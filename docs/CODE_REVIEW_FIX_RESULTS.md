@@ -314,12 +314,14 @@ schema/version impact.
   - `crates/pine-runtime/src/builtins/ta/*`
   - builtin signature/runtime metadata
 
-**Classification: Confirmed architectural drift risk, partially addressed**
+**Classification: Confirmed architectural drift risk, fixed with guardrails**
 
 `crates/pine-builtins/src/history.rs` now declares implicit history
 requirements for selected `ta.*` calls, and `crates/pine-sema/src/history.rs`
 consumes that metadata instead of owning a separate callee table. Runtime
-implementations still live separately in `crates/pine-runtime/src/builtins/ta/*`.
+implementations still live separately in `crates/pine-runtime/src/builtins/ta/*`,
+but fixed-offset implicit reads now use a debug/test assertion helper and
+reviewed runtime metadata is reconciled against the shared declaration.
 The remaining risk is real: if runtime starts reading deeper history than the
 shared metadata retains, output can silently become `na`. This item is still not
 a concrete current failing fixture like CR-015/CR-019.
@@ -338,7 +340,10 @@ regression to `close[1]`. Also bound the existing `ta.kc` and `ta.kcw` numeric
 regressions to `close[1]`, and the existing `ta.mfi` and `ta.tsi` numeric
 regressions to `close[1]`. Bound the existing `ta.cross`, `ta.crossover`, and
 `ta.crossunder` numeric regression to `close[1]` and series `baseline[1]`.
-Remaining work is runtime helper/debug assertion closeout evaluation.
+Added `HistoricalRuntime::read_declared_series_history` so fixed-offset runtime
+implicit-history reads assert in debug/test builds when their requested offset
+exceeds declared retention, while explicit history and length-derived reads keep
+Pine warmup/`na` semantics.
 
 **Verification**
 
@@ -369,8 +374,10 @@ Remaining work is runtime helper/debug assertion closeout evaluation.
 - `runs_cross_functions_over_historical_bars` asserts the cross helper numeric
   sequences and the HIR retention requirements for `close[1]` and series
   `baseline[1]`.
+- `read_declared_series_history` is used by builtin OHLC lookback helpers and
+  fixed-offset TA source lookbacks for MFI, TSI, CMO, and cross helpers.
 
-**Result: Partially fixed; runtime helper/debug assertion closeout remains**
+**Result: Fixed with shared metadata, reviewed-list reconciliation, fixed-offset runtime assertions, and retention-bound numeric regressions**
 
 ---
 
@@ -595,9 +602,11 @@ The CR-010 metadata phase has started: implicit history requirements are now a
 shared declaration consumed by sema, reviewed runtime implicit-history reads are
 reconciled against that metadata, and the
 SAR/DMI/Supertrend/KC/KCW/MFI/TSI/Cross numeric regressions are tied to HIR
-retention requirements. A debug/test-only assertion can still be considered once
-runtime history reads can distinguish "normal warmup/out-of-range" from
-"declared retention too small".
+retention requirements. Fixed-offset runtime implicit-history reads now go
+through `read_declared_series_history`, which keeps release behavior unchanged
+but debug-asserts when a runtime implicit read asks for more history than sema
+declared. Explicit history and length-derived reads continue using the normal
+`SeriesStore::read` warmup/`Na` behavior.
 
 **Verification**
 
@@ -607,8 +616,11 @@ runtime history reads can distinguish "normal warmup/out-of-range" from
   `series_retention.max_depth_for(series_id)`.
 - `SeriesStore::read` returns `PineValue::Na` when the requested offset is not in
   the retained buffer.
+- `read_declared_series_history` asserts fixed-offset implicit reads against
+  `series_retention.max_depth_for(series_id)` before delegating to
+  `SeriesStore::read`.
 
-**Result: Partially addressed via shared metadata, reviewed-list reconciliation, and SAR/DMI/Supertrend/KC/KCW/MFI/TSI/Cross retention-bound numeric regressions; runtime retention diagnostics remain deferred**
+**Result: Fixed for fixed-offset implicit-history drift; explicit history and length-derived warmup semantics remain unchanged**
 
 ---
 
@@ -2283,4 +2295,5 @@ outcomes are tracked under the individual CR entries:
 - `ta.*` history coupling remains a structural follow-up under CR-010/016/021:
   shared metadata, reviewed-list runtime reconciliation, and
   SAR/DMI/Supertrend/KC/KCW/MFI/TSI/Cross retention-bound numeric coverage now
-  exists, but runtime retention diagnostics remain deferred.
+  exists, with fixed-offset runtime implicit reads guarded by
+  `read_declared_series_history`.

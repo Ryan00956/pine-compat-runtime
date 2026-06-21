@@ -373,11 +373,28 @@ impl<'a> HistoricalRuntime<'a> {
             .iter()
             .find(|symbol| symbol.name == name)?;
         let series_id = symbol.series_id?;
-        self.series_store.read(series_id, offset).as_f64()
+        self.read_declared_series_history(series_id, offset)
+            .as_f64()
     }
 
     pub(crate) fn previous_builtin_f64(&self, name: &str) -> Option<f64> {
         self.builtin_f64_at(name, 1)
+    }
+
+    pub(crate) fn read_declared_series_history(
+        &self,
+        series_id: SeriesId,
+        offset: usize,
+    ) -> PineValue {
+        if offset > 0
+            && let Some(max_depth) = self.series_retention.max_depth_for(series_id)
+        {
+            debug_assert!(
+                offset <= max_depth,
+                "runtime implicit history read offset {offset} exceeds declared retention {max_depth} for {series_id:?}"
+            );
+        }
+        self.series_store.read(series_id, offset)
     }
 
     pub(crate) fn current_builtin_i64(&self, name: &str) -> Option<i64> {

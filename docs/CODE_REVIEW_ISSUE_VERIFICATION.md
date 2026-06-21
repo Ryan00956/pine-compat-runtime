@@ -1893,7 +1893,7 @@ or nuance during verification.
 - Original claim: sema hard-codes implicit `ta.*` lookback requirements, and this
   table can drift from runtime implementation.
 
-**Status: Confirmed; partially addressed**
+**Status: Confirmed; fixed with guardrails**
 
 **Current code evidence**
 
@@ -1908,9 +1908,14 @@ or nuance during verification.
   `pine_builtins::builtin_history_requirement(...)` instead of owning a
   separate callee table.
 - Runtime implementations independently read prior values:
-  - `previous_close()` / `previous_builtin_f64(...)`;
-  - `builtin_f64_at("low", 2)` and `builtin_f64_at("high", 2)` in SAR logic;
-  - direct `series_store.read(series_id, 1)` / length reads in `ta` flow helpers.
+  - `previous_close()` / `previous_builtin_f64(...)` now route through
+    `read_declared_series_history`;
+  - `builtin_f64_at("low", 2)` and `builtin_f64_at("high", 2)` in SAR logic now
+    route through `read_declared_series_history`;
+  - fixed-offset TA source lookbacks for MFI, TSI, CMO, and cross helpers now
+    route through `read_declared_series_history`;
+  - explicit history and length-derived reads keep normal `series_store.read`
+    warmup/`Na` behavior.
 - [builtin_registry.rs](../crates/pine-runtime/src/tests/builtin_registry.rs)
   now includes `runtime_implicit_history_calls_match_shared_metadata`, which
   compares a reviewed runtime implicit-history list against the shared metadata.
@@ -1935,9 +1940,8 @@ or nuance during verification.
 - The same file now binds `runs_cross_functions_over_historical_bars` to the
   expected `close[1]` and series `baseline[1]` HIR retention requirements while
   retaining the cross helper numeric sequence assertions.
-- The remaining coupling is runtime implementation drift outside that reviewed
-  list: runtime reads are not yet compile-time-bound to the shared metadata by a
-  runtime helper.
+- Fixed-offset runtime implicit-history reads now debug-assert against declared
+  retention before delegating to `SeriesStore::read`.
 
 **Impact**
 
@@ -1951,12 +1955,9 @@ retained, results can become `Na` without a diagnostic.
 - Keep the shared builtin history metadata as the sema-facing source of truth.
 - Keep the explicit reviewed-list reconciliation test current for every runtime
   builtin with implicit history.
-- Avoid relying only on ad hoc runtime source scans.
-- Consider a runtime helper/debug assertion if future design needs a stronger
-  binding between runtime reads and declared retention.
-- Keep the retention-bound high-risk numeric regressions green and decide
-  whether the deferred runtime helper/debug assertion is needed for P1-c
-  closeout.
+- Keep fixed-offset implicit runtime reads on `read_declared_series_history`
+  rather than direct `series_store.read(...)`.
+- Keep the retention-bound high-risk numeric regressions green.
 
 **Verification after fix**
 
@@ -1985,26 +1986,25 @@ retained, results can become `Na` without a diagnostic.
   with `self.series_retention.max_depth_for(series_id)`.
 - [series.rs](../crates/pine-runtime/src/series.rs) trims buffers to that depth
   and returns `PineValue::Na` when `offset > buffer.len()`.
+- [context.rs](../crates/pine-runtime/src/runtime/context.rs) also exposes
+  `read_declared_series_history`, which debug-asserts that fixed-offset runtime
+  implicit reads do not exceed declared retention before delegating to
+  `SeriesStore::read`.
 
 **Impact**
 
-Medium correctness risk. The current behavior is intentionally non-crashing, but
-that makes sema/runtime history drift hard to detect. A too-small retention
-depth looks like normal warmup `na` rather than an internal contract violation.
+Medium correctness risk, now guarded for fixed-offset implicit reads. The normal
+`SeriesStore::read` behavior remains intentionally non-crashing for explicit
+history, dynamic/length-derived history, and warmup bars.
 
 **Recommended fix**
 
-- Continue CR-010 by evaluating whether the current
-  SAR/DMI/Supertrend/KC/KCW/MFI/TSI/Cross retention-bound numeric regressions
-  and reviewed-list reconciliation are sufficient, or whether a runtime
-  helper/debug assertion is needed for retention under-declaration.
-- In debug/test builds, consider adding an assertion or diagnostic path when a
-  builtin reads beyond declared retention. This could be implemented as a
-  runtime history access helper that knows the required offset and callsite.
-- Continue adding golden or fixture tests where deeper history is required after
-  warmup, so a too-small buffer changes expected values and fails tests. The
-  SAR, DMI, Supertrend, KC, KCW, MFI, TSI, and Cross paths now have
-  retention-bound numeric regressions.
+- Keep fixed-offset implicit runtime reads on `read_declared_series_history`.
+- Keep `runtime_implicit_history_calls_match_shared_metadata` and the
+  retention-bound numeric regressions green when runtime TA implementations
+  change.
+- Treat explicit history and length-derived reads separately because their
+  `Na`/warmup behavior is part of the supported runtime semantics.
 
 **Verification after fix**
 

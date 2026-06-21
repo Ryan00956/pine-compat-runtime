@@ -197,11 +197,12 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
 
-        let (positive_flow, negative_flow) = match self.series_store.read(series_id, 1).as_f64() {
-            Some(previous) if source > previous => (Some(source * volume), Some(0.0)),
-            Some(previous) if source < previous => (Some(0.0), Some(source * volume)),
-            Some(_) | None => (Some(0.0), Some(0.0)),
-        };
+        let (positive_flow, negative_flow) =
+            match self.read_declared_series_history(series_id, 1).as_f64() {
+                Some(previous) if source > previous => (Some(source * volume), Some(0.0)),
+                Some(previous) if source < previous => (Some(0.0), Some(source * volume)),
+                Some(_) | None => (Some(0.0), Some(0.0)),
+            };
         self.update_mfi_windows(call_site_id, positive_flow, negative_flow, length);
 
         let positive_window = self
@@ -866,9 +867,9 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(left_series_id) = args[0].value.series_id else {
             return Ok(PineValue::Bool(false));
         };
-        let previous_left = self.series_store.read(left_series_id, 1);
+        let previous_left = self.read_declared_series_history(left_series_id, 1);
         let previous_right = if let Some(right_series_id) = args[1].value.series_id {
-            self.series_store.read(right_series_id, 1)
+            self.read_declared_series_history(right_series_id, 1)
         } else {
             current_right.clone()
         };
@@ -1112,7 +1113,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(series_id) = args[0].value.series_id else {
             return Ok(PineValue::Na);
         };
-        let Some(previous_source) = self.series_store.read(series_id, 1).as_f64() else {
+        let Some(previous_source) = self.read_declared_series_history(series_id, 1).as_f64() else {
             return Ok(PineValue::Na);
         };
 
@@ -1158,7 +1159,7 @@ impl<'a> HistoricalRuntime<'a> {
         let length = length as usize;
         let (positive_change, negative_change) = match (source.as_f64(), args[0].value.series_id) {
             (Some(source), Some(series_id)) => {
-                match self.series_store.read(series_id, 1).as_f64() {
+                match self.read_declared_series_history(series_id, 1).as_f64() {
                     Some(previous) => {
                         let change = source - previous;
                         (Some(change.max(0.0)), Some((-change).max(0.0)))
