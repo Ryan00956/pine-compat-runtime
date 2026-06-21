@@ -139,7 +139,7 @@
 
 ### 阶段 1 审查结论（2026-05-31）
 
-**总体**：手写 lexer + Pratt 表达式解析器，结构清晰，无 host 依赖（无文件/网络/时钟）。语法层质量良好，主要发现一个中等健壮性问题。
+**总体**：手写 lexer + Pratt 表达式解析器，结构清晰，无 host 依赖（无文件/网络/时钟）。语法层质量良好；早期记录的表达式递归深度健壮性问题已关闭。
 
 **良好实践（已验证）**
 - 所有字面量解析错误（int/float/color/version）优雅降级为诊断 + 占位值，无 panic。
@@ -150,7 +150,7 @@
 - 缩进栈 + Indent/Dedent token + `E_LEX_INDENT` 不一致缩进诊断。
 
 **发现的问题（仅记录，未修改）**
-- [中] 解析器递归无深度上限：`parse_expr`/`parse_prefix` 对深度嵌套（括号/历史/三元/一元）无界递归。**实测**：深度≈2000 的嵌套括号脚本（约 4KB）即触发栈溢出 SIGABRT（退出码 134）。对「可嵌入、接受 host 提供源码」的运行时构成健壮性/DoS 风险（注：深层 `Box<Expr>` 的 Drop 也会递归）。建议加入嵌套深度上限并转为诊断。— [parser.rs](crates/pine-syntax/src/parser.rs)
+- [已关闭] 解析器递归无深度上限：当前 [parser.rs](crates/pine-syntax/src/parser.rs) 为 `parse_expr` 增加 `MAX_EXPR_DEPTH=256`，超限报 `E_PARSE_EXPR_DEPTH` 而非栈溢出，并由 `rejects_expression_nesting_past_depth_limit` 与 `deep_expression_limit.pine` fixture 覆盖。
 - [低] `line_col` 列号按字节计算而非字符：含多字节 UTF-8 的行，诊断列号偏大（仅影响诊断显示）。— [source.rs](crates/pine-syntax/src/source.rs)
 - [低] 软关键字碰撞：`library/export/type/method` 被词法当作普通 Identifier，`phase_j_statement` 用上下文判定。`export`/`library` 无 lookahead 守卫，`export = 5`、`type x = 5` 等会误解析。Pine 中这些为保留字，影响有限。— [parser_phase_j.rs](crates/pine-syntax/src/parser_phase_j.rs)
 - [低] 数值字面量不支持科学计数法/下划线分隔：`number()` 仅识别十进制整数与 `d.d` 浮点；`1e6` 会被拆为 `1` + 标识符 `e6`。需与 LANGUAGE_SCOPE 核对是否为预期。— [lexer.rs](crates/pine-syntax/src/lexer.rs)
@@ -160,7 +160,7 @@
 - [信息] 制表符固定按 4 空格计算缩进（tab=4 硬编码）；混合制表符/空格可能产生意外层级（有不一致缩进诊断兜底）。
 - [信息] 诊断码盘点：语法层共 7 个 `E_LEX_*` + 14 个 `E_PARSE_*`（共21），留待阶段 16 与 DIAGNOSTIC_CODES.md 核对。
 
-**结论**：语法层可靠、可进入阶段 2。唯一需重视的是递归深度上限（中），其余为低/信息级，留待阶段 16 或单独提任务。
+**结论**：语法层可靠、可进入阶段 2。历史递归深度上限问题已关闭并有 fixture/单测守护，其余为低/信息级，留待阶段 16 或单独提任务。
 
 ---
 
@@ -256,7 +256,7 @@
 **发现的问题（仅记录，未修改）**
 - [中] `ta.*` 隐式历史回看表与 runtime 实现强耦合：`history.rs::record_call_history` 硬编码各 `ta` 函数的回看深度（`ta.tr/atr/kc…→close[1]`、`ta.sar→high/low[2]`、`ta.dmi→high/low/close[1]` 等）。若 runtime 对应实现的实际回看深度变化而此表未同步，会**静默低估**历史缓冲区，导致结果错误或越界。建议把回看需求与 builtin 签名/实现绑定为单一数据源，留待阶段 5/6 对账。— [history.rs](crates/pine-sema/src/history.rs)
 - [低] 平行类型推断路径需手工同步：`analyze_expr`（带诊断、有递归守卫）与 `type_of_expr_with_params`（纯推断、**无**独立递归守卫，靠「有错即跳过 lowering」间接兜底）各自实现一套 `ReturnSpec`/二元/三元/switch 推断。两者一旦漂移即产生「分析期类型」与「lowering 期类型」不一致。当前递归 UDF 总会先在 `analyze_udf_call` 报错从而不进入 lowering，故暂不可达；属潜在脆弱点。— [expressions.rs](crates/pine-sema/src/analyzer/expressions.rs)
-- [低] 语义层递归同样无深度上限（与阶段1一致）：`analyze_expr`/`analyze_udf_call`/`type_of_expr_with_params` 对深度嵌套表达式或深 UDF 调用链按 AST 深度递归，无界。深层非递归 UDF 链或巨型嵌套表达式可致栈溢出。建议与阶段1的解析深度上限统一治理。— [expressions.rs](crates/pine-sema/src/analyzer/expressions.rs)、[functions.rs](crates/pine-sema/src/analyzer/functions.rs)
+- [已关闭] 语义层主分析递归无深度上限：当前 [expressions.rs](crates/pine-sema/src/analyzer/expressions.rs) 用 `MAX_SEMA_EXPR_DEPTH=128` 报 `E_SEMA_EXPR_DEPTH`，UDF/方法调用链用 `MAX_FUNCTION_CALL_DEPTH=64` 报 `E_FUNCTION_CALL_DEPTH`；`rejects_deep_semantic_expression_nesting`、`rejects_deep_acyclic_function_call_chain` 与 sema fixtures 覆盖该边界。纯推断路径的手工同步风险仍由上一条“平行类型推断路径”跟踪。
 - [低] 重赋值会按 RHS 限定符覆盖符号类型：`Reassign` 末尾 `update_symbol_type(name, value_type)` 直接以右值类型替换符号类型，可能把一个 `var`/曾为 Series 的变量**收窄**为 Const/Simple；条件分支内的重赋值也不会强制提升为 Series。持久性虽由 `var_slot`/`PersistenceKind` 单独跟踪，但限定符不反映「逐 bar 可变=series」的 Pine 语义。需与 runtime 行为核对是否影响正确性。— [statements.rs](crates/pine-sema/src/analyzer/statements.rs)
 - [信息] 不支持原因串混用内部阶段标签：`unsupported.rs` 的 reason 文案夹带 “Phase J Slice 0 / Phase 1 / Phase L” 等内部里程碑词汇，且粒度不一（有的写 “Phase 1”、有的写 “current subset”），面向最终用户时含义不清。建议统一为面向用户的措辞，留待阶段 16。— [unsupported.rs](crates/pine-sema/src/analyzer/unsupported.rs)
 - [信息] `expr_types`/`expr_user_types`/`bindings` 以 `(span.start, span.end)` 或 `BindingKey{span,name}` 作记忆化键：依赖 span 唯一性。当前 AST 中各表达式 span 互异，无冲突；若未来出现合成/复用 span（如宏展开）需警惕键碰撞。— [context.rs](crates/pine-sema/src/analyzer/context.rs)
@@ -309,12 +309,12 @@
 - `collect_library_declarations` 用 `mem::take` 避免克隆整个 AST 遍历（性能+借用友好）。
 
 **发现的问题（仅记录，未修改）**
-- [低] 内联递归无深度/规模上限：`lower_udf_call → lower_function_body → lower_expr_with_params → lower_udf_call` 按调用链深度递归。递归环已被 `E_RECURSIVE_FUNCTION` 拦（lowering 受 `!has_errors()` 门控），但**非递归**的深链/广复用 UDF 会使内联深度与 HIR 体积按乘法膨胀，无体积上限，可致栈溢出或内存激增。与阶段1/3 递归发现同类。— [lowering/mod.rs](crates/pine-sema/src/lowering/mod.rs)
+- [已关闭] 内联递归无深度/规模上限：当前 [lowering/mod.rs](crates/pine-sema/src/lowering/mod.rs) 通过 `LoweringLimits` 限制 inline 深度、HIR 节点数与临时符号数，超限报 `E_LOWERING_BUDGET`；`rejects_lowering_temp_symbol_budget_exhaustion` 覆盖预算失败路径。
 - [信息] root 被解析两次：`validate_modules` 内 `parse_source(graph.root())` 一次，`analyze_input` 又 `parse_source(input.root())` 一次。正确性无损（诊断不重复），仅单次调用内重复解析开销；可复用一份 AST。— [analysis.rs](crates/pine-sema/src/analysis.rs)
 - [信息] 常量按名替换的潜在遮蔽：`rewrite_expr` 对任意 `expr_name` 命中 `context.constants` 的表达式整体替换为常量值。若库体内局部符号与某导入常量同名，可能被意外替换（当前子集下概率低）。— [modules_rewrite.rs](crates/pine-sema/src/modules_rewrite.rs)
-- [信息] 模块/重写递归与阶段1 同类：`rewrite_expr`/`visit_expr`/`is_const_import_expr` 对 host 提供的库表达式无深度上限递归。— [modules_rewrite.rs](crates/pine-sema/src/modules_rewrite.rs)、[modules.rs](crates/pine-sema/src/modules.rs)
+- [信息・已关闭] 模块/重写递归与阶段1 同类：`rewrite_expr`/`visit_expr`/`is_const_import_expr` 处理的是已通过 parser 的 AST，host 提供库表达式同受 `MAX_EXPR_DEPTH` 约束；深表达式主崩溃面已由阶段1解析深度上限间接关闭。— [modules_rewrite.rs](crates/pine-sema/src/modules_rewrite.rs)、[modules.rs](crates/pine-sema/src/modules.rs)
 
-**结论**：lowering/模块层确定性、隔离性、诊断覆盖均良，无「高/中」级问题。唯一需跟进的是内联无上限（低，与阶段1/3 递归发现可合并治理）。可进入阶段 5（内置签名注册表）。
+**结论**：lowering/模块层确定性、隔离性、诊断覆盖均良，无「高/中」级问题。历史内联无上限问题已由 `LoweringLimits` 关闭，剩余为重复解析、模块常量遮蔽等信息级工程观察。可进入阶段 5（内置签名注册表）。
 
 ---
 
@@ -425,11 +425,11 @@ run_historical(program, bars)
 - [已关闭] [expressions.rs](crates/pine-runtime/src/runtime/expressions.rs) 早期审查记录的整数算术坍缩为 `Float` 问题在当前实现中已修复：`Int +/-/*/% Int` 通过 `numeric_add`/`numeric_sub`/`numeric_mul`/`numeric_mod` 保留 `PineValue::Int`（溢出时才回退到有限 float/`na`），`/` 仍按 Pine 数值除法走 float。回归证据包括 `runs_for_loop_with_computed_integer_bound`、`runs_array_get_with_computed_integer_index`、`runs_sma_with_computed_integer_length`、`runs_math_sum_with_computed_integer_length`，以及 conformance 中的 `computed_array_operands.pine`/`computed_lengths.pine`。
 - [中] 运行时侧确认阶段 3 历史深度耦合：[context.rs](crates/pine-runtime/src/runtime/context.rs) `commit_current_series` 用 `series_retention.max_depth_for(series_id)`（源自 sema 的 `program.series_history`）裁剪缓冲；若 sema 的 `ta.*` 隐式回看表低估深度，缓冲被裁短，后续 `series_store.read(offset>len)` **静默返回 `Na`** 而非真实历史值——错误结果而非崩溃。与阶段 3 [中] 同根，建议统一为单一数据源并加端到端回归。
 - [低] 运行时错误无源位置：[error.rs](crates/pine-runtime/src/error.rs) `RuntimeError` 仅含 `message: String`，无 span。除零/越界/「history offset must be an int」等错误无法回指源码，落实阶段 2 [低] 的 HIR-无-span 影响。
-- [信息] 表达式求值递归无显式深度上限：`eval_expr` 对 `Unary/Binary/Ternary/Block/...` 递归下降，深层嵌套 HIR（含阶段 4 内联放大产生的深 HIR）在运行时仍可栈溢出；与阶段 1/3/4 的递归治理同类，建议统一加深度上限。
+- [已关闭] 表达式求值递归无显式深度上限：当前 [expressions.rs](crates/pine-runtime/src/runtime/expressions.rs) 用 `MAX_RUNTIME_EVAL_DEPTH=512` 包裹 `eval_expr`，超限返回 `RuntimeError`，并由 `rejects_hir_expression_past_runtime_eval_depth` 覆盖。
 - [信息] 普遍线性扫描 `program.symbols.iter().find()`：`set_builtin_symbols`（每 bar ~22 次）、`persistent_slot_for_symbol`、`current_builtin_f64`、`series_id_for_symbol` 等逐符号访问均 O(symbols)，可预构建索引映射。
 - [信息] `HistoricalRuntime` 为巨型结构体，实时每次 Forming 更新整体 `clone()`（含全部 HashMap/Vec），高频 forming 更新下内存/性能开销显著；正确性无虞，仅性能观察。
 
-**结论**：运行时主循环、保留、实时回滚、持久化语义结构正确且防御充分；早期记录的整数算术坍缩 P0 在当前实现中已关闭，for 循环算术上界、计算下标与计算长度路径均有回归覆盖。其余为阶段 3 历史耦合的运行时确认、无-span、递归与线性扫描等承接性观察。可进入阶段 7（数值/字符串/时间内置）。
+**结论**：运行时主循环、保留、实时回滚、持久化语义结构正确且防御充分；早期记录的整数算术坍缩 P0 与 eval 深度无上限均已关闭并有回归覆盖。其余为阶段 3 历史耦合的运行时确认、无-span、线性扫描与 forming clone 等承接性观察。可进入阶段 7（数值/字符串/时间内置）。
 
 ---
 
@@ -776,9 +776,9 @@ run_historical(program, bars)
 - [信息] 运行期全程持有 GIL：`run` 未用 `Python::allow_threads` 包裹 `run_historical_with_request_environment`，长脚本/长 bar 流会阻塞其他 Python 线程；正确性无虞，仅并发性能观察。— [lib.rs](crates/pine-python/src/lib.rs)
 - [信息] `value_to_py` 分配开销：每个标量值都先建一个单元素 `PyList`、append 后取 `get_item(0)` 再 unbind——是绕开「无独立 to-object」的实现技巧，但对长序列产生 O(n) 次额外 list 分配。建议改用直接构造 `PyObject` 的辅助。— [lib.rs](crates/pine-python/src/lib.rs)
 - [信息・承接阶段 12] bar 输入有限性已补：Python `float('nan')`/`float('inf')` 会被拒绝（`test_run_script_rejects_non_finite_bar_values` 覆盖）。主 bars 时间单调/去重仍未在 Python host 层校验（request 流经 `from_streams` 有校验）；dict 路径静默忽略多余键、sequence 路径严格要求 6 元——两路径宽严不一。— [lib.rs](crates/pine-python/src/lib.rs)
-- [信息・承接阶段 1/3/4/6] 深递归崩溃面经 Python 暴露：各层递归无深度上限（解析/语义/内联/求值），深嵌套脚本会栈溢出 SIGABRT——这是**不可被 Python 捕获**的进程级中止，会直接杀死宿主解释器。绑定继承了该 DoS/崩溃面。建议随阶段 16 统一加深度上限治理。
+- [信息・已关闭] 深递归崩溃面经 Python 暴露：解析/语义/内联/求值的主深度上限已补齐，深嵌套脚本应转为结构化诊断或 runtime error，而非 Python 进程级 SIGABRT。Python 仍可考虑更丰富的结构化异常，但该 DoS 主线已关闭。
 
-**结论**：Python 绑定是忠实、字段同构、错误统一的薄封装，pytest 回归充分，与 CLI/WASM 行为基本一致，无「高/中(独有)」级缺陷。非有限浮点跨 host 表示与 bar 非有限输入的历史问题已关闭；其余为承接性观察（无 profile、GIL、value_to_py 分配、bar 时间校验、深递归崩溃面）。可进入阶段 14（WASM 绑定）。
+**结论**：Python 绑定是忠实、字段同构、错误统一的薄封装，pytest 回归充分，与 CLI/WASM 行为基本一致，无「高/中(独有)」级缺陷。非有限浮点跨 host 表示、bar 非有限输入与深递归崩溃面的历史问题已关闭；其余为承接性观察（无 profile、GIL、value_to_py 分配、bar 时间校验）。可进入阶段 14（WASM 绑定）。
 
 ---
 
@@ -829,7 +829,7 @@ run_historical(program, bars)
 - [信息] CSV 解析 + json_escape 代码三处重复：`parse_bars_csv` 在 [pine-wasm/lib.rs](crates/pine-wasm/src/lib.rs) 与 [pine-cli/bars_csv.rs](crates/pine-cli/src/bars_csv.rs) 完全复制；`json_escape` 在 runtime output、[pine-cli/json.rs](crates/pine-cli/src/json.rs)、[pine-wasm/analysis_json.rs](crates/pine-wasm/src/analysis_json.rs) 三处各一份（承接阶段 12[信息]）。漂移风险，建议提取共享 crate/模块。
 - [信息] analysis 报告双序列化器：WASM 手写 `analysis_json` 与 Python `analysis_to_py` 各实现一遍，字段集需手工同步（与阶段 11 手写 JSON 维护性观察同类）；run 输出则因共用 `public_runtime_result_json` 无此问题。建议 analysis 也收敛到单一 writer。— [analysis_json.rs](crates/pine-wasm/src/analysis_json.rs)
 - [信息] 无 profile API：WASM 未暴露 `public_runtime_profiled_result_json`（与 Python 同缺、CLI 有 `--profile`）。
-- [信息] 无 panic hook：未依赖 `console_error_panic_hook`，深递归栈溢出（承接阶段 1/3/4/6）在 wasm 触发 unreachable trap，host JS 仅得无消息的 `RuntimeError`，难诊断；建议 release 仍考虑设置 panic hook 改善可观测性。— [Cargo.toml](crates/pine-wasm/Cargo.toml)
+- [信息] 无 panic hook：深递归栈溢出主线已由 parser/sema/lowering/runtime 深度预算关闭；但 WASM 仍未依赖 `console_error_panic_hook`，若未来出现意外 panic，host JS 仍只得较弱的 trap 信息。建议 release 仍考虑设置 panic hook 改善可观测性。— [Cargo.toml](crates/pine-wasm/Cargo.toml)
 - [信息・共享范围限制] chart 上下文不可配置：WASM/Python/CLI 三 host 均硬编码 `ChartContext::default()`（`NASDAQ:AAPL` + 默认 tf），host 无法设置图表 symbol/timeframe；`request.security` 同 symbol 快路径恒以默认 symbol 匹配。属共享 scope 限制，留待阶段 16。— [chart.rs](crates/pine-runtime/src/request/chart.rs)
 
 **结论**：WASM 绑定输入校验完备、确定性显式（BTreeMap 排序）、run 输出与 CLI 字节一致、转义合规，质量良好，无「高/中(独有)」级缺陷。非有限浮点在 WASM 字符串边界被放大的历史问题已随序列化/CSV 边界修复关闭；剩余为 duplicate 键坍缩分歧与代码重复/双序列化器等工程项。可进入阶段 15（测试/快照/一致性）。
@@ -871,7 +871,7 @@ run_historical(program, bars)
 - [中] conformance 状态准确性无机器校验：[conformance.rs](crates/pine-cli/src/conformance.rs) 的 `validate_fixture_paths` 仅检查 fixture 文件**存在**，无任何测试验证 (a) fixture 真的使用了所声明的 feature，(b) status（supported/partial/unsupported）与实现现状一致。115 个 **partial** 项尤其没有「partial 边界」断言。实现回归后矩阵仍会声称 supported（只要文件在）。建议加 feature↔fixture 语义链接校验或 partial 边界回归。
 - [中] runtime 指标 fixture 仅 smoke+parity、无数值 golden：incremental.rs 对所有 runtime fixture 断言「无诊断 + 增量==全量」，但**不校验输出数值**。而 golden 快照只覆盖策略/绘图等少数 fixture——大量 `ta.*`/`math.*` 指标 fixture（alma/ao/cci/cmo/dmi/sar/supertrend/tsi/vwap…）**无 golden 数值快照**，仅被 smoke+parity 执行。因此承接阶段 7「暖机种子可能偏离 TradingView」的数值偏差**无法被测试体系捕获**。建议为高风险递归指标补 golden 值快照 / conformance 数值基准。
 - [低][已关闭] 整数坍缩高危缺陷已补回归守护：阶段 6/7 实测的 `for i = 0 to n-1`、`array.get(a, k-1)`、`ta.sma(close, n*1)` 静默失效路径，当前由 `runs_for_loop_with_computed_integer_bound`、`runs_array_get_with_computed_integer_index`、`runs_sma_with_computed_integer_length`、`runs_math_sum_with_computed_integer_length` 以及 `computed_array_operands.pine`/`computed_lengths.pine` 覆盖。后续要求是保留这些回归，不再把该项列为活跃缺口。
-- [低] 语法层 fixture 回归近空白：[syntax/tests/fixtures.rs](crates/pine-syntax/tests/fixtures.rs) 仅 1 个 test（phase1_basic）；深嵌套递归（阶段1[中] 栈溢出）、多字节列号（阶段1[低]）等无 fixture 回归（仅 src 内联单测覆盖部分）。
+- [低][已关闭] 语法层 fixture 回归近空白：当前 [syntax/tests/fixtures.rs](crates/pine-syntax/tests/fixtures.rs) 已覆盖 `deep_expression_limit.pine`、`utf8_diagnostic_column.pine`、`parse_error_recovery.pine`、`malformed_number_recovery.pine`、`soft_keyword_export_identifier.pine` 等边界，不再只有 `phase1_basic`。
 - [信息] 8 个死 fixture（引用于零处）：`tests/fixtures/sema/unsupported_strategy_exit_{stop,stop_limit,stop_profit,limit_loss,profit_loss,profit_qty,qty_stop,trailing_partial_quantity}.pine`——这些组合现多已 supported（存在对应 `supported_strategy_exit_*` 并被测），旧 unsupported 版残留为死文件。建议清理或纳入测试。
 - [信息][已关闭] 非有限/不可解析输出无 fixture：阶段 11/12/14 的非有限 Float→非法 JSON / 不可 `JSON.parse` 历史缺口已补 runtime JSON、CLI CSV、WASM CSV、Python 输出/输入回归；后续要求是保留这些跨 host 守护。
 - [信息] 跨平台浮点格式无显式快照矩阵：f64 `Display`（阶段11）的跨平台字节稳定性靠假设，无跨架构 CI 快照断言（属阶段16 确定性主线，可在此登记）。
@@ -902,7 +902,7 @@ run_historical(program, bars)
 
 ### 阶段 16 审查结论（2026-06-01）
 
-**总体**：跨 crate 复核四条主线。**确定性与合规两条线健康**（实测红线守住、clean-room 政策完备且被遵守）；**安全线**除「无界递归栈溢出」外的运行时执行路径基本无 panic 面、DoS 上限齐备；**诊断线**存在系统性文档缺口（22 个码未登记）与「错误无 span」承接问题。本阶段收口，给出全局风险汇总与优先修复排序。
+**总体**：跨 crate 复核四条主线。**确定性与合规两条线健康**（实测红线守住、clean-room 政策完备且被遵守）；**安全线**中历史「无界递归栈溢出」主线已由 parser/sema/lowering/runtime 深度预算关闭，运行时执行路径基本无 panic 面、DoS 上限齐备；**诊断线**存在系统性文档缺口（22 个码未登记）与「错误无 span」承接问题。本阶段收口，给出全局风险汇总与优先修复排序。
 
 **诊断主线（实测对账）**
 - **22 个已发射诊断码未登记** [DIAGNOSTIC_CODES.md](docs/DIAGNOSTIC_CODES.md)（比阶段 3 记录的 11 个更全，含跨 crate 全量）：`E_LEX_INDENT`、`E_PARSE_BLOCK/FOR/FUNCTION`、`E_LOOP_CONTROL/RANGE_TYPE/RETURN/STEP`、`E_SCRIPT_DECL_DUPLICATE/LOCATION`、`E_STRATEGY_MODE/PRICE/QTY`、`E_STRATEGY_EXIT_ENTRY/MINTICK/PRICE/QTY/TICKS`（后 5 个为 broker **运行时**诊断）、`E_UNKNOWN_FUNCTION/METHOD/COLOR`、`E_METHOD_RECEIVER_TYPE`。诊断码是公开 DX 契约，建议全部补登。`E_HOST_INPUT` 已登记且确在 WASM 发射（手写 JSON 转义，非缺口）。
@@ -918,7 +918,7 @@ run_historical(program, bars)
 **安全主线（实测）**
 - 运行时执行路径（处理不可信 bars/HIR）**几乎无 panic 面**：runtime+builtins 非测试代码仅 1 处 `unreachable!`（[arrays.rs](crates/pine-runtime/src/builtins/arrays.rs) min/max 内部枚举守卫，不可由输入触发），无可达 unwrap。143 个 `unwrap()`/26 个 `panic!` 集中在 sema/syntax 编译期，且字面量解析已优雅降级（阶段 1）。
 - DoS 上限齐备：`MAX_WHILE_ITERATIONS`、`MAX_SERIES_HISTORY_VALUES=1e6`、`MAX_ARRAY_ELEMENTS=1e5`、绘图 `MAX_*=500`，溢出用 `checked_*`（阶段 6/8）。
-- **唯一系统性崩溃面 = 无界递归栈溢出**（阶段 1/3/4/6 一致）：解析/语义/内联/求值各层无深度上限，深嵌套脚本（实测 ~2000 层括号 ≈4KB 即 SIGABRT），且经 **所有 host 暴露**——Python 为不可捕获的进程级中止、WASM 为无消息 trap。这是面向「可嵌入、接受 host 源码」运行时最需治理的安全项。
+- **已关闭：无界递归栈溢出主线**（阶段 1/3/4/6 一致）：解析、语义表达式、UDF/方法调用链、lowering inline/HIR 预算、runtime eval 均已有显式上限，深嵌套脚本应转为 `E_PARSE_EXPR_DEPTH`/`E_SEMA_EXPR_DEPTH`/`E_FUNCTION_CALL_DEPTH`/`E_LOWERING_BUDGET` 或 runtime error，而非跨 host 崩溃。
 - 不可信输入注入面（承接）：CSV/bars 接受 `NaN`/`inf` 与非有限 Float 产出非法 JSON / WASM 整段不可 `JSON.parse` 的历史问题已关闭；剩余输入面主要是 CSV 无大小上限可 OOM（阶段 12）。
 
 **合规主线（实测通过）**
@@ -931,13 +931,13 @@ run_historical(program, bars)
 | 优先级 | 问题 | 严重度 | 来源阶段 | 建议 |
 | --- | --- | --- | --- | --- |
 | **P0** | 整数算术坍缩为 Float，`for i=0 to n-1`/计算下标/`ta.*` 计算长度静默失效 | 高（已关闭） | 6/7 | 当前实现已通过 `numeric_add`/`numeric_sub`/`numeric_mul`/`numeric_mod` 保留 `Int`；继续保留计算上界/下标/长度回归 |
-| **P1-a** | 无界递归 → 栈溢出，跨所有 host 崩溃 DoS | 中(安全) | 1/3/4/6 | 解析/语义/内联/求值统一加嵌套深度上限并转诊断 |
+| **P1-a** | 无界递归 → 栈溢出，跨所有 host 崩溃 DoS | 中(安全，已关闭) | 1/3/4/6 | 当前 parser/sema/lowering/runtime 均有深度/预算上限；继续保留深嵌套回归 |
 | **P1-b** | 非有限 Float 未在序列化/输入边界归一（非法 JSON、WASM 不可解析） | 中（已关闭） | 11/12/14 | 当前已通过 `f64_json` 非有限→`null`、CLI/WASM/Python bar 边界拒绝非有限 OHLCV，并保留跨 host 回归 |
 | **P1-c** | `ta.*` 隐式历史回看表与 runtime 强耦合，漂移静默低估缓冲区 | 中 | 3/6 | 回看需求与 builtin 签名/实现绑定为单一数据源 + 端到端回归 |
 | **P2** | 与 TradingView 口径分歧：缺省下单量应为 1、撮合时序、绘图上限/淘汰策略、时区仅 UTC、request 时间框整数倍+仅 3 参、数组越界/负下标 | 中 | 7/8/9/10 | 对齐 TradingView 或在兼容性文档显式声明口径 |
 | **P3** | 工程/文档：22 诊断码未登记、运行时错误无 span、`analyze` 退出码、conformance 无机器校验 + 数值 golden 缺口、parse_bars_csv/json_escape 重复、8 死 fixture、文档漂移、包元数据 | 低/信息 | 0/2/6/11/12/14/15/16 | 批量清理，多数可独立小改 |
 
-**结论**：经 16 阶段系统走读，`pine-compat-runtime` 整体工程质量高——架构红线清晰、确定性与 clean-room 合规可靠、失败路径与增量一致性测试扎实、运行时执行路径防御充分。历史 P0 整数算术坍缩与 P1-b 非有限边界均已关闭并有回归覆盖；当前优先级前列转为无界递归（安全）与 `ta.*` 历史耦合（正确性）两项「中」级横切问题。其余为与 TradingView 的兼容口径分歧（多为文档化范围限制）与工程/文档清理项。建议按已关闭项回归守护、剩余 P1→P3 的顺序继续推进。**全部 16 阶段审查完成。**
+**结论**：经 16 阶段系统走读，`pine-compat-runtime` 整体工程质量高——架构红线清晰、确定性与 clean-room 合规可靠、失败路径与增量一致性测试扎实、运行时执行路径防御充分。历史 P0 整数算术坍缩、P1-a 无界递归崩溃面与 P1-b 非有限边界均已关闭并有回归覆盖；当前优先级前列转为 `ta.*` 历史耦合（正确性）这一「中」级横切问题。其余为与 TradingView 的兼容口径分歧（多为文档化范围限制）与工程/文档清理项。建议按已关闭项回归守护、剩余 P1→P3 的顺序继续推进。**全部 16 阶段审查完成。**
 
 ---
 
@@ -950,20 +950,20 @@ run_historical(program, bars)
 - [阶段0][低] Cargo.toml:17 — `repository = ""` 包元数据为空 — 发布前补全仓库地址。
 - [阶段0][信息] scripts/check_structure.py — 仅排除 `/src/tests/`，导致 strategy/broker/tests.rs(1245行) 被当作生产实现计入阈值 — 扩展测试文件排除规则。
 - [阶段0][信息] Cargo.toml — 无 `[workspace.dependencies]` 集中管理外部依赖 — 未来共享依赖时引入以防版本漂移。
-- [阶段1][中] crates/pine-syntax/src/parser.rs — parse_expr/parse_prefix 递归无深度上限，深度≈2000 的嵌套表达式即栈溢出 SIGABRT（实测 exit 134） — 加嵌套深度上限并转诊断（DoS/健壮性）。
+- [阶段1][中][已关闭] crates/pine-syntax/src/parser.rs — parse_expr/parse_prefix 递归无深度上限曾使深嵌套表达式栈溢出 SIGABRT — 当前 `MAX_EXPR_DEPTH=256` 超限报 `E_PARSE_EXPR_DEPTH`，并有单测/fixture 守护。
 - [阶段1][低] crates/pine-syntax/src/source.rs — line_col 列号按字节而非字符计算，多字节行诊断列号偏大 — 按字符计算列号。
 - [阶段1][低] crates/pine-syntax/src/parser_phase_j.rs — 软关键字 library/export/type/method 无 lookahead 守卫，同名标识符误解析 — 加上下文守卫。
 - [阶段1][低] crates/pine-syntax/src/lexer.rs — 数值字面量不支持科学计数法(1e6)/下划线 — 按 LANGUAGE_SCOPE 确认是否需补齐。
 - [阶段2][低] crates/pine-ir/src/lib.rs — HIR 不携带 Span，运行时错误无法回指源码位置 — 评估是否为 HirExpr 补充 span（阶段6/16）。
 - [阶段3][中] crates/pine-sema/src/history.rs — ta.* 隐式历史回看表硬编码且与 runtime 实现强耦合，漂移会静默低估历史缓冲区 — 与 builtin 签名/实现绑定为单一数据源（阶段5/6 对账）。
 - [阶段3][低] crates/pine-sema/src/analyzer/expressions.rs — 平行类型推断路径（analyze_expr vs type_of_expr_with_params）需手工同步，后者无独立递归守卫，靠「有错跳过 lowering」间接兜底 — 合并或加显式守卫。
-- [阶段3][低] crates/pine-sema/src/analyzer/{expressions,functions}.rs — 语义层递归（表达式/UDF 调用链）无深度上限，深嵌套/深链可栈溢出 — 与阶段1解析深度上限统一治理。
+- [阶段3][低][已关闭] crates/pine-sema/src/analyzer/{expressions,functions,methods}.rs — 语义层表达式/UDF/方法调用链曾无深度上限 — 当前 `MAX_SEMA_EXPR_DEPTH`/`MAX_FUNCTION_CALL_DEPTH` 转为诊断并有回归守护。
 - [阶段3][低] crates/pine-sema/src/analyzer/statements.rs — Reassign 以 RHS 限定符覆盖符号类型，可把 var/Series 变量收窄为 Const/Simple，条件重赋值不强制 Series — 与 runtime 行为核对限定符语义。
 - [阶段3][低] docs/DIAGNOSTIC_CODES.md — 11 个 sema 诊断码未登记（E_STRATEGY_MODE / E_SCRIPT_DECL_LOCATION / E_SCRIPT_DECL_DUPLICATE / E_LOOP_CONTROL / E_LOOP_RANGE_TYPE / E_LOOP_STEP / E_LOOP_RETURN / E_UNKNOWN_FUNCTION / E_UNKNOWN_METHOD / E_UNKNOWN_COLOR / E_METHOD_RECEIVER_TYPE） — 补登文档（阶段16 统一核对）。
 - [阶段6][高][已关闭] crates/pine-runtime/src/runtime/expressions.rs — 整数算术坍缩为 Float（旧 `numeric_binary→finite_float_or_na` 路径），曾致 `for i = 0 to n-1`、`array.get(a, k-1)` 等以算术计算的整数静默失效 — 当前 `Int +/-/*/% Int` 保留 Int，并由计算循环上界/数组下标/长度回归守护。
 - [阶段6][中] crates/pine-runtime/src/runtime/context.rs — 运行时侧确认阶段3历史深度耦合：series_retention.max_depth_for 源自 sema series_history，低估则 series_store.read(offset>len) 静默返回 Na（错误结果非崩溃） — 与阶段3统一为单一数据源并加端到端回归。
 - [阶段6][低] crates/pine-runtime/src/error.rs — RuntimeError 仅含 message，无 span，运行时错误无法回指源码（承接阶段2[低]） — 评估为运行时错误补充 span（阶段16）。
-- [阶段6][信息] crates/pine-runtime/src/runtime/expressions.rs — eval_expr 递归无深度上限（深嵌套/内联放大 HIR 可栈溢出）；program.symbols.iter().find() 普遍线性扫描；HistoricalRuntime 巨型结构体实时每 Forming 更新整体 clone — 统一递归治理 + 预构建符号索引 + 评估 forming 增量更新。
+- [阶段6][信息] crates/pine-runtime/src/runtime/expressions.rs — eval_expr 递归无深度上限已由 `MAX_RUNTIME_EVAL_DEPTH` 关闭；`program.symbols.iter().find()` 普遍线性扫描与 `HistoricalRuntime` 巨型结构体实时每 Forming 更新整体 clone 仍为性能观察 — 预构建符号索引 + 评估 forming 增量更新。
 - [阶段7][高][已关闭] crates/pine-runtime/src/builtins/ta/averages.rs 等 — 整数坍缩缺陷曾扩散至 ta.*/math.* 长度参数（算术计算长度取 0 → 返回 Na） — 已随阶段6根因关闭，由 `computed_lengths.pine`、`runs_sma_with_computed_integer_length`、`runs_math_sum_with_computed_integer_length` 守护。
 - [阶段7][中] crates/pine-runtime/src/builtins/time.rs — 时区仅支持 UTC 等价物（is_supported_utc_timezone），非 UTC 时区使 time 组件/str.format_time 报 RuntimeError，与 Pine IANA/交易所时区不兼容 — 对照 LANGUAGE_SCOPE 确认是否有意裁剪。
 - [阶段7][信息] crates/pine-runtime/src/builtins/ta/averages.rs — ema/rma/rsi 暖机期以首个源值播种，可能与 TradingView 首 length 根有偏差；math.* 函数与二元 `Int +/-/*/% Int` 当前均保留 Int — 用 conformance fixtures 继续核实暖机口径。
@@ -982,7 +982,7 @@ run_historical(program, bars)
 - [阶段12][中][已关闭] crates/pine-cli/src/bars_csv.rs (parse_f64_column) — f64::from_str 曾接受 "NaN"/"inf"/"infinity"，非有限 bar 数据可入运行时 — 当前 CSV 边界拒绝非有限 OHLCV。
 - [阶段12][低/信息] crates/pine-cli/src/commands/run.rs + bars_csv.rs — 主 --bars 未在 CLI 层校验时间单调/去重（request-bars 有校验）；fs::read_to_string 一次性读入无大小上限（超大 CSV OOM）；json_escape 在 cli 与 runtime 重复实现。
 - [阶段3][信息] crates/pine-sema/src/analyzer/unsupported.rs — 不支持原因串夹带内部阶段标签（Phase J/1/L）且粒度不一 — 统一面向用户措辞。
-- [阶段4][低] crates/pine-sema/src/lowering/mod.rs — UDF/方法/导入函数按调用点内联，递归无深度/规模上限，深链/广复用 UDF 使 HIR 按乘法膨胀，可栈溢出/内存激增 — 与阶段1/3 递归上限合并治理。
+- [阶段4][低][已关闭] crates/pine-sema/src/lowering/mod.rs — UDF/方法/导入函数按调用点内联曾无深度/规模上限 — 当前 `LoweringLimits` 约束 inline 深度、HIR 节点数、临时符号数，超限报 `E_LOWERING_BUDGET`。
 - [阶段4][信息] crates/pine-sema/src/analysis.rs — root 源被解析两次（validate_modules 与 analyze_input 各一次） — 复用一份 AST 以减开销。
 - [阶段4][信息] crates/pine-sema/src/modules_rewrite.rs — 常量按名整体替换，库体内同名局部符号可被意外替换 — 按作用域限定替换范围（当前子集下概率低）。
 - [阶段5][信息] crates/pine-builtins/src/constants/floats.rs — syminfo.mintick=0.01 / pointvalue=1.0 硬编码常量，跨品种数值偏差 — 运行时阶段核实是否有覆盖路径。
@@ -992,20 +992,20 @@ run_historical(program, bars)
 - [阶段13][低] crates/pine-python/src/lib.rs — compile_script/run_script 失败把诊断拼成单一字符串抛 PyValueError，丢失结构化 code/severity/span，调用方需另行 analyze_script 二次分析 — 评估让异常携带结构化诊断。
 - [阶段13][低] crates/pine-python/src/lib.rs — compile/run 对任意严重度诊断都拒绝（!diagnostics.is_empty()），与 analyze_script 的 executable=hir.is_some() 不对齐；未来 warning/info 诊断会致 executable=True 但 compile 抛错（当前 sema 不发非 error 诊断故不可达，三 host 一致） — 改为按 has_errors() 门控。
 - [阶段13][信息] crates/pine-python/src/lib.rs — Python 无 profile API（CLI 有 --profile→profiled JSON，WASM 亦无）；run 全程持 GIL 未 allow_threads；value_to_py 每标量分配单元素 PyList 取 item0（长序列 O(n) 额外分配） — 评估补 profile 入口 + allow_threads + 直接构造对象。
-- [阶段13][信息] crates/pine-python/src/lib.rs — bar 输入已拒绝非有限 OHLCV；主 bars 仍不校验 time 单调，dict 路径静默忽略多余键、sequence 路径严格 6 元宽严不一；深递归栈溢出 SIGABRT 经 Python 暴露为不可捕获的进程级中止（承接阶段1/3/4/6） — 随阶段16 统一治理。
+- [阶段13][信息] crates/pine-python/src/lib.rs — bar 输入已拒绝非有限 OHLCV；主 bars 仍不校验 time 单调，dict 路径静默忽略多余键、sequence 路径严格 6 元宽严不一；深递归栈溢出主线已由 core 深度预算关闭 — 剩余输入形态差异可后续治理。
 - [阶段14][中][已关闭] crates/pine-wasm/src/run.rs + output/json.rs — 非有限浮点在 WASM 字符串边界曾放大为浏览器 JSON.parse 失败 — 当前 run 输出非有限→null，CSV 非有限 OHLCV 被拒绝，并有 WASM 回归。
 - [阶段14][中][已关闭] crates/pine-wasm/src/run.rs (parse_bars_csv/parse_f64_column) — 与 CLI 同源，f64 parse 曾接受 NaN/inf/infinity 注入运行时 — 当前 CSV 边界拒绝非有限。
 - [阶段14][低] crates/pine-wasm/src/request_bars.rs + library_sources.rs — serde_json 解析对象时重复 SYMBOL:TIMEFRAME / 库源键被静默坍缩为最后一个（测试已文档化），不触发 provider DuplicateKey；而 CLI 多 --request-bars 同键会报错 — 跨 host 去重语义不一致，统一为显式拒绝或文档明示。
 - [阶段14][信息] crates/pine-wasm/src/lib.rs + pine-cli/src/bars_csv.rs + 三处 json_escape — parse_bars_csv 在 wasm/cli 完全复制、json_escape 在 runtime/cli/wasm 三份（承接阶段12[信息]）；analysis 报告 WASM 手写 JSON 与 Python dict 双序列化器需手工同步（run 输出共用 public_runtime_result_json 无此问题） — 提取共享模块/收敛单一 writer。
-- [阶段14][信息] crates/pine-wasm/Cargo.toml + src/request/chart.rs — WASM 无 profile API（同 Python 缺、CLI 有）；未设 console_error_panic_hook，栈溢出 trap 在 JS 端无消息难诊断；chart 上下文三 host 均硬编码 ChartContext::default()（NASDAQ:AAPL）不可配置 — 评估补 profile 入口/panic hook/可配置 chart 上下文（阶段16）。
+- [阶段14][信息] crates/pine-wasm/Cargo.toml + src/request/chart.rs — WASM 无 profile API（同 Python 缺、CLI 有）；深递归栈溢出主线已关闭，但未设 console_error_panic_hook 仍影响意外 panic 可观测性；chart 上下文三 host 均硬编码 ChartContext::default()（NASDAQ:AAPL）不可配置 — 评估补 profile 入口/panic hook/可配置 chart 上下文（阶段16）。
 - [阶段15][中] crates/pine-cli/src/conformance.rs — conformance 状态准确性无机器校验：validate_fixture_paths 仅查文件存在，无测试验证 fixture 真用了所声明 feature、status(supported/partial/unsupported) 与实现一致；115 个 partial 无边界断言 — 加 feature↔fixture 语义链接校验/partial 边界回归。
 - [阶段15][中] crates/pine-runtime/tests/incremental.rs — 全部 runtime fixture 仅断言「无诊断+增量==全量」不验数值；ta.*/math.* 大量指标 fixture(alma/ao/cci/dmi/sar/supertrend/tsi/vwap…) 无 golden 数值快照，承接阶段7 暖机偏差无法被捕获 — 为高风险递归指标补 golden 值/数值基准。
 - [阶段15][低][已关闭] tests/fixtures — 整数坍缩(阶段6/7)曾无回归 fixture；当前已补计算循环上界、数组下标/尺寸、`ta.*`/`math.*` 计算长度用例 — 后续保留这些 fixture 作为回归守护。
-- [阶段15][低] crates/pine-syntax/tests/fixtures.rs — 语法层 fixture 回归仅 1 个 test；深嵌套递归(阶段1[中])、多字节列号(阶段1[低])无 fixture 回归 — 补语法边界 fixture。
+- [阶段15][低][已关闭] crates/pine-syntax/tests/fixtures.rs — 语法层 fixture 回归曾仅 1 个 test；当前已补 deep_expression_limit、utf8_diagnostic_column、parse_error_recovery、malformed_number_recovery、soft_keyword_export_identifier 等 fixture。
 - [阶段15][信息] tests/fixtures/sema/unsupported_strategy_exit_{stop,stop_limit,stop_profit,limit_loss,profit_loss,profit_qty,qty_stop,trailing_partial_quantity}.pine — 8 个死 fixture 引用于零处(对应组合现已 supported，旧 unsupported 版残留) — 清理或纳入测试。
 - [阶段15][信息][已关闭] tests/fixtures — 非有限 Float→非法 JSON/不可 JSON.parse(阶段11/12/14) 曾无对应 fixture；当前已补 runtime JSON、CLI CSV、WASM CSV、Python 输出/输入回归；f64 Display 跨平台稳定性仍无跨架构快照矩阵。
 - [阶段16][中] docs/DIAGNOSTIC_CODES.md — 实测 22 个已发射诊断码未登记(E_LEX_INDENT/E_PARSE_BLOCK/FOR/FUNCTION/E_LOOP_*4/E_SCRIPT_DECL_*2/E_STRATEGY_MODE/PRICE/QTY/E_STRATEGY_EXIT_*5/E_UNKNOWN_FUNCTION/METHOD/COLOR/E_METHOD_RECEIVER_TYPE)，含 5 个 broker 运行时码；诊断码为公开 DX 契约 — 全部补登。
 - [阶段16][信息·确定性通过] core 五 crate 实测无时钟/随机/网络/文件/env 调用，chrono 关 clock；HashMap 仅按键控存储不入输出顺序；增量==全量 parity 覆盖全 runtime fixture — 残留 f64 Display 跨平台无 CI 快照矩阵。
-- [阶段16][信息·安全] runtime+builtins 执行路径实测仅 1 处守卫式 unreachable、无可达 unwrap，DoS 上限齐备；唯一系统性崩溃面=无界递归栈溢出(阶段1/3/4/6)经所有 host 暴露(Python SIGABRT/WASM trap) — 统一深度上限治理(P1)。
+- [阶段16][信息·安全] runtime+builtins 执行路径实测仅 1 处守卫式 unreachable、无可达 unwrap，DoS 上限齐备；历史系统性崩溃面=无界递归栈溢出(阶段1/3/4/6)已由 parser/sema/lowering/runtime 深度预算关闭 — 继续保留深嵌套回归。
 - [阶段16][信息·合规通过] COMPATIBILITY_AND_LEGAL.md clean-room 政策完备且被遵守，代码仅 1 处注释陈述 Pine == 语义，无品牌/错误文案复制 — 轻微：包元数据 repository 空且无非关联声明(承接阶段0)。
-- [阶段16][汇总] 历史 P0 整数坍缩(高,正确性根因) 与 P1-b 非有限边界(中) 已关闭并有回归守护；后续优先修复排序转为 P1 无界递归/ta.* 历史耦合(中) → P2 TradingView 口径分歧 → P3 工程文档清理；全部 16 阶段审查完成。
+- [阶段16][汇总] 历史 P0 整数坍缩(高,正确性根因)、P1-a 无界递归崩溃面(中) 与 P1-b 非有限边界(中) 已关闭并有回归守护；后续优先修复排序转为 P1 ta.* 历史耦合(中) → P2 TradingView 口径分歧 → P3 工程文档清理；全部 16 阶段审查完成。
