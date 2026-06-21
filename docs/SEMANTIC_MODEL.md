@@ -445,9 +445,9 @@ top-level scalar `int`/`float`/`bool`/`string`/`color` fields. `Type.new(...)`
 constructs runtime values, field reads are typed from the local UDT
 declaration, and ordinary variables, local for-expression constructor results,
 top-level/block-local/loop-local typed declarations initialized from
-same-local-UDT ternary, switch, or `if` expressions, top-level/block-local
-typed declarations initialized or reassigned from same-local-UDT `for`
-expressions, plus `var` declarations initialized from `na`, same-UDT
+same-local-UDT ternary, switch, or `if` expressions, top-level/block-local/
+loop-local typed declarations initialized or reassigned from same-local-UDT
+`for` expressions, plus `var` declarations initialized from `na`, same-UDT
 constructors, same-UDT ternary expressions, same-UDT switch expressions,
 same-UDT `if` expressions, or same-UDT `for` expressions may hold those values.
 Local scalar fields can be reassigned with `value.field := expr`

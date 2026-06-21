@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed loop-local typed UDT declarations initialized and
+  reassigned from same-local-UDT `for` expressions.
 - Added fixture-backed block-local typed UDT declarations initialized and
   reassigned from same-local-UDT `for` expressions.
 - Added fixture-backed top-level typed UDT declarations initialized and

@@ -527,13 +527,13 @@ Delivered scope:
 - Local scalar-field user-defined types with `Type.new(...)`, field reads,
   ordinary variables, local for-expression constructor results,
   top-level/block-local/loop-local same-UDT ternary, switch, or `if`
-  expression initialization, top-level/block-local same-UDT `for` expression
-  initialization and reassignment, `var` persistence from `na`, same-UDT
-  constructors, same-UDT ternary expressions, same-UDT switch expressions,
-  same-UDT `if` expressions, or same-UDT `for` expressions, scalar field
-  mutation outside UDF/method bodies including branch and `for` loop bodies, and
-  UDF constructor returns, directly, through nested pure constructor-helper UDF
-  calls, or through
+  expression initialization, top-level/block-local/loop-local same-UDT `for`
+  expression initialization and reassignment, `var` persistence from `na`,
+  same-UDT constructors, same-UDT ternary expressions, same-UDT switch
+  expressions, same-UDT `if` expressions, or same-UDT `for` expressions, scalar
+  field mutation outside UDF/method bodies including branch and `for` loop
+  bodies, and UDF constructor returns, directly, through nested pure
+  constructor-helper UDF calls, or through
   same-local-UDT ternary, switch, `if` expression, final if/else constructor
   branches, or final for bodies, from local UDT parameter scalar fields, scalar
   fields read through block-local UDT aliases of those

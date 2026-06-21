@@ -154,6 +154,14 @@ for typed_switch_i = 0 to 1
         => Point.new(high + typed_switch_i + 245, low)
     loop_typed_switch_sum := loop_typed_switch_sum + loop_typed_switch.x + loop_typed_switch.y
 plot(loop_typed_switch_sum)
+loop_typed_for_sum = close > 0 ? 0.0 : 0.0
+for typed_for_i = 0 to 1
+    Point loop_typed_for = for typed_for_j = 0 to 1
+        Point.new(high + typed_for_i + typed_for_j + 430, low)
+    loop_typed_for := for typed_for_j = 0 to 1
+        Point.new(high + typed_for_i + typed_for_j + 435, low)
+    loop_typed_for_sum := loop_typed_for_sum + loop_typed_for.x + loop_typed_for.y
+plot(loop_typed_for_sum)
 while_typed_sum = close > 0 ? 0.0 : 0.0
 while_typed_i = 0
 while while_typed_i < 2
