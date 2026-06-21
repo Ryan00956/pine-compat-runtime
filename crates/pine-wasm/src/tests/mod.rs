@@ -478,6 +478,19 @@ fn run_script_csv_returns_array_typed_declarations_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_chart_point_array_typed_declarations_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/chart_point_array_typed_declarations.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("chart point array typed declarations fixture should run");
+
+    assert_snapshot("runtime_chart_point_array_typed_declarations.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_array_helpers_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/array_helpers.pine"),
