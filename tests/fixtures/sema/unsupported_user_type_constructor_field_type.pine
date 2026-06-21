@@ -1,0 +1,6 @@
+//@version=5
+type Point
+    float x
+
+p = Point.new(true)
+plot(close)
