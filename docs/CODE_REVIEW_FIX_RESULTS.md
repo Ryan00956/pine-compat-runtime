@@ -314,33 +314,39 @@ schema/version impact.
   - `crates/pine-runtime/src/builtins/ta/*`
   - builtin signature/runtime metadata
 
-**Classification: Confirmed architectural drift risk, not a direct isolated bug**
+**Classification: Confirmed architectural drift risk, partially addressed**
 
-`crates/pine-sema/src/history.rs` manually records implicit history requirements
-for selected `ta.*` calls. Runtime implementations live separately in
-`crates/pine-runtime/src/builtins/ta/*`. The risk is real: if runtime starts
-reading deeper history than sema retained, output can silently become `na`.
-However, this item is about preventing future drift and creating a shared source
-of truth; it is not a concrete current failing fixture like CR-015/CR-019.
+`crates/pine-builtins/src/history.rs` now declares implicit history
+requirements for selected `ta.*` calls, and `crates/pine-sema/src/history.rs`
+consumes that metadata instead of owning a separate callee table. Runtime
+implementations still live separately in `crates/pine-runtime/src/builtins/ta/*`.
+The remaining risk is real: if runtime starts reading deeper history than the
+shared metadata retains, output can silently become `na`. This item is still not
+a concrete current failing fixture like CR-015/CR-019.
 
 **Action**
 
-No code change in this pass. A proper fix should be a focused metadata phase:
-define builtin history requirements once, consume that metadata from sema, and
-add a reconciliation test that every runtime builtin with implicit source
-history has declared sema history behavior.
+Introduced a focused metadata phase: builtin history requirements are declared
+once in `pine-builtins` and consumed by sema. Added a metadata registration test
+and kept the existing sema lowering regression over the major implicit `ta.*`
+requirements. Remaining work is runtime/metadata reconciliation plus
+oracle-backed or golden numeric fixtures.
 
 **Verification**
 
-- `crates/pine-sema/src/history.rs` contains the manual `record_call_history`
-  table for `ta.tr`, `ta.atr`, `ta.dmi`, `ta.sar`, `ta.change`, `ta.mom`,
-  `ta.roc`, and cross helpers.
+- `crates/pine-builtins/src/history.rs` contains the shared
+  `BUILTIN_HISTORY_METADATA` table for `ta.tr`, `ta.atr`, `ta.dmi`, `ta.sar`,
+  `ta.change`, `ta.mom`, `ta.roc`, and cross helpers.
+- `crates/pine-sema/src/history.rs` consumes
+  `pine_builtins::builtin_history_requirement(...)`.
 - Runtime TA implementations are separate from that table under
   `crates/pine-runtime/src/builtins/ta/`.
-- Existing sema lowering tests cover some inferred history behavior but do not
-  enforce a runtime/sema metadata reconciliation contract.
+- `history_metadata_names_are_registered_builtins` ensures declared history
+  metadata names have registered builtin signatures.
+- `infers_implicit_ta_history_requirements_by_series` covers inferred history
+  behavior, but runtime/metadata reconciliation is still pending.
 
-**Result: Deferred, no fix applied**
+**Result: Partially fixed; runtime reconciliation remains**
 
 ---
 
@@ -561,11 +567,11 @@ supported behavior.
 
 **Action**
 
-No code change in this pass. Treat as part of the CR-010 history-metadata phase:
-make implicit history requirements a shared declaration and add reconciliation
-tests. A debug/test-only assertion can be considered once runtime history reads
-can distinguish "normal warmup/out-of-range" from "declared retention too
-small".
+The CR-010 metadata phase has started: implicit history requirements are now a
+shared declaration consumed by sema. Continue with runtime/metadata
+reconciliation tests. A debug/test-only assertion can be considered once runtime
+history reads can distinguish "normal warmup/out-of-range" from "declared
+retention too small".
 
 **Verification**
 
@@ -576,7 +582,7 @@ small".
 - `SeriesStore::read` returns `PineValue::Na` when the requested offset is not in
   the retained buffer.
 
-**Result: Deferred, no fix applied**
+**Result: Partially addressed via shared metadata; runtime retention diagnostics remain deferred**
 
 ---
 
@@ -2248,6 +2254,6 @@ outcomes are tracked under the individual CR entries:
 - recursion/resource limits were fixed under CR-005/012/018/037/047/061;
 - non-finite input/output boundaries were fixed and regression-tested under
   CR-031/034/043/048/049/058;
-- `ta.*` history coupling remains a structural follow-up under CR-010/016/021,
-  because it needs shared metadata or oracle-backed fixture work rather than a
-  small local patch.
+- `ta.*` history coupling remains a structural follow-up under CR-010/016/021:
+  shared metadata now exists, but runtime reconciliation and oracle-backed
+  fixture work are still pending.

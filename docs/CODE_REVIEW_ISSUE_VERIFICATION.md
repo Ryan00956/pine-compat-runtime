@@ -1893,47 +1893,47 @@ or nuance during verification.
 - Original claim: sema hard-codes implicit `ta.*` lookback requirements, and this
   table can drift from runtime implementation.
 
-**Status: Confirmed**
+**Status: Confirmed; partially addressed**
 
 **Current code evidence**
 
-- [history.rs](../crates/pine-sema/src/history.rs) records builtin history in a
-  hand-written `record_call_history` match:
+- [history.rs](../crates/pine-builtins/src/history.rs) declares builtin history
+  metadata for the supported implicit-history `ta.*` subset:
   - `ta.tr`, `ta.atr`, `ta.supertrend`, `ta.kc`, `ta.kcw` record `close[1]`;
   - `ta.dmi` records `high[1]`, `low[1]`, `close[1]`;
   - `ta.sar` records `high[2]`, `low[2]`, `close[1]`;
   - `ta.mfi`, `ta.tsi`, `ta.cmo`, `ta.change`, `ta.mom`, `ta.roc`, and cross
     helpers record source-specific lookbacks.
+- [history.rs](../crates/pine-sema/src/history.rs) now consumes
+  `pine_builtins::builtin_history_requirement(...)` instead of owning a
+  separate callee table.
 - Runtime implementations independently read prior values:
   - `previous_close()` / `previous_builtin_f64(...)`;
   - `builtin_f64_at("low", 2)` and `builtin_f64_at("high", 2)` in SAR logic;
   - direct `series_store.read(series_id, 1)` / length reads in `ta` flow helpers.
-- There is no shared metadata table tying builtin signatures, sema history
-  requirements, and runtime implementation together.
+- The remaining coupling is runtime implementation drift: runtime reads are not
+  yet reconciled against the shared metadata table by a test or runtime helper.
 
 **Impact**
 
-Medium correctness risk. This pass does not prove the current table is wrong for
-any specific builtin. The confirmed issue is maintainability and silent failure:
-if runtime later reads deeper history than sema retained, results can become
-`Na` without a diagnostic.
+Medium correctness risk. This pass does not prove the current metadata is wrong
+for any specific builtin. The confirmed remaining issue is maintainability and
+silent failure: if runtime later reads deeper history than metadata/sema
+retained, results can become `Na` without a diagnostic.
 
 **Recommended fix**
 
-- Introduce a single source of truth for implicit history requirements. Practical
-  options:
-  - builtin metadata alongside `BuiltinSignature`;
-  - a runtime-owned `BuiltinHistoryRequirement` table consumed by sema;
-  - explicit tests that reconcile sema requirements against a declared table for
-    every builtin with implicit history.
-- Avoid deriving this from source strings or ad hoc runtime scans.
+- Keep the shared builtin history metadata as the sema-facing source of truth.
+- Add explicit tests that reconcile runtime implicit history reads against the
+  declared table for every builtin with implicit history.
+- Avoid relying only on ad hoc runtime source scans.
 - Add end-to-end regression for the high-risk builtins: `ta.sar`, `ta.dmi`,
   `ta.supertrend`, `ta.kc/kcw`, `ta.tsi`, `ta.mfi`, and cross helpers.
 
 **Verification after fix**
 
 - Add a reconciliation unit test that fails when a builtin with runtime history
-  use lacks declared sema history requirements.
+  use lacks declared history metadata.
 - Run `cargo test -p pine-sema` and `cargo test -p pine-runtime`.
 
 ---
@@ -1966,7 +1966,8 @@ depth looks like normal warmup `na` rather than an internal contract violation.
 
 **Recommended fix**
 
-- Fix CR-010 by making implicit history requirements a shared declaration.
+- Continue CR-010 by reconciling runtime history reads against the shared
+  metadata declaration.
 - In debug/test builds, consider adding an assertion or diagnostic path when a
   builtin reads beyond declared retention. This could be implemented as a
   runtime history access helper that knows the required offset and callsite.

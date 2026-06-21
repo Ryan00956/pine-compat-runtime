@@ -207,8 +207,8 @@ impl HistoryRequirementCollector {
         match &expr.kind {
             HirExprKind::Literal(_) | HirExprKind::Symbol(_) => {}
             HirExprKind::Builtin(name) => {
-                if name == "ta.tr" {
-                    self.record_builtin_history("close", 1);
+                if let Some(requirement) = pine_builtins::builtin_history_requirement(name) {
+                    self.record_builtin_history_requirement(requirement, &[]);
                 }
             }
             HirExprKind::Unary { expr, .. } => self.visit_expr(expr),
@@ -295,58 +295,84 @@ impl HistoryRequirementCollector {
     }
 
     fn record_call_history(&mut self, callee: &str, args: &[HirCallArg]) {
-        match callee {
-            "ta.tr" | "ta.atr" | "ta.supertrend" | "ta.kc" | "ta.kcw" => {
-                self.record_builtin_history("close", 1)
-            }
-            "ta.dmi" => {
-                self.record_builtin_history("high", 1);
-                self.record_builtin_history("low", 1);
-                self.record_builtin_history("close", 1);
-            }
-            "ta.sar" => {
-                self.record_builtin_history("high", 2);
-                self.record_builtin_history("low", 2);
-                self.record_builtin_history("close", 1);
-            }
-            "ta.mfi" => {
-                self.record_constant_history(args.first().and_then(|arg| arg.value.series_id), 1)
-            }
-            "ta.tsi" => {
-                self.record_constant_history(args.first().and_then(|arg| arg.value.series_id), 1)
-            }
-            "ta.cmo" => {
-                self.record_constant_history(args.first().and_then(|arg| arg.value.series_id), 1)
-            }
-            "ta.change" => self.record_optional_length_history(args),
-            "ta.mom" | "ta.roc" => self.record_required_length_history(args),
-            "ta.cross" | "ta.crossover" | "ta.crossunder" => self.record_cross_history(args),
-            _ => {}
+        if let Some(requirement) = pine_builtins::builtin_history_requirement(callee) {
+            self.record_builtin_history_requirement(requirement, args);
         }
     }
 
-    fn record_optional_length_history(&mut self, args: &[HirCallArg]) {
-        let series_id = args.first().and_then(|arg| arg.value.series_id);
-        match args.get(1).and_then(|arg| constant_hir_int(&arg.value)) {
+    fn record_builtin_history_requirement(
+        &mut self,
+        requirement: pine_builtins::BuiltinHistoryRequirement,
+        args: &[HirCallArg],
+    ) {
+        match requirement {
+            pine_builtins::BuiltinHistoryRequirement::BuiltinSeries(requirements) => {
+                for requirement in requirements {
+                    self.record_builtin_history(requirement.symbol, requirement.offset);
+                }
+            }
+            pine_builtins::BuiltinHistoryRequirement::SourceOffset { source_arg, offset } => self
+                .record_constant_history(
+                    args.get(source_arg).and_then(|arg| arg.value.series_id),
+                    offset,
+                ),
+            pine_builtins::BuiltinHistoryRequirement::OptionalLengthOffset {
+                source_arg,
+                length_arg,
+                default_offset,
+            } => self.record_optional_length_history(args, source_arg, length_arg, default_offset),
+            pine_builtins::BuiltinHistoryRequirement::RequiredLengthOffset {
+                source_arg,
+                length_arg,
+            } => self.record_required_length_history(args, source_arg, length_arg),
+            pine_builtins::BuiltinHistoryRequirement::Cross {
+                args: count,
+                offset,
+            } => {
+                self.record_cross_history(args, count, offset);
+            }
+        }
+    }
+
+    fn record_optional_length_history(
+        &mut self,
+        args: &[HirCallArg],
+        source_arg: usize,
+        length_arg: usize,
+        default_offset: u32,
+    ) {
+        let series_id = args.get(source_arg).and_then(|arg| arg.value.series_id);
+        match args
+            .get(length_arg)
+            .and_then(|arg| constant_hir_int(&arg.value))
+        {
             Some(length) if length > 0 => self.record_constant_history(series_id, length as u32),
             Some(_) => {}
-            None if args.len() > 1 => self.record_dynamic_history(series_id),
-            None => self.record_constant_history(series_id, 1),
+            None if args.len() > length_arg => self.record_dynamic_history(series_id),
+            None => self.record_constant_history(series_id, default_offset),
         }
     }
 
-    fn record_required_length_history(&mut self, args: &[HirCallArg]) {
-        let series_id = args.first().and_then(|arg| arg.value.series_id);
-        match args.get(1).and_then(|arg| constant_hir_int(&arg.value)) {
+    fn record_required_length_history(
+        &mut self,
+        args: &[HirCallArg],
+        source_arg: usize,
+        length_arg: usize,
+    ) {
+        let series_id = args.get(source_arg).and_then(|arg| arg.value.series_id);
+        match args
+            .get(length_arg)
+            .and_then(|arg| constant_hir_int(&arg.value))
+        {
             Some(length) if length > 0 => self.record_constant_history(series_id, length as u32),
             Some(_) => {}
             None => self.record_dynamic_history(series_id),
         }
     }
 
-    fn record_cross_history(&mut self, args: &[HirCallArg]) {
-        for arg in args.iter().take(2) {
-            self.record_constant_history(arg.value.series_id, 1);
+    fn record_cross_history(&mut self, args: &[HirCallArg], count: usize, offset: u32) {
+        for arg in args.iter().take(count) {
+            self.record_constant_history(arg.value.series_id, offset);
         }
     }
 
