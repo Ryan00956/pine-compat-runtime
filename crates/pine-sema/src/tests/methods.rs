@@ -743,6 +743,35 @@ plot(made.x + close)
 }
 
 #[test]
+fn accepts_udt_typed_local_return_from_user_method_aliases() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method makeTyped(Point p, Point other) =>
+    copy = p
+    otherCopy = other
+    px = copy.x
+    ox = otherCopy.x
+    Point made = na
+    made := Point.new(x=px + ox)
+    made
+p = Point.new(close)
+q = Point.new(open)
+made = p.makeTyped(q)
+plot(made.x + close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_typed_constructor_local_return_from_user_method() {
     let analysis = analyze(
         r#"type Point
