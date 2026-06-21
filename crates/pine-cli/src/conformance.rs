@@ -198,12 +198,12 @@ fn validate_status_fixture_paths(
             }
         }
         "unsupported" => {
-            if !fixtures
-                .iter()
-                .any(|fixture| fixture.starts_with("tests/fixtures/sema/unsupported_"))
-            {
+            if !fixtures.iter().any(|fixture| {
+                fixture.starts_with("tests/fixtures/sema/unsupported_")
+                    || fixture.starts_with("tests/fixtures/syntax/")
+            }) {
                 return Err(format!(
-                    "line {line_number}: unsupported feature `{feature}` must reference unsupported sema diagnostic fixture coverage"
+                    "line {line_number}: unsupported feature `{feature}` must reference unsupported sema or syntax diagnostic fixture coverage"
                 ));
             }
         }

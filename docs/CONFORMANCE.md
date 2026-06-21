@@ -1309,7 +1309,8 @@ Conformance metadata is validated before matrix output is trusted:
 - Every fixture path must exist in the workspace.
 - `supported` and `partial` entries must cite executable, realtime, syntax,
   positive semantic, or regression coverage.
-- `unsupported` entries must cite unsupported semantic diagnostic fixtures.
+- `unsupported` entries must cite unsupported semantic diagnostic fixtures or
+  syntax diagnostic fixtures for parser-level boundaries.
 - Every supported built-in registry entry and known unsupported platform family
   must remain represented.
 

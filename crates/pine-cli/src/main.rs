@@ -275,14 +275,26 @@ mod tests {
         let unsupported_error = try_conformance_entries_from_tsv(
             "feature\tstatus\tnotes\tfixtures\nrequest.*\tunsupported\tnotes\ttests/fixtures/runtime/io.pine\n",
         )
-        .expect_err("unsupported feature should require unsupported sema fixture");
-        assert!(unsupported_error.contains("unsupported sema diagnostic fixture coverage"));
+        .expect_err("unsupported feature should require diagnostic fixture coverage");
+        assert!(
+            unsupported_error.contains("unsupported sema or syntax diagnostic fixture coverage")
+        );
 
         let supported_error = try_conformance_entries_from_tsv(
             "feature\tstatus\tnotes\tfixtures\nindicator\tsupported\tnotes\ttests/fixtures/sema/unsupported_request.pine\n",
         )
         .expect_err("supported feature should require executable or positive fixture");
         assert!(supported_error.contains("must reference runtime"));
+    }
+
+    #[test]
+    fn accepts_unsupported_syntax_diagnostic_fixture_paths() {
+        let entries = try_conformance_entries_from_tsv(
+            "feature\tstatus\tnotes\tfixtures\nexpression nesting depth\tunsupported\tnotes\ttests/fixtures/syntax/deep_expression_limit.pine\n",
+        )
+        .expect("unsupported parser diagnostics should allow syntax fixture coverage");
+
+        assert_eq!(entries[0].feature, "expression nesting depth");
     }
 
     #[test]
