@@ -1,0 +1,11 @@
+//@version=5
+indicator("User type typed var rollback")
+type Point
+    float x
+
+var Point p = na
+if bar_index == 0
+    p := Point.new(close)
+else
+    p := Point.new(p.x + 1)
+plot(p.x)
