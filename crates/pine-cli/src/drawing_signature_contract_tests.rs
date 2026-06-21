@@ -44,6 +44,7 @@ const ARRAY_NUMERIC_ELEMENT_METHOD_NAMES: &[&str] = &[
     "array.range",
     "array.median",
     "array.mode",
+    "array.percentile_nearest_rank",
 ];
 
 const ARRAY_SERIES_FLOAT_METHOD_NAMES: &[&str] = &[
@@ -526,6 +527,7 @@ fn array_series_float_accepts_doc(accepts: Accepts) -> &'static str {
 fn array_numeric_element_accepts_doc(accepts: Accepts) -> &'static str {
     match accepts {
         Accepts::NumericArray => "float-array|int-array",
+        Accepts::SeriesOrSimpleNumeric => "numeric-compatible",
         other => accepts_doc(other),
     }
 }
