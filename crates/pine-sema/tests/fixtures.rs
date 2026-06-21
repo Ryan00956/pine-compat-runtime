@@ -5390,6 +5390,14 @@ fn reports_unsupported_negative_history_fixture() {
 }
 
 #[test]
+fn reports_unsupported_expression_depth_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_expression_depth.pine",
+        "E_SEMA_EXPR_DEPTH",
+    );
+}
+
+#[test]
 fn reports_unsupported_recursive_function_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_recursive_function.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
