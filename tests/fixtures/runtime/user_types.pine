@@ -77,6 +77,16 @@ for typed_ternary_i = 0 to 1
     loop_typed_ternary := typed_ternary_i == 1 ? Point.new(high + typed_ternary_i + 200, low) : Point.new(high + typed_ternary_i + 205, low)
     loop_typed_ternary_sum := loop_typed_ternary_sum + loop_typed_ternary.x + loop_typed_ternary.y
 plot(loop_typed_ternary_sum)
+loop_typed_switch_sum = close > 0 ? 0.0 : 0.0
+for typed_switch_i = 0 to 1
+    Point loop_typed_switch = switch typed_switch_i
+        0 => Point.new(high + typed_switch_i + 230, low)
+        => Point.new(high + typed_switch_i + 235, low)
+    loop_typed_switch := switch typed_switch_i
+        1 => Point.new(high + typed_switch_i + 240, low)
+        => Point.new(high + typed_switch_i + 245, low)
+    loop_typed_switch_sum := loop_typed_switch_sum + loop_typed_switch.x + loop_typed_switch.y
+plot(loop_typed_switch_sum)
 while_typed_sum = close > 0 ? 0.0 : 0.0
 while_typed_i = 0
 while while_typed_i < 2
@@ -101,6 +111,18 @@ while while_typed_ternary_i < 2
     while_typed_ternary_sum := while_typed_ternary_sum + while_typed_ternary.x + while_typed_ternary.y
     while_typed_ternary_i := while_typed_ternary_i + 1
 plot(while_typed_ternary_sum)
+while_typed_switch_sum = close > 0 ? 0.0 : 0.0
+while_typed_switch_i = 0
+while while_typed_switch_i < 2
+    Point while_typed_switch = switch while_typed_switch_i
+        0 => Point.new(high + while_typed_switch_i + 250, low)
+        => Point.new(high + while_typed_switch_i + 255, low)
+    while_typed_switch := switch while_typed_switch_i
+        1 => Point.new(high + while_typed_switch_i + 260, low)
+        => Point.new(high + while_typed_switch_i + 265, low)
+    while_typed_switch_sum := while_typed_switch_sum + while_typed_switch.x + while_typed_switch.y
+    while_typed_switch_i := while_typed_switch_i + 1
+plot(while_typed_switch_sum)
 p.x := high
 plot(p.x + p.y)
 branch = Point.new(close, open)

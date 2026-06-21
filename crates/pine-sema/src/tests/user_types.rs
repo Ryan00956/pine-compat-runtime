@@ -487,6 +487,43 @@ plot(sum)
 }
 
 #[test]
+fn accepts_loop_local_user_type_typed_declaration_with_switch_initializer() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+sum = close > 0 ? 0.0 : 0.0
+for i = 0 to 1
+    Point p = switch i
+        0 => Point.new(close + i, open)
+        => Point.new(high + i, low)
+    p := switch i
+        1 => Point.new(high + i, low)
+        => Point.new(close + i, open)
+    sum := sum + p.x + p.y
+while sum > 0
+    Point p = switch bar_index
+        0 => Point.new(close, open)
+        1 => Point.new(high, low)
+        => Point.new(close + 1, open)
+    p := switch bar_index
+        3 => Point.new(high, low)
+        => Point.new(close, open)
+    sum := sum - p.x - p.y
+plot(sum)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udf_local_user_type_typed_declaration_with_na_initializer() {
     let analysis = analyze(
         r#"type Point
