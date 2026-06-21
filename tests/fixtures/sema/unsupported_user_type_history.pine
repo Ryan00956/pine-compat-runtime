@@ -1,0 +1,7 @@
+//@version=5
+type Point
+    float x
+
+p = Point.new(close)
+prior = p[1]
+plot(prior.x)
