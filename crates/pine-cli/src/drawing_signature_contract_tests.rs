@@ -64,6 +64,15 @@ const ARRAY_ORDERING_METHOD_NAMES: &[&str] = &["array.sort", "array.sort_indices
 
 const ARRAY_JOIN_METHOD_NAMES: &[&str] = &["array.join"];
 
+const ARRAY_ELEMENT_READER_METHOD_NAMES: &[&str] = &[
+    "array.get",
+    "array.pop",
+    "array.remove",
+    "array.shift",
+    "array.first",
+    "array.last",
+];
+
 const ARRAY_BINARY_SEARCH_METHOD_NAMES: &[&str] = &[
     "array.binary_search",
     "array.binary_search_leftmost",
@@ -222,6 +231,21 @@ fn array_join_builtin_signatures_stay_in_sync_with_docs() {
 }
 
 #[test]
+fn array_element_reader_builtin_signatures_stay_in_sync_with_docs() {
+    let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
+    let docs = fs::read_to_string(&docs_path)
+        .unwrap_or_else(|err| panic!("failed to read {}: {err}", docs_path.display()));
+
+    for name in ARRAY_ELEMENT_READER_METHOD_NAMES {
+        let signature = pine_builtins::PHASE_1_BUILTINS
+            .iter()
+            .find(|signature| signature.name == *name)
+            .unwrap_or_else(|| panic!("missing builtin signature for `{name}`"));
+        assert_array_element_reader_signature_documented(&docs, signature);
+    }
+}
+
+#[test]
 fn array_binary_search_builtin_signatures_stay_in_sync_with_docs() {
     let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
     let docs = fs::read_to_string(&docs_path)
@@ -359,6 +383,17 @@ fn assert_array_ordering_signature_documented(
 
 fn assert_array_join_signature_documented(docs: &str, signature: &pine_builtins::BuiltinSignature) {
     let expected = format_array_join_signature(signature);
+    assert!(
+        docs.lines().any(|line| line == expected),
+        "BUILTIN_SIGNATURES.md should document `{expected}`"
+    );
+}
+
+fn assert_array_element_reader_signature_documented(
+    docs: &str,
+    signature: &pine_builtins::BuiltinSignature,
+) {
+    let expected = format_array_element_reader_signature(signature);
     assert!(
         docs.lines().any(|line| line == expected),
         "BUILTIN_SIGNATURES.md should document `{expected}`"
@@ -597,6 +632,28 @@ fn format_array_join_signature(signature: &pine_builtins::BuiltinSignature) -> S
     )
 }
 
+fn format_array_element_reader_signature(signature: &pine_builtins::BuiltinSignature) -> String {
+    let params = signature
+        .params
+        .iter()
+        .map(|param| {
+            let optional = if param.optional { "?" } else { "" };
+            format!(
+                "{}{}: {}",
+                param.name,
+                optional,
+                array_element_reader_accepts_doc(param.accepts)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!(
+        "{}({params}) -> {}",
+        signature.name,
+        array_element_reader_return_doc(signature.returns)
+    )
+}
+
 fn format_array_binary_search_signature(signature: &pine_builtins::BuiltinSignature) -> String {
     let params = signature
         .params
@@ -716,6 +773,14 @@ fn array_join_accepts_doc(accepts: Accepts) -> &'static str {
     }
 }
 
+fn array_element_reader_accepts_doc(accepts: Accepts) -> &'static str {
+    match accepts {
+        Accepts::Array => ALL_ARRAY_DOC,
+        Accepts::SimpleInt => "simple int",
+        other => accepts_doc(other),
+    }
+}
+
 fn array_same_kind_accepts_doc(name: &str, accepts: Accepts) -> &'static str {
     match (name, accepts) {
         ("id2", Accepts::Array) => "same array kind",
@@ -786,6 +851,13 @@ fn array_numeric_element_return_doc(returns: ReturnSpec) -> &'static str {
     match returns {
         ReturnSpec::ArrayNumeric(0) => "series element",
         other => panic!("unsupported array numeric element return {other:?}"),
+    }
+}
+
+fn array_element_reader_return_doc(returns: ReturnSpec) -> &'static str {
+    match returns {
+        ReturnSpec::ArrayElement(0) => "series element",
+        other => panic!("unsupported array element reader return {other:?}"),
     }
 }
 
