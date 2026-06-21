@@ -500,6 +500,17 @@ fn run_script_csv_returns_computed_array_operands_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_array_type_alias_declarations_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/array_type_alias_declarations.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("array type-alias declarations fixture should run");
+
+    assert_snapshot("runtime_array_type_alias_declarations.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_array_from_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/array_from.pine"),
