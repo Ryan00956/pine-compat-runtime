@@ -1,0 +1,6 @@
+//@version=5
+if close > open
+    type Point
+        float x
+
+plot(close)
