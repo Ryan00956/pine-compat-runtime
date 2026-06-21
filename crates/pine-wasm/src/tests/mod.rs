@@ -287,6 +287,17 @@ fn run_script_csv_returns_chart_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_ticker_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/ticker.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("ticker fixture should run");
+
+    assert_snapshot("runtime_ticker.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_hline_fill_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/io.pine"),
