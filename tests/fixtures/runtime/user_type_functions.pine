@@ -40,6 +40,10 @@ makeTyped(x, y) =>
     Point typed = na
     typed := Point.new(x, y)
     typed
+makeTypedConstructed(x, y) =>
+    Point typed = Point.new(x + 30, y)
+    typed := Point.new(typed.x + 5, typed.y)
+    typed
 cloneViaMake(p) => make(p.x, p.y)
 cloneViaMakeNamed(p) => makeNamed(p.x, p.y)
 cloneTernary(p, flip) => flip ? Point.new(p.x, p.y) : Point.new(p.x + 10, p.y)
@@ -92,6 +96,7 @@ madeAlias = makeAlias(close, open)
 madeNamed = makeNamed(close, open)
 madeNamedAlias = makeNamedAlias(close, open)
 madeTyped = makeTyped(close, open)
+madeTypedConstructed = makeTypedConstructed(close, open)
 plot(same.x - same.y)
 plot(same.x + same.y)
 plot(wrapped.x + wrapped.y + bar_index)
@@ -116,3 +121,4 @@ plot(madeAlias.x + madeAlias.y + bar_index)
 plot(madeNamed.x + madeNamed.y + bar_index)
 plot(madeNamedAlias.x + madeNamedAlias.y + bar_index)
 plot(madeTyped.x + madeTyped.y + bar_index)
+plot(madeTypedConstructed.x + madeTypedConstructed.y + bar_index)
