@@ -1924,6 +1924,10 @@ or nuance during verification.
 - The same file now binds `runs_supertrend_over_historical_bars` to the
   expected `close[1]` HIR retention requirement while retaining the Supertrend
   numeric sequence assertions.
+- [builtins_ta_averages.rs](../crates/pine-runtime/src/tests/builtins_ta_averages.rs)
+  now binds `runs_keltner_channels_over_historical_bars` and
+  `runs_keltner_channel_width_over_historical_bars` to the expected `close[1]`
+  HIR retention requirement while retaining their numeric sequence assertions.
 - The remaining coupling is runtime implementation drift outside that reviewed
   list: runtime reads are not yet compile-time-bound to the shared metadata by a
   runtime helper.
@@ -1944,7 +1948,7 @@ retained, results can become `Na` without a diagnostic.
 - Consider a runtime helper/debug assertion if future design needs a stronger
   binding between runtime reads and declared retention.
 - Extend end-to-end numeric regressions beyond the current
-  SAR/DMI/Supertrend coverage to the remaining high-risk builtins: `ta.kc/kcw`,
+  SAR/DMI/Supertrend/KC/KCW coverage to the remaining high-risk builtins:
   `ta.tsi`, `ta.mfi`, and cross helpers.
 
 **Verification after fix**
@@ -1984,19 +1988,20 @@ depth looks like normal warmup `na` rather than an internal contract violation.
 **Recommended fix**
 
 - Continue CR-010 by extending oracle/golden tests beyond the current
-  SAR/DMI/Supertrend retention-bound numeric regressions and by considering a
-  runtime helper/debug assertion for retention under-declaration.
+  SAR/DMI/Supertrend/KC/KCW retention-bound numeric regressions and by
+  considering a runtime helper/debug assertion for retention under-declaration.
 - In debug/test builds, consider adding an assertion or diagnostic path when a
   builtin reads beyond declared retention. This could be implemented as a
   runtime history access helper that knows the required offset and callsite.
 - Continue adding golden or fixture tests where deeper history is required after
   warmup, so a too-small buffer changes expected values and fails tests. The
-  SAR, DMI, and Supertrend paths now have retention-bound numeric regressions.
+  SAR, DMI, Supertrend, KC, and KCW paths now have retention-bound numeric
+  regressions.
 
 **Verification after fix**
 
-- Extend targeted fixtures/tests beyond the current SAR, DMI, and Supertrend
-  built-in history regressions.
+- Extend targeted fixtures/tests beyond the current SAR, DMI, Supertrend, KC,
+  and KCW built-in history regressions.
 - Run `cargo test -p pine-runtime --test incremental` and relevant numeric tests.
 
 ---

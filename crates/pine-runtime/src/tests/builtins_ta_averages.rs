@@ -298,13 +298,16 @@ plot(na(invalid_upper) ? 1 : 0)
         "{:?}",
         analysis.diagnostics
     );
+    let hir = analysis.hir.expect("HIR");
+    assert_eq!(hir.history.max_constant_offset, 1);
+    assert_builtin_series_history(&hir, "close", 1);
 
     let bars = vec![
         bar_ohlc(10.0, 11.0, 9.0, 10.0),
         bar_ohlc(12.0, 15.0, 14.0, 12.0),
         bar_ohlc(9.0, 10.0, 8.0, 9.0),
     ];
-    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let result = run_historical(&hir, &bars).expect("runtime result");
 
     assert_values_close(
         &result.plots[0].values,
@@ -347,13 +350,16 @@ plot(na(invalid) ? 1 : 0)
         "{:?}",
         analysis.diagnostics
     );
+    let hir = analysis.hir.expect("HIR");
+    assert_eq!(hir.history.max_constant_offset, 1);
+    assert_builtin_series_history(&hir, "close", 1);
 
     let bars = vec![
         bar_ohlc(10.0, 11.0, 9.0, 10.0),
         bar_ohlc(12.0, 15.0, 14.0, 12.0),
         bar_ohlc(9.0, 10.0, 8.0, 9.0),
     ];
-    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let result = run_historical(&hir, &bars).expect("runtime result");
 
     assert_values_close(
         &result.plots[0].values,
@@ -562,4 +568,33 @@ plot(invalid)
     assert_eq!(result.plots[5].values[1], PineValue::Na);
     assert_eq!(result.plots[5].values[2], PineValue::Na);
     assert_eq!(result.plots[5].values[3], PineValue::Na);
+}
+
+fn assert_builtin_series_history(
+    hir: &pine_ir::HirProgram,
+    symbol_name: &str,
+    expected_offset: u32,
+) {
+    let series_id = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == symbol_name)
+        .and_then(|symbol| symbol.series_id)
+        .unwrap_or_else(|| panic!("{symbol_name} should have a series id"));
+    let requirement = hir
+        .series_history
+        .iter()
+        .find(|requirement| requirement.series_id == series_id)
+        .unwrap_or_else(|| panic!("{symbol_name} should have a history requirement"));
+
+    assert_eq!(
+        requirement.max_constant_offset, expected_offset,
+        "{symbol_name} history requirement: {:?}",
+        requirement
+    );
+    assert!(
+        !requirement.has_dynamic_offsets,
+        "{symbol_name} history requirement: {:?}",
+        requirement
+    );
 }
