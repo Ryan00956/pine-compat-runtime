@@ -50,6 +50,15 @@ if bar_index >= 0
     Point block_typed_ternary = bar_index < 2 ? Point.new(high + 145, low) : Point.new(high + 150, low)
     block_typed_ternary := bar_index == 3 ? Point.new(high + 155, low) : Point.new(high + 160, low)
     plot(block_typed_ternary.x + block_typed_ternary.y)
+if bar_index >= 0
+    Point block_typed_switch = switch bar_index
+        0 => Point.new(high + 165, low)
+        1 => Point.new(high + 170, low)
+        => Point.new(high + 175, low)
+    block_typed_switch := switch bar_index
+        3 => Point.new(high + 180, low)
+        => Point.new(high + 185, low)
+    plot(block_typed_switch.x + block_typed_switch.y)
 loop_typed_sum = close > 0 ? 0.0 : 0.0
 for typed_i = 0 to 1
     Point loop_typed_point = na
