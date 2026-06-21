@@ -327,9 +327,10 @@ a concrete current failing fixture like CR-015/CR-019.
 **Action**
 
 Introduced a focused metadata phase: builtin history requirements are declared
-once in `pine-builtins` and consumed by sema. Added a metadata registration test
-and kept the existing sema lowering regression over the major implicit `ta.*`
-requirements. Remaining work is runtime/metadata reconciliation plus
+once in `pine-builtins` and consumed by sema. Added a metadata registration test,
+kept the existing sema lowering regression over the major implicit `ta.*`
+requirements, and added a runtime reviewed-list reconciliation test
+(`runtime_implicit_history_calls_match_shared_metadata`). Remaining work is
 oracle-backed or golden numeric fixtures.
 
 **Verification**
@@ -344,9 +345,11 @@ oracle-backed or golden numeric fixtures.
 - `history_metadata_names_are_registered_builtins` ensures declared history
   metadata names have registered builtin signatures.
 - `infers_implicit_ta_history_requirements_by_series` covers inferred history
-  behavior, but runtime/metadata reconciliation is still pending.
+  behavior.
+- `runtime_implicit_history_calls_match_shared_metadata` checks reviewed runtime
+  implicit-history reads against `BUILTIN_HISTORY_METADATA`.
 
-**Result: Partially fixed; runtime reconciliation remains**
+**Result: Partially fixed; numeric oracle/golden coverage remains**
 
 ---
 
@@ -568,10 +571,10 @@ supported behavior.
 **Action**
 
 The CR-010 metadata phase has started: implicit history requirements are now a
-shared declaration consumed by sema. Continue with runtime/metadata
-reconciliation tests. A debug/test-only assertion can be considered once runtime
-history reads can distinguish "normal warmup/out-of-range" from "declared
-retention too small".
+shared declaration consumed by sema, and reviewed runtime implicit-history reads
+are reconciled against that metadata. A debug/test-only assertion can still be
+considered once runtime history reads can distinguish "normal
+warmup/out-of-range" from "declared retention too small".
 
 **Verification**
 
@@ -582,7 +585,7 @@ retention too small".
 - `SeriesStore::read` returns `PineValue::Na` when the requested offset is not in
   the retained buffer.
 
-**Result: Partially addressed via shared metadata; runtime retention diagnostics remain deferred**
+**Result: Partially addressed via shared metadata and reviewed-list reconciliation; runtime retention diagnostics remain deferred**
 
 ---
 
@@ -2255,5 +2258,5 @@ outcomes are tracked under the individual CR entries:
 - non-finite input/output boundaries were fixed and regression-tested under
   CR-031/034/043/048/049/058;
 - `ta.*` history coupling remains a structural follow-up under CR-010/016/021:
-  shared metadata now exists, but runtime reconciliation and oracle-backed
-  fixture work are still pending.
+  shared metadata and reviewed-list runtime reconciliation now exist, but
+  oracle-backed fixture work is still pending.

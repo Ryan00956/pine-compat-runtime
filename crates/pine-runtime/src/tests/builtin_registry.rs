@@ -1,4 +1,6 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
+
+use pine_builtins::{BuiltinHistoryRequirement, BuiltinSeriesHistoryRequirement};
 
 const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "alert",
@@ -378,6 +380,127 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "year",
 ];
 
+const HISTORY_CLOSE_1: &[BuiltinSeriesHistoryRequirement] = &[BuiltinSeriesHistoryRequirement {
+    symbol: "close",
+    offset: 1,
+}];
+
+const HISTORY_DMI: &[BuiltinSeriesHistoryRequirement] = &[
+    BuiltinSeriesHistoryRequirement {
+        symbol: "high",
+        offset: 1,
+    },
+    BuiltinSeriesHistoryRequirement {
+        symbol: "low",
+        offset: 1,
+    },
+    BuiltinSeriesHistoryRequirement {
+        symbol: "close",
+        offset: 1,
+    },
+];
+
+const HISTORY_SAR: &[BuiltinSeriesHistoryRequirement] = &[
+    BuiltinSeriesHistoryRequirement {
+        symbol: "high",
+        offset: 2,
+    },
+    BuiltinSeriesHistoryRequirement {
+        symbol: "low",
+        offset: 2,
+    },
+    BuiltinSeriesHistoryRequirement {
+        symbol: "close",
+        offset: 1,
+    },
+];
+
+const RUNTIME_TA_IMPLICIT_HISTORY_CALLS: &[(&str, BuiltinHistoryRequirement)] = &[
+    (
+        "ta.tr",
+        BuiltinHistoryRequirement::BuiltinSeries(HISTORY_CLOSE_1),
+    ),
+    (
+        "ta.atr",
+        BuiltinHistoryRequirement::BuiltinSeries(HISTORY_CLOSE_1),
+    ),
+    (
+        "ta.supertrend",
+        BuiltinHistoryRequirement::BuiltinSeries(HISTORY_CLOSE_1),
+    ),
+    (
+        "ta.kc",
+        BuiltinHistoryRequirement::BuiltinSeries(HISTORY_CLOSE_1),
+    ),
+    (
+        "ta.kcw",
+        BuiltinHistoryRequirement::BuiltinSeries(HISTORY_CLOSE_1),
+    ),
+    (
+        "ta.dmi",
+        BuiltinHistoryRequirement::BuiltinSeries(HISTORY_DMI),
+    ),
+    (
+        "ta.sar",
+        BuiltinHistoryRequirement::BuiltinSeries(HISTORY_SAR),
+    ),
+    (
+        "ta.mfi",
+        BuiltinHistoryRequirement::SourceOffset {
+            source_arg: 0,
+            offset: 1,
+        },
+    ),
+    (
+        "ta.tsi",
+        BuiltinHistoryRequirement::SourceOffset {
+            source_arg: 0,
+            offset: 1,
+        },
+    ),
+    (
+        "ta.cmo",
+        BuiltinHistoryRequirement::SourceOffset {
+            source_arg: 0,
+            offset: 1,
+        },
+    ),
+    (
+        "ta.change",
+        BuiltinHistoryRequirement::OptionalLengthOffset {
+            source_arg: 0,
+            length_arg: 1,
+            default_offset: 1,
+        },
+    ),
+    (
+        "ta.mom",
+        BuiltinHistoryRequirement::RequiredLengthOffset {
+            source_arg: 0,
+            length_arg: 1,
+        },
+    ),
+    (
+        "ta.roc",
+        BuiltinHistoryRequirement::RequiredLengthOffset {
+            source_arg: 0,
+            length_arg: 1,
+        },
+    ),
+    (
+        "ta.cross",
+        BuiltinHistoryRequirement::Cross { args: 2, offset: 1 },
+    ),
+    (
+        "ta.crossover",
+        BuiltinHistoryRequirement::Cross { args: 2, offset: 1 },
+    ),
+    (
+        "ta.crossunder",
+        BuiltinHistoryRequirement::Cross { args: 2, offset: 1 },
+    ),
+];
+
 #[test]
 fn builtin_signatures_have_runtime_dispatch() {
     let runtime: BTreeSet<_> = RUNTIME_DISPATCHED_CALLS.iter().copied().collect();
@@ -406,6 +529,42 @@ fn builtin_signatures_have_runtime_dispatch() {
     assert!(
         unregistered_dispatch.is_empty(),
         "runtime dispatch names missing builtin signatures: {unregistered_dispatch:?}"
+    );
+}
+
+#[test]
+fn runtime_implicit_history_calls_match_shared_metadata() {
+    let runtime_dispatch: BTreeSet<_> = RUNTIME_DISPATCHED_CALLS.iter().copied().collect();
+    let reviewed_runtime_history: BTreeMap<_, _> =
+        RUNTIME_TA_IMPLICIT_HISTORY_CALLS.iter().copied().collect();
+    let shared_history: BTreeMap<_, _> = pine_builtins::BUILTIN_HISTORY_METADATA
+        .iter()
+        .map(|metadata| (metadata.name, metadata.requirement))
+        .collect();
+    assert_eq!(
+        reviewed_runtime_history.len(),
+        RUNTIME_TA_IMPLICIT_HISTORY_CALLS.len(),
+        "reviewed runtime history call names must be unique"
+    );
+    assert_eq!(
+        shared_history.len(),
+        pine_builtins::BUILTIN_HISTORY_METADATA.len(),
+        "shared builtin history metadata names must be unique"
+    );
+
+    let missing_dispatch: Vec<_> = reviewed_runtime_history
+        .keys()
+        .copied()
+        .filter(|name| !runtime_dispatch.contains(name))
+        .collect();
+    assert!(
+        missing_dispatch.is_empty(),
+        "reviewed runtime history calls missing runtime dispatch: {missing_dispatch:?}"
+    );
+
+    assert_eq!(
+        reviewed_runtime_history, shared_history,
+        "runtime implicit-history review list must match shared builtin history metadata"
     );
 }
 

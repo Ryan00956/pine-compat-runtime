@@ -1911,8 +1911,12 @@ or nuance during verification.
   - `previous_close()` / `previous_builtin_f64(...)`;
   - `builtin_f64_at("low", 2)` and `builtin_f64_at("high", 2)` in SAR logic;
   - direct `series_store.read(series_id, 1)` / length reads in `ta` flow helpers.
-- The remaining coupling is runtime implementation drift: runtime reads are not
-  yet reconciled against the shared metadata table by a test or runtime helper.
+- [builtin_registry.rs](../crates/pine-runtime/src/tests/builtin_registry.rs)
+  now includes `runtime_implicit_history_calls_match_shared_metadata`, which
+  compares a reviewed runtime implicit-history list against the shared metadata.
+- The remaining coupling is runtime implementation drift outside that reviewed
+  list: runtime reads are not yet compile-time-bound to the shared metadata by a
+  runtime helper.
 
 **Impact**
 
@@ -1924,16 +1928,18 @@ retained, results can become `Na` without a diagnostic.
 **Recommended fix**
 
 - Keep the shared builtin history metadata as the sema-facing source of truth.
-- Add explicit tests that reconcile runtime implicit history reads against the
-  declared table for every builtin with implicit history.
+- Keep the explicit reviewed-list reconciliation test current for every runtime
+  builtin with implicit history.
 - Avoid relying only on ad hoc runtime source scans.
+- Consider a runtime helper/debug assertion if future design needs a stronger
+  binding between runtime reads and declared retention.
 - Add end-to-end regression for the high-risk builtins: `ta.sar`, `ta.dmi`,
   `ta.supertrend`, `ta.kc/kcw`, `ta.tsi`, `ta.mfi`, and cross helpers.
 
 **Verification after fix**
 
-- Add a reconciliation unit test that fails when a builtin with runtime history
-  use lacks declared history metadata.
+- Keep `runtime_implicit_history_calls_match_shared_metadata` green when runtime
+  implicit-history reads change.
 - Run `cargo test -p pine-sema` and `cargo test -p pine-runtime`.
 
 ---
@@ -1966,8 +1972,8 @@ depth looks like normal warmup `na` rather than an internal contract violation.
 
 **Recommended fix**
 
-- Continue CR-010 by reconciling runtime history reads against the shared
-  metadata declaration.
+- Continue CR-010 by adding oracle/golden tests for high-risk indicators and by
+  considering a runtime helper/debug assertion for retention under-declaration.
 - In debug/test builds, consider adding an assertion or diagnostic path when a
   builtin reads beyond declared retention. This could be implemented as a
   runtime history access helper that knows the required offset and callsite.
