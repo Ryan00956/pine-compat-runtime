@@ -180,6 +180,19 @@ impl Parser {
                 });
             }
 
+            if let Some(colon_eq_offset) = self.nested_field_reassign_colon_eq_offset() {
+                for _ in 0..=colon_eq_offset {
+                    self.bump();
+                }
+                let value = self.parse_expr(0)?;
+                return Some(Stmt {
+                    span: start.merge(value.span),
+                    kind: StmtKind::Unsupported {
+                        feature: "nested field mutation".to_owned(),
+                    },
+                });
+            }
+
             if self.nth_at(1, TokenKind::Dot)
                 && self
                     .tokens
@@ -1110,6 +1123,21 @@ impl Parser {
         self.tokens.get(self.pos + offset).is_some_and(|token| {
             std::mem::discriminant(&token.kind) == std::mem::discriminant(&expected)
         })
+    }
+
+    fn nested_field_reassign_colon_eq_offset(&self) -> Option<usize> {
+        let mut offset = 1;
+        let mut field_count = 0;
+        while self.nth_at(offset, TokenKind::Dot)
+            && self
+                .tokens
+                .get(self.pos + offset + 1)
+                .is_some_and(|token| matches!(token.kind, TokenKind::Identifier(_)))
+        {
+            field_count += 1;
+            offset += 2;
+        }
+        (field_count >= 2 && self.nth_at(offset, TokenKind::ColonEq)).then_some(offset)
     }
 
     fn nth_identifier_is(&self, offset: usize, expected: &str) -> bool {

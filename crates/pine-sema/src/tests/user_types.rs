@@ -200,6 +200,40 @@ plot(w.inner.x + w.inner.y)
 }
 
 #[test]
+fn rejects_nested_user_type_field_mutation() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+type Wrapper
+    Point inner
+p = Point.new(close)
+w = Wrapper.new(p)
+w.inner.x := high
+plot(w.inner.x)
+"#,
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_UNSUPPORTED_FEATURE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "nested field mutation"),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn rejects_mismatched_nested_user_type_field_constructors() {
     let analysis = analyze(
         r#"type Point

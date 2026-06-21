@@ -49,6 +49,9 @@ pub(crate) fn unsupported_syntax_reason(feature: &str) -> &'static str {
         "user-defined type field mutation" => {
             "user-defined type field mutation is not supported; UDT values are immutable in the current subset"
         }
+        "nested field mutation" => {
+            "nested field mutation is not supported in the current object value subset"
+        }
         "strategy state variable mutation" => {
             "strategy state variables are read-only in the current strategy subset"
         }

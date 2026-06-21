@@ -479,4 +479,22 @@ mod tests {
         assert_eq!(field, "x");
         assert!(matches!(value.kind, ExprKind::Literal(_)));
     }
+
+    #[test]
+    fn parses_nested_field_mutation_as_unsupported_boundary() {
+        let parsed = parse("p.inner.x := 1\n");
+
+        let StmtKind::Unsupported { feature } = &parsed.program.statements[0].kind else {
+            panic!("expected unsupported nested field mutation");
+        };
+        assert_eq!(feature, "nested field mutation");
+        assert!(
+            !parsed
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR"),
+            "{:?}",
+            parsed.diagnostics
+        );
+    }
 }
