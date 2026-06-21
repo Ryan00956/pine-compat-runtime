@@ -26,6 +26,32 @@ fn reports_supported_phase_1_calls() {
 }
 
 #[test]
+fn reports_unsupported_drawing_namespace_without_unknown_function_noise() {
+    let analysis = analyze("label.set_text_wrap(na, na)\nplot(close)\n");
+    let codes: Vec<_> = analysis
+        .diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.code.as_str())
+        .collect();
+
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(
+        analysis.compatibility.unsupported[0].feature,
+        "label.set_text_wrap"
+    );
+    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
+    assert!(!codes.contains(&"E_UNKNOWN_FUNCTION"), "{codes:?}");
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("partial drawing subset")),
+        "{:?}",
+        analysis.diagnostics
+    );
+}
+
+#[test]
 fn accepts_same_context_request_security() {
     let analysis = analyze("plot(request.security(syminfo.tickerid, timeframe.period, close))\n");
 

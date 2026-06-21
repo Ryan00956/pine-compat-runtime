@@ -405,7 +405,11 @@ impl Analyzer {
             return None;
         }
 
+        let unsupported_count = self.compatibility.unsupported.len();
         self.check_feature_name(&name, callee.span);
+        if self.compatibility.unsupported.len() > unsupported_count {
+            return None;
+        }
         self.diagnostics.push(Diagnostic::error(
             "E_UNKNOWN_FUNCTION",
             format!("unknown function `{name}`"),
