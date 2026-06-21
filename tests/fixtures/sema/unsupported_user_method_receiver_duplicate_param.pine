@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported receiver duplicate param")
+type Point
+    float x
+
+method choose(Point p, float p) => p.x
+plot(close)
