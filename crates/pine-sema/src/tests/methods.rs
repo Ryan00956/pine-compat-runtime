@@ -791,6 +791,35 @@ plot(made.x + close)
 }
 
 #[test]
+fn accepts_udt_typed_ternary_local_return_from_user_method_aliases() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method makeTyped(Point p, Point other, bool flip) =>
+    copy = p
+    otherCopy = other
+    px = copy.x
+    ox = otherCopy.x
+    Point made = flip ? Point.new(x=px) : Point.new(x=ox + 1)
+    made := flip ? Point.new(x=made.x + 2) : Point.new(x=made.x + 3)
+    made
+p = Point.new(close)
+q = Point.new(open)
+made = p.makeTyped(q, bar_index < 2)
+plot(made.x + close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_typed_switch_local_return_from_user_method() {
     let analysis = analyze(
         r#"type Point

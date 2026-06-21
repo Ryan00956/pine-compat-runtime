@@ -110,6 +110,14 @@ method makeTypedTernary(Point p, float x, bool flip) =>
     Point made = flip ? Point.new(x + 40) : Point.new(x + 45)
     made := flip ? Point.new(made.x + 5) : Point.new(made.x + 10)
     made
+method makeTypedTernaryFrom(Point p, Point other, bool flip) =>
+    copy = p
+    otherCopy = other
+    px = copy.x
+    ox = otherCopy.x
+    Point made = flip ? Point.new(x=px + 70) : Point.new(x=ox + 75)
+    made := flip ? Point.new(x=made.x + 5) : Point.new(x=made.x + 10)
+    made
 method makeTypedSwitch(Point p, float x, int mode) =>
     Point made = switch mode
         0 => Point.new(x + 55)
@@ -158,6 +166,7 @@ madeNamedBlock = p.makeNamedBlock(open)
 madeTyped = p.makeTyped(open)
 madeTypedConstructed = p.makeTypedConstructed(open)
 madeTypedTernary = p.makeTypedTernary(open, bar_index < 2)
+madeTypedTernaryFrom = p.makeTypedTernaryFrom(q, bar_index < 2)
 madeTypedSwitch = p.makeTypedSwitch(open, bar_index)
 plot(p.shift(open))
 plot(same.x + close)
@@ -194,6 +203,7 @@ plot(madeNamedBlock.x + close)
 plot(madeTyped.x + close)
 plot(madeTypedConstructed.x + close)
 plot(madeTypedTernary.x + close)
+plot(madeTypedTernaryFrom.x + close)
 plot(madeTypedSwitch.x + close)
 plot(sameIf.x + close)
 plot(sameFor.x + close)
