@@ -37,6 +37,15 @@ const ARRAY_CONSTRUCTOR_NAMES: &[&str] = &[
 
 const ARRAY_TRUTHY_METHOD_NAMES: &[&str] = &["array.every", "array.some"];
 
+const ARRAY_NUMERIC_ELEMENT_METHOD_NAMES: &[&str] = &[
+    "array.min",
+    "array.max",
+    "array.sum",
+    "array.range",
+    "array.median",
+    "array.mode",
+];
+
 #[test]
 fn drawing_and_chart_point_builtin_signatures_stay_in_sync_with_docs() {
     let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
@@ -91,6 +100,21 @@ fn array_truthy_builtin_signatures_stay_in_sync_with_docs() {
     }
 }
 
+#[test]
+fn array_numeric_element_builtin_signatures_stay_in_sync_with_docs() {
+    let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
+    let docs = fs::read_to_string(&docs_path)
+        .unwrap_or_else(|err| panic!("failed to read {}: {err}", docs_path.display()));
+
+    for name in ARRAY_NUMERIC_ELEMENT_METHOD_NAMES {
+        let signature = pine_builtins::PHASE_1_BUILTINS
+            .iter()
+            .find(|signature| signature.name == *name)
+            .unwrap_or_else(|| panic!("missing builtin signature for `{name}`"));
+        assert_array_numeric_element_signature_documented(&docs, signature);
+    }
+}
+
 fn covered_signature_name(name: &str) -> bool {
     SIGNATURE_PREFIXES
         .iter()
@@ -121,6 +145,17 @@ fn assert_array_truthy_signature_documented(
     signature: &pine_builtins::BuiltinSignature,
 ) {
     let expected = format_array_truthy_signature(signature);
+    assert!(
+        docs.lines().any(|line| line == expected),
+        "BUILTIN_SIGNATURES.md should document `{expected}`"
+    );
+}
+
+fn assert_array_numeric_element_signature_documented(
+    docs: &str,
+    signature: &pine_builtins::BuiltinSignature,
+) {
+    let expected = format_array_numeric_element_signature(signature);
     assert!(
         docs.lines().any(|line| line == expected),
         "BUILTIN_SIGNATURES.md should document `{expected}`"
@@ -194,6 +229,28 @@ fn format_array_truthy_signature(signature: &pine_builtins::BuiltinSignature) ->
     )
 }
 
+fn format_array_numeric_element_signature(signature: &pine_builtins::BuiltinSignature) -> String {
+    let params = signature
+        .params
+        .iter()
+        .map(|param| {
+            let optional = if param.optional { "?" } else { "" };
+            format!(
+                "{}{}: {}",
+                param.name,
+                optional,
+                array_numeric_element_accepts_doc(param.accepts)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!(
+        "{}({params}) -> {}",
+        signature.name,
+        array_numeric_element_return_doc(signature.returns)
+    )
+}
+
 fn accepts_doc(accepts: Accepts) -> &'static str {
     match accepts {
         Accepts::Exact(pine_type) => pine_type_doc(pine_type),
@@ -215,6 +272,13 @@ fn accepts_doc(accepts: Accepts) -> &'static str {
         Accepts::TableCompatible => "table-compatible",
         Accepts::ChartPointCompatible => "chart.point-compatible",
         other => panic!("unsupported drawing signature acceptor {other:?}"),
+    }
+}
+
+fn array_numeric_element_accepts_doc(accepts: Accepts) -> &'static str {
+    match accepts {
+        Accepts::NumericArray => "float-array|int-array",
+        other => accepts_doc(other),
     }
 }
 
@@ -247,6 +311,13 @@ fn array_constructor_return_doc(pine_type: impl std::fmt::Debug) -> &'static str
         "PineType { qualifier: Simple, kind: TableArray }" => "simple table-array",
         "PineType { qualifier: Simple, kind: ChartPointArray }" => "simple chart-point-array",
         other => panic!("unsupported array constructor return type {other}"),
+    }
+}
+
+fn array_numeric_element_return_doc(returns: ReturnSpec) -> &'static str {
+    match returns {
+        ReturnSpec::ArrayNumeric(0) => "series element",
+        other => panic!("unsupported array numeric element return {other:?}"),
     }
 }
 
