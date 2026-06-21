@@ -4971,6 +4971,14 @@ fn reports_unsupported_user_method_unknown_named_arg_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_method_duplicate_named_arg_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_method_duplicate_named_arg.pine",
+        "E_FUNCTION_ARG_DUPLICATE",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_method_duplicate_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_user_method_duplicate.pine",
