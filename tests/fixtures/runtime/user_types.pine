@@ -21,6 +21,20 @@ if bar_index >= 0
     Point block_typed_point = na
     block_typed_point := Point.new(high + 40, low)
     plot(block_typed_point.x + block_typed_point.y)
+loop_typed_sum = close > 0 ? 0.0 : 0.0
+for typed_i = 0 to 1
+    Point loop_typed_point = na
+    loop_typed_point := Point.new(high + typed_i, low)
+    loop_typed_sum := loop_typed_sum + loop_typed_point.x + loop_typed_point.y
+plot(loop_typed_sum)
+while_typed_sum = close > 0 ? 0.0 : 0.0
+while_typed_i = 0
+while while_typed_i < 2
+    Point while_typed_point = na
+    while_typed_point := Point.new(high + while_typed_i + 10, low)
+    while_typed_sum := while_typed_sum + while_typed_point.x + while_typed_point.y
+    while_typed_i := while_typed_i + 1
+plot(while_typed_sum)
 p.x := high
 plot(p.x + p.y)
 branch = Point.new(close, open)

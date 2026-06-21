@@ -242,6 +242,34 @@ if close > open
 }
 
 #[test]
+fn accepts_loop_local_user_type_typed_declaration_with_na_initializer() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+sum = close > 0 ? 0.0 : 0.0
+for i = 0 to 1
+    Point p = na
+    p := Point.new(close + i, open)
+    sum := sum + p.x + p.y
+while sum > 0
+    Point p = na
+    p := Point.new(close, open)
+    sum := sum - p.x - p.y
+plot(sum)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn rejects_mismatched_user_type_typed_declaration_reassignment() {
     let analysis = analyze(
         r#"type Point
