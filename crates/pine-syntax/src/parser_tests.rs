@@ -390,6 +390,43 @@ fn parses_if_statement() {
 }
 
 #[test]
+fn parses_if_expression_declaration() {
+    let parsed = parse("x = if close > open\n    high\nelse\n    low\nplot(x)\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::If {
+        condition,
+        then_branch,
+        else_branch,
+    } = &value.kind
+    else {
+        panic!("expected if expression");
+    };
+    assert!(matches!(condition.kind, ExprKind::Binary { .. }));
+    assert_eq!(then_branch.len(), 1);
+    assert_eq!(else_branch.len(), 1);
+    assert!(matches!(then_branch[0].kind, StmtKind::Expr(_)));
+    assert!(matches!(else_branch[0].kind, StmtKind::Expr(_)));
+}
+
+#[test]
+fn rejects_if_expression_without_else() {
+    let parsed = parse("x = if close > open\n    high\nplot(x)\n");
+
+    assert!(
+        parsed
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_PARSE_IF_EXPR"),
+        "{:?}",
+        parsed.diagnostics
+    );
+}
+
+#[test]
 fn parses_function_declaration() {
     let parsed = parse("double(x) => x * 2\nplot(close)\n");
 

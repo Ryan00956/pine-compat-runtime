@@ -509,6 +509,7 @@ fn is_const_import_expr(expr: &Expr) -> bool {
                 && is_const_import_expr(else_expr)
         }
         ExprKind::Call { .. }
+        | ExprKind::If { .. }
         | ExprKind::For { .. }
         | ExprKind::Switch { .. }
         | ExprKind::Tuple(_)
@@ -652,6 +653,16 @@ fn visit_expr(expr: &Expr, visitor: &mut impl FnMut(&Expr)) {
             visit_expr(condition, visitor);
             visit_expr(then_expr, visitor);
             visit_expr(else_expr, visitor);
+        }
+        ExprKind::If {
+            condition,
+            then_branch,
+            else_branch,
+        } => {
+            visit_expr(condition, visitor);
+            for statement in then_branch.iter().chain(else_branch) {
+                visit_statement_exprs(statement, visitor);
+            }
         }
         ExprKind::For {
             from,

@@ -182,6 +182,11 @@ pub enum ExprKind {
         then_expr: Box<Expr>,
         else_expr: Box<Expr>,
     },
+    If {
+        condition: Box<Expr>,
+        then_branch: Vec<Stmt>,
+        else_branch: Vec<Stmt>,
+    },
     For {
         counter: String,
         from: Box<Expr>,

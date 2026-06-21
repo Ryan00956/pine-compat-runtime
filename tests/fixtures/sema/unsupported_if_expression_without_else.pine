@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported if expression without else")
+value = if close > open
+    close
+plot(value)

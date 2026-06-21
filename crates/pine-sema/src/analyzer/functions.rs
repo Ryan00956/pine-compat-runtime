@@ -77,6 +77,19 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
                 || contains_output_or_declaration_call(then_expr)
                 || contains_output_or_declaration_call(else_expr)
         }
+        ExprKind::If {
+            condition,
+            then_branch,
+            else_branch,
+        } => {
+            contains_output_or_declaration_call(condition)
+                || then_branch
+                    .iter()
+                    .any(statement_contains_output_or_declaration_call)
+                || else_branch
+                    .iter()
+                    .any(statement_contains_output_or_declaration_call)
+        }
         ExprKind::Switch { selector, arms } => {
             selector
                 .as_deref()

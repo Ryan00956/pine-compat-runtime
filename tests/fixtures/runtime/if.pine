@@ -6,3 +6,9 @@ if close > open
 else
     x := open
 plot(x)
+branch_value = if close > open
+    spread = high - low
+    spread + close
+else
+    open + close
+plot(branch_value)

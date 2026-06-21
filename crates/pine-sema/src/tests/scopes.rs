@@ -58,6 +58,21 @@ fn accepts_block_local_declaration_in_if() {
 }
 
 #[test]
+fn accepts_if_expression_with_branch_local_declarations() {
+    let analysis = analyze(
+        "x = if close > open\n    spread = high - low\n    spread\nelse\n    open\nplot(x)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn rejects_block_local_declaration_escape() {
     let analysis = analyze("if close > open\n    x = close\nplot(x)\n");
 

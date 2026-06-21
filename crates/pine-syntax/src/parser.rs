@@ -659,7 +659,10 @@ impl Parser {
         let mut left = self.parse_prefix()?;
 
         loop {
-            if matches!(left.kind, ExprKind::For { .. } | ExprKind::Switch { .. }) {
+            if matches!(
+                left.kind,
+                ExprKind::If { .. } | ExprKind::For { .. } | ExprKind::Switch { .. }
+            ) {
                 break;
             }
             if let Some(template_callee) = self.parse_array_new_template_callee(&left) {
@@ -794,6 +797,7 @@ impl Parser {
                 Some(expr)
             }
             TokenKind::For => self.parse_for_expr(),
+            TokenKind::If => self.parse_if_expr(),
             TokenKind::Switch => self.parse_switch_expr(),
             TokenKind::LBracket => self.parse_tuple_expr(),
             _ => {
@@ -814,6 +818,47 @@ impl Parser {
                 to: Box::new(parts.to),
                 step: parts.step.map(Box::new),
                 body: parts.body,
+            },
+        })
+    }
+
+    fn parse_if_expr(&mut self) -> Option<Expr> {
+        let start = self.expect(TokenKind::If, "expected `if`")?;
+        let condition = self.parse_expr(0)?;
+        self.expect(TokenKind::Newline, "expected newline after `if` condition")?;
+        let then_branch = self.parse_indented_block()?;
+        let mut span = then_branch
+            .last()
+            .map_or(condition.span, |statement| statement.span);
+
+        if !self.at(TokenKind::Else) {
+            self.diagnostics.push(Diagnostic::error(
+                "E_PARSE_IF_EXPR",
+                "if expressions require an else branch",
+                start.merge(span),
+            ));
+            return None;
+        }
+
+        self.bump();
+        if self.at(TokenKind::If) {
+            self.diagnostics.push(Diagnostic::error(
+                "E_PARSE_IF_EXPR",
+                "else-if expression branches are not supported; use a nested if expression in the else branch",
+                self.current().span,
+            ));
+            return None;
+        }
+        self.expect(TokenKind::Newline, "expected newline after `else`")?;
+        let else_branch = self.parse_indented_block()?;
+        span = else_branch.last().map_or(span, |statement| statement.span);
+
+        Some(Expr {
+            span: start.merge(span),
+            kind: ExprKind::If {
+                condition: Box::new(condition),
+                then_branch,
+                else_branch,
             },
         })
     }

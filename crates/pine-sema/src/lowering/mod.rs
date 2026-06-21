@@ -438,6 +438,27 @@ impl Analyzer {
                     param_types,
                 )?),
             },
+            ExprKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => HirExprKind::Ternary {
+                condition: Box::new(self.lower_expr_with_params(
+                    condition,
+                    param_exprs,
+                    param_types,
+                )?),
+                then_expr: Box::new(self.lower_expr_branch_return(
+                    then_branch,
+                    param_exprs,
+                    param_types,
+                )?),
+                else_expr: Box::new(self.lower_expr_branch_return(
+                    else_branch,
+                    param_exprs,
+                    param_types,
+                )?),
+            },
             ExprKind::Switch { selector, arms } => HirExprKind::Switch {
                 selector: match selector {
                     Some(selector) => Some(Box::new(self.lower_expr_with_params(
@@ -983,6 +1004,28 @@ impl Analyzer {
                 result: Box::new(result),
             },
         })
+    }
+
+    fn lower_expr_branch_return(
+        &mut self,
+        branch: &[Stmt],
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
+        let (last, prefix) = branch.split_last()?;
+        let StmtKind::Expr(result) = &last.kind else {
+            return None;
+        };
+        let statements = prefix
+            .iter()
+            .map(|statement| self.lower_stmt_with_params(statement, param_exprs, param_types))
+            .collect::<Option<Vec<_>>>()?;
+        let result = self.lower_expr_with_params(result, param_exprs, param_types)?;
+        if statements.is_empty() {
+            Some(result)
+        } else {
+            Some(prepend_block_statements(statements, result))
+        }
     }
 
     fn lower_function_if_return(

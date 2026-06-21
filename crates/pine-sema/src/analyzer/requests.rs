@@ -227,7 +227,7 @@ fn request_expression_is_pure_scalar(expr: &Expr) -> bool {
                         && request_expression_is_same_context_value(&arm.result)
                 })
         }
-        ExprKind::Tuple(_) | ExprKind::For { .. } => false,
+        ExprKind::Tuple(_) | ExprKind::If { .. } | ExprKind::For { .. } => false,
     }
 }
 
@@ -305,7 +305,7 @@ fn request_expression_is_provider_scalar(expr: &Expr) -> bool {
                         && request_expression_is_provider_scalar(&arm.result)
                 })
         }
-        ExprKind::Tuple(_) | ExprKind::For { .. } => false,
+        ExprKind::Tuple(_) | ExprKind::If { .. } | ExprKind::For { .. } => false,
     }
 }
 

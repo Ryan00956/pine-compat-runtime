@@ -195,6 +195,15 @@ pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
             then_expr: Box::new(rewrite_expr(then_expr, context)),
             else_expr: Box::new(rewrite_expr(else_expr, context)),
         },
+        ExprKind::If {
+            condition,
+            then_branch,
+            else_branch,
+        } => ExprKind::If {
+            condition: Box::new(rewrite_expr(condition, context)),
+            then_branch: rewrite_statements(then_branch, context),
+            else_branch: rewrite_statements(else_branch, context),
+        },
         ExprKind::For {
             counter,
             from,

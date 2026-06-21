@@ -347,6 +347,11 @@ impl Analyzer {
                 else_expr,
                 ..
             } => self.user_type_name_of_ternary_branches(then_expr, else_expr),
+            ExprKind::If {
+                then_branch,
+                else_branch,
+                ..
+            } => self.user_type_name_of_if_branches(then_branch, else_branch),
             ExprKind::Switch { arms, .. } => self.user_type_name_of_switch_arms(arms),
             ExprKind::For { body, .. } => self.user_type_name_of_for_body(body),
             _ => None,
@@ -469,6 +474,11 @@ impl Analyzer {
                 (Some(then_name), Some(else_name)) if then_name == else_name => Some(then_name),
                 _ => None,
             },
+            ExprKind::If {
+                then_branch,
+                else_branch,
+                ..
+            } => self.user_type_name_of_if_branches(then_branch, else_branch),
             ExprKind::Switch { arms, .. } => {
                 let mut resolved_type_name = None;
                 for arm in arms {

@@ -24,6 +24,7 @@ improved over time, but codes should remain stable once published.
 - `E_PARSE_EXPORT`: invalid export declaration.
 - `E_PARSE_FOR`: invalid for-loop declaration.
 - `E_PARSE_FUNCTION`: invalid function declaration.
+- `E_PARSE_IF_EXPR`: invalid if expression.
 - `E_PARSE_IMPORT`: invalid import declaration.
 - `E_PARSE_LIBRARY`: invalid library declaration.
 - `E_PARSE_NAME`: invalid qualified name.
@@ -37,6 +38,7 @@ improved over time, but codes should remain stable once published.
 - `E_HOST_INPUT`: a host binding rejected malformed input before semantic
   analysis, such as invalid WASM library-source JSON.
 - `E_ASSIGN_TYPE`: reassignment type mismatch.
+- `E_BRANCH_RETURN`: branch expression body does not end with an expression.
 - `E_BRANCH_TYPE`: ternary branch type mismatch.
 - `E_CALL_ARG_NAME`: unknown named argument.
 - `E_CALL_ARG_TYPE`: argument type does not satisfy the built-in signature.

@@ -84,6 +84,11 @@ impl Analyzer {
                     _ => None,
                 }
             }
+            ExprKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => self.analyze_if_expr(condition, then_branch, else_branch, expr.span),
             ExprKind::Switch { selector, arms } => {
                 self.analyze_switch_expr(selector.as_deref(), arms, expr.span)
             }
@@ -125,6 +130,85 @@ impl Analyzer {
                 value_type.map(|value_type| PineType::new(Qualifier::Series, value_type.kind))
             }
         }
+    }
+
+    pub(crate) fn analyze_if_expr(
+        &mut self,
+        condition: &Expr,
+        then_branch: &[Stmt],
+        else_branch: &[Stmt],
+        span: Span,
+    ) -> Option<PineType> {
+        let condition_type = self.analyze_expr(condition);
+        if let Some(condition_type) = condition_type {
+            self.expect_bool(condition_type, condition.span);
+        }
+
+        self.compatibility.supported.push(FeatureUse {
+            feature: "if".to_owned(),
+            span,
+        });
+
+        self.block_depth += 1;
+        let then_type = self.analyze_expr_branch_return(then_branch, "if", span);
+        let else_type = self.analyze_expr_branch_return(else_branch, "if", span);
+        self.block_depth -= 1;
+
+        match (condition_type, then_type, else_type) {
+            (Some(condition_type), Some(then_type), Some(else_type)) => {
+                let pine_type =
+                    self.merge_branch_types(condition_type, then_type, else_type, span)?;
+                if pine_type.kind == ValueKind::UserType
+                    && self
+                        .user_type_name_of_if_branches(then_branch, else_branch)
+                        .is_none()
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_BRANCH_TYPE",
+                        "if user-defined type branches must resolve to the same local UDT",
+                        span,
+                    ));
+                    return None;
+                }
+                Some(pine_type)
+            }
+            _ => None,
+        }
+    }
+
+    fn analyze_expr_branch_return(
+        &mut self,
+        branch: &[Stmt],
+        keyword: &str,
+        span: Span,
+    ) -> Option<PineType> {
+        let Some((last, prefix)) = branch.split_last() else {
+            self.diagnostics.push(Diagnostic::error(
+                "E_BRANCH_RETURN",
+                format!("{keyword} expression branches must end with an expression"),
+                span,
+            ));
+            return None;
+        };
+
+        self.scope.push_scope();
+        for statement in prefix {
+            self.analyze_stmt(statement);
+        }
+        let pine_type = match &last.kind {
+            StmtKind::Expr(expr) => self.analyze_expr(expr),
+            _ => {
+                self.analyze_stmt(last);
+                self.diagnostics.push(Diagnostic::error(
+                    "E_BRANCH_RETURN",
+                    format!("{keyword} expression branches must end with an expression"),
+                    last.span,
+                ));
+                None
+            }
+        };
+        self.scope.pop_scope();
+        pine_type
     }
 
     fn enter_expr_analysis(&mut self, span: Span) -> bool {
@@ -649,6 +733,11 @@ impl Analyzer {
                     common_kind(then_type.kind, else_type.kind)?,
                 ))
             }
+            ExprKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => self.type_of_if_expr_with_params(condition, then_branch, else_branch, param_types),
             ExprKind::Switch { selector, arms } => {
                 self.type_of_switch_expr_with_params(selector.as_deref(), arms, param_types)
             }
@@ -796,6 +885,37 @@ impl Analyzer {
         method_arg_types.push(Some(receiver_type));
         method_arg_types.extend(arg_types.iter().copied());
         self.return_type(signature, &method_arg_types)
+    }
+
+    pub(crate) fn type_of_if_expr_with_params(
+        &self,
+        condition: &Expr,
+        then_branch: &[Stmt],
+        else_branch: &[Stmt],
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<PineType> {
+        let condition_type = self.type_of_expr_with_params(condition, param_types)?;
+        let then_type = self.type_of_branch_return_with_params(then_branch, param_types)?;
+        let else_type = self.type_of_branch_return_with_params(else_branch, param_types)?;
+        Some(PineType::new(
+            strongest_qualifier(
+                condition_type.qualifier,
+                strongest_qualifier(then_type.qualifier, else_type.qualifier),
+            ),
+            common_kind(then_type.kind, else_type.kind)?,
+        ))
+    }
+
+    fn type_of_branch_return_with_params(
+        &self,
+        branch: &[Stmt],
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<PineType> {
+        let last = branch.last()?;
+        let StmtKind::Expr(expr) = &last.kind else {
+            return None;
+        };
+        self.type_of_expr_with_params(expr, param_types)
     }
 
     pub(crate) fn type_of_switch_expr_with_params(
