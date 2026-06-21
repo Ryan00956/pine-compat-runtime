@@ -716,7 +716,7 @@ fn runs_cross_functions_over_historical_bars() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("cross")
-baseline = 2.0
+baseline = close * 0 + 2.0
 crossed = ta.cross(close, baseline)
 over = ta.crossover(close, baseline)
 under = ta.crossunder(close, baseline)
@@ -731,9 +731,13 @@ plot(under ? 1 : 0)
         "{:?}",
         analysis.diagnostics
     );
+    let hir = analysis.hir.expect("HIR");
+    assert_eq!(hir.history.max_constant_offset, 1);
+    assert_builtin_series_history(&hir, "close", 1);
+    assert_builtin_series_history(&hir, "baseline", 1);
 
     let bars = vec![bar(1.0), bar(3.0), bar(1.0), bar(2.0), bar(4.0)];
-    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let result = run_historical(&hir, &bars).expect("runtime result");
 
     assert_values_close(&result.plots[0].values, &[0.0, 1.0, 1.0, 0.0, 1.0]);
     assert_values_close(&result.plots[1].values, &[0.0, 1.0, 0.0, 0.0, 1.0]);

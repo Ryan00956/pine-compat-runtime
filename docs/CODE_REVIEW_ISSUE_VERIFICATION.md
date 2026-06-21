@@ -1932,6 +1932,9 @@ or nuance during verification.
   now binds `runs_mfi_over_historical_bars` and
   `runs_tsi_over_historical_bars` to the expected `close[1]` HIR retention
   requirement while retaining their numeric sequence assertions.
+- The same file now binds `runs_cross_functions_over_historical_bars` to the
+  expected `close[1]` and series `baseline[1]` HIR retention requirements while
+  retaining the cross helper numeric sequence assertions.
 - The remaining coupling is runtime implementation drift outside that reviewed
   list: runtime reads are not yet compile-time-bound to the shared metadata by a
   runtime helper.
@@ -1951,9 +1954,9 @@ retained, results can become `Na` without a diagnostic.
 - Avoid relying only on ad hoc runtime source scans.
 - Consider a runtime helper/debug assertion if future design needs a stronger
   binding between runtime reads and declared retention.
-- Extend end-to-end numeric regressions beyond the current
-  SAR/DMI/Supertrend/KC/KCW/MFI/TSI coverage to the remaining high-risk
-  cross helpers.
+- Keep the retention-bound high-risk numeric regressions green and decide
+  whether the deferred runtime helper/debug assertion is needed for P1-c
+  closeout.
 
 **Verification after fix**
 
@@ -1991,21 +1994,22 @@ depth looks like normal warmup `na` rather than an internal contract violation.
 
 **Recommended fix**
 
-- Continue CR-010 by extending oracle/golden tests beyond the current
-  SAR/DMI/Supertrend/KC/KCW/MFI/TSI retention-bound numeric regressions and by
-  considering a runtime helper/debug assertion for retention under-declaration.
+- Continue CR-010 by evaluating whether the current
+  SAR/DMI/Supertrend/KC/KCW/MFI/TSI/Cross retention-bound numeric regressions
+  and reviewed-list reconciliation are sufficient, or whether a runtime
+  helper/debug assertion is needed for retention under-declaration.
 - In debug/test builds, consider adding an assertion or diagnostic path when a
   builtin reads beyond declared retention. This could be implemented as a
   runtime history access helper that knows the required offset and callsite.
 - Continue adding golden or fixture tests where deeper history is required after
   warmup, so a too-small buffer changes expected values and fails tests. The
-  SAR, DMI, Supertrend, KC, KCW, MFI, and TSI paths now have retention-bound
-  numeric regressions.
+  SAR, DMI, Supertrend, KC, KCW, MFI, TSI, and Cross paths now have
+  retention-bound numeric regressions.
 
 **Verification after fix**
 
-- Extend targeted fixtures/tests beyond the current SAR, DMI, Supertrend, KC,
-  KCW, MFI, and TSI built-in history regressions.
+- Keep targeted fixtures/tests green across the current SAR, DMI, Supertrend,
+  KC, KCW, MFI, TSI, and Cross built-in history regressions.
 - Run `cargo test -p pine-runtime --test incremental` and relevant numeric tests.
 
 ---
