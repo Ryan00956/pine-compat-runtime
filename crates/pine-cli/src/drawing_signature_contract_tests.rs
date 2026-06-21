@@ -63,7 +63,8 @@ const ARRAY_BINARY_SEARCH_METHOD_NAMES: &[&str] = &[
 
 const ARRAY_INDEX_SEARCH_METHOD_NAMES: &[&str] = &["array.indexof", "array.lastindexof"];
 
-const ARRAY_SAME_KIND_METHOD_NAMES: &[&str] = &["array.copy", "array.slice", "array.concat"];
+const ARRAY_SAME_KIND_METHOD_NAMES: &[&str] =
+    &["array.copy", "array.slice", "array.concat", "array.abs"];
 
 const ALL_ARRAY_DOC: &str = "float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array";
 
@@ -500,6 +501,7 @@ fn array_same_kind_accepts_doc(name: &str, accepts: Accepts) -> &'static str {
     match (name, accepts) {
         ("id2", Accepts::Array) => "same array kind",
         (_, Accepts::Array) => ALL_ARRAY_DOC,
+        (_, Accepts::NumericArray) => "float-array|int-array",
         (_, Accepts::SimpleInt) => "simple int",
         (_, other) => accepts_doc(other),
     }
