@@ -268,13 +268,19 @@ impl Analyzer {
                 let target = if let Some(target) =
                     self.resolve_chart_point_field_mutation(receiver, field, statement.span)
                 {
-                    Some((target.pine_type, "chart.point field mutation"))
+                    Some((target.pine_type, None, "chart.point field mutation"))
                 } else {
                     self.resolve_user_type_field_mutation(receiver, field, statement.span)
-                        .map(|target| (target.pine_type, "user-defined type field mutation"))
+                        .map(|target| {
+                            (
+                                target.pine_type,
+                                target.user_type_name,
+                                "user-defined type field mutation",
+                            )
+                        })
                 };
                 if self.function_depth > 0 {
-                    let reason = match target.as_ref().map(|(_, feature)| *feature) {
+                    let reason = match target.as_ref().map(|(_, _, feature)| *feature) {
                         Some("user-defined type field mutation") => {
                             "mutating user-defined type fields inside user-defined functions or methods is not supported"
                         }
@@ -288,13 +294,21 @@ impl Analyzer {
                     self.unsupported("function_side_effect", reason, statement.span);
                 }
                 let value_type = self.analyze_expr(value);
-                if let (Some((target_type, feature)), Some(value_type)) = (target, value_type) {
-                    self.validate_assignment(
-                        &format!("{receiver}.{field}"),
-                        target_type,
-                        value_type,
-                        statement.span,
-                    );
+                if let (Some((target_type, target_user_type, feature)), Some(value_type)) =
+                    (target, value_type)
+                {
+                    let name = format!("{receiver}.{field}");
+                    if let Some(target_user_type) = target_user_type {
+                        self.validate_user_type_field_assignment(
+                            &name,
+                            &target_user_type,
+                            value,
+                            value_type,
+                            statement.span,
+                        );
+                    } else {
+                        self.validate_assignment(&name, target_type, value_type, statement.span);
+                    }
                     self.compatibility.supported.push(FeatureUse {
                         feature: feature.to_owned(),
                         span: statement.span,
@@ -399,6 +413,31 @@ impl Analyzer {
                 typed_declaration_name(target_type.kind),
                 value_type.qualifier,
                 value_type.kind
+            ),
+            span,
+        ));
+    }
+
+    fn validate_user_type_field_assignment(
+        &mut self,
+        name: &str,
+        target_user_type: &str,
+        value: &pine_syntax::Expr,
+        value_type: PineType,
+        span: Span,
+    ) {
+        if self
+            .user_type_name_of_expr(value)
+            .is_some_and(|actual_user_type| actual_user_type == target_user_type)
+        {
+            return;
+        }
+
+        self.diagnostics.push(Diagnostic::error(
+            "E_ASSIGN_TYPE",
+            format!(
+                "cannot assign {:?} {:?} to `{name}` of user-defined type `{target_user_type}`",
+                value_type.qualifier, value_type.kind
             ),
             span,
         ));

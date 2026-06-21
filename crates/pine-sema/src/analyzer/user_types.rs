@@ -45,6 +45,7 @@ pub(crate) struct UdtFieldAccessStep {
 
 pub(crate) struct UdtFieldMutation {
     pub(crate) pine_type: PineType,
+    pub(crate) user_type_name: Option<String>,
 }
 
 pub(crate) fn span_key(span: Span) -> (usize, usize) {
@@ -211,11 +212,10 @@ impl Analyzer {
             return None;
         };
         let user_type = self.user_types.get(&type_name)?;
-        let Some(field_kind) = user_type
+        let Some(field) = user_type
             .fields
             .iter()
             .find(|field| field.name == field_name)
-            .map(|field| field.pine_type.kind)
         else {
             self.diagnostics.push(Diagnostic::error(
                 "E_UDT_UNKNOWN_FIELD",
@@ -224,9 +224,12 @@ impl Analyzer {
             ));
             return None;
         };
+        let field_kind = field.pine_type.kind;
+        let field_user_type_name = field.user_type_name.clone();
         self.bind_symbol(receiver, span, symbol);
         Some(UdtFieldMutation {
             pine_type: PineType::new(symbol.pine_type.qualifier, field_kind),
+            user_type_name: field_user_type_name,
         })
     }
 

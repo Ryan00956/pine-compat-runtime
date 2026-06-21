@@ -200,6 +200,64 @@ plot(w.inner.x + w.inner.y)
 }
 
 #[test]
+fn accepts_nested_user_type_field_replacement() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+type Wrapper
+    Point inner
+p = Point.new(close, open)
+w = Wrapper.new(p)
+w.inner := Point.new(high, low)
+plot(w.inner.x + w.inner.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| { feature.feature == "user-defined type field mutation" })
+    );
+}
+
+#[test]
+fn rejects_mismatched_nested_user_type_field_replacement() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+type Other
+    float x
+type Wrapper
+    Point inner
+p = Point.new(close)
+w = Wrapper.new(p)
+w.inner := Other.new(high)
+plot(w.inner.x)
+"#,
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_ASSIGN_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn rejects_nested_user_type_field_mutation() {
     let analysis = analyze(
         r#"type Point

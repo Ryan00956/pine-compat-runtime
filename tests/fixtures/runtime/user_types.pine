@@ -36,3 +36,5 @@ inner = wrapped.inner
 plot(inner.x + inner.y)
 nestedScore(w) => w.inner.x + w.inner.y + w.weight
 plot(nestedScore(wrapped))
+wrapped.inner := Point.new(high + 10, low)
+plot(wrapped.inner.x + wrapped.inner.y + wrapped.weight)
