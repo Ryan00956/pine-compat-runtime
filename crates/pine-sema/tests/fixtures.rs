@@ -4744,6 +4744,15 @@ fn reports_unsupported_user_type_field_mutation_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_type_parameter_field_mutation_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_user_type_parameter_field_mutation.pine",
+        "function_side_effect",
+        "mutating user-defined type fields inside user-defined functions or methods",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_method_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_user_method.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");

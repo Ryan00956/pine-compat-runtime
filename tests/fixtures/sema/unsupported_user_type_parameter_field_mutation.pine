@@ -1,0 +1,11 @@
+//@version=5
+type Point
+    float x
+
+touch(p) =>
+    p.x := 1
+    p
+
+point = Point.new(close)
+mutated = touch(point)
+plot(mutated.x)
