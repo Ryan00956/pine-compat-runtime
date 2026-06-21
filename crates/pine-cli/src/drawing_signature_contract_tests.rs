@@ -83,6 +83,8 @@ const ARRAY_MUTATION_VALUE_METHOD_NAMES: &[&str] = &[
 
 const ARRAY_SIZE_METHOD_NAMES: &[&str] = &["array.size"];
 
+const ARRAY_FROM_METHOD_NAMES: &[&str] = &["array.from"];
+
 const ARRAY_BINARY_SEARCH_METHOD_NAMES: &[&str] = &[
     "array.binary_search",
     "array.binary_search_leftmost",
@@ -286,6 +288,21 @@ fn array_size_builtin_signatures_stay_in_sync_with_docs() {
 }
 
 #[test]
+fn array_from_builtin_signatures_stay_in_sync_with_docs() {
+    let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
+    let docs = fs::read_to_string(&docs_path)
+        .unwrap_or_else(|err| panic!("failed to read {}: {err}", docs_path.display()));
+
+    for name in ARRAY_FROM_METHOD_NAMES {
+        let signature = pine_builtins::PHASE_1_BUILTINS
+            .iter()
+            .find(|signature| signature.name == *name)
+            .unwrap_or_else(|| panic!("missing builtin signature for `{name}`"));
+        assert_array_from_signature_documented(&docs, signature);
+    }
+}
+
+#[test]
 fn array_binary_search_builtin_signatures_stay_in_sync_with_docs() {
     let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
     let docs = fs::read_to_string(&docs_path)
@@ -453,6 +470,14 @@ fn assert_array_mutation_value_signature_documented(
 
 fn assert_array_size_signature_documented(docs: &str, signature: &pine_builtins::BuiltinSignature) {
     let expected = format_array_size_signature(signature);
+    assert!(
+        docs.lines().any(|line| line == expected),
+        "BUILTIN_SIGNATURES.md should document `{expected}`"
+    );
+}
+
+fn assert_array_from_signature_documented(docs: &str, signature: &pine_builtins::BuiltinSignature) {
+    let expected = format_array_from_signature(signature);
     assert!(
         docs.lines().any(|line| line == expected),
         "BUILTIN_SIGNATURES.md should document `{expected}`"
@@ -755,6 +780,33 @@ fn format_array_size_signature(signature: &pine_builtins::BuiltinSignature) -> S
         signature.name,
         return_doc(signature.returns)
     )
+}
+
+fn format_array_from_signature(signature: &pine_builtins::BuiltinSignature) -> String {
+    assert!(
+        signature.variadic,
+        "array.from signature should remain variadic"
+    );
+    assert_eq!(
+        signature.params.len(),
+        1,
+        "array.from should keep a single variadic parameter"
+    );
+    let param = signature.params[0];
+    assert_eq!(
+        param.accepts,
+        Accepts::Any,
+        "array.from variadic parameter should accept any value"
+    );
+    assert!(
+        !param.optional,
+        "array.from variadic parameter should remain required"
+    );
+    let return_doc = match signature.returns {
+        ReturnSpec::ArrayFromArgs => "simple inferred scalar-or-object-array",
+        other => panic!("unsupported array.from return {other:?}"),
+    };
+    format!("{}({}, ...) -> {return_doc}", signature.name, param.name)
 }
 
 fn format_array_binary_search_signature(signature: &pine_builtins::BuiltinSignature) -> String {
