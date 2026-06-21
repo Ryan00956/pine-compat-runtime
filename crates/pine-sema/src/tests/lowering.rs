@@ -61,6 +61,48 @@ fn infers_implicit_builtin_history_requirements() {
 }
 
 #[test]
+fn infers_implicit_ta_history_requirements_by_series() {
+    let analysis = analyze(
+        r#"len = input.int(1, "Length")
+plot(ta.tr())
+plot(ta.atr(2))
+[line, direction] = ta.supertrend(2, 3)
+plot(line + direction)
+[middle, upper, lower] = ta.kc(close, 2, 2)
+plot(middle + upper + lower)
+plot(ta.kcw(close, 2, 2))
+[plus, minus, adx] = ta.dmi(3, 2)
+plot(plus + minus + adx)
+plot(ta.sar(0.02, 0.02, 0.2))
+plot(ta.mfi(close, 3))
+plot(ta.tsi(close, 2, 3))
+plot(ta.cmo(close, 3))
+plot(ta.change(open, 2))
+plot(ta.change(close, len))
+plot(ta.mom(high, 4))
+plot(ta.roc(low, len))
+plot(ta.cross(close, open) ? 1 : 0)
+plot(ta.crossover(high, low) ? 1 : 0)
+plot(ta.crossunder(close, low) ? 1 : 0)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+
+    assert_eq!(hir.history.max_constant_offset, 4);
+    assert!(hir.history.has_dynamic_offsets);
+    assert_series_history(&hir, "close", 1, true);
+    assert_series_history(&hir, "open", 2, false);
+    assert_series_history(&hir, "high", 4, false);
+    assert_series_history(&hir, "low", 2, true);
+}
+
+#[test]
 fn infers_array_history_requirements() {
     let analysis = analyze(
         "values = array.new_float(1)\nvalues.set(0, close)\nprevious = values[1]\nplot(na(previous) ? na : previous.get(0))\n",
@@ -86,6 +128,36 @@ fn infers_array_history_requirements() {
         }),
         "{:?}",
         hir.series_history
+    );
+}
+
+fn assert_series_history(
+    hir: &pine_ir::HirProgram,
+    symbol_name: &str,
+    expected_offset: u32,
+    expected_dynamic: bool,
+) {
+    let series_id = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == symbol_name)
+        .and_then(|symbol| symbol.series_id)
+        .unwrap_or_else(|| panic!("{symbol_name} should have a series id"));
+    let requirement = hir
+        .series_history
+        .iter()
+        .find(|requirement| requirement.series_id == series_id)
+        .unwrap_or_else(|| panic!("{symbol_name} should have a history requirement"));
+
+    assert_eq!(
+        requirement.max_constant_offset, expected_offset,
+        "{symbol_name} history requirement: {:?}",
+        requirement
+    );
+    assert_eq!(
+        requirement.has_dynamic_offsets, expected_dynamic,
+        "{symbol_name} history requirement: {:?}",
+        requirement
     );
 }
 

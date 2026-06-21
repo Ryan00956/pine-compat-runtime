@@ -254,7 +254,7 @@
 - 常量求值 `const_int_value`/`constant_hir_int` 用 `checked_neg`，无溢出 panic。
 
 **发现的问题（仅记录，未修改）**
-- [中] `ta.*` 隐式历史回看表与 runtime 实现强耦合：`history.rs::record_call_history` 硬编码各 `ta` 函数的回看深度（`ta.tr/atr/kc…→close[1]`、`ta.sar→high/low[2]`、`ta.dmi→high/low/close[1]` 等）。若 runtime 对应实现的实际回看深度变化而此表未同步，会**静默低估**历史缓冲区，导致结果错误或越界。建议把回看需求与 builtin 签名/实现绑定为单一数据源，留待阶段 5/6 对账。— [history.rs](crates/pine-sema/src/history.rs)
+- [中] `ta.*` 隐式历史回看表与 runtime 实现强耦合：`history.rs::record_call_history` 硬编码各 `ta` 函数的回看深度（`ta.tr/atr/kc…→close[1]`、`ta.sar→high/low[2]`、`ta.dmi→high/low/close[1]` 等）。若 runtime 对应实现的实际回看深度变化而此表未同步，会**静默低估**历史缓冲区，导致结果错误或越界。当前已补 `infers_implicit_ta_history_requirements_by_series` 覆盖主要隐式 `ta.*` 表项；建议把回看需求与 builtin 签名/实现绑定为单一数据源，留待阶段 5/6 对账。— [history.rs](crates/pine-sema/src/history.rs)
 - [低] 平行类型推断路径需手工同步：`analyze_expr`（带诊断、有递归守卫）与 `type_of_expr_with_params`（纯推断、**无**独立递归守卫，靠「有错即跳过 lowering」间接兜底）各自实现一套 `ReturnSpec`/二元/三元/switch 推断。两者一旦漂移即产生「分析期类型」与「lowering 期类型」不一致。当前递归 UDF 总会先在 `analyze_udf_call` 报错从而不进入 lowering，故暂不可达；属潜在脆弱点。— [expressions.rs](crates/pine-sema/src/analyzer/expressions.rs)
 - [已关闭] 语义层主分析递归无深度上限：当前 [expressions.rs](crates/pine-sema/src/analyzer/expressions.rs) 用 `MAX_SEMA_EXPR_DEPTH=128` 报 `E_SEMA_EXPR_DEPTH`，UDF/方法调用链用 `MAX_FUNCTION_CALL_DEPTH=64` 报 `E_FUNCTION_CALL_DEPTH`；`rejects_deep_semantic_expression_nesting`、`rejects_deep_acyclic_function_call_chain` 与 sema fixtures 覆盖该边界。纯推断路径的手工同步风险仍由上一条“平行类型推断路径”跟踪。
 - [低] 重赋值会按 RHS 限定符覆盖符号类型：`Reassign` 末尾 `update_symbol_type(name, value_type)` 直接以右值类型替换符号类型，可能把一个 `var`/曾为 Series 的变量**收窄**为 Const/Simple；条件分支内的重赋值也不会强制提升为 Series。持久性虽由 `var_slot`/`PersistenceKind` 单独跟踪，但限定符不反映「逐 bar 可变=series」的 Pine 语义。需与 runtime 行为核对是否影响正确性。— [statements.rs](crates/pine-sema/src/analyzer/statements.rs)
@@ -933,7 +933,7 @@ run_historical(program, bars)
 | **P0** | 整数算术坍缩为 Float，`for i=0 to n-1`/计算下标/`ta.*` 计算长度静默失效 | 高（已关闭） | 6/7 | 当前实现已通过 `numeric_add`/`numeric_sub`/`numeric_mul`/`numeric_mod` 保留 `Int`；继续保留计算上界/下标/长度回归 |
 | **P1-a** | 无界递归 → 栈溢出，跨所有 host 崩溃 DoS | 中(安全，已关闭) | 1/3/4/6 | 当前 parser/sema/lowering/runtime 均有深度/预算上限；继续保留深嵌套回归 |
 | **P1-b** | 非有限 Float 未在序列化/输入边界归一（非法 JSON、WASM 不可解析） | 中（已关闭） | 11/12/14 | 当前已通过 `f64_json` 非有限→`null`、CLI/WASM/Python bar 边界拒绝非有限 OHLCV，并保留跨 host 回归 |
-| **P1-c** | `ta.*` 隐式历史回看表与 runtime 强耦合，漂移静默低估缓冲区 | 中 | 3/6 | 回看需求与 builtin 签名/实现绑定为单一数据源 + 端到端回归 |
+| **P1-c** | `ta.*` 隐式历史回看表与 runtime 强耦合，漂移静默低估缓冲区 | 中 | 3/6 | 已补主要 `ta.*` 隐式历史需求回归；后续仍需回看需求与 builtin 签名/实现绑定为单一数据源 + 端到端数值基准 |
 | **P2** | 与 TradingView 口径分歧：缺省下单量应为 1、撮合时序、绘图上限/淘汰策略、时区仅 UTC、request 时间框整数倍+仅 3 参、数组越界/负下标 | 中 | 7/8/9/10 | 对齐 TradingView 或在兼容性文档显式声明口径 |
 | **P3** | 工程/文档：22 诊断码未登记、运行时错误无 span、`analyze` 退出码、conformance 无机器校验 + 数值 golden 缺口、parse_bars_csv/json_escape 重复、8 死 fixture、文档漂移、包元数据 | 低/信息 | 0/2/6/11/12/14/15/16 | 批量清理，多数可独立小改 |
 
@@ -955,7 +955,7 @@ run_historical(program, bars)
 - [阶段1][低] crates/pine-syntax/src/parser_phase_j.rs — 软关键字 library/export/type/method 无 lookahead 守卫，同名标识符误解析 — 加上下文守卫。
 - [阶段1][低] crates/pine-syntax/src/lexer.rs — 数值字面量不支持科学计数法(1e6)/下划线 — 按 LANGUAGE_SCOPE 确认是否需补齐。
 - [阶段2][低] crates/pine-ir/src/lib.rs — HIR 不携带 Span，运行时错误无法回指源码位置 — 评估是否为 HirExpr 补充 span（阶段6/16）。
-- [阶段3][中] crates/pine-sema/src/history.rs — ta.* 隐式历史回看表硬编码且与 runtime 实现强耦合，漂移会静默低估历史缓冲区 — 与 builtin 签名/实现绑定为单一数据源（阶段5/6 对账）。
+- [阶段3][中] crates/pine-sema/src/history.rs — ta.* 隐式历史回看表硬编码且与 runtime 实现强耦合，漂移会静默低估历史缓冲区；已补主要表项 sema 回归守护 — 后续与 builtin 签名/实现绑定为单一数据源（阶段5/6 对账）。
 - [阶段3][低] crates/pine-sema/src/analyzer/expressions.rs — 平行类型推断路径（analyze_expr vs type_of_expr_with_params）需手工同步，后者无独立递归守卫，靠「有错跳过 lowering」间接兜底 — 合并或加显式守卫。
 - [阶段3][低][已关闭] crates/pine-sema/src/analyzer/{expressions,functions,methods}.rs — 语义层表达式/UDF/方法调用链曾无深度上限 — 当前 `MAX_SEMA_EXPR_DEPTH`/`MAX_FUNCTION_CALL_DEPTH` 转为诊断并有回归守护。
 - [阶段3][低] crates/pine-sema/src/analyzer/statements.rs — Reassign 以 RHS 限定符覆盖符号类型，可把 var/Series 变量收窄为 Const/Simple，条件重赋值不强制 Series — 与 runtime 行为核对限定符语义。
