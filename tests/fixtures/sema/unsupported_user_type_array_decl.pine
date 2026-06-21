@@ -1,0 +1,6 @@
+//@version=5
+type Point
+    float x
+
+array<Point> points = na
+plot(close)

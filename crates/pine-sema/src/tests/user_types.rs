@@ -93,6 +93,26 @@ prior = p[1]
 }
 
 #[test]
+fn rejects_user_type_array_typed_declarations() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+array<Point> points = na
+plot(close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_DECL_TYPE" && diagnostic.message.contains("array<Point>")
+        }),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn rejects_block_local_user_type_declarations() {
     let analysis = analyze(
         r#"if close > open
