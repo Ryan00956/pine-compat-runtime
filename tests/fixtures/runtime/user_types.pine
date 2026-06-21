@@ -66,6 +66,11 @@ var Point typed_var_switch = switch bar_index
 if bar_index == 2
     typed_var_switch := Point.new(high + 395, low)
 plot(typed_var_switch.x + typed_var_switch.y)
+var Point typed_var_for = for typed_var_i = 0 to 1
+    Point.new(high + typed_var_i + 400, low)
+if bar_index == 2
+    typed_var_for := Point.new(high + 405, low)
+plot(typed_var_for.x + typed_var_for.y)
 if bar_index >= 0
     Point block_typed_point = na
     block_typed_point := Point.new(high + 40, low)

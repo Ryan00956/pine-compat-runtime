@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed typed UDT `var` declarations initialized from
+  same-local-UDT `for` expressions, including realtime rollback coverage.
+- Added fixture-backed typed UDT `var` declarations initialized from
   same-local-UDT `switch` expressions, including realtime rollback coverage.
 - Added fixture-backed typed UDT `var` declarations initialized from
   same-local-UDT ternary expressions, including realtime rollback coverage.

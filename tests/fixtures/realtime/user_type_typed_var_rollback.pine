@@ -27,3 +27,8 @@ var Point s = switch bar_index
 if bar_index > 0
     s := Point.new(s.x + 1)
 plot(s.x)
+var Point t = for i = 0 to 1
+    Point.new(close + i + 80)
+if bar_index > 0
+    t := Point.new(t.x + 1)
+plot(t.x)

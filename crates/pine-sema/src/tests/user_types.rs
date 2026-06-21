@@ -409,6 +409,29 @@ plot(p.x + p.y)
 }
 
 #[test]
+fn accepts_var_user_type_typed_declaration_with_for_initializer() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+var Point p = for i = 0 to 1
+    Point.new(close + i, open)
+if bar_index == 2
+    p := Point.new(high, low)
+plot(p.x + p.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_block_local_user_type_typed_declaration_with_na_initializer() {
     let analysis = analyze(
         r#"type Point
