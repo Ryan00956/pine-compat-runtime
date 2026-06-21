@@ -56,6 +56,8 @@ const ARRAY_SERIES_FLOAT_METHOD_NAMES: &[&str] = &[
     "array.stdev",
 ];
 
+const ARRAY_FLOAT_ARRAY_METHOD_NAMES: &[&str] = &["array.standardize"];
+
 const ARRAY_BINARY_SEARCH_METHOD_NAMES: &[&str] = &[
     "array.binary_search",
     "array.binary_search_leftmost",
@@ -150,6 +152,21 @@ fn array_series_float_builtin_signatures_stay_in_sync_with_docs() {
             .find(|signature| signature.name == *name)
             .unwrap_or_else(|| panic!("missing builtin signature for `{name}`"));
         assert_array_series_float_signature_documented(&docs, signature);
+    }
+}
+
+#[test]
+fn array_float_array_builtin_signatures_stay_in_sync_with_docs() {
+    let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
+    let docs = fs::read_to_string(&docs_path)
+        .unwrap_or_else(|err| panic!("failed to read {}: {err}", docs_path.display()));
+
+    for name in ARRAY_FLOAT_ARRAY_METHOD_NAMES {
+        let signature = pine_builtins::PHASE_1_BUILTINS
+            .iter()
+            .find(|signature| signature.name == *name)
+            .unwrap_or_else(|| panic!("missing builtin signature for `{name}`"));
+        assert_array_float_array_signature_documented(&docs, signature);
     }
 }
 
@@ -250,6 +267,17 @@ fn assert_array_series_float_signature_documented(
     signature: &pine_builtins::BuiltinSignature,
 ) {
     let expected = format_array_series_float_signature(signature);
+    assert!(
+        docs.lines().any(|line| line == expected),
+        "BUILTIN_SIGNATURES.md should document `{expected}`"
+    );
+}
+
+fn assert_array_float_array_signature_documented(
+    docs: &str,
+    signature: &pine_builtins::BuiltinSignature,
+) {
+    let expected = format_array_float_array_signature(signature);
     assert!(
         docs.lines().any(|line| line == expected),
         "BUILTIN_SIGNATURES.md should document `{expected}`"
@@ -397,6 +425,28 @@ fn format_array_series_float_signature(signature: &pine_builtins::BuiltinSignatu
         "{}({params}) -> {}",
         signature.name,
         return_doc(signature.returns)
+    )
+}
+
+fn format_array_float_array_signature(signature: &pine_builtins::BuiltinSignature) -> String {
+    let params = signature
+        .params
+        .iter()
+        .map(|param| {
+            let optional = if param.optional { "?" } else { "" };
+            format!(
+                "{}{}: {}",
+                param.name,
+                optional,
+                array_numeric_element_accepts_doc(param.accepts)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!(
+        "{}({params}) -> {}",
+        signature.name,
+        array_float_array_return_doc(signature.returns)
     )
 }
 
@@ -568,6 +618,17 @@ fn array_numeric_element_return_doc(returns: ReturnSpec) -> &'static str {
     match returns {
         ReturnSpec::ArrayNumeric(0) => "series element",
         other => panic!("unsupported array numeric element return {other:?}"),
+    }
+}
+
+fn array_float_array_return_doc(returns: ReturnSpec) -> &'static str {
+    match returns {
+        ReturnSpec::Fixed(pine_type)
+            if format!("{pine_type:?}") == "PineType { qualifier: Simple, kind: FloatArray }" =>
+        {
+            "float-array"
+        }
+        other => panic!("unsupported array float-array return {other:?}"),
     }
 }
 
