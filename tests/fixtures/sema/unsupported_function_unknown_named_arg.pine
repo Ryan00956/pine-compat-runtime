@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported UDF unknown named arg")
+double(x) => x * 2
+plot(double(src=close))
