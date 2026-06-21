@@ -1135,6 +1135,11 @@ plot(sar)
         "{:?}",
         analysis.diagnostics
     );
+    let hir = analysis.hir.expect("HIR");
+    assert_eq!(hir.history.max_constant_offset, 2);
+    assert_builtin_series_history(&hir, "high", 2);
+    assert_builtin_series_history(&hir, "low", 2);
+    assert_builtin_series_history(&hir, "close", 1);
 
     let bars = vec![
         bar_ohlc(10.0, 11.0, 9.0, 10.0),
@@ -1148,7 +1153,7 @@ plot(sar)
         bar_ohlc(5.0, 7.0, 3.0, 6.0),
         bar_ohlc(6.0, 12.0, 5.0, 11.0),
     ];
-    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let result = run_historical(&hir, &bars).expect("runtime result");
 
     assert_eq!(result.plots[0].values[0], PineValue::Na);
     assert_values_close(
@@ -1156,5 +1161,34 @@ plot(sar)
         &[
             9.0, 9.0, 9.16, 9.5704, 17.0, 17.0, 16.56, 15.8064, 14.781888,
         ],
+    );
+}
+
+fn assert_builtin_series_history(
+    hir: &pine_ir::HirProgram,
+    symbol_name: &str,
+    expected_offset: u32,
+) {
+    let series_id = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == symbol_name)
+        .and_then(|symbol| symbol.series_id)
+        .unwrap_or_else(|| panic!("{symbol_name} should have a series id"));
+    let requirement = hir
+        .series_history
+        .iter()
+        .find(|requirement| requirement.series_id == series_id)
+        .unwrap_or_else(|| panic!("{symbol_name} should have a history requirement"));
+
+    assert_eq!(
+        requirement.max_constant_offset, expected_offset,
+        "{symbol_name} history requirement: {:?}",
+        requirement
+    );
+    assert!(
+        !requirement.has_dynamic_offsets,
+        "{symbol_name} history requirement: {:?}",
+        requirement
     );
 }
