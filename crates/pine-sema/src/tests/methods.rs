@@ -849,6 +849,40 @@ plot(made.x + close)
 }
 
 #[test]
+fn accepts_udt_typed_switch_local_return_from_user_method_aliases() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method makeTyped(Point p, Point other, int mode) =>
+    copy = p
+    otherCopy = other
+    px = copy.x
+    ox = otherCopy.x
+    Point made = switch mode
+        0 => Point.new(x=px)
+        1 => Point.new(x=ox + 1)
+        => Point.new(x=copy.x + 2)
+    made := switch mode
+        3 => Point.new(x=made.x + 3)
+        => Point.new(x=made.x + 4)
+    made
+p = Point.new(close)
+q = Point.new(open)
+made = p.makeTyped(q, bar_index)
+plot(made.x + close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_passthrough_user_function() {
     let analysis = analyze(
         r#"type Point
