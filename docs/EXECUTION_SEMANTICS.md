@@ -537,11 +537,11 @@ stored scalar value. Normal declarations allocate a fresh UDT value when
 reached on each bar; `var` UDT declarations preserve the last confirmed UDT
 value across bars and roll back during realtime forming updates like other
 ordinary `var` values, including typed `var` declarations initialized from
-`na`, same-UDT constructors, same-UDT ternary expressions, or same-UDT `if`
-expressions. Local scalar-field reassignment evaluates the right-hand
-expression, replaces that field in the current UDT value, and writes the
-updated value back to the receiver symbol, including the receiver's persistent
-slot when applicable. Local `for` expressions may construct a local UDT in
+`na`, same-UDT constructors, same-UDT ternary expressions, same-UDT switch
+expressions, or same-UDT `if` expressions. Local scalar-field reassignment
+evaluates the right-hand expression, replaces that field in the current UDT
+value, and writes the updated value back to the receiver symbol, including the
+receiver's persistent slot when applicable. Local `for` expressions may construct a local UDT in
 their final body expression, return the final iteration's UDT value, and allow
 the caller to store that value and read its fields. Top-level, block-local, and
 loop-local typed UDT declarations may also initialize from same-local-UDT

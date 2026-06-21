@@ -209,6 +209,13 @@ var Point r = bar_index == 0 ? Point.new(close + 30) : Point.new(close + 40)
 if bar_index > 0
     r := Point.new(r.x + 1)
 plot(r.x)
+var Point s = switch bar_index
+    0 => Point.new(close + 50)
+    1 => Point.new(close + 60)
+    => Point.new(close + 70)
+if bar_index > 0
+    s := Point.new(s.x + 1)
+plot(s.x)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -230,6 +237,7 @@ plot(r.x)
     assert_values_close(&forming.plots[0].values, &[1.0, 2.0]);
     assert_values_close(&forming.plots[1].values, &[11.0, 12.0]);
     assert_values_close(&forming.plots[2].values, &[31.0, 32.0]);
+    assert_values_close(&forming.plots[3].values, &[51.0, 52.0]);
 
     let rolled_back = runtime
         .update(BarUpdate::forming(bar(3.0)))
@@ -237,6 +245,7 @@ plot(r.x)
     assert_values_close(&rolled_back.plots[0].values, &[1.0, 2.0]);
     assert_values_close(&rolled_back.plots[1].values, &[11.0, 12.0]);
     assert_values_close(&rolled_back.plots[2].values, &[31.0, 32.0]);
+    assert_values_close(&rolled_back.plots[3].values, &[51.0, 52.0]);
 
     let confirmed = runtime
         .update(BarUpdate::confirmed(bar(4.0)))
@@ -244,4 +253,5 @@ plot(r.x)
     assert_values_close(&confirmed.plots[0].values, &[1.0, 2.0]);
     assert_values_close(&confirmed.plots[1].values, &[11.0, 12.0]);
     assert_values_close(&confirmed.plots[2].values, &[31.0, 32.0]);
+    assert_values_close(&confirmed.plots[3].values, &[51.0, 52.0]);
 }

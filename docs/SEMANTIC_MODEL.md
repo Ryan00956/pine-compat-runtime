@@ -447,10 +447,11 @@ declaration, and ordinary variables, local for-expression constructor results,
 top-level/block-local/loop-local typed declarations initialized from
 same-local-UDT ternary, switch, or `if` expressions, plus `var` declarations
 initialized from `na`, same-UDT constructors, same-UDT ternary expressions, or
-same-UDT `if` expressions may hold those values. Local scalar fields can be
-reassigned with `value.field := expr` outside UDF/method bodies, including
-branch, `for` loop, and `while` loop bodies; the assigned expression must be
-compatible with the declared field type. UDF parameter passthrough is supported
+same-UDT switch expressions, or same-UDT `if` expressions may hold those
+values. Local scalar fields can be reassigned with `value.field := expr`
+outside UDF/method bodies, including branch, `for` loop, and `while` loop
+bodies; the assigned expression must be compatible with the declared field
+type. UDF parameter passthrough is supported
 when the function returns the UDT
 parameter itself, when a block-bodied function returns a local alias chain that
 starts from that parameter, or when a nested passthrough UDF call maps back to

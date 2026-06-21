@@ -20,3 +20,10 @@ var Point r = bar_index == 0 ? Point.new(close + 30) : Point.new(close + 40)
 if bar_index > 0
     r := Point.new(r.x + 1)
 plot(r.x)
+var Point s = switch bar_index
+    0 => Point.new(close + 50)
+    1 => Point.new(close + 60)
+    => Point.new(close + 70)
+if bar_index > 0
+    s := Point.new(s.x + 1)
+plot(s.x)
