@@ -3,6 +3,9 @@ indicator("User-defined types")
 type Point
     float x
     float y
+type Wrapper
+    Point inner
+    float weight
 
 p = Point.new(close, open)
 plot(p.x + p.y)
@@ -27,3 +30,9 @@ plot(while_mutated.x + while_mutated.y)
 looped = for i = 0 to 1
     Point.new(p.x + i, p.y)
 plot(looped.x + looped.y)
+wrapped = Wrapper.new(p, high)
+plot(wrapped.inner.x + wrapped.inner.y + wrapped.weight)
+inner = wrapped.inner
+plot(inner.x + inner.y)
+nestedScore(w) => w.inner.x + w.inner.y + w.weight
+plot(nestedScore(wrapped))

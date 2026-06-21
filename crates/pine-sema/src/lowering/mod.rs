@@ -277,7 +277,12 @@ impl Analyzer {
                     .map(|access| (access.receiver, access.index))
                     .or_else(|| {
                         self.user_type_field_access_for_lowering(&parts, statement.span)
-                            .map(|access| (access.receiver, access.index))
+                            .and_then(|access| {
+                                access
+                                    .fields
+                                    .first()
+                                    .map(|field| (access.receiver, field.index))
+                            })
                     })?;
                 HirStmtKind::FieldReassign {
                     symbol: self.bound_symbol(&access.0, statement.span)?.id,
@@ -379,20 +384,27 @@ impl Analyzer {
                     let receiver_symbol = self
                         .bound_symbol(&access.receiver, expr.span)
                         .or_else(|| self.scope.resolve(&access.receiver))?;
-                    return Some(HirExpr {
-                        pine_type: field,
-                        series_id,
-                        kind: HirExprKind::FieldAccess {
-                            value: Box::new(param_exprs.get(&access.receiver).cloned().unwrap_or(
-                                HirExpr {
-                                    kind: HirExprKind::Symbol(receiver_symbol.id),
-                                    pine_type: receiver_symbol.pine_type,
-                                    series_id: receiver_symbol.series_id,
-                                },
-                            )),
-                            index: access.index,
-                        },
-                    });
+                    let mut value = param_exprs
+                        .get(&access.receiver)
+                        .cloned()
+                        .unwrap_or(HirExpr {
+                            kind: HirExprKind::Symbol(receiver_symbol.id),
+                            pine_type: receiver_symbol.pine_type,
+                            series_id: receiver_symbol.series_id,
+                        });
+                    let last_index = access.fields.len().saturating_sub(1);
+                    for (index, field_access) in access.fields.iter().enumerate() {
+                        value = HirExpr {
+                            pine_type: field_access.pine_type,
+                            series_id: (index == last_index).then_some(series_id).flatten(),
+                            kind: HirExprKind::FieldAccess {
+                                value: Box::new(value),
+                                index: field_access.index,
+                            },
+                        };
+                    }
+                    debug_assert_eq!(value.pine_type, field);
+                    return Some(value);
                 }
                 HirExprKind::Builtin(parts.join("."))
             }

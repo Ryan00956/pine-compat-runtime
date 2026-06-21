@@ -177,6 +177,54 @@ plot(p.x)
 }
 
 #[test]
+fn accepts_nested_user_type_fields_and_field_reads() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+type Wrapper
+    Point inner
+p = Point.new(close, open)
+w = Wrapper.new(p)
+plot(w.inner.x + w.inner.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn rejects_mismatched_nested_user_type_field_constructors() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+type Other
+    float x
+type Wrapper
+    Point inner
+w = Wrapper.new(Other.new(close))
+plot(close)
+"#,
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_UDT_CONSTRUCTOR_ARG"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_user_type_constructor_return_from_user_function() {
     let analysis = analyze(
         r#"type Point
