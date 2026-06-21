@@ -100,7 +100,27 @@ chart.point.from_time(time: int-compatible, price: numeric-compatible) -> series
 chart.point.copy(id: chart.point-compatible) -> series chart.point
 label.new(x: int-compatible, y: numeric-compatible, text?: string-compatible, xloc?: const string, yloc?: const string, color?: color-compatible, style?: const string, textcolor?: color-compatible, size?: string-or-int-compatible, textalign?: const string, tooltip?: string-compatible, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series label
 label.new(point: chart.point-compatible, text?: string-compatible, xloc?: const string, yloc?: const string, color?: color-compatible, style?: const string, textcolor?: color-compatible, size?: string-or-int-compatible, textalign?: const string, tooltip?: string-compatible, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series label
+label.set_x(id: label-compatible, x: int-compatible) -> void
+label.set_xloc(id: label-compatible, x: int-compatible, xloc: const string) -> void
+label.set_y(id: label-compatible, y: numeric-compatible) -> void
+label.set_xy(id: label-compatible, x: int-compatible, y: numeric-compatible) -> void
 label.set_point(id: label-compatible, point: chart.point-compatible) -> void
+label.set_yloc(id: label-compatible, yloc: const string) -> void
+label.set_text(id: label-compatible, text: string-compatible) -> void
+label.set_color(id: label-compatible, color: color-compatible) -> void
+label.set_textcolor(id: label-compatible, textcolor: color-compatible) -> void
+label.set_style(id: label-compatible, style: const string) -> void
+label.set_size(id: label-compatible, size: string-or-int-compatible) -> void
+label.set_tooltip(id: label-compatible, tooltip: string-compatible) -> void
+label.set_textalign(id: label-compatible, textalign: const string) -> void
+label.set_text_font_family(id: label-compatible, text_font_family: const string) -> void
+label.set_text_formatting(id: label-compatible, text_formatting: int-compatible) -> void
+label.delete(id: label-compatible) -> void
+label.copy(id: label-compatible) -> series label
+label.get_x(id: label-compatible) -> series int
+label.get_y(id: label-compatible) -> series float
+label.get_text(id: label-compatible) -> series string
+label.all -> simple array<label>
 line.new(x1: int-compatible, y1: numeric-compatible, x2: int-compatible, y2: numeric-compatible, xloc?: const string, extend?: const string, color?: color-compatible, style?: const string, width?: int-compatible, force_overlay?: const bool) -> series line
 line.new(first_point: chart.point-compatible, second_point: chart.point-compatible, xloc?: const string, extend?: const string, color?: color-compatible, style?: const string, width?: int-compatible, force_overlay?: const bool) -> series line
 linefill.new(line1: line-compatible, line2: line-compatible, color: color-compatible) -> series linefill
