@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed typed UDT `var` declarations initialized from
+  same-local-UDT `if` expressions, including realtime rollback coverage.
 - Added fixture-backed top-level, block-local, and loop-local typed UDT
   declarations initialized from same-local-UDT `if` expressions.
 - Added fixture-backed typed local UDT declarations initialized from

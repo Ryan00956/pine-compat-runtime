@@ -198,6 +198,13 @@ if bar_index == 0
 else
     p := Point.new(p.x + 1)
 plot(p.x)
+var Point q = if bar_index == 0
+    Point.new(close + 10)
+else
+    Point.new(close + 20)
+if bar_index > 0
+    q := Point.new(q.x + 1)
+plot(q.x)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -217,14 +224,17 @@ plot(p.x)
         .update(BarUpdate::forming(bar(2.0)))
         .expect("forming update");
     assert_values_close(&forming.plots[0].values, &[1.0, 2.0]);
+    assert_values_close(&forming.plots[1].values, &[11.0, 12.0]);
 
     let rolled_back = runtime
         .update(BarUpdate::forming(bar(3.0)))
         .expect("second forming update");
     assert_values_close(&rolled_back.plots[0].values, &[1.0, 2.0]);
+    assert_values_close(&rolled_back.plots[1].values, &[11.0, 12.0]);
 
     let confirmed = runtime
         .update(BarUpdate::confirmed(bar(4.0)))
         .expect("confirmed update");
     assert_values_close(&confirmed.plots[0].values, &[1.0, 2.0]);
+    assert_values_close(&confirmed.plots[1].values, &[11.0, 12.0]);
 }
