@@ -4734,6 +4734,14 @@ fn reports_unsupported_user_type_duplicate_field_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_type_duplicate_decl_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_type_duplicate_decl.pine",
+        "E_UDT_DUPLICATE",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_type_decl_location_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_user_type_decl_location.pine",

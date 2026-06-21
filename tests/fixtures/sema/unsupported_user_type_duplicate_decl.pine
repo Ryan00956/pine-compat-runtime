@@ -1,0 +1,7 @@
+//@version=5
+type Point
+    float x
+type Point
+    float y
+
+plot(close)
