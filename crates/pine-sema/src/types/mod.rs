@@ -266,6 +266,7 @@ fn can_assign_na_to_kind(kind: ValueKind) -> bool {
             | ValueKind::Box
             | ValueKind::Table
             | ValueKind::ChartPoint
+            | ValueKind::UserType
             | ValueKind::IntArray
             | ValueKind::FloatArray
             | ValueKind::BoolArray

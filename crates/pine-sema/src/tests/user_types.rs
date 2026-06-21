@@ -177,6 +177,74 @@ plot(p.x)
 }
 
 #[test]
+fn accepts_user_type_typed_declaration_with_na_initializer() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+Point p = na
+p := Point.new(close, open)
+plot(p.x + p.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn rejects_mismatched_user_type_typed_declaration_reassignment() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+type Other
+    float x
+Point p = na
+p := Other.new(close)
+plot(close)
+"#,
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_UDT_ASSIGN_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_mismatched_user_type_typed_declaration_initializer() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+type Other
+    float x
+Point p = Other.new(close)
+plot(close)
+"#,
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_UDT_ASSIGN_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_nested_user_type_fields_and_field_reads() {
     let analysis = analyze(
         r#"type Point

@@ -189,8 +189,21 @@ impl Analyzer {
                 let value_type = self.analyze_expr(value).unwrap_or(UNKNOWN);
                 let declared_pine_type =
                     self.declared_pine_type(declared_type.as_deref(), statement.span);
+                let declared_user_type_name = declared_type
+                    .as_deref()
+                    .filter(|type_name| self.user_types.contains_key(*type_name))
+                    .map(str::to_owned);
                 if let Some(target_type) = declared_pine_type {
                     self.validate_typed_declaration(name, target_type, value_type, statement.span);
+                    if let Some(target_user_type_name) = declared_user_type_name.as_deref() {
+                        self.validate_user_type_value_assignment(
+                            name,
+                            target_user_type_name,
+                            value,
+                            value_type,
+                            statement.span,
+                        );
+                    }
                     self.compatibility.supported.push(FeatureUse {
                         feature: format!(
                             "{} typed declarations",
@@ -213,7 +226,9 @@ impl Analyzer {
                 } else {
                     self.define_symbol_with_persistence(name, symbol_type, persistence, var_slot_id)
                 };
-                if let Some(type_name) = self.user_type_name_of_expr(value) {
+                if let Some(type_name) = declared_user_type_name {
+                    self.mark_symbol_user_type(symbol, type_name);
+                } else if let Some(type_name) = self.user_type_name_of_expr(value) {
                     self.mark_symbol_user_type(symbol, type_name);
                 }
                 self.bind_symbol(name, statement.span, symbol);
@@ -241,13 +256,15 @@ impl Analyzer {
                     if target_type.kind == ValueKind::UserType
                         && let Some(symbol) = self.scope.resolve(name)
                         && let Some(target_type_name) = self.symbol_user_types.get(&symbol.id)
-                        && self.expr_user_type_name(value).as_ref() != Some(target_type_name)
                     {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_UDT_ASSIGN_TYPE",
-                            format!("cannot assign a different user-defined type to `{name}`"),
+                        let target_type_name = target_type_name.clone();
+                        self.validate_user_type_value_assignment(
+                            name,
+                            &target_type_name,
+                            value,
+                            value_type,
                             statement.span,
-                        ));
+                        );
                     }
                     if can_assign(target_type, value_type) {
                         self.update_symbol_type(
@@ -383,6 +400,9 @@ impl Analyzer {
             Some("array<chart.point>") => {
                 Some(PineType::new(Qualifier::Series, ValueKind::ChartPointArray))
             }
+            Some(type_name) if self.user_types.contains_key(type_name) => {
+                Some(PineType::new(Qualifier::Series, ValueKind::UserType))
+            }
             Some(type_name) => {
                 self.diagnostics.push(Diagnostic::error(
                     "E_DECL_TYPE",
@@ -439,6 +459,29 @@ impl Analyzer {
                 "cannot assign {:?} {:?} to `{name}` of user-defined type `{target_user_type}`",
                 value_type.qualifier, value_type.kind
             ),
+            span,
+        ));
+    }
+
+    fn validate_user_type_value_assignment(
+        &mut self,
+        name: &str,
+        target_user_type: &str,
+        value: &pine_syntax::Expr,
+        value_type: PineType,
+        span: Span,
+    ) {
+        if value_type.kind == ValueKind::Na
+            || self
+                .user_type_name_of_expr(value)
+                .is_some_and(|actual_user_type| actual_user_type == target_user_type)
+        {
+            return;
+        }
+
+        self.diagnostics.push(Diagnostic::error(
+            "E_UDT_ASSIGN_TYPE",
+            format!("cannot assign a different user-defined type to `{name}`"),
             span,
         ));
     }
