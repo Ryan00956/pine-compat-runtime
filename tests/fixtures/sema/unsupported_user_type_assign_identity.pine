@@ -1,0 +1,9 @@
+//@version=5
+type Point
+    float x
+type Other
+    float x
+
+Point p = na
+p := Other.new(close)
+plot(close)
