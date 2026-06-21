@@ -60,6 +60,8 @@ const ARRAY_FLOAT_ARRAY_METHOD_NAMES: &[&str] = &["array.standardize"];
 
 const ARRAY_VOID_ALL_ARRAY_METHOD_NAMES: &[&str] = &["array.reverse", "array.clear"];
 
+const ARRAY_ORDERING_METHOD_NAMES: &[&str] = &["array.sort", "array.sort_indices"];
+
 const ARRAY_BINARY_SEARCH_METHOD_NAMES: &[&str] = &[
     "array.binary_search",
     "array.binary_search_leftmost",
@@ -188,6 +190,21 @@ fn array_void_all_array_builtin_signatures_stay_in_sync_with_docs() {
 }
 
 #[test]
+fn array_ordering_builtin_signatures_stay_in_sync_with_docs() {
+    let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
+    let docs = fs::read_to_string(&docs_path)
+        .unwrap_or_else(|err| panic!("failed to read {}: {err}", docs_path.display()));
+
+    for name in ARRAY_ORDERING_METHOD_NAMES {
+        let signature = pine_builtins::PHASE_1_BUILTINS
+            .iter()
+            .find(|signature| signature.name == *name)
+            .unwrap_or_else(|| panic!("missing builtin signature for `{name}`"));
+        assert_array_ordering_signature_documented(&docs, signature);
+    }
+}
+
+#[test]
 fn array_binary_search_builtin_signatures_stay_in_sync_with_docs() {
     let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
     let docs = fs::read_to_string(&docs_path)
@@ -306,6 +323,17 @@ fn assert_array_void_all_array_signature_documented(
     signature: &pine_builtins::BuiltinSignature,
 ) {
     let expected = format_array_void_all_array_signature(signature);
+    assert!(
+        docs.lines().any(|line| line == expected),
+        "BUILTIN_SIGNATURES.md should document `{expected}`"
+    );
+}
+
+fn assert_array_ordering_signature_documented(
+    docs: &str,
+    signature: &pine_builtins::BuiltinSignature,
+) {
+    let expected = format_array_ordering_signature(signature);
     assert!(
         docs.lines().any(|line| line == expected),
         "BUILTIN_SIGNATURES.md should document `{expected}`"
@@ -500,6 +528,28 @@ fn format_array_void_all_array_signature(signature: &pine_builtins::BuiltinSigna
     )
 }
 
+fn format_array_ordering_signature(signature: &pine_builtins::BuiltinSignature) -> String {
+    let params = signature
+        .params
+        .iter()
+        .map(|param| {
+            let optional = if param.optional { "?" } else { "" };
+            format!(
+                "{}{}: {}",
+                param.name,
+                optional,
+                array_ordering_accepts_doc(param.accepts)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!(
+        "{}({params}) -> {}",
+        signature.name,
+        array_ordering_return_doc(signature.returns)
+    )
+}
+
 fn format_array_binary_search_signature(signature: &pine_builtins::BuiltinSignature) -> String {
     let params = signature
         .params
@@ -605,6 +655,13 @@ fn array_all_accepts_doc(accepts: Accepts) -> &'static str {
     }
 }
 
+fn array_ordering_accepts_doc(accepts: Accepts) -> &'static str {
+    match accepts {
+        Accepts::NumericOrStringArray => "float-array|int-array|string-array",
+        other => accepts_doc(other),
+    }
+}
+
 fn array_same_kind_accepts_doc(name: &str, accepts: Accepts) -> &'static str {
     match (name, accepts) {
         ("id2", Accepts::Array) => "same array kind",
@@ -686,6 +743,22 @@ fn array_float_array_return_doc(returns: ReturnSpec) -> &'static str {
             "float-array"
         }
         other => panic!("unsupported array float-array return {other:?}"),
+    }
+}
+
+fn array_ordering_return_doc(returns: ReturnSpec) -> &'static str {
+    match returns {
+        ReturnSpec::Fixed(pine_type)
+            if format!("{pine_type:?}") == "PineType { qualifier: Const, kind: Void }" =>
+        {
+            "void"
+        }
+        ReturnSpec::Fixed(pine_type)
+            if format!("{pine_type:?}") == "PineType { qualifier: Simple, kind: IntArray }" =>
+        {
+            "int-array"
+        }
+        other => panic!("unsupported array ordering return {other:?}"),
     }
 }
 
