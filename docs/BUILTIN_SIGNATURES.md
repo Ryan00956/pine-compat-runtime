@@ -152,8 +152,35 @@ linefill.delete(id: linefill-compatible) -> void
 linefill.all -> simple array<linefill>
 box.new(left: int-compatible, top: numeric-compatible, right: int-compatible, bottom: numeric-compatible, border_color?: color-compatible, border_width?: int-compatible, border_style?: const string, extend?: const string, xloc?: const string, bgcolor?: color-compatible, text?: string-compatible, text_size?: string-or-int-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_wrap?: const string, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series box
 box.new(top_left: chart.point-compatible, bottom_right: chart.point-compatible, border_color?: color-compatible, border_width?: int-compatible, border_style?: const string, extend?: const string, xloc?: const string, bgcolor?: color-compatible, text?: string-compatible, text_size?: string-or-int-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_wrap?: const string, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series box
+box.set_left(id: box-compatible, x: int-compatible) -> void
+box.set_top(id: box-compatible, y: numeric-compatible) -> void
+box.set_right(id: box-compatible, x: int-compatible) -> void
+box.set_bottom(id: box-compatible, y: numeric-compatible) -> void
+box.set_lefttop(id: box-compatible, x: int-compatible, y: numeric-compatible) -> void
 box.set_top_left_point(id: box-compatible, point: chart.point-compatible) -> void
+box.set_rightbottom(id: box-compatible, x: int-compatible, y: numeric-compatible) -> void
 box.set_bottom_right_point(id: box-compatible, point: chart.point-compatible) -> void
+box.set_bgcolor(id: box-compatible, color: color-compatible) -> void
+box.set_border_color(id: box-compatible, color: color-compatible) -> void
+box.set_border_width(id: box-compatible, width: int-compatible) -> void
+box.set_border_style(id: box-compatible, style: const string) -> void
+box.set_extend(id: box-compatible, extend: const string) -> void
+box.set_xloc(id: box-compatible, left: int-compatible, right: int-compatible, xloc: const string) -> void
+box.set_text(id: box-compatible, text: string-compatible) -> void
+box.set_text_color(id: box-compatible, text_color: color-compatible) -> void
+box.set_text_size(id: box-compatible, text_size: string-or-int-compatible) -> void
+box.set_text_halign(id: box-compatible, text_halign: const string) -> void
+box.set_text_valign(id: box-compatible, text_valign: const string) -> void
+box.set_text_wrap(id: box-compatible, text_wrap: const string) -> void
+box.set_text_font_family(id: box-compatible, text_font_family: const string) -> void
+box.set_text_formatting(id: box-compatible, text_formatting: int-compatible) -> void
+box.delete(id: box-compatible) -> void
+box.copy(id: box-compatible) -> series box
+box.get_top(id: box-compatible) -> series float
+box.get_bottom(id: box-compatible) -> series float
+box.get_left(id: box-compatible) -> series int
+box.get_right(id: box-compatible) -> series int
+box.all -> simple array<box>
 polyline.new(points: simple array<chart.point>, curved?: bool-compatible, closed?: bool-compatible, xloc?: const string, line_color?: color-compatible, fill_color?: color-compatible, line_style?: const string, line_width?: int-compatible, force_overlay?: const bool) -> series polyline
 polyline.delete(id: polyline-compatible) -> void
 polyline.all -> simple array<polyline>
