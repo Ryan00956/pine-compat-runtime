@@ -481,6 +481,31 @@ plot(w.inner.x + w.inner.y)
 }
 
 #[test]
+fn accepts_typed_nested_user_type_declaration_with_constructor_initializer() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+type Wrapper
+    Point inner
+    float weight
+p = Point.new(close, open)
+Wrapper w = Wrapper.new(p, high)
+w := Wrapper.new(Point.new(high, low), close)
+plot(w.inner.x + w.inner.y + w.weight)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_nested_user_type_field_replacement() {
     let analysis = analyze(
         r#"type Point

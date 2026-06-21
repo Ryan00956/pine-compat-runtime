@@ -82,6 +82,10 @@ plot(while_mutated.x + while_mutated.y)
 looped = for i = 0 to 1
     Point.new(p.x + i, p.y)
 plot(looped.x + looped.y)
+Wrapper typed_wrapped = Wrapper.new(Point.new(high + 100, low), high)
+plot(typed_wrapped.inner.x + typed_wrapped.inner.y + typed_wrapped.weight)
+typed_wrapped := Wrapper.new(Point.new(high + 105, low), close)
+plot(typed_wrapped.inner.x + typed_wrapped.inner.y + typed_wrapped.weight)
 wrapped = Wrapper.new(p, high)
 plot(wrapped.inner.x + wrapped.inner.y + wrapped.weight)
 inner = wrapped.inner
