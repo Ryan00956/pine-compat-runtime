@@ -17,6 +17,10 @@ Point typed_constructed = Point.new(high + 30, low)
 plot(typed_constructed.x + typed_constructed.y)
 typed_constructed := Point.new(high + 35, low)
 plot(typed_constructed.x + typed_constructed.y)
+Point typed_ternary = bar_index < 2 ? Point.new(high + 65, low) : Point.new(high + 70, low)
+plot(typed_ternary.x + typed_ternary.y)
+typed_ternary := bar_index == 3 ? Point.new(high + 75, low) : Point.new(high + 80, low)
+plot(typed_ternary.x + typed_ternary.y)
 var Point typed_var_point = na
 if bar_index == 0
     typed_var_point := Point.new(high + 20, low)
