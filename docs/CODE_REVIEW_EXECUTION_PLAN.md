@@ -422,14 +422,14 @@ run_historical(program, bars)
 - `var`/`varip` 持久化（[persistence.rs](crates/pine-runtime/src/runtime/persistence.rs)）：`eval_decl` 首次求值后缓存于 `var_store`，后续 bar 直接复用，符合一次初始化语义。
 
 **发现的问题（仅记录，未修改）**
-- [高] [expressions.rs](crates/pine-runtime/src/runtime/expressions.rs) `numeric_binary`：整数算术坍缩为 `Float`。`Add/Sub/Mul/Div/Mod` 一律走 `numeric_binary → finite_float_or_na → PineValue::Float`，因此 `Int op Int` 产出 `Float`（如 `3 - 1 → Float(2.0)`）。而 [statements.rs](crates/pine-runtime/src/runtime/statements.rs) `eval_for_loop` 与数组下标等处用 `as_i64()` 取整数，[value.rs](crates/pine-runtime/src/value.rs) 的 `as_i64()` **只接受 `PineValue::Int`、对整值 `Float` 返回 `None`**。后果：以算术表达式计算的整数被静默丢弃。**实测复现**：`for i = 0 to n - 1`（n=3）循环体一次都不执行（plot=`[0,0]`，应为 3；而 `for i = 0 to 2` 正确得 3）；`array.get(a, k - 1)`（k=2）返回 `na`（应为 `20`；`array.get(a, 1)` 正确）。`for i = 0 to array.size(a) - 1` 这一 Pine 最常见惯用法因此**静默无效**。建议：整数算术保留 `Int`（仅 `/` 强制 float、`Int/Int` 含余数时转 float），或令 `as_i64()` 接受 `fract()==0` 的 `Float`。
+- [已关闭] [expressions.rs](crates/pine-runtime/src/runtime/expressions.rs) 早期审查记录的整数算术坍缩为 `Float` 问题在当前实现中已修复：`Int +/-/*/% Int` 通过 `numeric_add`/`numeric_sub`/`numeric_mul`/`numeric_mod` 保留 `PineValue::Int`（溢出时才回退到有限 float/`na`），`/` 仍按 Pine 数值除法走 float。回归证据包括 `runs_for_loop_with_computed_integer_bound`、`runs_array_get_with_computed_integer_index`、`runs_sma_with_computed_integer_length`、`runs_math_sum_with_computed_integer_length`，以及 conformance 中的 `computed_array_operands.pine`/`computed_lengths.pine`。
 - [中] 运行时侧确认阶段 3 历史深度耦合：[context.rs](crates/pine-runtime/src/runtime/context.rs) `commit_current_series` 用 `series_retention.max_depth_for(series_id)`（源自 sema 的 `program.series_history`）裁剪缓冲；若 sema 的 `ta.*` 隐式回看表低估深度，缓冲被裁短，后续 `series_store.read(offset>len)` **静默返回 `Na`** 而非真实历史值——错误结果而非崩溃。与阶段 3 [中] 同根，建议统一为单一数据源并加端到端回归。
 - [低] 运行时错误无源位置：[error.rs](crates/pine-runtime/src/error.rs) `RuntimeError` 仅含 `message: String`，无 span。除零/越界/「history offset must be an int」等错误无法回指源码，落实阶段 2 [低] 的 HIR-无-span 影响。
 - [信息] 表达式求值递归无显式深度上限：`eval_expr` 对 `Unary/Binary/Ternary/Block/...` 递归下降，深层嵌套 HIR（含阶段 4 内联放大产生的深 HIR）在运行时仍可栈溢出；与阶段 1/3/4 的递归治理同类，建议统一加深度上限。
 - [信息] 普遍线性扫描 `program.symbols.iter().find()`：`set_builtin_symbols`（每 bar ~22 次）、`persistent_slot_for_symbol`、`current_builtin_f64`、`series_id_for_symbol` 等逐符号访问均 O(symbols)，可预构建索引映射。
 - [信息] `HistoricalRuntime` 为巨型结构体，实时每次 Forming 更新整体 `clone()`（含全部 HashMap/Vec），高频 forming 更新下内存/性能开销显著；正确性无虞，仅性能观察。
 
-**结论**：运行时主循环、保留、实时回滚、持久化语义结构正确且防御充分，但 [高] 整数算术坍缩为 `Float` 导致 for 循环算术上界 / 计算下标静默失效，是需优先修复的正确性缺陷（本阶段实测复现）。其余为阶段 3 历史耦合的运行时确认、无-span、递归与线性扫描等承接性观察。可进入阶段 7（数值/字符串/时间内置）。
+**结论**：运行时主循环、保留、实时回滚、持久化语义结构正确且防御充分；早期记录的整数算术坍缩 P0 在当前实现中已关闭，for 循环算术上界、计算下标与计算长度路径均有回归覆盖。其余为阶段 3 历史耦合的运行时确认、无-span、递归与线性扫描等承接性观察。可进入阶段 7（数值/字符串/时间内置）。
 
 ---
 
@@ -456,16 +456,16 @@ run_historical(program, bars)
 
 ### 阶段 7 审查结论（2026-05-31）
 
-**总体**：`math.*`/`ta.*`/`str.*`/时间内置实现完整、`na`/空窗口/除零防御到位，且在确定性（随机种子不依赖系统时钟）、正则线性时间（无 ReDoS）等方面表现良好。但阶段 6 的 [高] 整数坍缩缺陷在本阶段**被证实有更大爆炸半径**：几乎所有 `ta.*`/`math.*` 的 `length`/`count` 参数都用 `as_i64().unwrap_or(0)` 取整，以算术表达式计算的长度会坍缩为 `Float` → `None` → `0` → 返回 `Na`。
+**总体**：`math.*`/`ta.*`/`str.*`/时间内置实现完整、`na`/空窗口/除零防御到位，且在确定性（随机种子不依赖系统时钟）、正则线性时间（无 ReDoS）等方面表现良好。阶段 6 早期记录的整数坍缩缺陷已关闭，`ta.*`/`math.*` 的计算长度路径由 `computed_lengths.pine` 与聚焦测试覆盖。
 
 **数值内置语义差异清单**
-- 整数保留（良好面）：`math.max/min/abs/floor/ceil/trunc/round(x)` 均保留 `Int`（`math.max/min` 用 `has_float` 跟踪）——与阶段 6 二元算符“一律转 Float”形成**不一致**：修复二元算符后两者可谐一。
+- 整数保留（良好面）：`math.max/min/abs/floor/ceil/trunc/round(x)` 均保留 `Int`（`math.max/min` 用 `has_float` 跟踪）；二元 `Int +/-/*/% Int` 当前也保留 `Int`，与这些数学内置保持一致。
 - 递归序列暖机种子：`ema_next`/`rma_next` 首值 `None => source`（以首个源值播种）；`ta.rsi` 首 bar 返 `Na` 后用 rma 种子。需对照 TradingView 暖机期（部分指标首个 RMA 用 SMA-of-length 播种）核实前 `length` 根是否有数值偏差。
 - `ta.sma`/`math.sum` 等滑动窗口未满返 `Na`；`length<=0` 返 `Na`——边界处理正确。
 - 时间：`year/month/.../timestamp/timeframe.*` 均基于 UTC、不读系统时钟；时间戳越界、`timestamp` 无效日期均报 `RuntimeError`；`timeframe_seconds` 各单位范围有界。
 
 **高风险算法标注**
-- `numeric_binary` 坍缩跳过了 `ta.*`/`math.*` 的整数长度路径（见下 [高] 项）。
+- 计算整数长度路径已由 `ta.sma(close, 1 + 1)`、`math.sum(close, 1 + 1)` 等回归覆盖；后续风险集中在递归指标暖机口径与状态隔离。
 - 递归/反复指标（supertrend/sar/dmi/tsi/macd 等）依赖 `call_state` 按 `call_site_id` 隔离，状态随 `HistoricalRuntime` 克隆（实时 forming 每次 clone），逻辑正确但加重阶段 6 的 clone 开销观察。
 
 **良好实践（已验证）**
@@ -475,12 +475,12 @@ run_historical(program, bars)
 - `set_builtin_symbols`/时间换算用 `checked_*`、`u32::try_from`/`i32::try_from` 防越界→`RuntimeError` 而非 panic。
 
 **发现的问题（仅记录，未修改）**
-- [高・承接阶段 6] 整数坍缩缺陷扩散至 `ta.*`/`math.*` 长度参数：[averages.rs](crates/pine-runtime/src/builtins/ta/averages.rs) 等处 `length = eval_expr(..).as_i64().unwrap_or(0)`，以算术表达式计算的长度（`Float`）取到 `0` → 返回 `Na`。**实测复现**：`ta.sma(close, 2)` → `[na,15,25,35]`（正确），而 `ta.sma(close, n * 1)`（n=2）→ `[na,na,na,na]`（全 na）。`math.sum`/所有含计算长度的 `ta.*` 同病。进一步证实阶段 6 [高] 是全局性根因。
+- [已关闭・承接阶段 6] 整数坍缩缺陷曾扩散至 `ta.*`/`math.*` 长度参数；当前 `numeric_add`/`numeric_sub`/`numeric_mul`/`numeric_mod` 保留 `Int` 后，`ta.sma(close, n * 1)`、`math.sum(close, 1 + 1)` 等计算长度路径已恢复，并由 `runs_sma_with_computed_integer_length`、`runs_math_sum_with_computed_integer_length` 与 `computed_lengths.pine` 覆盖。
 - [中] 时区仅支持 UTC 等价物：[time.rs](crates/pine-runtime/src/builtins/time.rs) `is_supported_utc_timezone` 仅接受 `UTC/Etc\/UTC/GMT/Z/+0000/+00:00`，其余（如 `America\/New_York`、`Asia\/Shanghai`）使 `year/month/.../str.format_time` **报 `RuntimeError`** 而非按时区计算。与 Pine 支持 IANA/交易所时区不兼容；需对照 [LANGUAGE_SCOPE.md](docs/LANGUAGE_SCOPE.md) 确认是否为有意裁剪。
 - [信息] 暖机期种子待对照：`ema_next`/`rma_next`/`ta.rsi` 以首个源值播种，可能与 TradingView 首 `length` 根（部分用 SMA 播种）有数值偏差 — 用 conformance fixtures 核实。
 - [信息] `math.round_to_mintick` 用硬编码 `syminfo.mintick=0.01`（承接阶段 5）；`format_month`/`format.*` 常量格式与 Pine 需逐项对照（阶段 11/16）。
 
-**结论**：数值/字符串/时间内置实现健壮、确定性与防御到位，主要问题是阶段 6 [高] 整数坍缩在 `ta.*`/`math.*` 长度参数上的全局性扩散（已实测），以及 [中] 时区仅 UTC 的兼容缺口。可进入阶段 8（数组/绘图/输出/变量）。
+**结论**：数值/字符串/时间内置实现健壮、确定性与防御到位；整数坍缩在 `ta.*`/`math.*` 长度参数上的历史扩散已关闭并有回归覆盖。当前仍需处理 [中] 时区仅 UTC 的兼容缺口，并继续用 conformance 核实递归指标暖机口径。可进入阶段 8（数组/绘图/输出/变量）。
 
 ---
 
@@ -527,10 +527,10 @@ run_historical(program, bars)
 **发现的问题（仅记录，未修改）**
 - [中] 绘图上限固定 + 溢出报错，且忽略 `max_*_count` 声明：[labels.rs](crates/pine-runtime/src/builtins/drawings/labels.rs)/[lines.rs](crates/pine-runtime/src/builtins/drawings/lines.rs)/[boxes.rs](crates/pine-runtime/src/builtins/drawings/boxes.rs) 在 `len() >= MAX_*` 时返 `RuntimeError`。全仓未引用 `max_labels_count`/`max_lines_count`/`max_boxes_count`（grep 无命中）。而 TradingView 默认保留最近 N（默认 50、可声明至 500）并**静默淘汰最旧**。后果：逐 bar 画图超 500 根的脚本在本引擎**报错中止**，而 TradingView 正常运行。建议：读取声明的 `max_*_count` 并改为环形淘汰最旧对象。
 - [中] 数组越界/负下标语义分歧：[arrays.rs](crates/pine-runtime/src/builtins/arrays.rs) `array.get` 越界返 `Na`、`normalize_array_index` 对负下标按 `len+index` 回绕。Pine 对越界与负下标均抛“数组下标越界”运行时错误。越界静默返 `Na` 可能掩盖逻辑错误；需对照确认是否为有意放宽。
-- [信息·承接阶段 6/7] 数组下标/`array.new_*` 尺寸参数同经 `as_i64()`：以算术表达式计算的下标/尺寸坍缩为 `Float→None`，`array.get/set/insert` 返 `Na`/静默丢弃（阶段 6 实测 `array.get(a, k-1)→na`）。`int(k-1)` 可绕过，但 Pine 无需显式 `int()`。
+- [信息·已关闭] 数组下标/`array.new_*` 尺寸参数的算术整数路径已由 `computed_array_operands.pine` 与 `runs_array_get_with_computed_integer_index` 覆盖，阶段 6/7 早期记录的 `array.get(a, k-1)→na` 不再复现。
 - [信息] 绘图样式/位置默认值字符串硬编码（`label.style_label_down`/`yloc.price`/`shape.xcross` 等），与 Pine 常量需逐项对照（阶段 11/16）。
 
-**结论**：数组/绘图/输出实现内存有界、顺序确定、边界不 panic，但存在 [中] 绘图上限固定/溢出报错/忽略声明、[中] 数组越界/负下标与 Pine 的语义分歧，以及阶段 6/7 整数坍缩在数组下标的延伸。可进入阶段 9（策略与撮合）。
+**结论**：数组/绘图/输出实现内存有界、顺序确定、边界不 panic，但存在 [中] 绘图上限固定/溢出报错/忽略声明、[中] 数组越界/负下标与 Pine 的语义分歧。阶段 6/7 整数坍缩在数组下标的历史延伸已关闭并有回归覆盖。可进入阶段 9（策略与撮合）。
 
 ---
 
@@ -855,7 +855,7 @@ run_historical(program, bars)
 
 ### 阶段 15 审查结论（2026-06-01）
 
-**总体**：测试体系规模可观（~831 个 Rust `#[test]` + 38 个 pytest；304 个 `.pine` fixture + CSV 共 317 文件；72 个 golden 快照；conformance.tsv 353 个特性=225 supported/115 partial/13 unsupported）。**最强项是确定性保证**（全部 runtime fixture 的「增量==全量」parity）与**密集的失败路径/不支持诊断覆盖**。主要缺口是**正确性维度**：大量数值指标 fixture 仅被 smoke+parity 执行而**无 golden 数值断言**，conformance 状态准确性**无机器校验**，且阶段 6/7 的高危整数坍缩缺陷**无任何回归 fixture 能捕获**。
+**总体**：测试体系规模可观（~831 个 Rust `#[test]` + 38 个 pytest；304 个 `.pine` fixture + CSV 共 317 文件；72 个 golden 快照；conformance.tsv 353 个特性=225 supported/115 partial/13 unsupported）。**最强项是确定性保证**（全部 runtime fixture 的「增量==全量」parity）与**密集的失败路径/不支持诊断覆盖**。主要缺口是**正确性维度**：大量数值指标 fixture 仅被 smoke+parity 执行而**无 golden 数值断言**，conformance 状态准确性**无机器校验**。阶段 6/7 的高危整数坍缩缺陷已补计算循环上界、数组下标/尺寸、`ta.*`/`math.*` 计算长度回归，不再是当前测试缺口。
 
 **测试覆盖热力图（产出 1，按层/机制）**
 - 单测分布：runtime 414、sema 306、wasm 39、syntax 34、cli 33、builtins 5、ir 0、python 0（pytest 38 独立）。数值正确性主要靠 `src/tests/builtins_*.rs` 等**内联小脚本 + 手算期望值**。
@@ -870,7 +870,7 @@ run_historical(program, bars)
 **缺口清单（产出 2）**
 - [中] conformance 状态准确性无机器校验：[conformance.rs](crates/pine-cli/src/conformance.rs) 的 `validate_fixture_paths` 仅检查 fixture 文件**存在**，无任何测试验证 (a) fixture 真的使用了所声明的 feature，(b) status（supported/partial/unsupported）与实现现状一致。115 个 **partial** 项尤其没有「partial 边界」断言。实现回归后矩阵仍会声称 supported（只要文件在）。建议加 feature↔fixture 语义链接校验或 partial 边界回归。
 - [中] runtime 指标 fixture 仅 smoke+parity、无数值 golden：incremental.rs 对所有 runtime fixture 断言「无诊断 + 增量==全量」，但**不校验输出数值**。而 golden 快照只覆盖策略/绘图等少数 fixture——大量 `ta.*`/`math.*` 指标 fixture（alma/ao/cci/cmo/dmi/sar/supertrend/tsi/vwap…）**无 golden 数值快照**，仅被 smoke+parity 执行。因此承接阶段 7「暖机种子可能偏离 TradingView」的数值偏差**无法被测试体系捕获**。建议为高风险递归指标补 golden 值快照 / conformance 数值基准。
-- [低] 整数坍缩高危缺陷无回归守护：阶段 6/7 实测的 `for i = 0 to n-1`、`array.get(a, k-1)`、`ta.sma(close, n*1)` 静默失效，现有 fixture 全用**字面量**长度/下标（`for i = 0 to 2`），**无以算术表达式计算长度/下标**的 fixture，故测试体系完全无法暴露该缺陷。建议补回归 fixture（即使当前失败，作为已知缺陷锚点）。
+- [低][已关闭] 整数坍缩高危缺陷已补回归守护：阶段 6/7 实测的 `for i = 0 to n-1`、`array.get(a, k-1)`、`ta.sma(close, n*1)` 静默失效路径，当前由 `runs_for_loop_with_computed_integer_bound`、`runs_array_get_with_computed_integer_index`、`runs_sma_with_computed_integer_length`、`runs_math_sum_with_computed_integer_length` 以及 `computed_array_operands.pine`/`computed_lengths.pine` 覆盖。后续要求是保留这些回归，不再把该项列为活跃缺口。
 - [低] 语法层 fixture 回归近空白：[syntax/tests/fixtures.rs](crates/pine-syntax/tests/fixtures.rs) 仅 1 个 test（phase1_basic）；深嵌套递归（阶段1[中] 栈溢出）、多字节列号（阶段1[低]）等无 fixture 回归（仅 src 内联单测覆盖部分）。
 - [信息] 8 个死 fixture（引用于零处）：`tests/fixtures/sema/unsupported_strategy_exit_{stop,stop_limit,stop_profit,limit_loss,profit_loss,profit_qty,qty_stop,trailing_partial_quantity}.pine`——这些组合现多已 supported（存在对应 `supported_strategy_exit_*` 并被测），旧 unsupported 版残留为死文件。建议清理或纳入测试。
 - [信息] 非有限/不可解析输出无 fixture：阶段 11/12/14 的非有限 Float→非法 JSON / 不可 `JSON.parse` 在测试体系中**无对应用例**（无 NaN/inf 注入、无非有限 OHLCV CSV 测试），该跨 host 缺陷无回归守护。
@@ -930,14 +930,14 @@ run_historical(program, bars)
 
 | 优先级 | 问题 | 严重度 | 来源阶段 | 建议 |
 | --- | --- | --- | --- | --- |
-| **P0** | 整数算术坍缩为 Float，`for i=0 to n-1`/计算下标/`ta.*` 计算长度静默失效 | 高 | 6/7 | `numeric_binary` 保留 `Int`（仅 `/` 强制 float），或 `as_i64()` 接受 `fract==0` 的 Float |
+| **P0** | 整数算术坍缩为 Float，`for i=0 to n-1`/计算下标/`ta.*` 计算长度静默失效 | 高（已关闭） | 6/7 | 当前实现已通过 `numeric_add`/`numeric_sub`/`numeric_mul`/`numeric_mod` 保留 `Int`；继续保留计算上界/下标/长度回归 |
 | **P1-a** | 无界递归 → 栈溢出，跨所有 host 崩溃 DoS | 中(安全) | 1/3/4/6 | 解析/语义/内联/求值统一加嵌套深度上限并转诊断 |
 | **P1-b** | 非有限 Float 未在序列化/输入边界归一（非法 JSON、WASM 不可解析） | 中 | 11/12/14 | 序列化边界非有限→`null`；CSV/bars 拒绝非有限 OHLCV |
 | **P1-c** | `ta.*` 隐式历史回看表与 runtime 强耦合，漂移静默低估缓冲区 | 中 | 3/6 | 回看需求与 builtin 签名/实现绑定为单一数据源 + 端到端回归 |
 | **P2** | 与 TradingView 口径分歧：缺省下单量应为 1、撮合时序、绘图上限/淘汰策略、时区仅 UTC、request 时间框整数倍+仅 3 参、数组越界/负下标 | 中 | 7/8/9/10 | 对齐 TradingView 或在兼容性文档显式声明口径 |
 | **P3** | 工程/文档：22 诊断码未登记、运行时错误无 span、`analyze` 退出码、conformance 无机器校验 + 数值 golden 缺口、parse_bars_csv/json_escape 重复、8 死 fixture、文档漂移、包元数据 | 低/信息 | 0/2/6/11/12/14/15/16 | 批量清理，多数可独立小改 |
 
-**结论**：经 16 阶段系统走读，`pine-compat-runtime` 整体工程质量高——架构红线清晰、确定性与 clean-room 合规可靠、失败路径与增量一致性测试扎实、运行时执行路径防御充分。**唯一「高」级缺陷是整数算术坍缩（P0，正确性根因，建议最优先修复）**；其次是跨所有阶段反复出现的无界递归（安全）、非有限浮点边界（输出正确性）、`ta.*` 历史耦合（正确性）三项「中」级横切问题。其余为与 TradingView 的兼容口径分歧（多为文档化范围限制）与工程/文档清理项。建议按上表 P0→P3 推进修复，并在动 P0 时同步补阶段 15 指出的算术长度/下标回归 fixture。**全部 16 阶段审查完成。**
+**结论**：经 16 阶段系统走读，`pine-compat-runtime` 整体工程质量高——架构红线清晰、确定性与 clean-room 合规可靠、失败路径与增量一致性测试扎实、运行时执行路径防御充分。历史 P0 整数算术坍缩已关闭并有计算上界/下标/长度回归覆盖；当前优先级前列转为跨所有阶段反复出现的无界递归（安全）、非有限浮点边界（输出正确性）、`ta.*` 历史耦合（正确性）三项「中」级横切问题。其余为与 TradingView 的兼容口径分歧（多为文档化范围限制）与工程/文档清理项。建议按已关闭 P0 回归守护、P1→P3 的顺序继续推进。**全部 16 阶段审查完成。**
 
 ---
 
@@ -960,16 +960,16 @@ run_historical(program, bars)
 - [阶段3][低] crates/pine-sema/src/analyzer/{expressions,functions}.rs — 语义层递归（表达式/UDF 调用链）无深度上限，深嵌套/深链可栈溢出 — 与阶段1解析深度上限统一治理。
 - [阶段3][低] crates/pine-sema/src/analyzer/statements.rs — Reassign 以 RHS 限定符覆盖符号类型，可把 var/Series 变量收窄为 Const/Simple，条件重赋值不强制 Series — 与 runtime 行为核对限定符语义。
 - [阶段3][低] docs/DIAGNOSTIC_CODES.md — 11 个 sema 诊断码未登记（E_STRATEGY_MODE / E_SCRIPT_DECL_LOCATION / E_SCRIPT_DECL_DUPLICATE / E_LOOP_CONTROL / E_LOOP_RANGE_TYPE / E_LOOP_STEP / E_LOOP_RETURN / E_UNKNOWN_FUNCTION / E_UNKNOWN_METHOD / E_UNKNOWN_COLOR / E_METHOD_RECEIVER_TYPE） — 补登文档（阶段16 统一核对）。
-- [阶段6][高] crates/pine-runtime/src/runtime/expressions.rs — 整数算术坍缩为 Float（numeric_binary→finite_float_or_na），as_i64() 拒绝整值 Float，致 `for i = 0 to n-1`、`array.get(a, k-1)` 等以算术计算的整数静默失效（已实测复现：循环不执行/下标返回 na） — 整数算术保留 Int，或令 as_i64 接受 fract==0 的 Float。
+- [阶段6][高][已关闭] crates/pine-runtime/src/runtime/expressions.rs — 整数算术坍缩为 Float（旧 `numeric_binary→finite_float_or_na` 路径），曾致 `for i = 0 to n-1`、`array.get(a, k-1)` 等以算术计算的整数静默失效 — 当前 `Int +/-/*/% Int` 保留 Int，并由计算循环上界/数组下标/长度回归守护。
 - [阶段6][中] crates/pine-runtime/src/runtime/context.rs — 运行时侧确认阶段3历史深度耦合：series_retention.max_depth_for 源自 sema series_history，低估则 series_store.read(offset>len) 静默返回 Na（错误结果非崩溃） — 与阶段3统一为单一数据源并加端到端回归。
 - [阶段6][低] crates/pine-runtime/src/error.rs — RuntimeError 仅含 message，无 span，运行时错误无法回指源码（承接阶段2[低]） — 评估为运行时错误补充 span（阶段16）。
 - [阶段6][信息] crates/pine-runtime/src/runtime/expressions.rs — eval_expr 递归无深度上限（深嵌套/内联放大 HIR 可栈溢出）；program.symbols.iter().find() 普遍线性扫描；HistoricalRuntime 巨型结构体实时每 Forming 更新整体 clone — 统一递归治理 + 预构建符号索引 + 评估 forming 增量更新。
-- [阶段7][高] crates/pine-runtime/src/builtins/ta/averages.rs 等 — 整数坍缩缺陷扩散至 ta.*/math.* 长度参数（as_i64().unwrap_or(0)），算术计算的长度取 0 → 返回 Na（实测：`ta.sma(close, n*1)` 全 na，`ta.sma(close, 2)` 正确） — 同阶段6[高]根因，修复 numeric_binary 保留 Int 后连带解决。
+- [阶段7][高][已关闭] crates/pine-runtime/src/builtins/ta/averages.rs 等 — 整数坍缩缺陷曾扩散至 ta.*/math.* 长度参数（算术计算长度取 0 → 返回 Na） — 已随阶段6根因关闭，由 `computed_lengths.pine`、`runs_sma_with_computed_integer_length`、`runs_math_sum_with_computed_integer_length` 守护。
 - [阶段7][中] crates/pine-runtime/src/builtins/time.rs — 时区仅支持 UTC 等价物（is_supported_utc_timezone），非 UTC 时区使 time 组件/str.format_time 报 RuntimeError，与 Pine IANA/交易所时区不兼容 — 对照 LANGUAGE_SCOPE 确认是否有意裁剪。
-- [阶段7][信息] crates/pine-runtime/src/builtins/ta/averages.rs — ema/rma/rsi 暖机期以首个源值播种，可能与 TradingView 首 length 根有偏差；math.* 函数保留 Int 但二元算符坍缩 Float 不一致 — 用 conformance fixtures 核实 + 随二元算符修复谐一。
+- [阶段7][信息] crates/pine-runtime/src/builtins/ta/averages.rs — ema/rma/rsi 暖机期以首个源值播种，可能与 TradingView 首 length 根有偏差；math.* 函数与二元 `Int +/-/*/% Int` 当前均保留 Int — 用 conformance fixtures 继续核实暖机口径。
 - [阶段8][中] crates/pine-runtime/src/builtins/drawings/{labels,lines,boxes}.rs — 绘图上限固定 500 且溢出报 RuntimeError（非淘汰最旧），且全仓未引用 max_labels_count/max_lines_count/max_boxes_count 声明 — 读取声明上限并改为环形淘汰最旧，对齐 TradingView。
 - [阶段8][中] crates/pine-runtime/src/builtins/arrays.rs — array.get 越界返 Na、负下标按 len+index Python 式回绕，而 Pine 对越界/负下标抛运行时错误 — 需对照确认是否有意放宽；越界静默 Na 可能掩盖逻辑错误。
-- [阶段8][信息] crates/pine-runtime/src/builtins/arrays.rs — 数组下标/array.new_* 尺寸参数同经 as_i64()，算术计算的下标/尺寸坍缩 Na（承接阶段6/7，int() 可绕过）；绘图样式默认值字符串硬编码待对照（阶段11/16）。
+- [阶段8][信息][已关闭] crates/pine-runtime/src/builtins/arrays.rs — 数组下标/array.new_* 尺寸参数的算术整数路径已由 `computed_array_operands.pine` 覆盖；绘图样式默认值字符串硬编码待对照（阶段11/16）。
 - [阶段9][中] crates/pine-ir/src/lib.rs + crates/pine-runtime/src/builtins/strategy.rs — 未声明 default_qty_value 且 entry 无 qty 时 default_entry_qty()=None→unwrap_or(NaN)→拒单不开仓，而 TradingView 缺省 default_qty_value=1 会开 1 手 — 缺省回退为 1.0 对齐 TradingView。
 - [阶段9][中] crates/pine-runtime/src/builtins/strategy.rs + strategy/broker — 撮合时序简化：entry 当根收盘价立即成交、exit 次根 high/low，而 TradingView 默认次根开盘成交且支持 intrabar；未建模 process_orders_on_close/calc_on_order_fills — 阶段16 在兼容性文档显式声明口径差异。
 - [阶段9][信息] crates/pine-runtime/src/strategy/broker/accounting.rs + crates/pine-builtins/src/namespaces/core.rs — long-only、无手续费/滑点/金字塔/做空均为文档化范围限制；strategy() 签名仅识别 7 个参数，commission_*/slippage/pyramiding/margin_* 由 sema 报未知参数 — 阶段16 与 BUILTIN_SIGNATURES 核对并确认无“sema 通过但运行时静默吞掉”的路径。
@@ -1000,7 +1000,7 @@ run_historical(program, bars)
 - [阶段14][信息] crates/pine-wasm/Cargo.toml + src/request/chart.rs — WASM 无 profile API（同 Python 缺、CLI 有）；未设 console_error_panic_hook，栈溢出 trap 在 JS 端无消息难诊断；chart 上下文三 host 均硬编码 ChartContext::default()（NASDAQ:AAPL）不可配置 — 评估补 profile 入口/panic hook/可配置 chart 上下文（阶段16）。
 - [阶段15][中] crates/pine-cli/src/conformance.rs — conformance 状态准确性无机器校验：validate_fixture_paths 仅查文件存在，无测试验证 fixture 真用了所声明 feature、status(supported/partial/unsupported) 与实现一致；115 个 partial 无边界断言 — 加 feature↔fixture 语义链接校验/partial 边界回归。
 - [阶段15][中] crates/pine-runtime/tests/incremental.rs — 全部 runtime fixture 仅断言「无诊断+增量==全量」不验数值；ta.*/math.* 大量指标 fixture(alma/ao/cci/dmi/sar/supertrend/tsi/vwap…) 无 golden 数值快照，承接阶段7 暖机偏差无法被捕获 — 为高风险递归指标补 golden 值/数值基准。
-- [阶段15][低] tests/fixtures — 整数坍缩(阶段6/7)无回归 fixture：现有 fixture 全用字面量长度/下标，无以算术表达式计算长度/下标的用例，测试体系无法暴露该高危缺陷 — 补回归 fixture 作为已知缺陷锚点。
+- [阶段15][低][已关闭] tests/fixtures — 整数坍缩(阶段6/7)曾无回归 fixture；当前已补计算循环上界、数组下标/尺寸、`ta.*`/`math.*` 计算长度用例 — 后续保留这些 fixture 作为回归守护。
 - [阶段15][低] crates/pine-syntax/tests/fixtures.rs — 语法层 fixture 回归仅 1 个 test；深嵌套递归(阶段1[中])、多字节列号(阶段1[低])无 fixture 回归 — 补语法边界 fixture。
 - [阶段15][信息] tests/fixtures/sema/unsupported_strategy_exit_{stop,stop_limit,stop_profit,limit_loss,profit_loss,profit_qty,qty_stop,trailing_partial_quantity}.pine — 8 个死 fixture 引用于零处(对应组合现已 supported，旧 unsupported 版残留) — 清理或纳入测试。
 - [阶段15][信息] tests/fixtures — 非有限 Float→非法 JSON/不可 JSON.parse(阶段11/12/14) 无对应 fixture(无 NaN/inf 注入、无非有限 OHLCV CSV)；f64 Display 跨平台稳定性无跨架构快照矩阵 — 补非有限注入用例 + 阶段16 确定性矩阵。
@@ -1008,4 +1008,4 @@ run_historical(program, bars)
 - [阶段16][信息·确定性通过] core 五 crate 实测无时钟/随机/网络/文件/env 调用，chrono 关 clock；HashMap 仅按键控存储不入输出顺序；增量==全量 parity 覆盖全 runtime fixture — 残留 f64 Display 跨平台无 CI 快照矩阵。
 - [阶段16][信息·安全] runtime+builtins 执行路径实测仅 1 处守卫式 unreachable、无可达 unwrap，DoS 上限齐备；唯一系统性崩溃面=无界递归栈溢出(阶段1/3/4/6)经所有 host 暴露(Python SIGABRT/WASM trap) — 统一深度上限治理(P1)。
 - [阶段16][信息·合规通过] COMPATIBILITY_AND_LEGAL.md clean-room 政策完备且被遵守，代码仅 1 处注释陈述 Pine == 语义，无品牌/错误文案复制 — 轻微：包元数据 repository 空且无非关联声明(承接阶段0)。
-- [阶段16][汇总] 优先修复排序 P0 整数坍缩(高,正确性根因) → P1 无界递归/非有限浮点边界/ta.* 历史耦合(中) → P2 TradingView 口径分歧 → P3 工程文档清理；全部 16 阶段审查完成。
+- [阶段16][汇总] 历史 P0 整数坍缩(高,正确性根因) 已关闭并有回归守护；后续优先修复排序转为 P1 无界递归/非有限浮点边界/ta.* 历史耦合(中) → P2 TradingView 口径分歧 → P3 工程文档清理；全部 16 阶段审查完成。
