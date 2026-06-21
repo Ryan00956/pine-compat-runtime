@@ -1960,3 +1960,59 @@ plot(touch())
     );
     assert!(analysis.hir.is_none());
 }
+
+#[test]
+fn accepts_user_type_local_field_mutation_inside_function() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+make() =>
+    local = Point.new(close)
+    local.x := local.x + 1
+    local
+p = make()
+plot(p.x)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| { feature.feature == "user-defined type field mutation" })
+    );
+}
+
+#[test]
+fn rejects_user_type_parameter_field_mutation_inside_function() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+touch(p) =>
+    p.x := 1
+    p
+point = Point.new(close)
+mutated = touch(point)
+plot(mutated.x)
+"#,
+    );
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| { feature.feature == "function_side_effect" }),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use pine_ir::{
     CallSiteId, DrawingSettings, PersistenceKind, PineType, Qualifier, ScriptMode, SeriesId,
@@ -51,6 +51,8 @@ pub(crate) struct Analyzer {
     pub(crate) strategy_settings: StrategySettings,
     pub(crate) drawing_settings: DrawingSettings,
     pub(crate) function_stack: Vec<String>,
+    pub(crate) function_param_symbols: Vec<HashSet<SymbolId>>,
+    pub(crate) function_context_is_method: Vec<bool>,
     pub(crate) next_symbol_id: u32,
     pub(crate) next_series_id: u32,
     pub(crate) next_call_site_id: u32,

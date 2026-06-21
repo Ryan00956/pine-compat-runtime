@@ -47,6 +47,8 @@ pub fn analyze_input(input: &AnalysisInput) -> Analysis {
         strategy_settings: Default::default(),
         drawing_settings: Default::default(),
         function_stack: Vec::new(),
+        function_param_symbols: Vec::new(),
+        function_context_is_method: Vec::new(),
         next_symbol_id: initial_symbol_count(),
         next_series_id: initial_series_count(),
         next_call_site_id: 0,

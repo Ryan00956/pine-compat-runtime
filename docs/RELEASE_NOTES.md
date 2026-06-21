@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed UDF-local UDT scalar field mutation for local variables
+  while keeping global/parameter UDF mutation and method field mutation
+  rejected as side effects.
 - Added runtime fixture coverage for while-loop typed UDT declarations
   initialized and reassigned from same-local-UDT `for` expressions.
 - Added fixture-backed loop-local typed UDT declarations initialized and
@@ -2281,9 +2284,10 @@
   parameters, or block-local scalar aliases of those parameters using
   positional or named constructor field arguments, and allow the caller to
   assign and field-read that returned value. Local scalar UDT fields can now be
-  reassigned with `value.field := expr` outside UDF/method bodies. Local `for`
-  expressions may construct and return a local UDT value from their final body
-  expression. Pure UDFs may construct and return local UDT values, directly,
+  reassigned with `value.field := expr` outside method bodies, including
+  UDF-local variables. Local `for` expressions may construct and return a local
+  UDT value from their final body expression. Pure UDFs may construct and
+  return local UDT values, directly,
   through nested pure constructor-helper UDF calls, or through same-local-UDT
   ternary, switch, final if/else constructor branches, or final for bodies, from
   local UDT parameter scalar fields, scalar fields read through block-local UDT

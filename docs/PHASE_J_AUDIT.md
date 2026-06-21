@@ -30,7 +30,7 @@ fixtures, and the compatibility matrix.
   persistence.
 - UDT runtime values roll back through ordinary `var` confirmed-state semantics
   during realtime forming updates. Local scalar fields can be reassigned
-  outside UDF/method bodies, including in branch and `for` loop bodies.
+  outside method bodies, including branch, `for` loop, and UDF-local variables.
 - Pure user-defined methods on local UDT receivers with scalar parameters lower
   through the existing inlined UDF body path with the receiver as the first
   internal argument.

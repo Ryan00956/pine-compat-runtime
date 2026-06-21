@@ -561,10 +561,12 @@ those fields, scalar parameters whose types are inferred from the call
 arguments, or block-local scalar aliases of those scalar parameters, using
 positional or named constructor field arguments.
 Positional and named UDF call arguments both preserve the parameter identity.
-The caller may then store the returned value and read its fields. Field
-mutation inside UDFs or methods, UDT history references, UDT `varip`, nested
-UDT fields, UDT arrays, and imported UDT values are rejected before runtime
-execution or remain outside the executable subset.
+The caller may then store the returned value and read its fields. UDF-local
+UDT variables may mutate scalar fields before returning the updated value.
+Mutating UDT fields on globals or parameters inside UDFs, field mutation inside
+methods, UDT history references, UDT `varip`, nested UDT fields, UDT arrays,
+and imported UDT values are rejected before runtime execution or remain outside
+the executable subset.
 
 Pure local UDT methods execute as receiver functions. The receiver value is
 passed as the first internal argument and the method body is evaluated through

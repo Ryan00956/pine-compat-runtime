@@ -162,6 +162,7 @@ impl Analyzer {
         );
         self.mark_symbol_user_type(receiver, method.receiver_type.clone());
 
+        let mut param_symbols = std::collections::HashSet::from([receiver.id]);
         let mut resolved_arg_types = vec![None; method.params.len()];
         let mut resolved_arg_user_types = vec![None; method.params.len()];
         for (arg_index, param_index) in arg_indices.iter().copied().enumerate() {
@@ -177,6 +178,7 @@ impl Analyzer {
         {
             let arg_type = arg_type.unwrap_or(UNKNOWN);
             let symbol = self.define_local_symbol(&param.name, arg_type, None, false);
+            param_symbols.insert(symbol.id);
             if !can_assign(param.pine_type, arg_type) {
                 self.diagnostics.push(Diagnostic::error(
                     "E_METHOD_ARG_TYPE",
@@ -203,6 +205,8 @@ impl Analyzer {
             }
         }
         self.function_stack.push(stack_name);
+        self.function_param_symbols.push(param_symbols);
+        self.function_context_is_method.push(true);
         self.function_depth += 1;
         let return_type = self.analyze_function_body(&method.body, method.span);
         if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserType)
@@ -212,6 +216,8 @@ impl Analyzer {
             self.mark_expr_user_type(span, type_name);
         }
         self.function_depth -= 1;
+        self.function_context_is_method.pop();
+        self.function_param_symbols.pop();
         self.function_stack.pop();
         self.scope.pop_scope();
         Some(return_type)

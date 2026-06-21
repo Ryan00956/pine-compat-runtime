@@ -344,7 +344,8 @@ The analyzer should reject these with clear diagnostics:
   fields, `Type.new(...)` construction, local field reads, ordinary variables,
   local for-expression constructor results, top-level/block-local/loop-local
   same-UDT `for` expression initialization and reassignment, `var` persistence,
-  scalar field mutation outside UDF/method bodies, and UDF constructor returns,
+  scalar field mutation outside method bodies including UDF-local variables,
+  and UDF constructor returns,
   directly, through nested pure constructor-helper UDF calls, or through
   same-local-UDT ternary, switch, final if/else constructor branches, or final
   for bodies, from local UDT parameter scalar fields, scalar fields read through block-local UDT

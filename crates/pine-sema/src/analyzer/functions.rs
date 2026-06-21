@@ -295,17 +295,21 @@ impl Analyzer {
                 .and_then(|arg| self.user_type_name_of_expr(&arg.value));
         }
         self.scope.push_scope();
+        let mut param_symbols = std::collections::HashSet::new();
         for (param, (arg_type, arg_user_type)) in function
             .params
             .iter()
             .zip(resolved_arg_types.into_iter().zip(resolved_arg_user_types))
         {
             let symbol = self.define_local_symbol(param, arg_type.unwrap_or(UNKNOWN), None, false);
+            param_symbols.insert(symbol.id);
             if let Some(type_name) = arg_user_type {
                 self.mark_symbol_user_type(symbol, type_name);
             }
         }
         self.function_stack.push(name.to_owned());
+        self.function_param_symbols.push(param_symbols);
+        self.function_context_is_method.push(false);
         self.function_depth += 1;
         let return_type = self.analyze_function_body(&function.body, function.span);
         if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserType) {
@@ -333,6 +337,8 @@ impl Analyzer {
             }
         }
         self.function_depth -= 1;
+        self.function_context_is_method.pop();
+        self.function_param_symbols.pop();
         self.function_stack.pop();
         self.scope.pop_scope();
 

@@ -46,6 +46,7 @@ pub(crate) struct UdtFieldAccessStep {
 pub(crate) struct UdtFieldMutation {
     pub(crate) pine_type: PineType,
     pub(crate) user_type_name: Option<String>,
+    pub(crate) receiver_symbol: SymbolInfo,
 }
 
 pub(crate) fn span_key(span: Span) -> (usize, usize) {
@@ -230,6 +231,7 @@ impl Analyzer {
         Some(UdtFieldMutation {
             pine_type: PineType::new(symbol.pine_type.qualifier, field_kind),
             user_type_name: field_user_type_name,
+            receiver_symbol: symbol,
         })
     }
 

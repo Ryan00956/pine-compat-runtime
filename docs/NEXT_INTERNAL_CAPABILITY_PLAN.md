@@ -134,8 +134,8 @@ method resolution.
 
 Recent closure:
 
-- Local scalar-field UDT mutation outside UDF/method bodies now has branch,
-  `for`, and `while` coverage.
+- Local scalar-field UDT mutation outside method bodies now has branch, `for`,
+  `while`, and UDF-local variable coverage.
 - Pure local UDT methods now have fixture-backed receiver and additional local
   UDT parameter passthrough, alias, nested-method passthrough, constructor
   helper, and same-local-UDT ternary, switch, `if` expression, final if/else,

@@ -451,9 +451,9 @@ loop-local typed declarations initialized or reassigned from same-local-UDT
 constructors, same-UDT ternary expressions, same-UDT switch expressions,
 same-UDT `if` expressions, or same-UDT `for` expressions may hold those values.
 Local scalar fields can be reassigned with `value.field := expr`
-outside UDF/method bodies, including branch, `for` loop, and `while` loop
-bodies; the assigned expression must be compatible with the declared field
-type. UDF parameter passthrough is supported
+outside method bodies, including branch, `for` loop, `while` loop, and
+UDF-local variable bodies; the assigned expression must be compatible with the
+declared field type. UDF parameter passthrough is supported
 when the function returns the UDT
 parameter itself, when a block-bodied function returns a local alias chain that
 starts from that parameter, or when a nested passthrough UDF call maps back to
@@ -466,9 +466,11 @@ scalar aliases of those fields, parameters whose scalar types are inferred at
 the callsite, or block-local scalar aliases of those scalar parameters, using
 positional or named constructor field arguments.
 Positional and named UDF call arguments both preserve the parameter identity,
-so returned UDT values can be assigned and field-read at the callsite. UDT
-history references, field mutation inside UDFs or methods, `varip`, nested UDT
-fields, UDT arrays, and imported UDT identity remain outside the claim.
+so returned UDT values can be assigned and field-read at the callsite.
+UDF-local UDT variables may mutate scalar fields before returning the updated
+value. UDT history references, global or parameter field mutation inside UDFs,
+field mutation inside methods, `varip`, nested UDT fields, UDT arrays, and
+imported UDT identity remain outside the claim.
 
 Pure user-defined methods are supported for local UDT receivers with scalar or
 local UDT parameters, including direct UDT passthrough returns, block-local

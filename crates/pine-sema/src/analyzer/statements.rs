@@ -285,7 +285,7 @@ impl Analyzer {
                 let target = if let Some(target) =
                     self.resolve_chart_point_field_mutation(receiver, field, statement.span)
                 {
-                    Some((target.pine_type, None, "chart.point field mutation"))
+                    Some((target.pine_type, None, "chart.point field mutation", None))
                 } else {
                     self.resolve_user_type_field_mutation(receiver, field, statement.span)
                         .map(|target| {
@@ -293,11 +293,30 @@ impl Analyzer {
                                 target.pine_type,
                                 target.user_type_name,
                                 "user-defined type field mutation",
+                                Some(target.receiver_symbol),
                             )
                         })
                 };
-                if self.function_depth > 0 {
-                    let reason = match target.as_ref().map(|(_, _, feature)| *feature) {
+                let allowed_function_local_udt_mutation =
+                    target
+                        .as_ref()
+                        .is_some_and(|(_, _, feature, receiver_symbol)| {
+                            *feature == "user-defined type field mutation"
+                                && !self
+                                    .function_context_is_method
+                                    .last()
+                                    .copied()
+                                    .unwrap_or(false)
+                                && receiver_symbol.is_some_and(|symbol| {
+                                    !self.scope.resolves_to_global(receiver)
+                                        && !self
+                                            .function_param_symbols
+                                            .last()
+                                            .is_some_and(|params| params.contains(&symbol.id))
+                                })
+                        });
+                if self.function_depth > 0 && !allowed_function_local_udt_mutation {
+                    let reason = match target.as_ref().map(|(_, _, feature, _)| *feature) {
                         Some("user-defined type field mutation") => {
                             "mutating user-defined type fields inside user-defined functions or methods is not supported"
                         }
@@ -311,7 +330,7 @@ impl Analyzer {
                     self.unsupported("function_side_effect", reason, statement.span);
                 }
                 let value_type = self.analyze_expr(value);
-                if let (Some((target_type, target_user_type, feature)), Some(value_type)) =
+                if let (Some((target_type, target_user_type, feature, _)), Some(value_type)) =
                     (target, value_type)
                 {
                     let name = format!("{receiver}.{field}");

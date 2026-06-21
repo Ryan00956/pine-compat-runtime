@@ -1183,3 +1183,30 @@ p.draw()
     );
     assert!(analysis.hir.is_none());
 }
+
+#[test]
+fn rejects_user_type_local_field_mutation_inside_method() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method mutateLocal(Point p) =>
+    local = Point.new(p.x)
+    local.x := local.x + 1
+    local
+p = Point.new(close)
+q = p.mutateLocal()
+plot(q.x)
+"#,
+    );
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| { feature.feature == "function_side_effect" }),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}

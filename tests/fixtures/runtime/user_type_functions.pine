@@ -114,6 +114,10 @@ makeTypedForFrom(p, count) =>
     typed := for i = 0 to count
         Point.new(y=typed.y, x=typed.x + i + 5)
     typed
+makeLocalMutated(x, y) =>
+    local = Point.new(x + 130, y)
+    local.x := local.x + 5
+    local
 cloneViaMake(p) => make(p.x, p.y)
 cloneViaMakeNamed(p) => makeNamed(p.x, p.y)
 cloneTernary(p, flip) => flip ? Point.new(p.x, p.y) : Point.new(p.x + 10, p.y)
@@ -175,6 +179,7 @@ madeTypedSwitch = makeTypedSwitch(close, open, bar_index)
 madeTypedSwitchFrom = makeTypedSwitchFrom(p, bar_index)
 madeTypedIfFrom = makeTypedIfFrom(p, bar_index < 2)
 madeTypedForFrom = makeTypedForFrom(p, 2)
+madeLocalMutated = makeLocalMutated(close, open)
 plot(same.x - same.y)
 plot(same.x + same.y)
 plot(wrapped.x + wrapped.y + bar_index)
@@ -208,3 +213,4 @@ plot(madeTypedSwitch.x + madeTypedSwitch.y + bar_index)
 plot(madeTypedSwitchFrom.x + madeTypedSwitchFrom.y + bar_index)
 plot(madeTypedIfFrom.x + madeTypedIfFrom.y + bar_index)
 plot(madeTypedForFrom.x + madeTypedForFrom.y + bar_index)
+plot(madeLocalMutated.x + madeLocalMutated.y + bar_index)
