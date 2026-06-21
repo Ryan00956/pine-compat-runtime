@@ -502,6 +502,17 @@ fn run_script_csv_returns_object_array_typed_declarations_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_drawing_typed_declarations_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/drawing_typed_declarations.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("drawing typed declarations fixture should run");
+
+    assert_snapshot("runtime_drawing_typed_declarations.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_array_helpers_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/array_helpers.pine"),
