@@ -32,6 +32,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "unsupported array.sort_indices order `sideways`",
     ),
     (
+        "tests/fixtures/regressions/history_dynamic_negative_offset.pine",
+        "history offset must be non-negative",
+    ),
+    (
         "tests/fixtures/regressions/array_new_float_negative_size.pine",
         "array.new_float size cannot be negative",
     ),

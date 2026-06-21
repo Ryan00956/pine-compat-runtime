@@ -1,0 +1,5 @@
+//@version=5
+indicator("Dynamic negative history offset")
+values = array.new_int()
+offset = array.indexof(values, 1)
+plot(close[offset])
