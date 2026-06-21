@@ -1,0 +1,6 @@
+//@version=5
+type Node
+    Parent parent
+type Parent
+    float x
+plot(close)
