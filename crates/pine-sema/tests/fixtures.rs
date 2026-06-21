@@ -4742,6 +4742,14 @@ fn reports_unsupported_user_type_decl_location_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_type_constructor_arg_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_type_constructor_arg.pine",
+        "E_UDT_CONSTRUCTOR_ARG",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_type_varip_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_user_type_varip.pine",
