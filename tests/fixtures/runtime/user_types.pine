@@ -21,6 +21,10 @@ var Point typed_var_point = na
 if bar_index == 0
     typed_var_point := Point.new(high + 20, low)
 plot(typed_var_point.x + typed_var_point.y)
+var Point typed_var_constructed = Point.new(high + 45, low)
+if bar_index == 2
+    typed_var_constructed := Point.new(high + 50, low)
+plot(typed_var_constructed.x + typed_var_constructed.y)
 if bar_index >= 0
     Point block_typed_point = na
     block_typed_point := Point.new(high + 40, low)
