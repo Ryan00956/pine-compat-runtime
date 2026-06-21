@@ -21,6 +21,16 @@ Point typed_ternary = bar_index < 2 ? Point.new(high + 65, low) : Point.new(high
 plot(typed_ternary.x + typed_ternary.y)
 typed_ternary := bar_index == 3 ? Point.new(high + 75, low) : Point.new(high + 80, low)
 plot(typed_ternary.x + typed_ternary.y)
+Point typed_if = if bar_index < 2
+    Point.new(high + 270, low)
+else
+    Point.new(high + 275, low)
+plot(typed_if.x + typed_if.y)
+typed_if := if bar_index == 3
+    Point.new(high + 280, low)
+else
+    Point.new(high + 285, low)
+plot(typed_if.x + typed_if.y)
 Point typed_switch = switch bar_index
     0 => Point.new(high + 120, low)
     1 => Point.new(high + 125, low)
@@ -51,6 +61,16 @@ if bar_index >= 0
     block_typed_ternary := bar_index == 3 ? Point.new(high + 155, low) : Point.new(high + 160, low)
     plot(block_typed_ternary.x + block_typed_ternary.y)
 if bar_index >= 0
+    Point block_typed_if = if bar_index < 2
+        Point.new(high + 290, low)
+    else
+        Point.new(high + 295, low)
+    block_typed_if := if bar_index == 3
+        Point.new(high + 300, low)
+    else
+        Point.new(high + 305, low)
+    plot(block_typed_if.x + block_typed_if.y)
+if bar_index >= 0
     Point block_typed_switch = switch bar_index
         0 => Point.new(high + 165, low)
         1 => Point.new(high + 170, low)
@@ -77,6 +97,18 @@ for typed_ternary_i = 0 to 1
     loop_typed_ternary := typed_ternary_i == 1 ? Point.new(high + typed_ternary_i + 200, low) : Point.new(high + typed_ternary_i + 205, low)
     loop_typed_ternary_sum := loop_typed_ternary_sum + loop_typed_ternary.x + loop_typed_ternary.y
 plot(loop_typed_ternary_sum)
+loop_typed_if_sum = close > 0 ? 0.0 : 0.0
+for typed_if_i = 0 to 1
+    Point loop_typed_if = if typed_if_i == 0
+        Point.new(high + typed_if_i + 310, low)
+    else
+        Point.new(high + typed_if_i + 315, low)
+    loop_typed_if := if typed_if_i == 1
+        Point.new(high + typed_if_i + 320, low)
+    else
+        Point.new(high + typed_if_i + 325, low)
+    loop_typed_if_sum := loop_typed_if_sum + loop_typed_if.x + loop_typed_if.y
+plot(loop_typed_if_sum)
 loop_typed_switch_sum = close > 0 ? 0.0 : 0.0
 for typed_switch_i = 0 to 1
     Point loop_typed_switch = switch typed_switch_i
@@ -111,6 +143,20 @@ while while_typed_ternary_i < 2
     while_typed_ternary_sum := while_typed_ternary_sum + while_typed_ternary.x + while_typed_ternary.y
     while_typed_ternary_i := while_typed_ternary_i + 1
 plot(while_typed_ternary_sum)
+while_typed_if_sum = close > 0 ? 0.0 : 0.0
+while_typed_if_i = 0
+while while_typed_if_i < 2
+    Point while_typed_if = if while_typed_if_i == 0
+        Point.new(high + while_typed_if_i + 330, low)
+    else
+        Point.new(high + while_typed_if_i + 335, low)
+    while_typed_if := if while_typed_if_i == 1
+        Point.new(high + while_typed_if_i + 340, low)
+    else
+        Point.new(high + while_typed_if_i + 345, low)
+    while_typed_if_sum := while_typed_if_sum + while_typed_if.x + while_typed_if.y
+    while_typed_if_i := while_typed_if_i + 1
+plot(while_typed_if_sum)
 while_typed_switch_sum = close > 0 ? 0.0 : 0.0
 while_typed_switch_i = 0
 while while_typed_switch_i < 2

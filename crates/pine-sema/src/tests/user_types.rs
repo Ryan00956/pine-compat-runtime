@@ -240,6 +240,33 @@ plot(p.x + p.y)
 }
 
 #[test]
+fn accepts_user_type_typed_declaration_with_if_initializer() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+Point p = if bar_index < 2
+    Point.new(close, open)
+else
+    Point.new(high, low)
+p := if bar_index == 3
+    Point.new(high, low)
+else
+    Point.new(close, open)
+plot(p.x + p.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_user_type_typed_declaration_with_switch_initializer() {
     let analysis = analyze(
         r#"type Point
@@ -376,6 +403,34 @@ if close > open
 }
 
 #[test]
+fn accepts_block_local_user_type_typed_declaration_with_if_initializer() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+if close > open
+    Point p = if bar_index < 2
+        Point.new(close, open)
+    else
+        Point.new(high, low)
+    p := if bar_index == 3
+        Point.new(high, low)
+    else
+        Point.new(close, open)
+    plot(p.x + p.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_block_local_user_type_typed_declaration_with_switch_initializer() {
     let analysis = analyze(
         r#"type Point
@@ -472,6 +527,46 @@ for i = 0 to 1
 while sum > 0
     Point p = bar_index < 2 ? Point.new(close, open) : Point.new(high, low)
     p := bar_index == 3 ? Point.new(high, low) : Point.new(close, open)
+    sum := sum - p.x - p.y
+plot(sum)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_loop_local_user_type_typed_declaration_with_if_initializer() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+sum = close > 0 ? 0.0 : 0.0
+for i = 0 to 1
+    Point p = if i == 0
+        Point.new(close + i, open)
+    else
+        Point.new(high + i, low)
+    p := if i == 1
+        Point.new(high + i, low)
+    else
+        Point.new(close + i, open)
+    sum := sum + p.x + p.y
+while sum > 0
+    Point p = if bar_index < 2
+        Point.new(close, open)
+    else
+        Point.new(high, low)
+    p := if bar_index == 3
+        Point.new(high, low)
+    else
+        Point.new(close, open)
     sum := sum - p.x - p.y
 plot(sum)
 "#,
