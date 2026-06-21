@@ -4782,6 +4782,14 @@ fn reports_unsupported_user_type_constructor_too_many_args_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_type_constructor_missing_arg_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_type_constructor_missing_arg.pine",
+        "E_UDT_CONSTRUCTOR_ARG",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_type_unknown_field_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_user_type_unknown_field.pine",
