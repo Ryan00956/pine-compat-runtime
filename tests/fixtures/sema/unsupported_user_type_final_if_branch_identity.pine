@@ -1,0 +1,14 @@
+//@version=5
+type Point
+    float x
+type Other
+    float x
+
+choose(flip) =>
+    if flip
+        Point.new(close)
+    else
+        Other.new(open)
+
+value = choose(close > open)
+plot(value.x)
