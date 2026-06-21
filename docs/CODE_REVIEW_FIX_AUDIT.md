@@ -64,7 +64,7 @@
 | CR-039 | modules_rewrite.rs | ✅ | 名称改写改为作用域感知：局部声明、函数/方法参数、for 计数器、元组声明都会 shadow 模块常量/函数目标（含 `prefix.field` 形式），修复「纯名称、易受作用域影响」缺陷。 |
 | CR-041 | tests/builtin_registry.rs | 🟡 | 新增双向对账测试（注册签名 ↔ 运行时派发名），形成守卫。但 `RUNTIME_DISPATCHED_CALLS` 仍是手维护清单，并非由派发逻辑自动派生，未来仍需人工同步（见「遗留与建议」）。 |
 | CR-011/CR-009 | — | ⬜ | 均 Deferred，未改代码，符合声明。 |
-| CR-010/CR-016 | builtins history metadata / sema history / runtime registry / SAR+DMI+Supertrend+KC/KCW numeric baselines | 🟡 | 已引入 `BUILTIN_HISTORY_METADATA`、由 sema 消费，补 reviewed runtime/metadata 对账，并把 `ta.sar`/`ta.dmi`/`ta.supertrend`/`ta.kc`/`ta.kcw` 数值基准绑定到各自 HIR retention；其他高风险指标数值基准仍待扩展。 |
+| CR-010/CR-016 | builtins history metadata / sema history / runtime registry / SAR+DMI+Supertrend+KC/KCW+MFI/TSI numeric baselines | 🟡 | 已引入 `BUILTIN_HISTORY_METADATA`、由 sema 消费，补 reviewed runtime/metadata 对账，并把 `ta.sar`/`ta.dmi`/`ta.supertrend`/`ta.kc`/`ta.kcw`/`ta.mfi`/`ta.tsi` 数值基准绑定到各自 HIR retention；其他高风险指标数值基准仍待扩展。 |
 
 ### D. 运行时内核 / 数值（pine-runtime）
 

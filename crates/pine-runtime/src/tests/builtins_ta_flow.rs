@@ -791,6 +791,9 @@ plot(na(invalid) ? 1 : 0)
         "{:?}",
         analysis.diagnostics
     );
+    let hir = analysis.hir.expect("HIR");
+    assert_eq!(hir.history.max_constant_offset, 1);
+    assert_builtin_series_history(&hir, "close", 1);
 
     let bars = vec![
         bar_volume(10.0, 100.0),
@@ -800,7 +803,7 @@ plot(na(invalid) ? 1 : 0)
         bar_volume(13.0, 500.0),
         bar_volume(12.0, 600.0),
     ];
-    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let result = run_historical(&hir, &bars).expect("runtime result");
 
     assert_eq!(result.plots[0].values[0], PineValue::Na);
     assert_eq!(result.plots[0].values[1], PineValue::Na);
@@ -836,6 +839,9 @@ plot(na(invalid) ? 1 : 0)
         "{:?}",
         analysis.diagnostics
     );
+    let hir = analysis.hir.expect("HIR");
+    assert_eq!(hir.history.max_constant_offset, 1);
+    assert_builtin_series_history(&hir, "close", 1);
 
     let bars = vec![
         bar(10.0),
@@ -845,7 +851,7 @@ plot(na(invalid) ? 1 : 0)
         bar(13.0),
         bar(12.0),
     ];
-    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let result = run_historical(&hir, &bars).expect("runtime result");
 
     assert_eq!(result.plots[0].values[0], PineValue::Na);
     assert_values_close(

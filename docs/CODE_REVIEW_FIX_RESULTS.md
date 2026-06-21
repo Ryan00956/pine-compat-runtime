@@ -335,6 +335,7 @@ requirements, and added a runtime reviewed-list reconciliation test
 (`high[2]`, `low[2]`, `close[1]`), the existing `ta.dmi` numeric regression to
 `high[1]`, `low[1]`, and `close[1]`, and the existing `ta.supertrend` numeric
 regression to `close[1]`. Also bound the existing `ta.kc` and `ta.kcw` numeric
+regressions to `close[1]`, and the existing `ta.mfi` and `ta.tsi` numeric
 regressions to `close[1]`. Remaining work is oracle-backed or golden numeric
 fixtures for the rest of the high-risk indicators.
 
@@ -362,6 +363,8 @@ fixtures for the rest of the high-risk indicators.
 - `runs_keltner_channels_over_historical_bars` and
   `runs_keltner_channel_width_over_historical_bars` assert both their numeric
   sequences and the HIR retention requirement for `close[1]`.
+- `runs_mfi_over_historical_bars` and `runs_tsi_over_historical_bars` assert
+  both their numeric sequences and the HIR retention requirement for `close[1]`.
 
 **Result: Partially fixed; broader numeric oracle/golden coverage remains**
 
@@ -586,10 +589,10 @@ supported behavior.
 
 The CR-010 metadata phase has started: implicit history requirements are now a
 shared declaration consumed by sema, reviewed runtime implicit-history reads are
-reconciled against that metadata, and the SAR/DMI/Supertrend/KC/KCW numeric
-regressions are tied to HIR retention requirements. A debug/test-only assertion
-can still be considered once runtime history reads can distinguish "normal
-warmup/out-of-range" from "declared retention too small".
+reconciled against that metadata, and the SAR/DMI/Supertrend/KC/KCW/MFI/TSI
+numeric regressions are tied to HIR retention requirements. A debug/test-only
+assertion can still be considered once runtime history reads can distinguish
+"normal warmup/out-of-range" from "declared retention too small".
 
 **Verification**
 
@@ -600,7 +603,7 @@ warmup/out-of-range" from "declared retention too small".
 - `SeriesStore::read` returns `PineValue::Na` when the requested offset is not in
   the retained buffer.
 
-**Result: Partially addressed via shared metadata, reviewed-list reconciliation, and SAR/DMI/Supertrend/KC/KCW retention-bound numeric regressions; runtime retention diagnostics remain deferred**
+**Result: Partially addressed via shared metadata, reviewed-list reconciliation, and SAR/DMI/Supertrend/KC/KCW/MFI/TSI retention-bound numeric regressions; runtime retention diagnostics remain deferred**
 
 ---
 
@@ -2274,5 +2277,5 @@ outcomes are tracked under the individual CR entries:
   CR-031/034/043/048/049/058;
 - `ta.*` history coupling remains a structural follow-up under CR-010/016/021:
   shared metadata, reviewed-list runtime reconciliation, and
-  SAR/DMI/Supertrend/KC/KCW retention-bound numeric coverage now exist, but
-  broader oracle-backed fixture work is still pending.
+  SAR/DMI/Supertrend/KC/KCW/MFI/TSI retention-bound numeric coverage now exist,
+  but broader oracle-backed fixture work is still pending.
