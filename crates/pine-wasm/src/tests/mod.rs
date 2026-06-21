@@ -276,6 +276,17 @@ fn run_script_csv_returns_color_outputs_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_chart_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/chart.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("chart fixture should run");
+
+    assert_snapshot("runtime_chart.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_hline_fill_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/io.pine"),

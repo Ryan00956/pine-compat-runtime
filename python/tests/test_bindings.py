@@ -281,6 +281,18 @@ def test_run_script_returns_color_outputs_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_chart_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/chart.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_chart.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_hline_fill_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/io.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_hline_fill.json").read_text())
