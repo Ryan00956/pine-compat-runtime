@@ -73,6 +73,14 @@ const ARRAY_ELEMENT_READER_METHOD_NAMES: &[&str] = &[
     "array.last",
 ];
 
+const ARRAY_MUTATION_VALUE_METHOD_NAMES: &[&str] = &[
+    "array.push",
+    "array.set",
+    "array.insert",
+    "array.unshift",
+    "array.fill",
+];
+
 const ARRAY_BINARY_SEARCH_METHOD_NAMES: &[&str] = &[
     "array.binary_search",
     "array.binary_search_leftmost",
@@ -246,6 +254,21 @@ fn array_element_reader_builtin_signatures_stay_in_sync_with_docs() {
 }
 
 #[test]
+fn array_mutation_value_builtin_signatures_stay_in_sync_with_docs() {
+    let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
+    let docs = fs::read_to_string(&docs_path)
+        .unwrap_or_else(|err| panic!("failed to read {}: {err}", docs_path.display()));
+
+    for name in ARRAY_MUTATION_VALUE_METHOD_NAMES {
+        let signature = pine_builtins::PHASE_1_BUILTINS
+            .iter()
+            .find(|signature| signature.name == *name)
+            .unwrap_or_else(|| panic!("missing builtin signature for `{name}`"));
+        assert_array_mutation_value_signature_documented(&docs, signature);
+    }
+}
+
+#[test]
 fn array_binary_search_builtin_signatures_stay_in_sync_with_docs() {
     let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
     let docs = fs::read_to_string(&docs_path)
@@ -394,6 +417,17 @@ fn assert_array_element_reader_signature_documented(
     signature: &pine_builtins::BuiltinSignature,
 ) {
     let expected = format_array_element_reader_signature(signature);
+    assert!(
+        docs.lines().any(|line| line == expected),
+        "BUILTIN_SIGNATURES.md should document `{expected}`"
+    );
+}
+
+fn assert_array_mutation_value_signature_documented(
+    docs: &str,
+    signature: &pine_builtins::BuiltinSignature,
+) {
+    let expected = format_array_mutation_value_signature(signature);
     assert!(
         docs.lines().any(|line| line == expected),
         "BUILTIN_SIGNATURES.md should document `{expected}`"
@@ -654,6 +688,28 @@ fn format_array_element_reader_signature(signature: &pine_builtins::BuiltinSigna
     )
 }
 
+fn format_array_mutation_value_signature(signature: &pine_builtins::BuiltinSignature) -> String {
+    let params = signature
+        .params
+        .iter()
+        .map(|param| {
+            let optional = if param.optional { "?" } else { "" };
+            format!(
+                "{}{}: {}",
+                param.name,
+                optional,
+                array_mutation_value_accepts_doc(param.accepts)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!(
+        "{}({params}) -> {}",
+        signature.name,
+        return_doc(signature.returns)
+    )
+}
+
 fn format_array_binary_search_signature(signature: &pine_builtins::BuiltinSignature) -> String {
     let params = signature
         .params
@@ -776,6 +832,15 @@ fn array_join_accepts_doc(accepts: Accepts) -> &'static str {
 fn array_element_reader_accepts_doc(accepts: Accepts) -> &'static str {
     match accepts {
         Accepts::Array => ALL_ARRAY_DOC,
+        Accepts::SimpleInt => "simple int",
+        other => accepts_doc(other),
+    }
+}
+
+fn array_mutation_value_accepts_doc(accepts: Accepts) -> &'static str {
+    match accepts {
+        Accepts::Array => ALL_ARRAY_DOC,
+        Accepts::Any => "element-compatible",
         Accepts::SimpleInt => "simple int",
         other => accepts_doc(other),
     }
