@@ -4726,6 +4726,14 @@ fn reports_unsupported_user_type_field_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_type_duplicate_field_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_type_duplicate_field.pine",
+        "E_UDT_FIELD_DUPLICATE",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_type_varip_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_user_type_varip.pine",
