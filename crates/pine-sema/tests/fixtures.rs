@@ -5249,6 +5249,14 @@ fn reports_unsupported_function_pos_after_named_arg_fixture() {
 }
 
 #[test]
+fn reports_unsupported_function_too_many_args_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_function_too_many_args.pine",
+        "E_FUNCTION_ARITY",
+    );
+}
+
+#[test]
 fn reports_unsupported_declaration_function_side_effect_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_declaration_function_side_effect.pine",

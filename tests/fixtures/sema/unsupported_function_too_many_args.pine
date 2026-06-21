@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported UDF too many args")
+double(x) => x * 2
+plot(double(close, open))
