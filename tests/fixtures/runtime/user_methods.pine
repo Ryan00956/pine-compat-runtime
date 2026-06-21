@@ -98,6 +98,10 @@ method makeNamed(Point p, float x) => Point.new(x=x)
 method makeNamedBlock(Point p, float x) =>
     ax = x
     Point.new(x=ax)
+method makeTyped(Point p, float x) =>
+    Point made = na
+    made := Point.new(x)
+    made
 
 p = Point.new(close)
 q = Point.new(open)
@@ -134,6 +138,7 @@ made = p.make(open)
 madeBlock = p.makeBlock(open)
 madeNamed = p.makeNamed(open)
 madeNamedBlock = p.makeNamedBlock(open)
+madeTyped = p.makeTyped(open)
 plot(p.shift(open))
 plot(same.x + close)
 plot(sameBlock.x + close)
@@ -166,5 +171,6 @@ plot(made.x + close)
 plot(madeBlock.x + close)
 plot(madeNamed.x + close)
 plot(madeNamedBlock.x + close)
+plot(madeTyped.x + close)
 plot(sameIf.x + close)
 plot(sameFor.x + close)
