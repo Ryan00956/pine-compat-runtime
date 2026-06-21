@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported UDF duplicate named arg")
+spread(hi, lo) => hi - lo
+plot(spread(high, hi=low))

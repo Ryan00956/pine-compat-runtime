@@ -5225,6 +5225,14 @@ fn reports_unsupported_function_side_effect_arg_fixture() {
 }
 
 #[test]
+fn reports_unsupported_function_duplicate_named_arg_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_function_duplicate_named_arg.pine",
+        "E_FUNCTION_ARG_DUPLICATE",
+    );
+}
+
+#[test]
 fn reports_unsupported_declaration_function_side_effect_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_declaration_function_side_effect.pine",
