@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed typed local UDT method declarations initialized from
+  same-local-UDT `for` expressions using receiver and local UDT parameter
+  aliases.
 - Added fixture-backed UDF-local typed UDT declarations initialized from
   same-local-UDT `for` expressions using UDT and scalar field aliases.
 - Added support for omitted `label.new` text in scalar and chart-point overloads,

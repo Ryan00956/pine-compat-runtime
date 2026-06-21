@@ -156,6 +156,15 @@ method makeTypedSwitchFrom(Point p, Point other, int mode) =>
         3 => Point.new(x=made.x + 5)
         => Point.new(x=made.x + 10)
     made
+method makeTypedForFrom(Point p, Point other, int count) =>
+    copy = p
+    otherCopy = other
+    px = copy.x
+    ox = otherCopy.x
+    Point made = for i = 0 to count
+        Point.new(x=px + ox + i + 110)
+    made := Point.new(x=made.x + 5)
+    made
 
 p = Point.new(close)
 q = Point.new(open)
@@ -200,6 +209,7 @@ madeTypedTernary = p.makeTypedTernary(open, bar_index < 2)
 madeTypedTernaryFrom = p.makeTypedTernaryFrom(q, bar_index < 2)
 madeTypedSwitch = p.makeTypedSwitch(open, bar_index)
 madeTypedSwitchFrom = p.makeTypedSwitchFrom(q, bar_index)
+madeTypedForFrom = p.makeTypedForFrom(q, 2)
 plot(p.shift(open))
 plot(same.x + close)
 plot(sameBlock.x + close)
@@ -240,5 +250,6 @@ plot(madeTypedTernary.x + close)
 plot(madeTypedTernaryFrom.x + close)
 plot(madeTypedSwitch.x + close)
 plot(madeTypedSwitchFrom.x + close)
+plot(madeTypedForFrom.x + close)
 plot(sameIf.x + close)
 plot(sameFor.x + close)
