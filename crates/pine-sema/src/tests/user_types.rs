@@ -198,6 +198,27 @@ plot(p.x + p.y)
 }
 
 #[test]
+fn accepts_user_type_typed_declaration_with_constructor_initializer() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+Point p = Point.new(close, open)
+p := Point.new(high, low)
+plot(p.x + p.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_var_user_type_typed_declaration_with_na_initializer() {
     let analysis = analyze(
         r#"type Point

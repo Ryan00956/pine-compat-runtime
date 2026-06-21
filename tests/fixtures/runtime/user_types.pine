@@ -13,6 +13,10 @@ Point typed_point = na
 plot(typed_point.x)
 typed_point := Point.new(high + 5, low)
 plot(typed_point.x + typed_point.y)
+Point typed_constructed = Point.new(high + 30, low)
+plot(typed_constructed.x + typed_constructed.y)
+typed_constructed := Point.new(high + 35, low)
+plot(typed_constructed.x + typed_constructed.y)
 var Point typed_var_point = na
 if bar_index == 0
     typed_var_point := Point.new(high + 20, low)
