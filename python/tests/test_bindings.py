@@ -480,6 +480,24 @@ def test_run_script_returns_chart_point_array_typed_declarations_fixture_contrac
     assert result == expected
 
 
+def test_run_script_returns_object_array_typed_declarations_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/object_array_typed_declarations.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_object_array_typed_declarations.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_array_helpers_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/array_helpers.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_array_helpers.json").read_text())
