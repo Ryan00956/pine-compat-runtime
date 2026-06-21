@@ -29,6 +29,10 @@ if bar_index >= 0
     Point block_typed_point = na
     block_typed_point := Point.new(high + 40, low)
     plot(block_typed_point.x + block_typed_point.y)
+if bar_index >= 0
+    Point block_typed_constructed = Point.new(high + 55, low)
+    block_typed_constructed := Point.new(high + 60, low)
+    plot(block_typed_constructed.x + block_typed_constructed.y)
 loop_typed_sum = close > 0 ? 0.0 : 0.0
 for typed_i = 0 to 1
     Point loop_typed_point = na
