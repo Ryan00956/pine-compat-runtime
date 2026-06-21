@@ -231,6 +231,46 @@ plot(w.inner.x + w.inner.y)
 }
 
 #[test]
+fn accepts_nested_user_type_field_replacement_in_control_flow() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+type Wrapper
+    Point inner
+p = Point.new(close, open)
+w = Wrapper.new(p)
+if bar_index < 2
+    w.inner := Point.new(high, low)
+else
+    w.inner := Point.new(close, open)
+for i = 0 to 1
+    w.inner := Point.new(w.inner.x + i, w.inner.y)
+while_i = 0
+while while_i < 1
+    w.inner := Point.new(w.inner.x, w.inner.y + 1)
+    while_i := while_i + 1
+plot(w.inner.x + w.inner.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| { feature.feature == "user-defined type field mutation" })
+    );
+}
+
+#[test]
 fn rejects_mismatched_nested_user_type_field_replacement() {
     let analysis = analyze(
         r#"type Point

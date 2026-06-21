@@ -38,3 +38,19 @@ nestedScore(w) => w.inner.x + w.inner.y + w.weight
 plot(nestedScore(wrapped))
 wrapped.inner := Point.new(high + 10, low)
 plot(wrapped.inner.x + wrapped.inner.y + wrapped.weight)
+branch_wrapped = Wrapper.new(Point.new(close, open), high)
+if bar_index < 2
+    branch_wrapped.inner := Point.new(high + 20, low)
+else
+    branch_wrapped.inner := Point.new(high + 30, low)
+plot(branch_wrapped.inner.x + branch_wrapped.inner.y + branch_wrapped.weight)
+for_wrapped = Wrapper.new(Point.new(close, open), high)
+for i = 0 to 1
+    for_wrapped.inner := Point.new(for_wrapped.inner.x + i + 10, for_wrapped.inner.y + i)
+plot(for_wrapped.inner.x + for_wrapped.inner.y + for_wrapped.weight)
+while_wrapped = Wrapper.new(Point.new(close, open), high)
+while_i_nested = 0
+while while_i_nested < 2
+    while_wrapped.inner := Point.new(while_wrapped.inner.x + while_i_nested + 20, while_wrapped.inner.y + while_i_nested)
+    while_i_nested := while_i_nested + 1
+plot(while_wrapped.inner.x + while_wrapped.inner.y + while_wrapped.weight)
