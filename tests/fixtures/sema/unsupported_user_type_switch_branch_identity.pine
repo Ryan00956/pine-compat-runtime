@@ -1,0 +1,10 @@
+//@version=5
+type Point
+    float x
+type Other
+    float x
+
+value = switch bar_index
+    0 => Point.new(close)
+    => Other.new(open)
+plot(value.x)
