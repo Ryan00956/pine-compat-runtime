@@ -123,14 +123,33 @@ label.get_text(id: label-compatible) -> series string
 label.all -> simple array<label>
 line.new(x1: int-compatible, y1: numeric-compatible, x2: int-compatible, y2: numeric-compatible, xloc?: const string, extend?: const string, color?: color-compatible, style?: const string, width?: int-compatible, force_overlay?: const bool) -> series line
 line.new(first_point: chart.point-compatible, second_point: chart.point-compatible, xloc?: const string, extend?: const string, color?: color-compatible, style?: const string, width?: int-compatible, force_overlay?: const bool) -> series line
+line.set_x1(id: line-compatible, x: int-compatible) -> void
+line.set_first_point(id: line-compatible, point: chart.point-compatible) -> void
+line.set_y1(id: line-compatible, y: numeric-compatible) -> void
+line.set_xy1(id: line-compatible, x: int-compatible, y: numeric-compatible) -> void
+line.set_x2(id: line-compatible, x: int-compatible) -> void
+line.set_second_point(id: line-compatible, point: chart.point-compatible) -> void
+line.set_y2(id: line-compatible, y: numeric-compatible) -> void
+line.set_xy2(id: line-compatible, x: int-compatible, y: numeric-compatible) -> void
+line.set_xloc(id: line-compatible, x1: int-compatible, x2: int-compatible, xloc: const string) -> void
+line.set_color(id: line-compatible, color: color-compatible) -> void
+line.set_width(id: line-compatible, width: int-compatible) -> void
+line.set_style(id: line-compatible, style: const string) -> void
+line.set_extend(id: line-compatible, extend: const string) -> void
+line.delete(id: line-compatible) -> void
+line.copy(id: line-compatible) -> series line
+line.get_price(id: line-compatible, x: int-compatible) -> series float
+line.get_x1(id: line-compatible) -> series int
+line.get_y1(id: line-compatible) -> series float
+line.get_x2(id: line-compatible) -> series int
+line.get_y2(id: line-compatible) -> series float
+line.all -> simple array<line>
 linefill.new(line1: line-compatible, line2: line-compatible, color: color-compatible) -> series linefill
 linefill.set_color(id: linefill-compatible, color: color-compatible) -> void
 linefill.get_line1(id: linefill-compatible) -> series line
 linefill.get_line2(id: linefill-compatible) -> series line
 linefill.delete(id: linefill-compatible) -> void
 linefill.all -> simple array<linefill>
-line.set_first_point(id: line-compatible, point: chart.point-compatible) -> void
-line.set_second_point(id: line-compatible, point: chart.point-compatible) -> void
 box.new(left: int-compatible, top: numeric-compatible, right: int-compatible, bottom: numeric-compatible, border_color?: color-compatible, border_width?: int-compatible, border_style?: const string, extend?: const string, xloc?: const string, bgcolor?: color-compatible, text?: string-compatible, text_size?: string-or-int-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_wrap?: const string, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series box
 box.new(top_left: chart.point-compatible, bottom_right: chart.point-compatible, border_color?: color-compatible, border_width?: int-compatible, border_style?: const string, extend?: const string, xloc?: const string, bgcolor?: color-compatible, text?: string-compatible, text_size?: string-or-int-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_wrap?: const string, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series box
 box.set_top_left_point(id: box-compatible, point: chart.point-compatible) -> void
