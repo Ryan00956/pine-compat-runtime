@@ -1,5 +1,5 @@
 use pine_builtins::{Accepts, ReturnSpec};
-use std::{fs, path::PathBuf};
+use std::{collections::BTreeSet, fs, path::PathBuf};
 
 const SIGNATURE_PREFIXES: &[&str] = &[
     "chart.point.",
@@ -80,6 +80,8 @@ const ARRAY_MUTATION_VALUE_METHOD_NAMES: &[&str] = &[
     "array.unshift",
     "array.fill",
 ];
+
+const ARRAY_INCLUDES_METHOD_NAMES: &[&str] = &["array.includes"];
 
 const ARRAY_SIZE_METHOD_NAMES: &[&str] = &["array.size"];
 
@@ -273,6 +275,21 @@ fn array_mutation_value_builtin_signatures_stay_in_sync_with_docs() {
 }
 
 #[test]
+fn array_includes_builtin_signatures_stay_in_sync_with_docs() {
+    let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
+    let docs = fs::read_to_string(&docs_path)
+        .unwrap_or_else(|err| panic!("failed to read {}: {err}", docs_path.display()));
+
+    for name in ARRAY_INCLUDES_METHOD_NAMES {
+        let signature = pine_builtins::PHASE_1_BUILTINS
+            .iter()
+            .find(|signature| signature.name == *name)
+            .unwrap_or_else(|| panic!("missing builtin signature for `{name}`"));
+        assert_array_includes_signature_documented(&docs, signature);
+    }
+}
+
+#[test]
 fn array_size_builtin_signatures_stay_in_sync_with_docs() {
     let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
     let docs = fs::read_to_string(&docs_path)
@@ -347,10 +364,62 @@ fn array_same_kind_builtin_signatures_stay_in_sync_with_docs() {
     }
 }
 
+#[test]
+fn array_builtin_signatures_stay_in_sync_with_docs_guards_cover_all_array_builtins() {
+    let guarded = guarded_array_signature_names();
+    let registered = pine_builtins::PHASE_1_BUILTINS
+        .iter()
+        .map(|signature| signature.name)
+        .filter(|name| name.starts_with("array."))
+        .collect::<BTreeSet<_>>();
+
+    let missing = registered.difference(&guarded).copied().collect::<Vec<_>>();
+    assert!(
+        missing.is_empty(),
+        "array builtin signature docs guards are missing entries: {missing:?}"
+    );
+
+    let stale = guarded.difference(&registered).copied().collect::<Vec<_>>();
+    assert!(
+        stale.is_empty(),
+        "array builtin signature docs guards reference unknown builtins: {stale:?}"
+    );
+}
+
 fn covered_signature_name(name: &str) -> bool {
     SIGNATURE_PREFIXES
         .iter()
         .any(|prefix| name.starts_with(prefix))
+}
+
+fn guarded_array_signature_names() -> BTreeSet<&'static str> {
+    let mut names = BTreeSet::new();
+    for group in [
+        ARRAY_CONSTRUCTOR_NAMES,
+        ARRAY_TRUTHY_METHOD_NAMES,
+        ARRAY_NUMERIC_ELEMENT_METHOD_NAMES,
+        ARRAY_SERIES_FLOAT_METHOD_NAMES,
+        ARRAY_FLOAT_ARRAY_METHOD_NAMES,
+        ARRAY_VOID_ALL_ARRAY_METHOD_NAMES,
+        ARRAY_ORDERING_METHOD_NAMES,
+        ARRAY_JOIN_METHOD_NAMES,
+        ARRAY_ELEMENT_READER_METHOD_NAMES,
+        ARRAY_MUTATION_VALUE_METHOD_NAMES,
+        ARRAY_INCLUDES_METHOD_NAMES,
+        ARRAY_SIZE_METHOD_NAMES,
+        ARRAY_FROM_METHOD_NAMES,
+        ARRAY_BINARY_SEARCH_METHOD_NAMES,
+        ARRAY_INDEX_SEARCH_METHOD_NAMES,
+        ARRAY_SAME_KIND_METHOD_NAMES,
+    ] {
+        for name in group {
+            assert!(
+                names.insert(*name),
+                "array builtin signature docs guard duplicates `{name}`"
+            );
+        }
+    }
+    names
 }
 
 fn assert_signature_documented(docs: &str, signature: &pine_builtins::BuiltinSignature) {
@@ -440,6 +509,17 @@ fn assert_array_ordering_signature_documented(
 
 fn assert_array_join_signature_documented(docs: &str, signature: &pine_builtins::BuiltinSignature) {
     let expected = format_array_join_signature(signature);
+    assert!(
+        docs.lines().any(|line| line == expected),
+        "BUILTIN_SIGNATURES.md should document `{expected}`"
+    );
+}
+
+fn assert_array_includes_signature_documented(
+    docs: &str,
+    signature: &pine_builtins::BuiltinSignature,
+) {
+    let expected = format_array_includes_signature(signature);
     assert!(
         docs.lines().any(|line| line == expected),
         "BUILTIN_SIGNATURES.md should document `{expected}`"
@@ -705,6 +785,28 @@ fn format_array_join_signature(signature: &pine_builtins::BuiltinSignature) -> S
                 param.name,
                 optional,
                 array_join_accepts_doc(param.accepts)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!(
+        "{}({params}) -> {}",
+        signature.name,
+        return_doc(signature.returns)
+    )
+}
+
+fn format_array_includes_signature(signature: &pine_builtins::BuiltinSignature) -> String {
+    let params = signature
+        .params
+        .iter()
+        .map(|param| {
+            let optional = if param.optional { "?" } else { "" };
+            format!(
+                "{}{}: {}",
+                param.name,
+                optional,
+                array_index_search_accepts_doc(param.accepts)
             )
         })
         .collect::<Vec<_>>()
