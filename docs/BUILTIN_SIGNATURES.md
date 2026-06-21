@@ -181,6 +181,30 @@ box.get_bottom(id: box-compatible) -> series float
 box.get_left(id: box-compatible) -> series int
 box.get_right(id: box-compatible) -> series int
 box.all -> simple array<box>
+table.new(position: const string, columns: int-compatible, rows: int-compatible, bgcolor?: color-compatible, frame_color?: color-compatible, frame_width?: int-compatible, border_color?: color-compatible, border_width?: int-compatible) -> series table
+table.delete(id: table-compatible) -> void
+table.clear(id: table-compatible, start_column: int-compatible, start_row: int-compatible, end_column: int-compatible, end_row: int-compatible) -> void
+table.merge_cells(id: table-compatible, start_column: int-compatible, start_row: int-compatible, end_column: int-compatible, end_row: int-compatible) -> void
+table.cell(id: table-compatible, column: int-compatible, row: int-compatible, text: string-compatible, width?: numeric-compatible, height?: numeric-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_size?: string-or-int-compatible, bgcolor?: color-compatible, tooltip?: string-compatible, text_font_family?: const string, text_formatting?: int-compatible) -> void
+table.set_position(id: table-compatible, position: const string) -> void
+table.set_bgcolor(id: table-compatible, bgcolor: color-compatible) -> void
+table.set_frame_color(id: table-compatible, frame_color: color-compatible) -> void
+table.set_frame_width(id: table-compatible, frame_width: int-compatible) -> void
+table.set_border_color(id: table-compatible, border_color: color-compatible) -> void
+table.set_border_width(id: table-compatible, border_width: int-compatible) -> void
+table.cell_set_text(id: table-compatible, column: int-compatible, row: int-compatible, text: string-compatible) -> void
+table.cell_set_bgcolor(id: table-compatible, column: int-compatible, row: int-compatible, bgcolor: color-compatible) -> void
+table.cell_set_text_color(id: table-compatible, column: int-compatible, row: int-compatible, text_color: color-compatible) -> void
+table.cell_set_width(id: table-compatible, column: int-compatible, row: int-compatible, width: numeric-compatible) -> void
+table.cell_set_height(id: table-compatible, column: int-compatible, row: int-compatible, height: numeric-compatible) -> void
+table.cell_set_text_size(id: table-compatible, column: int-compatible, row: int-compatible, text_size: string-or-int-compatible) -> void
+table.cell_set_text_halign(id: table-compatible, column: int-compatible, row: int-compatible, text_halign: const string) -> void
+table.cell_set_text_valign(id: table-compatible, column: int-compatible, row: int-compatible, text_valign: const string) -> void
+table.cell_set_text_wrap(id: table-compatible, column: int-compatible, row: int-compatible, text_wrap: const string) -> void
+table.cell_set_tooltip(id: table-compatible, column: int-compatible, row: int-compatible, tooltip: string-compatible) -> void
+table.cell_set_text_font_family(id: table-compatible, column: int-compatible, row: int-compatible, text_font_family: const string) -> void
+table.cell_set_text_formatting(id: table-compatible, column: int-compatible, row: int-compatible, text_formatting: int-compatible) -> void
+table.all -> simple array<table>
 polyline.new(points: simple array<chart.point>, curved?: bool-compatible, closed?: bool-compatible, xloc?: const string, line_color?: color-compatible, fill_color?: color-compatible, line_style?: const string, line_width?: int-compatible, force_overlay?: const bool) -> series polyline
 polyline.delete(id: polyline-compatible) -> void
 polyline.all -> simple array<polyline>
