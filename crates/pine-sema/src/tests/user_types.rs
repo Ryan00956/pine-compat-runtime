@@ -93,6 +93,36 @@ prior = p[1]
 }
 
 #[test]
+fn rejects_var_user_type_history_references() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+var Point p = Point.new(close)
+prior = p[1]
+"#,
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| { diagnostic.code == "E_UNSUPPORTED_FEATURE" }),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| { feature.feature == "user-defined type history" }),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn rejects_user_type_array_typed_declarations() {
     let analysis = analyze(
         r#"type Point
