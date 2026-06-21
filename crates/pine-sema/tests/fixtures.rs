@@ -4955,6 +4955,14 @@ fn reports_unsupported_user_method_missing_arg_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_method_too_many_args_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_method_too_many_args.pine",
+        "E_FUNCTION_ARITY",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_method_duplicate_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_user_method_duplicate.pine",
