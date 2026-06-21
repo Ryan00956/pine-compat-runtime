@@ -52,6 +52,28 @@ fn reports_unsupported_drawing_namespace_without_unknown_function_noise() {
 }
 
 #[test]
+fn reports_unsupported_drawing_method_without_unknown_method_noise() {
+    let analysis = analyze("id = label.new(bar_index, high, \"start\")\nid.set_text_wrap(na)\n");
+    let codes: Vec<_> = analysis
+        .diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.code.as_str())
+        .collect();
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "label.set_text_wrap"),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
+    assert!(!codes.contains(&"E_UNKNOWN_METHOD"), "{codes:?}");
+}
+
+#[test]
 fn accepts_same_context_request_security() {
     let analysis = analyze("plot(request.security(syminfo.tickerid, timeframe.period, close))\n");
 

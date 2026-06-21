@@ -482,11 +482,19 @@ impl Analyzer {
                 | ValueKind::Box
                 | ValueKind::Table
         ) {
-            self.diagnostics.push(Diagnostic::error(
-                "E_UNKNOWN_METHOD",
-                format!("unknown drawing method `{method_name}`"),
+            let namespace = match receiver_type.kind {
+                ValueKind::Label => "label",
+                ValueKind::Line => "line",
+                ValueKind::LineFill => "linefill",
+                ValueKind::Box => "box",
+                ValueKind::Table => "table",
+                _ => unreachable!("drawing receiver kind checked above"),
+            };
+            self.unsupported(
+                &format!("{namespace}.{method_name}"),
+                "this drawing object call is not supported in the current partial drawing subset",
                 callee.span,
-            ));
+            );
             return MethodResolution::Resolved(None);
         }
 

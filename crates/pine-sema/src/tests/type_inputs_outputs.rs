@@ -892,16 +892,17 @@ fn accepts_drawing_object_method_syntax() {
 }
 
 #[test]
-fn rejects_unknown_drawing_object_method_syntax() {
+fn rejects_unsupported_drawing_object_method_syntax() {
     let analysis = analyze("id = label.new(bar_index, high, \"start\")\nid.set_text_wrap(na)\n");
 
     assert!(
         analysis
-            .diagnostics
+            .compatibility
+            .unsupported
             .iter()
-            .any(|diagnostic| diagnostic.code == "E_UNKNOWN_METHOD"),
+            .any(|feature| feature.feature == "label.set_text_wrap"),
         "{:?}",
-        analysis.diagnostics
+        analysis.compatibility.unsupported
     );
     assert!(analysis.hir.is_none());
 }
