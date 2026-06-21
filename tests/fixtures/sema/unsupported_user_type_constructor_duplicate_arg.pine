@@ -1,0 +1,7 @@
+//@version=5
+type Point
+    float x
+    float y
+
+p = Point.new(x = close, x = open)
+plot(close)

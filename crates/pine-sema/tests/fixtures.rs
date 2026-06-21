@@ -4758,6 +4758,14 @@ fn reports_unsupported_user_type_constructor_arg_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_type_constructor_duplicate_arg_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_type_constructor_duplicate_arg.pine",
+        "E_UDT_CONSTRUCTOR_ARG",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_type_unknown_field_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_user_type_unknown_field.pine",
