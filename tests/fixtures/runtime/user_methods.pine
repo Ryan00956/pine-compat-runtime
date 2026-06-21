@@ -106,6 +106,14 @@ method makeTypedConstructed(Point p, float x) =>
     Point made = Point.new(x + 30)
     made := Point.new(made.x + 5)
     made
+method makeTypedConstructedFrom(Point p, Point other) =>
+    copy = p
+    otherCopy = other
+    px = copy.x
+    ox = otherCopy.x
+    Point made = Point.new(x=px + ox + 35)
+    made := Point.new(x=made.x + 5)
+    made
 method makeTypedTernary(Point p, float x, bool flip) =>
     Point made = flip ? Point.new(x + 40) : Point.new(x + 45)
     made := flip ? Point.new(made.x + 5) : Point.new(made.x + 10)
@@ -178,6 +186,7 @@ madeNamed = p.makeNamed(open)
 madeNamedBlock = p.makeNamedBlock(open)
 madeTyped = p.makeTyped(open)
 madeTypedConstructed = p.makeTypedConstructed(open)
+madeTypedConstructedFrom = p.makeTypedConstructedFrom(q)
 madeTypedTernary = p.makeTypedTernary(open, bar_index < 2)
 madeTypedTernaryFrom = p.makeTypedTernaryFrom(q, bar_index < 2)
 madeTypedSwitch = p.makeTypedSwitch(open, bar_index)
@@ -216,6 +225,7 @@ plot(madeNamed.x + close)
 plot(madeNamedBlock.x + close)
 plot(madeTyped.x + close)
 plot(madeTypedConstructed.x + close)
+plot(madeTypedConstructedFrom.x + close)
 plot(madeTypedTernary.x + close)
 plot(madeTypedTernaryFrom.x + close)
 plot(madeTypedSwitch.x + close)
