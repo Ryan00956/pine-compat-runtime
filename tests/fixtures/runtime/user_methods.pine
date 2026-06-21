@@ -106,6 +106,10 @@ method makeTypedConstructed(Point p, float x) =>
     Point made = Point.new(x + 30)
     made := Point.new(made.x + 5)
     made
+method makeTypedTernary(Point p, float x, bool flip) =>
+    Point made = flip ? Point.new(x + 40) : Point.new(x + 45)
+    made := flip ? Point.new(made.x + 5) : Point.new(made.x + 10)
+    made
 
 p = Point.new(close)
 q = Point.new(open)
@@ -144,6 +148,7 @@ madeNamed = p.makeNamed(open)
 madeNamedBlock = p.makeNamedBlock(open)
 madeTyped = p.makeTyped(open)
 madeTypedConstructed = p.makeTypedConstructed(open)
+madeTypedTernary = p.makeTypedTernary(open, bar_index < 2)
 plot(p.shift(open))
 plot(same.x + close)
 plot(sameBlock.x + close)
@@ -178,5 +183,6 @@ plot(madeNamed.x + close)
 plot(madeNamedBlock.x + close)
 plot(madeTyped.x + close)
 plot(madeTypedConstructed.x + close)
+plot(madeTypedTernary.x + close)
 plot(sameIf.x + close)
 plot(sameFor.x + close)
