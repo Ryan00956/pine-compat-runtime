@@ -4913,6 +4913,14 @@ fn reports_unsupported_user_method_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_method_decl_location_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_method_decl_location.pine",
+        "E_METHOD_DECL_LOCATION",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_method_side_effect_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_user_method_side_effect.pine",
