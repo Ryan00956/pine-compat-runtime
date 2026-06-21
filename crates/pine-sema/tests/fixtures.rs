@@ -5401,6 +5401,14 @@ fn reports_unsupported_recursive_function_fixture() {
 }
 
 #[test]
+fn reports_unsupported_function_call_depth_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_function_call_depth.pine",
+        "E_FUNCTION_CALL_DEPTH",
+    );
+}
+
+#[test]
 fn accepts_supported_block_statement_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/supported_block_statements.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
