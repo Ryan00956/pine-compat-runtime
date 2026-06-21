@@ -1,7 +1,8 @@
 use pine_builtins::{Accepts, ReturnSpec};
 use std::{fs, path::PathBuf};
 
-const DRAWING_PREFIXES: &[&str] = &[
+const SIGNATURE_PREFIXES: &[&str] = &[
+    "chart.point.",
     "label.",
     "line.",
     "linefill.",
@@ -20,14 +21,14 @@ const DRAWING_ALL_VALUES: &[&str] = &[
 ];
 
 #[test]
-fn drawing_builtin_signatures_stay_in_sync_with_docs() {
+fn drawing_and_chart_point_builtin_signatures_stay_in_sync_with_docs() {
     let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
     let docs = fs::read_to_string(&docs_path)
         .unwrap_or_else(|err| panic!("failed to read {}: {err}", docs_path.display()));
 
     for signature in pine_builtins::PHASE_1_BUILTINS
         .iter()
-        .filter(|signature| drawing_signature_name(signature.name))
+        .filter(|signature| covered_signature_name(signature.name))
     {
         let expected = format_signature(signature);
         assert!(
@@ -47,8 +48,8 @@ fn drawing_builtin_signatures_stay_in_sync_with_docs() {
     }
 }
 
-fn drawing_signature_name(name: &str) -> bool {
-    DRAWING_PREFIXES
+fn covered_signature_name(name: &str) -> bool {
+    SIGNATURE_PREFIXES
         .iter()
         .any(|prefix| name.starts_with(prefix))
 }
@@ -105,6 +106,7 @@ fn pine_type_doc(pine_type: impl std::fmt::Debug) -> &'static str {
         "PineType { qualifier: Series, kind: Int }" => "series int",
         "PineType { qualifier: Series, kind: Float }" => "series float",
         "PineType { qualifier: Series, kind: String }" => "series string",
+        "PineType { qualifier: Series, kind: ChartPoint }" => "series chart.point",
         "PineType { qualifier: Series, kind: Label }" => "series label",
         "PineType { qualifier: Series, kind: Line }" => "series line",
         "PineType { qualifier: Series, kind: LineFill }" => "series linefill",
