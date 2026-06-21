@@ -240,6 +240,32 @@ plot(p.x + p.y)
 }
 
 #[test]
+fn accepts_user_type_typed_declaration_with_switch_initializer() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+Point p = switch bar_index
+    0 => Point.new(close, open)
+    1 => Point.new(high, low)
+    => Point.new(close + 1, open)
+p := switch bar_index
+    3 => Point.new(high, low)
+    => Point.new(close, open)
+plot(p.x + p.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_var_user_type_typed_declaration_with_na_initializer() {
     let analysis = analyze(
         r#"type Point

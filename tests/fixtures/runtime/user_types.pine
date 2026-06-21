@@ -21,6 +21,15 @@ Point typed_ternary = bar_index < 2 ? Point.new(high + 65, low) : Point.new(high
 plot(typed_ternary.x + typed_ternary.y)
 typed_ternary := bar_index == 3 ? Point.new(high + 75, low) : Point.new(high + 80, low)
 plot(typed_ternary.x + typed_ternary.y)
+Point typed_switch = switch bar_index
+    0 => Point.new(high + 120, low)
+    1 => Point.new(high + 125, low)
+    => Point.new(high + 130, low)
+plot(typed_switch.x + typed_switch.y)
+typed_switch := switch bar_index
+    3 => Point.new(high + 135, low)
+    => Point.new(high + 140, low)
+plot(typed_switch.x + typed_switch.y)
 var Point typed_var_point = na
 if bar_index == 0
     typed_var_point := Point.new(high + 20, low)
