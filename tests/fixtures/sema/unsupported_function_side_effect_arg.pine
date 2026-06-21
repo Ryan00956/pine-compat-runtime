@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported UDF side effect argument")
+value(x) => x
+plot(value(input.float(1.0)))

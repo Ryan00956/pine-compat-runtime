@@ -5216,6 +5216,15 @@ fn reports_unsupported_function_side_effect_fixture() {
 }
 
 #[test]
+fn reports_unsupported_function_side_effect_arg_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_function_side_effect_arg.pine",
+        "function_side_effect",
+        "side-effecting calls cannot be passed as user-defined function arguments",
+    );
+}
+
+#[test]
 fn reports_unsupported_declaration_function_side_effect_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_declaration_function_side_effect.pine",
