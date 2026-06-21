@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported user method positional after named arg")
+type Point
+    float x
+
+method combine(Point p, float delta, float scale) => p.x + delta * scale
+p = Point.new(close)
+plot(p.combine(delta=open, high))

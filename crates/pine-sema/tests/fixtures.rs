@@ -4979,6 +4979,14 @@ fn reports_unsupported_user_method_duplicate_named_arg_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_method_pos_after_named_arg_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_method_pos_after_named_arg.pine",
+        "E_FUNCTION_ARG_ORDER",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_method_duplicate_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_user_method_duplicate.pine",
