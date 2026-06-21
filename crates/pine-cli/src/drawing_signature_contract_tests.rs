@@ -20,6 +20,21 @@ const DRAWING_ALL_VALUES: &[&str] = &[
     "table.all",
 ];
 
+const ARRAY_CONSTRUCTOR_NAMES: &[&str] = &[
+    "array.new_float",
+    "array.new_int",
+    "array.new_bool",
+    "array.new_string",
+    "array.new_color",
+    "array.new_label",
+    "array.new_line",
+    "array.new_linefill",
+    "array.new_polyline",
+    "array.new_box",
+    "array.new_table",
+    "array.new<chart.point>",
+];
+
 #[test]
 fn drawing_and_chart_point_builtin_signatures_stay_in_sync_with_docs() {
     let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
@@ -30,11 +45,7 @@ fn drawing_and_chart_point_builtin_signatures_stay_in_sync_with_docs() {
         .iter()
         .filter(|signature| covered_signature_name(signature.name))
     {
-        let expected = format_signature(signature);
-        assert!(
-            docs.lines().any(|line| line == expected),
-            "BUILTIN_SIGNATURES.md should document `{expected}`"
-        );
+        assert_signature_documented(&docs, signature);
     }
 
     for name in DRAWING_ALL_VALUES {
@@ -48,10 +59,44 @@ fn drawing_and_chart_point_builtin_signatures_stay_in_sync_with_docs() {
     }
 }
 
+#[test]
+fn array_constructor_builtin_signatures_stay_in_sync_with_docs() {
+    let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
+    let docs = fs::read_to_string(&docs_path)
+        .unwrap_or_else(|err| panic!("failed to read {}: {err}", docs_path.display()));
+
+    for name in ARRAY_CONSTRUCTOR_NAMES {
+        let signature = pine_builtins::PHASE_1_BUILTINS
+            .iter()
+            .find(|signature| signature.name == *name)
+            .unwrap_or_else(|| panic!("missing builtin signature for `{name}`"));
+        assert_array_constructor_signature_documented(&docs, signature);
+    }
+}
+
 fn covered_signature_name(name: &str) -> bool {
     SIGNATURE_PREFIXES
         .iter()
         .any(|prefix| name.starts_with(prefix))
+}
+
+fn assert_signature_documented(docs: &str, signature: &pine_builtins::BuiltinSignature) {
+    let expected = format_signature(signature);
+    assert!(
+        docs.lines().any(|line| line == expected),
+        "BUILTIN_SIGNATURES.md should document `{expected}`"
+    );
+}
+
+fn assert_array_constructor_signature_documented(
+    docs: &str,
+    signature: &pine_builtins::BuiltinSignature,
+) {
+    let expected = format_array_constructor_signature(signature);
+    assert!(
+        docs.lines().any(|line| line == expected),
+        "BUILTIN_SIGNATURES.md should document `{expected}`"
+    );
 }
 
 fn format_signature(signature: &pine_builtins::BuiltinSignature) -> String {
@@ -71,9 +116,39 @@ fn format_signature(signature: &pine_builtins::BuiltinSignature) -> String {
     )
 }
 
+fn format_array_constructor_signature(signature: &pine_builtins::BuiltinSignature) -> String {
+    let params = signature
+        .params
+        .iter()
+        .map(|param| {
+            let optional = if param.optional { "?" } else { "" };
+            format!(
+                "{}{}: {}",
+                param.name,
+                optional,
+                array_constructor_accepts_doc(param.accepts)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    let ReturnSpec::Fixed(pine_type) = signature.returns else {
+        panic!(
+            "array constructor should have fixed return {:?}",
+            signature.returns
+        );
+    };
+    format!(
+        "{}({params}) -> {}",
+        signature.name,
+        array_constructor_return_doc(pine_type)
+    )
+}
+
 fn accepts_doc(accepts: Accepts) -> &'static str {
     match accepts {
         Accepts::Exact(pine_type) => pine_type_doc(pine_type),
+        Accepts::Numeric => "numeric",
+        Accepts::SimpleInt => "simple int",
         Accepts::ConstString => "const string",
         Accepts::ConstBool => "const bool",
         Accepts::ColorCompatible => "color-compatible",
@@ -90,6 +165,31 @@ fn accepts_doc(accepts: Accepts) -> &'static str {
         Accepts::TableCompatible => "table-compatible",
         Accepts::ChartPointCompatible => "chart.point-compatible",
         other => panic!("unsupported drawing signature acceptor {other:?}"),
+    }
+}
+
+fn array_constructor_accepts_doc(accepts: Accepts) -> &'static str {
+    match accepts {
+        Accepts::ChartPointCompatible => "chart-point-compatible",
+        other => accepts_doc(other),
+    }
+}
+
+fn array_constructor_return_doc(pine_type: impl std::fmt::Debug) -> &'static str {
+    match format!("{pine_type:?}").as_str() {
+        "PineType { qualifier: Simple, kind: FloatArray }" => "simple float-array",
+        "PineType { qualifier: Simple, kind: IntArray }" => "simple int-array",
+        "PineType { qualifier: Simple, kind: BoolArray }" => "simple bool-array",
+        "PineType { qualifier: Simple, kind: StringArray }" => "simple string-array",
+        "PineType { qualifier: Simple, kind: ColorArray }" => "simple color-array",
+        "PineType { qualifier: Simple, kind: LabelArray }" => "simple label-array",
+        "PineType { qualifier: Simple, kind: LineArray }" => "simple line-array",
+        "PineType { qualifier: Simple, kind: LineFillArray }" => "simple linefill-array",
+        "PineType { qualifier: Simple, kind: PolylineArray }" => "simple polyline-array",
+        "PineType { qualifier: Simple, kind: BoxArray }" => "simple box-array",
+        "PineType { qualifier: Simple, kind: TableArray }" => "simple table-array",
+        "PineType { qualifier: Simple, kind: ChartPointArray }" => "simple chart-point-array",
+        other => panic!("unsupported array constructor return type {other}"),
     }
 }
 
@@ -113,6 +213,11 @@ fn pine_type_doc(pine_type: impl std::fmt::Debug) -> &'static str {
         "PineType { qualifier: Series, kind: Polyline }" => "series polyline",
         "PineType { qualifier: Series, kind: Box }" => "series box",
         "PineType { qualifier: Series, kind: Table }" => "series table",
+        "PineType { qualifier: Simple, kind: FloatArray }" => "simple float-array",
+        "PineType { qualifier: Simple, kind: IntArray }" => "simple int-array",
+        "PineType { qualifier: Simple, kind: BoolArray }" => "simple bool-array",
+        "PineType { qualifier: Simple, kind: StringArray }" => "simple string-array",
+        "PineType { qualifier: Simple, kind: ColorArray }" => "simple color-array",
         "PineType { qualifier: Simple, kind: ChartPointArray }" => "simple array<chart.point>",
         "PineType { qualifier: Simple, kind: LabelArray }" => "simple array<label>",
         "PineType { qualifier: Simple, kind: LineArray }" => "simple array<line>",
