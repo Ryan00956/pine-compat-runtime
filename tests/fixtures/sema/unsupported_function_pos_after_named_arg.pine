@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported UDF positional after named arg")
+spread(hi, lo) => hi - lo
+plot(spread(hi=high, low))
