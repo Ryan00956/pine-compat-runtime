@@ -86,6 +86,9 @@ Wrapper typed_wrapped = Wrapper.new(Point.new(high + 100, low), high)
 plot(typed_wrapped.inner.x + typed_wrapped.inner.y + typed_wrapped.weight)
 typed_wrapped := Wrapper.new(Point.new(high + 105, low), close)
 plot(typed_wrapped.inner.x + typed_wrapped.inner.y + typed_wrapped.weight)
+Wrapper typed_wrapped_na = na
+typed_wrapped_na := Wrapper.new(Point.new(high + 110, low), close)
+plot(typed_wrapped_na.inner.x + typed_wrapped_na.inner.y + typed_wrapped_na.weight)
 wrapped = Wrapper.new(p, high)
 plot(wrapped.inner.x + wrapped.inner.y + wrapped.weight)
 inner = wrapped.inner
