@@ -198,6 +198,28 @@ plot(p.x + p.y)
 }
 
 #[test]
+fn accepts_var_user_type_typed_declaration_with_na_initializer() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+var Point p = na
+if bar_index == 0
+    p := Point.new(close, open)
+plot(p.x + p.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn rejects_mismatched_user_type_typed_declaration_reassignment() {
     let analysis = analyze(
         r#"type Point

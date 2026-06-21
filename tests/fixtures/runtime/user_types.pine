@@ -13,6 +13,10 @@ Point typed_point = na
 plot(typed_point.x)
 typed_point := Point.new(high + 5, low)
 plot(typed_point.x + typed_point.y)
+var Point typed_var_point = na
+if bar_index == 0
+    typed_var_point := Point.new(high + 20, low)
+plot(typed_var_point.x + typed_var_point.y)
 p.x := high
 plot(p.x + p.y)
 branch = Point.new(close, open)
