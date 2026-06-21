@@ -467,6 +467,17 @@ fn run_script_csv_returns_scalar_typed_declarations_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_chart_point_typed_decl_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/chart_point_typed_decl.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("chart point typed declaration fixture should run");
+
+    assert_snapshot("runtime_chart_point_typed_decl.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_array_typed_declarations_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/array_typed_declarations.pine"),
