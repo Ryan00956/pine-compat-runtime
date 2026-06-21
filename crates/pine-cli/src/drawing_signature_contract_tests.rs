@@ -55,6 +55,12 @@ const ARRAY_SERIES_FLOAT_METHOD_NAMES: &[&str] = &[
     "array.stdev",
 ];
 
+const ARRAY_BINARY_SEARCH_METHOD_NAMES: &[&str] = &[
+    "array.binary_search",
+    "array.binary_search_leftmost",
+    "array.binary_search_rightmost",
+];
+
 #[test]
 fn drawing_and_chart_point_builtin_signatures_stay_in_sync_with_docs() {
     let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
@@ -139,6 +145,21 @@ fn array_series_float_builtin_signatures_stay_in_sync_with_docs() {
     }
 }
 
+#[test]
+fn array_binary_search_builtin_signatures_stay_in_sync_with_docs() {
+    let docs_path = workspace_dir().join("docs/BUILTIN_SIGNATURES.md");
+    let docs = fs::read_to_string(&docs_path)
+        .unwrap_or_else(|err| panic!("failed to read {}: {err}", docs_path.display()));
+
+    for name in ARRAY_BINARY_SEARCH_METHOD_NAMES {
+        let signature = pine_builtins::PHASE_1_BUILTINS
+            .iter()
+            .find(|signature| signature.name == *name)
+            .unwrap_or_else(|| panic!("missing builtin signature for `{name}`"));
+        assert_array_binary_search_signature_documented(&docs, signature);
+    }
+}
+
 fn covered_signature_name(name: &str) -> bool {
     SIGNATURE_PREFIXES
         .iter()
@@ -191,6 +212,17 @@ fn assert_array_series_float_signature_documented(
     signature: &pine_builtins::BuiltinSignature,
 ) {
     let expected = format_array_series_float_signature(signature);
+    assert!(
+        docs.lines().any(|line| line == expected),
+        "BUILTIN_SIGNATURES.md should document `{expected}`"
+    );
+}
+
+fn assert_array_binary_search_signature_documented(
+    docs: &str,
+    signature: &pine_builtins::BuiltinSignature,
+) {
+    let expected = format_array_binary_search_signature(signature);
     assert!(
         docs.lines().any(|line| line == expected),
         "BUILTIN_SIGNATURES.md should document `{expected}`"
@@ -308,6 +340,28 @@ fn format_array_series_float_signature(signature: &pine_builtins::BuiltinSignatu
     )
 }
 
+fn format_array_binary_search_signature(signature: &pine_builtins::BuiltinSignature) -> String {
+    let params = signature
+        .params
+        .iter()
+        .map(|param| {
+            let optional = if param.optional { "?" } else { "" };
+            format!(
+                "{}{}: {}",
+                param.name,
+                optional,
+                array_binary_search_accepts_doc(param.accepts)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!(
+        "{}({params}) -> {}",
+        signature.name,
+        return_doc(signature.returns)
+    )
+}
+
 fn accepts_doc(accepts: Accepts) -> &'static str {
     match accepts {
         Accepts::Exact(pine_type) => pine_type_doc(pine_type),
@@ -329,6 +383,14 @@ fn accepts_doc(accepts: Accepts) -> &'static str {
         Accepts::TableCompatible => "table-compatible",
         Accepts::ChartPointCompatible => "chart.point-compatible",
         other => panic!("unsupported drawing signature acceptor {other:?}"),
+    }
+}
+
+fn array_binary_search_accepts_doc(accepts: Accepts) -> &'static str {
+    match accepts {
+        Accepts::NumericArray => "float-array|int-array",
+        Accepts::Any => "element-compatible",
+        other => accepts_doc(other),
     }
 }
 
@@ -407,6 +469,7 @@ fn pine_type_doc(pine_type: impl std::fmt::Debug) -> &'static str {
         "PineType { qualifier: Series, kind: Polyline }" => "series polyline",
         "PineType { qualifier: Series, kind: Box }" => "series box",
         "PineType { qualifier: Series, kind: Table }" => "series table",
+        "PineType { qualifier: Simple, kind: Int }" => "simple int",
         "PineType { qualifier: Simple, kind: FloatArray }" => "simple float-array",
         "PineType { qualifier: Simple, kind: IntArray }" => "simple int-array",
         "PineType { qualifier: Simple, kind: BoolArray }" => "simple bool-array",
