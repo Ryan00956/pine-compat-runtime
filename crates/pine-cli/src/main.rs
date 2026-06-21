@@ -3,6 +3,8 @@ use std::{env, process::ExitCode};
 mod bars_csv;
 mod commands;
 mod conformance;
+#[cfg(test)]
+mod drawing_signature_contract_tests;
 mod json;
 mod library_sources;
 #[cfg(test)]
