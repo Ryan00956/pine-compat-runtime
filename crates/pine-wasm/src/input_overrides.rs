@@ -76,6 +76,10 @@ fn parse_generic_input_override(value: &Value) -> Result<PineValue, String> {
         return Err("input override float must be finite".to_owned());
     }
     if let Some(value) = value.as_str() {
+        let trimmed = value.trim();
+        if trimmed.starts_with('#') || trimmed.starts_with("0x") || trimmed.starts_with("0X") {
+            return parse_color_u32(trimmed).map(PineValue::Color);
+        }
         return Ok(PineValue::String(value.to_owned()));
     }
     Err("input override value must be a bool, int, finite float, or string".to_owned())

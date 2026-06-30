@@ -132,7 +132,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(from) = self.eval_expr(from)?.as_i64() else {
             return Ok(PineValue::Na);
         };
-        let Some(to) = self.eval_expr(to)?.as_i64() else {
+        let Some(mut to_boundary) = self.eval_expr(to)?.as_i64() else {
             return Ok(PineValue::Na);
         };
         let step_size = if let Some(step) = step {
@@ -150,11 +150,16 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             1
         };
-        let step = if from <= to { step_size } else { -step_size };
+        let dynamic_boundary = self.uses_v6_semantics();
+        let step = if from <= to_boundary {
+            step_size
+        } else {
+            -step_size
+        };
         let mut value = from;
         let mut loop_result = PineValue::Na;
         loop {
-            if (step > 0 && value > to) || (step < 0 && value < to) {
+            if (step > 0 && value > to_boundary) || (step < 0 && value < to_boundary) {
                 break;
             }
             self.set_symbol_value(counter, PineValue::Int(value));
@@ -196,6 +201,12 @@ impl<'a> HistoricalRuntime<'a> {
                 break;
             };
             value = next;
+            if dynamic_boundary {
+                let Some(next_boundary) = self.eval_expr(to)?.as_i64() else {
+                    return Ok(PineValue::Na);
+                };
+                to_boundary = next_boundary;
+            }
         }
         Ok(loop_result)
     }

@@ -133,6 +133,24 @@ plot(color.r(shade))
 }
 
 #[test]
+fn generic_color_input_override_accepts_hex_string() {
+    let source = r##"indicator("generic color")
+shade = input(color.red, "Shade")
+plot(color.r(shade))
+"##;
+    let bars = "time,open,high,low,close,volume\n0,1,1,1,1,1\n";
+    let input_ids = input_call_ids_by_title(source);
+    let overrides_json =
+        input_overrides_json(&[(input_ids["Shade"], serde_json::json!("#4CAF50"))]);
+
+    let output = run_script_csv_with_input_overrides(source, bars, &overrides_json)
+        .expect("generic color input override should run");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(parsed["plots"][0]["values"], serde_json::json!([76]));
+}
+
+#[test]
 fn input_overrides_report_unknown_call_site() {
     let message = run_script_csv_with_input_overrides_internal(
         "indicator(\"inputs\")\nlength = input.int(2, \"Length\")\nplot(ta.sma(close, length))\n",

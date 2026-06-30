@@ -106,6 +106,7 @@ impl Analyzer {
             .script_declaration
             .map_or(ScriptMode::Indicator, |(mode, _)| mode);
         Some(HirProgram {
+            language_version: program.version.map(|version| version.version),
             script_mode,
             strategy_settings: self.strategy_settings,
             drawing_settings: self.drawing_settings,

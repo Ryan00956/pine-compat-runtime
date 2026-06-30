@@ -459,6 +459,7 @@ mod tests {
 
     fn runtime() -> HistoricalRuntime<'static> {
         let program = Box::leak(Box::new(HirProgram {
+            language_version: None,
             script_mode: ScriptMode::Indicator,
             strategy_settings: StrategySettings::default(),
             drawing_settings: DrawingSettings::default(),

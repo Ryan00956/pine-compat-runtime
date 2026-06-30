@@ -121,6 +121,114 @@ plot(out)
 }
 
 #[test]
+fn v6_lazy_logical_ops_skip_right_side_effects() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=6
+indicator("v6 lazy logical")
+or_values = array.from(1, 2)
+or_hit = true or or_values.pop() == 2
+plot(or_values.size())
+and_values = array.from(1, 2)
+and_hit = false and and_values.pop() == 2
+plot(and_values.size())
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(&result.plots[0].values, &[2.0]);
+    assert_values_close(&result.plots[1].values, &[2.0]);
+}
+
+#[test]
+fn pre_v6_logical_ops_keep_strict_right_side_evaluation() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("strict logical")
+or_values = array.from(1, 2)
+or_hit = true or or_values.pop() == 2
+plot(or_values.size())
+and_values = array.from(1, 2)
+and_hit = false and and_values.pop() == 2
+plot(and_values.size())
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(&result.plots[0].values, &[1.0]);
+    assert_values_close(&result.plots[1].values, &[1.0]);
+}
+
+#[test]
+fn v6_for_loop_uses_dynamic_to_boundary() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=6
+indicator("v6 dynamic for")
+sum = 0
+end = 3
+for i = 0 to end
+    sum := sum + 1
+    end := 0
+plot(sum)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_values_close(&result.plots[0].values, &[1.0]);
+}
+
+#[test]
+fn pre_v6_for_loop_uses_initial_to_boundary() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("fixed for")
+sum = 0
+end = 3
+for i = 0 to end
+    sum := sum + 1
+    end := 0
+plot(sum)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_values_close(&result.plots[0].values, &[4.0]);
+}
+
+#[test]
 fn runs_local_varip_with_var_like_historical_state() {
     let source = SourceFile::new(
         "test.pine",

@@ -525,14 +525,20 @@ value-producing expression. Void side-effect calls such as `alert()` are not
 valid branch results, and neither are trailing declarations or reassignment
 statements.
 
-`for i = start to end` evaluates the integer range once when the loop statement
-is reached on a bar. The range is inclusive. The runtime increments when
-`start <= end` and decrements when `start > end`. An explicit non-zero int
-`by step` supplies the absolute step magnitude; the sign of `step` does not
-override the range direction. If `start`, `end`, or `step` evaluates to `na`,
-the loop body is skipped. The counter is scoped to the loop body. `break` exits
-the nearest enclosing loop. `continue` skips the rest of the current iteration
-and advances to the next loop counter value.
+For v6 scripts, `and` and `or` use lazy evaluation: the right operand is skipped
+when the left operand already determines the result. Earlier-version scripts
+keep strict operand evaluation for this runtime's legacy subset.
+
+`for i = start to end` loops over an inclusive integer range. The runtime
+increments when `start <= end` and decrements when `start > end`. An explicit
+non-zero int `by step` supplies the absolute step magnitude; the sign of `step`
+does not override the range direction. `start` and `step` are evaluated once
+when the loop statement is reached on a bar. In v6 scripts, `end` is
+re-evaluated before each iteration; earlier-version scripts evaluate `end` once
+when the loop is reached. If `start`, `end`, or `step` evaluates to `na`, the
+loop body is skipped. The counter is scoped to the loop body. `break` exits the
+nearest enclosing loop. `continue` skips the rest of the current iteration and
+advances to the next loop counter value.
 
 When a `for` loop is used as a declaration value, the loop body must end with a
 value-producing expression. Void side-effect calls such as `alert()` are not

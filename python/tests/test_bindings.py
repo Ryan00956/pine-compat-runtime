@@ -158,6 +158,21 @@ def test_program_run_accepts_call_site_keyed_input_overrides():
     assert script_result["plots"][0]["values"] == [2.0, 4.0, 6.0]
 
 
+def test_program_run_accepts_generic_color_input_override_string():
+    source = (
+        'indicator("generic color")\n'
+        'shade = input(color.red, "Shade")\n'
+        'plot(color.r(shade))\n'
+    )
+    report = pine_compat.analyze_script(source)
+    call_site_id = report["inputs"][0]["callSiteId"]
+    program = pine_compat.compile_script(source)
+
+    result = program.run(BARS, input_overrides={call_site_id: "#4CAF50"})
+
+    assert result["plots"][0]["values"] == [76.0, 76.0, 76.0]
+
+
 def test_program_run_rejects_unknown_input_override_call_site():
     program = pine_compat.compile_script(
         'indicator("inputs")\n'
@@ -201,6 +216,34 @@ def test_run_script_rejects_non_finite_bar_values():
         assert "bar `close` value must be finite" in str(error)
     else:
         raise AssertionError("non-finite bar value should fail")
+
+
+def test_run_script_rejects_duplicate_bar_times():
+    bars = [
+        {"time": 0, "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0, "volume": 1.0},
+        {"time": 0, "open": 2.0, "high": 2.0, "low": 2.0, "close": 2.0, "volume": 1.0},
+    ]
+
+    try:
+        pine_compat.run_script('indicator("demo")\nplot(close)\n', bars)
+    except ValueError as error:
+        assert "duplicate bar time `0`" in str(error)
+    else:
+        raise AssertionError("duplicate bar time should fail")
+
+
+def test_run_script_rejects_unsorted_bar_times():
+    bars = [
+        {"time": 1, "open": 1.0, "high": 1.0, "low": 1.0, "close": 1.0, "volume": 1.0},
+        {"time": 0, "open": 2.0, "high": 2.0, "low": 2.0, "close": 2.0, "volume": 1.0},
+    ]
+
+    try:
+        pine_compat.run_script('indicator("demo")\nplot(close)\n', bars)
+    except ValueError as error:
+        assert "bars are not sorted: `0` follows `1`" in str(error)
+    else:
+        raise AssertionError("unsorted bar time should fail")
 
 
 def test_run_script_converts_non_finite_plot_values_to_none():

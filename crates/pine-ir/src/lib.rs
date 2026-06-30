@@ -50,6 +50,7 @@ pub struct DrawingSettings {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct HirProgram {
+    pub language_version: Option<u16>,
     pub script_mode: ScriptMode,
     pub strategy_settings: StrategySettings,
     pub drawing_settings: DrawingSettings,

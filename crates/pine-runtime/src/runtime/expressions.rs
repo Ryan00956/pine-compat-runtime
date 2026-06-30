@@ -37,6 +37,27 @@ impl<'a> HistoricalRuntime<'a> {
                 eval_unary(*op, value)
             }
             HirExprKind::Binary { op, left, right } => {
+                if self.uses_v6_semantics() {
+                    match op {
+                        HirBinaryOp::And => {
+                            let left = self.eval_expr(left)?;
+                            if matches!(left, PineValue::Bool(false)) {
+                                return Ok(PineValue::Bool(false));
+                            }
+                            let right = self.eval_expr(right)?;
+                            return Ok(eval_binary(*op, left, right));
+                        }
+                        HirBinaryOp::Or => {
+                            let left = self.eval_expr(left)?;
+                            if matches!(left, PineValue::Bool(true)) {
+                                return Ok(PineValue::Bool(true));
+                            }
+                            let right = self.eval_expr(right)?;
+                            return Ok(eval_binary(*op, left, right));
+                        }
+                        _ => {}
+                    }
+                }
                 let left = self.eval_expr(left)?;
                 let right = self.eval_expr(right)?;
                 eval_binary(*op, left, right)

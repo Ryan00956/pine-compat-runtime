@@ -13,8 +13,9 @@ The parser should recognize version declarations:
 //@version=6
 ```
 
-The runtime can initially support a shared v5/v6-style subset. Unsupported
-version-specific behavior must be reported in diagnostics.
+The analyzer carries the parsed version into HIR so the runtime can select
+version-specific behavior. Unsupported version-specific behavior must be
+reported in diagnostics.
 
 ## Initial Supported Syntax
 
@@ -142,6 +143,10 @@ Phase 1 executable subset:
   equivalent method-call syntax such as
   `values.push(close)` and `values.get(0)`
 
+For v6 scripts, `and` and `or` use lazy evaluation: the right operand is skipped
+when the left operand already determines the result. Earlier-version scripts
+keep the pre-v6 strict operand evaluation used by this runtime's legacy subset.
+
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes. Series values not evaluated on a bar are committed as `na` to
 keep history buffers bar-aligned.
@@ -173,9 +178,12 @@ from selected statement-block arms are rejected by semantic fixture.
 `for` loops support inclusive integer ranges with an optional explicit `by`
 step. The runtime increments when `from <= to` and decrements when `from > to`;
 the absolute step magnitude is used, so signed step values do not override the
-range direction. If a runtime range bound or step evaluates to `na`, the loop
-body is skipped and a loop expression returns `na`. The loop counter is scoped
-to the loop body. Step values must be non-zero ints.
+range direction. The `from` bound and `by` step are evaluated once when the loop
+is reached. In v6 scripts, the `to` bound is re-evaluated before each iteration;
+earlier-version scripts evaluate the `to` bound once. If a runtime range bound
+or step evaluates to `na`, the loop body is skipped and a loop expression
+returns `na`. The loop counter is scoped to the loop body. Step values must be
+non-zero ints.
 `break` exits the nearest enclosing loop and `continue` skips to its next
 iteration. `break` or `continue` outside a loop is rejected with
 `E_LOOP_CONTROL`.

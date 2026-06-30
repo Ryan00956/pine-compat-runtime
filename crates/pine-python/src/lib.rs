@@ -116,7 +116,30 @@ fn parse_bars(bars: &Bound<'_, PyAny>) -> PyResult<Vec<Bar>> {
         let item = item?;
         parsed.push(parse_bar(&item)?);
     }
+    validate_bar_times(&parsed)?;
     Ok(parsed)
+}
+
+fn validate_bar_times(bars: &[Bar]) -> PyResult<()> {
+    let mut previous_time = None;
+    for bar in bars {
+        if let Some(previous) = previous_time {
+            if bar.time == previous {
+                return Err(PyValueError::new_err(format!(
+                    "duplicate bar time `{}`",
+                    bar.time
+                )));
+            }
+            if bar.time < previous {
+                return Err(PyValueError::new_err(format!(
+                    "bars are not sorted: `{}` follows `{previous}`",
+                    bar.time
+                )));
+            }
+        }
+        previous_time = Some(bar.time);
+    }
+    Ok(())
 }
 
 fn analysis_input_from_python(
@@ -269,6 +292,10 @@ fn parse_generic_input_override(value: &Bound<'_, PyAny>) -> PyResult<PineValue>
         return Err(PyValueError::new_err("input override float must be finite"));
     }
     if let Ok(value) = value.extract::<String>() {
+        let trimmed = value.trim();
+        if trimmed.starts_with('#') || trimmed.starts_with("0x") || trimmed.starts_with("0X") {
+            return parse_color_u32(trimmed).map(PineValue::Color);
+        }
         return Ok(PineValue::String(value));
     }
     Err(PyValueError::new_err(
@@ -307,14 +334,45 @@ fn parse_float_override(input_name: &str, value: &Bound<'_, PyAny>) -> PyResult<
 fn parse_color_override(value: &Bound<'_, PyAny>) -> PyResult<u32> {
     if value.is_instance_of::<PyBool>() {
         return Err(PyValueError::new_err(
-            "input.color override must be an unsigned 32-bit integer",
+            "input.color override must be a u32, 0xRRGGBB, or #RRGGBB value",
         ));
     }
-    let value = value.extract::<i64>().map_err(|_| {
-        PyValueError::new_err("input.color override must be an unsigned 32-bit integer")
-    })?;
-    u32::try_from(value).map_err(|_| {
-        PyValueError::new_err("input.color override must be an unsigned 32-bit integer")
+    if let Ok(value) = value.extract::<i64>() {
+        return u32::try_from(value).map_err(|_| {
+            PyValueError::new_err("input.color override must be a u32, 0xRRGGBB, or #RRGGBB value")
+        });
+    }
+    if let Ok(value) = value.extract::<String>() {
+        return parse_color_u32(value.trim());
+    }
+    Err(PyValueError::new_err(
+        "input.color override must be a u32, 0xRRGGBB, or #RRGGBB value",
+    ))
+}
+
+fn parse_color_u32(value: &str) -> PyResult<u32> {
+    let Some(value) = value.strip_prefix('#') else {
+        let Some(value) = value
+            .strip_prefix("0x")
+            .or_else(|| value.strip_prefix("0X"))
+        else {
+            return value.parse::<u32>().map_err(|_| {
+                PyValueError::new_err(
+                    "input.color override must be a u32, 0xRRGGBB, or #RRGGBB value",
+                )
+            });
+        };
+        return u32::from_str_radix(value, 16).map_err(|_| {
+            PyValueError::new_err("input.color override must be a u32, 0xRRGGBB, or #RRGGBB value")
+        });
+    };
+    if !matches!(value.len(), 6 | 8) {
+        return Err(PyValueError::new_err(
+            "input.color override hex values must use #RRGGBB or #RRGGBBAA",
+        ));
+    }
+    u32::from_str_radix(value, 16).map_err(|_| {
+        PyValueError::new_err("input.color override must be a u32, 0xRRGGBB, or #RRGGBB value")
     })
 }
 

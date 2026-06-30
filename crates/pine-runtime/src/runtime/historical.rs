@@ -189,6 +189,12 @@ pub fn run_historical_profiled_with_request_environment_and_input_overrides(
 }
 
 impl<'a> HistoricalRuntime<'a> {
+    pub(crate) fn uses_v6_semantics(&self) -> bool {
+        self.program
+            .language_version
+            .is_some_and(|version| version >= 6)
+    }
+
     #[must_use]
     pub fn new(program: &'a HirProgram) -> Self {
         Self::with_request_environment(program, RequestEnvironment::default())
