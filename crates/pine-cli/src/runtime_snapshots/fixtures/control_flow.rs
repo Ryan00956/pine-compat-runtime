@@ -233,6 +233,10 @@ pub(crate) const CONTROL_FLOW_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixtur
         "tests/fixtures/runtime/max_bars_back.pine",
     ),
     (
+        "runtime_max_bars_back_function.json",
+        "tests/fixtures/runtime/max_bars_back_function.pine",
+    ),
+    (
         "runtime_varip_scalar.json",
         "tests/fixtures/runtime/varip_scalar.pine",
     ),

@@ -10457,16 +10457,8 @@ fn reports_unsupported_negative_history_fixture() {
 }
 
 #[test]
-fn reports_unsupported_max_bars_back_function_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_max_bars_back_function.pine",
-        "max_bars_back",
-        "per-variable max_bars_back calls",
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_max_bars_back_function.pine",
-        &["indicator/strategy declaration-level max_bars_back"],
-    );
+fn accepts_supported_max_bars_back_function_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_max_bars_back_function.pine");
 }
 
 #[test]
@@ -10595,6 +10587,21 @@ fn assert_unsupported_features_fixture(path: &str, expected: &[(&str, &str)]) {
         );
     }
     assert!(analysis.hir.is_none());
+}
+
+fn assert_valid_fixture(path: &str) {
+    let path = workspace_fixture(path);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
 }
 
 fn assert_diagnostic_fixture(path: &str, code: &str) {

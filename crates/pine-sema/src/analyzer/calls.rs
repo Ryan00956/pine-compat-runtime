@@ -425,6 +425,7 @@ impl Analyzer {
         self.validate_array_from_args(signature, args, arg_types);
         self.validate_user_type_array_helper_args(signature, args, arg_types);
         self.validate_indicator_args(signature, args);
+        self.validate_max_bars_back_args(signature, args);
         self.validate_alert_args(signature, args);
         self.validate_drawing_option_args(signature, args);
     }

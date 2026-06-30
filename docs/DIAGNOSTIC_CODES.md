@@ -47,6 +47,7 @@ improved over time, but codes should remain stable once published.
 - `E_CONDITION_TYPE`: condition expression is not bool.
 - `E_DECL_TYPE`: typed declaration uses a type name outside the supported
   subset.
+- `E_DECL_VALUE`: declaration initializer is not a value-producing expression.
 - `E_FUNCTION_ARG_DUPLICATE`: user-defined function argument was provided more
   than once.
 - `E_FUNCTION_ARG_NAME`: unknown user-defined function named argument.

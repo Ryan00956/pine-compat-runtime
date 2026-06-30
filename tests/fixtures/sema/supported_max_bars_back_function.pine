@@ -1,4 +1,4 @@
 //@version=5
-indicator("Unsupported max_bars_back function")
+indicator("Supported max_bars_back function")
 max_bars_back(close, 20)
 plot(close)

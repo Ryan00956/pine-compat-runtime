@@ -25,6 +25,10 @@ impl<'a> HistoricalRuntime<'a> {
             {
                 self.history_dynamic_retention_misses =
                     self.history_dynamic_retention_misses.saturating_add(1);
+                self.history_dynamic_retention_max_bars_back = Some(
+                    self.history_dynamic_retention_max_bars_back
+                        .map_or(max_depth, |current| current.min(max_depth)),
+                );
                 self.history_dynamic_retention_max_missed_offset = Some(
                     self.history_dynamic_retention_max_missed_offset
                         .map_or(offset, |current| current.max(offset)),

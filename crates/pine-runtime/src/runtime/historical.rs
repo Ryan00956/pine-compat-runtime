@@ -56,6 +56,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) series_store: SeriesStore,
     pub(crate) series_retention: SeriesRetention,
     pub(crate) history_dynamic_retention_misses: usize,
+    pub(crate) history_dynamic_retention_max_bars_back: Option<usize>,
     pub(crate) history_dynamic_retention_max_missed_offset: Option<usize>,
     pub(crate) current_symbols: HashMap<SymbolId, PineValue>,
     pub(crate) current_series: HashMap<SeriesId, PineValue>,
@@ -217,6 +218,7 @@ impl<'a> HistoricalRuntime<'a> {
             series_store: SeriesStore::new(),
             series_retention: SeriesRetention::from_program(program),
             history_dynamic_retention_misses: 0,
+            history_dynamic_retention_max_bars_back: None,
             history_dynamic_retention_max_missed_offset: None,
             current_symbols: HashMap::new(),
             current_series: HashMap::new(),
@@ -474,13 +476,18 @@ impl<'a> HistoricalRuntime<'a> {
             return Vec::new();
         }
 
-        let Some(max_bars_back) = self.program.max_bars_back else {
+        let Some(max_bars_back) = self
+            .program
+            .max_bars_back
+            .map(|value| value as usize)
+            .or(self.history_dynamic_retention_max_bars_back)
+        else {
             return Vec::new();
         };
 
         let max_missed_offset = self
             .history_dynamic_retention_max_missed_offset
-            .unwrap_or(max_bars_back as usize + 1);
+            .unwrap_or(max_bars_back + 1);
 
         vec![RuntimeDiagnostic {
             code: "W_HISTORY_MAX_BARS_BACK".to_owned(),

@@ -2,7 +2,8 @@ use std::collections::{BTreeMap, HashMap};
 
 use pine_ir::{
     HirCallArg, HirExpr, HirExprKind, HirHistoryOffset, HirHistoryRequirements, HirLiteral,
-    HirSeriesHistoryRequirement, HirStmt, HirStmtKind, HirSymbol, HirUnaryOp, SeriesId,
+    HirSeriesHistoryRequirement, HirSeriesMaxBarsBack, HirStmt, HirStmtKind, HirSymbol, HirUnaryOp,
+    SeriesId,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -50,6 +51,69 @@ pub(crate) fn infer_history_requirements(
 pub(crate) fn infer_max_bars_back(statements: &[HirStmt]) -> Option<u32> {
     statements.iter().find_map(max_bars_back_from_stmt)
 }
+
+pub(crate) fn infer_series_max_bars_back(statements: &[HirStmt]) -> Vec<HirSeriesMaxBarsBack> {
+    let mut values: BTreeMap<SeriesId, u32> = BTreeMap::new();
+    for statement in statements {
+        collect_series_max_bars_back_from_stmt(statement, &mut values);
+    }
+    values
+        .into_iter()
+        .map(|(series_id, max_bars_back)| HirSeriesMaxBarsBack {
+            series_id,
+            max_bars_back,
+        })
+        .collect()
+}
+
+fn collect_series_max_bars_back_from_stmt(
+    statement: &HirStmt,
+    values: &mut BTreeMap<SeriesId, u32>,
+) {
+    match &statement.kind {
+        HirStmtKind::Expr(expr) => {
+            if let Some((series_id, max_bars_back)) = series_max_bars_back_from_expr_stmt(expr) {
+                values
+                    .entry(series_id)
+                    .and_modify(|current| *current = (*current).min(max_bars_back))
+                    .or_insert(max_bars_back);
+            }
+        }
+        HirStmtKind::If { .. }
+        | HirStmtKind::For { .. }
+        | HirStmtKind::ForIn { .. }
+        | HirStmtKind::While { .. }
+        | HirStmtKind::Decl { .. }
+        | HirStmtKind::Reassign { .. }
+        | HirStmtKind::FieldReassign { .. }
+        | HirStmtKind::TupleDecl { .. }
+        | HirStmtKind::Break
+        | HirStmtKind::Continue => {}
+    }
+}
+
+fn series_max_bars_back_from_expr_stmt(expr: &HirExpr) -> Option<(SeriesId, u32)> {
+    let HirExprKind::Call { callee, args, .. } = &expr.kind else {
+        return None;
+    };
+    if callee != "max_bars_back" {
+        return None;
+    }
+
+    let source = call_arg(args, 0, "source")?;
+    let num = call_arg(args, 1, "num")?;
+    let series_id = source.series_id?;
+    let max_bars_back = constant_hir_int(num).and_then(|value| u32::try_from(value).ok())?;
+    Some((series_id, max_bars_back))
+}
+
+fn call_arg<'a>(args: &'a [HirCallArg], index: usize, name: &str) -> Option<&'a HirExpr> {
+    args.iter()
+        .find(|arg| arg.name.as_deref() == Some(name))
+        .or_else(|| args.get(index).filter(|arg| arg.name.is_none()))
+        .map(|arg| &arg.value)
+}
+
 pub(crate) fn max_bars_back_from_stmt(statement: &HirStmt) -> Option<u32> {
     match &statement.kind {
         HirStmtKind::Expr(expr)
@@ -85,14 +149,17 @@ pub(crate) fn max_bars_back_from_stmt(statement: &HirStmt) -> Option<u32> {
 }
 pub(crate) fn max_bars_back_from_expr(expr: &HirExpr) -> Option<u32> {
     match &expr.kind {
-        HirExprKind::Call { callee, args, .. } if callee == "indicator" => args
-            .iter()
-            .enumerate()
-            .find(|(index, arg)| {
-                arg.name.as_deref() == Some("max_bars_back") || (arg.name.is_none() && *index == 6)
-            })
-            .and_then(|(_, arg)| constant_hir_int(&arg.value))
-            .and_then(|value| u32::try_from(value).ok()),
+        HirExprKind::Call { callee, args, .. } if callee == "indicator" || callee == "strategy" => {
+            let index = if callee == "indicator" { 6 } else { 3 };
+            args.iter()
+                .enumerate()
+                .find(|(arg_index, arg)| {
+                    arg.name.as_deref() == Some("max_bars_back")
+                        || (arg.name.is_none() && *arg_index == index)
+                })
+                .and_then(|(_, arg)| constant_hir_int(&arg.value))
+                .and_then(|value| u32::try_from(value).ok())
+        }
         HirExprKind::Call { args, .. } => args
             .iter()
             .find_map(|arg| max_bars_back_from_expr(&arg.value)),

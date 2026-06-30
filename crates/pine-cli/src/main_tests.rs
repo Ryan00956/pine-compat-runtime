@@ -110,6 +110,7 @@ fn expected_partial_builtin(name: &str) -> bool {
             name,
             "request.security"
                 | "strategy"
+                | "max_bars_back"
                 | "alert"
                 | "alertcondition"
                 | "ta.vwap"

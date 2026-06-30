@@ -588,6 +588,19 @@ const FIXNAN_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const MAX_BARS_BACK_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::SeriesNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "num",
+        accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
+        optional: false,
+    },
+];
+
 pub(crate) const SCRIPT_SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "indicator",
@@ -600,6 +613,13 @@ pub(crate) const SCRIPT_SIGNATURES: &[BuiltinSignature] = &[
         name: "strategy",
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "max_bars_back",
+        phase: BuiltinPhase::Phase1Core,
+        params: MAX_BARS_BACK_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

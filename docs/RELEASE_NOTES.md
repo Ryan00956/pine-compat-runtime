@@ -4066,8 +4066,9 @@ output change is documented with snapshot updates.
 - `history references`: supports constant non-negative offsets and guarded
   dynamic integer offsets, including `series int`, loop-produced offsets, and
   user-defined function parameters.
-- `max_bars_back`: supports indicator-level constant non-negative retention
-  bounds for dynamic history.
+- `max_bars_back`: supports indicator/strategy-level constant non-negative
+  retention bounds for dynamic history, plus top-level
+  `max_bars_back(source, num)` helper calls for simple series identifiers.
 - `color.*` named constants: supports the current common registry only.
 - `realtime forming rollback`: covers output, alert events,
   supported drawing objects, `var`, scalar and scalar typed-array `varip`,
@@ -4089,7 +4090,8 @@ them silently:
 - Alert frequency controls.
 - Advanced drawing object methods and unsupported `polyline.*` point-list
   object systems.
-- Per-variable `max_bars_back` declarations and inference.
+- Per-variable `max_bars_back` declarations beyond the top-level simple series
+  identifier helper subset.
 - Recursive user-defined functions.
 - User-defined function side effects, including output calls, alerts,
   input declarations, indicator declarations, array mutation, global

@@ -487,6 +487,47 @@ plot(close[offset])
 }
 
 #[test]
+fn max_bars_back_function_bounds_only_declared_series() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("series max_bars_back")
+max_bars_back(close, 2)
+offset = bar_index == 0 ? 0 : 3
+plot(close[offset])
+plot(open[offset])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 2);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Float(1.0));
+    assert_eq!(profiled.result.plots[0].values[1..], vec![PineValue::Na; 3]);
+    assert_eq!(profiled.result.plots[1].values[0], PineValue::Float(1.0));
+    assert_eq!(profiled.result.plots[1].values[1], PineValue::Na);
+    assert_eq!(profiled.result.plots[1].values[2], PineValue::Na);
+    assert_eq!(profiled.result.plots[1].values[3], PineValue::Float(1.0));
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::MaxBarsBack
+    );
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert_eq!(profiled.profile.history_dynamic_retention_misses, 3);
+    assert_eq!(
+        profiled.profile.history_dynamic_retention_max_missed_offset,
+        Some(3)
+    );
+}
+
+#[test]
 fn append_bar_matches_full_historical_run() {
     let source = SourceFile::new(
         "test.pine",

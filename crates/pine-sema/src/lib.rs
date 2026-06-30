@@ -46,7 +46,9 @@ mod prelude {
     };
     pub(crate) use crate::analyzer::user_types::{UserTypeIdentity, UserTypeInfo, span_key};
     pub(crate) use crate::compatibility::{FeatureUse, UnsupportedFeature};
-    pub(crate) use crate::history::{infer_history_requirements, infer_max_bars_back};
+    pub(crate) use crate::history::{
+        infer_history_requirements, infer_max_bars_back, infer_series_max_bars_back,
+    };
     pub(crate) use crate::resolver::{SymbolInfo, binding_key};
     pub(crate) use crate::symbols::INITIAL_SYMBOLS;
     pub(crate) use crate::types::{

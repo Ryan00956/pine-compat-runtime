@@ -1828,6 +1828,45 @@ fn accepts_indicator_max_bars_back() {
 }
 
 #[test]
+fn accepts_strategy_max_bars_back() {
+    let analysis = analyze("strategy(\"Demo\", max_bars_back=10)\nplot(close[bar_index])\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    assert_eq!(hir.max_bars_back, Some(10));
+}
+
+#[test]
+fn accepts_max_bars_back_function_for_series_symbol() {
+    let analysis =
+        analyze("indicator(\"Demo\")\nmax_bars_back(close, 10)\nplot(close[bar_index])\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let close_series = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "close")
+        .and_then(|symbol| symbol.series_id)
+        .expect("close should have a series id");
+    assert!(
+        hir.series_max_bars_back
+            .iter()
+            .any(|value| { value.series_id == close_series && value.max_bars_back == 10 }),
+        "{:?}",
+        hir.series_max_bars_back
+    );
+}
+
+#[test]
 fn accepts_indicator_max_polylines_count_named_arg() {
     let analysis = analyze("indicator(\"Demo\", max_polylines_count=75)\nplot(close)\n");
 
@@ -2028,6 +2067,65 @@ fn rejects_negative_indicator_max_bars_back() {
             .diagnostics
             .iter()
             .any(|diagnostic| diagnostic.code == "E_CALL_ARG_VALUE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_negative_max_bars_back_function_length() {
+    let analysis = analyze("indicator(\"Demo\")\nmax_bars_back(close, -1)\n");
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_VALUE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_max_bars_back_function_expression_source() {
+    let analysis = analyze("indicator(\"Demo\")\nmax_bars_back(close + open, 10)\n");
+
+    assert!(
+        analysis.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_CALL_ARG_VALUE"
+                && diagnostic.message.contains("simple series identifier")
+        }),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_max_bars_back_function_in_block() {
+    let analysis = analyze("indicator(\"Demo\")\nif close > open\n    max_bars_back(close, 10)\n");
+
+    assert!(
+        analysis.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_CALL_ARG_VALUE" && diagnostic.message.contains("top-level")
+        }),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_max_bars_back_function_as_declaration_value() {
+    let analysis = analyze("indicator(\"Demo\")\nvalue = max_bars_back(close, 10)\n");
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_DECL_VALUE"),
         "{:?}",
         analysis.diagnostics
     );

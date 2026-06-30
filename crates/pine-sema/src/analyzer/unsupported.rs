@@ -10,7 +10,6 @@ pub(crate) const MAP_UNSUPPORTED_REASON: &str =
     "map collections are not implemented; map.* requires a dedicated key/value storage model";
 pub(crate) const MATRIX_UNSUPPORTED_REASON: &str =
     "this matrix function is outside the supported runtime-owned matrix<float> subset";
-pub(crate) const MAX_BARS_BACK_FUNCTION_UNSUPPORTED_REASON: &str = "per-variable max_bars_back calls are not implemented; only indicator/strategy declaration-level max_bars_back is supported";
 pub(crate) const STRATEGY_UNSUPPORTED_REASON: &str = "strategy order functions beyond the supported strategy.entry/strategy.order market/limit/stop/stop-limit-long and reduce-only-short subset, strategy.close/strategy.close_all/strategy.cancel/strategy.cancel_all/strategy.exit subset, broker emulation settings, and rich backtesting features are not implemented";
 pub(crate) const STRATEGY_RISK_UNSUPPORTED_REASON: &str = "strategy.risk broker risk rules are not implemented; broker emulation must support deterministic order admission, pending-order cancellation, account thresholds, and rule state before risk directives can be accepted";
 pub(crate) fn unsupported_strategy_reason(name: &str) -> Option<&'static str> {
@@ -82,8 +81,6 @@ impl Analyzer {
     pub(crate) fn check_feature_name(&mut self, name: &str, span: Span) {
         let unsupported_reason = if pine_builtins::is_phase_1_builtin(name) {
             None
-        } else if name == "max_bars_back" {
-            Some(MAX_BARS_BACK_FUNCTION_UNSUPPORTED_REASON)
         } else if let Some(reason) = unsupported_log_reason(name) {
             Some(reason)
         } else if let Some(reason) = unsupported_collection_reason(name) {

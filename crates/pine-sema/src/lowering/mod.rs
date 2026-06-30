@@ -101,6 +101,7 @@ impl Analyzer {
         let symbols = self.lower_symbols();
         let history = infer_history_requirements(&statements, &symbols);
         let max_bars_back = infer_max_bars_back(&statements);
+        let series_max_bars_back = infer_series_max_bars_back(&statements);
         let script_mode = self
             .script_declaration
             .map_or(ScriptMode::Indicator, |(mode, _)| mode);
@@ -114,6 +115,7 @@ impl Analyzer {
             next_call_site_id: self.next_call_site_id,
             next_var_slot_id: self.next_var_slot_id,
             max_bars_back,
+            series_max_bars_back,
             history: history.program,
             series_history: history.series,
         })

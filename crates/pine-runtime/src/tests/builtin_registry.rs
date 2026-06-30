@@ -115,6 +115,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "hline",
     "hour",
     "indicator",
+    "max_bars_back",
     "input",
     "input.bool",
     "input.color",

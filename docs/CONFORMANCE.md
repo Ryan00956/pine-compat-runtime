@@ -117,6 +117,13 @@ non-`chart.point` dotted `array.new<...>()` templates and imported UDT
 same-local scalar-field UDT `array.new<T>()` expressions are fixture-backed
 outside typed declaration syntax.
 
+`max_bars_back` is partial. Declaration-level
+`indicator(..., max_bars_back=N)` and `strategy(..., max_bars_back=N)` apply a
+global constant non-negative retention bound for dynamic history reads. Top-level
+statement-form `max_bars_back(source, N)` is fixture-backed for simple series
+identifiers and applies a per-series retention bound. Expression targets,
+non-constant lengths, and negative lengths are rejected.
+
 ## Strategy Runtime Contract
 
 Phase G marks `strategy` as partial. The executable subset accepts

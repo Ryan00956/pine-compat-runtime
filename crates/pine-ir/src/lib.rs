@@ -59,6 +59,7 @@ pub struct HirProgram {
     pub next_call_site_id: u32,
     pub next_var_slot_id: u32,
     pub max_bars_back: Option<u32>,
+    pub series_max_bars_back: Vec<HirSeriesMaxBarsBack>,
     pub history: HirHistoryRequirements,
     pub series_history: Vec<HirSeriesHistoryRequirement>,
 }
@@ -74,6 +75,12 @@ pub struct HirSeriesHistoryRequirement {
     pub series_id: SeriesId,
     pub max_constant_offset: u32,
     pub has_dynamic_offsets: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct HirSeriesMaxBarsBack {
+    pub series_id: SeriesId,
+    pub max_bars_back: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

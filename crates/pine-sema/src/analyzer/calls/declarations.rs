@@ -110,4 +110,65 @@ impl Analyzer {
             }
         }
     }
+
+    pub(crate) fn validate_max_bars_back_args(
+        &mut self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+    ) {
+        if signature.name != "max_bars_back" {
+            return;
+        }
+
+        if self.block_depth > 0 {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_VALUE",
+                "`max_bars_back` calls must be top-level statements",
+                args.first().map_or_else(Span::default, |arg| arg.span),
+            ));
+        }
+
+        if let Some(source) = args
+            .iter()
+            .enumerate()
+            .find(|(index, arg)| {
+                arg.name.as_deref() == Some("source")
+                    || (arg.name.is_none()
+                        && signature
+                            .params
+                            .get(*index)
+                            .is_some_and(|param| param.name == "source"))
+            })
+            .map(|(_, arg)| &arg.value)
+            && !matches!(source.kind, ExprKind::Identifier(_))
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_VALUE",
+                "`max_bars_back` argument `source` must be a simple series identifier",
+                source.span,
+            ));
+        }
+
+        for (index, arg) in args.iter().enumerate() {
+            let is_num = arg.name.as_deref() == Some("num")
+                || (arg.name.is_none()
+                    && signature
+                        .params
+                        .get(index)
+                        .is_some_and(|param| param.name == "num"));
+            if !is_num {
+                continue;
+            }
+
+            if let Some(value) = const_int_value(&arg.value)
+                && value < 0
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    "`max_bars_back` argument `num` must be non-negative",
+                    arg.span,
+                ));
+            }
+        }
+    }
 }

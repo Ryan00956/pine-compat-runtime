@@ -198,6 +198,13 @@ impl Analyzer {
                 value,
             } => {
                 let value_type = self.analyze_expr(value).unwrap_or(UNKNOWN);
+                if value_type.kind == ValueKind::Void {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_DECL_VALUE",
+                        "declarations must be initialized with a value-producing expression",
+                        value.span,
+                    ));
+                }
                 let declared_pine_type =
                     self.declared_pine_type(declared_type.as_ref(), statement.span);
                 let declared_user_type_name = declared_type

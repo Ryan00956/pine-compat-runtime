@@ -109,6 +109,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
     matches!(
         name,
         "indicator"
+            | "max_bars_back"
             | "strategy"
             | "alert"
             | "alertcondition"

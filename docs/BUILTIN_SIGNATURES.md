@@ -622,6 +622,8 @@ indicator(title: const string, shorttitle?: const string, overlay?: const bool, 
   -> void
 strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, close_entries_rule?: const string, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset)
   -> void
+max_bars_back(source: series numeric, num: const int)
+  -> void
 strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
 -> void
 strategy.order(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: string-compatible, oca_type?: string-compatible, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
@@ -682,7 +684,11 @@ strategy.opentrades.max_drawdown(trade_num: series/simple numeric) -> series flo
 ```
 
 Only metadata arguments needed by the output and history-retention model should
-be accepted in Phase 1. `max_bars_back` must be non-negative when provided.
+be accepted in Phase 1. Declaration-level `max_bars_back` and top-level
+`max_bars_back(source, num)` helper calls must use non-negative constant
+lengths. The helper-call subset is limited to simple series identifiers as the
+`source` argument, and applies a per-series retention bound for dynamic history
+reads.
 Unsupported named arguments should produce compatibility diagnostics.
 Typed variable declarations are fixture-backed for `int`, `float`, `bool`,
 `string`, `color`, `chart.point`, and drawing-id `label`, `line`, `linefill`,
