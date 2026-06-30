@@ -9316,10 +9316,21 @@ fn reports_unsupported_alertcondition_plot_placeholder_fixture() {
 
 #[test]
 fn reports_unsupported_log_fixture() {
-    assert_unsupported_fixture(
+    assert_unsupported_features_fixture(
         "tests/fixtures/sema/unsupported_log.pine",
-        "log.info",
-        "Pine Logs output is not implemented",
+        &[
+            ("log.info", "Pine Logs output is not implemented"),
+            ("log.warning", "Pine Logs output is not implemented"),
+            ("log.error", "Pine Logs output is not implemented"),
+        ],
+    );
+}
+
+#[test]
+fn reports_unknown_log_function_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unknown_log_function.pine",
+        &["unknown function `log.debug`"],
     );
 }
 
@@ -10551,6 +10562,38 @@ fn assert_unsupported_fixture(path: &str, feature: &str, reason: &str) {
         path.display(),
         analysis.compatibility.unsupported
     );
+    assert!(analysis.hir.is_none());
+}
+
+fn assert_unsupported_features_fixture(path: &str, expected: &[(&str, &str)]) {
+    let path = workspace_fixture(path);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    for (feature, reason) in expected {
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|unsupported| unsupported.feature == *feature
+                    && unsupported.reason.contains(reason)),
+            "{} unsupported features: {:?}",
+            path.display(),
+            analysis.compatibility.unsupported
+        );
+        assert!(
+            analysis.diagnostics.iter().any(|diagnostic| {
+                diagnostic.code == "E_UNSUPPORTED_FEATURE"
+                    && diagnostic.message.contains(feature)
+                    && diagnostic.message.contains(reason)
+            }),
+            "{} diagnostics: {:?}",
+            path.display(),
+            analysis.diagnostics
+        );
+    }
     assert!(analysis.hir.is_none());
 }
 
