@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported dynamic history for result")
+
+offset = for i = 0 to 0
+    close
+
+plot(close[offset])

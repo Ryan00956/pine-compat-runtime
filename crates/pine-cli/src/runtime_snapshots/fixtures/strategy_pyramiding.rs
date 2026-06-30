@@ -14,8 +14,16 @@ pub(crate) const STRATEGY_PYRAMIDING_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapsho
         "tests/fixtures/runtime/strategy_closedtrades_fields.pine",
     ),
     (
+        "runtime_strategy_closedtrades_fields_pyramiding.json",
+        "tests/fixtures/runtime/strategy_closedtrades_fields_pyramiding.pine",
+    ),
+    (
         "runtime_strategy_opentrades_fields.json",
         "tests/fixtures/runtime/strategy_opentrades_fields.pine",
+    ),
+    (
+        "runtime_strategy_opentrades_fields_pyramiding.json",
+        "tests/fixtures/runtime/strategy_opentrades_fields_pyramiding.pine",
     ),
     (
         "runtime_strategy_pyramiding.json",

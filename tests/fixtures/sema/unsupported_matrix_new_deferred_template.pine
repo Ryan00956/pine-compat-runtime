@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.new deferred template")
+
+values = matrix.new<label>(2, 2, na)
+plot(close)

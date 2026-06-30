@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.hma Series Length")
+plot(ta.hma(close, bar_index))

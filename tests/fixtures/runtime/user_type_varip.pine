@@ -1,0 +1,41 @@
+//@version=5
+indicator("User type varip")
+type Point
+    float x
+
+varip Point from_na = na
+if bar_index == 0
+    from_na := Point.new(close)
+else
+    from_na.x := from_na.x + 1
+plot(from_na.x)
+
+varip Point constructed = Point.new(close + 10)
+constructed.x := constructed.x + 1
+plot(constructed.x)
+
+varip inferred = Point.new(close + 20)
+inferred.x := inferred.x + 1
+plot(inferred.x)
+
+varip Point typed_ternary = bar_index == 0 ? Point.new(close + 30) : Point.new(open + 30)
+typed_ternary.x := typed_ternary.x + 1
+plot(typed_ternary.x)
+
+varip Point typed_switch = switch bar_index
+    0 => Point.new(close + 40)
+    => Point.new(open + 40)
+typed_switch.x := typed_switch.x + 1
+plot(typed_switch.x)
+
+varip Point typed_if = if bar_index == 0
+    Point.new(close + 50)
+else
+    Point.new(open + 50)
+typed_if.x := typed_if.x + 1
+plot(typed_if.x)
+
+varip Point typed_for = for i = 0 to 1
+    Point.new(close + 60 + i)
+typed_for.x := typed_for.x + 1
+plot(typed_for.x)

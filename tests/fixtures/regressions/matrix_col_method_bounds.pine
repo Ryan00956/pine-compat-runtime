@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix column method extraction bounds")
+
+values = matrix.new<float>(2, 2, close)
+column_values = values.col(2)
+plot(column_values.get(0))

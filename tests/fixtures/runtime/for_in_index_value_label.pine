@@ -1,0 +1,26 @@
+//@version=5
+indicator("For in index value label")
+
+first = label.new(10, high, "a")
+second = label.new(11, low, "b")
+labels = array.from(first, second)
+
+int index_sum = 0
+int x_sum = 0
+int text_len_sum = 0
+for index, value in labels
+    index_sum := index_sum + index
+    if index == 0
+        label.set_text(value, "zero")
+    if index == 1
+        label.set_text(value, "one")
+    x_sum := x_sum + label.get_x(value)
+    text_len_sum := text_len_sum + str.length(label.get_text(value))
+
+first_after = labels.get(0)
+second_after = labels.get(1)
+
+plot(index_sum)
+plot(x_sum)
+plot(text_len_sum)
+plot(str.length(label.get_text(first_after)) + str.length(label.get_text(second_after)))

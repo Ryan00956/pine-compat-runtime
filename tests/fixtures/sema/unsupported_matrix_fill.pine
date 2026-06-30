@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.fill")
+
+matrix.fill(na, close)
+plot(close)

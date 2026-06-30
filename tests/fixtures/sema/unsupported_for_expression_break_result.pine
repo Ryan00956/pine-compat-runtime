@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported for expression break result")
+
+value = for i = 0 to 1
+    break
+
+plot(close)

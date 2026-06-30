@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array.set Index method")
+values = array.new_bool(1, false)
+values.set("0", true)
+plot(close)

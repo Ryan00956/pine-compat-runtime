@@ -37,6 +37,8 @@ Important current rules:
 - `int` may widen to `float`; `float` does not narrow to `int`.
 - `SimpleInt` accepts `const`, `input`, or `simple` integers and rejects
   `series int`.
+- `AtMostInputNumeric` accepts `const` or `input` numeric values and rejects
+  `simple`/`series` values.
 - `SeriesFloat` requires an actual `series float`.
 - Compatibility names such as `SeriesOrSimpleNumeric` currently mean any
   numeric qualifier at or below `series`; this includes `const` and `input`.
@@ -49,16 +51,23 @@ Important current rules:
   either `const`, `input`, or `series`.
 - There is no separate runtime input immutability model beyond the qualifier
   assigned by semantic analysis.
-- Built-in signature docs use descriptive Pine-like terms, while code uses a
-  smaller set of coarse acceptors.
+- Built-in signature docs use descriptive Pine-like terms, while code still uses
+  a smaller `Accepts` enum. The analyzer now has shared `qualifier_at_most` and
+  kind-filter helpers, but not every Pine-style signature phrase has a distinct
+  data-model variant.
 - History offsets accept non-negative integer literals plus integer expressions
   at any implemented qualifier, including `series int`.
 - Scalar array, scalar slice, label-array, label-slice, line-array,
-  line-slice, box-slice, linefill-array, linefill-slice, box-array,
-  table-array, table-slice, chart.point-array, and chart.point-slice ids can now receive series storage
-  for fixture-backed array history snapshots. Polyline arrays, remaining
-  map/matrix values, drawing-object collections, and broader aliasing rules
-  remain undesigned.
+  line-slice, box-slice, linefill-array, linefill-slice, polyline-array,
+  polyline-slice, box-array, table-array, table-slice, chart.point-array,
+  chart.point-slice, and same-local scalar-field UDT-array ids can now receive
+  series storage for fixture-backed array history snapshots.
+- Matrix history snapshots are fixture-backed for committed matrix values,
+  dynamic matrix offsets including `na` offset predicates, and
+  while-expression matrix results. Map values,
+  UDT/imported-UDT value history, drawing-object collections beyond
+  fixture-backed id arrays/slices, and broader aliasing rules remain
+  undesigned or rejected.
 
 ## Impact On Dynamic History
 
@@ -75,12 +84,13 @@ Dynamic history offsets now use an explicit integer-kind policy:
 ## Phase C Closeout
 
 The history-offset qualifier policy is implemented and fixture-covered for
-const, input, simple, and series integers. Remaining qualifier work is not a
-blocker for Phase C history support:
+const, input, simple, and series integers. Shared qualifier-bound argument
+helpers back the current "at most input" and "at most simple" acceptors.
+Remaining qualifier work is not a blocker for Phase C history support:
 
-1. Add a precise helper for qualifier-bound argument acceptance so built-in
-   signatures can say "at most input" or "at most simple" without bespoke enum
-   variants for every kind.
+1. Keep the shared qualifier-bound argument helpers covered as more built-in
+   signatures move from bespoke acceptors to "at most input" or "at most
+   simple" semantics.
 2. Keep `docs/BUILTIN_SIGNATURES.md` aligned with code acceptors as new
    built-ins are added, because built-in length parameters already rely on
    `SimpleInt` semantics.

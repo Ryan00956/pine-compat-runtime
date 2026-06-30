@@ -1,0 +1,16 @@
+//@version=6
+indicator("Matrix reshape while control flow")
+
+values = matrix.new<float>(1, 4, close)
+
+i = 0
+while i < 2
+    if i == 0
+        matrix.reshape(values, 2, 2)
+    else
+        values.reshape(4, 1)
+    i := i + 1
+
+plot(matrix.rows(values), "rows")
+plot(values.columns(), "columns")
+plot(values.get(3, 0), "last")

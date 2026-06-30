@@ -608,6 +608,9 @@ fn runs_array_from_operations() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("array from")
+type Point
+    float x
+
 ints = array.from(1, 2, 3)
 plot(ints.size())
 plot(ints.sum())
@@ -626,6 +629,147 @@ plot(words.join("|") == "a|b" ? 1 : 0)
 
 colors = array.from(color.red, color.green)
 plot(colors.get(0) == color.red and colors.get(1) == color.green ? 1 : 0)
+
+points = array.from(Point.new(close), Point.new(open))
+array.set(points, 0, Point.new(high))
+points.set(1, Point.new(low))
+array.push(points, Point.new(close + open))
+points.push(Point.new(high + low))
+first_point = array.get(points, 0)
+second_point = points.get(1)
+third_point = array.get(points, 2)
+fourth_point = points.get(3)
+first_reader_point = array.first(points)
+method_first_reader_point = points.first()
+last_reader_point = array.last(points)
+method_last_reader_point = points.last()
+popped_point = array.pop(points)
+method_popped_point = points.pop()
+shifted_point = array.shift(points)
+method_shifted_point = points.shift()
+cleared_points = array.from(Point.new(close), Point.new(open))
+array.clear(cleared_points)
+cleared_points_empty_size = array.size(cleared_points)
+array.push(cleared_points, Point.new(high))
+cleared_reader_point = array.get(cleared_points, 0)
+method_cleared_points = array.from(Point.new(close), Point.new(open))
+method_cleared_points.clear()
+method_cleared_points_empty_size = method_cleared_points.size()
+method_cleared_points.push(Point.new(low))
+method_cleared_reader_point = method_cleared_points.get(0)
+copy_source_points = array.from(Point.new(close), Point.new(open))
+copied_points = array.copy(copy_source_points)
+method_copied_points = copy_source_points.copy()
+array.push(copied_points, Point.new(high))
+method_copied_points.push(Point.new(low))
+copy_reader_point = array.get(copied_points, 0)
+copy_added_point = copied_points.get(2)
+method_copy_added_point = method_copied_points.get(2)
+reverse_points = array.from(Point.new(close), Point.new(open))
+array.reverse(reverse_points)
+reverse_first_point = array.get(reverse_points, 0)
+reverse_second_point = reverse_points.get(1)
+method_reverse_points = array.from(Point.new(high), Point.new(low))
+method_reverse_points.reverse()
+method_reverse_first_point = method_reverse_points.get(0)
+method_reverse_second_point = method_reverse_points.get(1)
+concat_left_points = array.from(Point.new(close))
+concat_right_points = array.from(Point.new(open), Point.new(high))
+concat_returned_points = array.concat(concat_left_points, concat_right_points)
+concat_added_point = concat_returned_points.get(2)
+method_concat_left_points = array.from(Point.new(low))
+method_concat_right_points = array.from(Point.new(high), Point.new(open))
+method_concat_returned_points = method_concat_left_points.concat(method_concat_right_points)
+method_concat_added_point = method_concat_returned_points.get(2)
+slice_source_points = array.from(Point.new(close), Point.new(open), Point.new(high))
+slice_window_points = array.slice(slice_source_points, 1, 3)
+slice_first_point = slice_window_points.get(0)
+array.set(slice_window_points, 0, Point.new(low))
+slice_parent_point = slice_source_points.get(1)
+method_slice_source_points = array.from(Point.new(close), Point.new(open), Point.new(high))
+method_slice_window_points = method_slice_source_points.slice(0, 2)
+method_slice_source_points.set(1, Point.new(low))
+method_slice_second_point = method_slice_window_points.get(1)
+insert_points = array.from(Point.new(close), Point.new(high))
+array.insert(insert_points, 1, Point.new(open))
+insert_inserted_point = insert_points.get(1)
+insert_tail_point = insert_points.get(2)
+method_insert_points = array.from(Point.new(low), Point.new(close))
+method_insert_points.insert(1, Point.new(high))
+method_insert_inserted_point = method_insert_points.get(1)
+method_insert_tail_point = method_insert_points.get(2)
+remove_points = array.from(Point.new(close), Point.new(open), Point.new(high))
+removed_point = array.remove(remove_points, 1)
+remove_after_point = remove_points.get(1)
+method_remove_points = array.from(Point.new(low), Point.new(close), Point.new(open))
+method_removed_point = method_remove_points.remove(0)
+method_remove_after_point = method_remove_points.get(0)
+unshift_points = array.from(Point.new(close), Point.new(high))
+array.unshift(unshift_points, Point.new(open))
+unshift_first_point = unshift_points.get(0)
+unshift_second_point = unshift_points.get(1)
+method_unshift_points = array.from(Point.new(low), Point.new(close))
+method_unshift_points.unshift(Point.new(high))
+method_unshift_first_point = method_unshift_points.get(0)
+method_unshift_second_point = method_unshift_points.get(1)
+plot(array.size(points))
+plot(points.size())
+plot(first_point.x + second_point.x)
+plot(third_point.x + fourth_point.x)
+plot(first_reader_point.x)
+plot(method_first_reader_point.x)
+plot(last_reader_point.x)
+plot(method_last_reader_point.x)
+plot(popped_point.x)
+plot(method_popped_point.x)
+plot(shifted_point.x)
+plot(method_shifted_point.x)
+plot(cleared_points_empty_size)
+plot(array.size(cleared_points))
+plot(cleared_reader_point.x)
+plot(method_cleared_points_empty_size)
+plot(method_cleared_points.size())
+plot(method_cleared_reader_point.x)
+plot(array.size(copy_source_points))
+plot(array.size(copied_points))
+plot(method_copied_points.size())
+plot(copy_reader_point.x)
+plot(copy_added_point.x)
+plot(method_copy_added_point.x)
+plot(reverse_first_point.x)
+plot(reverse_second_point.x)
+plot(method_reverse_first_point.x)
+plot(method_reverse_second_point.x)
+plot(array.size(concat_returned_points))
+plot(concat_added_point.x)
+plot(array.size(concat_right_points))
+plot(method_concat_returned_points.size())
+plot(method_concat_added_point.x)
+plot(method_concat_right_points.size())
+plot(slice_window_points.size())
+plot(slice_first_point.x)
+plot(slice_parent_point.x)
+plot(method_slice_window_points.size())
+plot(method_slice_second_point.x)
+plot(method_slice_source_points.size())
+plot(insert_points.size())
+plot(insert_inserted_point.x)
+plot(insert_tail_point.x)
+plot(method_insert_points.size())
+plot(method_insert_inserted_point.x)
+plot(method_insert_tail_point.x)
+plot(remove_points.size())
+plot(removed_point.x)
+plot(remove_after_point.x)
+plot(method_remove_points.size())
+plot(method_removed_point.x)
+plot(method_remove_after_point.x)
+plot(unshift_points.size())
+plot(unshift_first_point.x)
+plot(unshift_second_point.x)
+plot(method_unshift_points.size())
+plot(method_unshift_first_point.x)
+plot(method_unshift_second_point.x)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -638,7 +782,7 @@ plot(colors.get(0) == color.red and colors.get(1) == color.green ? 1 : 0)
     let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 8);
+    assert_eq!(result.plots.len(), 66);
     assert_values_close(&result.plots[0].values, &[3.0, 3.0]);
     assert_values_close(&result.plots[1].values, &[6.0, 6.0]);
     assert_values_close(&result.plots[2].values, &[4.0, 4.0]);
@@ -647,6 +791,64 @@ plot(colors.get(0) == color.red and colors.get(1) == color.green ? 1 : 0)
     assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[8].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[9].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[10].values, &[4.0, 7.0]);
+    assert_values_close(&result.plots[11].values, &[7.0, 12.0]);
+    assert_values_close(&result.plots[12].values, &[4.0, 6.0]);
+    assert_values_close(&result.plots[13].values, &[4.0, 6.0]);
+    assert_values_close(&result.plots[14].values, &[4.0, 7.0]);
+    assert_values_close(&result.plots[15].values, &[4.0, 7.0]);
+    assert_values_close(&result.plots[16].values, &[4.0, 7.0]);
+    assert_values_close(&result.plots[17].values, &[3.0, 5.0]);
+    assert_values_close(&result.plots[18].values, &[4.0, 6.0]);
+    assert_values_close(&result.plots[19].values, &[0.0, 1.0]);
+    assert_values_close(&result.plots[20].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[21].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[22].values, &[4.0, 6.0]);
+    assert_values_close(&result.plots[23].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[24].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[25].values, &[0.0, 1.0]);
+    assert_values_close(&result.plots[26].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[27].values, &[3.0, 3.0]);
+    assert_values_close(&result.plots[28].values, &[3.0, 3.0]);
+    assert_values_close(&result.plots[29].values, &[2.0, 3.0]);
+    assert_values_close(&result.plots[30].values, &[4.0, 6.0]);
+    assert_values_close(&result.plots[31].values, &[0.0, 1.0]);
+    assert_values_close(&result.plots[32].values, &[1.0, 2.0]);
+    assert_values_close(&result.plots[33].values, &[2.0, 3.0]);
+    assert_values_close(&result.plots[34].values, &[0.0, 1.0]);
+    assert_values_close(&result.plots[35].values, &[4.0, 6.0]);
+    assert_values_close(&result.plots[36].values, &[3.0, 3.0]);
+    assert_values_close(&result.plots[37].values, &[4.0, 6.0]);
+    assert_values_close(&result.plots[38].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[39].values, &[3.0, 3.0]);
+    assert_values_close(&result.plots[40].values, &[1.0, 2.0]);
+    assert_values_close(&result.plots[41].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[42].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[43].values, &[1.0, 2.0]);
+    assert_values_close(&result.plots[44].values, &[0.0, 1.0]);
+    assert_values_close(&result.plots[45].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[46].values, &[0.0, 1.0]);
+    assert_values_close(&result.plots[47].values, &[3.0, 3.0]);
+    assert_values_close(&result.plots[48].values, &[3.0, 3.0]);
+    assert_values_close(&result.plots[49].values, &[1.0, 2.0]);
+    assert_values_close(&result.plots[50].values, &[4.0, 6.0]);
+    assert_values_close(&result.plots[51].values, &[3.0, 3.0]);
+    assert_values_close(&result.plots[52].values, &[4.0, 6.0]);
+    assert_values_close(&result.plots[53].values, &[2.0, 3.0]);
+    assert_values_close(&result.plots[54].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[55].values, &[1.0, 2.0]);
+    assert_values_close(&result.plots[56].values, &[4.0, 6.0]);
+    assert_values_close(&result.plots[57].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[58].values, &[0.0, 1.0]);
+    assert_values_close(&result.plots[59].values, &[2.0, 3.0]);
+    assert_values_close(&result.plots[60].values, &[3.0, 3.0]);
+    assert_values_close(&result.plots[61].values, &[1.0, 2.0]);
+    assert_values_close(&result.plots[62].values, &[2.0, 3.0]);
+    assert_values_close(&result.plots[63].values, &[3.0, 3.0]);
+    assert_values_close(&result.plots[64].values, &[4.0, 6.0]);
+    assert_values_close(&result.plots[65].values, &[0.0, 1.0]);
 }
 
 #[test]

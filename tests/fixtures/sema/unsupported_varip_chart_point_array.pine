@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported varip chart.point array")
+varip array<chart.point> points = array.new<chart.point>()
+plot(close)

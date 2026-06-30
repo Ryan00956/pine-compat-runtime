@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported selector switch statement block")
+direction = close > open ? 1 : -1
+value = switch direction
+    1 =>
+        local = high
+    => close
+plot(value)

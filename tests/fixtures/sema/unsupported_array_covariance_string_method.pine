@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array covariance string method")
+left = array.new_string()
+right = array.new_string()
+plot(left.covariance(right))

@@ -1,0 +1,25 @@
+//@version=6
+indicator("Matrix copy")
+
+source = matrix.new<float>(1, 1, close)
+alias = source
+copied = matrix.copy(source)
+method_copied = source.copy()
+
+matrix.set(alias, 0, 0, close + 10)
+alias_value = matrix.get(source, 0, 0)
+copied_before = matrix.get(copied, 0, 0)
+method_copied_before = matrix.get(method_copied, 0, 0)
+
+matrix.set(copied, 0, 0, close + 20)
+matrix.set(method_copied, 0, 0, close + 30)
+source_after_copy_mutation = matrix.get(source, 0, 0)
+copied_after = matrix.get(copied, 0, 0)
+method_copied_after = matrix.get(method_copied, 0, 0)
+
+plot(alias_value, "alias_value")
+plot(copied_before, "copied_before")
+plot(method_copied_before, "method_copied_before")
+plot(source_after_copy_mutation, "source_after_copy_mutation")
+plot(copied_after, "copied_after")
+plot(method_copied_after, "method_copied_after")

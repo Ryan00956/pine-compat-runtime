@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix col")
+
+values = matrix.col(na, 0)
+plot(array.size(values))

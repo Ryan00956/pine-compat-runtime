@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported matrix.reshape method in UDF")
+
+reshape_matrix(values) =>
+    values.reshape(1, 1)
+    close
+
+values = matrix.new<float>(1, 1, close)
+plot(reshape_matrix(values))

@@ -1,0 +1,14 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT switch identity")
+
+type Point
+    float x
+
+p = switch
+    close > open =>
+        lib.Point.new(close)
+    =>
+        Point.new(open)
+
+plot(close)

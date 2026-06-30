@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array avg color method")
+values = array.new_color()
+plot(values.avg())

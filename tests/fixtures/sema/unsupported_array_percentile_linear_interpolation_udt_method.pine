@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported array.percentile_linear_interpolation UDT method")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+plot(values.percentile_linear_interpolation(50))

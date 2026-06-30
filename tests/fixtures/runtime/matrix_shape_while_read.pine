@@ -1,0 +1,19 @@
+//@version=6
+indicator("Matrix shape while read")
+
+values = matrix.new<float>(1, 4, close)
+
+shape_total = close * 0
+i = 0
+while i < 2
+    if i == 0
+        matrix.reshape(values, 2, 2)
+        shape_total := shape_total + matrix.rows(values)
+    else
+        values.reshape(4, 1)
+        shape_total := shape_total + values.columns()
+    i := i + 1
+
+plot(shape_total, "shape_total")
+plot(matrix.rows(values), "final_rows")
+plot(values.columns(), "final_columns")

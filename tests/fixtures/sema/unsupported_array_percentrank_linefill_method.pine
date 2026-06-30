@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentrank linefill method")
+values = array.new_linefill(0)
+plot(values.percentrank(0))

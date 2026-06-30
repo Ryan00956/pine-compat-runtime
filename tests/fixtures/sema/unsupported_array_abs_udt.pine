@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported array.abs UDT")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+result = array.abs(values)
+plot(close)

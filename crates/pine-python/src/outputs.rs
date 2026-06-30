@@ -29,7 +29,10 @@ pub(crate) fn runtime_result_to_py(
     if let Some(strategy) = &result.strategy {
         output.set_item("strategy", strategy_result_to_py(py, strategy)?)?;
     }
-    output.set_item("diagnostics", PyList::empty(py))?;
+    output.set_item(
+        "diagnostics",
+        runtime_diagnostics_to_py(py, &result.diagnostics)?,
+    )?;
     Ok(output.into_any().unbind())
 }
 
@@ -48,7 +51,7 @@ fn strategy_result_to_py(
     )?;
     output.set_item(
         "diagnostics",
-        strategy_diagnostics_to_py(py, &strategy.diagnostics)?,
+        runtime_diagnostics_to_py(py, &strategy.diagnostics)?,
     )?;
     Ok(output.into_any().unbind())
 }
@@ -80,7 +83,7 @@ fn strategy_order_fill_alerts_to_py(
     Ok(output.into_any().unbind())
 }
 
-fn strategy_diagnostics_to_py(
+fn runtime_diagnostics_to_py(
     py: Python<'_>,
     diagnostics: &[pine_runtime::RuntimeDiagnostic],
 ) -> PyResult<Py<PyAny>> {
@@ -570,7 +573,9 @@ fn append_value(py: Python<'_>, output: &Bound<'_, PyList>, value: &PineValue) -
         PineValue::UserType(values) | PineValue::Tuple(values) => {
             output.append(values_to_py(py, values)?)
         }
-        PineValue::Array(_) | PineValue::Na | PineValue::Void => output.append(py.None()),
+        PineValue::Array(_) | PineValue::Matrix(_) | PineValue::Na | PineValue::Void => {
+            output.append(py.None())
+        }
     }
 }
 

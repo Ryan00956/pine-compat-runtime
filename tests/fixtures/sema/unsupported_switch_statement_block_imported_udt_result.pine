@@ -1,0 +1,11 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported switch block imported UDT result")
+
+p = switch
+    close > open =>
+        lib.Point.new(close)
+    =>
+        na
+
+plot(close)

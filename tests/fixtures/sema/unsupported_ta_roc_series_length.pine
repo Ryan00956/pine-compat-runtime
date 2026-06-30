@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.roc Series Length")
+plot(ta.roc(close, bar_index))

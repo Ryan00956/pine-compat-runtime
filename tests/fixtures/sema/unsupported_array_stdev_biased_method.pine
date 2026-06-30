@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.stdev Biased method")
+values = array.new_int(2, 1)
+plot(values.stdev(close))

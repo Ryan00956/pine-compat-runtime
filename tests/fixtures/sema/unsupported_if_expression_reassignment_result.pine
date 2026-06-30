@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported if expression reassignment result")
+
+total = 0.0
+value = if close > open
+    total := high
+else
+    close
+
+plot(value)

@@ -1,0 +1,10 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT UDF nested passthrough")
+
+inner(p) => p
+outer(p) => inner(p)
+
+p = outer(lib.Point.new(close))
+lib.Point typed = outer(lib.Point.new(open))
+plot(p.x + typed.x)

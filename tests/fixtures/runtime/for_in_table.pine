@@ -1,0 +1,19 @@
+//@version=5
+indicator("For in table array")
+
+first = table.new(position.top_right, 1, 1)
+second = table.new(position.bottom_left, 1, 1)
+tables = array.from(first, second)
+
+int touched = 0
+int before_count = array.size(table.all)
+for id in tables
+    table.cell(id, 0, 0, "loop")
+    table.delete(id)
+    touched := touched + 1
+
+first_after = tables.get(0)
+table.delete(first_after)
+plot(before_count)
+plot(array.size(table.all))
+plot(touched)

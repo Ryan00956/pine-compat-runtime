@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported matrix.fill in UDF")
+
+fill_matrix(values) =>
+    matrix.fill(values, close)
+
+values = matrix.new<float>(1, 1, close)
+fill_matrix(values)
+plot(close)

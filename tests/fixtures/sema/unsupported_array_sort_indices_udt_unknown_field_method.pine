@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported array sort_indices UDT unknown field method")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+indices = values.sort_indices(order.ascending, "missing")
+plot(close)

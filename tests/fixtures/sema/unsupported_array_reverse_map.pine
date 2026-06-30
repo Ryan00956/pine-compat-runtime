@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array reverse map")
+values = array.new<map>()
+array.reverse(values)
+plot(close)

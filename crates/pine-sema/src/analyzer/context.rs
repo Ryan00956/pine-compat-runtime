@@ -8,9 +8,10 @@ use pine_syntax::{Diagnostic, FunctionBody, Program, Severity, Span};
 
 use crate::analysis::Analysis;
 use crate::compatibility::CompatibilityReport;
-use crate::prelude::UserTypeInfo;
+use crate::modules::ImportedUserTypeInfo;
+use crate::prelude::{UserTypeIdentity, UserTypeInfo};
 use crate::resolver::{BindingKey, ScopeResolver, SymbolInfo};
-use crate::types::is_array_kind;
+use crate::types::is_collection_kind;
 
 pub(crate) const MAX_SEMA_EXPR_DEPTH: u32 = 128;
 pub(crate) const MAX_FUNCTION_CALL_DEPTH: usize = 64;
@@ -43,9 +44,14 @@ pub(crate) struct Analyzer {
     pub(crate) lower_symbol_overrides: Vec<HashMap<SymbolId, SymbolInfo>>,
     pub(crate) functions: HashMap<String, FunctionInfo>,
     pub(crate) methods: HashMap<(String, String), MethodInfo>,
+    pub(crate) imported_user_types: HashMap<String, ImportedUserTypeInfo>,
     pub(crate) user_types: HashMap<String, UserTypeInfo>,
     pub(crate) symbol_user_types: HashMap<SymbolId, String>,
+    pub(crate) symbol_user_type_identities: HashMap<SymbolId, UserTypeIdentity>,
+    pub(crate) symbol_user_type_arrays: HashMap<SymbolId, String>,
     pub(crate) expr_user_types: HashMap<(usize, usize), String>,
+    pub(crate) expr_user_type_identities: HashMap<(usize, usize), UserTypeIdentity>,
+    pub(crate) expr_user_type_arrays: HashMap<(usize, usize), String>,
     pub(crate) expr_types: HashMap<(usize, usize), PineType>,
     pub(crate) script_declaration: Option<(ScriptMode, Span)>,
     pub(crate) strategy_settings: StrategySettings,
@@ -224,7 +230,7 @@ impl Analyzer {
     }
 
     pub(crate) fn series_id_for_type(&mut self, pine_type: PineType) -> Option<SeriesId> {
-        if pine_type.qualifier == Qualifier::Series || is_array_kind(pine_type.kind) {
+        if pine_type.qualifier == Qualifier::Series || is_collection_kind(pine_type.kind) {
             Some(self.alloc_series())
         } else {
             None

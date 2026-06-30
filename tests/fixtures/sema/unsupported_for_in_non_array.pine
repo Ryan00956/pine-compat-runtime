@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported for in non array")
+for value in close
+    plot(value)

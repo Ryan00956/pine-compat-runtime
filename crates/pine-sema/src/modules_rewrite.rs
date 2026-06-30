@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use pine_syntax::{
     CallArg, ExportDecl, ExportItem, Expr, ExprKind, FunctionBody, Program, Stmt, StmtKind,
-    SwitchArm,
+    SwitchArm, SwitchArmResult,
 };
 
 use crate::analyzer::calls::expr_name;
@@ -63,6 +63,24 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
             condition: rewrite_expr(condition, context),
             body: rewrite_statements(body, context),
         },
+        StmtKind::ForIn {
+            index,
+            value,
+            iterable,
+            body,
+        } => StmtKind::ForIn {
+            index: index.clone(),
+            value: value.clone(),
+            iterable: rewrite_expr(iterable, context),
+            body: {
+                let body_context = if let Some(index) = index {
+                    context.shadowing(index).shadowing(value)
+                } else {
+                    context.shadowing(value)
+                };
+                rewrite_statements(body, &body_context)
+            },
+        },
         StmtKind::Decl {
             mode,
             declared_type,
@@ -107,6 +125,10 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
                 ExportItem::Const { name, value, span } => ExportItem::Const {
                     name: name.clone(),
                     value: rewrite_expr(value, context),
+                    span: *span,
+                },
+                ExportItem::UserType { decl, span } => ExportItem::UserType {
+                    decl: decl.clone(),
                     span: *span,
                 },
                 ExportItem::Unknown { span } => ExportItem::Unknown { span: *span },
@@ -222,6 +244,10 @@ pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
                 rewrite_statements(body, &body_context)
             },
         },
+        ExprKind::While { condition, body } => ExprKind::While {
+            condition: Box::new(rewrite_expr(condition, context)),
+            body: rewrite_statements(body, context),
+        },
         ExprKind::Switch { selector, arms } => ExprKind::Switch {
             selector: selector
                 .as_ref()
@@ -233,7 +259,7 @@ pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
                         .condition
                         .as_ref()
                         .map(|condition| rewrite_expr(condition, context)),
-                    result: rewrite_expr(&arm.result, context),
+                    result: rewrite_switch_arm_result(&arm.result, context),
                 })
                 .collect(),
         },
@@ -254,6 +280,18 @@ pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
     Expr {
         kind,
         span: expr.span,
+    }
+}
+
+fn rewrite_switch_arm_result(
+    result: &SwitchArmResult,
+    context: &RewriteContext,
+) -> SwitchArmResult {
+    match result {
+        SwitchArmResult::Expr(expr) => SwitchArmResult::Expr(rewrite_expr(expr, context)),
+        SwitchArmResult::Block(statements) => {
+            SwitchArmResult::Block(rewrite_statements(statements, context))
+        }
     }
 }
 

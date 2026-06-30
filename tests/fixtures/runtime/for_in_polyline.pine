@@ -1,0 +1,19 @@
+//@version=5
+indicator("For in polyline array")
+
+points = array.from(chart.point.from_index(bar_index, close), chart.point.from_index(bar_index + 1, close + 1))
+first = polyline.new(points, line_color=color.red)
+second = polyline.new(points, line_color=color.green)
+paths = array.from(first, second)
+
+int deleted = 0
+int before_count = array.size(polyline.all)
+for id in paths
+    polyline.delete(id)
+    deleted := deleted + 1
+
+first_after = paths.get(0)
+polyline.delete(first_after)
+plot(before_count)
+plot(array.size(polyline.all))
+plot(deleted)

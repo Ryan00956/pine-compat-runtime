@@ -1,0 +1,17 @@
+//@version=5
+indicator("For in index value bool")
+
+values = array.from(true, false, true)
+
+int index_sum = 0
+int true_count = 0
+int true_index_sum = 0
+for index, value in values
+    index_sum := index_sum + index
+    if value
+        true_count := true_count + 1
+        true_index_sum := true_index_sum + index
+
+plot(index_sum)
+plot(true_count)
+plot(true_index_sum)

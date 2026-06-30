@@ -16,6 +16,8 @@ pub(crate) enum ArrayElementKind {
     Box,
     Table,
     ChartPoint,
+    #[allow(dead_code)]
+    UserType,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -152,6 +154,29 @@ pub(crate) fn array_numeric_result(kind: ArrayElementKind, value: f64) -> PineVa
     }
 }
 
+pub(crate) fn array_value_for_kind(kind: ArrayElementKind, value: PineValue) -> PineValue {
+    match (kind, value) {
+        (ArrayElementKind::Float, PineValue::Int(value)) => PineValue::Float(value as f64),
+        (ArrayElementKind::Float, PineValue::Float(value)) => PineValue::Float(value),
+        (ArrayElementKind::Int, PineValue::Int(value)) => PineValue::Int(value),
+        (ArrayElementKind::Bool, PineValue::Bool(value)) => PineValue::Bool(value),
+        (ArrayElementKind::String, PineValue::String(value)) => PineValue::String(value),
+        (ArrayElementKind::Color, PineValue::Color(value)) => PineValue::Color(value),
+        (ArrayElementKind::Label, PineValue::Label(value)) => PineValue::Label(value),
+        (ArrayElementKind::Line, PineValue::Line(value)) => PineValue::Line(value),
+        (ArrayElementKind::LineFill, PineValue::LineFill(value)) => PineValue::LineFill(value),
+        (ArrayElementKind::Polyline, PineValue::Polyline(value)) => PineValue::Polyline(value),
+        (ArrayElementKind::Box, PineValue::Box(value)) => PineValue::Box(value),
+        (ArrayElementKind::Table, PineValue::Table(value)) => PineValue::Table(value),
+        (ArrayElementKind::ChartPoint, PineValue::ChartPoint(value)) => {
+            PineValue::ChartPoint(value)
+        }
+        (ArrayElementKind::UserType, PineValue::UserType(value)) => PineValue::UserType(value),
+        (_, PineValue::Na) => PineValue::Na,
+        _ => PineValue::Na,
+    }
+}
+
 pub(crate) fn compare_array_numeric_values(left: &PineValue, right: &PineValue) -> Ordering {
     match (left.as_f64(), right.as_f64()) {
         (Some(left), Some(right)) => left.partial_cmp(&right).unwrap_or(Ordering::Equal),
@@ -205,6 +230,28 @@ pub(crate) fn compare_array_sort_values(
     }
 }
 
+pub(crate) fn compare_user_type_sort_field_values(
+    left: &PineValue,
+    right: &PineValue,
+    field_index: usize,
+    descending: bool,
+) -> Ordering {
+    let left = user_type_sort_field_value(left, field_index);
+    let right = user_type_sort_field_value(right, field_index);
+    let kind = match (&left, &right) {
+        (PineValue::String(_), _) | (_, PineValue::String(_)) => ArrayElementKind::String,
+        _ => ArrayElementKind::Float,
+    };
+    compare_array_sort_values(kind, &left, &right, descending)
+}
+
+fn user_type_sort_field_value(value: &PineValue, field_index: usize) -> PineValue {
+    match value {
+        PineValue::UserType(fields) => fields.get(field_index).cloned().unwrap_or(PineValue::Na),
+        _ => PineValue::Na,
+    }
+}
+
 pub(crate) fn is_array_sort_special(kind: ArrayElementKind, value: &PineValue) -> bool {
     matches!(value, PineValue::Na)
         || matches!(value, PineValue::Float(value) if !value.is_finite())
@@ -240,4 +287,32 @@ pub(crate) fn array_numeric_upper_bound(values: &[PineValue], target: &PineValue
         }
     }
     left
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn does_not_infer_user_type_arrays_from_values() {
+        assert_eq!(
+            infer_array_from_kind(&[PineValue::UserType(vec![PineValue::Float(1.0)])]),
+            None
+        );
+    }
+
+    #[test]
+    fn accepts_user_type_values_for_internal_user_type_array_kind() {
+        assert_eq!(
+            array_value_for_kind(
+                ArrayElementKind::UserType,
+                PineValue::UserType(vec![PineValue::Float(1.0)])
+            ),
+            PineValue::UserType(vec![PineValue::Float(1.0)])
+        );
+        assert_eq!(
+            array_value_for_kind(ArrayElementKind::UserType, PineValue::Float(1.0)),
+            PineValue::Na
+        );
+    }
 }

@@ -1,0 +1,7 @@
+//@version=5
+indicator("Dynamic negative history offset UDF return")
+
+negative_offset() =>
+    -1
+
+plot(close[negative_offset()])

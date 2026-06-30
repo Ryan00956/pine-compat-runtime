@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix set")
+
+matrix.set(na, 0, 0, close)
+plot(close)

@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported matrix.set method in UDF")
+
+mutate(values) =>
+    values.set(0, 0, close)
+    close
+
+values = matrix.new<float>(1, 1, close)
+plot(mutate(values))

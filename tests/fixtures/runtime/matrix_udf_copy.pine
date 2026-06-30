@@ -1,0 +1,19 @@
+//@version=6
+indicator("Matrix UDF copy")
+
+copy_values(values) =>
+    matrix.copy(values)
+
+method_copy_values(values) =>
+    values.copy()
+
+source = matrix.new<float>(1, 1, close)
+copied = copy_values(source)
+method_copied = method_copy_values(source)
+
+matrix.set(copied, 0, 0, close + 10)
+method_copied.set(0, 0, close + 20)
+
+plot(matrix.get(source, 0, 0), "source")
+plot(matrix.get(copied, 0, 0), "copied")
+plot(method_copied.get(0, 0), "method_copied")

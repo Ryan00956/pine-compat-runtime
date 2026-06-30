@@ -1,0 +1,7 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT field mutation type")
+
+p = lib.Point.new(close)
+p.x := "bad"
+plot(p.x)

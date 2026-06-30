@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported map.put_all")
+
+map.put_all(na, na)
+plot(close)

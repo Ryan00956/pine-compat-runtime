@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported matrix typed declaration")
+
+matrix values = na
+plot(close)

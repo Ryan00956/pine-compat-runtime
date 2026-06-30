@@ -25,25 +25,33 @@ pub(crate) const SIMPLE_INT: PineType = PineType::new(Qualifier::Simple, ValueKi
 pub(crate) const SIMPLE_BOOL: PineType = PineType::new(Qualifier::Simple, ValueKind::Bool);
 pub(crate) const SIMPLE_COLOR: PineType = PineType::new(Qualifier::Simple, ValueKind::Color);
 pub(crate) const SIMPLE_STRING: PineType = PineType::new(Qualifier::Simple, ValueKind::String);
+pub(crate) const SIMPLE_FLOAT_MATRIX: PineType =
+    PineType::new(Qualifier::Simple, ValueKind::FloatMatrix);
+
+const fn simple_array_type_from_element_kind(element_kind: ValueKind) -> PineType {
+    match element_kind.array_kind_from_element_kind() {
+        Some(array_kind) => PineType::new(Qualifier::Simple, array_kind),
+        None => panic!("unsupported array element kind"),
+    }
+}
+
 pub(crate) const SIMPLE_FLOAT_ARRAY: PineType =
-    PineType::new(Qualifier::Simple, ValueKind::FloatArray);
-pub(crate) const SIMPLE_INT_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::IntArray);
-pub(crate) const SIMPLE_BOOL_ARRAY: PineType =
-    PineType::new(Qualifier::Simple, ValueKind::BoolArray);
+    simple_array_type_from_element_kind(ValueKind::Float);
+pub(crate) const SIMPLE_INT_ARRAY: PineType = simple_array_type_from_element_kind(ValueKind::Int);
+pub(crate) const SIMPLE_BOOL_ARRAY: PineType = simple_array_type_from_element_kind(ValueKind::Bool);
 pub(crate) const SIMPLE_STRING_ARRAY: PineType =
-    PineType::new(Qualifier::Simple, ValueKind::StringArray);
+    simple_array_type_from_element_kind(ValueKind::String);
 pub(crate) const SIMPLE_COLOR_ARRAY: PineType =
-    PineType::new(Qualifier::Simple, ValueKind::ColorArray);
+    simple_array_type_from_element_kind(ValueKind::Color);
 pub(crate) const SIMPLE_LABEL_ARRAY: PineType =
-    PineType::new(Qualifier::Simple, ValueKind::LabelArray);
-pub(crate) const SIMPLE_LINE_ARRAY: PineType =
-    PineType::new(Qualifier::Simple, ValueKind::LineArray);
+    simple_array_type_from_element_kind(ValueKind::Label);
+pub(crate) const SIMPLE_LINE_ARRAY: PineType = simple_array_type_from_element_kind(ValueKind::Line);
 pub(crate) const SIMPLE_LINE_FILL_ARRAY: PineType =
-    PineType::new(Qualifier::Simple, ValueKind::LineFillArray);
+    simple_array_type_from_element_kind(ValueKind::LineFill);
 pub(crate) const SIMPLE_POLYLINE_ARRAY: PineType =
-    PineType::new(Qualifier::Simple, ValueKind::PolylineArray);
-pub(crate) const SIMPLE_BOX_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::BoxArray);
+    simple_array_type_from_element_kind(ValueKind::Polyline);
+pub(crate) const SIMPLE_BOX_ARRAY: PineType = simple_array_type_from_element_kind(ValueKind::Box);
 pub(crate) const SIMPLE_TABLE_ARRAY: PineType =
-    PineType::new(Qualifier::Simple, ValueKind::TableArray);
+    simple_array_type_from_element_kind(ValueKind::Table);
 pub(crate) const SIMPLE_CHART_POINT_ARRAY: PineType =
-    PineType::new(Qualifier::Simple, ValueKind::ChartPointArray);
+    simple_array_type_from_element_kind(ValueKind::ChartPoint);

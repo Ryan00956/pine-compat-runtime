@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported array.insert UDT")
+type Point
+    float x
+type Marker
+    float x
+
+values = array.from(Point.new(close))
+array.insert(values, 0, Marker.new(high))
+plot(close)

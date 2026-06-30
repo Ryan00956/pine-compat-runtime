@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.new initial value")
+
+values = matrix.new<float>(1, 1, "x")
+plot(close)

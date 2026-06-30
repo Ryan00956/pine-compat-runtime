@@ -1,0 +1,8 @@
+//@version=5
+indicator("While expression array zero")
+
+items = while false
+    array.from(close, open)
+
+plot(na(items) ? 1 : 0, "is_na")
+plot(na(items) ? na : array.size(items), "size")

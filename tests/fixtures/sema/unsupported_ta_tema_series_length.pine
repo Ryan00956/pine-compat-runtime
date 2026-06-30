@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.tema Series Length")
+plot(ta.tema(close, bar_index))

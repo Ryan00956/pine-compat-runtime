@@ -1,0 +1,6 @@
+//@version=5
+indicator("Supported ta.kc Simple Mult")
+values = array.new_int(2, 1)
+[middle, upper, lower] = ta.kc(close, 3, array.size(values))
+width = ta.kcw(close, 3, array.size(values))
+plot(middle + upper + lower + width)

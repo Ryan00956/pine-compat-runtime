@@ -45,6 +45,59 @@ const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const STRATEGY_ORDER_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::SimpleString,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "direction",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "qty",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "limit",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "stop",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "oca_name",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "oca_type",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "comment",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "alert_message",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "disable_alert",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
+];
+
 const STRATEGY_CLOSE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -218,6 +271,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "strategy.entry",
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_ENTRY_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.order",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_ORDER_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

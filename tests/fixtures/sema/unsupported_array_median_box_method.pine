@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array median box method")
+values = array.new_box()
+plot(values.median())

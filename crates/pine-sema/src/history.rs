@@ -74,6 +74,9 @@ pub(crate) fn max_bars_back_from_stmt(statement: &HirStmt) -> Option<u32> {
             .or_else(|| max_bars_back_from_expr(to))
             .or_else(|| step.as_ref().and_then(max_bars_back_from_expr))
             .or_else(|| infer_max_bars_back(body)),
+        HirStmtKind::ForIn { iterable, body, .. } => {
+            max_bars_back_from_expr(iterable).or_else(|| infer_max_bars_back(body))
+        }
         HirStmtKind::While { condition, body } => {
             max_bars_back_from_expr(condition).or_else(|| infer_max_bars_back(body))
         }
@@ -127,9 +130,18 @@ pub(crate) fn max_bars_back_from_expr(expr: &HirExpr) -> Option<u32> {
             .or_else(|| step.as_deref().and_then(max_bars_back_from_expr))
             .or_else(|| infer_max_bars_back(statements))
             .or_else(|| max_bars_back_from_expr(result)),
-        HirExprKind::Tuple(items) | HirExprKind::UserTypeConstruct { fields: items } => {
-            items.iter().find_map(max_bars_back_from_expr)
-        }
+        HirExprKind::While {
+            condition,
+            statements,
+            result,
+        } => max_bars_back_from_expr(condition)
+            .or_else(|| infer_max_bars_back(statements))
+            .or_else(|| max_bars_back_from_expr(result)),
+        HirExprKind::Tuple(items)
+        | HirExprKind::UserTypeConstruct { fields: items, .. }
+        | HirExprKind::UserTypeArrayConstruct {
+            elements: items, ..
+        } => items.iter().find_map(max_bars_back_from_expr),
         HirExprKind::FieldAccess { value, .. } => max_bars_back_from_expr(value),
         HirExprKind::Block { statements, result } => {
             infer_max_bars_back(statements).or_else(|| max_bars_back_from_expr(result))
@@ -187,6 +199,10 @@ impl HistoryRequirementCollector {
                 if let Some(step) = step {
                     self.visit_expr(step);
                 }
+                self.visit_stmts(body);
+            }
+            HirStmtKind::ForIn { iterable, body, .. } => {
+                self.visit_expr(iterable);
                 self.visit_stmts(body);
             }
             HirStmtKind::While { condition, body } => {
@@ -252,14 +268,28 @@ impl HistoryRequirementCollector {
                 self.visit_stmts(statements);
                 self.visit_expr(result);
             }
+            HirExprKind::While {
+                condition,
+                statements,
+                result,
+            } => {
+                self.visit_expr(condition);
+                self.visit_stmts(statements);
+                self.visit_expr(result);
+            }
             HirExprKind::Tuple(items) => {
                 for item in items {
                     self.visit_expr(item);
                 }
             }
-            HirExprKind::UserTypeConstruct { fields } => {
+            HirExprKind::UserTypeConstruct { fields, .. } => {
                 for field in fields {
                     self.visit_expr(field);
+                }
+            }
+            HirExprKind::UserTypeArrayConstruct { elements, .. } => {
+                for element in elements {
+                    self.visit_expr(element);
                 }
             }
             HirExprKind::FieldAccess { value, .. } => self.visit_expr(value),

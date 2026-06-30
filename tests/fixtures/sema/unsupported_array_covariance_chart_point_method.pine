@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array covariance chart point method")
+left = array.new<chart.point>()
+right = array.new<chart.point>()
+plot(left.covariance(right))

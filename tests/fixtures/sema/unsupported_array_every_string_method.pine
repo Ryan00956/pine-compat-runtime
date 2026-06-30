@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array every string method")
+values = array.new_string()
+plot(values.every() ? 1 : 0)

@@ -1,0 +1,18 @@
+//@version=5
+indicator("For in label array")
+
+first = label.new(bar_index, high, "a")
+second = label.new(bar_index + 1, low, "b")
+labels = array.from(first, second)
+
+int x_sum = 0
+int text_len_sum = 0
+for id in labels
+    label.set_text(id, "loop")
+    x_sum := x_sum + label.get_x(id)
+    text_len_sum := text_len_sum + str.length(label.get_text(id))
+
+first_after = labels.get(0)
+plot(x_sum)
+plot(text_len_sum)
+plot(str.length(label.get_text(first_after)))

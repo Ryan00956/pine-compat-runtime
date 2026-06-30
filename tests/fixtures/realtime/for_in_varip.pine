@@ -1,0 +1,14 @@
+//@version=5
+indicator("Realtime for in varip")
+
+varip int[] values = array.new_int()
+values.push(1)
+
+int total = 0
+for value in values
+    total := total + value
+    if barstate.isrealtime and not barstate.isconfirmed
+        values.push(10)
+
+plot(values.size())
+plot(total)

@@ -1,0 +1,16 @@
+//@version=5
+indicator("Unsupported switch statement block UDT identity")
+type Point
+    float x
+type Other
+    float x
+
+value = switch bar_index
+    0 =>
+        made = Point.new(close)
+        made
+    =>
+        made = Other.new(open)
+        made
+
+plot(value.x)

@@ -1,0 +1,23 @@
+//@version=6
+indicator("While expression matrix")
+
+i = 0
+fresh = while i < 2
+    i := i + 1
+    matrix.new<float>(1, 2, close + i)
+
+fresh.set(0, 0, fresh.get(0, 0) + 10)
+
+source = matrix.new<float>(1, 2, close)
+j = 0
+alias = while j < 2
+    j := j + 1
+    source
+
+alias.set(0, 1, alias.get(0, 1) + 20)
+
+plot(matrix.rows(fresh), "fresh_rows")
+plot(fresh.columns(), "fresh_columns")
+plot(fresh.get(0, 0), "fresh_first")
+plot(matrix.get(fresh, 0, 1), "fresh_second")
+plot(matrix.get(source, 0, 1), "source_alias_second")

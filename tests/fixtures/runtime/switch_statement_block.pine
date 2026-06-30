@@ -1,0 +1,8 @@
+//@version=5
+indicator("Switch statement block fixture")
+value = switch
+    close > open =>
+        sample = ta.sma(close, 2)
+        sample + 1
+    => close
+plot(value)

@@ -1,0 +1,13 @@
+//@version=5
+strategy("Strategy buy and hold return percent")
+identity(value) => value
+
+plot(strategy.buy_and_hold_return_percent)
+plot(identity(strategy.buy_and_hold_return_percent))
+independent_buy_and_hold = strategy.buy_and_hold_return_percent * 0
+buy_and_hold_i = 0
+while buy_and_hold_i < 1
+    independent_buy_and_hold := strategy.buy_and_hold_return_percent
+    buy_and_hold_i := buy_and_hold_i + 1
+plot(independent_buy_and_hold)
+plot(strategy.buy_and_hold_return_percent[1])

@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array reverse matrix")
+values = array.new<matrix>()
+array.reverse(values)
+plot(close)

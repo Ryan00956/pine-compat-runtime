@@ -1,0 +1,8 @@
+//@version=5
+strategy("Strategy order metadata", overlay=true)
+if bar_index == 0
+    strategy.order("L", strategy.long, qty=1, limit=9, comment="limit order", alert_message="limit alert", disable_alert=false)
+if bar_index == 2
+    strategy.order("R", strategy.short, qty=1, comment="reduce order", alert_message="reduce alert", disable_alert=false)
+plot(na(strategy.closedtrades.entry_comment(0)) ? na : strategy.closedtrades.entry_comment(0) == "limit order" ? 1 : 0)
+plot(na(strategy.closedtrades.exit_comment(0)) ? na : strategy.closedtrades.exit_comment(0) == "reduce order" ? 1 : 0)

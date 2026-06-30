@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix add_row method")
+
+values = matrix.new<float>(1, 1, close)
+values.add_row(1, close)
+plot(close)

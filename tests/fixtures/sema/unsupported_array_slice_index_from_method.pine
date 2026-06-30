@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array.slice Index From method")
+values = array.new_int(2, 1)
+window = values.slice("0", 1)
+plot(array.size(window))

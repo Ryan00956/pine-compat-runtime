@@ -1,0 +1,11 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT for identity")
+
+type Point
+    float x
+
+lib.Point p = for i = 0 to 1
+    Point.new(close + i)
+
+plot(close)

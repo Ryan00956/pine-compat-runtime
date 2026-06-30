@@ -38,6 +38,12 @@ pub enum StmtKind {
         step: Option<Expr>,
         body: Vec<Stmt>,
     },
+    ForIn {
+        index: Option<String>,
+        value: String,
+        iterable: Expr,
+        body: Vec<Stmt>,
+    },
     While {
         condition: Expr,
         body: Vec<Stmt>,
@@ -51,7 +57,7 @@ pub enum StmtKind {
     },
     Decl {
         mode: DeclMode,
-        declared_type: Option<String>,
+        declared_type: Option<DeclaredType>,
         name: String,
         value: Expr,
     },
@@ -71,6 +77,57 @@ pub enum StmtKind {
     Unsupported {
         feature: String,
     },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DeclaredType {
+    Named(String),
+    Array { element_type: String },
+    Matrix { element_type: String },
+}
+
+impl DeclaredType {
+    #[must_use]
+    pub fn canonical_name(&self) -> String {
+        match self {
+            Self::Named(type_name) => type_name.clone(),
+            Self::Array { element_type } => format!("array<{element_type}>"),
+            Self::Matrix { element_type } => format!("matrix<{element_type}>"),
+        }
+    }
+
+    #[must_use]
+    pub fn into_canonical_name(self) -> String {
+        match self {
+            Self::Named(type_name) => type_name,
+            Self::Array { element_type } => format!("array<{element_type}>"),
+            Self::Matrix { element_type } => format!("matrix<{element_type}>"),
+        }
+    }
+
+    #[must_use]
+    pub fn named_type(&self) -> Option<&str> {
+        match self {
+            Self::Named(type_name) => Some(type_name),
+            Self::Array { .. } | Self::Matrix { .. } => None,
+        }
+    }
+
+    #[must_use]
+    pub fn array_element_type(&self) -> Option<&str> {
+        match self {
+            Self::Named(_) | Self::Matrix { .. } => None,
+            Self::Array { element_type } => Some(element_type),
+        }
+    }
+
+    #[must_use]
+    pub fn matrix_element_type(&self) -> Option<&str> {
+        match self {
+            Self::Named(_) | Self::Array { .. } => None,
+            Self::Matrix { element_type } => Some(element_type),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -108,6 +165,10 @@ pub enum ExportItem {
     Const {
         name: String,
         value: Expr,
+        span: Span,
+    },
+    UserType {
+        decl: UserTypeDecl,
         span: Span,
     },
     Unknown {
@@ -194,6 +255,10 @@ pub enum ExprKind {
         step: Option<Box<Expr>>,
         body: Vec<Stmt>,
     },
+    While {
+        condition: Box<Expr>,
+        body: Vec<Stmt>,
+    },
     Switch {
         selector: Option<Box<Expr>>,
         arms: Vec<SwitchArm>,
@@ -212,7 +277,13 @@ pub enum ExprKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SwitchArm {
     pub condition: Option<Expr>,
-    pub result: Expr,
+    pub result: SwitchArmResult,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SwitchArmResult {
+    Expr(Expr),
+    Block(Vec<Stmt>),
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -1,0 +1,13 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT if expression identity")
+
+type Point
+    float x
+
+p = if close > open
+    lib.Point.new(close)
+else
+    Point.new(open)
+
+plot(close)

@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array min bool method")
+values = array.new_bool()
+plot(values.min())

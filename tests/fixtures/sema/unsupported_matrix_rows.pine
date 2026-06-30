@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix rows")
+
+row_count = matrix.rows(na)
+plot(row_count)

@@ -1,0 +1,18 @@
+//@version=5
+indicator("Series history offset UDF return")
+
+offset_for_bar() =>
+    bar_index == 0 ? 0 : 1
+
+offset_or_na_for_bar() =>
+    bar_index == 2 ? na : offset_for_bar()
+
+offset = offset_for_bar()
+maybe_offset = bar_index == 2 ? na : offset
+previous = close[offset]
+
+plot(previous)
+plot((close + open)[offset])
+plot(close[maybe_offset])
+plot(close[offset_or_na_for_bar()])
+plot(na(previous[1]) ? 1 : 0)

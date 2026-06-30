@@ -1,0 +1,5 @@
+//@version=5
+import user/duplicate_udt_const/1 as lib
+indicator("Unsupported duplicate exported UDT and const")
+
+plot(close)

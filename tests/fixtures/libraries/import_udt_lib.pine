@@ -1,5 +1,8 @@
 library("Imported UDT fixture")
-type Point
+export type Point
     float x
+
+export type Wrapper
+    Point nested
 
 method shift(Point p, float delta) => p.x + delta

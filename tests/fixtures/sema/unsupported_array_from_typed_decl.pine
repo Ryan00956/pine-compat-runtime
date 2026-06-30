@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array typed declaration from array.from")
+
+array values = array.from(close)
+plot(close)

@@ -241,6 +241,37 @@ fn lowers_plain_declaration_without_persistence() {
 }
 
 #[test]
+fn lowers_user_type_constructor_with_type_name_metadata() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+p = Point.new(close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("UDT constructor script should lower");
+    let value = hir
+        .statements
+        .iter()
+        .find_map(|statement| match &statement.kind {
+            HirStmtKind::Decl { value, .. } => Some(value),
+            _ => None,
+        })
+        .expect("expected UDT declaration");
+
+    let pine_ir::HirExprKind::UserTypeConstruct { identity, .. } = &value.kind else {
+        panic!("expected UDT constructor HIR, got {:?}", value.kind);
+    };
+    assert_eq!(identity.source_id, 0);
+    assert_eq!(identity.type_name, "Point");
+}
+
+#[test]
 fn skips_hir_when_semantic_errors_exist() {
     let analysis = analyze("plot()\n");
 

@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.percentrank Series Length")
+plot(ta.percentrank(close, bar_index))

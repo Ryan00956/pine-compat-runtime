@@ -130,6 +130,24 @@ pub(crate) fn stringify_array_join_element(value: &PineValue) -> String {
     }
 }
 
+pub(crate) fn stringify_user_type_array_join_element(value: &PineValue, type_name: &str) -> String {
+    let PineValue::UserType(fields) = value else {
+        return stringify_array_join_element(value);
+    };
+
+    let mut result = String::new();
+    result.push_str(type_name);
+    result.push('(');
+    for (index, field) in fields.iter().enumerate() {
+        if index > 0 {
+            result.push_str(", ");
+        }
+        result.push_str(&stringify_array_join_element(field));
+    }
+    result.push(')');
+    result
+}
+
 pub(crate) fn format_string_placeholders(
     format_string: &str,
     values: &[PineValue],

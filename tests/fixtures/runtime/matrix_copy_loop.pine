@@ -1,0 +1,15 @@
+//@version=6
+indicator("Matrix copy loop")
+
+source = matrix.new<float>(1, 1, close)
+
+copy_total = close * 0
+source_total = close * 0
+for i = 0 to 1
+    copied = i == 0 ? matrix.copy(source) : source.copy()
+    copied.set(0, 0, close + 10 + i)
+    copy_total := copy_total + copied.get(0, 0)
+    source_total := source_total + source.get(0, 0)
+
+plot(copy_total, "copy_total")
+plot(source_total, "source_total")

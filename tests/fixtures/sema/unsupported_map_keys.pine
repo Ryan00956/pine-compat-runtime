@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported map.keys")
+
+keys = map.keys(na)
+plot(close)

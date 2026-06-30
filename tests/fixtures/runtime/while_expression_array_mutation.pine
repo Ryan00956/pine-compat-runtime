@@ -1,0 +1,12 @@
+//@version=5
+indicator("While expression array mutation fixture")
+
+i = 0
+items = while i < 3
+    i := i + 1
+    array.from(close + i, i)
+
+items.set(0, items.get(0) + 10)
+
+plot(array.size(items))
+plot(items.get(0) + items.get(1))

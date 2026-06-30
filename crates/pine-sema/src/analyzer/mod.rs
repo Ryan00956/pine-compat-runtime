@@ -12,4 +12,5 @@ pub(crate) mod statements;
 pub(crate) mod strategy;
 pub(crate) mod time_calls;
 pub(crate) mod unsupported;
+pub(crate) mod user_type_array_sort;
 pub(crate) mod user_types;

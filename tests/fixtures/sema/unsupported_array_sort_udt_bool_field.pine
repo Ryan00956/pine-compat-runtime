@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported array sort UDT bool field")
+type Marker
+    bool active
+
+values = array.from(Marker.new(true))
+array.sort(values, order.ascending, "active")
+plot(close)

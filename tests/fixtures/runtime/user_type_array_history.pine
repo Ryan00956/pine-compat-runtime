@@ -1,0 +1,31 @@
+//@version=5
+indicator("User type array history")
+type Point
+    float x
+    string label
+
+var array<Point> points = array.new<Point>()
+points.clear()
+points.push(Point.new(close, "live"))
+
+previous = points[1]
+float previous_x_before = na
+float previous_x_after = na
+float previous_size = na
+if bar_index > 0
+    previous_before = previous.get(0)
+    previous_x_before := previous_before.x
+    previous.set(0, Point.new(999.0, "snapshot"))
+    previous_after = previous.get(0)
+    previous_x_after := previous_after.x
+    previous_size := previous.size()
+current = points.get(0)
+dynamic_offset = bar_index == 0 ? na : 1
+dynamic_previous = points[dynamic_offset]
+
+plot(na(previous) ? 1 : 0)
+plot(na(dynamic_previous) ? 1 : 0)
+plot(previous_x_before)
+plot(previous_x_after)
+plot(current.x)
+plot(previous_size)

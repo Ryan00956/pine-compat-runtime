@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array abs line method")
+values = array.new_line()
+result = values.abs()
+plot(result.size())

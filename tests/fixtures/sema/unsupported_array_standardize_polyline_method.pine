@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array standardize polyline method")
+values = array.new_polyline(0)
+standardized = values.standardize()
+plot(close)

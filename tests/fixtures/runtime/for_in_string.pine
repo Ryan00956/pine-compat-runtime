@@ -1,0 +1,14 @@
+//@version=5
+indicator("For in string")
+
+values = array.from("a", "bb", "ccc")
+int score = 0
+for value in values
+    if value == "a"
+        score := score + 1
+    if value == "bb"
+        score := score + 10
+    if value == "ccc"
+        score := score + 100
+
+plot(score)

@@ -1,0 +1,22 @@
+//@version=6
+indicator("Matrix reshape control flow")
+
+values = matrix.new<float>(1, 4, close)
+
+if close > 2
+    values.reshape(2, 2)
+else
+    matrix.reshape(values, 4, 1)
+
+plot(matrix.rows(values), "branch_rows")
+plot(values.columns(), "branch_columns")
+
+for i = 0 to 1
+    if i == 0
+        matrix.reshape(values, 1, 4)
+    else
+        values.reshape(4, 1)
+
+plot(matrix.rows(values), "loop_rows")
+plot(values.columns(), "loop_columns")
+plot(values.get(3, 0), "loop_last")

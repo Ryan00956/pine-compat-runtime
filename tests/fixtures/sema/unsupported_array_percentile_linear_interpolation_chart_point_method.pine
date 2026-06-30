@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentile linear interpolation chart point method")
+points = array.new<chart.point>()
+plot(points.percentile_linear_interpolation(50))

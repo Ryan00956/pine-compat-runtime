@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array range box method")
+values = array.new_box()
+plot(values.range())

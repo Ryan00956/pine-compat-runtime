@@ -81,10 +81,88 @@ fn accepts_provider_request_context_fixture() {
 }
 
 #[test]
+fn accepts_supported_hline_input_price_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_hline_input_price.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "hline"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn reports_unsupported_hline_series_price_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_hline_series_price.pine",
+        &["`hline` argument `price` does not accept Series Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_hline_simple_price_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_hline_simple_price.pine",
+        &["`hline` argument `price` does not accept Simple Int"],
+    );
+}
+
+#[test]
+fn accepts_supported_ta_sma_simple_length_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_ta_sma_simple_length.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "ta.sma"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn reports_unsupported_ta_sma_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_sma_length.pine",
         &["`ta.sma` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_sma_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_sma_series_length.pine",
+        &["`ta.sma` argument `length` does not accept Series Int"],
     );
 }
 
@@ -97,10 +175,26 @@ fn reports_unsupported_ta_ema_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_ema_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_ema_series_length.pine",
+        &["`ta.ema` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_dema_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_dema_length.pine",
         &["`ta.dema` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_dema_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_dema_series_length.pine",
+        &["`ta.dema` argument `length` does not accept Series Int"],
     );
 }
 
@@ -113,6 +207,14 @@ fn reports_unsupported_ta_tema_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_tema_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_tema_series_length.pine",
+        &["`ta.tema` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_rma_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_rma_length.pine",
@@ -121,10 +223,26 @@ fn reports_unsupported_ta_rma_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_rma_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_rma_series_length.pine",
+        &["`ta.rma` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_rsi_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_rsi_length.pine",
         &["`ta.rsi` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_rsi_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_rsi_series_length.pine",
+        &["`ta.rsi` argument `length` does not accept Series Int"],
     );
 }
 
@@ -161,10 +279,26 @@ fn reports_unsupported_ta_alma_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_alma_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_alma_series_length.pine",
+        &["`ta.alma` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_alma_offset_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_alma_offset.pine",
         &["`ta.alma` argument `offset` does not accept Const Bool"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_alma_series_offset_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_alma_series_offset.pine",
+        &["`ta.alma` argument `offset` does not accept Series Float"],
     );
 }
 
@@ -177,6 +311,68 @@ fn reports_unsupported_ta_alma_sigma_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_alma_series_sigma_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_alma_series_sigma.pine",
+        &["`ta.alma` argument `sigma` does not accept Series Float"],
+    );
+}
+
+#[test]
+fn accepts_supported_ta_alma_simple_floor_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_ta_alma_simple_floor.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "ta.alma"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_ta_alma_input_floor_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_ta_alma_input_floor.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "ta.alma"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn reports_unsupported_ta_alma_floor_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_alma_floor.pine",
@@ -185,10 +381,26 @@ fn reports_unsupported_ta_alma_floor_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_alma_series_floor_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_alma_series_floor.pine",
+        &["`ta.alma` argument `floor` does not accept Series Bool"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_bb_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_bb_length.pine",
         &["`ta.bb` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_bb_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_bb_series_length.pine",
+        &["`ta.bb` argument `length` does not accept Series Int"],
     );
 }
 
@@ -209,6 +421,14 @@ fn reports_unsupported_ta_bbw_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_bbw_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_bbw_series_length.pine",
+        &["`ta.bbw` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_bbw_mult_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_bbw_mult.pine",
@@ -217,10 +437,76 @@ fn reports_unsupported_ta_bbw_mult_fixture() {
 }
 
 #[test]
+fn accepts_supported_ta_kc_simple_mult_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_ta_kc_simple_mult.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    for feature in ["ta.kc", "ta.kcw"] {
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|supported| supported.feature == feature),
+            "{} supported features: {:?}",
+            path.display(),
+            analysis.compatibility.supported
+        );
+    }
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_ta_kc_input_mult_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_ta_kc_input_mult.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    for feature in ["ta.kc", "ta.kcw"] {
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|supported| supported.feature == feature),
+            "{} supported features: {:?}",
+            path.display(),
+            analysis.compatibility.supported
+        );
+    }
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn reports_unsupported_ta_kc_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_kc_length.pine",
         &["`ta.kc` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_kc_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_kc_series_length.pine",
+        &["`ta.kc` argument `length` does not accept Series Int"],
     );
 }
 
@@ -249,6 +535,14 @@ fn reports_unsupported_ta_kcw_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_kcw_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_kcw_series_length.pine",
+        &["`ta.kcw` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_kcw_mult_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_kcw_mult.pine",
@@ -273,10 +567,26 @@ fn reports_unsupported_ta_dmi_di_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_dmi_series_di_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_dmi_series_di_length.pine",
+        &["`ta.dmi` argument `diLength` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_dmi_adx_smoothing_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_dmi_adx_smoothing.pine",
         &["`ta.dmi` argument `adxSmoothing` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_dmi_series_adx_smoothing_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_dmi_series_adx_smoothing.pine",
+        &["`ta.dmi` argument `adxSmoothing` does not accept Series Int"],
     );
 }
 
@@ -289,10 +599,26 @@ fn reports_unsupported_ta_tsi_short_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_tsi_series_short_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_tsi_series_short_length.pine",
+        &["`ta.tsi` argument `short_length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_tsi_long_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_tsi_long_length.pine",
         &["`ta.tsi` argument `long_length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_tsi_series_long_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_tsi_series_long_length.pine",
+        &["`ta.tsi` argument `long_length` does not accept Series Int"],
     );
 }
 
@@ -305,10 +631,26 @@ fn reports_unsupported_ta_atr_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_atr_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_atr_series_length.pine",
+        &["`ta.atr` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_cci_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_cci_length.pine",
         &["`ta.cci` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_cci_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_cci_series_length.pine",
+        &["`ta.cci` argument `length` does not accept Series Int"],
     );
 }
 
@@ -321,10 +663,26 @@ fn reports_unsupported_ta_cmo_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_cmo_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_cmo_series_length.pine",
+        &["`ta.cmo` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_cog_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_cog_length.pine",
         &["`ta.cog` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_cog_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_cog_series_length.pine",
+        &["`ta.cog` argument `length` does not accept Series Int"],
     );
 }
 
@@ -337,10 +695,26 @@ fn reports_unsupported_ta_dev_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_dev_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_dev_series_length.pine",
+        &["`ta.dev` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_median_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_median_length.pine",
         &["`ta.median` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_median_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_median_series_length.pine",
+        &["`ta.median` argument `length` does not accept Series Int"],
     );
 }
 
@@ -353,10 +727,26 @@ fn reports_unsupported_ta_mfi_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_mfi_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_mfi_series_length.pine",
+        &["`ta.mfi` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_mode_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_mode_length.pine",
         &["`ta.mode` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_mode_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_mode_series_length.pine",
+        &["`ta.mode` argument `length` does not accept Series Int"],
     );
 }
 
@@ -369,10 +759,26 @@ fn reports_unsupported_ta_mom_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_mom_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_mom_series_length.pine",
+        &["`ta.mom` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_highest_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_highest_length.pine",
         &["`ta.highest` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_highest_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_highest_series_length.pine",
+        &["`ta.highest` argument `length` does not accept Series Int"],
     );
 }
 
@@ -389,6 +795,14 @@ fn reports_unsupported_ta_lowest_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_lowest_length.pine",
         &["`ta.lowest` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_lowest_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_lowest_series_length.pine",
+        &["`ta.lowest` argument `length` does not accept Series Int"],
     );
 }
 
@@ -425,6 +839,14 @@ fn reports_unsupported_ta_highestbars_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_highestbars_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_highestbars_series_length.pine",
+        &["`ta.highestbars` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_highestbars_source_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_highestbars_source.pine",
@@ -437,6 +859,14 @@ fn reports_unsupported_ta_lowestbars_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_lowestbars_length.pine",
         &["`ta.lowestbars` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_lowestbars_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_lowestbars_series_length.pine",
+        &["`ta.lowestbars` argument `length` does not accept Series Int"],
     );
 }
 
@@ -457,10 +887,26 @@ fn reports_unsupported_ta_falling_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_falling_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_falling_series_length.pine",
+        &["`ta.falling` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_rising_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_rising_length.pine",
         &["`ta.rising` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_rising_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_rising_series_length.pine",
+        &["`ta.rising` argument `length` does not accept Series Int"],
     );
 }
 
@@ -473,10 +919,26 @@ fn reports_unsupported_ta_range_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_range_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_range_series_length.pine",
+        &["`ta.range` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_roc_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_roc_length.pine",
         &["`ta.roc` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_roc_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_roc_series_length.pine",
+        &["`ta.roc` argument `length` does not accept Series Int"],
     );
 }
 
@@ -489,10 +951,26 @@ fn reports_unsupported_ta_vwma_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_vwma_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_vwma_series_length.pine",
+        &["`ta.vwma` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_wma_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_wma_length.pine",
         &["`ta.wma` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_wma_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_wma_series_length.pine",
+        &["`ta.wma` argument `length` does not accept Series Int"],
     );
 }
 
@@ -505,10 +983,26 @@ fn reports_unsupported_ta_hma_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_hma_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_hma_series_length.pine",
+        &["`ta.hma` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_wpr_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_wpr_length.pine",
         &["`ta.wpr` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_wpr_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_wpr_series_length.pine",
+        &["`ta.wpr` argument `length` does not accept Series Int"],
     );
 }
 
@@ -521,10 +1015,26 @@ fn reports_unsupported_ta_correlation_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_correlation_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_correlation_series_length.pine",
+        &["`ta.correlation` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_covariance_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_covariance_length.pine",
         &["`ta.covariance` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_covariance_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_covariance_series_length.pine",
+        &["`ta.covariance` argument `length` does not accept Series Int"],
     );
 }
 
@@ -537,6 +1047,14 @@ fn reports_unsupported_ta_linreg_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_linreg_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_linreg_series_length.pine",
+        &["`ta.linreg` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_linreg_offset_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_linreg_offset.pine",
@@ -545,10 +1063,59 @@ fn reports_unsupported_ta_linreg_offset_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_linreg_series_offset_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_linreg_series_offset.pine",
+        &["`ta.linreg` argument `offset` does not accept Series Int"],
+    );
+}
+
+#[test]
+fn accepts_supported_ta_percentile_input_percentage_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_ta_percentile_input_percentage.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    for feature in [
+        "ta.percentile_nearest_rank",
+        "ta.percentile_linear_interpolation",
+    ] {
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|supported| supported.feature == feature),
+            "{} supported features: {:?}",
+            path.display(),
+            analysis.compatibility.supported
+        );
+    }
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn reports_unsupported_ta_percentile_linear_interpolation_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_percentile_linear_interpolation_length.pine",
         &["`ta.percentile_linear_interpolation` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_percentile_linear_interpolation_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_percentile_linear_interpolation_series_length.pine",
+        &["`ta.percentile_linear_interpolation` argument `length` does not accept Series Int"],
     );
 }
 
@@ -563,10 +1130,36 @@ fn reports_unsupported_ta_percentile_linear_interpolation_percentage_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_percentile_linear_interpolation_simple_percentage_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_percentile_linear_interpolation_simple_percentage.pine",
+        &["`ta.percentile_linear_interpolation` argument `percentage` does not accept Simple Int"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_percentile_linear_interpolation_series_percentage_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_percentile_linear_interpolation_series_percentage.pine",
+        &[
+            "`ta.percentile_linear_interpolation` argument `percentage` does not accept Series Float",
+        ],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_percentile_nearest_rank_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_percentile_nearest_rank_length.pine",
         &["`ta.percentile_nearest_rank` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_percentile_nearest_rank_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_percentile_nearest_rank_series_length.pine",
+        &["`ta.percentile_nearest_rank` argument `length` does not accept Series Int"],
     );
 }
 
@@ -579,6 +1172,22 @@ fn reports_unsupported_ta_percentile_nearest_rank_percentage_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_percentile_nearest_rank_simple_percentage_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_percentile_nearest_rank_simple_percentage.pine",
+        &["`ta.percentile_nearest_rank` argument `percentage` does not accept Simple Int"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_percentile_nearest_rank_series_percentage_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_percentile_nearest_rank_series_percentage.pine",
+        &["`ta.percentile_nearest_rank` argument `percentage` does not accept Series Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_percentrank_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_percentrank_length.pine",
@@ -587,10 +1196,26 @@ fn reports_unsupported_ta_percentrank_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_percentrank_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_percentrank_series_length.pine",
+        &["`ta.percentrank` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_stdev_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_stdev_length.pine",
         &["`ta.stdev` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_stdev_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_stdev_series_length.pine",
+        &["`ta.stdev` argument `length` does not accept Series Int"],
     );
 }
 
@@ -611,6 +1236,14 @@ fn reports_unsupported_ta_variance_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_variance_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_variance_series_length.pine",
+        &["`ta.variance` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_variance_biased_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_variance_biased.pine",
@@ -627,6 +1260,14 @@ fn reports_unsupported_ta_stoch_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_stoch_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_stoch_series_length.pine",
+        &["`ta.stoch` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_supertrend_factor_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_supertrend_factor.pine",
@@ -635,10 +1276,26 @@ fn reports_unsupported_ta_supertrend_factor_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_supertrend_series_factor_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_supertrend_series_factor.pine",
+        &["`ta.supertrend` argument `factor` does not accept Series Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_supertrend_atr_period_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_supertrend_atr_period.pine",
         &["`ta.supertrend` argument `atrPeriod` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_supertrend_series_atr_period_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_supertrend_series_atr_period.pine",
+        &["`ta.supertrend` argument `atrPeriod` does not accept Series Int"],
     );
 }
 
@@ -659,10 +1316,26 @@ fn reports_unsupported_ta_change_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_change_series_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_change_series_length.pine",
+        &["`ta.change` argument `length` does not accept Series Int"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_sar_start_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_sar_start.pine",
         &["`ta.sar` argument `start` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_sar_series_start_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_sar_series_start.pine",
+        &["`ta.sar` argument `start` does not accept Series Float"],
     );
 }
 
@@ -675,10 +1348,26 @@ fn reports_unsupported_ta_sar_inc_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_sar_series_inc_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_sar_series_inc.pine",
+        &["`ta.sar` argument `inc` does not accept Series Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_sar_max_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_sar_max.pine",
         &["`ta.sar` argument `max` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_sar_series_max_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_sar_series_max.pine",
+        &["`ta.sar` argument `max` does not accept Series Float"],
     );
 }
 
@@ -861,6 +1550,33 @@ fn reports_unsupported_varip_drawing_fixture() {
 }
 
 #[test]
+fn reports_unsupported_varip_chart_point_array_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_varip_chart_point_array.pine",
+        "varip",
+        "scalar typed-array declarations only",
+    );
+}
+
+#[test]
+fn reports_unsupported_varip_drawing_array_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_varip_drawing_array.pine",
+        "varip",
+        "scalar typed-array declarations only",
+    );
+}
+
+#[test]
+fn reports_unsupported_varip_user_type_array_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_user_type_array_varip_decl.pine",
+        "varip",
+        "UDT array varip requires separate array backing-store",
+    );
+}
+
+#[test]
 fn reports_unsupported_strategy_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy.pine",
@@ -912,6 +1628,50 @@ fn accepts_supported_strategy_pyramiding_fixture() {
     assert!(analysis.compatibility.unsupported.is_empty());
     let hir = analysis.hir.expect("strategy declaration should lower");
     assert_eq!(hir.strategy_settings.pyramiding_limit, 2);
+}
+
+#[test]
+fn accepts_supported_strategy_close_entries_rule_fifo_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_strategy_close_entries_rule_fifo.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    let hir = analysis.hir.expect("strategy declaration should lower");
+    assert_eq!(
+        hir.strategy_settings.close_entries_rule,
+        pine_ir::StrategyCloseEntriesRule::Fifo
+    );
+}
+
+#[test]
+fn accepts_supported_strategy_close_entries_rule_any_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_strategy_close_entries_rule_any.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    let hir = analysis.hir.expect("strategy declaration should lower");
+    assert_eq!(
+        hir.strategy_settings.close_entries_rule,
+        pine_ir::StrategyCloseEntriesRule::Any
+    );
 }
 
 #[test]
@@ -1333,11 +2093,22 @@ fn reports_unsupported_strategy_declaration_properties_fixture() {
             "calc_on_every_tick",
             "process_orders_on_close",
             "currency",
-            "close_entries_rule",
             "risk_free_rate",
             "use_bar_magnifier",
             "fill_orders_on_standard_ohlc",
         ],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_close_entries_rule_unknown_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_close_entries_rule_unknown.pine",
+        "E_CALL_ARG_VALUE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_close_entries_rule_unknown.pine",
+        &["close_entries_rule", "FIFO", "ANY"],
     );
 }
 
@@ -1451,9 +2222,20 @@ fn reports_unsupported_strategy_max_boxes_count_fixture() {
 
 #[test]
 fn reports_unsupported_strategy_order_fixture() {
-    assert_strategy_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_orders.pine",
-        &["strategy.order"],
+        "E_CALL_ARG_VALUE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_orders.pine",
+        &[
+            "explicit positive qty",
+            "strategy.long",
+            "only supported for strategy.long",
+            "market/limit/stop/stop-limit-long subset",
+            "oca_name",
+            "oca_type",
+        ],
     );
 }
 
@@ -1671,6 +2453,30 @@ fn accepts_supported_strategy_entry_fixture() {
         );
         assert!(analysis.hir.is_some());
     }
+}
+
+#[test]
+fn accepts_supported_strategy_order_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_order.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "strategy.order")
+    );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -1906,6 +2712,7 @@ fn accepts_supported_strategy_profit_state_fixture() {
             "strategy.grossprofit_percent",
             "strategy.grossloss",
             "strategy.grossloss_percent",
+            "strategy.buy_and_hold_return_percent",
             "strategy.avg_trade",
             "strategy.avg_trade_percent",
             "strategy.avg_winning_trade",
@@ -1916,6 +2723,7 @@ fn accepts_supported_strategy_profit_state_fixture() {
             "strategy.max_runup_percent",
             "strategy.max_drawdown",
             "strategy.max_drawdown_percent",
+            "strategy.margin_liquidation_price",
             "strategy.equity",
         ],
     );
@@ -1947,8 +2755,10 @@ fn accepts_supported_strategy_closedtrades_fields_fixture() {
         "tests/fixtures/sema/supported_strategy_closedtrades_fields.pine",
         &[
             "strategy.closedtrades.entry_price",
+            "strategy.closedtrades.entry_comment",
             "strategy.closedtrades.entry_id",
             "strategy.closedtrades.exit_price",
+            "strategy.closedtrades.exit_comment",
             "strategy.closedtrades.exit_id",
             "strategy.closedtrades.entry_bar_index",
             "strategy.closedtrades.exit_bar_index",
@@ -1969,6 +2779,7 @@ fn accepts_supported_strategy_opentrades_fields_fixture() {
         "tests/fixtures/sema/supported_strategy_opentrades_fields.pine",
         &[
             "strategy.opentrades.entry_price",
+            "strategy.opentrades.entry_comment",
             "strategy.opentrades.entry_id",
             "strategy.opentrades.entry_bar_index",
             "strategy.opentrades.entry_time",
@@ -2026,13 +2837,6 @@ fn reports_strategy_state_indicator_fixture() {
 }
 
 #[test]
-fn reports_strategy_state_variables_fixture() {
-    assert_strategy_state_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_strategy_state_variables.pine",
-    );
-}
-
-#[test]
 fn reports_unknown_strategy_variable_fixture() {
     assert_strategy_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy_unknown_variable.pine",
@@ -2044,7 +2848,13 @@ fn reports_unknown_strategy_variable_fixture() {
 fn reports_unsupported_strategy_order_and_trade_namespace_fixture() {
     assert_strategy_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy_order_and_trade_namespaces.pine",
-        &["strategy.risk.max_drawdown"],
+        &[
+            "strategy.risk.allow_entry_in",
+            "strategy.risk.max_drawdown",
+            "strategy.risk.max_intraday_loss",
+            "strategy.risk.max_position_size",
+            "strategy.risk.max_intraday_filled_orders",
+        ],
     );
 }
 
@@ -2230,6 +3040,42 @@ fn reports_unsupported_if_condition_fixture() {
 }
 
 #[test]
+fn reports_unsupported_if_expression_alert_result_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_if_expression_alert_result.pine",
+        "E_BRANCH_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_if_expression_alert_result.pine",
+        &["if expression branches must end with a value-producing expression"],
+    );
+}
+
+#[test]
+fn reports_unsupported_if_expression_no_final_result_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_if_expression_no_final_result.pine",
+        "E_BRANCH_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_if_expression_no_final_result.pine",
+        &["if expression branches must end with an expression"],
+    );
+}
+
+#[test]
+fn reports_unsupported_if_expression_reassignment_result_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_if_expression_reassignment_result.pine",
+        "E_BRANCH_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_if_expression_reassignment_result.pine",
+        &["if expression branches must end with an expression"],
+    );
+}
+
+#[test]
 fn reports_unsupported_switch_condition_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_switch_condition.pine",
@@ -2238,10 +3084,173 @@ fn reports_unsupported_switch_condition_fixture() {
 }
 
 #[test]
+fn reports_unsupported_for_in_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_for_in.pine",
+        "for...in",
+        "scalar arrays, label arrays, line arrays, linefill arrays, polyline arrays, box arrays, table arrays, chart.point arrays, and same-local scalar-field UDT arrays only",
+    );
+}
+
+#[test]
+fn reports_unsupported_for_in_non_array_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_for_in_non_array.pine",
+        "for...in",
+        "scalar arrays, label arrays, line arrays, linefill arrays, polyline arrays, box arrays, table arrays, chart.point arrays, and same-local scalar-field UDT arrays only",
+    );
+}
+
+#[test]
+fn reports_unsupported_for_in_index_value_non_int_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_for_in_index_value_non_int.pine",
+        "for...in",
+        "index/value for...in currently supports statement iteration over array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, and same-local scalar-field UDT arrays only",
+    );
+}
+
+#[test]
+fn reports_unsupported_for_expression_alert_result_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_for_expression_alert_result.pine",
+        "E_LOOP_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_for_expression_alert_result.pine",
+        &["for expression body must end with a value-producing expression"],
+    );
+}
+
+#[test]
+fn reports_unsupported_for_expression_break_result_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_for_expression_break_result.pine",
+        "E_LOOP_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_for_expression_break_result.pine",
+        &["for expression body must end with an expression"],
+    );
+}
+
+#[test]
+fn reports_unsupported_for_expression_continue_result_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_for_expression_continue_result.pine",
+        "E_LOOP_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_for_expression_continue_result.pine",
+        &["for expression body must end with an expression"],
+    );
+}
+
+#[test]
+fn reports_unsupported_for_expression_no_final_result_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_for_expression_no_final_result.pine",
+        "E_LOOP_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_for_expression_no_final_result.pine",
+        &["for expression body must end with an expression"],
+    );
+}
+
+#[test]
+fn reports_unsupported_for_expression_reassignment_result_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_for_expression_reassignment_result.pine",
+        "E_LOOP_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_for_expression_reassignment_result.pine",
+        &["for expression body must end with an expression"],
+    );
+}
+
+#[test]
 fn reports_unsupported_switch_statement_block_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_switch_statement_block.pine",
-        "E_PARSE_SWITCH_BLOCK",
+        "E_BRANCH_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_switch_statement_block.pine",
+        &["switch expression branches must end with an expression"],
+    );
+}
+
+#[test]
+fn reports_unsupported_switch_statement_block_selector_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_switch_statement_block_selector.pine",
+        "E_BRANCH_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_switch_statement_block_selector.pine",
+        &["switch expression branches must end with an expression"],
+    );
+}
+
+#[test]
+fn reports_unsupported_switch_statement_block_default_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_switch_statement_block_default.pine",
+        "E_BRANCH_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_switch_statement_block_default.pine",
+        &["switch expression branches must end with an expression"],
+    );
+}
+
+#[test]
+fn reports_unsupported_switch_statement_block_alert_result_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_switch_statement_block_alert_result.pine",
+        "E_BRANCH_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_switch_statement_block_alert_result.pine",
+        &["switch expression branches must end with a value-producing expression"],
+    );
+}
+
+#[test]
+fn reports_unsupported_switch_statement_block_reassignment_result_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_switch_statement_block_reassignment_result.pine",
+        "E_BRANCH_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_switch_statement_block_reassignment_result.pine",
+        &["switch expression branches must end with an expression"],
+    );
+}
+
+#[test]
+fn reports_unsupported_switch_statement_block_scope_leak_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_switch_statement_block_scope_leak.pine",
+        "E_UNKNOWN_SYMBOL",
+    );
+}
+
+#[test]
+fn reports_unsupported_switch_statement_block_udt_identity_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_switch_statement_block_udt_identity.pine",
+        "E_BRANCH_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_imported_udt_switch_identity_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_imported_udt_switch_identity.pine",
+        "E_BRANCH_TYPE",
     );
 }
 
@@ -2250,6 +3259,70 @@ fn reports_unsupported_while_condition_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_while_condition.pine",
         &["condition must be bool, got Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_while_expression_scope_leak_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_while_expression_scope_leak.pine",
+        "E_UNKNOWN_SYMBOL",
+    );
+}
+
+#[test]
+fn reports_unsupported_while_expression_no_final_result_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_while_expression_no_final_result.pine",
+        "E_BRANCH_RETURN",
+    );
+}
+
+#[test]
+fn reports_unsupported_while_expression_reassignment_result_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_while_expression_reassignment_result.pine",
+        "E_BRANCH_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_while_expression_reassignment_result.pine",
+        &["while expression branches must end with an expression"],
+    );
+}
+
+#[test]
+fn reports_unsupported_while_expression_break_result_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_while_expression_break_result.pine",
+        "E_BRANCH_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_while_expression_break_result.pine",
+        &["while expression branches must end with an expression"],
+    );
+}
+
+#[test]
+fn reports_unsupported_while_expression_continue_result_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_while_expression_continue_result.pine",
+        "E_BRANCH_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_while_expression_continue_result.pine",
+        &["while expression branches must end with an expression"],
+    );
+}
+
+#[test]
+fn reports_unsupported_while_expression_alert_result_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_while_expression_alert_result.pine",
+        "E_BRANCH_RETURN",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_while_expression_alert_result.pine",
+        &["while expression branches must end with a value-producing expression"],
     );
 }
 
@@ -2400,6 +3473,168 @@ fn reports_unsupported_array_typed_decl_fixture() {
 }
 
 #[test]
+fn reports_unsupported_var_array_typed_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_var_array_typed_decl.pine",
+        &["typed declaration `array` is not supported"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_na_typed_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_na_typed_decl.pine",
+        &["typed declaration `array` is not supported"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_from_typed_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_from_typed_decl.pine",
+        &["typed declaration `array` is not supported"],
+    );
+}
+
+#[test]
+fn reports_unsupported_map_typed_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_typed_decl.pine",
+        &["typed declaration `map` is not supported"],
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_typed_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_matrix_typed_decl.pine",
+        &["typed declaration `matrix` is not supported"],
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_int_typed_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_matrix_int_typed_decl.pine",
+        &["typed declaration `matrix<int>` is not supported"],
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_label_typed_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_matrix_label_typed_decl.pine",
+        &["typed declaration `matrix<label>` is not supported"],
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_for_in_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_for_in.pine",
+        "for...in",
+        "map, matrix, and other iterable families remain unsupported",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_varip_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_varip.pine",
+        "varip",
+        "matrix varip requires explicit backing-store",
+    );
+}
+
+#[test]
+fn reports_unsupported_user_type_array_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_user_type_array_decl.pine",
+        &["typed declaration `array<Wrapper>` does not support UDT arrays with non-scalar fields"],
+    );
+}
+
+#[test]
+fn reports_unsupported_user_type_array_alias_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_user_type_array_alias_decl.pine",
+        &["typed declaration `array<Wrapper>` does not support UDT arrays with non-scalar fields"],
+    );
+}
+
+#[test]
+fn reports_unsupported_user_type_array_from_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_user_type_array_from_decl.pine",
+        &["cannot assign a different user-defined type array to `points`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_new_unknown_udt_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_new_unknown_udt.pine",
+        &["`array.new<Point>` requires a local scalar-field UDT"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_new_nested_udt_field_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_new_nested_udt_field.pine",
+        &["`array.new<Wrapper>` does not support UDT arrays with non-scalar fields"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_new_mixed_udt_initial_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_new_mixed_udt_initial.pine",
+        &["`array.new<Point>` argument `initial_value` expects UDT `Point`, got `Marker`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_map_typed_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_map_typed_decl.pine",
+        &["typed declaration `array<map>` is not supported"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_matrix_typed_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_matrix_typed_decl.pine",
+        &["typed declaration `array<matrix>` is not supported"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_nested_typed_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_nested_typed_decl.pine",
+        &["typed declaration `array<array>` is not supported"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_tuple_typed_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_tuple_typed_decl.pine",
+        &["typed declaration `array<tuple>` is not supported"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_strategy_typed_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_strategy_typed_decl.pine",
+        &["typed declaration `array<strategy>` is not supported"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_typed_decl_initial_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_typed_decl_initial.pine",
@@ -2536,22 +3771,6 @@ fn reports_unsupported_table_cast_source_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_clear_udt_fixture() {
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_array_clear_udt.pine",
-        "E_CALL_ARG_TYPE",
-    );
-}
-
-#[test]
-fn reports_unsupported_array_reverse_udt_fixture() {
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_array_reverse_udt.pine",
-        "E_CALL_ARG_TYPE",
-    );
-}
-
-#[test]
 fn reports_unsupported_array_from_array_argument_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_from_array_argument.pine",
@@ -2568,6 +3787,22 @@ fn reports_unsupported_array_from_mixed_kinds_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_from_mixed_udt_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_from_mixed_udt.pine",
+        &["`array.from` does not support UDT arrays"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_from_nested_udt_field_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_from_nested_udt_field.pine",
+        &["`array.from` does not support UDT arrays"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_from_all_na_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_from_all_na.pine",
@@ -2579,6 +3814,14 @@ fn reports_unsupported_array_from_all_na_fixture() {
 fn reports_unsupported_array_abs_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_abs_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_abs_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_abs_chart_point_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -2600,6 +3843,14 @@ fn reports_unsupported_array_insert_value_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_insert_value_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_insert_value_method.pine",
+        &["`array.insert` argument `value` does not accept Series Float for bool arrays"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_insert_index_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_insert_index.pine",
@@ -2608,9 +3859,41 @@ fn reports_unsupported_array_insert_index_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_insert_index_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_insert_index_method.pine",
+        &["`array.insert` argument `index` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_insert_udt_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_insert_udt.pine",
+        &["`array.insert` argument `value` expects UDT `Point`, got `Marker`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_insert_udt_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_insert_udt_method.pine",
+        &["`array.insert` argument `value` expects UDT `Point`, got `Marker`"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_set_value_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_set_value.pine",
+        &["`array.set` argument `value` does not accept Series Float for bool arrays"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_set_value_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_set_value_method.pine",
         &["`array.set` argument `value` does not accept Series Float for bool arrays"],
     );
 }
@@ -2624,6 +3907,30 @@ fn reports_unsupported_array_set_index_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_set_index_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_set_index_method.pine",
+        &["`array.set` argument `index` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_set_mixed_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_set_mixed_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_set_mixed_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_set_mixed_udt_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_get_index_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_get_index.pine",
@@ -2632,9 +3939,41 @@ fn reports_unsupported_array_get_index_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_get_index_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_get_index_method.pine",
+        &["`array.get` argument `index` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_push_mixed_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_push_mixed_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_push_mixed_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_push_mixed_udt_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_push_value_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_push_value.pine",
+        &["`array.push` argument `value` does not accept Series Float for bool arrays"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_push_value_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_push_value_method.pine",
         &["`array.push` argument `value` does not accept Series Float for bool arrays"],
     );
 }
@@ -2648,10 +3987,42 @@ fn reports_unsupported_array_remove_index_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_remove_index_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_remove_index_method.pine",
+        &["`array.remove` argument `index` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_unshift_value_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_unshift_value.pine",
         &["`array.unshift` argument `value` does not accept Series Float for bool arrays"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_unshift_value_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_unshift_value_method.pine",
+        &["`array.unshift` argument `value` does not accept Series Float for bool arrays"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_unshift_udt_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_unshift_udt.pine",
+        &["`array.unshift` argument `value` expects UDT `Point`, got `Marker`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_unshift_udt_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_unshift_udt_method.pine",
+        &["`array.unshift` argument `value` expects UDT `Point`, got `Marker`"],
     );
 }
 
@@ -2664,9 +4035,41 @@ fn reports_unsupported_array_fill_value_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_fill_value_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_fill_value_method.pine",
+        &["`array.fill` argument `value` does not accept Series Float for bool arrays"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_fill_udt_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_fill_udt.pine",
+        &["`array.fill` argument `value` expects UDT `Point`, got `Marker`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_fill_udt_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_fill_udt_method.pine",
+        &["`array.fill` argument `value` expects UDT `Point`, got `Marker`"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_fill_index_from_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_fill_index_from.pine",
+        &["`array.fill` argument `index_from` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_fill_index_from_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_fill_index_from_method.pine",
         &["`array.fill` argument `index_from` does not accept Const String"],
     );
 }
@@ -2680,9 +4083,57 @@ fn reports_unsupported_array_fill_index_to_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_fill_index_to_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_fill_index_to_method.pine",
+        &["`array.fill` argument `index_to` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_reverse_map_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_reverse_map.pine",
+        &["`array.new<map>` requires a local scalar-field UDT"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_reverse_map_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_reverse_map_method.pine",
+        &["`array.new<map>` requires a local scalar-field UDT"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_reverse_matrix_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_reverse_matrix.pine",
+        &["`array.new<matrix>` requires a local scalar-field UDT"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_reverse_matrix_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_reverse_matrix_method.pine",
+        &["`array.new<matrix>` requires a local scalar-field UDT"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_join_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_join_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_join_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_join_label_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -2696,9 +4147,25 @@ fn reports_unsupported_array_join_line_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_join_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_join_line_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_join_box_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_join_box.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_join_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_join_box_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -2712,9 +4179,25 @@ fn reports_unsupported_array_join_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_join_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_join_table_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_join_linefill_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_join_linefill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_join_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_join_linefill_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -2728,6 +4211,14 @@ fn reports_unsupported_array_join_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_join_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_join_polyline_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_join_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_join_chart_point.pine",
@@ -2736,10 +4227,74 @@ fn reports_unsupported_array_join_chart_point_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_join_udt_fixture() {
+fn reports_unsupported_array_join_chart_point_method_fixture() {
     assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_array_join_udt.pine",
+        "tests/fixtures/sema/unsupported_array_join_chart_point_method.pine",
         "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_join_map_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_join_map.pine",
+        &["`array.new<map>` requires a local scalar-field UDT"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_join_map_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_join_map_method.pine",
+        &["`array.new<map>` requires a local scalar-field UDT"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_join_matrix_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_join_matrix.pine",
+        &["`array.new<matrix>` requires a local scalar-field UDT"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_join_matrix_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_join_matrix_method.pine",
+        &["`array.new<matrix>` requires a local scalar-field UDT"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_slice_map_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_slice_map.pine",
+        &["`array.new<map>` requires a local scalar-field UDT"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_slice_map_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_slice_map_method.pine",
+        &["`array.new<map>` requires a local scalar-field UDT"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_slice_matrix_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_slice_matrix.pine",
+        &["`array.new<matrix>` requires a local scalar-field UDT"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_slice_matrix_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_slice_matrix_method.pine",
+        &["`array.new<matrix>` requires a local scalar-field UDT"],
     );
 }
 
@@ -2752,10 +4307,10 @@ fn reports_unsupported_array_join_separator_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_slice_udt_fixture() {
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_array_slice_udt.pine",
-        "E_CALL_ARG_TYPE",
+fn reports_unsupported_array_join_separator_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_join_separator_method.pine",
+        &["`array.join` argument `separator` does not accept Series Float"],
     );
 }
 
@@ -2763,6 +4318,14 @@ fn reports_unsupported_array_slice_udt_fixture() {
 fn reports_unsupported_array_slice_index_from_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_slice_index_from.pine",
+        &["`array.slice` argument `index_from` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_slice_index_from_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_slice_index_from_method.pine",
         &["`array.slice` argument `index_from` does not accept Const String"],
     );
 }
@@ -2776,10 +4339,42 @@ fn reports_unsupported_array_slice_index_to_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_slice_index_to_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_slice_index_to_method.pine",
+        &["`array.slice` argument `index_to` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_includes_value_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_includes_value.pine",
         &["`array.includes` argument `value` does not accept Series Float for bool arrays"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_includes_value_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_includes_value_method.pine",
+        &["`array.includes` argument `value` does not accept Series Float for bool arrays"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_includes_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_includes_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_includes_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_includes_udt_method.pine",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2792,6 +4387,30 @@ fn reports_unsupported_array_indexof_value_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_indexof_value_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_indexof_value_method.pine",
+        &["`array.indexof` argument `value` does not accept Series Float for bool arrays"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_indexof_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_indexof_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_indexof_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_indexof_udt_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_lastindexof_value_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_lastindexof_value.pine",
@@ -2800,9 +4419,41 @@ fn reports_unsupported_array_lastindexof_value_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_lastindexof_value_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_lastindexof_value_method.pine",
+        &["`array.lastindexof` argument `value` does not accept Series Float for bool arrays"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_lastindexof_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_lastindexof_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_lastindexof_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_lastindexof_udt_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_bool.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_bool_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -2816,9 +4467,25 @@ fn reports_unsupported_array_sort_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_color_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_label_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -2832,9 +4499,25 @@ fn reports_unsupported_array_sort_line_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_line_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_box_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_box.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_box_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -2848,9 +4531,25 @@ fn reports_unsupported_array_sort_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_table_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_linefill_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_linefill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_linefill_namespace_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_linefill_namespace.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -2864,9 +4563,25 @@ fn reports_unsupported_array_sort_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_polyline_namespace_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_polyline_namespace.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_chart_point_namespace_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_chart_point_namespace.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -2880,9 +4595,73 @@ fn reports_unsupported_array_sort_udt_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_udt_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_udt_unknown_field_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_udt_unknown_field.pine",
+        &["int, float, or string `sort_field`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_udt_unknown_field_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_udt_unknown_field_method.pine",
+        &["int, float, or string `sort_field`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_udt_bool_field_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_udt_bool_field.pine",
+        &["int, float, or string `sort_field`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_udt_bool_field_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_udt_bool_field_method.pine",
+        &["int, float, or string `sort_field`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_udt_dynamic_field_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_udt_dynamic_field.pine",
+        &["`array.sort` argument `sort_field` does not accept Series String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_udt_dynamic_field_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_udt_dynamic_field_method.pine",
+        &["`array.sort` argument `sort_field` does not accept Series String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_order_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_sort_order.pine",
+        &["`array.sort` argument `order` does not accept Series Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_order_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_order_method.pine",
         &["`array.sort` argument `order` does not accept Series Float"],
     );
 }
@@ -2896,9 +4675,25 @@ fn reports_unsupported_array_sort_indices_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_indices_bool_namespace_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_indices_bool_namespace.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_indices_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_indices_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_indices_label_namespace_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_indices_label_namespace.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -2912,9 +4707,25 @@ fn reports_unsupported_array_sort_indices_line_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_indices_line_namespace_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_indices_line_namespace.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_indices_box_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_indices_box.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_indices_box_namespace_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_indices_box_namespace.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -2928,9 +4739,25 @@ fn reports_unsupported_array_sort_indices_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_indices_table_namespace_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_indices_table_namespace.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_indices_linefill_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_indices_linefill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_indices_linefill_namespace_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_indices_linefill_namespace.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -2944,9 +4771,25 @@ fn reports_unsupported_array_sort_indices_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_indices_polyline_namespace_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_indices_polyline_namespace.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_indices_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_indices_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_indices_chart_point_namespace_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_indices_chart_point_namespace.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -2960,9 +4803,73 @@ fn reports_unsupported_array_sort_indices_udt_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_indices_udt_namespace_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_indices_udt_namespace.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_indices_udt_unknown_field_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_indices_udt_unknown_field.pine",
+        &["int, float, or string `sort_field`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_indices_udt_unknown_field_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_indices_udt_unknown_field_method.pine",
+        &["int, float, or string `sort_field`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_indices_udt_bool_field_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_indices_udt_bool_field.pine",
+        &["int, float, or string `sort_field`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_indices_udt_bool_field_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_indices_udt_bool_field_method.pine",
+        &["int, float, or string `sort_field`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_indices_udt_dynamic_field_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_indices_udt_dynamic_field.pine",
+        &["`array.sort_indices` argument `sort_field` does not accept Series String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_indices_udt_dynamic_field_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_indices_udt_dynamic_field_method.pine",
+        &["`array.sort_indices` argument `sort_field` does not accept Series String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_indices_color_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_indices_color.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_indices_color_namespace_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_indices_color_namespace.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -2976,9 +4883,25 @@ fn reports_unsupported_array_sort_indices_order_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_indices_order_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_indices_order_method.pine",
+        &["`array.sort_indices` argument `order` does not accept Series Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_stdev_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_stdev_bool.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_stdev_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_stdev_bool_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -2992,9 +4915,25 @@ fn reports_unsupported_array_stdev_string_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_stdev_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_stdev_string_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_stdev_color_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_stdev_color.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_stdev_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_stdev_color_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3008,9 +4947,25 @@ fn reports_unsupported_array_stdev_label_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_stdev_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_stdev_label_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_stdev_line_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_stdev_line.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_stdev_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_stdev_line_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3024,9 +4979,25 @@ fn reports_unsupported_array_stdev_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_stdev_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_stdev_box_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_stdev_table_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_stdev_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_stdev_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_stdev_table_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3040,9 +5011,25 @@ fn reports_unsupported_array_stdev_linefill_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_stdev_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_stdev_linefill_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_stdev_polyline_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_stdev_polyline.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_stdev_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_stdev_polyline_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3056,9 +5043,41 @@ fn reports_unsupported_array_stdev_chart_point_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_stdev_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_stdev_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_stdev_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_stdev_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_stdev_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_stdev_udt_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_stdev_biased_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_stdev_biased.pine",
+        &["`array.stdev` argument `biased` does not accept Series Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_stdev_biased_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_stdev_biased_method.pine",
         &["`array.stdev` argument `biased` does not accept Series Float"],
     );
 }
@@ -3072,9 +5091,25 @@ fn reports_unsupported_array_variance_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_variance_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_variance_bool_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_variance_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_variance_string.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_variance_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_variance_string_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3088,9 +5123,25 @@ fn reports_unsupported_array_variance_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_variance_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_variance_color_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_variance_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_variance_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_variance_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_variance_label_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3104,9 +5155,25 @@ fn reports_unsupported_array_variance_line_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_variance_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_variance_line_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_variance_box_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_variance_box.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_variance_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_variance_box_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3120,9 +5187,25 @@ fn reports_unsupported_array_variance_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_variance_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_variance_table_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_variance_linefill_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_variance_linefill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_variance_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_variance_linefill_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3136,9 +5219,41 @@ fn reports_unsupported_array_variance_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_variance_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_variance_polyline_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_variance_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_variance_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_variance_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_variance_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_variance_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_variance_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_variance_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_variance_udt_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3152,9 +5267,25 @@ fn reports_unsupported_array_variance_biased_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_variance_biased_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_variance_biased_method.pine",
+        &["`array.variance` argument `biased` does not accept Series Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_every_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_every_string.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_every_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_every_string_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3168,9 +5299,25 @@ fn reports_unsupported_array_every_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_every_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_every_color_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_every_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_every_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_every_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_every_label_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3184,9 +5331,25 @@ fn reports_unsupported_array_every_line_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_every_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_every_line_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_every_box_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_every_box.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_every_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_every_box_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3200,9 +5363,25 @@ fn reports_unsupported_array_every_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_every_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_every_table_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_every_linefill_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_every_linefill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_every_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_every_linefill_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3216,9 +5395,41 @@ fn reports_unsupported_array_every_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_every_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_every_polyline_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_every_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_every_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_every_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_every_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_every_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_every_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_every_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_every_udt_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3232,9 +5443,25 @@ fn reports_unsupported_array_some_string_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_some_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_some_string_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_some_color_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_some_color.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_some_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_some_color_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3248,9 +5475,25 @@ fn reports_unsupported_array_some_label_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_some_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_some_label_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_some_line_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_some_line.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_some_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_some_line_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3264,9 +5507,25 @@ fn reports_unsupported_array_some_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_some_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_some_box_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_some_table_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_some_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_some_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_some_table_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3280,9 +5539,25 @@ fn reports_unsupported_array_some_linefill_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_some_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_some_linefill_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_some_polyline_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_some_polyline.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_some_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_some_polyline_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3296,9 +5571,41 @@ fn reports_unsupported_array_some_chart_point_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_some_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_some_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_some_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_some_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_some_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_some_udt_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_covariance_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_covariance_bool.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_covariance_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_covariance_bool_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3312,9 +5619,25 @@ fn reports_unsupported_array_covariance_string_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_covariance_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_covariance_string_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_covariance_color_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_covariance_color.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_covariance_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_covariance_color_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3328,9 +5651,25 @@ fn reports_unsupported_array_covariance_label_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_covariance_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_covariance_label_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_covariance_line_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_covariance_line.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_covariance_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_covariance_line_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3344,9 +5683,25 @@ fn reports_unsupported_array_covariance_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_covariance_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_covariance_box_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_covariance_table_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_covariance_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_covariance_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_covariance_table_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3360,9 +5715,25 @@ fn reports_unsupported_array_covariance_linefill_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_covariance_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_covariance_linefill_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_covariance_polyline_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_covariance_polyline.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_covariance_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_covariance_polyline_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3376,9 +5747,41 @@ fn reports_unsupported_array_covariance_chart_point_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_covariance_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_covariance_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_covariance_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_covariance_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_covariance_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_covariance_udt_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_covariance_id2_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_covariance_id2.pine",
+        &["`array.covariance` argument `id2` does not accept Series Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_covariance_id2_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_covariance_id2_method.pine",
         &["`array.covariance` argument `id2` does not accept Series Float"],
     );
 }
@@ -3392,9 +5795,25 @@ fn reports_unsupported_array_covariance_biased_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_covariance_biased_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_covariance_biased_method.pine",
+        &["`array.covariance` argument `biased` does not accept Series Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentrank_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentrank_bool.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentrank_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentrank_bool_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3408,9 +5827,25 @@ fn reports_unsupported_array_percentrank_string_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentrank_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentrank_string_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentrank_color_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentrank_color.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentrank_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentrank_color_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3424,9 +5859,25 @@ fn reports_unsupported_array_percentrank_label_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentrank_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentrank_label_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentrank_line_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentrank_line.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentrank_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentrank_line_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3440,9 +5891,25 @@ fn reports_unsupported_array_percentrank_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentrank_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentrank_box_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentrank_table_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentrank_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentrank_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentrank_table_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3456,9 +5923,25 @@ fn reports_unsupported_array_percentrank_linefill_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentrank_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentrank_linefill_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentrank_polyline_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentrank_polyline.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentrank_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentrank_polyline_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3472,9 +5955,41 @@ fn reports_unsupported_array_percentrank_chart_point_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentrank_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentrank_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentrank_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentrank_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentrank_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentrank_udt_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentrank_index_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_percentrank_index.pine",
+        &["`array.percentrank` argument `index` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentrank_index_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_percentrank_index_method.pine",
         &["`array.percentrank` argument `index` does not accept Const String"],
     );
 }
@@ -3488,9 +6003,25 @@ fn reports_unsupported_array_percentile_linear_interpolation_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentile_linear_interpolation_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_bool_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentile_linear_interpolation_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_string.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_linear_interpolation_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_string_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3504,9 +6035,25 @@ fn reports_unsupported_array_percentile_linear_interpolation_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentile_linear_interpolation_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_color_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentile_linear_interpolation_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_linear_interpolation_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_label_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3520,9 +6067,25 @@ fn reports_unsupported_array_percentile_linear_interpolation_line_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentile_linear_interpolation_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_line_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentile_linear_interpolation_box_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_box.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_linear_interpolation_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_box_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3536,9 +6099,25 @@ fn reports_unsupported_array_percentile_linear_interpolation_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentile_linear_interpolation_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_table_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentile_linear_interpolation_linefill_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_linefill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_linear_interpolation_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_linefill_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3552,9 +6131,41 @@ fn reports_unsupported_array_percentile_linear_interpolation_polyline_fixture() 
 }
 
 #[test]
+fn reports_unsupported_array_percentile_linear_interpolation_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_polyline_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentile_linear_interpolation_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_linear_interpolation_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_linear_interpolation_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_linear_interpolation_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_udt_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3570,9 +6181,27 @@ fn reports_unsupported_array_percentile_linear_interpolation_percentage_fixture(
 }
 
 #[test]
+fn reports_unsupported_array_percentile_linear_interpolation_percentage_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_percentage_method.pine",
+        &[
+            "`array.percentile_linear_interpolation` argument `percentage` does not accept Const String",
+        ],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentile_nearest_rank_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_bool.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_nearest_rank_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_bool_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3586,9 +6215,25 @@ fn reports_unsupported_array_percentile_nearest_rank_string_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentile_nearest_rank_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_string_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentile_nearest_rank_color_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_color.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_nearest_rank_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_color_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3602,9 +6247,25 @@ fn reports_unsupported_array_percentile_nearest_rank_label_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentile_nearest_rank_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_label_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentile_nearest_rank_line_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_line.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_nearest_rank_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_line_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3618,9 +6279,25 @@ fn reports_unsupported_array_percentile_nearest_rank_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentile_nearest_rank_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_box_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentile_nearest_rank_table_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_nearest_rank_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_table_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3634,9 +6311,25 @@ fn reports_unsupported_array_percentile_nearest_rank_linefill_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentile_nearest_rank_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_linefill_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentile_nearest_rank_polyline_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_polyline.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_nearest_rank_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_polyline_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3650,9 +6343,41 @@ fn reports_unsupported_array_percentile_nearest_rank_chart_point_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentile_nearest_rank_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_nearest_rank_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_nearest_rank_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_udt_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentile_nearest_rank_percentage_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_percentage.pine",
+        &["`array.percentile_nearest_rank` argument `percentage` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_nearest_rank_percentage_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_percentage_method.pine",
         &["`array.percentile_nearest_rank` argument `percentage` does not accept Const String"],
     );
 }
@@ -3666,9 +6391,25 @@ fn reports_unsupported_array_mode_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_mode_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_mode_bool_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_mode_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_mode_string.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_mode_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_mode_string_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3682,9 +6423,25 @@ fn reports_unsupported_array_mode_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_mode_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_mode_color_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_mode_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_mode_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_mode_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_mode_label_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3698,9 +6455,25 @@ fn reports_unsupported_array_mode_line_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_mode_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_mode_line_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_mode_box_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_mode_box.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_mode_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_mode_box_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3714,9 +6487,25 @@ fn reports_unsupported_array_mode_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_mode_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_mode_table_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_mode_linefill_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_mode_linefill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_mode_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_mode_linefill_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3730,9 +6519,41 @@ fn reports_unsupported_array_mode_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_mode_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_mode_polyline_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_mode_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_mode_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_mode_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_mode_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_mode_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_mode_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_mode_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_mode_udt_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3746,9 +6567,25 @@ fn reports_unsupported_array_median_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_median_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_median_bool_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_median_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_median_string.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_median_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_median_string_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3762,9 +6599,25 @@ fn reports_unsupported_array_median_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_median_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_median_color_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_median_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_median_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_median_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_median_label_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3778,9 +6631,25 @@ fn reports_unsupported_array_median_line_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_median_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_median_line_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_median_box_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_median_box.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_median_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_median_box_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3794,9 +6663,25 @@ fn reports_unsupported_array_median_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_median_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_median_table_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_median_linefill_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_median_linefill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_median_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_median_linefill_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3810,9 +6695,41 @@ fn reports_unsupported_array_median_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_median_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_median_polyline_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_median_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_median_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_median_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_median_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_median_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_median_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_median_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_median_udt_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3826,9 +6743,25 @@ fn reports_unsupported_array_range_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_range_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_range_bool_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_range_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_range_string.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_range_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_range_string_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3842,9 +6775,25 @@ fn reports_unsupported_array_range_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_range_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_range_color_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_range_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_range_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_range_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_range_label_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3858,9 +6807,25 @@ fn reports_unsupported_array_range_line_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_range_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_range_line_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_range_box_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_range_box.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_range_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_range_box_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3874,9 +6839,25 @@ fn reports_unsupported_array_range_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_range_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_range_table_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_range_linefill_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_range_linefill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_range_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_range_linefill_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3890,9 +6871,41 @@ fn reports_unsupported_array_range_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_range_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_range_polyline_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_range_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_range_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_range_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_range_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_range_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_range_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_range_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_range_udt_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3906,9 +6919,25 @@ fn reports_unsupported_array_avg_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_avg_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_avg_bool_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_avg_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_avg_string.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_avg_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_avg_string_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3922,9 +6951,25 @@ fn reports_unsupported_array_avg_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_avg_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_avg_color_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_avg_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_avg_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_avg_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_avg_label_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3938,9 +6983,25 @@ fn reports_unsupported_array_avg_line_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_avg_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_avg_line_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_avg_box_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_avg_box.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_avg_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_avg_box_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3954,9 +7015,25 @@ fn reports_unsupported_array_avg_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_avg_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_avg_table_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_avg_linefill_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_avg_linefill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_avg_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_avg_linefill_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3970,9 +7047,41 @@ fn reports_unsupported_array_avg_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_avg_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_avg_polyline_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_avg_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_avg_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_avg_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_avg_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_avg_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_avg_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_avg_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_avg_udt_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -3986,9 +7095,25 @@ fn reports_unsupported_array_sum_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sum_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_bool_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sum_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sum_string.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sum_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_string_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4002,9 +7127,25 @@ fn reports_unsupported_array_sum_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sum_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_color_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sum_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sum_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sum_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_label_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4018,9 +7159,25 @@ fn reports_unsupported_array_sum_line_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sum_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_line_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sum_box_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sum_box.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sum_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_box_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4034,9 +7191,25 @@ fn reports_unsupported_array_sum_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sum_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_table_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sum_linefill_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sum_linefill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sum_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_linefill_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4050,9 +7223,41 @@ fn reports_unsupported_array_sum_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sum_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_polyline_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sum_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sum_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sum_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sum_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sum_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_udt_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4066,9 +7271,25 @@ fn reports_unsupported_array_max_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_max_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_max_bool_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_max_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_max_string.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_max_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_max_string_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4082,9 +7303,25 @@ fn reports_unsupported_array_max_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_max_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_max_color_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_max_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_max_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_max_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_max_label_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4098,9 +7335,25 @@ fn reports_unsupported_array_max_line_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_max_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_max_line_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_max_box_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_max_box.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_max_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_max_box_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4114,9 +7367,25 @@ fn reports_unsupported_array_max_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_max_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_max_table_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_max_linefill_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_max_linefill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_max_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_max_linefill_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4130,9 +7399,41 @@ fn reports_unsupported_array_max_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_max_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_max_polyline_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_max_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_max_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_max_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_max_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_max_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_max_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_max_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_max_udt_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4146,9 +7447,25 @@ fn reports_unsupported_array_min_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_min_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_bool_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_min_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_min_string.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_min_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_string_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4162,9 +7479,25 @@ fn reports_unsupported_array_min_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_min_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_color_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_min_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_min_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_min_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_label_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4178,9 +7511,25 @@ fn reports_unsupported_array_min_line_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_min_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_line_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_min_box_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_min_box.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_min_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_box_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4194,9 +7543,25 @@ fn reports_unsupported_array_min_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_min_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_table_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_min_linefill_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_min_linefill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_min_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_linefill_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4210,9 +7575,41 @@ fn reports_unsupported_array_min_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_min_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_polyline_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_min_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_min_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_min_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_min_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_min_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_udt_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4226,9 +7623,25 @@ fn reports_unsupported_array_abs_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_abs_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_abs_bool_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_abs_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_abs_string.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_abs_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_abs_string_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4242,9 +7655,25 @@ fn reports_unsupported_array_abs_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_abs_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_abs_color_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_abs_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_abs_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_abs_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_abs_label_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4258,9 +7687,25 @@ fn reports_unsupported_array_abs_line_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_abs_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_abs_line_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_abs_box_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_abs_box.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_abs_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_abs_box_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4274,9 +7719,25 @@ fn reports_unsupported_array_abs_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_abs_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_abs_table_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_abs_linefill_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_abs_linefill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_abs_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_abs_linefill_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4290,9 +7751,41 @@ fn reports_unsupported_array_abs_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_abs_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_abs_polyline_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_abs_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_abs_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_abs_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_abs_udt_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_bool.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_bool_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4306,9 +7799,25 @@ fn reports_unsupported_array_binary_search_string_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_string_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_color_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_color.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_color_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4322,9 +7831,25 @@ fn reports_unsupported_array_binary_search_label_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_label_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_line_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_line.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_line_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4338,9 +7863,25 @@ fn reports_unsupported_array_binary_search_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_box_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_table_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_table_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4354,9 +7895,25 @@ fn reports_unsupported_array_binary_search_linefill_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_linefill_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_polyline_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_polyline.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_polyline_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4370,9 +7927,41 @@ fn reports_unsupported_array_binary_search_chart_point_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_udt_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_value_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_binary_search_value.pine",
+        &["`array.binary_search` argument `value` does not accept Const String for int arrays"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_value_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_binary_search_value_method.pine",
         &["`array.binary_search` argument `value` does not accept Const String for int arrays"],
     );
 }
@@ -4386,9 +7975,25 @@ fn reports_unsupported_array_binary_search_leftmost_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_leftmost_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_bool_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_leftmost_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_leftmost_string.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_leftmost_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_string_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4402,9 +8007,25 @@ fn reports_unsupported_array_binary_search_leftmost_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_leftmost_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_color_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_leftmost_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_leftmost_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_leftmost_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_label_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4418,9 +8039,25 @@ fn reports_unsupported_array_binary_search_leftmost_line_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_leftmost_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_line_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_leftmost_box_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_leftmost_box.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_leftmost_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_box_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4434,9 +8071,25 @@ fn reports_unsupported_array_binary_search_leftmost_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_leftmost_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_table_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_leftmost_linefill_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_leftmost_linefill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_leftmost_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_linefill_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4450,9 +8103,41 @@ fn reports_unsupported_array_binary_search_leftmost_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_leftmost_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_polyline_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_leftmost_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_leftmost_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_leftmost_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_leftmost_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_leftmost_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_udt_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4468,9 +8153,27 @@ fn reports_unsupported_array_binary_search_leftmost_value_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_leftmost_value_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_value_method.pine",
+        &[
+            "`array.binary_search_leftmost` argument `value` does not accept Const String for int arrays",
+        ],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_rightmost_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_rightmost_bool.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_rightmost_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_bool_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4484,9 +8187,25 @@ fn reports_unsupported_array_binary_search_rightmost_string_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_rightmost_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_string_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_rightmost_color_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_rightmost_color.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_rightmost_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_color_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4500,9 +8219,25 @@ fn reports_unsupported_array_binary_search_rightmost_label_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_rightmost_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_label_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_rightmost_line_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_rightmost_line.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_rightmost_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_line_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4516,9 +8251,25 @@ fn reports_unsupported_array_binary_search_rightmost_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_rightmost_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_box_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_rightmost_table_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_rightmost_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_rightmost_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_table_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4532,6 +8283,14 @@ fn reports_unsupported_array_binary_search_rightmost_linefill_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_rightmost_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_linefill_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_rightmost_polyline_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_rightmost_polyline.pine",
@@ -4540,9 +8299,41 @@ fn reports_unsupported_array_binary_search_rightmost_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_rightmost_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_polyline_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_rightmost_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_rightmost_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_rightmost_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_rightmost_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_rightmost_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_udt_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4558,9 +8349,27 @@ fn reports_unsupported_array_binary_search_rightmost_value_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_rightmost_value_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_value_method.pine",
+        &[
+            "`array.binary_search_rightmost` argument `value` does not accept Const String for int arrays",
+        ],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_standardize_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_standardize_bool.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_standardize_bool_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_standardize_bool_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4574,9 +8383,25 @@ fn reports_unsupported_array_standardize_string_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_standardize_string_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_standardize_string_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_standardize_color_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_standardize_color.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_standardize_color_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_standardize_color_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4590,9 +8415,25 @@ fn reports_unsupported_array_standardize_label_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_standardize_label_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_standardize_label_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_standardize_line_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_standardize_line.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_standardize_line_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_standardize_line_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4606,9 +8447,25 @@ fn reports_unsupported_array_standardize_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_standardize_box_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_standardize_box_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_standardize_table_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_standardize_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_standardize_table_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_standardize_table_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4622,6 +8479,14 @@ fn reports_unsupported_array_standardize_linefill_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_standardize_linefill_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_standardize_linefill_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_standardize_polyline_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_standardize_polyline.pine",
@@ -4630,9 +8495,41 @@ fn reports_unsupported_array_standardize_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_standardize_polyline_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_standardize_polyline_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_standardize_chart_point_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_standardize_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_standardize_chart_point_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_standardize_chart_point_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_standardize_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_standardize_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_standardize_udt_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_standardize_udt_method.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -4655,9 +8552,41 @@ fn reports_unsupported_array_concat_id2_fixture() {
 
 #[test]
 fn reports_unsupported_array_concat_udt_fixture() {
-    assert_diagnostic_fixture(
+    assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_concat_udt.pine",
-        "E_CALL_ARG_TYPE",
+        &["`array.concat` argument `id2` expects UDT array `Point`, got `Marker`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_concat_map_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_concat_map.pine",
+        &["`array.new<map>` requires a local scalar-field UDT"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_concat_map_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_concat_map_method.pine",
+        &["`array.new<map>` requires a local scalar-field UDT"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_concat_matrix_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_concat_matrix.pine",
+        &["`array.new<matrix>` requires a local scalar-field UDT"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_concat_matrix_method_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_concat_matrix_method.pine",
+        &["`array.new<matrix>` requires a local scalar-field UDT"],
     );
 }
 
@@ -4679,7 +8608,199 @@ fn reports_import_fixture_missing_host_library() {
 fn reports_unsupported_imported_udt_constructor_fixture() {
     assert_import_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_imported_udt_constructor.pine",
-        "E_IMPORT_UNKNOWN_EXPORT",
+        "E_IMPORT_UNSUPPORTED_UDT",
+    );
+}
+
+#[test]
+fn reports_unsupported_imported_private_udt_constructor_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/unsupported_imported_private_udt_constructor.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let library_path = workspace_fixture("tests/fixtures/libraries/import_private_udt_lib.pine");
+    let library_text =
+        fs::read_to_string(&library_path).expect("library fixture should be readable");
+    let library_source = SourceFile::new(library_path.display().to_string(), library_text);
+    let input = AnalysisInput::with_library_sources(
+        source,
+        vec![("user/private_udt/1".to_owned(), library_source)],
+    )
+    .expect("library fixture input should be valid");
+    let analysis = analyze_input(&input);
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_IMPORT_PRIVATE_SYMBOL"),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn reports_unsupported_import_duplicate_exported_udt_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/unsupported_import_duplicate_exported_udt.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let library_path = workspace_fixture("tests/fixtures/libraries/import_duplicate_udt_lib.pine");
+    let library_text =
+        fs::read_to_string(&library_path).expect("library fixture should be readable");
+    let library_source = SourceFile::new(library_path.display().to_string(), library_text);
+    let input = AnalysisInput::with_library_sources(
+        source,
+        vec![("user/duplicate_udt/1".to_owned(), library_source)],
+    )
+    .expect("library fixture input should be valid");
+    let analysis = analyze_input(&input);
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_IMPORT_DUPLICATE_EXPORT"),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn reports_unsupported_import_duplicate_exported_udt_const_fixture() {
+    let path = workspace_fixture(
+        "tests/fixtures/sema/unsupported_import_duplicate_exported_udt_const.pine",
+    );
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let library_path =
+        workspace_fixture("tests/fixtures/libraries/import_duplicate_udt_const_lib.pine");
+    let library_text =
+        fs::read_to_string(&library_path).expect("library fixture should be readable");
+    let library_source = SourceFile::new(library_path.display().to_string(), library_text);
+    let input = AnalysisInput::with_library_sources(
+        source,
+        vec![("user/duplicate_udt_const/1".to_owned(), library_source)],
+    )
+    .expect("library fixture input should be valid");
+    let analysis = analyze_input(&input);
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_IMPORT_DUPLICATE_EXPORT"),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn reports_unsupported_import_duplicate_exported_udt_function_fixture() {
+    let path = workspace_fixture(
+        "tests/fixtures/sema/unsupported_import_duplicate_exported_udt_function.pine",
+    );
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let library_path =
+        workspace_fixture("tests/fixtures/libraries/import_duplicate_udt_function_lib.pine");
+    let library_text =
+        fs::read_to_string(&library_path).expect("library fixture should be readable");
+    let library_source = SourceFile::new(library_path.display().to_string(), library_text);
+    let input = AnalysisInput::with_library_sources(
+        source,
+        vec![("user/duplicate_udt_function/1".to_owned(), library_source)],
+    )
+    .expect("library fixture input should be valid");
+    let analysis = analyze_input(&input);
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_IMPORT_DUPLICATE_EXPORT"),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn reports_unsupported_imported_udt_varip_fixture() {
+    assert_import_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_imported_udt_varip.pine",
+        "E_IMPORT_UNSUPPORTED_UDT",
+    );
+}
+
+#[test]
+fn reports_unsupported_imported_udt_assignment_identity_fixture() {
+    assert_import_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_imported_udt_assignment_identity.pine",
+        "E_UDT_ASSIGN_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_imported_udt_typed_decl_identity_fixture() {
+    assert_import_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_imported_udt_typed_decl_identity.pine",
+        "E_UDT_ASSIGN_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_imported_udt_ternary_identity_fixture() {
+    assert_import_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_imported_udt_ternary_identity.pine",
+        "E_BRANCH_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_imported_udt_if_expression_identity_fixture() {
+    assert_import_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_imported_udt_if_expression_identity.pine",
+        "E_BRANCH_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_imported_udt_udf_passthrough_identity_fixture() {
+    assert_import_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_imported_udt_udf_passthrough_identity.pine",
+        "E_UDT_ASSIGN_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_imported_udt_udf_nested_passthrough_identity_fixture() {
+    assert_import_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_imported_udt_udf_nested_passthrough_identity.pine",
+        "E_UDT_ASSIGN_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_imported_udt_udf_constructor_return_identity_fixture() {
+    assert_import_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_imported_udt_udf_constructor_return_identity.pine",
+        "E_UDT_ASSIGN_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_imported_udt_udf_nested_constructor_return_identity_fixture() {
+    assert_import_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_imported_udt_udf_nested_constructor_return_identity.pine",
+        "E_UDT_ASSIGN_TYPE",
     );
 }
 
@@ -4687,7 +8808,15 @@ fn reports_unsupported_imported_udt_constructor_fixture() {
 fn reports_unsupported_imported_method_fixture() {
     assert_import_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_imported_method.pine",
-        "E_UNKNOWN_METHOD",
+        "E_IMPORT_UNSUPPORTED_METHOD",
+    );
+}
+
+#[test]
+fn reports_unsupported_imported_method_qualified_fixture() {
+    assert_import_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_imported_method_qualified.pine",
+        "E_IMPORT_UNSUPPORTED_METHOD",
     );
 }
 
@@ -4814,11 +8943,28 @@ fn reports_unsupported_user_type_unknown_field_fixture() {
 }
 
 #[test]
-fn reports_unsupported_user_type_varip_fixture() {
+fn reports_unsupported_user_type_varip_non_constructor_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_user_type_varip.pine",
         "varip",
-        "other value families",
+        "UDT varip supports only explicit scalar-field declarations",
+    );
+}
+
+#[test]
+fn reports_unsupported_user_type_varip_nested_field_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_user_type_varip_nested_field.pine",
+        "varip",
+        "UDT varip supports only explicit scalar-field declarations",
+    );
+}
+
+#[test]
+fn reports_unsupported_user_type_varip_assign_identity_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_type_varip_assign_identity.pine",
+        "E_UDT_ASSIGN_TYPE",
     );
 }
 
@@ -4883,7 +9029,7 @@ fn reports_unsupported_user_type_field_mutation_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_user_type_field_mutation.pine",
         "function_side_effect",
-        "mutating user-defined type fields inside user-defined functions or methods",
+        "mutating fields on global user-defined type values inside user-defined functions",
     );
 }
 
@@ -4892,7 +9038,7 @@ fn reports_unsupported_user_type_parameter_field_mutation_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_user_type_parameter_field_mutation.pine",
         "function_side_effect",
-        "mutating user-defined type fields inside user-defined functions or methods",
+        "mutating user-defined type parameter fields inside user-defined functions",
     );
 }
 
@@ -4943,7 +9089,7 @@ fn reports_unsupported_user_method_field_mutation_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_user_method_field_mutation.pine",
         "function_side_effect",
-        "mutating user-defined type fields inside user-defined functions or methods",
+        "mutating user-defined type fields inside methods",
     );
 }
 
@@ -5190,11 +9336,832 @@ fn reports_unsupported_map_fixture() {
 }
 
 #[test]
+fn reports_unsupported_map_new_template_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_new_template.pine",
+        "map.new<string,float>",
+        "map collections are not implemented",
+    );
+}
+
+#[test]
+fn reports_unsupported_map_new_dotted_template_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_new_dotted_template.pine",
+        "map.new<chart.point,chart.point>",
+        "map collections are not implemented",
+    );
+}
+
+#[test]
+fn reports_unsupported_map_get_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_get.pine",
+        "map.get",
+        "map collections are not implemented",
+    );
+}
+
+#[test]
+fn reports_unsupported_map_contains_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_contains.pine",
+        "map.contains",
+        "map collections are not implemented",
+    );
+}
+
+#[test]
+fn reports_unsupported_map_size_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_size.pine",
+        "map.size",
+        "map collections are not implemented",
+    );
+}
+
+#[test]
+fn reports_unsupported_map_remove_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_remove.pine",
+        "map.remove",
+        "map collections are not implemented",
+    );
+}
+
+#[test]
+fn reports_unsupported_map_clear_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_clear.pine",
+        "map.clear",
+        "map collections are not implemented",
+    );
+}
+
+#[test]
+fn reports_unsupported_map_copy_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_copy.pine",
+        "map.copy",
+        "map collections are not implemented",
+    );
+}
+
+#[test]
+fn reports_unsupported_map_keys_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_keys.pine",
+        "map.keys",
+        "map collections are not implemented",
+    );
+}
+
+#[test]
+fn reports_unsupported_map_values_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_values.pine",
+        "map.values",
+        "map collections are not implemented",
+    );
+}
+
+#[test]
+fn reports_unsupported_map_put_all_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_put_all.pine",
+        "map.put_all",
+        "map collections are not implemented",
+    );
+}
+
+#[test]
 fn reports_unsupported_matrix_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix.pine",
-        "matrix.get",
+        "matrix.det",
         "matrix collections are not implemented",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_add_row_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_add_row.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_add_col_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_add_col.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_remove_row_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_remove_row.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_remove_col_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_remove_col.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_rows_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_rows.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_rows_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_rows_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_columns_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_columns.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_columns_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_columns_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_row_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_row.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_row_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_row_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_row_index_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_row_index_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_row_method_index_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_row_method_index_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_col_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_col.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_col_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_col_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_col_index_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_col_index_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_col_method_index_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_col_method_index_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_get_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_get.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_get_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_get_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_get_row_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_get_row_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_get_column_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_get_column_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_get_method_row_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_get_method_row_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_get_method_column_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_get_method_column_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_copy_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_copy.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_copy_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_copy_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_set_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_set.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_set_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_set_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_set_row_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_set_row_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_set_column_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_set_column_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_set_value_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_set_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_set_method_value_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_set_method_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_set_method_row_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_set_method_row_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_set_method_column_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_set_method_column_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_fill_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_fill.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_fill_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_fill_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_fill_value_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_fill_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_fill_method_value_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_fill_method_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_reshape_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_reshape.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_reshape_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_reshape_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_reshape_row_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_reshape_row_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_reshape_column_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_reshape_column_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_reshape_method_row_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_reshape_method_row_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_reshape_method_column_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_reshape_method_column_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_new_template_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_new_template.pine",
+        "matrix.new<int>",
+        "matrix collections are not implemented",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_new_deferred_template_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_new_deferred_template.pine",
+        "matrix.new<label>",
+        "matrix collections are not implemented",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_new_initial_value_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_new_initial_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn accepts_supported_matrix_add_row_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_add_row.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.add_row"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_add_col_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_add_col.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.add_col"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_remove_row_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_remove_row.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.remove_row"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_remove_col_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_remove_col.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.remove_col"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_sum_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_sum.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.sum"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_avg_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_avg.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.avg"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn reports_unsupported_matrix_sum_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_sum.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_sum_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_sum_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_avg_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_avg.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_avg_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_avg_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_set_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_set_udf.pine",
+        "function_side_effect",
+        "collection mutation is not supported inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_set_method_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_set_method_udf.pine",
+        "function_side_effect",
+        "collection mutation is not supported inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_fill_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_fill_udf.pine",
+        "function_side_effect",
+        "collection mutation is not supported inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_fill_method_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_fill_method_udf.pine",
+        "function_side_effect",
+        "collection mutation is not supported inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_reshape_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_reshape_udf.pine",
+        "function_side_effect",
+        "collection mutation is not supported inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_reshape_method_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_reshape_method_udf.pine",
+        "function_side_effect",
+        "collection mutation is not supported inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_add_row_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_add_row_udf.pine",
+        "function_side_effect",
+        "collection mutation is not supported inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_add_row_method_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_add_row_method_udf.pine",
+        "function_side_effect",
+        "collection mutation is not supported inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_add_col_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_add_col_udf.pine",
+        "function_side_effect",
+        "collection mutation is not supported inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_add_col_method_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_add_col_method_udf.pine",
+        "function_side_effect",
+        "collection mutation is not supported inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_remove_row_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_remove_row_udf.pine",
+        "function_side_effect",
+        "collection mutation is not supported inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_remove_row_method_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_remove_row_method_udf.pine",
+        "function_side_effect",
+        "collection mutation is not supported inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_remove_col_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_remove_col_udf.pine",
+        "function_side_effect",
+        "collection mutation is not supported inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_remove_col_method_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_remove_col_method_udf.pine",
+        "function_side_effect",
+        "collection mutation is not supported inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_method.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_add_row_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_add_row_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_add_col_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_add_col_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_remove_row_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_remove_row_method.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_remove_col_method_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_remove_col_method.pine",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -5286,7 +10253,7 @@ fn reports_unsupported_array_function_side_effect_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_function_side_effect.pine",
         "function_side_effect",
-        "array mutation",
+        "collection mutation",
     );
 }
 
@@ -5381,11 +10348,96 @@ fn reports_unsupported_dynamic_history_fixture() {
 }
 
 #[test]
+fn reports_unsupported_dynamic_history_bool_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_dynamic_history_bool.pine",
+        "dynamic_history_offset",
+        "integer expression",
+    );
+}
+
+#[test]
+fn reports_unsupported_dynamic_history_udf_return_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_dynamic_history_udf_return.pine",
+        "dynamic_history_offset",
+        "integer expression",
+    );
+}
+
+#[test]
+fn reports_unsupported_dynamic_history_builtin_result_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_dynamic_history_builtin_result.pine",
+        "dynamic_history_offset",
+        "integer expression",
+    );
+}
+
+#[test]
+fn reports_unsupported_dynamic_history_ternary_result_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_dynamic_history_ternary_result.pine",
+        "dynamic_history_offset",
+        "integer expression",
+    );
+}
+
+#[test]
+fn reports_unsupported_dynamic_history_if_result_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_dynamic_history_if_result.pine",
+        "dynamic_history_offset",
+        "integer expression",
+    );
+}
+
+#[test]
+fn reports_unsupported_dynamic_history_switch_result_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_dynamic_history_switch_result.pine",
+        "dynamic_history_offset",
+        "integer expression",
+    );
+}
+
+#[test]
+fn reports_unsupported_dynamic_history_for_result_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_dynamic_history_for_result.pine",
+        "dynamic_history_offset",
+        "integer expression",
+    );
+}
+
+#[test]
+fn reports_unsupported_dynamic_history_while_result_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_dynamic_history_while_result.pine",
+        "dynamic_history_offset",
+        "integer expression",
+    );
+}
+
+#[test]
 fn reports_unsupported_negative_history_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_negative_history.pine",
         "negative_history_offset",
         "non-negative",
+    );
+}
+
+#[test]
+fn reports_unsupported_max_bars_back_function_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_max_bars_back_function.pine",
+        "max_bars_back",
+        "per-variable max_bars_back calls",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_max_bars_back_function.pine",
+        &["indicator/strategy declaration-level max_bars_back"],
     );
 }
 
@@ -5450,6 +10502,22 @@ fn accepts_supported_block_statement_fixture() {
         );
     }
     assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn reports_unsupported_loop_control_break_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_loop_control_break.pine",
+        "E_LOOP_CONTROL",
+    );
+}
+
+#[test]
+fn reports_unsupported_loop_control_continue_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_loop_control_continue.pine",
+        "E_LOOP_CONTROL",
+    );
 }
 
 fn assert_unsupported_fixture(path: &str, feature: &str, reason: &str) {
@@ -5541,13 +10609,18 @@ fn assert_strategy_unsupported_fixture(path: &str, features: &[&str]) {
     let analysis = analyze_source(&source);
 
     for feature in features {
+        let expected_reason = if feature.starts_with("strategy.risk.") {
+            "broker risk rules"
+        } else {
+            "broker emulation"
+        };
         assert!(
             analysis
                 .compatibility
                 .unsupported
                 .iter()
                 .any(|unsupported| unsupported.feature == *feature
-                    && unsupported.reason.contains("broker emulation")),
+                    && unsupported.reason.contains(expected_reason)),
             "{} unsupported features: {:?}",
             path.display(),
             analysis.compatibility.unsupported
@@ -5576,11 +10649,13 @@ fn assert_strategy_state_mode_fixture(path: &str) {
         "strategy.openprofit",
         "strategy.netprofit",
         "strategy.equity",
+        "strategy.buy_and_hold_return_percent",
         "strategy.closedtrades",
         "strategy.wintrades",
         "strategy.losstrades",
         "strategy.eventrades",
         "strategy.opentrades",
+        "strategy.margin_liquidation_price",
     ];
 
     for variable in variables {
@@ -5623,38 +10698,4 @@ fn assert_strategy_state_supported_fixture(path: &str, variables: &[&str]) {
         );
     }
     assert!(analysis.hir.is_some());
-}
-
-fn assert_strategy_state_unsupported_fixture(path: &str) {
-    let path = workspace_fixture(path);
-    let text = fs::read_to_string(&path).expect("fixture should be readable");
-    let source = SourceFile::new(path.display().to_string(), text);
-    let analysis = analyze_source(&source);
-    let variables = ["strategy.buy_and_hold_return_percent"];
-
-    for variable in variables {
-        assert!(
-            analysis
-                .compatibility
-                .unsupported
-                .iter()
-                .any(|unsupported| {
-                    unsupported.feature == variable
-                        && unsupported.reason.contains("broker emulation")
-                }),
-            "{} unsupported features: {:?}",
-            path.display(),
-            analysis.compatibility.unsupported
-        );
-    }
-    assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .all(|diagnostic| diagnostic.code != "E_UNKNOWN_SYMBOL"),
-        "{} diagnostics: {:?}",
-        path.display(),
-        analysis.diagnostics
-    );
-    assert!(analysis.hir.is_none());
 }

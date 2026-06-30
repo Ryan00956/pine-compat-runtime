@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix.set row type")
+
+values = matrix.new<float>(1, 1, close)
+matrix.set(values, "row", 0, close)
+plot(matrix.get(values, 0, 0))

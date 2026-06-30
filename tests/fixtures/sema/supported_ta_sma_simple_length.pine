@@ -1,0 +1,4 @@
+//@version=5
+indicator("Supported ta.sma Simple Length")
+values = array.new_int(3, 1)
+plot(ta.sma(close, array.size(values)))

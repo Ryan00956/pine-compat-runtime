@@ -1,0 +1,16 @@
+//@version=5
+indicator("Series history offset stateful built-in")
+
+offset = bar_index == 0 ? 0 : 1
+maybe_offset = bar_index == 2 ? na : offset
+builtin_offset = ta.barssince(bar_index == 1)
+sma_value = ta.sma(close, 2)
+previous = sma_value[offset]
+returned_offset_previous = sma_value[builtin_offset]
+
+plot(previous)
+plot(ta.sma(close + open, 2)[offset])
+plot(sma_value[maybe_offset])
+plot(returned_offset_previous)
+plot(na(previous[1]) ? 1 : 0)
+plot(na(returned_offset_previous[1]) ? 1 : 0)

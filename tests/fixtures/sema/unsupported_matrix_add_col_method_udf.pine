@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported matrix add_col method in UDF")
+
+mutate(values) =>
+    values.add_col(1, array.from(close))
+    close
+
+values = matrix.new<float>(1, 1, close)
+plot(mutate(values))

@@ -1,0 +1,27 @@
+//@version=5
+indicator("UDT array writeback")
+
+type Point
+    float x
+    float y
+
+points = array.from(Point.new(close, open), Point.new(high, low))
+
+first_read = array.get(points, 0)
+first_read.x := high
+first_after_local_mutation = points.get(0)
+array.set(points, 0, first_read)
+first_after_writeback = points.get(0)
+
+second_read = points.get(1)
+second_read.y := close + 10
+second_after_local_mutation = array.get(points, 1)
+points.set(1, second_read)
+second_after_writeback = array.get(points, 1)
+
+plot(first_after_local_mutation.x == close ? 1 : 0)
+plot(first_after_writeback.x == high ? 1 : 0)
+plot(first_after_writeback.y == open ? 1 : 0)
+plot(second_after_local_mutation.y == low ? 1 : 0)
+plot(second_after_writeback.x == high ? 1 : 0)
+plot(second_after_writeback.y == close + 10 ? 1 : 0)

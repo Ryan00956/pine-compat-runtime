@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix.fill method value")
+
+values = matrix.new<float>(1, 1, close)
+values.fill("x")
+plot(close)

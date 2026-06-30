@@ -1,57 +1,33 @@
 use std::collections::HashMap;
 
-use pine_ir::{PineType, Qualifier, ValueKind};
+use pine_ir::{PineType, Qualifier, SymbolId, ValueKind};
 use pine_syntax::{
     CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Program, Span, Stmt, StmtKind, SwitchArm,
+    SwitchArmResult,
 };
 
 use crate::analyzer::calls::expr_name;
-use crate::analyzer::context::{Analyzer, FunctionInfo};
+use crate::analyzer::context::Analyzer;
 use crate::analyzer::functions::resolve_udf_arg_indices;
-use crate::compatibility::FeatureUse;
 use crate::resolver::SymbolInfo;
-use crate::types::{UNKNOWN, can_assign, strongest_qualifier};
+use crate::source_graph::SourceId;
+use crate::types::UNKNOWN;
 
-#[derive(Debug, Clone)]
-pub(crate) struct UserTypeInfo {
-    pub(crate) name: String,
-    pub(crate) fields: Vec<UserTypeFieldInfo>,
-}
+mod arrays;
+mod constructors;
+mod flow;
+mod imported;
+mod types;
 
-#[derive(Debug, Clone)]
-pub(crate) struct UserTypeFieldInfo {
-    pub(crate) name: String,
-    pub(crate) pine_type: PineType,
-    pub(crate) user_type_name: Option<String>,
-}
-
-#[derive(Debug, Clone)]
-pub(crate) struct UdtConstructor {
-    pub(crate) field_args: Vec<Expr>,
-    pub(crate) pine_type: PineType,
-}
-
-#[derive(Debug, Clone)]
-pub(crate) struct UdtFieldAccess {
-    pub(crate) receiver: String,
-    pub(crate) fields: Vec<UdtFieldAccessStep>,
-}
-
-#[derive(Debug, Clone)]
-pub(crate) struct UdtFieldAccessStep {
-    pub(crate) index: usize,
-    pub(crate) pine_type: PineType,
-}
-
-pub(crate) struct UdtFieldMutation {
-    pub(crate) pine_type: PineType,
-    pub(crate) user_type_name: Option<String>,
-    pub(crate) receiver_symbol: SymbolInfo,
-}
-
-pub(crate) fn span_key(span: Span) -> (usize, usize) {
-    (span.start, span.end)
-}
+use self::flow::{
+    branch_return_expr, is_na_expr, merge_user_type_name, returned_udf_param_index,
+    user_type_identity_matches_name,
+};
+pub(crate) use types::{
+    ImportedUdtConstructorArgError, ImportedUdtConstructorArgPlan, UdtConstructor, UdtFieldAccess,
+    UdtFieldAccessStep, UdtFieldMutation, UserTypeArrayElementInference, UserTypeFieldInfo,
+    UserTypeIdentity, UserTypeInfo, classify_user_type_array_element_names, span_key,
+};
 
 impl Analyzer {
     pub(crate) fn register_user_types(&mut self, program: &Program) {
@@ -96,63 +72,15 @@ impl Analyzer {
             self.user_types.insert(
                 decl.name.clone(),
                 UserTypeInfo {
+                    identity: UserTypeIdentity {
+                        source_id: SourceId::root(),
+                        name: decl.name.clone(),
+                    },
                     name: decl.name.clone(),
                     fields,
                 },
             );
         }
-    }
-
-    pub(crate) fn user_type_constructor(
-        &mut self,
-        callee_name: &str,
-        args: &[CallArg],
-        span: Span,
-    ) -> Option<UdtConstructor> {
-        let type_name = callee_name.strip_suffix(".new")?;
-        let user_type = self.user_types.get(type_name).cloned()?;
-
-        let resolved = self.resolve_constructor_args(&user_type, args, span)?;
-        let mut qualifier = Qualifier::Const;
-        let mut field_args = Vec::with_capacity(resolved.len());
-        for (field, arg) in user_type.fields.iter().zip(resolved) {
-            let Some(arg) = arg else {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_UDT_CONSTRUCTOR_ARG",
-                    format!(
-                        "missing field `{}` for `{}` constructor",
-                        field.name, type_name
-                    ),
-                    span,
-                ));
-                return None;
-            };
-            let arg_type = self.analyze_expr(&arg.value).unwrap_or(UNKNOWN);
-            if !self.can_assign_user_type_field(field, &arg.value, arg_type) {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_UDT_CONSTRUCTOR_ARG",
-                    format!(
-                        "cannot assign {:?} {:?} to field `{}` of type {:?}",
-                        arg_type.qualifier, arg_type.kind, field.name, field.pine_type.kind
-                    ),
-                    arg.span,
-                ));
-            }
-            qualifier = strongest_qualifier(qualifier, arg_type.qualifier);
-            field_args.push(arg.value.clone());
-        }
-
-        let pine_type = PineType::new(qualifier, ValueKind::UserType);
-        self.expr_user_types
-            .insert(span_key(span), user_type.name.clone());
-        self.compatibility.supported.push(FeatureUse {
-            feature: "user-defined types".to_owned(),
-            span,
-        });
-        Some(UdtConstructor {
-            field_args,
-            pine_type,
-        })
     }
 
     pub(crate) fn resolve_user_type_field_access(
@@ -166,6 +94,21 @@ impl Analyzer {
         let receiver = &parts[0];
         let symbol = self.scope.resolve(receiver)?;
         let type_name = self.symbol_user_types.get(&symbol.id)?.clone();
+        if self.imported_user_types.contains_key(&type_name) {
+            let Some((pine_type, user_type_name, _)) = self.resolve_imported_user_type_field_path(
+                &type_name,
+                symbol.pine_type.qualifier,
+                &parts[1..],
+                span,
+            ) else {
+                return Some(UNKNOWN);
+            };
+            self.bind_symbol(receiver, span, symbol);
+            if let Some(user_type_name) = user_type_name {
+                self.mark_expr_user_type(span, user_type_name);
+            }
+            return Some(pine_type);
+        }
         let Some((pine_type, user_type_name, _)) = self.resolve_user_type_field_path(
             &type_name,
             symbol.pine_type.qualifier,
@@ -212,6 +155,21 @@ impl Analyzer {
             ));
             return None;
         };
+        if self.imported_user_types.contains_key(&type_name) {
+            let field_names = [field_name.to_owned()];
+            let (pine_type, user_type_name, _) = self.resolve_imported_user_type_field_path(
+                &type_name,
+                symbol.pine_type.qualifier,
+                &field_names,
+                span,
+            )?;
+            self.bind_symbol(receiver, span, symbol);
+            return Some(UdtFieldMutation {
+                pine_type,
+                user_type_name,
+                receiver_symbol: symbol,
+            });
+        }
         let user_type = self.user_types.get(&type_name)?;
         let Some(field) = user_type
             .fields
@@ -250,59 +208,6 @@ impl Analyzer {
         self.type_of_user_type_field_path(type_name, symbol.pine_type.qualifier, &parts[1..])
     }
 
-    pub(crate) fn type_of_user_type_constructor_with_params(
-        &self,
-        callee_name: &str,
-        args: &[CallArg],
-        param_types: &HashMap<String, PineType>,
-    ) -> Option<PineType> {
-        let type_name = callee_name.strip_suffix(".new")?;
-        let user_type = self.user_types.get(type_name)?;
-        if args.len() != user_type.fields.len() {
-            return None;
-        }
-        let mut qualifier = Qualifier::Const;
-        for arg in args {
-            let arg_type = self.type_of_expr_with_params(&arg.value, param_types)?;
-            qualifier = strongest_qualifier(qualifier, arg_type.qualifier);
-        }
-        Some(PineType::new(qualifier, ValueKind::UserType))
-    }
-
-    pub(crate) fn user_type_constructor_for_lowering(
-        &self,
-        callee_name: &str,
-        args: &[CallArg],
-        param_types: &HashMap<String, PineType>,
-    ) -> Option<UdtConstructor> {
-        let type_name = callee_name.strip_suffix(".new")?;
-        let user_type = self.user_types.get(type_name)?;
-        let mut field_args = vec![None; user_type.fields.len()];
-        let mut next_positional = 0;
-        for arg in args {
-            let index = match &arg.name {
-                Some(name) => user_type
-                    .fields
-                    .iter()
-                    .position(|field| field.name == *name)?,
-                None => {
-                    let index = next_positional;
-                    next_positional += 1;
-                    index
-                }
-            };
-            field_args[index] = Some(arg.value.clone());
-        }
-        Some(UdtConstructor {
-            field_args: field_args.into_iter().collect::<Option<_>>()?,
-            pine_type: self.type_of_user_type_constructor_with_params(
-                callee_name,
-                args,
-                param_types,
-            )?,
-        })
-    }
-
     pub(crate) fn user_type_field_access_for_lowering(
         &self,
         parts: &[String],
@@ -324,7 +229,23 @@ impl Analyzer {
     }
 
     pub(crate) fn expr_user_type_name(&self, expr: &Expr) -> Option<String> {
-        self.expr_user_types.get(&span_key(expr.span)).cloned()
+        let type_name = self.expr_user_types.get(&span_key(expr.span))?.clone();
+        if let Some(identity) = self.expr_user_type_identity(expr) {
+            debug_assert!(user_type_identity_matches_name(&identity, &type_name));
+        }
+        Some(type_name)
+    }
+
+    pub(crate) fn expr_user_type_identity(&self, expr: &Expr) -> Option<UserTypeIdentity> {
+        self.expr_user_type_identities
+            .get(&span_key(expr.span))
+            .cloned()
+    }
+
+    pub(crate) fn expr_user_type_array_name(&self, expr: &Expr) -> Option<String> {
+        self.expr_user_type_arrays
+            .get(&span_key(expr.span))
+            .cloned()
     }
 
     pub(crate) fn user_type_name_of_expr(&self, expr: &Expr) -> Option<String> {
@@ -355,7 +276,38 @@ impl Analyzer {
                 ..
             } => self.user_type_name_of_if_branches(then_branch, else_branch),
             ExprKind::Switch { arms, .. } => self.user_type_name_of_switch_arms(arms),
-            ExprKind::For { body, .. } => self.user_type_name_of_for_body(body),
+            ExprKind::For { body, .. } => self.user_type_name_of_branch_return(body),
+            ExprKind::While { body, .. } => self.user_type_name_of_branch_return(body),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn direct_user_type_constructor_name(&self, expr: &Expr) -> Option<String> {
+        let ExprKind::Call { callee, .. } = &expr.kind else {
+            return None;
+        };
+        let callee_name = expr_name(callee)?;
+        let type_name = callee_name.strip_suffix(".new")?;
+        if self.expr_user_type_name(expr).as_deref() == Some(type_name) {
+            return Some(type_name.to_owned());
+        }
+        None
+    }
+
+    pub(crate) fn user_type_array_name_of_expr(&self, expr: &Expr) -> Option<String> {
+        if let Some(type_name) = self.expr_user_type_array_name(expr) {
+            return Some(type_name);
+        }
+        match &expr.kind {
+            ExprKind::Identifier(name) => self
+                .scope
+                .resolve(name)
+                .and_then(|symbol| self.symbol_user_type_arrays.get(&symbol.id).cloned()),
+            ExprKind::QualifiedName(parts) if parts.len() == 1 => self
+                .scope
+                .resolve(&parts[0])
+                .and_then(|symbol| self.symbol_user_type_arrays.get(&symbol.id).cloned()),
+            ExprKind::History { expr, .. } => self.user_type_array_name_of_expr(expr),
             _ => None,
         }
     }
@@ -373,7 +325,7 @@ impl Analyzer {
         true
     }
 
-    fn user_type_name_of_ternary_branches(
+    pub(crate) fn user_type_name_of_ternary_branches(
         &self,
         then_expr: &Expr,
         else_expr: &Expr,
@@ -396,23 +348,16 @@ impl Analyzer {
         self.mark_expr_user_type(span, type_name);
         true
     }
-
-    fn user_type_name_of_switch_arms(&self, arms: &[SwitchArm]) -> Option<String> {
+    pub(crate) fn user_type_name_of_switch_arms(&self, arms: &[SwitchArm]) -> Option<String> {
         let mut resolved_type_name = None;
+        let aliases = HashMap::new();
         for arm in arms {
-            match self.user_type_name_of_expr(&arm.result) {
-                Some(type_name) => match &resolved_type_name {
-                    Some(resolved) if resolved != &type_name => return None,
-                    Some(_) => {}
-                    None => resolved_type_name = Some(type_name),
-                },
-                None if is_na_expr(&arm.result) => {}
-                None => return None,
-            }
+            let (type_name, is_na) =
+                self.user_type_name_of_switch_arm_result_with_local_aliases(&arm.result, &aliases);
+            merge_user_type_name(&mut resolved_type_name, type_name, is_na)?;
         }
         resolved_type_name
     }
-
     pub(crate) fn user_type_name_of_if_branches(
         &self,
         then_branch: &[Stmt],
@@ -430,19 +375,18 @@ impl Analyzer {
             _ => None,
         }
     }
-
-    fn user_type_name_of_for_body(&self, body: &[Stmt]) -> Option<String> {
-        self.user_type_name_of_branch_return(body)
-    }
-
-    fn user_type_name_of_branch_return(&self, branch: &[Stmt]) -> Option<String> {
+    pub(crate) fn user_type_name_of_branch_return(&self, branch: &[Stmt]) -> Option<String> {
         let (prefix, expr) = branch_return_expr(branch)?;
-        let aliases = self.local_user_type_aliases(prefix);
+        let aliases = self.local_user_type_aliases(prefix, &HashMap::new());
         self.user_type_name_of_expr_with_local_aliases(expr, &aliases)
     }
 
-    fn local_user_type_aliases(&self, prefix: &[Stmt]) -> HashMap<String, String> {
-        let mut aliases = HashMap::new();
+    fn local_user_type_aliases(
+        &self,
+        prefix: &[Stmt],
+        outer_aliases: &HashMap<String, String>,
+    ) -> HashMap<String, String> {
+        let mut aliases = outer_aliases.clone();
         for statement in prefix {
             if let StmtKind::Decl { name, value, .. } = &statement.kind
                 && let Some(type_name) =
@@ -484,19 +428,41 @@ impl Analyzer {
             ExprKind::Switch { arms, .. } => {
                 let mut resolved_type_name = None;
                 for arm in arms {
-                    match self.user_type_name_of_expr_with_local_aliases(&arm.result, aliases) {
-                        Some(type_name) => match &resolved_type_name {
-                            Some(resolved) if resolved != &type_name => return None,
-                            Some(_) => {}
-                            None => resolved_type_name = Some(type_name),
-                        },
-                        None => return None,
-                    }
+                    let (type_name, is_na) = self
+                        .user_type_name_of_switch_arm_result_with_local_aliases(
+                            &arm.result,
+                            aliases,
+                        );
+                    merge_user_type_name(&mut resolved_type_name, type_name, is_na)?;
                 }
                 resolved_type_name
             }
-            ExprKind::For { body, .. } => self.user_type_name_of_for_body(body),
+            ExprKind::For { body, .. } => self.user_type_name_of_branch_return(body),
+            ExprKind::While { body, .. } => self.user_type_name_of_branch_return(body),
             _ => None,
+        }
+    }
+
+    fn user_type_name_of_switch_arm_result_with_local_aliases(
+        &self,
+        result: &SwitchArmResult,
+        aliases: &HashMap<String, String>,
+    ) -> (Option<String>, bool) {
+        match result {
+            SwitchArmResult::Expr(expr) => (
+                self.user_type_name_of_expr_with_local_aliases(expr, aliases),
+                is_na_expr(expr),
+            ),
+            SwitchArmResult::Block(statements) => {
+                let Some((prefix, expr)) = branch_return_expr(statements) else {
+                    return (None, false);
+                };
+                let aliases = self.local_user_type_aliases(prefix, aliases);
+                (
+                    self.user_type_name_of_expr_with_local_aliases(expr, &aliases),
+                    is_na_expr(expr),
+                )
+            }
         }
     }
 
@@ -527,7 +493,7 @@ impl Analyzer {
                         else_branch,
                         ..
                     } => self.user_type_name_of_if_branches(then_branch, else_branch),
-                    StmtKind::For { body, .. } => self.user_type_name_of_for_body(body),
+                    StmtKind::For { body, .. } => self.user_type_name_of_branch_return(body),
                     _ => None,
                 }
             }
@@ -535,94 +501,47 @@ impl Analyzer {
     }
 
     pub(crate) fn mark_expr_user_type(&mut self, span: Span, type_name: String) {
-        self.expr_user_types.insert(span_key(span), type_name);
+        let identity = self.user_type_identity_for_name(&type_name);
+        let key = span_key(span);
+        self.expr_user_types.insert(key, type_name);
+        if let Some(identity) = identity {
+            self.expr_user_type_identities.insert(key, identity);
+        }
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn mark_expr_user_type_array(&mut self, span: Span, type_name: String) {
+        self.expr_user_type_arrays.insert(span_key(span), type_name);
     }
 
     pub(crate) fn mark_symbol_user_type(&mut self, symbol: SymbolInfo, type_name: String) {
-        self.symbol_user_types.insert(symbol.id, type_name);
+        self.mark_symbol_id_user_type(symbol.id, type_name);
     }
 
-    fn resolve_constructor_args(
-        &mut self,
-        user_type: &UserTypeInfo,
-        args: &[CallArg],
-        span: Span,
-    ) -> Option<Vec<Option<CallArg>>> {
-        if args.len() > user_type.fields.len() {
-            self.diagnostics.push(Diagnostic::error(
-                "E_UDT_CONSTRUCTOR_ARG",
-                format!(
-                    "`{}.new` expects {} field argument(s), got {}",
-                    user_type.name,
-                    user_type.fields.len(),
-                    args.len()
-                ),
-                span,
-            ));
-            return None;
+    pub(crate) fn mark_symbol_id_user_type(&mut self, symbol_id: SymbolId, type_name: String) {
+        let identity = self.user_type_identity_for_name(&type_name);
+        self.symbol_user_types.insert(symbol_id, type_name);
+        if let Some(identity) = identity {
+            self.symbol_user_type_identities.insert(symbol_id, identity);
         }
-
-        let mut resolved = vec![None; user_type.fields.len()];
-        let mut positional_open = true;
-        let mut next_positional = 0;
-        for arg in args {
-            if let Some(name) = &arg.name {
-                positional_open = false;
-                let Some(index) = user_type
-                    .fields
-                    .iter()
-                    .position(|field| field.name == *name)
-                else {
-                    self.diagnostics.push(Diagnostic::error(
-                        "E_UDT_CONSTRUCTOR_ARG",
-                        format!(
-                            "unknown field `{name}` for `{}` constructor",
-                            user_type.name
-                        ),
-                        arg.span,
-                    ));
-                    return None;
-                };
-                if resolved[index].is_some() {
-                    self.diagnostics.push(Diagnostic::error(
-                        "E_UDT_CONSTRUCTOR_ARG",
-                        format!(
-                            "duplicate field `{name}` for `{}` constructor",
-                            user_type.name
-                        ),
-                        arg.span,
-                    ));
-                    return None;
-                }
-                resolved[index] = Some(arg.clone());
-            } else {
-                if !positional_open {
-                    self.diagnostics.push(Diagnostic::error(
-                        "E_UDT_CONSTRUCTOR_ARG",
-                        "positional field argument cannot follow named field argument",
-                        arg.span,
-                    ));
-                    return None;
-                }
-                resolved[next_positional] = Some(arg.clone());
-                next_positional += 1;
-            }
-        }
-        Some(resolved)
     }
 
-    fn can_assign_user_type_field(
-        &self,
-        field: &UserTypeFieldInfo,
-        value: &Expr,
-        value_type: PineType,
-    ) -> bool {
-        if let Some(expected_type_name) = &field.user_type_name {
-            return self
-                .user_type_name_of_expr(value)
-                .is_some_and(|actual_type_name| actual_type_name == *expected_type_name);
-        }
-        can_assign(field.pine_type, value_type)
+    pub(crate) fn mark_symbol_user_type_array(&mut self, symbol: SymbolInfo, type_name: String) {
+        self.symbol_user_type_arrays.insert(symbol.id, type_name);
+    }
+
+    fn user_type_identity_for_name(&self, type_name: &str) -> Option<UserTypeIdentity> {
+        self.user_types
+            .get(type_name)
+            .map(|user_type| user_type.identity.clone())
+            .or_else(|| {
+                self.imported_user_types
+                    .get(type_name)
+                    .map(|user_type| UserTypeIdentity {
+                        source_id: user_type.identity.source_id,
+                        name: user_type.identity.name.clone(),
+                    })
+            })
     }
 
     fn user_type_name_of_field_access(&self, parts: &[String]) -> Option<String> {
@@ -685,6 +604,9 @@ impl Analyzer {
         qualifier: Qualifier,
         field_names: &[String],
     ) -> Option<(PineType, Option<String>, Vec<UdtFieldAccessStep>)> {
+        if let Some(path) = self.imported_user_type_field_path(type_name, qualifier, field_names) {
+            return Some(path);
+        }
         let mut current_type_name = type_name.to_owned();
         let mut final_type = None;
         let mut final_user_type_name = None;
@@ -702,7 +624,7 @@ impl Analyzer {
         Some((final_type?, final_user_type_name, fields))
     }
 
-    fn user_type_field<'a>(
+    pub(crate) fn user_type_field<'a>(
         &'a self,
         type_name: &str,
         field_name: &str,
@@ -745,134 +667,6 @@ impl Analyzer {
     }
 }
 
-fn returned_udf_param_index(
-    body: &FunctionBody,
-    params: &[String],
-    functions: &HashMap<String, FunctionInfo>,
-    depth: usize,
-) -> Option<usize> {
-    if depth > params.len() + functions.len() {
-        return None;
-    }
-    match body {
-        FunctionBody::Expr(expr) => returned_expr_param_index(expr, params, functions, depth),
-        FunctionBody::Block(statements) => {
-            returned_statements_param_index(statements, params, functions, &HashMap::new(), depth)
-        }
-    }
-}
-
-fn returned_statements_param_index(
-    statements: &[Stmt],
-    params: &[String],
-    functions: &HashMap<String, FunctionInfo>,
-    outer_aliases: &HashMap<String, String>,
-    depth: usize,
-) -> Option<usize> {
-    let (last, prefix) = statements.split_last()?;
-    let mut aliases = outer_aliases.clone();
-    for statement in prefix {
-        if let StmtKind::Decl { name, value, .. } = &statement.kind
-            && let Some(source_name) = identifier_name(value)
-        {
-            aliases.insert(name.clone(), source_name.clone());
-        }
-    }
-    match &last.kind {
-        StmtKind::Expr(expr) => {
-            returned_expr_param_index_with_aliases(expr, params, functions, &aliases, depth)
-        }
-        StmtKind::If {
-            then_branch,
-            else_branch,
-            ..
-        } => {
-            let then_index =
-                returned_statements_param_index(then_branch, params, functions, &aliases, depth)?;
-            let else_index =
-                returned_statements_param_index(else_branch, params, functions, &aliases, depth)?;
-            (then_index == else_index).then_some(then_index)
-        }
-        StmtKind::For { body, .. } => {
-            returned_statements_param_index(body, params, functions, &aliases, depth)
-        }
-        _ => None,
-    }
-}
-
-fn returned_expr_param_index(
-    expr: &Expr,
-    params: &[String],
-    functions: &HashMap<String, FunctionInfo>,
-    depth: usize,
-) -> Option<usize> {
-    returned_expr_param_index_with_aliases(expr, params, functions, &HashMap::new(), depth)
-}
-
-fn returned_expr_param_index_with_aliases(
-    expr: &Expr,
-    params: &[String],
-    functions: &HashMap<String, FunctionInfo>,
-    aliases: &HashMap<String, String>,
-    depth: usize,
-) -> Option<usize> {
-    if let Some(returned_name) = identifier_name(expr) {
-        return aliased_param_index(returned_name, params, aliases);
-    }
-    let ExprKind::Call { callee, args } = &expr.kind else {
-        return None;
-    };
-    let callee_name = expr_name(callee)?;
-    let function = functions.get(&callee_name)?;
-    let returned_param_index =
-        returned_udf_param_index(&function.body, &function.params, functions, depth + 1)?;
-    let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
-    let arg_index = arg_indices
-        .iter()
-        .position(|mapped_param_index| *mapped_param_index == returned_param_index)?;
-    returned_expr_param_index_with_aliases(
-        &args[arg_index].value,
-        params,
-        functions,
-        aliases,
-        depth,
-    )
-}
-
-fn aliased_param_index(
-    returned_name: &str,
-    params: &[String],
-    aliases: &HashMap<String, String>,
-) -> Option<usize> {
-    let mut name = returned_name.to_owned();
-    for _ in 0..=aliases.len() {
-        if let Some(index) = params.iter().position(|param| param == &name) {
-            return Some(index);
-        }
-        name = aliases.get(&name)?.clone();
-    }
-    None
-}
-
-fn identifier_name(expr: &Expr) -> Option<&String> {
-    let ExprKind::Identifier(name) = &expr.kind else {
-        return None;
-    };
-    Some(name)
-}
-
-fn is_na_expr(expr: &Expr) -> bool {
-    match &expr.kind {
-        ExprKind::Identifier(name) => name == "na",
-        ExprKind::QualifiedName(parts) if parts.len() == 1 => parts[0] == "na",
-        _ => false,
-    }
-}
-
-fn branch_return_expr(branch: &[Stmt]) -> Option<(&[Stmt], &Expr)> {
-    let (last, prefix) = branch.split_last()?;
-    let StmtKind::Expr(expr) = &last.kind else {
-        return None;
-    };
-    Some((prefix, expr))
-}
+#[cfg(test)]
+#[path = "user_types/tests.rs"]
+mod tests;

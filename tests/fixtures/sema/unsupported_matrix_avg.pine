@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix avg")
+
+average = matrix.avg(na)
+plot(average)

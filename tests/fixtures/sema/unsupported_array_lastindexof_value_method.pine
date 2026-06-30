@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.lastindexof Value method")
+values = array.new_bool(1, true)
+plot(values.lastindexof(close))

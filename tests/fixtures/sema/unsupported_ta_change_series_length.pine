@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.change Series Length")
+plot(ta.change(close, bar_index))

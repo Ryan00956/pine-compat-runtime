@@ -1,0 +1,17 @@
+//@version=5
+indicator("Default switch statement block fixture")
+condition_value = switch
+    close > open => high
+    =>
+        fallback = close
+        fallback + 1
+
+direction = 0
+selector_value = switch direction
+    1 => high
+    =>
+        fallback = low
+        fallback - 1
+
+plot(condition_value)
+plot(selector_value)

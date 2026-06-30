@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentile nearest rank bool method")
+values = array.new_bool()
+plot(values.percentile_nearest_rank(50))

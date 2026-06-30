@@ -1,0 +1,29 @@
+//@version=6
+indicator("Matrix UDF row/col")
+
+namespace_row_sum(values) =>
+    row_values = matrix.row(values, 1)
+    row_values.get(0) + row_values.get(1)
+
+method_row_sum(values) =>
+    row_values = values.row(0)
+    row_values.get(0) + row_values.get(1)
+
+namespace_col_sum(values) =>
+    column_values = matrix.col(values, 1)
+    column_values.get(0) + column_values.get(1)
+
+method_col_sum(values) =>
+    column_values = values.col(0)
+    column_values.get(0) + column_values.get(1)
+
+values = matrix.new<float>(2, 2, close)
+matrix.set(values, 0, 0, close + 1)
+matrix.set(values, 0, 1, close + 2)
+matrix.set(values, 1, 0, close + 3)
+matrix.set(values, 1, 1, close + 4)
+
+plot(namespace_row_sum(values), "namespace_row_sum")
+plot(method_row_sum(values), "method_row_sum")
+plot(namespace_col_sum(values), "namespace_col_sum")
+plot(method_col_sum(values), "method_col_sum")

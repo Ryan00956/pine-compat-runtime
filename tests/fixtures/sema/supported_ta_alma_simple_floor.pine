@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported ta.alma Simple Floor")
+values = array.new_int(1, 1)
+floor_value = array.size(values) > 0
+plot(ta.alma(close, 4, 0.85, 6, floor_value))

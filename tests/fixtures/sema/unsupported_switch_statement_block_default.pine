@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported switch default statement block")
+value = switch
+    close > open => high
+    =>
+        local = close
+plot(value)

@@ -1,0 +1,28 @@
+//@version=5
+indicator("For in index value table")
+
+first = table.new(position.top_right, 1, 1)
+second = table.new(position.bottom_left, 1, 1)
+tables = array.from(first, second)
+
+int index_sum = 0
+int before_count = array.size(table.all)
+for index, value in tables
+    index_sum := index_sum + index
+    table.cell(value, 0, 0, index == 0 ? "first" : "second")
+    if index == 1
+        table.delete(value)
+
+after_loop_count = array.size(table.all)
+first_after = tables.get(0)
+table.delete(first_after)
+after_first_delete_count = array.size(table.all)
+second_after = tables.get(1)
+table.delete(second_after)
+after_second_delete_count = array.size(table.all)
+
+plot(index_sum)
+plot(before_count)
+plot(after_loop_count)
+plot(after_first_delete_count)
+plot(after_second_delete_count)

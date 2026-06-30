@@ -1,0 +1,9 @@
+//@version=5
+indicator("Unsupported if expression alert result")
+
+value = if close > open
+    alert("x")
+else
+    close
+
+plot(close)

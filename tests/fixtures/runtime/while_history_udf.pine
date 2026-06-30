@@ -1,0 +1,11 @@
+//@version=5
+indicator("While history UDF")
+bump(prev, index) =>
+    prev + index
+
+i = 0
+total = close * 0.0
+while i < 2
+    total := total + bump(nz(close[1]), i)
+    i := i + 1
+plot(total)

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported map.values")
+
+values = map.values(na)
+plot(close)

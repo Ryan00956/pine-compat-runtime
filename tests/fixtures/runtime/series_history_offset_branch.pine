@@ -1,0 +1,16 @@
+//@version=5
+indicator("Series history offset branch")
+
+offset = bar_index - bar_index
+if bar_index > 0
+    offset := 1
+else
+    offset := 0
+
+maybe_offset = bar_index == 2 ? na : offset
+previous = close[offset]
+
+plot(previous)
+plot((close + open)[offset])
+plot(close[maybe_offset])
+plot(na(previous[1]) ? 1 : 0)

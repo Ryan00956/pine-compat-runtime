@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix label typed declaration")
+
+matrix<label> values = na
+plot(close)

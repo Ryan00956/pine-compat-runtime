@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported switch statement block scope leak")
+value = switch
+    close > open =>
+        local = high
+        local
+    =>
+        close
+plot(local)
+plot(value)

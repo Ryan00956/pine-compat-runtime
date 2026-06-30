@@ -1,0 +1,13 @@
+//@version=5
+indicator("While expression UDT fixture")
+type Point
+    float x
+    float y
+
+i = 0
+value = while i < 3
+    i := i + 1
+    made = Point.new(close + i, i)
+    made
+
+plot(value.x + value.y)

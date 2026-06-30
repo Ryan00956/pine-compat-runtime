@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported array concat matrix")
+left = array.new<matrix>()
+right = array.new<matrix>()
+result = array.concat(left, right)
+plot(close)

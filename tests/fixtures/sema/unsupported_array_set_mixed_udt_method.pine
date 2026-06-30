@@ -1,0 +1,11 @@
+//@version=5
+indicator("Unsupported array.set Mixed UDT method")
+type Point
+    float x
+
+type Marker
+    float x
+
+values = array.from(Point.new(close))
+values.set(0, Marker.new(high))
+plot(close)

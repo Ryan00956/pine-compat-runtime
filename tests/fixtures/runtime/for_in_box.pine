@@ -1,0 +1,22 @@
+//@version=5
+indicator("For in box array")
+
+first = box.new(bar_index, high, bar_index + 1, low)
+second = box.new(bar_index + 2, high + 1, bar_index + 3, low + 1)
+boxes = array.from(first, second)
+
+int left_sum = 0
+int deleted = 0
+int before_count = array.size(box.all)
+for id in boxes
+    box.set_left(id, box.get_left(id) + 10)
+    left_sum := left_sum + box.get_left(id)
+    box.delete(id)
+    deleted := deleted + 1
+
+first_after = boxes.get(0)
+box.delete(first_after)
+plot(left_sum)
+plot(before_count)
+plot(array.size(box.all))
+plot(deleted)

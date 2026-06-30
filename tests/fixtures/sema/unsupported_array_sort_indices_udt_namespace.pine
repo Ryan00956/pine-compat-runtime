@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported array sort_indices UDT namespace")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+indices = array.sort_indices(values)
+plot(close)

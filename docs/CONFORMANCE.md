@@ -90,13 +90,31 @@ Typed variable declarations are partial: `int`, `float`, `bool`, `string`,
 `table`, and `polyline` declarations, plus scalar `array<int>`,
 `array<float>`, `array<bool>`, `array<string>`, `array<color>`, and
 object-id `array<label>`, `array<line>`, `array<linefill>`,
-`array<polyline>`, `array<box>`, `array<table>`, and `array<chart.point>`
-declarations, are fixture-backed with
+`array<polyline>`, `array<box>`, `array<table>`, `array<chart.point>`, and
+same-local scalar-field UDT `array<T>` declarations, are fixture-backed with
 compatible or `na` initializers and later compatible reassignment. The
 equivalent `type[]` aliases are fixture-backed for the same supported array
-element types, including `var` declarations and the scalar typed-array `varip`
-subset. Bare `array`, UDT, map, matrix, and other typed declarations remain
-unsupported unless a narrower feature row explicitly backs them with fixtures.
+element types, including `var` declarations, the scalar typed-array `varip`
+subset, and explicitly typed same-local scalar-field UDT `varip` declarations
+initialized from `na`, same-UDT constructors, or fixture-backed same-UDT ternary/switch/if/for
+expressions, and `matrix<float>` declarations initialized from compatible
+matrix values or `na`. Bare `array`, non-scalar or imported UDT arrays, UDT
+array `varip`, nested-field UDT `varip`, map, bare matrix declarations,
+non-float matrix declarations, and other typed declarations remain unsupported
+unless a narrower feature row explicitly backs them with fixtures;
+direct sema fixtures keep bare array declarations, including `var`, `na`, and
+initializer-inferred forms, non-scalar UDT array template and alias
+declarations, mismatched UDT array declarations, non-constructor-inferred UDT
+`varip`, nested-field UDT `varip`, UDT array `varip`,
+unsupported map/matrix array element templates, nested array element templates,
+tuple array element templates, strategy-like record array element templates,
+plus bare map, bare matrix, and non-float matrix typed declaration boundaries
+rejected, and the imported-source compatibility
+fixtures keep `array<lib.Point>` and `lib.Point[]` declarations rejected. Parser-level syntax fixtures keep
+non-`chart.point` dotted `array.new<...>()` templates and imported UDT
+`array.new<lib.Point>()` templates rejected, while
+same-local scalar-field UDT `array.new<T>()` expressions are fixture-backed
+outside typed declaration syntax.
 
 ## Strategy Runtime Contract
 
@@ -104,7 +122,7 @@ Phase G marks `strategy` as partial. The executable subset accepts
 `strategy(title, shorttitle, overlay, max_bars_back, initial_capital,
 default_qty_type, default_qty_value, commission_type, commission_value,
 slippage, backtest_fill_limits_assumption, margin_long, margin_short,
-pyramiding, named max_labels_count, named max_boxes_count, named max_lines_count, named max_polylines_count)` where
+pyramiding, close_entries_rule, named max_labels_count, named max_boxes_count, named max_lines_count, named max_polylines_count)` where
 `initial_capital` must be a positive const numeric value when provided. Phase L
 accepts `default_qty_type=strategy.fixed` with positive const numeric
 `default_qty_value`; Strategy Internal Stage 12 accepts
@@ -119,15 +137,45 @@ declaration/IR storage, long-only `strategy.opentrades.capital_held`, and
 long-entry affordability checks for the supported entry subset when explicit
 active `margin_long` is configured. They also enable the first long-only forced
 liquidation subset using `bar.low`, the documented available-funds algorithm,
-and whole-unit truncation. They do not enable short margin behavior,
-margin-specific public schema expansion, symbol precision rounding, or
-`strategy.margin_liquidation_price`. Stage 13 Slice 10 accepts positive integer
+and whole-unit truncation. `strategy.margin_liquidation_price` exposes the
+current long-only margin boundary price for active `margin_long` positions.
+They do not enable short margin behavior, margin-specific public schema
+expansion, or symbol tick rounding for the liquidation price. Stage 13 Slice 10
+accepts positive integer
 const `pyramiding` values for same-direction long `strategy.entry()` market
-entries, with the default staying at `1`; short entries, reversals,
-`strategy.order()`, same-tick price-based entry exceptions beyond the
-fixture-backed long subset, and broader
-multi-entry exit/reporting semantics remain outside the supported subset unless
-fixture-backed. Stage 13 Slice 80 adds WASM public JSON host-parity coverage for
+entries, with the default staying at `1`; `strategy(...,
+close_entries_rule="FIFO")` and `strategy(..., close_entries_rule="ANY")` are
+accepted close-entry allocation settings, stored in strategy settings, and
+fixture-backed for current long-only FIFO close/exit allocation plus id-specific
+`"ANY"` `strategy.close(id)` and `strategy.exit(..., from_entry=id)` allocation,
+including same-entry-id partial exit allocation in stable ledger order.
+Omitted-`from_entry` exits and `strategy.close_all()` stay on the FIFO path.
+Fixture-backed market-long
+`strategy.order(id, strategy.long, qty=...)`, or omitted-qty long orders using
+the configured default quantity, add to existing long exposure without consuming
+the `strategy.entry()` pyramiding limit. Fixture-backed limit-long
+`strategy.order(id, strategy.long, qty=..., limit=price)` uses the supported
+long limit timing model while also bypassing that limit, and omitted long `qty`
+uses the configured default quantity at placement time. Fixture-backed stop-long
+`strategy.order(id, strategy.long, qty=..., stop=price)` uses the supported long
+stop timing model while also bypassing that limit, and omitted long `qty` uses
+the configured default quantity at placement time. Fixture-backed
+stop-limit-long
+`strategy.order(id, strategy.long, qty=..., stop=stop_price, limit=limit_price)`
+uses the supported long stop-limit activation/fill timing model while also
+bypassing that limit, and omitted long `qty` uses the configured default
+quantity at placement time. Reduce-only market
+`strategy.order(id, strategy.short, qty=...)` can reduce existing long exposure
+without opening shorts; while flat, it is a no-op. Omitted `qty` remains
+unsupported for `strategy.short`.
+The supported `strategy.order()` subset accepts `comment`, `alert_message`, and
+`disable_alert` metadata; supported long order fills retain entry comments,
+reduce-only short fills retain exit comments, and supported fill payloads are
+exposed under `strategy.alerts`. Short entries, short exposure, reversals,
+short price-based `strategy.order()` forms, same-tick price-based entry exceptions beyond the
+fixture-backed long subset, and broader multi-entry exit/reporting semantics
+remain outside the supported subset unless fixture-backed. Stage 13 Slice 80
+adds WASM public JSON host-parity coverage for
 the base `pyramiding`, `strategy.close(id)`, and `strategy.close_all()` fixtures.
 Stage 13 Slice 81 adds matching Python binding public JSON host-parity coverage
 for those fixtures. Stage 13 Slice 82 adds WASM public JSON host-parity coverage
@@ -328,6 +376,9 @@ closed-trade loss as a positive value, excluding winning, flat, and current
 open trades. Stage 7 Slice 32 adds `strategy.netprofit_percent`,
 `strategy.grossprofit_percent`, and `strategy.grossloss_percent` by dividing the
 corresponding realized amount by `initial_capital` and multiplying by 100.
+Stage 7 Slice 34 adds `strategy.buy_and_hold_return_percent` as the current
+close's percentage change from the first loaded bar close, returning `na` when
+that baseline is zero or non-finite.
 Stage 7 Slice 24 adds `strategy.avg_trade` as average realized
 profit/loss per closed trade, returning `na` until at least one trade is
 closed. Stage 7 Slice 25 adds `strategy.avg_winning_trade` as average realized
@@ -431,13 +482,14 @@ floating profit for that same supported open position. Stage 7 Slice 12 adds
 `strategy.opentrades.entry_id(trade_num)`, returning the retained entry id for
 that same supported open position. Stage 7 Slice 13 adds
 `strategy.opentrades.commission(trade_num)`, returning `0.0` without configured
-commission and the current open supported entry commission when configured.
+commission and the selected open trade's supported entry commission when
+configured.
 Stage 7 Slice 14
 adds `strategy.opentrades.max_runup(trade_num)`, returning the largest
-high-based favorable excursion seen so far for that current supported open
+high-based favorable excursion seen so far for the selected open
 position. Stage 7 Slice 15 adds
 `strategy.opentrades.max_drawdown(trade_num)`, returning the largest low-based
-adverse excursion seen so far for that current supported open position. Stage
+adverse excursion seen so far for the selected open trade. Stage
 7 Slice 16 adds `strategy.opentrades.entry_comment(trade_num)`, returning the
 stored entry comment for the current commented fixture-backed open trade without
 expanding public runtime JSON. Stage 7 Slice 35 adds
@@ -450,10 +502,12 @@ script statements, apply the documented available-funds and four-times-cover
 algorithm with temporary whole-unit truncation, and emit only existing
 order/trade/position/equity output fields. Stage 7 Slice 15 adds
 `strategy.closedtrades.max_runup(trade_num)`, returning the
-largest high-based favorable excursion retained for the closed trade quantity.
+largest high-based favorable excursion retained for the selected closed trade
+quantity.
 Stage 7 Slice 16 adds `strategy.closedtrades.max_drawdown(trade_num)`,
-returning the largest low-based adverse excursion retained for the closed trade
-quantity. Stage 7 Slice 17 adds cash-per-contract commission accounting for
+returning the largest low-based adverse excursion retained for the selected
+closed trade quantity. The current long-only closed-trade field subset reads
+fixture-backed pyramided closed trades by zero-based index. Stage 7 Slice 17 adds cash-per-contract commission accounting for
 supported entries and exits without adding public schema fields. Stage 7 Slice
 18 adds cash-per-order commission accounting under the same public contract.
 Stage 7 Slice 19 adds fixed-tick slippage for supported long entry, close, and
@@ -614,15 +668,32 @@ active-entry relative bracket design gate is recorded in
 Phase J adds a host-neutral source graph scaffold and a narrow executable
 import subset. `tests/fixtures/conformance.tsv` marks `import` as `partial`
 only for host-provided exact-key imports with aliases, exported const
-expressions, and pure exported functions. Library declarations, imported UDTs,
+expressions, pure exported functions, scalar-field imported UDT constructors
+with direct field reads, ordinary same-imported-UDT reassignment, and
+scalar-field imported UDT typed declarations initialized or reassigned from the
+same imported identity, same-imported-identity ternary, `if`, `switch`,
+`while`, and `for` expression results, plus direct imported UDT UDF parameter
+passthrough returns and nested passthrough chains, and scalar-field mutation in
+top-level, branch, `for`-loop, `while`-loop, and UDF-local statement contexts.
+Deferred-field imported UDT constructors remain rejected with targeted
+diagnostics; private library UDTs remain non-exported symbols, local/imported
+structural lookalikes remain distinct assignment identities, and duplicate
+exported UDT names, UDT/const name collisions, or UDT/function name collisions
+are rejected through the shared export table. Library declarations, broader
+imported UDT flow, imported UDT history references, imported UDT
+parameter/global field mutation inside UDFs, nested imported field mutation,
 imported methods, re-exports, remote lookup, and side-effecting exported
 functions remain outside the supported matrix.
 
 Local user-defined types are partial. The supported subset is limited to
 top-level `type` declarations with scalar int/float/bool/string/color fields,
 `Type.new(...)` construction, field reads on local values, ordinary variables,
-local for-expression constructor results, `var` persistence, and UDF parameter
-passthrough/returns through positional or named arguments with direct returns,
+local for-expression constructor results, `var` persistence, explicitly typed
+same-local scalar-field UDT `varip` values initialized from `na`, same-UDT
+constructors, or fixture-backed same-UDT ternary expressions, plus
+direct-constructor-inferred same-local scalar-field UDT `varip` values with
+realtime intrabar persistence, and UDF parameter passthrough/returns through
+positional or named arguments with direct returns,
 block-local aliases, or nested passthrough calls, plus UDF construction/returns,
 directly, through nested pure
 constructor-helper UDF calls, or through same-local-UDT ternary, switch, final
@@ -633,9 +704,35 @@ those fields, inferred scalar parameters, or block-local scalar aliases of
 those scalar parameters using positional or named constructor field arguments.
 Local scalar fields can be reassigned outside method bodies, including in
 branch, `for` loop, `while` loop, and UDF-local variables. Global or
-parameter field mutation inside UDFs, field mutation inside methods, `varip`,
-history references on UDT values, UDT fields, UDT arrays, and imported UDTs
-remain outside the supported matrix.
+parameter field mutation inside UDFs, field mutation inside methods,
+non-constructor-inferred UDT `varip`, nested-field UDT `varip`, UDT array `varip`,
+history references on UDT values, UDT fields, UDT array operations beyond
+same-local scalar-field `array.new<T>()` construction, `array.from`
+construction with size and `array.get` field reads plus `array.set`
+replacement, `array.push` append, and `array.pop`
+returns, `array.shift` returns, `array.first` reads, and `array.last` reads,
+plus `array.clear` reset/reuse, `array.copy` independence, `array.concat`
+same-UDT append, `array.slice` parent-window read/write mirroring, and
+`array.reverse` reordering, `array.fill` same-UDT replacement, UDT array
+`array.join` positional stringification, local field mutation of UDT array
+values with explicit same-UDT `array.set`/`set()` writeback, local pure UDF
+calls that consume UDT array values, local pure method calls on UDT array values
+after binding them to local variables, UDT array
+`array.sort`/`array.sort_indices` by `int`, `float`, or `string` `sort_field`,
+UDT array id history snapshots, ordinary `var` realtime rollback,
+scalar-field imported UDT constructors with direct field reads, and ordinary
+same-imported-UDT reassignment, scalar-field imported UDT typed declarations
+initialized or reassigned from the same imported identity, and imported UDT
+ternary, `if`, `switch`, `while`, or `for` expression results whose branches resolve
+to the same imported identity. Direct and nested imported UDT UDF parameter passthrough
+returns are also fixture-backed, as are direct or nested imported UDT
+constructor-return UDFs. Ordinary imported UDT `var` declarations and
+scalar-field imported UDT `varip` declarations are fixture-backed, as is
+scalar-field imported UDT mutation in top-level, branch, `for`-loop, and
+`while`-loop statement contexts plus UDF-local variable mutation in pure
+functions. Imported UDT arrays, imported methods, and broader imported UDT flow
+remain outside the
+supported matrix.
 User-defined methods are partial for pure methods on local UDT receivers with
 scalar or local UDT parameters and direct UDT passthrough returns, block-local
 receiver or local UDT parameter alias passthrough returns, final if/else or
@@ -652,13 +749,26 @@ is passed as the first internal parameter. Returned receiver values,
 block-local receiver aliases, final if/else or final for local UDT aliases,
 local UDT parameter values, block-local local UDT parameter aliases, or
 constructed local UDT values may be assigned and field-read at the callsite.
+Same-local scalar-field UDT values read from UDT arrays may also be passed to
+local pure UDFs, including passthrough and constructor-return UDFs.
+Same-local scalar-field UDT values read from UDT arrays may also be bound to
+local variables and used as receivers for these local pure methods.
+Same-local scalar-field UDT array elements may also be iterated by
+statement-form `for...in` loops as value-copy loop locals.
 Side effects,
 recursion, unknown receiver types, imported methods, mismatched UDT parameter
 identity, and unsupported parameter families remain outside the supported
 matrix.
-Phase J Slice 9 deliberately keeps imported UDT identity and imported methods
-as a maintenance tail: exported constants/functions are source-graph scoped,
-but UDT type identity and method tables are local to the root source for now.
+The imported UDT subset is intentionally narrow: scalar-field constructors,
+direct field reads, ordinary same-imported-UDT reassignment, explicit
+scalar-field typed declarations, direct UDF parameter passthrough returns
+including nested passthrough chains, direct or nested constructor-return UDFs,
+same-imported-identity ternary/`if`/`switch`/`while`/`for` results, and
+scalar-field mutation in top-level, branch, `for`-loop, `while`-loop, and
+UDF-local statement contexts carry source-scoped identity through semantic
+analysis and HIR, while imported methods, collections, history, nested field
+mutation, UDF parameter/global field side effects, method field mutation, and
+broader imported UDT value flow remain a maintenance tail.
 The closed Phase J boundary and maintenance tails are summarized in
 `docs/PHASE_J_AUDIT.md`.
 
@@ -712,8 +822,10 @@ while-loop control-flow cloning coverage, and the fixture-backed `label.get_x`,
 `label.get_y`, and
 `label.get_text` getters over the latest existing label snapshot, including
 ordinary and independent while-loop control-flow read coverage for all three
-getters, plus `label.all` existing-label id reads, including ordinary and
-independent while-loop control-flow read coverage, with default 50/named 1-500
+getters, statement-form `array<label>` `for...in` shallow-id iteration with
+getter/setter calls and setter visibility through the source array id, plus
+`label.all` existing-label id reads, including ordinary and independent
+while-loop control-flow read coverage, with default 50/named 1-500
 `max_labels_count` oldest-active label eviction before new creation. The
 executable line subset covers `line.new` x1/y1/x2/y2 creation with optional
 xloc, extend, color, style, and width initialization for existing host-neutral
@@ -729,7 +841,9 @@ and independent while-loop control-flow mutation coverage, `line.delete`
 deletion snapshots, including ordinary and independent while-loop control-flow
 deletion coverage,
 fixture-backed cloning with `line.copy`, including ordinary and independent
-while-loop control-flow cloning coverage, `line.all` reads from ordinary and
+while-loop control-flow cloning coverage, statement-form `array<line>`
+`for...in` shallow-id iteration with getter/setter calls and setter visibility
+through the source array id, `line.all` reads from ordinary and
 independent while-loop control-flow blocks, fixture-backed `line.get_x1`,
 `line.get_y1`, `line.get_x2`, and `line.get_y2` reads from ordinary and
 independent while-loop control-flow blocks, and fixture-backed
@@ -956,8 +1070,10 @@ runtime-owned linefill ids over supported line ids, emit sparse color snapshots,
 mutate colors, return referenced line ids through `linefill.get_line1` and
 `linefill.get_line2`, and replace the previous linefill for the same line pair.
 `linefill.delete` appends deletion snapshots, including while-loop
-control-flow deletes, and `linefill.all` returns currently existing linefill ids
-in creation order while omitting replaced or deleted linefills.
+control-flow deletes, statement-form `array<linefill>` `for...in` shallow-id
+iteration supports getter/setter calls with setter visibility through linefill
+snapshots and source array ids, and `linefill.all` returns currently existing
+linefill ids in creation order while omitting replaced or deleted linefills.
 `array.new_linefill` and `array.from` support linefill id arrays for generic
 object-array storage, mutation, reads, and search; numeric, truth, sorting, and
 join helpers still reject linefill arrays with type diagnostics. `chart.point`
@@ -967,6 +1083,37 @@ construct/copy point values, and top-level `time`, `index`, and `price` field
 reads and mutation are fixture-backed. `array.new<chart.point>()` can construct
 chart-point arrays, `array.from(chart.point, ...)` can infer chart-point arrays,
 and the generic storage/read/mutation/search subset can carry point values.
+Label, line, linefill, box, and table arrays may also be iterated by statement-form
+`for...in` as shallow-id loop locals with getter/setter, cell-write, or
+lifecycle calls and visibility through the source array id, linefill snapshots,
+or `box.all`/`table.all` deletion state. Polyline arrays may also be iterated by
+statement-form `for...in` as shallow-id loop locals with deletion visible
+through `polyline.all`. Chart-point arrays may also be iterated by
+statement-form value-only or index/value `for...in` as value-copy loop locals
+with field reads and local field mutation that does not write back to the source
+slot.
+`array.new<T>()` and `array.from` can construct same-local scalar-field UDT
+arrays for value-only and index/value `for...in` value-copy iteration,
+`array.size`, method `size()`, namespace `array.get`, method `get()` field
+reads, and
+same-UDT `array.set`/`set()` replacement, `array.push`/`push()` append, and
+`array.pop`/`pop()` returns plus `array.shift`/`shift()` returns,
+`array.first`/`first()` and `array.last`/`last()` reads,
+including direct `array.new<T>()` empty-array `na` returns for first, last,
+pop, and shift,
+`array.clear`/`clear()` reset/reuse, `array.copy`/`copy()` independence,
+`array.concat`/`concat()` same-UDT append,
+`array.slice`/`slice()` parent-window read/write mirroring, and
+`array.reverse`/`reverse()` reordering, plus `array.insert`/`insert()`
+same-UDT insertion, `array.remove`/`remove()` returns, and
+`array.unshift`/`unshift()` same-UDT prepend; typed `array<T>`/`T[]`
+declarations are supported for the same local scalar-field UDT array subset.
+Same-local scalar-field UDT array id history snapshots are fixture-backed and
+clone the committed array before historical reads. Mixed UDT values, imported
+UDT values inferred through `array.from`, nested-field UDT values, UDT value
+history, UDT array `varip`, and nested-field UDT `varip` remain unsupported.
+Ordinary `var` UDT arrays roll back their backing store during realtime forming
+updates.
 `polyline.new` can consume those arrays and copy their values into host-neutral
 runtime snapshots, while `polyline.delete` and `polyline.all` cover the
 historical and forming-bar rollback lifecycle subset. Omitted `line_color`
@@ -984,6 +1131,35 @@ id arrays are fixture-backed through
 `array.new_polyline`, official `array.new<polyline>` template syntax, typed
 `array<polyline>`/`polyline[]` declarations, `array.from(polyline, ...)`,
 the generic object-array helper subset, and array/slice history snapshots.
+UDT arrays remain outside generic array mutation semantics until broader
+copy/deep-copy rules are designed; the current UDT array subset is limited to
+same-local scalar-field `array.new<T>()` and
+`array.from(...)` construction with `array.size`/`size()` reads,
+`array.get`/`get()` field reads,
+same-UDT `array.set`/`set()` replacement, and same-UDT `array.push`/`push()`
+append, plus `array.pop`/`pop()` and `array.shift`/`shift()` returns and
+`array.first`/`first()` and `array.last`/`last()` reads, plus
+`array.clear`/`clear()` reset/reuse, `array.copy`/`copy()` independence, and
+`array.concat`/`concat()` same-UDT append, `array.slice`/`slice()`
+parent-window read/write mirroring, `array.reverse`/`reverse()` reordering, and
+`array.insert`/`insert()` same-UDT insertion, plus `array.remove`/`remove()`
+returns, `array.unshift`/`unshift()` same-UDT prepend, `array.sort`/`sort()`
+by an `int`, `float`, or `string` `sort_field`, `array.sort_indices`/
+`sort_indices()` by the same `sort_field` subset returning original indexes
+without mutating the source array, same-local scalar-field UDT `array<T>` and
+`T[]` typed declarations, same-local scalar-field UDT `array.includes`,
+`array.indexof`, and `array.lastindexof` structural equality search,
+`array.fill`/`fill()` same-UDT replacement over valid half-open ranges,
+`array.join`/`join()` positional UDT stringification,
+local field mutation of UDT values read from arrays with explicit same-UDT
+`array.set`/`set()` writeback, while direct chained slot field mutation such as
+`points.get(0).x := value` remains unsupported at the parser boundary,
+local pure UDF calls that consume UDT values read from arrays,
+local pure method calls on UDT values read from arrays into local variables,
+same-local scalar-field UDT array id history snapshots including dynamic na-offset predicate output, same-local scalar-field
+UDT array statement-form `for...in` value-copy loop variables with field reads
+and local field mutation that does not write back to the source slot, and
+ordinary `var` realtime rollback.
 
 Phase H reserves `alerts` as a top-level runtime key in `schemaVersion: 3`.
 The first supported alert subsets are `alertcondition(condition, title,
@@ -1014,11 +1190,113 @@ The official Pine Logs functions `log.info()`, `log.warning()`, and
 output contract, so the analyzer reports them as explicit unsupported `log.*`
 calls instead of treating them as unknown functions.
 
-Pine map and matrix collections remain unsupported. `map.*` requires a
-dedicated key/value storage model, and `matrix.*` requires a dedicated
-two-dimensional storage model, so both namespaces are reported as explicit
-unsupported collection families until their semantics are designed and
-fixture-backed.
+Pine map collections remain unsupported. `map.*`, including `map.new<K, V>`
+templates with dotted type names, map access helpers such as `map.get`,
+`map.contains`, and `map.size`, mutation helpers such as `map.remove`,
+`map.clear`, and `map.put_all`, copy helpers such as `map.copy`, and
+array-returning helpers such as `map.keys` and `map.values`, requires a
+dedicated key/value storage model.
+
+Pine matrix collections are partial. Runtime-owned `matrix<float>` ids support
+`matrix.new<float>`, `matrix.get`, `matrix.set`, `matrix.fill`, `matrix.copy`,
+`matrix.reshape`, `values.reshape(rows, columns)`, `matrix.add_row`,
+`values.add_row(row, array_id)`, `matrix.add_col`,
+`values.add_col(column, array_id)`, `matrix.remove_row`,
+`values.remove_row(row)`, `matrix.remove_col`, `values.remove_col(column)`,
+`matrix.rows`, `values.rows()`, `matrix.columns`, `values.columns()`,
+`matrix.sum`, `values.sum()`, `matrix.avg`, `values.avg()`, `matrix.row`,
+`values.row(row)`, `matrix.col`, and `values.col(column)` with rectangular storage,
+namespace and method-call reshape preserving element order and element count,
+namespace and method-call reshape element-count mismatch errors,
+namespace and method-call row/column insertion from `array<float>` snapshots,
+namespace and method-call row/column deletion,
+namespace and method-call matrix sums and averages that ignore `na` cells and
+return `na` for empty or all-`na` matrices,
+numeric/na cells,
+int-to-float coercion, zero row/column dimensions, shape reads, shape reads
+through ordinary for and while loops, read-only UDF
+cell/shape reads and row/column extraction reads, UDF-returned independent
+copies, loop-local independent copies, while-loop independent copies, while-expression fresh/alias/zero/break/continue/history matrix results including dynamic na-offset predicates, set/get/fill/reshape mutation,
+branch/loop set/fill/reshape mutation ordering, while-loop set/fill/reshape mutation ordering, add-row/add-column insertion ordering, row/column deletion ordering, assignment/reference aliasing, explicit
+independent copies, ordinary `var`
+persistence, committed matrix history snapshots, shape snapshots, and
+dynamic-offset matrix snapshots that return fresh copies plus na-offset matrix predicate output,
+realtime forming-bar rollback for matrix mutation and shape changes, runtime profile slot/cell
+counters, namespace and method-call row/column extraction returning independent
+`array<float>` snapshots, row/column extraction reads through ordinary branches, for loops,
+and while loops,
+and bounds errors, including row/column `matrix.get` index
+bounds, method-alias `values.get(row, column)` row/column index bounds,
+namespace `matrix.row`/`matrix.col` row/column extraction index bounds,
+method-alias `values.row(row)`/`values.col(column)` row/column extraction index bounds,
+namespace `matrix.row`/`matrix.col` negative row/column extraction index bounds,
+method-alias `values.row(row)`/`values.col(column)` negative row/column extraction index bounds,
+namespace `matrix.row`/`matrix.col` `na` row/column extraction index bounds,
+method-alias `values.row(row)`/`values.col(column)` `na` row/column extraction index bounds,
+negative row/column `matrix.get` index bounds, method-alias
+`values.get(row, column)` negative row/column index bounds, `matrix.set` row/column bounds, negative
+`matrix.set` row/column bounds, method-alias
+`values.set(row, column, value)` row/column bounds, method-alias
+`values.set(row, column, value)` negative row/column bounds, `na` row/column indexes for matrix cell reads
+and writes, method-alias `values.get(row, column)` `na` row/column indexes,
+method-alias `values.set(row, column, value)` `na` row/column indexes, negative
+namespace `matrix.reshape` row/column counts, negative method-alias
+`values.reshape(rows, columns)` row/column counts, `na` namespace `matrix.reshape`
+row/column counts, `na` method-alias `values.reshape(rows, columns)` row/column
+counts, negative and `na` constructor
+dimensions, and the matrix
+cell-budget guard, plus `matrix.add_row` insertion row bounds and array-size
+mismatch errors, `matrix.add_col` insertion column bounds and array-size
+mismatch errors, `matrix.remove_row` row bounds and `na` row-index errors, and
+`matrix.remove_col` column bounds and `na` column-index errors.
+Matrix get/copy helpers including
+`values.get(row, column)` and `values.copy()`, shape readers including
+`values.rows()`/`values.columns()`, sum/average readers including
+`values.sum()`/`values.avg()`,
+row/column extraction helpers including
+`values.row(row)`/`values.col(column)`, and mutating helpers including
+`values.set(row, column, value)`, `values.fill(value)`,
+`values.reshape(rows, columns)`, `values.add_row(row, array_id)`, and
+`values.add_col(column, array_id)`, `values.remove_row(row)`, and
+`values.remove_col(column)` also reject
+non-matrix receivers at semantic
+analysis time. Non-numeric `matrix.new<float>`
+initial values,
+non-int namespace `matrix.row`/`matrix.col` row/column indexes,
+non-int method-alias `values.row(row)`/`values.col(column)` row/column indexes,
+non-int namespace/method `matrix.add_row` row indexes, non-int namespace/method `matrix.add_col` column indexes, non-int namespace/method `matrix.remove_row` row indexes, non-int namespace/method `matrix.remove_col` column indexes, non-`array<float>`
+namespace/method `matrix.add_row` row data, non-`array<float>` namespace/method `matrix.add_col` column data,
+`matrix.set`/`matrix.fill` values, and method values for
+`values.set(row, column, value)` and `values.fill(value)` are rejected at
+semantic analysis time. Non-int `matrix.get` row/column indexes are also
+rejected at semantic analysis time, including the `values.get(row, column)`
+method alias row/column indexes. Non-int namespace `matrix.set` row/column
+indexes and `values.set(row, column, value)` method alias row/column indexes are
+rejected at semantic analysis time. Non-int namespace `matrix.reshape`
+row/column counts and method-alias `values.reshape(rows, columns)` row/column
+counts are rejected at semantic analysis time.
+`matrix.set`, `matrix.fill`, `matrix.reshape`, `matrix.add_row`,
+`matrix.add_col`, `matrix.remove_row`, and `matrix.remove_col`,
+including
+`values.set(row, column, value)`, `values.fill(value)`,
+`values.reshape(rows, columns)`, `values.add_row(row, array_id)`,
+`values.add_col(column, array_id)`, `values.remove_row(row)`, and
+`values.remove_col(column)`, remain unsupported inside user-defined functions.
+Non-float `matrix.new<T>` templates,
+deferred element templates such as `matrix.new<label>`, method syntax beyond
+`values.fill(value)`, `values.get(row, column)`,
+`values.set(row, column, value)`, `values.copy()`,
+`values.reshape(rows, columns)`, `values.rows()`, `values.columns()`,
+`values.sum()`, `values.avg()`, `values.row(row)`, `values.col(column)`, `values.add_row(row, array_id)`, and
+`values.add_col(column, array_id)`, `values.remove_row(row)`, and
+`values.remove_col(column)`, non-float, deferred, or bare matrix typed
+declarations, `varip`, and for-in iteration remain unsupported until their
+semantics are designed and fixture-backed.
+`matrix<float>` typed declarations are fixture-backed. Matrix history is
+fixture-backed for committed, shape, and dynamic-offset `matrix<float>`
+snapshots that return fresh copies.
+Matrix `varip` declarations have dedicated negative fixture coverage and remain
+outside the scalar/array/UDT `varip` handoff subset.
 
 Runtime `schemaVersion: 4` added strategy order-fill alert payloads under
 `strategy.alerts` for supported strategy fills. Runtime `schemaVersion: 5` adds
@@ -1088,9 +1366,10 @@ Examples:
 - unsupported `request.security` variants outside the same-context identity
   scalar/tuple-literal subset and same-or-higher-timeframe provider
   scalar/tuple-literal subset
-- unsupported strategy declaration contexts and strategy order functions such as
-  `strategy.order`; `strategy.exit` same-side pairs, custom OCA parameters, 3+
-  triggers, invalid trailing combinations, and arbitrary future binding for
+- unsupported strategy declaration contexts and strategy order variants outside
+  the fixture-backed `strategy.order` subset; `strategy.exit` same-side pairs,
+  custom OCA parameters, 3+ triggers, invalid trailing combinations, and
+  arbitrary future binding for
   unmatched `from_entry` ids remain fixture-backed unsupported cases.
   Stop-only `strategy.exit(id, from_entry, stop=price)`, limit-only
   `strategy.exit(id, from_entry, limit=price)`, profit-only
@@ -1144,11 +1423,12 @@ Examples:
 - unsupported label and line methods
 - unsupported import variants outside the host-provided alias/exported
   const/pure-function subset
-- unsupported `varip` forms such as drawing ids, tuples, and value families
-  outside the scalar and scalar typed-array subset
+- unsupported `varip` forms such as drawing ids, drawing-id typed arrays,
+  chart-point typed arrays, tuples, and value families outside the scalar and
+  scalar typed-array subset
 - non-integer or negative history offsets
-- unsupported function side effects, including drawing, alert, and strategy
-  order side effects
+- unsupported function side effects, including drawing, alert, strategy order,
+  and UDT parameter field mutation side effects
 
 Expected result:
 
@@ -1205,7 +1485,7 @@ request.security     partial      same-context identity scalar-expression subset
 alertcondition       partial      bool-compatible condition plus const-string title/message runtime events, with OHLCV plus ticker/interval/exchange/time placeholders in alertcondition messages only
 alert                partial      string-compatible dynamic message runtime events when execution reaches the call, with const-string frequency subset only
 log.*                unsupported  Pine Logs output functions require a host-owned log pane/output contract and are not implemented
-strategy             partial      declaration plus strategy-mode runtime result; positive const numeric initial_capital, fixed, cash, and percent-of-equity default_qty subsets, supported cash-per-contract, cash-per-order, and percent commission modes, finite non-negative integer slippage ticks, and finite non-negative integer limit-verification ticks only
+strategy             partial      declaration plus strategy-mode runtime result; positive const numeric initial_capital, fixed, cash, and percent-of-equity default_qty subsets, supported cash-per-contract, cash-per-order, and percent commission modes, finite non-negative integer slippage ticks, finite non-negative integer limit-verification ticks, explicit close_entries_rule="FIFO" default allocation, and fixture-backed close_entries_rule="ANY" id-specific long-only close/exit allocation including same-entry-id partial exit allocation
 strategy.entry       partial      long market entry filled at next historical bar open plus long limit entry filled at limit price on a later historical bar when low <= limit or below the configured verified limit threshold, long stop entry filled at stop price on a later historical bar when high >= stop, and long stop-limit entry activated on a later historical bar when high >= stop then filled at limit price on a subsequent historical bar when low <= limit or below the configured verified limit threshold; configured slippage worsens long entry fill prices after trigger selection; explicit positive qty, fixed default qty, cash default qty resolved as cash/current close, or percent-of-equity default qty resolved at placement time from current supported equity and close; explicit active margin_long rejects fills whose required margin exceeds simulated equity at the actual fill price; same-direction long market entries honor the configured positive integer pyramiding limit, while multiple long limit, stop, or stop-limit entries triggered on the same historical fill pass can exceed that limit when they are all eligible in that pass; comment, alert_message, and disable_alert metadata syntax is semantically accepted and stored internally on pending and filled entries; supported fill payloads are exposed in `strategy.alerts`; explicit Python, CLI, and WASM host helpers can render `{{strategy.order.alert_message}}` for selected public fill events, while external alert delivery remains unsupported; same-tick exceptions beyond the fixture-backed long price-based entry subset remain unsupported; no public pending-order output
 strategy.close       partial      full long-position close, fixed-qty partial close, or qty_percent partial close of the matching current long entry id at current bar close; fixed qty and qty_percent must be finite and positive; qty_percent resolves against the current matching position size; qty wins when both quantity forms are supplied; oversized quantities clamp to the current matching position size, keep remaining long position state open at the same average price, preserve the public strategy JSON shape without close order events, and cancel matching pending exits only when the close fully flattens the entry; configured slippage worsens the long close fill price; flat, wrong-entry, or repeated closes are no-op; comment, alert_message, and disable_alert syntax is accepted and stored internally on closed-trade metrics; supported fill payloads are exposed in `strategy.alerts`; explicit Python, CLI, and WASM host helpers can render `{{strategy.order.alert_message}}` for selected public fill events, while external alert delivery remains unsupported; immediately, partial strategy.close_all, and multi-entry close allocation remain unsupported
 strategy.close_all   partial      full close of the current supported long position at current bar close; flat or already-closed calls are no-op; closed trade output uses the current entry id; comment, alert_message, and disable_alert syntax is accepted and stored internally on closed-trade metrics; supported fill payloads are exposed in `strategy.alerts`; explicit Python, CLI, and WASM host helpers can render `{{strategy.order.alert_message}}` for selected public fill events, while external alert delivery remains unsupported
@@ -1224,6 +1504,7 @@ strategy.grossprofit partial      cumulative positive realized closed-trade prof
 strategy.grossprofit_percent partial cumulative positive realized closed-trade profit as a percentage of initial_capital, excluding losing, flat, and current open trades, in strategy-mode scripts only
 strategy.grossloss partial        cumulative realized closed-trade loss read-only series as a positive value, excluding winning, flat, and current open trades, in strategy-mode scripts only
 strategy.grossloss_percent partial cumulative realized closed-trade loss as a positive percentage of initial_capital, excluding winning, flat, and current open trades, in strategy-mode scripts only
+strategy.buy_and_hold_return_percent partial close-based buy-and-hold percentage return from the first loaded bar close, returning na when the first close is zero or non-finite, in strategy-mode scripts only
 strategy.avg_trade partial        average realized profit/loss per closed trade read-only series, na before the first closed trade and excluding current open trades, in strategy-mode scripts only
 strategy.avg_trade_percent partial average realized per-trade profit/loss percentage read-only series, using each closed trade entry value as denominator, na before the first closed trade and excluding current open trades, in strategy-mode scripts only
 strategy.avg_winning_trade partial average realized profit among winning closed trades only, na before the first winning closed trade and excluding losing, flat, and current open trades, in strategy-mode scripts only
@@ -1236,34 +1517,35 @@ strategy.max_drawdown partial     maximum intrabar equity drawdown amount read-o
 strategy.max_drawdown_percent partial maximum intrabar equity drawdown percentage read-only series over the current supported long-only trading interval, dividing the supported drawdown amount by entry price times current supported position quantity and multiplying by 100
 strategy.equity     partial       cash plus current market value read-only series in strategy-mode scripts only; without configured commission or slippage this matches initial_capital plus realized net profit plus current open profit, and with supported commission/slippage it reflects entry commission debits on open positions and slippage-adjusted fill prices
 strategy.closedtrades partial     closed-trade count read-only series int in strategy-mode scripts only; immediate after strategy.close or strategy.close_all and next-bar visible after pending strategy.exit fills
-strategy.closedtrades.* partial   closed-trade entry_price, entry_comment, entry_id, exit_price, exit_comment, exit_id, entry_bar_index, exit_bar_index, entry_time, exit_time, commission, size, profit, max_runup, and max_drawdown field functions in strategy-mode scripts only; entry_comment returns the retained entry comment when present; entry_id returns the retained entry id; exit_comment returns the retained close or selected exit comment when present; exit_id returns the retained close or exit id; commission is 0.0 without configured commission or supported entry-plus-exit commission when configured; max_runup returns the largest high-based favorable excursion retained for the closed trade quantity; max_drawdown returns the largest low-based adverse excursion retained for the closed trade quantity; trade_num is zero-based integer-only and invalid, negative, non-integer, or out-of-range indexes return na; no public runtime schema expansion
-strategy.closedtrades.max_runup partial closed-trade max runup field function in strategy-mode scripts only; uses the largest high-based favorable excursion retained for the closed trade quantity; no public runtime schema expansion
-strategy.closedtrades.max_drawdown partial closed-trade max drawdown field function in strategy-mode scripts only; uses the largest low-based adverse excursion retained for the closed trade quantity; no public runtime schema expansion
-strategy.closedtrades.entry_comment partial closed-trade entry comment field function in strategy-mode scripts only; returns the retained entry comment when present; no public runtime schema expansion
-strategy.closedtrades.exit_comment partial closed-trade exit comment field function in strategy-mode scripts only; returns the retained close or selected exit comment when present; no public runtime schema expansion
+strategy.closedtrades.* partial   closed-trade entry_price, entry_comment, entry_id, exit_price, exit_comment, exit_id, entry_bar_index, exit_bar_index, entry_time, exit_time, commission, size, profit, max_runup, and max_drawdown field functions in strategy-mode scripts only; entry_comment returns the retained entry comment when present; entry_id returns the retained entry id; exit_comment returns the retained close or selected exit comment when present; exit_id returns the retained close or exit id; commission is 0.0 without configured commission or supported entry-plus-exit commission when configured; max_runup returns the largest high-based favorable excursion retained for the selected closed trade quantity; max_drawdown returns the largest low-based adverse excursion retained for the selected closed trade quantity; trade_num is zero-based integer-only and can read fixture-backed pyramided closed trades by index; invalid, negative, non-integer, or out-of-range indexes return na; no public runtime schema expansion
+strategy.closedtrades.max_runup partial closed-trade max runup field function in strategy-mode scripts only; can read fixture-backed pyramided closed trades by index; uses the largest high-based favorable excursion retained for the selected closed trade quantity; no public runtime schema expansion
+strategy.closedtrades.max_drawdown partial closed-trade max drawdown field function in strategy-mode scripts only; can read fixture-backed pyramided closed trades by index; uses the largest low-based adverse excursion retained for the selected closed trade quantity; no public runtime schema expansion
+strategy.closedtrades.entry_comment partial closed-trade entry comment field function in strategy-mode scripts only; returns the retained entry comment when present; can read fixture-backed commented pyramided closed trades by index; no public runtime schema expansion
+strategy.closedtrades.exit_comment partial closed-trade exit comment field function in strategy-mode scripts only; returns the retained close or selected exit comment when present; can read fixture-backed commented pyramided closed trades by index; no public runtime schema expansion
 strategy.wintrades partial        closed winning-trade count read-only series int in strategy-mode scripts only; counts closed trades with positive realized profit
 strategy.losstrades partial       closed losing-trade count read-only series int in strategy-mode scripts only; counts closed trades with negative realized profit
 strategy.eventrades partial       closed even-trade count read-only series int in strategy-mode scripts only; counts closed trades with zero realized profit
-strategy.opentrades partial       open-trade count read-only series int in strategy-mode scripts only; 1 for the current supported long position and 0 when flat
-strategy.opentrades.* partial     open-trade field function subset limited to entry_price, entry_comment, entry_id, entry_bar_index, entry_time, size, profit, commission, max_runup, and max_drawdown for the current supported long position, plus the capital_held variable; entry_comment returns the retained entry comment when present; trade_num must be 0 and invalid or flat-state function reads return na; commission returns 0.0 without configured commission or current open supported entry commission when configured; max_runup returns the largest high-based favorable excursion seen so far; max_drawdown returns the largest low-based adverse excursion seen so far; capital_held returns na without active margin, 0.0 while flat with active margin, and current open long market value times margin_long / 100 with explicit active margin_long; no public runtime schema expansion
+strategy.opentrades partial       open-trade count read-only series int in strategy-mode scripts only; returns 0 when flat, 1 for the default single-open-trade subset, and the fixture-backed open-trade ledger count for supported pyramiding entries
+strategy.opentrades.* partial     open-trade field function subset limited to entry_price, entry_comment, entry_id, entry_bar_index, entry_time, size, profit, commission, max_runup, and max_drawdown over the current long-only open-trade ledger, plus the capital_held variable; entry_comment returns the retained entry comment when present; trade_num is zero-based and can read fixture-backed pyramided long open trades by index; invalid, negative, non-integer, out-of-range, or flat-state function reads return na; commission returns 0.0 without configured commission or current open supported entry commission when configured; max_runup returns the largest high-based favorable excursion seen so far for the selected open trade; max_drawdown returns the largest low-based adverse excursion seen so far for the selected open trade; capital_held returns na without active margin, 0.0 while flat with active margin, and current open long market value times margin_long / 100 with explicit active margin_long; no public runtime schema expansion
 strategy.opentrades.capital_held partial open-trade capital held variable in strategy-mode scripts only; returns na in the no-margin subset, 0.0 while flat with active margin, and current open long market value times margin_long / 100 while the supported long position is open, including after long-only forced liquidation reduces the position; short margin remains unsupported; no public runtime schema expansion
-strategy.opentrades.entry_price partial current open-trade entry price field function in strategy-mode scripts only; no public runtime schema expansion
-strategy.opentrades.entry_comment partial current open-trade entry comment field function in strategy-mode scripts only; returns the retained entry comment when present; no public runtime schema expansion
-strategy.opentrades.entry_id partial current open-trade entry id field function in strategy-mode scripts only; no public runtime schema expansion
-strategy.opentrades.entry_bar_index partial current open-trade entry bar index field function in strategy-mode scripts only; no public runtime schema expansion
-strategy.opentrades.entry_time partial current open-trade entry time field function in strategy-mode scripts only; no public runtime schema expansion
-strategy.opentrades.size partial  current open-trade size field function in strategy-mode scripts only; no public runtime schema expansion
-strategy.opentrades.profit partial current open-trade floating profit field function in strategy-mode scripts only; no public runtime schema expansion
-strategy.opentrades.commission partial current open-trade commission field function in strategy-mode scripts only; returns 0.0 without configured commission or current open supported entry commission when configured; no public runtime schema expansion
-strategy.opentrades.max_runup partial current open-trade max runup field function in strategy-mode scripts only; uses the largest high-based favorable excursion seen so far; no public runtime schema expansion
-strategy.opentrades.max_drawdown partial current open-trade max drawdown field function in strategy-mode scripts only; uses the largest low-based adverse excursion seen so far; no public runtime schema expansion
+strategy.margin_liquidation_price partial long-only margin liquidation price read-only series in strategy-mode scripts only; returns na without active long margin, while flat, or when the long-margin denominator is unattainable; symbol tick rounding, short margin, and margin-specific public schema expansion remain unsupported
+strategy.opentrades.entry_price partial current open-trade entry price field function in strategy-mode scripts only; can read fixture-backed pyramided long open trades by index; no public runtime schema expansion
+strategy.opentrades.entry_comment partial current open-trade entry comment field function in strategy-mode scripts only; returns the retained entry comment when present; can read fixture-backed commented pyramided long open trades by index; no public runtime schema expansion
+strategy.opentrades.entry_id partial current open-trade entry id field function in strategy-mode scripts only; can read fixture-backed pyramided long open trades by index; no public runtime schema expansion
+strategy.opentrades.entry_bar_index partial current open-trade entry bar index field function in strategy-mode scripts only; can read fixture-backed pyramided long open trades by index; no public runtime schema expansion
+strategy.opentrades.entry_time partial current open-trade entry time field function in strategy-mode scripts only; can read fixture-backed pyramided long open trades by index; no public runtime schema expansion
+strategy.opentrades.size partial  current open-trade size field function in strategy-mode scripts only; can read fixture-backed pyramided long open trades by index; no public runtime schema expansion
+strategy.opentrades.profit partial current open-trade floating profit field function in strategy-mode scripts only; can read fixture-backed pyramided long open trades by index; no public runtime schema expansion
+strategy.opentrades.commission partial current open-trade commission field function in strategy-mode scripts only; can read fixture-backed pyramided long open trades by index; returns 0.0 without configured commission or selected open-trade supported entry commission when configured; no public runtime schema expansion
+strategy.opentrades.max_runup partial current open-trade max runup field function in strategy-mode scripts only; can read fixture-backed pyramided long open trades by index; uses the largest high-based favorable excursion seen so far for the selected open trade; no public runtime schema expansion
+strategy.opentrades.max_drawdown partial current open-trade max drawdown field function in strategy-mode scripts only; can read fixture-backed pyramided long open trades by index; uses the largest low-based adverse excursion seen so far for the selected open trade; no public runtime schema expansion
 strategy.exit       partial      stop-only, limit-only, profit-only, loss-only, one-downside/one-upside bracket, trailing, and optional fixed-qty or qty-percent long exits; absolute stop/limit exits can match a requested open pyramided long entry id by `from_entry`, and omitted-`from_entry` absolute stop/limit exits can close all currently open pyramided long entries and persist for later open long entries until the position closes; single-trigger and bracket profit/loss tick exits plus trailing trail_points activation for an open pyramided long entry convert from the matched entry price; omitted-`from_entry` full profit/loss-tick exits and full stop+limit, stop+profit, loss+limit, or loss+profit brackets can close currently open pyramided long entries with unique entry ids using each entry price for relative legs when present; omitted-`from_entry` current full profit/loss-tick exits, full trail_points+trail_offset and trail_price+trail_offset trailing exits, plus full loss+profit, stop+profit, loss+limit, and stop+limit brackets can also close same-entry-id pyramided long trades using each open trade entry price; omitted-`from_entry` full profit/loss-tick exits, full trail_points+trail_offset and trail_price+trail_offset trailing exits, plus full loss+profit, stop+profit, loss+limit, and stop+limit brackets can also persist for later same-entry-id pyramided long trades using each later open trade entry price for relative legs when present; omitted-`from_entry` full profit/loss-tick exits and full loss+profit, stop+profit, and loss+limit brackets can also persist for later open long entries with unique entry ids until the position closes; omitted-`from_entry` full stop+limit brackets can also persist for later open long entries until the position closes; omitted-`from_entry` full trail_price+trail_offset trailing exits can close currently open pyramided long entries and persist for later open long entries until the position closes, and full trail_points+trail_offset trailing exits can do the same for currently open unique entry ids and persist for later open long entries with unique entry ids using each entry price for activation; exits matching multiple open trades with the same entry id emit one public exit order and one closed trade per matched ledger allocation; single-trigger same-calculation absolute stop/limit/trail_price attachment and single-trigger same-calculation entry-relative profit/loss/trail_points attachment to a pending entry are supported for the active entry id; active-entry relative bracket forms remain unsupported until Stage 10 behavior slices resolve deferred bracket legs; bracket forms are stop+limit, stop+profit, loss+limit, and loss+profit for the current one-net-long entry; trailing forms are trail_price+trail_offset and trail_points+trail_offset; profit/loss/trailing ticks convert with fixed syminfo.mintick; configured limit verification requires long limit/profit exit fills to move beyond the limit/profit price while preserving the original limit/profit fill price; qty is placement-time finite positive absolute quantity; qty_percent is placement-time finite positive percent resolved to an absolute quantity against current position size, matching open pyramided entry quantity, or matching pending entry quantity; when qty and qty_percent are both supplied, qty determines the reserved or filled quantity; omitted qty and qty_percent keep full-position one-effective-pending replacement behavior; explicit fixed-qty or qty-percent single-trigger, bracket, and trailing calls can keep multiple reserved pending exits; comment, comment_profit, comment_loss, comment_trailing, alert_message, alert_profit, alert_loss, alert_trailing, and disable_alert metadata syntax is semantically accepted and stored internally on pending and deferred exits; supported fill payloads are exposed in `strategy.alerts`; explicit Python, CLI, and WASM host helpers can render `{{strategy.order.alert_message}}` for selected public fill events, while external alert delivery remains unsupported; fills clamp to current position size, leave remaining long position open when partial, expose only absolute filled qty, and apply configured slippage to the long exit fill price after trigger selection; later-bar low <= stop/loss/active trailing stop or high >= verified limit/profit/activation price drives fills/activation; same-side touched exits fill in placement order; mixed downside/upside same-bar touches fill downside candidates only; bracket both-leg touches contribute the downside candidate; trailing activation bars do not fill; branch/switch/loop/state/history/incremental/host interactions fixture-backed
-strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close/strategy.close_all/strategy.cancel/strategy.cancel_all and the supported single-trigger, one-downside/one-upside bracket, trailing, optional fixed-qty and qty-percent strategy.exit subset, and fixed-qty or qty-percent single-trigger/bracket/trailing multiple-exit reservation subset; strategy.exit same-side pairs stop+loss and limit+profit, 3+ trigger/invalid trailing/multiple-pending outside that subset/omitted-quantity multiple reservations/reservation outside that subset/arbitrary future binding for unmatched `from_entry` ids; rich order types, cash/contracts sizing, mutable strategy state, margin behavior beyond long-entry affordability, long-only capital_held, and long-only forced liquidation, open-trade namespace functions outside entry_price/entry_comment/entry_id/entry_bar_index/entry_time/size/profit/commission/max_runup/max_drawdown/capital_held, closed-trade namespace functions outside entry_price/entry_comment/entry_id/exit_price/exit_comment/exit_id/entry_bar_index/exit_bar_index/entry_time/exit_time/commission/size/profit/max_runup/max_drawdown, commission modes outside strategy.commission.cash_per_contract, strategy.commission.cash_per_order, and strategy.commission.percent, fill models beyond fixed-tick slippage and fixed-tick limit verification on supported long fills, rich reporting metrics, and strategy reporting helpers beyond the supported position/profit/equity/count/held-quantity/runup/drawdown and supported trade field variables are not implemented
-array.*              partial      float/int/bool/string/color and label/line/linefill/polyline/box/table creation through type-specific array.new_* calls and official array.new<type> syntax, chart.point array.new<chart.point> construction, array.from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search including linefill, polyline, and chart.point object-array search, binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, branch/loop sort and reverse mutation fixtures, scalar-array join, mutation, polyline array/slice history snapshots, and helper fixture subset only
-typed declarations   partial      int, float, bool, string, color, chart.point, drawing-id label/line/linefill/box/table/polyline, scalar array<int>/array<float>/array<bool>/array<string>/array<color>, object-id array<label>/array<line>/array<linefill>/array<polyline>/array<box>/array<table>, array<chart.point>, and equivalent type[] aliases for those supported array element types including var declarations and the scalar typed-array varip subset with compatible or na initializers and later compatible reassignment are fixture-backed; bare array, UDT, map, matrix, and other typed declarations remain unsupported unless covered by narrower feature rows
+strategy.*           unsupported  strategy order functions beyond strategy.entry, the fixture-backed explicit/default-quantity market/limit/stop/stop-limit long and explicit-quantity reduce-only market short strategy.order subset, strategy.close/strategy.close_all/strategy.cancel/strategy.cancel_all, the supported single-trigger, one-downside/one-upside bracket, trailing, optional fixed-qty and qty-percent strategy.exit subset, and fixed-qty or qty-percent single-trigger/bracket/trailing multiple-exit reservation subset; strategy.order omitted qty for strategy.short, short exposure, reversals, short price-based orders, OCA, exit attachment semantics, and broader price-based order families; strategy.exit same-side pairs stop+loss and limit+profit, 3+ trigger/invalid trailing/multiple-pending outside that subset/omitted-quantity multiple reservations/reservation outside that subset/arbitrary future binding for unmatched `from_entry` ids; rich order types, cash/contracts sizing, mutable strategy state, margin behavior beyond long-entry affordability, long-only capital_held, and long-only forced liquidation, open-trade namespace functions outside entry_price/entry_comment/entry_id/entry_bar_index/entry_time/size/profit/commission/max_runup/max_drawdown/capital_held, closed-trade namespace functions outside entry_price/entry_comment/entry_id/exit_price/exit_comment/exit_id/entry_bar_index/exit_bar_index/entry_time/exit_time/commission/size/profit/max_runup/max_drawdown, commission modes outside strategy.commission.cash_per_contract, strategy.commission.cash_per_order, and strategy.commission.percent, fill models beyond fixed-tick slippage and fixed-tick limit verification on supported long fills, and strategy reporting helpers beyond the supported position/profit/equity/count/held-quantity/runup/drawdown/buy-and-hold return and supported trade field variables are not implemented
+array.*              partial      float/int/bool/string/color and label/line/linefill/polyline/box/table creation through type-specific array.new_* calls and official array.new<type> syntax, chart.point array.new<chart.point> construction, array.from inference, same-local scalar-field UDT array.new<T>/array.from construction with typed array<T>/T[] declarations, size reads, array.get field reads, array.set replacement, array.push append, array.insert same-UDT insertion, array.pop returns, array.remove returns, array.shift returns, array.unshift same-UDT prepend, array.fill same-UDT replacement, array.join positional UDT stringification, array.first reads, array.last reads, array.clear reset/reuse, array.copy independence, array.concat same-UDT append, array.slice parent-window read/write mirroring, array.reverse reordering, UDT array.sort and array.sort_indices by int/float/string sort_field, same-local scalar-field UDT array includes/indexof/lastindexof structural equality search, same-local scalar-field UDT array id history snapshots including dynamic na-offset predicate output, label-array, line-array, linefill-array, polyline-array, box-array, and table-array for-in shallow-id iteration, chart-point and same-local scalar-field UDT array for-in value-copy iteration, array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, and same-local scalar-field UDT arrays index/value for-in iteration with a zero-based series int index loop local, and ordinary var realtime rollback, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search including linefill, polyline, and chart.point object-array search, binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, branch/loop sort and reverse mutation fixtures, scalar-array and same-local scalar-field UDT-array join, mutation, polyline array/slice history snapshots, scalar-array while-expression result history snapshots including dynamic na-offset predicates, and helper fixture subset only
+typed declarations   partial      int, float, bool, string, color, chart.point, drawing-id label/line/linefill/box/table/polyline, scalar array<int>/array<float>/array<bool>/array<string>/array<color>, object-id array<label>/array<line>/array<linefill>/array<polyline>/array<box>/array<table>, array<chart.point>, same-local scalar-field UDT array<T>, scalar-field imported UDT declarations initialized or reassigned from the same imported identity, including ordinary var and scalar-field varip declarations, and equivalent type[] aliases for those supported array element types including var declarations and the scalar typed-array varip subset, explicitly typed same-local scalar-field UDT varip declarations initialized from na, same-UDT constructors, same-UDT ternary expressions, same-UDT switch expressions, same-UDT if expressions, or same-UDT for expressions, and matrix<float> declarations with compatible or na initializers and later compatible reassignment are fixture-backed; bare array, non-scalar or imported UDT arrays, UDT array varip, nested-field UDT varip, map, bare matrix, non-float or deferred matrix, and other typed declarations remain unsupported unless covered by narrower feature rows
 chart.point          partial      chart.point.new/now/from_index/from_time/copy constructors, time/index/price field reads, top-level field mutation, chart.point typed declarations, and array.new<chart.point>/array.from chart-point array storage/read/mutation/search are fixture-backed; line.new, line point setters, box.new, box point setters, label.new, and label.set_point consume chart.point values through dedicated partial rows, and polyline.new consumes chart-point arrays through its dedicated partial row, including omitted line_color defaulting to color.blue and default/declaration-driven max-count eviction; polyline id arrays are fixture-backed through array.new_polyline, array.new<polyline>, array.from(polyline, ...), and array/slice history snapshots
 map.*                unsupported  map collections require a dedicated key/value storage model and are not implemented
-matrix.*             unsupported  matrix collections require a dedicated two-dimensional storage model and are not implemented
+matrix.*             partial      matrix.new<float>, matrix.get, matrix.set, matrix.fill, values.fill(value), values.get(row, column), values.set(row, column, value), matrix.copy, values.copy(), matrix.reshape, values.reshape(rows, columns), matrix.add_row, values.add_row(row, array_id), matrix.add_col, values.add_col(column, array_id), matrix.remove_row, values.remove_row(row), matrix.remove_col, values.remove_col(column), matrix.rows, values.rows(), matrix.columns, values.columns(), matrix.sum, values.sum(), matrix.avg, values.avg(), matrix.row, values.row(row), matrix.col, and values.col(column) are fixture-backed for runtime-owned float matrices with matrix<float> typed declarations, namespace and method-call reshape preserving element order and count, namespace and method-call row/column insertion from array<float> snapshots, namespace and method-call row/column deletion, namespace and method-call matrix sums and averages that ignore na cells and return na for empty or all-na matrices, namespace and method-call row/column extraction returning independent array<float> snapshots through ordinary branches, for loops, and while loops, while-expression fresh, existing-alias, zero-iteration na, break/continue, and history matrix results with caller-side reads and mutation, ordinary var persistence, committed, shape including dynamic na-offset predicates, and dynamic-offset history snapshots returning fresh copies, realtime forming-bar rollback for mutation and shape changes, semantic rejection for non-matrix get/copy receivers including values.get(row, column) and values.copy() method receivers, semantic rejection for non-matrix sum/average receivers including values.sum()/values.avg() method receivers, semantic rejection for non-int matrix.get row/column indexes including values.get(row, column) row/column indexes, semantic rejection for non-int namespace matrix.set row/column indexes including values.set(row, column, value) row/column indexes, semantic rejection for non-int namespace matrix.reshape row/column counts and values.reshape(rows, columns) method row/column counts, semantic rejection for non-int namespace/method matrix.add_row row indexes, semantic rejection for non-int namespace/method matrix.add_col column indexes, semantic rejection for non-int namespace/method matrix.remove_row row indexes, semantic rejection for non-int namespace/method matrix.remove_col column indexes, semantic rejection for non-array<float> matrix.add_row row data and matrix.add_col column data, semantic rejection for non-matrix shape-reader receivers including values.rows()/values.columns() method receivers, semantic rejection for non-matrix row/column extraction receivers including values.row(row)/values.col(column) method receivers, semantic rejection for non-int namespace matrix.row/matrix.col row/column indexes and values.row(row)/values.col(column) method row/column indexes, semantic rejection for non-matrix mutating-helper receivers including values.set(row, column, value), values.fill(value), values.reshape(rows, columns), values.add_row(row, array_id), values.add_col(column, array_id), values.remove_row(row), and values.remove_col(column) method receivers, semantic rejection for non-numeric matrix.new<float> initial values, semantic rejection for non-numeric matrix.set/fill values including values.set(row, column, value) and values.fill(value), runtime matrix.add_row row bounds and row-array size mismatch errors, runtime matrix.add_col column bounds and column-array size mismatch errors, runtime matrix.remove_row row bounds and na row-index errors, runtime matrix.remove_col column bounds and na column-index errors, and UDF side-effect rejection for matrix.add_row/values.add_row(row, array_id), matrix.add_col/values.add_col(column, array_id), matrix.remove_row/values.remove_row(row), and matrix.remove_col/values.remove_col(column); non-float templates, other method syntax, non-float, deferred, or bare matrix typed declarations, varip, and for-in iteration remain unsupported
 linefill.new         partial      linefill object creation between existing line ids with color snapshots and official same-pair replacement semantics; na or deleted line ids return na; linefill array construction is supported through array.new_linefill and array.from for linefill ids
 linefill.set_color   partial      linefill color mutation for existing linefill ids, including namespace-call and method-call dispatch, na id no-op behavior, and no-op behavior after the linefill has been replaced/deleted by a same-pair linefill.new call
 linefill.get_line1   partial      returns the first line id referenced by an existing linefill, including namespace-call dispatch; na ids and replaced linefill ids return na
@@ -1272,8 +1554,8 @@ linefill.delete      partial      linefill id deletion snapshots, including ordi
 linefill.all         partial      snapshot array of currently existing linefill ids in creation order, including ordinary and while-loop control-flow reads; replaced or deleted linefills are omitted from subsequent reads while linefill array construction is supported through array.new_linefill and array.from for linefill ids
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets
-import               partial      host-provided exact-key imports with aliases, exported const expressions, and pure exported functions only
-user-defined types   partial      local scalar-field type declarations, Type.new constructors, field reads, ordinary variables, local for-expression constructor results, top-level/block-local/loop-local same-UDT `for` expression initialization and reassignment, var persistence from na, same-UDT constructors, same-UDT ternary expressions, same-UDT switch expressions, same-UDT `if` expressions, or same-UDT `for` expressions, scalar field mutation outside method bodies including branch, for-loop, while-loop, and UDF-local variables, top-level/block-local/loop-local same-UDT ternary, switch, or `if` expression initialization, UDF parameter passthrough/returns through positional or named arguments with direct returns, UDT block-local aliases, final if/else or final for local UDT aliases, or nested passthrough calls, and UDF constructor returns, directly, through nested pure constructor-helper UDF calls, or through same-local-UDT ternary, switch, `if` expression, final if/else constructor branches, or final for bodies, from local UDT parameter scalar fields, scalar fields read through block-local UDT aliases of those parameters, block-local scalar aliases of those fields, inferred scalar parameters, or block-local scalar aliases of those scalar parameters using positional or named constructor field arguments only, including UDF-local typed locals initialized or reassigned through those same-local-UDT expressions
+import               partial      host-provided exact-key imports with aliases, exported const expressions, pure exported functions, scalar-field imported UDT constructors with direct field reads, ordinary same-imported-UDT reassignment, scalar-field imported UDT typed declarations initialized or reassigned from the same imported identity, ordinary imported UDT var declarations, scalar-field imported UDT varip declarations, scalar-field imported UDT mutation in top-level, branch, for-loop, while-loop, and UDF-local statement contexts, same-imported-identity ternary, `if`, `switch`, `while`, and `for` expression results, imported UDT UDF direct or nested parameter passthrough, and direct or nested constructor-return results; deferred-field constructors, broader imported UDT flow, nested imported field mutation, imported methods, remote lookup, re-exports, unaliased imports, and side-effecting exported functions remain unsupported
+user-defined types   partial      local scalar-field type declarations, Type.new constructors, field reads, ordinary variables, local for-expression constructor results, top-level/block-local/loop-local same-UDT `for` expression initialization and reassignment, var persistence from na, same-UDT constructors, same-UDT ternary expressions, same-UDT switch expressions, same-UDT `if` expressions, or same-UDT `for` expressions, scalar field mutation outside method bodies including branch, for-loop, while-loop, and UDF-local variables, top-level/block-local/loop-local same-UDT ternary, switch, or `if` expression initialization, UDF parameter passthrough/returns through positional or named arguments with direct returns, UDT block-local aliases, final if/else or final for local UDT aliases, or nested passthrough calls, and UDF constructor returns, directly, through nested pure constructor-helper UDF calls, or through same-local-UDT ternary, switch, `if` expression, final if/else constructor branches, or final for bodies, from local UDT parameter scalar fields, scalar fields read through block-local UDT aliases of those parameters, block-local scalar aliases of those fields, inferred scalar parameters, or block-local scalar aliases of those scalar parameters using positional or named constructor field arguments only, including UDF-local typed locals initialized or reassigned through those same-local-UDT expressions, explicitly typed same-local scalar-field UDT varip values initialized from na, same-UDT constructors, same-UDT ternary expressions, same-UDT switch expressions, same-UDT if expressions, or same-UDT for expressions plus direct-constructor-inferred same-local scalar-field UDT varip values with realtime intrabar persistence, and scalar-field imported UDT constructor/direct field-read/ordinary reassignment/typed declaration/ordinary var/scalar-field varip/scalar-field mutation in top-level, branch, for-loop, while-loop, and UDF-local statement contexts/same-imported-identity ternary, `if`, `switch`, `while`, `for`, direct-or-nested UDF passthrough, and direct-or-nested UDF constructor-return identity subset
 user-defined methods partial      pure methods on local UDT receivers with scalar or local UDT parameters, direct UDT passthrough returns, block-local receiver or local UDT parameter alias passthrough returns, final if/else or final for local UDT alias passthrough returns, nested-method UDT parameter passthrough returns, and local UDT constructor returns, directly, through nested pure constructor-helper UDF calls, or through same-local-UDT ternary, switch, `if` expression, final if/else constructor branches, or final for bodies, from receiver or local UDT parameter scalar fields, scalar fields read through block-local receiver or local UDT parameter aliases, block-local scalar aliases of those fields, inferred scalar parameters, or block-local scalar aliases of those parameters using positional or named constructor field arguments only, including typed method locals initialized or reassigned through those same-local-UDT expressions
 ```
 
@@ -1337,6 +1619,7 @@ generic, object, UDT, map/matrix, history, and slice-aliasing semantics are
 designed and fixture-backed.
 
 The current `varip` subset is summarized in `docs/PHASE_I_AUDIT.md`. Keep
-`varip` marked `partial` until drawing object ids, tuples, maps, matrices, UDTs,
-imports, object arrays, generic arrays, and other value families have designed
-rollback semantics and fixture coverage.
+`varip` marked `partial` until drawing object ids, drawing-id arrays,
+chart-point arrays, tuples, maps, matrices, non-constructor-inferred or
+nested-field UDT values, UDT arrays, imports, object arrays, generic arrays, and
+other value families have designed rollback semantics and fixture coverage.

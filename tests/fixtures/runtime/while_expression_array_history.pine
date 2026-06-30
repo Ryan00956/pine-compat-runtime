@@ -1,0 +1,19 @@
+//@version=5
+indicator("While expression array history")
+
+i = 0
+items = while i < 2
+    i := i + 1
+    array.from(close + i, i)
+
+previous = items[1]
+dynamic_offset = bar_index == 0 ? na : 1
+dynamic_previous = items[dynamic_offset]
+if not na(previous)
+    previous.set(0, previous.get(0) + 100)
+
+plot(items.get(0), "current")
+plot(na(previous) ? na : previous.get(0), "previous_mutated")
+plot(na(previous) ? na : items.get(0), "current_after_previous_mutation")
+plot(na(previous) ? 1 : 0, "previous_is_na")
+plot(na(dynamic_previous) ? 1 : 0, "dynamic_previous_is_na")

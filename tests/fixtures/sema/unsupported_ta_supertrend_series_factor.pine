@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported ta.supertrend Series Factor")
+[line, direction] = ta.supertrend(close / 10.0, 10)
+plot(line + direction)

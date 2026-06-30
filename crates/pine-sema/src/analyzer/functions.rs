@@ -98,7 +98,7 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
                     arm.condition
                         .as_ref()
                         .is_some_and(contains_output_or_declaration_call)
-                        || contains_output_or_declaration_call(&arm.result)
+                        || switch_arm_result_contains_output_or_declaration_call(&arm.result)
                 })
         }
         ExprKind::For {
@@ -134,7 +134,7 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
                                 statement_contains_output_or_declaration_call(statement)
                             })
                     }
-                    StmtKind::For { .. } | StmtKind::While { .. } => true,
+                    StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => true,
                     StmtKind::Break | StmtKind::Continue | StmtKind::Function { .. } => false,
                     StmtKind::Import(_)
                     | StmtKind::Library(_)
@@ -144,8 +144,23 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
                     StmtKind::Unsupported { .. } => false,
                 })
         }
+        ExprKind::While { condition, body } => {
+            contains_output_or_declaration_call(condition)
+                || body
+                    .iter()
+                    .any(statement_contains_output_or_declaration_call)
+        }
         ExprKind::Tuple(items) => items.iter().any(contains_output_or_declaration_call),
         ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => false,
+    }
+}
+
+fn switch_arm_result_contains_output_or_declaration_call(result: &SwitchArmResult) -> bool {
+    match result {
+        SwitchArmResult::Expr(expr) => contains_output_or_declaration_call(expr),
+        SwitchArmResult::Block(statements) => statements
+            .iter()
+            .any(statement_contains_output_or_declaration_call),
     }
 }
 
@@ -176,7 +191,7 @@ pub(crate) fn statement_contains_output_or_declaration_call(statement: &Stmt) ->
                     .iter()
                     .any(statement_contains_output_or_declaration_call)
         }
-        StmtKind::For { .. } | StmtKind::While { .. } => true,
+        StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => true,
         StmtKind::Break | StmtKind::Continue | StmtKind::Function { .. } => false,
         StmtKind::Import(_)
         | StmtKind::Library(_)

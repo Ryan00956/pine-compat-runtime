@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported map array typed declaration")
+
+array<map> values = na
+plot(close)

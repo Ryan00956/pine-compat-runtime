@@ -1,0 +1,5 @@
+//@version=5
+import user/duplicate_udt_function/1 as lib
+indicator("Unsupported duplicate exported UDT and function")
+
+plot(close)

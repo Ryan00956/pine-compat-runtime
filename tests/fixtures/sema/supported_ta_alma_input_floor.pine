@@ -1,0 +1,4 @@
+//@version=5
+indicator("Supported ta.alma Input Floor")
+floor_value = input.bool(true, "Floor")
+plot(ta.alma(close, 4, 0.85, 6, floor_value))

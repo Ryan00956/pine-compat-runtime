@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix remove_row bounds")
+
+values = matrix.new<float>(1, 1, close)
+matrix.remove_row(values, 1)
+plot(close)

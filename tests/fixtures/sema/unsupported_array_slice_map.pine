@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array slice map")
+values = array.new<map>()
+window = array.slice(values, 0, 1)
+plot(close)

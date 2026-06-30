@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix.reshape column type")
+
+values = matrix.new<float>(1, 1, close)
+matrix.reshape(values, 1, "columns")
+plot(matrix.get(values, 0, 0))

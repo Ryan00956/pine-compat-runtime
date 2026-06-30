@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.push Value method")
+values = array.new_bool(1, true)
+values.push(close)

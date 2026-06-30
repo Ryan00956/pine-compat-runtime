@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported map remove")
+
+removed = map.remove(na, "key")
+plot(na(removed) ? 0 : 1)

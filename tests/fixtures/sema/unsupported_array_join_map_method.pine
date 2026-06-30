@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array join map method")
+values = array.new<map>()
+text = values.join()
+plot(close)

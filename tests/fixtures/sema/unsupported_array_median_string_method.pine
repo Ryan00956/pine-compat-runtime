@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array median string method")
+values = array.new_string()
+plot(values.median())

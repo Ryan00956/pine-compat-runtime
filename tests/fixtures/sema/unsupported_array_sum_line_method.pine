@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array sum line method")
+values = array.new_line()
+plot(values.sum())

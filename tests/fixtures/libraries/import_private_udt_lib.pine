@@ -1,0 +1,3 @@
+library("Private imported UDT fixture")
+type Point
+    float x

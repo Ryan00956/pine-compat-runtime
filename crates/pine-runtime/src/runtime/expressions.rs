@@ -68,18 +68,27 @@ impl<'a> HistoricalRuntime<'a> {
                 statements,
                 Some(result),
             )?,
+            HirExprKind::While {
+                condition,
+                statements,
+                result,
+            } => self.eval_while_loop(condition, statements, Some(result))?,
             HirExprKind::Tuple(items) => PineValue::Tuple(
                 items
                     .iter()
                     .map(|item| self.eval_expr(item))
                     .collect::<Result<_, _>>()?,
             ),
-            HirExprKind::UserTypeConstruct { fields } => PineValue::UserType(
+            HirExprKind::UserTypeConstruct { fields, .. } => PineValue::UserType(
                 fields
                     .iter()
                     .map(|field| self.eval_expr(field))
                     .collect::<Result<_, _>>()?,
             ),
+            HirExprKind::UserTypeArrayConstruct {
+                type_name,
+                elements,
+            } => self.eval_user_type_array_construct(type_name, elements)?,
             HirExprKind::FieldAccess { value, index } => match self.eval_expr(value)? {
                 PineValue::UserType(fields) => fields.get(*index).cloned().unwrap_or(PineValue::Na),
                 PineValue::ChartPoint(point) => point.field(*index),
@@ -94,11 +103,8 @@ impl<'a> HistoricalRuntime<'a> {
                 for statement in statements {
                     match self.eval_stmt(statement)? {
                         StmtControl::None => {}
-                        StmtControl::Break | StmtControl::Continue => {
-                            return Err(RuntimeError {
-                                message: "loop control escaped its enclosing loop".to_owned(),
-                            });
-                        }
+                        StmtControl::Break => return Err(RuntimeError::loop_break()),
+                        StmtControl::Continue => return Err(RuntimeError::loop_continue()),
                     }
                 }
                 self.eval_expr(result)?
@@ -112,6 +118,25 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         Ok(value)
+    }
+
+    fn eval_user_type_array_construct(
+        &mut self,
+        type_name: &str,
+        elements: &[HirExpr],
+    ) -> Result<PineValue, RuntimeError> {
+        if elements.len() > MAX_ARRAY_ELEMENTS {
+            return Err(RuntimeError {
+                message: format!(
+                    "user-defined type array cannot exceed {MAX_ARRAY_ELEMENTS} elements"
+                ),
+            });
+        }
+        let values = elements
+            .iter()
+            .map(|element| self.eval_expr(element))
+            .collect::<Result<_, _>>()?;
+        Ok(self.new_user_type_array_from_values(type_name.to_owned(), values))
     }
 
     pub(crate) fn eval_switch(

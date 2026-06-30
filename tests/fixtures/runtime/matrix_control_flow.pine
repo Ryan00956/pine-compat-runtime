@@ -1,0 +1,16 @@
+//@version=6
+indicator("Matrix control flow")
+
+values = matrix.new<float>(1, 2, 0)
+
+if close > 2
+    matrix.set(values, 0, 0, close)
+else
+    values.set(0, 0, open)
+
+for i = 0 to 1
+    previous = matrix.get(values, 0, 1)
+    matrix.set(values, 0, 1, previous + close + i)
+
+plot(matrix.get(values, 0, 0), "branch_value")
+plot(values.get(0, 1), "loop_value")

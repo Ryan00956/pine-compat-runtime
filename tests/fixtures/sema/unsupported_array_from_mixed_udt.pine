@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported array.from mixed UDT")
+type Point
+    float x
+
+type Marker
+    float x
+
+values = array.from(Point.new(close), Marker.new(open))
+plot(close)

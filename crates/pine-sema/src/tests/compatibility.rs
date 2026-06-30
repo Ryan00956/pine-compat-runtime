@@ -3019,6 +3019,61 @@ fn import_reports_duplicate_exports() {
 }
 
 #[test]
+fn import_reports_duplicate_exported_user_types() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/sema/unsupported_import_duplicate_exported_udt.pine"
+        ),
+        vec![(
+            "user/duplicate_udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_duplicate_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_DUPLICATE_EXPORT"), "{codes:?}");
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_reports_duplicate_exported_user_type_and_const_names() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/sema/unsupported_import_duplicate_exported_udt_const.pine"
+        ),
+        vec![(
+            "user/duplicate_udt_const/1",
+            include_str!(
+                "../../../../tests/fixtures/libraries/import_duplicate_udt_const_lib.pine"
+            ),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_DUPLICATE_EXPORT"), "{codes:?}");
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_reports_duplicate_exported_user_type_and_function_names() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/sema/unsupported_import_duplicate_exported_udt_function.pine"
+        ),
+        vec![(
+            "user/duplicate_udt_function/1",
+            include_str!(
+                "../../../../tests/fixtures/libraries/import_duplicate_udt_function_lib.pine"
+            ),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_DUPLICATE_EXPORT"), "{codes:?}");
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn import_reports_dependency_cycle() {
     let analysis = analyze_with_libraries(
         "import user/one/1 as one\nplot(close)\n",
@@ -3119,29 +3174,639 @@ fn import_rejects_recursive_exported_functions() {
 }
 
 #[test]
-fn import_rejects_imported_user_type_constructors() {
+fn import_accepts_scalar_imported_user_type_constructors() {
     let analysis = analyze_with_libraries(
         "import user/udt/1 as lib\np = lib.Point.new(close)\nplot(p.x)\n",
-        vec![("user/udt/1", "library(\"udt\")\ntype Point\n    float x\n")],
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
     );
 
     let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_IMPORT_UNKNOWN_EXPORT"), "{codes:?}");
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "user-defined types")
+    );
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_typed_declarations() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\nlib.Point p = lib.Point.new(close)\np := lib.Point.new(open)\nplot(p.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "lib.Point typed declarations")
+    );
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_var_declarations() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/import_udt_var.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_rejects_scalar_imported_user_type_var_identity_mismatch() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/sema/unsupported_imported_udt_var_identity.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_UDT_ASSIGN_TYPE"), "{codes:?}");
     assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_varip_declarations() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/import_udt_varip.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_rejects_scalar_imported_user_type_varip_identity_mismatch() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/sema/unsupported_imported_udt_varip_identity.pine"
+        ),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_UDT_ASSIGN_TYPE"), "{codes:?}");
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_rejects_deferred_field_imported_user_type_varip() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/sema/unsupported_imported_udt_varip.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_UNSUPPORTED_UDT"), "{codes:?}");
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_field_mutation() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/import_udt_field_mutation.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "user-defined type field mutation")
+    );
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_control_flow_field_mutation() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/runtime/import_udt_field_mutation_control_flow.pine"
+        ),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_rejects_scalar_imported_user_type_field_mutation_type() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/sema/unsupported_imported_udt_field_mutation_type.pine"
+        ),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_ASSIGN_TYPE"), "{codes:?}");
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_rejects_scalar_imported_user_type_parameter_field_mutation() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/sema/unsupported_imported_udt_parameter_field_mutation.pine"
+        ),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
+    assert!(
+        analysis.compatibility.unsupported.iter().any(|feature| {
+            feature.feature == "function_side_effect" && feature.reason.contains("parameter fields")
+        }),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_rejects_scalar_imported_user_type_global_field_mutation() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/sema/unsupported_imported_udt_global_field_mutation.pine"
+        ),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
+    assert!(
+        analysis.compatibility.unsupported.iter().any(|feature| {
+            feature.feature == "function_side_effect"
+                && feature.reason.contains("global user-defined type values")
+        }),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_rejects_scalar_imported_user_type_history() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/sema/unsupported_imported_udt_history.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "user-defined type history"),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_rejects_nested_imported_user_type_field_mutation() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/sema/unsupported_imported_udt_nested_field_mutation.pine"
+        ),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "nested field mutation"),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_rejects_imported_user_type_array_declaration() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/sema/unsupported_imported_udt_array_decl.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_DECL_TYPE"), "{codes:?}");
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("array<lib.Point>")),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_rejects_imported_user_type_array_alias_declaration() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/sema/unsupported_imported_udt_array_alias_decl.pine"
+        ),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_DECL_TYPE"), "{codes:?}");
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("array<lib.Point>")),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_rejects_imported_user_type_array_from_inference() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/sema/unsupported_imported_udt_array_from.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_CALL_ARG_TYPE"), "{codes:?}");
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("does not support UDT arrays")),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_ternary() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\np = close > open ? lib.Point.new(close) : lib.Point.new(open)\nlib.Point typed = close > open ? p : lib.Point.new(high)\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_if_expression() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\np = if close > open\n    lib.Point.new(close)\nelse\n    lib.Point.new(open)\nlib.Point typed = if close > open\n    p\nelse\n    lib.Point.new(high)\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_udf_passthrough() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\npassthrough(p) => p\np = passthrough(lib.Point.new(close))\nlib.Point typed = passthrough(lib.Point.new(open))\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "function")
+    );
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_udf_nested_passthrough() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\ninner(p) => p\nouter(p) => inner(p)\np = outer(lib.Point.new(close))\nlib.Point typed = outer(lib.Point.new(open))\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "function")
+    );
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_udf_constructor_return() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\nmakePoint(x) => lib.Point.new(x)\np = makePoint(close)\nlib.Point typed = makePoint(open)\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "function")
+    );
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_udf_local_field_mutation() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/import_udt_udf_local_field_mutation.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_udf_nested_constructor_return() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\nmakePoint(x) => lib.Point.new(x)\nouter(x) => makePoint(x)\np = outer(close)\nlib.Point typed = outer(open)\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "function")
+    );
+}
+
+#[test]
+fn import_rejects_deferred_field_imported_user_type_constructors_with_metadata_note() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\np = lib.Wrapper.new(na)\nplot(close)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Wrapper\n    Point nested\ntype Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_UNSUPPORTED_UDT"), "{codes:?}");
+    assert!(
+        analysis.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_IMPORT_UNSUPPORTED_UDT"
+                && diagnostic
+                    .message
+                    .contains("non-scalar or deferred field metadata remains unsupported")
+        }),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_rejects_private_user_type_constructors() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/sema/unsupported_imported_private_udt_constructor.pine"
+        ),
+        vec![(
+            "user/private_udt/1",
+            "library(\"private udt\")\ntype Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_PRIVATE_SYMBOL"), "{codes:?}");
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_accepts_while_expression_imported_user_type_result() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/import_udt_while_expression.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}");
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_rejects_while_expression_imported_user_type_identity_mismatch() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/sema/unsupported_imported_udt_while_identity.pine"
+        ),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_UDT_ASSIGN_TYPE"), "{codes:?}");
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_accepts_for_expression_imported_user_type_result() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/import_udt_for_expression.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}");
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_rejects_for_expression_imported_user_type_identity_mismatch() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/sema/unsupported_imported_udt_for_identity.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_UDT_ASSIGN_TYPE"), "{codes:?}");
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_accepts_switch_block_imported_user_type_result() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/import_udt_switch_statement_block.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}");
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
 fn import_rejects_imported_user_methods() {
     let analysis = analyze_with_libraries(
-        "import user/methods/1 as lib\ntype Point\n    float x\np = Point.new(close)\nplot(p.shift(1))\n",
+        include_str!("../../../../tests/fixtures/sema/unsupported_imported_method.pine"),
         vec![(
-            "user/methods/1",
-            "library(\"methods\")\ntype Point\n    float x\nmethod shift(Point p, float delta) => p.x + delta\n",
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
         )],
     );
 
     let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_UNKNOWN_METHOD"), "{codes:?}");
+    assert!(codes.contains(&"E_IMPORT_UNSUPPORTED_METHOD"), "{codes:?}");
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_rejects_alias_qualified_imported_user_methods() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/sema/unsupported_imported_method_qualified.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_UNSUPPORTED_METHOD"), "{codes:?}");
+    assert!(
+        analysis.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_IMPORT_UNSUPPORTED_METHOD"
+                && diagnostic.message.contains("for receiver `lib.Point`")
+        }),
+        "{:?}",
+        analysis.diagnostics
+    );
     assert!(analysis.hir.is_none());
 }
 

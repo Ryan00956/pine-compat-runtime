@@ -74,6 +74,27 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn margin_liquidation_price(&self) -> Option<f64> {
+        if self.position_size <= 0.0 || !self.margin_long.is_active() {
+            return None;
+        }
+        let margin_ratio = self.margin_long.value_percent / 100.0;
+        if !margin_ratio.is_finite() || margin_ratio <= 0.0 {
+            return None;
+        }
+        let denominator = self.position_size * (1.0 - margin_ratio);
+        if !denominator.is_finite() || denominator == 0.0 {
+            return None;
+        }
+        let price = -self.cash / denominator;
+        if price.is_finite() {
+            Some(normalize_zero(price))
+        } else {
+            None
+        }
+    }
+
+    #[must_use]
     pub(crate) fn can_afford_long_entry(&self, qty: f64, fill_price: f64) -> bool {
         if !self.margin_long.is_active() {
             return true;

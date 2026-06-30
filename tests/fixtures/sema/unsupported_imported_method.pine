@@ -1,8 +1,6 @@
 //@version=5
 import user/udt/1 as lib
 indicator("Unsupported imported method")
-type Point
-    float x
 
-p = Point.new(close)
+p = lib.Point.new(close)
 plot(p.shift(1))

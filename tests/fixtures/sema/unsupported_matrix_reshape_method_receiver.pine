@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.reshape method receiver")
+
+close.reshape(1, 1)
+plot(close)

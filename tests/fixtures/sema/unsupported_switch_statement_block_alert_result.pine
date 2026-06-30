@@ -1,0 +1,9 @@
+//@version=5
+indicator("Unsupported switch statement block alert result")
+
+value = switch
+    close > open =>
+        alert("x")
+    => close
+
+plot(close)

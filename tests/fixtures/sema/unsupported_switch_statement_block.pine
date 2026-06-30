@@ -2,6 +2,6 @@
 indicator("Unsupported switch statement block")
 value = switch
     close > open =>
-        high
+        local = high
     => close
 plot(value)

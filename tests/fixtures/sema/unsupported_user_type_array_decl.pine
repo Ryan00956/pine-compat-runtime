@@ -1,6 +1,9 @@
 //@version=5
-type Point
+type Inner
     float x
 
-array<Point> points = na
+type Wrapper
+    Inner inner
+
+array<Wrapper> points = na
 plot(close)

@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array standardize box method")
+values = array.new_box()
+standardized = values.standardize()
+plot(close)

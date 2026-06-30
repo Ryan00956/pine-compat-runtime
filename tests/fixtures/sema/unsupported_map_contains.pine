@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported map contains")
+
+exists = map.contains(na, "key")
+plot(exists ? 1 : 0)

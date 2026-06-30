@@ -1,0 +1,10 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT varip identity")
+
+type Point
+    float x
+
+varip lib.Point p = Point.new(close)
+
+plot(close)

@@ -1,0 +1,19 @@
+//@version=6
+indicator("Matrix add_row")
+
+values = matrix.new<float>(1, 2, 1)
+insert = array.from(2.0, 3.0)
+matrix.add_row(values, 1, insert)
+values.add_row(2, array.from(4.0, 5.0))
+
+row_snapshot = matrix.row(values, 1)
+array.set(insert, 0, 99.0)
+
+plot(matrix.rows(values), "rows")
+plot(matrix.columns(values), "columns")
+plot(matrix.get(values, 0, 0), "r0c0")
+plot(matrix.get(values, 1, 0), "r1c0")
+plot(matrix.get(values, 1, 1), "r1c1")
+plot(matrix.get(values, 2, 0), "r2c0")
+plot(matrix.get(values, 2, 1), "r2c1")
+plot(array.get(row_snapshot, 0), "row_snapshot")

@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix get na column index")
+
+values = matrix.new<float>(2, 2, close)
+missing_column = int(na)
+plot(matrix.get(values, 0, missing_column))

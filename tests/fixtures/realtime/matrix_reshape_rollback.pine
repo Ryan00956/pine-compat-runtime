@@ -1,0 +1,11 @@
+//@version=6
+indicator("Realtime matrix reshape rollback")
+
+var values = matrix.new<float>(1, 2, close)
+if close > open
+    values.reshape(2, 1)
+else
+    matrix.reshape(values, 1, 2)
+
+plot(matrix.rows(values), "rows")
+plot(values.columns(), "columns")

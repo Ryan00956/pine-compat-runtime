@@ -57,8 +57,8 @@ Phase 1 executable subset:
   `by step`, `break`, `continue`, and loop result assignment
 - partial `while condition` statement loops with bool/`na` conditions, `break`,
   `continue`, local `var`, nested loops, and a runtime iteration guard
-- partial `switch` expressions with condition arms, selector/case arms, and
-  expression results
+- partial `switch` expressions with condition arms, selector/case arms,
+  expression results, and statement-block arms that end in a result expression
 - branch/loop interactions for `if` inside loops, loops inside `if`, `switch`
   inside loops, and loops inside UDF block bodies
 - normal and tuple declarations scoped to an `if`/`else` branch
@@ -147,9 +147,10 @@ branch executes. Series values not evaluated on a bar are committed as `na` to
 keep history buffers bar-aligned.
 
 Stateful calls inside `switch` arms follow the same conditional callsite rule:
-only the selected arm result executes. Selector-form switches evaluate the
-selector once per bar, compare cases in source order, and return `na` when no
-arm matches and no default arm is present.
+only the selected arm result executes. For supported block arms, only the
+selected block's statements and final result expression execute.
+Selector-form switches evaluate the selector once per bar, compare cases in
+source order, and return `na` when no arm matches and no default arm is present.
 
 Normal and tuple block-local declarations inside `if` blocks are scoped to the
 branch and do not leak outside it. A tuple declaration in a local scope shadows
@@ -157,6 +158,17 @@ outer variables with the same names; use reassignment syntax for scalar updates
 to existing variables. `var` declarations in local blocks initialize the first
 time their declaration site is reached, then preserve state across later
 executions.
+Switch statement-block arm declarations follow the same branch-local no-leak
+rule, and supported block arms may reassign already-visible outer variables.
+When a selected statement-block arm executes inside a loop body, `break` and
+`continue` propagate to the nearest enclosing loop. The `switch` expression does
+not consume loop-control statements as its own control flow.
+Tuple declaration/destructuring from selected statement-block arms is supported
+when each arm's final expression has compatible tuple arity and element types.
+Same-local UDT constructor results and block-local UDT aliases are supported
+when all selected arm result identities resolve to the same local UDT. Mismatched
+UDT identities across arms remain rejected. Imported UDT constructor results
+from selected statement-block arms are rejected by semantic fixture.
 
 `for` loops support inclusive integer ranges with an optional explicit `by`
 step. The runtime increments when `from <= to` and decrements when `from > to`;
@@ -165,18 +177,34 @@ range direction. If a runtime range bound or step evaluates to `na`, the loop
 body is skipped and a loop expression returns `na`. The loop counter is scoped
 to the loop body. Step values must be non-zero ints.
 `break` exits the nearest enclosing loop and `continue` skips to its next
-iteration.
+iteration. `break` or `continue` outside a loop is rejected with
+`E_LOOP_CONTROL`.
 `x = for ...` and tuple assignment from `for` results are supported when the
 loop body ends with an expression. The assigned value is the latest iteration
 result that reached that expression, or `na` if no iteration reaches it.
 
-`while` loops are statement-only in the current executable subset. Conditions
+`while` loops support statement form and a scalar expression subset. Conditions
 must type-check as bool; a runtime `na` condition exits the loop like false.
 `break` and `continue` target the nearest enclosing loop. A deterministic
-iteration guard prevents runaway loops. `while` expressions are rejected.
+iteration guard prevents runaway loops. Fixture-backed `while` bodies include
+history reads and pure UDF calls. `while` expressions return the latest reached
+final body expression, or `na` if no iteration produces a value, with
+fixture-backed stateful callsite advancement, body-local declarations, and
+local `var` declaration-site persistence. When evaluated inside an outer loop,
+`break` and `continue` in the expression body are contained by the nearest
+`while` expression. Tuple declaration/destructuring, same-local UDT constructor
+or block-local alias results, and scalar-array results with caller-side reads
+and mutation from while expressions are fixture-backed for fresh arrays and
+existing-array alias returns, including zero-iteration `na`, break/continue
+result preservation, and fresh historical copies from committed history reads;
+imported UDT identity plus nested collection variants remain outside the current
+subset, with nested-array while-expression results and imported UDT constructor
+results rejected by semantic fixtures.
 
-`switch` support is expression-only. Each arm must return a single expression;
-statement-block switch arms are rejected.
+`switch` support is expression-only in condition and selector forms. Expression
+arms are supported in both forms. Statement-block arms are supported when the
+block ends with a result expression. Block arms without a final expression
+remain rejected.
 
 User-defined functions support single-expression and multi-statement block
 bodies:

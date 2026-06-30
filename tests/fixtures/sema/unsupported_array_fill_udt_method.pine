@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported array.fill UDT method")
+type Point
+    float x
+type Marker
+    float x
+
+values = array.from(Point.new(close))
+values.fill(Marker.new(open))
+plot(close)

@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.highest Series Length")
+plot(ta.highest(close, bar_index))

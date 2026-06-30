@@ -130,7 +130,9 @@ hang the host.
 
 ### Implementation Tasks
 
-Status: implemented for statement loops; while expressions remain out of scope.
+Status: implemented for statement loops and the first scalar while-expression
+subset; tuple, UDT, and broader collection-expression variants remain out of
+scope.
 
 - Syntax:
   - Add `while` token support.
@@ -152,7 +154,8 @@ Status: implemented for statement loops; while expressions remain out of scope.
     and guard failure.
   - Add `while` to conformance metadata as `partial`.
 - Docs:
-  - Document statement-only while support and the iteration guard.
+  - Document while statement support, the scalar expression subset, and the
+    iteration guard.
 
 ### Suggested Commits
 

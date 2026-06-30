@@ -24,6 +24,11 @@ matrix in `tests/fixtures/conformance.tsv`.
   color array ids using either `array<type>` or `type[]` declaration syntax. The
   retained intrabar state includes backing array contents, element kind,
   branch-local declaration sites, and `array.copy` boundaries.
+- Explicitly typed same-local scalar-field UDT `varip` values initialized from
+  `na`, same-UDT constructors, or fixture-backed same-UDT ternary/switch/if/for expressions,
+  with intrabar value-clone handoff and scalar field mutation writeback.
+- Direct-constructor-inferred same-local scalar-field UDT `varip` values, using
+  the same intrabar value-clone handoff.
 - Semantic diagnostics for unsupported `varip` value families, including a
   dedicated diagnostic for drawing object ids.
 
@@ -96,9 +101,9 @@ and `python3 -m pytest python/tests`.
 - Drawing object ids remain rejected for `varip`. Supporting them requires an
   object-store handoff design for labels, lines, boxes, and tables instead of
   retaining ids alone.
-- Tuple `varip`, maps, matrices, user-defined types, imports, object arrays,
-  generic arrays, and other unimplemented value families remain outside the
-  Phase I claim.
+- Tuple `varip`, maps, matrices, non-constructor-inferred or nested-field
+  user-defined types, imports, UDT arrays, object arrays, generic arrays, and
+  other unimplemented value families remain outside the Phase I claim.
 - Array mutation inside UDFs remains rejected by the existing side-effect rules.
 - Python and WASM expose historical compile/analyze/run surfaces only; no
   realtime repeated-forming-update host API is claimed.

@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix add_col size mismatch")
+
+values = matrix.new<float>(2, 1, close)
+matrix.add_col(values, 1, array.from(close))
+plot(close)

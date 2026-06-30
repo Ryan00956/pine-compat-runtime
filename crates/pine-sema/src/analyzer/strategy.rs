@@ -1,10 +1,6 @@
 use crate::prelude::*;
 
-const STRATEGY_FIXED_DEFAULT_QTY_TYPE: &str = "strategy.fixed";
-const STRATEGY_PERCENT_OF_EQUITY_DEFAULT_QTY_TYPE: &str = "strategy.percent_of_equity";
-const STRATEGY_CASH_PER_CONTRACT_COMMISSION_TYPE: &str = "strategy.commission.cash_per_contract";
-const STRATEGY_CASH_PER_ORDER_COMMISSION_TYPE: &str = "strategy.commission.cash_per_order";
-const STRATEGY_PERCENT_COMMISSION_TYPE: &str = "strategy.commission.percent";
+mod declaration;
 
 const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.position_size",
@@ -16,6 +12,7 @@ const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.grossprofit_percent",
     "strategy.grossloss",
     "strategy.grossloss_percent",
+    "strategy.buy_and_hold_return_percent",
     "strategy.avg_trade",
     "strategy.avg_trade_percent",
     "strategy.avg_winning_trade",
@@ -36,12 +33,15 @@ const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.eventrades",
     "strategy.opentrades",
     "strategy.opentrades.capital_held",
+    "strategy.margin_liquidation_price",
 ];
 
 const STRATEGY_CLOSED_TRADE_FIELD_FUNCTIONS: &[&str] = &[
     "strategy.closedtrades.entry_price",
+    "strategy.closedtrades.entry_comment",
     "strategy.closedtrades.entry_id",
     "strategy.closedtrades.exit_price",
+    "strategy.closedtrades.exit_comment",
     "strategy.closedtrades.exit_id",
     "strategy.closedtrades.entry_bar_index",
     "strategy.closedtrades.exit_bar_index",
@@ -56,6 +56,7 @@ const STRATEGY_CLOSED_TRADE_FIELD_FUNCTIONS: &[&str] = &[
 
 const STRATEGY_OPEN_TRADE_FIELD_FUNCTIONS: &[&str] = &[
     "strategy.opentrades.entry_price",
+    "strategy.opentrades.entry_comment",
     "strategy.opentrades.entry_id",
     "strategy.opentrades.entry_bar_index",
     "strategy.opentrades.entry_time",
@@ -102,10 +103,6 @@ fn strategy_exit_arg_family(name: &str) -> Option<StrategyExitArgFamily> {
 }
 
 pub(crate) fn is_strategy_state_variable(name: &str) -> bool {
-    STRATEGY_STATE_VARIABLES.contains(&name)
-}
-
-pub(crate) fn is_supported_strategy_state_variable(name: &str) -> bool {
     STRATEGY_STATE_VARIABLES.contains(&name)
 }
 
@@ -156,344 +153,6 @@ impl Analyzer {
         }
     }
 
-    pub(crate) fn validate_strategy_declaration_args(&mut self, args: &[CallArg]) {
-        let mut default_qty_type_arg = None;
-        let mut default_qty_value_arg = None;
-        let mut default_qty_constructor: Option<fn(f64) -> pine_ir::StrategyDefaultQuantity> = None;
-        let mut default_qty_value = None;
-        let mut commission_type_arg = None;
-        let mut commission_constructor: Option<fn(f64) -> pine_ir::StrategyCommission> = None;
-        let mut commission_value_arg = None;
-        let mut commission_value = None;
-
-        for (index, arg) in args.iter().enumerate() {
-            let Some(name) = arg.name.as_deref().or_else(|| {
-                [
-                    "title",
-                    "shorttitle",
-                    "overlay",
-                    "max_bars_back",
-                    "initial_capital",
-                    "default_qty_type",
-                    "default_qty_value",
-                    "commission_type",
-                    "commission_value",
-                    "slippage",
-                    "backtest_fill_limits_assumption",
-                    "margin_long",
-                    "margin_short",
-                    "pyramiding",
-                    "max_labels_count",
-                    "max_boxes_count",
-                    "max_lines_count",
-                    "max_polylines_count",
-                ]
-                .get(index)
-                .copied()
-            }) else {
-                continue;
-            };
-
-            match name {
-                "initial_capital" => {
-                    let Some(initial_capital) = const_numeric_value(&arg.value) else {
-                        continue;
-                    };
-                    if !initial_capital.is_finite() || initial_capital <= 0.0 {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `initial_capital` must be positive",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    self.strategy_settings.initial_capital = initial_capital;
-                }
-                "default_qty_type" => {
-                    default_qty_type_arg = Some(arg);
-                    let Some(default_qty_type) = const_string_value(&arg.value) else {
-                        continue;
-                    };
-                    match default_qty_type.as_str() {
-                        STRATEGY_FIXED_DEFAULT_QTY_TYPE => {
-                            default_qty_constructor = Some(
-                                pine_ir::StrategyDefaultQuantity::Fixed
-                                    as fn(f64) -> pine_ir::StrategyDefaultQuantity,
-                            );
-                        }
-                        "strategy.cash" => {
-                            default_qty_constructor = Some(
-                                pine_ir::StrategyDefaultQuantity::Cash
-                                    as fn(f64) -> pine_ir::StrategyDefaultQuantity,
-                            );
-                        }
-                        STRATEGY_PERCENT_OF_EQUITY_DEFAULT_QTY_TYPE => {
-                            default_qty_constructor = Some(
-                                pine_ir::StrategyDefaultQuantity::PercentOfEquity
-                                    as fn(f64) -> pine_ir::StrategyDefaultQuantity,
-                            );
-                        }
-                        _ => {
-                            self.diagnostics.push(Diagnostic::error(
-                                "E_CALL_ARG_VALUE",
-                                "`strategy` argument `default_qty_type` only supports strategy.fixed, strategy.cash, or strategy.percent_of_equity",
-                                arg.span,
-                            ));
-                            continue;
-                        }
-                    }
-                }
-                "default_qty_value" => {
-                    default_qty_value_arg = Some(arg);
-                    let Some(qty) = const_numeric_value(&arg.value) else {
-                        continue;
-                    };
-                    if !qty.is_finite() || qty <= 0.0 {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `default_qty_value` must be positive",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    default_qty_value = Some(qty);
-                }
-                "commission_type" => {
-                    commission_type_arg = Some(arg);
-                    let Some(commission_type) = const_string_value(&arg.value) else {
-                        continue;
-                    };
-                    match commission_type.as_str() {
-                        STRATEGY_CASH_PER_CONTRACT_COMMISSION_TYPE => {
-                            commission_constructor = Some(
-                                pine_ir::StrategyCommission::CashPerContract
-                                    as fn(f64) -> pine_ir::StrategyCommission,
-                            );
-                        }
-                        STRATEGY_CASH_PER_ORDER_COMMISSION_TYPE => {
-                            commission_constructor = Some(
-                                pine_ir::StrategyCommission::CashPerOrder
-                                    as fn(f64) -> pine_ir::StrategyCommission,
-                            );
-                        }
-                        STRATEGY_PERCENT_COMMISSION_TYPE => {
-                            commission_constructor = Some(
-                                pine_ir::StrategyCommission::Percent
-                                    as fn(f64) -> pine_ir::StrategyCommission,
-                            );
-                        }
-                        _ => {
-                            self.diagnostics.push(Diagnostic::error(
-                                "E_CALL_ARG_VALUE",
-                                "`strategy` argument `commission_type` only supports strategy.commission.cash_per_contract, strategy.commission.cash_per_order, or strategy.commission.percent",
-                                arg.span,
-                            ));
-                            continue;
-                        }
-                    }
-                }
-                "commission_value" => {
-                    commission_value_arg = Some(arg);
-                    let Some(value) = const_numeric_value(&arg.value) else {
-                        continue;
-                    };
-                    if !value.is_finite() || value < 0.0 {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `commission_value` must be non-negative",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    commission_value = Some(value);
-                }
-                "slippage" => {
-                    let Some(value) = const_numeric_value(&arg.value) else {
-                        continue;
-                    };
-                    if !value.is_finite() || value < 0.0 || value.fract() != 0.0 {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `slippage` must be a non-negative integer",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    self.strategy_settings.slippage_ticks = value;
-                }
-                "backtest_fill_limits_assumption" => {
-                    let Some(value) = const_numeric_value(&arg.value) else {
-                        continue;
-                    };
-                    if !value.is_finite() || value < 0.0 || value.fract() != 0.0 {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `backtest_fill_limits_assumption` must be a non-negative integer",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    self.strategy_settings.backtest_fill_limit_ticks = value;
-                }
-                "margin_long" | "margin_short" => {
-                    let Some(value) = const_numeric_value(&arg.value) else {
-                        continue;
-                    };
-                    if !value.is_finite() || value < 0.0 {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            format!("`strategy` argument `{name}` must be non-negative"),
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    let setting = pine_ir::StrategyMarginSetting::explicit(value);
-                    if name == "margin_long" {
-                        self.strategy_settings.margin_long = setting;
-                    } else {
-                        self.strategy_settings.margin_short = setting;
-                    }
-                }
-                "pyramiding" => {
-                    let Some(value) = const_numeric_value(&arg.value) else {
-                        continue;
-                    };
-                    if !value.is_finite()
-                        || value <= 0.0
-                        || value.fract() != 0.0
-                        || value > usize::MAX as f64
-                    {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `pyramiding` must be a positive integer",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    self.strategy_settings.pyramiding_limit = value as usize;
-                }
-                "max_labels_count" => {
-                    if arg.name.is_none() {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_NAME",
-                            "`strategy` argument `max_labels_count` must be named in the current subset",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    let Some(value) = const_int_value(&arg.value) else {
-                        continue;
-                    };
-                    if !(1..=500).contains(&value) {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `max_labels_count` must be between 1 and 500",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    self.drawing_settings.max_labels_count = Some(value as u32);
-                }
-                "max_boxes_count" => {
-                    if arg.name.is_none() {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_NAME",
-                            "`strategy` argument `max_boxes_count` must be named in the current subset",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    let Some(value) = const_int_value(&arg.value) else {
-                        continue;
-                    };
-                    if !(1..=500).contains(&value) {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `max_boxes_count` must be between 1 and 500",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    self.drawing_settings.max_boxes_count = Some(value as u32);
-                }
-                "max_lines_count" => {
-                    if arg.name.is_none() {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_NAME",
-                            "`strategy` argument `max_lines_count` must be named in the current subset",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    let Some(value) = const_int_value(&arg.value) else {
-                        continue;
-                    };
-                    if !(1..=500).contains(&value) {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `max_lines_count` must be between 1 and 500",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    self.drawing_settings.max_lines_count = Some(value as u32);
-                }
-                "max_polylines_count" => {
-                    if arg.name.is_none() {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_NAME",
-                            "`strategy` argument `max_polylines_count` must be named in the current subset",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    let Some(value) = const_int_value(&arg.value) else {
-                        continue;
-                    };
-                    if !(1..=100).contains(&value) {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `max_polylines_count` must be between 1 and 100",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    self.drawing_settings.max_polylines_count = Some(value as u32);
-                }
-                _ => {}
-            }
-        }
-
-        if default_qty_type_arg.is_some() {
-            if let (Some(default_qty_constructor), Some(qty)) = (
-                default_qty_constructor,
-                if default_qty_value_arg.is_some() {
-                    default_qty_value
-                } else {
-                    Some(1.0)
-                },
-            ) {
-                self.strategy_settings.default_qty = Some(default_qty_constructor(qty));
-            }
-        } else if let Some(qty) = default_qty_value {
-            self.strategy_settings.default_qty = Some(pine_ir::StrategyDefaultQuantity::Fixed(qty));
-        }
-        if commission_value_arg.is_some() && commission_type_arg.is_none() {
-            if let Some(arg) = commission_value_arg {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_VALUE",
-                    "`strategy` argument `commission_value` requires a supported commission_type",
-                    arg.span,
-                ));
-            }
-            return;
-        }
-        if let Some(commission_constructor) = commission_constructor {
-            self.strategy_settings.commission =
-                Some(commission_constructor(commission_value.unwrap_or(0.0)));
-        }
-    }
-
     pub(crate) fn validate_strategy_order_call(
         &mut self,
         name: &str,
@@ -503,6 +162,7 @@ impl Analyzer {
         if !matches!(
             name,
             "strategy.entry"
+                | "strategy.order"
                 | "strategy.close"
                 | "strategy.close_all"
                 | "strategy.cancel"
@@ -522,6 +182,8 @@ impl Analyzer {
 
         if name == "strategy.entry" {
             self.validate_strategy_entry_args(args);
+        } else if name == "strategy.order" {
+            self.validate_strategy_order_args(args);
         } else if name == "strategy.close" {
             self.validate_strategy_close_args(args);
         } else if name == "strategy.exit" {
@@ -557,12 +219,7 @@ impl Analyzer {
             return true;
         }
 
-        if is_supported_strategy_state_variable(name) {
-            return false;
-        }
-
-        self.unsupported(name, STRATEGY_STATE_UNSUPPORTED_REASON, span);
-        true
+        false
     }
 
     pub(crate) fn validate_strategy_entry_args(&mut self, args: &[CallArg]) {
@@ -620,6 +277,126 @@ impl Analyzer {
                         ));
                     }
                 }
+                _ => {}
+            }
+        }
+    }
+
+    pub(crate) fn validate_strategy_order_args(&mut self, args: &[CallArg]) {
+        fn strategy_order_arg_name(index: usize, arg: &CallArg) -> Option<&str> {
+            arg.name.as_deref().or_else(|| {
+                [
+                    "id",
+                    "direction",
+                    "qty",
+                    "limit",
+                    "stop",
+                    "oca_name",
+                    "oca_type",
+                    "comment",
+                    "alert_message",
+                    "disable_alert",
+                ]
+                .get(index)
+                .copied()
+            })
+        }
+        let direction = args.iter().enumerate().find_map(|(index, arg)| {
+            let name = strategy_order_arg_name(index, arg)?;
+            (name == "direction")
+                .then(|| const_string_value(&arg.value))
+                .flatten()
+        });
+        let has_qty = args
+            .iter()
+            .enumerate()
+            .any(|(index, arg)| strategy_order_arg_name(index, arg) == Some("qty"));
+        if direction.as_deref() == Some("strategy.short")
+            && !has_qty
+            && let Some(direction_arg) = args.iter().enumerate().find_map(|(index, arg)| {
+                (strategy_order_arg_name(index, arg) == Some("direction")).then_some(arg)
+            })
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_VALUE",
+                "`strategy.order` reduce-only strategy.short requires an explicit positive qty",
+                direction_arg.span,
+            ));
+        }
+        for (index, arg) in args.iter().enumerate() {
+            let Some(name) = strategy_order_arg_name(index, arg) else {
+                continue;
+            };
+            match name {
+                "direction" => {
+                    let Some(direction) = const_string_value(&arg.value) else {
+                        continue;
+                    };
+                    if !matches!(direction.as_str(), "strategy.long" | "strategy.short") {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy.order` argument `direction` only supports strategy.long or reduce-only strategy.short",
+                            arg.span,
+                        ));
+                    }
+                }
+                "qty" => {
+                    if let Some(qty) = const_numeric_value(&arg.value)
+                        && (!qty.is_finite() || qty <= 0.0)
+                    {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy.order` argument `qty` must be finite and positive",
+                            arg.span,
+                        ));
+                    }
+                }
+                "limit" => {
+                    if direction.as_deref() == Some("strategy.short") {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_NAME",
+                            "`strategy.order` argument `limit` is only supported for strategy.long",
+                            arg.span,
+                        ));
+                    }
+                    if let Some(limit) = const_numeric_value(&arg.value)
+                        && (!limit.is_finite() || limit <= 0.0)
+                    {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy.order` argument `limit` must be positive",
+                            arg.span,
+                        ));
+                    }
+                }
+                "stop" => {
+                    if direction.as_deref() == Some("strategy.short") {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_NAME",
+                            "`strategy.order` argument `stop` is only supported for strategy.long",
+                            arg.span,
+                        ));
+                    }
+                    if let Some(stop) = const_numeric_value(&arg.value)
+                        && (!stop.is_finite() || stop <= 0.0)
+                    {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy.order` argument `stop` must be positive",
+                            arg.span,
+                        ));
+                    }
+                }
+                "oca_name" | "oca_type" => {
+                    self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_NAME",
+                            format!(
+                            "`strategy.order` argument `{name}` is outside the supported market/limit/stop/stop-limit-long subset"
+                        ),
+                            arg.span,
+                        ));
+                }
+                "comment" | "alert_message" | "disable_alert" => {}
                 _ => {}
             }
         }

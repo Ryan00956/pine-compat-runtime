@@ -6,4 +6,8 @@ source.set(0, current)
 window = source.slice(0, 1)
 previous_window = window[1]
 previous_id = na(previous_window) ? na : previous_window.get(0)
+dynamic_offset = bar_index == 0 ? na : 1
+dynamic_previous_window = window[dynamic_offset]
+plot(na(previous_window) ? 1 : 0)
+plot(na(dynamic_previous_window) ? 1 : 0)
 plot(na(previous_id) ? na : label.get_x(previous_id))

@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array every table method")
+values = array.new_table()
+plot(values.every() ? 1 : 0)

@@ -1,0 +1,27 @@
+//@version=6
+indicator("Matrix row/column branch read")
+
+values = matrix.new<float>(2, 2, 0)
+matrix.set(values, 0, 0, close + 1)
+matrix.set(values, 0, 1, close + 10)
+matrix.set(values, 1, 0, close + 100)
+matrix.set(values, 1, 1, close + 1000)
+
+row_total = close * 0
+column_total = close * 0
+
+if bar_index % 2 == 0
+    row_values = matrix.row(values, 0)
+    matrix.set(values, 0, 0, close + 100)
+    row_values.set(1, close + 200)
+    row_total := row_values.get(0) + row_values.get(1) + matrix.get(values, 0, 1)
+else
+    column_values = values.col(0)
+    matrix.set(values, 1, 0, close + 1000)
+    column_values.set(1, close + 300)
+    column_total := column_values.get(0) + column_values.get(1) + matrix.get(values, 1, 0)
+
+plot(row_total, "row_total")
+plot(column_total, "column_total")
+plot(matrix.get(values, 0, 0), "matrix_00")
+plot(matrix.get(values, 1, 0), "matrix_10")

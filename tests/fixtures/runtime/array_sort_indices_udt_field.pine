@@ -1,0 +1,21 @@
+//@version=5
+indicator("Array sort_indices UDT field")
+type Point
+    float x
+    string tag
+
+by_x = array.from(Point.new(3.0, "c"), Point.new(1.0, "a"), Point.new(2.0, "b"))
+x_indices = array.sort_indices(by_x, order.ascending, "x")
+first_after_x_indices = by_x.get(0)
+plot(x_indices.get(0))
+plot(x_indices.get(1))
+plot(x_indices.get(2))
+plot(first_after_x_indices.x)
+
+by_tag = array.from(Point.new(1.0, "b"), Point.new(2.0, "a"), Point.new(3.0, "c"))
+tag_indices = by_tag.sort_indices(order.descending, "tag")
+first_after_tag_indices = by_tag.get(0)
+plot(tag_indices.get(0))
+plot(tag_indices.get(1))
+plot(tag_indices.get(2))
+plot(first_after_tag_indices.x)

@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported matrix remove_col")
+
+values = matrix.new<float>(1, 2, close)
+matrix.remove_col(values, 1)
+values.remove_col(0)
+plot(close)

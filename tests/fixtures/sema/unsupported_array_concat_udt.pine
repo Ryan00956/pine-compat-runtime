@@ -1,9 +1,11 @@
 //@version=5
-indicator("Unsupported array concat UDT")
+indicator("Unsupported array concat mixed UDT")
 type Point
+    float x
+type Marker
     float x
 
 left = array.from(Point.new(close))
-right = array.from(Point.new(open))
+right = array.from(Marker.new(open))
 result = array.concat(left, right)
 plot(close)

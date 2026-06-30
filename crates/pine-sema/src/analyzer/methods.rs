@@ -99,6 +99,16 @@ impl Analyzer {
             .get(&(receiver_type_name.clone(), method_name.to_owned()))
             .cloned()
         else {
+            if self.imported_user_types.contains_key(&receiver_type_name) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_IMPORT_UNSUPPORTED_METHOD",
+                    format!(
+                        "imported method `{method_name}` for receiver `{receiver_type_name}` is not supported; imported method dispatch requires imported UDT identity"
+                    ),
+                    span,
+                ));
+                return Some(None);
+            }
             self.diagnostics.push(Diagnostic::error(
                 "E_UNKNOWN_METHOD",
                 format!("unknown method `{method_name}` for `{receiver_type_name}`"),

@@ -1,0 +1,12 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT for expression")
+
+p = for i = 0 to 2
+    made = lib.Point.new(close + i)
+    made
+
+lib.Point typed = for i = 0 to 1
+    p
+
+plot(p.x + typed.x)

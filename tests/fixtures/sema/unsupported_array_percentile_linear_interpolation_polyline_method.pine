@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentile linear interpolation polyline method")
+values = array.new_polyline(0)
+plot(values.percentile_linear_interpolation(50))

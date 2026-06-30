@@ -989,6 +989,275 @@ plot(close + sum)
 }
 
 #[test]
+fn runs_while_expression_scalar_result() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/while_expression.pine",
+        include_str!("../../../../tests/fixtures/runtime/while_expression.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_values_close(&result.plots[0].values, &[2.0, 3.0, 4.0]);
+    assert_eq!(result.plots[1].values, vec![PineValue::Na; 3]);
+    assert_values_close(&result.plots[2].values, &[30.0, 30.0, 30.0]);
+}
+
+#[test]
+fn runs_while_expression_stateful_scope() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/while_expression_stateful_scope.pine",
+        include_str!("../../../../tests/fixtures/runtime/while_expression_stateful_scope.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_values_close(&result.plots[0].values, &[5.0, 8.0, 11.0]);
+}
+
+#[test]
+fn runs_while_expression_nested_control() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/while_expression_nested_control.pine",
+        include_str!("../../../../tests/fixtures/runtime/while_expression_nested_control.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_values_close(&result.plots[0].values, &[12.0, 12.0, 12.0]);
+}
+
+#[test]
+fn runs_while_expression_tuple_result() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/while_expression_tuple.pine",
+        include_str!("../../../../tests/fixtures/runtime/while_expression_tuple.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(&result.plots[0].values, &[3.0, 3.0, 3.0]);
+    assert_values_close(&result.plots[1].values, &[30.0, 30.0, 30.0]);
+}
+
+#[test]
+fn runs_while_expression_array_result() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/while_expression_array.pine",
+        include_str!("../../../../tests/fixtures/runtime/while_expression_array.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(&result.plots[0].values, &[2.0, 2.0, 2.0]);
+    assert_values_close(&result.plots[1].values, &[7.0, 8.0, 9.0]);
+}
+
+#[test]
+fn runs_while_expression_array_result_mutation() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/while_expression_array_mutation.pine",
+        include_str!("../../../../tests/fixtures/runtime/while_expression_array_mutation.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(&result.plots[0].values, &[2.0, 2.0, 2.0]);
+    assert_values_close(&result.plots[1].values, &[17.0, 18.0, 19.0]);
+}
+
+#[test]
+fn runs_while_expression_array_alias_result() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/while_expression_array_alias.pine",
+        include_str!("../../../../tests/fixtures/runtime/while_expression_array_alias.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(&result.plots[0].values, &[12.0, 14.0, 16.0]);
+    assert_values_close(&result.plots[1].values, &[12.0, 14.0, 16.0]);
+}
+
+#[test]
+fn runs_while_expression_array_history_result() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/while_expression_array_history.pine",
+        include_str!("../../../../tests/fixtures/runtime/while_expression_array_history.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 5);
+    assert_values_close(&result.plots[0].values, &[3.0, 4.0, 5.0]);
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_values_close(&result.plots[1].values[1..], &[103.0, 104.0]);
+    assert_eq!(result.plots[2].values[0], PineValue::Na);
+    assert_values_close(&result.plots[2].values[1..], &[4.0, 5.0]);
+    assert_values_close(&result.plots[3].values, &[1.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[4].values, &[1.0, 0.0, 0.0]);
+}
+
+#[test]
+fn runs_while_expression_array_control_result() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/while_expression_array_control.pine",
+        include_str!("../../../../tests/fixtures/runtime/while_expression_array_control.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 4);
+    assert_values_close(&result.plots[0].values, &[4.0, 5.0, 6.0]);
+    assert_values_close(&result.plots[1].values, &[3.0, 3.0, 3.0]);
+    assert_values_close(&result.plots[2].values, &[3.0, 4.0, 5.0]);
+    assert_values_close(&result.plots[3].values, &[2.0, 2.0, 2.0]);
+}
+
+#[test]
+fn runs_while_expression_array_zero_result() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/while_expression_array_zero.pine",
+        include_str!("../../../../tests/fixtures/runtime/while_expression_array_zero.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(&result.plots[0].values, &[1.0, 1.0, 1.0]);
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[1], PineValue::Na);
+    assert_eq!(result.plots[1].values[2], PineValue::Na);
+}
+
+#[test]
+fn runs_while_expression_udt_result() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/while_expression_udt.pine",
+        include_str!("../../../../tests/fixtures/runtime/while_expression_udt.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_values_close(&result.plots[0].values, &[7.0, 8.0, 9.0]);
+}
+
+#[test]
+fn runs_while_loop_history_reads_and_udf_calls() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/while_history_udf.pine",
+        r#"//@version=5
+indicator("While history UDF")
+bump(prev, index) =>
+    prev + index
+
+i = 0
+total = close * 0.0
+while i < 2
+    total := total + bump(nz(close[1]), i)
+    i := i + 1
+plot(total)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_values_close(&result.plots[0].values, &[1.0, 3.0, 5.0]);
+}
+
+#[test]
 fn runs_nested_while_loop_control_on_nearest_loop() {
     let source = SourceFile::new(
         "test.pine",
@@ -1259,6 +1528,38 @@ plot(value)
 }
 
 #[test]
+fn runs_condition_switch_statement_block_arm() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/switch_statement_block.pine",
+        r#"indicator("condition switch block")
+value = switch
+    close > open =>
+        sample = ta.sma(close, 2)
+        sample + 1
+    => close
+plot(value)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        bar_ohlc(0.0, 1.0, 0.0, 1.0),
+        bar_ohlc(3.0, 3.0, 2.0, 2.0),
+        bar_ohlc(3.0, 4.0, 3.0, 4.0),
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[2.0, 3.5]);
+}
+
+#[test]
 fn runs_selector_switch_expression() {
     let source = SourceFile::new(
         "test.pine",
@@ -1287,6 +1588,253 @@ plot(value)
 
     assert_eq!(result.plots.len(), 1);
     assert_values_close(&result.plots[0].values, &[5.0, 1.0, 2.0]);
+}
+
+#[test]
+fn runs_selector_switch_statement_block_arm() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/switch_statement_block_selector.pine",
+        r#"indicator("selector switch block")
+direction = close > open ? 1 : close < open ? -1 : 0
+value = switch direction
+    1 =>
+        selected = high
+        selected + 1
+    -1 =>
+        selected = low
+        selected - 1
+    => close
+plot(value)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        bar_ohlc(1.0, 5.0, 0.0, 2.0),
+        bar_ohlc(3.0, 6.0, 1.0, 2.0),
+        bar_ohlc(2.0, 7.0, 4.0, 2.0),
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_values_close(&result.plots[0].values, &[6.0, 0.0, 2.0]);
+}
+
+#[test]
+fn runs_default_switch_statement_block_arm() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/switch_statement_block_default.pine",
+        r#"indicator("default switch block")
+condition_value = switch
+    close > open => high
+    =>
+        fallback = close
+        fallback + 1
+
+direction = 0
+selector_value = switch direction
+    1 => high
+    =>
+        fallback = low
+        fallback - 1
+
+plot(condition_value)
+plot(selector_value)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        bar_ohlc(1.0, 5.0, 0.0, 2.0),
+        bar_ohlc(3.0, 6.0, 1.0, 2.0),
+        bar_ohlc(2.0, 7.0, 4.0, 2.0),
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(&result.plots[0].values, &[5.0, 3.0, 3.0]);
+    assert_values_close(&result.plots[1].values, &[-1.0, 0.0, 3.0]);
+}
+
+#[test]
+fn runs_switch_statement_block_scope_and_outer_assignment() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/switch_statement_block_scope.pine",
+        r#"indicator("switch block scope")
+outer = close * 0.0
+value = switch
+    close > open =>
+        local = high
+        outer := local + 10
+        outer + 1
+    close < open =>
+        local = low
+        outer := local + 20
+        outer + 2
+    =>
+        local = close
+        outer := local + 30
+        outer + 3
+
+plot(value)
+plot(outer)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        bar_ohlc(1.0, 5.0, 0.0, 2.0),
+        bar_ohlc(3.0, 6.0, 1.0, 2.0),
+        bar_ohlc(2.0, 7.0, 4.0, 2.0),
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(&result.plots[0].values, &[16.0, 23.0, 35.0]);
+    assert_values_close(&result.plots[1].values, &[15.0, 21.0, 32.0]);
+}
+
+#[test]
+fn runs_switch_statement_block_loop_control() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/switch_statement_block_loop_control.pine",
+        r#"indicator("switch block loop control")
+total = 0
+
+for i = 0 to 5
+    switch
+        i == 1 =>
+            total := total + 10
+            continue
+            0
+        i == 4 =>
+            total := total + 100
+            break
+            0
+        =>
+            total := total + i
+            0
+
+plot(close + total)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_values_close(&result.plots[0].values, &[116.0, 117.0, 118.0]);
+}
+
+#[test]
+fn runs_switch_statement_block_tuple_result() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/switch_statement_block_tuple.pine",
+        r#"indicator("switch block tuple")
+[first, second] = switch
+    close > open =>
+        selected = high
+        [selected + 1, close + 10]
+    close < open =>
+        selected = low
+        [selected + 2, close + 20]
+    =>
+        selected = close
+        [selected + 3, close + 30]
+
+plot(first)
+plot(second)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        bar_ohlc(1.0, 5.0, 0.0, 2.0),
+        bar_ohlc(3.0, 6.0, 1.0, 2.0),
+        bar_ohlc(2.0, 7.0, 4.0, 2.0),
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(&result.plots[0].values, &[6.0, 3.0, 5.0]);
+    assert_values_close(&result.plots[1].values, &[12.0, 22.0, 32.0]);
+}
+
+#[test]
+fn runs_switch_statement_block_udt_result() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/switch_statement_block_udt.pine",
+        r#"indicator("switch block UDT")
+type Point
+    float x
+    float y
+
+Point value = switch
+    close > open =>
+        made = Point.new(high + 10, low)
+        made
+    close < open =>
+        made = Point.new(low + 20, high)
+        made
+    =>
+        Point.new(close + 30, open)
+
+plot(value.x + value.y)
+
+value := switch bar_index
+    2 =>
+        next = Point.new(high + 40, low)
+        next
+    =>
+        next = Point.new(close + 50, open)
+        next
+
+plot(value.x + value.y)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        bar_ohlc(1.0, 5.0, 0.0, 2.0),
+        bar_ohlc(3.0, 6.0, 1.0, 2.0),
+        bar_ohlc(2.0, 7.0, 4.0, 2.0),
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(&result.plots[0].values, &[15.0, 27.0, 34.0]);
+    assert_values_close(&result.plots[1].values, &[53.0, 55.0, 51.0]);
 }
 
 #[test]

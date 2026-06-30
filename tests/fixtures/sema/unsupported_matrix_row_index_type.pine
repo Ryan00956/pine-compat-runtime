@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix.row index type")
+
+values = matrix.new<float>(1, 1, close)
+row_values = matrix.row(values, "row")
+plot(array.size(row_values))

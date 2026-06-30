@@ -96,63 +96,9 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "runtime_str_format_default_number_format.json",
         "tests/fixtures/runtime/str_format_default_number_format.pine",
     ),
-    (
-        "runtime_array_helpers.json",
-        "tests/fixtures/runtime/array_helpers.pine",
-    ),
-    ("runtime_array.json", "tests/fixtures/runtime/array.pine"),
-    (
-        "runtime_array_methods.json",
-        "tests/fixtures/runtime/array_methods.pine",
-    ),
-    (
-        "runtime_computed_array_operands.json",
-        "tests/fixtures/runtime/computed_array_operands.pine",
-    ),
-    (
-        "runtime_array_from.json",
-        "tests/fixtures/runtime/array_from.pine",
-    ),
-    (
-        "runtime_array_insert_remove.json",
-        "tests/fixtures/runtime/array_insert_remove.pine",
-    ),
-    (
-        "runtime_array_fill.json",
-        "tests/fixtures/runtime/array_fill.pine",
-    ),
-    (
-        "runtime_array_clear.json",
-        "tests/fixtures/runtime/array_clear.pine",
-    ),
-    (
-        "runtime_array_references.json",
-        "tests/fixtures/runtime/array_references.pine",
-    ),
-    (
-        "runtime_array_search.json",
-        "tests/fixtures/runtime/array_search.pine",
-    ),
-    (
-        "runtime_array_statistics.json",
-        "tests/fixtures/runtime/array_statistics.pine",
-    ),
-    (
-        "runtime_array_ordering.json",
-        "tests/fixtures/runtime/array_ordering.pine",
-    ),
-    (
-        "runtime_array_ordering_control_flow.json",
-        "tests/fixtures/runtime/array_ordering_control_flow.pine",
-    ),
-    (
-        "runtime_array_join.json",
-        "tests/fixtures/runtime/array_join.pine",
-    ),
-    (
-        "runtime_array_slice_concat.json",
-        "tests/fixtures/runtime/array_slice_concat.pine",
-    ),
+];
+
+pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     (
         "runtime_timeframe.json",
         "tests/fixtures/runtime/timeframe.pine",
@@ -775,87 +721,5 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     (
         "runtime_table_merge_cells.json",
         "tests/fixtures/runtime/table_merge_cells.pine",
-    ),
-    (
-        "runtime_loop_state_interactions.json",
-        "tests/fixtures/runtime/loop_state_interactions.pine",
-    ),
-    (
-        "runtime_branch_loop_interactions.json",
-        "tests/fixtures/runtime/branch_loop_interactions.pine",
-    ),
-    ("runtime_switch.json", "tests/fixtures/runtime/switch.pine"),
-    (
-        "runtime_block_statements.json",
-        "tests/fixtures/runtime/block_statements.pine",
-    ),
-    (
-        "runtime_for_edges.json",
-        "tests/fixtures/runtime/for_edges.pine",
-    ),
-    (
-        "runtime_for_stateful.json",
-        "tests/fixtures/runtime/for_stateful.pine",
-    ),
-    ("runtime_while.json", "tests/fixtures/runtime/while.pine"),
-    (
-        "runtime_while_edges.json",
-        "tests/fixtures/runtime/while_edges.pine",
-    ),
-    (
-        "runtime_while_stateful.json",
-        "tests/fixtures/runtime/while_stateful.pine",
-    ),
-    (
-        "runtime_local_scope.json",
-        "tests/fixtures/runtime/local_scope.pine",
-    ),
-    (
-        "runtime_history_edges.json",
-        "tests/fixtures/runtime/history_edges.pine",
-    ),
-    (
-        "runtime_dynamic_history.json",
-        "tests/fixtures/runtime/dynamic_history.pine",
-    ),
-    (
-        "runtime_dynamic_history_scopes.json",
-        "tests/fixtures/runtime/dynamic_history_scopes.pine",
-    ),
-    (
-        "runtime_series_history_offset.json",
-        "tests/fixtures/runtime/series_history_offset.pine",
-    ),
-    (
-        "runtime_max_bars_back.json",
-        "tests/fixtures/runtime/max_bars_back.pine",
-    ),
-    (
-        "runtime_varip_scalar.json",
-        "tests/fixtures/runtime/varip_scalar.pine",
-    ),
-    (
-        "runtime_varip_local.json",
-        "tests/fixtures/runtime/varip_local.pine",
-    ),
-    (
-        "runtime_varip_array.json",
-        "tests/fixtures/runtime/varip_array.pine",
-    ),
-    (
-        "runtime_request_security_same_context.json",
-        "tests/fixtures/runtime/request_security_same_context.pine",
-    ),
-    (
-        "runtime_user_types.json",
-        "tests/fixtures/runtime/user_types.pine",
-    ),
-    (
-        "runtime_user_type_functions.json",
-        "tests/fixtures/runtime/user_type_functions.pine",
-    ),
-    (
-        "runtime_user_methods.json",
-        "tests/fixtures/runtime/user_methods.pine",
     ),
 ];

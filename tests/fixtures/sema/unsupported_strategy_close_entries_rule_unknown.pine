@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported close entries rule unknown", close_entries_rule="LIFO")
+plot(close)

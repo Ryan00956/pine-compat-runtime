@@ -20,10 +20,12 @@ Switch expressions:
 - Selector-less condition arms are supported.
 - Selector/case arms are supported.
 - Default arms are supported.
-- Arms return expressions only.
+- Expression arms and result-producing statement-block arms are supported.
 - Stateful callsites inside switch arms advance only when the selected arm
   executes.
 - A switch with no matching arm and no default returns `na`.
+- Imported UDT constructor results from statement-block arms are fixture-backed
+  rejected.
 
 For loops:
 
@@ -41,12 +43,26 @@ For loops:
 
 While loops:
 
-- Statement-only `while condition` loops are supported.
+- Statement-form `while condition` loops and scalar `while` expression results
+  are supported.
 - Conditions must type-check as bool.
 - Runtime `na` conditions exit the loop like false.
 - `break` and `continue` target the nearest enclosing loop.
 - Nested loops, local declarations, local `var`, and stateful callsites inside
   loop bodies are supported.
+- Scalar `while` expressions return the latest reached final body expression or
+  `na`, with fixture-backed stateful callsite advancement and loop-local
+  declaration no-leak behavior.
+- `break` and `continue` inside a while-expression body are contained by the
+  nearest while expression when evaluated inside an outer loop.
+- Tuple declaration/destructuring from while-expression results is covered.
+- Same-local UDT constructor or block-local alias results from while
+  expressions are covered.
+- Fresh or existing-alias scalar-array results with caller-side reads and
+  mutation from while expressions are covered.
+- Nested-array results from while expressions are fixture-backed rejected.
+- Imported UDT constructor results from while expressions are fixture-backed
+  rejected.
 - A deterministic runtime iteration guard rejects non-terminating loops.
 
 Branch and loop interactions:

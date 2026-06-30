@@ -1,0 +1,17 @@
+//@version=6
+indicator("Matrix remove_col")
+
+values = matrix.new<float>(2, 3, 1)
+matrix.set(values, 0, 1, 2)
+matrix.set(values, 0, 2, 3)
+matrix.set(values, 1, 0, 4)
+matrix.set(values, 1, 1, 5)
+matrix.set(values, 1, 2, 6)
+
+matrix.remove_col(values, 1)
+values.remove_col(1)
+
+plot(matrix.rows(values), "rows")
+plot(matrix.columns(values), "columns")
+plot(matrix.get(values, 0, 0), "r0c0")
+plot(matrix.get(values, 1, 0), "r1c0")

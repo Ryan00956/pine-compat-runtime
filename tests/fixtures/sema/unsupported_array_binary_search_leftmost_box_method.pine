@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.binary_search_leftmost box method")
+values = array.new_box()
+plot(values.binary_search_leftmost(1))

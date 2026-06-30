@@ -1,0 +1,19 @@
+//@version=5
+indicator("For in UDT array")
+
+type Point
+    float x
+    string tag
+
+points = array.from(Point.new(close, "close"), Point.new(open, "open"), Point.new(high, "high"))
+float sum = 0.0
+int tag_len = 0
+for point in points
+    point.x := point.x + 10
+    sum := sum + point.x
+    tag_len := tag_len + str.length(point.tag)
+
+first_after = points.get(0)
+plot(sum)
+plot(tag_len)
+plot(first_after.x)

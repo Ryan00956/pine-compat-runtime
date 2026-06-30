@@ -1,0 +1,22 @@
+//@version=6
+indicator("Matrix UDF read")
+
+namespace_cell(values) =>
+    matrix.get(values, 0, 0)
+
+method_cell(values) =>
+    values.get(0, 1)
+
+namespace_shape(values) =>
+    matrix.rows(values) + matrix.columns(values)
+
+method_shape(values) =>
+    values.rows() * values.columns()
+
+values = matrix.new<float>(2, 3, close)
+matrix.set(values, 0, 1, close + 10)
+
+plot(namespace_cell(values), "namespace_cell")
+plot(method_cell(values), "method_cell")
+plot(namespace_shape(values), "namespace_shape")
+plot(method_shape(values), "method_shape")

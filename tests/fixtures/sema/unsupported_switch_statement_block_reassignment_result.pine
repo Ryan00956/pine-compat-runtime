@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported switch statement block reassignment result")
+
+total = 0.0
+value = switch
+    close > open =>
+        total := high
+    => close
+
+plot(value)

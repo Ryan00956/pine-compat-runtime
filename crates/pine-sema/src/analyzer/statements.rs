@@ -1,5 +1,8 @@
 use crate::prelude::*;
 
+mod declarations;
+mod for_in;
+
 impl Analyzer {
     pub(crate) fn analyze_program(&mut self, program: &Program) {
         self.register_user_types(program);
@@ -133,6 +136,14 @@ impl Analyzer {
                 self.loop_depth -= 1;
                 self.block_depth -= 1;
             }
+            StmtKind::ForIn {
+                index,
+                value,
+                iterable,
+                body,
+            } => {
+                self.analyze_for_in_stmt(index.as_deref(), value, iterable, body, statement.span);
+            }
             StmtKind::While { condition, body } => {
                 let condition_type = self.analyze_expr(condition);
                 if let Some(condition_type) = condition_type {
@@ -188,11 +199,19 @@ impl Analyzer {
             } => {
                 let value_type = self.analyze_expr(value).unwrap_or(UNKNOWN);
                 let declared_pine_type =
-                    self.declared_pine_type(declared_type.as_deref(), statement.span);
+                    self.declared_pine_type(declared_type.as_ref(), statement.span);
                 let declared_user_type_name = declared_type
-                    .as_deref()
-                    .filter(|type_name| self.user_types.contains_key(*type_name))
+                    .as_ref()
+                    .and_then(DeclaredType::named_type)
+                    .filter(|type_name| self.is_known_user_type_name(type_name))
                     .map(str::to_owned);
+                let declared_user_type_array_name = declared_type
+                    .as_ref()
+                    .and_then(|declared_type| self.declared_user_type_array_name(declared_type));
+                let inferred_varip_user_type_name = (matches!(mode, pine_syntax::DeclMode::Varip)
+                    && declared_user_type_name.is_none())
+                .then(|| self.direct_user_type_constructor_name(value))
+                .flatten();
                 if let Some(target_type) = declared_pine_type {
                     self.validate_typed_declaration(name, target_type, value_type, statement.span);
                     if let Some(target_user_type_name) = declared_user_type_name.as_deref() {
@@ -204,17 +223,34 @@ impl Analyzer {
                             statement.span,
                         );
                     }
+                    if let Some(target_type_name) = declared_user_type_array_name.as_deref() {
+                        self.validate_user_type_array_value_assignment(
+                            name,
+                            target_type_name,
+                            value,
+                            value_type,
+                            statement.span,
+                        );
+                    }
                     self.compatibility.supported.push(FeatureUse {
                         feature: format!(
                             "{} typed declarations",
-                            declared_type.as_deref().unwrap_or("typed")
+                            declared_type
+                                .as_ref()
+                                .map_or_else(|| "typed".to_owned(), DeclaredType::canonical_name)
                         ),
                         span: statement.span,
                     });
                 }
                 let symbol_type = declared_pine_type.unwrap_or(value_type);
-                let (persistence, var_slot_id) =
-                    self.declaration_persistence(*mode, symbol_type, statement.span);
+                let (persistence, var_slot_id) = self.declaration_persistence(
+                    *mode,
+                    symbol_type,
+                    declared_user_type_name
+                        .as_deref()
+                        .or(inferred_varip_user_type_name.as_deref()),
+                    statement.span,
+                );
                 let symbol = if self.block_depth > 0 || self.function_depth > 0 {
                     self.define_local_symbol_with_persistence(
                         name,
@@ -228,8 +264,15 @@ impl Analyzer {
                 };
                 if let Some(type_name) = declared_user_type_name {
                     self.mark_symbol_user_type(symbol, type_name);
+                } else if let Some(type_name) = declared_user_type_array_name {
+                    self.mark_symbol_user_type_array(symbol, type_name);
                 } else if let Some(type_name) = self.user_type_name_of_expr(value) {
                     self.mark_symbol_user_type(symbol, type_name);
+                }
+                if symbol_type.kind == ValueKind::UserTypeArray
+                    && let Some(type_name) = self.user_type_array_name_of_expr(value)
+                {
+                    self.mark_symbol_user_type_array(symbol, type_name);
                 }
                 self.bind_symbol(name, statement.span, symbol);
             }
@@ -259,6 +302,19 @@ impl Analyzer {
                     {
                         let target_type_name = target_type_name.clone();
                         self.validate_user_type_value_assignment(
+                            name,
+                            &target_type_name,
+                            value,
+                            value_type,
+                            statement.span,
+                        );
+                    }
+                    if target_type.kind == ValueKind::UserTypeArray
+                        && let Some(symbol) = self.scope.resolve(name)
+                        && let Some(target_type_name) = self.symbol_user_type_arrays.get(&symbol.id)
+                    {
+                        let target_type_name = target_type_name.clone();
+                        self.validate_user_type_array_value_assignment(
                             name,
                             &target_type_name,
                             value,
@@ -297,28 +353,43 @@ impl Analyzer {
                             )
                         })
                 };
+                let receiver_is_global = self.scope.resolves_to_global(receiver);
+                let receiver_is_function_param = target
+                    .as_ref()
+                    .and_then(|(_, _, _, receiver_symbol)| receiver_symbol.as_ref())
+                    .is_some_and(|symbol| {
+                        self.function_param_symbols
+                            .last()
+                            .is_some_and(|params| params.contains(&symbol.id))
+                    });
+                let is_method_context = self
+                    .function_context_is_method
+                    .last()
+                    .copied()
+                    .unwrap_or(false);
                 let allowed_function_local_udt_mutation =
                     target
                         .as_ref()
                         .is_some_and(|(_, _, feature, receiver_symbol)| {
                             *feature == "user-defined type field mutation"
-                                && !self
-                                    .function_context_is_method
-                                    .last()
-                                    .copied()
-                                    .unwrap_or(false)
-                                && receiver_symbol.is_some_and(|symbol| {
-                                    !self.scope.resolves_to_global(receiver)
-                                        && !self
-                                            .function_param_symbols
-                                            .last()
-                                            .is_some_and(|params| params.contains(&symbol.id))
-                                })
+                                && !is_method_context
+                                && receiver_symbol.is_some()
+                                && !receiver_is_global
+                                && !receiver_is_function_param
                         });
                 if self.function_depth > 0 && !allowed_function_local_udt_mutation {
                     let reason = match target.as_ref().map(|(_, _, feature, _)| *feature) {
+                        Some("user-defined type field mutation") if is_method_context => {
+                            "mutating user-defined type fields inside methods is not supported"
+                        }
+                        Some("user-defined type field mutation") if receiver_is_function_param => {
+                            "mutating user-defined type parameter fields inside user-defined functions is not supported"
+                        }
+                        Some("user-defined type field mutation") if receiver_is_global => {
+                            "mutating fields on global user-defined type values inside user-defined functions is not supported"
+                        }
                         Some("user-defined type field mutation") => {
-                            "mutating user-defined type fields inside user-defined functions or methods is not supported"
+                            "mutating user-defined type fields inside user-defined functions is not supported"
                         }
                         Some("chart.point field mutation") => {
                             "mutating chart.point fields inside user-defined functions or methods is not supported"
@@ -359,265 +430,11 @@ impl Analyzer {
             }
         }
     }
-
-    fn declaration_persistence(
-        &mut self,
-        mode: pine_syntax::DeclMode,
-        value_type: PineType,
-        span: Span,
-    ) -> (PersistenceKind, Option<pine_ir::VarSlotId>) {
-        match mode {
-            pine_syntax::DeclMode::Normal => (PersistenceKind::None, None),
-            pine_syntax::DeclMode::Var => (PersistenceKind::Var, Some(self.alloc_var_slot())),
-            pine_syntax::DeclMode::Varip => {
-                if is_drawing_id_value(value_type.kind) {
-                    self.unsupported("varip", VARIP_DRAWING_UNSUPPORTED_REASON, span);
-                    return (PersistenceKind::None, None);
-                }
-                if !is_supported_varip_value(value_type.kind) {
-                    self.unsupported("varip", VARIP_VALUE_UNSUPPORTED_REASON, span);
-                    return (PersistenceKind::None, None);
-                }
-                self.compatibility.supported.push(FeatureUse {
-                    feature: "varip".to_owned(),
-                    span,
-                });
-                (PersistenceKind::Varip, Some(self.alloc_var_slot()))
-            }
-        }
-    }
-
-    fn declared_pine_type(&mut self, declared_type: Option<&str>, span: Span) -> Option<PineType> {
-        match declared_type {
-            Some("int") => Some(PineType::new(Qualifier::Series, ValueKind::Int)),
-            Some("float") => Some(PineType::new(Qualifier::Series, ValueKind::Float)),
-            Some("bool") => Some(PineType::new(Qualifier::Series, ValueKind::Bool)),
-            Some("string") => Some(PineType::new(Qualifier::Series, ValueKind::String)),
-            Some("color") => Some(PineType::new(Qualifier::Series, ValueKind::Color)),
-            Some("label") => Some(PineType::new(Qualifier::Series, ValueKind::Label)),
-            Some("line") => Some(PineType::new(Qualifier::Series, ValueKind::Line)),
-            Some("linefill") => Some(PineType::new(Qualifier::Series, ValueKind::LineFill)),
-            Some("polyline") => Some(PineType::new(Qualifier::Series, ValueKind::Polyline)),
-            Some("box") => Some(PineType::new(Qualifier::Series, ValueKind::Box)),
-            Some("table") => Some(PineType::new(Qualifier::Series, ValueKind::Table)),
-            Some("chart.point") => Some(PineType::new(Qualifier::Series, ValueKind::ChartPoint)),
-            Some("array<int>") => Some(PineType::new(Qualifier::Series, ValueKind::IntArray)),
-            Some("array<float>") => Some(PineType::new(Qualifier::Series, ValueKind::FloatArray)),
-            Some("array<bool>") => Some(PineType::new(Qualifier::Series, ValueKind::BoolArray)),
-            Some("array<string>") => Some(PineType::new(Qualifier::Series, ValueKind::StringArray)),
-            Some("array<color>") => Some(PineType::new(Qualifier::Series, ValueKind::ColorArray)),
-            Some("array<label>") => Some(PineType::new(Qualifier::Series, ValueKind::LabelArray)),
-            Some("array<line>") => Some(PineType::new(Qualifier::Series, ValueKind::LineArray)),
-            Some("array<linefill>") => {
-                Some(PineType::new(Qualifier::Series, ValueKind::LineFillArray))
-            }
-            Some("array<polyline>") => {
-                Some(PineType::new(Qualifier::Series, ValueKind::PolylineArray))
-            }
-            Some("array<box>") => Some(PineType::new(Qualifier::Series, ValueKind::BoxArray)),
-            Some("array<table>") => Some(PineType::new(Qualifier::Series, ValueKind::TableArray)),
-            Some("array<chart.point>") => {
-                Some(PineType::new(Qualifier::Series, ValueKind::ChartPointArray))
-            }
-            Some(type_name) if self.user_types.contains_key(type_name) => {
-                Some(PineType::new(Qualifier::Series, ValueKind::UserType))
-            }
-            Some(type_name) => {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_DECL_TYPE",
-                    format!("typed declaration `{type_name}` is not supported"),
-                    span,
-                ));
-                None
-            }
-            None => None,
-        }
-    }
-
-    fn validate_typed_declaration(
-        &mut self,
-        name: &str,
-        target_type: PineType,
-        value_type: PineType,
-        span: Span,
-    ) {
-        if can_assign(target_type, value_type) || value_type.kind == ValueKind::Na {
-            return;
-        }
-
-        self.diagnostics.push(Diagnostic::error(
-            "E_ASSIGN_TYPE",
-            format!(
-                "cannot initialize `{name}` of type {} with {:?} {:?}",
-                typed_declaration_name(target_type.kind),
-                value_type.qualifier,
-                value_type.kind
-            ),
-            span,
-        ));
-    }
-
-    fn validate_user_type_field_assignment(
-        &mut self,
-        name: &str,
-        target_user_type: &str,
-        value: &pine_syntax::Expr,
-        value_type: PineType,
-        span: Span,
-    ) {
-        if self
-            .user_type_name_of_expr(value)
-            .is_some_and(|actual_user_type| actual_user_type == target_user_type)
-        {
-            return;
-        }
-
-        self.diagnostics.push(Diagnostic::error(
-            "E_ASSIGN_TYPE",
-            format!(
-                "cannot assign {:?} {:?} to `{name}` of user-defined type `{target_user_type}`",
-                value_type.qualifier, value_type.kind
-            ),
-            span,
-        ));
-    }
-
-    fn validate_user_type_value_assignment(
-        &mut self,
-        name: &str,
-        target_user_type: &str,
-        value: &pine_syntax::Expr,
-        value_type: PineType,
-        span: Span,
-    ) {
-        if value_type.kind == ValueKind::Na
-            || self
-                .user_type_name_of_expr(value)
-                .is_some_and(|actual_user_type| actual_user_type == target_user_type)
-        {
-            return;
-        }
-
-        self.diagnostics.push(Diagnostic::error(
-            "E_UDT_ASSIGN_TYPE",
-            format!("cannot assign a different user-defined type to `{name}`"),
-            span,
-        ));
-    }
-
-    pub(crate) fn analyze_tuple_decl(&mut self, statement: &pine_syntax::Stmt) {
-        let StmtKind::TupleDecl { names, value } = &statement.kind else {
-            return;
-        };
-        self.analyze_expr(value);
-
-        let Some(element_types) = self.tuple_element_types(value) else {
-            self.diagnostics.push(Diagnostic::error(
-                "E_TUPLE_TYPE",
-                "tuple assignment requires a tuple value",
-                value.span,
-            ));
-            return;
-        };
-
-        if names.len() != element_types.len() {
-            self.diagnostics.push(Diagnostic::error(
-                "E_TUPLE_ARITY",
-                format!(
-                    "tuple assignment expects {} value(s), got {}",
-                    names.len(),
-                    element_types.len()
-                ),
-                statement.span,
-            ));
-            return;
-        }
-
-        if self.block_depth > 0 || self.function_depth > 0 {
-            for (name, pine_type) in names.iter().zip(element_types) {
-                let symbol =
-                    self.define_local_symbol(name, pine_type, None, self.function_depth == 0);
-                self.bind_symbol(name, statement.span, symbol);
-            }
-        } else {
-            for (name, pine_type) in names.iter().zip(element_types) {
-                self.define_symbol(name, pine_type, None);
-                if let Some(symbol) = self.scope.resolve(name) {
-                    self.bind_symbol(name, statement.span, symbol);
-                }
-            }
-        }
-    }
-}
-
-fn is_supported_varip_value(kind: ValueKind) -> bool {
-    matches!(
-        kind,
-        ValueKind::Int
-            | ValueKind::Float
-            | ValueKind::Bool
-            | ValueKind::String
-            | ValueKind::Color
-            | ValueKind::Na
-    ) || is_supported_varip_array(kind)
 }
 
 fn reassigned_symbol_type(target_type: PineType, value_type: PineType) -> PineType {
     PineType::new(
         strongest_qualifier(target_type.qualifier, value_type.qualifier),
         common_kind(target_type.kind, value_type.kind).unwrap_or(target_type.kind),
-    )
-}
-
-fn typed_declaration_name(kind: ValueKind) -> &'static str {
-    match kind {
-        ValueKind::Int => "int",
-        ValueKind::Float => "float",
-        ValueKind::Bool => "bool",
-        ValueKind::String => "string",
-        ValueKind::Color => "color",
-        ValueKind::Label => "label",
-        ValueKind::Line => "line",
-        ValueKind::LineFill => "linefill",
-        ValueKind::Polyline => "polyline",
-        ValueKind::Box => "box",
-        ValueKind::Table => "table",
-        ValueKind::ChartPoint => "chart.point",
-        ValueKind::IntArray => "array<int>",
-        ValueKind::FloatArray => "array<float>",
-        ValueKind::BoolArray => "array<bool>",
-        ValueKind::StringArray => "array<string>",
-        ValueKind::ColorArray => "array<color>",
-        ValueKind::LabelArray => "array<label>",
-        ValueKind::LineArray => "array<line>",
-        ValueKind::LineFillArray => "array<linefill>",
-        ValueKind::PolylineArray => "array<polyline>",
-        ValueKind::BoxArray => "array<box>",
-        ValueKind::TableArray => "array<table>",
-        ValueKind::ChartPointArray => "array<chart.point>",
-        _ => "typed",
-    }
-}
-
-fn is_supported_varip_array(kind: ValueKind) -> bool {
-    matches!(
-        kind,
-        ValueKind::FloatArray
-            | ValueKind::IntArray
-            | ValueKind::BoolArray
-            | ValueKind::StringArray
-            | ValueKind::ColorArray
-    )
-}
-
-fn is_drawing_id_value(kind: ValueKind) -> bool {
-    matches!(
-        kind,
-        ValueKind::Label
-            | ValueKind::Line
-            | ValueKind::LineFill
-            | ValueKind::Polyline
-            | ValueKind::Box
-            | ValueKind::Table
     )
 }

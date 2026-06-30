@@ -1244,6 +1244,105 @@ fn run_script_csv_returns_for_edges_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_for_in_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/for_in.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("for in fixture should run");
+
+    assert_snapshot("runtime_for_in.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_for_in_bool_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/for_in_bool.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("for in bool fixture should run");
+
+    assert_snapshot("runtime_for_in_bool.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_for_in_color_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/for_in_color.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("for in color fixture should run");
+
+    assert_snapshot("runtime_for_in_color.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_for_in_float_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/for_in_float.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("for in float fixture should run");
+
+    assert_snapshot("runtime_for_in_float.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_for_in_control_flow_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/for_in_control_flow.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("for in control flow fixture should run");
+
+    assert_snapshot("runtime_for_in_control_flow.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_for_in_mutation_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/for_in_mutation.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("for in mutation fixture should run");
+
+    assert_snapshot("runtime_for_in_mutation.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_for_in_stateful_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/for_in_stateful.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("for in stateful fixture should run");
+
+    assert_snapshot("runtime_for_in_stateful.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_for_in_string_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/for_in_string.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("for in string fixture should run");
+
+    assert_snapshot("runtime_for_in_string.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_for_in_zero_iteration_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/for_in_zero_iteration.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("for in zero iteration fixture should run");
+
+    assert_snapshot("runtime_for_in_zero_iteration.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_for_stateful_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/for_stateful.pine"),
@@ -1387,6 +1486,17 @@ fn run_script_csv_returns_varip_array_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_user_type_varip_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/user_type_varip.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("user type varip fixture should run");
+
+    assert_snapshot("runtime_user_type_varip.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_request_security_same_context_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/request_security_same_context.pine"),
@@ -1478,7 +1588,7 @@ fn analyze_script_reports_unsupported_user_type_varip_fixture() {
         parsed["compatibility"]["unsupported"][0]["reason"]
             .as_str()
             .expect("unsupported reason should be a string")
-            .contains("other value families")
+            .contains("UDT varip supports only explicit scalar-field declarations")
     );
 }
 
@@ -1502,7 +1612,7 @@ fn analyze_script_reports_unsupported_user_type_field_mutation_fixture() {
         parsed["compatibility"]["unsupported"][0]["reason"]
             .as_str()
             .expect("unsupported reason should be a string")
-            .contains("mutating user-defined type fields")
+            .contains("mutating fields on global user-defined type values")
     );
 }
 
@@ -1625,12 +1735,13 @@ fn run_script_csv_returns_na_fixture_contract() {
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
     assert_eq!(parsed["diagnostics"], serde_json::json!([]));
     let plots = parsed["plots"].as_array().expect("plots");
-    assert_eq!(plots.len(), 5);
+    assert_eq!(plots.len(), 6);
     assert_eq!(plots[0]["values"], serde_json::json!([2, 2, 3, 4]));
     assert_eq!(plots[1]["values"], serde_json::json!([2, 2, 3, 4]));
     assert_eq!(plots[2]["values"], serde_json::json!([2, 2, 4, 4]));
     assert_eq!(plots[3]["values"], serde_json::json!([0, 0, 0, 0]));
     assert_eq!(plots[4]["values"], serde_json::json!([0, 0, 0, 0]));
+    assert_eq!(plots[5]["values"], serde_json::json!([1, 0, 0, 0]));
 }
 
 #[test]
@@ -3458,6 +3569,22 @@ fn runs_strategy_closedtrades_fields_from_csv_to_json() {
 }
 
 #[test]
+fn runs_strategy_closedtrades_fields_pyramiding_from_csv_to_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_closedtrades_fields_pyramiding.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy closed trade fields pyramiding script should run");
+
+    assert_snapshot(
+        "runtime_strategy_closedtrades_fields_pyramiding.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_opentrades_fields_from_csv_to_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_opentrades_fields.pine"),
@@ -3466,6 +3593,22 @@ fn runs_strategy_opentrades_fields_from_csv_to_json() {
     .expect("strategy open trade fields script should run");
 
     assert_snapshot("runtime_strategy_opentrades_fields.json", &output);
+}
+
+#[test]
+fn runs_strategy_opentrades_fields_pyramiding_from_csv_to_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_opentrades_fields_pyramiding.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy open trade fields pyramiding script should run");
+
+    assert_snapshot(
+        "runtime_strategy_opentrades_fields_pyramiding.json",
+        &output,
+    );
 }
 
 #[test]
@@ -3641,6 +3784,28 @@ fn runs_strategy_close_all_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_close_exit_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_close_exit.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy close exit fixture should run");
+
+    assert_snapshot("runtime_strategy_close_exit.json", &output);
+}
+
+#[test]
+fn runs_strategy_close_all_exit_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_close_all_exit.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy close_all exit fixture should run");
+
+    assert_snapshot("runtime_strategy_close_all_exit.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_stop_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_stop.pine"),
@@ -3674,6 +3839,28 @@ fn runs_strategy_cancel_entry_fixture_from_csv_to_public_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_cancel_exit_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_cancel_exit.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy cancel exit script should run");
+
+    assert_snapshot("runtime_strategy_cancel_exit.json", &output);
+}
+
+#[test]
+fn runs_strategy_cancel_noop_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_cancel_noop.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy cancel noop script should run");
+
+    assert_snapshot("runtime_strategy_cancel_noop.json", &output);
+}
+
+#[test]
 fn runs_strategy_cancel_all_entry_exit_fixture_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_cancel_all_entry_exit.pine"),
@@ -3682,6 +3869,28 @@ fn runs_strategy_cancel_all_entry_exit_fixture_from_csv_to_public_strategy_json(
     .expect("strategy cancel all entry exit script should run");
 
     assert_snapshot("runtime_strategy_cancel_all_entry_exit.json", &output);
+}
+
+#[test]
+fn runs_strategy_cancel_all_exit_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_cancel_all_exit.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy cancel all exit script should run");
+
+    assert_snapshot("runtime_strategy_cancel_all_exit.json", &output);
+}
+
+#[test]
+fn runs_strategy_cancel_all_noop_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_cancel_all_noop.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy cancel all noop script should run");
+
+    assert_snapshot("runtime_strategy_cancel_all_noop.json", &output);
 }
 
 #[test]

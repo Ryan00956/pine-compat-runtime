@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix get na row index")
+
+values = matrix.new<float>(2, 2, close)
+missing_row = int(na)
+plot(matrix.get(values, missing_row, 0))

@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported map typed declaration")
+
+map values = na
+plot(close)

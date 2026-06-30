@@ -1,0 +1,7 @@
+//@version=6
+indicator("Matrix row extraction na index")
+
+values = matrix.new<float>(2, 2, close)
+missing_row = int(na)
+row_values = matrix.row(values, missing_row)
+plot(row_values.get(0))

@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.ema Series Length")
+plot(ta.ema(close, bar_index))

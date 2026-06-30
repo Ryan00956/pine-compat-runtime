@@ -1,7 +1,7 @@
 # Strategy Internal Gap Audit
 
-Status: planning audit, refreshed after Strategy Internal Stage 13 on
-2026-06-06.
+Status: planning audit, refreshed through the fixture-backed
+`close_entries_rule="ANY"` and close metadata subset on 2026-06-26.
 
 This audit compares the current fixture-backed strategy subset with the
 internal strategy behavior exposed by TradingView Pine Script strategy
@@ -42,19 +42,25 @@ Pine broker emulator.
 Implemented and fixture-backed:
 
 - `strategy(...)` declaration with selected metadata, positive const
-  `initial_capital`, fixed default quantity, cash-per-contract,
-  cash-per-order, and percent commission, fixed-tick slippage, and fixed-tick limit
-  verification.
+  `initial_capital`, fixed/cash/percent-of-equity default quantities,
+  cash-per-contract, cash-per-order, and percent commission, fixed-tick
+  slippage, fixed-tick limit verification, finite non-negative
+  `margin_long`/`margin_short` declaration parsing, the current long-only active
+  `margin_long` subset, positive integer `pyramiding`, and fixture-backed
+  `close_entries_rule="FIFO"` plus id-specific long-only
+  `close_entries_rule="ANY"`.
 - `strategy.entry(id, strategy.long, qty=...)` and supported configured default
   quantities, including the Stage 13 fixture-backed long-only `pyramiding`
   subset and same-tick long price-based entry exceptions.
 - `strategy.close(id)` as a full close of matching long entries, plus
   fixed-`qty` and `qty_percent` partial closes where `qty` wins when both
-  quantity forms are supplied.
+  quantity forms are supplied, with supported `comment`, `alert_message`, and
+  `disable_alert` metadata.
 - `strategy.close_all()` flattening all open long ledger entries in the current
-  supported long-only multi-entry subset.
-- Public strategy output with `orders`, `trades`, `position`, `equity`, and
-  `diagnostics`.
+  supported long-only multi-entry subset, with supported `comment`,
+  `alert_message`, and `disable_alert` metadata.
+- Public strategy output with `orders`, `trades`, `position`, `equity`,
+  `alerts`, and `diagnostics`.
 - Read-only state/count variables:
   - `strategy.position_size`
   - `strategy.position_avg_price`
@@ -141,6 +147,8 @@ single long-only broker, not a full broker-settings model.
 Missing internal behavior:
 
 - `pyramiding` behavior beyond the current fixture-backed long-only subset
+- broader `close_entries_rule="ANY"` behavior beyond the fixture-backed
+  id-specific long-only close/exit allocation subset
 - `calc_on_order_fills`
 - `calc_on_every_tick`
 - `process_orders_on_close`
@@ -150,7 +158,6 @@ Missing internal behavior:
 - fill models beyond fixed-tick slippage and fixed-tick limit verification on
   supported long fills
 - runtime behavior for `margin_short`
-- `close_entries_rule`
 - `risk_free_rate`
 - `use_bar_magnifier`
 - `fill_orders_on_standard_ohlc`
@@ -223,42 +230,57 @@ metadata/default-sizing/risk interaction or wait for a short/reversal design.
 ### 4. Market Close Commands
 
 Current state: `strategy.close(id)` closes matching long ledger entries at the
-current bar close and cancels matching pending exits. `strategy.close(id,
-qty=...)` and `strategy.close(id, qty_percent=...)` can partially close the
-matching current long position while keeping matching pending exits alive; `qty`
-wins when both quantity forms are supplied. `strategy.close_all()` closes all
-open long ledger entries without requiring an entry id.
+current bar close and cancels matching pending exits when the close fully
+flattens that entry. `strategy.close(id, qty=...)` and
+`strategy.close(id, qty_percent=...)` can partially close the matching current
+long position while keeping matching pending exits alive; `qty` wins when both
+quantity forms are supplied. `strategy.close_all()` closes all open long ledger
+entries without requiring an entry id. Both close commands accept supported
+`comment`, `alert_message`, and `disable_alert` metadata; closed-trade comment
+helpers and supported order-fill alert payloads are fixture-backed for that
+metadata. `close_entries_rule="FIFO"` is fixture-backed as the explicit default,
+and `close_entries_rule="ANY"` is fixture-backed for id-specific long-only
+`strategy.close(id)` and `strategy.exit(..., from_entry=id)`, including
+same-entry-id partial exit allocation in stable ledger order.
 
 Missing internal behavior:
 
 - `immediately`;
-- `comment`, `alert_message`, and alert suppression options;
-- partial `strategy.close_all()`;
 - close behavior beyond the current fixture-backed long-only multi-entry
   allocation subset;
-- close-entry ordering such as FIFO versus entry-specific close rules.
+- broader `close_entries_rule="ANY"` allocation rules beyond the current
+  id-specific long-only close/exit subset.
 
 Gap size: medium to large.
 
-Best first slice: full `strategy.close_all()`, partial `strategy.close()`, and
-the current Stage 13 long-only allocation subset are already closed. Do not
-continue market-close work until close metadata, `immediately`, partial
-`strategy.close_all()`, and richer close-entry ordering have a separate design.
+Best first slice: full `strategy.close_all()`, partial `strategy.close()`, close
+metadata, explicit FIFO, and the first id-specific long-only `"ANY"` allocation
+subset are already closed. Do not continue market-close work until
+`immediately` or broader non-default close-entry ordering has a separate
+execution/allocation design.
 
 ### 5. Generic Orders And Cancellation
 
-Current state: `strategy.order` remains unsupported. Stage 6 added the
-fixture-backed supported `strategy.cancel(id)` and `strategy.cancel_all()`
-subsets for current internal pending entries and exits.
+Current state: `strategy.order` is partial. The fixture-backed subset supports
+explicit-quantity market-long add/increase orders, limit-long add/increase
+orders through the supported long limit timing model, stop-long add/increase
+orders through the supported long stop timing model, stop-limit-long
+add/increase orders through the supported long stop-limit timing model, and
+reduce-only market-short orders that shrink existing long exposure without
+opening shorts. The supported subset also accepts `comment`, `alert_message`,
+and `disable_alert` metadata; long fills retain entry comments, reduce-only
+short fills retain exit comments, and supported fill payloads are exposed under
+`strategy.alerts`.
+Stage 6 added the fixture-backed supported `strategy.cancel(id)` and
+`strategy.cancel_all()` subsets for current internal pending entries and exits.
 
 Missing internal behavior:
 
-- `strategy.order()` as a generic long/short order that can open, reduce,
-  reverse, or close positions;
-- market, limit, stop, and stop-limit order forms;
-- cancellation of pending entries and exits by id;
-- cancel-all behavior across all pending orders;
-- order metadata comments and alert messages.
+- full `strategy.order()` as a generic long/short order that can open, reduce,
+  reverse, or close positions across both sides;
+- short exposure, reversal, and short price-based generic orders;
+- generic-order-specific cancellation/OCA behavior beyond the current shared
+  pending-entry cancellation subset.
 
 Gap size: large.
 
@@ -326,7 +348,7 @@ Missing internal behavior:
 - multi-entry behavior beyond the current fixture-backed long-only subset;
 - short positions;
 - automatic reversal from long to short or short to long;
-- FIFO and configured close ordering;
+- configured close ordering beyond explicit default FIFO;
 - net position versus individual trade accounting.
 
 Gap size: foundation and large.
@@ -511,8 +533,8 @@ event model. Strategy order-fill alert metadata is stored internally on
 supported strategy order paths, and
 `docs/STRATEGY_ORDER_FILL_ALERTS_DESIGN.md` defines the order-fill alert event
 boundary. The broker now records internal order-fill alert events for supported
-entry, exit, close, and close_all fills, including `disable_alert` suppression
-and exit leg-specific message selection. Public runtime `schemaVersion: 4`
+entry, supported generic order, exit, close, and close_all fills, including
+`disable_alert` suppression and exit leg-specific message selection. Public runtime `schemaVersion: 4`
 exposes those broker-owned payloads under `strategy.alerts` with CLI, Python,
 and WASM parity. The host-layer `{{strategy.order.alert_message}}` renderer is
 available through explicit Python, CLI, and WASM helpers without changing
@@ -546,8 +568,9 @@ emission, and failure reporting are implemented through explicit host APIs.
 4. Keep strategy order-fill alert metadata and public `strategy.alerts` stable
    before adding placeholder rendering or external delivery.
 5. Defer short exposure, reversals, generic `strategy.order()`, custom OCA
-   behavior, public pending-order records, and richer close-entry ordering until
-   a new broker-model design explicitly covers their state transitions.
+   behavior, public pending-order records, and broader non-default close-entry
+   ordering until a new broker-model design explicitly covers their state
+   transitions.
 
 ## Completion Gates For Any Slice
 

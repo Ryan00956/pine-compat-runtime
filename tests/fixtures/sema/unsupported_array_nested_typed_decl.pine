@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported nested array typed declaration")
+
+array<array> values = na
+plot(close)

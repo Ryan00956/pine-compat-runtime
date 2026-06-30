@@ -1,0 +1,5 @@
+//@version=6
+indicator("Matrix negative row bounds")
+
+values = matrix.new<float>(2, 2, close)
+plot(matrix.get(values, -1, 0))

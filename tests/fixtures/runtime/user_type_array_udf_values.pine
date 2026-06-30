@@ -1,0 +1,28 @@
+//@version=5
+indicator("UDT array UDF values")
+
+type Point
+    float x
+    float y
+
+score(p) => p.x + p.y
+pass(p) => p
+combine(a, b) => Point.new(a.x + b.x, a.y + b.y)
+shifted(p, delta) => Point.new(p.x + delta, p.y)
+
+points = array.from(Point.new(close, open), Point.new(high, low))
+first = pass(array.get(points, 0))
+second = pass(points.get(1))
+first_reader = pass(array.first(points))
+last_reader = pass(points.last())
+combo = combine(first, second)
+shifted_first = shifted(array.get(points, 0), 10)
+
+plot(score(array.get(points, 0)) == close + open ? 1 : 0)
+plot(score(points.get(1)) == high + low ? 1 : 0)
+plot(first.x == close ? 1 : 0)
+plot(second.y == low ? 1 : 0)
+plot(first_reader.y == open ? 1 : 0)
+plot(last_reader.x == high ? 1 : 0)
+plot(combo.x + combo.y == close + high + open + low ? 1 : 0)
+plot(shifted_first.x == close + 10 ? 1 : 0)

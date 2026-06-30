@@ -1,0 +1,9 @@
+//@version=6
+indicator("Supported matrix add_row")
+
+values = matrix.new<float>(1, 2, 1)
+row_values = array.from(2.0, 3.0)
+matrix.add_row(values, 1, row_values)
+values.add_row(2, array.from(4.0, 5.0))
+
+plot(matrix.rows(values) + matrix.columns(values))

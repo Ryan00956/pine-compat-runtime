@@ -1,0 +1,27 @@
+//@version=6
+indicator("Matrix row")
+
+values = matrix.new<float>(2, 3, na)
+matrix.set(values, 0, 0, close)
+matrix.set(values, 0, 1, close + 1)
+matrix.set(values, 0, 2, close + 2)
+matrix.set(values, 1, 0, close + 10)
+matrix.set(values, 1, 1, close + 11)
+matrix.set(values, 1, 2, close + 12)
+
+first_row = matrix.row(values, 0)
+second_row = matrix.row(values, 1)
+first_before_matrix_write = first_row.get(1)
+matrix.set(values, 0, 1, close + 100)
+first_after_matrix_write = first_row.get(1)
+first_row.set(2, close + 200)
+matrix_after_row_write = matrix.get(values, 0, 2)
+
+plot(first_row.size(), "first_row_size")
+plot(first_row.get(0), "first_row_first")
+plot(first_before_matrix_write, "first_before_matrix_write")
+plot(first_after_matrix_write, "first_after_matrix_write")
+plot(first_row.get(2), "first_row_after_array_write")
+plot(matrix_after_row_write, "matrix_after_row_write")
+plot(second_row.get(0), "second_row_first")
+plot(second_row.get(2), "second_row_last")

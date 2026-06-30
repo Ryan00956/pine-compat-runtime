@@ -1,3 +1,5 @@
+mod guards;
+
 use std::collections::HashSet;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -73,17 +75,7 @@ pub(crate) fn try_conformance_entries_from_tsv(text: &str) -> Result<Vec<MatrixE
             ));
         }
 
-        validate_status_fixture_paths(line_number, feature, status, &fixtures)?;
-        validate_request_fixture_paths(line_number, feature, status, &fixtures)?;
-        validate_partial_unsupported_notes_fixture_paths(
-            line_number,
-            feature,
-            status,
-            notes,
-            &fixtures,
-        )?;
-        validate_label_getter_feature(line_number, feature)?;
-        validate_array_unsupported_type_fixture_paths(line_number, feature, notes, &fixtures)?;
+        guards::validate_entry(line_number, feature, status, notes, &fixtures)?;
 
         entries.push(MatrixEntry {
             feature: feature.to_owned(),
@@ -94,122 +86,6 @@ pub(crate) fn try_conformance_entries_from_tsv(text: &str) -> Result<Vec<MatrixE
     }
 
     Ok(entries)
-}
-
-fn validate_label_getter_feature(line_number: usize, feature: &str) -> Result<(), String> {
-    if feature.starts_with("label.get_")
-        && !matches!(feature, "label.get_x" | "label.get_y" | "label.get_text")
-    {
-        return Err(format!(
-            "line {line_number}: label getter feature `{feature}` is outside the official label.get_x/label.get_y/label.get_text subset"
-        ));
-    }
-    Ok(())
-}
-
-fn validate_partial_unsupported_notes_fixture_paths(
-    line_number: usize,
-    feature: &str,
-    status: &str,
-    notes: &str,
-    fixtures: &[&str],
-) -> Result<(), String> {
-    if status == "partial"
-        && contains_ascii_word(notes, "unsupported")
-        && !fixtures
-            .iter()
-            .any(|fixture| fixture.starts_with("tests/fixtures/sema/unsupported_"))
-    {
-        return Err(format!(
-            "line {line_number}: partial feature `{feature}` with unsupported notes must reference unsupported sema diagnostic fixture coverage"
-        ));
-    }
-    Ok(())
-}
-
-fn validate_array_unsupported_type_fixture_paths(
-    line_number: usize,
-    feature: &str,
-    notes: &str,
-    fixtures: &[&str],
-) -> Result<(), String> {
-    if !feature.starts_with("array.") {
-        return Ok(());
-    }
-
-    for unsupported_type in ["linefill", "polyline", "UDT"] {
-        if contains_ascii_word(notes, unsupported_type) {
-            let fixture_term = unsupported_type.to_ascii_lowercase();
-            if !fixtures
-                .iter()
-                .any(|fixture| fixture.to_ascii_lowercase().contains(&fixture_term))
-            {
-                return Err(format!(
-                    "line {line_number}: array feature `{feature}` with {unsupported_type} notes must reference {unsupported_type} fixture coverage"
-                ));
-            }
-        }
-    }
-
-    Ok(())
-}
-
-fn contains_ascii_word(text: &str, needle: &str) -> bool {
-    text.split(|ch: char| !(ch.is_ascii_alphanumeric() || ch == '_'))
-        .any(|word| word.eq_ignore_ascii_case(needle))
-}
-
-fn validate_request_fixture_paths(
-    line_number: usize,
-    feature: &str,
-    status: &str,
-    fixtures: &[&str],
-) -> Result<(), String> {
-    if feature.starts_with("request.")
-        && matches!(status, "supported" | "partial")
-        && !fixtures.iter().any(|fixture| fixture.contains("request"))
-    {
-        return Err(format!(
-            "line {line_number}: {status} request feature `{feature}` must reference request fixture coverage"
-        ));
-    }
-    Ok(())
-}
-
-fn validate_status_fixture_paths(
-    line_number: usize,
-    feature: &str,
-    status: &str,
-    fixtures: &[&str],
-) -> Result<(), String> {
-    match status {
-        "supported" | "partial" => {
-            if !fixtures.iter().any(|fixture| {
-                fixture.starts_with("tests/fixtures/runtime/")
-                    || fixture.starts_with("tests/fixtures/realtime/")
-                    || fixture.starts_with("tests/fixtures/syntax/")
-                    || fixture.starts_with("tests/fixtures/request/")
-                    || fixture.starts_with("tests/fixtures/sema/supported_")
-                    || fixture.starts_with("tests/fixtures/regressions/")
-            }) {
-                return Err(format!(
-                    "line {line_number}: {status} feature `{feature}` must reference runtime, realtime, syntax, supported sema, or regression fixture coverage"
-                ));
-            }
-        }
-        "unsupported" => {
-            if !fixtures.iter().any(|fixture| {
-                fixture.starts_with("tests/fixtures/sema/unsupported_")
-                    || fixture.starts_with("tests/fixtures/syntax/")
-            }) {
-                return Err(format!(
-                    "line {line_number}: unsupported feature `{feature}` must reference unsupported sema or syntax diagnostic fixture coverage"
-                ));
-            }
-        }
-        _ => unreachable!("status was validated before fixture rules"),
-    }
-    Ok(())
 }
 
 #[cfg(test)]

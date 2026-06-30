@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported matrix.add_row in UDF")
+
+mutate(values) =>
+    matrix.add_row(values, 1, array.from(close))
+    close
+
+values = matrix.new<float>(1, 1, close)
+plot(mutate(values))

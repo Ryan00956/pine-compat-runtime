@@ -1,0 +1,11 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT var")
+
+var inferred = lib.Point.new(close)
+var lib.Point typed = lib.Point.new(open)
+
+inferred := lib.Point.new(inferred.x + 1)
+typed := lib.Point.new(typed.x + 10)
+
+plot(inferred.x + typed.x)

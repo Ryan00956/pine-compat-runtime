@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported array.new nested UDT field")
+type Point
+    float x
+
+type Wrapper
+    Point point
+
+wrappers = array.new<Wrapper>()
+plot(close)

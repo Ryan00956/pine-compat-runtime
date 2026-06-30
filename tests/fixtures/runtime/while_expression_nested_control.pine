@@ -1,0 +1,16 @@
+//@version=5
+indicator("While expression nested control")
+
+sum = 0
+for outer = 0 to 2
+    i = 0
+    value = while i < 4
+        i := i + 1
+        if i == 2
+            continue
+        if i == 4
+            break
+        i
+    sum := sum + value + outer
+
+plot(sum)

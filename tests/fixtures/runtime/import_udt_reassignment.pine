@@ -1,0 +1,7 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT reassignment")
+
+p = lib.Point.new(close)
+p := lib.Point.new(open)
+plot(p.x)

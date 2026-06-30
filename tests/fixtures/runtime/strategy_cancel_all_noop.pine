@@ -1,0 +1,8 @@
+//@version=5
+strategy("Cancel all noop strategy", overlay=true)
+
+if bar_index == 0
+    strategy.cancel_all()
+
+plot(strategy.position_size)
+plot(strategy.closedtrades)

@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.mfi Series Length")
+plot(ta.mfi(close, bar_index))

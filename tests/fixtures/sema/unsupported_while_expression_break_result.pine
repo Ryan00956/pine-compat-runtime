@@ -1,0 +1,9 @@
+//@version=5
+indicator("Unsupported while expression break result")
+
+i = 0
+result = while i < 1
+    i := i + 1
+    break
+
+plot(result)

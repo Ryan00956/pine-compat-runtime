@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported map size")
+
+count = map.size(na)
+plot(count)

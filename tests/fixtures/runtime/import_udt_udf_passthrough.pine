@@ -1,0 +1,9 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT UDF passthrough")
+
+passthrough(p) => p
+
+p = passthrough(lib.Point.new(close))
+lib.Point typed = passthrough(lib.Point.new(open))
+plot(p.x + typed.x)

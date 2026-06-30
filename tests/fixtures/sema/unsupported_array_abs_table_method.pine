@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array abs table method")
+values = array.new_table()
+result = values.abs()
+plot(result.size())

@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported while expression scope leak")
+i = 0
+result = while i < 1
+    local = close
+    i := i + 1
+    local
+plot(local)

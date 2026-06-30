@@ -76,6 +76,7 @@ impl<'a> HistoricalRuntime<'a> {
             };
             self.array_slices.insert(id, slice);
             self.array_kinds.insert(id, kind);
+            self.copy_array_user_type_metadata_from(previous, id, id);
             self.seed_intrabar_array_from(previous, slice.parent_id);
             return;
         }
@@ -87,5 +88,66 @@ impl<'a> HistoricalRuntime<'a> {
         };
         self.array_store.insert(id, values);
         self.array_kinds.insert(id, kind);
+        self.copy_array_user_type_metadata_from(previous, id, id);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use pine_ir::{
+        DrawingSettings, HirHistoryRequirements, HirProgram, ScriptMode, StrategySettings,
+    };
+
+    use super::*;
+
+    fn runtime() -> HistoricalRuntime<'static> {
+        let program = Box::leak(Box::new(HirProgram {
+            script_mode: ScriptMode::Indicator,
+            strategy_settings: StrategySettings::default(),
+            drawing_settings: DrawingSettings::default(),
+            symbols: Vec::new(),
+            statements: Vec::new(),
+            next_series_id: 0,
+            next_call_site_id: 0,
+            next_var_slot_id: 0,
+            max_bars_back: None,
+            history: HirHistoryRequirements::default(),
+            series_history: Vec::new(),
+        }));
+        HistoricalRuntime::new(program)
+    }
+
+    #[test]
+    fn seed_intrabar_array_preserves_user_type_array_metadata() {
+        let mut previous = runtime();
+        previous
+            .array_store
+            .insert(3, vec![PineValue::UserType(vec![PineValue::Float(1.0)])]);
+        previous.array_kinds.insert(3, ArrayElementKind::UserType);
+        previous.mark_array_user_type_for_test(3, "Point");
+        previous.array_slices.insert(
+            8,
+            ArraySlice {
+                parent_id: 3,
+                start: 0,
+                len: 1,
+            },
+        );
+        previous.array_kinds.insert(8, ArrayElementKind::UserType);
+        previous.mark_array_user_type_for_test(8, "Point");
+
+        let mut current = runtime();
+        current.seed_intrabar_array_from(&previous, 8);
+
+        assert_eq!(
+            current.array_kinds.get(&8),
+            Some(&ArrayElementKind::UserType)
+        );
+        assert_eq!(current.array_user_type_name(8), Some("Point"));
+        assert_eq!(
+            current.array_kinds.get(&3),
+            Some(&ArrayElementKind::UserType)
+        );
+        assert_eq!(current.array_user_type_name(3), Some("Point"));
     }
 }

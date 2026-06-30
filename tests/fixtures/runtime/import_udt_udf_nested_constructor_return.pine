@@ -1,0 +1,10 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT UDF nested constructor return")
+
+makePoint(x) => lib.Point.new(x)
+outer(x) => makePoint(x)
+
+p = outer(close)
+lib.Point typed = outer(open)
+plot(p.x + typed.x)

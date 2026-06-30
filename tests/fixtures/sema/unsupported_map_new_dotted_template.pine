@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported map.new dotted template")
+
+values = map.new<chart.point, chart.point>()
+plot(close)

@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported while expression reassignment result")
+
+i = 0
+result = while i < 1
+    i := i + 1
+
+plot(result)

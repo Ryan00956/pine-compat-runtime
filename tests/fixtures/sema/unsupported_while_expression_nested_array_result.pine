@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported while expression nested array result")
+
+inner = array.from(close)
+i = 0
+items = while i < 1
+    i := i + 1
+    array.from(inner)
+
+plot(close)

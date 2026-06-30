@@ -44,6 +44,12 @@ impl Default for StrategyMarginSetting {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StrategyCloseEntriesRule {
+    Fifo,
+    Any,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct StrategySettings {
     pub initial_capital: f64,
@@ -54,6 +60,7 @@ pub struct StrategySettings {
     pub backtest_fill_limit_ticks: f64,
     pub margin_long: StrategyMarginSetting,
     pub margin_short: StrategyMarginSetting,
+    pub close_entries_rule: StrategyCloseEntriesRule,
 }
 
 impl Default for StrategySettings {
@@ -67,6 +74,7 @@ impl Default for StrategySettings {
             backtest_fill_limit_ticks: 0.0,
             margin_long: StrategyMarginSetting::default(),
             margin_short: StrategyMarginSetting::default(),
+            close_entries_rule: StrategyCloseEntriesRule::Fifo,
         }
     }
 }

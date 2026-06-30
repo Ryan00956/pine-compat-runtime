@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.mom Series Length")
+plot(ta.mom(close, bar_index))

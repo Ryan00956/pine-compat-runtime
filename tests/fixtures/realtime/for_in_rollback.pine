@@ -1,0 +1,14 @@
+//@version=5
+indicator("Realtime for in rollback")
+
+var values = array.new_int()
+array.push(values, 1)
+
+int total = 0
+for value in values
+    total := total + value
+    if barstate.isrealtime and not barstate.isconfirmed
+        array.push(values, 10)
+
+plot(array.size(values))
+plot(total)

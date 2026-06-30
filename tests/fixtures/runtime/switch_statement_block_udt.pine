@@ -1,0 +1,27 @@
+//@version=5
+indicator("Switch statement block UDT fixture")
+type Point
+    float x
+    float y
+
+Point value = switch
+    close > open =>
+        made = Point.new(high + 10, low)
+        made
+    close < open =>
+        made = Point.new(low + 20, high)
+        made
+    =>
+        Point.new(close + 30, open)
+
+plot(value.x + value.y)
+
+value := switch bar_index
+    2 =>
+        next = Point.new(high + 40, low)
+        next
+    =>
+        next = Point.new(close + 50, open)
+        next
+
+plot(value.x + value.y)

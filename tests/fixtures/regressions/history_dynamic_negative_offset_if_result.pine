@@ -1,0 +1,9 @@
+//@version=5
+indicator("Dynamic negative history offset if result")
+
+offset = if close > open
+    -1
+else
+    -1
+
+plot(close[offset])

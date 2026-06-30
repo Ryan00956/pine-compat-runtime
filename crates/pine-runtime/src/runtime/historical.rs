@@ -49,18 +49,26 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) last_bar_time: Option<i64>,
     pub(crate) chart_visible_left_time: Option<i64>,
     pub(crate) chart_visible_right_time: Option<i64>,
+    pub(crate) first_bar_close: Option<f64>,
     pub(crate) request_environment: RequestEnvironment,
     pub(crate) request_cache: HashMap<RequestCacheKey, Vec<(i64, PineValue)>>,
     pub(crate) eval_expr_depth: u32,
     pub(crate) series_store: SeriesStore,
     pub(crate) series_retention: SeriesRetention,
+    pub(crate) history_dynamic_retention_misses: usize,
+    pub(crate) history_dynamic_retention_max_missed_offset: Option<usize>,
     pub(crate) current_symbols: HashMap<SymbolId, PineValue>,
     pub(crate) current_series: HashMap<SeriesId, PineValue>,
     pub(crate) var_store: HashMap<VarSlotId, PineValue>,
     pub(crate) array_store: HashMap<u32, Vec<PineValue>>,
     pub(crate) array_kinds: HashMap<u32, ArrayElementKind>,
+    pub(crate) array_user_types: HashMap<u32, String>,
     pub(crate) array_slices: HashMap<u32, ArraySlice>,
     pub(crate) next_array_id: u32,
+    #[allow(dead_code)]
+    pub(crate) matrix_store: HashMap<u32, MatrixStorage>,
+    #[allow(dead_code)]
+    pub(crate) next_matrix_id: u32,
     pub(crate) call_state: HashMap<CallSiteId, PineValue>,
     pub(crate) valuewhen_state: HashMap<CallSiteId, VecDeque<PineValue>>,
     pub(crate) rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
@@ -202,18 +210,24 @@ impl<'a> HistoricalRuntime<'a> {
             last_bar_time: None,
             chart_visible_left_time: None,
             chart_visible_right_time: None,
+            first_bar_close: None,
             request_environment,
             request_cache: HashMap::new(),
             eval_expr_depth: 0,
             series_store: SeriesStore::new(),
             series_retention: SeriesRetention::from_program(program),
+            history_dynamic_retention_misses: 0,
+            history_dynamic_retention_max_missed_offset: None,
             current_symbols: HashMap::new(),
             current_series: HashMap::new(),
             var_store: HashMap::new(),
             array_store: HashMap::new(),
             array_kinds: HashMap::new(),
+            array_user_types: HashMap::new(),
             array_slices: HashMap::new(),
             next_array_id: 0,
+            matrix_store: HashMap::new(),
+            next_matrix_id: 0,
             call_state: HashMap::new(),
             valuewhen_state: HashMap::new(),
             rolling_windows: HashMap::new(),
@@ -270,7 +284,8 @@ impl<'a> HistoricalRuntime<'a> {
                 program.strategy_settings.margin_long,
                 program.strategy_settings.margin_short,
                 program.strategy_settings.pyramiding_limit,
-            ),
+            )
+            .with_close_entries_rule(program.strategy_settings.close_entries_rule),
             next_label_id: 1,
             next_line_id: 1,
             next_line_fill_id: 1,
@@ -368,6 +383,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.current_bar_update_kind = update_kind;
         self.current_bar_is_new = is_new_bar;
         self.current_bar = Some(bar);
+        self.first_bar_close.get_or_insert(bar.close);
         self.chart_visible_left_time.get_or_insert(bar.time);
         if self.historical_end.is_none()
             || matches!(
@@ -400,13 +416,15 @@ impl<'a> HistoricalRuntime<'a> {
         self.set_builtin_symbols(&bar, bar_index)?;
 
         for statement in &self.program.statements {
-            match self.eval_stmt(statement)? {
-                StmtControl::None => {}
-                StmtControl::Break | StmtControl::Continue => {
-                    return Err(RuntimeError {
-                        message: "loop control escaped its enclosing loop".to_owned(),
-                    });
+            match self.eval_stmt(statement) {
+                Ok(StmtControl::None) => {}
+                Ok(StmtControl::Break | StmtControl::Continue) => {
+                    return Err(RuntimeError::escaped_loop_control());
                 }
+                Err(error) if error.loop_control().is_some() => {
+                    return Err(RuntimeError::escaped_loop_control());
+                }
+                Err(error) => return Err(error),
             }
         }
 
@@ -447,8 +465,30 @@ impl<'a> HistoricalRuntime<'a> {
             alerts: self.alerts.clone(),
             strategy: (self.program.script_mode == ScriptMode::Strategy)
                 .then(|| self.strategy_broker.result()),
-            diagnostics: Vec::new(),
+            diagnostics: self.runtime_diagnostics(),
         }
+    }
+
+    fn runtime_diagnostics(&self) -> Vec<RuntimeDiagnostic> {
+        if self.history_dynamic_retention_misses == 0 {
+            return Vec::new();
+        }
+
+        let Some(max_bars_back) = self.program.max_bars_back else {
+            return Vec::new();
+        };
+
+        let max_missed_offset = self
+            .history_dynamic_retention_max_missed_offset
+            .unwrap_or(max_bars_back as usize + 1);
+
+        vec![RuntimeDiagnostic {
+            code: "W_HISTORY_MAX_BARS_BACK".to_owned(),
+            message: format!(
+                "dynamic history offsets exceeded max_bars_back={max_bars_back}; {} reads returned na, maximum requested offset was {max_missed_offset}",
+                self.history_dynamic_retention_misses
+            ),
+        }]
     }
 
     #[must_use]
@@ -600,6 +640,7 @@ impl<'a> HistoricalRuntime<'a> {
             .sum::<usize>();
         let array_values = self.array_store.values().map(Vec::len).sum::<usize>();
         let array_value_capacity = self.array_store.values().map(Vec::capacity).sum::<usize>();
+        let matrix_profile = self.matrix_store_profile();
         let label_snapshots = self
             .labels
             .iter()
@@ -690,6 +731,9 @@ impl<'a> HistoricalRuntime<'a> {
             history_max_constant_offset: self.program.history.max_constant_offset,
             history_max_bars_back: self.program.max_bars_back,
             history_has_dynamic_offsets: self.program.history.has_dynamic_offsets,
+            history_dynamic_retention_misses: self.history_dynamic_retention_misses,
+            history_dynamic_retention_max_missed_offset: self
+                .history_dynamic_retention_max_missed_offset,
             symbol_slots: self.current_symbols.len(),
             symbol_capacity: self.current_symbols.capacity(),
             current_series_slots: self.current_series.len(),
@@ -700,6 +744,10 @@ impl<'a> HistoricalRuntime<'a> {
             array_capacity: self.array_store.capacity(),
             array_values,
             array_value_capacity,
+            matrix_slots: matrix_profile.slots,
+            matrix_capacity: matrix_profile.capacity,
+            matrix_cells: matrix_profile.cells,
+            matrix_cell_capacity: matrix_profile.cell_capacity,
             call_state_slots: self.call_state.len(),
             call_state_capacity: self.call_state.capacity(),
             valuewhen_state_slots: self.valuewhen_state.len(),

@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported array.covariance UDT")
+type Point
+    float x
+
+left = array.from(Point.new(close))
+right = array.from(Point.new(open))
+plot(array.covariance(left, right))

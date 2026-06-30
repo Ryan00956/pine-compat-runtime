@@ -149,7 +149,8 @@ strategy metrics beyond the Phase L position/profit/equity variables remain
 unsupported except for the Phase O `strategy.closedtrades` and
 `strategy.opentrades` count variables, the Stage 3 outcome count variables, the
 Stage 7 script-visible trade field functions, and the gross profit/loss,
-profit-percent, average-trade, and max run-up/drawdown variables.
+profit-percent, average-trade, max run-up/drawdown, and buy-and-hold return
+variables.
 `strategy.grossprofit` is a read-only strategy-mode `series float` that sums
 positive realized closed-trade profit only; losing, flat, and current open
 trades do not change it. `strategy.netprofit_percent`,
@@ -169,6 +170,10 @@ entry quantity, while `short` stays `0` because short entries are unsupported.
 winning, flat, and current open trades do not change it. `strategy.avg_trade`
 is a read-only strategy-mode `series float` that returns average realized
 profit/loss per closed trade and `na` before the first closed trade.
+`strategy.buy_and_hold_return_percent` is a read-only strategy-mode
+`series float` that returns the current close's percentage change from the
+first loaded bar close and returns `na` when that baseline is zero or
+non-finite.
 `strategy.avg_winning_trade` is a read-only strategy-mode `series float` that
 returns average realized profit among winning closed trades only and `na`
 before the first winning closed trade. `strategy.avg_losing_trade` is a
@@ -293,7 +298,58 @@ instead of deferring them to runtime.
 
 ## Loops
 
-`while` statements are statement-only in the current executable subset:
+Range `for` loops execute over inclusive integer bounds. Statement-form
+`for...in` loops are fixture-backed for `array<int>`, `array<float>`,
+`array<bool>`, `array<string>`, `array<color>`, drawing-id object arrays,
+`array<chart.point>`, and same-local scalar-field UDT array values:
+
+```pine
+for value in values
+    statement
+```
+
+The narrow index/value form is fixture-backed for `array<int>`, `array<float>`,
+`array<bool>`, `array<string>`, `array<color>`, `array<label>`, `array<line>`,
+`array<linefill>`, `array<polyline>`, `array<box>`, `array<table>`,
+`array<chart.point>`, and same-local scalar-field UDT arrays only. The index
+loop-local is a zero-based `series int` for the current visited slot:
+
+```pine
+for index, value in values
+    statement
+```
+
+The iterable is evaluated once before the loop starts. Runtime snapshots the
+initial array length, visits indexes from `0` to `initial_len - 1`, reads each
+element when that index is reached, and assigns the element by value to the
+loop-local variable. `break` and `continue` use the same nearest-loop
+control-flow rules as range `for` and `while`; loop-body local declarations are
+scoped to the loop body; stateful built-in calls in the body advance at each
+reached iteration for that callsite. Empty arrays and typed `na` array iterables
+execute zero iterations. Mutating the iterated array through any
+alias affects not-yet-visited existing indexes, appends do not extend the
+current loop, and shrinkage that makes a future initial index out-of-bounds
+raises the same runtime error as `array.get`. Label, line, linefill, polyline,
+box, and table array loop values are shallow-copied ids, so drawing setters or
+lifecycle operations through the loop local mutate the same drawing object while
+assignment to the loop local does not write the source array slot. Chart-point
+array and same-local scalar-field UDT array loop values are copied into the
+loop-local variable, so local field mutation does not write back to the source
+slot. Index/value iteration over iterables other than `array<int>`,
+`array<float>`, `array<bool>`, `array<string>`, `array<color>`,
+`array<label>`, `array<line>`, `array<linefill>`, `array<polyline>`, or
+`array<box>`, expression-form `for...in`, non-array iterables, imported or
+non-scalar-field UDT arrays, map/matrix iterables, other non-scalar arrays, and
+broader collection mutation families remain outside the current subset. Ordinary
+`var` scalar arrays roll back loop-body mutation during repeated forming
+realtime updates, while scalar typed-array
+`varip` iteration preserves carried intrabar loop-body mutation between repeated
+forming updates. The scalar-array, label-array, line-array, linefill-array,
+polyline-array, box-array, and table-array shallow-id fixtures, chart-point-array
+value-copy fixture, and UDT-array value-copy fixture have explicit incremental
+append execution parity with full historical recomputation.
+
+`while` supports statement loops and a scalar expression subset:
 
 ```pine
 while condition
@@ -302,6 +358,21 @@ while condition
 
 The condition must be `bool`. The loop body has its own local scope, and
 `break`/`continue` use the same nearest-loop control-flow rules as `for`.
+`while` expressions must have a final body expression. Scalar, tuple,
+same-local UDT, and scalar-array result subsets return the latest reached final
+body expression, or `na` if no iteration produces a value. Callers may read or
+mutate a returned scalar array with supported scalar-array APIs, including fresh
+arrays, existing scalar-array aliases, zero-iteration `na`, break/continue
+result preservation, and fresh historical copies from committed history reads.
+Stateful callsites in a reached expression-loop body advance on each reached
+iteration, and body-local declarations including local `var` declaration sites
+follow the same loop-local storage rules as statement bodies. Nested collection
+interactions through while-expression results remain outside the current subset,
+with nested-array and imported UDT constructor result expressions rejected
+during semantic analysis even though top-level scalar-field imported UDT
+constructors are supported.
+Bodies without a final result expression remain rejected until explicit
+semantics are fixture-backed.
 Runtime execution enforces an iteration guard; the semantic analyzer does not
 try to prove termination.
 
@@ -353,14 +424,23 @@ value = switch direction
     1 => high
     -1 => low
     => close
+
+value = switch
+    close > open =>
+        local = high
+        local
+    => close
 ```
 
-The current executable subset supports expression arms only. Selector-less arm
-conditions must be `bool`. Selector-form cases are compared with equality in
+The current executable subset supports expression arms in condition and selector
+forms, plus statement-block arms that end with a result expression. Selector-less
+arm conditions must be `bool`. Selector-form cases are compared with equality in
 source order. Arm result kinds must have a common compatible kind, following the
 same branch merge rules as ternary expressions. The result qualifier is the
 strongest qualifier among the selector or conditions and the selected result
-expressions.
+expressions. Imported UDT constructor results from statement-block arms remain
+outside the current subset and are rejected during semantic analysis even
+though top-level scalar-field imported UDT constructors are supported.
 
 ## Arrays
 
@@ -417,6 +497,9 @@ otherwise typed array, mixed int/float arguments produce a float array, and
 label, line, linefill, box, or table ids infer the matching drawing-id array.
 Normal declarations allocate a fresh array whenever the declaration executes.
 `var` declarations preserve the array id and backing storage across bars.
+Same-local scalar-field UDT arrays may be declared with `array<T>` or `T[]`
+when initialized with `na` or a same-UDT array expression; the declaration keeps
+the concrete local UDT identity for later assignment and helper checks.
 Supported operations are
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
 `array.new_color`, `array.new_label`, `array.new_line`, `array.new_linefill`,
@@ -440,16 +523,44 @@ helpers may also be called with method syntax on float and int arrays.
 string arrays.
 `every/some` may also be called with method syntax on float, int, and bool
 arrays.
+Same-local scalar-field UDT array `includes`, `indexof`, and `lastindexof`
+compare UDT values structurally across every scalar field using the runtime
+value equality relation. Different local UDT identities remain incompatible
+even when their field shapes match.
+Same-local scalar-field UDT array `fill` replaces the whole array or a valid
+half-open range with a same-local UDT value; values from different local UDT
+identities remain rejected.
+Same-local scalar-field UDT array `join` stringifies each element as
+`TypeName(field0, field1, ...)`, using field declaration order and the existing
+scalar `array.join` formatting for field values. This does not enable
+`str.tostring(UDT)`.
+Field mutation on a UDT value read from a same-local scalar-field UDT array
+mutates only that local value; it does not change the source array slot unless a
+later same-UDT `array.set`/`set()` explicitly writes the value back.
+Direct chained slot field mutation such as `points.get(0).x := value` remains
+outside the parser subset.
+When a same-local scalar-field UDT value is read from a UDT array, that value
+may be passed to local pure UDFs that read scalar fields, passthrough the value,
+or return a constructed same-local UDT. When bound to a local variable, that
+local value may also be used as the receiver for local pure UDT methods. Chained
+method calls directly on `array.get(...)` expressions remain outside the parser
+subset.
 Local user-defined types are part of the executable Phase J subset only for
 top-level scalar `int`/`float`/`bool`/`string`/`color` fields. `Type.new(...)`
 constructs runtime values, field reads are typed from the local UDT
-declaration, and ordinary variables, local for-expression constructor results,
-top-level/block-local/loop-local typed declarations initialized from
-same-local-UDT ternary, switch, or `if` expressions, top-level/block-local/
-loop-local typed declarations initialized or reassigned from same-local-UDT
-`for` expressions, plus `var` declarations initialized from `na`, same-UDT
-constructors, same-UDT ternary expressions, same-UDT switch expressions,
-same-UDT `if` expressions, or same-UDT `for` expressions may hold those values.
+declaration, and ordinary variables, local for-expression and while-expression
+constructor results, top-level/block-local/loop-local typed declarations
+initialized from same-local-UDT ternary, switch, or `if` expressions,
+top-level/block-local/loop-local typed declarations initialized or reassigned
+from same-local-UDT `for` expressions, plus `var` declarations initialized from
+`na`, same-UDT constructors, same-UDT ternary expressions, same-UDT switch
+expressions, same-UDT `if` expressions, or same-UDT `for` expressions may hold
+those values.
+Explicitly typed same-local scalar-field UDT `varip` declarations initialized
+from `na`, same-UDT constructors, or fixture-backed same-UDT ternary/switch/if/for
+expressions, plus direct-constructor-inferred same-local scalar-field UDT
+`varip` declarations, may also hold those values and persist them intrabar by
+value.
 Local scalar fields can be reassigned with `value.field := expr`
 outside method bodies, including branch, `for` loop, `while` loop, and
 UDF-local variable bodies; the assigned expression must be compatible with the
@@ -467,10 +578,23 @@ the callsite, or block-local scalar aliases of those scalar parameters, using
 positional or named constructor field arguments.
 Positional and named UDF call arguments both preserve the parameter identity,
 so returned UDT values can be assigned and field-read at the callsite.
+Same-local scalar-field UDT values read from UDT arrays may also be passed to
+local pure UDFs, including passthrough and constructor-return UDFs.
 UDF-local UDT variables may mutate scalar fields before returning the updated
 value. UDT history references, global or parameter field mutation inside UDFs,
-field mutation inside methods, `varip`, nested UDT fields, UDT arrays, and
-imported UDT identity remain outside the claim.
+field mutation inside methods, non-constructor-inferred UDT `varip`,
+nested-field UDT `varip`, and UDT arrays remain outside the claim. Imported UDT
+identity is supported only for the scalar-field constructor, direct field-read,
+ordinary same-imported-UDT reassignment, and explicit scalar-field imported
+typed declaration subset, plus direct or nested UDF parameter passthrough and
+direct or nested constructor-return results, and same-imported-identity ternary,
+`if`, `switch`, `while`, or `for` expression results, ordinary imported UDT
+`var` declarations, scalar-field imported UDT `varip` declarations, and
+scalar-field mutation in top-level, branch, `for`-loop, `while`-loop, and
+UDF-local statement contexts;
+local/imported structural lookalikes remain distinct assignment identities.
+Imported UDT history, collections, nested field mutation, UDF parameter/global
+field side effects, method field mutation, and methods remain outside the claim.
 
 Pure user-defined methods are supported for local UDT receivers with scalar or
 local UDT parameters, including direct UDT passthrough returns, block-local
@@ -497,7 +621,9 @@ receiver or local UDT parameter aliases, block-local scalar aliases of those
 fields, inferred scalar parameters, or block-local scalar aliases of those
 parameters,
 the callsite keeps that UDT identity so the returned value can be assigned and
-field-read. Methods with side effects, recursion, unsupported
+field-read. Same-local scalar-field UDT values read from UDT arrays can also be
+bound to locals and used as local pure method receivers. Methods with side
+effects, recursion, unsupported
 parameter families, mismatched UDT parameter identity, unknown receivers, and
 imported method tables remain rejected. Non-array method calls outside the
 local UDT method subset continue to fail with receiver/type diagnostics.
@@ -563,7 +689,9 @@ source array unchanged.
 `array.reverse` reverses any supported typed array in place. `array.join`
 converts supported array elements to string with the default numeric format,
 uses `,` as the default separator, and returns an empty string for empty arrays.
-Color elements render as normalized integer color values. Out-of-range
+Color elements render as normalized integer color values. Same-local
+scalar-field UDT arrays use `TypeName(field0, field1, ...)` element rendering.
+Out-of-range
 `array.get`, `array.set`, `array.insert`, and `array.remove` on an existing
 array raise runtime errors; empty `array.pop`, empty `array.shift`, and
 `array.first`/`array.last` on empty arrays return `na`. Out-of-range
@@ -575,6 +703,59 @@ User-defined functions may receive supported arrays and use read-only
 operations such as `array.size` and `array.get`. Array mutation inside
 user-defined functions is rejected until function side-effect semantics are
 broader.
+
+The current matrix subset supports runtime-owned float matrix ids through
+`matrix.new<float>(rows, columns, initial_value?)`, `matrix.get`,
+`matrix.set`, `matrix.fill`, `matrix.copy`, `matrix.reshape`,
+`matrix.add_row`, `matrix.add_col`, `matrix.remove_row`, `matrix.remove_col`,
+`matrix.rows`, `matrix.columns`, `matrix.sum`, `matrix.avg`, `matrix.row`, and
+`matrix.col`.
+Matrix cells
+hold float or `na` values; int cell inputs are coerced to float. Matrix
+assignment and UDF
+argument binding pass the runtime matrix id by reference, while `matrix.copy`
+allocates an independent matrix store snapshot of the current cells.
+`matrix.row` and `matrix.col` return independent `array<float>` snapshots of
+the selected row or column. Ordinary `var` matrix ids persist across bars, and
+realtime forming-bar rollback restores the confirmed matrix store for
+non-`varip` updates. Matrix construction rejects negative row or column counts
+and is bounded by a 100,000-cell runtime budget before allocation. `matrix.set`
+and `matrix.fill` inside user-defined
+functions remain rejected by the collection side-effect boundary.
+`values.fill(value)`, `values.get(row, column)`, `values.rows()`, and
+`values.columns()` are supported as method-call aliases for the matching
+namespace calls. `values.set(row, column, value)` is also supported as a
+method-call alias for `matrix.set(values, row, column, value)` outside
+user-defined functions, `values.copy()` is supported as a method-call alias for
+`matrix.copy(values)`, `values.reshape(rows, columns)` lowers to
+`matrix.reshape(values, rows, columns)`, `values.row(row)` lowers to
+`matrix.row(values, row)`, and `values.col(column)` lowers to
+`matrix.col(values, column)`, and `values.add_row(row, array_id)` lowers to
+`matrix.add_row(values, row, array_id)`, and
+`values.add_col(column, array_id)` lowers to
+`matrix.add_col(values, column, array_id)`, and `values.remove_row(row)` lowers
+to `matrix.remove_row(values, row)`, and `values.remove_col(column)` lowers to
+`matrix.remove_col(values, column)`. Reshape preserves element order and
+element count. `matrix.sum` returns the sum of numeric cells in row-major order,
+ignoring `na` cells and returning `na` when no numeric cells exist;
+`matrix.avg` returns the average over the same non-`na` numeric cell set.
+`values.sum()` and `values.avg()` lower to the matching read-only namespace
+helpers. `matrix.add_row` copies an `array<float>` row into the matrix,
+requires the row length to match the current column count, and inserts at an
+index in `0..=rows` while preserving row order around the insertion.
+`matrix.add_col` copies an `array<float>` column into the matrix, requires the
+column length to match the current row count, and inserts at an index in
+`0..=columns` while preserving column order around the insertion.
+`matrix.remove_row` deletes an existing row using the same row-index bounds as
+row reads. `matrix.remove_col` deletes an existing column using the same
+column-index bounds as column reads. Non-float matrix templates, other method
+syntax, bare or non-float matrix typed declarations, `varip`, and matrix for-in
+iteration remain outside the current subset. `matrix<float>` typed declarations
+accept compatible
+matrix values or `na`. Matrix history is supported only for committed
+`matrix<float>` snapshots that return fresh copies.
+Matrix `varip` declarations are rejected with a matrix-specific diagnostic until
+backing-store handoff semantics are designed.
 
 ## `na`
 

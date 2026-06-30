@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.linreg Series Length")
+plot(ta.linreg(close, bar_index, 0))

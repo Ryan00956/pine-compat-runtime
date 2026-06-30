@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported array.copy UDT")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+copy = array.copy(values)
+plot(close)

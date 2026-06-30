@@ -23,6 +23,10 @@ impl<'a> HistoricalRuntime<'a> {
             "array.new_box" => self.eval_array_new_box(args),
             "array.new_table" => self.eval_array_new_table(args),
             "array.new<chart.point>" => self.eval_array_new_chart_point(args),
+            _ if callee.starts_with("array.new<") && callee.ends_with('>') => {
+                let type_name = &callee["array.new<".len()..callee.len() - 1];
+                self.eval_array_new_user_type(args, type_name)
+            }
             "array.from" => self.eval_array_from(args),
             "array.size" => self.eval_array_size(args),
             "array.push" => self.eval_array_push(args),

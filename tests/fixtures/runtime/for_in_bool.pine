@@ -1,0 +1,10 @@
+//@version=5
+indicator("For in bool")
+
+values = array.from(true, false, true)
+int count = 0
+for value in values
+    if value
+        count := count + 1
+
+plot(count)

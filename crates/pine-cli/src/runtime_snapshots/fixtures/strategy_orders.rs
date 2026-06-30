@@ -50,6 +50,22 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
         "tests/fixtures/runtime/strategy_builtin_default_quantity.pine",
     ),
     (
+        "runtime_strategy_order_default_quantity.json",
+        "tests/fixtures/runtime/strategy_order_default_quantity.pine",
+    ),
+    (
+        "runtime_strategy_order_limit_default_quantity.json",
+        "tests/fixtures/runtime/strategy_order_limit_default_quantity.pine",
+    ),
+    (
+        "runtime_strategy_order_stop_default_quantity.json",
+        "tests/fixtures/runtime/strategy_order_stop_default_quantity.pine",
+    ),
+    (
+        "runtime_strategy_order_stop_limit_default_quantity.json",
+        "tests/fixtures/runtime/strategy_order_stop_limit_default_quantity.pine",
+    ),
+    (
         "runtime_strategy_constants.json",
         "tests/fixtures/runtime/strategy_constants.pine",
     ),
@@ -102,12 +118,36 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
         "tests/fixtures/runtime/strategy_close_all.pine",
     ),
     (
+        "runtime_strategy_close_exit.json",
+        "tests/fixtures/runtime/strategy_close_exit.pine",
+    ),
+    (
+        "runtime_strategy_close_all_exit.json",
+        "tests/fixtures/runtime/strategy_close_all_exit.pine",
+    ),
+    (
         "runtime_strategy_cancel_entry.json",
         "tests/fixtures/runtime/strategy_cancel_entry.pine",
     ),
     (
+        "runtime_strategy_cancel_exit.json",
+        "tests/fixtures/runtime/strategy_cancel_exit.pine",
+    ),
+    (
+        "runtime_strategy_cancel_noop.json",
+        "tests/fixtures/runtime/strategy_cancel_noop.pine",
+    ),
+    (
         "runtime_strategy_cancel_all_entry_exit.json",
         "tests/fixtures/runtime/strategy_cancel_all_entry_exit.pine",
+    ),
+    (
+        "runtime_strategy_cancel_all_exit.json",
+        "tests/fixtures/runtime/strategy_cancel_all_exit.pine",
+    ),
+    (
+        "runtime_strategy_cancel_all_noop.json",
+        "tests/fixtures/runtime/strategy_cancel_all_noop.pine",
     ),
     (
         "runtime_strategy_exit_stop.json",

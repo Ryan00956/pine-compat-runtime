@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.rma Series Length")
+plot(ta.rma(close, bar_index))

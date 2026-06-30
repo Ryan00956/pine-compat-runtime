@@ -81,4 +81,8 @@ pub(crate) const STRATEGY_ACCOUNTING_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapsho
         "runtime_strategy_profit_percent_state.json",
         "tests/fixtures/runtime/strategy_profit_percent_state.pine",
     ),
+    (
+        "runtime_strategy_buy_and_hold_return_percent.json",
+        "tests/fixtures/runtime/strategy_buy_and_hold_return_percent.pine",
+    ),
 ];

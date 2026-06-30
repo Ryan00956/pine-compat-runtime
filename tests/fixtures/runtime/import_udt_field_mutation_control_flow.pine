@@ -1,0 +1,22 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT field mutation control flow")
+
+branched = lib.Point.new(close)
+if bar_index < 2
+    branched.x := branched.x + 10
+else
+    branched.x := branched.x + 20
+plot(branched.x)
+
+looped_for = lib.Point.new(close)
+for i = 0 to 1
+    looped_for.x := looped_for.x + i + 1
+plot(looped_for.x)
+
+looped_while = lib.Point.new(close)
+steps = 0
+while steps < 2
+    looped_while.x := looped_while.x + 2
+    steps := steps + 1
+plot(looped_while.x)

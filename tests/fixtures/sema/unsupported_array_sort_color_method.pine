@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported array sort color method")
+values = array.new_color()
+values.push(color.red)
+values.sort()
+plot(close)

@@ -1,0 +1,21 @@
+//@version=6
+indicator("Matrix reshape method")
+
+values = matrix.new<float>(2, 2, close)
+values.set(0, 0, close)
+values.set(0, 1, close + 10)
+values.set(1, 0, close + 20)
+values.set(1, 1, close + 30)
+
+values.reshape(1, 4)
+
+plot(values.rows(), "rows")
+plot(values.columns(), "columns")
+plot(values.get(0, 0), "first")
+plot(values.get(0, 3), "last")
+
+values.reshape(4, 1)
+
+plot(values.rows(), "reshaped_rows")
+plot(values.columns(), "reshaped_columns")
+plot(values.get(3, 0), "reshaped_last")

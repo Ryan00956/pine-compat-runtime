@@ -1,0 +1,20 @@
+//@version=5
+indicator("UDT array method values")
+
+type Point
+    float x
+    float y
+
+method total(Point p) => p.x + p.y
+method withOther(Point p, Point other, float bias) => p.x + other.y + bias
+
+points = array.from(Point.new(close, open), Point.new(high, low))
+first = array.get(points, 0)
+second = points.get(1)
+first_reader = array.first(points)
+last_reader = points.last()
+
+plot(first.total() == close + open ? 1 : 0)
+plot(second.withOther(first, 10) == high + open + 10 ? 1 : 0)
+plot(first_reader.withOther(second, 20) == close + low + 20 ? 1 : 0)
+plot(last_reader.total() == high + low ? 1 : 0)

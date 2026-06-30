@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentile nearest rank label method")
+values = array.new_label()
+plot(values.percentile_nearest_rank(50))

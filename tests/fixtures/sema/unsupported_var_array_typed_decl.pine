@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported var array typed declaration")
+
+var array values = array.new_float()
+plot(close)

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.columns method receiver")
+
+column_count = close.columns()
+plot(column_count)

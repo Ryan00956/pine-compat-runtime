@@ -1,0 +1,13 @@
+//@version=5
+indicator("While expression array alias fixture")
+
+source = array.from(close, open)
+i = 0
+items = while i < 2
+    i := i + 1
+    source
+
+items.set(0, items.get(0) + 10)
+
+plot(source.get(0) + source.get(1))
+plot(items.get(0) + items.get(1))

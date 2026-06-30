@@ -1,0 +1,6 @@
+//@version=5
+indicator("Supported ta.kc Input Mult")
+mult = input.float(2.0, "Multiplier")
+[middle, upper, lower] = ta.kc(close, 3, mult)
+width = ta.kcw(close, 3, mult)
+plot(middle + upper + lower + width)

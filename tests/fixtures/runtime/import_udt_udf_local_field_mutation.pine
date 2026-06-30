@@ -1,0 +1,13 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT UDF local field mutation")
+
+makeShifted(x, delta) =>
+    local = lib.Point.new(x)
+    local.x := local.x + delta
+    local
+
+p = makeShifted(close, 10)
+lib.Point typed = makeShifted(open, 20)
+plot(p.x)
+plot(typed.x)

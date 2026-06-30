@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.copy method receiver")
+
+values = close.copy()
+plot(close)

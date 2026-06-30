@@ -1,0 +1,4 @@
+//@version=6
+indicator("Supported hline Input Price")
+price = input.float(2.0, "Price")
+hline(price)

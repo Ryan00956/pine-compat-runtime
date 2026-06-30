@@ -336,7 +336,7 @@ impl<'a> HistoricalRuntime<'a> {
             let value = if matches!(max_depth, Some(0)) {
                 value
             } else {
-                self.clone_array_history_value(value)?
+                self.clone_collection_history_value(value)?
             };
             self.series_store.commit(series_id, value, max_depth);
         }

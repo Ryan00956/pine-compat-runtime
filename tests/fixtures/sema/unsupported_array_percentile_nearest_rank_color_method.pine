@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentile nearest rank color method")
+values = array.new_color()
+plot(values.percentile_nearest_rank(50))

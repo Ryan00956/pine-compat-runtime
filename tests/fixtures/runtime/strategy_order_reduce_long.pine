@@ -1,0 +1,8 @@
+//@version=5
+strategy("Reduce long strategy order")
+if bar_index == 0
+    strategy.entry("E", strategy.long, qty=1)
+if bar_index == 1
+    strategy.order("R", strategy.short, qty=0.5)
+plot(strategy.position_size)
+plot(strategy.netprofit)

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix copy")
+
+values = matrix.copy(na)
+plot(close)

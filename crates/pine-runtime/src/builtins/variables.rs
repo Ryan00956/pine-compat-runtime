@@ -295,6 +295,12 @@ impl<'a> HistoricalRuntime<'a> {
                     .map_or(PineValue::Na, PineValue::Float)
             });
         }
+        if name == "strategy.margin_liquidation_price" {
+            return self
+                .strategy_broker
+                .margin_liquidation_price()
+                .map_or(PineValue::Na, PineValue::Float);
+        }
         if name == "strategy.openprofit" {
             return self.current_bar.map_or(PineValue::Na, |bar| {
                 PineValue::Float(self.strategy_broker.open_profit(bar.close))
@@ -317,6 +323,9 @@ impl<'a> HistoricalRuntime<'a> {
         }
         if name == "strategy.grossloss_percent" {
             return PineValue::Float(self.strategy_broker.gross_loss_percent());
+        }
+        if name == "strategy.buy_and_hold_return_percent" {
+            return self.strategy_buy_and_hold_return_percent();
         }
         if name == "strategy.avg_trade" {
             return self
@@ -427,6 +436,19 @@ impl<'a> HistoricalRuntime<'a> {
             BarUpdateKind::Historical => self.is_latest_known_bar(),
             BarUpdateKind::Forming | BarUpdateKind::Confirmed => false,
         }
+    }
+
+    fn strategy_buy_and_hold_return_percent(&self) -> PineValue {
+        let Some(current_bar) = self.current_bar else {
+            return PineValue::Na;
+        };
+        let Some(first_close) = self.first_bar_close else {
+            return PineValue::Na;
+        };
+        if first_close == 0.0 || !first_close.is_finite() || !current_bar.close.is_finite() {
+            return PineValue::Na;
+        }
+        PineValue::Float((current_bar.close - first_close) / first_close * 100.0)
     }
 }
 

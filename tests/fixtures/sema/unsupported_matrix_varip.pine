@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix varip")
+
+varip values = matrix.new<float>(1, 1, close)
+plot(matrix.get(values, 0, 0))

@@ -1,3 +1,0 @@
-//@version=5
-strategy("Unsupported strategy state variables")
-plot(strategy.buy_and_hold_return_percent)

@@ -1,0 +1,19 @@
+//@version=6
+indicator("While expression matrix history")
+
+i = 0
+values = while i < 2
+    i := i + 1
+    matrix.new<float>(1, 2, close + i)
+
+previous = values[1]
+dynamic_offset = bar_index == 0 ? na : 1
+dynamic_previous = values[dynamic_offset]
+if not na(previous)
+    previous.set(0, 0, previous.get(0, 0) + 100)
+
+plot(values.get(0, 0), "current")
+plot(na(previous) ? na : previous.get(0, 0), "previous_mutated")
+plot(na(previous) ? na : values.get(0, 0), "current_after_previous_mutation")
+plot(na(previous) ? 1 : 0, "previous_is_na")
+plot(na(dynamic_previous) ? 1 : 0, "dynamic_previous_is_na")

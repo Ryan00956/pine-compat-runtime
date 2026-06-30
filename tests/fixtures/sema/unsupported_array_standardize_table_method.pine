@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array standardize table method")
+values = array.new_table()
+standardized = values.standardize()
+plot(close)

@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array some string method")
+values = array.new_string()
+plot(values.some() ? 1 : 0)

@@ -110,14 +110,19 @@ The supported subset preserves diagnostic-only boundaries:
 - duplicate aliases: `E_IMPORT_DUPLICATE_ALIAS`
 - invalid library declarations: `E_IMPORT_INVALID_LIBRARY`
 - duplicate exports: `E_IMPORT_DUPLICATE_EXPORT`
+- duplicate exported UDT names: `E_IMPORT_DUPLICATE_EXPORT`
+- duplicate exported UDT/const names: `E_IMPORT_DUPLICATE_EXPORT`
+- duplicate exported UDT/function names: `E_IMPORT_DUPLICATE_EXPORT`
 - private or unknown imported symbols: `E_IMPORT_PRIVATE_SYMBOL` and
   `E_IMPORT_UNKNOWN_EXPORT`
 - import cycles: `E_IMPORT_CYCLE`
 - exported series constants: `E_IMPORT_CONST_VALUE`
 - side-effecting exported functions: `E_IMPORT_FUNCTION_SIDE_EFFECT`
 - recursive imported functions: `E_RECURSIVE_FUNCTION`
-- imported UDT constructors: `E_IMPORT_UNKNOWN_EXPORT`
-- imported methods: `E_UNKNOWN_METHOD`
+- exported imported UDT constructors: `E_IMPORT_UNSUPPORTED_UDT`
+- private imported UDT constructors: `E_IMPORT_PRIVATE_SYMBOL`
+- imported methods: `E_UNKNOWN_METHOD` for receiver-style lookup and
+  `E_IMPORT_UNSUPPORTED_METHOD` for alias-qualified access
 - unsupported UDT field types: `E_UDT_FIELD_TYPE`
 - unsupported UDT forms: `E_UNSUPPORTED_FEATURE`
 - unsupported UDT field mutation: `E_UNSUPPORTED_FEATURE`
@@ -165,8 +170,8 @@ the configured limit.
   filesystem lookup inside core crates, and network access remain outside the
   host-neutral source graph.
 - Re-exports, wildcard imports, unaliased imports, imported UDT identity,
-  imported constructors, imported methods, private UDT visibility, and
-  source-graph-wide method tables remain unsupported.
+  imported constructors, imported methods, and source-graph-wide method tables
+  remain unsupported. Private library UDTs remain non-exported symbols.
 - Side-effecting exported functions, library output declarations, library
   inputs, strategy-library interactions, and cross-library runtime state
   semantics remain unsupported.

@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported for expression reassignment result")
+
+sum = 0
+value = for i = 0 to 1
+    sum := sum + i
+
+plot(close)

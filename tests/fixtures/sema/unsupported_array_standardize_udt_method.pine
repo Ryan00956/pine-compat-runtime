@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported array.standardize UDT method")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+standardized = values.standardize()
+plot(close)

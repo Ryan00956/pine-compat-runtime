@@ -123,23 +123,25 @@ prior = p[1]
 }
 
 #[test]
-fn rejects_user_type_array_typed_declarations() {
+fn accepts_user_type_array_typed_declarations() {
     let analysis = analyze(
         r#"type Point
     float x
 array<Point> points = na
-plot(close)
+points := array.new<Point>()
+Point[] more = array.from(Point.new(close))
+points := more
+first = points.get(0)
+plot(first.x)
 "#,
     );
 
     assert!(
-        analysis.diagnostics.iter().any(|diagnostic| {
-            diagnostic.code == "E_DECL_TYPE" && diagnostic.message.contains("array<Point>")
-        }),
+        analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -161,11 +163,11 @@ fn rejects_block_local_user_type_declarations() {
 }
 
 #[test]
-fn rejects_varip_user_type_declarations() {
+fn rejects_non_constructor_inferred_varip_user_type_declarations() {
     let analysis = analyze(
         r#"type Point
     float x
-varip p = Point.new(close)
+varip p = bar_index == 0 ? Point.new(close) : Point.new(open)
 "#,
     );
 
@@ -177,6 +179,147 @@ varip p = Point.new(close)
             .any(|feature| { feature.feature == "varip" })
     );
     assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn accepts_inferred_constructor_scalar_field_user_type_varip_declaration() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+varip p = Point.new(close)
+p.x := p.x + 1
+plot(p.x)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "varip")
+    );
+}
+
+#[test]
+fn accepts_typed_ternary_scalar_field_user_type_varip_declaration() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+varip Point p = bar_index == 0 ? Point.new(close) : Point.new(open)
+p.x := p.x + 1
+plot(p.x)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "varip")
+    );
+}
+
+#[test]
+fn accepts_typed_switch_scalar_field_user_type_varip_declaration() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+varip Point p = switch bar_index
+    0 => Point.new(close)
+    => Point.new(open)
+p.x := p.x + 1
+plot(p.x)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "varip")
+    );
+}
+
+#[test]
+fn accepts_typed_if_scalar_field_user_type_varip_declaration() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+varip Point p = if bar_index == 0
+    Point.new(close)
+else
+    Point.new(open)
+p.x := p.x + 1
+plot(p.x)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "varip")
+    );
+}
+
+#[test]
+fn accepts_typed_for_scalar_field_user_type_varip_declaration() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+varip Point p = for i = 0 to 1
+    Point.new(close + i)
+p.x := p.x + 1
+plot(p.x)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "varip")
+    );
 }
 
 #[test]
@@ -203,6 +346,36 @@ plot(p.x)
             .supported
             .iter()
             .any(|feature| { feature.feature == "user-defined type field mutation" })
+    );
+}
+
+#[test]
+fn accepts_typed_scalar_field_user_type_varip_declaration() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+varip Point p = na
+if bar_index == 0
+    p := Point.new(close)
+else
+    p.x := p.x + 1
+plot(p.x)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "varip")
     );
 }
 
@@ -1778,6 +1951,30 @@ fn accepts_user_type_for_expression_constructor_assignment() {
 p = Point.new(close, open)
 made = for i = 0 to 1
     Point.new(p.x + i, p.y)
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_user_type_while_expression_constructor_assignment() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+i = 0
+made = while i < 2
+    i := i + 1
+    candidate = Point.new(close + i, open)
+    candidate
 plot(made.x + made.y)
 "#,
     );

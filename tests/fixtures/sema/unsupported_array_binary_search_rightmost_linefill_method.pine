@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.binary_search_rightmost linefill method")
+values = array.new_linefill(0)
+plot(values.binary_search_rightmost(1))

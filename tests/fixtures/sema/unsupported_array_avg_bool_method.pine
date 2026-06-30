@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array avg bool method")
+values = array.new_bool()
+plot(values.avg())

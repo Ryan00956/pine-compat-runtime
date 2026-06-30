@@ -8,6 +8,7 @@ impl<'a> HistoricalRuntime<'a> {
         expr: &HirExpr,
         offset: &HirHistoryOffset,
     ) -> Result<PineValue, RuntimeError> {
+        let is_dynamic_offset = matches!(offset, HirHistoryOffset::Dynamic(_));
         let Some(offset) = self.eval_history_offset(offset)? else {
             return Ok(PineValue::Na);
         };
@@ -18,8 +19,19 @@ impl<'a> HistoricalRuntime<'a> {
 
         self.eval_expr(expr)?;
         if let Some(series_id) = expr.series_id {
+            if is_dynamic_offset
+                && let Some(max_depth) = self.series_retention.max_depth_for(series_id)
+                && offset > max_depth
+            {
+                self.history_dynamic_retention_misses =
+                    self.history_dynamic_retention_misses.saturating_add(1);
+                self.history_dynamic_retention_max_missed_offset = Some(
+                    self.history_dynamic_retention_max_missed_offset
+                        .map_or(offset, |current| current.max(offset)),
+                );
+            }
             let value = self.series_store.read(series_id, offset);
-            self.clone_array_history_value(value)
+            self.clone_collection_history_value(value)
         } else {
             Ok(PineValue::Na)
         }
@@ -62,19 +74,22 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
-    pub(crate) fn clone_array_history_value(
+    pub(crate) fn clone_collection_history_value(
         &mut self,
         value: PineValue,
     ) -> Result<PineValue, RuntimeError> {
-        let PineValue::Array(id) = value else {
-            return Ok(value);
-        };
-        let Some(kind) = self.array_kinds.get(&id).copied() else {
-            return Ok(PineValue::Na);
-        };
-        let Some(values) = self.array_values_clone(id)? else {
-            return Ok(PineValue::Na);
-        };
-        Ok(self.new_array_from_values(kind, values))
+        match value {
+            PineValue::Array(id) => {
+                let Some(kind) = self.array_kinds.get(&id).copied() else {
+                    return Ok(PineValue::Na);
+                };
+                let Some(values) = self.array_values_clone(id)? else {
+                    return Ok(PineValue::Na);
+                };
+                Ok(self.new_array_from_values_with_user_type_metadata(id, kind, values))
+            }
+            PineValue::Matrix(id) => Ok(self.copy_matrix(id)),
+            value => Ok(value),
+        }
     }
 }

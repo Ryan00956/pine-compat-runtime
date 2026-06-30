@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported ta.dmi Series adxSmoothing")
+[plus, minus, adx] = ta.dmi(2, bar_index)
+plot(plus + minus + adx)

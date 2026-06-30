@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported tuple array typed declaration")
+
+array<tuple> values = na
+plot(close)

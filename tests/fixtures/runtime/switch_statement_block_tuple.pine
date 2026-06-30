@@ -1,0 +1,15 @@
+//@version=5
+indicator("Switch statement block tuple fixture")
+[first, second] = switch
+    close > open =>
+        selected = high
+        [selected + 1, close + 10]
+    close < open =>
+        selected = low
+        [selected + 2, close + 20]
+    =>
+        selected = close
+        [selected + 3, close + 30]
+
+plot(first)
+plot(second)

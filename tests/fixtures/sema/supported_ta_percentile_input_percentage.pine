@@ -1,0 +1,6 @@
+//@version=5
+indicator("Supported ta.percentile Input Percentage")
+percent = input.float(50.0, "Percent")
+nearest = ta.percentile_nearest_rank(close, 3, percent)
+linear = ta.percentile_linear_interpolation(close, 3, percent)
+plot(nz(nearest) + nz(linear))

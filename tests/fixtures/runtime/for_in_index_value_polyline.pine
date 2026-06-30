@@ -1,0 +1,28 @@
+//@version=5
+indicator("For in index value polyline")
+
+points = array.from(chart.point.from_index(bar_index, close), chart.point.from_index(bar_index + 1, close + 1))
+first = polyline.new(points, line_color=color.red)
+second = polyline.new(points, line_color=color.green)
+paths = array.from(first, second)
+
+int index_sum = 0
+int before_count = array.size(polyline.all)
+for index, value in paths
+    index_sum := index_sum + index
+    if index == 0
+        polyline.delete(value)
+
+after_loop_count = array.size(polyline.all)
+first_after = paths.get(0)
+polyline.delete(first_after)
+after_first_again_count = array.size(polyline.all)
+second_after = paths.get(1)
+polyline.delete(second_after)
+after_second_count = array.size(polyline.all)
+
+plot(index_sum)
+plot(before_count)
+plot(after_loop_count)
+plot(after_first_again_count)
+plot(after_second_count)

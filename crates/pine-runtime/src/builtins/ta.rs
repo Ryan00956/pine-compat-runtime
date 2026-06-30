@@ -5,8 +5,10 @@ use pine_ir::{CallSiteId, HirCallArg, HirExpr};
 use crate::*;
 mod averages;
 mod flow;
+mod momentum;
 mod pivots;
 mod statistics;
+mod trend;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct RsiState {

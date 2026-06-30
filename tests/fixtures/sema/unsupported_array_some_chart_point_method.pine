@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array some chart point method")
+points = array.new<chart.point>()
+plot(points.some() ? 1 : 0)

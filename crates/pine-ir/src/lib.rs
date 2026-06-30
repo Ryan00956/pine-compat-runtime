@@ -1,11 +1,13 @@
 //! Host-independent intermediate representation scaffolding.
 
 mod strategy;
+mod types;
 
 pub use strategy::{
-    DEFAULT_STRATEGY_INITIAL_CAPITAL, StrategyCommission, StrategyDefaultQuantity,
-    StrategyMarginSetting, StrategySettings,
+    DEFAULT_STRATEGY_INITIAL_CAPITAL, StrategyCloseEntriesRule, StrategyCommission,
+    StrategyDefaultQuantity, StrategyMarginSetting, StrategySettings,
 };
+pub use types::{PineType, Qualifier, ValueKind};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct SeriesId(pub u32);
@@ -18,6 +20,12 @@ pub struct VarSlotId(pub u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SymbolId(pub u32);
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HirUserTypeIdentity {
+    pub source_id: usize,
+    pub type_name: String,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PersistenceKind {
@@ -38,61 +46,6 @@ pub struct DrawingSettings {
     pub max_boxes_count: Option<u32>,
     pub max_lines_count: Option<u32>,
     pub max_polylines_count: Option<u32>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Qualifier {
-    Const,
-    Input,
-    Simple,
-    Series,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ValueKind {
-    Int,
-    Float,
-    Bool,
-    String,
-    Color,
-    Plot,
-    HLine,
-    Label,
-    Line,
-    LineFill,
-    Polyline,
-    Box,
-    Table,
-    ChartPoint,
-    FloatArray,
-    IntArray,
-    BoolArray,
-    StringArray,
-    ColorArray,
-    LabelArray,
-    LineArray,
-    LineFillArray,
-    PolylineArray,
-    BoxArray,
-    TableArray,
-    ChartPointArray,
-    UserType,
-    Tuple,
-    Na,
-    Void,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct PineType {
-    pub qualifier: Qualifier,
-    pub kind: ValueKind,
-}
-
-impl PineType {
-    #[must_use]
-    pub const fn new(qualifier: Qualifier, kind: ValueKind) -> Self {
-        Self { qualifier, kind }
-    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -151,6 +104,12 @@ pub enum HirStmtKind {
         from: HirExpr,
         to: HirExpr,
         step: Option<HirExpr>,
+        body: Vec<HirStmt>,
+    },
+    ForIn {
+        index: Option<SymbolId>,
+        value: SymbolId,
+        iterable: HirExpr,
         body: Vec<HirStmt>,
     },
     While {
@@ -216,9 +175,19 @@ pub enum HirExprKind {
         statements: Vec<HirStmt>,
         result: Box<HirExpr>,
     },
+    While {
+        condition: Box<HirExpr>,
+        statements: Vec<HirStmt>,
+        result: Box<HirExpr>,
+    },
     Tuple(Vec<HirExpr>),
     UserTypeConstruct {
+        identity: HirUserTypeIdentity,
         fields: Vec<HirExpr>,
+    },
+    UserTypeArrayConstruct {
+        type_name: String,
+        elements: Vec<HirExpr>,
     },
     FieldAccess {
         value: Box<HirExpr>,

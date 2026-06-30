@@ -1,0 +1,25 @@
+//@version=5
+indicator("For in index value line")
+
+first = line.new(10, high, 11, low)
+second = line.new(12, high + 1, 13, low + 1)
+lines = array.from(first, second)
+
+int index_sum = 0
+int x_sum = 0
+float y_sum = 0.0
+for index, value in lines
+    index_sum := index_sum + index
+    line.set_x1(value, line.get_x1(value) + index + 10)
+    line.set_y1(value, line.get_y1(value) + index + 1)
+    x_sum := x_sum + line.get_x1(value)
+    y_sum := y_sum + line.get_y1(value)
+
+first_after = lines.get(0)
+second_after = lines.get(1)
+
+plot(index_sum)
+plot(x_sum)
+plot(y_sum)
+plot(line.get_x1(first_after) + line.get_x1(second_after))
+plot(line.get_y1(first_after) + line.get_y1(second_after))

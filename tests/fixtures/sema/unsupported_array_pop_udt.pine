@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported array.pop UDT")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+point = array.pop(values)
+plot(close)

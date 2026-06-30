@@ -1,5 +1,6 @@
 use pine_ir::{HirExpr, HirStmt, HirStmtKind, SymbolId};
 
+use crate::error::RuntimeLoopControl;
 use crate::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -7,6 +8,15 @@ pub(crate) enum StmtControl {
     None,
     Break,
     Continue,
+}
+
+impl StmtControl {
+    fn from_runtime_error(error: &RuntimeError) -> Option<Self> {
+        match error.loop_control()? {
+            RuntimeLoopControl::Break => Some(Self::Break),
+            RuntimeLoopControl::Continue => Some(Self::Continue),
+        }
+    }
 }
 
 impl<'a> HistoricalRuntime<'a> {
@@ -41,8 +51,16 @@ impl<'a> HistoricalRuntime<'a> {
             } => {
                 self.eval_for_loop(*counter, from, to, step.as_ref(), body, None)?;
             }
+            HirStmtKind::ForIn {
+                index,
+                value,
+                iterable,
+                body,
+            } => {
+                self.eval_for_in_loop(*index, *value, iterable, body)?;
+            }
             HirStmtKind::While { condition, body } => {
-                self.eval_while_loop(condition, body)?;
+                self.eval_while_loop(condition, body, None)?;
             }
             HirStmtKind::Break => return Ok(StmtControl::Break),
             HirStmtKind::Continue => return Ok(StmtControl::Continue),
@@ -142,18 +160,33 @@ impl<'a> HistoricalRuntime<'a> {
             self.set_symbol_value(counter, PineValue::Int(value));
             let mut control = StmtControl::None;
             for statement in body {
-                match self.eval_stmt(statement)? {
-                    StmtControl::None => {}
-                    next_control => {
+                match self.eval_stmt(statement) {
+                    Ok(StmtControl::None) => {}
+                    Ok(next_control) => {
                         control = next_control;
                         break;
                     }
+                    Err(error) => match StmtControl::from_runtime_error(&error) {
+                        Some(next_control) => {
+                            control = next_control;
+                            break;
+                        }
+                        None => return Err(error),
+                    },
                 }
             }
             match control {
                 StmtControl::None => {
                     if let Some(result) = result {
-                        loop_result = self.eval_expr(result)?;
+                        match self.eval_expr(result) {
+                            Ok(value) => loop_result = value,
+                            Err(error) => match StmtControl::from_runtime_error(&error) {
+                                Some(StmtControl::Break) => break,
+                                Some(StmtControl::Continue) => {}
+                                Some(StmtControl::None) => {}
+                                None => return Err(error),
+                            },
+                        }
                     }
                 }
                 StmtControl::Break => break,
@@ -171,8 +204,10 @@ impl<'a> HistoricalRuntime<'a> {
         &mut self,
         condition: &HirExpr,
         body: &[HirStmt],
-    ) -> Result<(), RuntimeError> {
+        result: Option<&HirExpr>,
+    ) -> Result<PineValue, RuntimeError> {
         let mut iterations = 0_usize;
+        let mut loop_result = PineValue::Na;
         loop {
             match self.eval_expr(condition)? {
                 PineValue::Bool(true) => {}
@@ -189,15 +224,90 @@ impl<'a> HistoricalRuntime<'a> {
             }
             iterations += 1;
 
+            let mut control = StmtControl::None;
             for statement in body {
-                match self.eval_stmt(statement)? {
-                    StmtControl::None => {}
-                    StmtControl::Break => return Ok(()),
-                    StmtControl::Continue => break,
+                match self.eval_stmt(statement) {
+                    Ok(StmtControl::None) => {}
+                    Ok(next_control) => {
+                        control = next_control;
+                        break;
+                    }
+                    Err(error) => match StmtControl::from_runtime_error(&error) {
+                        Some(next_control) => {
+                            control = next_control;
+                            break;
+                        }
+                        None => return Err(error),
+                    },
                 }
+            }
+            match control {
+                StmtControl::None => {
+                    if let Some(result) = result {
+                        match self.eval_expr(result) {
+                            Ok(value) => loop_result = value,
+                            Err(error) => match StmtControl::from_runtime_error(&error) {
+                                Some(StmtControl::Break) => break,
+                                Some(StmtControl::Continue) => {}
+                                Some(StmtControl::None) => {}
+                                None => return Err(error),
+                            },
+                        }
+                    }
+                }
+                StmtControl::Break => return Ok(loop_result),
+                StmtControl::Continue => {}
             }
         }
 
+        Ok(loop_result)
+    }
+
+    fn eval_for_in_loop(
+        &mut self,
+        index_symbol: Option<SymbolId>,
+        value_symbol: SymbolId,
+        iterable: &HirExpr,
+        body: &[HirStmt],
+    ) -> Result<(), RuntimeError> {
+        let iterable = self.eval_expr(iterable)?;
+        let PineValue::Array(array_id) = iterable else {
+            if matches!(iterable, PineValue::Na) {
+                return Ok(());
+            }
+            return Err(RuntimeError {
+                message: "for...in iterable is not an array".to_owned(),
+            });
+        };
+        let Some(initial_len) = self.array_len(array_id)? else {
+            return Ok(());
+        };
+
+        for index in 0..initial_len {
+            let value = self.array_get_cloned(array_id, index as i64)?;
+            let Some(value) = value else {
+                return Err(RuntimeError {
+                    message: "for...in array is not available".to_owned(),
+                });
+            };
+            if let Some(index_symbol) = index_symbol {
+                self.set_symbol_value(index_symbol, PineValue::Int(index as i64));
+            }
+            self.set_symbol_value(value_symbol, value);
+            for statement in body {
+                match self.eval_stmt(statement) {
+                    Ok(StmtControl::None) => {}
+                    Ok(StmtControl::Break) => return Ok(()),
+                    Ok(StmtControl::Continue) => break,
+                    Err(error) => match StmtControl::from_runtime_error(&error) {
+                        Some(StmtControl::Break) => return Ok(()),
+                        Some(StmtControl::Continue) => break,
+                        Some(StmtControl::None) => {}
+                        None => return Err(error),
+                    },
+                }
+            }
+        }
         Ok(())
     }
 }

@@ -1,0 +1,8 @@
+//@version=6
+indicator("Matrix heavy profile")
+
+first = matrix.new<float>(2, 3, close)
+second = matrix.copy(first)
+zero = matrix.new<float>(0, 4, close)
+
+plot(matrix.rows(first) + matrix.columns(second) + matrix.columns(zero))

@@ -1206,6 +1206,130 @@ def test_run_script_returns_for_edges_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_for_in_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/for_in.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_for_in.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_for_in_bool_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/for_in_bool.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_for_in_bool.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_for_in_color_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/for_in_color.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_for_in_color.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_for_in_float_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/for_in_float.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_for_in_float.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_for_in_mutation_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/for_in_mutation.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_for_in_mutation.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_for_in_control_flow_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/for_in_control_flow.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_for_in_control_flow.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_for_in_stateful_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/for_in_stateful.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_for_in_stateful.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_for_in_string_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/for_in_string.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_for_in_string.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_for_in_zero_iteration_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/for_in_zero_iteration.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_for_in_zero_iteration.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_for_stateful_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/for_stateful.pine").read_text()
     expected = json.loads(
@@ -1376,6 +1500,18 @@ def test_run_script_returns_varip_array_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_user_type_varip_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/user_type_varip.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_user_type_varip.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_request_security_same_context_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/request_security_same_context.pine"
@@ -1461,7 +1597,10 @@ def test_compile_script_reports_unsupported_user_type_varip_fixture():
         message = str(error)
         assert "E_UNSUPPORTED_FEATURE" in message
         assert "`varip` is not supported" in message
-        assert "other value families" in message
+        assert (
+            "UDT varip supports only explicit scalar-field declarations"
+            in message
+        )
     else:
         raise AssertionError("unsupported UDT varip fixture should fail")
 
@@ -1477,7 +1616,7 @@ def test_compile_script_reports_unsupported_user_type_field_mutation_fixture():
         message = str(error)
         assert "E_UNSUPPORTED_FEATURE" in message
         assert "`function_side_effect` is not supported" in message
-        assert "mutating user-defined type fields" in message
+        assert "mutating fields on global user-defined type values" in message
     else:
         raise AssertionError("unsupported UDT field mutation fixture should fail")
 
@@ -1629,12 +1768,13 @@ def test_run_script_returns_na_fixture_contract():
     result = pine_compat.run_script(source, bars)
 
     assert result["diagnostics"] == []
-    assert len(result["plots"]) == 5
+    assert len(result["plots"]) == 6
     assert result["plots"][0]["values"] == [2.0, 2.0, 3.0, 4.0]
     assert result["plots"][1]["values"] == [2.0, 2.0, 3.0, 4.0]
     assert result["plots"][2]["values"] == [2.0, 2.0, 4.0, 4.0]
     assert result["plots"][3]["values"] == [0.0, 0.0, 0.0, 0.0]
     assert result["plots"][4]["values"] == [0.0, 0.0, 0.0, 0.0]
+    assert result["plots"][5]["values"] == [1, 0, 0, 0]
 
 
 def test_run_script_returns_na_snapshot_contract():
@@ -4070,10 +4210,66 @@ def test_run_script_returns_strategy_close_all_trade_contract():
     assert result == expected
 
 
+def test_run_script_returns_strategy_close_exit_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_close_exit.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_close_exit.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_close_all_exit_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_close_all_exit.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_close_all_exit.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_cancel_entry_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_cancel_entry.pine").read_text()
     expected = json.loads(
         (ROOT / "tests/snapshots/runtime_strategy_cancel_entry.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_cancel_exit_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_cancel_exit.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_cancel_exit.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_cancel_noop_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_cancel_noop.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_cancel_noop.json").read_text()
     )
 
     result = pine_compat.run_script(
@@ -4092,6 +4288,34 @@ def test_run_script_returns_strategy_cancel_all_entry_exit_contract():
         (
             ROOT / "tests/snapshots/runtime_strategy_cancel_all_entry_exit.json"
         ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_cancel_all_exit_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_cancel_all_exit.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_cancel_all_exit.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_cancel_all_noop_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_cancel_all_noop.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_cancel_all_noop.json").read_text()
     )
 
     result = pine_compat.run_script(

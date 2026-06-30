@@ -1,0 +1,21 @@
+//@version=6
+indicator("Matrix history")
+
+var values = matrix.new<float>(1, 1, close)
+matrix.set(values, 0, 0, close)
+
+previous = values[1]
+previous_cell = bar_index == 0 ? na : matrix.get(previous, 0, 0)
+plot(previous_cell, "previous_cell")
+
+if bar_index > 0
+    matrix.set(previous, 0, 0, 100)
+plot(matrix.get(values, 0, 0), "current_cell")
+
+each_bar = matrix.new<float>(1, 1, close)
+matrix.set(each_bar, 0, 0, close + 10)
+previous_each_bar = each_bar[1]
+previous_each_bar_cell = bar_index == 0 ? na : previous_each_bar.get(0, 0)
+plot(previous_each_bar_cell, "previous_each_bar_cell")
+plot(close[1], "previous_close")
+plot(na(previous) ? 1 : 0, "previous_is_na")

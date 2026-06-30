@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported dynamic history ternary result")
+
+offset = close > open ? close : open
+
+plot(close[offset])

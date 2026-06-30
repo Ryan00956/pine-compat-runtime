@@ -1,331 +1,19 @@
+use crate::analyzer::user_type_array_sort as ut_array_sort;
+use crate::analyzer::user_types::UserTypeArrayElementInference;
 use crate::prelude::*;
 
-const LABEL_STYLES: &[&str] = &[
-    "label.style_none",
-    "label.style_xcross",
-    "label.style_cross",
-    "label.style_triangleup",
-    "label.style_triangledown",
-    "label.style_flag",
-    "label.style_circle",
-    "label.style_square",
-    "label.style_diamond",
-    "label.style_arrowup",
-    "label.style_arrowdown",
-    "label.style_label_up",
-    "label.style_label_down",
-    "label.style_label_left",
-    "label.style_label_right",
-    "label.style_label_lower_left",
-    "label.style_label_lower_right",
-    "label.style_label_upper_left",
-    "label.style_label_upper_right",
-    "label.style_label_center",
-];
+mod arrays;
+mod declarations;
+mod drawing_options;
+mod helpers;
+mod return_types;
 
-const LABEL_SIZES: &[&str] = &[
-    "size.auto",
-    "size.tiny",
-    "size.small",
-    "size.normal",
-    "size.large",
-    "size.huge",
-];
-
-const LABEL_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
-
-const LINE_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
-
-const BOX_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
-
-const LABEL_YLOCS: &[&str] = &["yloc.price", "yloc.abovebar", "yloc.belowbar"];
-
-const LINE_STYLES: &[&str] = &[
-    "line.style_solid",
-    "line.style_dotted",
-    "line.style_dashed",
-    "line.style_arrow_left",
-    "line.style_arrow_right",
-    "line.style_arrow_both",
-];
-
-const BOX_BORDER_STYLES: &[&str] = &["line.style_solid", "line.style_dotted", "line.style_dashed"];
-
-const LINE_EXTENDS: &[&str] = &["extend.none", "extend.right", "extend.left", "extend.both"];
-
-const TEXT_HALIGNS: &[&str] = &["text.align_left", "text.align_center", "text.align_right"];
-
-const TEXT_VALIGNS: &[&str] = &["text.align_top", "text.align_center", "text.align_bottom"];
-
-const TEXT_WRAPS: &[&str] = &["text.wrap_none", "text.wrap_auto"];
-
-const TEXT_FONT_FAMILIES: &[&str] = &["font.family_default", "font.family_monospace"];
-
-const TABLE_POSITIONS: &[&str] = &[
-    "position.top_left",
-    "position.top_center",
-    "position.top_right",
-    "position.middle_left",
-    "position.middle_center",
-    "position.middle_right",
-    "position.bottom_left",
-    "position.bottom_center",
-    "position.bottom_right",
-];
-
-pub(crate) fn expr_name(expr: &Expr) -> Option<String> {
-    match &expr.kind {
-        ExprKind::Identifier(name) => Some(name.clone()),
-        ExprKind::QualifiedName(parts) => Some(parts.join(".")),
-        _ => None,
-    }
-}
-pub(crate) fn method_call_parts(expr: &Expr) -> Option<(&str, &str)> {
-    match &expr.kind {
-        ExprKind::QualifiedName(parts) if parts.len() == 2 => {
-            Some((parts[0].as_str(), parts[1].as_str()))
-        }
-        _ => None,
-    }
-}
-pub(crate) fn receiver_call_arg(receiver_name: &str, span: Span) -> CallArg {
-    CallArg {
-        name: None,
-        span,
-        value: Expr {
-            kind: ExprKind::Identifier(receiver_name.to_owned()),
-            span,
-        },
-    }
-}
-pub(crate) fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
-    match method_name {
-        "size" => Some("array.size"),
-        "push" => Some("array.push"),
-        "get" => Some("array.get"),
-        "set" => Some("array.set"),
-        "insert" => Some("array.insert"),
-        "pop" => Some("array.pop"),
-        "remove" => Some("array.remove"),
-        "shift" => Some("array.shift"),
-        "unshift" => Some("array.unshift"),
-        "fill" => Some("array.fill"),
-        "first" => Some("array.first"),
-        "last" => Some("array.last"),
-        "copy" => Some("array.copy"),
-        "slice" => Some("array.slice"),
-        "concat" => Some("array.concat"),
-        "includes" => Some("array.includes"),
-        "every" => Some("array.every"),
-        "some" => Some("array.some"),
-        "indexof" => Some("array.indexof"),
-        "lastindexof" => Some("array.lastindexof"),
-        "binary_search" => Some("array.binary_search"),
-        "binary_search_leftmost" => Some("array.binary_search_leftmost"),
-        "binary_search_rightmost" => Some("array.binary_search_rightmost"),
-        "abs" => Some("array.abs"),
-        "min" => Some("array.min"),
-        "max" => Some("array.max"),
-        "sum" => Some("array.sum"),
-        "avg" => Some("array.avg"),
-        "range" => Some("array.range"),
-        "median" => Some("array.median"),
-        "mode" => Some("array.mode"),
-        "percentile_nearest_rank" => Some("array.percentile_nearest_rank"),
-        "percentile_linear_interpolation" => Some("array.percentile_linear_interpolation"),
-        "percentrank" => Some("array.percentrank"),
-        "covariance" => Some("array.covariance"),
-        "standardize" => Some("array.standardize"),
-        "variance" => Some("array.variance"),
-        "stdev" => Some("array.stdev"),
-        "sort" => Some("array.sort"),
-        "sort_indices" => Some("array.sort_indices"),
-        "reverse" => Some("array.reverse"),
-        "join" => Some("array.join"),
-        "clear" => Some("array.clear"),
-        _ => None,
-    }
-}
-
-pub(crate) fn drawing_method_builtin_name(
-    receiver_kind: ValueKind,
-    method_name: &str,
-) -> Option<String> {
-    let namespace = match receiver_kind {
-        ValueKind::Label => "label",
-        ValueKind::Line => "line",
-        ValueKind::LineFill => "linefill",
-        ValueKind::Polyline => "polyline",
-        ValueKind::Box => "box",
-        ValueKind::Table => "table",
-        _ => return None,
-    };
-    let builtin_name = format!("{namespace}.{method_name}");
-    let signature = pine_builtins::get_phase_1_builtin(&builtin_name)?;
-    let first_param = signature.params.first()?;
-    let accepts_receiver = match receiver_kind {
-        ValueKind::Label => first_param.accepts == Accepts::LabelCompatible,
-        ValueKind::Line => first_param.accepts == Accepts::LineCompatible,
-        ValueKind::LineFill => first_param.accepts == Accepts::LineFillCompatible,
-        ValueKind::Polyline => first_param.accepts == Accepts::PolylineCompatible,
-        ValueKind::Box => first_param.accepts == Accepts::BoxCompatible,
-        ValueKind::Table => first_param.accepts == Accepts::TableCompatible,
-        _ => false,
-    };
-    accepts_receiver.then_some(builtin_name)
-}
-pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
-    matches!(
-        name,
-        "indicator"
-            | "strategy"
-            | "alert"
-            | "alertcondition"
-            | "plot"
-            | "hline"
-            | "fill"
-            | "bgcolor"
-            | "barcolor"
-            | "plotchar"
-            | "plotshape"
-            | "plotarrow"
-            | "plotbar"
-            | "plotcandle"
-            | "label.new"
-            | "label.set_x"
-            | "label.set_xloc"
-            | "label.set_y"
-            | "label.set_xy"
-            | "label.set_point"
-            | "label.set_yloc"
-            | "label.set_text"
-            | "label.set_color"
-            | "label.set_textcolor"
-            | "label.set_style"
-            | "label.set_size"
-            | "label.set_tooltip"
-            | "label.set_textalign"
-            | "label.set_text_font_family"
-            | "label.set_text_formatting"
-            | "label.delete"
-            | "label.copy"
-            | "line.new"
-            | "line.set_first_point"
-            | "line.set_x1"
-            | "line.set_y1"
-            | "line.set_xy1"
-            | "line.set_second_point"
-            | "line.set_x2"
-            | "line.set_y2"
-            | "line.set_xy2"
-            | "line.set_xloc"
-            | "line.set_color"
-            | "line.set_width"
-            | "line.set_style"
-            | "line.set_extend"
-            | "line.delete"
-            | "line.copy"
-            | "polyline.new"
-            | "polyline.delete"
-            | "box.new"
-            | "box.set_left"
-            | "box.set_top"
-            | "box.set_right"
-            | "box.set_bottom"
-            | "box.set_lefttop"
-            | "box.set_top_left_point"
-            | "box.set_rightbottom"
-            | "box.set_bottom_right_point"
-            | "box.set_bgcolor"
-            | "box.set_border_color"
-            | "box.set_border_width"
-            | "box.set_border_style"
-            | "box.set_extend"
-            | "box.set_xloc"
-            | "box.set_text"
-            | "box.set_text_color"
-            | "box.set_text_size"
-            | "box.set_text_halign"
-            | "box.set_text_valign"
-            | "box.set_text_wrap"
-            | "box.set_text_font_family"
-            | "box.set_text_formatting"
-            | "box.delete"
-            | "box.copy"
-            | "table.new"
-            | "table.delete"
-            | "table.clear"
-            | "table.merge_cells"
-            | "table.cell"
-            | "table.set_position"
-            | "table.set_bgcolor"
-            | "table.set_frame_color"
-            | "table.set_frame_width"
-            | "table.set_border_color"
-            | "table.set_border_width"
-            | "table.cell_set_text"
-            | "table.cell_set_bgcolor"
-            | "table.cell_set_text_color"
-            | "table.cell_set_width"
-            | "table.cell_set_height"
-            | "table.cell_set_text_size"
-            | "table.cell_set_text_halign"
-            | "table.cell_set_text_valign"
-            | "table.cell_set_tooltip"
-            | "table.cell_set_text_font_family"
-            | "table.cell_set_text_formatting"
-            | "strategy.entry"
-            | "strategy.close"
-            | "strategy.close_all"
-            | "strategy.cancel"
-            | "strategy.cancel_all"
-            | "strategy.exit"
-    ) || name == "input"
-        || name.starts_with("input.")
-}
-pub(crate) fn is_array_mutation_builtin(name: &str) -> bool {
-    matches!(
-        name,
-        "array.push"
-            | "array.set"
-            | "array.insert"
-            | "array.pop"
-            | "array.remove"
-            | "array.shift"
-            | "array.unshift"
-            | "array.fill"
-            | "array.clear"
-            | "array.sort"
-            | "array.reverse"
-            | "array.concat"
-    )
-}
-pub(crate) fn is_array_mutation_method_call_name(name: &str) -> bool {
-    name.rsplit_once('.')
-        .and_then(|(_, method_name)| array_method_builtin_name(method_name))
-        .is_some_and(is_array_mutation_builtin)
-}
-pub(crate) fn is_ta_extreme_length_overload(name: &str) -> bool {
-    matches!(
-        name,
-        "ta.highest" | "ta.lowest" | "ta.highestbars" | "ta.lowestbars"
-    )
-}
-pub(crate) fn is_ta_pivot_default_source_overload(name: &str) -> bool {
-    matches!(name, "ta.pivothigh" | "ta.pivotlow")
-}
-pub(crate) fn is_time_function_overload(name: &str) -> bool {
-    matches!(name, "time" | "time_close")
-}
-pub(crate) fn is_timestamp_overload(name: &str) -> bool {
-    name == "timestamp"
-}
-pub(crate) fn is_ta_vwap_bands_call(name: &str, args: &[CallArg]) -> bool {
-    name == "ta.vwap"
-        && args.iter().enumerate().any(|(index, arg)| {
-            arg.name.as_deref() == Some("stdev_mult") || (index >= 2 && arg.name.is_none())
-        })
-}
+pub(crate) use helpers::{
+    array_method_builtin_name, drawing_method_builtin_name, expr_name, is_array_mutation_builtin,
+    is_array_mutation_method_call_name, is_output_or_declaration_builtin,
+    is_ta_extreme_length_overload, is_ta_pivot_default_source_overload, is_ta_vwap_bands_call,
+    is_time_function_overload, is_timestamp_overload, method_call_parts, receiver_call_arg,
+};
 
 impl Analyzer {
     pub(crate) fn analyze_call(
@@ -346,15 +34,23 @@ impl Analyzer {
         if name.starts_with("request.") {
             return self.analyze_request_call(&name, callee.span, args);
         }
-
         if let Some(constructor) = self.user_type_constructor(&name, args, span) {
             return Some(constructor.pine_type);
         }
-
+        if let Some(constructor) = self.imported_user_type_constructor(&name, args, span) {
+            return Some(constructor.pine_type);
+        }
         let arg_types: Vec<_> = args
             .iter()
             .map(|arg| self.analyze_expr(&arg.value))
             .collect();
+
+        if let Some(type_name) = ut_array_sort::array_new_user_type_name(&name) {
+            return self.analyze_user_type_array_new_call(&name, type_name, span, args, &arg_types);
+        }
+        if ut_array_sort::is_user_type_array_ordering_call(&name, &arg_types) {
+            return self.analyze_user_type_array_sort_call(&name, span, args, &arg_types);
+        }
 
         if let Some(signature) = pine_builtins::get_phase_1_builtin(&name) {
             self.check_feature_name(&name, callee.span);
@@ -371,7 +67,7 @@ impl Analyzer {
             if self.function_depth > 0 && is_array_mutation_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",
-                    "array mutation is not supported inside user-defined functions",
+                    "collection mutation is not supported inside user-defined functions",
                     callee.span,
                 );
             }
@@ -380,6 +76,16 @@ impl Analyzer {
             if is_ta_vwap_bands_call(&name, args) {
                 return Some(pine_builtins::tuple_return_type());
             }
+            if name == "array.from"
+                && let Some(UserTypeArrayElementInference::SameScalarLocal(type_name)) =
+                    self.array_from_user_type_element_inference(args, &arg_types)
+            {
+                let pine_type = PineType::new(Qualifier::Simple, ValueKind::UserTypeArray);
+                self.mark_expr_user_type_array(span, type_name);
+                return Some(pine_type);
+            }
+            self.mark_user_type_array_element_result(&name, span, args, &arg_types);
+            self.mark_user_type_array_result(&name, span, args, &arg_types);
             return self.return_type(signature, &arg_types);
         }
 
@@ -498,7 +204,13 @@ impl Analyzer {
             return MethodResolution::Resolved(None);
         }
 
-        if !is_array_kind(receiver_type.kind) {
+        let builtin_name =
+            matrix_method_builtin_name(receiver_type.kind, method_name).or_else(|| {
+                is_array_kind(receiver_type.kind)
+                    .then(|| array_method_builtin_name(method_name))
+                    .flatten()
+            });
+        if builtin_name.is_none() && !is_array_kind(receiver_type.kind) {
             self.diagnostics.push(Diagnostic::error(
                 "E_METHOD_RECEIVER_TYPE",
                 format!(
@@ -510,7 +222,6 @@ impl Analyzer {
             return MethodResolution::Resolved(None);
         }
 
-        let builtin_name = array_method_builtin_name(method_name);
         let Some(signature) = builtin_name
             .and_then(|name| pine_builtins::get_phase_1_builtin(name).map(|sig| (name, sig)))
         else {
@@ -527,7 +238,7 @@ impl Analyzer {
         if self.function_depth > 0 && is_array_mutation_builtin(builtin_name) {
             self.unsupported(
                 "function_side_effect",
-                "array mutation is not supported inside user-defined functions",
+                "collection mutation is not supported inside user-defined functions",
                 callee.span,
             );
         }
@@ -538,8 +249,23 @@ impl Analyzer {
         let mut method_arg_types = Vec::with_capacity(arg_types.len() + 1);
         method_arg_types.push(Some(receiver_type));
         method_arg_types.extend(arg_types.iter().copied());
+        if ut_array_sort::is_user_type_array_ordering_call(builtin_name, &method_arg_types) {
+            return MethodResolution::Resolved(self.analyze_user_type_array_sort_call(
+                builtin_name,
+                call_span,
+                &method_args,
+                &method_arg_types,
+            ));
+        }
 
         self.validate_call_args(signature, &method_args, &method_arg_types);
+        self.mark_user_type_array_element_result(
+            builtin_name,
+            call_span,
+            &method_args,
+            &method_arg_types,
+        );
+        self.mark_user_type_array_result(builtin_name, call_span, &method_args, &method_arg_types);
         MethodResolution::Resolved(self.return_type(signature, &method_arg_types))
     }
 
@@ -673,6 +399,13 @@ impl Analyzer {
                 continue;
             };
 
+            if signature.name == "array.join"
+                && param.name == "id"
+                && arg_type.kind == ValueKind::UserTypeArray
+            {
+                continue;
+            }
+
             if !accepts_type(param.accepts, arg_type) {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_TYPE",
@@ -685,719 +418,15 @@ impl Analyzer {
             }
         }
 
+        self.validate_user_type_array_value_args(signature, args, arg_types);
         self.validate_array_value_args(signature, args, arg_types);
         self.validate_array_concat_args(signature, args, arg_types);
+        self.validate_user_type_array_concat_args(signature, args, arg_types);
         self.validate_array_from_args(signature, args, arg_types);
+        self.validate_user_type_array_helper_args(signature, args, arg_types);
         self.validate_indicator_args(signature, args);
         self.validate_alert_args(signature, args);
         self.validate_drawing_option_args(signature, args);
-    }
-
-    fn validate_time_function_args(
-        &mut self,
-        signature: &BuiltinSignature,
-        args: &[CallArg],
-        arg_types: &[Option<PineType>],
-    ) {
-        if args.is_empty() {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARITY",
-                format!("`{}` expects at least 1 argument(s), got 0", signature.name),
-                Span::default(),
-            ));
-            return;
-        }
-
-        if args.len() > 5 {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARITY",
-                format!(
-                    "`{}` expects at most 5 argument(s), got {}",
-                    signature.name,
-                    args.len()
-                ),
-                args[5].span,
-            ));
-        }
-        if !args.iter().enumerate().any(|(index, arg)| {
-            arg.name.as_deref() == Some("timeframe") || (index == 0 && arg.name.is_none())
-        }) {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARITY",
-                format!("`{}` expects a `timeframe` argument", signature.name),
-                args.first().map_or(Span::default(), |arg| arg.span),
-            ));
-        }
-
-        for (index, arg) in args.iter().enumerate() {
-            if let Some(name) = &arg.name {
-                let accepts = match name.as_str() {
-                    "timeframe" => Accepts::SimpleString,
-                    "session" | "timezone" => Accepts::StringCompatible,
-                    "bars_back" | "timeframe_bars_back" => Accepts::IntCompatible,
-                    _ => {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_NAME",
-                            format!("`{}` has no argument named `{name}`", signature.name),
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                };
-                self.validate_time_function_arg_type(
-                    signature.name,
-                    name,
-                    accepts,
-                    index,
-                    arg,
-                    arg_types,
-                );
-                continue;
-            }
-
-            let Some((param_name, accepts)) =
-                self.resolve_time_function_positional_arg(signature.name, args, arg_types, index)
-            else {
-                continue;
-            };
-            self.validate_time_function_arg_type(
-                signature.name,
-                param_name,
-                accepts,
-                index,
-                arg,
-                arg_types,
-            );
-        }
-    }
-
-    fn validate_time_function_arg_type(
-        &mut self,
-        function_name: &str,
-        param_name: &str,
-        accepts: Accepts,
-        index: usize,
-        arg: &CallArg,
-        arg_types: &[Option<PineType>],
-    ) {
-        let Some(arg_type) = arg_types.get(index).copied().flatten() else {
-            return;
-        };
-        if !accepts_type(accepts, arg_type) {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_TYPE",
-                format!(
-                    "`{}` argument `{}` does not accept {:?} {:?}",
-                    function_name, param_name, arg_type.qualifier, arg_type.kind
-                ),
-                arg.span,
-            ));
-        }
-    }
-
-    fn resolve_time_function_positional_arg(
-        &mut self,
-        function_name: &str,
-        args: &[CallArg],
-        arg_types: &[Option<PineType>],
-        index: usize,
-    ) -> Option<(&'static str, Accepts)> {
-        match index {
-            0 => Some(("timeframe", Accepts::SimpleString)),
-            1 => self.resolve_time_second_positional_arg(function_name, args, arg_types),
-            2 => self.resolve_time_third_positional_arg(function_name, args, arg_types),
-            3 => self.resolve_time_fourth_positional_arg(function_name, args, arg_types),
-            4 => Some(("timeframe_bars_back", Accepts::IntCompatible)),
-            _ => None,
-        }
-    }
-
-    fn resolve_time_second_positional_arg(
-        &mut self,
-        function_name: &str,
-        args: &[CallArg],
-        arg_types: &[Option<PineType>],
-    ) -> Option<(&'static str, Accepts)> {
-        let arg_type = arg_types.get(1).copied().flatten()?;
-        if accepts_type(Accepts::IntCompatible, arg_type)
-            && !accepts_type(Accepts::StringCompatible, arg_type)
-        {
-            return Some(("bars_back", Accepts::IntCompatible));
-        }
-        if accepts_type(Accepts::StringCompatible, arg_type) {
-            return Some(("session", Accepts::StringCompatible));
-        }
-        self.diagnostics.push(Diagnostic::error(
-            "E_CALL_ARG_TYPE",
-            format!(
-                "`{}` second positional argument must be a session string or bars_back int",
-                function_name
-            ),
-            args[1].span,
-        ));
-        None
-    }
-
-    fn resolve_time_third_positional_arg(
-        &mut self,
-        function_name: &str,
-        args: &[CallArg],
-        arg_types: &[Option<PineType>],
-    ) -> Option<(&'static str, Accepts)> {
-        let second_type = arg_types.get(1).copied().flatten()?;
-        let third_type = arg_types.get(2).copied().flatten()?;
-        if accepts_type(Accepts::IntCompatible, second_type)
-            && !accepts_type(Accepts::StringCompatible, second_type)
-        {
-            return Some(("timeframe_bars_back", Accepts::IntCompatible));
-        }
-        if accepts_type(Accepts::StringCompatible, third_type) {
-            return Some(("timezone", Accepts::StringCompatible));
-        }
-        if accepts_type(Accepts::IntCompatible, third_type) {
-            return Some(("bars_back", Accepts::IntCompatible));
-        }
-        self.diagnostics.push(Diagnostic::error(
-            "E_CALL_ARG_TYPE",
-            format!(
-                "`{}` third positional argument must be a timezone string or bars_back int",
-                function_name
-            ),
-            args[2].span,
-        ));
-        None
-    }
-
-    fn resolve_time_fourth_positional_arg(
-        &mut self,
-        function_name: &str,
-        args: &[CallArg],
-        arg_types: &[Option<PineType>],
-    ) -> Option<(&'static str, Accepts)> {
-        let second_type = arg_types.get(1).copied().flatten()?;
-        let third_type = arg_types.get(2).copied().flatten()?;
-        if accepts_type(Accepts::IntCompatible, second_type)
-            && !accepts_type(Accepts::StringCompatible, second_type)
-        {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARITY",
-                format!(
-                    "`{}` positional bars_back overload expects at most 3 argument(s), got {}",
-                    function_name,
-                    args.len()
-                ),
-                args[3].span,
-            ));
-            return None;
-        }
-        if accepts_type(Accepts::StringCompatible, third_type) {
-            return Some(("bars_back", Accepts::IntCompatible));
-        }
-        Some(("timeframe_bars_back", Accepts::IntCompatible))
-    }
-
-    pub(crate) fn validate_drawing_option_args(
-        &mut self,
-        signature: &BuiltinSignature,
-        args: &[CallArg],
-    ) {
-        match signature.name {
-            "label.new" => {
-                self.validate_label_string_arg(signature, args, 3, "xloc", LABEL_XLOCS);
-                self.validate_label_string_arg(signature, args, 4, "yloc", LABEL_YLOCS);
-                self.validate_label_string_arg(signature, args, 6, "style", LABEL_STYLES);
-                self.validate_text_size_arg(signature, args, 8, "size");
-                self.validate_label_string_arg(signature, args, 9, "textalign", TEXT_HALIGNS);
-                self.validate_label_string_arg(
-                    signature,
-                    args,
-                    11,
-                    "text_font_family",
-                    TEXT_FONT_FAMILIES,
-                );
-                self.validate_text_formatting_arg(signature, args, 13, "text_formatting");
-            }
-            "label.set_style" => {
-                self.validate_label_string_arg(signature, args, 1, "style", LABEL_STYLES);
-            }
-            "label.set_size" => {
-                self.validate_text_size_arg(signature, args, 1, "size");
-            }
-            "label.set_textalign" => {
-                self.validate_label_string_arg(signature, args, 1, "textalign", TEXT_HALIGNS);
-            }
-            "label.set_text_font_family" => {
-                self.validate_label_string_arg(
-                    signature,
-                    args,
-                    1,
-                    "text_font_family",
-                    TEXT_FONT_FAMILIES,
-                );
-            }
-            "label.set_text_formatting" => {
-                self.validate_text_formatting_arg(signature, args, 1, "text_formatting");
-            }
-            "label.set_xloc" => {
-                self.validate_label_string_arg(signature, args, 2, "xloc", LABEL_XLOCS);
-            }
-            "label.set_yloc" => {
-                self.validate_label_string_arg(signature, args, 1, "yloc", LABEL_YLOCS);
-            }
-            "line.new" => {
-                self.validate_label_string_arg(signature, args, 4, "xloc", LINE_XLOCS);
-                self.validate_label_string_arg(signature, args, 5, "extend", LINE_EXTENDS);
-                self.validate_label_string_arg(signature, args, 7, "style", LINE_STYLES);
-            }
-            "box.new" => {
-                self.validate_label_string_arg(
-                    signature,
-                    args,
-                    6,
-                    "border_style",
-                    BOX_BORDER_STYLES,
-                );
-                self.validate_label_string_arg(signature, args, 7, "extend", LINE_EXTENDS);
-                self.validate_label_string_arg(signature, args, 8, "xloc", BOX_XLOCS);
-                self.validate_text_size_arg(signature, args, 11, "text_size");
-                self.validate_label_string_arg(signature, args, 13, "text_halign", TEXT_HALIGNS);
-                self.validate_label_string_arg(signature, args, 14, "text_valign", TEXT_VALIGNS);
-                self.validate_label_string_arg(signature, args, 15, "text_wrap", TEXT_WRAPS);
-                self.validate_label_string_arg(
-                    signature,
-                    args,
-                    16,
-                    "text_font_family",
-                    TEXT_FONT_FAMILIES,
-                );
-                self.validate_text_formatting_arg(signature, args, 18, "text_formatting");
-            }
-            "line.set_style" => {
-                self.validate_label_string_arg(signature, args, 1, "style", LINE_STYLES);
-            }
-            "line.set_extend" => {
-                self.validate_label_string_arg(signature, args, 1, "extend", LINE_EXTENDS);
-            }
-            "line.set_xloc" => {
-                self.validate_label_string_arg(signature, args, 3, "xloc", LINE_XLOCS);
-            }
-            "box.set_extend" => {
-                self.validate_label_string_arg(signature, args, 1, "extend", LINE_EXTENDS);
-            }
-            "box.set_xloc" => {
-                self.validate_label_string_arg(signature, args, 3, "xloc", BOX_XLOCS);
-            }
-            "box.set_border_style" => {
-                self.validate_label_string_arg(signature, args, 1, "style", BOX_BORDER_STYLES);
-            }
-            "box.set_text_size" => {
-                self.validate_text_size_arg(signature, args, 1, "text_size");
-            }
-            "box.set_text_halign" => {
-                self.validate_label_string_arg(signature, args, 1, "text_halign", TEXT_HALIGNS);
-            }
-            "box.set_text_valign" => {
-                self.validate_label_string_arg(signature, args, 1, "text_valign", TEXT_VALIGNS);
-            }
-            "box.set_text_wrap" => {
-                self.validate_label_string_arg(signature, args, 1, "text_wrap", TEXT_WRAPS);
-            }
-            "box.set_text_font_family" => {
-                self.validate_label_string_arg(
-                    signature,
-                    args,
-                    1,
-                    "text_font_family",
-                    TEXT_FONT_FAMILIES,
-                );
-            }
-            "box.set_text_formatting" => {
-                self.validate_text_formatting_arg(signature, args, 1, "text_formatting");
-            }
-            "table.new" => {
-                self.validate_label_string_arg(signature, args, 0, "position", TABLE_POSITIONS);
-            }
-            "table.set_position" => {
-                self.validate_label_string_arg(signature, args, 1, "position", TABLE_POSITIONS);
-            }
-            "table.cell_set_text_halign" => {
-                self.validate_label_string_arg(signature, args, 3, "text_halign", TEXT_HALIGNS);
-            }
-            "table.cell_set_text_valign" => {
-                self.validate_label_string_arg(signature, args, 3, "text_valign", TEXT_VALIGNS);
-            }
-            "table.cell_set_text_wrap" => {
-                self.validate_label_string_arg(signature, args, 3, "text_wrap", TEXT_WRAPS);
-            }
-            "table.cell_set_text_size" => {
-                self.validate_text_size_arg(signature, args, 3, "text_size");
-            }
-            "table.cell" => {
-                self.validate_label_string_arg(signature, args, 7, "text_halign", TEXT_HALIGNS);
-                self.validate_label_string_arg(signature, args, 8, "text_valign", TEXT_VALIGNS);
-                self.validate_text_size_arg(signature, args, 9, "text_size");
-                self.validate_label_string_arg(
-                    signature,
-                    args,
-                    12,
-                    "text_font_family",
-                    TEXT_FONT_FAMILIES,
-                );
-                self.validate_text_formatting_arg(signature, args, 13, "text_formatting");
-            }
-            "table.cell_set_text_font_family" => {
-                self.validate_label_string_arg(
-                    signature,
-                    args,
-                    3,
-                    "text_font_family",
-                    TEXT_FONT_FAMILIES,
-                );
-            }
-            "table.cell_set_text_formatting" => {
-                self.validate_text_formatting_arg(signature, args, 3, "text_formatting");
-            }
-            _ => {}
-        }
-    }
-
-    fn validate_text_formatting_arg(
-        &mut self,
-        signature: &BuiltinSignature,
-        args: &[CallArg],
-        index: usize,
-        name: &str,
-    ) {
-        for (arg_index, arg) in args.iter().enumerate() {
-            let is_target = arg.name.as_deref() == Some(name)
-                || (arg.name.is_none()
-                    && signature
-                        .params
-                        .get(arg_index)
-                        .is_some_and(|param| param.name == name && index == arg_index));
-            if !is_target {
-                continue;
-            }
-            let Some(value) = const_int_value(&arg.value) else {
-                continue;
-            };
-            if !(0..=3).contains(&value) {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_VALUE",
-                    format!(
-                        "`{}` argument `{name}` only supports text.format_none, text.format_bold, text.format_italic, or text.format_bold + text.format_italic",
-                        signature.name
-                    ),
-                    arg.span,
-                ));
-            }
-        }
-    }
-
-    pub(crate) fn validate_label_string_arg(
-        &mut self,
-        signature: &BuiltinSignature,
-        args: &[CallArg],
-        index: usize,
-        name: &str,
-        allowed: &[&str],
-    ) {
-        for (arg_index, arg) in args.iter().enumerate() {
-            let is_target = arg.name.as_deref() == Some(name)
-                || (arg.name.is_none()
-                    && signature
-                        .params
-                        .get(arg_index)
-                        .is_some_and(|param| param.name == name && index == arg_index));
-            if !is_target {
-                continue;
-            }
-            let Some(value) = const_string_value(&arg.value) else {
-                continue;
-            };
-            if !allowed.iter().any(|allowed_value| *allowed_value == value) {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_VALUE",
-                    format!(
-                        "`{}` argument `{name}` only supports {}",
-                        signature.name,
-                        allowed.join(", ")
-                    ),
-                    arg.span,
-                ));
-            }
-        }
-    }
-
-    fn validate_text_size_arg(
-        &mut self,
-        signature: &BuiltinSignature,
-        args: &[CallArg],
-        index: usize,
-        name: &str,
-    ) {
-        for (arg_index, arg) in args.iter().enumerate() {
-            let is_target = arg.name.as_deref() == Some(name)
-                || (arg.name.is_none()
-                    && signature
-                        .params
-                        .get(arg_index)
-                        .is_some_and(|param| param.name == name && index == arg_index));
-            if !is_target {
-                continue;
-            }
-            let Some(value) = const_string_value(&arg.value) else {
-                continue;
-            };
-            if !LABEL_SIZES
-                .iter()
-                .any(|allowed_value| *allowed_value == value)
-            {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_VALUE",
-                    format!(
-                        "`{}` argument `{name}` only supports {} or int sizes",
-                        signature.name,
-                        LABEL_SIZES.join(", ")
-                    ),
-                    arg.span,
-                ));
-            }
-        }
-    }
-
-    pub(crate) fn validate_indicator_args(
-        &mut self,
-        signature: &BuiltinSignature,
-        args: &[CallArg],
-    ) {
-        if signature.name != "indicator" {
-            return;
-        }
-
-        self.validate_label_string_arg(
-            signature,
-            args,
-            3,
-            "format",
-            &[
-                "format.inherit",
-                "format.price",
-                "format.percent",
-                "format.volume",
-            ],
-        );
-        self.validate_label_string_arg(
-            signature,
-            args,
-            5,
-            "scale",
-            &["scale.left", "scale.right", "scale.none"],
-        );
-
-        for (index, arg) in args.iter().enumerate() {
-            let is_precision = arg.name.as_deref() == Some("precision")
-                || (arg.name.is_none()
-                    && signature
-                        .params
-                        .get(index)
-                        .is_some_and(|param| param.name == "precision"));
-            if is_precision {
-                if let Some(value) = const_int_value(&arg.value)
-                    && !(0..=16).contains(&value)
-                {
-                    self.diagnostics.push(Diagnostic::error(
-                        "E_CALL_ARG_VALUE",
-                        "`indicator` argument `precision` must be between 0 and 16",
-                        arg.span,
-                    ));
-                }
-                continue;
-            }
-
-            if self.validate_indicator_drawing_count_arg(signature, arg, index) {
-                continue;
-            }
-
-            let is_max_bars_back = arg.name.as_deref() == Some("max_bars_back")
-                || (arg.name.is_none()
-                    && signature
-                        .params
-                        .get(index)
-                        .is_some_and(|param| param.name == "max_bars_back"));
-            if !is_max_bars_back {
-                continue;
-            }
-
-            if let Some(value) = const_int_value(&arg.value)
-                && value < 0
-            {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_VALUE",
-                    "`indicator` argument `max_bars_back` must be non-negative",
-                    arg.span,
-                ));
-            }
-        }
-    }
-
-    pub(crate) fn validate_array_value_args(
-        &mut self,
-        signature: &BuiltinSignature,
-        args: &[CallArg],
-        arg_types: &[Option<PineType>],
-    ) {
-        let value_index = match signature.name {
-            "array.push"
-            | "array.unshift"
-            | "array.fill"
-            | "array.includes"
-            | "array.indexof"
-            | "array.lastindexof"
-            | "array.binary_search"
-            | "array.binary_search_leftmost"
-            | "array.binary_search_rightmost" => 1,
-            "array.set" | "array.insert" => 2,
-            _ => return,
-        };
-        let Some(array_type) = arg_types.first().copied().flatten() else {
-            return;
-        };
-        let Some(value_type) = arg_types.get(value_index).copied().flatten() else {
-            return;
-        };
-        let expected = match array_type.kind {
-            ValueKind::FloatArray
-                if matches!(
-                    value_type.kind,
-                    ValueKind::Int | ValueKind::Float | ValueKind::Na
-                ) =>
-            {
-                return;
-            }
-            ValueKind::IntArray if matches!(value_type.kind, ValueKind::Int | ValueKind::Na) => {
-                return;
-            }
-            ValueKind::BoolArray if matches!(value_type.kind, ValueKind::Bool | ValueKind::Na) => {
-                return;
-            }
-            ValueKind::StringArray
-                if matches!(value_type.kind, ValueKind::String | ValueKind::Na) =>
-            {
-                return;
-            }
-            ValueKind::ColorArray
-                if matches!(value_type.kind, ValueKind::Color | ValueKind::Na) =>
-            {
-                return;
-            }
-            ValueKind::LineArray if matches!(value_type.kind, ValueKind::Line | ValueKind::Na) => {
-                return;
-            }
-            ValueKind::LineFillArray
-                if matches!(value_type.kind, ValueKind::LineFill | ValueKind::Na) =>
-            {
-                return;
-            }
-            ValueKind::PolylineArray
-                if matches!(value_type.kind, ValueKind::Polyline | ValueKind::Na) =>
-            {
-                return;
-            }
-            ValueKind::LabelArray
-                if matches!(value_type.kind, ValueKind::Label | ValueKind::Na) =>
-            {
-                return;
-            }
-            ValueKind::BoxArray if matches!(value_type.kind, ValueKind::Box | ValueKind::Na) => {
-                return;
-            }
-            ValueKind::TableArray
-                if matches!(value_type.kind, ValueKind::Table | ValueKind::Na) =>
-            {
-                return;
-            }
-            ValueKind::ChartPointArray
-                if matches!(value_type.kind, ValueKind::ChartPoint | ValueKind::Na) =>
-            {
-                return;
-            }
-            ValueKind::FloatArray => "float arrays",
-            ValueKind::IntArray => "int arrays",
-            ValueKind::BoolArray => "bool arrays",
-            ValueKind::StringArray => "string arrays",
-            ValueKind::ColorArray => "color arrays",
-            ValueKind::LabelArray => "label arrays",
-            ValueKind::LineArray => "line arrays",
-            ValueKind::LineFillArray => "linefill arrays",
-            ValueKind::PolylineArray => "polyline arrays",
-            ValueKind::BoxArray => "box arrays",
-            ValueKind::TableArray => "table arrays",
-            ValueKind::ChartPointArray => "chart.point arrays",
-            _ => return,
-        };
-
-        self.diagnostics.push(Diagnostic::error(
-            "E_CALL_ARG_TYPE",
-            format!(
-                "`{}` argument `value` does not accept {:?} {:?} for {expected}",
-                signature.name, value_type.qualifier, value_type.kind,
-            ),
-            args.get(value_index)
-                .map_or(Span::default(), |arg| arg.span),
-        ));
-    }
-
-    pub(crate) fn validate_array_concat_args(
-        &mut self,
-        signature: &BuiltinSignature,
-        args: &[CallArg],
-        arg_types: &[Option<PineType>],
-    ) {
-        if signature.name != "array.concat" {
-            return;
-        }
-        let Some(first_type) = arg_types.first().copied().flatten() else {
-            return;
-        };
-        let Some(second_type) = arg_types.get(1).copied().flatten() else {
-            return;
-        };
-        if !is_array_kind(first_type.kind)
-            || !is_array_kind(second_type.kind)
-            || first_type.kind == second_type.kind
-        {
-            return;
-        }
-
-        self.diagnostics.push(Diagnostic::error(
-            "E_CALL_ARG_TYPE",
-            format!(
-                "`array.concat` argument `id2` does not accept {:?} {:?} for {:?} {:?}",
-                second_type.qualifier, second_type.kind, first_type.qualifier, first_type.kind,
-            ),
-            args.get(1).map_or(Span::default(), |arg| arg.span),
-        ));
-    }
-
-    pub(crate) fn validate_array_from_args(
-        &mut self,
-        signature: &BuiltinSignature,
-        args: &[CallArg],
-        arg_types: &[Option<PineType>],
-    ) {
-        if signature.name != "array.from" {
-            return;
-        }
-        if array_from_return_type(arg_types).is_some() {
-            return;
-        }
-
-        self.diagnostics.push(Diagnostic::error(
-            "E_CALL_ARG_TYPE",
-            "`array.from` arguments must infer one supported array element kind",
-            args.first().map_or(Span::default(), |arg| arg.span),
-        ));
     }
 
     pub(crate) fn resolve_param<'a>(
@@ -1423,68 +452,6 @@ impl Analyzer {
                     .then(|| signature.params.last())
                     .flatten()
             })
-        }
-    }
-
-    pub(crate) fn return_type(
-        &self,
-        signature: &BuiltinSignature,
-        arg_types: &[Option<PineType>],
-    ) -> Option<PineType> {
-        match signature.returns {
-            ReturnSpec::Fixed(pine_type) => Some(pine_type),
-            ReturnSpec::Tuple(_) => Some(pine_builtins::tuple_return_type()),
-            ReturnSpec::SameAsArg(index) => arg_types.get(index).copied().flatten(),
-            ReturnSpec::BoolFromArg(index) => arg_types
-                .get(index)
-                .copied()
-                .flatten()
-                .map(pine_builtins::fallback_bool_for_arg),
-            ReturnSpec::ColorFromArg(index) => arg_types
-                .get(index)
-                .copied()
-                .flatten()
-                .map(pine_builtins::color_return_for_arg),
-            ReturnSpec::PromotedColor => promoted_color_type(arg_types),
-            ReturnSpec::PromotedBool => promoted_bool_type(arg_types),
-            ReturnSpec::PromotedInt => promoted_int_type(arg_types),
-            ReturnSpec::PromotedString => promoted_string_type(arg_types),
-            ReturnSpec::FloatFromStringArg(index) => arg_types
-                .get(index)
-                .copied()
-                .flatten()
-                .map(float_return_for_arg),
-            ReturnSpec::PromotedNumeric => promoted_numeric_type(arg_types),
-            ReturnSpec::ArrayElement(index) => array_element_return_type(arg_types, index),
-            ReturnSpec::ArrayNumeric(index) => array_numeric_return_type(arg_types, index),
-            ReturnSpec::ArrayFromArgs => array_from_return_type(arg_types),
-            ReturnSpec::IntFromArg(index) => arg_types
-                .get(index)
-                .copied()
-                .flatten()
-                .map(int_return_for_arg),
-            ReturnSpec::FloatFromArg(index) => arg_types
-                .get(index)
-                .copied()
-                .flatten()
-                .map(float_return_for_arg),
-            ReturnSpec::SeriesFromArg(index) => arg_types
-                .get(index)
-                .copied()
-                .flatten()
-                .and_then(series_return_for_arg),
-            ReturnSpec::ChangeFromArg(index) => arg_types
-                .get(index)
-                .copied()
-                .flatten()
-                .and_then(pine_builtins::change_return_for_arg),
-            ReturnSpec::PromotedFloat => promoted_float_type(arg_types),
-            ReturnSpec::Round => round_return_type(arg_types),
-            ReturnSpec::InputFromArg(index) => arg_types
-                .get(index)
-                .copied()
-                .flatten()
-                .and_then(pine_builtins::input_return_for_arg),
         }
     }
 }

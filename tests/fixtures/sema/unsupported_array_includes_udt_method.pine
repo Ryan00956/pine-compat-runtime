@@ -1,0 +1,9 @@
+//@version=5
+indicator("Unsupported array.includes UDT method")
+type Point
+    float x
+type Other
+    float x
+
+values = array.from(Point.new(close))
+plot(values.includes(Other.new(open)) ? 1 : 0)

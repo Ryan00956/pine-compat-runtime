@@ -1,0 +1,22 @@
+//@version=5
+indicator("User type array typed declarations")
+type Point
+    float x
+    string label
+
+array<Point> points = na
+points := array.new<Point>()
+points.push(Point.new(close, "first"))
+
+Point[] more = array.from(Point.new(high, "second"))
+points := more
+
+array<Point> copied = points.copy()
+copied.push(Point.new(low, "third"))
+
+first = points.get(0)
+second = copied.get(1)
+plot(first.x)
+plot(str.length(first.label))
+plot(second.x)
+plot(copied.size())

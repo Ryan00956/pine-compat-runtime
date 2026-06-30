@@ -1,0 +1,29 @@
+//@version=6
+indicator("Matrix dynamic history")
+
+var values = matrix.new<float>(1, 2, close)
+matrix.set(values, 0, 0, close)
+if bar_index % 2 == 0
+    matrix.reshape(values, 1, 2)
+else
+    values.reshape(2, 1)
+
+offset = bar_index < 2 ? bar_index : 2
+previous = values[offset]
+previous_cell = matrix.get(previous, 0, 0)
+previous_rows = matrix.rows(previous)
+previous_columns = previous.columns()
+na_offset = bar_index == 0 ? na : offset
+missing = values[na_offset]
+
+if bar_index > 0
+    matrix.set(previous, 0, 0, 100)
+    previous.reshape(1, 2)
+
+plot(previous_cell, "previous_cell")
+plot(previous_rows, "previous_rows")
+plot(previous_columns, "previous_columns")
+plot(matrix.get(values, 0, 0), "current_cell")
+plot(matrix.rows(values), "current_rows")
+plot(values.columns(), "current_columns")
+plot(na(missing) ? 1 : 0, "na_offset_is_na")

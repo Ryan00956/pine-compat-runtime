@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array.binary_search chart point method")
+points = array.new<chart.point>()
+point = chart.point.now(close)
+plot(points.binary_search(point))

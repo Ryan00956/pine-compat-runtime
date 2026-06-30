@@ -1,0 +1,16 @@
+//@version=5
+indicator("Array search UDT")
+type Point
+    float x
+    string tag
+
+points = array.from(Point.new(close, "first"), Point.new(open, "second"), Point.new(close, "first"))
+same = Point.new(close, "first")
+other = Point.new(high, "other")
+
+plot(array.includes(points, same) ? 1 : 0)
+plot(points.includes(other) ? 1 : 0)
+plot(array.indexof(points, same))
+plot(points.indexof(other))
+plot(array.lastindexof(points, same))
+plot(points.lastindexof(other))

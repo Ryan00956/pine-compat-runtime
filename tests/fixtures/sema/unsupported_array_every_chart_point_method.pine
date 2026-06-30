@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array every chart point method")
+points = array.new<chart.point>()
+plot(points.every() ? 1 : 0)

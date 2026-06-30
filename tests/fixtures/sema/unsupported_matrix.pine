@@ -1,4 +1,5 @@
 //@version=6
 indicator("Unsupported matrix")
 
-matrix.get(na, 0, 0)
+value = matrix.det(na)
+plot(value)

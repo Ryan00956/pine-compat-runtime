@@ -1,0 +1,5 @@
+//@version=6
+indicator("Matrix cell limit")
+
+values = matrix.new<float>(317, 317, close)
+plot(matrix.rows(values))

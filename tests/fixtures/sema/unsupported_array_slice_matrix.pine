@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array slice matrix")
+values = array.new<matrix>()
+window = array.slice(values, 0, 1)
+plot(close)

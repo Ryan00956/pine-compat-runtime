@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported strategy array typed declaration")
+
+array<strategy> values = na
+plot(close)

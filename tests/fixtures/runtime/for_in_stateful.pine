@@ -1,0 +1,10 @@
+//@version=5
+indicator("For in stateful calls")
+
+values = array.from(0, 1)
+sum = close * 0.0
+for value in values
+    sample = ta.sma(close + value, 2)
+    sum := sum + nz(sample)
+
+plot(sum)

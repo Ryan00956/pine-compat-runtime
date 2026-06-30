@@ -1,0 +1,12 @@
+//@version=5
+indicator("While expression stateful scope")
+
+i = 0
+value = while i < 2
+    var carried = 0
+    local = i + 1
+    carried := carried + 1
+    i := i + 1
+    nz(ta.sma(close, 2)) + carried + local
+
+plot(value)

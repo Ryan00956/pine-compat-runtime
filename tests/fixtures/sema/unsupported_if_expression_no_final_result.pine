@@ -1,0 +1,9 @@
+//@version=5
+indicator("Unsupported if expression no final result")
+
+value = if close > open
+    local = high
+else
+    close
+
+plot(value)

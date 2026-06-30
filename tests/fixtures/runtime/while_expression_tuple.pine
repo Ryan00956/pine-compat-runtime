@@ -1,0 +1,14 @@
+//@version=5
+indicator("While expression tuple")
+
+i = 0
+[left, right] = while i < 4
+    i := i + 1
+    if i == 2
+        continue
+    if i == 4
+        break
+    [i, i * 10]
+
+plot(left)
+plot(right)

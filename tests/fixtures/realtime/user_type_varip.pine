@@ -1,0 +1,45 @@
+//@version=5
+indicator("User type varip realtime")
+type Point
+    float x
+
+var Point normal = Point.new(close)
+normal.x := normal.x + 1
+plot(normal.x)
+
+varip Point intrabar = Point.new(close)
+intrabar.x := intrabar.x + 1
+plot(intrabar.x)
+
+varip Point seeded = na
+if bar_index == 0
+    seeded := Point.new(close)
+else
+    seeded.x := seeded.x + 1
+plot(seeded.x)
+
+varip inferred = Point.new(close)
+inferred.x := inferred.x + 1
+plot(inferred.x)
+
+varip Point typed_ternary = bar_index == 0 ? Point.new(close) : Point.new(open)
+typed_ternary.x := typed_ternary.x + 1
+plot(typed_ternary.x)
+
+varip Point typed_switch = switch bar_index
+    0 => Point.new(close)
+    => Point.new(open)
+typed_switch.x := typed_switch.x + 1
+plot(typed_switch.x)
+
+varip Point typed_if = if bar_index == 0
+    Point.new(close)
+else
+    Point.new(open)
+typed_if.x := typed_if.x + 1
+plot(typed_if.x)
+
+varip Point typed_for = for i = 0 to 1
+    Point.new(close + i)
+typed_for.x := typed_for.x + 1
+plot(typed_for.x)

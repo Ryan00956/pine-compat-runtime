@@ -44,6 +44,10 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
+        "strategy.buy_and_hold_return_percent",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
         "strategy.avg_trade",
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
@@ -121,6 +125,10 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     ),
     (
         "strategy.opentrades.capital_held",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
+        "strategy.margin_liquidation_price",
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
@@ -337,6 +345,7 @@ mod tests {
             "strategy.grossprofit_percent",
             "strategy.grossloss",
             "strategy.grossloss_percent",
+            "strategy.buy_and_hold_return_percent",
             "strategy.avg_trade",
             "strategy.avg_trade_percent",
             "strategy.avg_winning_trade",
@@ -351,6 +360,7 @@ mod tests {
             "strategy.max_contracts_held_long",
             "strategy.max_contracts_held_short",
             "strategy.opentrades.capital_held",
+            "strategy.margin_liquidation_price",
             "strategy.equity",
         ] {
             assert_eq!(

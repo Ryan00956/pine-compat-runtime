@@ -1,0 +1,14 @@
+//@version=5
+indicator("For in color")
+
+values = array.from(color.red, color.green, color.blue)
+int score = 0
+for value in values
+    if value == color.red
+        score := score + 1
+    if value == color.green
+        score := score + 10
+    if value == color.blue
+        score := score + 100
+
+plot(score)

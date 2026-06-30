@@ -1,4 +1,6 @@
-use crate::{HistoryRetentionMode, PineValue, RuntimeProfile};
+use crate::{PineValue, RuntimeProfile};
+
+mod profile;
 
 use super::alerts::AlertEvent;
 use super::drawings::{
@@ -9,6 +11,7 @@ use super::model::{
     PlotBarSeries, PlotCandleSeries, PlotCharSeries, PlotSeries, PlotShapeSeries, RuntimeResult,
 };
 use super::strategy::StrategyResult;
+use profile::profile_json;
 
 pub fn public_runtime_result_json(result: &RuntimeResult) -> String {
     let mut output = format!("{{\"schemaVersion\":{},", PUBLIC_RUNTIME_SCHEMA_VERSION);
@@ -66,203 +69,6 @@ pub fn public_runtime_profiled_result_json(
     output.push_str(&profile_json(profile));
     output.push('}');
     output
-}
-
-fn profile_json(profile: &RuntimeProfile) -> String {
-    format!(
-        concat!(
-            "{{",
-            "\"bars\":{},",
-            "\"seriesBuffers\":{},",
-            "\"seriesValues\":{},",
-            "\"seriesCapacity\":{},",
-            "\"maxSeriesDepth\":{},",
-            "\"historyRetentionMode\":\"{}\",",
-            "\"historyMaxConstantOffset\":{},",
-            "\"historyMaxBarsBack\":{},",
-            "\"historyHasDynamicOffsets\":{},",
-            "\"symbolSlots\":{},",
-            "\"symbolCapacity\":{},",
-            "\"currentSeriesSlots\":{},",
-            "\"currentSeriesCapacity\":{},",
-            "\"varSlots\":{},",
-            "\"varCapacity\":{},",
-            "\"arraySlots\":{},",
-            "\"arrayCapacity\":{},",
-            "\"arrayValues\":{},",
-            "\"arrayValueCapacity\":{},",
-            "\"callStateSlots\":{},",
-            "\"callStateCapacity\":{},",
-            "\"valuewhenStateSlots\":{},",
-            "\"valuewhenStateCapacity\":{},",
-            "\"valuewhenStateValues\":{},",
-            "\"valuewhenStateValueCapacity\":{},",
-            "\"rollingWindowSlots\":{},",
-            "\"rollingWindowCapacity\":{},",
-            "\"rollingWindowValues\":{},",
-            "\"rollingWindowValueCapacity\":{},",
-            "\"rsiStateSlots\":{},",
-            "\"rsiStateCapacity\":{},",
-            "\"macdStateSlots\":{},",
-            "\"macdStateCapacity\":{},",
-            "\"plots\":{},",
-            "\"plotValues\":{},",
-            "\"plotCapacity\":{},",
-            "\"plotChars\":{},",
-            "\"plotCharValues\":{},",
-            "\"plotCharCapacity\":{},",
-            "\"plotShapes\":{},",
-            "\"plotShapeValues\":{},",
-            "\"plotShapeCapacity\":{},",
-            "\"plotArrows\":{},",
-            "\"plotArrowValues\":{},",
-            "\"plotArrowCapacity\":{},",
-            "\"plotBars\":{},",
-            "\"plotBarValues\":{},",
-            "\"plotBarCapacity\":{},",
-            "\"plotCandles\":{},",
-            "\"plotCandleValues\":{},",
-            "\"plotCandleCapacity\":{},",
-            "\"bgColors\":{},",
-            "\"bgColorValues\":{},",
-            "\"bgColorCapacity\":{},",
-            "\"barColors\":{},",
-            "\"barColorValues\":{},",
-            "\"barColorCapacity\":{},",
-            "\"hlines\":{},",
-            "\"hlineCapacity\":{},",
-            "\"fills\":{},",
-            "\"fillCapacity\":{},",
-            "\"labels\":{},",
-            "\"labelSnapshots\":{},",
-            "\"labelCapacity\":{},",
-            "\"labelSnapshotCapacity\":{},",
-            "\"lines\":{},",
-            "\"lineSnapshots\":{},",
-            "\"lineCapacity\":{},",
-            "\"lineSnapshotCapacity\":{},",
-            "\"lineFills\":{},",
-            "\"lineFillSnapshots\":{},",
-            "\"lineFillCapacity\":{},",
-            "\"lineFillSnapshotCapacity\":{},",
-            "\"polylines\":{},",
-            "\"polylineSnapshots\":{},",
-            "\"polylinePoints\":{},",
-            "\"polylineCapacity\":{},",
-            "\"polylineSnapshotCapacity\":{},",
-            "\"polylinePointCapacity\":{},",
-            "\"boxes\":{},",
-            "\"boxSnapshots\":{},",
-            "\"boxCapacity\":{},",
-            "\"boxSnapshotCapacity\":{},",
-            "\"tables\":{},",
-            "\"tableCells\":{},",
-            "\"tableCapacity\":{},",
-            "\"tableSnapshotCapacity\":{},",
-            "\"tableCellCapacity\":{}",
-            "}}"
-        ),
-        profile.bars,
-        profile.series_buffers,
-        profile.series_values,
-        profile.series_capacity,
-        profile.max_series_depth,
-        history_retention_mode_json(profile.history_retention_mode),
-        profile.history_max_constant_offset,
-        option_u32_json(profile.history_max_bars_back),
-        profile.history_has_dynamic_offsets,
-        profile.symbol_slots,
-        profile.symbol_capacity,
-        profile.current_series_slots,
-        profile.current_series_capacity,
-        profile.var_slots,
-        profile.var_capacity,
-        profile.array_slots,
-        profile.array_capacity,
-        profile.array_values,
-        profile.array_value_capacity,
-        profile.call_state_slots,
-        profile.call_state_capacity,
-        profile.valuewhen_state_slots,
-        profile.valuewhen_state_capacity,
-        profile.valuewhen_state_values,
-        profile.valuewhen_state_value_capacity,
-        profile.rolling_window_slots,
-        profile.rolling_window_capacity,
-        profile.rolling_window_values,
-        profile.rolling_window_value_capacity,
-        profile.rsi_state_slots,
-        profile.rsi_state_capacity,
-        profile.macd_state_slots,
-        profile.macd_state_capacity,
-        profile.plots,
-        profile.plot_values,
-        profile.plot_capacity,
-        profile.plot_chars,
-        profile.plot_char_values,
-        profile.plot_char_capacity,
-        profile.plot_shapes,
-        profile.plot_shape_values,
-        profile.plot_shape_capacity,
-        profile.plot_arrows,
-        profile.plot_arrow_values,
-        profile.plot_arrow_capacity,
-        profile.plot_bars,
-        profile.plot_bar_values,
-        profile.plot_bar_capacity,
-        profile.plot_candles,
-        profile.plot_candle_values,
-        profile.plot_candle_capacity,
-        profile.bg_colors,
-        profile.bg_color_values,
-        profile.bg_color_capacity,
-        profile.bar_colors,
-        profile.bar_color_values,
-        profile.bar_color_capacity,
-        profile.hlines,
-        profile.hline_capacity,
-        profile.fills,
-        profile.fill_capacity,
-        profile.labels,
-        profile.label_snapshots,
-        profile.label_capacity,
-        profile.label_snapshot_capacity,
-        profile.lines,
-        profile.line_snapshots,
-        profile.line_capacity,
-        profile.line_snapshot_capacity,
-        profile.line_fills,
-        profile.line_fill_snapshots,
-        profile.line_fill_capacity,
-        profile.line_fill_snapshot_capacity,
-        profile.polylines,
-        profile.polyline_snapshots,
-        profile.polyline_points,
-        profile.polyline_capacity,
-        profile.polyline_snapshot_capacity,
-        profile.polyline_point_capacity,
-        profile.boxes,
-        profile.box_snapshots,
-        profile.box_capacity,
-        profile.box_snapshot_capacity,
-        profile.tables,
-        profile.table_cells,
-        profile.table_capacity,
-        profile.table_snapshot_capacity,
-        profile.table_cell_capacity
-    )
-}
-
-fn history_retention_mode_json(mode: HistoryRetentionMode) -> &'static str {
-    match mode {
-        HistoryRetentionMode::StaticTrimmed => "staticTrimmed",
-        HistoryRetentionMode::DynamicFull => "dynamicFull",
-        HistoryRetentionMode::MaxBarsBack => "maxBarsBack",
-    }
-}
-
-fn option_u32_json(value: Option<u32>) -> String {
-    value.map_or_else(|| "null".to_owned(), |value| value.to_string())
 }
 
 fn plots_json(plots: &[PlotSeries]) -> String {
@@ -977,7 +783,9 @@ fn value_json(value: &PineValue) -> String {
             output.push(']');
             output
         }
-        PineValue::Array(_) | PineValue::Na | PineValue::Void => "null".to_owned(),
+        PineValue::Array(_) | PineValue::Matrix(_) | PineValue::Na | PineValue::Void => {
+            "null".to_owned()
+        }
     }
 }
 

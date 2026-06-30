@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix columns")
+
+column_count = matrix.columns(na)
+plot(column_count)

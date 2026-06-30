@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix for-in")
+
+values = matrix.new<float>(1, 1, close)
+for value in values
+    plot(value)

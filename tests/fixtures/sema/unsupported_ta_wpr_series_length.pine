@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.wpr Series Length")
+plot(ta.wpr(bar_index))

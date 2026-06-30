@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array sort linefill namespace")
+values = array.new_linefill(0)
+array.sort(values)
+plot(close)

@@ -1,0 +1,7 @@
+//@version=5
+indicator("While expression syntax")
+i = 0
+result = while i < 3
+    i := i + 1
+    i
+plot(result)

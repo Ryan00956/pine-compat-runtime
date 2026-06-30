@@ -1,0 +1,22 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT varip realtime")
+
+var lib.Point normal = lib.Point.new(close)
+normal := lib.Point.new(normal.x + 1)
+plot(normal.x)
+
+varip lib.Point intrabar = lib.Point.new(close)
+intrabar := lib.Point.new(intrabar.x + 1)
+plot(intrabar.x)
+
+varip lib.Point seeded = na
+if bar_index == 0
+    seeded := lib.Point.new(close)
+else
+    seeded := lib.Point.new(seeded.x + 1)
+plot(seeded.x)
+
+varip inferred = lib.Point.new(close)
+inferred := lib.Point.new(inferred.x + 1)
+plot(inferred.x)

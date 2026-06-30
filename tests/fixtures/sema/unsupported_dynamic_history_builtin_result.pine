@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported dynamic history built-in result")
+
+offset = ta.sma(close, 2)
+plot(close[offset])

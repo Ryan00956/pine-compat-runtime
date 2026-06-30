@@ -411,7 +411,7 @@ const PLOTCANDLE_PARAMS: &[BuiltinParam] = &[
 const HLINE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "price",
-        accepts: Accepts::ConstOrInputFloat,
+        accepts: Accepts::AtMostInputNumeric,
         optional: false,
     },
     BuiltinParam {

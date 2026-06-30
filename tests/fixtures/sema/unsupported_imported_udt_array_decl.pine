@@ -1,0 +1,6 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT array declaration")
+
+array<lib.Point> points = na
+plot(close)

@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported dotted array.new template")
+points = array.new<library.Point>()
+plot(close)

@@ -1,0 +1,9 @@
+//@version=5
+type Inner
+    float x
+
+type Wrapper
+    Inner inner
+
+Wrapper[] points = na
+plot(close)

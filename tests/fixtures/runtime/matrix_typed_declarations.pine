@@ -1,0 +1,15 @@
+//@version=6
+indicator("Matrix typed declarations")
+
+matrix<float> values = na
+values := matrix.new<float>(1, 1, close)
+plot(values.get(0, 0), "values")
+
+var matrix<float> persistent = matrix.new<float>(1, 1, close)
+persistent.set(0, 0, close + 10)
+plot(persistent.get(0, 0), "persistent")
+
+matrix<float> copied = values.copy()
+copied.set(0, 0, close + 20)
+plot(values.get(0, 0), "source_after_copy")
+plot(copied.get(0, 0), "copied")

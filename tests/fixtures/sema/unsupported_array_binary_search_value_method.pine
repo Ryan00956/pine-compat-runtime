@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.binary_search Value method")
+values = array.new_int(2, 1)
+plot(values.binary_search("1"))

@@ -134,6 +134,11 @@ const STRATEGY_PARAMS: &[BuiltinParam] = &[
         optional: true,
     },
     BuiltinParam {
+        name: "close_entries_rule",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
         name: "max_labels_count",
         accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
         optional: true,

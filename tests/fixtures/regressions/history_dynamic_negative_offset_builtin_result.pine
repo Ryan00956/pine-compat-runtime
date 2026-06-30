@@ -1,0 +1,6 @@
+//@version=5
+indicator("Dynamic negative history offset built-in result")
+
+offset = math.floor(close - close - 1)
+
+plot(close[offset])

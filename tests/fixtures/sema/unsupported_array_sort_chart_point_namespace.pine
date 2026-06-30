@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array sort chart point namespace")
+points = array.new<chart.point>()
+array.sort(points)
+plot(close)

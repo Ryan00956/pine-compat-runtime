@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array.remove Index method")
+values = array.new_int(1, 1)
+value = values.remove("0")
+plot(close)

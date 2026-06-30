@@ -40,6 +40,14 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "array slice is out of bounds of the parent array",
     ),
     (
+        "tests/fixtures/regressions/for_in_pop_shrink_bounds.pine",
+        "array index 1 is out of bounds for array of size 1",
+    ),
+    (
+        "tests/fixtures/regressions/for_in_clear_shrink_bounds.pine",
+        "array index 1 is out of bounds for array of size 0",
+    ),
+    (
         "tests/fixtures/regressions/array_unshift_limit.pine",
         "array.unshift cannot exceed 100000 elements",
     ),
@@ -53,6 +61,34 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     ),
     (
         "tests/fixtures/regressions/history_dynamic_negative_offset.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udf_return.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_builtin_result.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_ternary_result.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_if_result.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_switch_result.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_for_result.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_while_result.pine",
         "history offset must be non-negative",
     ),
     (
@@ -142,6 +178,242 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     (
         "tests/fixtures/regressions/array_new_chart_point_size_limit.pine",
         "array.new<chart.point> size cannot exceed 100000 elements",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_get_row_bounds.pine",
+        "matrix row index 2 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_get_column_bounds.pine",
+        "matrix column index 2 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_get_method_row_bounds.pine",
+        "matrix row index 2 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_get_method_column_bounds.pine",
+        "matrix column index 2 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_get_negative_row_bounds.pine",
+        "matrix row index -1 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_get_negative_column_bounds.pine",
+        "matrix column index -1 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_get_method_negative_row_bounds.pine",
+        "matrix row index -1 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_get_method_negative_column_bounds.pine",
+        "matrix column index -1 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_get_na_row_index.pine",
+        "matrix row index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_get_na_column_index.pine",
+        "matrix column index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_get_method_na_row_index.pine",
+        "matrix row index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_get_method_na_column_index.pine",
+        "matrix column index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_row_bounds.pine",
+        "matrix row index 2 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_col_bounds.pine",
+        "matrix column index 2 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_row_negative_bounds.pine",
+        "matrix row index -1 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_col_negative_bounds.pine",
+        "matrix column index -1 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_row_na_index.pine",
+        "matrix row index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_col_na_index.pine",
+        "matrix column index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_row_method_bounds.pine",
+        "matrix row index 2 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_col_method_bounds.pine",
+        "matrix column index 2 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_row_method_negative_bounds.pine",
+        "matrix row index -1 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_col_method_negative_bounds.pine",
+        "matrix column index -1 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_row_method_na_index.pine",
+        "matrix row index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_col_method_na_index.pine",
+        "matrix column index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_set_row_bounds.pine",
+        "matrix row index 2 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_set_column_bounds.pine",
+        "matrix column index 2 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_set_method_row_bounds.pine",
+        "matrix row index 2 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_set_method_column_bounds.pine",
+        "matrix column index 2 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_set_negative_row_bounds.pine",
+        "matrix row index -1 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_set_negative_column_bounds.pine",
+        "matrix column index -1 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_set_method_negative_row_bounds.pine",
+        "matrix row index -1 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_set_method_negative_column_bounds.pine",
+        "matrix column index -1 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_set_na_row_index.pine",
+        "matrix row index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_set_method_na_row_index.pine",
+        "matrix row index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_set_na_column_index.pine",
+        "matrix column index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_set_method_na_column_index.pine",
+        "matrix column index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_new_negative_row_count.pine",
+        "matrix row count cannot be negative",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_new_negative_column_count.pine",
+        "matrix column count cannot be negative",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_new_na_row_count.pine",
+        "matrix row count cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_new_na_column_count.pine",
+        "matrix column count cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_cell_limit.pine",
+        "matrix cell count cannot exceed 100000",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_add_row_bounds.pine",
+        "matrix row index 2 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_add_row_size_mismatch.pine",
+        "matrix add_row array size 1 must match column count 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_add_col_bounds.pine",
+        "matrix column index 2 is out of bounds for size 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_add_col_size_mismatch.pine",
+        "matrix add_col array size 1 must match row count 2",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_remove_row_bounds.pine",
+        "matrix row index 1 is out of bounds for size 1",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_remove_row_na_index.pine",
+        "matrix row index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_remove_col_bounds.pine",
+        "matrix column index 1 is out of bounds for size 1",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_remove_col_na_index.pine",
+        "matrix column index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_reshape_mismatch.pine",
+        "matrix reshape dimensions must preserve element count",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_reshape_method_mismatch.pine",
+        "matrix reshape dimensions must preserve element count",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_reshape_negative_row_count.pine",
+        "matrix row count cannot be negative",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_reshape_method_negative_row_count.pine",
+        "matrix row count cannot be negative",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_reshape_negative_column_count.pine",
+        "matrix column count cannot be negative",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_reshape_method_negative_column_count.pine",
+        "matrix column count cannot be negative",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_reshape_na_row_count.pine",
+        "matrix row count cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_reshape_method_na_row_count.pine",
+        "matrix row count cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_reshape_method_na_column_count.pine",
+        "matrix column count cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_reshape_na_column_count.pine",
+        "matrix column count cannot be na",
     ),
     (
         "tests/fixtures/regressions/table_new_count_limit.pine",

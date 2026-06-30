@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array sum string method")
+values = array.new_string()
+plot(values.sum())

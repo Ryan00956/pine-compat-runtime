@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array max line method")
+values = array.new_line()
+plot(values.max())

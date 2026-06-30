@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.new unknown UDT")
+points = array.new<Point>()
+plot(close)

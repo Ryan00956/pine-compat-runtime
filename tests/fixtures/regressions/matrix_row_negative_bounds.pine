@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix row extraction negative bounds")
+
+values = matrix.new<float>(2, 2, close)
+row_values = matrix.row(values, -1)
+plot(row_values.get(0))

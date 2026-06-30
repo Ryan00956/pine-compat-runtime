@@ -136,6 +136,33 @@ fn array_heavy_profile_fixture_bounds_array_capacity() {
 }
 
 #[test]
+fn matrix_heavy_profile_fixture_records_matrix_storage() {
+    let profile = profile_fixture("tests/fixtures/profile/matrix_heavy.pine");
+
+    assert_eq!(profile.bars, PROFILE_BARS);
+    assert_eq!(profile.matrix_slots, PROFILE_BARS * 3);
+    assert_eq!(profile.matrix_cells, PROFILE_BARS * 12);
+    assert_eq!(profile.plots, 1);
+    assert_eq!(profile.plot_values, PROFILE_BARS);
+    assert!(profile.matrix_capacity >= profile.matrix_slots);
+    assert!(profile.matrix_cell_capacity >= profile.matrix_cells);
+    assert_capacity_within(
+        "matrix slot",
+        profile.matrix_capacity,
+        profile.matrix_slots,
+        2,
+        64,
+    );
+    assert_capacity_within(
+        "matrix cell",
+        profile.matrix_cell_capacity,
+        profile.matrix_cells,
+        2,
+        64,
+    );
+}
+
+#[test]
 fn dynamic_history_profile_fixture_respects_max_bars_back() {
     let profile = profile_fixture("tests/fixtures/profile/dynamic_history_max_bars_back.pine");
 
@@ -146,10 +173,41 @@ fn dynamic_history_profile_fixture_respects_max_bars_back() {
     );
     assert_eq!(profile.history_max_bars_back, Some(32));
     assert!(profile.history_has_dynamic_offsets);
+    assert_eq!(profile.history_dynamic_retention_misses, 0);
+    assert_eq!(profile.history_dynamic_retention_max_missed_offset, None);
     assert_eq!(profile.max_series_depth, 32);
     assert!(profile.series_buffers > 0);
     assert!(
         profile.series_values <= profile.series_buffers * 32,
+        "max_bars_back should bound retained values per series buffer: {:?}",
+        profile
+    );
+    assert_capacity_within(
+        "series",
+        profile.series_capacity,
+        profile.series_values,
+        2,
+        64,
+    );
+}
+
+#[test]
+fn dynamic_history_profile_fixture_reports_max_bars_back_misses() {
+    let profile = profile_fixture("tests/fixtures/profile/dynamic_history_max_bars_back_miss.pine");
+
+    assert_eq!(profile.bars, PROFILE_BARS);
+    assert_eq!(
+        profile.history_retention_mode,
+        HistoryRetentionMode::MaxBarsBack
+    );
+    assert_eq!(profile.history_max_bars_back, Some(2));
+    assert!(profile.history_has_dynamic_offsets);
+    assert_eq!(profile.history_dynamic_retention_misses, PROFILE_BARS - 1);
+    assert_eq!(profile.history_dynamic_retention_max_missed_offset, Some(3));
+    assert_eq!(profile.max_series_depth, 2);
+    assert!(profile.series_buffers > 0);
+    assert!(
+        profile.series_values <= profile.series_buffers * 2,
         "max_bars_back should bound retained values per series buffer: {:?}",
         profile
     );

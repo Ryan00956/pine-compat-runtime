@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.binary_search_rightmost bool method")
+values = array.new_bool()
+plot(values.binary_search_rightmost(1))

@@ -9,9 +9,9 @@ mod parser_tests;
 mod source;
 
 pub use ast::{
-    BinaryOp, CallArg, DeclMode, ExportDecl, ExportItem, Expr, ExprKind, FunctionBody, ImportAlias,
-    ImportDecl, LibraryDecl, Literal, MethodDecl, MethodParam, Program, Stmt, StmtKind, SwitchArm,
-    UnaryOp, UserTypeDecl, UserTypeField, VersionDecl,
+    BinaryOp, CallArg, DeclMode, DeclaredType, ExportDecl, ExportItem, Expr, ExprKind,
+    FunctionBody, ImportAlias, ImportDecl, LibraryDecl, Literal, MethodDecl, MethodParam, Program,
+    Stmt, StmtKind, SwitchArm, SwitchArmResult, UnaryOp, UserTypeDecl, UserTypeField, VersionDecl,
 };
 pub use diagnostic::{Diagnostic, Severity};
 pub use lexer::{Lexed, Token, TokenKind, lex};

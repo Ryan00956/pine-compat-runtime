@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix reshape method negative row count")
+
+values = matrix.new<float>(2, 2, close)
+values.reshape(-1, 4)
+plot(close)

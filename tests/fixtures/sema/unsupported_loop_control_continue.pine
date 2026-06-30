@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported top-level continue")
+continue
+plot(close)

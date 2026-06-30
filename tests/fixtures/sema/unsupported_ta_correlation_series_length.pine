@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.correlation Series Length")
+plot(ta.correlation(close, high, bar_index))

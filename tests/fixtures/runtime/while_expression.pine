@@ -1,0 +1,24 @@
+//@version=5
+indicator("While expression")
+
+limit = bar_index + 2
+i = bar_index
+latest = while i < limit
+    i := i + 1
+    i
+
+zero = while false
+    1
+
+j = 0
+controlled = while j < 5
+    j := j + 1
+    if j == 2
+        continue
+    if j == 4
+        break
+    j * 10
+
+plot(latest)
+plot(zero)
+plot(controlled)

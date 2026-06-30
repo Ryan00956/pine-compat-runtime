@@ -1,0 +1,23 @@
+//@version=5
+indicator("Array sort UDT field")
+type Point
+    float x
+    string tag
+
+by_x = array.from(Point.new(3.0, "c"), Point.new(1.0, "a"), Point.new(2.0, "b"))
+array.sort(by_x, order.ascending, "x")
+first_by_x = by_x.get(0)
+second_by_x = by_x.get(1)
+third_by_x = by_x.get(2)
+plot(first_by_x.x)
+plot(second_by_x.x)
+plot(third_by_x.x)
+
+by_tag = array.from(Point.new(1.0, "b"), Point.new(2.0, "a"), Point.new(3.0, "c"))
+by_tag.sort(order.descending, "tag")
+first_by_tag = array.get(by_tag, 0)
+second_by_tag = array.get(by_tag, 1)
+third_by_tag = array.get(by_tag, 2)
+plot(first_by_tag.x)
+plot(second_by_tag.x)
+plot(third_by_tag.x)

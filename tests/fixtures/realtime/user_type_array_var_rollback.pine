@@ -1,0 +1,12 @@
+//@version=5
+indicator("User type array var rollback")
+type Point
+    float x
+
+var points = array.from(Point.new(close))
+array.push(points, Point.new(close))
+first = points.first()
+last = points.last()
+plot(points.size())
+plot(first.x)
+plot(last.x)

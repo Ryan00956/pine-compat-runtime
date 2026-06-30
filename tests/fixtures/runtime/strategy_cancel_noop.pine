@@ -1,0 +1,17 @@
+//@version=5
+strategy("Cancel noop strategy", overlay=true)
+
+if bar_index == 0
+    strategy.cancel("UNKNOWN")
+    strategy.entry("P", strategy.long, qty=1, limit=2)
+    strategy.cancel("P")
+    strategy.cancel("P")
+    strategy.entry("L", strategy.long, qty=2)
+
+if bar_index == 1
+    strategy.cancel("L")
+    strategy.cancel("UNKNOWN")
+
+plot(strategy.position_size)
+plot(strategy.opentrades)
+plot(strategy.closedtrades)

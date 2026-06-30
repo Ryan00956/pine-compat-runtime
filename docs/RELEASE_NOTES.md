@@ -2,6 +2,337 @@
 
 ## Unreleased
 
+- Added fixture-backed `matrix.avg` and `values.avg()` support for read-only
+  averaging of runtime-owned float matrices, ignoring `na` cells and returning
+  `na` for empty or all-`na` matrices.
+- Added fixture-backed `matrix.sum` and `values.sum()` support for read-only
+  summing of runtime-owned float matrices, ignoring `na` cells and returning
+  `na` for empty or all-`na` matrices.
+- Added fixture-backed `matrix.add_row` and `values.add_row(row, array_id)`
+  support for inserting copied `array<float>` rows into runtime-owned float
+  matrices, with semantic UDF side-effect rejection and runtime bounds/size
+  guards.
+- Added fixture-backed `matrix.add_col` and `values.add_col(column, array_id)`
+  support for inserting copied `array<float>` columns into runtime-owned float
+  matrices, with semantic UDF side-effect rejection and runtime bounds/size
+  guards.
+- Added fixture-backed `matrix.remove_row` and `values.remove_row(row)` support
+  for deleting rows from runtime-owned float matrices, with semantic UDF
+  side-effect rejection and runtime bounds/`na` row-index guards.
+- Added fixture-backed `matrix.remove_col` and `values.remove_col(column)`
+  support for deleting columns from runtime-owned float matrices, with semantic
+  UDF side-effect rejection and runtime bounds/`na` column-index guards.
+- Added read-only strategy-mode `strategy.buy_and_hold_return_percent` as a
+  series float based on the first loaded bar close, with sema/runtime fixture
+  coverage for supported reads and unsupported indicator/request/mutation
+  contexts.
+- Added fixture-backed `matrix.reshape` namespace-call support that preserves
+  matrix element order and element count.
+- Added fixture-backed `values.reshape(rows, columns)` matrix method-call
+  lowering to the supported `matrix.reshape` runtime operation.
+- Added fixture-backed `matrix.row` and `matrix.col` namespace-call support that
+  returns independent `array<float>` row/column snapshots.
+- Added fixture-backed `values.row(row)` matrix method-call lowering to the
+  supported `matrix.row` runtime operation.
+- Added fixture-backed `values.col(column)` matrix method-call lowering to the
+  supported `matrix.col` runtime operation.
+- Added public runtime fixture coverage for matrix row/column extraction reads
+  through `if`/`else` branches.
+- Added public runtime fixture coverage for matrix row/column extraction reads
+  through `while` loops.
+- Added public runtime fixture coverage for matrix shape reads after reshape
+  calls inside `while` loops.
+- Added public runtime fixture coverage for matrix copy independence inside
+  `while` loops.
+- Added public runtime fixture coverage for matrix set mutation ordering inside
+  `while` loops.
+- Added public runtime fixture coverage for matrix fill mutation ordering inside
+  `while` loops.
+- Added public runtime fixture coverage for matrix reshape mutation ordering
+  inside `while` loops.
+- Added fixture-backed `while` expression coverage for `matrix<float>` results
+  with caller-side reads and mutation, including fresh matrix results and
+  existing-matrix alias returns.
+- Added fixture-backed `while` expression coverage for `matrix<float>` result
+  preservation across `continue` and `break`.
+- Added fixture-backed `while` expression coverage for scalar-array result
+  preservation across `continue` and `break`.
+- Added fixture-backed history coverage for scalar-array values produced by
+  `while` expressions, including fresh historical copies.
+- Added fixture-backed history coverage for `matrix<float>` values produced by
+  `while` expressions, including fresh historical copies.
+- Added fixture-backed `while` expression coverage for scalar-array
+  zero-iteration `na` results and safe branch-gated size reads on that `na`
+  result.
+- Added fixture-backed `while` expression coverage for `matrix<float>`
+  zero-iteration `na` results and safe shape reads on that `na` result.
+- Added fixture-backed `matrix<float>` typed declarations with compatible matrix
+  or `na` initializers.
+- Added public runtime fixture coverage for committed `matrix<float>` history
+  snapshots returning independent matrix copies.
+- Added public runtime fixture coverage for UDF-returned independent matrix
+  copies.
+- Added matrix slot/cell counters to runtime profiles.
+- Added public runtime fixture coverage for read-only matrix cell and shape reads
+  inside user-defined functions.
+- Added public runtime fixture coverage for matrix mutation/readback ordering
+  inside branches and loops.
+- Added public runtime fixture coverage for zero-row and zero-column matrix
+  constructor shape reads.
+- Added public runtime-error fixture coverage for `na` matrix constructor
+  dimensions.
+- Added public runtime-error fixture coverage for `na` row/column indexes in
+  matrix cell reads and writes.
+- Added public runtime-error fixture coverage for negative `matrix.set`
+  row/column bounds.
+- Added public runtime-error fixture coverage for `matrix.set` row/column
+  bounds.
+- Added public runtime-error fixture coverage for negative `matrix.get`
+  row/column indexes.
+- Added public runtime-error fixture coverage for `matrix.get` column bounds.
+- Added public runtime-error fixture coverage for negative
+  `matrix.new<float>` dimensions and the cell budget guard.
+- Added dedicated negative fixture coverage and a matrix-specific diagnostic for
+  unsupported `varip` matrix declarations.
+- Added fixture-backed ordinary `var` matrix persistence and realtime
+  forming-bar rollback coverage for runtime-owned `matrix<float>` mutation.
+- Added fixture-backed public coverage for same-entry-id partial
+  `strategy.exit(..., from_entry=id, qty=...)` allocation under
+  `close_entries_rule="ANY"`, locking stable ledger-order closed-trade output.
+- Accepted `strategy(..., close_entries_rule="ANY")` for the fixture-backed
+  long-only `strategy.close(id)` and `strategy.exit(..., from_entry=id)` subset,
+  while keeping broader omitted-entry, close-all, short/reversal, generic-order,
+  and OCA allocation behavior out of scope.
+- Added internal broker coverage for `close_entries_rule="ANY"` allocation on
+  `strategy.exit(..., from_entry=id)`.
+- Wired the internal close-entry rule through `BrokerState` close/exit
+  allocation decisions and added broker-level `"ANY"` path coverage.
+- Added an internal ledger allocation helper and unit coverage for future
+  `close_entries_rule="ANY"` entry-id selection.
+- Expanded the pure-internal `close_entries_rule` reference with an `"ANY"`
+  design audit covering command scope, deterministic entry-id allocation,
+  reservation identity, closed-trade records, and the first behavior-slice
+  fixtures.
+- Added `strategy(..., close_entries_rule="FIFO")` as an explicit default FIFO
+  allocation setting, with HIR/runtime settings storage and fixture-backed
+  parity for current long-only close and exit allocation.
+- Added metadata support for the fixture-backed `strategy.order()` subset:
+  `comment`, `alert_message`, and `disable_alert` are accepted on supported
+  long market/limit/stop/stop-limit orders and reduce-only short market orders,
+  with comments retained for trade comment helpers and fill payloads exposed in
+  `strategy.alerts`.
+- Added omitted-qty long `strategy.order()` support for market, limit, stop, and
+  stop-limit orders, resolving the configured default fixed/cash/percent
+  quantity at placement time with runtime snapshot coverage for each supported
+  long order family while keeping omitted `qty` unsupported for
+  `strategy.short`.
+- Added fixture-backed stop-limit-long
+  `strategy.order(id, strategy.long, qty=..., stop=stop_price,
+  limit=limit_price)` support using the existing long stop-limit timing model
+  while bypassing `strategy.entry()` pyramiding.
+- Added fixture-backed stop-long
+  `strategy.order(id, strategy.long, qty=..., stop=price)` support using the
+  existing long stop timing model while bypassing `strategy.entry()` pyramiding.
+- Added fixture-backed limit-long
+  `strategy.order(id, strategy.long, qty=..., limit=price)` support using the
+  existing long limit timing model while bypassing `strategy.entry()`
+  pyramiding.
+- Added reduce-only `strategy.order(id, strategy.short, qty=...)` support that
+  can shrink existing long exposure without opening short positions, while
+  keeping short exposure, reversals, short price-based orders, and OCA
+  unsupported.
+- Added long-only `strategy.margin_liquidation_price` support for active
+  `margin_long` positions, while keeping short margin, tick rounding, and
+  margin-specific public schema expansion unsupported.
+- Added pyramiding runtime coverage for indexed
+  `strategy.closedtrades.*` field reads over multiple closed trades.
+- Added pyramiding runtime coverage for `strategy.opentrades.commission`,
+  `strategy.opentrades.max_runup`, and `strategy.opentrades.max_drawdown`
+  indexed open-trade reads.
+- Aligned individual `strategy.opentrades.*` field conformance rows with
+  fixture-backed pyramiding index reads.
+- Added runtime coverage for reading second open-trade field values in the
+  current long-only pyramiding subset.
+- Aligned strategy trade comment field semantic feature tracking with the
+  existing runtime and documentation coverage.
+- Clarified unsupported `strategy.risk.*` diagnostics to identify broker risk
+  rules separately from generic strategy order gaps.
+- Added representative negative fixture coverage for unsupported
+  `strategy.risk.*` broker-rule calls.
+- Added a pure-internal design gate for future `strategy.risk.*` broker rules.
+- Added a pure-internal design gate for future strategy short-margin and richer
+  account semantics.
+- Added a pure-internal design gate for future strategy execution timing and
+  recalculation semantics.
+- Added a pure-internal design gate for future strategy OCA group semantics.
+- Added a pure-internal design gate for future strategy `close_entries_rule`
+  allocation semantics.
+- Added a pure-internal design gate for future generic `strategy.order()`
+  netting semantics.
+- Added a pure-internal design gate for future strategy short-entry and
+  automatic reversal semantics.
+- Added a pure-internal design gate for future `while` expression result
+  semantics.
+- Added default-arm fixture coverage for rejecting `switch` statement-block
+  arms.
+- Added a semantic fixture for rejecting imported UDT construction inside a
+  `varip` initializer until imported UDT identity is implemented.
+- Added a semantic fixture for rejecting mismatched UDT identity assignment into
+  an explicitly typed UDT `varip` slot.
+- Added selector-form fixture coverage for rejecting `switch` statement-block
+  arms, keeping future statement-block support gated behind the switch block
+  design path.
+- Added fixture-backed statement-form `for...in` iteration for
+  `array<chart.point>` values, with value-copy loop locals, field reads, and
+  local field mutation that does not write back to the source slot.
+- Added fixture-backed statement-form `for...in` iteration for `array<label>`
+  values, with shallow-id loop locals, getter/setter calls, and setter
+  visibility through the source array id.
+- Added fixture-backed statement-form `for...in` iteration for `array<line>`
+  values, with shallow-id loop locals, getter/setter calls, and setter
+  visibility through the source array id.
+- Added fixture-backed statement-form `for...in` iteration for `array<linefill>`
+  values, with shallow-id loop locals, getter/setter calls, and setter
+  visibility through source array ids and linefill snapshots.
+- Added fixture-backed statement-form `for...in` iteration for `array<polyline>`
+  values, with shallow-id loop locals and deletion visibility through
+  `polyline.all`.
+- Added fixture-backed statement-form `for...in` iteration for `array<box>`
+  values, with shallow-id loop locals, setter calls, deletion, and `box.all`
+  visibility.
+- Added fixture-backed statement-form `for...in` iteration for `array<table>`
+  values, with shallow-id loop locals, cell writes, deletion, and `table.all`
+  visibility.
+- Added fixture-backed statement-form `for...in` iteration for same-local
+  scalar-field UDT arrays, with value-copy loop locals, field reads, and local
+  field mutation that does not write back to the source slot.
+- Added fixture-backed statement-form `for index, value in values` iteration for
+  `array<int>` values, with a zero-based `series int` index loop-local while
+  keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  index/value iteration unsupported.
+- Added fixture-backed statement-form `for index, value in values` iteration for
+  `array<float>` values, reusing the zero-based `series int` index loop-local
+  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  index/value iteration unsupported.
+- Added fixture-backed statement-form `for index, value in values` iteration for
+  `array<bool>` values, reusing the zero-based `series int` index loop-local
+  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  index/value iteration unsupported.
+- Added fixture-backed statement-form `for index, value in values` iteration for
+  `array<string>` values, reusing the zero-based `series int` index loop-local
+  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  index/value iteration unsupported.
+- Added fixture-backed statement-form `for index, value in values` iteration for
+  `array<color>` values, reusing the zero-based `series int` index loop-local
+  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  index/value iteration unsupported.
+- Added fixture-backed statement-form `for index, value in values` iteration for
+  `array<label>` values, reusing the zero-based `series int` index loop-local
+  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  index/value iteration unsupported.
+- Added fixture-backed statement-form `for index, value in values` iteration for
+  `array<line>` values, reusing the zero-based `series int` index loop-local
+  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  index/value iteration unsupported.
+- Added fixture-backed statement-form `for index, value in values` iteration for
+  `array<linefill>` values, reusing the zero-based `series int` index
+  loop-local while keeping imported or non-scalar-field UDT, map/matrix, and
+  expression-form index/value iteration unsupported.
+- Added fixture-backed statement-form `for index, value in values` iteration for
+  `array<polyline>` values, reusing the zero-based `series int` index
+  loop-local while keeping imported or non-scalar-field UDT, map/matrix, and
+  expression-form index/value iteration unsupported.
+- Added fixture-backed statement-form `for index, value in values` iteration for
+  `array<box>` values, reusing the zero-based `series int` index loop-local
+  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  index/value iteration unsupported.
+- Added fixture-backed statement-form `for index, value in values` iteration for
+  `array<table>` values, reusing the zero-based `series int` index loop-local
+  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  index/value iteration unsupported.
+- Added fixture-backed statement-form `for index, value in values` iteration for
+  `array<chart.point>` values, reusing the zero-based `series int` index
+  loop-local while preserving value-copy point locals whose field mutation does
+  not write back to the source array slot.
+- Added fixture-backed statement-form `for index, value in values` iteration for
+  same-local scalar-field UDT arrays, reusing the zero-based `series int` index
+  loop-local while preserving value-copy UDT locals whose field mutation does not
+  write back to the source array slot.
+- Added a semantic fixture for rejecting non-array `for...in` iterables while
+  keeping the current scalar-array statement-form subset unchanged.
+- Added fixture-backed stateful built-in callsite coverage for scalar-array
+  statement-form `for...in` loop bodies.
+- Added fixture-backed `break`, `continue`, and loop-body local declaration
+  coverage for scalar-array statement-form `for...in`.
+- Added fixture-backed zero-iteration coverage for scalar-array statement-form
+  `for...in` over empty arrays and typed `na` array iterables.
+- Added an explicit incremental-vs-historical parity guard for the current
+  scalar-array statement-form `for...in` runtime fixtures.
+- Added fixture-backed scalar typed-array `varip` interaction coverage for
+  statement-form `for...in`, including initial-length iteration and loop-body
+  append behavior across repeated forming realtime updates.
+- Added fixture-backed ordinary `var` scalar-array realtime rollback coverage for
+  statement-form `for...in` loop-body mutation, while keeping index/value
+  iteration, expression-form iteration, and non-scalar iterable families
+  unsupported.
+- Added statement-form `for...in` support for `array<float>` values, while
+  keeping bool, string, color, object, UDT, map, and matrix iteration
+  unsupported.
+- Added statement-form `for...in` support for `array<bool>` values, while
+  keeping string, color, object, UDT, map, and matrix iteration unsupported.
+- Added statement-form `for...in` support for `array<string>` values, while
+  keeping color, object, UDT, map, and matrix iteration unsupported.
+- Added statement-form `for...in` support for `array<color>` values, completing
+  the current scalar-array iteration subset while keeping object, UDT, map, and
+  matrix iteration unsupported.
+- Added a distinct statement-form `for...in` AST boundary for the current
+  scalar-array iteration subset.
+- Added a distinct internal `for...in` HIR shape, lowering path, and traversal
+  support for the current scalar-array iteration subset.
+- Added fixture-backed statement-form `for...in` iteration over `array<int>`
+  values while keeping other element families and expression/index forms
+  unsupported at that slice.
+- Added fixture-backed `array<int>` `for...in` mutation policy coverage:
+  initial-length iteration, current-storage reads for not-yet-visited indexes,
+  append non-extension, alias mutation visibility, and shrink-to-out-of-bounds
+  runtime errors.
+- Added fixture-backed explicitly typed same-local scalar-field UDT `varip`
+  values with realtime intrabar value persistence, including same-UDT ternary, switch, if, and for initializers.
+- Added direct-constructor-inferred same-local scalar-field UDT `varip` values
+  while keeping non-constructor inferred UDT `varip` rejected.
+- Aligned unsupported UDT value `varip` diagnostics with the current
+  explicit/direct-constructor same-local scalar-field subset, keeping UDT array
+  `varip` diagnostics separate.
+- Added a pure-internal design gate for future UDT `varip` values.
+- Added a pure-internal design gate for future imported UDT identity.
+- Added a pure-internal design gate for future `switch` statement-block arms.
+- Added a parser fixture keeping `while` expressions outside the current
+  statement-only `while` subset.
+- Added a parser fixture keeping direct chained UDT array slot field mutation
+  such as `points.get(0).x := value` outside the current syntax subset.
+- Added fixture-backed same-local scalar-field UDT array element writeback
+  semantics: field mutation on a value read from an array stays local until an
+  explicit same-UDT `array.set`/`set()` writes it back.
+- Added fixture-backed local pure UDF calls that consume same-local
+  scalar-field UDT values read from UDT arrays and preserve UDT identity through
+  passthrough or constructor returns.
+- Added fixture-backed local pure UDT method calls on same-local scalar-field
+  UDT values read from UDT arrays into local variables.
+- Added fixture-backed `array.join` and `join()` support for same-local
+  scalar-field UDT arrays using positional `TypeName(field0, field1, ...)`
+  element rendering, while keeping general `str.tostring(UDT)` unsupported.
+- Added fixture-backed `array.fill` and `fill()` support for same-local
+  scalar-field UDT arrays while keeping mismatched UDT fill values rejected.
+- Added fixture-backed `array.includes`, `array.indexof`, and
+  `array.lastindexof` support for same-local scalar-field UDT arrays using
+  structural equality over scalar fields, while keeping mismatched UDT
+  identities rejected.
+- Added fixture-backed `array<T>` and `T[]` declarations for same-local
+  scalar-field UDT arrays, with `na` initialization, same-UDT reassignment, and
+  UDT identity checks for mismatched array assignments.
+- Added fixture-backed `array.sort_indices` support for same-local scalar-field
+  UDT arrays by compile-time `int`, `float`, or `string` `sort_field`, returning
+  original indexes without mutating the source array.
 - Aligned existing-array `array.get`, `array.set`, `array.insert`, and
   `array.remove` out-of-bounds indexes with runtime errors while preserving
   valid negative indexing from the array end.
@@ -856,8 +1187,14 @@
   declaration metadata constants for `indicator(..., scale=...)`.
 - Added fixture-backed fixed-default `syminfo.main_tickerid` and
   `syminfo.mincontract` metadata variables.
-- Added fixture-backed unsupported `map.*` and `matrix.*` collection namespace
-  coverage until dedicated storage models are designed.
+- Added fixture-backed `matrix<float>` namespace-call support for
+  `matrix.new<float>`, `matrix.get`, `matrix.set`, `matrix.copy`,
+  `matrix.rows`, and `matrix.columns`, including assignment/reference aliasing
+  and explicit independent copies; non-float templates, fill/reshape, method
+  syntax, typed declarations, history, rollback, and matrix for-in remain
+  unsupported.
+- Added fixture-backed unsupported `map.*` collection namespace coverage until
+  a dedicated key/value storage model is designed.
 - Added fixture-backed unsupported `log.*` coverage for Pine Logs functions
   until a host-owned log output contract exists.
 - Added a conformance metadata guardrail that rejects non-official `label.get_*`
@@ -868,8 +1205,23 @@
 - Extended the array conformance metadata guardrail to require linefill and polyline fixture evidence when those unsupported array kinds are claimed.
 - Added a conformance metadata guardrail requiring UDT fixture evidence for array UDT notes.
 - Added fixture-backed `array.clear` coverage for rejected UDT arrays.
-- Added fixture-backed `array.concat` coverage for rejected UDT arrays.
-- Added fixture-backed `array.slice` coverage for rejected UDT arrays.
+- Added fixture-backed `array.concat` coverage for same-UDT arrays while keeping
+  mixed UDT arrays rejected.
+- Added fixture-backed `array.slice` coverage for same-UDT arrays while keeping
+  unsupported UDT array families outside the slice subset.
+- Added fixture-backed `array.insert` coverage for same-UDT arrays while
+  keeping mixed UDT insert values rejected.
+- Added fixture-backed `array.remove` coverage for same-UDT arrays while
+  keeping unsupported UDT array families outside the slice subset.
+- Added fixture-backed `array.unshift` coverage for same-UDT arrays while
+  keeping mixed UDT prepend values rejected.
+- Added fixture-backed realtime rollback coverage for ordinary `var`
+  same-local UDT arrays.
+- Added fixture-backed `array.new<T>()` construction for same-local scalar-field
+  UDT arrays while keeping unknown, nested-field, and mixed-initial UDT forms
+  rejected.
+- Added fixture-backed `array.sort` support for same-local scalar-field UDT
+  arrays by compile-time `int`, `float`, or `string` `sort_field`.
 - Added fixture-backed `array.join` coverage for rejected UDT arrays.
 - Added fixture-backed `array.reverse` coverage for rejected UDT arrays.
 - Added fixture-backed `array.sort_indices` coverage for rejected UDT arrays.

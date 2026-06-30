@@ -1,0 +1,6 @@
+library("Duplicate exported UDT fixture")
+export type Point
+    float x
+
+export type Point
+    float y

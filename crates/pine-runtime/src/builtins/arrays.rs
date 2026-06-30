@@ -1,242 +1,20 @@
-use std::cmp::Ordering;
-
 use pine_ir::{HirCallArg, HirExpr};
 
-use crate::builtins::strings::stringify_array_join_element;
+use crate::builtins::strings::{
+    stringify_array_join_element, stringify_user_type_array_join_element,
+};
 use crate::*;
 
 mod calls;
 mod constructors;
+mod ordering;
+mod statistics;
+mod store;
 mod support;
 
 pub(crate) use support::*;
 
 impl<'a> HistoricalRuntime<'a> {
-    fn array_index_out_of_bounds(index: i64, len: usize) -> RuntimeError {
-        RuntimeError {
-            message: format!("array index {index} is out of bounds for array of size {len}"),
-        }
-    }
-
-    pub(crate) fn array_values_clone(
-        &self,
-        id: u32,
-    ) -> Result<Option<Vec<PineValue>>, RuntimeError> {
-        if let Some(slice) = self.array_slices.get(&id).copied() {
-            self.validate_array_slice(slice)?;
-            let end = slice.start + slice.len;
-            return Ok(self
-                .array_store
-                .get(&slice.parent_id)
-                .map(|values| values[slice.start..end].to_vec()));
-        }
-
-        Ok(self.array_store.get(&id).cloned())
-    }
-
-    fn array_len(&self, id: u32) -> Result<Option<usize>, RuntimeError> {
-        if let Some(slice) = self.array_slices.get(&id).copied() {
-            self.validate_array_slice(slice)?;
-            return Ok(Some(slice.len));
-        }
-
-        Ok(self.array_store.get(&id).map(Vec::len))
-    }
-
-    fn validate_array_slice(&self, slice: ArraySlice) -> Result<(), RuntimeError> {
-        let Some(values) = self.array_store.get(&slice.parent_id) else {
-            return Err(RuntimeError {
-                message: "array slice parent is not available".to_owned(),
-            });
-        };
-        let Some(end) = slice.start.checked_add(slice.len) else {
-            return Err(RuntimeError {
-                message: "array slice is out of bounds of the parent array".to_owned(),
-            });
-        };
-        if end > values.len() {
-            return Err(RuntimeError {
-                message: "array slice is out of bounds of the parent array".to_owned(),
-            });
-        }
-        Ok(())
-    }
-
-    fn array_read_index(&self, id: u32, index: i64) -> Result<Option<(u32, usize)>, RuntimeError> {
-        if let Some(slice) = self.array_slices.get(&id).copied() {
-            self.validate_array_slice(slice)?;
-            let Some(index) = normalize_array_index(index, slice.len) else {
-                return Err(Self::array_index_out_of_bounds(index, slice.len));
-            };
-            return Ok(Some((slice.parent_id, slice.start + index)));
-        }
-
-        let Some(values) = self.array_store.get(&id) else {
-            return Ok(None);
-        };
-        let Some(index) = normalize_array_index(index, values.len()) else {
-            return Err(Self::array_index_out_of_bounds(index, values.len()));
-        };
-        Ok(Some((id, index)))
-    }
-
-    fn array_insert_index(
-        &self,
-        id: u32,
-        index: i64,
-    ) -> Result<Option<(u32, usize)>, RuntimeError> {
-        if let Some(slice) = self.array_slices.get(&id).copied() {
-            self.validate_array_slice(slice)?;
-            let Some(index) = normalize_array_insert_index(index, slice.len) else {
-                return Err(Self::array_index_out_of_bounds(index, slice.len));
-            };
-            return Ok(Some((slice.parent_id, slice.start + index)));
-        }
-
-        let Some(values) = self.array_store.get(&id) else {
-            return Ok(None);
-        };
-        let Some(index) = normalize_array_insert_index(index, values.len()) else {
-            return Err(Self::array_index_out_of_bounds(index, values.len()));
-        };
-        Ok(Some((id, index)))
-    }
-
-    fn array_parent_len_for_insert(&self, id: u32) -> Option<usize> {
-        let target_id = self
-            .array_slices
-            .get(&id)
-            .map_or(id, |slice| slice.parent_id);
-        self.array_store.get(&target_id).map(Vec::len)
-    }
-
-    fn array_get_cloned(&self, id: u32, index: i64) -> Result<Option<PineValue>, RuntimeError> {
-        let Some((target_id, index)) = self.array_read_index(id, index)? else {
-            return Ok(None);
-        };
-        Ok(self
-            .array_store
-            .get(&target_id)
-            .and_then(|values| values.get(index))
-            .cloned())
-    }
-
-    fn array_set_value(
-        &mut self,
-        id: u32,
-        index: i64,
-        value: PineValue,
-    ) -> Result<(), RuntimeError> {
-        let Some((target_id, index)) = self.array_read_index(id, index)? else {
-            return Ok(());
-        };
-        if let Some(slot) = self
-            .array_store
-            .get_mut(&target_id)
-            .and_then(|values| values.get_mut(index))
-        {
-            *slot = value;
-        }
-        Ok(())
-    }
-
-    fn array_insert_value(
-        &mut self,
-        id: u32,
-        index: i64,
-        value: PineValue,
-    ) -> Result<(), RuntimeError> {
-        let Some((target_id, index)) = self.array_insert_index(id, index)? else {
-            return Ok(());
-        };
-        let Some(parent_len) = self.array_parent_len_for_insert(id) else {
-            return Ok(());
-        };
-        if parent_len >= MAX_ARRAY_ELEMENTS {
-            return Err(RuntimeError {
-                message: format!("array.insert cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
-            });
-        }
-        if let Some(values) = self.array_store.get_mut(&target_id) {
-            values.insert(index, value);
-        }
-        if let Some(slice) = self.array_slices.get_mut(&id) {
-            slice.len += 1;
-        }
-        Ok(())
-    }
-
-    fn array_remove_value(
-        &mut self,
-        id: u32,
-        index: i64,
-    ) -> Result<Option<PineValue>, RuntimeError> {
-        let Some((target_id, index)) = self.array_read_index(id, index)? else {
-            return Ok(None);
-        };
-        let removed = self
-            .array_store
-            .get_mut(&target_id)
-            .map(|values| values.remove(index));
-        if removed.is_some()
-            && let Some(slice) = self.array_slices.get_mut(&id)
-        {
-            slice.len = slice.len.saturating_sub(1);
-        }
-        Ok(removed)
-    }
-
-    fn array_replace_values(
-        &mut self,
-        id: u32,
-        replacement: Vec<PineValue>,
-    ) -> Result<(), RuntimeError> {
-        if let Some(slice) = self.array_slices.get(&id).copied() {
-            self.validate_array_slice(slice)?;
-            for (offset, value) in replacement.into_iter().enumerate() {
-                if offset >= slice.len {
-                    break;
-                }
-                if let Some(slot) = self
-                    .array_store
-                    .get_mut(&slice.parent_id)
-                    .and_then(|values| values.get_mut(slice.start + offset))
-                {
-                    *slot = value;
-                }
-            }
-            return Ok(());
-        }
-
-        if let Some(values) = self.array_store.get_mut(&id) {
-            *values = replacement;
-        }
-        Ok(())
-    }
-
-    fn new_array_slice(&mut self, source_id: u32, index_from: usize, index_to: usize) -> PineValue {
-        let id = self.next_array_id;
-        self.next_array_id += 1;
-        let Some(kind) = self.array_kinds.get(&source_id).copied() else {
-            return PineValue::Na;
-        };
-        let (parent_id, start) = if let Some(parent) = self.array_slices.get(&source_id).copied() {
-            (parent.parent_id, parent.start + index_from)
-        } else {
-            (source_id, index_from)
-        };
-        self.array_kinds.insert(id, kind);
-        self.array_slices.insert(
-            id,
-            ArraySlice {
-                parent_id,
-                start,
-                len: index_to - index_from,
-            },
-        );
-        PineValue::Array(id)
-    }
-
     pub(crate) fn eval_array_size(
         &mut self,
         args: &[HirCallArg],
@@ -520,7 +298,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(values) = self.array_values_clone(id)? else {
             return Ok(PineValue::Na);
         };
-        Ok(self.new_array_from_values(kind, values))
+        Ok(self.new_array_from_values_with_user_type_metadata(id, kind, values))
     }
 
     pub(crate) fn eval_array_slice(
@@ -591,617 +369,6 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Array(target_id))
     }
 
-    pub(crate) fn eval_array_includes(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let index = self.eval_array_search(args, ArraySearchMode::First)?;
-        Ok(PineValue::Bool(index.is_some()))
-    }
-
-    pub(crate) fn eval_array_truth(
-        &mut self,
-        args: &[HirCallArg],
-        mode: ArrayTruthMode,
-    ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let PineValue::Array(id) = id else {
-            return Ok(PineValue::Na);
-        };
-        let Some(kind) = self.array_kinds.get(&id).copied() else {
-            return Ok(PineValue::Na);
-        };
-        if !matches!(
-            kind,
-            ArrayElementKind::Float | ArrayElementKind::Int | ArrayElementKind::Bool
-        ) {
-            return Ok(PineValue::Na);
-        }
-        let Some(values) = self.array_values_clone(id)? else {
-            return Ok(PineValue::Na);
-        };
-        let result = match mode {
-            ArrayTruthMode::Every => values.iter().all(array_truthy_value),
-            ArrayTruthMode::Some => values.iter().any(array_truthy_value),
-        };
-        Ok(PineValue::Bool(result))
-    }
-
-    pub(crate) fn eval_array_indexof(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let index = self
-            .eval_array_search(args, ArraySearchMode::First)?
-            .map_or(-1, |index| index as i64);
-        Ok(PineValue::Int(index))
-    }
-
-    pub(crate) fn eval_array_lastindexof(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let index = self
-            .eval_array_search(args, ArraySearchMode::Last)?
-            .map_or(-1, |index| index as i64);
-        Ok(PineValue::Int(index))
-    }
-
-    pub(crate) fn eval_array_search(
-        &mut self,
-        args: &[HirCallArg],
-        mode: ArraySearchMode,
-    ) -> Result<Option<usize>, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let PineValue::Array(id) = id else {
-            let _ = self.eval_expr(&args[1].value)?;
-            return Ok(None);
-        };
-        let Some(kind) = self.array_kinds.get(&id).copied() else {
-            let _ = self.eval_expr(&args[1].value)?;
-            return Ok(None);
-        };
-        let value = self.eval_array_value(&args[1].value, kind)?;
-        let Some(values) = self.array_values_clone(id)? else {
-            return Ok(None);
-        };
-        let index = match mode {
-            ArraySearchMode::First => values.iter().position(|item| values_equal(item, &value)),
-            ArraySearchMode::Last => values.iter().rposition(|item| values_equal(item, &value)),
-        };
-        Ok(index)
-    }
-
-    pub(crate) fn eval_array_binary_search(
-        &mut self,
-        args: &[HirCallArg],
-        mode: ArrayBinarySearchMode,
-    ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let PineValue::Array(id) = id else {
-            let _ = self.eval_expr(&args[1].value)?;
-            return Ok(PineValue::Int(-1));
-        };
-        let Some(kind) = self.array_kinds.get(&id).copied() else {
-            let _ = self.eval_expr(&args[1].value)?;
-            return Ok(PineValue::Int(-1));
-        };
-        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
-            let _ = self.eval_expr(&args[1].value)?;
-            return Ok(PineValue::Int(-1));
-        }
-        let value = self.eval_array_value(&args[1].value, kind)?;
-        let Some(values) = self.array_values_clone(id)? else {
-            return Ok(PineValue::Int(-1));
-        };
-        if values.is_empty() {
-            return Ok(PineValue::Int(-1));
-        }
-
-        let lower = array_numeric_lower_bound(&values, &value);
-        let exact_match =
-            lower < values.len() && compare_array_numeric_values(&values[lower], &value).is_eq();
-        let index = match mode {
-            ArrayBinarySearchMode::Exact => exact_match.then_some(lower),
-            ArrayBinarySearchMode::Leftmost => {
-                if exact_match || lower == 0 {
-                    Some(lower.min(values.len() - 1))
-                } else {
-                    Some(lower - 1)
-                }
-            }
-            ArrayBinarySearchMode::Rightmost => {
-                if exact_match {
-                    Some(array_numeric_upper_bound(&values, &value) - 1)
-                } else {
-                    Some(lower.min(values.len() - 1))
-                }
-            }
-        }
-        .map_or(-1, |index| index as i64);
-
-        Ok(PineValue::Int(index))
-    }
-
-    pub(crate) fn eval_array_numeric(
-        &mut self,
-        args: &[HirCallArg],
-        mode: ArrayNumericMode,
-    ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let PineValue::Array(id) = id else {
-            return Ok(PineValue::Na);
-        };
-        let Some(kind) = self.array_kinds.get(&id).copied() else {
-            return Ok(PineValue::Na);
-        };
-        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
-            return Ok(PineValue::Na);
-        }
-        let Some(values) = self.array_values_clone(id)? else {
-            return Ok(PineValue::Na);
-        };
-
-        match mode {
-            ArrayNumericMode::Min | ArrayNumericMode::Max => {
-                let mut current: Option<f64> = None;
-                for value in values.iter().filter_map(PineValue::as_f64) {
-                    current = Some(match (mode, current) {
-                        (_, None) => value,
-                        (ArrayNumericMode::Min, Some(current)) => current.min(value),
-                        (ArrayNumericMode::Max, Some(current)) => current.max(value),
-                        _ => unreachable!("only min/max modes are handled here"),
-                    });
-                }
-                let Some(current) = current else {
-                    return Ok(PineValue::Na);
-                };
-                Ok(array_numeric_result(kind, current))
-            }
-            ArrayNumericMode::Range => {
-                let mut min: Option<f64> = None;
-                let mut max: Option<f64> = None;
-                for value in values.iter().filter_map(PineValue::as_f64) {
-                    min = Some(min.map_or(value, |current| current.min(value)));
-                    max = Some(max.map_or(value, |current| current.max(value)));
-                }
-                let (Some(min), Some(max)) = (min, max) else {
-                    return Ok(PineValue::Na);
-                };
-                Ok(array_numeric_result(kind, max - min))
-            }
-            ArrayNumericMode::Sum | ArrayNumericMode::Avg => {
-                let mut total = 0.0;
-                let mut count = 0_usize;
-                for value in values.iter().filter_map(PineValue::as_f64) {
-                    total += value;
-                    count += 1;
-                }
-                if count == 0 {
-                    return Ok(PineValue::Na);
-                }
-                if matches!(mode, ArrayNumericMode::Avg) {
-                    Ok(finite_float_or_na(total / count as f64))
-                } else {
-                    Ok(array_numeric_result(kind, total))
-                }
-            }
-            ArrayNumericMode::Median => {
-                let mut numeric_values: Vec<_> =
-                    values.iter().filter_map(PineValue::as_f64).collect();
-                if numeric_values.is_empty() {
-                    return Ok(PineValue::Na);
-                }
-                numeric_values
-                    .sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
-                let middle = numeric_values.len() / 2;
-                let median = if numeric_values.len() % 2 == 0 {
-                    (numeric_values[middle - 1] + numeric_values[middle]) / 2.0
-                } else {
-                    numeric_values[middle]
-                };
-                Ok(array_numeric_result(kind, median))
-            }
-            ArrayNumericMode::Mode => {
-                let mut numeric_values: Vec<_> =
-                    values.iter().filter_map(PineValue::as_f64).collect();
-                if numeric_values.is_empty() {
-                    return Ok(PineValue::Na);
-                }
-                numeric_values
-                    .sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
-
-                let mut best_value = numeric_values[0];
-                let mut best_count = 0_usize;
-                let mut current_value = numeric_values[0];
-                let mut current_count = 0_usize;
-                for value in numeric_values {
-                    if (value - current_value).abs() < f64::EPSILON {
-                        current_count += 1;
-                    } else {
-                        if current_count > best_count {
-                            best_value = current_value;
-                            best_count = current_count;
-                        }
-                        current_value = value;
-                        current_count = 1;
-                    }
-                }
-                if current_count > best_count {
-                    best_value = current_value;
-                    best_count = current_count;
-                }
-                if best_count < 2 {
-                    return Ok(PineValue::Na);
-                }
-                Ok(array_numeric_result(kind, best_value))
-            }
-        }
-    }
-
-    pub(crate) fn eval_array_abs(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let PineValue::Array(id) = id else {
-            return Ok(PineValue::Na);
-        };
-        let Some(kind) = self.array_kinds.get(&id).copied() else {
-            return Ok(PineValue::Na);
-        };
-        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
-            return Ok(PineValue::Na);
-        }
-        let Some(values) = self.array_values_clone(id)? else {
-            return Ok(PineValue::Na);
-        };
-
-        let values = values
-            .iter()
-            .map(|value| match (kind, value) {
-                (_, PineValue::Na) => PineValue::Na,
-                (ArrayElementKind::Int, PineValue::Int(value)) => value
-                    .checked_abs()
-                    .map(PineValue::Int)
-                    .unwrap_or(PineValue::Na),
-                (ArrayElementKind::Float, PineValue::Float(value)) => {
-                    finite_float_or_na(value.abs())
-                }
-                (ArrayElementKind::Float, PineValue::Int(value)) => {
-                    finite_float_or_na((*value as f64).abs())
-                }
-                _ => PineValue::Na,
-            })
-            .collect();
-
-        Ok(self.new_array_from_values(kind, values))
-    }
-
-    pub(crate) fn eval_array_percentile(
-        &mut self,
-        args: &[HirCallArg],
-        mode: ArrayPercentileMode,
-    ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let percentage = self.eval_expr(&args[1].value)?.as_f64();
-        let PineValue::Array(id) = id else {
-            return Ok(PineValue::Na);
-        };
-        let Some(percentage) = percentage else {
-            return Ok(PineValue::Na);
-        };
-        if !(0.0..=100.0).contains(&percentage) {
-            return Ok(PineValue::Na);
-        }
-        let Some(kind) = self.array_kinds.get(&id).copied() else {
-            return Ok(PineValue::Na);
-        };
-        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
-            return Ok(PineValue::Na);
-        }
-        let Some(values) = self.array_values_clone(id)? else {
-            return Ok(PineValue::Na);
-        };
-        let mut numeric_values: Vec<_> = values.iter().filter_map(PineValue::as_f64).collect();
-        if numeric_values.is_empty() {
-            return Ok(PineValue::Na);
-        }
-        numeric_values.sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
-
-        match mode {
-            ArrayPercentileMode::NearestRank => {
-                let rank = ((percentage / 100.0) * numeric_values.len() as f64).ceil();
-                let index = (rank as usize)
-                    .saturating_sub(1)
-                    .min(numeric_values.len() - 1);
-                Ok(array_numeric_result(kind, numeric_values[index]))
-            }
-            ArrayPercentileMode::LinearInterpolation => {
-                if numeric_values.len() == 1 {
-                    return Ok(finite_float_or_na(numeric_values[0]));
-                }
-                let rank = (percentage / 100.0) * (numeric_values.len() - 1) as f64;
-                let lower = rank.floor() as usize;
-                let upper = rank.ceil() as usize;
-                let fraction = rank - lower as f64;
-                let value = numeric_values[lower]
-                    + (numeric_values[upper] - numeric_values[lower]) * fraction;
-                Ok(finite_float_or_na(value))
-            }
-        }
-    }
-
-    pub(crate) fn eval_array_percentrank(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let index = self.eval_expr(&args[1].value)?.as_i64();
-        let PineValue::Array(id) = id else {
-            return Ok(PineValue::Na);
-        };
-        let Some(index) = index else {
-            return Ok(PineValue::Na);
-        };
-        if index < 0 {
-            return Ok(PineValue::Na);
-        }
-        let Some(kind) = self.array_kinds.get(&id).copied() else {
-            return Ok(PineValue::Na);
-        };
-        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
-            return Ok(PineValue::Na);
-        }
-        let Some(values) = self.array_values_clone(id)? else {
-            return Ok(PineValue::Na);
-        };
-        let Some(target) = values.get(index as usize).and_then(PineValue::as_f64) else {
-            return Ok(PineValue::Na);
-        };
-        let numeric_values: Vec<_> = values.iter().filter_map(PineValue::as_f64).collect();
-        if numeric_values.is_empty() {
-            return Ok(PineValue::Na);
-        }
-        let count = numeric_values
-            .iter()
-            .filter(|value| **value <= target || (**value - target).abs() < f64::EPSILON)
-            .count();
-        Ok(finite_float_or_na(
-            count as f64 / numeric_values.len() as f64 * 100.0,
-        ))
-    }
-
-    pub(crate) fn eval_array_standardize(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let PineValue::Array(id) = id else {
-            return Ok(PineValue::Na);
-        };
-        let Some(kind) = self.array_kinds.get(&id).copied() else {
-            return Ok(PineValue::Na);
-        };
-        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
-            return Ok(PineValue::Na);
-        }
-        let Some(values) = self.array_values_clone(id)? else {
-            return Ok(PineValue::Na);
-        };
-
-        let numeric_values: Vec<_> = values.iter().filter_map(PineValue::as_f64).collect();
-        let count = numeric_values.len();
-        if count == 0 {
-            return Ok(self.new_array_from_values(ArrayElementKind::Float, Vec::new()));
-        }
-
-        let mean = numeric_values.iter().sum::<f64>() / count as f64;
-        let variance = numeric_values
-            .iter()
-            .map(|value| {
-                let diff = value - mean;
-                diff * diff
-            })
-            .sum::<f64>()
-            / count as f64;
-        let stdev = variance.sqrt();
-
-        let values = values
-            .iter()
-            .map(|value| {
-                let Some(value) = value.as_f64() else {
-                    return PineValue::Na;
-                };
-                if stdev == 0.0 || !stdev.is_finite() {
-                    PineValue::Na
-                } else {
-                    finite_float_or_na((value - mean) / stdev)
-                }
-            })
-            .collect();
-
-        Ok(self.new_array_from_values(ArrayElementKind::Float, values))
-    }
-
-    pub(crate) fn eval_array_covariance(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let id1 = self.eval_expr(&args[0].value)?;
-        let id2 = self.eval_expr(&args[1].value)?;
-        let biased = match args.get(2) {
-            Some(arg) => matches!(self.eval_expr(&arg.value)?, PineValue::Bool(true)),
-            None => true,
-        };
-        let (PineValue::Array(id1), PineValue::Array(id2)) = (id1, id2) else {
-            return Ok(PineValue::Na);
-        };
-        let (Some(kind1), Some(kind2)) = (
-            self.array_kinds.get(&id1).copied(),
-            self.array_kinds.get(&id2).copied(),
-        ) else {
-            return Ok(PineValue::Na);
-        };
-        if !matches!(kind1, ArrayElementKind::Float | ArrayElementKind::Int)
-            || !matches!(kind2, ArrayElementKind::Float | ArrayElementKind::Int)
-        {
-            return Ok(PineValue::Na);
-        }
-        let (Some(values1), Some(values2)) =
-            (self.array_values_clone(id1)?, self.array_values_clone(id2)?)
-        else {
-            return Ok(PineValue::Na);
-        };
-        if values1.len() != values2.len() {
-            return Ok(PineValue::Na);
-        }
-
-        let pairs: Vec<_> = values1
-            .iter()
-            .zip(values2)
-            .filter_map(|(left, right)| Some((left.as_f64()?, right.as_f64()?)))
-            .collect();
-        let count = pairs.len();
-        if count == 0 || (!biased && count < 2) {
-            return Ok(PineValue::Na);
-        }
-
-        let mean1 = pairs.iter().map(|(left, _)| left).sum::<f64>() / count as f64;
-        let mean2 = pairs.iter().map(|(_, right)| right).sum::<f64>() / count as f64;
-        let covariance_sum = pairs
-            .iter()
-            .map(|(left, right)| (left - mean1) * (right - mean2))
-            .sum::<f64>();
-        let denominator = if biased { count } else { count - 1 };
-        Ok(finite_float_or_na(covariance_sum / denominator as f64))
-    }
-
-    pub(crate) fn eval_array_variance(
-        &mut self,
-        args: &[HirCallArg],
-        mode: ArrayVarianceMode,
-    ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let biased = match args.get(1) {
-            Some(arg) => matches!(self.eval_expr(&arg.value)?, PineValue::Bool(true)),
-            None => true,
-        };
-        let PineValue::Array(id) = id else {
-            return Ok(PineValue::Na);
-        };
-        let Some(kind) = self.array_kinds.get(&id).copied() else {
-            return Ok(PineValue::Na);
-        };
-        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
-            return Ok(PineValue::Na);
-        }
-        let Some(values) = self.array_values_clone(id)? else {
-            return Ok(PineValue::Na);
-        };
-
-        let numeric_values: Vec<_> = values.iter().filter_map(PineValue::as_f64).collect();
-        let count = numeric_values.len();
-        if count == 0 || (!biased && count < 2) {
-            return Ok(PineValue::Na);
-        }
-
-        let mean = numeric_values.iter().sum::<f64>() / count as f64;
-        let squared_diff_sum = numeric_values
-            .iter()
-            .map(|value| {
-                let diff = value - mean;
-                diff * diff
-            })
-            .sum::<f64>();
-        let denominator = if biased { count } else { count - 1 };
-        let variance = squared_diff_sum / denominator as f64;
-        let result = match mode {
-            ArrayVarianceMode::Variance => variance,
-            ArrayVarianceMode::Stdev => variance.sqrt(),
-        };
-
-        Ok(finite_float_or_na(result))
-    }
-
-    pub(crate) fn eval_array_sort(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let descending = self.eval_array_sort_descending(args, "array.sort")?;
-        let PineValue::Array(id) = id else {
-            return Ok(PineValue::Void);
-        };
-        let Some(kind) = self.array_kinds.get(&id).copied() else {
-            return Ok(PineValue::Void);
-        };
-        if !matches!(
-            kind,
-            ArrayElementKind::Float | ArrayElementKind::Int | ArrayElementKind::String
-        ) {
-            return Ok(PineValue::Void);
-        }
-        if let Some(mut values) = self.array_values_clone(id)? {
-            values.sort_by(|left, right| compare_array_sort_values(kind, left, right, descending));
-            self.array_replace_values(id, values)?;
-        }
-        Ok(PineValue::Void)
-    }
-
-    pub(crate) fn eval_array_sort_indices(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let descending = self.eval_array_sort_descending(args, "array.sort_indices")?;
-        let PineValue::Array(id) = id else {
-            return Ok(PineValue::Na);
-        };
-        let Some(kind) = self.array_kinds.get(&id).copied() else {
-            return Ok(PineValue::Na);
-        };
-        if !matches!(
-            kind,
-            ArrayElementKind::Float | ArrayElementKind::Int | ArrayElementKind::String
-        ) {
-            return Ok(PineValue::Na);
-        }
-        let Some(values) = self.array_values_clone(id)? else {
-            return Ok(PineValue::Na);
-        };
-
-        let mut indices = (0..values.len()).collect::<Vec<_>>();
-        indices.sort_by(|left, right| {
-            compare_array_sort_values(kind, &values[*left], &values[*right], descending)
-                .then_with(|| left.cmp(right))
-        });
-        let values = indices
-            .into_iter()
-            .map(|index| PineValue::Int(index as i64))
-            .collect();
-
-        Ok(self.new_array_from_values(ArrayElementKind::Int, values))
-    }
-
-    pub(crate) fn eval_array_sort_descending(
-        &mut self,
-        args: &[HirCallArg],
-        callee: &str,
-    ) -> Result<bool, RuntimeError> {
-        match args.get(1) {
-            Some(order) => match self.eval_expr(&order.value)? {
-                PineValue::String(order) if order == "order.descending" => Ok(true),
-                PineValue::String(order) if order == "order.ascending" => Ok(false),
-                PineValue::String(order) => Err(RuntimeError {
-                    message: format!("unsupported {callee} order `{order}`"),
-                }),
-                _ => Ok(false),
-            },
-            None => Ok(false),
-        }
-    }
-
     pub(crate) fn eval_array_reverse(
         &mut self,
         args: &[HirCallArg],
@@ -1240,12 +407,17 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(values) = self.array_values_clone(id)? else {
             return Ok(PineValue::Na);
         };
+        let user_type_name = self.array_user_types.get(&id).map(String::as_str);
         let mut result = String::new();
         for (index, value) in values.iter().enumerate() {
             if index > 0 {
                 result.push_str(&separator);
             }
-            result.push_str(&stringify_array_join_element(value));
+            if let Some(type_name) = user_type_name {
+                result.push_str(&stringify_user_type_array_join_element(value, type_name));
+            } else {
+                result.push_str(&stringify_array_join_element(value));
+            }
         }
         self.string_value_or_error(result, "array.join")
     }
@@ -1272,24 +444,162 @@ impl<'a> HistoricalRuntime<'a> {
         kind: ArrayElementKind,
     ) -> Result<PineValue, RuntimeError> {
         let value = self.eval_expr(expr)?;
-        Ok(match (kind, value) {
-            (ArrayElementKind::Float, PineValue::Int(value)) => PineValue::Float(value as f64),
-            (ArrayElementKind::Float, PineValue::Float(value)) => PineValue::Float(value),
-            (ArrayElementKind::Int, PineValue::Int(value)) => PineValue::Int(value),
-            (ArrayElementKind::Bool, PineValue::Bool(value)) => PineValue::Bool(value),
-            (ArrayElementKind::String, PineValue::String(value)) => PineValue::String(value),
-            (ArrayElementKind::Color, PineValue::Color(value)) => PineValue::Color(value),
-            (ArrayElementKind::Label, PineValue::Label(value)) => PineValue::Label(value),
-            (ArrayElementKind::Line, PineValue::Line(value)) => PineValue::Line(value),
-            (ArrayElementKind::LineFill, PineValue::LineFill(value)) => PineValue::LineFill(value),
-            (ArrayElementKind::Polyline, PineValue::Polyline(value)) => PineValue::Polyline(value),
-            (ArrayElementKind::Box, PineValue::Box(value)) => PineValue::Box(value),
-            (ArrayElementKind::Table, PineValue::Table(value)) => PineValue::Table(value),
-            (ArrayElementKind::ChartPoint, PineValue::ChartPoint(value)) => {
-                PineValue::ChartPoint(value)
-            }
-            (_, PineValue::Na) => PineValue::Na,
-            _ => PineValue::Na,
-        })
+        Ok(array_value_for_kind(kind, value))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use pine_ir::{
+        DrawingSettings, HirExpr, HirExprKind, HirHistoryRequirements, HirLiteral, HirProgram,
+        HirUserTypeIdentity, PineType, Qualifier, ScriptMode, StrategySettings, ValueKind,
+    };
+
+    use super::*;
+
+    fn runtime() -> HistoricalRuntime<'static> {
+        let program = Box::leak(Box::new(HirProgram {
+            script_mode: ScriptMode::Indicator,
+            strategy_settings: StrategySettings::default(),
+            drawing_settings: DrawingSettings::default(),
+            symbols: Vec::new(),
+            statements: Vec::new(),
+            next_series_id: 0,
+            next_call_site_id: 0,
+            next_var_slot_id: 0,
+            max_bars_back: None,
+            history: HirHistoryRequirements::default(),
+            series_history: Vec::new(),
+        }));
+        HistoricalRuntime::new(program)
+    }
+
+    fn hir_float(value: f64) -> HirExpr {
+        HirExpr {
+            kind: HirExprKind::Literal(HirLiteral::Float(value)),
+            pine_type: PineType::new(Qualifier::Const, ValueKind::Float),
+            series_id: None,
+        }
+    }
+
+    fn hir_point(x: f64) -> HirExpr {
+        HirExpr {
+            kind: HirExprKind::UserTypeConstruct {
+                identity: HirUserTypeIdentity {
+                    source_id: 0,
+                    type_name: "Point".to_owned(),
+                },
+                fields: vec![hir_float(x)],
+            },
+            pine_type: PineType::new(Qualifier::Series, ValueKind::UserType),
+            series_id: None,
+        }
+    }
+
+    #[test]
+    fn evaluates_internal_user_type_array_construct_with_metadata() {
+        let mut runtime = runtime();
+        let expr = HirExpr {
+            kind: HirExprKind::UserTypeArrayConstruct {
+                type_name: "Point".to_owned(),
+                elements: vec![hir_point(1.0), hir_point(2.0)],
+            },
+            pine_type: PineType::new(Qualifier::Series, ValueKind::UserTypeArray),
+            series_id: None,
+        };
+
+        let PineValue::Array(id) = runtime.eval_expr(&expr).expect("array construct succeeds")
+        else {
+            panic!("expected user-defined type array");
+        };
+
+        assert_eq!(
+            runtime.array_kinds.get(&id),
+            Some(&ArrayElementKind::UserType)
+        );
+        assert_eq!(runtime.array_user_type_name(id), Some("Point"));
+        assert_eq!(
+            runtime.array_store.get(&id),
+            Some(&vec![
+                PineValue::UserType(vec![PineValue::Float(1.0)]),
+                PineValue::UserType(vec![PineValue::Float(2.0)]),
+            ])
+        );
+    }
+
+    #[test]
+    fn preserves_user_type_array_metadata_across_internal_clones() {
+        let mut runtime = runtime();
+        let source = runtime.new_user_type_array_from_values(
+            "Point",
+            vec![
+                PineValue::UserType(vec![PineValue::Float(1.0)]),
+                PineValue::UserType(vec![PineValue::Float(2.0)]),
+            ],
+        );
+        let PineValue::Array(source_id) = source else {
+            panic!("expected source array");
+        };
+        assert_eq!(
+            runtime.array_kinds.get(&source_id),
+            Some(&ArrayElementKind::UserType)
+        );
+        assert_eq!(runtime.array_user_type_name(source_id), Some("Point"));
+
+        let copied = runtime.new_array_from_values_with_user_type_metadata(
+            source_id,
+            ArrayElementKind::UserType,
+            vec![PineValue::UserType(vec![PineValue::Float(3.0)])],
+        );
+        let PineValue::Array(copied_id) = copied else {
+            panic!("expected copied array");
+        };
+        assert_eq!(
+            runtime.array_kinds.get(&copied_id),
+            Some(&ArrayElementKind::UserType)
+        );
+        assert_eq!(runtime.array_user_type_name(copied_id), Some("Point"));
+
+        let slice = runtime.new_array_slice(source_id, 0, 1);
+        let PineValue::Array(slice_id) = slice else {
+            panic!("expected slice array");
+        };
+        assert_eq!(
+            runtime.array_kinds.get(&slice_id),
+            Some(&ArrayElementKind::UserType)
+        );
+        assert_eq!(runtime.array_user_type_name(slice_id), Some("Point"));
+
+        let history = runtime
+            .clone_collection_history_value(PineValue::Array(source_id))
+            .expect("history clone should succeed");
+        let PineValue::Array(history_id) = history else {
+            panic!("expected history array");
+        };
+        assert_eq!(
+            runtime.array_kinds.get(&history_id),
+            Some(&ArrayElementKind::UserType)
+        );
+        assert_eq!(runtime.array_user_type_name(history_id), Some("Point"));
+    }
+
+    #[test]
+    fn cloned_runtime_preserves_user_type_array_metadata() {
+        let mut runtime = runtime();
+        let source = runtime.new_user_type_array_from_values(
+            "Point",
+            vec![PineValue::UserType(vec![PineValue::Float(1.0)])],
+        );
+        let PineValue::Array(source_id) = source else {
+            panic!("expected source array");
+        };
+
+        let cloned = runtime.clone();
+
+        assert_eq!(
+            cloned.array_kinds.get(&source_id),
+            Some(&ArrayElementKind::UserType)
+        );
+        assert_eq!(cloned.array_user_type_name(source_id), Some("Point"));
     }
 }

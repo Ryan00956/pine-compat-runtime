@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.rows method receiver")
+
+row_count = close.rows()
+plot(row_count)

@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported varip drawing array")
+varip array<label> labels = array.new_label()
+plot(close)

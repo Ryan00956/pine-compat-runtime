@@ -1,0 +1,7 @@
+//@version=6
+indicator("Matrix reshape na column count")
+
+values = matrix.new<float>(2, 2, close)
+missing_column = int(na)
+matrix.reshape(values, 4, missing_column)
+plot(close)

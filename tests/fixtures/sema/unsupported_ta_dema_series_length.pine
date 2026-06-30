@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.dema Series Length")
+plot(ta.dema(close, bar_index))

@@ -1,6 +1,6 @@
 use std::{fs, path::PathBuf};
 
-use pine_syntax::{LineCol, SourceFile, parse_source};
+use pine_syntax::{ExprKind, LineCol, SourceFile, StmtKind, parse_source};
 
 fn workspace_fixture(path: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -78,6 +78,110 @@ fn rejects_deep_expression_limit_fixture() {
     let (_, parsed) = parse_fixture("tests/fixtures/syntax/deep_expression_limit.pine");
 
     assert!(has_diagnostic(&parsed.diagnostics, "E_PARSE_EXPR_DEPTH"));
+}
+
+#[test]
+fn parses_for_in_iteration_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/unsupported_for_in.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::ForIn {
+        index,
+        value,
+        iterable,
+        body,
+    } = &parsed.program.statements[2].kind
+    else {
+        panic!("expected for...in statement");
+    };
+    assert_eq!(index, &None);
+    assert_eq!(value, "value");
+    assert!(matches!(
+        iterable.kind,
+        pine_syntax::ExprKind::Identifier(_)
+    ));
+    assert_eq!(body.len(), 1);
+}
+
+#[test]
+fn parses_for_in_index_value_iteration_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/for_in_index_value.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::ForIn {
+        index,
+        value,
+        iterable,
+        body,
+    } = &parsed.program.statements[2].kind
+    else {
+        panic!("expected for...in statement");
+    };
+    assert_eq!(index.as_deref(), Some("index"));
+    assert_eq!(value, "value");
+    assert!(matches!(
+        iterable.kind,
+        pine_syntax::ExprKind::Identifier(_)
+    ));
+    assert_eq!(body.len(), 1);
+}
+
+#[test]
+fn rejects_for_in_multi_value_iteration_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/unsupported_for_in_index_value.pine");
+
+    assert!(has_diagnostic(&parsed.diagnostics, "E_PARSE_FOR"));
+}
+
+#[test]
+fn rejects_for_in_expression_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/unsupported_for_in_expression.pine");
+
+    assert!(has_diagnostic(&parsed.diagnostics, "E_PARSE_EXPECTED"));
+}
+
+#[test]
+fn parses_while_expression_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/while_expression.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let value = parsed
+        .program
+        .statements
+        .iter()
+        .find_map(|statement| match &statement.kind {
+            StmtKind::Decl { name, value, .. } if name == "result" => Some(value),
+            _ => None,
+        })
+        .expect("expected result declaration");
+    let ExprKind::While { condition, body } = &value.kind else {
+        panic!("expected while expression AST");
+    };
+    assert!(matches!(condition.kind, ExprKind::Binary { .. }));
+    assert_eq!(body.len(), 2);
+}
+
+#[test]
+fn rejects_array_new_udt_template_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/unsupported_array_new_udt.pine");
+
+    assert!(has_diagnostic(&parsed.diagnostics, "E_PARSE_EXPR"));
+}
+
+#[test]
+fn rejects_imported_udt_array_new_template_fixture() {
+    let (_, parsed) =
+        parse_fixture("tests/fixtures/syntax/unsupported_imported_udt_array_new.pine");
+
+    assert!(has_diagnostic(&parsed.diagnostics, "E_PARSE_EXPR"));
+}
+
+#[test]
+fn rejects_udt_array_chained_field_mutation_fixture() {
+    let (_, parsed) =
+        parse_fixture("tests/fixtures/syntax/unsupported_udt_array_chained_field_mutation.pine");
+
+    assert!(has_diagnostic(&parsed.diagnostics, "E_PARSE_EXPR"));
 }
 
 fn parse_fixture(path: &str) -> (SourceFile, pine_syntax::Parse) {

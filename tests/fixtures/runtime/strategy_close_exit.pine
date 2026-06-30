@@ -1,0 +1,13 @@
+//@version=5
+strategy("Close cancels exit strategy", overlay=true)
+
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XL", "L", limit=4)
+
+if bar_index == 2
+    strategy.close("L")
+
+plot(strategy.position_size)
+plot(strategy.closedtrades)
+plot(strategy.opentrades)

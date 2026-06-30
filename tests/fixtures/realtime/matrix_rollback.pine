@@ -1,0 +1,9 @@
+//@version=6
+indicator("Realtime matrix rollback")
+
+var values = matrix.new<float>(1, 1, close)
+matrix.set(values, 0, 0, close)
+
+plot(matrix.get(values, 0, 0), "value")
+plot(matrix.rows(values), "rows")
+plot(matrix.columns(values), "columns")

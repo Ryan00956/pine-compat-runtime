@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array covariance color method")
+left = array.new_color()
+right = array.new_color()
+plot(left.covariance(right))

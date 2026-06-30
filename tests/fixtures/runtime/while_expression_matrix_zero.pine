@@ -1,0 +1,9 @@
+//@version=6
+indicator("While expression matrix zero")
+
+values = while false
+    matrix.new<float>(1, 2, close)
+
+plot(matrix.rows(values), "rows")
+plot(values.columns(), "columns")
+plot(na(values) ? 1 : 0, "is_na")

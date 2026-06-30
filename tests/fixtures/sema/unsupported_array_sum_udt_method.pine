@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported array.sum UDT method")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+plot(values.sum())

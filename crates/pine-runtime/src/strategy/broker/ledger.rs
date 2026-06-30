@@ -117,18 +117,37 @@ impl TradeLedger {
             if quantity <= 0.0 {
                 continue;
             }
-            let entry_commission = trade.entry_commission * (quantity / trade.quantity);
-            allocations.push(TradeAllocation {
-                trade_index,
-                trade_key: trade.key,
-                entry_id: trade.id.clone(),
-                entry_price: trade.entry_price,
-                entry_bar_index: trade.entry_bar_index,
-                entry_time: trade.entry_time,
-                quantity,
-                entry_commission,
-                entry_metadata: trade.entry_metadata.clone(),
-            });
+            allocations.push(Self::allocation_for_trade(trade_index, trade, quantity));
+            remaining -= quantity;
+        }
+        allocations
+    }
+
+    #[allow(dead_code)]
+    pub(super) fn allocate_exit_any_for_entry(
+        &self,
+        entry_id: &str,
+        requested_quantity: f64,
+    ) -> Vec<TradeAllocation> {
+        if !requested_quantity.is_finite() || requested_quantity <= 0.0 {
+            return Vec::new();
+        }
+
+        let mut remaining = requested_quantity;
+        let mut allocations = Vec::new();
+        for (trade_index, trade) in self.open_trades.iter().enumerate() {
+            if trade.id != entry_id {
+                continue;
+            }
+            if remaining <= 0.0 {
+                break;
+            }
+
+            let quantity = remaining.min(trade.quantity);
+            if quantity <= 0.0 {
+                continue;
+            }
+            allocations.push(Self::allocation_for_trade(trade_index, trade, quantity));
             remaining -= quantity;
         }
         allocations
@@ -158,18 +177,7 @@ impl TradeLedger {
             return Vec::new();
         }
 
-        let entry_commission = trade.entry_commission * (quantity / trade.quantity);
-        vec![TradeAllocation {
-            trade_index,
-            trade_key: trade.key,
-            entry_id: trade.id.clone(),
-            entry_price: trade.entry_price,
-            entry_bar_index: trade.entry_bar_index,
-            entry_time: trade.entry_time,
-            quantity,
-            entry_commission,
-            entry_metadata: trade.entry_metadata.clone(),
-        }]
+        vec![Self::allocation_for_trade(trade_index, trade, quantity)]
     }
 
     #[allow(dead_code)]
@@ -193,6 +201,25 @@ impl TradeLedger {
             }
         }
         self.rebuild_net_position();
+    }
+
+    fn allocation_for_trade(
+        trade_index: usize,
+        trade: &OpenTrade,
+        quantity: f64,
+    ) -> TradeAllocation {
+        let entry_commission = trade.entry_commission * (quantity / trade.quantity);
+        TradeAllocation {
+            trade_index,
+            trade_key: trade.key,
+            entry_id: trade.id.clone(),
+            entry_price: trade.entry_price,
+            entry_bar_index: trade.entry_bar_index,
+            entry_time: trade.entry_time,
+            quantity,
+            entry_commission,
+            entry_metadata: trade.entry_metadata.clone(),
+        }
     }
 
     fn rebuild_net_position(&mut self) {

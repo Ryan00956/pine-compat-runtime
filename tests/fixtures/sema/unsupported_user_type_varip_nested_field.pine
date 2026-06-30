@@ -1,0 +1,9 @@
+//@version=5
+indicator("Unsupported nested-field user type varip")
+type Point
+    float x
+type Wrapper
+    Point inner
+
+varip Wrapper wrapped = Wrapper.new(Point.new(close))
+plot(wrapped.inner.x)

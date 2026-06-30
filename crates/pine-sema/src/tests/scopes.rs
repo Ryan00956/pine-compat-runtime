@@ -188,18 +188,15 @@ fn rejects_incompatible_switch_arm_results() {
 }
 
 #[test]
-fn rejects_statement_block_switch_arm() {
+fn accepts_condition_switch_statement_block_arm() {
     let analysis = analyze("x = switch\n    close > open =>\n        high\n    => close\n");
 
     assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == "E_PARSE_SWITCH_BLOCK"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -629,18 +626,15 @@ fn accepts_while_loop_with_na_condition_and_local_var() {
 }
 
 #[test]
-fn rejects_while_expression() {
+fn accepts_while_expression_scope() {
     let analysis = analyze("x = while close > open\n    close\nplot(x)\n");
 
     assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == "E_PARSE_WHILE_EXPR"),
+        analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -920,6 +914,19 @@ fn accepts_for_expression_result() {
 #[test]
 fn accepts_tuple_for_expression_result() {
     let analysis = analyze("[x, y] = for i = 0 to 2\n    [i, i * 2]\nplot(x + y)\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_tuple_while_expression_result() {
+    let analysis =
+        analyze("i = 0\n[x, y] = while i < 2\n    i := i + 1\n    [i, i * 2]\nplot(x + y)\n");
 
     assert!(
         analysis.diagnostics.is_empty(),

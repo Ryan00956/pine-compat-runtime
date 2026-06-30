@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array.sort_indices Order method")
+values = array.new_int(2, 1)
+indices = values.sort_indices(close)
+plot(array.get(indices, 0))

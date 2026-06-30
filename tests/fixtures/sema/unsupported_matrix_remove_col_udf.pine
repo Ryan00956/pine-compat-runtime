@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported matrix.remove_col in UDF")
+
+trim_col(values) =>
+    matrix.remove_col(values, 0)
+    close
+
+values = matrix.new<float>(1, 1, close)
+plot(trim_col(values))

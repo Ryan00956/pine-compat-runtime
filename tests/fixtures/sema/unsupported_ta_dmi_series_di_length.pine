@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported ta.dmi Series diLength")
+[plus, minus, adx] = ta.dmi(bar_index, 2)
+plot(plus + minus + adx)

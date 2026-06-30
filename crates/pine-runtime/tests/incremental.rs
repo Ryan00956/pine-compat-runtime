@@ -211,18 +211,84 @@ fn runtime_fixtures_match_incremental_append_execution() {
     assert!(checked >= 7, "expected runtime fixtures to be checked");
 }
 
-fn analyze_fixture(path: &Path, text: String) -> Analysis {
-    let source = SourceFile::new(path.display().to_string(), text.clone());
-    if !text.contains("import user/lib/1") {
-        return analyze_source(&source);
+#[test]
+fn for_in_fixtures_match_incremental_append_execution() {
+    let bars = load_bars(&workspace_fixture("tests/fixtures/runtime/bars.csv"));
+
+    for fixture in [
+        "tests/fixtures/runtime/for_in.pine",
+        "tests/fixtures/runtime/for_in_float.pine",
+        "tests/fixtures/runtime/for_in_bool.pine",
+        "tests/fixtures/runtime/for_in_string.pine",
+        "tests/fixtures/runtime/for_in_color.pine",
+        "tests/fixtures/runtime/for_in_control_flow.pine",
+        "tests/fixtures/runtime/for_in_mutation.pine",
+        "tests/fixtures/runtime/for_in_stateful.pine",
+        "tests/fixtures/runtime/for_in_zero_iteration.pine",
+    ] {
+        assert_fixture_matches_incremental_append_execution(fixture, &bars);
+    }
+}
+
+#[test]
+fn matrix_history_fixtures_match_incremental_append_execution() {
+    let bars = load_bars(&workspace_fixture("tests/fixtures/runtime/bars.csv"));
+
+    for fixture in [
+        "tests/fixtures/runtime/matrix_history.pine",
+        "tests/fixtures/runtime/matrix_history_shape.pine",
+        "tests/fixtures/runtime/matrix_dynamic_history.pine",
+    ] {
+        assert_fixture_matches_incremental_append_execution(fixture, &bars);
+    }
+}
+
+fn assert_fixture_matches_incremental_append_execution(fixture: &str, bars: &[Bar]) {
+    let path = workspace_fixture(fixture);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let analysis = analyze_fixture(&path, text);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("runtime fixture should lower to HIR");
+
+    let full = run_historical(&hir, bars).expect("full execution should succeed");
+    let mut runtime = HistoricalRuntime::new(&hir);
+    for bar in bars.iter().copied() {
+        runtime
+            .append_bar(bar)
+            .expect("append execution should succeed");
     }
 
-    let library_path = workspace_fixture("tests/fixtures/libraries/import_lib.pine");
+    assert_eq!(
+        runtime.result(),
+        full,
+        "{} incremental result should match full recomputation",
+        path.display()
+    );
+}
+
+fn analyze_fixture(path: &Path, text: String) -> Analysis {
+    let source = SourceFile::new(path.display().to_string(), text.clone());
+    let library = if text.contains("import user/lib/1") {
+        Some(("user/lib/1", "tests/fixtures/libraries/import_lib.pine"))
+    } else if text.contains("import user/udt/1") {
+        Some(("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine"))
+    } else {
+        None
+    };
+    let Some((key, library_fixture)) = library else {
+        return analyze_source(&source);
+    };
+    let library_path = workspace_fixture(library_fixture);
     let library_text = fs::read_to_string(&library_path).expect("import library fixture");
     let input = AnalysisInput::with_library_sources(
         source,
         vec![(
-            "user/lib/1".to_owned(),
+            key.to_owned(),
             SourceFile::new(library_path.display().to_string(), library_text),
         )],
     )

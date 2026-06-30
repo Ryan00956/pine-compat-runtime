@@ -127,7 +127,18 @@ impl Parser {
         let start = self.current().span;
         self.bump();
 
-        let item = if self.looks_like_function_decl() {
+        let item = if matches!(&self.current().kind, TokenKind::Identifier(name) if name == "type")
+            && self.nth_identifier(1)
+        {
+            let user_type = self.parse_user_type_decl()?;
+            match user_type.kind {
+                StmtKind::UserType(decl) => ExportItem::UserType {
+                    decl,
+                    span: user_type.span,
+                },
+                _ => unreachable!(),
+            }
+        } else if self.looks_like_function_decl() {
             let function = self.parse_function_decl()?;
             match function.kind {
                 StmtKind::Function { name, params, body } => ExportItem::Function {
@@ -163,7 +174,8 @@ impl Parser {
         let end = match &item {
             ExportItem::Function { span, .. }
             | ExportItem::Const { span, .. }
-            | ExportItem::Unknown { span } => *span,
+            | ExportItem::UserType { span, .. } => *span,
+            ExportItem::Unknown { span } => *span,
         };
         Some(Stmt {
             span: start.merge(end),
@@ -432,6 +444,23 @@ mod tests {
         };
         assert_eq!(name, "answer");
         assert!(matches!(value.kind, ExprKind::Literal(Literal::Int(42))));
+    }
+
+    #[test]
+    fn parses_exported_user_type_declaration() {
+        let parsed = parse("export type Point\n    float x\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::Export(export) = &parsed.program.statements[0].kind else {
+            panic!("expected export declaration");
+        };
+        let ExportItem::UserType { decl, .. } = &export.item else {
+            panic!("expected exported user-defined type");
+        };
+        assert_eq!(decl.name, "Point");
+        assert_eq!(decl.fields.len(), 1);
+        assert_eq!(decl.fields[0].type_name, "float");
+        assert_eq!(decl.fields[0].name, "x");
     }
 
     #[test]

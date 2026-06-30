@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use pine_ir::HirProgram;
+use pine_ir::{HirProgram, Qualifier, ValueKind};
 use pine_syntax::{Diagnostic, SourceFile};
 
 use crate::analyzer::context::Analyzer;
@@ -39,9 +39,14 @@ pub fn analyze_input(input: &AnalysisInput) -> Analysis {
         lower_symbol_overrides: Vec::new(),
         functions: module_validation.imported_functions,
         methods: HashMap::new(),
+        imported_user_types: module_validation.imported_user_types,
         user_types: HashMap::new(),
         symbol_user_types: HashMap::new(),
+        symbol_user_type_identities: HashMap::new(),
+        symbol_user_type_arrays: HashMap::new(),
         expr_user_types: HashMap::new(),
+        expr_user_type_identities: HashMap::new(),
+        expr_user_type_arrays: HashMap::new(),
         expr_types: HashMap::new(),
         script_declaration: None,
         strategy_settings: Default::default(),
@@ -63,6 +68,27 @@ pub fn analyze_input(input: &AnalysisInput) -> Analysis {
         lowered_temp_symbols: 0,
         lowering_budget_reported: false,
     };
+    debug_assert!(analyzer.imported_user_types.iter().all(|(key, user_type)| {
+        key.ends_with(&format!(".{}", user_type.identity.name))
+            && !user_type.identity.name.is_empty()
+            && user_type.fields.iter().all(|field| {
+                !field.name.is_empty()
+                    && !field.type_name.is_empty()
+                    && field.span.start <= field.span.end
+                    && field.pine_type.is_none_or(|pine_type| {
+                        pine_type.qualifier == Qualifier::Series
+                            && matches!(
+                                pine_type.kind,
+                                ValueKind::Int
+                                    | ValueKind::Float
+                                    | ValueKind::Bool
+                                    | ValueKind::String
+                                    | ValueKind::Color
+                            )
+                    })
+            })
+            && user_type.span.start <= user_type.span.end
+    }));
     analyzer.analyze_program(&module_validation.root_program);
     analyzer.finish(&module_validation.root_program)
 }

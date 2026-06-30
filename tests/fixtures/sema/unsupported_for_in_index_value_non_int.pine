@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported for in index value non-int")
+values = matrix.new<float>(2, 2, close)
+for index, value in values
+    plot(index)

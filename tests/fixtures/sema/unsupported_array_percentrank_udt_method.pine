@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported array.percentrank UDT method")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+plot(values.percentrank(0))

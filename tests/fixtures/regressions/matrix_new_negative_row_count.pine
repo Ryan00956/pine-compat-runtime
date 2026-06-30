@@ -1,0 +1,5 @@
+//@version=6
+indicator("Matrix negative row count")
+
+values = matrix.new<float>(-1, 1, close)
+plot(matrix.rows(values))

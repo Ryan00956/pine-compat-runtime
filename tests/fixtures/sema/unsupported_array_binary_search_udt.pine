@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported array.binary_search UDT")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+plot(array.binary_search(values, Point.new(open)))

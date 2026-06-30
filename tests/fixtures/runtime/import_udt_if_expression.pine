@@ -1,0 +1,15 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT if expression")
+
+p = if close > open
+    lib.Point.new(close)
+else
+    lib.Point.new(open)
+
+lib.Point typed = if close > open
+    p
+else
+    lib.Point.new(high)
+
+plot(p.x + typed.x)

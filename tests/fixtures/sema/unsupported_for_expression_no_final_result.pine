@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported for expression no final result")
+
+value = for i = 0 to 1
+    local = i
+
+plot(close)

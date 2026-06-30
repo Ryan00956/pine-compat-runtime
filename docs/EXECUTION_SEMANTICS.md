@@ -79,8 +79,18 @@ internal strategy settings. Stage 7 Margin Slice M2 uses explicit active
 Slice M3 also checks supported long entry affordability at the actual fill
 price. Stage 7 Margin Slice M5 implements the first long-only forced
 liquidation subset using `bar.low`, the documented available-funds algorithm,
-and whole-unit truncation. Short margin behavior, margin liquidation price, and
-margin-specific public schema expansion remain unsupported.
+and whole-unit truncation. `strategy.margin_liquidation_price` returns the
+current long-only price where supported equity equals required long margin for
+an active `margin_long` position, or `na` without active long margin, while
+flat, or when the long-margin denominator is unattainable. Short margin
+behavior, symbol tick rounding for the liquidation price, and margin-specific
+public schema expansion remain unsupported.
+`strategy(..., close_entries_rule="FIFO")` is accepted as an explicit default
+FIFO close-entry allocation setting. `strategy(..., close_entries_rule="ANY")`
+is stored in internal strategy settings and is fixture-backed for the current
+long-only id-specific `strategy.close(id)` and
+`strategy.exit(..., from_entry=id)` allocation subset. Omitted-`from_entry`
+exits and `strategy.close_all()` keep the existing FIFO allocation path.
 
 The current entry subset is `strategy.entry(id, strategy.long, qty=...)`,
 `strategy.entry(id, strategy.long)` when a fixed default quantity is configured,
@@ -153,7 +163,8 @@ Strategy-mode scripts can read `strategy.position_size` and
 `strategy.position_avg_price`, `strategy.openprofit`, `strategy.netprofit`,
 `strategy.grossprofit`, `strategy.grossloss`, `strategy.avg_trade`,
 `strategy.avg_winning_trade`, `strategy.avg_losing_trade`,
-`strategy.max_runup`, `strategy.max_drawdown`, and
+`strategy.buy_and_hold_return_percent`, `strategy.max_runup`,
+`strategy.max_drawdown`, and
 `strategy.equity` as historical series floats. They can also read `strategy.closedtrades` and
 `strategy.opentrades` as historical series ints in the current count-only
 reporting subset. In the current long-only subset,
@@ -165,6 +176,9 @@ long and `0` when flat. `strategy.netprofit` sums realized closed-trade profit.
 losing, flat, and current open trades do not change it.
 `strategy.grossloss` sums realized closed-trade losses as positive values, so
 winning, flat, and current open trades do not change it.
+`strategy.buy_and_hold_return_percent` returns the current close's percentage
+change from the first loaded bar close and returns `na` when that first close is
+zero or non-finite.
 `strategy.avg_trade` returns `strategy.netprofit / strategy.closedtrades` once
 at least one trade is closed, and `na` before the first closed trade.
 `strategy.avg_winning_trade` returns the average realized profit among winning
@@ -229,9 +243,11 @@ trades; invalid, out-of-range, or uncommented reads return `na`, and comments
 remain internal script-visible metadata rather than public strategy JSON
 fields. Stage 7 Slice 15 adds
 `strategy.closedtrades.max_runup(trade_num)`, returning the largest high-based
-favorable excursion retained for the closed trade quantity. Stage 7 Slice 16
+favorable excursion retained for the selected closed trade quantity. The
+current long-only closed-trade field subset reads fixture-backed pyramided
+closed trades by zero-based index. Stage 7 Slice 16
 adds `strategy.closedtrades.max_drawdown(trade_num)`, returning the largest
-low-based adverse excursion retained for the closed trade quantity. Stage 7
+low-based adverse excursion retained for the selected closed trade quantity. Stage 7
 Slice 17 adds cash-per-contract commission accounting for supported entries and
 exits without adding public schema fields. Stage 7 Slice 18 adds cash-per-order
 commission accounting under the same public contract. Stage 7 Slice 19 adds
@@ -278,17 +294,19 @@ size. Stage 7 Slice 10 adds `strategy.opentrades.profit(trade_num)`, returning
 the current close-based floating profit for the current open position. Stage 7
 Slice 11 adds `strategy.opentrades.entry_id(trade_num)`, returning the retained
 entry id for that open position. Stage 7 Slice 12 adds
-`strategy.opentrades.commission(trade_num)`, returning `0.0` for that open
-position without configured commission and the current open supported entry
-commission when configured. Stage 7 Slice 13 adds
+`strategy.opentrades.commission(trade_num)`, returning `0.0` for the selected
+open trade without configured commission and the selected open trade's
+supported entry commission when configured. Stage 7 Slice 13 adds
 `strategy.opentrades.max_runup(trade_num)`, returning the largest high-based
-favorable excursion seen so far for that open position. Stage 7 Slice 14 adds
+favorable excursion seen so far for the selected open trade. Stage 7 Slice 14 adds
 `strategy.opentrades.max_drawdown(trade_num)`, returning the largest low-based
-adverse excursion seen so far for that open position. Strategy trade comment
+adverse excursion seen so far for the selected open trade. Strategy trade comment
 helpers add `strategy.opentrades.entry_comment(trade_num)` for commented
-fixture-backed open trades; invalid, out-of-range, flat-state, or uncommented
-reads return `na`, with no public strategy JSON expansion. Other open-trade
-namespace functions and public open-trade record output remain unsupported.
+fixture-backed open trades. The current long-only open-trade field subset reads
+fixture-backed pyramided open trades by zero-based index; invalid, out-of-range,
+flat-state, or uncommented reads return `na`, with no public strategy JSON
+expansion. Other open-trade namespace functions and public open-trade record
+output remain unsupported.
 Stage 7 Slice 35 adds `strategy.opentrades.capital_held` as the one variable
 inside the open-trade namespace. In the current no-margin subset it returns
 `na`; with explicit active `margin_long`, Stage 7 Margin Slice M2 returns the
@@ -298,14 +316,52 @@ or `0.0` while flat. Stage 7 Margin Slice M3 applies the same active
 fill price. Stage 7 Margin Slice M5 applies the long-only forced-liquidation
 subset, so `capital_held` reflects the remaining open long position after a
 margin call. Short margin behavior remains unsupported.
+`strategy.margin_liquidation_price` uses the same supported long-only margin
+account model. It solves the current broker equation
+`equity_value(price) == position_size * price * margin_long / 100` and returns
+`na` without active long margin, while flat, or for the unattainable
+`margin_long=100` divisor. It does not round to `syminfo.mintick` yet and does
+not expose a public margin schema field.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
-Python dictionaries, and WASM JSON. Short entries, `strategy.exit` variants
-beyond the supported single-trigger, one-downside/one-upside bracket,
-trailing-stop, fixed-quantity, percent-quantity, explicit single-trigger or
-bracket/trailing reservation subset, `strategy.cancel(id)`, and
-`strategy.cancel_all()`, `strategy.order`, rich order families, strategy
-reporting helpers beyond the supported position/profit/equity/count/run-up/drawdown variables,
+Python dictionaries, and WASM JSON. Fixture-backed market-long
+`strategy.order(id, strategy.long, qty=...)`, or omitted-qty long orders using
+the configured default quantity, fill on the next historical bar open and can
+add to an existing long position without using the `strategy.entry()`
+pyramiding limit. Fixture-backed limit-long
+`strategy.order(id, strategy.long, qty=..., limit=price)` orders use the
+supported long limit timing model, fill at the verified limit price on a later
+historical bar, and also bypass the `strategy.entry()` pyramiding limit;
+omitted long `qty` uses the configured default quantity at placement time.
+Fixture-backed stop-long
+`strategy.order(id, strategy.long, qty=..., stop=price)` orders use the
+supported long stop timing model, fill at the stop price on a later historical
+bar, and also bypass the `strategy.entry()` pyramiding limit; omitted long
+`qty` uses the configured default quantity at placement time.
+Fixture-backed stop-limit-long
+`strategy.order(id, strategy.long, qty=..., stop=stop_price, limit=limit_price)`
+orders use the supported long stop-limit model: activation occurs on a later
+historical bar when `high >= stop`, and the limit fill can occur only on a
+subsequent historical bar when `low <= limit` or below the configured verified
+limit threshold. They also bypass the `strategy.entry()` pyramiding limit;
+omitted long `qty` uses the configured default quantity at placement time.
+Fixture-backed reduce-only market
+`strategy.order(id, strategy.short, qty=...)` orders can reduce an existing long
+position on the next historical bar open, recording a `strategy.short` order
+event and clamping oversized quantities without opening short exposure; while
+flat, they are no-ops. Omitted `qty` remains unsupported for `strategy.short`.
+The supported `strategy.order()` subset accepts
+`comment`, `alert_message`, and `disable_alert` metadata. Supported long order
+fills retain entry comments, reduce-only short fills retain exit comments, and
+supported order-fill alert payloads are exposed under `strategy.alerts`; the
+metadata does not widen unsupported order shapes. Short entries,
+`strategy.exit` variants beyond the
+supported single-trigger, one-downside/one-upside bracket, trailing-stop,
+fixed-quantity, percent-quantity, explicit single-trigger or bracket/trailing
+reservation subset, `strategy.cancel(id)`, and `strategy.cancel_all()`,
+reversal/OCA `strategy.order` forms, short exposure, short price-based orders,
+rich order families, strategy reporting helpers beyond the supported
+position/profit/equity/count/run-up/drawdown/buy-and-hold return variables,
 requested-context strategy state, strategy state mutation, and realtime
 strategy handoff remain unsupported until later strategy-maintenance slices
 define and fixture those semantics. Phase M
@@ -434,9 +490,20 @@ functions lower through the same inlined UDF machinery as local functions.
 Runtime execution receives one lowered HIR program and performs no filesystem,
 network, registry, or library lookup.
 
-The executable import subset intentionally excludes remote lookup, re-exports,
-unaliased imports, side-effecting exported functions, imported UDT identity,
-and imported methods.
+The executable import subset supports scalar-field imported UDT constructors,
+direct field reads, ordinary same-imported-UDT reassignment, and scalar-field
+imported UDT typed declarations, same-imported-identity ternary results, plus
+same-imported-identity `if`, `switch`, `while`, and `for` expression results,
+direct or nested UDF parameter passthrough and direct or nested constructor-return
+results, ordinary imported UDT `var` declarations, and scalar-field mutation in
+top-level, branch, `for`-loop, `while`-loop, and UDF-local statement contexts,
+by lowering them to ordinary UDT field-vector values with source-scoped HIR
+identity. It also supports scalar-field imported UDT `varip` declarations
+through the same intrabar value-clone slot model as local scalar-field UDT
+`varip`.
+intentionally excludes remote lookup, re-exports, unaliased imports,
+side-effecting exported functions, broader imported UDT flow, history,
+collections, and imported methods.
 
 ## Variables
 
@@ -453,6 +520,11 @@ The value can be committed into its series history after the bar execution.
 Normal and tuple declarations inside `if` blocks are scoped to the branch. If
 the branch is skipped, branch-local series slots commit `na` for that bar.
 
+When an `if` is used as a declaration value, both branches must end with a
+value-producing expression. Void side-effect calls such as `alert()` are not
+valid branch results, and neither are trailing declarations or reassignment
+statements.
+
 `for i = start to end` evaluates the integer range once when the loop statement
 is reached on a bar. The range is inclusive. The runtime increments when
 `start <= end` and decrements when `start > end`. An explicit non-zero int
@@ -462,25 +534,85 @@ the loop body is skipped. The counter is scoped to the loop body. `break` exits
 the nearest enclosing loop. `continue` skips the rest of the current iteration
 and advances to the next loop counter value.
 
-When a `for` loop is used as a declaration value, the loop body must end with an
-expression. The loop returns the last value produced by that expression. If a
-`continue` skips the expression or a `break` exits before it, the previous
+When a `for` loop is used as a declaration value, the loop body must end with a
+value-producing expression. Void side-effect calls such as `alert()` are not
+valid loop results. The loop returns the last value produced by the final
+expression. A trailing `break` or `continue` statement is not a result
+expression, and neither are trailing declarations or reassignment statements.
+If a `continue` skips the expression or a `break` exits before it, the previous
 produced value remains the loop result. If no iteration reaches the expression,
 the loop result is `na`.
+
+Statement-form `for value in values` currently supports only `array<int>`,
+`array<float>`, `array<bool>`, `array<string>`, and `array<color>` iterables.
+The iterable expression is evaluated once, the initial array length is captured,
+and the runtime visits indexes `0..initial_len`. Each element is read from
+current array storage when its index is reached and assigned by value to the
+loop-local variable. Empty arrays and typed `na` array iterables execute zero
+iterations. `break` exits the nearest enclosing loop, `continue` skips the rest
+of the current iteration, loop-body local declarations are scoped like other
+loop bodies, and stateful built-in calls in the body advance at each reached
+iteration for that callsite. `break` or `continue` outside a loop is rejected
+with `E_LOOP_CONTROL`. Mutations through any alias affect not-yet-visited
+existing indexes. Appended elements are not visited in the current loop. If the
+array shrinks so a future initial index is out of bounds, execution raises the
+same runtime error used by `array.get`. Label, line, linefill, polyline, box,
+and table array loop values are shallow-copied ids, so drawing setters or lifecycle
+operations through the loop local mutate the same drawing object while
+assignment to the loop local does not write the source array slot. Chart-point
+array and same-local scalar-field UDT array loop values are copied into the
+loop-local variable, so local field mutation does not write back to the source
+slot. The narrow `for index, value in values` form supports `array<int>`,
+`array<float>`, `array<bool>`, `array<string>`, `array<color>`,
+`array<label>`, `array<line>`, `array<linefill>`, `array<polyline>`,
+`array<box>`, `array<table>`, `array<chart.point>`, and same-local
+scalar-field UDT array iterables with a zero-based `series int` index
+loop-local. Index/value iteration over imported or non-scalar-field UDT arrays,
+map/matrix iterables, expression-form `for...in`, non-array iterables, and other
+non-scalar arrays remain outside the current subset.
+Ordinary `var` scalar arrays roll back
+loop-body mutation during repeated forming realtime updates, while scalar
+typed-array `varip` iteration preserves carried intrabar loop-body mutation
+between repeated forming updates. The scalar-array runtime fixtures,
+label-array, line-array, linefill-array, polyline-array, box-array, and
+table-array shallow-id fixtures, chart-point-array value-copy fixture, and
+UDT-array value-copy fixture have explicit execution parity with full historical
+recomputation.
 
 `while condition` evaluates the condition before each iteration. A `true`
 condition executes the body, while `false` or `na` exits the loop. `break`
 exits the nearest enclosing loop. `continue` skips the remaining body statements
 and re-evaluates the condition. Runtime execution enforces a maximum iteration
-guard per while statement evaluation so non-terminating scripts fail instead of
-hanging execution. `while` expressions are not part of the current executable
-subset.
+guard per while evaluation so non-terminating scripts fail instead of
+hanging execution. `while` bodies follow ordinary statement expression rules,
+including fixture-backed history reads and pure UDF calls. Scalar `while`
+expressions return the latest reached final body expression, or `na` if no
+iteration produces a value. Stateful callsites in reached expression bodies
+advance per reached iteration, and body-local declarations including local
+`var` declaration sites follow loop-local storage rules. When a while
+expression is evaluated inside an outer loop, `break` and `continue` in the
+expression body are consumed by the nearest while expression and do not control
+the outer loop. Tuple declaration/destructuring from while-expression results
+uses the same latest-produced-result rule. A while expression may return a
+scalar array result, including a fresh array or an existing scalar-array alias;
+callers may read or mutate that returned array with the supported scalar-array
+APIs. Scalar-array zero-iteration `na`, result preservation across
+break/continue, and fresh historical copies from committed history reads are
+fixture-backed. Nested collection interactions through while-expression results
+remain outside this executable subset, and nested-array while-expression results
+are rejected before runtime execution. Same-imported-identity UDT
+while-expression results are supported; local/imported mismatches are rejected
+before runtime execution.
 
 `switch` expressions evaluate arms in source order. Selector-form switches
 evaluate the selector once per bar, then compare each case expression with that
 selector value. Selector-less switches evaluate each arm condition until one is
-`true`. Only the selected result expression executes. If no arm matches and no
-default arm exists, the switch returns `na`.
+`true`. Only the selected result expression executes. For supported
+statement-block arms, only the selected block's statements execute and its final
+expression becomes the arm result. If no arm matches and no default arm exists,
+the switch returns `na`. Same-imported-identity UDT switch results are
+supported; imported/local or otherwise mismatched UDT switch results are
+rejected before runtime execution.
 
 ### Reassignment
 
@@ -544,12 +676,15 @@ field in the current UDT value, and writes the updated value back to the
 receiver symbol, including the receiver's persistent slot when applicable.
 Local `for` expressions may construct a local UDT in their final body
 expression, return the final iteration's UDT value, and allow the caller to
-store that value and read its fields. Top-level, block-local, and
-loop-local typed UDT declarations may also initialize from same-local-UDT
-ternary, switch, or `if` expressions and later reassign to the same local UDT
-type; top-level, block-local, and loop-local typed UDT declarations may also
-initialize or reassign from same-local-UDT `for` expressions. UDFs may pass a
-local UDT value through a parameter and return that same parameter, or return a
+store that value and read its fields. Local `while` expressions may likewise
+construct or alias a local UDT in their final body expression, return the
+latest reached UDT value, and allow the caller to store that value and read its
+fields. Top-level, block-local, and loop-local typed UDT declarations may also
+initialize from same-local-UDT ternary, switch, or `if` expressions and later
+reassign to the same local UDT type; top-level, block-local, and loop-local
+typed UDT declarations may also initialize or reassign from same-local-UDT
+`for` expressions. UDFs may pass a local UDT value through a parameter and
+return that same parameter, or return a
 block-local alias chain that starts from that parameter, or return a nested
 passthrough UDF call that maps back to that parameter. Pure UDFs may also
 construct and return a local UDT, directly,
@@ -565,8 +700,22 @@ The caller may then store the returned value and read its fields. UDF-local
 UDT variables may mutate scalar fields before returning the updated value.
 Mutating UDT fields on globals or parameters inside UDFs, field mutation inside
 methods, UDT history references, UDT `varip`, nested UDT fields, UDT arrays,
-and imported UDT values are rejected before runtime execution or remain outside
-the executable subset.
+and broader imported UDT values are rejected before runtime execution or remain
+outside the executable subset. Imported UDTs are executable only for
+host-provided exported scalar-field types constructed as `alias.Type.new(...)`
+read through direct scalar fields such as `value.x`, and reassigned from the
+same imported UDT identity, including explicit `alias.Type` typed declarations
+with same-identity initialization or reassignment, same-imported-identity
+ternary, `if`, `switch`, `while`, and `for` expression results, direct or nested UDF
+parameter passthrough returns, direct or nested constructor-return UDFs, and
+scalar-field mutation in top-level, branch, `for`-loop, `while`-loop, and
+UDF-local statement contexts.
+Scalar-field imported UDT `varip` declarations may persist the same imported
+identity by value across forming updates.
+Local/imported structural lookalikes are distinct assignment identities;
+imported UDT history, collections, nested field mutation, UDF parameter/global
+field side effects, method field mutation, and methods remain
+unsupported.
 
 Pure local UDT methods execute as receiver functions. The receiver value is
 passed as the first internal argument and the method body is evaluated through
@@ -595,12 +744,18 @@ varip ticks = 0
 
 The current executable `varip` subset supports global and local scalar
 `int`/`float`/`bool`/`string`/`color`/`na` declarations plus scalar typed-array
-ids for float, int, bool, string, and color arrays. Local scalar declaration
-sites inside `if`, `for`, `while`, and user-defined function bodies use the
-same declaration-site storage model as local `var`; each lowered scalar UDF
-callsite gets independent storage. Historical execution treats this subset like
-`var`: the declaration initializes once when first reached and reassignment
-persists across committed bars.
+ids for float, int, bool, string, and color arrays. It also supports explicitly
+typed same-local scalar-field UDT values initialized from `na`, same-UDT
+constructors, or fixture-backed same-UDT ternary/switch/if/for expressions, plus
+direct-constructor-inferred same-local scalar-field UDT values such as
+`varip p = Point.new(close)`, and scalar-field imported UDT values initialized
+from `na`, same-imported constructors, or direct constructor inference such as
+`varip p = lib.Point.new(close)`. Local scalar declaration sites
+inside `if`, `for`, `while`, and user-defined function bodies use the same
+declaration-site storage model as local `var`; each lowered scalar UDF callsite
+gets independent storage.
+Historical execution treats this subset like `var`: the declaration initializes
+once when first reached and reassignment persists across committed bars.
 
 Realtime forming-bar execution differs from ordinary `var`. A first forming
 update for a bar starts from the last confirmed runtime state. Repeated forming
@@ -618,12 +773,17 @@ reach. Assigning a `varip` scalar typed-array slot to another variable preserves
 the same array id, so mutations through either name update the same backing
 store. `array.copy` returns an independent array id, and a `varip` slot that is
 reassigned to that copy retains the copied backing store across repeated forming
-updates without aliasing the source. Array mutation inside UDFs remains rejected
-by the existing function side-effect rules. Drawing object ids are rejected for
-`varip`: retaining only the id would be unsafe while label, line, box, and table
-object stores continue to roll back between forming updates. Tuples and other
-value families remain unsupported until their declaration-site, backing-store,
-and rollback rules are explicitly designed.
+updates without aliasing the source. A carried UDT `varip` value is cloned by
+value, and scalar field mutation writes the updated field vector back to the
+`varip` slot. Array mutation inside UDFs remains rejected by the existing
+function side-effect rules. Drawing object ids are rejected for `varip`:
+retaining only the id would be unsafe while label, line, box, and table object
+stores continue to roll back between forming updates. Matrix ids are also
+rejected for `varip` until matrix backing-store handoff semantics are designed.
+Tuples,
+non-constructor-inferred UDT `varip`, nested-field UDT `varip`, UDT arrays, and
+other value families remain unsupported until their declaration-site,
+backing-store, identity, and rollback rules are explicitly designed.
 
 Array bounds are stable in the current subset: `array.get`, `array.set`,
 `array.insert`, and `array.remove` support negative indexes from the array end.
@@ -691,6 +851,63 @@ The supported method-call syntax lowers to the same `array.*` runtime calls, so
 the same bounds, persistence, and UDF side-effect rules apply.
 Array mutation, including push/pop/shift/unshift/set/sort/reverse/clear, inside
 user-defined functions is rejected as a function side-effect boundary.
+
+For matrices, the stored value is a runtime-owned matrix id. The current
+runtime subset supports `matrix.new<float>`, `matrix.get`, `matrix.set`,
+`matrix.fill`, `matrix.copy`, `matrix.reshape`, `matrix.add_row`,
+`matrix.add_col`, `matrix.remove_row`, `matrix.remove_col`, `matrix.rows`,
+`matrix.columns`, `matrix.sum`, `matrix.avg`, `matrix.row`, and `matrix.col`.
+`matrix.new<float>` allocates a fresh rectangular store when executed, fills
+cells with the optional numeric/`na` initial value, and coerces int cell values
+to float. Assigning a matrix to another variable copies the id, not the backing
+cells; mutating either name with `matrix.set` or `matrix.fill` mutates the same
+runtime-owned matrix. `matrix.copy` allocates an independent store with the
+current cells. Ordinary `var` matrix ids persist across bars, and realtime
+forming-bar rollback clones the confirmed matrix store before re-executing
+non-`varip` updates. Row and column counts must be non-negative, total cell
+count is capped at 100,000, and out-of-bounds row or column access is a runtime
+error.
+`matrix.set`, `matrix.fill`, `matrix.reshape`, `matrix.add_row`,
+`matrix.add_col`, `matrix.remove_row`, and `matrix.remove_col` inside
+user-defined functions are rejected as a collection side-effect boundary.
+`values.fill(value)` lowers to
+`matrix.fill(values, value)` for float matrices, `values.get(row, column)`
+lowers to `matrix.get(values, row, column)`, `values.set(row, column, value)`
+lowers to `matrix.set(values, row, column, value)` while keeping the same UDF
+side-effect rejection, `values.copy()` lowers to `matrix.copy(values)`, and
+`values.rows()` / `values.columns()` lower to the corresponding shape readers,
+while `values.sum()` and `values.avg()` lower to the matching read-only
+`matrix.sum(values)` / `matrix.avg(values)` helpers.
+`matrix.reshape(values, rows, columns)` changes the shape in place while
+preserving element order and element count; `values.reshape(rows, columns)`
+lowers to the same operation. `matrix<float>` typed declarations accept
+compatible matrix values or `na`. Committed matrix history snapshots return
+fresh matrix copies. `matrix.row(values, row)` and
+`matrix.col(values, column)` return independent `array<float>` snapshots of the
+selected row or column. `values.row(row)` lowers to
+`matrix.row(values, row)` and returns the same independent row snapshot.
+`values.col(column)` lowers to `matrix.col(values, column)` and returns the same
+independent column snapshot. `matrix.add_row(values, row, array_id)` copies an
+`array<float>` row into the matrix at an insertion index in `0..=rows`, requires
+the array length to match the matrix column count, and remains under the
+100,000-cell matrix budget. `values.add_row(row, array_id)` lowers to the same
+operation. `matrix.add_col(values, column, array_id)` copies an `array<float>`
+column into the matrix at an insertion index in `0..=columns`, requires the
+array length to match the matrix row count, and remains under the same cell
+budget. `values.add_col(column, array_id)` lowers to the same operation.
+`matrix.remove_row(values, row)` removes an existing row using the same row
+index bounds as `matrix.row`, and `values.remove_row(row)` lowers to the same
+operation. `matrix.remove_col(values, column)` removes an existing column using
+the same column index bounds as `matrix.col`, and `values.remove_col(column)`
+lowers to the same operation. `matrix.sum(values)` sums numeric cells, ignores
+`na` cells, and returns `na` for empty or all-`na` matrices; `matrix.avg(values)`
+averages the same non-`na` numeric cell set and returns `na` when it is empty.
+Matrix method syntax beyond the fixture-backed
+aliases, bare or non-float matrix typed declarations, `varip`, and for-in
+iteration remain outside the executable subset.
+Matrix allocation rejects negative dimensions and is guarded by the runtime cell
+budget before storage is reserved, so invalid or oversized
+`matrix.new<float>` calls report deterministic runtime errors.
 
 Supported drawing-object calls currently cover the initial `label.*`, `line.*`,
 `box.*`, and `table.*` lifecycles. Labels use deterministic ids, sparse
@@ -1001,11 +1218,18 @@ array mutation inside requested expressions remain unsupported.
 
 ### `varip`
 
-Scalar and scalar typed-array `varip` declarations use the intrabar persistence
-model described above. Drawing object ids are rejected before runtime because
-their object stores are not part of the `varip` handoff; tuples and other value
-families remain rejected until their realtime state partitions are designed. The
-closed Phase I boundary for this subset is recorded in `docs/PHASE_I_AUDIT.md`.
+Scalar, scalar typed-array, explicitly typed same-local or same-imported
+scalar-field UDT, and direct-constructor-inferred same-local or same-imported
+scalar-field UDT `varip` declarations use
+the intrabar persistence model described above. The explicitly typed UDT subset
+includes `na`, same-UDT constructors, and fixture-backed same-UDT ternary/switch/if/for
+initializers. Drawing object ids are rejected before runtime because their
+object stores are not part of the `varip` handoff; tuples,
+non-constructor-inferred UDT values, nested-field UDT values, UDT arrays, and
+other value families remain rejected until their realtime state partitions are
+designed. The closed Phase I boundary for the original scalar and scalar
+typed-array subset is recorded in
+`docs/PHASE_I_AUDIT.md`.
 
 ## User-Defined Functions
 
@@ -1058,6 +1282,10 @@ Rules:
 - Out-of-range references return `na` unless the feature later needs stricter
   runtime errors for selected cases.
 - Dynamic offsets should be supported only after constant offsets are correct.
+  Runtime profiles count dynamic history reads whose requested offset exceeds
+  the effective retained depth in `historyDynamicRetentionMisses` and expose
+  their maximum requested offset as `historyDynamicRetentionMaxMissedOffset`;
+  those reads still return `na` in the current subset.
 
 History can apply to variables, built-in series, and accepted expressions. Any
 expression that needs history must have stable series storage assigned before

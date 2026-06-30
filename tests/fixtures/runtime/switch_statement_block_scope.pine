@@ -1,0 +1,19 @@
+//@version=5
+indicator("Switch statement block scope fixture")
+outer = close * 0.0
+value = switch
+    close > open =>
+        local = high
+        outer := local + 10
+        outer + 1
+    close < open =>
+        local = low
+        outer := local + 20
+        outer + 2
+    =>
+        local = close
+        outer := local + 30
+        outer + 3
+
+plot(value)
+plot(outer)

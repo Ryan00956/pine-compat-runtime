@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix add_col bounds")
+
+values = matrix.new<float>(1, 1, close)
+matrix.add_col(values, 2, array.from(close))
+plot(close)

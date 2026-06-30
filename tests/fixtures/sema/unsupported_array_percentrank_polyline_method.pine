@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentrank polyline method")
+values = array.new_polyline(0)
+plot(values.percentrank(0))

@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported array.binary_search_leftmost UDT method")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+plot(values.binary_search_leftmost(Point.new(open)))

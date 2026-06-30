@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.tsi Series Long Length")
+plot(ta.tsi(close, 2, bar_index))

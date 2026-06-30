@@ -1,0 +1,21 @@
+//@version=6
+indicator("Matrix fill control flow")
+
+values = matrix.new<float>(1, 2, 0)
+
+if close > 2
+    values.fill(close)
+else
+    matrix.fill(values, close + 10)
+
+plot(matrix.get(values, 0, 0), "branch_first")
+plot(values.get(0, 1), "branch_last")
+
+for i = 0 to 1
+    if i == 0
+        matrix.fill(values, close + 20)
+    else
+        values.fill(matrix.get(values, 0, 0) + 1)
+
+plot(matrix.get(values, 0, 0), "loop_first")
+plot(values.get(0, 1), "loop_last")

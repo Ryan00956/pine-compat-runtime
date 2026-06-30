@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported array.shift UDT")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+point = array.shift(values)
+plot(close)

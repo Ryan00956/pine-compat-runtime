@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix new na row count")
+
+missing_rows = int(na)
+values = matrix.new<float>(missing_rows, 1, close)
+plot(matrix.rows(values))

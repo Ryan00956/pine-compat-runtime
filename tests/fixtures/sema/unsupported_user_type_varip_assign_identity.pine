@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported user type varip assignment identity")
+type Point
+    float x
+type Other
+    float x
+
+varip Point p = Point.new(close)
+p := Other.new(open)
+plot(p.x)

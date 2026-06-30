@@ -1265,3 +1265,54 @@ fn rejects_non_bool_while_condition() {
     );
     assert!(analysis.hir.is_none());
 }
+
+#[test]
+fn rejects_while_expression_non_bool_condition() {
+    let analysis = analyze("result = while 1\n    1\nplot(result)\n");
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CONDITION_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_while_expression_without_final_result() {
+    let analysis = analyze("result = while close > open\n    value = 1\nplot(result)\n");
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_BRANCH_RETURN"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn accepts_while_expression_scalar_result() {
+    let analysis = analyze("result = while close > open\n    close\nplot(result)\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "while"),
+        "{:?}",
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}

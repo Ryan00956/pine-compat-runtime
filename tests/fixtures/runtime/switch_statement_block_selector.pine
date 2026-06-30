@@ -1,0 +1,12 @@
+//@version=5
+indicator("Selector switch statement block fixture")
+direction = close > open ? 1 : close < open ? -1 : 0
+value = switch direction
+    1 =>
+        selected = high
+        selected + 1
+    -1 =>
+        selected = low
+        selected - 1
+    => close
+plot(value)

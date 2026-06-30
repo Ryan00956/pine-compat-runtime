@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.new template")
+
+values = matrix.new<int>(2, 2, 1)
+plot(close)

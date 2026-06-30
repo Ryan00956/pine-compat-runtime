@@ -2,59 +2,33 @@ use std::collections::{HashMap, HashSet};
 
 use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{
-    BinaryOp, Diagnostic, ExportItem, Expr, ExprKind, FunctionBody, ImportDecl, Program, Span,
-    Stmt, StmtKind, UnaryOp, parse_source,
+    BinaryOp, Diagnostic, ExportItem, Expr, ExprKind, FunctionBody, Program, Span, Stmt, StmtKind,
+    SwitchArmResult, UnaryOp, parse_source,
 };
 
 use crate::analyzer::context::FunctionInfo;
 use crate::analyzer::functions::{
     contains_output_or_declaration_call, statement_contains_output_or_declaration_call,
 };
-use crate::source_graph::{AnalysisInput, SourceId};
+use crate::source_graph::AnalysisInput;
 
+mod alias_access;
+mod imports;
+mod model;
 #[path = "modules_rewrite.rs"]
 mod modules_rewrite;
 
+use imports::{
+    detect_import_cycles, imports_in_program, validate_library_imports, validate_root_imports,
+};
+use model::{
+    ExportInfo, ModuleInfo, ModuleMethodInfo, ModuleUserTypeFieldInfo, ModuleUserTypeIdentity,
+    ModuleUserTypeInfo, imported_user_type_scalar_field_type, module_user_type_fields_match,
+};
+pub(crate) use model::{
+    ImportedUserTypeFieldInfo, ImportedUserTypeIdentity, ImportedUserTypeInfo, ModuleValidation,
+};
 use modules_rewrite::{RewriteContext, rewrite_expr, rewrite_function_body, rewrite_program};
-
-#[derive(Debug)]
-pub(crate) struct ModuleValidation {
-    pub(crate) diagnostics: Vec<Diagnostic>,
-    pub(crate) root_program: Program,
-    pub(crate) imported_functions: HashMap<String, FunctionInfo>,
-}
-
-#[derive(Debug)]
-struct ModuleInfo {
-    id: SourceId,
-    key: Option<String>,
-    program: Program,
-    exports: HashMap<String, ExportInfo>,
-    private_symbols: HashSet<String>,
-    functions: HashMap<String, FunctionInfo>,
-    constants: HashMap<String, Expr>,
-}
-
-#[derive(Debug, Clone)]
-enum ExportInfo {
-    Function { span: Span },
-    Const { value: Expr, span: Span },
-}
-
-impl ExportInfo {
-    fn span(&self) -> Span {
-        match self {
-            ExportInfo::Function { span } | ExportInfo::Const { span, .. } => *span,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-struct ImportRef {
-    key: String,
-    alias: Option<(String, Span)>,
-    span: Span,
-}
 
 pub(crate) fn validate_modules(input: &AnalysisInput) -> ModuleValidation {
     let graph = input.source_graph();
@@ -69,6 +43,8 @@ pub(crate) fn validate_modules(input: &AnalysisInput) -> ModuleValidation {
         program: root_program.clone(),
         exports: HashMap::new(),
         private_symbols: HashSet::new(),
+        user_types: HashMap::new(),
+        methods: HashMap::new(),
         functions: HashMap::new(),
         constants: HashMap::new(),
     });
@@ -83,6 +59,8 @@ pub(crate) fn validate_modules(input: &AnalysisInput) -> ModuleValidation {
             program: parsed.program,
             exports: HashMap::new(),
             private_symbols: HashSet::new(),
+            user_types: HashMap::new(),
+            methods: HashMap::new(),
             functions: HashMap::new(),
             constants: HashMap::new(),
         };
@@ -104,6 +82,7 @@ pub(crate) fn validate_modules(input: &AnalysisInput) -> ModuleValidation {
         diagnostics,
         root_program,
         imported_functions: import_plan.imported_functions,
+        imported_user_types: import_plan.imported_user_types,
     }
 }
 
@@ -164,6 +143,40 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                     }
                     module.constants.insert(name.clone(), value.clone());
                 }
+                ExportItem::UserType { decl, span } => {
+                    let identity = ModuleUserTypeIdentity {
+                        source_id: module.id,
+                        name: decl.name.clone(),
+                    };
+                    let fields = decl
+                        .fields
+                        .iter()
+                        .map(|field| ModuleUserTypeFieldInfo {
+                            name: field.name.clone(),
+                            type_name: field.type_name.clone(),
+                            pine_type: imported_user_type_scalar_field_type(&field.type_name),
+                            span: field.span,
+                        })
+                        .collect::<Vec<_>>();
+                    register_export(
+                        module,
+                        &decl.name,
+                        ExportInfo::UserType {
+                            identity: identity.clone(),
+                            fields: fields.clone(),
+                            span: *span,
+                        },
+                        diagnostics,
+                    );
+                    module.user_types.insert(
+                        decl.name.clone(),
+                        ModuleUserTypeInfo {
+                            identity,
+                            fields,
+                            span: *span,
+                        },
+                    );
+                }
                 ExportItem::Unknown { .. } => {}
             },
             StmtKind::Function { name, params, body } => {
@@ -183,8 +196,32 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                     module.constants.insert(name.clone(), value.clone());
                 }
             }
+            StmtKind::UserType(user_type) => {
+                module.private_symbols.insert(user_type.name.clone());
+            }
+            StmtKind::Method(_) => {}
             _ => {}
         }
+    }
+    for statement in &statements {
+        let StmtKind::Method(method) = &statement.kind else {
+            continue;
+        };
+        let receiver_type_name = method
+            .params
+            .first()
+            .map(|receiver| receiver.type_name.clone());
+        let receiver_identity = receiver_type_name
+            .as_deref()
+            .and_then(|type_name| module.user_types.get(type_name))
+            .map(|user_type| user_type.identity.clone());
+        module.methods.insert(
+            method.name.clone(),
+            ModuleMethodInfo {
+                receiver_type_name,
+                receiver_identity,
+            },
+        );
     }
     // Restore the statements that were moved out above.
     module.program.statements = statements;
@@ -213,175 +250,11 @@ fn register_export(
     }
 }
 
-fn validate_root_imports(
-    modules: &[ModuleInfo],
-    library_index: &HashMap<String, usize>,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    let root = &modules[0];
-    let imports = imports_in_program(&root.program);
-    let mut aliases = HashMap::new();
-    for import in &imports {
-        if !library_index.contains_key(&import.key) {
-            diagnostics.push(Diagnostic::error(
-                "E_IMPORT_MISSING_LIBRARY",
-                format!("missing library source for import `{}`", import.key),
-                import.span,
-            ));
-        }
-        let Some((alias, alias_span)) = &import.alias else {
-            diagnostics.push(Diagnostic::error(
-                "E_IMPORT_ALIAS_REQUIRED",
-                format!(
-                    "import `{}` requires an alias in the supported subset",
-                    import.key
-                ),
-                import.span,
-            ));
-            continue;
-        };
-        if let Some(previous) = aliases.insert(alias.clone(), *alias_span) {
-            diagnostics.push(Diagnostic::error(
-                "E_IMPORT_DUPLICATE_ALIAS",
-                format!("duplicate import alias `{alias}`"),
-                previous.merge(*alias_span),
-            ));
-        }
-    }
-
-    validate_alias_access(root, &imports, modules, library_index, diagnostics);
-}
-
-fn validate_library_imports(
-    modules: &[ModuleInfo],
-    library_index: &HashMap<String, usize>,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    for module in modules.iter().skip(1) {
-        for import in imports_in_program(&module.program) {
-            if !library_index.contains_key(&import.key) {
-                diagnostics.push(Diagnostic::error(
-                    "E_IMPORT_MISSING_LIBRARY",
-                    format!("missing library source for import `{}`", import.key),
-                    import.span,
-                ));
-            }
-        }
-    }
-}
-
-fn validate_alias_access(
-    root: &ModuleInfo,
-    imports: &[ImportRef],
-    modules: &[ModuleInfo],
-    library_index: &HashMap<String, usize>,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    let aliases: HashMap<_, _> = imports
-        .iter()
-        .filter_map(|import| {
-            let (alias, _) = import.alias.as_ref()?;
-            Some((alias.as_str(), import.key.as_str()))
-        })
-        .collect();
-    if aliases.is_empty() {
-        return;
-    }
-
-    for statement in &root.program.statements {
-        visit_statement_exprs(statement, &mut |expr| {
-            let ExprKind::QualifiedName(parts) = &expr.kind else {
-                return;
-            };
-            if parts.len() < 2 {
-                return;
-            }
-            let Some(key) = aliases.get(parts[0].as_str()) else {
-                return;
-            };
-            let Some(module_index) = library_index.get(*key) else {
-                return;
-            };
-            let module = &modules[*module_index];
-            let symbol = &parts[1];
-            if module.exports.contains_key(symbol) {
-                return;
-            }
-            if module.private_symbols.contains(symbol) || module.functions.contains_key(symbol) {
-                diagnostics.push(Diagnostic::error(
-                    "E_IMPORT_PRIVATE_SYMBOL",
-                    format!("`{}` is not exported by `{}`", parts.join("."), key),
-                    expr.span,
-                ));
-            } else {
-                diagnostics.push(Diagnostic::error(
-                    "E_IMPORT_UNKNOWN_EXPORT",
-                    format!("unknown export `{symbol}` in `{key}`"),
-                    expr.span,
-                ));
-            }
-        });
-    }
-}
-
-fn detect_import_cycles(
-    modules: &[ModuleInfo],
-    library_index: &HashMap<String, usize>,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    let mut visiting = HashSet::new();
-    let mut visited = HashSet::new();
-    for module in modules.iter().skip(1) {
-        visit_module(
-            module,
-            modules,
-            library_index,
-            &mut visiting,
-            &mut visited,
-            diagnostics,
-        );
-    }
-}
-
-fn visit_module(
-    module: &ModuleInfo,
-    modules: &[ModuleInfo],
-    library_index: &HashMap<String, usize>,
-    visiting: &mut HashSet<SourceId>,
-    visited: &mut HashSet<SourceId>,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    if visited.contains(&module.id) {
-        return;
-    }
-    if !visiting.insert(module.id) {
-        return;
-    }
-
-    for import in imports_in_program(&module.program) {
-        let Some(next_index) = library_index.get(&import.key) else {
-            continue;
-        };
-        let next = &modules[*next_index];
-        if visiting.contains(&next.id) {
-            diagnostics.push(Diagnostic::error(
-                "E_IMPORT_CYCLE",
-                format!("import cycle includes `{}`", import.key),
-                import.span,
-            ));
-            continue;
-        }
-        visit_module(next, modules, library_index, visiting, visited, diagnostics);
-    }
-
-    visiting.remove(&module.id);
-    visited.insert(module.id);
-}
-
 #[derive(Default)]
 struct ImportPlan {
     root_rewrites: RewriteContext,
     imported_functions: HashMap<String, FunctionInfo>,
+    imported_user_types: HashMap<String, ImportedUserTypeInfo>,
 }
 
 fn build_import_plan(
@@ -412,6 +285,34 @@ fn build_import_plan(
                     plan.root_rewrites
                         .function_targets
                         .insert(format!("{alias}.{name}"), format!("{alias}.{name}"));
+                }
+                ExportInfo::UserType {
+                    identity,
+                    fields,
+                    span,
+                } => {
+                    debug_assert!(module.user_types.get(name).is_some_and(|user_type| {
+                        module_user_type_fields_match(fields, &user_type.fields)
+                    }));
+                    plan.imported_user_types.insert(
+                        format!("{alias}.{name}"),
+                        ImportedUserTypeInfo {
+                            identity: ImportedUserTypeIdentity {
+                                source_id: identity.source_id,
+                                name: identity.name.clone(),
+                            },
+                            fields: fields
+                                .iter()
+                                .map(|field| ImportedUserTypeFieldInfo {
+                                    name: field.name.clone(),
+                                    type_name: field.type_name.clone(),
+                                    pine_type: field.pine_type,
+                                    span: field.span,
+                                })
+                                .collect(),
+                            span: *span,
+                        },
+                    );
                 }
             }
         }
@@ -511,6 +412,7 @@ fn is_const_import_expr(expr: &Expr) -> bool {
         ExprKind::Call { .. }
         | ExprKind::If { .. }
         | ExprKind::For { .. }
+        | ExprKind::While { .. }
         | ExprKind::Switch { .. }
         | ExprKind::Tuple(_)
         | ExprKind::History { .. }
@@ -540,30 +442,6 @@ fn function_body_has_side_effect(body: &FunctionBody) -> bool {
         FunctionBody::Block(statements) => statements
             .iter()
             .any(statement_contains_output_or_declaration_call),
-    }
-}
-
-fn imports_in_program(program: &Program) -> Vec<ImportRef> {
-    program
-        .statements
-        .iter()
-        .filter_map(|statement| {
-            let StmtKind::Import(import) = &statement.kind else {
-                return None;
-            };
-            Some(import_ref(import, statement.span))
-        })
-        .collect()
-}
-
-fn import_ref(import: &ImportDecl, span: Span) -> ImportRef {
-    ImportRef {
-        key: import.key.clone(),
-        alias: import
-            .alias
-            .as_ref()
-            .map(|alias| (alias.name.clone(), alias.span)),
-        span,
     }
 }
 
@@ -610,9 +488,16 @@ fn visit_statement_exprs(statement: &Stmt, visitor: &mut impl FnMut(&Expr)) {
                 visit_statement_exprs(statement, visitor);
             }
         }
+        StmtKind::ForIn { iterable, body, .. } => {
+            visit_expr(iterable, visitor);
+            for statement in body {
+                visit_statement_exprs(statement, visitor);
+            }
+        }
         StmtKind::Export(export) => match &export.item {
             ExportItem::Const { value, .. } => visit_expr(value, visitor),
             ExportItem::Function { body, .. } => visit_function_body(body, visitor),
+            ExportItem::UserType { .. } => {}
             ExportItem::Unknown { .. } => {}
         },
         StmtKind::Method(method) => visit_function_body(&method.body, visitor),
@@ -680,6 +565,12 @@ fn visit_expr(expr: &Expr, visitor: &mut impl FnMut(&Expr)) {
                 visit_statement_exprs(statement, visitor);
             }
         }
+        ExprKind::While { condition, body } => {
+            visit_expr(condition, visitor);
+            for statement in body {
+                visit_statement_exprs(statement, visitor);
+            }
+        }
         ExprKind::Switch { selector, arms } => {
             if let Some(selector) = selector {
                 visit_expr(selector, visitor);
@@ -688,7 +579,14 @@ fn visit_expr(expr: &Expr, visitor: &mut impl FnMut(&Expr)) {
                 if let Some(condition) = &arm.condition {
                     visit_expr(condition, visitor);
                 }
-                visit_expr(&arm.result, visitor);
+                match &arm.result {
+                    SwitchArmResult::Expr(result) => visit_expr(result, visitor),
+                    SwitchArmResult::Block(statements) => {
+                        for statement in statements {
+                            visit_statement_exprs(statement, visitor);
+                        }
+                    }
+                }
             }
         }
         ExprKind::Tuple(items) => {
@@ -703,5 +601,168 @@ fn visit_expr(expr: &Expr, visitor: &mut impl FnMut(&Expr)) {
             }
         }
         ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => {}
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::source_graph::SourceId;
+    use pine_syntax::SourceFile;
+
+    fn parsed_program(text: &str) -> Program {
+        parse_source(&SourceFile::new("library.pine", text)).program
+    }
+
+    #[test]
+    fn exported_user_type_records_identity_and_fields() {
+        let mut module = ModuleInfo {
+            id: SourceId::library(7),
+            key: Some("user/identity/1".to_owned()),
+            program: parsed_program(
+                r#"
+library("identity")
+export type Point
+    float x
+"#,
+            ),
+            exports: HashMap::new(),
+            private_symbols: HashSet::new(),
+            user_types: HashMap::new(),
+            methods: HashMap::new(),
+            functions: HashMap::new(),
+            constants: HashMap::new(),
+        };
+        let mut diagnostics = Vec::new();
+
+        collect_library_declarations(&mut module, &mut diagnostics);
+
+        assert!(diagnostics.is_empty(), "{diagnostics:?}");
+        let ExportInfo::UserType {
+            identity, fields, ..
+        } = module.exports.get("Point").expect("exported UDT")
+        else {
+            panic!("Point should be a UDT export");
+        };
+        assert_eq!(identity.source_id, SourceId::library(7));
+        assert_eq!(identity.name, "Point");
+        assert_eq!(fields.len(), 1);
+        assert_eq!(fields[0].name, "x");
+        assert_eq!(fields[0].type_name, "float");
+        assert_eq!(
+            fields[0].pine_type,
+            Some(PineType::new(Qualifier::Series, ValueKind::Float))
+        );
+
+        let user_type = module.user_types.get("Point").expect("UDT table entry");
+        assert_eq!(user_type.identity, *identity);
+        assert_eq!(user_type.fields.len(), 1);
+        assert_eq!(user_type.fields[0].name, fields[0].name);
+        assert_eq!(user_type.fields[0].type_name, fields[0].type_name);
+        assert_eq!(user_type.fields[0].pine_type, fields[0].pine_type);
+        assert_eq!(user_type.fields[0].span, fields[0].span);
+    }
+
+    #[test]
+    fn import_plan_records_alias_qualified_user_type_metadata() {
+        let root = ModuleInfo {
+            id: SourceId::root(),
+            key: None,
+            program: parse_source(&SourceFile::new(
+                "root.pine",
+                r#"import user/identity/1 as lib
+"#,
+            ))
+            .program,
+            exports: HashMap::new(),
+            private_symbols: HashSet::new(),
+            user_types: HashMap::new(),
+            methods: HashMap::new(),
+            functions: HashMap::new(),
+            constants: HashMap::new(),
+        };
+        let mut library = ModuleInfo {
+            id: SourceId::library(0),
+            key: Some("user/identity/1".to_owned()),
+            program: parsed_program(
+                r#"
+library("identity")
+export type Point
+    float x
+"#,
+            ),
+            exports: HashMap::new(),
+            private_symbols: HashSet::new(),
+            user_types: HashMap::new(),
+            methods: HashMap::new(),
+            functions: HashMap::new(),
+            constants: HashMap::new(),
+        };
+        let mut diagnostics = Vec::new();
+        collect_library_declarations(&mut library, &mut diagnostics);
+        let modules = vec![root, library];
+        let library_index = HashMap::from([("user/identity/1".to_owned(), 1)]);
+
+        let plan = build_import_plan(&modules, &library_index, &mut diagnostics);
+
+        assert!(diagnostics.is_empty(), "{diagnostics:?}");
+        let point = plan
+            .imported_user_types
+            .get("lib.Point")
+            .expect("alias-qualified imported UDT");
+        assert_eq!(point.identity.source_id, SourceId::library(0));
+        assert_eq!(point.identity.name, "Point");
+        assert_eq!(point.fields.len(), 1);
+        assert_eq!(point.fields[0].name, "x");
+        assert_eq!(point.fields[0].type_name, "float");
+        assert_eq!(
+            point.fields[0].pine_type,
+            Some(PineType::new(Qualifier::Series, ValueKind::Float))
+        );
+        assert_eq!(
+            point.span,
+            modules[1]
+                .user_types
+                .get("Point")
+                .expect("library UDT metadata")
+                .span
+        );
+    }
+
+    #[test]
+    fn library_method_records_receiver_identity_metadata() {
+        let mut module = ModuleInfo {
+            id: SourceId::library(3),
+            key: Some("user/methods/1".to_owned()),
+            program: parsed_program(
+                r#"
+library("methods")
+export type Point
+    float x
+
+method shift(Point p, float delta) => p.x + delta
+"#,
+            ),
+            exports: HashMap::new(),
+            private_symbols: HashSet::new(),
+            user_types: HashMap::new(),
+            methods: HashMap::new(),
+            functions: HashMap::new(),
+            constants: HashMap::new(),
+        };
+        let mut diagnostics = Vec::new();
+
+        collect_library_declarations(&mut module, &mut diagnostics);
+
+        assert!(diagnostics.is_empty(), "{diagnostics:?}");
+        let method = module.methods.get("shift").expect("library method");
+        assert_eq!(method.receiver_type_name.as_deref(), Some("Point"));
+        assert_eq!(
+            method.receiver_identity,
+            Some(ModuleUserTypeIdentity {
+                source_id: SourceId::library(3),
+                name: "Point".to_owned(),
+            })
+        );
     }
 }

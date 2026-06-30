@@ -1,0 +1,5 @@
+library("Duplicate exported UDT/function fixture")
+export type Point
+    float x
+
+export Point(value) => value

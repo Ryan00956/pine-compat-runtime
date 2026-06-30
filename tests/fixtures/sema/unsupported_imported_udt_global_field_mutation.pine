@@ -1,0 +1,12 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT global field mutation")
+
+point = lib.Point.new(close)
+
+touch() =>
+    point.x := 1
+    point
+
+mutated = touch()
+plot(mutated.x)

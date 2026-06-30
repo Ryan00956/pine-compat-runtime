@@ -1,0 +1,6 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT constructor")
+
+p = lib.Point.new(close)
+plot(p.x)

@@ -426,6 +426,76 @@ fn accepts_array_from_operations() {
 }
 
 #[test]
+fn accepts_array_while_expression_result() {
+    let analysis = analyze(
+        "i = 0\nitems = while i < 2\n    i := i + 1\n    array.from(close + i, i)\nplot(array.size(items) + array.get(items, 0) + items.get(1))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_array_while_expression_result_mutation() {
+    let analysis = analyze(
+        "i = 0\nitems = while i < 2\n    i := i + 1\n    array.from(close + i, i)\nitems.set(0, items.get(0) + 10)\nplot(array.size(items) + items.get(0) + items.get(1))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_array_while_expression_alias_result() {
+    let analysis = analyze(
+        "source = array.from(close, open)\ni = 0\nitems = while i < 2\n    i := i + 1\n    source\nitems.set(0, items.get(0) + 10)\nplot(source.get(0) + items.get(0))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn rejects_while_expression_nested_array_result() {
+    let source = SourceFile::new(
+        "tests/fixtures/sema/unsupported_while_expression_nested_array_result.pine",
+        include_str!(
+            "../../../../tests/fixtures/sema/unsupported_while_expression_nested_array_result.pine"
+        ),
+    );
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"
+                && diagnostic.message.contains(
+                    "`array.from` arguments must infer one supported array element kind"
+                )),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_array_helper_method_calls() {
     let analysis = analyze(
         "values = array.new_string()\nvalues.unshift(\"tail\")\nvalues.unshift(\"head\")\nfirst = values.first()\nlast = values.last()\nshifted = values.shift()\nplot(first == \"head\" and last == \"tail\" and shifted == \"head\" ? values.size() : 0)\n",

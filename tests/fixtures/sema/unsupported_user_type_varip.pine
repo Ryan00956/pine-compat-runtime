@@ -2,5 +2,5 @@
 type Point
     float x
 
-varip p = Point.new(close)
+varip p = bar_index == 0 ? Point.new(close) : Point.new(open)
 plot(p.x)

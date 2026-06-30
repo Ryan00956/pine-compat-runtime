@@ -1,0 +1,18 @@
+//@version=5
+indicator("For in index value string")
+
+values = array.from("a", "bb", "ccc")
+
+int index_sum = 0
+int score = 0
+for index, value in values
+    index_sum := index_sum + index
+    if value == "a"
+        score := score + index + 1
+    if value == "bb"
+        score := score + (index + 1) * 10
+    if value == "ccc"
+        score := score + (index + 1) * 100
+
+plot(index_sum)
+plot(score)

@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array covariance polyline method")
+left = array.new_polyline(0)
+right = array.new_polyline(0)
+plot(left.covariance(right))

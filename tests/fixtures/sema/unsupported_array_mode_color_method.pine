@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array mode color method")
+values = array.new_color()
+plot(values.mode())

@@ -620,12 +620,14 @@ ohlc4 = (open + high + low + close) / 4
 ```text
 indicator(title: const string, shorttitle?: const string, overlay?: const bool, format?: const string, precision?: const int, scale?: const string, max_bars_back?: const int, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset, ...)
   -> void
-strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset)
+strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, close_entries_rule?: const string, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset)
   -> void
 strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
-  -> void
+-> void
+strategy.order(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: string-compatible, oca_type?: string-compatible, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
+-> void
 strategy.close(id: simple string, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
-  -> void
+-> void
 strategy.close_all(comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible) -> void
 strategy.cancel(id: simple string) -> void
 strategy.cancel_all() -> void
@@ -636,6 +638,7 @@ strategy.grossprofit -> series float
 strategy.grossprofit_percent -> series float
 strategy.grossloss -> series float
 strategy.grossloss_percent -> series float
+strategy.buy_and_hold_return_percent -> series float
 strategy.avg_trade -> series float
 strategy.avg_trade_percent -> series float
 strategy.avg_winning_trade -> series float
@@ -665,6 +668,7 @@ strategy.closedtrades.profit(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.max_runup(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.max_drawdown(trade_num: series/simple numeric) -> series float
 strategy.opentrades.capital_held -> series float
+strategy.margin_liquidation_price -> series float
 strategy.opentrades.entry_price(trade_num: series/simple numeric) -> series float
 strategy.opentrades.entry_comment(trade_num: series/simple numeric) -> series string
 strategy.opentrades.entry_id(trade_num: series/simple numeric) -> series string
@@ -685,15 +689,15 @@ Typed variable declarations are fixture-backed for `int`, `float`, `bool`,
 `box`, `table`, and `polyline` values, plus scalar `array<int>`,
 `array<float>`, `array<bool>`, `array<string>`, `array<color>`, and
 object-id `array<label>`, `array<line>`, `array<linefill>`,
-`array<polyline>`, `array<box>`, `array<table>`, and `array<chart.point>`
-values, with compatible or `na`
+`array<polyline>`, `array<box>`, `array<table>`, `array<chart.point>`, and
+same-local scalar-field UDT `array<T>` values, with compatible or `na`
 initializers. The equivalent `type[]` aliases are fixture-backed for the same
 supported array element types, including `var` declarations and the scalar
 typed-array `varip` subset. These declarations assign the declared value kind to
 the symbol, so later compatible reassignment works after `na` initialization.
-Bare `array`, UDT, map, matrix, and other typed
-declarations remain unsupported with semantic diagnostics unless covered by a
-narrower fixture-backed row.
+Bare `array`, non-scalar or imported UDT arrays, UDT array `varip`, map, matrix,
+and other typed declarations remain unsupported with semantic diagnostics unless
+covered by a narrower fixture-backed row.
 `indicator(..., scale=...)` accepts the fixture-backed `scale.left`,
 `scale.right`, and `scale.none` named constants as declaration metadata. The
 runtime rejects other const string scale values and does not emit chart axis
@@ -745,9 +749,34 @@ Short margin behavior, symbol precision rounding, and margin liquidation price
 remain unsupported.
 `strategy(..., pyramiding=N)` accepts positive integer const values and limits
 same-direction long `strategy.entry()` market entries to that many open trades
-for the current position. The default remains `1`. Short entries, reversals,
-`strategy.order()`, same-tick price-based entry exceptions, and broader
-multi-entry exit/reporting semantics remain unsupported unless fixture-backed.
+for the current position. The default remains `1`. Fixture-backed market-long
+`strategy.order(id, strategy.long, qty=...)`, or omitted-qty long orders using
+the configured default quantity, fill on the next historical bar open and can
+add to an existing long position without consuming the `strategy.entry()`
+pyramiding limit. Fixture-backed limit-long
+`strategy.order(id, strategy.long, qty=..., limit=price)` fills through the
+supported long limit timing model and also bypasses the `strategy.entry()`
+pyramiding limit; omitted long `qty` uses the configured default quantity at
+placement time. Fixture-backed stop-long
+`strategy.order(id, strategy.long, qty=..., stop=price)` fills through the
+supported long stop timing model and also bypasses the `strategy.entry()`
+pyramiding limit; omitted long `qty` uses the configured default quantity at
+placement time. Fixture-backed stop-limit-long
+`strategy.order(id, strategy.long, qty=..., stop=stop_price, limit=limit_price)`
+uses the supported long stop-limit activation and fill timing model and also
+bypasses the `strategy.entry()` pyramiding limit; omitted long `qty` uses the
+configured default quantity at placement time. Fixture-backed reduce-only market
+`strategy.order(id, strategy.short, qty=...)` can reduce an existing long
+position on the next historical bar open and clamps oversized quantities without
+opening short exposure; while flat, it is a no-op. Omitted `qty` remains
+unsupported for `strategy.short`. Short exposure, reversals, short price-based
+orders, OCA behavior, same-tick price-based entry exceptions, and broader
+multi-entry exit/reporting
+semantics remain unsupported unless fixture-backed.
+The supported `strategy.order()` subset accepts `comment`, `alert_message`,
+and `disable_alert` metadata; long fills retain entry comments and reduce-only
+short fills retain exit comments for script-visible trade comment helpers, while
+supported fill payloads are exposed in `strategy.alerts`.
 `strategy(..., max_labels_count=N)` accepts named const integer values from
 1 through 500 and stores them in HIR for label runtime eviction.
 `strategy(..., max_boxes_count=N)` accepts named const integer values from
@@ -792,6 +821,10 @@ multi-entry `strategy.exit` semantics remain outside the current claim.
 `strategy.grossloss_percent` are read-only strategy-mode series floats that
 divide the corresponding realized amount by `initial_capital` and multiply by
 100.
+`strategy.buy_and_hold_return_percent` is a read-only strategy-mode series
+float that returns `(close - first_close) / first_close * 100`, using the first
+loaded bar close as `first_close`; it returns `na` when that baseline is zero or
+non-finite.
 `strategy.grossprofit` is a read-only strategy-mode series float that sums
 positive realized closed-trade profit only. Losing, flat, and current open
 trades do not change it. `strategy.grossloss` is a read-only strategy-mode
@@ -869,9 +902,9 @@ those supported shapes can keep multiple reserved pending exits for different
 open pyramided long entry for fixture-backed absolute stop/limit exits, or the
 active pending entry for same-calculation absolute `stop`, `limit`, and
 `trail_price` attachment plus entry-relative `profit`, `loss`, and
-`trail_points` attachment. Supported `strategy.entry`, `strategy.exit`,
-`strategy.close`, and `strategy.close_all` metadata arguments are retained on
-broker-owned fill events and exposed as raw order-fill payloads in
+`trail_points` attachment. Supported `strategy.entry`, `strategy.order`,
+`strategy.exit`, `strategy.close`, and `strategy.close_all` metadata arguments
+are retained on broker-owned fill events and exposed as raw order-fill payloads in
 `strategy.alerts` for supported fills. Explicit Python, CLI, and WASM host
 helpers can render `{{strategy.order.alert_message}}` for selected public fill
 events; external alert delivery remains unsupported. Richer strategy order
@@ -891,12 +924,18 @@ read-only strategy-mode field functions over the current closed-trade list.
 `strategy.opentrades.size`, `strategy.opentrades.profit`, and
 `strategy.opentrades.commission`, `strategy.opentrades.max_runup`, and
 `strategy.opentrades.max_drawdown` are read-only strategy-mode field functions
-for the current supported long position.
+over the current long-only open-trade ledger.
 `strategy.opentrades.capital_held` is a read-only strategy-mode variable. The
 current no-margin subset returns `na`; with explicit active `margin_long`, the
 current long-only subset returns current open long market value multiplied by
 `margin_long / 100`, including after the current long-only forced-liquidation
 subset reduces the open position. Short margin behavior remains unsupported.
+`strategy.margin_liquidation_price` is a read-only strategy-mode series float
+that returns the current long-only broker price where supported equity equals
+required long margin for an active `margin_long` position. It returns `na`
+without active long margin, while flat, or when the long margin denominator is
+unattainable, such as `margin_long=100`. Symbol tick rounding, short margin,
+and public margin-specific schema expansion remain unsupported.
 `trade_num` is a zero-based integer index; missing, negative, out-of-range, or
 non-integer indexes return `na`. Closed- and open-trade `entry_id` return the
 retained entry id. Closed-trade `exit_id` returns the retained close or exit id.
@@ -978,7 +1017,7 @@ plotbar(open: series/simple numeric, high: series/simple numeric, low: series/si
 plotcandle(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, wickcolor?: color-compatible, editable?: const bool, show_last?: simple int, bordercolor?: color-compatible, display?: const string)
   -> void
 
-hline(price: const-or-input float, title?: const string, color?: color-compatible, linestyle?: const string, linewidth?: simple int, editable?: const bool, display?: const string)
+hline(price: input/const numeric, title?: const string, color?: color-compatible, linestyle?: const string, linewidth?: simple int, editable?: const bool, display?: const string)
   -> hline
 
 fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, title?: const string, editable?: const bool, show_last?: simple int, fillgaps?: const bool, display?: const string)
@@ -1145,10 +1184,13 @@ array.copy(id: float-array|int-array|bool-array|string-array|color-array|label-a
 array.slice(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index_from: simple int, index_to: simple int) -> same array kind
 array.concat(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, id2: same array kind) -> same array kind
 array.includes(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible) -> series bool
+array.includes(id: same-local-scalar-field-UDT-array, value: same local UDT) -> series bool
 array.every(id: float-array|int-array|bool-array) -> series bool
 array.some(id: float-array|int-array|bool-array) -> series bool
 array.indexof(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible) -> simple int
+array.indexof(id: same-local-scalar-field-UDT-array, value: same local UDT) -> simple int
 array.lastindexof(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible) -> simple int
+array.lastindexof(id: same-local-scalar-field-UDT-array, value: same local UDT) -> simple int
 array.binary_search(id: float-array|int-array, value: element-compatible) -> simple int
 array.binary_search_leftmost(id: float-array|int-array, value: element-compatible) -> simple int
 array.binary_search_rightmost(id: float-array|int-array, value: element-compatible) -> simple int
@@ -1196,9 +1238,10 @@ parameters pass the array id; array mutation inside user-defined functions
 remains unsupported. `array.from` infers the array
 kind from its arguments, requires at least one non-`na` supported typed value,
 allows `na` in otherwise typed arrays, and promotes mixed int/float arguments
-to a float array. `array.join` remains limited to scalar typed arrays, while
+to a float array. `array.join` supports scalar typed arrays and the
+fixture-backed same-local scalar-field UDT array subset, while
 `str.tostring(array)` remains limited to non-color scalar typed arrays. Color,
-linefill, drawing-id, and chart-point arrays remain outside the
+linefill, drawing-id, chart-point, and UDT arrays remain outside the
 `str.tostring(array)` subset. Linefill arrays are supported for generic
 object-array storage and search, chart-point arrays are supported for generic
 point-list storage and search, and `polyline.all` exposes a read-only snapshot
@@ -1213,7 +1256,9 @@ runtime errors. `array.remove` removes and returns an element, while
 out-of-bounds indexes are runtime errors. `array.fill` fills the whole array by
 default or the half-open
 `[index_from, index_to)` window when bounds are supplied; invalid ranges are
-no-ops. `array.slice` returns a same-kind shallow window over the parent
+no-ops. The semantic analyzer also allows `array.fill`/`fill()` for
+same-local scalar-field UDT arrays with a same-UDT value; mismatched local UDT
+values remain rejected. `array.slice` returns a same-kind shallow window over the parent
 array's half-open `[index_from, index_to)` range; slice reads and writes mirror
 the parent window, slice insertions widen the window and insert into the parent,
 invalid creation bounds return `na`, and later parent mutations that move the
@@ -1259,10 +1304,12 @@ bodies. `array.sort_indices` returns a new int array containing original indexes
 in sorted order without modifying the source array. `array.reverse` supports
 every supported typed array and is fixture-backed in branch and loop bodies for
 scalar array values.
-`array.join` supports supported scalar typed arrays only, defaults the separator
+`array.join` supports supported scalar typed arrays, defaults the separator
 to `,`, uses the default numeric string format, and renders colors as their
-normalized integer color values. Drawing-id, chart.point, UDT, map, and matrix
-arrays remain outside the join subset. Array assignment passes the runtime array
+normalized integer color values. The semantic analyzer also allows `array.join`
+for same-local scalar-field UDT arrays; those elements render as
+`TypeName(field0, field1, ...)`, with `NaN` for `na` elements. Drawing-id,
+chart.point, map, and matrix arrays remain outside the join subset. Array assignment passes the runtime array
 id by reference; use `array.copy` to allocate an independent array with the same
 current element values.
 

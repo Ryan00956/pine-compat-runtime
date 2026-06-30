@@ -1,0 +1,16 @@
+//@version=5
+indicator("Series history offset while")
+
+offset = bar_index - bar_index
+i = 0
+while i < 2
+    offset := bar_index == 0 ? 0 : i
+    i := i + 1
+
+maybe_offset = bar_index == 2 ? na : offset
+previous = close[offset]
+
+plot(previous)
+plot((close + open)[offset])
+plot(close[maybe_offset])
+plot(na(previous[1]) ? 1 : 0)

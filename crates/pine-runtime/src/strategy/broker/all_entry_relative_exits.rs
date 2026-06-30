@@ -1,6 +1,6 @@
 use super::{
     BrokerState, StrategyExitMetadata,
-    active_entry_brackets::DeferredLossProfitBracketSpec,
+    loss_profit_brackets::DeferredLossProfitBracketSpec,
     pending_exits::{
         DeferredBracketLeg, DeferredRelativeExit, DeferredRelativeExitTrigger, ExitQuantityRequest,
         PendingExit, PendingExitQuantity, PendingExitTrigger, PendingTrailingActivation,

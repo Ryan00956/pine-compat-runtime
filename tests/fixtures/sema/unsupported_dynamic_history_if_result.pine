@@ -1,0 +1,9 @@
+//@version=5
+indicator("Unsupported dynamic history if result")
+
+offset = if close > open
+    close
+else
+    open
+
+plot(close[offset])

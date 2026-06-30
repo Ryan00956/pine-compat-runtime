@@ -1,0 +1,18 @@
+//@version=6
+indicator("While expression matrix control")
+
+i = 0
+values = while i < 5
+    i := i + 1
+    if i == 2
+        continue
+    if i == 4
+        break
+    matrix.new<float>(1, 2, close + i)
+
+values.set(0, 0, values.get(0, 0) + 10)
+
+plot(matrix.rows(values), "rows")
+plot(values.columns(), "columns")
+plot(values.get(0, 0), "first")
+plot(matrix.get(values, 0, 1), "second")

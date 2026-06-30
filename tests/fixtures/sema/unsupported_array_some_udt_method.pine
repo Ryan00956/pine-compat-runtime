@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported array.some UDT method")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+plot(values.some() ? 1 : 0)

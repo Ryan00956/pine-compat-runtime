@@ -1,4 +1,4 @@
-use super::entries::PendingEntryBook;
+use super::pending_entries::PendingEntryBook;
 use super::pending_exits::PendingExitBook;
 
 #[derive(Debug, Clone, PartialEq)]

@@ -1,0 +1,17 @@
+//@version=6
+indicator("Matrix avg")
+
+values = matrix.new<float>(2, 3, na)
+matrix.set(values, 0, 0, close)
+matrix.set(values, 0, 1, close + 2)
+matrix.set(values, 1, 2, close + 10)
+namespace_avg = matrix.avg(values)
+method_avg = values.avg()
+
+empty = matrix.new<float>(0, 2)
+all_na = matrix.new<float>(1, 2)
+
+plot(namespace_avg, "namespace_avg")
+plot(method_avg, "method_avg")
+plot(na(matrix.avg(empty)) ? 1 : 0, "empty_avg_is_na")
+plot(na(all_na.avg()) ? 1 : 0, "all_na_avg_is_na")

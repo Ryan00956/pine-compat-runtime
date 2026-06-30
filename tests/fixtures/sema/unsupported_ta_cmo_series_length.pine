@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.cmo Series Length")
+plot(ta.cmo(close, bar_index))

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix get")
+
+value = matrix.get(na, 0, 0)
+plot(value)

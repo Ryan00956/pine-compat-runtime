@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array abs box method")
+values = array.new_box()
+result = values.abs()
+plot(result.size())

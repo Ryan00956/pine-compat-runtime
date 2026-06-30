@@ -1,0 +1,3 @@
+//@version=5
+strategy("Supported close entries rule ANY", close_entries_rule="ANY")
+plot(close)

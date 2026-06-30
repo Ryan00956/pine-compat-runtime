@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array standardize linefill method")
+values = array.new_linefill(0)
+standardized = values.standardize()
+plot(close)

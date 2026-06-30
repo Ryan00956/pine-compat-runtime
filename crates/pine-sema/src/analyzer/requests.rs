@@ -224,10 +224,18 @@ fn request_expression_is_pure_scalar(expr: &Expr) -> bool {
                     arm.condition
                         .as_ref()
                         .is_none_or(request_expression_is_same_context_value)
-                        && request_expression_is_same_context_value(&arm.result)
+                        && match &arm.result {
+                            SwitchArmResult::Expr(result) => {
+                                request_expression_is_same_context_value(result)
+                            }
+                            SwitchArmResult::Block(_) => false,
+                        }
                 })
         }
-        ExprKind::Tuple(_) | ExprKind::If { .. } | ExprKind::For { .. } => false,
+        ExprKind::Tuple(_)
+        | ExprKind::If { .. }
+        | ExprKind::For { .. }
+        | ExprKind::While { .. } => false,
     }
 }
 
@@ -302,10 +310,18 @@ fn request_expression_is_provider_scalar(expr: &Expr) -> bool {
                     arm.condition
                         .as_ref()
                         .is_none_or(request_expression_is_provider_scalar)
-                        && request_expression_is_provider_scalar(&arm.result)
+                        && match &arm.result {
+                            SwitchArmResult::Expr(result) => {
+                                request_expression_is_provider_scalar(result)
+                            }
+                            SwitchArmResult::Block(_) => false,
+                        }
                 })
         }
-        ExprKind::Tuple(_) | ExprKind::If { .. } | ExprKind::For { .. } => false,
+        ExprKind::Tuple(_)
+        | ExprKind::If { .. }
+        | ExprKind::For { .. }
+        | ExprKind::While { .. } => false,
     }
 }
 

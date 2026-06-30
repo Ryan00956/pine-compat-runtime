@@ -1,0 +1,31 @@
+//@version=5
+indicator("For in index value box")
+
+first = box.new(bar_index, high, bar_index + 1, low)
+second = box.new(bar_index + 2, high + 1, bar_index + 3, low + 1)
+boxes = array.from(first, second)
+
+int index_sum = 0
+int left_sum = 0
+for index, value in boxes
+    index_sum := index_sum + index
+    box.set_left(value, box.get_left(value) + index + 10)
+    left_sum := left_sum + box.get_left(value)
+    if index == 1
+        box.delete(value)
+
+after_loop_count = array.size(box.all)
+first_after = boxes.get(0)
+second_after = boxes.get(1)
+first_left = box.get_left(first_after)
+box.delete(first_after)
+after_first_delete_count = array.size(box.all)
+box.delete(second_after)
+after_second_delete_count = array.size(box.all)
+
+plot(index_sum)
+plot(left_sum)
+plot(first_left)
+plot(after_loop_count)
+plot(after_first_delete_count)
+plot(after_second_delete_count)

@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported array concat map method")
+left = array.new<map>()
+right = array.new<map>()
+result = left.concat(right)
+plot(close)

@@ -1,7 +1,7 @@
 use crate::namespaces::types::VOID;
 use crate::namespaces::{
-    alerts, arrays, chart, colors, core, drawings, math, outputs, requests, strategy, strings,
-    syminfo, ta, ticker, time,
+    alerts, arrays, chart, colors, core, drawings, math, matrices, outputs, requests, strategy,
+    strings, syminfo, ta, ticker, time,
 };
 use crate::signature::{BuiltinParam, BuiltinPhase, BuiltinSignature, ReturnSpec};
 
@@ -31,6 +31,7 @@ const BUILTIN_COUNT: usize = core::SCRIPT_SIGNATURES.len()
     + math::SIGNATURES.len()
     + core::VALUE_SIGNATURES.len()
     + arrays::SIGNATURES.len()
+    + matrices::SIGNATURES.len()
     + ta::SIGNATURES.len();
 
 static PHASE_1_BUILTINS_ARRAY: [BuiltinSignature; BUILTIN_COUNT] = build_phase_1_builtins();
@@ -58,6 +59,7 @@ const fn build_phase_1_builtins() -> [BuiltinSignature; BUILTIN_COUNT] {
     index = copy_signatures(&mut builtins, index, math::SIGNATURES);
     index = copy_signatures(&mut builtins, index, core::VALUE_SIGNATURES);
     index = copy_signatures(&mut builtins, index, arrays::SIGNATURES);
+    index = copy_signatures(&mut builtins, index, matrices::SIGNATURES);
     let _index = copy_signatures(&mut builtins, index, ta::SIGNATURES);
 
     builtins
@@ -119,15 +121,9 @@ mod tests {
         assert_eq!(signature.params[12].accepts, crate::Accepts::ConstNumeric);
         assert_eq!(signature.params[13].name, "pyramiding");
         assert_eq!(signature.params[13].accepts, crate::Accepts::ConstNumeric);
-        assert_eq!(signature.params[14].name, "max_labels_count");
-        assert_eq!(
-            signature.params[14].accepts,
-            crate::Accepts::Exact(pine_ir::PineType::new(
-                pine_ir::Qualifier::Const,
-                pine_ir::ValueKind::Int
-            ))
-        );
-        assert_eq!(signature.params[15].name, "max_boxes_count");
+        assert_eq!(signature.params[14].name, "close_entries_rule");
+        assert_eq!(signature.params[14].accepts, crate::Accepts::ConstString);
+        assert_eq!(signature.params[15].name, "max_labels_count");
         assert_eq!(
             signature.params[15].accepts,
             crate::Accepts::Exact(pine_ir::PineType::new(
@@ -135,7 +131,7 @@ mod tests {
                 pine_ir::ValueKind::Int
             ))
         );
-        assert_eq!(signature.params[16].name, "max_lines_count");
+        assert_eq!(signature.params[16].name, "max_boxes_count");
         assert_eq!(
             signature.params[16].accepts,
             crate::Accepts::Exact(pine_ir::PineType::new(
@@ -143,9 +139,17 @@ mod tests {
                 pine_ir::ValueKind::Int
             ))
         );
-        assert_eq!(signature.params[17].name, "max_polylines_count");
+        assert_eq!(signature.params[17].name, "max_lines_count");
         assert_eq!(
             signature.params[17].accepts,
+            crate::Accepts::Exact(pine_ir::PineType::new(
+                pine_ir::Qualifier::Const,
+                pine_ir::ValueKind::Int
+            ))
+        );
+        assert_eq!(signature.params[18].name, "max_polylines_count");
+        assert_eq!(
+            signature.params[18].accepts,
             crate::Accepts::Exact(pine_ir::PineType::new(
                 pine_ir::Qualifier::Const,
                 pine_ir::ValueKind::Int

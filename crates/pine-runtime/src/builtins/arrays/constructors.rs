@@ -85,6 +85,29 @@ impl<'a> HistoricalRuntime<'a> {
         self.eval_array_new_with_kind(args, "array.new<chart.point>", ArrayElementKind::ChartPoint)
     }
 
+    pub(crate) fn eval_array_new_user_type(
+        &mut self,
+        args: &[HirCallArg],
+        type_name: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        let function_name = format!("array.new<{type_name}>");
+        let Some(size) = self.eval_array_new_size(args, &function_name)? else {
+            return Ok(PineValue::Na);
+        };
+
+        let initial_value = if let Some(value_arg) = args.get(1) {
+            self.eval_array_value(&value_arg.value, ArrayElementKind::UserType)?
+        } else {
+            PineValue::Na
+        };
+
+        let value = self.new_array(ArrayElementKind::UserType, size, initial_value);
+        if let PineValue::Array(id) = value {
+            self.array_user_types.insert(id, type_name.to_owned());
+        }
+        Ok(value)
+    }
+
     pub(crate) fn eval_array_from(
         &mut self,
         args: &[HirCallArg],
@@ -155,6 +178,19 @@ impl<'a> HistoricalRuntime<'a> {
         self.array_store.insert(id, values);
         self.array_kinds.insert(id, kind);
         PineValue::Array(id)
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn new_user_type_array_from_values(
+        &mut self,
+        type_name: impl Into<String>,
+        values: Vec<PineValue>,
+    ) -> PineValue {
+        let value = self.new_array_from_values(ArrayElementKind::UserType, values);
+        if let PineValue::Array(id) = value {
+            self.array_user_types.insert(id, type_name.into());
+        }
+        value
     }
 
     fn eval_array_new_with_kind(

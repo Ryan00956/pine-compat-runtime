@@ -1,6 +1,6 @@
 use pine_ir::{
-    CallSiteId, HirExpr, HirExprKind, HirLiteral, HirStmt, HirStmtKind, PineType, Qualifier,
-    ValueKind,
+    CallSiteId, HirBinaryOp, HirCallArg, HirExpr, HirExprKind, HirLiteral, HirStmt, HirStmtKind,
+    PineType, Qualifier, SymbolId, ValueKind,
 };
 use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
@@ -59,6 +59,132 @@ plot(close)
     );
 }
 
+#[test]
+fn evaluates_hir_while_expression_zero_iteration_as_na() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("runtime while expression zero")
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let mut program = analysis.hir.expect("HIR");
+    replace_first_plot_arg(
+        &mut program,
+        while_expr(bool_expr(false), Vec::new(), int_expr(1)),
+    );
+
+    let result = run_historical(&program, &[bar(1.0)]).expect("while expression runtime result");
+
+    assert_eq!(result.plots[0].values, vec![PineValue::Na]);
+}
+
+#[test]
+fn evaluates_hir_while_expression_latest_result() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("runtime while expression")
+x = 0
+plot(x)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let mut program = analysis.hir.expect("HIR");
+    let x = program
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "x")
+        .expect("x symbol")
+        .id;
+    let increment = HirStmt {
+        kind: HirStmtKind::Reassign {
+            symbol: x,
+            value: binary_expr(HirBinaryOp::Add, symbol_expr(x, int_type()), int_expr(1)),
+        },
+    };
+    let condition = binary_expr(HirBinaryOp::Lt, symbol_expr(x, int_type()), int_expr(3));
+    replace_first_plot_arg(
+        &mut program,
+        while_expr(condition, vec![increment], symbol_expr(x, int_type())),
+    );
+
+    let result = run_historical(&program, &[bar(1.0)]).expect("while expression runtime result");
+
+    assert_eq!(result.plots[0].values, vec![PineValue::Int(3)]);
+}
+
+#[test]
+fn evaluates_hir_while_expression_loop_control_result() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("runtime while expression control")
+x = 0
+plot(x)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let mut program = analysis.hir.expect("HIR");
+    let x = program
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "x")
+        .expect("x symbol")
+        .id;
+    let increment = HirStmt {
+        kind: HirStmtKind::Reassign {
+            symbol: x,
+            value: binary_expr(HirBinaryOp::Add, symbol_expr(x, int_type()), int_expr(1)),
+        },
+    };
+    let continue_at_two = HirStmt {
+        kind: HirStmtKind::If {
+            condition: binary_expr(HirBinaryOp::Eq, symbol_expr(x, int_type()), int_expr(2)),
+            then_branch: vec![HirStmt {
+                kind: HirStmtKind::Continue,
+            }],
+            else_branch: Vec::new(),
+        },
+    };
+    let break_at_four = HirStmt {
+        kind: HirStmtKind::If {
+            condition: binary_expr(HirBinaryOp::Eq, symbol_expr(x, int_type()), int_expr(4)),
+            then_branch: vec![HirStmt {
+                kind: HirStmtKind::Break,
+            }],
+            else_branch: Vec::new(),
+        },
+    };
+    let condition = binary_expr(HirBinaryOp::Lt, symbol_expr(x, int_type()), int_expr(5));
+    let result_expr = binary_expr(HirBinaryOp::Mul, symbol_expr(x, int_type()), int_expr(10));
+    replace_first_plot_arg(
+        &mut program,
+        while_expr(
+            condition,
+            vec![increment, continue_at_two, break_at_four],
+            result_expr,
+        ),
+    );
+
+    let result = run_historical(&program, &[bar(1.0)]).expect("while expression runtime result");
+
+    assert_eq!(result.plots[0].values, vec![PineValue::Int(30)]);
+}
+
 fn nested_unary_expr(depth: u32) -> HirExpr {
     let mut expr = int_expr(1);
     for _ in 0..depth {
@@ -74,12 +200,79 @@ fn nested_unary_expr(depth: u32) -> HirExpr {
     expr
 }
 
+fn bool_expr(value: bool) -> HirExpr {
+    HirExpr {
+        kind: HirExprKind::Literal(HirLiteral::Bool(value)),
+        pine_type: PineType::new(Qualifier::Const, ValueKind::Bool),
+        series_id: None,
+    }
+}
+
 fn int_expr(value: i64) -> HirExpr {
     HirExpr {
         kind: HirExprKind::Literal(HirLiteral::Int(value)),
         pine_type: int_type(),
         series_id: None,
     }
+}
+
+fn symbol_expr(symbol: SymbolId, pine_type: PineType) -> HirExpr {
+    HirExpr {
+        kind: HirExprKind::Symbol(symbol),
+        pine_type,
+        series_id: None,
+    }
+}
+
+fn binary_expr(op: HirBinaryOp, left: HirExpr, right: HirExpr) -> HirExpr {
+    HirExpr {
+        kind: HirExprKind::Binary {
+            op,
+            left: Box::new(left),
+            right: Box::new(right),
+        },
+        pine_type: match op {
+            HirBinaryOp::Eq
+            | HirBinaryOp::NotEq
+            | HirBinaryOp::Gt
+            | HirBinaryOp::Gte
+            | HirBinaryOp::Lt
+            | HirBinaryOp::Lte
+            | HirBinaryOp::And
+            | HirBinaryOp::Or => PineType::new(Qualifier::Series, ValueKind::Bool),
+            _ => PineType::new(Qualifier::Series, ValueKind::Int),
+        },
+        series_id: None,
+    }
+}
+
+fn while_expr(condition: HirExpr, statements: Vec<HirStmt>, result: HirExpr) -> HirExpr {
+    HirExpr {
+        kind: HirExprKind::While {
+            condition: Box::new(condition),
+            statements,
+            result: Box::new(result),
+        },
+        pine_type: int_type(),
+        series_id: None,
+    }
+}
+
+fn replace_first_plot_arg(program: &mut pine_ir::HirProgram, value: HirExpr) {
+    for statement in &mut program.statements {
+        let HirStmtKind::Expr(HirExpr {
+            kind: HirExprKind::Call { callee, args, .. },
+            ..
+        }) = &mut statement.kind
+        else {
+            continue;
+        };
+        if callee == "plot" {
+            args[0] = HirCallArg { name: None, value };
+            return;
+        }
+    }
+    panic!("expected plot call");
 }
 
 fn int_type() -> PineType {
@@ -286,6 +479,11 @@ plot(close[offset])
     );
     assert_eq!(profiled.profile.history_max_bars_back, Some(2));
     assert!(profiled.profile.history_has_dynamic_offsets);
+    assert_eq!(profiled.profile.history_dynamic_retention_misses, 3);
+    assert_eq!(
+        profiled.profile.history_dynamic_retention_max_missed_offset,
+        Some(3)
+    );
 }
 
 #[test]

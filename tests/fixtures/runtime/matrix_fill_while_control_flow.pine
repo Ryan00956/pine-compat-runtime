@@ -1,0 +1,15 @@
+//@version=6
+indicator("Matrix fill while control flow")
+
+values = matrix.new<float>(1, 2, 0)
+
+i = 0
+while i < 2
+    if i == 0
+        matrix.fill(values, close + 10)
+    else
+        values.fill(matrix.get(values, 0, 0) + close + 20)
+    i := i + 1
+
+plot(matrix.get(values, 0, 0), "first")
+plot(values.get(0, 1), "second")

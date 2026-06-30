@@ -5,6 +5,7 @@ pub(crate) mod colors;
 pub(crate) mod core;
 pub(crate) mod drawings;
 pub(crate) mod math;
+pub(crate) mod matrices;
 pub(crate) mod outputs;
 pub(crate) mod requests;
 pub(crate) mod strategy;

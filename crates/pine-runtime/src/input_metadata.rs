@@ -47,6 +47,10 @@ fn collect_input_calls_from_stmts(statements: &[HirStmt], calls: &mut Vec<InputC
                 }
                 collect_input_calls_from_stmts(body, calls);
             }
+            HirStmtKind::ForIn { iterable, body, .. } => {
+                collect_input_calls_from_expr(iterable, calls);
+                collect_input_calls_from_stmts(body, calls);
+            }
             HirStmtKind::While { condition, body } => {
                 collect_input_calls_from_expr(condition, calls);
                 collect_input_calls_from_stmts(body, calls);
@@ -117,7 +121,20 @@ fn collect_input_calls_from_expr(expr: &HirExpr, calls: &mut Vec<InputCall>) {
             collect_input_calls_from_stmts(statements, calls);
             collect_input_calls_from_expr(result, calls);
         }
-        HirExprKind::Tuple(values) | HirExprKind::UserTypeConstruct { fields: values } => {
+        HirExprKind::While {
+            condition,
+            statements,
+            result,
+        } => {
+            collect_input_calls_from_expr(condition, calls);
+            collect_input_calls_from_stmts(statements, calls);
+            collect_input_calls_from_expr(result, calls);
+        }
+        HirExprKind::Tuple(values)
+        | HirExprKind::UserTypeConstruct { fields: values, .. }
+        | HirExprKind::UserTypeArrayConstruct {
+            elements: values, ..
+        } => {
             for value in values {
                 collect_input_calls_from_expr(value, calls);
             }

@@ -1,81 +1,55 @@
 mod accounting;
-mod active_entry_brackets;
 mod all_entry_relative_exits;
+mod close_orders;
+mod closed_trades;
+mod deferred_relative_exits;
 mod entries;
+mod exit_orders;
+mod exit_placement;
+mod exit_price_orders;
 mod exits;
 mod fills;
 mod ledger;
+mod loss_limit_brackets;
+mod loss_profit_brackets;
 mod order_book;
+mod pending_entries;
+mod pending_entry_fills;
 mod pending_exits;
+mod state;
+mod stop_profit_brackets;
+mod types;
 
-use pine_ir::{DEFAULT_STRATEGY_INITIAL_CAPITAL, StrategyCommission, StrategyMarginSetting};
+use pine_ir::{StrategyCloseEntriesRule, StrategyCommission, StrategyMarginSetting};
 
-pub(crate) use active_entry_brackets::{
-    LossLimitBracketSpec, LossProfitBracketSpec, StopProfitBracketSpec,
-};
-use entries::{PendingEntryKind, StopLimitEntryPlacement};
 #[cfg(test)]
 use ledger::NetPosition;
-use ledger::{OpenTrade, TradeAllocation, TradeDirection, TradeLedger};
+use ledger::TradeLedger;
+#[cfg(test)]
+use ledger::{OpenTrade, TradeAllocation, TradeDirection};
+pub(crate) use loss_limit_brackets::LossLimitBracketSpec;
+pub(crate) use loss_profit_brackets::LossProfitBracketSpec;
 use order_book::OrderBook;
+use pending_entries::StopLimitEntryPlacement;
 use pending_exits::{
     PendingExit, PendingExitQuantity, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate,
 };
 pub(crate) use pending_exits::{TrailPointsExitSpec, TrailPriceExitSpec};
+pub(crate) use stop_profit_brackets::StopProfitBracketSpec;
+use types::ClosedTradeMetrics;
+pub(crate) use types::{StrategyExitMetadata, StrategyOrderFillAlertEvent, StrategyOrderMetadata};
 
 use crate::{
-    RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent, StrategyOrderFillAlertOutput,
-    StrategyPositionSnapshot, StrategyResult, StrategyTrade,
+    RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent, StrategyPositionSnapshot,
+    StrategyTrade,
 };
-
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub(crate) struct StrategyOrderMetadata {
-    pub(crate) comment: Option<String>,
-    pub(crate) alert_message: Option<String>,
-    pub(crate) disable_alert: bool,
-}
-
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub(crate) struct StrategyExitMetadata {
-    pub(crate) comment: Option<String>,
-    pub(crate) comment_profit: Option<String>,
-    pub(crate) comment_loss: Option<String>,
-    pub(crate) comment_trailing: Option<String>,
-    pub(crate) alert_message: Option<String>,
-    pub(crate) alert_profit: Option<String>,
-    pub(crate) alert_loss: Option<String>,
-    pub(crate) alert_trailing: Option<String>,
-    pub(crate) disable_alert: bool,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) struct StrategyOrderFillAlertEvent {
-    pub(crate) id: String,
-    pub(crate) bar_index: usize,
-    pub(crate) time: i64,
-    pub(crate) direction: String,
-    pub(crate) qty: f64,
-    pub(crate) price: f64,
-    pub(crate) entry_id: Option<String>,
-    pub(crate) exit_id: Option<String>,
-    pub(crate) message: String,
-}
-
-struct EntryFill {
-    id: String,
-    bar_index: usize,
-    time: i64,
-    price: f64,
-    qty: f64,
-    metadata: StrategyOrderMetadata,
-}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BrokerState {
     initial_capital: f64,
     commission: Option<StrategyCommission>,
     pyramiding_limit: usize,
+    close_entries_rule: StrategyCloseEntriesRule,
     margin_long: StrategyMarginSetting,
     margin_short: StrategyMarginSetting,
     open_entry_commission: f64,
@@ -112,394 +86,7 @@ pub struct BrokerState {
     trade_ledger: TradeLedger,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum EntryPyramidingMode {
-    EnforceLimit,
-    SameTickPriceException,
-}
-
-impl Default for BrokerState {
-    fn default() -> Self {
-        Self::new(DEFAULT_STRATEGY_INITIAL_CAPITAL)
-    }
-}
-
 impl BrokerState {
-    #[must_use]
-    pub fn new(initial_capital: f64) -> Self {
-        Self::new_with_commission(initial_capital, None)
-    }
-
-    #[must_use]
-    pub fn new_with_cash_per_contract_commission(
-        initial_capital: f64,
-        commission_per_contract: f64,
-    ) -> Self {
-        Self::new_with_commission(
-            initial_capital,
-            Some(StrategyCommission::CashPerContract(commission_per_contract)),
-        )
-    }
-
-    #[must_use]
-    pub fn new_with_commission(
-        initial_capital: f64,
-        commission: Option<StrategyCommission>,
-    ) -> Self {
-        Self::new_with_commission_and_slippage(initial_capital, commission, 0.0)
-    }
-
-    #[must_use]
-    pub fn new_with_commission_and_slippage(
-        initial_capital: f64,
-        commission: Option<StrategyCommission>,
-        slippage_price_offset: f64,
-    ) -> Self {
-        Self::new_with_commission_slippage_and_limit_verification(
-            initial_capital,
-            commission,
-            slippage_price_offset,
-            0.0,
-        )
-    }
-
-    #[must_use]
-    pub fn new_with_commission_slippage_and_limit_verification(
-        initial_capital: f64,
-        commission: Option<StrategyCommission>,
-        slippage_price_offset: f64,
-        limit_verification_price_offset: f64,
-    ) -> Self {
-        Self::new_with_account_settings(
-            initial_capital,
-            commission,
-            slippage_price_offset,
-            limit_verification_price_offset,
-            StrategyMarginSetting::default(),
-            StrategyMarginSetting::default(),
-        )
-    }
-
-    #[must_use]
-    pub fn new_with_account_settings(
-        initial_capital: f64,
-        commission: Option<StrategyCommission>,
-        slippage_price_offset: f64,
-        limit_verification_price_offset: f64,
-        margin_long: StrategyMarginSetting,
-        margin_short: StrategyMarginSetting,
-    ) -> Self {
-        Self::new_with_account_settings_and_pyramiding(
-            initial_capital,
-            commission,
-            slippage_price_offset,
-            limit_verification_price_offset,
-            margin_long,
-            margin_short,
-            1,
-        )
-    }
-
-    #[must_use]
-    pub fn new_with_account_settings_and_pyramiding(
-        initial_capital: f64,
-        commission: Option<StrategyCommission>,
-        slippage_price_offset: f64,
-        limit_verification_price_offset: f64,
-        margin_long: StrategyMarginSetting,
-        margin_short: StrategyMarginSetting,
-        pyramiding_limit: usize,
-    ) -> Self {
-        Self {
-            initial_capital,
-            commission,
-            pyramiding_limit,
-            margin_long,
-            margin_short,
-            open_entry_commission: 0.0,
-            slippage_price_offset,
-            limit_verification_price_offset,
-            cash: initial_capital,
-            position_size: 0.0,
-            avg_price: 0.0,
-            next_close_metadata: StrategyOrderMetadata::default(),
-            next_exit_metadata: StrategyExitMetadata::default(),
-            entry_id: None,
-            entry_bar_index: None,
-            entry_time: None,
-            open_trade_max_high: None,
-            open_trade_min_low: None,
-            open_trade_equity_on_entry: None,
-            open_trade_min_equity_before_entry: None,
-            open_trade_max_equity_before_entry: None,
-            min_equity_before_open_trade: initial_capital,
-            max_equity_before_open_trade: initial_capital,
-            max_runup: 0.0,
-            max_runup_percent: 0.0,
-            max_drawdown: 0.0,
-            max_drawdown_percent: 0.0,
-            max_contracts_held_long: 0.0,
-            orders: Vec::new(),
-            order_fill_alerts: Vec::new(),
-            trades: Vec::new(),
-            closed_trade_metrics: Vec::new(),
-            position: Vec::new(),
-            equity: Vec::new(),
-            diagnostics: Vec::new(),
-            order_book: OrderBook::new(),
-            trade_ledger: TradeLedger::default(),
-        }
-    }
-
-    fn commission_for_fill(&self, qty: f64, price: f64) -> f64 {
-        match self.commission {
-            Some(StrategyCommission::CashPerContract(value)) => qty * value,
-            Some(StrategyCommission::CashPerOrder(value)) => value,
-            Some(StrategyCommission::Percent(value)) => qty * price * (value / 100.0),
-            None => 0.0,
-        }
-    }
-
-    fn entry_commission_for_fill(&self, qty: f64, price: f64) -> f64 {
-        self.commission_for_fill(qty, price)
-    }
-
-    fn exit_commission_for_fill(&self, qty: f64, price: f64) -> f64 {
-        self.commission_for_fill(qty, price)
-    }
-
-    pub(crate) fn with_next_exit_metadata<T>(
-        &mut self,
-        metadata: StrategyExitMetadata,
-        f: impl FnOnce(&mut Self) -> T,
-    ) -> T {
-        let previous = std::mem::replace(&mut self.next_exit_metadata, metadata);
-        let result = f(self);
-        self.next_exit_metadata = previous;
-        result
-    }
-
-    pub(super) fn take_next_exit_metadata(&mut self) -> StrategyExitMetadata {
-        std::mem::take(&mut self.next_exit_metadata)
-    }
-
-    pub(crate) fn with_next_close_metadata<T>(
-        &mut self,
-        metadata: StrategyOrderMetadata,
-        f: impl FnOnce(&mut Self) -> T,
-    ) -> T {
-        let previous = std::mem::replace(&mut self.next_close_metadata, metadata);
-        let result = f(self);
-        self.next_close_metadata = previous;
-        result
-    }
-
-    pub(super) fn take_next_close_metadata(&mut self) -> StrategyOrderMetadata {
-        std::mem::take(&mut self.next_close_metadata)
-    }
-
-    fn entry_commission_for_closed_quantity(&self, qty: f64) -> f64 {
-        if qty >= self.position_size {
-            self.open_entry_commission
-        } else {
-            self.open_entry_commission * (qty / self.position_size)
-        }
-    }
-
-    fn long_entry_fill_price(&self, price: f64) -> f64 {
-        price + self.slippage_price_offset
-    }
-
-    fn long_exit_fill_price(&self, price: f64) -> f64 {
-        price - self.slippage_price_offset
-    }
-
-    fn long_limit_exit_is_verified(&self, limit_price: f64, high: f64) -> bool {
-        high >= limit_price + self.limit_verification_price_offset
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn entry_long(
-        &mut self,
-        id: String,
-        bar_index: usize,
-        time: i64,
-        price: f64,
-        qty: f64,
-    ) -> bool {
-        self.entry_long_with_metadata(
-            id,
-            bar_index,
-            time,
-            price,
-            qty,
-            StrategyOrderMetadata::default(),
-        )
-    }
-
-    pub(crate) fn entry_long_with_metadata(
-        &mut self,
-        id: String,
-        bar_index: usize,
-        time: i64,
-        price: f64,
-        qty: f64,
-        metadata: StrategyOrderMetadata,
-    ) -> bool {
-        self.entry_long_internal(
-            EntryFill {
-                id,
-                bar_index,
-                time,
-                price,
-                qty,
-                metadata,
-            },
-            EntryPyramidingMode::EnforceLimit,
-        )
-    }
-
-    fn entry_long_from_price_based_same_tick_exception_with_metadata(
-        &mut self,
-        id: String,
-        bar_index: usize,
-        time: i64,
-        price: f64,
-        qty: f64,
-        metadata: StrategyOrderMetadata,
-    ) -> bool {
-        self.entry_long_internal(
-            EntryFill {
-                id,
-                bar_index,
-                time,
-                price,
-                qty,
-                metadata,
-            },
-            EntryPyramidingMode::SameTickPriceException,
-        )
-    }
-
-    fn entry_long_internal(
-        &mut self,
-        fill: EntryFill,
-        pyramiding_mode: EntryPyramidingMode,
-    ) -> bool {
-        if !fill.qty.is_finite() || fill.qty <= 0.0 {
-            self.diagnostics.push(RuntimeDiagnostic {
-                code: "E_STRATEGY_QTY".to_owned(),
-                message: "`strategy.entry` quantity must be positive".to_owned(),
-            });
-            return false;
-        }
-        if !fill.price.is_finite() {
-            self.diagnostics.push(RuntimeDiagnostic {
-                code: "E_STRATEGY_PRICE".to_owned(),
-                message: "`strategy.entry` fill price must be finite".to_owned(),
-            });
-            return false;
-        }
-        if pyramiding_mode == EntryPyramidingMode::EnforceLimit && !self.can_open_long_entry() {
-            return false;
-        }
-
-        let fill_price = self.long_entry_fill_price(fill.price);
-        if !fill_price.is_finite() {
-            self.diagnostics.push(RuntimeDiagnostic {
-                code: "E_STRATEGY_PRICE".to_owned(),
-                message: "`strategy.entry` slipped fill price must be finite".to_owned(),
-            });
-            return false;
-        }
-        if !self.can_afford_long_entry(fill.qty, fill_price) {
-            self.diagnostics.push(RuntimeDiagnostic {
-                code: "E_STRATEGY_MARGIN".to_owned(),
-                message: "`strategy.entry` requires more margin than available equity".to_owned(),
-            });
-            return false;
-        }
-
-        let equity_on_entry = self.cash;
-        let min_equity_before_entry = self.min_equity_before_open_trade;
-        let max_equity_before_entry = self.max_equity_before_open_trade;
-        let alert_id = fill.id.clone();
-        let alert_metadata = fill.metadata.clone();
-        let open_trade = OpenTrade {
-            key: 0,
-            id: fill.id.clone(),
-            direction: TradeDirection::Long,
-            quantity: fill.qty,
-            entry_price: fill_price,
-            entry_bar_index: fill.bar_index,
-            entry_time: fill.time,
-            entry_commission: self.entry_commission_for_fill(fill.qty, fill_price),
-            max_high: Some(fill_price),
-            min_low: Some(fill_price),
-            equity_on_entry: Some(equity_on_entry),
-            min_equity_before_entry: Some(min_equity_before_entry),
-            max_equity_before_entry: Some(max_equity_before_entry),
-            entry_metadata: fill.metadata,
-        };
-        if pyramiding_mode == EntryPyramidingMode::SameTickPriceException {
-            self.record_open_long_trade_exceeding_pyramiding(open_trade);
-        } else {
-            self.record_open_long_trade(open_trade);
-        }
-        self.record_order_event(
-            fill.id,
-            fill.bar_index,
-            fill.time,
-            "strategy.long",
-            fill.qty,
-            fill_price,
-        );
-        self.record_order_fill_alert_from_order_metadata(
-            &alert_metadata,
-            StrategyOrderFillAlertEvent {
-                id: alert_id.clone(),
-                bar_index: fill.bar_index,
-                time: fill.time,
-                direction: "strategy.long".to_owned(),
-                qty: fill.qty,
-                price: fill_price,
-                entry_id: Some(alert_id),
-                exit_id: None,
-                message: String::new(),
-            },
-        );
-        self.record_position_snapshot(fill.bar_index);
-        true
-    }
-
-    fn record_open_long_trade(&mut self, open_trade: OpenTrade) {
-        self.record_open_long_legacy_state(&open_trade);
-        if self.pyramiding_limit <= 1 {
-            self.trade_ledger.open_long(open_trade);
-        } else {
-            self.trade_ledger.append_long(open_trade);
-        }
-        self.sync_aggregate_position_from_ledger();
-    }
-
-    fn record_open_long_trade_exceeding_pyramiding(&mut self, open_trade: OpenTrade) {
-        self.record_open_long_legacy_state(&open_trade);
-        self.trade_ledger.append_long(open_trade);
-        self.sync_aggregate_position_from_ledger();
-    }
-
-    fn sync_aggregate_position_from_ledger(&mut self) {
-        let net_position = self.trade_ledger.net_position();
-        self.position_size = net_position.signed_size;
-        self.avg_price = net_position.avg_price;
-        self.max_contracts_held_long = self.max_contracts_held_long.max(self.position_size);
-    }
-
-    fn apply_trade_allocations_and_sync_position(&mut self, allocations: &[TradeAllocation]) {
-        self.trade_ledger.apply_allocations(allocations);
-        self.sync_aggregate_position_from_ledger();
-    }
-
     fn expand_persistent_all_entry_exit_for_new_entry(&mut self, bar_index: usize) {
         let position_size = self.position_size;
         if !position_size.is_finite() || position_size <= 0.0 {
@@ -577,6 +164,70 @@ impl BrokerState {
     }
 
     #[allow(dead_code)]
+    pub(crate) fn place_pending_market_long_order(
+        &mut self,
+        id: String,
+        qty: f64,
+        created_bar_index: usize,
+    ) {
+        self.place_pending_market_long_order_with_metadata(
+            id,
+            qty,
+            created_bar_index,
+            StrategyOrderMetadata::default(),
+        );
+    }
+
+    pub(crate) fn place_pending_market_long_order_with_metadata(
+        &mut self,
+        id: String,
+        qty: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+    ) {
+        self.order_book
+            .entries_mut()
+            .place_market_long_without_pyramiding_with_metadata(
+                id,
+                qty,
+                created_bar_index,
+                metadata,
+                &mut self.diagnostics,
+            );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_pending_market_short_order(
+        &mut self,
+        id: String,
+        qty: f64,
+        created_bar_index: usize,
+    ) {
+        self.place_pending_market_short_order_with_metadata(
+            id,
+            qty,
+            created_bar_index,
+            StrategyOrderMetadata::default(),
+        );
+    }
+
+    pub(crate) fn place_pending_market_short_order_with_metadata(
+        &mut self,
+        id: String,
+        qty: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+    ) {
+        self.order_book.entries_mut().place_market_short_order(
+            id,
+            qty,
+            created_bar_index,
+            metadata,
+            &mut self.diagnostics,
+        );
+    }
+
+    #[allow(dead_code)]
     pub(crate) fn place_pending_limit_long_entry(
         &mut self,
         id: String,
@@ -607,6 +258,43 @@ impl BrokerState {
         self.order_book
             .entries_mut()
             .place_limit_long_with_metadata(
+                id,
+                qty,
+                limit,
+                created_bar_index,
+                metadata,
+                &mut self.diagnostics,
+            );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_pending_limit_long_order(
+        &mut self,
+        id: String,
+        qty: f64,
+        limit: f64,
+        created_bar_index: usize,
+    ) {
+        self.place_pending_limit_long_order_with_metadata(
+            id,
+            qty,
+            limit,
+            created_bar_index,
+            StrategyOrderMetadata::default(),
+        );
+    }
+
+    pub(crate) fn place_pending_limit_long_order_with_metadata(
+        &mut self,
+        id: String,
+        qty: f64,
+        limit: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+    ) {
+        self.order_book
+            .entries_mut()
+            .place_limit_long_without_pyramiding_with_metadata(
                 id,
                 qty,
                 limit,
@@ -652,6 +340,43 @@ impl BrokerState {
             metadata,
             &mut self.diagnostics,
         );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_pending_stop_long_order(
+        &mut self,
+        id: String,
+        qty: f64,
+        stop: f64,
+        created_bar_index: usize,
+    ) {
+        self.place_pending_stop_long_order_with_metadata(
+            id,
+            qty,
+            stop,
+            created_bar_index,
+            StrategyOrderMetadata::default(),
+        );
+    }
+
+    pub(crate) fn place_pending_stop_long_order_with_metadata(
+        &mut self,
+        id: String,
+        qty: f64,
+        stop: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+    ) {
+        self.order_book
+            .entries_mut()
+            .place_stop_long_without_pyramiding_with_metadata(
+                id,
+                qty,
+                stop,
+                created_bar_index,
+                metadata,
+                &mut self.diagnostics,
+            );
     }
 
     #[allow(dead_code)]
@@ -701,176 +426,51 @@ impl BrokerState {
     }
 
     #[allow(dead_code)]
-    fn pending_entry_count(&self) -> usize {
-        self.order_book.entries().count()
-    }
-
-    pub(crate) fn fill_pending_market_long_entries(
+    pub(crate) fn place_pending_stop_limit_long_order(
         &mut self,
-        bar_index: usize,
-        time: i64,
-        fill_price: f64,
+        id: String,
+        qty: f64,
+        stop: f64,
+        limit: f64,
+        created_bar_index: usize,
     ) {
-        if !self.can_open_long_entry() {
-            self.order_book.entries_mut().clear_all();
-            return;
-        }
-        let Some(pending_entry) = self
-            .order_book
-            .entries_mut()
-            .take_first_eligible_market_long(bar_index)
-        else {
-            return;
-        };
-
-        let entry_id = pending_entry.id;
-        let filled = self.entry_long_with_metadata(
-            entry_id.clone(),
-            bar_index,
-            time,
-            fill_price,
-            pending_entry.quantity,
-            pending_entry.metadata,
+        self.place_pending_stop_limit_long_order_with_metadata(
+            id,
+            qty,
+            stop,
+            limit,
+            created_bar_index,
+            StrategyOrderMetadata::default(),
         );
-        if filled {
-            self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
-            self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
-        } else {
-            self.order_book.exits_mut().clear_for_entry(&entry_id);
-        }
-        self.order_book.entries_mut().clear_all();
     }
 
-    pub(crate) fn fill_pending_limit_long_entries(
+    pub(crate) fn place_pending_stop_limit_long_order_with_metadata(
         &mut self,
-        bar_index: usize,
-        time: i64,
-        low: f64,
+        id: String,
+        qty: f64,
+        stop: f64,
+        limit: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
     ) {
-        if !self.can_open_long_entry() {
-            self.order_book.entries_mut().clear_all();
-            return;
-        }
-        let pending_entries = self.order_book.entries_mut().take_all_eligible_limit_long(
-            bar_index,
-            low,
-            self.limit_verification_price_offset,
-        );
-        if pending_entries.is_empty() {
-            return;
-        }
-
-        for pending_entry in pending_entries {
-            let PendingEntryKind::Limit { price } = pending_entry.kind else {
-                continue;
-            };
-            let entry_id = pending_entry.id;
-            let filled = self.entry_long_from_price_based_same_tick_exception_with_metadata(
-                entry_id.clone(),
-                bar_index,
-                time,
-                price,
-                pending_entry.quantity,
-                pending_entry.metadata,
-            );
-            if filled {
-                self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
-                self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
-            } else {
-                self.order_book.exits_mut().clear_for_entry(&entry_id);
-            }
-        }
-        self.order_book.entries_mut().clear_all();
-    }
-
-    pub(crate) fn fill_pending_stop_long_entries(
-        &mut self,
-        bar_index: usize,
-        time: i64,
-        high: f64,
-    ) {
-        if !self.can_open_long_entry() {
-            self.order_book.entries_mut().clear_all();
-            return;
-        }
-        let pending_entries = self
-            .order_book
-            .entries_mut()
-            .take_all_eligible_stop_long(bar_index, high);
-        if pending_entries.is_empty() {
-            return;
-        }
-
-        for pending_entry in pending_entries {
-            let PendingEntryKind::Stop { price } = pending_entry.kind else {
-                continue;
-            };
-            let entry_id = pending_entry.id;
-            let filled = self.entry_long_from_price_based_same_tick_exception_with_metadata(
-                entry_id.clone(),
-                bar_index,
-                time,
-                price,
-                pending_entry.quantity,
-                pending_entry.metadata,
-            );
-            if filled {
-                self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
-                self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
-            } else {
-                self.order_book.exits_mut().clear_for_entry(&entry_id);
-            }
-        }
-        self.order_book.entries_mut().clear_all();
-    }
-
-    pub(crate) fn fill_pending_stop_limit_long_entries(
-        &mut self,
-        bar_index: usize,
-        time: i64,
-        high: f64,
-        low: f64,
-    ) {
-        if !self.can_open_long_entry() {
-            self.order_book.entries_mut().clear_all();
-            return;
-        }
         self.order_book
             .entries_mut()
-            .activate_stop_limit_long_entries(bar_index, high);
-        let pending_entries = self
-            .order_book
-            .entries_mut()
-            .take_all_eligible_stop_limit_long(
-                bar_index,
-                low,
-                self.limit_verification_price_offset,
+            .place_stop_limit_long_without_pyramiding_with_metadata(
+                StopLimitEntryPlacement {
+                    id,
+                    quantity: qty,
+                    stop_price: stop,
+                    limit_price: limit,
+                    created_bar_index,
+                    metadata,
+                },
+                &mut self.diagnostics,
             );
-        if pending_entries.is_empty() {
-            return;
-        }
+    }
 
-        for pending_entry in pending_entries {
-            let PendingEntryKind::StopLimit { limit_price, .. } = pending_entry.kind else {
-                continue;
-            };
-            let entry_id = pending_entry.id;
-            let filled = self.entry_long_from_price_based_same_tick_exception_with_metadata(
-                entry_id.clone(),
-                bar_index,
-                time,
-                limit_price,
-                pending_entry.quantity,
-                pending_entry.metadata,
-            );
-            if filled {
-                self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
-                self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
-            } else {
-                self.order_book.exits_mut().clear_for_entry(&entry_id);
-            }
-        }
-        self.order_book.entries_mut().clear_all();
+    #[allow(dead_code)]
+    fn pending_entry_count(&self) -> usize {
+        self.order_book.entries().count()
     }
 
     fn has_pending_entry(&self, id: &str) -> bool {
@@ -1158,43 +758,6 @@ impl BrokerState {
                 .remove_identities(&filled_identities);
         }
     }
-
-    #[must_use]
-    pub fn result(&self) -> StrategyResult {
-        StrategyResult {
-            orders: self.orders.clone(),
-            trades: self.trades.clone(),
-            position: self.position.clone(),
-            equity: self.equity.clone(),
-            alerts: self
-                .order_fill_alerts
-                .iter()
-                .map(|event| StrategyOrderFillAlertOutput {
-                    id: event.id.clone(),
-                    bar_index: event.bar_index,
-                    time: event.time,
-                    direction: event.direction.clone(),
-                    qty: event.qty,
-                    price: event.price,
-                    entry_id: event.entry_id.clone(),
-                    exit_id: event.exit_id.clone(),
-                    message: event.message.clone(),
-                })
-                .collect(),
-            diagnostics: self.diagnostics.clone(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-struct ClosedTradeMetrics {
-    commission: f64,
-    profit_percent: f64,
-    max_runup: f64,
-    max_drawdown: f64,
-    entry_comment: Option<String>,
-    exit_comment: Option<String>,
-    close_metadata: StrategyOrderMetadata,
 }
 
 #[cfg(test)]

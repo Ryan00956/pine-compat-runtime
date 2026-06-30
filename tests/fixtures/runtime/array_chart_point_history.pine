@@ -5,4 +5,8 @@ ids = array.new<chart.point>(1)
 ids.set(0, current)
 previous_ids = ids[1]
 previous_point = na(previous_ids) ? na : previous_ids.get(0)
+dynamic_offset = bar_index == 0 ? na : 1
+dynamic_previous_ids = ids[dynamic_offset]
+plot(na(previous_ids) ? 1 : 0)
+plot(na(dynamic_previous_ids) ? 1 : 0)
 plot(na(previous_point) ? na : previous_point.index)

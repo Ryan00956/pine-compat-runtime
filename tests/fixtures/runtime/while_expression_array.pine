@@ -1,0 +1,10 @@
+//@version=5
+indicator("While expression array fixture")
+
+i = 0
+items = while i < 3
+    i := i + 1
+    array.from(close + i, i)
+
+plot(array.size(items))
+plot(array.get(items, 0) + array.get(items, 1))

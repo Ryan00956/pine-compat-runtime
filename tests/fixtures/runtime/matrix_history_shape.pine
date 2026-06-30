@@ -1,0 +1,24 @@
+//@version=6
+indicator("Matrix history shape")
+
+var values = matrix.new<float>(1, 2, close)
+if bar_index % 2 == 0
+    matrix.reshape(values, 1, 2)
+else
+    values.reshape(2, 1)
+
+previous = values[1]
+dynamic_offset = bar_index == 0 ? na : 1
+dynamic_previous = values[dynamic_offset]
+previous_rows = bar_index == 0 ? na : matrix.rows(previous)
+previous_columns = bar_index == 0 ? na : previous.columns()
+
+if bar_index > 0
+    matrix.reshape(previous, 1, 2)
+
+plot(previous_rows, "previous_rows")
+plot(previous_columns, "previous_columns")
+plot(matrix.rows(values), "current_rows")
+plot(values.columns(), "current_columns")
+plot(na(previous) ? 1 : 0, "previous_is_na")
+plot(na(dynamic_previous) ? 1 : 0, "dynamic_previous_is_na")

@@ -1,0 +1,11 @@
+//@version=5
+indicator("Series history offset built-in")
+
+offset = bar_index == 0 ? 0 : 1
+maybe_offset = bar_index == 2 ? na : offset
+previous = ta.change(close)[offset]
+
+plot(previous)
+plot(ta.change(close + open)[offset])
+plot(ta.change(close)[maybe_offset])
+plot(na(previous[1]) ? 1 : 0)

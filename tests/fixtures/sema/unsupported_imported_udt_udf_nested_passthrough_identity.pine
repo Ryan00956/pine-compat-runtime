@@ -1,0 +1,12 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT UDF nested passthrough identity")
+
+type Point
+    float x
+
+inner(p) => p
+outer(p) => inner(p)
+
+lib.Point p = outer(Point.new(close))
+plot(p.x)

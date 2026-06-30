@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported ta.kc Series Length")
+[basis, upper, lower] = ta.kc(close, bar_index, 2)
+plot(basis)

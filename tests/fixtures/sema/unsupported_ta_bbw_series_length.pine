@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.bbw Series Length")
+plot(ta.bbw(close, bar_index, 2))

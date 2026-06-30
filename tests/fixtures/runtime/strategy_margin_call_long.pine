@@ -5,3 +5,4 @@ if bar_index == 0
 plot(strategy.position_size)
 plot(strategy.opentrades.capital_held)
 plot(strategy.closedtrades)
+plot(strategy.margin_liquidation_price)

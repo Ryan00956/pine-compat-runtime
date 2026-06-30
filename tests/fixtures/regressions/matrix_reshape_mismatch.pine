@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix reshape mismatch")
+
+values = matrix.new<float>(2, 2, close)
+matrix.reshape(values, 3, 2)
+plot(close)

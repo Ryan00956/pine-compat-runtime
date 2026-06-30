@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported array sort bool method")
+values = array.new_bool()
+values.push(true)
+values.sort()
+plot(close)

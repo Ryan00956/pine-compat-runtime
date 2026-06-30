@@ -1,9 +1,36 @@
 use crate::{
-    BinaryOp, DeclMode, ExprKind, FunctionBody, Literal, Parse, SourceFile, StmtKind, parse_source,
+    BinaryOp, DeclMode, DeclaredType, ExprKind, FunctionBody, Literal, Parse, SourceFile, StmtKind,
+    SwitchArmResult, parse_source,
 };
 
 fn parse(text: &str) -> Parse {
     parse_source(&SourceFile::new("test.pine", text))
+}
+
+fn declared_type_name(declared_type: &Option<DeclaredType>) -> Option<String> {
+    declared_type.as_ref().map(DeclaredType::canonical_name)
+}
+
+fn first_declared_type(parsed: &Parse) -> Option<String> {
+    let StmtKind::Decl { declared_type, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    declared_type_name(declared_type)
+}
+
+#[test]
+fn declared_type_canonical_names_match_existing_ast_strings() {
+    assert_eq!(
+        DeclaredType::Named("chart.point".to_owned()).into_canonical_name(),
+        "chart.point"
+    );
+    assert_eq!(
+        DeclaredType::Array {
+            element_type: "chart.point".to_owned()
+        }
+        .into_canonical_name(),
+        "array<chart.point>"
+    );
 }
 
 #[test]
@@ -67,6 +94,96 @@ fn parses_scalar_array_new_template_call() {
 }
 
 #[test]
+fn parses_udt_array_new_template_call() {
+    let parsed = parse("points = array.new<Point>(2, Point.new(close))\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::Identifier("array.new<Point>".to_owned())
+    );
+    assert_eq!(args.len(), 2);
+}
+
+#[test]
+fn parses_matrix_new_template_call() {
+    let parsed = parse("values = matrix.new<float>(2, 2, close)\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::Identifier("matrix.new<float>".to_owned())
+    );
+    assert_eq!(args.len(), 3);
+}
+
+#[test]
+fn parses_deferred_matrix_new_template_call() {
+    let parsed = parse("points = matrix.new<chart.point>(2, 2, chart.point.now(close))\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::Identifier("matrix.new<chart.point>".to_owned())
+    );
+    assert_eq!(args.len(), 3);
+}
+
+#[test]
+fn parses_map_new_template_call() {
+    let parsed = parse("values = map.new<string, float>()\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::Identifier("map.new<string,float>".to_owned())
+    );
+    assert_eq!(args.len(), 0);
+}
+
+#[test]
+fn parses_dotted_map_new_template_call() {
+    let parsed = parse("values = map.new<chart.point, chart.point>()\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::Identifier("map.new<chart.point,chart.point>".to_owned())
+    );
+    assert_eq!(args.len(), 0);
+}
+
+#[test]
 fn parses_object_array_new_template_call() {
     let parsed = parse("labels = array.new<label>(1, label.new(bar_index, close))\n");
 
@@ -117,7 +234,32 @@ fn parses_chart_point_typed_declaration() {
         panic!("expected declaration");
     };
     assert_eq!(*mode, DeclMode::Normal);
-    assert_eq!(declared_type.as_deref(), Some("chart.point"));
+    assert_eq!(
+        declared_type_name(declared_type),
+        Some("chart.point".to_owned())
+    );
+    assert_eq!(name, "p");
+}
+
+#[test]
+fn parses_dotted_named_typed_declaration() {
+    let parsed = parse("lib.Point p = lib.Point.new(close)\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl {
+        mode,
+        declared_type,
+        name,
+        ..
+    } = &parsed.program.statements[0].kind
+    else {
+        panic!("expected declaration");
+    };
+    assert_eq!(*mode, DeclMode::Normal);
+    assert_eq!(
+        declared_type_name(declared_type),
+        Some("lib.Point".to_owned())
+    );
     assert_eq!(name, "p");
 }
 
@@ -136,7 +278,10 @@ fn parses_var_chart_point_typed_declaration() {
         panic!("expected declaration");
     };
     assert_eq!(*mode, DeclMode::Var);
-    assert_eq!(declared_type.as_deref(), Some("chart.point"));
+    assert_eq!(
+        declared_type_name(declared_type),
+        Some("chart.point".to_owned())
+    );
     assert_eq!(name, "p");
 }
 
@@ -155,7 +300,7 @@ fn parses_scalar_typed_declaration() {
         panic!("expected declaration");
     };
     assert_eq!(*mode, DeclMode::Normal);
-    assert_eq!(declared_type.as_deref(), Some("float"));
+    assert_eq!(declared_type_name(declared_type), Some("float".to_owned()));
     assert_eq!(name, "price");
 }
 
@@ -174,7 +319,10 @@ fn parses_array_typed_declaration() {
         panic!("expected declaration");
     };
     assert_eq!(*mode, DeclMode::Normal);
-    assert_eq!(declared_type.as_deref(), Some("array<float>"));
+    assert_eq!(
+        declared_type_name(declared_type),
+        Some("array<float>".to_owned())
+    );
     assert_eq!(name, "prices");
 }
 
@@ -193,7 +341,10 @@ fn parses_dotted_array_typed_declaration() {
         panic!("expected declaration");
     };
     assert_eq!(*mode, DeclMode::Normal);
-    assert_eq!(declared_type.as_deref(), Some("array<chart.point>"));
+    assert_eq!(
+        declared_type_name(declared_type),
+        Some("array<chart.point>".to_owned())
+    );
     assert_eq!(name, "points");
 }
 
@@ -212,8 +363,33 @@ fn parses_polyline_array_typed_declaration() {
         panic!("expected declaration");
     };
     assert_eq!(*mode, DeclMode::Normal);
-    assert_eq!(declared_type.as_deref(), Some("array<polyline>"));
+    assert_eq!(
+        declared_type_name(declared_type),
+        Some("array<polyline>".to_owned())
+    );
     assert_eq!(name, "paths");
+}
+
+#[test]
+fn parses_matrix_typed_declaration() {
+    let parsed = parse("matrix<float> values = matrix.new<float>(1, 1)\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl {
+        mode,
+        declared_type,
+        name,
+        ..
+    } = &parsed.program.statements[0].kind
+    else {
+        panic!("expected declaration");
+    };
+    assert_eq!(*mode, DeclMode::Normal);
+    assert_eq!(
+        declared_type_name(declared_type),
+        Some("matrix<float>".to_owned())
+    );
+    assert_eq!(name, "values");
 }
 
 #[test]
@@ -231,7 +407,10 @@ fn parses_array_type_alias_declaration() {
         panic!("expected declaration");
     };
     assert_eq!(*mode, DeclMode::Normal);
-    assert_eq!(declared_type.as_deref(), Some("array<float>"));
+    assert_eq!(
+        declared_type_name(declared_type),
+        Some("array<float>".to_owned())
+    );
     assert_eq!(name, "prices");
 }
 
@@ -250,7 +429,10 @@ fn parses_var_array_type_alias_declaration() {
         panic!("expected declaration");
     };
     assert_eq!(*mode, DeclMode::Var);
-    assert_eq!(declared_type.as_deref(), Some("array<float>"));
+    assert_eq!(
+        declared_type_name(declared_type),
+        Some("array<float>".to_owned())
+    );
     assert_eq!(name, "prices");
 }
 
@@ -269,7 +451,10 @@ fn parses_varip_array_type_alias_declaration() {
         panic!("expected declaration");
     };
     assert_eq!(*mode, DeclMode::Varip);
-    assert_eq!(declared_type.as_deref(), Some("array<int>"));
+    assert_eq!(
+        declared_type_name(declared_type),
+        Some("array<int>".to_owned())
+    );
     assert_eq!(name, "counts");
 }
 
@@ -288,8 +473,43 @@ fn parses_dotted_array_type_alias_declaration() {
         panic!("expected declaration");
     };
     assert_eq!(*mode, DeclMode::Normal);
-    assert_eq!(declared_type.as_deref(), Some("array<chart.point>"));
+    assert_eq!(
+        declared_type_name(declared_type),
+        Some("array<chart.point>".to_owned())
+    );
     assert_eq!(name, "points");
+}
+
+#[test]
+fn canonicalizes_array_template_and_alias_declarations() {
+    for source in [
+        "array < float > prices = array.new_float()\n",
+        "float [] prices = array.new_float()\n",
+    ] {
+        let parsed = parse(source);
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        assert_eq!(
+            first_declared_type(&parsed),
+            Some("array<float>".to_owned())
+        );
+    }
+}
+
+#[test]
+fn canonicalizes_dotted_array_template_and_alias_declarations() {
+    for source in [
+        "array < chart.point > points = array.new<chart.point>()\n",
+        "chart.point [] points = array.new<chart.point>()\n",
+    ] {
+        let parsed = parse(source);
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        assert_eq!(
+            first_declared_type(&parsed),
+            Some("array<chart.point>".to_owned())
+        );
+    }
 }
 
 #[test]
@@ -305,7 +525,7 @@ fn parses_unknown_typed_declaration_for_semantic_diagnostic() {
     else {
         panic!("expected declaration");
     };
-    assert_eq!(declared_type.as_deref(), Some("line"));
+    assert_eq!(declared_type_name(declared_type), Some("line".to_owned()));
     assert_eq!(name, "id");
 }
 
@@ -556,31 +776,64 @@ fn parses_selector_switch_expression_declaration() {
 }
 
 #[test]
-fn rejects_while_expression() {
+fn parses_while_expression() {
     let parsed = parse("x = while close > open\n    close\nplot(x)\n");
 
-    assert!(
-        parsed
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == "E_PARSE_WHILE_EXPR"),
-        "{:?}",
-        parsed.diagnostics
-    );
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::While { condition, body } = &value.kind else {
+        panic!("expected while expression AST");
+    };
+    assert!(matches!(condition.kind, ExprKind::Binary { .. }));
+    assert_eq!(body.len(), 1);
+    assert!(matches!(body[0].kind, StmtKind::Expr(_)));
 }
 
 #[test]
-fn rejects_statement_block_switch_arm() {
+fn parses_condition_switch_statement_block_arm() {
     let parsed = parse("x = switch\n    close > open =>\n        high\n    => close\n");
 
-    assert!(
-        parsed
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == "E_PARSE_SWITCH_BLOCK"),
-        "{:?}",
-        parsed.diagnostics
-    );
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Switch { arms, .. } = &value.kind else {
+        panic!("expected switch expression");
+    };
+    assert!(matches!(arms[0].result, SwitchArmResult::Block(_)));
+    assert!(matches!(arms[1].result, SwitchArmResult::Expr(_)));
+}
+
+#[test]
+fn parses_selector_switch_statement_block_arm() {
+    let parsed = parse("x = switch direction\n    1 =>\n        high\n    => close\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Switch { arms, .. } = &value.kind else {
+        panic!("expected switch expression");
+    };
+    assert!(matches!(arms[0].result, SwitchArmResult::Block(_)));
+    assert!(matches!(arms[1].result, SwitchArmResult::Expr(_)));
+}
+
+#[test]
+fn parses_default_statement_block_switch_arm() {
+    let parsed = parse("x = switch\n    close > open => high\n    =>\n        close\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Switch { arms, .. } = &value.kind else {
+        panic!("expected switch expression");
+    };
+    assert!(matches!(arms[0].result, SwitchArmResult::Expr(_)));
+    assert!(matches!(arms[1].result, SwitchArmResult::Block(_)));
 }
 
 #[test]

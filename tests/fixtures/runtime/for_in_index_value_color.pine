@@ -1,0 +1,18 @@
+//@version=5
+indicator("For in index value color")
+
+values = array.from(color.red, color.green, color.blue)
+
+int index_sum = 0
+int score = 0
+for index, value in values
+    index_sum := index_sum + index
+    if value == color.red
+        score := score + index + 1
+    if value == color.green
+        score := score + (index + 1) * 10
+    if value == color.blue
+        score := score + (index + 1) * 100
+
+plot(index_sum)
+plot(score)

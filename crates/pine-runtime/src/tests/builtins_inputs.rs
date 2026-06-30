@@ -50,6 +50,13 @@ fn first_call_site_id(program: &pine_ir::HirProgram, callee: &str) -> u32 {
                         return Some(call_site_id);
                     }
                 }
+                pine_ir::HirStmtKind::ForIn { iterable, body, .. } => {
+                    if let Some(call_site_id) =
+                        find_in_expr(iterable, callee).or_else(|| find_in_stmts(body, callee))
+                    {
+                        return Some(call_site_id);
+                    }
+                }
                 pine_ir::HirStmtKind::Break | pine_ir::HirStmtKind::Continue => {}
             }
         }
@@ -104,10 +111,18 @@ fn first_call_site_id(program: &pine_ir::HirProgram, callee: &str) -> u32 {
                 .or_else(|| step.as_deref().and_then(|step| find_in_expr(step, callee)))
                 .or_else(|| find_in_stmts(statements, callee))
                 .or_else(|| find_in_expr(result, callee)),
+            pine_ir::HirExprKind::While {
+                condition,
+                statements,
+                result,
+            } => find_in_expr(condition, callee)
+                .or_else(|| find_in_stmts(statements, callee))
+                .or_else(|| find_in_expr(result, callee)),
             pine_ir::HirExprKind::Tuple(values)
-            | pine_ir::HirExprKind::UserTypeConstruct { fields: values } => {
-                values.iter().find_map(|value| find_in_expr(value, callee))
-            }
+            | pine_ir::HirExprKind::UserTypeConstruct { fields: values, .. }
+            | pine_ir::HirExprKind::UserTypeArrayConstruct {
+                elements: values, ..
+            } => values.iter().find_map(|value| find_in_expr(value, callee)),
             pine_ir::HirExprKind::Block { statements, result } => {
                 find_in_stmts(statements, callee).or_else(|| find_in_expr(result, callee))
             }

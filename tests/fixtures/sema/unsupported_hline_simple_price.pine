@@ -1,0 +1,4 @@
+//@version=6
+indicator("Unsupported hline Simple Price")
+values = array.new_int(1, 1)
+hline(array.size(values))

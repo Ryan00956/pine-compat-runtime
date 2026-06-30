@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix set column bounds")
+
+values = matrix.new<float>(2, 2, close)
+matrix.set(values, 0, 2, close)
+plot(matrix.get(values, 0, 0))

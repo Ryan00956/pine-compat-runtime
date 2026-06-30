@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported array.get UDT")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+point = array.get(values, 0)
+plot(close)

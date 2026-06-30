@@ -29,9 +29,7 @@ improved over time, but codes should remain stable once published.
 - `E_PARSE_LIBRARY`: invalid library declaration.
 - `E_PARSE_NAME`: invalid qualified name.
 - `E_PARSE_SWITCH`: invalid switch expression.
-- `E_PARSE_SWITCH_BLOCK`: statement-block switch arms are not supported.
 - `E_PARSE_TYPE`: invalid user-defined type declaration.
-- `E_PARSE_WHILE_EXPR`: while expressions are not supported.
 
 ## Semantic Analysis
 
@@ -100,7 +98,14 @@ improved over time, but codes should remain stable once published.
 - `E_IMPORT_INVALID_LIBRARY`: host-provided library source does not contain
   exactly one library declaration.
 - `E_IMPORT_MISSING_LIBRARY`: an import key has no host-provided source.
-- `E_IMPORT_PRIVATE_SYMBOL`: root code accessed a non-exported library symbol.
+- `E_IMPORT_PRIVATE_SYMBOL`: root code accessed a non-exported library symbol,
+  including a private library user-defined type.
+- `E_IMPORT_UNSUPPORTED_METHOD`: root code accessed a library method through an
+  import alias or an imported UDT receiver, but imported method dispatch is
+  outside the current supported subset.
+- `E_IMPORT_UNSUPPORTED_UDT`: root code accessed an exported library
+  user-defined type, but imported UDT identity is outside the current supported
+  subset.
 - `E_IMPORT_UNKNOWN_EXPORT`: root code accessed an export that the library does
   not declare.
 - `E_RECURSIVE_FUNCTION`: recursive user-defined function call is not supported.

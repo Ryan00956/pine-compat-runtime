@@ -7,8 +7,10 @@ var values = array.new_int()
 array.push(values, 1)
 simple_length = math.min(array.size(values), 1)
 maybe_offset = bar_index == 2 ? na : length
+first_bar_offset = bar_index == 0 ? 0 : 1
 
 plot(close[length])
 plot((close + open)[length])
 plot(close[simple_length])
 plot(close[maybe_offset])
+plot(close[first_bar_offset])

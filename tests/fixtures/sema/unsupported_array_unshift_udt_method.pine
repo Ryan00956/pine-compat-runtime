@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported array.unshift UDT method")
+type Point
+    float x
+type Marker
+    float x
+
+values = array.from(Point.new(close))
+values.unshift(Marker.new(high))
+plot(close)

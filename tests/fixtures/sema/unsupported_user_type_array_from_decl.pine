@@ -1,0 +1,10 @@
+//@version=5
+type Point
+    float x
+
+type Marker
+    float x
+
+array<Point> points = array.from(Marker.new(close))
+plot(close)
+plot(close)

@@ -8,4 +8,8 @@ ids.set(0, current)
 previous_ids = ids[1]
 previous_id = na(previous_ids) ? na : previous_ids.get(0)
 previous_line = na(previous_id) ? na : linefill.get_line1(previous_id)
+dynamic_offset = bar_index == 0 ? na : 1
+dynamic_previous_ids = ids[dynamic_offset]
+plot(na(previous_ids) ? 1 : 0)
+plot(na(dynamic_previous_ids) ? 1 : 0)
 plot(na(previous_line) ? na : line.get_x1(previous_line))

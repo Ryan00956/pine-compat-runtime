@@ -1,0 +1,13 @@
+//@version=6
+indicator("Matrix zero dimensions")
+
+zero_rows = matrix.new<float>(0, 2, close)
+zero_columns = matrix.new<float>(2, 0, close)
+zero_both = matrix.new<float>(0, 0, close)
+
+plot(matrix.rows(zero_rows), "zero_rows_rows")
+plot(matrix.columns(zero_rows), "zero_rows_columns")
+plot(matrix.rows(zero_columns), "zero_columns_rows")
+plot(matrix.columns(zero_columns), "zero_columns_columns")
+plot(matrix.rows(zero_both), "zero_both_rows")
+plot(matrix.columns(zero_both), "zero_both_columns")

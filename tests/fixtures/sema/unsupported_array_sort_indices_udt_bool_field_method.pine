@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported array sort_indices UDT bool field method")
+type Point
+    bool flag
+
+values = array.from(Point.new(close > open))
+indices = values.sort_indices(order.ascending, "flag")
+plot(close)

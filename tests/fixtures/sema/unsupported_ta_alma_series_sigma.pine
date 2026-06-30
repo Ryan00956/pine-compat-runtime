@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.alma Series Sigma")
+plot(ta.alma(close, 3, 0.85, close / 10.0))

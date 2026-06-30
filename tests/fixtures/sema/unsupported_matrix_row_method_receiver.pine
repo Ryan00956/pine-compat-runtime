@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.row method receiver")
+
+row_values = close.row(0)
+plot(array.size(row_values))

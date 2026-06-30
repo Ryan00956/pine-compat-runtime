@@ -1,0 +1,13 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT while identity")
+
+type Point
+    float x
+
+i = 0
+lib.Point p = while i < 1
+    i := i + 1
+    Point.new(close)
+
+plot(close)

@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix set negative column bounds")
+
+values = matrix.new<float>(2, 2, close)
+matrix.set(values, 0, -1, close)
+plot(matrix.get(values, 0, 0))

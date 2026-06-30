@@ -1,4 +1,4 @@
-use super::entries::{PendingEntry, PendingEntryDirection, PendingEntryKind};
+use super::pending_entries::{PendingEntry, PendingEntryDirection, PendingEntryKind};
 use super::pending_exits::{
     DeferredBracketLeg, DeferredRelativeExit, DeferredRelativeExitTrigger, ExitQuantityRequest,
     PendingExitBook, PendingExitQuantity, PendingExitReservationFamily, PendingExitTouch,
@@ -442,6 +442,190 @@ fn trade_ledger_allocates_matching_entry_by_fifo() {
             },
         ]
     );
+}
+
+#[test]
+fn trade_ledger_allocates_any_rule_by_exact_entry_id_in_ledger_order() {
+    let mut ledger = TradeLedger::default();
+    ledger.append_open_trade_for_test(ledger_open_trade("older", 1.0, 100.0, 2.0));
+    ledger.append_open_trade_for_test(ledger_open_trade("target", 2.0, 110.0, 6.0));
+    ledger.append_open_trade_for_test(ledger_open_trade("target", 3.0, 120.0, 12.0));
+
+    assert_eq!(
+        ledger.allocate_exit_any_for_entry("target", 3.5),
+        vec![
+            TradeAllocation {
+                trade_index: 1,
+                trade_key: 1,
+                entry_id: "target".to_owned(),
+                entry_price: 110.0,
+                entry_bar_index: 110,
+                entry_time: 1100,
+                quantity: 2.0,
+                entry_commission: 6.0,
+                entry_metadata: StrategyOrderMetadata::default(),
+            },
+            TradeAllocation {
+                trade_index: 2,
+                trade_key: 2,
+                entry_id: "target".to_owned(),
+                entry_price: 120.0,
+                entry_bar_index: 120,
+                entry_time: 1200,
+                quantity: 1.5,
+                entry_commission: 6.0,
+                entry_metadata: StrategyOrderMetadata::default(),
+            },
+        ]
+    );
+}
+
+#[test]
+fn close_entries_rule_any_internal_close_uses_exact_entry_id_allocation() {
+    let mut broker = BrokerState::new_with_account_settings_and_pyramiding(
+        100_000.0,
+        None,
+        0.0,
+        0.0,
+        StrategyMarginSetting::default(),
+        StrategyMarginSetting::default(),
+        2,
+    )
+    .with_close_entries_rule(StrategyCloseEntriesRule::Any);
+    assert_eq!(broker.close_entries_rule, StrategyCloseEntriesRule::Any);
+    assert!(broker.entry_long("older".to_owned(), 0, 10, 100.0, 1.0));
+    assert!(broker.entry_long("target".to_owned(), 1, 20, 110.0, 2.0));
+
+    broker.close_long("target".to_owned(), 2, 30, 120.0);
+
+    assert_eq!(broker.closed_trade_count(), 1);
+    assert_eq!(broker.trades[0].id, "target");
+    assert_eq!(broker.trades[0].exit_id, "target");
+    assert_eq!(broker.trades[0].qty, 2.0);
+    assert_eq!(broker.trades[0].entry_price, 110.0);
+    assert_eq!(broker.trades[0].exit_price, 120.0);
+    assert_eq!(broker.trades[0].profit, 20.0);
+    assert_eq!(broker.open_trade_count(), 1);
+    assert_eq!(
+        broker
+            .trade_ledger
+            .open_at(0)
+            .map(|trade| trade.id.as_str()),
+        Some("older")
+    );
+    assert_eq!(broker.position_size(), 1.0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn close_entries_rule_any_internal_omitted_exit_stays_fifo() {
+    let mut broker = BrokerState::new_with_account_settings_and_pyramiding(
+        100_000.0,
+        None,
+        0.0,
+        0.0,
+        StrategyMarginSetting::default(),
+        StrategyMarginSetting::default(),
+        2,
+    )
+    .with_close_entries_rule(StrategyCloseEntriesRule::Any);
+    assert!(broker.entry_long("older".to_owned(), 0, 10, 100.0, 1.0));
+    assert!(broker.entry_long("newer".to_owned(), 1, 20, 110.0, 2.0));
+
+    broker.fill_pending_exit(
+        PendingExit {
+            id: "X".to_owned(),
+            from_entry: String::new(),
+            target_trade_key: None,
+            trigger: PendingExitTrigger::Limit(120.0),
+            quantity: PendingExitQuantity::Fixed(1.5),
+            reserved_quantity: 1.5,
+            multiple_reservation: false,
+            last_update_bar_index: 1,
+            metadata: StrategyExitMetadata::default(),
+        },
+        2,
+        30,
+        120.0,
+    );
+
+    assert_eq!(broker.closed_trade_count(), 2);
+    assert_eq!(broker.trades[0].id, "older");
+    assert_eq!(broker.trades[0].qty, 1.0);
+    assert_eq!(broker.trades[0].profit, 20.0);
+    assert_eq!(broker.trades[1].id, "newer");
+    assert_eq!(broker.trades[1].qty, 0.5);
+    assert_eq!(broker.trades[1].profit, 5.0);
+    assert_eq!(broker.open_trade_count(), 1);
+    assert_eq!(
+        broker
+            .trade_ledger
+            .open_at(0)
+            .map(|trade| trade.id.as_str()),
+        Some("newer")
+    );
+    assert_eq!(
+        broker.trade_ledger.open_at(0).map(|trade| trade.quantity),
+        Some(1.5)
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn close_entries_rule_any_internal_exit_from_entry_uses_exact_entry_id_allocation() {
+    let mut broker = BrokerState::new_with_account_settings_and_pyramiding(
+        100_000.0,
+        None,
+        0.0,
+        0.0,
+        StrategyMarginSetting::default(),
+        StrategyMarginSetting::default(),
+        2,
+    )
+    .with_close_entries_rule(StrategyCloseEntriesRule::Any);
+    assert!(broker.entry_long("older".to_owned(), 0, 10, 100.0, 1.0));
+    assert!(broker.entry_long("target".to_owned(), 1, 20, 110.0, 2.0));
+
+    broker.fill_pending_exit(
+        PendingExit {
+            id: "X".to_owned(),
+            from_entry: "target".to_owned(),
+            target_trade_key: None,
+            trigger: PendingExitTrigger::Limit(120.0),
+            quantity: PendingExitQuantity::Fixed(1.5),
+            reserved_quantity: 1.5,
+            multiple_reservation: false,
+            last_update_bar_index: 1,
+            metadata: StrategyExitMetadata::default(),
+        },
+        2,
+        30,
+        120.0,
+    );
+
+    assert_eq!(broker.closed_trade_count(), 1);
+    assert_eq!(broker.trades[0].id, "target");
+    assert_eq!(broker.trades[0].exit_id, "X");
+    assert_eq!(broker.trades[0].qty, 1.5);
+    assert_eq!(broker.trades[0].entry_price, 110.0);
+    assert_eq!(broker.trades[0].exit_price, 120.0);
+    assert_eq!(broker.trades[0].profit, 15.0);
+    assert_eq!(broker.open_trade_count(), 2);
+    assert_eq!(
+        broker
+            .trade_ledger
+            .open_at(0)
+            .map(|trade| (trade.id.as_str(), trade.quantity)),
+        Some(("older", 1.0))
+    );
+    assert_eq!(
+        broker
+            .trade_ledger
+            .open_at(1)
+            .map(|trade| (trade.id.as_str(), trade.quantity)),
+        Some(("target", 0.5))
+    );
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]
@@ -1037,6 +1221,7 @@ fn pending_market_entry_records_internal_order_without_public_fill() {
             quantity: 2.0,
             created_bar_index: 0,
             metadata: StrategyOrderMetadata::default(),
+            enforce_pyramiding: true,
         })
     );
     assert!(broker.orders.is_empty());
@@ -1064,6 +1249,7 @@ fn pending_market_entry_replaces_same_id_without_public_fill() {
             quantity: 3.0,
             created_bar_index: 1,
             metadata: StrategyOrderMetadata::default(),
+            enforce_pyramiding: true,
         })
     );
     assert!(broker.orders.is_empty());
@@ -1243,6 +1429,79 @@ fn pending_market_entry_fills_on_later_bar_price() {
 }
 
 #[test]
+fn pending_market_order_bypasses_entry_pyramiding_limit_for_same_side_long() {
+    let mut broker = BrokerState::new(100_000.0);
+    assert!(broker.entry_long("E".to_owned(), 0, 10, 100.0, 1.0));
+
+    broker.place_pending_market_long_order("O".to_owned(), 2.0, 1);
+    broker.fill_pending_market_long_entries(2, 20, 110.0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert_eq!(broker.orders.len(), 2);
+    assert_eq!(broker.orders[1].id, "O");
+    assert_eq!(broker.orders[1].bar_index, 2);
+    assert_eq!(broker.orders[1].direction, "strategy.long");
+    assert_eq!(broker.orders[1].qty, 2.0);
+    assert_eq!(broker.orders[1].price, 110.0);
+    assert_eq!(broker.position_size, 3.0);
+    assert_eq!(broker.open_trade_count(), 2);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_market_short_order_reduces_long_without_reversal() {
+    let mut broker = BrokerState::new(100_000.0);
+    assert!(broker.entry_long("E".to_owned(), 0, 10, 100.0, 1.0));
+
+    broker.place_pending_market_short_order("R".to_owned(), 3.0, 1);
+    broker.fill_pending_market_long_entries(2, 20, 110.0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert_eq!(broker.orders.len(), 2);
+    assert_eq!(broker.orders[1].id, "R");
+    assert_eq!(broker.orders[1].bar_index, 2);
+    assert_eq!(broker.orders[1].direction, "strategy.short");
+    assert_eq!(broker.orders[1].qty, 1.0);
+    assert_eq!(broker.orders[1].price, 110.0);
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(broker.open_trade_count(), 0);
+    assert_eq!(broker.closed_trade_count(), 1);
+    assert_eq!(broker.trades[0].id, "E");
+    assert_eq!(broker.trades[0].exit_id, "R");
+    assert_eq!(broker.trades[0].profit, 10.0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_market_short_order_metadata_records_reduce_alert_and_exit_comment() {
+    let mut broker = BrokerState::new(100_000.0);
+    assert!(broker.entry_long("E".to_owned(), 0, 10, 100.0, 1.0));
+    broker.order_fill_alerts.clear();
+    let metadata = order_metadata("reduce", false);
+
+    broker.place_pending_market_short_order_with_metadata("R".to_owned(), 3.0, 1, metadata);
+    broker.fill_pending_market_long_entries(2, 20, 110.0);
+
+    assert_eq!(broker.closed_trade_count(), 1);
+    assert_eq!(broker.closed_trade_exit_comment(0), Some("reduce comment"));
+    assert_eq!(
+        broker.order_fill_alerts,
+        vec![StrategyOrderFillAlertEvent {
+            id: "R".to_owned(),
+            bar_index: 2,
+            time: 20,
+            direction: "strategy.short".to_owned(),
+            qty: 1.0,
+            price: 110.0,
+            entry_id: None,
+            exit_id: Some("R".to_owned()),
+            message: "reduce alert".to_owned(),
+        }]
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn margin_long_allows_affordable_long_entry() {
     let mut broker = margin_broker(100.0, 50.0);
 
@@ -1343,6 +1602,15 @@ fn margin_call_partially_liquidates_long_position() {
     assert!(broker.entry_long("L".to_owned(), 1, 20, 4.0, 100.0));
     broker.update_open_trade_extremes(4.0, 3.0);
 
+    assert!(
+        (broker
+            .margin_liquidation_price()
+            .expect("price before margin call")
+            - 235.0 / 75.0)
+            .abs()
+            < 1e-10
+    );
+
     broker.evaluate_margin_call_long(1, 20, 3.0);
 
     assert_eq!(broker.orders.len(), 2);
@@ -1360,6 +1628,14 @@ fn margin_call_partially_liquidates_long_position() {
     assert_eq!(broker.cash, -79.0);
     assert_eq!(broker.equity_value(3.0), 65.0);
     assert_eq!(broker.open_trade_capital_held(3.0), Some(36.0));
+    assert!(
+        (broker
+            .margin_liquidation_price()
+            .expect("price after margin call")
+            - 79.0 / 36.0)
+            .abs()
+            < 1e-10
+    );
     assert_eq!(broker.open_trade_count(), 1);
     assert_eq!(broker.closed_trade_count(), 1);
     assert_eq!(
@@ -1403,6 +1679,18 @@ fn margin_call_is_noop_when_available_funds_cover_margin() {
     assert!(broker.trades.is_empty());
     assert_eq!(broker.position_size, 100.0);
     assert_eq!(broker.cash, -200.0);
+}
+
+#[test]
+fn margin_liquidation_price_is_na_without_active_long_margin_state() {
+    let mut broker = BrokerState::new(100.0);
+    assert_eq!(broker.margin_liquidation_price(), None);
+    assert!(broker.entry_long("L".to_owned(), 1, 20, 4.0, 1.0));
+    assert_eq!(broker.margin_liquidation_price(), None);
+
+    let mut full_margin = margin_broker(100.0, 100.0);
+    assert!(full_margin.entry_long("L".to_owned(), 1, 20, 4.0, 1.0));
+    assert_eq!(full_margin.margin_liquidation_price(), None);
 }
 
 #[test]

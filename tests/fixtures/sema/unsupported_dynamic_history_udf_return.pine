@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported dynamic history UDF return")
+
+offset_from_price() =>
+    close
+
+plot(close[offset_from_price()])

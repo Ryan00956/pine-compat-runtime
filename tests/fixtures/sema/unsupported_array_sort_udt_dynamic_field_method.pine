@@ -1,0 +1,9 @@
+//@version=5
+indicator("Unsupported array sort UDT dynamic field method")
+type Point
+    float x
+
+field = close > open ? "x" : "missing"
+values = array.from(Point.new(close))
+values.sort(order.ascending, field)
+plot(close)

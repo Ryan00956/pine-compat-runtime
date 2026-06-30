@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix.get method column type")
+
+values = matrix.new<float>(1, 1, close)
+value = values.get(0, "column")
+plot(value)

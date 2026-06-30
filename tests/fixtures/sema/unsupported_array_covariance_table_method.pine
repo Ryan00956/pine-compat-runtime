@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array covariance table method")
+left = array.new_table()
+right = array.new_table()
+plot(left.covariance(right))

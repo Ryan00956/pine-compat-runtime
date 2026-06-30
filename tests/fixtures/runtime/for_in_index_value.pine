@@ -1,0 +1,13 @@
+//@version=5
+indicator("For in index value")
+
+values = array.from(10, 20, 30)
+
+int index_sum = 0
+int weighted_sum = 0
+for index, value in values
+    index_sum := index_sum + index
+    weighted_sum := weighted_sum + value * (index + 1)
+
+plot(index_sum)
+plot(weighted_sum)

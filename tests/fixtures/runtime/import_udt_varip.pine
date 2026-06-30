@@ -1,0 +1,18 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT varip")
+
+varip lib.Point seeded = na
+if bar_index == 0
+    seeded := lib.Point.new(close)
+else
+    seeded := lib.Point.new(seeded.x + 1)
+plot(seeded.x)
+
+varip lib.Point constructed = lib.Point.new(close + 10)
+constructed := lib.Point.new(constructed.x + 1)
+plot(constructed.x)
+
+varip inferred = lib.Point.new(close + 20)
+inferred := lib.Point.new(inferred.x + 1)
+plot(inferred.x)

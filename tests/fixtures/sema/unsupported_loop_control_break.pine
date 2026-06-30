@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported top-level break")
+break
+plot(close)

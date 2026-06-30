@@ -1,0 +1,21 @@
+//@version=5
+indicator("For in index value chart point")
+
+points = array.from(chart.point.new(time, bar_index, close), chart.point.from_index(bar_index + 1, high), chart.point.new(time + 20, bar_index + 2, low))
+
+float price_sum = 0.0
+int loop_index_sum = 0
+int point_index_sum = 0
+for index, point in points
+    point.price := point.price + 10
+    price_sum := price_sum + point.price
+    loop_index_sum := loop_index_sum + index
+    point_index_sum := point_index_sum + point.index
+
+first_after = points.get(0)
+second_after = points.get(1)
+plot(loop_index_sum)
+plot(point_index_sum)
+plot(price_sum)
+plot(first_after.price)
+plot(second_after.price)

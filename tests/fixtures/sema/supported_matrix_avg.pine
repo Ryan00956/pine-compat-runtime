@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported matrix avg")
+
+values = matrix.new<float>(1, 2, close)
+plot(matrix.avg(values))
+plot(values.avg())

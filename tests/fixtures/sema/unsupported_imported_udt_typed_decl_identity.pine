@@ -1,0 +1,9 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT typed declaration identity")
+
+type Point
+    float x
+
+lib.Point p = Point.new(close)
+plot(p.x)

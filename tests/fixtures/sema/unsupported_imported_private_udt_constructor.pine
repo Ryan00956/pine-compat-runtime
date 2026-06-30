@@ -1,0 +1,6 @@
+//@version=5
+import user/private_udt/1 as lib
+indicator("Unsupported imported private UDT constructor")
+
+p = lib.Point.new(close)
+plot(p.x)

@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported while expression no final result")
+
+result = while close > open
+    value = 1
+
+plot(result)

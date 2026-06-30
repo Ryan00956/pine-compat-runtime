@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported user type array varip declaration")
+type Point
+    float x
+
+varip array<Point> points = array.new<Point>()
+plot(close)

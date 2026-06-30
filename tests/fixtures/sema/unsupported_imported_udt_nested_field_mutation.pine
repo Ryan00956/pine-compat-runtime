@@ -1,0 +1,7 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT nested field mutation")
+
+w = lib.Wrapper.new(na)
+w.nested.x := high
+plot(close)

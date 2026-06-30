@@ -1,0 +1,18 @@
+//@version=5
+indicator("Array join UDT")
+type Point
+    float x
+    string tag
+    bool active
+
+points = array.from(Point.new(1.25, "a", true), Point.new(2.5, "", false))
+plot(array.join(points, "|") == "Point(1.25, a, true)|Point(2.5, , false)" ? 1 : 0)
+plot(points.join() == "Point(1.25, a, true),Point(2.5, , false)" ? 1 : 0)
+slice = points.slice(1, 2)
+plot(slice.join("|") == "Point(2.5, , false)" ? 1 : 0)
+
+empty = array.new<Point>()
+plot(empty.join("|") == "" ? 1 : 0)
+
+missing = array.new<Point>(2)
+plot(array.join(missing, "|") == "NaN|NaN" ? 1 : 0)
