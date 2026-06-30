@@ -67,7 +67,7 @@ impl Analyzer {
             if self.function_depth > 0 && is_array_mutation_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",
-                    "collection mutation is not supported inside user-defined functions",
+                    &unsupported_collection_mutation_udf_reason(&name),
                     callee.span,
                 );
             }
@@ -238,7 +238,7 @@ impl Analyzer {
         if self.function_depth > 0 && is_array_mutation_builtin(builtin_name) {
             self.unsupported(
                 "function_side_effect",
-                "collection mutation is not supported inside user-defined functions",
+                &unsupported_collection_mutation_udf_reason(builtin_name),
                 callee.span,
             );
         }
@@ -454,4 +454,8 @@ impl Analyzer {
             })
         }
     }
+}
+
+fn unsupported_collection_mutation_udf_reason(operation: &str) -> String {
+    format!("collection mutation via `{operation}` is not supported inside user-defined functions")
 }

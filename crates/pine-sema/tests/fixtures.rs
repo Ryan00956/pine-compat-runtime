@@ -28,7 +28,7 @@ fn reports_unsupported_request_lower_tf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_request_lower_tf.pine",
         "request.security_lower_tf",
-        "outside the supported request.security subset",
+        "array-returning lower-timeframe request semantics",
     );
 }
 
@@ -1550,11 +1550,28 @@ fn reports_unsupported_varip_drawing_fixture() {
 }
 
 #[test]
-fn reports_unsupported_varip_chart_point_array_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_varip_chart_point_array.pine",
-        "varip",
-        "scalar typed-array declarations only",
+fn accepts_supported_varip_chart_point_array_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/varip_chart_point_array.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+    assert_eq!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .filter(|supported| supported.feature == "varip")
+            .count(),
+        2
     );
 }
 
@@ -1563,7 +1580,7 @@ fn reports_unsupported_varip_drawing_array_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_varip_drawing_array.pine",
         "varip",
-        "scalar typed-array declarations only",
+        "chart.point typed-array declarations only",
     );
 }
 
@@ -9439,7 +9456,7 @@ fn reports_unsupported_matrix_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix.pine",
         "matrix.det",
-        "matrix collections are not implemented",
+        "runtime-owned matrix<float> subset",
     );
 }
 
@@ -9784,7 +9801,7 @@ fn reports_unsupported_matrix_new_template_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_new_template.pine",
         "matrix.new<int>",
-        "matrix collections are not implemented",
+        "runtime-owned matrix<float> subset",
     );
 }
 
@@ -9793,7 +9810,7 @@ fn reports_unsupported_matrix_new_deferred_template_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_new_deferred_template.pine",
         "matrix.new<label>",
-        "matrix collections are not implemented",
+        "runtime-owned matrix<float> subset",
     );
 }
 
@@ -10004,7 +10021,7 @@ fn reports_unsupported_matrix_set_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_set_udf.pine",
         "function_side_effect",
-        "collection mutation is not supported inside user-defined functions",
+        "collection mutation via `matrix.set`",
     );
 }
 
@@ -10013,7 +10030,7 @@ fn reports_unsupported_matrix_set_method_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_set_method_udf.pine",
         "function_side_effect",
-        "collection mutation is not supported inside user-defined functions",
+        "collection mutation via `matrix.set`",
     );
 }
 
@@ -10022,7 +10039,7 @@ fn reports_unsupported_matrix_fill_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_fill_udf.pine",
         "function_side_effect",
-        "collection mutation is not supported inside user-defined functions",
+        "collection mutation via",
     );
 }
 
@@ -10031,7 +10048,7 @@ fn reports_unsupported_matrix_fill_method_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_fill_method_udf.pine",
         "function_side_effect",
-        "collection mutation is not supported inside user-defined functions",
+        "collection mutation via",
     );
 }
 
@@ -10040,7 +10057,7 @@ fn reports_unsupported_matrix_reshape_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_reshape_udf.pine",
         "function_side_effect",
-        "collection mutation is not supported inside user-defined functions",
+        "collection mutation via",
     );
 }
 
@@ -10049,7 +10066,7 @@ fn reports_unsupported_matrix_reshape_method_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_reshape_method_udf.pine",
         "function_side_effect",
-        "collection mutation is not supported inside user-defined functions",
+        "collection mutation via",
     );
 }
 
@@ -10058,7 +10075,7 @@ fn reports_unsupported_matrix_add_row_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_add_row_udf.pine",
         "function_side_effect",
-        "collection mutation is not supported inside user-defined functions",
+        "collection mutation via",
     );
 }
 
@@ -10067,7 +10084,7 @@ fn reports_unsupported_matrix_add_row_method_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_add_row_method_udf.pine",
         "function_side_effect",
-        "collection mutation is not supported inside user-defined functions",
+        "collection mutation via",
     );
 }
 
@@ -10076,7 +10093,7 @@ fn reports_unsupported_matrix_add_col_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_add_col_udf.pine",
         "function_side_effect",
-        "collection mutation is not supported inside user-defined functions",
+        "collection mutation via",
     );
 }
 
@@ -10085,7 +10102,7 @@ fn reports_unsupported_matrix_add_col_method_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_add_col_method_udf.pine",
         "function_side_effect",
-        "collection mutation is not supported inside user-defined functions",
+        "collection mutation via",
     );
 }
 
@@ -10094,7 +10111,7 @@ fn reports_unsupported_matrix_remove_row_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_remove_row_udf.pine",
         "function_side_effect",
-        "collection mutation is not supported inside user-defined functions",
+        "collection mutation via",
     );
 }
 
@@ -10103,7 +10120,7 @@ fn reports_unsupported_matrix_remove_row_method_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_remove_row_method_udf.pine",
         "function_side_effect",
-        "collection mutation is not supported inside user-defined functions",
+        "collection mutation via",
     );
 }
 
@@ -10112,7 +10129,7 @@ fn reports_unsupported_matrix_remove_col_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_remove_col_udf.pine",
         "function_side_effect",
-        "collection mutation is not supported inside user-defined functions",
+        "collection mutation via",
     );
 }
 
@@ -10121,7 +10138,7 @@ fn reports_unsupported_matrix_remove_col_method_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_remove_col_method_udf.pine",
         "function_side_effect",
-        "collection mutation is not supported inside user-defined functions",
+        "collection mutation via",
     );
 }
 
@@ -10253,7 +10270,7 @@ fn reports_unsupported_array_function_side_effect_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_function_side_effect.pine",
         "function_side_effect",
-        "collection mutation",
+        "collection mutation via `array.push`",
     );
 }
 
@@ -10609,22 +10626,24 @@ fn assert_strategy_unsupported_fixture(path: &str, features: &[&str]) {
     let analysis = analyze_source(&source);
 
     for feature in features {
-        let expected_reason = if feature.starts_with("strategy.risk.") {
-            "broker risk rules"
+        let expected_reasons: &[&str] = if feature.starts_with("strategy.risk.") {
+            &["broker risk rules"]
         } else {
-            "broker emulation"
+            &["strategy.order", "broker emulation"]
         };
-        assert!(
-            analysis
-                .compatibility
-                .unsupported
-                .iter()
-                .any(|unsupported| unsupported.feature == *feature
-                    && unsupported.reason.contains(expected_reason)),
-            "{} unsupported features: {:?}",
-            path.display(),
-            analysis.compatibility.unsupported
-        );
+        for expected_reason in expected_reasons {
+            assert!(
+                analysis
+                    .compatibility
+                    .unsupported
+                    .iter()
+                    .any(|unsupported| unsupported.feature == *feature
+                        && unsupported.reason.contains(expected_reason)),
+                "{} unsupported features: {:?}",
+                path.display(),
+                analysis.compatibility.unsupported
+            );
+        }
     }
     assert!(
         analysis

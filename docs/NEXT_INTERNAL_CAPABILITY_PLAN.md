@@ -47,7 +47,9 @@ Good next slices:
 
 Keep out of scope until separately designed:
 
-- Short exposure, reversals, and `strategy.order`.
+- Short exposure, reversals, and `strategy.order` forms beyond the
+  fixture-backed long market/limit/stop/stop-limit add-or-increase subset and
+  explicit-quantity reduce-only market-short subset.
 - Pyramiding behavior beyond the current fixture-backed long-only multi-entry
   ledger subset, including short/reversal netting and richer close-entry rules.
 - Custom OCA behavior, unsupported margin/account behavior, and rich order
@@ -64,8 +66,9 @@ Recommended first slice: do not reopen broad broker foundations immediately
 after Stage 13. Prefer either a narrow no-op/diagnostics/accounting slice that
 keeps the public schema unchanged, or move to a small built-in coverage slice
 from a real fixture gap. Do not add short exposure, reversals, generic
-`strategy.order()`, custom OCA, public pending-order fields, or any conformance
-widening without runtime behavior and host-parity evidence in the same slice.
+`strategy.order()` beyond the current fixture-backed subset, custom OCA, public
+pending-order fields, or any conformance widening without runtime behavior and
+host-parity evidence in the same slice.
 
 Closed maintenance slice:
 
@@ -118,9 +121,12 @@ Good next slices:
 
 Keep out of scope until separately designed:
 
-- Arrays of user-defined types.
-- Drawing-object arrays and point arrays.
-- Map or matrix families.
+- UDT array behavior beyond the same-local scalar-field subset, including
+  imported or non-scalar UDT arrays.
+- Drawing-object and `chart.point` array behavior beyond the fixture-backed
+  object-id and value-array subsets.
+- Map families and matrix behavior beyond the fixture-backed `matrix<float>`
+  subset.
 - Behavior that requires object identity or lifetime rules not already modeled.
 
 Recommended first slice: add one missing array helper for already-supported
@@ -143,7 +149,7 @@ Recent closure:
 
 Good next slices:
 
-- Clearer diagnostics for unsupported imported UDTs, imported methods, and
+- Clearer diagnostics for unsupported imported UDT tails, imported methods, and
   side-effecting methods.
 - Negative fixture maintenance for unsupported method parameter families or
   mismatched local UDT identity.
@@ -152,15 +158,18 @@ Good next slices:
 
 Keep out of scope until separately designed:
 
-- Imported UDT identity across source graphs.
+- Imported UDT identity beyond the current same-imported-identity scalar-field
+  source-graph subset, including history and collection flows.
 - Imported methods.
-- UDT arrays.
+- UDT arrays beyond the same-local scalar-field subset, especially imported or
+  non-scalar UDT arrays.
 - UDT history references and `varip` UDT values.
 - Side effects inside methods.
 
 Recommended first slice: one diagnostics fixture/message improvement for an
-already unsupported UDT or method boundary, without widening imported UDTs,
-imported methods, UDT arrays, UDT history, `varip`, or method side effects.
+already unsupported UDT or method boundary, without widening imported UDT tails,
+imported methods, imported/non-scalar UDT arrays, UDT history, `varip`, or
+method side effects.
 
 ## Direction 5: Request Support
 

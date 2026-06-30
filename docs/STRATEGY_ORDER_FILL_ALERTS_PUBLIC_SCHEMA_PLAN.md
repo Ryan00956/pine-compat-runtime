@@ -5,7 +5,8 @@ Status: implementation slice closed on 2026-06-11.
 This document closes the public-schema design slice after
 `docs/STRATEGY_ORDER_FILL_ALERTS_DESIGN.md`. It chooses the host output shape
 for exposing broker-owned strategy order-fill alert events. The implementation
-slice now exposes this shape as public runtime `schemaVersion: 4` output.
+slice introduced this shape in public runtime `schemaVersion: 4`; later runtime
+schema versions continue to expose the same strategy alert payload.
 
 ## Decision
 

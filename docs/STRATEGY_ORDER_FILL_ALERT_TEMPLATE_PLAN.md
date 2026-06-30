@@ -26,8 +26,9 @@ Sources:
 ## Current State
 
 The runtime exposes broker-owned order-fill payloads under
-`strategy.alerts[].message` in public runtime `schemaVersion: 4`. That field is
-the resolved raw order-fill payload selected at fill time.
+`strategy.alerts[].message`. That field was introduced in public runtime
+`schemaVersion: 4` and remains present in the current runtime schema; it is the
+resolved raw order-fill payload selected at fill time.
 
 The analyzer still rejects TradingView-style placeholders in Pine-source
 `alert()` and `alertcondition()` strings under the existing

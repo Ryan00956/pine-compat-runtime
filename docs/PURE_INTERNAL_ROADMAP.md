@@ -205,7 +205,7 @@ Remaining internal work:
 
 - map storage model and key/value type rules;
 - matrix storage model and two-dimensional indexing rules;
-- UDT arrays and `sort_field` behavior;
+- UDT array behavior beyond the same-local scalar-field subset;
 - generic or bare `array` declarations beyond current fixture-backed element
   kinds;
 - `for...in` iteration over arrays and future collections;
@@ -264,7 +264,8 @@ Remaining internal work:
 - broader imported UDT identity flow across source graphs, including history
   and collections;
 - imported methods;
-- UDT arrays and UDT history references;
+- UDT arrays beyond the same-local scalar-field subset and UDT history
+  references;
 - broader `varip` UDT values beyond the typed same-local scalar-field subset;
 - side effects inside methods or UDFs, if ever accepted;
 - clearer diagnostics for unsupported imported UDT, imported method, and method
@@ -346,14 +347,17 @@ Remaining internal work:
 
 - short exposure;
 - automatic long/short reversal;
-- generic `strategy.order()`;
+- `strategy.order()` behavior beyond the fixture-backed long
+  market/limit/stop/stop-limit add-or-increase subset and explicit-quantity
+  reduce-only market-short subset;
 - broader `close_entries_rule="ANY"` behavior beyond fixture-backed
   id-specific long-only close/exit allocation;
 - custom OCA behavior across order families;
 - `process_orders_on_close`, `calc_on_order_fills`, `calc_on_every_tick`, and bar
   magnifier style timing;
-- `margin_short`, richer account constraints, currency conversion, precision and
-  rounding rules, and `strategy.margin_liquidation_price`;
+- `margin_short`, richer account constraints, currency conversion, broader
+  short-side, rounded, and currency-aware `strategy.margin_liquidation_price`
+  behavior;
 - remaining strategy information variables and trade namespace fields;
 - `strategy.risk.*` rules after broker/account foundations are stronger.
 
@@ -376,7 +380,8 @@ positive `strategy.short` entry, short exposure, or automatic reversal support.
 
 The generic strategy order design gate is closed in
 `docs/PURE_INTERNAL_STRATEGY_ORDER_DESIGN.md`. Use it before any positive
-`strategy.order()` support, generic order netting, or generic-order OCA work.
+`strategy.order()` support beyond the current fixture-backed subset, generic
+order netting, or generic-order OCA work.
 
 The strategy close-entries-rule reference is in
 `docs/PURE_INTERNAL_STRATEGY_CLOSE_ENTRIES_RULE_DESIGN.md`. Use it before any
@@ -393,8 +398,9 @@ positive `process_orders_on_close`, `calc_on_order_fills`,
 
 The strategy margin-short/account design gate is closed in
 `docs/PURE_INTERNAL_STRATEGY_MARGIN_SHORT_ACCOUNT_DESIGN.md`. Use it before any
-positive `margin_short` runtime behavior, `strategy.margin_liquidation_price`,
-symbol precision rounding, or currency-conversion account behavior.
+positive `margin_short` runtime behavior, broader/short/rounded/currency-aware
+`strategy.margin_liquidation_price`, symbol precision rounding, or
+currency-conversion account behavior.
 
 The strategy risk-rule design gate is closed in
 `docs/PURE_INTERNAL_STRATEGY_RISK_DESIGN.md`. Use it before any positive

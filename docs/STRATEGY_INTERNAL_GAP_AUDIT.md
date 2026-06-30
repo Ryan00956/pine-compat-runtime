@@ -216,7 +216,8 @@ Missing internal behavior:
 - automatic reversal when an opposite entry is placed;
 - pyramiding behavior beyond the current fixture-backed long-only multi-entry
   subset;
-- entry comments and alert-message metadata;
+- entry metadata behavior beyond the supported `comment`, `alert_message`, and
+  `disable_alert` subset;
 - richer default quantity modes;
 - interaction with `strategy.risk.allow_entry_in`.
 
@@ -305,7 +306,9 @@ Missing internal behavior:
 - exits across multiple open trades beyond the current Stage 13 long-only
   supported trigger families;
 - custom OCA names and OCA behavior;
-- exit comments and alert-message metadata;
+- exit metadata behavior beyond the supported `comment`, `comment_profit`,
+  `comment_loss`, `comment_trailing`, `alert_message`, `alert_profit`,
+  `alert_loss`, `alert_trailing`, and `disable_alert` subset;
 - broader no-op coverage for invalid `from_entry` ids outside the currently
   supported trigger and quantity shapes.
 
@@ -534,9 +537,10 @@ supported strategy order paths, and
 `docs/STRATEGY_ORDER_FILL_ALERTS_DESIGN.md` defines the order-fill alert event
 boundary. The broker now records internal order-fill alert events for supported
 entry, supported generic order, exit, close, and close_all fills, including
-`disable_alert` suppression and exit leg-specific message selection. Public runtime `schemaVersion: 4`
-exposes those broker-owned payloads under `strategy.alerts` with CLI, Python,
-and WASM parity. The host-layer `{{strategy.order.alert_message}}` renderer is
+`disable_alert` suppression and exit leg-specific message selection. The current
+public runtime `schemaVersion: 7` exposes those broker-owned payloads under
+`strategy.alerts` with CLI, Python, and WASM parity. The host-layer
+`{{strategy.order.alert_message}}` renderer is
 available through explicit Python, CLI, and WASM helpers without changing
 default runtime output.
 

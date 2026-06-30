@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
 const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) scalar expressions, pure tuple literals, and selected tuple expressions, plus provider-backed same-or-higher-timeframe scalar expressions, pure tuple literals, and selected tuple expressions, are supported; optional gaps/lookahead are limited to barmerge.gaps_off and barmerge.lookahead_off, while lower-timeframe requests, provider local aliases, and side-effecting requested expressions are not implemented";
+const REQUEST_SECURITY_LOWER_TF_UNSUPPORTED_REASON: &str = "array-returning lower-timeframe request semantics and host output shape for request.security_lower_tf are not designed in the supported request runtime";
 
 impl Analyzer {
     pub(crate) fn analyze_request_call(
@@ -11,6 +12,10 @@ impl Analyzer {
     ) -> Option<PineType> {
         match name {
             "request.security" => self.analyze_request_security(span, args),
+            "request.security_lower_tf" => {
+                self.unsupported(name, REQUEST_SECURITY_LOWER_TF_UNSUPPORTED_REASON, span);
+                None
+            }
             _ => {
                 self.unsupported(
                     name,

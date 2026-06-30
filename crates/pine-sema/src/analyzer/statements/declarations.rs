@@ -366,7 +366,7 @@ fn typed_value_kind_name(kind: ValueKind) -> Option<&'static str> {
 }
 
 fn is_supported_varip_array(kind: ValueKind) -> bool {
-    is_scalar_array_kind(kind)
+    is_scalar_array_kind(kind) || kind == ValueKind::ChartPointArray
 }
 
 fn is_drawing_id_value(kind: ValueKind) -> bool {

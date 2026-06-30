@@ -1,16 +1,17 @@
 use crate::prelude::*;
 
 pub(crate) const VARIP_DRAWING_UNSUPPORTED_REASON: &str = "varip drawing object ids are not supported; retaining only an id would be unsafe while drawing object stores roll back between forming updates";
-pub(crate) const VARIP_VALUE_UNSUPPORTED_REASON: &str = "varip currently supports scalar int, float, bool, string, color, na, and scalar typed-array declarations only; drawing ids, tuples, UDTs, and other value families are not implemented";
+pub(crate) const VARIP_VALUE_UNSUPPORTED_REASON: &str = "varip currently supports scalar int, float, bool, string, color, na, scalar typed-array declarations, and chart.point typed-array declarations only; drawing ids, tuples, UDTs, and other value families are not implemented";
 pub(crate) const VARIP_UDT_UNSUPPORTED_REASON: &str = "UDT varip supports only explicit scalar-field declarations or direct scalar-field constructors from the same local or imported identity; untyped non-constructor inference, nested-field UDTs, and non-scalar UDT fields remain unsupported";
 pub(crate) const VARIP_UDT_ARRAY_UNSUPPORTED_REASON: &str = "varip UDT arrays are not supported yet; UDT array varip requires separate array backing-store and UDT identity handoff semantics";
 pub(crate) const VARIP_MATRIX_UNSUPPORTED_REASON: &str = "varip matrix values are not supported yet; matrix varip requires explicit backing-store and realtime handoff semantics";
 pub(crate) const LOG_UNSUPPORTED_REASON: &str = "Pine Logs output is not implemented; log.info, log.warning, and log.error require a host-owned log pane/output contract";
 pub(crate) const MAP_UNSUPPORTED_REASON: &str =
     "map collections are not implemented; map.* requires a dedicated key/value storage model";
-pub(crate) const MATRIX_UNSUPPORTED_REASON: &str = "matrix collections are not implemented; matrix.* requires a dedicated two-dimensional storage model";
+pub(crate) const MATRIX_UNSUPPORTED_REASON: &str =
+    "this matrix function is outside the supported runtime-owned matrix<float> subset";
 pub(crate) const MAX_BARS_BACK_FUNCTION_UNSUPPORTED_REASON: &str = "per-variable max_bars_back calls are not implemented; only indicator/strategy declaration-level max_bars_back is supported";
-pub(crate) const STRATEGY_UNSUPPORTED_REASON: &str = "strategy order functions beyond the supported strategy.entry/strategy.close/strategy.close_all/strategy.cancel/strategy.cancel_all/strategy.exit subset, broker emulation settings, and rich backtesting features are not implemented";
+pub(crate) const STRATEGY_UNSUPPORTED_REASON: &str = "strategy order functions beyond the supported strategy.entry/strategy.order market/limit/stop/stop-limit-long and reduce-only-short subset, strategy.close/strategy.close_all/strategy.cancel/strategy.cancel_all/strategy.exit subset, broker emulation settings, and rich backtesting features are not implemented";
 pub(crate) const STRATEGY_RISK_UNSUPPORTED_REASON: &str = "strategy.risk broker risk rules are not implemented; broker emulation must support deterministic order admission, pending-order cancellation, account thresholds, and rule state before risk directives can be accepted";
 pub(crate) fn unsupported_strategy_reason(name: &str) -> Option<&'static str> {
     if name.starts_with("strategy.risk.") {

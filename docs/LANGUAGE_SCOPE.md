@@ -345,13 +345,14 @@ Request data:
 The analyzer should reject these with clear diagnostics:
 
 - strategy order functions and reporting helpers outside the narrow
-  `strategy.entry(id, strategy.long, qty=...)`, supported full/fixed-qty/
-  qty-percent `strategy.close` subset, and stop/limit/profit/loss,
-  one-downside/one-upside bracket, and trailing `strategy.exit` subsets,
-  including `strategy.order`, short entries, same-side or 3+ trigger exits,
-  invalid trailing combinations, partial `strategy.close_all()`, pyramiding,
-  broker settings beyond positive const numeric `initial_capital` and fixed
-  default quantity, percent-of-equity/cash/contracts sizing,
+  `strategy.entry`, `strategy.order`, `strategy.close`, `strategy.close_all`,
+  `strategy.cancel`, `strategy.cancel_all`, and `strategy.exit` subsets,
+  including short exposure, reversals, short price-based orders, OCA,
+  same-side or 3+ trigger exits, invalid trailing combinations, partial
+  `strategy.close_all()`, pyramiding behavior beyond the fixture-backed
+  long-only subset, broker settings beyond the supported declaration subset,
+  and sizing modes beyond the fixture-backed fixed, cash, and percent-of-equity
+  default entry subset,
   `strategy.*` variables beyond the supported position/profit/equity/count
   state subset, mutable strategy state, and requested-context strategy state
 - `request.*` variants outside the narrow same-context and same-or-higher-timeframe
@@ -362,11 +363,13 @@ The analyzer should reject these with clear diagnostics:
   frequency subset and alert placeholder interpolation outside the
   supported `alertcondition` message subset
 - `library` and root `export` declarations; `import` is partial for
-  host-provided exact-key aliases that expose exported const expressions and
-  pure exported functions, while unaliased imports, missing host sources,
-  re-exports, imported UDTs, imported methods, and side-effecting exported
-  functions remain rejected
-- unsupported array element types, matrices, and maps
+  host-provided exact-key aliases that expose exported const expressions, pure
+  exported functions, and the fixture-backed same-imported-identity
+  scalar-field UDT subset, while unaliased imports, missing host sources,
+  re-exports, imported UDT tails such as history/collections, imported methods,
+  and side-effecting exported functions remain rejected
+- unsupported collection families and element types, including maps and matrix
+  behavior beyond the fixture-backed `matrix<float>` subset
 - user-defined type forms outside the local scalar-field subset; Phase J
   accepts top-level `type` declarations with int/float/bool/string/color
   fields, `Type.new(...)` construction, local field reads, ordinary variables,

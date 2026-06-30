@@ -1,0 +1,5 @@
+//@version=5
+indicator("varip chart.point arrays")
+varip array<chart.point> points = array.new<chart.point>()
+varip chart.point[] aliases = array.new<chart.point>()
+plot(array.size(points) + array.size(aliases))

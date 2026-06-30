@@ -94,10 +94,11 @@ object-id `array<label>`, `array<line>`, `array<linefill>`,
 same-local scalar-field UDT `array<T>` declarations, are fixture-backed with
 compatible or `na` initializers and later compatible reassignment. The
 equivalent `type[]` aliases are fixture-backed for the same supported array
-element types, including `var` declarations, the scalar typed-array `varip`
-subset, and explicitly typed same-local scalar-field UDT `varip` declarations
-initialized from `na`, same-UDT constructors, or fixture-backed same-UDT ternary/switch/if/for
-expressions, and `matrix<float>` declarations initialized from compatible
+element types, including `var` declarations, the scalar and `chart.point`
+typed-array `varip` subset, and explicitly typed same-local scalar-field UDT
+`varip` declarations initialized from `na`, same-UDT constructors, or
+fixture-backed same-UDT ternary/switch/if/for expressions, and `matrix<float>`
+declarations initialized from compatible
 matrix values or `na`. Bare `array`, non-scalar or imported UDT arrays, UDT
 array `varip`, nested-field UDT `varip`, map, bare matrix declarations,
 non-float matrix declarations, and other typed declarations remain unsupported
@@ -354,13 +355,15 @@ now includes `syminfo.main_tickerid` plus `syminfo.mincontract` alongside the
 existing ticker, exchange, currency, session, mintick, pointvalue, minmove, and
 pricescale fields. Host-configurable symbol metadata remains outside the current
 runtime contract.
-Currency conversion, symbol precision rounding, lot-step constraints, pyramiding,
-short orders,
+Currency conversion, symbol precision rounding, lot-step constraints, pyramiding
+behavior beyond the fixture-backed long-only subset, short exposure,
 `strategy.exit` same-side/3+ trigger/invalid trailing variants, reservation
 behavior outside the explicit fixed-`qty` or `qty_percent`
 single-trigger/bracket/trailing subset, omitted-quantity multiple
-pending exits, `strategy.order`, realtime strategy handoff, and most strategy
-reporting variables remain outside the supported matrix.
+pending exits, `strategy.order` behavior beyond the fixture-backed
+long-market/price-based and reduce-only market-short subset, realtime strategy
+handoff, and most strategy reporting variables remain outside the supported
+matrix.
 
 Phase L adds the first read-only strategy state variables for historical
 strategy-mode scripts. `strategy.position_size` is a series float that is `0`
@@ -638,8 +641,10 @@ on those same trigger shapes with fixed `qty` determining the reserved or
 filled quantity. Stage 9 supports same-calculation active-entry single-trigger
 attachment for absolute `stop`, `limit`, and `trail_price` plus entry-relative
 `profit`, `loss`, and `trail_points + trail_offset` against a matching active
-pending long entry. Active-entry relative brackets remain a Stage 10 design
-target, while multiple pending exits outside the explicit fixed-`qty` or
+pending long entry. Same-calculation active-entry `stop + profit`,
+`loss + limit`, and `loss + profit` bracket attachment is also fixture-backed;
+other active-entry relative bracket forms remain outside the current subset,
+while multiple pending exits outside the explicit fixed-`qty` or
 `qty_percent` single-trigger/bracket/trailing reservation subset remain
 unsupported, including omitted-quantity multiple reservations, reservation
 behavior outside that subset, and arbitrary future binding for unmatched
@@ -1298,12 +1303,13 @@ snapshots that return fresh copies.
 Matrix `varip` declarations have dedicated negative fixture coverage and remain
 outside the scalar/array/UDT `varip` handoff subset.
 
-Runtime `schemaVersion: 4` added strategy order-fill alert payloads under
-`strategy.alerts` for supported strategy fills. Runtime `schemaVersion: 5` adds
-host-neutral `textWrap` to table cell snapshots. Runtime `schemaVersion: 6`
-adds top-level `lineFills` snapshots for the supported linefill subset. Runtime
-`schemaVersion: 7` adds top-level `polylines` snapshots for the supported
-`polyline.new` and lifecycle subset. The
+Runtime strategy order-fill alert payloads are exposed under `strategy.alerts`
+for supported strategy fills in the current runtime schema. Runtime
+`schemaVersion: 5` added host-neutral `textWrap` to table cell snapshots.
+Runtime `schemaVersion: 6` added top-level `lineFills` snapshots for the
+supported linefill subset. Runtime `schemaVersion: 7` is current and adds
+top-level `polylines` snapshots for the supported `polyline.new` and lifecycle
+subset. The
 top-level `alerts[]` array remains limited to reached `alert()` and
 `alertcondition()` callsites. Explicit Python, CLI, and WASM host helpers can render
 `{{strategy.order.alert_message}}` from selected public strategy fill events,
@@ -1424,8 +1430,8 @@ Examples:
 - unsupported import variants outside the host-provided alias/exported
   const/pure-function subset
 - unsupported `varip` forms such as drawing ids, drawing-id typed arrays,
-  chart-point typed arrays, tuples, and value families outside the scalar and
-  scalar typed-array subset
+  tuples, and value families outside the scalar, scalar typed-array, and
+  `chart.point` typed-array subset
 - non-integer or negative history offsets
 - unsupported function side effects, including drawing, alert, strategy order,
   and UDT parameter field mutation side effects
@@ -1613,13 +1619,13 @@ Matrix maintenance rules:
 - Use `pine-compat matrix --format json` to inspect the release matrix exposed
   to consumers.
 
-The current scalar typed-array subset is summarized in
-`docs/ARRAY_STAGE_AUDIT.md`. Keep `array.*` marked `partial` until the deferred
-generic, object, UDT, map/matrix, history, and slice-aliasing semantics are
-designed and fixture-backed.
+The current typed-array subset is summarized in `docs/ARRAY_STAGE_AUDIT.md`.
+Keep `array.*` marked `partial` until the deferred generic, imported/non-scalar
+UDT, map, broader matrix, history, and slice-aliasing semantics are designed
+and fixture-backed.
 
 The current `varip` subset is summarized in `docs/PHASE_I_AUDIT.md`. Keep
-`varip` marked `partial` until drawing object ids, drawing-id arrays,
-chart-point arrays, tuples, maps, matrices, non-constructor-inferred or
-nested-field UDT values, UDT arrays, imports, object arrays, generic arrays, and
-other value families have designed rollback semantics and fixture coverage.
+`varip` marked `partial` until drawing object ids, drawing-id arrays, tuples,
+maps, matrices, non-constructor-inferred or nested-field UDT values, UDT arrays,
+imports, object arrays beyond `chart.point`, generic arrays, and other value
+families have designed rollback semantics and fixture coverage.

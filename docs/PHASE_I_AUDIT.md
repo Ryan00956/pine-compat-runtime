@@ -21,9 +21,10 @@ matrix in `tests/fixtures/conformance.tsv`.
   objects, request caches, callsite state, non-`varip` arrays, and dynamic
   history reads roll back to confirmed state.
 - Scalar typed-array `varip` declarations for float, int, bool, string, and
-  color array ids using either `array<type>` or `type[]` declaration syntax. The
-  retained intrabar state includes backing array contents, element kind,
-  branch-local declaration sites, and `array.copy` boundaries.
+  color array ids, plus `chart.point` typed-array `varip` declarations, using
+  either `array<type>` or `type[]` declaration syntax. The retained intrabar
+  state includes backing array contents, element kind, branch-local declaration
+  sites, and `array.copy` boundaries.
 - Explicitly typed same-local scalar-field UDT `varip` values initialized from
   `na`, same-UDT constructors, or fixture-backed same-UDT ternary/switch/if/for expressions,
   with intrabar value-clone handoff and scalar field mutation writeback.

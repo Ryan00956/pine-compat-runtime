@@ -1,7 +1,7 @@
 # Pine Compat Runtime
 
 Pine Compat Runtime is a clean-room, open-source runtime for a Pine-compatible
-indicator scripting subset.
+executable scripting subset.
 
 The project is intentionally designed as an embeddable language runtime, not as
 an application-specific plugin. Hosts such as charting tools, research
@@ -10,7 +10,7 @@ able to integrate it through adapters.
 
 ## Goals
 
-- Implement a clean-room Pine-compatible indicator runtime.
+- Implement a clean-room Pine-compatible indicator and partial strategy runtime.
 - Prioritize semantic correctness over early breadth.
 - Support bar-by-bar time-series execution, historical references, `na`, `var`,
   inputs, plotting and selected drawing side effects, and fixture-backed
@@ -94,8 +94,9 @@ pine-compat-runtime/
 ## Current Baseline
 
 The current baseline is a Rust CLI and embeddable runtime that can parse,
-analyze, and execute a small set of common indicator scripts over CSV OHLCV
-data, then emit normalized JSON containing series, annotations, fills,
+analyze, and execute a small set of common indicator scripts and selected
+long-only strategy scripts over CSV OHLCV data, then emit normalized JSON
+containing series, annotations, fills,
 diagnostics, and compatibility reports.
 
 The project should not move into host-specific integration work until this
@@ -125,20 +126,26 @@ one-downside/one-upside `strategy.exit` bracket subset, the first trailing-stop
 `strategy.exit` subset, optional fixed-quantity and percent-quantity partial
 exits on those supported exit shapes, explicit fixed-quantity or
 percent-quantity single-trigger, bracket, and trailing multiple-exit
-reservations, Python bindings, and a thin WASM binding.
+reservations, the fixture-backed `strategy.order` market/limit/stop/stop-limit
+long add/increase subset and explicit-quantity reduce-only market-short subset,
+Python bindings, and a thin WASM binding.
 
 The runtime intentionally rejects unsupported features such as strategy order
-families beyond the current `strategy.entry`/`strategy.close`/
-`strategy.close_all`/`strategy.cancel`/`strategy.cancel_all`/`strategy.exit`
-subset, same-side, 3+ trigger, or invalid trailing strategy exits, request
+families beyond the current `strategy.entry`/`strategy.order`/
+`strategy.close`/`strategy.close_all`/`strategy.cancel`/
+`strategy.cancel_all`/`strategy.exit` subset, including `strategy.order`
+short exposure, reversals, short price-based orders, OCA, omitted short
+quantity, and broader price-based order families, same-side, 3+ trigger, or
+invalid trailing strategy exits, request
 variants outside the narrow `request.security` subset, multiple pending exits
 outside explicit fixed-quantity or percent-quantity single-trigger, bracket,
 and trailing `strategy.exit` reservations, including omitted-quantity multiple
 reservations, reservation behavior outside that subset, missing-entry future
 binding beyond the supported active-entry attachment subset, alert frequency
 modes and placeholder interpolation, remote library lookup, re-exports,
-imported UDTs,
-imported methods, side-effecting exported library functions, advanced drawing
+imported UDT flows beyond the fixture-backed same-imported-identity
+scalar-field subset, imported methods, side-effecting exported library
+functions, advanced drawing
 families and methods, unsupported collection families and element types, recursive
 functions, function side effects, and unsupported `varip` value families such
 as drawing ids and tuples.

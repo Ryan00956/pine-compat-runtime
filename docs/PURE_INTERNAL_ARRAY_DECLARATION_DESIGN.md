@@ -47,9 +47,9 @@ Current evidence:
   `tests/fixtures/runtime/user_type_array_typed_declarations.pine` cover
   accepted scalar, object-id, chart-point, and same-local scalar-field UDT array
   declaration forms.
-- `tests/fixtures/sema/unsupported_varip_chart_point_array.pine` keeps
-  chart-point typed-array `varip` declarations rejected until realtime handoff
-  rules cover non-scalar array families.
+- `tests/fixtures/sema/varip_chart_point_array.pine` covers the accepted
+  chart-point typed-array `varip` declaration subset after realtime handoff
+  rules were proven for runtime-owned `chart.point` arrays.
 - `tests/fixtures/sema/unsupported_varip_drawing_array.pine` keeps drawing-id
   typed-array `varip` declarations rejected under the same boundary.
 - `tests/fixtures/sema/unsupported_array_typed_decl.pine`,

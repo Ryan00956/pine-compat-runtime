@@ -984,6 +984,34 @@ fn strategy_order_limit_long_adds_to_existing_long_without_pyramiding() {
 }
 
 #[test]
+fn strategy_cancel_cancels_pending_limit_strategy_order_before_fill() {
+    let source = SourceFile::new(
+        "strategy_order_cancel_limit.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_cancel_limit.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(5.0), bar(2.0)]).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert!(strategy.orders.is_empty());
+    assert!(strategy.position.is_empty());
+    assert!(strategy.trades.is_empty());
+    assert!(strategy.diagnostics.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Float(0.0), PineValue::Float(0.0)]
+    );
+    assert_eq!(result.plots[1].values, vec![PineValue::Na, PineValue::Na]);
+}
+
+#[test]
 fn strategy_order_metadata_survives_price_order_and_reduce_fill() {
     let source = SourceFile::new(
         "strategy_order_metadata.pine",
@@ -1102,6 +1130,34 @@ fn strategy_order_stop_long_adds_to_existing_long_without_pyramiding() {
 }
 
 #[test]
+fn strategy_cancel_all_cancels_pending_stop_strategy_order_before_fill() {
+    let source = SourceFile::new(
+        "strategy_order_cancel_all_stop.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_cancel_all_stop.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(3.0)]).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert!(strategy.orders.is_empty());
+    assert!(strategy.position.is_empty());
+    assert!(strategy.trades.is_empty());
+    assert!(strategy.diagnostics.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Float(0.0), PineValue::Float(0.0)]
+    );
+    assert_eq!(result.plots[1].values, vec![PineValue::Na, PineValue::Na]);
+}
+
+#[test]
 fn strategy_order_stop_limit_long_adds_after_activation_without_pyramiding() {
     let source = SourceFile::new(
         "strategy_order_stop_limit_long.pine",
@@ -1156,6 +1212,41 @@ fn strategy_order_stop_limit_long_adds_after_activation_without_pyramiding() {
             PineValue::Float(11.0),
             PineValue::Float(31.0 / 3.0),
         ]
+    );
+}
+
+#[test]
+fn strategy_cancel_cancels_pending_stop_limit_strategy_order_before_activation() {
+    let source = SourceFile::new(
+        "strategy_order_cancel_stop_limit.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_cancel_stop_limit.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(3.0), bar(2.0)])
+        .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert!(strategy.orders.is_empty());
+    assert!(strategy.position.is_empty());
+    assert!(strategy.trades.is_empty());
+    assert!(strategy.diagnostics.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
     );
 }
 
