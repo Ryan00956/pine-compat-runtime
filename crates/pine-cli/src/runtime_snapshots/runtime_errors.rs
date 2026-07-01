@@ -48,6 +48,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "array index 1 is out of bounds for array of size 0",
     ),
     (
+        "tests/fixtures/regressions/map_for_in_put_size_change.pine",
+        "map size cannot change during direct for...in iteration",
+    ),
+    (
         "tests/fixtures/regressions/array_unshift_limit.pine",
         "array.unshift cannot exceed 100000 elements",
     ),

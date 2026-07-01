@@ -285,6 +285,19 @@ impl Parser {
 
     fn parse_for_stmt(&mut self) -> Option<Stmt> {
         let start = self.expect(TokenKind::For, "expected `for`")?;
+        if self.at(TokenKind::LBracket) {
+            let (key, value) = self.parse_for_in_pair()?;
+            let parts = self.parse_for_in_tail(start, Some(key), value)?;
+            return Some(Stmt {
+                span: parts.start.merge(parts.span),
+                kind: StmtKind::ForIn {
+                    index: parts.index,
+                    value: parts.value,
+                    iterable: parts.iterable,
+                    body: parts.body,
+                },
+            });
+        }
         let counter = self.parse_for_counter()?;
         if self.at(TokenKind::Comma) {
             self.bump();
@@ -355,6 +368,15 @@ impl Parser {
                 None
             }
         }
+    }
+
+    pub(super) fn parse_for_in_pair(&mut self) -> Option<(String, String)> {
+        self.expect(TokenKind::LBracket, "expected `[` before for...in pair")?;
+        let key = self.parse_for_counter()?;
+        self.expect(TokenKind::Comma, "expected `,` in for...in pair")?;
+        let value = self.parse_for_counter()?;
+        self.expect(TokenKind::RBracket, "expected `]` after for...in pair")?;
+        Some((key, value))
     }
 
     pub(super) fn parse_for_range_tail(

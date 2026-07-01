@@ -203,12 +203,16 @@ Current baseline:
 
 Remaining internal work:
 
-- map storage model and key/value type rules;
-- matrix storage model and two-dimensional indexing rules;
+- broader map storage and key/value type rules beyond the scalar key/value
+  subset, whose helper calls, history, rollback, varip, and direct key/value
+  `for...in` iteration are fixture-backed;
+- broader matrix storage model and two-dimensional indexing rules beyond the
+  fixture-backed float/int/bool/string/color matrix subsets;
 - UDT array behavior beyond the same-local scalar-field subset;
 - generic or bare `array` declarations beyond current fixture-backed element
   kinds;
-- `for...in` iteration over arrays and future collections;
+- `for...in` iteration beyond the fixture-backed array, matrix-row, UDT-array,
+  and scalar-map key/value subsets;
 - richer aliasing, nested collection, history, and rollback rules;
 - `varip` support for non-scalar collection families only after realtime handoff
   is designed.

@@ -786,6 +786,13 @@ their keys and appending new keys in source insertion order. Ordinary realtime
 rollback clones the confirmed runtime map store for each forming update, so
 unconfirmed map mutations do not leak across forming executions. Equivalent
 method aliases lower to the same namespace calls for the supported subset.
+Direct `for [key, value] in id` map iteration snapshots the current insertion
+order of scalar key/value pairs for statement and expression loops. The first
+loop local receives the key using the map key template kind, and the second
+receives the value using the map value template kind. Direct map iteration
+requires key/value loop variables; single-variable map iteration remains
+unsupported. If the loop body changes the map size, runtime execution reports an
+error.
 Scalar `map<K,V>` typed declarations preserve map template metadata for `na`
 initialization and same-template assignment. Scalar map history references
 preserve that template metadata for historical map receivers. Non-scalar

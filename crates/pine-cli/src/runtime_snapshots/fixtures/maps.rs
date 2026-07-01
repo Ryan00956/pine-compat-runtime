@@ -30,6 +30,10 @@ pub(crate) const MAP_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/map_keys_values.pine",
     ),
     (
+        "runtime_map_for_in.json",
+        "tests/fixtures/runtime/map_for_in.pine",
+    ),
+    (
         "runtime_map_put_all.json",
         "tests/fixtures/runtime/map_put_all.pine",
     ),

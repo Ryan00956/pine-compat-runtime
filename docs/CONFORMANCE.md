@@ -1251,6 +1251,12 @@ independent cloned backing store with the same scalar key/value template.
 `map.put_all` merges entries from a source map into a target map with the same
 scalar key/value template, replacing existing values without moving their order
 and appending new keys in source insertion order.
+Direct `for [key, value] in id` iteration is fixture-backed for scalar maps in
+insertion order, including statement and expression forms. The key loop local
+uses the map key template kind and the value loop local uses the map value
+template kind. Direct map iteration requires key/value loop variables, so
+single-variable `for value in id` remains rejected for map ids. Changing the map
+size from a direct map `for...in` body reports a runtime error.
 Ordinary realtime rollback restores map-store mutations from the confirmed
 runtime snapshot. Equivalent method aliases are supported for the same subset:
 `id.size()`, `id.put(key, value)`, `id.get(key)`, `id.contains(key)`,

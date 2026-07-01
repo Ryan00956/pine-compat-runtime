@@ -106,6 +106,7 @@ const FOR_IN_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/for_in_stateful.pine",
     "tests/fixtures/runtime/for_in_zero_iteration.pine",
     "tests/fixtures/runtime/for_in_expression.pine",
+    "tests/fixtures/runtime/map_for_in.pine",
     "tests/fixtures/runtime/matrix_for_in.pine",
     "tests/fixtures/realtime/for_in_rollback.pine",
     "tests/fixtures/realtime/for_in_varip.pine",
@@ -131,6 +132,7 @@ const FOR_IN_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/supported_for_in_expression_udt.pine",
     "tests/fixtures/sema/supported_for_in_expression_matrix.pine",
     "tests/fixtures/sema/supported_for_in_expression_index_value.pine",
+    "tests/fixtures/sema/supported_map_for_in.pine",
     "tests/fixtures/sema/unsupported_for_in_expression_non_array.pine",
 ];
 
@@ -473,6 +475,7 @@ fn validate_map_boundary_fixture_paths(
         "tests/fixtures/runtime/map_copy.pine",
         "tests/fixtures/runtime/map_methods.pine",
         "tests/fixtures/runtime/map_keys_values.pine",
+        "tests/fixtures/runtime/map_for_in.pine",
         "tests/fixtures/runtime/map_put_all.pine",
         "tests/fixtures/runtime/map_history.pine",
         "tests/fixtures/runtime/map_varip.pine",
@@ -487,6 +490,7 @@ fn validate_map_boundary_fixture_paths(
         "tests/fixtures/sema/supported_map_copy.pine",
         "tests/fixtures/sema/supported_map_methods.pine",
         "tests/fixtures/sema/supported_map_keys_values.pine",
+        "tests/fixtures/sema/supported_map_for_in.pine",
         "tests/fixtures/sema/supported_map_put_all.pine",
         "tests/fixtures/sema/supported_map_history.pine",
         "tests/fixtures/sema/supported_map_varip.pine",
@@ -522,7 +526,7 @@ fn validate_map_boundary_fixture_paths(
     ] {
         if !fixtures.contains(&fixture) {
             return Err(format!(
-                "line {line_number}: `map.*` must reference `{fixture}` while map support is limited to the fixture-backed scalar map helper, typed declaration, history, varip, read-only UDF, method-alias, and rollback subset"
+                "line {line_number}: `map.*` must reference `{fixture}` while map support is limited to the fixture-backed scalar map helper, direct key/value for-in, typed declaration, history, varip, read-only UDF, method-alias, and rollback subset"
             ));
         }
     }
@@ -729,6 +733,7 @@ mod tests {
             "tests/fixtures/runtime/map_copy.pine",
             "tests/fixtures/runtime/map_methods.pine",
             "tests/fixtures/runtime/map_keys_values.pine",
+            "tests/fixtures/runtime/map_for_in.pine",
             "tests/fixtures/runtime/map_put_all.pine",
             "tests/fixtures/runtime/map_history.pine",
             "tests/fixtures/runtime/map_varip.pine",
@@ -743,6 +748,7 @@ mod tests {
             "tests/fixtures/sema/supported_map_copy.pine",
             "tests/fixtures/sema/supported_map_methods.pine",
             "tests/fixtures/sema/supported_map_keys_values.pine",
+            "tests/fixtures/sema/supported_map_for_in.pine",
             "tests/fixtures/sema/supported_map_put_all.pine",
             "tests/fixtures/sema/supported_map_history.pine",
             "tests/fixtures/sema/supported_map_varip.pine",

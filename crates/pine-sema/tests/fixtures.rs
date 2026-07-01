@@ -3140,7 +3140,7 @@ fn reports_unsupported_for_in_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_for_in.pine",
         "for...in",
-        "matrix rows only; non-scalar-field UDT arrays, map, and other iterable families remain unsupported",
+        "direct map for...in iteration requires key/value loop variables",
     );
 }
 
@@ -3149,7 +3149,7 @@ fn reports_unsupported_for_in_non_array_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_for_in_non_array.pine",
         "for...in",
-        "matrix rows only; non-scalar-field UDT arrays, map, and other iterable families remain unsupported",
+        "matrix rows, and scalar maps with key/value loop variables only",
     );
 }
 
@@ -3158,7 +3158,7 @@ fn reports_unsupported_for_in_index_value_non_int_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_for_in_index_value_non_int.pine",
         "for...in",
-        "same-local or same-imported scalar-field UDT arrays, and matrix rows only",
+        "scalar maps where the first variable receives the key",
     );
 }
 
@@ -3469,7 +3469,7 @@ fn reports_unsupported_for_in_expression_non_array_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_for_in_expression_non_array.pine",
         "for...in expression",
-        "array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, same-local or same-imported scalar-field UDT array, and matrix iterables only",
+        "matrix iterables, and scalar maps with key/value loop variables only",
     );
 }
 
@@ -9971,6 +9971,43 @@ fn accepts_supported_map_keys_values_fixture() {
         analysis.diagnostics
     );
     assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "map.*"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_map_for_in_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_map_for_in.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "for"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
     assert!(
         analysis
             .compatibility

@@ -1,8 +1,17 @@
 use crate::prelude::*;
 
-const FOR_IN_SUPPORTED_ITERABLES_REASON: &str = "for...in currently supports statement iteration over scalar arrays, label arrays, line arrays, linefill arrays, polyline arrays, box arrays, table arrays, chart.point arrays, same-local or same-imported scalar-field UDT arrays, and matrix rows only; non-scalar-field UDT arrays, map, and other iterable families remain unsupported";
+const FOR_IN_SUPPORTED_ITERABLES_REASON: &str = "for...in currently supports statement iteration over scalar arrays, label arrays, line arrays, linefill arrays, polyline arrays, box arrays, table arrays, chart.point arrays, same-local or same-imported scalar-field UDT arrays, matrix rows, and scalar maps with key/value loop variables only; non-scalar-field UDT arrays and other iterable families remain unsupported";
 
-const FOR_IN_SUPPORTED_INDEX_VALUE_REASON: &str = "index/value for...in currently supports statement iteration over array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, same-local or same-imported scalar-field UDT arrays, and matrix rows only; other array element kinds, non-scalar-field UDT arrays, map, and expression-form for...in remain unsupported";
+const FOR_IN_SUPPORTED_INDEX_VALUE_REASON: &str = "index/value for...in currently supports statement iteration over array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, same-local or same-imported scalar-field UDT arrays, matrix rows, and scalar maps where the first variable receives the key; other array element kinds and non-scalar-field UDT arrays remain unsupported";
+
+const FOR_IN_MAP_REQUIRES_KEY_VALUE_REASON: &str = "direct map for...in iteration requires key/value loop variables such as `for [key, value] in values`";
+
+#[derive(Debug, Clone)]
+struct ForInLoopKinds {
+    index_kind: Option<ValueKind>,
+    value_kind: ValueKind,
+    user_type_name: Option<String>,
+}
 
 impl Analyzer {
     pub(super) fn analyze_for_in_stmt(
@@ -22,8 +31,11 @@ impl Analyzer {
             self.unsupported("for...in", FOR_IN_SUPPORTED_INDEX_VALUE_REASON, span);
             return;
         }
-        let Some((value_kind, user_type_name)) =
-            for_in_loop_value_kind(iterable_type.kind, self, iterable)
+        if iterable_type.kind == ValueKind::Map && index.is_none() {
+            self.unsupported("for...in", FOR_IN_MAP_REQUIRES_KEY_VALUE_REASON, span);
+            return;
+        }
+        let Some(kinds) = for_in_loop_kinds(iterable_type.kind, self, iterable, index.is_some())
         else {
             self.unsupported("for...in", FOR_IN_SUPPORTED_ITERABLES_REASON, span);
             return;
@@ -39,7 +51,10 @@ impl Analyzer {
         if let Some(index) = index {
             let index_symbol = self.define_local_symbol(
                 index,
-                PineType::new(Qualifier::Series, ValueKind::Int),
+                PineType::new(
+                    Qualifier::Series,
+                    kinds.index_kind.unwrap_or(ValueKind::Int),
+                ),
                 None,
                 self.function_depth == 0,
             );
@@ -47,12 +62,12 @@ impl Analyzer {
         }
         let value_symbol = self.define_local_symbol(
             value,
-            PineType::new(Qualifier::Series, value_kind),
+            PineType::new(Qualifier::Series, kinds.value_kind),
             None,
             self.function_depth == 0,
         );
         self.bind_symbol(value, span, value_symbol);
-        if let Some(type_name) = user_type_name {
+        if let Some(type_name) = kinds.user_type_name {
             self.mark_symbol_id_user_type(value_symbol.id, type_name);
         }
         for body_statement in body {
@@ -85,35 +100,58 @@ fn supports_index_value_for_in(iterable_kind: ValueKind) -> bool {
             | ValueKind::BoolMatrix
             | ValueKind::StringMatrix
             | ValueKind::ColorMatrix
+            | ValueKind::Map
     )
 }
 
-fn for_in_loop_value_kind(
+fn for_in_loop_kinds(
     iterable_kind: ValueKind,
     analyzer: &Analyzer,
     iterable: &Expr,
-) -> Option<(ValueKind, Option<String>)> {
+    has_index: bool,
+) -> Option<ForInLoopKinds> {
+    let scalar = |value_kind| {
+        Some(ForInLoopKinds {
+            index_kind: has_index.then_some(ValueKind::Int),
+            value_kind,
+            user_type_name: None,
+        })
+    };
     match iterable_kind {
-        ValueKind::IntArray => Some((ValueKind::Int, None)),
-        ValueKind::FloatArray => Some((ValueKind::Float, None)),
-        ValueKind::BoolArray => Some((ValueKind::Bool, None)),
-        ValueKind::StringArray => Some((ValueKind::String, None)),
-        ValueKind::ColorArray => Some((ValueKind::Color, None)),
-        ValueKind::LabelArray => Some((ValueKind::Label, None)),
-        ValueKind::LineArray => Some((ValueKind::Line, None)),
-        ValueKind::LineFillArray => Some((ValueKind::LineFill, None)),
-        ValueKind::PolylineArray => Some((ValueKind::Polyline, None)),
-        ValueKind::BoxArray => Some((ValueKind::Box, None)),
-        ValueKind::TableArray => Some((ValueKind::Table, None)),
-        ValueKind::ChartPointArray => Some((ValueKind::ChartPoint, None)),
-        ValueKind::FloatMatrix => Some((ValueKind::FloatArray, None)),
-        ValueKind::IntMatrix => Some((ValueKind::IntArray, None)),
-        ValueKind::BoolMatrix => Some((ValueKind::BoolArray, None)),
-        ValueKind::StringMatrix => Some((ValueKind::StringArray, None)),
-        ValueKind::ColorMatrix => Some((ValueKind::ColorArray, None)),
-        ValueKind::UserTypeArray => analyzer
-            .user_type_array_name_of_expr(iterable)
-            .map(|type_name| (ValueKind::UserType, Some(type_name))),
+        ValueKind::IntArray => scalar(ValueKind::Int),
+        ValueKind::FloatArray => scalar(ValueKind::Float),
+        ValueKind::BoolArray => scalar(ValueKind::Bool),
+        ValueKind::StringArray => scalar(ValueKind::String),
+        ValueKind::ColorArray => scalar(ValueKind::Color),
+        ValueKind::LabelArray => scalar(ValueKind::Label),
+        ValueKind::LineArray => scalar(ValueKind::Line),
+        ValueKind::LineFillArray => scalar(ValueKind::LineFill),
+        ValueKind::PolylineArray => scalar(ValueKind::Polyline),
+        ValueKind::BoxArray => scalar(ValueKind::Box),
+        ValueKind::TableArray => scalar(ValueKind::Table),
+        ValueKind::ChartPointArray => scalar(ValueKind::ChartPoint),
+        ValueKind::FloatMatrix => scalar(ValueKind::FloatArray),
+        ValueKind::IntMatrix => scalar(ValueKind::IntArray),
+        ValueKind::BoolMatrix => scalar(ValueKind::BoolArray),
+        ValueKind::StringMatrix => scalar(ValueKind::StringArray),
+        ValueKind::ColorMatrix => scalar(ValueKind::ColorArray),
+        ValueKind::Map => {
+            let info = analyzer.map_type_of_expr(iterable)?;
+            Some(ForInLoopKinds {
+                index_kind: Some(info.key_kind),
+                value_kind: info.value_kind,
+                user_type_name: None,
+            })
+        }
+        ValueKind::UserTypeArray => {
+            analyzer
+                .user_type_array_name_of_expr(iterable)
+                .map(|type_name| ForInLoopKinds {
+                    index_kind: has_index.then_some(ValueKind::Int),
+                    value_kind: ValueKind::UserType,
+                    user_type_name: Some(type_name),
+                })
+        }
         _ => None,
     }
 }

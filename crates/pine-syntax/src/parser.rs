@@ -260,6 +260,19 @@ impl Parser {
 
     fn parse_for_expr(&mut self) -> Option<Expr> {
         let start = self.expect(TokenKind::For, "expected `for`")?;
+        if self.at(TokenKind::LBracket) {
+            let (key, value) = self.parse_for_in_pair()?;
+            let parts = self.parse_for_in_tail(start, Some(key), value)?;
+            return Some(Expr {
+                span: parts.start.merge(parts.span),
+                kind: ExprKind::ForIn {
+                    index: parts.index,
+                    value: parts.value,
+                    iterable: Box::new(parts.iterable),
+                    body: parts.body,
+                },
+            });
+        }
         let counter = self.parse_for_counter()?;
         if self.at(TokenKind::Comma) {
             self.bump();

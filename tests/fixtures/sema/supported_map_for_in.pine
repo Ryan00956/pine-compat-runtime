@@ -1,0 +1,15 @@
+//@version=6
+indicator("Supported map for-in")
+
+prices = map.new<string, float>()
+prices.put("open", close)
+prices.put("high", high)
+
+float total = 0.0
+for [key, value] in prices
+    total := total + (key == "open" ? value : 0.0)
+
+last_value = for [key, value] in prices
+    key == "high" ? value : close
+
+plot(total + last_value)

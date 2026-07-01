@@ -810,6 +810,29 @@ fn parses_for_in_expression_index_value_declaration() {
 }
 
 #[test]
+fn parses_for_in_expression_bracket_pair_declaration() {
+    let parsed = parse("x = for [key, value] in values\n    value\nplot(x)\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::ForIn {
+        index,
+        value: loop_value,
+        body,
+        ..
+    } = &value.kind
+    else {
+        panic!("expected for-in expression");
+    };
+    assert_eq!(index.as_deref(), Some("key"));
+    assert_eq!(loop_value, "value");
+    assert_eq!(body.len(), 1);
+    assert!(matches!(body[0].kind, StmtKind::Expr(_)));
+}
+
+#[test]
 fn parses_condition_switch_expression_declaration() {
     let parsed = parse(
         "x = switch\n    close > open => high\n    close < open => low\n    => close\nplot(x)\n",

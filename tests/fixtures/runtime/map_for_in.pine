@@ -1,0 +1,31 @@
+//@version=6
+indicator("Map for-in")
+
+prices = map.new<string, float>()
+prices.put("open", 1.25)
+prices.put("close", 4.5)
+prices.put("open", 2.5)
+
+float total = 0.0
+int key_score = 0
+for [key, value] in prices
+    total := total + value
+    key_score := key_score + (key == "open" ? 10 : key == "close" ? 20 : 0)
+
+last_value = for [key, value] in prices
+    key == "open" ? value + 1.0 : value + 2.0
+
+int_map = map.new<int, string>()
+int_map.put(1, "one")
+int_map.put(2, "two")
+int int_key_score = 0
+int int_value_score = 0
+for [key, value] in int_map
+    int_key_score := int_key_score + key
+    int_value_score := int_value_score + (value == "one" ? 10 : value == "two" ? 20 : 0)
+
+plot(total, "total")
+plot(key_score, "key_score")
+plot(last_value, "last_value")
+plot(int_key_score, "int_key_score")
+plot(int_value_score, "int_value_score")
