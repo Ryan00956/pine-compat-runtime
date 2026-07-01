@@ -233,6 +233,79 @@ impl Analyzer {
         Some(return_type)
     }
 
+    pub(crate) fn analyze_alias_qualified_user_method_call(
+        &mut self,
+        name: &str,
+        span: Span,
+        call_span: Span,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> Option<Option<PineType>> {
+        let (alias, method_name) = alias_qualified_method_name(name)?;
+        if !self.methods.keys().any(|(receiver_type, candidate)| {
+            candidate == method_name && receiver_type.starts_with(&format!("{alias}."))
+        }) {
+            return None;
+        }
+        let Some(receiver_arg) = args.first() else {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                format!("`{name}` expects a receiver argument"),
+                span,
+            ));
+            return Some(None);
+        };
+        let ExprKind::Identifier(receiver_name) = &receiver_arg.value.kind else {
+            self.diagnostics.push(Diagnostic::error(
+                "E_IMPORT_UNSUPPORTED_METHOD",
+                format!("alias-qualified imported method `{name}` requires an identifier receiver"),
+                receiver_arg.span,
+            ));
+            return Some(None);
+        };
+        let receiver_type = arg_types.first().copied().flatten();
+        let Some(receiver_user_type) = self.user_type_name_of_expr(&receiver_arg.value) else {
+            if let Some(receiver_type) = receiver_type {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_METHOD_ARG_TYPE",
+                    format!(
+                        "cannot pass {:?} {:?} as receiver to imported method `{name}`",
+                        receiver_type.qualifier, receiver_type.kind
+                    ),
+                    receiver_arg.span,
+                ));
+            }
+            return Some(None);
+        };
+        if !receiver_user_type.starts_with(&format!("{alias}.")) {
+            self.diagnostics.push(Diagnostic::error(
+                "E_METHOD_ARG_TYPE",
+                format!("cannot pass receiver `{receiver_user_type}` to imported method `{name}`"),
+                receiver_arg.span,
+            ));
+            return Some(None);
+        }
+        if !self
+            .methods
+            .contains_key(&(receiver_user_type, method_name.to_owned()))
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_UNKNOWN_METHOD",
+                format!("unknown imported method `{name}` for receiver `{receiver_name}`"),
+                span,
+            ));
+            return Some(None);
+        }
+        self.analyze_user_method_call(
+            receiver_name,
+            method_name,
+            span,
+            call_span,
+            &args[1..],
+            &arg_types[1..],
+        )
+    }
+
     fn method_param_type(&mut self, name: &str, span: Span) -> Option<(PineType, Option<String>)> {
         let kind = match name {
             "int" => ValueKind::Int,

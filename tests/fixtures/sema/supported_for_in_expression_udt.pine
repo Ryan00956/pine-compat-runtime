@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported for-in expression UDT")
+
+type Point
+    int x
+
+values = array.from(Point.new(1), Point.new(2))
+result = for value in values
+    value
+
+plot(result.x)

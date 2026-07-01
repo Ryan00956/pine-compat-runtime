@@ -1,0 +1,38 @@
+//@version=6
+indicator("Matrix kron")
+
+left = matrix.new<float>(2, 2, 0)
+matrix.set(left, 0, 0, 1)
+matrix.set(left, 0, 1, 2)
+matrix.set(left, 1, 0, 3)
+matrix.set(left, 1, 1, 4)
+
+right = matrix.new<float>(2, 1, 0)
+matrix.set(right, 0, 0, 5)
+matrix.set(right, 1, 0, 6)
+
+namespace_result = matrix.kron(left, right)
+method_result = left.kron(right)
+matrix.set(left, 0, 0, 99)
+
+na_left = matrix.new<float>(1, 2, 2)
+matrix.set(na_left, 0, 1, na)
+na_result = matrix.kron(na_left, matrix.new<float>(1, 1, 3))
+
+empty_result = matrix.kron(matrix.new<float>(0, 2), right)
+
+plot(matrix.rows(namespace_result), "namespace_rows")
+plot(matrix.columns(namespace_result), "namespace_columns")
+plot(matrix.get(namespace_result, 0, 0), "namespace_0_0")
+plot(matrix.get(namespace_result, 0, 1), "namespace_0_1")
+plot(matrix.get(namespace_result, 1, 0), "namespace_1_0")
+plot(matrix.get(namespace_result, 1, 1), "namespace_1_1")
+plot(matrix.get(namespace_result, 2, 0), "namespace_2_0")
+plot(matrix.get(namespace_result, 2, 1), "namespace_2_1")
+plot(matrix.get(namespace_result, 3, 0), "namespace_3_0")
+plot(matrix.get(namespace_result, 3, 1), "namespace_3_1")
+plot(matrix.get(method_result, 0, 0), "method_0_0")
+plot(matrix.get(na_result, 0, 0), "na_result_0_0")
+plot(na(matrix.get(na_result, 0, 1)) ? 1 : 0, "na_result_0_1")
+plot(matrix.rows(empty_result), "empty_rows")
+plot(matrix.columns(empty_result), "empty_columns")

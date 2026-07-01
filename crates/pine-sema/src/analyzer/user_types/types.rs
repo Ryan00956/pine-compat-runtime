@@ -54,6 +54,7 @@ pub(crate) struct UdtFieldMutation {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum UserTypeArrayElementInference {
     SameScalarLocal(String),
+    SameScalarImported(String),
     MixedLocal,
     UnsupportedFieldType(String),
     UnknownUserTypeName,

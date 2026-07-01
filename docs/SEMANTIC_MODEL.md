@@ -301,7 +301,8 @@ instead of deferring them to runtime.
 Range `for` loops execute over inclusive integer bounds. Statement-form
 `for...in` loops are fixture-backed for `array<int>`, `array<float>`,
 `array<bool>`, `array<string>`, `array<color>`, drawing-id object arrays,
-`array<chart.point>`, and same-local scalar-field UDT array values:
+`array<chart.point>`, and same-local or same-imported scalar-field UDT array
+values:
 
 ```pine
 for value in values
@@ -311,8 +312,9 @@ for value in values
 The narrow index/value form is fixture-backed for `array<int>`, `array<float>`,
 `array<bool>`, `array<string>`, `array<color>`, `array<label>`, `array<line>`,
 `array<linefill>`, `array<polyline>`, `array<box>`, `array<table>`,
-`array<chart.point>`, and same-local scalar-field UDT arrays only. The index
-loop-local is a zero-based `series int` for the current visited slot:
+`array<chart.point>`, and same-local or same-imported scalar-field UDT arrays
+only. The index loop-local is a zero-based `series int` for the current visited
+slot:
 
 ```pine
 for index, value in values
@@ -333,14 +335,30 @@ raises the same runtime error as `array.get`. Label, line, linefill, polyline,
 box, and table array loop values are shallow-copied ids, so drawing setters or
 lifecycle operations through the loop local mutate the same drawing object while
 assignment to the loop local does not write the source array slot. Chart-point
-array and same-local scalar-field UDT array loop values are copied into the
-loop-local variable, so local field mutation does not write back to the source
-slot. Index/value iteration over iterables other than `array<int>`,
+array and same-local or same-imported scalar-field UDT array loop values are
+copied into the loop-local variable, so local field mutation does not write back
+to the source slot. Expression-form `for value in values` supports only `array<int>`,
 `array<float>`, `array<bool>`, `array<string>`, `array<color>`,
-`array<label>`, `array<line>`, `array<linefill>`, `array<polyline>`, or
-`array<box>`, expression-form `for...in`, non-array iterables, imported or
-non-scalar-field UDT arrays, map/matrix iterables, other non-scalar arrays, and
-broader collection mutation families remain outside the current subset. Ordinary
+`array<label>`, `array<line>`, `array<linefill>`, `array<polyline>`,
+`array<box>`, `array<table>`, `array<chart.point>`, and same-local
+scalar-field UDT array iterables, plus runtime-owned matrix row iterables, in
+the current subset. Matrix expression-form iteration binds the loop value to an
+independent row snapshot array. The optional expression-form index local is the
+same zero-based `series int` slot number used by statement-form index/value
+iteration. It returns the last expression from the last
+completed iteration, returns `na` for empty arrays, empty matrices, or typed
+`na` iterables, returns the previous completed result on `break`, and skips the
+current result expression on `continue`. Index/value iteration over iterables
+other than `array<int>`,
+`array<float>`, `array<bool>`, `array<string>`, `array<color>`,
+`array<label>`, `array<line>`, `array<linefill>`, `array<polyline>`,
+`array<box>`, `array<table>`, `array<chart.point>`, same-local or same-imported
+scalar-field UDT arrays, or runtime-owned matrix rows, expression-form `for...in` beyond the
+scalar-array, drawing-id-array, chart.point-array, same-local or same-imported
+scalar-field UDT-array, and matrix-row subset, non-array/non-matrix iterables,
+non-scalar-field UDT arrays, map iterables, other non-scalar arrays, and
+broader collection mutation families remain outside the current subset.
+Ordinary
 `var` scalar arrays roll back loop-body mutation during repeated forming
 realtime updates, while scalar typed-array
 `varip` iteration preserves carried intrabar loop-body mutation between repeated
@@ -359,10 +377,12 @@ while condition
 The condition must be `bool`. The loop body has its own local scope, and
 `break`/`continue` use the same nearest-loop control-flow rules as `for`.
 `while` expressions must have a final body expression. Scalar, tuple,
-same-local UDT, and scalar-array result subsets return the latest reached final
-body expression, or `na` if no iteration produces a value. Callers may read or
-mutate a returned scalar array with supported scalar-array APIs, including fresh
-arrays, existing scalar-array aliases, zero-iteration `na`, break/continue
+same-local UDT, scalar-array, and runtime-owned matrix result subsets return
+the latest reached final body expression, or `na` if no iteration produces a
+value. Callers may read or mutate a returned scalar array or returned
+`matrix<float>`, `matrix<int>`, `matrix<bool>`, `matrix<string>`, or
+`matrix<color>` id with supported APIs, including fresh arrays/matrices,
+existing scalar-array or matrix aliases, zero-iteration `na`, break/continue
 result preservation, and fresh historical copies from committed history reads.
 Stateful callsites in a reached expression-loop body advance on each reached
 iteration, and body-local declarations including local `var` declaration sites
@@ -530,15 +550,20 @@ even when their field shapes match.
 Same-local scalar-field UDT array `fill` replaces the whole array or a valid
 half-open range with a same-local UDT value; values from different local UDT
 identities remain rejected.
-Same-local scalar-field UDT array `join` stringifies each element as
-`TypeName(field0, field1, ...)`, using field declaration order and the existing
-scalar `array.join` formatting for field values. This does not enable
-`str.tostring(UDT)`.
+Same-local scalar-field UDT arrays and same-imported scalar-field UDT arrays
+constructed through `array.from` support `join` stringification. Each element is
+rendered as `TypeName(field0, field1, ...)`, using field declaration order and
+the existing scalar `array.join` formatting for field values. This does not
+enable `str.tostring(UDT)`.
 Field mutation on a UDT value read from a same-local scalar-field UDT array
 mutates only that local value; it does not change the source array slot unless a
 later same-UDT `array.set`/`set()` explicitly writes the value back.
-Direct chained slot field mutation such as `points.get(0).x := value` remains
-outside the parser subset.
+Direct chained slot field mutation is supported for
+`array.get(points, index).field := value` and `points.get(index).field := value`
+when `points` is a same-local scalar-field UDT array; it mutates a copy of the
+selected slot and writes that updated UDT value back to the same array index,
+including slice-window parent mirroring. The same operation remains rejected
+inside UDFs under the function side-effect policy.
 When a same-local scalar-field UDT value is read from a UDT array, that value
 may be passed to local pure UDFs that read scalar fields, passthrough the value,
 or return a constructed same-local UDT. When bound to a local variable, that
@@ -561,10 +586,10 @@ from `na`, same-UDT constructors, or fixture-backed same-UDT ternary/switch/if/f
 expressions, plus direct-constructor-inferred same-local scalar-field UDT
 `varip` declarations, may also hold those values and persist them intrabar by
 value.
-Local scalar fields can be reassigned with `value.field := expr`
-outside method bodies, including branch, `for` loop, `while` loop, and
-UDF-local variable bodies; the assigned expression must be compatible with the
-declared field type. UDF parameter passthrough is supported
+Local scalar fields can be reassigned with `value.field := expr` in top-level,
+branch, `for` loop, `while` loop, UDF-local variable bodies, and method-local
+variable bodies; the assigned expression must be compatible with the declared
+field type. UDF parameter passthrough is supported
 when the function returns the UDT
 parameter itself, when a block-bodied function returns a local alias chain that
 starts from that parameter, or when a nested passthrough UDF call maps back to
@@ -580,21 +605,43 @@ Positional and named UDF call arguments both preserve the parameter identity,
 so returned UDT values can be assigned and field-read at the callsite.
 Same-local scalar-field UDT values read from UDT arrays may also be passed to
 local pure UDFs, including passthrough and constructor-return UDFs.
-UDF-local UDT variables may mutate scalar fields before returning the updated
-value. UDT history references, global or parameter field mutation inside UDFs,
-field mutation inside methods, non-constructor-inferred UDT `varip`,
-nested-field UDT `varip`, and UDT arrays remain outside the claim. Imported UDT
-identity is supported only for the scalar-field constructor, direct field-read,
-ordinary same-imported-UDT reassignment, and explicit scalar-field imported
-typed declaration subset, plus direct or nested UDF parameter passthrough and
-direct or nested constructor-return results, and same-imported-identity ternary,
+Same-local or same-imported scalar-field UDT arrays may be declared as `varip`
+when the declaration carries explicit UDT array identity, allowing realtime
+handoff to retain the array id, backing contents, and UDT metadata between
+forming updates.
+UDF-local and method-local UDT variables may mutate scalar fields before
+returning the updated value. Local UDT value history references, global or
+parameter field mutation inside UDFs, receiver/parameter/global field mutation
+inside methods, non-constructor-inferred UDT `varip`, nested-field UDT `varip`,
+and non-scalar UDT arrays remain outside the claim.
+Imported UDT identity is supported only for the scalar-field constructor, direct field-read,
+ordinary same-imported-UDT reassignment, explicit scalar-field imported typed
+declarations, and same-imported scalar-field typed array declarations, plus
+direct or nested UDF parameter passthrough and direct or nested
+constructor-return results, and same-imported-identity ternary,
 `if`, `switch`, `while`, or `for` expression results, ordinary imported UDT
-`var` declarations, scalar-field imported UDT `varip` declarations, and
-scalar-field mutation in top-level, branch, `for`-loop, `while`-loop, and
-UDF-local statement contexts;
+`var` declarations, scalar-field imported UDT `varip` declarations,
+same-imported scalar-field UDT array `varip` declarations, and scalar-field
+mutation in top-level, branch, `for`-loop, `while`-loop, and UDF-local
+statement contexts, plus method-local field mutation and scalar-field
+value history plus `array.from` size/get/first/last plus set replacement field
+reads, push append field reads, unshift prepend field reads, insert insertion
+field reads, fill replacement field reads, join positional stringification,
+includes/indexof/lastindexof structural equality search, sort/sort_indices by
+int/float/string sort_field, pop/remove/shift return field reads, clear-size
+reset, copy independent field reads, reverse reordered field reads, slice
+window field reads, concat appended field reads, and
+statement/expression/index-value for-in value-copy field reads;
 local/imported structural lookalikes remain distinct assignment identities.
-Imported UDT history, collections, nested field mutation, UDF parameter/global
-field side effects, method field mutation, and methods remain outside the claim.
+Imported UDT collections beyond the
+scalar-field `array.from` size/get/first/last, set-replacement, push-append,
+unshift-prepend, insert-insertion, fill-replacement, join-stringification,
+search-structural-equality, sort-by-field, pop/remove/shift return, clear-size,
+copy-read, reverse-read, slice-window, concat-append, and for-in-value-copy
+subset,
+nested field mutation, broader imported UDT history, UDF
+parameter/global field side effects, and method receiver/parameter/global field
+side effects remain outside the claim.
 
 Pure user-defined methods are supported for local UDT receivers with scalar or
 local UDT parameters, including direct UDT passthrough returns, block-local
@@ -622,11 +669,21 @@ fields, inferred scalar parameters, or block-local scalar aliases of those
 parameters,
 the callsite keeps that UDT identity so the returned value can be assigned and
 field-read. Same-local scalar-field UDT values read from UDT arrays can also be
-bound to locals and used as local pure method receivers. Methods with side
-effects, recursion, unsupported
-parameter families, mismatched UDT parameter identity, unknown receivers, and
-imported method tables remain rejected. Non-array method calls outside the
-local UDT method subset continue to fail with receiver/type diagnostics.
+bound to locals and used as local pure method receivers. Receiver-style and
+alias-qualified scalar imported UDT method calls are supported when the imported
+method stays inside the scalar/imported-UDT parameter subset and the
+alias-qualified form receives a same-identity imported UDT as its first
+argument, including direct receiver passthrough or same-identity parameter
+passthrough returns, block-local, final-if, or final-for receiver or parameter
+alias passthrough returns, nested imported method passthrough returns,
+same-imported-identity constructor returns, and method-local scalar field
+mutation before returning a local UDT value.
+Methods with receiver/parameter/global field side effects, recursion,
+unsupported parameter families, mismatched UDT parameter identity, unknown
+receivers, and alias-qualified imported method receiver type mismatches remain
+rejected. Non-array
+method calls outside the local/imported UDT method subset continue to fail with
+receiver/type diagnostics.
 Float arrays accept int or float values and store them as floats. Int arrays
 accept int values. Bool arrays accept bool values. String
 arrays accept string values. Color arrays accept color values. Label and line
@@ -650,8 +707,11 @@ returns a valid indexed element, or raises a runtime error when the index is
 out of bounds. `array.fill`
 replaces all elements by default or a half-open `[index_from, index_to)` window
 when bounds are supplied; invalid ranges are no-ops.
-`array.indexof` and `array.lastindexof` return `-1` when the value is not
-present. Numeric binary search helpers are limited to float and int arrays and
+`array.includes`, `array.indexof`, and `array.lastindexof` use structural
+equality for same-local scalar-field UDT arrays and same-imported scalar-field
+UDT arrays constructed through `array.from`; `array.indexof` and
+`array.lastindexof` return `-1` when the value is not present. Numeric binary
+search helpers are limited to float and int arrays and
 expect the current array contents to be sorted ascending. `array.binary_search`
 returns `-1` when the value is not found; leftmost/rightmost return the nearest
 existing insertion-side index and return `-1` for empty arrays.
@@ -681,7 +741,10 @@ accept an optional `biased` bool argument that defaults to `true`; passing
 `false` uses the sample denominator and returns `na` when fewer than two
 numeric values remain.
 `array.sort` and `array.sort_indices` support float, int, and string arrays,
-sort ascending by default, and accept `order.ascending` or `order.descending`.
+plus same-local scalar-field UDT arrays and same-imported scalar-field UDT arrays
+constructed through `array.from` when a compile-time `sort_field` names an int,
+float, or string field. They sort ascending by default and accept
+`order.ascending` or `order.descending`.
 `na` values and empty strings sort last in ascending order and first in
 descending order. `array.sort` mutates the source array; `array.sort_indices`
 returns a new int array of original indexes in sorted order and leaves the
@@ -690,7 +753,8 @@ source array unchanged.
 converts supported array elements to string with the default numeric format,
 uses `,` as the default separator, and returns an empty string for empty arrays.
 Color elements render as normalized integer color values. Same-local
-scalar-field UDT arrays use `TypeName(field0, field1, ...)` element rendering.
+scalar-field UDT arrays and same-imported scalar-field UDT arrays constructed
+through `array.from` use `TypeName(field0, field1, ...)` element rendering.
 Out-of-range
 `array.get`, `array.set`, `array.insert`, and `array.remove` on an existing
 array raise runtime errors; empty `array.pop`, empty `array.shift`, and
@@ -704,30 +768,130 @@ operations such as `array.size` and `array.get`. Array mutation inside
 user-defined functions is rejected until function side-effect semantics are
 broader.
 
+The current map subset supports runtime-owned empty map ids through
+`map.new<K, V>()` where both template types are one of `int`, `float`, `bool`,
+`string`, or `color`. `map.size(id)` accepts map ids and returns the current
+entry count. `map.put`, `map.get`, and `map.contains` are supported for those
+scalar key/value templates: put inserts or replaces the entry for an equal key,
+get returns the current value or `na` for a missing key, and contains returns a
+series bool. `map.clear` removes all entries from the map id and the same id can
+be reused by later `map.put` calls. `map.remove` deletes a present key and is a
+no-op for missing keys. Assignment passes the runtime map id by reference, and
+`map.copy` returns an independent cloned backing store carrying the same scalar
+key/value template. `map.keys` and `map.values` return independent array
+snapshots in insertion order using the map's scalar key or value kind.
+`map.put_all` requires source and target maps to have the same scalar key/value
+template and mutates the target by replacing existing values without moving
+their keys and appending new keys in source insertion order. Ordinary realtime
+rollback clones the confirmed runtime map store for each forming update, so
+unconfirmed map mutations do not leak across forming executions. Equivalent
+method aliases lower to the same namespace calls for the supported subset.
+Scalar `map<K,V>` typed declarations preserve map template metadata for `na`
+initialization and same-template assignment. Scalar map history references
+preserve that template metadata for historical map receivers. Non-scalar
+templates, non-map map receivers, and bare map declarations remain unsupported
+with targeted diagnostics. Scalar map `varip` declarations are supported for the
+same scalar key/value template subset. User-defined function parameters receive
+the caller's scalar map template metadata, enabling read-only map helpers inside
+pure UDF bodies while mutating map helpers remain side-effect rejected.
+
 The current matrix subset supports runtime-owned float matrix ids through
 `matrix.new<float>(rows, columns, initial_value?)`, `matrix.get`,
-`matrix.set`, `matrix.fill`, `matrix.copy`, `matrix.reshape`,
-`matrix.add_row`, `matrix.add_col`, `matrix.remove_row`, `matrix.remove_col`,
-`matrix.rows`, `matrix.columns`, `matrix.sum`, `matrix.avg`, `matrix.row`, and
-`matrix.col`.
+`matrix.set`, `matrix.fill`, `matrix.copy`, `matrix.transpose`,
+`matrix.reverse`, `matrix.reshape`, `matrix.kron`, `matrix.mult`,
+`matrix.diff`, `matrix.pow`,
+`matrix.add_row`,
+`matrix.add_col`, `matrix.remove_row`, `matrix.remove_col`,
+`matrix.swap_rows`, `matrix.swap_columns`, `matrix.sort`,
+`matrix.submatrix`,
+`matrix.rows`, `matrix.columns`, `matrix.elements_count`, `matrix.is_square`,
+`matrix.is_binary`, `matrix.is_diagonal`, `matrix.is_identity`,
+`matrix.is_symmetric`, `matrix.is_antisymmetric`, `matrix.is_stochastic`,
+`matrix.is_zero`, `matrix.sum`, `matrix.avg`, `matrix.min`, `matrix.max`,
+`matrix.mode`, `matrix.trace`, `matrix.det`, `matrix.eigenvalues`,
+`matrix.eigenvectors`, `matrix.inv`, `matrix.pinv`, `matrix.rank`,
+`matrix.row`, and `matrix.col`.
 Matrix cells
 hold float or `na` values; int cell inputs are coerced to float. Matrix
 assignment and UDF
 argument binding pass the runtime matrix id by reference, while `matrix.copy`
 allocates an independent matrix store snapshot of the current cells.
-`matrix.row` and `matrix.col` return independent `array<float>` snapshots of
-the selected row or column. Ordinary `var` matrix ids persist across bars, and
+The subset also supports runtime-owned int matrix ids through
+`matrix.new<int>(rows, columns, initial_value?)` plus `matrix.get`,
+`matrix.set`, `matrix.fill`, `matrix.copy`, `matrix.transpose`,
+`matrix.reverse`, `matrix.reshape`, `matrix.submatrix`, `matrix.row`,
+`matrix.col`, `matrix.kron`, `matrix.mult`, `matrix.diff`, `matrix.pow`,
+`matrix.add_row`, `matrix.add_col`, `matrix.remove_row`, `matrix.remove_col`,
+`matrix.swap_rows`, `matrix.swap_columns`, `matrix.sort`, `matrix.rows`,
+`matrix.columns`, `matrix.elements_count`, and `matrix.is_square`,
+`matrix.is_binary`, `matrix.is_diagonal`,
+`matrix.is_identity`, `matrix.is_symmetric`, `matrix.is_antisymmetric`,
+`matrix.is_stochastic`, `matrix.is_zero`, `matrix.sum`, `matrix.avg`,
+`matrix.min`, `matrix.max`, `matrix.mode`, `matrix.trace`, `matrix.det`,
+`matrix.eigenvalues`, `matrix.eigenvectors`, `matrix.inv`, `matrix.pinv`, and
+`matrix.rank`, including the corresponding supported method aliases. Int matrix
+cells hold int or `na` values, and the
+int initial value plus `matrix.set`/`matrix.fill` write values must be
+int-compatible.
+The subset also supports runtime-owned bool matrix ids through
+`matrix.new<bool>(rows, columns, initial_value?)` plus `matrix.get`,
+`matrix.set`, `matrix.fill`, `matrix.copy`, `matrix.transpose`,
+`matrix.reverse`, `matrix.reshape`, `matrix.submatrix`, `matrix.row`,
+`matrix.col`, `matrix.add_row`, `matrix.add_col`, `matrix.remove_row`,
+`matrix.remove_col`, `matrix.swap_rows`, `matrix.swap_columns`, `matrix.rows`,
+`matrix.columns`, `matrix.elements_count`, and `matrix.is_square`, including
+the corresponding supported method aliases. Bool matrix cells hold bool or
+`na` values, and the bool initial value plus `matrix.set`/`matrix.fill` write
+values must be bool-compatible.
+`matrix.transpose` allocates an independent matrix store with swapped row and
+column counts.
+`matrix.reverse` mutates the existing matrix in place, preserving shape while
+moving `(row, column)` to `(rows - 1 - row, columns - 1 - column)`.
+`matrix.swap_rows` mutates the existing matrix in place by exchanging two
+validated row ranges, preserving shape and treating same-row or zero-column
+swaps as no-ops after row validation.
+`matrix.swap_columns` mutates the existing matrix in place by exchanging two
+validated column positions across all rows, preserving shape and treating
+same-column or zero-row swaps as no-ops after column validation.
+`matrix.sort` mutates the existing matrix in place by reordering complete row
+ranges according to a selected column, defaults to column `0`, accepts
+`order.ascending` and `order.descending`, preserves original row order for
+equal keys, and places `na` keys last ascending and first descending.
+`matrix.submatrix` returns an independent matrix copy of a selected half-open
+row/column range, defaulting omitted bounds to the source matrix's full row or
+column extent and allowing empty row or column slices.
+`matrix.row` and `matrix.col` return independent row/column snapshots:
+`array<float>` for float matrices, `array<int>` for int matrices, and
+`array<bool>` for bool matrices. Ordinary
+`var` matrix ids persist across bars, and
 realtime forming-bar rollback restores the confirmed matrix store for
 non-`varip` updates. Matrix construction rejects negative row or column counts
-and is bounded by a 100,000-cell runtime budget before allocation. `matrix.set`
-and `matrix.fill` inside user-defined
-functions remain rejected by the collection side-effect boundary.
-`values.fill(value)`, `values.get(row, column)`, `values.rows()`, and
-`values.columns()` are supported as method-call aliases for the matching
-namespace calls. `values.set(row, column, value)` is also supported as a
+and is bounded by a 100,000-cell runtime budget before allocation.
+`matrix.set`, `matrix.fill`, `matrix.reverse`, `matrix.reshape`,
+`matrix.add_row`, `matrix.add_col`, `matrix.remove_row`,
+`matrix.remove_col`, `matrix.swap_rows`, `matrix.swap_columns`, and
+`matrix.sort` inside
+user-defined functions remain rejected by the collection side-effect boundary.
+`values.fill(value)`, `values.get(row, column)`, `values.rows()`,
+`values.columns()`, `values.elements_count()`, `values.is_square()`,
+`values.is_binary()`, `values.is_diagonal()`, `values.is_identity()`,
+`values.is_symmetric()`, `values.is_antisymmetric()`,
+`values.is_stochastic()`, `values.is_zero()`, `values.sum()`,
+`values.avg()`, `values.min()`, `values.max()`, `values.mode()`, and
+`values.trace()`, `values.det()`, `values.eigenvalues()`,
+`values.eigenvectors()`, `values.kron(other)`, `values.mult(other)`,
+`values.diff(other)`, `values.pow(power)`,
+`values.inv()`,
+`values.pinv()`, and `values.rank()` are
+supported as method-call aliases for the matching
+namespace calls.
+`values.set(row, column, value)` is
+also supported as a
 method-call alias for `matrix.set(values, row, column, value)` outside
 user-defined functions, `values.copy()` is supported as a method-call alias for
-`matrix.copy(values)`, `values.reshape(rows, columns)` lowers to
+`matrix.copy(values)`, `values.transpose()` lowers to
+`matrix.transpose(values)`, `values.reverse()` lowers to
+`matrix.reverse(values)`, `values.reshape(rows, columns)` lowers to
 `matrix.reshape(values, rows, columns)`, `values.row(row)` lowers to
 `matrix.row(values, row)`, and `values.col(column)` lowers to
 `matrix.col(values, column)`, and `values.add_row(row, array_id)` lowers to
@@ -735,27 +899,139 @@ user-defined functions, `values.copy()` is supported as a method-call alias for
 `values.add_col(column, array_id)` lowers to
 `matrix.add_col(values, column, array_id)`, and `values.remove_row(row)` lowers
 to `matrix.remove_row(values, row)`, and `values.remove_col(column)` lowers to
-`matrix.remove_col(values, column)`. Reshape preserves element order and
-element count. `matrix.sum` returns the sum of numeric cells in row-major order,
+`matrix.remove_col(values, column)`, and `values.swap_rows(row1, row2)` lowers
+to `matrix.swap_rows(values, row1, row2)`, and
+`values.swap_columns(column1, column2)` lowers to
+`matrix.swap_columns(values, column1, column2)`, and
+`values.sort(column?, order?)` lowers to
+`matrix.sort(values, column?, order?)`, and `values.submatrix(...)` lowers to
+`matrix.submatrix(values, ...)`, and `values.kron(other)` lowers to
+`matrix.kron(values, other)`, and `values.mult(other)` lowers to
+`matrix.mult(values, other)` for matrix or scalar-right operands, and
+`values.diff(other)` lowers to `matrix.diff(values, other)` for matrix or
+scalar-right operands, and `values.pow(power)`
+lowers to `matrix.pow(values, power)`. Reshape preserves element order and
+element count. `matrix.kron` accepts runtime-owned float or int matrix operands
+and returns an independent Kronecker-product `matrix<float>` with expanded
+shape, propagates `na` or non-finite source cells to `na` result cells,
+preserves zero-dimension results, and is bounded by the 100,000-cell matrix
+budget. Matrix-by-matrix `matrix.mult` accepts runtime-owned float or int
+matrix operands and returns an independent `matrix<float>` product with shape
+`left.rows()` by `right.columns()`, requires
+`left.columns() == right.rows()`, propagates `na` or non-finite contributing
+cells to `na` result cells, preserves zero-dimension results, and is bounded by
+the 100,000-cell matrix budget. Scalar namespace `matrix.mult` accepts a
+numeric or `na` scalar on either side of a matrix operand and returns an
+independent same-shape `matrix<float>`. The `values.mult(scalar)` method alias
+supports the scalar-right form. `matrix.mult(values, vector)` and
+`values.mult(vector)` accept a right-hand `array<float>` or `array<int>` as a
+column vector, require `vector.size() == values.columns()`, and return an
+independent `array<float>` whose length is `values.rows()`. Namespace
+`matrix.mult(vector, values)` accepts a left-hand numeric array as a row vector,
+requires `vector.size() == values.rows()`, and returns an independent
+`array<float>` whose length is `values.columns()`. Array-pair and
+non-numeric-array `matrix.mult` overloads remain unsupported.
+Matrix-by-matrix `matrix.diff` accepts runtime-owned float or int matrix
+operands and returns an independent `matrix<float>` element-wise difference
+with matching operand shape, requires identical row and column counts,
+propagates `na` or non-finite source cells to `na` result cells, and preserves
+zero-dimension results. Scalar namespace `matrix.diff` accepts a numeric or
+`na` scalar on either side of a matrix operand and returns an independent
+same-shape `matrix<float>`. The `values.diff(scalar)` method alias supports
+the scalar-right form.
+`matrix.pow` accepts runtime-owned square float or int matrices and returns
+independent `matrix<float>` powers, with
+power `0` producing an identity matrix, power `1` producing an independent
+copy, larger powers using matrix multiplication `na` propagation, empty
+`0 x 0` inputs returning empty `0 x 0` results, and runtime errors for
+non-square matrices or negative powers.
+`matrix.elements_count` returns the current row-count by
+column-count element count, including zero for zero-dimension matrices.
+`matrix.is_square` returns whether row and column counts are equal.
+`matrix.is_zero` returns true when every stored numeric cell is zero, false for
+any non-zero or `na` cell, and true for zero-element matrices.
+`matrix.is_binary` returns true when every stored numeric cell is exactly zero
+or one, false for any other numeric value or `na` cell, and true for
+zero-element matrices.
+`matrix.is_diagonal` returns true when every cell outside the main diagonal is
+zero, false for any non-zero or `na` off-diagonal cell, allows any
+main-diagonal value, does not require a square shape, and returns true for
+zero-element matrices.
+`matrix.is_identity` returns true only for square matrices whose main diagonal
+cells are exactly one and whose off-diagonal cells are exactly zero, false for
+any `na` cell, false for non-square matrices, and true for empty `0 x 0`
+matrices.
+`matrix.is_symmetric` returns true only for square matrices whose stored
+numeric cells match their transposed counterparts, false for any `na` cell,
+false for non-square matrices, and true for empty `0 x 0` matrices.
+`matrix.is_antisymmetric` returns true only for square matrices whose main
+diagonal cells are exactly zero and whose off-diagonal cells are the negatives
+of their transposed counterparts, false for any `na` cell, false for non-square
+matrices, and true for empty `0 x 0` matrices.
+`matrix.is_stochastic` returns true when every cell is a finite non-negative
+number and either every row sums exactly to one or every column sums exactly to
+one, returns false for any `na` or negative cell, and returns false for
+zero-element matrices.
+`matrix.sum` returns the sum of numeric cells in row-major order,
 ignoring `na` cells and returning `na` when no numeric cells exist;
 `matrix.avg` returns the average over the same non-`na` numeric cell set.
-`values.sum()` and `values.avg()` lower to the matching read-only namespace
-helpers. `matrix.add_row` copies an `array<float>` row into the matrix,
+`matrix.min` and `matrix.max` scan the same non-`na` numeric cell set.
+`matrix.mode` returns the smallest most-frequent non-`na` numeric cell when a
+value repeats and otherwise returns `na`.
+`matrix.trace` sums non-`na` numeric cells on the main diagonal over
+`min(rows, columns)` positions and returns `na` when the diagonal has no
+numeric cells.
+`matrix.det` computes the determinant of square runtime-owned float or int
+matrices, returns `1.0` for empty `0 x 0` matrices, returns `na` for any `na`
+or non-finite cell, and raises a runtime error for non-square matrices.
+`matrix.eigenvalues` returns an independent `array<float>` of real eigenvalues
+for square runtime-owned float or int matrices, returns an empty array for
+empty `0 x 0` matrices, returns `na` for any `na` or non-finite cell and for
+non-real eigenvalue results, and raises a runtime error for non-square
+matrices.
+`matrix.eigenvectors` returns an independent `matrix<float>` whose columns are
+real eigenvectors for square runtime-owned float or int matrices, returns an
+independent empty `0 x 0` matrix for empty `0 x 0` input, returns `na` for any
+`na` or non-finite cell and for non-real or incomplete eigenvector results, and
+raises a runtime error for non-square matrices.
+`matrix.inv` computes an independent inverse matrix for non-singular square
+runtime-owned float or int matrices, returns an independent empty `0 x 0`
+matrix for empty `0 x 0` input, returns `na` for any `na` or non-finite cell
+and for singular matrices, and raises a runtime error for non-square matrices.
+`matrix.pinv` computes an independent Moore-Penrose pseudo-inverse matrix with
+row/column counts swapped from the source, returns an independent zero-cell
+matrix for zero-row or zero-column input, returns `na` for any `na` or
+non-finite cell, and supports singular and rectangular matrices.
+`matrix.rank` computes the rank of rectangular runtime-owned float or int
+matrices, returns `0` for zero-element matrices, and returns `na` for any `na`
+or non-finite cell.
+`values.sum()`, `values.avg()`, `values.min()`, `values.max()`,
+`values.mode()`, `values.trace()`, `values.det()`, `values.eigenvalues()`,
+`values.inv()`, `values.pinv()`, and `values.rank()` lower to the matching read-only
+namespace helpers.
+`matrix.add_row` copies an element-kind-matched row array into the matrix,
 requires the row length to match the current column count, and inserts at an
-index in `0..=rows` while preserving row order around the insertion.
-`matrix.add_col` copies an `array<float>` column into the matrix, requires the
-column length to match the current row count, and inserts at an index in
-`0..=columns` while preserving column order around the insertion.
+index in `0..=rows` while preserving row order around the insertion. Float
+matrices require `array<float>` row data, int matrices require `array<int>`
+row data, and bool matrices require `array<bool>` row data. `matrix.add_col` copies an element-kind-matched column array into the
+matrix, requires the column length to match the current row count, and inserts
+at an index in `0..=columns` while preserving column order around the
+insertion. Float matrices require `array<float>` column data, int matrices
+require `array<int>` column data, and bool matrices require `array<bool>`
+column data.
 `matrix.remove_row` deletes an existing row using the same row-index bounds as
 row reads. `matrix.remove_col` deletes an existing column using the same
-column-index bounds as column reads. Non-float matrix templates, other method
-syntax, bare or non-float matrix typed declarations, `varip`, and matrix for-in
-iteration remain outside the current subset. `matrix<float>` typed declarations
-accept compatible
-matrix values or `na`. Matrix history is supported only for committed
-`matrix<float>` snapshots that return fresh copies.
-Matrix `varip` declarations are rejected with a matrix-specific diagnostic until
-backing-store handoff semantics are designed.
+column-index bounds as column reads. Matrix templates beyond `float`, `int`,
+`bool`, `string`, and `color`, other method syntax, and bare matrix or matrix
+templates beyond float/int/bool/string/color typed declarations remain outside
+the current subset. `matrix<float>`, `matrix<int>`, `matrix<bool>`,
+`matrix<string>`, and `matrix<color>` typed declarations accept compatible
+matrix values or `na`; statement-form matrix `for...in` binds each loop value to
+an independent row snapshot array and the optional index to the zero-based row
+number. Matrix history is supported for committed matrix snapshots that return
+fresh copies. Matrix `varip` declarations are supported for the same runtime
+owned matrix element kinds, with realtime backing-store handoff across forming
+updates.
 
 ## `na`
 

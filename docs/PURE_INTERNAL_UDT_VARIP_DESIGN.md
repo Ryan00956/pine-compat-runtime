@@ -31,7 +31,11 @@ type Point
 varip p = bar_index == 0 ? Point.new(close) : Point.new(open)
 ```
 
-UDT array `varip` declarations are also rejected by
+Same-local scalar-field UDT array `varip` declarations are fixture-backed by
+`tests/fixtures/runtime/user_type_array_varip.pine`,
+`tests/fixtures/realtime/user_type_array_varip.pine`, and
+`tests/fixtures/sema/supported_user_type_array_varip_decl.pine`. Non-scalar UDT
+array `varip` declarations are rejected by
 `tests/fixtures/sema/unsupported_user_type_array_varip_decl.pine`, and
 nested-field UDT `varip` values are rejected by
 `tests/fixtures/sema/unsupported_user_type_varip_nested_field.pine`.
@@ -72,7 +76,7 @@ support:
 - imported identities are limited to scalar-field UDT values with source-scoped
   identity metadata;
 - no nested UDT fields;
-- no UDT arrays, UDT array history, or UDT array `varip`;
+- no non-scalar UDT arrays;
 - no UDT history references;
 - no drawing ids, chart points, tuples, maps, matrices, or arrays as UDT fields;
 - no field mutation inside UDF or method bodies beyond the subset already
@@ -157,7 +161,7 @@ A positive implementation slice should add at least:
 - paired realtime fixture showing ordinary UDT `var` still rolls back on
   repeated forming updates;
 - semantic fixture rejecting mismatched UDT assignment into a `varip` UDT slot;
-- semantic fixture keeping UDT array `varip` rejected;
+- semantic fixture keeping non-scalar UDT array `varip` rejected;
 - semantic fixture keeping deferred-field imported UDT `varip` rejected.
 
 Snapshot expectations must show the intrabar difference directly: ordinary UDT
@@ -172,6 +176,9 @@ Snapshot expectations must show the intrabar difference directly: ordinary UDT
    UDT identities only. Done.
 3. Add runtime and realtime fixtures proving field-vector clone handoff and
    confirmed-bar commit. Done for the typed scalar-field subset.
+4. Add same-local scalar-field UDT array `varip` handoff by reusing the
+   runtime-owned array backing-store seeding path and preserving UDT element
+   identity metadata. Done.
 4. Add untyped constructor inference only after typed declarations are stable.
    Done for direct same-local scalar-field constructors only.
 5. Add explicitly typed same-UDT ternary initializer fixtures under the existing

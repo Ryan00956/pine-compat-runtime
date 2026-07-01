@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported matrix reverse")
+
+values = matrix.new<float>(1, 2, close)
+matrix.reverse(values)
+values.reverse()
+plot(matrix.get(values, 0, 0))

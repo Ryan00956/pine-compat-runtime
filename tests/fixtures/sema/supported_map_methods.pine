@@ -1,0 +1,14 @@
+//@version=6
+indicator("Supported map methods")
+
+prices = map.new<string, float>()
+prices.put("open", open)
+prices.put("close", close)
+copied = prices.copy()
+prices.remove("open")
+count = prices.size()
+has_close = prices.contains("close")
+value = copied.get("open")
+copied.clear()
+
+plot(count + (has_close ? 1 : 0) + value)

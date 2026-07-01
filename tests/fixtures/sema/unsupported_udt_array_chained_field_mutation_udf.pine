@@ -1,0 +1,13 @@
+//@version=5
+indicator("Unsupported UDT array chained field mutation UDF")
+
+type Point
+    float x
+
+mutate(points) =>
+    points.get(0).x := high
+    points
+
+points = array.from(Point.new(close))
+result = mutate(points)
+plot(result.size())

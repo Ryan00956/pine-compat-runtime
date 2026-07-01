@@ -70,6 +70,12 @@ pub enum StmtKind {
         field: String,
         value: Expr,
     },
+    ArrayFieldReassign {
+        array: Expr,
+        index: Expr,
+        field: String,
+        value: Expr,
+    },
     TupleDecl {
         names: Vec<String>,
         value: Expr,
@@ -82,8 +88,16 @@ pub enum StmtKind {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DeclaredType {
     Named(String),
-    Array { element_type: String },
-    Matrix { element_type: String },
+    Array {
+        element_type: String,
+    },
+    Matrix {
+        element_type: String,
+    },
+    Map {
+        key_type: String,
+        value_type: String,
+    },
 }
 
 impl DeclaredType {
@@ -93,6 +107,10 @@ impl DeclaredType {
             Self::Named(type_name) => type_name.clone(),
             Self::Array { element_type } => format!("array<{element_type}>"),
             Self::Matrix { element_type } => format!("matrix<{element_type}>"),
+            Self::Map {
+                key_type,
+                value_type,
+            } => format!("map<{key_type},{value_type}>"),
         }
     }
 
@@ -102,6 +120,10 @@ impl DeclaredType {
             Self::Named(type_name) => type_name,
             Self::Array { element_type } => format!("array<{element_type}>"),
             Self::Matrix { element_type } => format!("matrix<{element_type}>"),
+            Self::Map {
+                key_type,
+                value_type,
+            } => format!("map<{key_type},{value_type}>"),
         }
     }
 
@@ -109,14 +131,14 @@ impl DeclaredType {
     pub fn named_type(&self) -> Option<&str> {
         match self {
             Self::Named(type_name) => Some(type_name),
-            Self::Array { .. } | Self::Matrix { .. } => None,
+            Self::Array { .. } | Self::Matrix { .. } | Self::Map { .. } => None,
         }
     }
 
     #[must_use]
     pub fn array_element_type(&self) -> Option<&str> {
         match self {
-            Self::Named(_) | Self::Matrix { .. } => None,
+            Self::Named(_) | Self::Matrix { .. } | Self::Map { .. } => None,
             Self::Array { element_type } => Some(element_type),
         }
     }
@@ -124,7 +146,7 @@ impl DeclaredType {
     #[must_use]
     pub fn matrix_element_type(&self) -> Option<&str> {
         match self {
-            Self::Named(_) | Self::Array { .. } => None,
+            Self::Named(_) | Self::Array { .. } | Self::Map { .. } => None,
             Self::Matrix { element_type } => Some(element_type),
         }
     }
@@ -253,6 +275,12 @@ pub enum ExprKind {
         from: Box<Expr>,
         to: Box<Expr>,
         step: Option<Box<Expr>>,
+        body: Vec<Stmt>,
+    },
+    ForIn {
+        index: Option<String>,
+        value: String,
+        iterable: Box<Expr>,
         body: Vec<Stmt>,
     },
     While {

@@ -1,0 +1,36 @@
+//@version=6
+indicator("Matrix reverse")
+
+values = matrix.new<float>(2, 3, na)
+matrix.set(values, 0, 0, close + 1)
+matrix.set(values, 0, 1, close + 2)
+matrix.set(values, 0, 2, close + 3)
+matrix.set(values, 1, 0, close + 4)
+matrix.set(values, 1, 1, close + 5)
+matrix.set(values, 1, 2, close + 6)
+
+matrix.reverse(values)
+
+method_values = matrix.new<float>(1, 3, na)
+method_values.set(0, 0, close + 7)
+method_values.set(0, 1, close + 8)
+method_values.set(0, 2, close + 9)
+method_values.reverse()
+
+zero_rows = matrix.new<float>(0, 3)
+zero_rows.reverse()
+zero_columns = matrix.new<float>(3, 0)
+matrix.reverse(zero_columns)
+
+plot(matrix.rows(values), "rows")
+plot(matrix.columns(values), "columns")
+plot(matrix.get(values, 0, 0), "cell_0_0")
+plot(matrix.get(values, 0, 1), "cell_0_1")
+plot(matrix.get(values, 1, 1), "cell_1_1")
+plot(matrix.get(values, 1, 2), "cell_1_2")
+plot(method_values.get(0, 0), "method_cell_0_0")
+plot(method_values.get(0, 2), "method_cell_0_2")
+plot(matrix.rows(zero_rows), "zero_rows_rows")
+plot(matrix.columns(zero_rows), "zero_rows_columns")
+plot(matrix.rows(zero_columns), "zero_columns_rows")
+plot(matrix.columns(zero_columns), "zero_columns_columns")

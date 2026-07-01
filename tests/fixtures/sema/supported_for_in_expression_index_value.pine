@@ -1,0 +1,12 @@
+//@version=6
+indicator("Supported for-in expression index value")
+
+values = array.from(1, 2)
+array_result = for index, value in values
+    index + value
+
+matrix_values = matrix.new<float>(2, 1, close)
+matrix_result = for index, row in matrix_values
+    index + row.get(0)
+
+plot(array_result + matrix_result)

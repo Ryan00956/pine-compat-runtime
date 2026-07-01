@@ -1,0 +1,85 @@
+//@version=6
+indicator("Matrix for-in")
+
+values = matrix.new<float>(2, 3, 0)
+matrix.set(values, 0, 0, 1)
+matrix.set(values, 0, 1, 2)
+matrix.set(values, 0, 2, 3)
+matrix.set(values, 1, 0, 4)
+matrix.set(values, 1, 1, 5)
+matrix.set(values, 1, 2, 6)
+
+row_count = 0
+sum = bar_index * 0.0
+for row in values
+    row_count := row_count + 1
+    sum := sum + row.get(0) + row.get(1) + row.get(2)
+    row.set(0, 100)
+
+matrix_unchanged = values.get(0, 0) == 1 ? 1 : 0
+
+weighted = bar_index * 0.0
+index_sum = bar_index * 0
+for i, row in values
+    index_sum := index_sum + i
+    weighted := weighted + row.get(0) * (i + 1)
+
+snapshot_shape_count = 0
+snapshot_shape_sum = bar_index * 0.0
+mutable = matrix.copy(values)
+for row in mutable
+    snapshot_shape_count := snapshot_shape_count + 1
+    snapshot_shape_sum := snapshot_shape_sum + row.get(0)
+    matrix.remove_row(mutable, 0)
+
+int_rows = matrix.new<int>(2, 1, 1)
+int_total = bar_index * 0
+for i, row in int_rows
+    int_total := int_total + row.get(0) + i
+
+bool_values = matrix.new<bool>(2, 1, true)
+bool_hits = bar_index * 0
+for row in bool_values
+    bool_hits := bool_hits + (row.get(0) ? 1 : 0)
+
+string_values = matrix.new<string>(1, 2, "x")
+string_hits = bar_index * 0
+for row in string_values
+    string_hits := string_hits + (row.get(1) == "x" ? 1 : 0)
+
+color_values = matrix.new<color>(1, 1, color.red)
+color_hits = bar_index * 0
+for row in color_values
+    color_hits := color_hits + (row.get(0) == color.red ? 1 : 0)
+
+break_sum = bar_index * 0.0
+for i, row in values
+    if i == 1
+        break
+    break_sum := break_sum + row.get(0)
+
+continue_sum = bar_index * 0.0
+for i, row in values
+    if i == 0
+        continue
+    continue_sum := continue_sum + row.get(0)
+
+empty = matrix.new<float>(0, 2)
+empty_count = 0
+for row in empty
+    empty_count := empty_count + 1
+
+plot(row_count, "row_count")
+plot(sum, "sum")
+plot(matrix_unchanged, "snapshot_independent")
+plot(index_sum, "index_sum")
+plot(weighted, "weighted")
+plot(snapshot_shape_count, "snapshot_shape_count")
+plot(snapshot_shape_sum, "snapshot_shape_sum")
+plot(int_total, "int_total")
+plot(bool_hits, "bool_hits")
+plot(string_hits, "string_hits")
+plot(color_hits, "color_hits")
+plot(break_sum, "break_sum")
+plot(continue_sum, "continue_sum")
+plot(empty_count, "empty_count")

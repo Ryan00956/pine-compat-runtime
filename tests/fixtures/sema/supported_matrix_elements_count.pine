@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported matrix elements count")
+
+values = matrix.new<float>(2, 3, close)
+plot(matrix.elements_count(values))
+plot(values.elements_count())

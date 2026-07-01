@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported matrix.reverse in UDF")
+
+reverse_matrix(values) =>
+    matrix.reverse(values)
+
+values = matrix.new<float>(1, 2, close)
+reverse_matrix(values)
+plot(close)

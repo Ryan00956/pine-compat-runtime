@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.swap_rows method row2")
+
+values = matrix.new<float>(2, 1, close)
+values.swap_rows(0, 1.5)

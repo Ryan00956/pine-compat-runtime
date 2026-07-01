@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.pinv")
+
+value = matrix.pinv(na)
+plot(value)

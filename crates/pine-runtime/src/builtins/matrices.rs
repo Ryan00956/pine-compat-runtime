@@ -1,8 +1,15 @@
 #![allow(dead_code)]
 
+use std::cmp::Ordering;
+
 use pine_ir::HirCallArg;
 
 use crate::*;
+
+mod arithmetic;
+mod linalg;
+mod linear_algebra;
+mod mutation;
 
 const MAX_MATRIX_CELLS: usize = 100_000;
 
@@ -43,19 +50,52 @@ impl<'a> HistoricalRuntime<'a> {
 
         Some(match callee {
             "matrix.new<float>" => self.eval_matrix_new_float(args),
+            "matrix.new<int>" => self.eval_matrix_new_int(args),
+            "matrix.new<bool>" => self.eval_matrix_new_bool(args),
+            "matrix.new<string>" => self.eval_matrix_new_string(args),
+            "matrix.new<color>" => self.eval_matrix_new_color(args),
             "matrix.get" => self.eval_matrix_get(args),
             "matrix.set" => self.eval_matrix_set(args),
             "matrix.fill" => self.eval_matrix_fill(args),
             "matrix.copy" => self.eval_matrix_copy(args),
+            "matrix.transpose" => self.eval_matrix_transpose(args),
+            "matrix.reverse" => self.eval_matrix_reverse(args),
             "matrix.reshape" => self.eval_matrix_reshape(args),
+            "matrix.kron" => self.eval_matrix_kron(args),
+            "matrix.mult" => self.eval_matrix_mult(args),
+            "matrix.diff" => self.eval_matrix_diff(args),
+            "matrix.pow" => self.eval_matrix_pow(args),
             "matrix.add_row" => self.eval_matrix_add_row(args),
             "matrix.add_col" => self.eval_matrix_add_col(args),
             "matrix.remove_col" => self.eval_matrix_remove_col(args),
             "matrix.remove_row" => self.eval_matrix_remove_row(args),
+            "matrix.swap_columns" => self.eval_matrix_swap_columns(args),
+            "matrix.swap_rows" => self.eval_matrix_swap_rows(args),
+            "matrix.sort" => self.eval_matrix_sort(args),
+            "matrix.submatrix" => self.eval_matrix_submatrix(args),
             "matrix.rows" => self.eval_matrix_rows(args),
             "matrix.columns" => self.eval_matrix_columns(args),
+            "matrix.elements_count" => self.eval_matrix_elements_count(args),
+            "matrix.is_square" => self.eval_matrix_is_square(args),
+            "matrix.is_binary" => self.eval_matrix_is_binary(args),
+            "matrix.is_diagonal" => self.eval_matrix_is_diagonal(args),
+            "matrix.is_identity" => self.eval_matrix_is_identity(args),
+            "matrix.is_symmetric" => self.eval_matrix_is_symmetric(args),
+            "matrix.is_antisymmetric" => self.eval_matrix_is_antisymmetric(args),
+            "matrix.is_stochastic" => self.eval_matrix_is_stochastic(args),
+            "matrix.is_zero" => self.eval_matrix_is_zero(args),
             "matrix.sum" => self.eval_matrix_sum(args),
             "matrix.avg" => self.eval_matrix_avg(args),
+            "matrix.min" => self.eval_matrix_min(args),
+            "matrix.max" => self.eval_matrix_max(args),
+            "matrix.mode" => self.eval_matrix_mode(args),
+            "matrix.trace" => self.eval_matrix_trace(args),
+            "matrix.det" => self.eval_matrix_det(args),
+            "matrix.eigenvalues" => self.eval_matrix_eigenvalues(args),
+            "matrix.eigenvectors" => self.eval_matrix_eigenvectors(args),
+            "matrix.inv" => self.eval_matrix_inv(args),
+            "matrix.pinv" => self.eval_matrix_pinv(args),
+            "matrix.rank" => self.eval_matrix_rank(args),
             "matrix.row" => self.eval_matrix_row(args),
             "matrix.col" => self.eval_matrix_col(args),
             _ => return None,
@@ -74,6 +114,62 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Na
         };
         self.new_matrix(MatrixElementKind::Float, rows, columns, initial_value)
+    }
+
+    pub(crate) fn eval_matrix_new_int(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let rows = matrix_dimension_value("row", self.eval_expr(&args[0].value)?)?;
+        let columns = matrix_dimension_value("column", self.eval_expr(&args[1].value)?)?;
+        let initial_value = if let Some(initial_value) = args.get(2) {
+            eval_matrix_int_value(self.eval_expr(&initial_value.value)?)
+        } else {
+            PineValue::Na
+        };
+        self.new_matrix(MatrixElementKind::Int, rows, columns, initial_value)
+    }
+
+    pub(crate) fn eval_matrix_new_bool(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let rows = matrix_dimension_value("row", self.eval_expr(&args[0].value)?)?;
+        let columns = matrix_dimension_value("column", self.eval_expr(&args[1].value)?)?;
+        let initial_value = if let Some(initial_value) = args.get(2) {
+            eval_matrix_bool_value(self.eval_expr(&initial_value.value)?)
+        } else {
+            PineValue::Na
+        };
+        self.new_matrix(MatrixElementKind::Bool, rows, columns, initial_value)
+    }
+
+    pub(crate) fn eval_matrix_new_string(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let rows = matrix_dimension_value("row", self.eval_expr(&args[0].value)?)?;
+        let columns = matrix_dimension_value("column", self.eval_expr(&args[1].value)?)?;
+        let initial_value = if let Some(initial_value) = args.get(2) {
+            eval_matrix_string_value(self.eval_expr(&initial_value.value)?)
+        } else {
+            PineValue::Na
+        };
+        self.new_matrix(MatrixElementKind::String, rows, columns, initial_value)
+    }
+
+    pub(crate) fn eval_matrix_new_color(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let rows = matrix_dimension_value("row", self.eval_expr(&args[0].value)?)?;
+        let columns = matrix_dimension_value("column", self.eval_expr(&args[1].value)?)?;
+        let initial_value = if let Some(initial_value) = args.get(2) {
+            eval_matrix_color_value(self.eval_expr(&initial_value.value)?)
+        } else {
+            PineValue::Na
+        };
+        self.new_matrix(MatrixElementKind::Color, rows, columns, initial_value)
     }
 
     pub(crate) fn eval_matrix_get(
@@ -106,7 +202,11 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let row = matrix_index_value("row", row)?;
         let column = matrix_index_value("column", column)?;
-        let value = eval_matrix_float_value(self.eval_expr(&args[3].value)?);
+        let value = self.eval_expr(&args[3].value)?;
+        let Some(kind) = self.matrix_store.get(&id).map(|matrix| matrix.kind) else {
+            return Ok(PineValue::Void);
+        };
+        let value = eval_matrix_value_for_kind(kind, value);
         self.matrix_set_value(id, row, column, value)?;
         Ok(PineValue::Void)
     }
@@ -116,10 +216,14 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
         let id = self.eval_expr(&args[0].value)?;
-        let value = eval_matrix_float_value(self.eval_expr(&args[1].value)?);
+        let value = self.eval_expr(&args[1].value)?;
         let PineValue::Matrix(id) = id else {
             return Ok(PineValue::Void);
         };
+        let Some(kind) = self.matrix_store.get(&id).map(|matrix| matrix.kind) else {
+            return Ok(PineValue::Void);
+        };
+        let value = eval_matrix_value_for_kind(kind, value);
         self.matrix_fill_value(id, value);
         Ok(PineValue::Void)
     }
@@ -134,83 +238,24 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(self.copy_matrix(id))
     }
 
-    pub(crate) fn eval_matrix_reshape(
+    pub(crate) fn eval_matrix_transpose(
         &mut self,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let rows = matrix_dimension_value("row", self.eval_expr(&args[1].value)?)?;
-        let columns = matrix_dimension_value("column", self.eval_expr(&args[2].value)?)?;
-        let PineValue::Matrix(id) = id else {
-            return Ok(PineValue::Void);
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
         };
-        self.matrix_reshape(id, rows, columns)?;
-        Ok(PineValue::Void)
+        Ok(self.matrix_transpose(id))
     }
 
-    pub(crate) fn eval_matrix_add_row(
+    pub(crate) fn eval_matrix_reverse(
         &mut self,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let row = matrix_insert_index_value("row", self.eval_expr(&args[1].value)?)?;
-        let array_id = self.eval_expr(&args[2].value)?;
-        let PineValue::Matrix(id) = id else {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
             return Ok(PineValue::Void);
         };
-        let PineValue::Array(array_id) = array_id else {
-            return Ok(PineValue::Void);
-        };
-        let Some(values) = self.array_values_clone(array_id)? else {
-            return Ok(PineValue::Void);
-        };
-        self.matrix_add_row(id, row, values)?;
-        Ok(PineValue::Void)
-    }
-
-    pub(crate) fn eval_matrix_add_col(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let column = matrix_insert_index_value("column", self.eval_expr(&args[1].value)?)?;
-        let array_id = self.eval_expr(&args[2].value)?;
-        let PineValue::Matrix(id) = id else {
-            return Ok(PineValue::Void);
-        };
-        let PineValue::Array(array_id) = array_id else {
-            return Ok(PineValue::Void);
-        };
-        let Some(values) = self.array_values_clone(array_id)? else {
-            return Ok(PineValue::Void);
-        };
-        self.matrix_add_col(id, column, values)?;
-        Ok(PineValue::Void)
-    }
-
-    pub(crate) fn eval_matrix_remove_row(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let row = matrix_index_value("row", self.eval_expr(&args[1].value)?)?;
-        let PineValue::Matrix(id) = id else {
-            return Ok(PineValue::Void);
-        };
-        self.matrix_remove_row(id, row)?;
-        Ok(PineValue::Void)
-    }
-
-    pub(crate) fn eval_matrix_remove_col(
-        &mut self,
-        args: &[HirCallArg],
-    ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let column = matrix_index_value("column", self.eval_expr(&args[1].value)?)?;
-        let PineValue::Matrix(id) = id else {
-            return Ok(PineValue::Void);
-        };
-        self.matrix_remove_col(id, column)?;
+        self.matrix_reverse(id);
         Ok(PineValue::Void)
     }
 
@@ -240,6 +285,123 @@ impl<'a> HistoricalRuntime<'a> {
             .unwrap_or(PineValue::Na))
     }
 
+    pub(crate) fn eval_matrix_elements_count(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .matrix_elements_count(id)
+            .map(|count| PineValue::Int(count as i64))
+            .unwrap_or(PineValue::Na))
+    }
+
+    pub(crate) fn eval_matrix_is_square(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .matrix_is_square(id)
+            .map(PineValue::Bool)
+            .unwrap_or(PineValue::Na))
+    }
+
+    pub(crate) fn eval_matrix_is_zero(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .matrix_is_zero(id)
+            .map(PineValue::Bool)
+            .unwrap_or(PineValue::Na))
+    }
+
+    pub(crate) fn eval_matrix_is_binary(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .matrix_is_binary(id)
+            .map(PineValue::Bool)
+            .unwrap_or(PineValue::Na))
+    }
+
+    pub(crate) fn eval_matrix_is_diagonal(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .matrix_is_diagonal(id)
+            .map(PineValue::Bool)
+            .unwrap_or(PineValue::Na))
+    }
+
+    pub(crate) fn eval_matrix_is_identity(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .matrix_is_identity(id)
+            .map(PineValue::Bool)
+            .unwrap_or(PineValue::Na))
+    }
+
+    pub(crate) fn eval_matrix_is_symmetric(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .matrix_is_symmetric(id)
+            .map(PineValue::Bool)
+            .unwrap_or(PineValue::Na))
+    }
+
+    pub(crate) fn eval_matrix_is_antisymmetric(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .matrix_is_antisymmetric(id)
+            .map(PineValue::Bool)
+            .unwrap_or(PineValue::Na))
+    }
+
+    pub(crate) fn eval_matrix_is_stochastic(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .matrix_is_stochastic(id)
+            .map(PineValue::Bool)
+            .unwrap_or(PineValue::Na))
+    }
+
     pub(crate) fn eval_matrix_sum(
         &mut self,
         args: &[HirCallArg],
@@ -260,6 +422,46 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(self.matrix_avg(id).unwrap_or(PineValue::Na))
     }
 
+    pub(crate) fn eval_matrix_min(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self.matrix_min(id).unwrap_or(PineValue::Na))
+    }
+
+    pub(crate) fn eval_matrix_max(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self.matrix_max(id).unwrap_or(PineValue::Na))
+    }
+
+    pub(crate) fn eval_matrix_mode(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self.matrix_mode(id).unwrap_or(PineValue::Na))
+    }
+
+    pub(crate) fn eval_matrix_trace(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self.matrix_trace(id).unwrap_or(PineValue::Na))
+    }
+
     pub(crate) fn eval_matrix_row(
         &mut self,
         args: &[HirCallArg],
@@ -270,10 +472,13 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         let row = matrix_index_value("row", row)?;
+        let Some(kind) = self.matrix_store.get(&id).map(|matrix| matrix.kind) else {
+            return Ok(PineValue::Na);
+        };
         let Some(values) = self.matrix_row_values(id, row)? else {
             return Ok(PineValue::Na);
         };
-        Ok(self.new_array_from_values(ArrayElementKind::Float, values))
+        Ok(self.new_array_from_values(matrix_array_element_kind(kind), values))
     }
 
     pub(crate) fn eval_matrix_col(
@@ -286,10 +491,13 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         let column = matrix_index_value("column", column)?;
+        let Some(kind) = self.matrix_store.get(&id).map(|matrix| matrix.kind) else {
+            return Ok(PineValue::Na);
+        };
         let Some(values) = self.matrix_col_values(id, column)? else {
             return Ok(PineValue::Na);
         };
-        Ok(self.new_array_from_values(ArrayElementKind::Float, values))
+        Ok(self.new_array_from_values(matrix_array_element_kind(kind), values))
     }
 
     pub(crate) fn new_matrix(
@@ -324,10 +532,186 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Matrix(id))
     }
 
+    fn insert_matrix_storage(
+        &mut self,
+        kind: MatrixElementKind,
+        rows: usize,
+        columns: usize,
+        values: Vec<PineValue>,
+    ) -> PineValue {
+        let id = self.next_matrix_id;
+        self.next_matrix_id += 1;
+        self.matrix_store.insert(
+            id,
+            MatrixStorage {
+                kind,
+                rows,
+                columns,
+                values,
+            },
+        );
+        PineValue::Matrix(id)
+    }
+
     pub(crate) fn matrix_shape(&self, id: u32) -> Option<(usize, usize)> {
         self.matrix_store
             .get(&id)
             .map(|matrix| (matrix.rows, matrix.columns))
+    }
+
+    pub(crate) fn matrix_elements_count(&self, id: u32) -> Option<usize> {
+        self.matrix_store.get(&id).map(|matrix| matrix.values.len())
+    }
+
+    pub(crate) fn matrix_is_square(&self, id: u32) -> Option<bool> {
+        self.matrix_store
+            .get(&id)
+            .map(|matrix| matrix.rows == matrix.columns)
+    }
+
+    pub(crate) fn matrix_is_zero(&self, id: u32) -> Option<bool> {
+        self.matrix_store.get(&id).map(|matrix| {
+            matrix
+                .values
+                .iter()
+                .all(|value| matches!(value.as_f64(), Some(number) if number == 0.0))
+        })
+    }
+
+    pub(crate) fn matrix_is_binary(&self, id: u32) -> Option<bool> {
+        self.matrix_store.get(&id).map(|matrix| {
+            matrix.values.iter().all(
+                |value| matches!(value.as_f64(), Some(number) if number == 0.0 || number == 1.0),
+            )
+        })
+    }
+
+    pub(crate) fn matrix_is_diagonal(&self, id: u32) -> Option<bool> {
+        self.matrix_store.get(&id).map(|matrix| {
+            for row in 0..matrix.rows {
+                for column in 0..matrix.columns {
+                    if row == column {
+                        continue;
+                    }
+                    let offset = row * matrix.columns + column;
+                    if !matches!(matrix.values[offset].as_f64(), Some(number) if number == 0.0) {
+                        return false;
+                    }
+                }
+            }
+            true
+        })
+    }
+
+    pub(crate) fn matrix_is_identity(&self, id: u32) -> Option<bool> {
+        self.matrix_store.get(&id).map(|matrix| {
+            if matrix.rows != matrix.columns {
+                return false;
+            }
+            for row in 0..matrix.rows {
+                for column in 0..matrix.columns {
+                    let offset = row * matrix.columns + column;
+                    let expected = if row == column { 1.0 } else { 0.0 };
+                    if !matches!(matrix.values[offset].as_f64(), Some(number) if number == expected)
+                    {
+                        return false;
+                    }
+                }
+            }
+            true
+        })
+    }
+
+    pub(crate) fn matrix_is_symmetric(&self, id: u32) -> Option<bool> {
+        self.matrix_store.get(&id).map(|matrix| {
+            if matrix.rows != matrix.columns {
+                return false;
+            }
+            for row in 0..matrix.rows {
+                for column in 0..matrix.columns {
+                    if matrix.values[row * matrix.columns + column]
+                        .as_f64()
+                        .is_none()
+                    {
+                        return false;
+                    }
+                    if row < column {
+                        let Some(value) = matrix.values[row * matrix.columns + column].as_f64()
+                        else {
+                            return false;
+                        };
+                        let Some(mirror) = matrix.values[column * matrix.columns + row].as_f64()
+                        else {
+                            return false;
+                        };
+                        if value != mirror {
+                            return false;
+                        }
+                    }
+                }
+            }
+            true
+        })
+    }
+
+    pub(crate) fn matrix_is_antisymmetric(&self, id: u32) -> Option<bool> {
+        self.matrix_store.get(&id).map(|matrix| {
+            if matrix.rows != matrix.columns {
+                return false;
+            }
+            for row in 0..matrix.rows {
+                for column in row..matrix.columns {
+                    let Some(value) = matrix.values[row * matrix.columns + column].as_f64() else {
+                        return false;
+                    };
+                    if row == column {
+                        if value != 0.0 {
+                            return false;
+                        }
+                        continue;
+                    }
+                    let Some(mirror) = matrix.values[column * matrix.columns + row].as_f64() else {
+                        return false;
+                    };
+                    if value != -mirror {
+                        return false;
+                    }
+                }
+            }
+            true
+        })
+    }
+
+    pub(crate) fn matrix_is_stochastic(&self, id: u32) -> Option<bool> {
+        self.matrix_store.get(&id).map(|matrix| {
+            if matrix.values.is_empty() {
+                return false;
+            }
+            let mut values = Vec::with_capacity(matrix.values.len());
+            for value in &matrix.values {
+                let Some(number) = value.as_f64() else {
+                    return false;
+                };
+                if !number.is_finite() || number < 0.0 {
+                    return false;
+                }
+                values.push(number);
+            }
+
+            let rows_sum_to_one = (0..matrix.rows).all(|row| {
+                let start = row * matrix.columns;
+                let end = start + matrix.columns;
+                values[start..end].iter().sum::<f64>() == 1.0
+            });
+            let columns_sum_to_one = (0..matrix.columns).all(|column| {
+                (0..matrix.rows)
+                    .map(|row| values[row * matrix.columns + column])
+                    .sum::<f64>()
+                    == 1.0
+            });
+
+            rows_sum_to_one || columns_sum_to_one
+        })
     }
 
     pub(crate) fn matrix_get_cloned(
@@ -381,143 +765,25 @@ impl<'a> HistoricalRuntime<'a> {
         PineValue::Matrix(id)
     }
 
-    pub(crate) fn matrix_reshape(
-        &mut self,
-        id: u32,
-        rows: i64,
-        columns: i64,
-    ) -> Result<(), RuntimeError> {
-        let rows = matrix_dimension("row", rows)?;
-        let columns = matrix_dimension("column", columns)?;
-        let cells = rows.checked_mul(columns).ok_or_else(|| RuntimeError {
-            message: "matrix reshape dimensions must preserve element count".to_owned(),
-        })?;
-        let Some(matrix) = self.matrix_store.get_mut(&id) else {
-            return Ok(());
+    pub(crate) fn matrix_transpose(&mut self, source_id: u32) -> PineValue {
+        let Some(source) = self.matrix_store.get(&source_id).cloned() else {
+            return PineValue::Na;
         };
-        if cells != matrix.values.len() {
-            return Err(RuntimeError {
-                message: "matrix reshape dimensions must preserve element count".to_owned(),
-            });
+
+        let mut values = Vec::with_capacity(source.values.len());
+        for row in 0..source.columns {
+            for column in 0..source.rows {
+                values.push(source.values[column * source.columns + row].clone());
+            }
         }
-        matrix.rows = rows;
-        matrix.columns = columns;
-        Ok(())
+
+        self.insert_matrix_storage(source.kind, source.columns, source.rows, values)
     }
 
-    pub(crate) fn matrix_add_row(
-        &mut self,
-        id: u32,
-        row: i64,
-        values: Vec<PineValue>,
-    ) -> Result<(), RuntimeError> {
-        let Some(matrix) = self.matrix_store.get_mut(&id) else {
-            return Ok(());
-        };
-        let row = matrix_insert_index("row", row, matrix.rows)?;
-        if values.len() != matrix.columns {
-            return Err(RuntimeError {
-                message: format!(
-                    "matrix add_row array size {} must match column count {}",
-                    values.len(),
-                    matrix.columns
-                ),
-            });
+    pub(crate) fn matrix_reverse(&mut self, id: u32) {
+        if let Some(matrix) = self.matrix_store.get_mut(&id) {
+            matrix.values.reverse();
         }
-        let new_cells = (matrix.rows + 1)
-            .checked_mul(matrix.columns)
-            .ok_or_else(|| RuntimeError {
-                message: format!("matrix cell count cannot exceed {MAX_MATRIX_CELLS}"),
-            })?;
-        if new_cells > MAX_MATRIX_CELLS {
-            return Err(RuntimeError {
-                message: format!("matrix cell count cannot exceed {MAX_MATRIX_CELLS}"),
-            });
-        }
-        let offset = row * matrix.columns;
-        matrix.values.splice(
-            offset..offset,
-            values.into_iter().map(eval_matrix_float_value),
-        );
-        matrix.rows += 1;
-        Ok(())
-    }
-
-    pub(crate) fn matrix_add_col(
-        &mut self,
-        id: u32,
-        column: i64,
-        values: Vec<PineValue>,
-    ) -> Result<(), RuntimeError> {
-        let Some(matrix) = self.matrix_store.get_mut(&id) else {
-            return Ok(());
-        };
-        let column = matrix_insert_index("column", column, matrix.columns)?;
-        if values.len() != matrix.rows {
-            return Err(RuntimeError {
-                message: format!(
-                    "matrix add_col array size {} must match row count {}",
-                    values.len(),
-                    matrix.rows
-                ),
-            });
-        }
-        let new_columns = matrix.columns + 1;
-        let new_cells = matrix
-            .rows
-            .checked_mul(new_columns)
-            .ok_or_else(|| RuntimeError {
-                message: format!("matrix cell count cannot exceed {MAX_MATRIX_CELLS}"),
-            })?;
-        if new_cells > MAX_MATRIX_CELLS {
-            return Err(RuntimeError {
-                message: format!("matrix cell count cannot exceed {MAX_MATRIX_CELLS}"),
-            });
-        }
-
-        let mut inserted_values = values.into_iter().map(eval_matrix_float_value);
-        let mut next_values = Vec::with_capacity(new_cells);
-        for row in 0..matrix.rows {
-            let start = row * matrix.columns;
-            let insert_offset = start + column;
-            next_values.extend_from_slice(&matrix.values[start..insert_offset]);
-            next_values.push(inserted_values.next().unwrap_or(PineValue::Na));
-            next_values.extend_from_slice(&matrix.values[insert_offset..start + matrix.columns]);
-        }
-        matrix.columns = new_columns;
-        matrix.values = next_values;
-        Ok(())
-    }
-
-    pub(crate) fn matrix_remove_row(&mut self, id: u32, row: i64) -> Result<(), RuntimeError> {
-        let Some(matrix) = self.matrix_store.get_mut(&id) else {
-            return Ok(());
-        };
-        let row = matrix_index("row", row, matrix.rows)?;
-        let start = row * matrix.columns;
-        let end = start + matrix.columns;
-        matrix.values.drain(start..end);
-        matrix.rows -= 1;
-        Ok(())
-    }
-
-    pub(crate) fn matrix_remove_col(&mut self, id: u32, column: i64) -> Result<(), RuntimeError> {
-        let Some(matrix) = self.matrix_store.get_mut(&id) else {
-            return Ok(());
-        };
-        let column = matrix_index("column", column, matrix.columns)?;
-        let new_columns = matrix.columns - 1;
-        let mut next_values = Vec::with_capacity(matrix.rows * new_columns);
-        for row in 0..matrix.rows {
-            let start = row * matrix.columns;
-            let remove_offset = start + column;
-            next_values.extend_from_slice(&matrix.values[start..remove_offset]);
-            next_values
-                .extend_from_slice(&matrix.values[remove_offset + 1..start + matrix.columns]);
-        }
-        matrix.columns = new_columns;
-        matrix.values = next_values;
-        Ok(())
     }
 
     pub(crate) fn matrix_row_values(
@@ -576,6 +842,72 @@ impl<'a> HistoricalRuntime<'a> {
         (count > 0).then(|| finite_float_or_na(total / count as f64))
     }
 
+    pub(crate) fn matrix_min(&self, id: u32) -> Option<PineValue> {
+        let matrix = self.matrix_store.get(&id)?;
+        matrix
+            .values
+            .iter()
+            .filter_map(PineValue::as_f64)
+            .reduce(f64::min)
+            .map(finite_float_or_na)
+    }
+
+    pub(crate) fn matrix_max(&self, id: u32) -> Option<PineValue> {
+        let matrix = self.matrix_store.get(&id)?;
+        matrix
+            .values
+            .iter()
+            .filter_map(PineValue::as_f64)
+            .reduce(f64::max)
+            .map(finite_float_or_na)
+    }
+
+    pub(crate) fn matrix_mode(&self, id: u32) -> Option<PineValue> {
+        let matrix = self.matrix_store.get(&id)?;
+        let mut values: Vec<_> = matrix.values.iter().filter_map(PineValue::as_f64).collect();
+        if values.is_empty() {
+            return None;
+        }
+        values.sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
+
+        let mut best_value = values[0];
+        let mut best_count = 0_usize;
+        let mut current_value = values[0];
+        let mut current_count = 0_usize;
+        for value in values {
+            if (value - current_value).abs() < f64::EPSILON {
+                current_count += 1;
+            } else {
+                if current_count > best_count {
+                    best_value = current_value;
+                    best_count = current_count;
+                }
+                current_value = value;
+                current_count = 1;
+            }
+        }
+        if current_count > best_count {
+            best_value = current_value;
+            best_count = current_count;
+        }
+        (best_count >= 2).then(|| finite_float_or_na(best_value))
+    }
+
+    pub(crate) fn matrix_trace(&self, id: u32) -> Option<PineValue> {
+        let matrix = self.matrix_store.get(&id)?;
+        let diagonal_len = matrix.rows.min(matrix.columns);
+        let mut total = 0.0;
+        let mut has_value = false;
+        for index in 0..diagonal_len {
+            let offset = index * matrix.columns + index;
+            if let Some(number) = matrix.values[offset].as_f64() {
+                total += number;
+                has_value = true;
+            }
+        }
+        has_value.then(|| finite_float_or_na(total))
+    }
+
     pub(crate) fn matrix_store_profile(&self) -> MatrixStoreProfile {
         MatrixStoreProfile {
             slots: self.matrix_store.len(),
@@ -613,6 +945,54 @@ fn eval_matrix_float_value(value: PineValue) -> PineValue {
         PineValue::Int(value) => PineValue::Float(value as f64),
         PineValue::Float(_) | PineValue::Na => value,
         _ => PineValue::Na,
+    }
+}
+
+fn eval_matrix_int_value(value: PineValue) -> PineValue {
+    match value {
+        PineValue::Int(_) | PineValue::Na => value,
+        _ => PineValue::Na,
+    }
+}
+
+fn eval_matrix_bool_value(value: PineValue) -> PineValue {
+    match value {
+        PineValue::Bool(_) | PineValue::Na => value,
+        _ => PineValue::Na,
+    }
+}
+
+fn eval_matrix_string_value(value: PineValue) -> PineValue {
+    match value {
+        PineValue::String(_) | PineValue::Na => value,
+        _ => PineValue::Na,
+    }
+}
+
+fn eval_matrix_color_value(value: PineValue) -> PineValue {
+    match value {
+        PineValue::Color(_) | PineValue::Na => value,
+        _ => PineValue::Na,
+    }
+}
+
+fn eval_matrix_value_for_kind(kind: MatrixElementKind, value: PineValue) -> PineValue {
+    match kind {
+        MatrixElementKind::Float => eval_matrix_float_value(value),
+        MatrixElementKind::Int => eval_matrix_int_value(value),
+        MatrixElementKind::Bool => eval_matrix_bool_value(value),
+        MatrixElementKind::String => eval_matrix_string_value(value),
+        MatrixElementKind::Color => eval_matrix_color_value(value),
+    }
+}
+
+pub(crate) fn matrix_array_element_kind(kind: MatrixElementKind) -> ArrayElementKind {
+    match kind {
+        MatrixElementKind::Float => ArrayElementKind::Float,
+        MatrixElementKind::Int => ArrayElementKind::Int,
+        MatrixElementKind::Bool => ArrayElementKind::Bool,
+        MatrixElementKind::String => ArrayElementKind::String,
+        MatrixElementKind::Color => ArrayElementKind::Color,
     }
 }
 

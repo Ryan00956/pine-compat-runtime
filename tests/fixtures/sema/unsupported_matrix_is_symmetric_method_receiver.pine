@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.is_symmetric method receiver")
+
+is_symmetric = close.is_symmetric()
+plot(close)

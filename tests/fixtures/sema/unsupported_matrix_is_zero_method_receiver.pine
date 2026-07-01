@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.is_zero method receiver")
+
+is_zero = close.is_zero()
+plot(close)

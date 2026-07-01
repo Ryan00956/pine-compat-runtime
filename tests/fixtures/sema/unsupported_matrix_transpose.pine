@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.transpose")
+
+values = matrix.transpose(na)
+plot(close)

@@ -1,0 +1,19 @@
+//@version=6
+indicator("Map history")
+
+values = map.new<string, float>()
+values.put("close", close)
+values.put("open", open)
+
+previous = values[1]
+previous_close = na(previous) ? na : previous.get("close")
+previous_size = na(previous) ? na : previous.size()
+
+if bar_index > 0
+    previous.put("close", 100)
+    previous.put("extra", 200)
+
+plot(previous_close, "previous_close")
+plot(values.get("close"), "current_close")
+plot(previous_size, "previous_size")
+plot(values.size(), "current_size")

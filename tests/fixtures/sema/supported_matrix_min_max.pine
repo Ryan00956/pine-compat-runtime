@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported matrix min max")
+
+values = matrix.new<float>(1, 2, close)
+plot(matrix.min(values))
+plot(values.min())
+plot(matrix.max(values))
+plot(values.max())

@@ -1,0 +1,25 @@
+//@version=6
+indicator("Matrix swap_rows")
+
+values = matrix.new<float>(3, 2, na)
+matrix.set(values, 0, 0, close + 1)
+matrix.set(values, 0, 1, close + 2)
+matrix.set(values, 1, 0, close + 3)
+matrix.set(values, 1, 1, close + 4)
+matrix.set(values, 2, 0, close + 5)
+matrix.set(values, 2, 1, close + 6)
+
+matrix.swap_rows(values, 0, 2)
+values.swap_rows(1, 1)
+
+zero_columns = matrix.new<float>(3, 0)
+zero_columns.swap_rows(0, 2)
+
+plot(matrix.rows(values), "rows")
+plot(matrix.columns(values), "columns")
+plot(matrix.get(values, 0, 0), "r0c0")
+plot(matrix.get(values, 0, 1), "r0c1")
+plot(matrix.get(values, 1, 0), "r1c0")
+plot(matrix.get(values, 2, 0), "r2c0")
+plot(matrix.rows(zero_columns), "zero_columns_rows")
+plot(matrix.columns(zero_columns), "zero_columns_columns")

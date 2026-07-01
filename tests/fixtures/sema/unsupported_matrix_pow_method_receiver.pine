@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix.pow method receiver")
+
+values = close
+value = values.pow(2)
+plot(value)

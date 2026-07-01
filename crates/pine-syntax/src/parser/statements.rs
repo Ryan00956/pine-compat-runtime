@@ -1,4 +1,4 @@
-use crate::{DeclMode, FunctionBody, Span, Stmt, StmtKind, TokenKind};
+use crate::{DeclMode, Expr, ExprKind, FunctionBody, Span, Stmt, StmtKind, TokenKind};
 
 use super::{ForInParts, ForParts, Parser};
 
@@ -99,6 +99,10 @@ impl Parser {
                 });
             }
 
+            if self.get_call_field_reassign_colon_eq_offset().is_some() {
+                return self.parse_array_field_reassign(name, start);
+            }
+
             if let Some(colon_eq_offset) = self.nested_field_reassign_colon_eq_offset() {
                 for _ in 0..=colon_eq_offset {
                     self.bump();
@@ -154,6 +158,60 @@ impl Parser {
         Some(Stmt {
             span: expr.span,
             kind: StmtKind::Expr(expr),
+        })
+    }
+
+    fn parse_array_field_reassign(&mut self, first: String, start: Span) -> Option<Stmt> {
+        self.bump();
+        self.expect(TokenKind::Dot, "expected `.` before `get`")?;
+        let TokenKind::Identifier(method) = self.current().kind.clone() else {
+            self.error_here("E_PARSE_ASSIGN", "expected `get` after `.`");
+            return None;
+        };
+        if method != "get" {
+            self.error_here(
+                "E_PARSE_ASSIGN",
+                "expected `get` before chained field mutation",
+            );
+            return None;
+        }
+        self.bump();
+        self.expect(TokenKind::LParen, "expected `(` after `get`")?;
+
+        let (array, index) = if first == "array" {
+            let array = self.parse_expr(0)?;
+            self.expect(TokenKind::Comma, "expected `,` after array receiver")?;
+            let index = self.parse_expr(0)?;
+            (array, index)
+        } else {
+            let array = Expr {
+                span: start,
+                kind: ExprKind::Identifier(first),
+            };
+            let index = self.parse_expr(0)?;
+            (array, index)
+        };
+
+        self.expect(TokenKind::RParen, "expected `)` after array get index")?;
+        self.expect(TokenKind::Dot, "expected `.` before field name")?;
+        let TokenKind::Identifier(field) = self.current().kind.clone() else {
+            self.error_here("E_PARSE_ASSIGN", "expected field name after `.`");
+            return None;
+        };
+        self.bump();
+        self.expect(
+            TokenKind::ColonEq,
+            "expected `:=` in chained field mutation",
+        )?;
+        let value = self.parse_expr(0)?;
+        Some(Stmt {
+            span: start.merge(value.span),
+            kind: StmtKind::ArrayFieldReassign {
+                array,
+                index,
+                field,
+                value,
+            },
         })
     }
 
@@ -286,13 +344,7 @@ impl Parser {
         })
     }
 
-    pub(super) fn parse_for_parts(&mut self) -> Option<ForParts> {
-        let start = self.expect(TokenKind::For, "expected `for`")?;
-        let counter = self.parse_for_counter()?;
-        self.parse_for_range_tail(start, counter)
-    }
-
-    fn parse_for_counter(&mut self) -> Option<String> {
+    pub(super) fn parse_for_counter(&mut self) -> Option<String> {
         match self.current().kind.clone() {
             TokenKind::Identifier(name) => {
                 self.bump();
@@ -305,7 +357,11 @@ impl Parser {
         }
     }
 
-    fn parse_for_range_tail(&mut self, start: Span, counter: String) -> Option<ForParts> {
+    pub(super) fn parse_for_range_tail(
+        &mut self,
+        start: Span,
+        counter: String,
+    ) -> Option<ForParts> {
         self.expect(TokenKind::Eq, "expected `=` after loop counter")?;
         let from = self.parse_expr(0)?;
         self.expect(TokenKind::To, "expected `to` in for loop")?;
@@ -334,7 +390,7 @@ impl Parser {
         })
     }
 
-    fn parse_for_in_tail(
+    pub(super) fn parse_for_in_tail(
         &mut self,
         start: Span,
         index: Option<String>,

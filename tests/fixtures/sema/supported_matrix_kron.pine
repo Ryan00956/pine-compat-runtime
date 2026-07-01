@@ -1,0 +1,9 @@
+//@version=6
+indicator("Supported matrix kron")
+
+left = matrix.new<float>(2, 2, close)
+right = matrix.new<float>(1, 2, open)
+namespace_result = matrix.kron(left, right)
+method_result = left.kron(right)
+plot(matrix.get(namespace_result, 0, 0))
+plot(matrix.get(method_result, 0, 0))

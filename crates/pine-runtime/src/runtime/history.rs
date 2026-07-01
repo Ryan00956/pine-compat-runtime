@@ -93,6 +93,7 @@ impl<'a> HistoricalRuntime<'a> {
                 Ok(self.new_array_from_values_with_user_type_metadata(id, kind, values))
             }
             PineValue::Matrix(id) => Ok(self.copy_matrix(id)),
+            PineValue::Map(id) => Ok(self.copy_map(id)),
             value => Ok(value),
         }
     }

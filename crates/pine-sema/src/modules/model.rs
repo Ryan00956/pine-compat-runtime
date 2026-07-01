@@ -1,9 +1,9 @@
 use std::collections::{HashMap, HashSet};
 
 use pine_ir::{PineType, Qualifier, ValueKind};
-use pine_syntax::{Diagnostic, Expr, Program, Span};
+use pine_syntax::{Diagnostic, Expr, FunctionBody, Program, Span};
 
-use crate::analyzer::context::FunctionInfo;
+use crate::analyzer::context::{FunctionInfo, MethodInfo};
 use crate::source_graph::SourceId;
 
 #[derive(Debug)]
@@ -11,6 +11,7 @@ pub(crate) struct ModuleValidation {
     pub(crate) diagnostics: Vec<Diagnostic>,
     pub(crate) root_program: Program,
     pub(crate) imported_functions: HashMap<String, FunctionInfo>,
+    pub(crate) imported_methods: HashMap<(String, String), MethodInfo>,
     pub(crate) imported_user_types: HashMap<String, ImportedUserTypeInfo>,
 }
 
@@ -89,6 +90,17 @@ pub(super) struct ModuleUserTypeFieldInfo {
 pub(super) struct ModuleMethodInfo {
     pub(super) receiver_type_name: Option<String>,
     pub(super) receiver_identity: Option<ModuleUserTypeIdentity>,
+    pub(super) receiver_name: String,
+    pub(super) params: Vec<ModuleMethodParamInfo>,
+    pub(super) param_names: Vec<String>,
+    pub(super) body: FunctionBody,
+    pub(super) span: Span,
+}
+
+#[derive(Debug, Clone)]
+pub(super) struct ModuleMethodParamInfo {
+    pub(super) name: String,
+    pub(super) type_name: String,
 }
 
 #[derive(Debug, Clone)]

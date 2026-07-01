@@ -1,0 +1,23 @@
+//@version=6
+indicator("Matrix is_diagonal")
+
+diagonal = matrix.new<float>(2, 2, 0)
+matrix.set(diagonal, 0, 0, close)
+matrix.set(diagonal, 1, 1, close + 1)
+rectangular = matrix.new<float>(2, 3, 0)
+matrix.set(rectangular, 0, 0, 1)
+matrix.set(rectangular, 1, 1, 2)
+non_diagonal = matrix.copy(diagonal)
+matrix.set(non_diagonal, 0, 1, 1)
+off_diagonal_na = matrix.new<float>(2, 2, 0)
+matrix.set(off_diagonal_na, 0, 1, na)
+diagonal_na = matrix.new<float>(2, 2, 0)
+matrix.set(diagonal_na, 0, 0, na)
+zero_rows = matrix.new<float>(0, 2)
+
+plot(matrix.is_diagonal(diagonal) ? 1 : 0, "diagonal")
+plot(rectangular.is_diagonal() ? 1 : 0, "rectangular")
+plot(matrix.is_diagonal(non_diagonal) ? 1 : 0, "non_diagonal")
+plot(off_diagonal_na.is_diagonal() ? 1 : 0, "off_diagonal_na")
+plot(matrix.is_diagonal(diagonal_na) ? 1 : 0, "diagonal_na")
+plot(zero_rows.is_diagonal() ? 1 : 0, "zero_rows")

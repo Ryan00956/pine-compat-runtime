@@ -10,6 +10,9 @@ impl Parser {
         if let Some(parsed) = self.try_parse_matrix_typed_decl_name() {
             return Some(parsed);
         }
+        if let Some(parsed) = self.try_parse_map_typed_decl_name() {
+            return Some(parsed);
+        }
         if let Some(parsed) = self.try_parse_array_type_alias_decl_name() {
             return Some(parsed);
         }
@@ -129,6 +132,51 @@ impl Parser {
             self.bump();
         }
         Some((DeclaredType::Matrix { element_type }, name, start))
+    }
+
+    fn try_parse_map_typed_decl_name(&mut self) -> Option<(DeclaredType, String, Span)> {
+        let TokenKind::Identifier(container) = self.current().kind.clone() else {
+            return None;
+        };
+        if container != "map" || !self.nth_at(1, TokenKind::Lt) {
+            return None;
+        }
+
+        let start_pos = self.pos;
+        let (key_type, value_type, name_offset, eq_offset) = if self.nth_at(3, TokenKind::Comma)
+            && self.nth_at(5, TokenKind::Gt)
+            && self.nth_at(7, TokenKind::Eq)
+        {
+            let TokenKind::Identifier(key_type) = self.tokens.get(self.pos + 2)?.kind.clone()
+            else {
+                return None;
+            };
+            let TokenKind::Identifier(value_type) = self.tokens.get(self.pos + 4)?.kind.clone()
+            else {
+                return None;
+            };
+            (key_type, value_type, 6, 7)
+        } else {
+            return None;
+        };
+
+        let TokenKind::Identifier(name) = self.tokens.get(self.pos + name_offset)?.kind.clone()
+        else {
+            return None;
+        };
+
+        let start = self.current().span;
+        while self.pos < start_pos + eq_offset {
+            self.bump();
+        }
+        Some((
+            DeclaredType::Map {
+                key_type,
+                value_type,
+            },
+            name,
+            start,
+        ))
     }
 
     fn try_parse_array_type_alias_decl_name(&mut self) -> Option<(DeclaredType, String, Span)> {

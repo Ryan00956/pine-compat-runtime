@@ -1,0 +1,12 @@
+//@version=6
+indicator("Supported map varip")
+
+varip map<string, float> typed = na
+if na(typed)
+    typed := map.new<string, float>()
+
+varip inferred = map.new<string, float>()
+typed.put("close", close)
+inferred.put("open", open)
+
+plot(typed.get("close") + inferred.get("open"))

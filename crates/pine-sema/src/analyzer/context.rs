@@ -49,9 +49,11 @@ pub(crate) struct Analyzer {
     pub(crate) symbol_user_types: HashMap<SymbolId, String>,
     pub(crate) symbol_user_type_identities: HashMap<SymbolId, UserTypeIdentity>,
     pub(crate) symbol_user_type_arrays: HashMap<SymbolId, String>,
+    pub(crate) symbol_maps: HashMap<SymbolId, MapTypeInfo>,
     pub(crate) expr_user_types: HashMap<(usize, usize), String>,
     pub(crate) expr_user_type_identities: HashMap<(usize, usize), UserTypeIdentity>,
     pub(crate) expr_user_type_arrays: HashMap<(usize, usize), String>,
+    pub(crate) expr_maps: HashMap<(usize, usize), MapTypeInfo>,
     pub(crate) expr_types: HashMap<(usize, usize), PineType>,
     pub(crate) script_declaration: Option<(ScriptMode, Span)>,
     pub(crate) strategy_settings: StrategySettings,
@@ -105,6 +107,12 @@ pub(crate) enum UdfArgError {
 pub(crate) enum MethodResolution {
     NotMethod,
     Resolved(Option<PineType>),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct MapTypeInfo {
+    pub(crate) key_kind: pine_ir::ValueKind,
+    pub(crate) value_kind: pine_ir::ValueKind,
 }
 
 impl Analyzer {

@@ -34,10 +34,13 @@ declarations for the same local scalar-field UDT array subset. UDT values read
 from those arrays can be locally field-mutated without changing the source
 array slot until an explicit same-UDT `array.set`/`set()` writeback, can be
 passed to local pure UDFs, and when bound to local variables can call local pure
-UDT methods. Direct chained slot mutation such as `points.get(0).x := value`
-remains unsupported at the parser boundary; scripts must bind the element to a
-local variable and explicitly write it back with `array.set`/`set()`. Other array
-helpers remain unsupported.
+UDT methods. Direct chained slot mutation is supported for
+`array.get(points, index).field := value` and `points.get(index).field := value`
+when `points` is a same-local scalar-field UDT array; it rewrites the selected
+slot by value and mirrors through slices. Chained UDT array field mutation inside
+UDFs remains rejected by the existing function side-effect policy. UDT-specific
+numeric/statistical helpers, binary search, nested collections, and non-scalar
+UDT element families remain unsupported.
 Ordinary `var` UDT arrays roll back to the
 confirmed backing store during realtime forming updates.
 
@@ -48,21 +51,35 @@ Current evidence:
 - `docs/ARRAY_STAGE_AUDIT.md` is historical for this area; newer conformance and
   this document are the authority for the now fixture-backed UDT `sort_field`
   subset.
-- `docs/PHASE_J_AUDIT.md` keeps UDT arrays, UDT history references, UDT
-  `varip`, nested UDT fields, recursive UDTs, and imported UDT values
-  unsupported after the local scalar-field UDT phase.
+- `docs/PHASE_J_AUDIT.md` is historical for this area; current conformance and
+  this document keep nested UDT fields, recursive UDTs, non-scalar imported UDT
+  arrays, and imported UDT array helpers outside the fixture-backed
+  same-imported scalar-field `array.from`/typed-array subset unsupported after
+  the local scalar-field UDT phase.
 - `tests/fixtures/sema/unsupported_user_type_array_decl.pine` and
   `tests/fixtures/sema/unsupported_user_type_array_alias_decl.pine` reject typed
   UDT array declarations whose element UDT has unsupported non-scalar fields.
   `tests/fixtures/sema/unsupported_user_type_array_from_decl.pine` keeps
-  mismatched UDT array initialization rejected, and
-  `tests/fixtures/sema/unsupported_user_type_array_varip_decl.pine` keeps UDT
-  array `varip` declarations rejected, while
+  mismatched UDT array initialization rejected,
+  `tests/fixtures/sema/supported_user_type_array_varip_decl.pine` accepts
+  same-local scalar-field UDT array `varip`, and
+  `tests/fixtures/sema/unsupported_user_type_array_varip_decl.pine` keeps
+  non-scalar UDT array `varip` declarations rejected, while
+  `tests/fixtures/runtime/import_udt_array_typed_declarations.pine` covers
+  same-imported scalar-field UDT array template and alias declarations, while
   `tests/fixtures/sema/unsupported_imported_udt_array_decl.pine` and
   `tests/fixtures/sema/unsupported_imported_udt_array_alias_decl.pine` keep
-  imported UDT array template and alias declarations rejected.
-  `tests/fixtures/sema/unsupported_imported_udt_array_from.pine` keeps
-  `array.from` inference from imported UDT values rejected.
+  non-scalar imported UDT array template and alias declarations rejected.
+  `tests/fixtures/runtime/import_udt_array_from.pine` covers same-imported
+  scalar-field UDT `array.from` construction with size/get/first/last field
+  reads, set replacement field reads, push append field reads, unshift prepend
+  field reads, insert insertion field reads, fill replacement field reads,
+  join positional stringification, includes/indexof/lastindexof structural
+  equality search, sort/sort_indices by int/float/string sort_field,
+  pop/remove/shift return field reads, clear/clear() size reset, copy
+  independent field reads, reverse reordered field reads, slice window field
+  reads, concat appended field reads, and statement/expression/index-value
+  for-in value-copy field reads.
   `crates/pine-sema/tests/fixtures.rs` and
   `crates/pine-sema/src/tests/compatibility.rs` assert those diagnostics.
 - `tests/fixtures/runtime/array_new_udt.pine` covers the current
@@ -127,16 +144,20 @@ Current evidence:
   `tests/fixtures/sema/unsupported_user_type_array_alias_decl.pine`,
   `tests/fixtures/sema/unsupported_user_type_array_from_decl.pine`, and
   `tests/fixtures/sema/unsupported_user_type_array_varip_decl.pine` keep
-  non-scalar-field UDT arrays, mismatched UDT array assignment, and UDT array
-  `varip` declarations rejected.
+  non-scalar-field UDT arrays, mismatched UDT array assignment, and non-scalar
+  UDT array `varip` declarations rejected, while
+  `tests/fixtures/sema/supported_user_type_array_varip_decl.pine` covers the
+  same-local scalar-field UDT array `varip` declaration subset.
 - `tests/fixtures/sema/unsupported_array_unshift_udt.pine` rejects unshift
   values from a different local UDT identity.
 - `tests/fixtures/runtime/user_type_array_writeback.pine` covers independent
   field mutation of UDT values read from arrays and explicit same-UDT
-  `array.set`/`set()` writeback into the source slot.
-- `tests/fixtures/syntax/unsupported_udt_array_chained_field_mutation.pine`
-  keeps direct chained UDT array slot field mutation rejected at the parser
-  boundary.
+  `array.set`/`set()` writeback into the source slot, plus namespace-call,
+  method-call, and slice-window chained field mutation writeback.
+- `tests/fixtures/syntax/udt_array_chained_field_mutation.pine` parses direct
+  chained UDT array slot field mutation syntax, while
+  `tests/fixtures/sema/unsupported_udt_array_chained_field_mutation_udf.pine`
+  keeps the UDF side-effect boundary rejected.
 - `crates/pine-sema/tests/fixtures.rs` also asserts the rejected UDT array helper
   diagnostics for the fixture-backed helper set above.
 
@@ -267,6 +288,10 @@ Accepted forms currently stay narrow:
 - `array.new<Point>()` / `array.new<Point>(size, Point.new(...))` for one local
   scalar-field UDT type
 - `array.from(Point.new(...))` when every element is the same local UDT
+- `array.from(lib.Point.new(...))` when every element is the same imported
+  scalar-field UDT, currently fixture-backed for size/get/first/last plus
+  pop/remove/shift return field reads, clear-size reset, and copy independent
+  field reads plus reverse reordered field reads
 - `array.get(points, index)` returning the same local UDT type
 - `array.set(points, index, Point.new(...))`
 - `array.push(points, Point.new(...))`
@@ -324,8 +349,9 @@ fixture-backed together:
 - mixed local UDT element arrays;
 - assignment between arrays of different UDT declarations with identical field
   shapes;
-- imported UDT arrays;
-- arrays of UDT values inferred across source boundaries.
+- imported UDT arrays beyond the same-imported scalar-field `array.from` and
+  typed-array fixture-backed helper subset;
+- arrays of UDT values inferred across mixed source boundaries.
 
 Shape equality is not type equality. Two UDT declarations with the same field
 names and field types must remain incompatible unless a later design explicitly
@@ -418,7 +444,8 @@ Supported history policy:
 - `array.get`/`get()` on the historical array id preserves the local UDT
   element identity so scalar fields remain readable;
 - no history references on UDT values read from arrays in the current subset;
-- no `varip` UDT arrays in the first positive runtime slice;
+- same-local scalar-field UDT array `varip` values retain the array id, backing
+  contents, and element identity metadata across realtime forming updates;
 - UDT arrays still roll back correctly for ordinary realtime forming updates
   when stored in `var` variables, with fixture-backed coverage in
   `tests/fixtures/realtime/user_type_array_var_rollback.pine`.
@@ -444,7 +471,8 @@ Initial policy:
   values read from arrays;
 - local pure methods on UDT values read from arrays are fixture-backed after the
   value is bound to a local variable;
-- imported methods remain unsupported.
+- receiver-style scalar imported UDT methods are supported, while
+  alias-qualified imported methods remain unsupported.
 
 ## Diagnostics
 
@@ -482,7 +510,12 @@ Recommended future slices:
    same-local scalar-field UDT value.
 8. UDT array join stringifies elements as `TypeName(field0, field1, ...)`
    without widening general UDT stringification.
-9. `varip` UDT arrays only after realtime handoff semantics are designed.
+9. UDT array `varip` for same-local scalar-field elements retains array ids,
+   backing contents, and element identity metadata across realtime forming
+   updates. Done.
+10. Chained UDT array slot field mutation supports namespace-call,
+    method-call, and slice-window writeback for same-local scalar-field UDT
+    arrays. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -507,7 +540,8 @@ This design gate started as a planning prerequisite and is now kept synchronized
 with incremental positive runtime slices. The current supported subset is the
 same-local scalar-field UDT `array.new<T>()` and `array.from` paths with the
 helper set listed in Current Boundary and Accepted Forms, plus ordinary `var`
-realtime rollback and typed `array<T>`/`T[]` declarations for that same UDT
-array subset. Broader UDT element families, UDT value history references, `varip`, and
-helpers not listed there remain unsupported until later fixture-backed slices
-implement syntax, analysis, runtime behavior, and conformance updates together.
+realtime rollback, same-local scalar-field UDT array `varip`, and typed
+`array<T>`/`T[]` declarations for that same UDT array subset. Broader UDT
+element families, UDT value history references, and helpers not listed there
+remain unsupported until later fixture-backed slices implement syntax, analysis,
+runtime behavior, and conformance updates together.

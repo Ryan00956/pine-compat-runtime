@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix.diff method value")
+
+values = matrix.new<float>(1, 1, 1)
+value = values.diff(close)
+plot(value)

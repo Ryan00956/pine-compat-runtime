@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix.mult method value")
+
+values = matrix.new<float>(1, 1, 1)
+value = values.mult(close)
+plot(value)

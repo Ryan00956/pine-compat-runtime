@@ -888,6 +888,141 @@ fn varip_array_fixture_persists_intrabar_backing_store_between_forming_updates()
 }
 
 #[test]
+fn user_type_array_varip_fixture_persists_intrabar_backing_store_between_forming_updates() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/user_type_array_varip.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[1.0]);
+    assert_values(&result.plots[1].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_values(&result.plots[0].values, &[1.0, 2.0]);
+    assert_values(&result.plots[1].values, &[1.0, 2.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should retain UDT array varip state");
+    assert_values(&result.plots[0].values, &[1.0, 3.0]);
+    assert_values(&result.plots[1].values, &[1.0, 3.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit UDT array varip state");
+    assert_values(&result.plots[0].values, &[1.0, 4.0]);
+    assert_values(&result.plots[1].values, &[1.0, 4.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(5.0)))
+        .expect("next forming update should start from confirmed UDT array varip state");
+    assert_values(&result.plots[0].values, &[1.0, 4.0, 5.0]);
+    assert_values(&result.plots[1].values, &[1.0, 4.0, 5.0]);
+}
+
+#[test]
+fn import_udt_array_varip_fixture_persists_intrabar_backing_store_between_forming_updates() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/import_udt_array_varip.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[2.0]);
+    assert_values(&result.plots[1].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_values(&result.plots[0].values, &[2.0, 3.0]);
+    assert_values(&result.plots[1].values, &[1.0, 2.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should retain imported UDT array varip state");
+    assert_values(&result.plots[0].values, &[2.0, 4.0]);
+    assert_values(&result.plots[1].values, &[1.0, 3.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit imported UDT array varip state");
+    assert_values(&result.plots[0].values, &[2.0, 5.0]);
+    assert_values(&result.plots[1].values, &[1.0, 4.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(5.0)))
+        .expect("next forming update should start from confirmed imported UDT array varip state");
+    assert_values(&result.plots[0].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[1].values, &[1.0, 4.0, 5.0]);
+}
+
+#[test]
+fn map_varip_fixture_persists_intrabar_backing_store_between_forming_updates() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/map_varip.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[1.0]);
+    assert_values(&result.plots[1].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_values(&result.plots[0].values, &[1.0, 2.0]);
+    assert_values(&result.plots[1].values, &[1.0, 2.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should retain map varip state");
+    assert_values(&result.plots[0].values, &[1.0, 3.0]);
+    assert_values(&result.plots[1].values, &[1.0, 3.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit map varip state");
+    assert_values(&result.plots[0].values, &[1.0, 4.0]);
+    assert_values(&result.plots[1].values, &[1.0, 4.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(5.0)))
+        .expect("next forming update should start from confirmed map varip state");
+    assert_values(&result.plots[0].values, &[1.0, 4.0, 5.0]);
+    assert_values(&result.plots[1].values, &[1.0, 4.0, 5.0]);
+}
+
+#[test]
+fn matrix_varip_fixture_persists_intrabar_backing_store_between_forming_updates() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/matrix_varip.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_values(&result.plots[0].values, &[1.0, 3.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should carry matrix varip state");
+    assert_values(&result.plots[0].values, &[1.0, 6.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should seed from latest forming matrix varip state");
+    assert_values(&result.plots[0].values, &[1.0, 10.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(5.0)))
+        .expect("next forming update should start from confirmed matrix varip state");
+    assert_values(&result.plots[0].values, &[1.0, 10.0, 15.0]);
+}
+
+#[test]
 fn dynamic_history_fixture_rolls_back_forming_history() {
     let mut runtime = runtime_for_fixture("tests/fixtures/realtime/dynamic_history_rollback.pine");
 

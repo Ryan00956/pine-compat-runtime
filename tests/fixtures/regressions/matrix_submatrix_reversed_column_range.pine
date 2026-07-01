@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix submatrix reversed column range")
+
+values = matrix.new<float>(3, 4, close)
+slice = matrix.submatrix(values, 0, 3, 3, 2)
+plot(matrix.rows(slice))

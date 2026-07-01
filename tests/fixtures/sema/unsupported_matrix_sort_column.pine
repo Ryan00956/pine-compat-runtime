@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.sort column")
+
+values = matrix.new<float>(1, 1, close)
+matrix.sort(values, 0.5)

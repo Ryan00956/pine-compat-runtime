@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported matrix mode")
+
+values = matrix.new<float>(1, 2, close)
+plot(matrix.mode(values))
+plot(values.mode())

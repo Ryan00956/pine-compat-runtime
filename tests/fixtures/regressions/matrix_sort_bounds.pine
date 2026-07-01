@@ -1,0 +1,5 @@
+//@version=6
+indicator("Matrix sort bounds")
+
+values = matrix.new<float>(1, 1, close)
+matrix.sort(values, 1)

@@ -233,7 +233,7 @@ Good next slice:
   `docs/PURE_INTERNAL_UDT_ARRAY_DESIGN.md`; the generic/bare array declaration
   design gate is closed in `docs/PURE_INTERNAL_ARRAY_DECLARATION_DESIGN.md`; the
   `for...in` design gate is closed in `docs/PURE_INTERNAL_FOR_IN_DESIGN.md`.
-  Use those documents before any positive `map.*`, any broader `matrix.*`, UDT
+  Use those documents before widening `map.*`, any broader `matrix.*`, UDT
   array, declaration-widening, or `for...in` support.
 
 ## Direction 4: User-Defined Types, Methods, And Imports
@@ -263,12 +263,12 @@ Remaining internal work:
 
 - broader imported UDT identity flow across source graphs, including history
   and collections;
-- imported methods;
+- broader imported methods beyond the receiver-style scalar imported UDT subset;
 - UDT arrays beyond the same-local scalar-field subset and UDT history
   references;
 - broader `varip` UDT values beyond the typed same-local scalar-field subset;
 - side effects inside methods or UDFs, if ever accepted;
-- clearer diagnostics for unsupported imported UDT, imported method, and method
+- clearer diagnostics for unsupported imported UDT, broader imported method, and method
   side-effect boundaries.
 
 Non-goals:

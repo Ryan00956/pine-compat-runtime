@@ -24,6 +24,16 @@ fn collect_input_calls_from_stmts(statements: &[HirStmt], calls: &mut Vec<InputC
             | HirStmtKind::TupleDecl { value: expr, .. } => {
                 collect_input_calls_from_expr(expr, calls);
             }
+            HirStmtKind::ArrayFieldReassign {
+                array,
+                index,
+                value,
+                ..
+            } => {
+                collect_input_calls_from_expr(array, calls);
+                collect_input_calls_from_expr(index, calls);
+                collect_input_calls_from_expr(value, calls);
+            }
             HirStmtKind::If {
                 condition,
                 then_branch,
@@ -118,6 +128,16 @@ fn collect_input_calls_from_expr(expr: &HirExpr, calls: &mut Vec<InputCall>) {
             if let Some(step) = step {
                 collect_input_calls_from_expr(step, calls);
             }
+            collect_input_calls_from_stmts(statements, calls);
+            collect_input_calls_from_expr(result, calls);
+        }
+        HirExprKind::ForIn {
+            iterable,
+            statements,
+            result,
+            ..
+        } => {
+            collect_input_calls_from_expr(iterable, calls);
             collect_input_calls_from_stmts(statements, calls);
             collect_input_calls_from_expr(result, calls);
         }

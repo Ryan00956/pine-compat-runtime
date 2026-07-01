@@ -2,6 +2,247 @@
 
 ## Unreleased
 
+- Added fixture-backed same-imported scalar-field UDT `array.from` construction
+  with `array.size`, namespace/method `array.get`, namespace/method
+  `array.first`/`array.last` field reads, namespace/method
+  `array.set`/`set()` replacement field reads, namespace/method
+  `array.push`/`push()` append field reads, namespace/method
+  `array.unshift`/`unshift()` prepend field reads, namespace/method
+  `array.insert`/`insert()` insertion field reads, namespace/method
+  `array.fill`/`fill()` replacement field reads, namespace/method
+  `array.join`/`join()` positional stringification, namespace/method
+  `array.includes`/`array.indexof`/`array.lastindexof` structural equality
+  search, namespace/method `array.sort`/`array.sort_indices` by scalar
+  `sort_field`, namespace/method
+  `array.pop`/`array.remove`/`array.shift` return field reads, and
+  `array.clear`/`clear()` size reset plus `array.copy`/`copy()` independent
+  field reads, `array.reverse`/`reverse()` reordered field reads,
+  `array.slice`/`slice()` window field reads, and
+  `array.concat`/`concat()` appended field reads, plus
+  statement/expression/index-value `for...in` value-copy field reads, while
+  `array.new<lib.Type>` remains rejected.
+- Added fixture-backed same-imported scalar-field UDT typed array declarations
+  for `array<lib.Type>` and `lib.Type[]`, with `na` initialization, later
+  same-identity `array.from` assignment, copy/get/push reads, and statement
+  `for...in` value-copy field reads. Non-scalar imported UDT array declarations
+  remain rejected.
+- Added fixture-backed same-imported scalar-field UDT array `varip`
+  declarations with historical and realtime intrabar backing-store handoff.
+  Non-scalar imported UDT array `varip` declarations remain rejected.
+- Added fixture-backed imported scalar-field UDT typed-array `slice()` and
+  `concat()` coverage, keeping the array helper matrix aligned with the
+  imported UDT array subset.
+- Added fixture-backed scalar-field imported UDT value history with caller-side
+  field reads, while local UDT value history and broader imported UDT history
+  remain rejected.
+- Added fixture-backed method-local scalar-field UDT mutation for local and
+  imported pure methods, while keeping receiver/parameter/global method field
+  side effects rejected.
+- Added fixture-backed receiver-style and alias-qualified scalar imported UDT
+  method calls, including direct receiver, same-identity parameter, block-local
+  alias, final-if alias, final-for alias, and nested-method passthrough returns
+  plus same-imported-identity constructor returns, using imported method receiver
+  identity while keeping wrong receiver types rejected.
+- Added fixture-backed same-local scalar-field UDT array chained field mutation
+  for `array.get(points, index).field := value` and
+  `points.get(index).field := value`, including slice-window parent writeback.
+  UDF-local chained UDT array mutation remains rejected as a function side
+  effect.
+- Added fixture-backed same-local scalar-field UDT array `varip` support for
+  `array<T>` and `T[]` declarations. Realtime forming updates now carry the
+  retained array id together with its backing store and UDT element metadata,
+  while non-scalar UDT array `varip` declarations remain rejected.
+- Added fixture-backed matrix `varip` support for runtime-owned
+  `matrix<float>`, `matrix<int>`, `matrix<bool>`, `matrix<string>`, and
+  `matrix<color>` ids. Realtime forming updates now carry matrix `varip` slots
+  together with their backing stores and advance retained matrix ids.
+- Added fixture-backed `map.new<K, V>()` support for runtime-owned map ids over
+  scalar `int`, `float`, `bool`, `string`, and `color` key/value templates,
+  plus `map.size(id)`, `map.put(id, key, value)`, `map.get(id, key)`, and
+  `map.contains(id, key)` namespace calls, plus `map.clear(id)` full-map
+  clearing, `map.remove(id, key)` single-key deletion, and `map.copy(id)`
+  independent backing-store cloning, plus `map.keys(id)` and `map.values(id)`
+  insertion-order array snapshots, and `map.put_all(target, source)`
+  same-template merge semantics. Equivalent `id.size()`, `id.put(...)`,
+  `id.get(...)`, `id.contains(...)`, `id.clear()`, `id.remove(...)`,
+  `id.copy()`, `id.keys()`, `id.values()`, and `id.put_all(source)` method
+  aliases lower to the same runtime calls. Ordinary realtime rollback of
+  map-store mutations is fixture-backed. Scalar `map<K,V>` typed declarations
+  accept compatible or `na` initialization and same-template reassignment.
+  Scalar map history snapshots now return independent historical copies.
+  Scalar map `varip` now retains map ids and backing stores across realtime
+  forming updates. Read-only map helpers now work through user-defined function
+  parameters when the caller supplies a known scalar map template. Bare map
+  declarations and non-scalar templates remain unsupported.
+- Added fixture-backed `while` expression coverage for `matrix<int>`,
+  `matrix<bool>`, `matrix<string>`, and `matrix<color>` results with
+  caller-side reads and mutation.
+- Added fixture-backed expression-form `for value in values` support for
+  `array<int>`, `array<float>`, `array<bool>`, `array<string>`,
+  `array<color>`, `array<label>`, `array<line>`, `array<linefill>`,
+  `array<polyline>`, `array<box>`, `array<table>`, `array<chart.point>`, and
+  same-local scalar-field UDT array iterables plus runtime-owned matrix row
+  iterables, returning the loop body's last expression from the last completed
+  iteration and `na` for zero-iteration or typed-`na` collections, with `break`
+  returning the previous result and `continue` skipping the current result
+  expression, including optional zero-based index locals. Broader collection
+  families remain unsupported.
+- Added fixture-backed statement-form `for...in` iteration over runtime-owned
+  `matrix<float>`, `matrix<int>`, `matrix<bool>`, `matrix<string>`, and
+  `matrix<color>` values. Matrix loops iterate row snapshots captured at loop
+  entry, expose each row as an independent `array<T>`, and support the narrow
+  `for row in values` and `for row_index, row in values` statement forms while
+  keeping map iteration and `varip matrix<T>` semantics unsupported.
+- Added fixture-backed `matrix.new<color>` support for runtime-owned color
+  matrix ids with color/`na` cells through structural matrix operations:
+  get/set/fill/copy/transpose/reverse/reshape/submatrix/row/col, row/column
+  insertion, deletion, swaps, shape readers, `is_square`, and
+  `matrix<color>` typed declarations, while numeric matrix readers and algebra
+  remain limited to float/int matrices.
+- Added fixture-backed `matrix.new<string>` support for runtime-owned string
+  matrix ids with string/`na` cells through structural matrix operations:
+  get/set/fill/copy/transpose/reverse/reshape/submatrix/row/col, row/column
+  insertion, deletion, swaps, shape readers, `is_square`, and
+  `matrix<string>` typed declarations, while numeric matrix readers and algebra
+  remain limited to float/int matrices.
+- Added fixture-backed `matrix.new<bool>` support for runtime-owned bool matrix
+  ids with bool/`na` cells through structural matrix operations:
+  get/set/fill/copy/transpose/reverse/reshape/submatrix/row/col, row/column
+  insertion, deletion, swaps, shape readers, `is_square`, and `matrix<bool>`
+  typed declarations, while numeric matrix readers and algebra remain limited
+  to float/int matrices.
+- Added fixture-backed `matrix.new<int>` support for runtime-owned int matrix
+  ids with int/`na` cells through `matrix.get`, `matrix.set`, `matrix.fill`,
+  `matrix.copy`, `matrix.transpose`, `matrix.reverse`, `matrix.reshape`,
+  `matrix.submatrix`, `matrix.row`, `matrix.col`, `matrix.add_row`,
+  `matrix.add_col`, `matrix.remove_row`, `matrix.remove_col`,
+  `matrix.swap_rows`, `matrix.swap_columns`, `matrix.sort`, shape readers,
+  value predicates, numeric readers, float-result matrix arithmetic including
+  scalar namespace mult/diff and matrix-array multiplication, linear algebra
+  readers, and matching supported method aliases, including
+  `array<int>` row/column insertion data and `matrix<int>` typed declarations
+  with compatible matrix or `na` initializers.
+- Added fixture-backed numeric-array `matrix.mult(values, vector)`,
+  `values.mult(vector)`, and `matrix.mult(vector, values)` support, treating
+  arrays as column or row vectors and returning independent `array<float>`
+  dot-product results with `na` propagation and semantic rejection for
+  array-pair or non-numeric arrays.
+- Added fixture-backed left-scalar namespace `matrix.diff(scalar, values)`
+  support for runtime-owned float or int matrices, returning independent
+  same-shape `matrix<float>` results that preserve subtraction operand order
+  with `na` propagation while keeping scalar-pair calls rejected at semantic
+  analysis.
+- Added fixture-backed left-scalar namespace `matrix.mult(scalar, values)`
+  support for runtime-owned float or int matrices, returning independent
+  same-shape `matrix<float>` results with `na` propagation while keeping
+  scalar-pair calls rejected at semantic analysis.
+- Added fixture-backed scalar-right `matrix.mult`/`values.mult(scalar)` and
+  `matrix.diff`/`values.diff(scalar)` support for runtime-owned float or int
+  matrices, returning independent same-shape `matrix<float>` results with `na`
+  propagation.
+- Added fixture-backed `matrix.submatrix` and
+  `values.submatrix(from_row?, to_row?, from_column?, to_column?)` support for
+  independent runtime-owned float matrix slice copies, including default full
+  ranges, empty row/column slices, semantic index checks, runtime bounds, `na`
+  index, and reversed-range errors.
+- Added fixture-backed `matrix.sort` and `values.sort(column?, order?)`
+  support for in-place row sorting on runtime-owned float matrices, including
+  default column `0`, `order.ascending`/`order.descending`, `na` sort placement,
+  column-index runtime errors, semantic column/order checks, and UDF
+  side-effect rejection.
+- Added fixture-backed `matrix.swap_columns` and
+  `values.swap_columns(column1, column2)` support for in-place column swaps on
+  runtime-owned float matrices, including same-column and zero-row no-op
+  behavior, column-index runtime errors, semantic index checks, and UDF
+  side-effect rejection.
+- Added fixture-backed `matrix.swap_rows` and `values.swap_rows(row1, row2)`
+  support for in-place row swaps on runtime-owned float matrices, including
+  same-row and zero-column no-op behavior, row-index runtime errors, semantic
+  index checks, and UDF side-effect rejection.
+- Added fixture-backed `matrix.pow` and `values.pow(power)` support for
+  read-only matrix powers on runtime-owned float square matrices, including
+  independent identity/copy/power results, `na` propagation, zero-dimension
+  results, non-square errors, and negative-power errors.
+- Added fixture-backed matrix-by-matrix `matrix.diff` and
+  `values.diff(other)` support for read-only element-wise subtraction on
+  runtime-owned float matrices, including independent results, `na` cell
+  propagation, zero-dimension results, and shape-mismatch errors.
+- Added fixture-backed matrix-by-matrix `matrix.mult` and
+  `values.mult(other)` support for read-only multiplication on runtime-owned
+  float matrices, including independent results, `na` cell propagation,
+  zero-dimension results, shape-mismatch errors, and cell-budget errors.
+- Added fixture-backed `matrix.kron` and `values.kron(other)` support for
+  read-only Kronecker-product matrices on runtime-owned float matrices,
+  including independent results, `na` cell propagation, zero-dimension results,
+  and cell-budget errors.
+- Added fixture-backed `matrix.eigenvectors` and `values.eigenvectors()`
+  support for read-only eigenvector matrices on runtime-owned float square
+  matrices, including symmetric, 2x2 real non-symmetric, empty, `na`,
+  non-square, and non-real eigenvector boundaries.
+- Added fixture-backed `matrix.eigenvalues` and `values.eigenvalues()`
+  support for read-only eigenvalue arrays on runtime-owned float square
+  matrices, including symmetric, 2x2 real non-symmetric, empty, `na`,
+  non-square, and non-real eigenvalue boundaries.
+- Added fixture-backed `matrix.pinv` and `values.pinv()` support for read-only
+  Moore-Penrose pseudo-inverse reads on runtime-owned float matrices, including
+  invertible square, singular square, rectangular, zero-dimension, and `na`
+  matrix coverage.
+- Added fixture-backed `matrix.inv` and `values.inv()` support for read-only
+  inverse-matrix reads on runtime-owned float square matrices, including
+  independent result matrices, empty `0 x 0` matrices, singular/`na` results,
+  and non-square runtime errors.
+- Added fixture-backed `matrix.rank` and `values.rank()` support for read-only
+  rank reads on runtime-owned float rectangular matrices, including dependent
+  rows, zero-dimension matrices, and `na` cells.
+- Added fixture-backed `matrix.det` and `values.det()` support for read-only
+  determinant reads on runtime-owned float square matrices, including
+  row-swap pivoting, empty `0 x 0` matrices, `na` cells, and non-square runtime
+  errors.
+- Added fixture-backed `matrix.trace` and `values.trace()` support for
+  read-only main-diagonal sums on runtime-owned float matrices, ignoring `na`
+  diagonal cells and returning `na` for empty or all-`na` diagonals.
+- Added fixture-backed `matrix.is_stochastic` and `values.is_stochastic()`
+  support for read-only stochastic-matrix checks on runtime-owned float
+  matrices, including row-sum and column-sum forms, negative values, `na`
+  cells, and zero-element matrices.
+- Added fixture-backed `matrix.is_antisymmetric` and
+  `values.is_antisymmetric()` support for read-only antisymmetric-matrix checks
+  on runtime-owned float matrices, including non-square matrices, `na` cells,
+  non-zero diagonal cells, and empty `0 x 0` matrices.
+- Added fixture-backed `matrix.is_symmetric` and `values.is_symmetric()`
+  support for read-only symmetric-matrix checks on runtime-owned float
+  matrices, including non-square matrices, `na` cells, and empty `0 x 0`
+  matrices.
+- Added fixture-backed `matrix.is_identity` and `values.is_identity()` support
+  for read-only identity-matrix checks on runtime-owned float matrices,
+  including non-square matrices, `na` cells, and empty `0 x 0` matrices.
+- Added fixture-backed `matrix.is_diagonal` and `values.is_diagonal()` support
+  for read-only diagonal-value checks on runtime-owned float matrices,
+  including rectangular matrices, `na` cells, and zero-dimension matrices.
+- Added fixture-backed `matrix.is_binary` and `values.is_binary()` support for
+  read-only binary-value checks on runtime-owned float matrices, including `na`
+  cells and zero-dimension matrices.
+- Added fixture-backed `matrix.is_zero` and `values.is_zero()` support for
+  read-only zero-value checks on runtime-owned float matrices, including `na`
+  cells and zero-dimension matrices.
+- Added fixture-backed `matrix.is_square` and `values.is_square()` support for
+  read-only matrix shape checks on runtime-owned float matrices.
+- Added fixture-backed `matrix.reverse` and `values.reverse()` support for
+  in-place reversal of runtime-owned float matrices, including zero-dimension
+  no-op behavior and UDF side-effect rejection.
+- Added fixture-backed `matrix.transpose` and `values.transpose()` support for
+  returning independent transposed copies of runtime-owned float matrices,
+  including zero-dimension shape swaps.
+- Added fixture-backed `matrix.elements_count` and `values.elements_count()`
+  support for read-only element-count reads of runtime-owned float matrices,
+  including zero-dimension and reshaped matrices.
+- Added fixture-backed `matrix.mode` and `values.mode()` support for read-only
+  mode scans of runtime-owned float matrices, ignoring `na` cells and returning
+  `na` for empty, all-`na`, or no-repeated-value matrices.
+- Added fixture-backed `matrix.min`/`matrix.max` and `values.min()`/
+  `values.max()` support for read-only min/max scans of runtime-owned float
+  matrices, ignoring `na` cells and returning `na` for empty or all-`na`
+  matrices.
 - Added fixture-backed `matrix.avg` and `values.avg()` support for read-only
   averaging of runtime-owned float matrices, ignoring `na` cells and returning
   `na` for empty or all-`na` matrices.
@@ -212,8 +453,8 @@
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<float>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
-  index/value iteration unsupported.
+  while keeping imported or non-scalar-field UDT and map/matrix iteration
+  unsupported at that slice.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<bool>` values, reusing the zero-based `series int` index loop-local
   while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
@@ -236,12 +477,12 @@
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<linefill>` values, reusing the zero-based `series int` index
-  loop-local while keeping imported or non-scalar-field UDT, map/matrix, and
-  expression-form index/value iteration unsupported.
+  loop-local while keeping imported or non-scalar-field UDT and map/matrix
+  iteration unsupported at that slice.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<polyline>` values, reusing the zero-based `series int` index
-  loop-local while keeping imported or non-scalar-field UDT, map/matrix, and
-  expression-form index/value iteration unsupported.
+  loop-local while keeping imported or non-scalar-field UDT and map/matrix
+  iteration unsupported at that slice.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<box>` values, reusing the zero-based `series int` index loop-local
   while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
@@ -308,8 +549,9 @@
 - Added a pure-internal design gate for future `switch` statement-block arms.
 - Added a parser fixture keeping `while` expressions outside the current
   statement-only `while` subset.
-- Added a parser fixture keeping direct chained UDT array slot field mutation
-  such as `points.get(0).x := value` outside the current syntax subset.
+- Added fixture-backed direct chained UDT array slot field mutation for
+  same-local scalar-field arrays, including `points.get(0).x := value` and
+  `array.get(points, 0).x := value`.
 - Added fixture-backed same-local scalar-field UDT array element writeback
   semantics: field mutation on a value read from an array stays local until an
   explicit same-UDT `array.set`/`set()` writes it back.

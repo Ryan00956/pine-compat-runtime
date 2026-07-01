@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.inv")
+
+value = matrix.inv(na)
+plot(value)

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Matrix determinant non-square")
+
+values = matrix.new<float>(2, 3, close)
+plot(matrix.det(values))

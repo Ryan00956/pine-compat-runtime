@@ -1,0 +1,143 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT array.from")
+
+p = lib.Point.new(close)
+other = lib.Point.new(close + 10)
+points = array.from(p, other)
+first_by_index = array.get(points, 0)
+second_by_index = points.get(1)
+first_value = array.first(points)
+last_value = points.last()
+set_points = array.from(lib.Point.new(close), lib.Point.new(close + 10))
+array.set(set_points, 0, lib.Point.new(close + 350))
+set_reader = set_points.get(0)
+method_set_points = array.from(lib.Point.new(close + 20), lib.Point.new(close + 30))
+method_set_points.set(1, lib.Point.new(close + 360))
+method_set_reader = array.get(method_set_points, 1)
+push_points = array.from(lib.Point.new(close))
+array.push(push_points, lib.Point.new(close + 370))
+push_reader = push_points.get(1)
+method_push_points = array.from(lib.Point.new(close + 20))
+method_push_points.push(lib.Point.new(close + 380))
+method_push_reader = array.get(method_push_points, 1)
+unshift_points = array.from(lib.Point.new(close))
+array.unshift(unshift_points, lib.Point.new(close + 390))
+unshift_reader = array.get(unshift_points, 0)
+method_unshift_points = array.from(lib.Point.new(close + 20))
+method_unshift_points.unshift(lib.Point.new(close + 400))
+method_unshift_reader = method_unshift_points.get(0)
+insert_points = array.from(lib.Point.new(close), lib.Point.new(close + 10))
+array.insert(insert_points, 1, lib.Point.new(close + 410))
+insert_reader = insert_points.get(1)
+method_insert_points = array.from(lib.Point.new(close + 20), lib.Point.new(close + 30))
+method_insert_points.insert(0, lib.Point.new(close + 420))
+method_insert_reader = array.get(method_insert_points, 0)
+fill_points = array.from(lib.Point.new(close), lib.Point.new(close + 10), lib.Point.new(close + 20))
+array.fill(fill_points, lib.Point.new(close + 430), 1, 3)
+fill_first_reader = array.get(fill_points, 0)
+fill_range_reader = fill_points.get(2)
+method_fill_points = array.from(lib.Point.new(close + 30), lib.Point.new(close + 40))
+method_fill_points.fill(lib.Point.new(close + 440))
+method_fill_reader = array.get(method_fill_points, 1)
+join_points = array.from(lib.Point.new(1.25), lib.Point.new(2.5))
+joined = array.join(join_points, "|") == "Point(1.25)|Point(2.5)" ? 1 : 0
+method_joined = join_points.join() == "Point(1.25),Point(2.5)" ? 1 : 0
+search_points = array.from(lib.Point.new(close), lib.Point.new(close + 1), lib.Point.new(close))
+search_same = lib.Point.new(close)
+search_missing = lib.Point.new(close + 999)
+includes_found = array.includes(search_points, search_same) ? 1 : 1000
+method_includes_missing = search_points.includes(search_missing) ? 1000 : 2
+index_found = array.indexof(search_points, search_same)
+method_index_missing = search_points.indexof(search_missing) == -1 ? 3 : 1000
+last_index_found = array.lastindexof(search_points, search_same)
+method_last_index_missing = search_points.lastindexof(search_missing) == -1 ? 4 : 1000
+sort_points = array.from(lib.Point.new(close + 3), lib.Point.new(close + 1), lib.Point.new(close + 2))
+array.sort(sort_points, order.ascending, "x")
+sort_first = sort_points.get(0)
+method_sort_points = array.from(lib.Point.new(close + 1), lib.Point.new(close + 3), lib.Point.new(close + 2))
+method_sort_points.sort(order.descending, "x")
+method_sort_first = array.get(method_sort_points, 0)
+sort_index_points = array.from(lib.Point.new(close + 2), lib.Point.new(close + 3), lib.Point.new(close + 1))
+sort_indices = array.sort_indices(sort_index_points, order.ascending, "x")
+sort_index_source_first = sort_index_points.get(0)
+method_sort_index_points = array.from(lib.Point.new(close + 2), lib.Point.new(close + 3), lib.Point.new(close + 1))
+method_sort_indices = method_sort_index_points.sort_indices(order.descending, "x")
+method_sort_index_source_first = array.get(method_sort_index_points, 0)
+pop_points = array.from(lib.Point.new(close + 20), lib.Point.new(close + 30))
+popped = array.pop(pop_points)
+method_pop_points = array.from(lib.Point.new(close + 40), lib.Point.new(close + 50))
+method_popped = method_pop_points.pop()
+shift_points = array.from(lib.Point.new(close + 60), lib.Point.new(close + 70))
+shifted = array.shift(shift_points)
+method_shift_points = array.from(lib.Point.new(close + 80), lib.Point.new(close + 90))
+method_shifted = method_shift_points.shift()
+remove_points = array.from(lib.Point.new(close + 100), lib.Point.new(close + 110), lib.Point.new(close + 120))
+removed = array.remove(remove_points, 1)
+method_remove_points = array.from(lib.Point.new(close + 120), lib.Point.new(close + 130), lib.Point.new(close + 140))
+method_removed = method_remove_points.remove(0)
+clear_points = array.from(lib.Point.new(close), lib.Point.new(close + 10))
+array.clear(clear_points)
+cleared_size = array.size(clear_points)
+method_clear_points = array.from(lib.Point.new(close), lib.Point.new(close + 10))
+method_clear_points.clear()
+method_cleared_size = method_clear_points.size()
+copy_source = array.from(lib.Point.new(close + 150), lib.Point.new(close + 160))
+copied = array.copy(copy_source)
+array.clear(copy_source)
+copy_reader = copied.get(1)
+method_copy_source = array.from(lib.Point.new(close + 170), lib.Point.new(close + 180))
+method_copied = method_copy_source.copy()
+method_copy_source.clear()
+method_copy_reader = array.get(method_copied, 0)
+reverse_points = array.from(lib.Point.new(close + 190), lib.Point.new(close + 200))
+array.reverse(reverse_points)
+reverse_reader = array.get(reverse_points, 0)
+method_reverse_points = array.from(lib.Point.new(close + 210), lib.Point.new(close + 220))
+method_reverse_points.reverse()
+method_reverse_reader = method_reverse_points.get(1)
+slice_source = array.from(lib.Point.new(close + 230), lib.Point.new(close + 240), lib.Point.new(close + 250))
+slice_window = array.slice(slice_source, 1, 3)
+slice_reader = slice_window.get(0)
+method_slice_source = array.from(lib.Point.new(close + 260), lib.Point.new(close + 270), lib.Point.new(close + 280))
+method_slice_window = method_slice_source.slice(0, 2)
+method_slice_reader = array.get(method_slice_window, 1)
+concat_left = array.from(lib.Point.new(close + 290))
+concat_right = array.from(lib.Point.new(close + 300), lib.Point.new(close + 310))
+concat_returned = array.concat(concat_left, concat_right)
+concat_reader = concat_returned.get(2)
+method_concat_left = array.from(lib.Point.new(close + 320))
+method_concat_right = array.from(lib.Point.new(close + 330), lib.Point.new(close + 340))
+method_concat_returned = method_concat_left.concat(method_concat_right)
+method_concat_reader = array.get(method_concat_returned, 1)
+for_points = array.from(lib.Point.new(close + 450), lib.Point.new(close + 460))
+float for_loop_sum = 0.0
+for point in for_points
+    point.x := point.x + 10
+    for_loop_sum := for_loop_sum + point.x
+for_source_first = for_points.get(0)
+for_index_points = array.from(lib.Point.new(close + 470), lib.Point.new(close + 480))
+int for_index_sum = 0
+float for_index_value_sum = 0.0
+for index, point in for_index_points
+    point.x := point.x + 20
+    for_index_sum := for_index_sum + index
+    for_index_value_sum := for_index_value_sum + point.x
+for_index_source_first = array.get(for_index_points, 0)
+read_total = array.size(points) + first_by_index.x + second_by_index.x + first_value.x + last_value.x
+returned_total = popped.x + method_popped.x + shifted.x + method_shifted.x + removed.x + method_removed.x
+clear_total = 1000 - cleared_size - method_cleared_size
+copy_total = copy_reader.x + method_copy_reader.x
+reverse_total = reverse_reader.x + method_reverse_reader.x
+slice_total = slice_reader.x + method_slice_reader.x
+concat_total = concat_reader.x + method_concat_reader.x + concat_returned.size() + method_concat_returned.size()
+set_total = set_reader.x + method_set_reader.x
+push_total = push_reader.x + method_push_reader.x + array.size(push_points) + method_push_points.size()
+unshift_total = unshift_reader.x + method_unshift_reader.x + array.size(unshift_points) + method_unshift_points.size()
+insert_total = insert_reader.x + method_insert_reader.x + array.size(insert_points) + method_insert_points.size()
+fill_total = fill_first_reader.x + fill_range_reader.x + method_fill_reader.x + array.size(fill_points) + method_fill_points.size()
+join_total = joined + method_joined
+search_total = includes_found + method_includes_missing + index_found + method_index_missing + last_index_found + method_last_index_missing
+sort_total = sort_first.x + method_sort_first.x + array.get(sort_indices, 0) + sort_indices.get(1) + array.get(sort_indices, 2) + sort_index_source_first.x + method_sort_indices.get(0) + array.get(method_sort_indices, 1) + method_sort_indices.get(2) + method_sort_index_source_first.x
+for_total = for_loop_sum + for_source_first.x + for_index_sum + for_index_value_sum + for_index_source_first.x
+plot(read_total + set_total + push_total + unshift_total + insert_total + fill_total + join_total + search_total + sort_total + for_total + returned_total + clear_total + copy_total + reverse_total + slice_total + concat_total)

@@ -27,6 +27,14 @@ pub(crate) const SIMPLE_COLOR: PineType = PineType::new(Qualifier::Simple, Value
 pub(crate) const SIMPLE_STRING: PineType = PineType::new(Qualifier::Simple, ValueKind::String);
 pub(crate) const SIMPLE_FLOAT_MATRIX: PineType =
     PineType::new(Qualifier::Simple, ValueKind::FloatMatrix);
+pub(crate) const SIMPLE_INT_MATRIX: PineType =
+    PineType::new(Qualifier::Simple, ValueKind::IntMatrix);
+pub(crate) const SIMPLE_BOOL_MATRIX: PineType =
+    PineType::new(Qualifier::Simple, ValueKind::BoolMatrix);
+pub(crate) const SIMPLE_STRING_MATRIX: PineType =
+    PineType::new(Qualifier::Simple, ValueKind::StringMatrix);
+pub(crate) const SIMPLE_COLOR_MATRIX: PineType =
+    PineType::new(Qualifier::Simple, ValueKind::ColorMatrix);
 
 const fn simple_array_type_from_element_kind(element_kind: ValueKind) -> PineType {
     match element_kind.array_kind_from_element_kind() {

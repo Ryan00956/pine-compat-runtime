@@ -1,5 +1,5 @@
 //@version=6
 indicator("Unsupported map copy")
 
-copied = map.copy(na)
-plot(na(copied) ? 0 : 1)
+copied = map.copy(close)
+plot(close)

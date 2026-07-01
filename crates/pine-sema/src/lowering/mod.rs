@@ -296,6 +296,26 @@ impl Analyzer {
                     value: self.lower_expr_with_params(value, param_exprs, param_types)?,
                 }
             }
+            StmtKind::ArrayFieldReassign {
+                array,
+                index,
+                field,
+                value,
+            } => {
+                let type_name = self.user_type_array_name_of_expr(array)?;
+                let field_index = self
+                    .user_types
+                    .get(&type_name)?
+                    .fields
+                    .iter()
+                    .position(|candidate| candidate.name == *field)?;
+                HirStmtKind::ArrayFieldReassign {
+                    array: self.lower_expr_with_params(array, param_exprs, param_types)?,
+                    index: self.lower_expr_with_params(index, param_exprs, param_types)?,
+                    field_index,
+                    value: self.lower_expr_with_params(value, param_exprs, param_types)?,
+                }
+            }
             StmtKind::TupleDecl { names, value } => HirStmtKind::TupleDecl {
                 symbols: names
                     .iter()
@@ -531,6 +551,40 @@ impl Analyzer {
                     )?),
                 }
             }
+            ExprKind::ForIn {
+                index,
+                value,
+                iterable,
+                body,
+            } => {
+                let (last, prefix) = body.split_last()?;
+                let StmtKind::Expr(result) = &last.kind else {
+                    return None;
+                };
+                HirExprKind::ForIn {
+                    index: match index {
+                        Some(index) => Some(self.lower_decl_symbol(index, expr.span)?.id),
+                        None => None,
+                    },
+                    value: self.lower_decl_symbol(value, expr.span)?.id,
+                    iterable: Box::new(self.lower_expr_with_params(
+                        iterable,
+                        param_exprs,
+                        param_types,
+                    )?),
+                    statements: prefix
+                        .iter()
+                        .map(|statement| {
+                            self.lower_stmt_with_params(statement, param_exprs, param_types)
+                        })
+                        .collect::<Option<_>>()?,
+                    result: Box::new(self.lower_expr_with_params(
+                        result,
+                        param_exprs,
+                        param_types,
+                    )?),
+                }
+            }
             ExprKind::While { condition, body } => {
                 let (last, prefix) = body.split_last()?;
                 let StmtKind::Expr(result) = &last.kind else {
@@ -609,6 +663,15 @@ impl Analyzer {
                         },
                     });
                 }
+                if let Some(method_call) = self.lower_alias_qualified_user_method_call(
+                    &name,
+                    callee.span,
+                    args,
+                    param_exprs,
+                    param_types,
+                ) {
+                    return Some(method_call);
+                }
                 if let Some((receiver_name, method_name)) = method_call_parts(callee)
                     && self
                         .bound_symbol(receiver_name, callee.span)
@@ -628,6 +691,7 @@ impl Analyzer {
                     return self.lower_udf_call(&name, expr.span, args, param_exprs, param_types);
                 }
                 if pine_builtins::get_phase_1_builtin(&name).is_none()
+                    && !name.starts_with("map.")
                     && let Some((receiver_name, method_name)) = method_call_parts(callee)
                     && let Some(builtin_name) = param_types
                         .get(receiver_name)
@@ -637,10 +701,17 @@ impl Analyzer {
                                 .map(|symbol| symbol.pine_type.kind)
                         })
                         .and_then(|receiver_kind| {
-                            drawing_method_builtin_name(receiver_kind, method_name).or_else(|| {
-                                matrix_method_builtin_name(receiver_kind, method_name)
-                                    .map(ToOwned::to_owned)
-                            })
+                            drawing_method_builtin_name(receiver_kind, method_name)
+                                .or_else(|| {
+                                    matrix_method_builtin_name(receiver_kind, method_name)
+                                        .map(ToOwned::to_owned)
+                                })
+                                .or_else(|| {
+                                    (receiver_kind == ValueKind::Map)
+                                        .then(|| map_method_builtin_name(method_name))
+                                        .flatten()
+                                        .map(ToOwned::to_owned)
+                                })
                         })
                         .or_else(|| array_method_builtin_name(method_name).map(ToOwned::to_owned))
                 {
@@ -781,6 +852,18 @@ impl Analyzer {
             return resolved_type_name;
         }
         if let ExprKind::For { body, .. } = &expr.kind {
+            let (last, prefix) = body.split_last()?;
+            let StmtKind::Expr(result) = &last.kind else {
+                return None;
+            };
+            let aliases = self.local_user_type_param_aliases(prefix, param_exprs, aliases);
+            return self.user_type_name_of_expr_with_params_and_aliases(
+                result,
+                param_exprs,
+                &aliases,
+            );
+        }
+        if let ExprKind::ForIn { body, .. } = &expr.kind {
             let (last, prefix) = body.split_last()?;
             let StmtKind::Expr(result) = &last.kind else {
                 return None;

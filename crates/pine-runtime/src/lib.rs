@@ -86,6 +86,7 @@ use algorithms::rolling_window::{
 };
 use builtins::args::output_id;
 use builtins::arrays::{ArrayElementKind, ArrayPercentileMode, ArraySlice};
+use builtins::maps::MapStorage;
 use builtins::matrices::MatrixStorage;
 use builtins::ta::{MacdState, PivotPointState, RsiState, VwapState};
 use output::align::finalize_bar_aligned_outputs;

@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported for-in expression bool")
+
+values = array.from(true, false)
+result = for value in values
+    not value
+
+plot(result ? 1 : 0)

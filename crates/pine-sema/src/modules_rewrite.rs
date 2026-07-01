@@ -11,6 +11,7 @@ use crate::analyzer::calls::expr_name;
 pub(super) struct RewriteContext {
     pub(super) constants: HashMap<String, Expr>,
     pub(super) function_targets: HashMap<String, String>,
+    pub(super) type_targets: HashMap<String, String>,
     shadowed_names: HashSet<String>,
 }
 
@@ -102,6 +103,17 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
             value,
         } => StmtKind::FieldReassign {
             receiver: receiver.clone(),
+            field: field.clone(),
+            value: rewrite_expr(value, context),
+        },
+        StmtKind::ArrayFieldReassign {
+            array,
+            index,
+            field,
+            value,
+        } => StmtKind::ArrayFieldReassign {
+            array: rewrite_expr(array, context),
+            index: rewrite_expr(index, context),
             field: field.clone(),
             value: rewrite_expr(value, context),
         },
@@ -244,6 +256,23 @@ pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
                 rewrite_statements(body, &body_context)
             },
         },
+        ExprKind::ForIn {
+            index,
+            value,
+            iterable,
+            body,
+        } => ExprKind::ForIn {
+            index: index.clone(),
+            value: value.clone(),
+            iterable: Box::new(rewrite_expr(iterable, context)),
+            body: {
+                let body_context = index.as_ref().map_or_else(
+                    || context.shadowing(value),
+                    |index| context.shadowing(index).shadowing(value),
+                );
+                rewrite_statements(body, &body_context)
+            },
+        },
         ExprKind::While { condition, body } => ExprKind::While {
             condition: Box::new(rewrite_expr(condition, context)),
             body: rewrite_statements(body, context),
@@ -273,9 +302,10 @@ pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
             expr: Box::new(rewrite_expr(expr, context)),
             offset: Box::new(rewrite_expr(offset, context)),
         },
-        ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => {
-            expr.kind.clone()
+        ExprKind::QualifiedName(parts) => {
+            rewrite_qualified_name(parts, context).unwrap_or_else(|| expr.kind.clone())
         }
+        ExprKind::Literal(_) | ExprKind::Identifier(_) => expr.kind.clone(),
     };
     Expr {
         kind,
@@ -324,12 +354,27 @@ impl RewriteContext {
         self.function_targets.get(name)
     }
 
+    fn type_target(&self, name: &str) -> Option<&String> {
+        if self.is_shadowed(name) {
+            return None;
+        }
+        self.type_targets.get(name)
+    }
+
     fn is_shadowed(&self, name: &str) -> bool {
         self.shadowed_names.contains(name)
             || name
                 .split_once('.')
                 .is_some_and(|(prefix, _)| self.shadowed_names.contains(prefix))
     }
+}
+
+fn rewrite_qualified_name(parts: &[String], context: &RewriteContext) -> Option<ExprKind> {
+    let (head, tail) = parts.split_first()?;
+    let target = context.type_target(head)?;
+    let mut rewritten = target.split('.').map(str::to_owned).collect::<Vec<_>>();
+    rewritten.extend(tail.iter().cloned());
+    Some(ExprKind::QualifiedName(rewritten))
 }
 
 fn record_statement_bindings(statement: &Stmt, context: &mut RewriteContext) {

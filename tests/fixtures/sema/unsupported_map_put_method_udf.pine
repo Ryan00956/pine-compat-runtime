@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported map put method UDF")
+
+change(id) =>
+    id.put("open", close)
+    close
+
+values = map.new<string, float>()
+plot(change(values))

@@ -6,7 +6,7 @@ use pine_syntax::{
     SwitchArmResult, UnaryOp, parse_source,
 };
 
-use crate::analyzer::context::FunctionInfo;
+use crate::analyzer::context::{FunctionInfo, MethodInfo, MethodParamInfo};
 use crate::analyzer::functions::{
     contains_output_or_declaration_call, statement_contains_output_or_declaration_call,
 };
@@ -22,8 +22,9 @@ use imports::{
     detect_import_cycles, imports_in_program, validate_library_imports, validate_root_imports,
 };
 use model::{
-    ExportInfo, ModuleInfo, ModuleMethodInfo, ModuleUserTypeFieldInfo, ModuleUserTypeIdentity,
-    ModuleUserTypeInfo, imported_user_type_scalar_field_type, module_user_type_fields_match,
+    ExportInfo, ModuleInfo, ModuleMethodInfo, ModuleMethodParamInfo, ModuleUserTypeFieldInfo,
+    ModuleUserTypeIdentity, ModuleUserTypeInfo, imported_user_type_scalar_field_type,
+    module_user_type_fields_match,
 };
 pub(crate) use model::{
     ImportedUserTypeFieldInfo, ImportedUserTypeIdentity, ImportedUserTypeInfo, ModuleValidation,
@@ -82,6 +83,7 @@ pub(crate) fn validate_modules(input: &AnalysisInput) -> ModuleValidation {
         diagnostics,
         root_program,
         imported_functions: import_plan.imported_functions,
+        imported_methods: import_plan.imported_methods,
         imported_user_types: import_plan.imported_user_types,
     }
 }
@@ -220,6 +222,27 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
             ModuleMethodInfo {
                 receiver_type_name,
                 receiver_identity,
+                receiver_name: method
+                    .params
+                    .first()
+                    .map(|receiver| receiver.name.clone())
+                    .unwrap_or_default(),
+                params: method
+                    .params
+                    .iter()
+                    .skip(1)
+                    .map(|param| ModuleMethodParamInfo {
+                        name: param.name.clone(),
+                        type_name: param.type_name.clone(),
+                    })
+                    .collect(),
+                param_names: method
+                    .params
+                    .iter()
+                    .map(|param| param.name.clone())
+                    .collect(),
+                body: method.body.clone(),
+                span: statement.span,
             },
         );
     }
@@ -254,6 +277,7 @@ fn register_export(
 struct ImportPlan {
     root_rewrites: RewriteContext,
     imported_functions: HashMap<String, FunctionInfo>,
+    imported_methods: HashMap<(String, String), MethodInfo>,
     imported_user_types: HashMap<String, ImportedUserTypeInfo>,
 }
 
@@ -337,8 +361,77 @@ fn build_import_plan(
                 ));
             }
         }
+
+        for (name, method) in &module.methods {
+            let Some(method_info) = imported_method_info(&alias, module, method) else {
+                continue;
+            };
+            plan.imported_methods.insert(
+                (method_info.receiver_type.clone(), name.clone()),
+                method_info,
+            );
+        }
     }
     plan
+}
+
+fn imported_method_info(
+    alias: &str,
+    module: &ModuleInfo,
+    method: &ModuleMethodInfo,
+) -> Option<MethodInfo> {
+    let identity = method.receiver_identity.as_ref()?;
+    if !exported_scalar_user_type(module, &identity.name) {
+        return None;
+    }
+
+    let mut params = Vec::with_capacity(method.params.len());
+    for param in &method.params {
+        params.push(imported_method_param_info(alias, module, param)?);
+    }
+
+    let module_context = rewrite_context_for_module(alias, module);
+    Some(MethodInfo {
+        receiver_type: format!("{alias}.{}", identity.name),
+        receiver_name: method.receiver_name.clone(),
+        params,
+        body: rewrite_function_body(&method.body, &method.param_names, &module_context),
+        span: method.span,
+    })
+}
+
+fn imported_method_param_info(
+    alias: &str,
+    module: &ModuleInfo,
+    param: &ModuleMethodParamInfo,
+) -> Option<MethodParamInfo> {
+    if let Some(pine_type) = imported_user_type_scalar_field_type(&param.type_name) {
+        return Some(MethodParamInfo {
+            name: param.name.clone(),
+            pine_type,
+            user_type_name: None,
+        });
+    }
+    if !exported_scalar_user_type(module, &param.type_name) {
+        return None;
+    }
+    Some(MethodParamInfo {
+        name: param.name.clone(),
+        pine_type: PineType::new(Qualifier::Series, ValueKind::UserType),
+        user_type_name: Some(format!("{alias}.{}", param.type_name)),
+    })
+}
+
+fn exported_scalar_user_type(module: &ModuleInfo, type_name: &str) -> bool {
+    matches!(
+        module.exports.get(type_name),
+        Some(ExportInfo::UserType { .. })
+    ) && module.user_types.get(type_name).is_some_and(|user_type| {
+        user_type
+            .fields
+            .iter()
+            .all(|field| field.pine_type.is_some())
+    })
 }
 
 fn rewrite_context_for_module(alias: &str, module: &ModuleInfo) -> RewriteContext {
@@ -357,6 +450,18 @@ fn rewrite_context_for_module(alias: &str, module: &ModuleInfo) -> RewriteContex
             format!("{alias}.{name}"),
             module_function_key(alias, module, name),
         );
+    }
+    for name in module
+        .exports
+        .iter()
+        .filter_map(|(name, export)| matches!(export, ExportInfo::UserType { .. }).then_some(name))
+    {
+        context
+            .type_targets
+            .insert(name.clone(), format!("{alias}.{name}"));
+        context
+            .type_targets
+            .insert(format!("{alias}.{name}"), format!("{alias}.{name}"));
     }
     context
 }
@@ -412,6 +517,7 @@ fn is_const_import_expr(expr: &Expr) -> bool {
         ExprKind::Call { .. }
         | ExprKind::If { .. }
         | ExprKind::For { .. }
+        | ExprKind::ForIn { .. }
         | ExprKind::While { .. }
         | ExprKind::Switch { .. }
         | ExprKind::Tuple(_)
@@ -456,6 +562,16 @@ fn visit_statement_exprs(statement: &Stmt, visitor: &mut impl FnMut(&Expr)) {
         | StmtKind::Reassign { value: expr, .. }
         | StmtKind::FieldReassign { value: expr, .. }
         | StmtKind::TupleDecl { value: expr, .. } => visit_expr(expr, visitor),
+        StmtKind::ArrayFieldReassign {
+            array,
+            index,
+            value,
+            ..
+        } => {
+            visit_expr(array, visitor);
+            visit_expr(index, visitor);
+            visit_expr(value, visitor);
+        }
         StmtKind::If {
             condition,
             then_branch,
@@ -565,6 +681,12 @@ fn visit_expr(expr: &Expr, visitor: &mut impl FnMut(&Expr)) {
                 visit_statement_exprs(statement, visitor);
             }
         }
+        ExprKind::ForIn { iterable, body, .. } => {
+            visit_expr(iterable, visitor);
+            for statement in body {
+                visit_statement_exprs(statement, visitor);
+            }
+        }
         ExprKind::While { condition, body } => {
             visit_expr(condition, visitor);
             for statement in body {
@@ -607,11 +729,19 @@ fn visit_expr(expr: &Expr, visitor: &mut impl FnMut(&Expr)) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::analyzer::calls::expr_name;
     use crate::source_graph::SourceId;
     use pine_syntax::SourceFile;
 
     fn parsed_program(text: &str) -> Program {
         parse_source(&SourceFile::new("library.pine", text)).program
+    }
+
+    fn qualified_name(parts: &[&str]) -> Expr {
+        Expr {
+            kind: ExprKind::QualifiedName(parts.iter().map(|part| (*part).to_owned()).collect()),
+            span: Span::new(0, 0),
+        }
     }
 
     #[test]
@@ -764,5 +894,55 @@ method shift(Point p, float delta) => p.x + delta
                 name: "Point".to_owned(),
             })
         );
+    }
+
+    #[test]
+    fn rewrite_context_alias_qualifies_exported_user_type_constructors() {
+        let mut module = ModuleInfo {
+            id: SourceId::library(4),
+            key: Some("user/methods/1".to_owned()),
+            program: parsed_program(
+                r#"
+library("methods")
+export type Point
+    float x
+"#,
+            ),
+            exports: HashMap::new(),
+            private_symbols: HashSet::new(),
+            user_types: HashMap::new(),
+            methods: HashMap::new(),
+            functions: HashMap::new(),
+            constants: HashMap::new(),
+        };
+        let mut diagnostics = Vec::new();
+        collect_library_declarations(&mut module, &mut diagnostics);
+        assert!(diagnostics.is_empty(), "{diagnostics:?}");
+        let context = rewrite_context_for_module("lib", &module);
+        let body = FunctionBody::Expr(qualified_name(&["Point", "new"]));
+
+        let rewritten = rewrite_function_body(&body, &[], &context);
+
+        let FunctionBody::Expr(expr) = rewritten else {
+            panic!("expression body expected");
+        };
+        assert_eq!(expr_name(&expr).as_deref(), Some("lib.Point.new"));
+    }
+
+    #[test]
+    fn rewrite_context_keeps_shadowed_user_type_constructor_names() {
+        let mut context = RewriteContext::default();
+        context
+            .type_targets
+            .insert("Point".to_owned(), "lib.Point".to_owned());
+        let body = FunctionBody::Expr(qualified_name(&["Point", "new"]));
+        let params = vec!["Point".to_owned()];
+
+        let rewritten = rewrite_function_body(&body, &params, &context);
+
+        let FunctionBody::Expr(expr) = rewritten else {
+            panic!("expression body expected");
+        };
+        assert_eq!(expr_name(&expr).as_deref(), Some("Point.new"));
     }
 }

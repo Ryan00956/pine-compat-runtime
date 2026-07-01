@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.diff")
+
+value = matrix.diff(na, matrix.new<float>(1, 1, 1))
+plot(value)

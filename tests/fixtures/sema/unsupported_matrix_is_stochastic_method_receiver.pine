@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.is_stochastic method receiver")
+
+is_stochastic = close.is_stochastic()
+plot(close)

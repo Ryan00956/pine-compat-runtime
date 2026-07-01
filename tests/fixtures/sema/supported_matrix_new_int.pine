@@ -1,0 +1,51 @@
+//@version=6
+indicator("Supported matrix.new<int>")
+
+values = matrix.new<int>(2, 3, 1)
+matrix<int> typed = na
+typed := matrix.new<int>(1, 1, 2)
+matrix.set(values, 0, 0, 2)
+values.set(0, 1, na)
+copy = values.copy()
+matrix.fill(copy, 3)
+copy.fill(na)
+slice = matrix.submatrix(copy, 0, 1, 0, 2)
+row_values = values.row(0)
+column_values = matrix.col(values, 1)
+row_values.set(0, 4)
+column_values.set(0, na)
+matrix.swap_rows(values, 0, 1)
+values.swap_columns(0, 1)
+matrix.remove_row(values, 1)
+values.remove_col(1)
+matrix.sort(values)
+values.sort(0, order.descending)
+matrix.add_row(values, 0, array.from(1, 2))
+values.add_col(0, array.from(3, 4))
+predicates = matrix.new<int>(1, 1, 1)
+zero_score = matrix.is_zero(predicates) ? 1 : 0
+binary_score = predicates.is_binary() ? 1 : 0
+diagonal_score = matrix.is_diagonal(predicates) ? 1 : 0
+identity_score = predicates.is_identity() ? 1 : 0
+symmetric_score = matrix.is_symmetric(predicates) ? 1 : 0
+antisymmetric_score = predicates.is_antisymmetric() ? 1 : 0
+stochastic_score = matrix.is_stochastic(predicates) ? 1 : 0
+predicate_score = zero_score + binary_score + diagonal_score + identity_score + symmetric_score + antisymmetric_score + stochastic_score
+stats = matrix.new<int>(2, 2, 1)
+stats_score = matrix.sum(stats) + stats.avg() + matrix.min(stats) + stats.max() + matrix.mode(stats) + stats.trace() + matrix.rank(stats) + stats.rank()
+kron_result = matrix.kron(stats, stats)
+mult_result = stats.mult(stats)
+diff_result = matrix.diff(stats, stats)
+pow_result = stats.pow(2)
+arith_score = matrix.get(kron_result, 0, 0) + mult_result.get(0, 0) + matrix.get(diff_result, 0, 0) + pow_result.get(0, 0)
+linalg = matrix.new<int>(1, 1, 4)
+linalg_values = matrix.eigenvalues(linalg)
+linalg_vectors = linalg.eigenvectors()
+linalg_inv = matrix.inv(linalg)
+linalg_pinv = linalg.pinv()
+linalg_score = matrix.det(linalg) + array.get(linalg_values, 0) + matrix.get(linalg_vectors, 0, 0) + linalg_inv.get(0, 0) + matrix.get(linalg_pinv, 0, 0)
+transposed = values.transpose()
+reshaped = values.copy()
+reshaped.reshape(3, 2)
+plot(matrix.get(slice, 0, 1) + typed.get(0, 0) + transposed.rows() + reshaped.columns() + row_values.size() + column_values.size() + predicate_score + stats_score + arith_score + linalg_score)
+matrix.reverse(reshaped)

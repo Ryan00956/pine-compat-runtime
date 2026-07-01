@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported matrix.mult bool array")
+
+values = matrix.new<float>(1, 2, close)
+vector = array.from(true, false)
+result = matrix.mult(values, vector)
+plot(close)

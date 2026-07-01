@@ -1,0 +1,11 @@
+//@version=6
+indicator("Unsupported map.put_all UDF")
+
+target = map.new<string, float>()
+source = map.new<string, float>()
+
+merge_all() =>
+    map.put_all(target, source)
+
+merge_all()
+plot(close)

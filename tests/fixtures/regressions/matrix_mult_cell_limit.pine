@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix mult cell limit")
+
+left = matrix.new<float>(334, 1, 1)
+right = matrix.new<float>(1, 300, 1)
+plot(matrix.get(matrix.mult(left, right), 0, 0))

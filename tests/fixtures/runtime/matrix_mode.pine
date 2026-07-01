@@ -1,0 +1,24 @@
+//@version=6
+indicator("Matrix mode")
+
+values = matrix.new<float>(2, 3, na)
+matrix.set(values, 0, 0, close + 2)
+matrix.set(values, 0, 1, close + 4)
+matrix.set(values, 1, 0, close + 2)
+matrix.set(values, 1, 2, close + 6)
+namespace_mode = matrix.mode(values)
+method_mode = values.mode()
+
+unique = matrix.new<float>(1, 3, na)
+matrix.set(unique, 0, 0, close + 1)
+matrix.set(unique, 0, 1, close + 2)
+matrix.set(unique, 0, 2, close + 3)
+
+empty = matrix.new<float>(0, 2)
+all_na = matrix.new<float>(1, 2)
+
+plot(namespace_mode, "namespace_mode")
+plot(method_mode, "method_mode")
+plot(na(matrix.mode(unique)) ? 1 : 0, "unique_mode_is_na")
+plot(na(matrix.mode(empty)) ? 1 : 0, "empty_mode_is_na")
+plot(na(all_na.mode()) ? 1 : 0, "all_na_mode_is_na")

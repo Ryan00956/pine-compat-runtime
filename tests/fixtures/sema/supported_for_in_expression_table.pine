@@ -1,0 +1,10 @@
+//@version=6
+indicator("Supported for-in expression table")
+
+first = table.new(position.top_left, 1, 1)
+second = table.new(position.bottom_right, 1, 1)
+values = array.from(first, second)
+result = for value in values
+    value
+
+plot(result == second ? 1 : 0)

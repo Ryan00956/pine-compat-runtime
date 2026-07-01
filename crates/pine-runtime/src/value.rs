@@ -53,6 +53,7 @@ pub enum PineValue {
     ChartPoint(ChartPointValue),
     Array(u32),
     Matrix(u32),
+    Map(u32),
     UserType(Vec<PineValue>),
     Tuple(Vec<PineValue>),
     Na,

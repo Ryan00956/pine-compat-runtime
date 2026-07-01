@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.is_zero")
+
+is_zero = matrix.is_zero(na)
+plot(close)

@@ -1,0 +1,27 @@
+//@version=6
+indicator("Supported while expression matrix kinds")
+
+int_i = 0
+int_values = while int_i < 1
+    int_i := int_i + 1
+    matrix.new<int>(1, 1, int_i)
+
+bool_i = 0
+bool_values = while bool_i < 1
+    bool_i := bool_i + 1
+    matrix.new<bool>(1, 1, true)
+
+string_i = 0
+string_values = while string_i < 1
+    string_i := string_i + 1
+    matrix.new<string>(1, 1, "a")
+
+color_i = 0
+color_values = while color_i < 1
+    color_i := color_i + 1
+    matrix.new<color>(1, 1, color.green)
+
+plot(int_values.get(0, 0))
+plot(bool_values.get(0, 0) ? 1 : 0)
+plot(string_values.get(0, 0) == "a" ? 1 : 0)
+plot(color_values.get(0, 0) == color.green ? 1 : 0)

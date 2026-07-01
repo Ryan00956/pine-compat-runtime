@@ -1,6 +1,8 @@
+use crate::analyzer::maps::{accepts_map_scalar_kind, map_kind_from_template_name};
 use crate::analyzer::user_type_array_sort as ut_array_sort;
 use crate::analyzer::user_types::UserTypeArrayElementInference;
 use crate::prelude::*;
+use crate::types::is_numeric_matrix_kind;
 
 mod arrays;
 mod declarations;
@@ -9,10 +11,12 @@ mod helpers;
 mod return_types;
 
 pub(crate) use helpers::{
-    array_method_builtin_name, drawing_method_builtin_name, expr_name, is_array_mutation_builtin,
-    is_array_mutation_method_call_name, is_output_or_declaration_builtin,
+    alias_qualified_method_name, array_method_builtin_name, drawing_method_builtin_name, expr_name,
+    is_array_mutation_builtin, is_array_mutation_method_call_name, is_map_mutation_builtin,
+    is_map_mutation_method_call_name, is_output_or_declaration_builtin,
     is_ta_extreme_length_overload, is_ta_pivot_default_source_overload, is_ta_vwap_bands_call,
-    is_time_function_overload, is_timestamp_overload, method_call_parts, receiver_call_arg,
+    is_time_function_overload, is_timestamp_overload, map_method_builtin_name, method_call_parts,
+    receiver_call_arg,
 };
 
 impl Analyzer {
@@ -45,6 +49,12 @@ impl Analyzer {
             .map(|arg| self.analyze_expr(&arg.value))
             .collect();
 
+        if let Some((key_type, value_type)) = map_new_template_types(&name) {
+            return self.analyze_map_new_call(&name, key_type, value_type, span, args);
+        }
+        if let Some(pine_type) = self.analyze_map_operation_call(&name, span, args, &arg_types) {
+            return pine_type;
+        }
         if let Some(type_name) = ut_array_sort::array_new_user_type_name(&name) {
             return self.analyze_user_type_array_new_call(&name, type_name, span, args, &arg_types);
         }
@@ -77,8 +87,10 @@ impl Analyzer {
                 return Some(pine_builtins::tuple_return_type());
             }
             if name == "array.from"
-                && let Some(UserTypeArrayElementInference::SameScalarLocal(type_name)) =
-                    self.array_from_user_type_element_inference(args, &arg_types)
+                && let Some(
+                    UserTypeArrayElementInference::SameScalarLocal(type_name)
+                    | UserTypeArrayElementInference::SameScalarImported(type_name),
+                ) = self.array_from_user_type_element_inference(args, &arg_types)
             {
                 let pine_type = PineType::new(Qualifier::Simple, ValueKind::UserTypeArray);
                 self.mark_expr_user_type_array(span, type_name);
@@ -87,6 +99,16 @@ impl Analyzer {
             self.mark_user_type_array_element_result(&name, span, args, &arg_types);
             self.mark_user_type_array_result(&name, span, args, &arg_types);
             return self.return_type(signature, &arg_types);
+        }
+
+        if let Some(pine_type) = self.analyze_alias_qualified_user_method_call(
+            &name,
+            callee.span,
+            span,
+            args,
+            &arg_types,
+        ) {
+            return pine_type;
         }
 
         match self.analyze_method_call(callee, span, args, &arg_types) {
@@ -122,6 +144,208 @@ impl Analyzer {
             callee.span,
         ));
         None
+    }
+
+    fn analyze_map_new_call(
+        &mut self,
+        name: &str,
+        key_type: &str,
+        value_type: &str,
+        span: Span,
+        args: &[CallArg],
+    ) -> Option<PineType> {
+        if !args.is_empty() {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                "map.new does not accept arguments in the current subset",
+                span,
+            ));
+            return None;
+        }
+        if !is_supported_map_scalar_type(key_type) || !is_supported_map_scalar_type(value_type) {
+            self.unsupported(
+                name,
+                "map.new currently supports only int, float, bool, string, or color key/value templates",
+                span,
+            );
+            return None;
+        }
+        self.compatibility.supported.push(FeatureUse {
+            feature: "map.*".to_owned(),
+            span,
+        });
+        self.mark_expr_map(
+            span,
+            MapTypeInfo {
+                key_kind: map_kind_from_template_name(key_type)
+                    .expect("supported map key type was checked"),
+                value_kind: map_kind_from_template_name(value_type)
+                    .expect("supported map value type was checked"),
+            },
+        );
+        Some(PineType::new(Qualifier::Simple, ValueKind::Map))
+    }
+
+    fn analyze_map_operation_call(
+        &mut self,
+        name: &str,
+        span: Span,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> Option<Option<PineType>> {
+        let expected_arity = match name {
+            "map.put" => 3,
+            "map.get" | "map.contains" | "map.remove" | "map.put_all" => 2,
+            "map.clear" | "map.copy" | "map.size" | "map.keys" | "map.values" => 1,
+            _ => return None,
+        };
+        if args.len() != expected_arity {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                format!(
+                    "`{name}` expects {expected_arity} argument(s), got {}",
+                    args.len()
+                ),
+                args.get(expected_arity).map_or(span, |arg| arg.span),
+            ));
+            return Some(None);
+        }
+
+        if matches!(name, "map.put" | "map.clear" | "map.remove" | "map.put_all")
+            && self.function_depth > 0
+        {
+            self.unsupported(
+                "function_side_effect",
+                &unsupported_collection_mutation_udf_reason(name),
+                span,
+            );
+            return Some(None);
+        }
+
+        let Some(receiver_type) = arg_types.first().copied().flatten() else {
+            return Some(None);
+        };
+        if receiver_type.kind != ValueKind::Map {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_TYPE",
+                format!(
+                    "`{name}` argument `id` does not accept {:?} {:?}",
+                    receiver_type.qualifier, receiver_type.kind
+                ),
+                args[0].span,
+            ));
+            return Some(None);
+        }
+        let Some(map_info) = self.map_type_of_expr(&args[0].value) else {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_TYPE",
+                format!("`{name}` receiver map template is not known"),
+                args[0].span,
+            ));
+            return Some(None);
+        };
+
+        if name == "map.put_all" {
+            let Some(source_type) = arg_types.get(1).copied().flatten() else {
+                return Some(None);
+            };
+            if source_type.kind != ValueKind::Map {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_TYPE",
+                    format!(
+                        "`{name}` argument `source` does not accept {:?} {:?}",
+                        source_type.qualifier, source_type.kind
+                    ),
+                    args[1].span,
+                ));
+                return Some(None);
+            }
+            let Some(source_info) = self.map_type_of_expr(&args[1].value) else {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_TYPE",
+                    format!("`{name}` source map template is not known"),
+                    args[1].span,
+                ));
+                return Some(None);
+            };
+            if source_info != map_info {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_TYPE",
+                    format!(
+                        "`{name}` source map template {:?}/{:?} does not match target {:?}/{:?}",
+                        source_info.key_kind,
+                        source_info.value_kind,
+                        map_info.key_kind,
+                        map_info.value_kind
+                    ),
+                    args[1].span,
+                ));
+                return Some(None);
+            }
+        }
+
+        if matches!(name, "map.put" | "map.get" | "map.contains" | "map.remove")
+            && let Some(key_type) = arg_types.get(1).copied().flatten()
+            && !accepts_map_scalar_kind(map_info.key_kind, key_type)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_TYPE",
+                format!(
+                    "`{name}` argument `key` does not accept {:?} {:?}",
+                    key_type.qualifier, key_type.kind
+                ),
+                args[1].span,
+            ));
+        }
+
+        if name == "map.put"
+            && let Some(value_type) = arg_types.get(2).copied().flatten()
+            && !accepts_map_scalar_kind(map_info.value_kind, value_type)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_TYPE",
+                format!(
+                    "`{name}` argument `value` does not accept {:?} {:?}",
+                    value_type.qualifier, value_type.kind
+                ),
+                args[2].span,
+            ));
+        }
+
+        self.compatibility.supported.push(FeatureUse {
+            feature: "map.*".to_owned(),
+            span,
+        });
+
+        if name == "map.copy" {
+            self.mark_expr_map(span, map_info);
+        }
+
+        Some(Some(match name {
+            "map.put" => PineType::new(Qualifier::Series, ValueKind::Void),
+            "map.get" => PineType::new(Qualifier::Series, map_info.value_kind),
+            "map.contains" => PineType::new(Qualifier::Series, ValueKind::Bool),
+            "map.clear" => PineType::new(Qualifier::Series, ValueKind::Void),
+            "map.remove" => PineType::new(Qualifier::Series, ValueKind::Void),
+            "map.copy" => PineType::new(Qualifier::Simple, ValueKind::Map),
+            "map.put_all" => PineType::new(Qualifier::Series, ValueKind::Void),
+            "map.size" => PineType::new(Qualifier::Series, ValueKind::Int),
+            "map.keys" => PineType::new(
+                Qualifier::Simple,
+                map_info
+                    .key_kind
+                    .array_kind_from_element_kind()
+                    .expect("supported map key kind has array kind"),
+            ),
+            "map.values" => PineType::new(
+                Qualifier::Simple,
+                map_info
+                    .value_kind
+                    .array_kind_from_element_kind()
+                    .expect("supported map value kind has array kind"),
+            ),
+            _ => unreachable!("map operation was matched above"),
+        }))
     }
 
     pub(crate) fn analyze_method_call(
@@ -202,6 +426,33 @@ impl Analyzer {
                 callee.span,
             );
             return MethodResolution::Resolved(None);
+        }
+
+        if receiver_type.kind == ValueKind::Map {
+            let Some(builtin_name) = map_method_builtin_name(method_name) else {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_UNKNOWN_METHOD",
+                    format!("unknown map method `{method_name}`"),
+                    callee.span,
+                ));
+                return MethodResolution::Resolved(None);
+            };
+
+            let mut method_args = Vec::with_capacity(args.len() + 1);
+            method_args.push(receiver_arg);
+            method_args.extend(args.iter().cloned());
+            let mut method_arg_types = Vec::with_capacity(arg_types.len() + 1);
+            method_arg_types.push(Some(receiver_type));
+            method_arg_types.extend(arg_types.iter().copied());
+            return MethodResolution::Resolved(
+                self.analyze_map_operation_call(
+                    builtin_name,
+                    call_span,
+                    &method_args,
+                    &method_arg_types,
+                )
+                .unwrap_or(None),
+            );
         }
 
         let builtin_name =
@@ -406,7 +657,7 @@ impl Analyzer {
                 continue;
             }
 
-            if !accepts_type(param.accepts, arg_type) {
+            if !call_arg_accepts_type(signature, args, arg_types, param.accepts, arg_type) {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_TYPE",
                     format!(
@@ -454,6 +705,103 @@ impl Analyzer {
                     .flatten()
             })
         }
+    }
+}
+
+fn map_new_template_types(name: &str) -> Option<(&str, &str)> {
+    let inner = name.strip_prefix("map.new<")?.strip_suffix('>')?;
+    inner.split_once(',')
+}
+
+fn is_supported_map_scalar_type(name: &str) -> bool {
+    matches!(name, "int" | "float" | "bool" | "string" | "color")
+}
+
+fn call_arg_accepts_type(
+    signature: &BuiltinSignature,
+    args: &[CallArg],
+    arg_types: &[Option<PineType>],
+    accepts: Accepts,
+    arg_type: PineType,
+) -> bool {
+    match accepts {
+        Accepts::MatrixElementCompatible(matrix_param_index) => {
+            let Some(matrix_type) =
+                arg_type_for_param_index(signature, args, arg_types, matrix_param_index)
+            else {
+                return true;
+            };
+            accepts_matrix_element_arg(matrix_type, arg_type).unwrap_or(true)
+        }
+        Accepts::MatrixElementArray(matrix_param_index) => {
+            let Some(matrix_type) =
+                arg_type_for_param_index(signature, args, arg_types, matrix_param_index)
+            else {
+                return true;
+            };
+            accepts_matrix_element_array_arg(matrix_type, arg_type).unwrap_or(true)
+        }
+        Accepts::MatrixOrNumericCompatibleWithMatrixCounterpart(counterpart_param_index) => {
+            if is_numeric_matrix_kind(arg_type.kind) {
+                return true;
+            }
+            if !accepts_type(Accepts::NumericCompatible, arg_type) {
+                return false;
+            }
+            let Some(counterpart_type) =
+                arg_type_for_param_index(signature, args, arg_types, counterpart_param_index)
+            else {
+                return true;
+            };
+            is_numeric_matrix_kind(counterpart_type.kind)
+        }
+        Accepts::MatrixOrNumericOrNumericArrayCompatibleWithMatrixCounterpart(
+            counterpart_param_index,
+        ) => {
+            if is_numeric_matrix_kind(arg_type.kind) {
+                return true;
+            }
+            let accepts_compatible_value = accepts_type(Accepts::NumericCompatible, arg_type)
+                || accepts_type(Accepts::NumericArray, arg_type);
+            if !accepts_compatible_value {
+                return false;
+            }
+            let Some(counterpart_type) =
+                arg_type_for_param_index(signature, args, arg_types, counterpart_param_index)
+            else {
+                return true;
+            };
+            is_numeric_matrix_kind(counterpart_type.kind)
+        }
+        _ => accepts_type(accepts, arg_type),
+    }
+}
+
+fn arg_type_for_param_index(
+    signature: &BuiltinSignature,
+    args: &[CallArg],
+    arg_types: &[Option<PineType>],
+    param_index: usize,
+) -> Option<PineType> {
+    args.iter().enumerate().find_map(|(arg_index, arg)| {
+        (param_index_for_arg(signature, arg_index, arg)? == param_index)
+            .then(|| arg_types.get(arg_index).copied().flatten())
+            .flatten()
+    })
+}
+
+fn param_index_for_arg(
+    signature: &BuiltinSignature,
+    arg_index: usize,
+    arg: &CallArg,
+) -> Option<usize> {
+    if let Some(name) = &arg.name {
+        return signature.params.iter().position(|param| param.name == name);
+    }
+    if arg_index < signature.params.len() {
+        Some(arg_index)
+    } else {
+        signature.variadic.then_some(signature.params.len() - 1)
     }
 }
 

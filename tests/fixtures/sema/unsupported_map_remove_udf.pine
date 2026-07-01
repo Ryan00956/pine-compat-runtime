@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported map remove udf")
+
+remove_key(id) =>
+    map.remove(id, "open")
+    map.size(id)
+
+prices = map.new<string, float>()
+plot(remove_key(prices))

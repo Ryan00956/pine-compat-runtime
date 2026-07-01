@@ -139,6 +139,12 @@ pub enum HirStmtKind {
         field_index: usize,
         value: HirExpr,
     },
+    ArrayFieldReassign {
+        array: HirExpr,
+        index: HirExpr,
+        field_index: usize,
+        value: HirExpr,
+    },
     TupleDecl {
         symbols: Vec<SymbolId>,
         value: HirExpr,
@@ -180,6 +186,13 @@ pub enum HirExprKind {
         from: Box<HirExpr>,
         to: Box<HirExpr>,
         step: Option<Box<HirExpr>>,
+        statements: Vec<HirStmt>,
+        result: Box<HirExpr>,
+    },
+    ForIn {
+        index: Option<SymbolId>,
+        value: SymbolId,
+        iterable: Box<HirExpr>,
         statements: Vec<HirStmt>,
         result: Box<HirExpr>,
     },

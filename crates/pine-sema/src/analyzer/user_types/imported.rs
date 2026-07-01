@@ -36,6 +36,12 @@ impl Analyzer {
         Some(self.imported_user_type_has_scalar_fields(user_type))
     }
 
+    pub(crate) fn imported_user_type_history_is_supported(&self, type_name: &str) -> bool {
+        self.imported_user_types
+            .get(type_name)
+            .is_some_and(|user_type| self.imported_user_type_has_scalar_fields(user_type))
+    }
+
     pub(crate) fn imported_user_type_constructor_arg_plan(
         &self,
         callee_name: &str,

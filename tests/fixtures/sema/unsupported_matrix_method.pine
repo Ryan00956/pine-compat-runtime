@@ -2,5 +2,5 @@
 indicator("Unsupported matrix method")
 
 values = matrix.new<float>(1, 1, close)
-values.transpose()
+values.concat(values)
 plot(close)

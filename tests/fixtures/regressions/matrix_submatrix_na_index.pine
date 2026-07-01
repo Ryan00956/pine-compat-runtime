@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix submatrix na index")
+
+values = matrix.new<float>(3, 4, close)
+slice = matrix.submatrix(values, int(na), 3)
+plot(matrix.rows(slice))

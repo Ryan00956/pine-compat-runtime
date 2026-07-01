@@ -215,10 +215,18 @@ impl Analyzer {
                 let declared_user_type_array_name = declared_type
                     .as_ref()
                     .and_then(|declared_type| self.declared_user_type_array_name(declared_type));
+                let declared_map_info = declared_type
+                    .as_ref()
+                    .and_then(|declared_type| self.declared_map_type_info(declared_type));
                 let inferred_varip_user_type_name = (matches!(mode, pine_syntax::DeclMode::Varip)
                     && declared_user_type_name.is_none())
                 .then(|| self.direct_user_type_constructor_name(value))
                 .flatten();
+                let inferred_varip_user_type_array_name =
+                    (matches!(mode, pine_syntax::DeclMode::Varip)
+                        && declared_user_type_array_name.is_none())
+                    .then(|| self.user_type_array_name_of_expr(value))
+                    .flatten();
                 if let Some(target_type) = declared_pine_type {
                     self.validate_typed_declaration(name, target_type, value_type, statement.span);
                     if let Some(target_user_type_name) = declared_user_type_name.as_deref() {
@@ -234,6 +242,15 @@ impl Analyzer {
                         self.validate_user_type_array_value_assignment(
                             name,
                             target_type_name,
+                            value,
+                            value_type,
+                            statement.span,
+                        );
+                    }
+                    if let Some(target_info) = declared_map_info {
+                        self.validate_map_value_assignment(
+                            name,
+                            target_info,
                             value,
                             value_type,
                             statement.span,
@@ -256,6 +273,9 @@ impl Analyzer {
                     declared_user_type_name
                         .as_deref()
                         .or(inferred_varip_user_type_name.as_deref()),
+                    declared_user_type_array_name
+                        .as_deref()
+                        .or(inferred_varip_user_type_array_name.as_deref()),
                     statement.span,
                 );
                 let symbol = if self.block_depth > 0 || self.function_depth > 0 {
@@ -280,6 +300,11 @@ impl Analyzer {
                     && let Some(type_name) = self.user_type_array_name_of_expr(value)
                 {
                     self.mark_symbol_user_type_array(symbol, type_name);
+                }
+                if symbol_type.kind == ValueKind::Map
+                    && let Some(info) = declared_map_info.or_else(|| self.map_type_of_expr(value))
+                {
+                    self.mark_symbol_map(symbol, info);
                 }
                 self.bind_symbol(name, statement.span, symbol);
             }
@@ -328,6 +353,21 @@ impl Analyzer {
                             value_type,
                             statement.span,
                         );
+                    }
+                    if target_type.kind == ValueKind::Map
+                        && let Some(symbol) = self.scope.resolve(name)
+                    {
+                        if let Some(target_info) = self.symbol_maps.get(&symbol.id).copied() {
+                            self.validate_map_value_assignment(
+                                name,
+                                target_info,
+                                value,
+                                value_type,
+                                statement.span,
+                            );
+                        } else if let Some(value_info) = self.map_type_of_expr(value) {
+                            self.mark_symbol_map(symbol, value_info);
+                        }
                     }
                     if can_assign(target_type, value_type) {
                         self.update_symbol_type(
@@ -379,7 +419,6 @@ impl Analyzer {
                         .as_ref()
                         .is_some_and(|(_, _, feature, receiver_symbol)| {
                             *feature == "user-defined type field mutation"
-                                && !is_method_context
                                 && receiver_symbol.is_some()
                                 && !receiver_is_global
                                 && !receiver_is_function_param
@@ -425,6 +464,96 @@ impl Analyzer {
                     }
                     self.compatibility.supported.push(FeatureUse {
                         feature: feature.to_owned(),
+                        span: statement.span,
+                    });
+                }
+            }
+            StmtKind::ArrayFieldReassign {
+                array,
+                index,
+                field,
+                value,
+            } => {
+                if self.function_depth > 0 {
+                    self.unsupported(
+                        "function_side_effect",
+                        "mutating user-defined type array fields inside user-defined functions or methods is not supported",
+                        statement.span,
+                    );
+                }
+
+                let array_type = self.analyze_expr(array);
+                let index_type = self.analyze_expr(index);
+                let value_type = self.analyze_expr(value);
+
+                if let Some(index_type) = index_type
+                    && index_type.kind != ValueKind::Int
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARG_TYPE",
+                        format!(
+                            "`array.get` index does not accept {:?} {:?}",
+                            index_type.qualifier, index_type.kind
+                        ),
+                        index.span,
+                    ));
+                }
+
+                let Some(array_type) = array_type else {
+                    return;
+                };
+                if array_type.kind != ValueKind::UserTypeArray {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_UDT_FIELD_MUTATION",
+                        "chained UDT array field mutation requires a same-local scalar-field UDT array",
+                        statement.span,
+                    ));
+                    return;
+                }
+                let Some(type_name) = self.user_type_array_name_of_expr(array) else {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_UDT_FIELD_MUTATION",
+                        "cannot resolve UDT element identity for chained array field mutation",
+                        statement.span,
+                    ));
+                    return;
+                };
+                let Some(user_type) = self.user_types.get(&type_name) else {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_UDT_FIELD_MUTATION",
+                        format!("unknown UDT array element `{type_name}`"),
+                        statement.span,
+                    ));
+                    return;
+                };
+                let Some((field_type, field_user_type_name)) = user_type
+                    .fields
+                    .iter()
+                    .find(|candidate| candidate.name == *field)
+                    .map(|field_info| (field_info.pine_type, field_info.user_type_name.clone()))
+                else {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_UDT_UNKNOWN_FIELD",
+                        format!("unknown field `{field}` on `{type_name}`"),
+                        statement.span,
+                    ));
+                    return;
+                };
+                if let Some(value_type) = value_type {
+                    let name = format!("array.get(...).{field}");
+                    if let Some(target_user_type) = field_user_type_name {
+                        self.validate_user_type_field_assignment(
+                            &name,
+                            &target_user_type,
+                            value,
+                            value_type,
+                            statement.span,
+                        );
+                    } else {
+                        self.validate_assignment(&name, field_type, value_type, statement.span);
+                    }
+                    self.compatibility.supported.push(FeatureUse {
+                        feature: "user-defined type array field mutation".to_owned(),
                         span: statement.span,
                     });
                 }

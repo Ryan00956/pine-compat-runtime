@@ -2,6 +2,14 @@ use pine_builtins::Accepts;
 use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{BinaryOp, Expr, ExprKind, Literal, UnaryOp};
 
+mod matrices;
+
+pub(crate) use matrices::{
+    accepts_matrix_element_arg, accepts_matrix_element_array_arg, is_matrix_kind,
+    is_numeric_matrix_kind, matrix_array_return_type, matrix_element_return_type,
+    matrix_method_builtin_name, matrix_mult_return_type,
+};
+
 pub(crate) const UNKNOWN: PineType = PineType::new(Qualifier::Series, ValueKind::Na);
 pub(crate) fn const_int_value(expr: &Expr) -> Option<i64> {
     match &expr.kind {
@@ -207,6 +215,19 @@ pub(crate) fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
         Accepts::PlotOrHLine => matches!(arg_type.kind, ValueKind::Plot | ValueKind::HLine),
         Accepts::Array => is_array_kind(arg_type.kind),
         Accepts::FloatMatrix => arg_type.kind == ValueKind::FloatMatrix,
+        Accepts::NumericMatrix => matrices::is_numeric_matrix_kind(arg_type.kind),
+        Accepts::Matrix => is_matrix_kind(arg_type.kind),
+        Accepts::Map => arg_type.kind == ValueKind::Map,
+        Accepts::MatrixOrNumericCompatibleWithMatrixCounterpart(_) => {
+            is_matrix_kind(arg_type.kind) || accepts_type(Accepts::NumericCompatible, arg_type)
+        }
+        Accepts::MatrixOrNumericOrNumericArrayCompatibleWithMatrixCounterpart(_) => {
+            is_matrix_kind(arg_type.kind)
+                || accepts_type(Accepts::NumericCompatible, arg_type)
+                || accepts_type(Accepts::NumericArray, arg_type)
+        }
+        Accepts::MatrixElementCompatible(_) => false,
+        Accepts::MatrixElementArray(_) => false,
         Accepts::Tuple => arg_type.kind == ValueKind::Tuple,
         Accepts::ScalarArray => is_scalar_array_kind(arg_type.kind),
         Accepts::NumericArray => is_numeric_array_kind(arg_type.kind),
@@ -283,6 +304,11 @@ fn can_assign_na_to_kind(kind: ValueKind) -> bool {
             | ValueKind::ChartPointArray
             | ValueKind::UserTypeArray
             | ValueKind::FloatMatrix
+            | ValueKind::IntMatrix
+            | ValueKind::BoolMatrix
+            | ValueKind::StringMatrix
+            | ValueKind::ColorMatrix
+            | ValueKind::Map
     )
 }
 pub(crate) fn qualifier_at_most(actual: Qualifier, max: Qualifier) -> bool {
@@ -504,30 +530,7 @@ pub(crate) fn is_array_kind(kind: ValueKind) -> bool {
     kind.array_element_kind().is_some()
 }
 pub(crate) fn is_collection_kind(kind: ValueKind) -> bool {
-    is_array_kind(kind) || kind == ValueKind::FloatMatrix
-}
-pub(crate) fn matrix_method_builtin_name(kind: ValueKind, method: &str) -> Option<&'static str> {
-    if kind != ValueKind::FloatMatrix {
-        return None;
-    }
-    match method {
-        "add_col" => Some("matrix.add_col"),
-        "add_row" => Some("matrix.add_row"),
-        "avg" => Some("matrix.avg"),
-        "copy" => Some("matrix.copy"),
-        "col" => Some("matrix.col"),
-        "fill" => Some("matrix.fill"),
-        "get" => Some("matrix.get"),
-        "remove_col" => Some("matrix.remove_col"),
-        "remove_row" => Some("matrix.remove_row"),
-        "reshape" => Some("matrix.reshape"),
-        "row" => Some("matrix.row"),
-        "set" => Some("matrix.set"),
-        "sum" => Some("matrix.sum"),
-        "rows" => Some("matrix.rows"),
-        "columns" => Some("matrix.columns"),
-        _ => None,
-    }
+    is_array_kind(kind) || is_matrix_kind(kind) || kind == ValueKind::Map
 }
 pub(crate) fn is_numeric_array_kind(kind: ValueKind) -> bool {
     matches!(

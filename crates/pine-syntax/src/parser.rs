@@ -116,6 +116,7 @@ impl Parser {
                 left.kind,
                 ExprKind::If { .. }
                     | ExprKind::For { .. }
+                    | ExprKind::ForIn { .. }
                     | ExprKind::While { .. }
                     | ExprKind::Switch { .. }
             ) {
@@ -258,7 +259,35 @@ impl Parser {
     }
 
     fn parse_for_expr(&mut self) -> Option<Expr> {
-        let parts = self.parse_for_parts()?;
+        let start = self.expect(TokenKind::For, "expected `for`")?;
+        let counter = self.parse_for_counter()?;
+        if self.at(TokenKind::Comma) {
+            self.bump();
+            let value = self.parse_for_counter()?;
+            let parts = self.parse_for_in_tail(start, Some(counter), value)?;
+            return Some(Expr {
+                span: parts.start.merge(parts.span),
+                kind: ExprKind::ForIn {
+                    index: parts.index,
+                    value: parts.value,
+                    iterable: Box::new(parts.iterable),
+                    body: parts.body,
+                },
+            });
+        }
+        if self.nth_identifier_is(0, "in") {
+            let parts = self.parse_for_in_tail(start, None, counter)?;
+            return Some(Expr {
+                span: parts.start.merge(parts.span),
+                kind: ExprKind::ForIn {
+                    index: parts.index,
+                    value: parts.value,
+                    iterable: Box::new(parts.iterable),
+                    body: parts.body,
+                },
+            });
+        }
+        let parts = self.parse_for_range_tail(start, counter)?;
 
         Some(Expr {
             span: parts.start.merge(parts.span),
@@ -578,6 +607,40 @@ impl Parser {
             offset += 2;
         }
         (field_count >= 2 && self.nth_at(offset, TokenKind::ColonEq)).then_some(offset)
+    }
+
+    fn get_call_field_reassign_colon_eq_offset(&self) -> Option<usize> {
+        if !self.nth_at(1, TokenKind::Dot)
+            || !self.tokens.get(self.pos + 2).is_some_and(
+                |token| matches!(&token.kind, TokenKind::Identifier(name) if name == "get"),
+            )
+            || !self.nth_at(3, TokenKind::LParen)
+        {
+            return None;
+        }
+
+        let mut offset = 3;
+        let mut depth = 0usize;
+        while let Some(token) = self.tokens.get(self.pos + offset) {
+            match token.kind {
+                TokenKind::LParen => depth += 1,
+                TokenKind::RParen => {
+                    depth = depth.saturating_sub(1);
+                    if depth == 0 {
+                        return (self.nth_at(offset + 1, TokenKind::Dot)
+                            && self.tokens.get(self.pos + offset + 2).is_some_and(|token| {
+                                matches!(token.kind, TokenKind::Identifier(_))
+                            })
+                            && self.nth_at(offset + 3, TokenKind::ColonEq))
+                        .then_some(offset + 3);
+                    }
+                }
+                TokenKind::Eof => break,
+                _ => {}
+            }
+            offset += 1;
+        }
+        None
     }
 
     fn nth_identifier_is(&self, offset: usize, expected: &str) -> bool {

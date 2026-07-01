@@ -1,0 +1,21 @@
+//@version=6
+indicator("Matrix elements count")
+
+values = matrix.new<float>(2, 3, close)
+namespace_count = matrix.elements_count(values)
+method_count = values.elements_count()
+
+zero_rows = matrix.new<float>(0, 4)
+zero_columns = matrix.new<float>(3, 0)
+
+reshaped = matrix.copy(values)
+matrix.reshape(reshaped, 3, 2)
+
+matrix.remove_row(values, 1)
+
+plot(namespace_count, "namespace_count")
+plot(method_count, "method_count")
+plot(matrix.elements_count(zero_rows), "zero_rows_count")
+plot(zero_columns.elements_count(), "zero_columns_count")
+plot(matrix.elements_count(reshaped), "reshaped_count")
+plot(values.elements_count(), "after_remove_count")

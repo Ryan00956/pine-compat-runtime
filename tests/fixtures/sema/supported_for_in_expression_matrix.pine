@@ -1,0 +1,24 @@
+//@version=6
+indicator("Supported for-in expression matrix")
+
+floats = matrix.new<float>(2, 1, close)
+float_result = for row in floats
+    row.get(0)
+
+ints = matrix.new<int>(1, 1, 1)
+int_result = for row in ints
+    row.get(0)
+
+bools = matrix.new<bool>(1, 1, true)
+bool_result = for row in bools
+    row.get(0)
+
+strings = matrix.new<string>(1, 1, "x")
+string_result = for row in strings
+    row.get(0)
+
+colors = matrix.new<color>(1, 1, color.red)
+color_result = for row in colors
+    row.get(0)
+
+plot(float_result + int_result + (bool_result ? 1 : 0) + (string_result == "x" ? 1 : 0) + (color_result == color.red ? 1 : 0))

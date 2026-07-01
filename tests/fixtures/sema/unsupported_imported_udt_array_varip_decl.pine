@@ -1,0 +1,6 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Unsupported imported non-scalar UDT array varip declaration")
+
+varip array<lib.Wrapper> points = na
+plot(close)

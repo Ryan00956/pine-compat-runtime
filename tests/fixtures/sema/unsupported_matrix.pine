@@ -1,5 +1,5 @@
 //@version=6
 indicator("Unsupported matrix")
 
-value = matrix.det(na)
+value = matrix.concat(na)
 plot(value)

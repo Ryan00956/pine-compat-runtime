@@ -1,6 +1,0 @@
-//@version=5
-import user/udt/1 as lib
-indicator("Unsupported imported method")
-
-p = lib.Point.new(close)
-plot(p.shift(1))

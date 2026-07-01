@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.trace method receiver")
+
+value = close.trace()
+plot(value)

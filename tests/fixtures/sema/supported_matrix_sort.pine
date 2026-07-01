@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported matrix.sort")
+
+values = matrix.new<float>(2, 2, close)
+matrix.sort(values, 1)
+values.sort(0, order.descending)
+values.sort()
+plot(matrix.get(values, 0, 0))

@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported for-in expression string")
+
+values = array.from("a", "b")
+result = for value in values
+    value
+
+plot(result == "b" ? 1 : 0)

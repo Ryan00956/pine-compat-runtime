@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported map put value type")
+
+values = map.new<string, float>()
+map.put(values, "close", "bad")
+plot(close)

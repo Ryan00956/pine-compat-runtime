@@ -6,6 +6,26 @@ pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &
         "tests/fixtures/runtime/matrix_float.pine",
     ),
     (
+        "runtime_matrix_int.json",
+        "tests/fixtures/runtime/matrix_int.pine",
+    ),
+    (
+        "runtime_matrix_bool.json",
+        "tests/fixtures/runtime/matrix_bool.pine",
+    ),
+    (
+        "runtime_matrix_string.json",
+        "tests/fixtures/runtime/matrix_string.pine",
+    ),
+    (
+        "runtime_matrix_color.json",
+        "tests/fixtures/runtime/matrix_color.pine",
+    ),
+    (
+        "runtime_matrix_for_in.json",
+        "tests/fixtures/runtime/matrix_for_in.pine",
+    ),
+    (
         "runtime_matrix_zero_dimensions.json",
         "tests/fixtures/runtime/matrix_zero_dimensions.pine",
     ),
@@ -78,8 +98,28 @@ pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &
         "tests/fixtures/runtime/matrix_typed_declarations.pine",
     ),
     (
+        "runtime_matrix_varip.json",
+        "tests/fixtures/runtime/matrix_varip.pine",
+    ),
+    (
         "runtime_matrix_reshape.json",
         "tests/fixtures/runtime/matrix_reshape.pine",
+    ),
+    (
+        "runtime_matrix_kron.json",
+        "tests/fixtures/runtime/matrix_kron.pine",
+    ),
+    (
+        "runtime_matrix_mult.json",
+        "tests/fixtures/runtime/matrix_mult.pine",
+    ),
+    (
+        "runtime_matrix_diff.json",
+        "tests/fixtures/runtime/matrix_diff.pine",
+    ),
+    (
+        "runtime_matrix_pow.json",
+        "tests/fixtures/runtime/matrix_pow.pine",
     ),
     (
         "runtime_matrix_reshape_method.json",
@@ -110,12 +150,108 @@ pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &
         "tests/fixtures/runtime/matrix_remove_col.pine",
     ),
     (
+        "runtime_matrix_swap_rows.json",
+        "tests/fixtures/runtime/matrix_swap_rows.pine",
+    ),
+    (
+        "runtime_matrix_swap_columns.json",
+        "tests/fixtures/runtime/matrix_swap_columns.pine",
+    ),
+    (
+        "runtime_matrix_sort.json",
+        "tests/fixtures/runtime/matrix_sort.pine",
+    ),
+    (
+        "runtime_matrix_submatrix.json",
+        "tests/fixtures/runtime/matrix_submatrix.pine",
+    ),
+    (
         "runtime_matrix_sum.json",
         "tests/fixtures/runtime/matrix_sum.pine",
     ),
     (
         "runtime_matrix_avg.json",
         "tests/fixtures/runtime/matrix_avg.pine",
+    ),
+    (
+        "runtime_matrix_min_max.json",
+        "tests/fixtures/runtime/matrix_min_max.pine",
+    ),
+    (
+        "runtime_matrix_mode.json",
+        "tests/fixtures/runtime/matrix_mode.pine",
+    ),
+    (
+        "runtime_matrix_trace.json",
+        "tests/fixtures/runtime/matrix_trace.pine",
+    ),
+    (
+        "runtime_matrix_det.json",
+        "tests/fixtures/runtime/matrix_det.pine",
+    ),
+    (
+        "runtime_matrix_eigenvalues.json",
+        "tests/fixtures/runtime/matrix_eigenvalues.pine",
+    ),
+    (
+        "runtime_matrix_eigenvectors.json",
+        "tests/fixtures/runtime/matrix_eigenvectors.pine",
+    ),
+    (
+        "runtime_matrix_inv.json",
+        "tests/fixtures/runtime/matrix_inv.pine",
+    ),
+    (
+        "runtime_matrix_pinv.json",
+        "tests/fixtures/runtime/matrix_pinv.pine",
+    ),
+    (
+        "runtime_matrix_rank.json",
+        "tests/fixtures/runtime/matrix_rank.pine",
+    ),
+    (
+        "runtime_matrix_elements_count.json",
+        "tests/fixtures/runtime/matrix_elements_count.pine",
+    ),
+    (
+        "runtime_matrix_is_square.json",
+        "tests/fixtures/runtime/matrix_is_square.pine",
+    ),
+    (
+        "runtime_matrix_is_binary.json",
+        "tests/fixtures/runtime/matrix_is_binary.pine",
+    ),
+    (
+        "runtime_matrix_is_diagonal.json",
+        "tests/fixtures/runtime/matrix_is_diagonal.pine",
+    ),
+    (
+        "runtime_matrix_is_identity.json",
+        "tests/fixtures/runtime/matrix_is_identity.pine",
+    ),
+    (
+        "runtime_matrix_is_symmetric.json",
+        "tests/fixtures/runtime/matrix_is_symmetric.pine",
+    ),
+    (
+        "runtime_matrix_is_antisymmetric.json",
+        "tests/fixtures/runtime/matrix_is_antisymmetric.pine",
+    ),
+    (
+        "runtime_matrix_is_stochastic.json",
+        "tests/fixtures/runtime/matrix_is_stochastic.pine",
+    ),
+    (
+        "runtime_matrix_is_zero.json",
+        "tests/fixtures/runtime/matrix_is_zero.pine",
+    ),
+    (
+        "runtime_matrix_transpose.json",
+        "tests/fixtures/runtime/matrix_transpose.pine",
+    ),
+    (
+        "runtime_matrix_reverse.json",
+        "tests/fixtures/runtime/matrix_reverse.pine",
     ),
     (
         "runtime_matrix_row_col_loop_read.json",

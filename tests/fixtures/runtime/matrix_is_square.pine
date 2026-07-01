@@ -1,0 +1,12 @@
+//@version=6
+indicator("Matrix is_square")
+
+square = matrix.new<float>(2, 2, close)
+rectangular = matrix.new<float>(2, 3, close)
+zero_square = matrix.new<float>(0, 0)
+zero_rows = matrix.new<float>(0, 2)
+
+plot(matrix.is_square(square) ? 1 : 0, "square")
+plot(matrix.is_square(rectangular) ? 1 : 0, "rectangular")
+plot(zero_square.is_square() ? 1 : 0, "zero_square")
+plot(zero_rows.is_square() ? 1 : 0, "zero_rows")

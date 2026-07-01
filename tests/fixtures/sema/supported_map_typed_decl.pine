@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported map typed declaration")
+
+map<string, float> prices = na
+prices := map.new<string, float>()
+prices.put("open", open)
+
+map<int, string> labels = map.new<int, string>()
+labels.put(bar_index, "bar")
+
+plot(prices.get("open") + (labels.get(bar_index) == "bar" ? 1 : 0))

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.elements_count")
+
+count = matrix.elements_count(na)
+plot(count)

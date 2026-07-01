@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.is_identity")
+
+is_identity = matrix.is_identity(na)
+plot(close)

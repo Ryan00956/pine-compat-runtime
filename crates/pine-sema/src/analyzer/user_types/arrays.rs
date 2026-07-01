@@ -32,8 +32,24 @@ impl Analyzer {
             return None;
         }
 
-        classify_user_type_array_element_names(&self.user_types, &type_names)
-            .or(Some(UserTypeArrayElementInference::UnknownUserTypeName))
+        if let Some(inference) =
+            classify_user_type_array_element_names(&self.user_types, &type_names)
+        {
+            return Some(inference);
+        }
+
+        let Some(first) = type_names.first() else {
+            return Some(UserTypeArrayElementInference::UnknownUserTypeName);
+        };
+        if type_names.iter().any(|type_name| type_name != first) {
+            return Some(UserTypeArrayElementInference::MixedLocal);
+        }
+        if self.imported_user_type_history_is_supported(first) {
+            return Some(UserTypeArrayElementInference::SameScalarImported(
+                first.clone(),
+            ));
+        }
+        Some(UserTypeArrayElementInference::UnknownUserTypeName)
     }
 
     pub(crate) fn analyze_user_type_array_new_call(

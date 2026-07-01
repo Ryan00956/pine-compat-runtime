@@ -1,5 +1,5 @@
 //@version=6
-indicator("Unsupported matrix int typed declaration")
+indicator("Unsupported matrix int typed declaration initial value")
 
-matrix<int> values = na
+matrix<int> values = matrix.new<float>(1, 1, close)
 plot(close)

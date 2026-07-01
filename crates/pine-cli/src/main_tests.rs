@@ -35,6 +35,8 @@ fn matrix_includes_supported_builtins_and_unsupported_features() {
         };
         let expected_feature = if signature.name.starts_with("matrix.") {
             "matrix.*"
+        } else if signature.name.starts_with("map.") {
+            "map.*"
         } else {
             signature.name
         };
@@ -102,6 +104,7 @@ fn expected_partial_builtin(name: &str) -> bool {
         "table.",
         "chart.point.",
         "matrix.",
+        "map.",
         "strategy.",
     ]
     .iter()
@@ -309,7 +312,6 @@ fn matrix_includes_known_unsupported_platform_families() {
         "request.*",
         "strategy.*",
         "alert placeholders",
-        "map.*",
         "unsupported label/table methods",
         "non-int history offsets",
         "negative history offsets",
@@ -325,6 +327,11 @@ fn matrix_includes_known_unsupported_platform_families() {
         entries
             .iter()
             .any(|entry| entry.feature == "matrix.*" && entry.status == "partial")
+    );
+    assert!(
+        entries
+            .iter()
+            .any(|entry| entry.feature == "map.*" && entry.status == "partial")
     );
 }
 

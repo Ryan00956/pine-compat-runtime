@@ -1,0 +1,13 @@
+//@version=5
+indicator("Realtime user type array varip")
+
+type Point
+    float x
+
+varip array<Point> points = array.new<Point>()
+points.push(Point.new(close))
+
+last = points.last()
+
+plot(points.size(), "size")
+plot(last.x, "last_x")

@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix<int> add_col float array")
+
+values = matrix.new<int>(2, 1, 1)
+values.add_col(0, array.from(1.0, 2.0))
+plot(close)

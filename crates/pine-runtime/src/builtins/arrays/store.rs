@@ -155,7 +155,7 @@ impl<'a> HistoricalRuntime<'a> {
             .cloned())
     }
 
-    pub(super) fn array_set_value(
+    pub(crate) fn array_set_value(
         &mut self,
         id: u32,
         index: i64,

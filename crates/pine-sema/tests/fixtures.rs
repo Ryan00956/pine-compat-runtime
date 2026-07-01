@@ -1580,16 +1580,51 @@ fn reports_unsupported_varip_drawing_array_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_varip_drawing_array.pine",
         "varip",
-        "chart.point typed-array declarations only",
+        "drawing ids, tuples",
     );
 }
 
 #[test]
-fn reports_unsupported_varip_user_type_array_fixture() {
-    assert_unsupported_fixture(
+fn accepts_supported_varip_user_type_array_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_user_type_array_varip_decl.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "varip"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn reports_unsupported_varip_user_type_array_nested_fixture() {
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_user_type_array_varip_decl.pine",
-        "varip",
-        "UDT array varip requires separate array backing-store",
+        "E_DECL_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_udt_array_chained_field_mutation_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_udt_array_chained_field_mutation_udf.pine",
+        "function_side_effect",
+        "user-defined type array fields",
     );
 }
 
@@ -3105,7 +3140,7 @@ fn reports_unsupported_for_in_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_for_in.pine",
         "for...in",
-        "scalar arrays, label arrays, line arrays, linefill arrays, polyline arrays, box arrays, table arrays, chart.point arrays, and same-local scalar-field UDT arrays only",
+        "matrix rows only; non-scalar-field UDT arrays, map, and other iterable families remain unsupported",
     );
 }
 
@@ -3114,7 +3149,7 @@ fn reports_unsupported_for_in_non_array_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_for_in_non_array.pine",
         "for...in",
-        "scalar arrays, label arrays, line arrays, linefill arrays, polyline arrays, box arrays, table arrays, chart.point arrays, and same-local scalar-field UDT arrays only",
+        "matrix rows only; non-scalar-field UDT arrays, map, and other iterable families remain unsupported",
     );
 }
 
@@ -3123,7 +3158,318 @@ fn reports_unsupported_for_in_index_value_non_int_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_for_in_index_value_non_int.pine",
         "for...in",
-        "index/value for...in currently supports statement iteration over array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, and same-local scalar-field UDT arrays only",
+        "same-local or same-imported scalar-field UDT arrays, and matrix rows only",
+    );
+}
+
+#[test]
+fn accepts_supported_for_in_expression_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_for_in_expression.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn accepts_supported_for_in_expression_float_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_for_in_expression_float.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn accepts_supported_for_in_expression_bool_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_for_in_expression_bool.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn accepts_supported_for_in_expression_string_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_for_in_expression_string.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn accepts_supported_for_in_expression_color_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_for_in_expression_color.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn accepts_supported_for_in_expression_label_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_for_in_expression_label.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn accepts_supported_for_in_expression_line_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_for_in_expression_line.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn accepts_supported_for_in_expression_linefill_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_for_in_expression_linefill.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn accepts_supported_for_in_expression_polyline_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_for_in_expression_polyline.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn accepts_supported_for_in_expression_box_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_for_in_expression_box.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn accepts_supported_for_in_expression_table_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_for_in_expression_table.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn accepts_supported_for_in_expression_chart_point_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_for_in_expression_chart_point.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn accepts_supported_for_in_expression_udt_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_for_in_expression_udt.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn accepts_supported_for_in_expression_matrix_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_for_in_expression_matrix.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn accepts_supported_for_in_expression_index_value_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_for_in_expression_index_value.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn reports_unsupported_for_in_expression_non_array_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_for_in_expression_non_array.pine",
+        "for...in expression",
+        "array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, same-local or same-imported scalar-field UDT array, and matrix iterables only",
     );
 }
 
@@ -3285,6 +3631,24 @@ fn reports_unsupported_while_expression_scope_leak_fixture() {
         "tests/fixtures/sema/unsupported_while_expression_scope_leak.pine",
         "E_UNKNOWN_SYMBOL",
     );
+}
+
+#[test]
+fn accepts_supported_while_expression_matrix_kinds_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_while_expression_matrix_kinds.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
 }
 
 #[test]
@@ -3522,6 +3886,30 @@ fn reports_unsupported_map_typed_decl_fixture() {
 }
 
 #[test]
+fn reports_unsupported_map_typed_decl_template_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_map_typed_decl_template.pine",
+        "E_DECL_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_typed_decl_template.pine",
+        &["typed declaration `map<label,float>` is not supported"],
+    );
+}
+
+#[test]
+fn reports_unsupported_map_typed_decl_assign_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_map_typed_decl_assign.pine",
+        "E_MAP_ASSIGN_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_typed_decl_assign.pine",
+        &["cannot assign a different map template to `values`"],
+    );
+}
+
+#[test]
 fn reports_unsupported_matrix_typed_decl_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_matrix_typed_decl.pine",
@@ -3530,10 +3918,10 @@ fn reports_unsupported_matrix_typed_decl_fixture() {
 }
 
 #[test]
-fn reports_unsupported_matrix_int_typed_decl_fixture() {
+fn reports_unsupported_matrix_int_typed_decl_initial_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_matrix_int_typed_decl.pine",
-        &["typed declaration `matrix<int>` is not supported"],
+        &["cannot initialize `values` of type matrix<int> with Simple FloatMatrix"],
     );
 }
 
@@ -3546,21 +3934,52 @@ fn reports_unsupported_matrix_label_typed_decl_fixture() {
 }
 
 #[test]
-fn reports_unsupported_matrix_for_in_fixture() {
-    assert_unsupported_fixture(
+fn reports_matrix_for_in_row_array_plot_type_fixture() {
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_matrix_for_in.pine",
-        "for...in",
-        "map, matrix, and other iterable families remain unsupported",
+        "E_CALL_ARG_TYPE",
     );
 }
 
 #[test]
-fn reports_unsupported_matrix_varip_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_matrix_varip.pine",
-        "varip",
-        "matrix varip requires explicit backing-store",
+fn accepts_supported_matrix_for_in_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_for_in.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "for")
+    );
+}
+
+#[test]
+fn accepts_supported_matrix_varip_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_varip.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "varip")
+    );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -8822,18 +9241,10 @@ fn reports_unsupported_imported_udt_udf_nested_constructor_return_identity_fixtu
 }
 
 #[test]
-fn reports_unsupported_imported_method_fixture() {
+fn reports_unsupported_imported_method_qualified_receiver_fixture() {
     assert_import_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_imported_method.pine",
-        "E_IMPORT_UNSUPPORTED_METHOD",
-    );
-}
-
-#[test]
-fn reports_unsupported_imported_method_qualified_fixture() {
-    assert_import_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_imported_method_qualified.pine",
-        "E_IMPORT_UNSUPPORTED_METHOD",
+        "tests/fixtures/sema/unsupported_imported_method_qualified_receiver.pine",
+        "E_METHOD_ARG_TYPE",
     );
 }
 
@@ -9356,10 +9767,13 @@ fn reports_unsupported_ticker_constructors_fixture() {
 
 #[test]
 fn reports_unsupported_map_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_map.pine",
-        "map.put",
-        "map collections are not implemented",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map.pine",
+        &["`map.put` argument `id` does not accept"],
     );
 }
 
@@ -9367,8 +9781,8 @@ fn reports_unsupported_map_fixture() {
 fn reports_unsupported_map_new_template_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_map_new_template.pine",
-        "map.new<string,float>",
-        "map collections are not implemented",
+        "map.new<line,float>",
+        "map.new currently supports only",
     );
 }
 
@@ -9377,88 +9791,561 @@ fn reports_unsupported_map_new_dotted_template_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_map_new_dotted_template.pine",
         "map.new<chart.point,chart.point>",
-        "map collections are not implemented",
+        "map.new currently supports only",
     );
 }
 
 #[test]
+fn accepts_supported_map_new_size_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_map_new_size.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "map.*"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_map_put_get_contains_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_map_put_get_contains.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "map.*"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_map_clear_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_map_clear.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "map.*"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_map_remove_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_map_remove.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "map.*"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_map_copy_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_map_copy.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "map.*"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_map_methods_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_map_methods.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "map.*"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_map_keys_values_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_map_keys_values.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "map.*"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_map_put_all_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_map_put_all.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "map.*"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_map_history_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_map_history.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "map.*"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_map_varip_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_map_varip.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "varip"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_map_udf_read_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_map_udf_read.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "map.*"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_map_typed_decl_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_map_typed_decl.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "map.*"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn reports_unsupported_map_get_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_map_get.pine",
-        "map.get",
-        "map collections are not implemented",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_get.pine",
+        &["`map.get` argument `id` does not accept"],
     );
 }
 
 #[test]
 fn reports_unsupported_map_contains_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_map_contains.pine",
-        "map.contains",
-        "map collections are not implemented",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_contains.pine",
+        &["`map.contains` argument `id` does not accept"],
+    );
+}
+
+#[test]
+fn reports_unsupported_map_put_key_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_map_put_key_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_put_key_type.pine",
+        &["`map.put` argument `key` does not accept"],
+    );
+}
+
+#[test]
+fn reports_unsupported_map_put_value_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_map_put_value_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_put_value_type.pine",
+        &["`map.put` argument `value` does not accept"],
+    );
+}
+
+#[test]
+fn reports_unsupported_map_get_key_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_map_get_key_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_get_key_type.pine",
+        &["`map.get` argument `key` does not accept"],
+    );
+}
+
+#[test]
+fn reports_unsupported_map_remove_key_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_map_remove_key_type.pine",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_remove_key_type.pine",
+        &["`map.remove` argument `key` does not accept"],
+    );
+}
+
+#[test]
+fn reports_unsupported_map_assign_template_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_map_assign_template.pine",
+        "E_MAP_ASSIGN_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_map_put_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_put_udf.pine",
+        "function_side_effect",
+        "collection mutation via `map.put`",
+    );
+}
+
+#[test]
+fn reports_unsupported_map_put_method_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_put_method_udf.pine",
+        "function_side_effect",
+        "collection mutation via `map.put`",
+    );
+}
+
+#[test]
+fn reports_unsupported_map_clear_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_clear_udf.pine",
+        "function_side_effect",
+        "collection mutation via `map.clear`",
+    );
+}
+
+#[test]
+fn reports_unsupported_map_remove_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_remove_udf.pine",
+        "function_side_effect",
+        "collection mutation via `map.remove`",
     );
 }
 
 #[test]
 fn reports_unsupported_map_size_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_map_size.pine",
-        "map.size",
-        "map collections are not implemented",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_size.pine",
+        &["`map.size` argument `id` does not accept"],
     );
 }
 
 #[test]
 fn reports_unsupported_map_remove_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_map_remove.pine",
-        "map.remove",
-        "map collections are not implemented",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_remove.pine",
+        &["`map.remove` argument `id` does not accept"],
     );
 }
 
 #[test]
 fn reports_unsupported_map_clear_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_map_clear.pine",
-        "map.clear",
-        "map collections are not implemented",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_clear.pine",
+        &["`map.clear` argument `id` does not accept"],
     );
 }
 
 #[test]
 fn reports_unsupported_map_copy_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_map_copy.pine",
-        "map.copy",
-        "map collections are not implemented",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_copy.pine",
+        &["`map.copy` argument `id` does not accept"],
     );
 }
 
 #[test]
 fn reports_unsupported_map_keys_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_map_keys.pine",
-        "map.keys",
-        "map collections are not implemented",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_keys.pine",
+        &["`map.keys` argument `id` does not accept"],
     );
 }
 
 #[test]
 fn reports_unsupported_map_values_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_map_values.pine",
-        "map.values",
-        "map collections are not implemented",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_values.pine",
+        &["`map.values` argument `id` does not accept"],
     );
 }
 
 #[test]
 fn reports_unsupported_map_put_all_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_map_put_all.pine",
-        "map.put_all",
-        "map collections are not implemented",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_put_all.pine",
+        &["`map.put_all` argument `source` does not accept"],
+    );
+}
+
+#[test]
+fn reports_unsupported_map_put_all_template_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_map_put_all_template.pine",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_map_put_all_template.pine",
+        &["`map.put_all` source map template"],
+    );
+}
+
+#[test]
+fn reports_unsupported_map_put_all_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_put_all_udf.pine",
+        "function_side_effect",
+        "collection mutation via `map.put_all` is not supported inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_map_put_all_method_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map_put_all_method_udf.pine",
+        "function_side_effect",
+        "collection mutation via `map.put_all` is not supported inside user-defined functions",
     );
 }
 
@@ -9466,7 +10353,7 @@ fn reports_unsupported_map_put_all_fixture() {
 fn reports_unsupported_matrix_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix.pine",
-        "matrix.det",
+        "matrix.concat",
         "runtime-owned matrix<float> subset",
     );
 }
@@ -9811,8 +10698,8 @@ fn reports_unsupported_matrix_reshape_method_column_type_fixture() {
 fn reports_unsupported_matrix_new_template_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_new_template.pine",
-        "matrix.new<int>",
-        "runtime-owned matrix<float> subset",
+        "matrix.new<line>",
+        "matrix function is outside",
     );
 }
 
@@ -9829,6 +10716,222 @@ fn reports_unsupported_matrix_new_deferred_template_fixture() {
 fn reports_unsupported_matrix_new_initial_value_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_matrix_new_initial_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn accepts_supported_matrix_new_int_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_new_int.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "matrix.new<int>")
+    );
+}
+
+#[test]
+fn accepts_supported_matrix_new_bool_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_new_bool.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "matrix.new<bool>")
+    );
+}
+
+#[test]
+fn accepts_supported_matrix_new_string_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_new_string.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "matrix.new<string>")
+    );
+}
+
+#[test]
+fn accepts_supported_matrix_new_color_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_new_color.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "matrix.new<color>")
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_new_int_initial_value_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_new_int_initial_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_new_bool_initial_value_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_new_bool_initial_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_new_string_initial_value_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_new_string_initial_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_new_color_initial_value_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_new_color_initial_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_bool_sum_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_bool_sum.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_string_sum_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_string_sum.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_color_sum_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_color_sum.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_bool_set_float_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_bool_set_float.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_string_set_float_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_string_set_float.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_color_set_float_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_color_set_float.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_bool_fill_float_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_bool_fill_float.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_string_fill_float_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_string_fill_float.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_color_fill_float_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_color_fill_float.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_int_set_float_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_int_set_float.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_int_fill_float_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_int_fill_float.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_int_add_row_float_array_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_int_add_row_float_array.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_int_add_col_float_array_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_int_add_col_float_array.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -9942,6 +11045,114 @@ fn accepts_supported_matrix_remove_col_fixture() {
 }
 
 #[test]
+fn accepts_supported_matrix_swap_rows_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_swap_rows.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.swap_rows"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_swap_columns_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_swap_columns.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.swap_columns"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_sort_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_sort.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.sort"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_submatrix_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_submatrix.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.submatrix"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_supported_matrix_sum_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/supported_matrix_sum.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
@@ -9996,6 +11207,656 @@ fn accepts_supported_matrix_avg_fixture() {
 }
 
 #[test]
+fn accepts_supported_matrix_min_max_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_min_max.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    for feature in ["matrix.min", "matrix.max"] {
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|supported| supported.feature == feature),
+            "{} supported features: {:?}",
+            path.display(),
+            analysis.compatibility.supported
+        );
+    }
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_mode_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_mode.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.mode"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_trace_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_trace.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.trace"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_det_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_det.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.det"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_eigenvalues_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_eigenvalues.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.eigenvalues"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_eigenvectors_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_eigenvectors.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.eigenvectors"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_kron_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_kron.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.kron"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_mult_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_mult.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.mult"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_diff_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_diff.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.diff"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_pow_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_pow.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.pow"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_inv_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_inv.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.inv"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_pinv_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_pinv.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.pinv"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_rank_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_rank.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.rank"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_elements_count_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_elements_count.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.elements_count"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_is_square_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_is_square.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.is_square"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_is_binary_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_is_binary.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.is_binary"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_is_diagonal_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_is_diagonal.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.is_diagonal"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_is_identity_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_is_identity.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.is_identity"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_is_symmetric_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_is_symmetric.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.is_symmetric"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_is_antisymmetric_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_is_antisymmetric.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.is_antisymmetric"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_is_stochastic_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_is_stochastic.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.is_stochastic"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_is_zero_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_is_zero.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.is_zero"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_transpose_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_transpose.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.transpose"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_matrix_reverse_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_reverse.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.reverse"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn reports_unsupported_matrix_sum_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_matrix_sum.pine",
@@ -10024,6 +11885,726 @@ fn reports_unsupported_matrix_avg_method_receiver_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_matrix_avg_method_receiver.pine",
         "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_min_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_min.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_min_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_min_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_max_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_max.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_max_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_max_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_mode_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_mode.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_mode_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_mode_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_trace_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_trace.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_trace_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_trace_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_det_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_det.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_det_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_det_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_eigenvalues_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_eigenvalues.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_eigenvalues_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_eigenvalues_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_eigenvectors_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_eigenvectors.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_eigenvectors_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_eigenvectors_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_kron_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_kron.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_kron_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_kron_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_kron_value_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_kron_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_kron_method_value_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_kron_method_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_mult_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_mult.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_mult_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_mult_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_mult_value_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_mult_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_mult_scalar_pair_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_mult_scalar_pair.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_mult_array_pair_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_mult_array_pair.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_mult_bool_array_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_mult_bool_array.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_mult_method_value_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_mult_method_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_diff_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_diff.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_diff_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_diff_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_diff_value_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_diff_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_diff_scalar_pair_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_diff_scalar_pair.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_diff_method_value_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_diff_method_value.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_pow_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_pow.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_pow_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_pow_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_pow_power_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_pow_power.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_pow_method_power_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_pow_method_power.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_inv_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_inv.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_inv_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_inv_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_pinv_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_pinv.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_pinv_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_pinv_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_rank_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_rank.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_rank_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_rank_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_elements_count_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_elements_count.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_elements_count_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_elements_count_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_square_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_square.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_square_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_square_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_binary_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_binary.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_binary_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_binary_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_diagonal_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_diagonal.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_diagonal_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_diagonal_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_identity_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_identity.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_identity_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_identity_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_symmetric_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_symmetric.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_symmetric_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_symmetric_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_antisymmetric_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_antisymmetric.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_antisymmetric_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_antisymmetric_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_stochastic_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_stochastic.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_stochastic_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_stochastic_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_zero_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_zero.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_zero_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_is_zero_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_transpose_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_transpose.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_transpose_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_transpose_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_reverse_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_reverse.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_reverse_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_reverse_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_rows_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_rows.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_rows_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_rows_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_rows_row1_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_rows_row1.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_rows_row2_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_rows_row2.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_rows_method_row1_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_rows_method_row1.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_rows_method_row2_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_rows_method_row2.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_columns_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_columns.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_columns_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_columns_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_columns_column1_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_columns_column1.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_columns_column2_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_columns_column2.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_columns_method_column1_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_columns_method_column1.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_columns_method_column2_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_columns_method_column2.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_sort_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_sort.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_sort_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_sort_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_sort_column_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_sort_column.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_sort_order_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_sort_order.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_sort_method_column_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_sort_method_column.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_sort_method_order_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_sort_method_order.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_submatrix_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_submatrix.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_submatrix_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_submatrix_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_submatrix_from_row_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_submatrix_from_row.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_submatrix_to_row_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_submatrix_to_row.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_submatrix_from_column_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_submatrix_from_column.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_submatrix_to_column_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_submatrix_to_column.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_submatrix_method_from_row_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_submatrix_method_from_row.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_submatrix_method_to_row_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_submatrix_method_to_row.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_submatrix_method_from_column_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_submatrix_method_from_column.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_submatrix_method_to_column_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_submatrix_method_to_column.pine",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -10076,6 +12657,24 @@ fn reports_unsupported_matrix_reshape_udf_fixture() {
 fn reports_unsupported_matrix_reshape_method_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_reshape_method_udf.pine",
+        "function_side_effect",
+        "collection mutation via",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_reverse_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_reverse_udf.pine",
+        "function_side_effect",
+        "collection mutation via",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_reverse_method_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_reverse_method_udf.pine",
         "function_side_effect",
         "collection mutation via",
     );
@@ -10148,6 +12747,60 @@ fn reports_unsupported_matrix_remove_col_udf_fixture() {
 fn reports_unsupported_matrix_remove_col_method_udf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_matrix_remove_col_method_udf.pine",
+        "function_side_effect",
+        "collection mutation via",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_rows_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_rows_udf.pine",
+        "function_side_effect",
+        "collection mutation via",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_rows_method_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_rows_method_udf.pine",
+        "function_side_effect",
+        "collection mutation via",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_columns_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_columns_udf.pine",
+        "function_side_effect",
+        "collection mutation via",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_swap_columns_method_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_swap_columns_method_udf.pine",
+        "function_side_effect",
+        "collection mutation via",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_sort_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_sort_udf.pine",
+        "function_side_effect",
+        "collection mutation via",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_sort_method_udf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix_sort_method_udf.pine",
         "function_side_effect",
         "collection mutation via",
     );

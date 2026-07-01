@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix.submatrix method from_column")
+
+values = matrix.new<float>(3, 4, close)
+slice = values.submatrix(0, 2, 1.5)
+plot(close)

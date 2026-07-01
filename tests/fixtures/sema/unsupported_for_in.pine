@@ -1,5 +1,5 @@
-//@version=5
-indicator("Unsupported for in")
-values = matrix.new<float>(2, 2, close)
+//@version=6
+indicator("Unsupported map for in")
+values = map.new<string, float>()
 for value in values
     plot(1)

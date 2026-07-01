@@ -1,3 +1,4 @@
+use crate::analyzer::maps::map_kind_from_template_name;
 use crate::prelude::*;
 
 impl Analyzer {
@@ -113,6 +114,13 @@ impl Analyzer {
                 };
                 self.type_of_expr_with_params(expr, param_types)
             }
+            ExprKind::ForIn { body, .. } => {
+                let last = body.last()?;
+                let StmtKind::Expr(expr) = &last.kind else {
+                    return None;
+                };
+                self.type_of_expr_with_params(expr, param_types)
+            }
             ExprKind::While { body, .. } => {
                 let last = body.last()?;
                 let StmtKind::Expr(expr) = &last.kind else {
@@ -138,6 +146,13 @@ impl Analyzer {
                     Some(pine_type)
                 } else if let Some(pine_type) = self
                     .type_of_imported_user_type_constructor_with_params(&name, args, param_types)
+                {
+                    Some(pine_type)
+                } else if let Some((key_type, value_type)) = map_new_template_types(&name) {
+                    map_kind_from_template_name(key_type)?;
+                    map_kind_from_template_name(value_type)?;
+                    Some(PineType::new(Qualifier::Simple, ValueKind::Map))
+                } else if let Some(pine_type) = self.type_of_map_operation(&name, args, param_types)
                 {
                     Some(pine_type)
                 } else if let Some(signature) = pine_builtins::get_phase_1_builtin(&name) {
@@ -175,6 +190,13 @@ impl Analyzer {
                             array_numeric_return_type(&arg_types, index)
                         }
                         ReturnSpec::ArrayFromArgs => array_from_return_type(&arg_types),
+                        ReturnSpec::MatrixElement(index) => {
+                            matrix_element_return_type(&arg_types, index)
+                        }
+                        ReturnSpec::MatrixArray(index) => {
+                            matrix_array_return_type(&arg_types, index)
+                        }
+                        ReturnSpec::MatrixMult => matrix_mult_return_type(&arg_types),
                         ReturnSpec::IntFromArg(index) => arg_types
                             .get(index)
                             .copied()
@@ -256,6 +278,32 @@ impl Analyzer {
             matrix_method_builtin_name(receiver_type.kind, method_name)
         {
             pine_builtins::get_phase_1_builtin(builtin_name)?
+        } else if receiver_type.kind == ValueKind::Map {
+            let receiver_arg = receiver_call_arg(receiver_name, receiver_span);
+            let builtin_name = map_method_builtin_name(method_name)?;
+            return match builtin_name {
+                "map.get" => {
+                    let info = self.map_type_of_expr(&receiver_arg.value)?;
+                    Some(PineType::new(Qualifier::Series, info.value_kind))
+                }
+                "map.contains" => Some(PineType::new(Qualifier::Series, ValueKind::Bool)),
+                "map.put" | "map.clear" | "map.remove" | "map.put_all" => {
+                    Some(PineType::new(Qualifier::Series, ValueKind::Void))
+                }
+                "map.copy" => Some(PineType::new(Qualifier::Simple, ValueKind::Map)),
+                "map.size" => Some(PineType::new(Qualifier::Series, ValueKind::Int)),
+                "map.keys" => {
+                    let info = self.map_type_of_expr(&receiver_arg.value)?;
+                    let kind = info.key_kind.array_kind_from_element_kind()?;
+                    Some(PineType::new(Qualifier::Simple, kind))
+                }
+                "map.values" => {
+                    let info = self.map_type_of_expr(&receiver_arg.value)?;
+                    let kind = info.value_kind.array_kind_from_element_kind()?;
+                    Some(PineType::new(Qualifier::Simple, kind))
+                }
+                _ => None,
+            };
         } else if is_array_kind(receiver_type.kind) {
             pine_builtins::get_phase_1_builtin(array_method_builtin_name(method_name)?)?
         } else {
@@ -387,6 +435,13 @@ impl Analyzer {
                 };
                 self.tuple_element_types(expr)
             }
+            ExprKind::ForIn { body, .. } => {
+                let last = body.last()?;
+                let StmtKind::Expr(expr) = &last.kind else {
+                    return None;
+                };
+                self.tuple_element_types(expr)
+            }
             ExprKind::While { body, .. } => {
                 let last = body.last()?;
                 let StmtKind::Expr(expr) = &last.kind else {
@@ -440,6 +495,54 @@ impl Analyzer {
             }
         }
     }
+
+    fn type_of_map_operation(
+        &self,
+        name: &str,
+        args: &[CallArg],
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<PineType> {
+        match name {
+            "map.put" | "map.clear" | "map.remove" | "map.put_all" => {
+                Some(PineType::new(Qualifier::Series, ValueKind::Void))
+            }
+            "map.contains" => Some(PineType::new(Qualifier::Series, ValueKind::Bool)),
+            "map.copy" => Some(PineType::new(Qualifier::Simple, ValueKind::Map)),
+            "map.size" => Some(PineType::new(Qualifier::Series, ValueKind::Int)),
+            "map.keys" | "map.values" => {
+                let first_arg = args.first()?;
+                let info = self.map_type_of_expr(&first_arg.value)?;
+                let element_kind = if name == "map.keys" {
+                    info.key_kind
+                } else {
+                    info.value_kind
+                };
+                Some(PineType::new(
+                    Qualifier::Simple,
+                    element_kind.array_kind_from_element_kind()?,
+                ))
+            }
+            "map.get" => {
+                let first_arg = args.first()?;
+                let info = self.map_type_of_expr(&first_arg.value).or_else(|| {
+                    let ExprKind::Identifier(name) = &first_arg.value.kind else {
+                        return None;
+                    };
+                    param_types
+                        .get(name)
+                        .filter(|pine_type| pine_type.kind == ValueKind::Map)?;
+                    None
+                })?;
+                Some(PineType::new(Qualifier::Series, info.value_kind))
+            }
+            _ => None,
+        }
+    }
+}
+
+fn map_new_template_types(name: &str) -> Option<(&str, &str)> {
+    let inner = name.strip_prefix("map.new<")?.strip_suffix('>')?;
+    inner.split_once(',')
 }
 
 fn merge_tuple_element_types(

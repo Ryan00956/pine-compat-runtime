@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported matrix is_identity")
+
+values = matrix.new<float>(2, 2, 0)
+plot(matrix.is_identity(values) ? 1 : 0)
+plot(values.is_identity() ? 1 : 0)

@@ -1,0 +1,22 @@
+//@version=6
+indicator("Map put get contains")
+
+prices = map.new<string, float>()
+map.put(prices, "open", 1)
+map.put(prices, "close", 4.5)
+before_replace = map.get(prices, "open")
+map.put(prices, "open", 2.5)
+
+flags = map.new<int, bool>()
+map.put(flags, 1, true)
+
+names = map.new<string, string>()
+map.put(names, "first", "alpha")
+
+plot(before_replace, "before_replace")
+plot(map.get(prices, "open"), "after_replace")
+plot(map.get(prices, "missing"), "missing")
+plot(map.size(prices), "size")
+plot(map.contains(prices, "close") ? 1 : 0, "contains_close")
+plot(map.contains(flags, 1) ? 1 : 0, "contains_int_bool")
+plot(map.contains(names, "first") ? map.size(names) : 0, "contains_string_string")

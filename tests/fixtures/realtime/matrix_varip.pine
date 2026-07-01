@@ -1,0 +1,8 @@
+//@version=6
+indicator("Realtime matrix varip")
+
+varip values = matrix.new<float>(1, 1, 0)
+current = values.get(0, 0)
+values.set(0, 0, current + close)
+
+plot(values.get(0, 0), "value")

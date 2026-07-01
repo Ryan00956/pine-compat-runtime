@@ -1,6 +1,6 @@
 //@version=5
 import user/udt/1 as lib
-indicator("Unsupported imported UDT array alias declaration")
+indicator("Unsupported imported non-scalar UDT array alias declaration")
 
-lib.Point[] points = na
+lib.Wrapper[] points = na
 plot(close)

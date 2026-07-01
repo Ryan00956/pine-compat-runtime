@@ -1,0 +1,7 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT method return")
+
+p = lib.Point.new(close)
+q = p.same()
+plot(q.x)

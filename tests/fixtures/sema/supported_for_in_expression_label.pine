@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported for-in expression label")
+
+values = array.from(label.new(bar_index, high, "first"), label.new(bar_index, low, "second"))
+result = for value in values
+    value
+
+plot(label.get_text(result) == "second" ? 1 : 0)

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.mode")
+
+mode_value = matrix.mode(na)
+plot(mode_value)

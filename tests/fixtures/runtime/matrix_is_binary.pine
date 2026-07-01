@@ -1,0 +1,14 @@
+//@version=6
+indicator("Matrix is_binary")
+
+binary = matrix.new<float>(2, 2, 0)
+matrix.set(binary, 0, 1, 1)
+non_binary = matrix.copy(binary)
+matrix.set(non_binary, 1, 1, 2)
+with_na = matrix.new<float>(1, 1, na)
+zero_rows = matrix.new<float>(0, 2)
+
+plot(matrix.is_binary(binary) ? 1 : 0, "binary")
+plot(non_binary.is_binary() ? 1 : 0, "non_binary")
+plot(matrix.is_binary(with_na) ? 1 : 0, "with_na")
+plot(zero_rows.is_binary() ? 1 : 0, "zero_rows")

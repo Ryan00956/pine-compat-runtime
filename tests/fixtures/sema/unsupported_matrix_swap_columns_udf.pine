@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported matrix.swap_columns in UDF")
+
+f(values) =>
+    matrix.swap_columns(values, 0, 1)
+    close
+
+plot(f(matrix.new<float>(1, 2, close)))

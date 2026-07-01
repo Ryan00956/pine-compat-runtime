@@ -1,0 +1,9 @@
+//@version=6
+indicator("Realtime map varip")
+
+varip values = map.new<int, float>()
+next_key = values.size()
+values.put(next_key, close)
+
+plot(values.size(), "size")
+plot(values.get(next_key), "latest")

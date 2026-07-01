@@ -1,0 +1,15 @@
+//@version=6
+indicator("Supported matrix diff")
+
+left = matrix.new<float>(1, 2, close)
+right = matrix.new<float>(1, 2, open)
+namespace_result = matrix.diff(left, right)
+method_result = left.diff(right)
+scalar_result = matrix.diff(left, close)
+left_scalar_result = matrix.diff(close, left)
+scalar_method_result = left.diff(2)
+plot(matrix.get(namespace_result, 0, 0))
+plot(matrix.get(method_result, 0, 0))
+plot(matrix.get(scalar_result, 0, 0))
+plot(matrix.get(left_scalar_result, 0, 0))
+plot(matrix.get(scalar_method_result, 0, 0))

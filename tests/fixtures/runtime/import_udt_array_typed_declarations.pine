@@ -1,0 +1,29 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Imported UDT array typed declarations")
+
+array<lib.Point> points = na
+points := array.from(lib.Point.new(close), lib.Point.new(close + 1))
+first = points.get(0)
+
+lib.Point[] more = array.from(lib.Point.new(open), lib.Point.new(open + 1))
+array<lib.Point> copied = more.copy()
+copied.push(lib.Point.new(high))
+last = copied.get(2)
+
+lib.Point[] reassigned = na
+reassigned := copied
+middle = reassigned.get(1)
+
+float loop_sum = 0.0
+for point in points
+    loop_sum := loop_sum + point.x
+
+slice_window = points.slice(0, 2)
+slice_first = slice_window.get(0)
+
+array<lib.Point> concat_target = array.from(lib.Point.new(close + 3))
+concat_returned = concat_target.concat(slice_window)
+concat_last = concat_returned.get(2)
+
+plot(first.x + last.x + middle.x + loop_sum + points.size() + copied.size() + slice_first.x + concat_last.x + concat_returned.size())

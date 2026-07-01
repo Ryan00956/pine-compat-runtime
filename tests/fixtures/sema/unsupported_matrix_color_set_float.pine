@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix<color> set float")
+
+values = matrix.new<color>(1, 1, color.red)
+matrix.set(values, 0, 0, close)
+plot(close)

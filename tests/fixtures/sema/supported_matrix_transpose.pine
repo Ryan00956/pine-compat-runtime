@@ -1,0 +1,9 @@
+//@version=6
+indicator("Supported matrix transpose")
+
+values = matrix.new<float>(2, 3, close)
+transposed = matrix.transpose(values)
+method_transposed = values.transpose()
+
+plot(matrix.rows(transposed))
+plot(method_transposed.columns())

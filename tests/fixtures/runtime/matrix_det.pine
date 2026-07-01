@@ -1,0 +1,30 @@
+//@version=6
+indicator("Matrix determinant")
+
+values = matrix.new<float>(2, 2, na)
+matrix.set(values, 0, 0, 1)
+matrix.set(values, 0, 1, 2)
+matrix.set(values, 1, 0, 3)
+matrix.set(values, 1, 1, 4)
+namespace_det = matrix.det(values)
+method_det = values.det()
+
+swap = matrix.new<float>(3, 3, na)
+matrix.set(swap, 0, 0, 0)
+matrix.set(swap, 0, 1, 2)
+matrix.set(swap, 0, 2, 1)
+matrix.set(swap, 1, 0, 3)
+matrix.set(swap, 1, 1, 0)
+matrix.set(swap, 1, 2, 0)
+matrix.set(swap, 2, 0, 5)
+matrix.set(swap, 2, 1, 1)
+matrix.set(swap, 2, 2, 1)
+
+empty = matrix.new<float>(0, 0)
+all_na = matrix.new<float>(2, 2)
+
+plot(namespace_det, "namespace_det")
+plot(method_det, "method_det")
+plot(matrix.det(swap), "swap_det")
+plot(matrix.det(empty), "empty_det")
+plot(na(all_na.det()) ? 1 : 0, "all_na_det_is_na")

@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported map remove key type")
+
+prices = map.new<string, float>()
+map.remove(prices, 1)
+
+plot(close)

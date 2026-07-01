@@ -1,0 +1,7 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT method local field mutation")
+
+p = lib.Point.new(close)
+mutated = p.mutateLocal(60)
+plot(mutated.x)

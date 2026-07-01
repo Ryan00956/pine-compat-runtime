@@ -13,3 +13,13 @@ matrix<float> copied = values.copy()
 copied.set(0, 0, close + 20)
 plot(values.get(0, 0), "source_after_copy")
 plot(copied.get(0, 0), "copied")
+
+matrix<int> int_values = na
+int_values := matrix.new<int>(1, 2, 1)
+int_values.set(0, 1, 3)
+plot(int_values.get(0, 0), "int_values_first")
+plot(int_values.get(0, 1), "int_values_second")
+
+var matrix<int> int_persistent = matrix.new<int>(1, 1, 4)
+int_persistent.set(0, 0, 6)
+plot(int_persistent.get(0, 0), "int_persistent")

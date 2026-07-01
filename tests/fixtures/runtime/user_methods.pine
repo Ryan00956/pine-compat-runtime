@@ -182,6 +182,10 @@ method makeTypedForFrom(Point p, Point other, int count) =>
     made := for i = 0 to count
         Point.new(x=made.x + i + 5)
     made
+method mutateLocal(Point p, float delta) =>
+    local = Point.new(p.x)
+    local.x := local.x + delta
+    local
 
 p = Point.new(close)
 q = Point.new(open)
@@ -228,6 +232,7 @@ madeTypedSwitch = p.makeTypedSwitch(open, bar_index)
 madeTypedSwitchFrom = p.makeTypedSwitchFrom(q, bar_index)
 madeTypedIfFrom = p.makeTypedIfFrom(q, bar_index < 2)
 madeTypedForFrom = p.makeTypedForFrom(q, 2)
+mutatedLocal = p.mutateLocal(200)
 plot(p.shift(open))
 plot(same.x + close)
 plot(sameBlock.x + close)
@@ -270,5 +275,6 @@ plot(madeTypedSwitch.x + close)
 plot(madeTypedSwitchFrom.x + close)
 plot(madeTypedIfFrom.x + close)
 plot(madeTypedForFrom.x + close)
+plot(mutatedLocal.x + close)
 plot(sameIf.x + close)
 plot(sameFor.x + close)

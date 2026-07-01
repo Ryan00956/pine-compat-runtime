@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix submatrix bounds")
+
+values = matrix.new<float>(3, 4, close)
+slice = matrix.submatrix(values, 0, 4)
+plot(matrix.rows(slice))

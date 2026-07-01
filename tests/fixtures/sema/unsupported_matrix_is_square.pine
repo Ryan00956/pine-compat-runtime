@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.is_square")
+
+is_square = matrix.is_square(na)
+plot(close)

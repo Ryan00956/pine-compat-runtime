@@ -1,0 +1,18 @@
+//@version=6
+indicator("Supported map put_all")
+
+target = map.new<string, float>()
+source = map.new<string, float>()
+map.put(target, "open", open)
+map.put(target, "low", low)
+map.put(source, "open", close)
+map.put(source, "high", high)
+
+map.put_all(target, source)
+method_target = map.copy(target)
+method_source = map.new<string, float>()
+method_source.put("close", close)
+method_target.put_all(method_source)
+
+keys = map.keys(target)
+plot(target.get("open") + target.get("high") + method_target.get("close") + keys.size())

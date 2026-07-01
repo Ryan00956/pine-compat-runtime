@@ -1,0 +1,9 @@
+//@version=6
+indicator("Supported map copy")
+
+source = map.new<string, float>()
+map.put(source, "open", open)
+copied = map.copy(source)
+map.put(source, "open", close)
+
+plot(map.get(copied, "open"))

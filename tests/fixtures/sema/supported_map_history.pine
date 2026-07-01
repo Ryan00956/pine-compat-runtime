@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported map history")
+
+values = map.new<string, float>()
+values.put("close", close)
+previous = values[1]
+plot(na(previous) ? na : previous.get("close") + previous.size())

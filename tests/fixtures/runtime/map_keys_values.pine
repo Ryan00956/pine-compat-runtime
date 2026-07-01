@@ -1,0 +1,27 @@
+//@version=6
+indicator("Map keys values")
+
+prices = map.new<string, float>()
+map.put(prices, "open", 1.25)
+map.put(prices, "close", 4.5)
+map.put(prices, "open", 2.5)
+
+keys = map.keys(prices)
+values = map.values(prices)
+
+map.remove(prices, "close")
+prices.put("high", 7.75)
+
+method_keys = prices.keys()
+method_values = prices.values()
+
+plot(array.size(keys), "keys_size")
+plot(array.get(keys, 0) == "open" ? 1 : 0, "key0_is_open")
+plot(array.get(keys, 1) == "close" ? 1 : 0, "key1_is_close")
+plot(array.get(values, 0), "value0_after_replace")
+plot(array.get(values, 1), "value1_close")
+plot(method_keys.size(), "method_keys_size")
+plot(method_keys.get(0) == "open" ? 1 : 0, "method_key0_is_open")
+plot(method_keys.get(1) == "high" ? 1 : 0, "method_key1_is_high")
+plot(method_values.get(1), "method_value1_high")
+plot(array.size(keys), "snapshot_keys_size")

@@ -1,8 +1,16 @@
 # Pure Internal Map Design Gate
 
-Status: closed as a documentation-only design gate. This slice does not change
-syntax acceptance, semantic analysis, runtime behavior, conformance status,
-snapshots, or public output.
+Status: scalar map helper, typed-declaration, history, and `varip` slices
+closed. The interpreter now accepts fixture-backed `map.new<K, V>()` for scalar
+key/value templates, `map.size(id)`, namespace-call `map.put`, `map.get`,
+`map.contains`, `map.clear`, `map.remove`, `map.copy`, `map.keys`,
+`map.values`, and `map.put_all` for runtime-owned map ids, plus scalar
+`map<K,V>` typed declarations. Scalar map history snapshots and ordinary
+realtime rollback for map-store mutations are fixture-backed. Scalar map
+`varip` handoff keeps map ids and backing stores across repeated realtime
+forming updates. Equivalent method aliases for the supported namespace subset
+lower to the same runtime calls. Bare map declarations and non-scalar templates
+remain unsupported.
 
 This document defines the first internal path for future `map.*` support. It is
 scoped to interpreter internals only: parser, semantic analysis, runtime storage,
@@ -11,33 +19,90 @@ rendering, or public JSON/Python/WASM map serialization.
 
 ## Current Boundary
 
-`map.*` is intentionally unsupported today.
+`map.*` is partial today.
 
 Current evidence:
 
-- `tests/fixtures/conformance.tsv` records `map.*` as `unsupported`.
+- `tests/fixtures/conformance.tsv` records `map.*` as `partial`.
+- `tests/fixtures/runtime/map_new_size.pine` and
+  `tests/fixtures/sema/supported_map_new_size.pine` cover
+  `map.new<int|float|bool|string|color, int|float|bool|string|color>()` empty
+  map ids and `map.size(id)` returning `0`.
+- `tests/fixtures/runtime/map_put_get_contains.pine` and
+  `tests/fixtures/sema/supported_map_put_get_contains.pine` cover scalar
+  `map.put`, `map.get`, and `map.contains` namespace calls, including
+  replacement, missing-key `na`, and key-presence reads.
+- `tests/fixtures/runtime/map_clear.pine` and
+  `tests/fixtures/sema/supported_map_clear.pine` cover scalar `map.clear`
+  namespace calls, including clearing all entries and reusing the same map id.
+- `tests/fixtures/runtime/map_remove.pine` and
+  `tests/fixtures/sema/supported_map_remove.pine` cover scalar `map.remove`
+  namespace calls, including deleting a present key and no-op removal of a
+  missing key.
+- `tests/fixtures/runtime/map_copy.pine` and
+  `tests/fixtures/sema/supported_map_copy.pine` cover scalar `map.copy`
+  namespace calls, including assignment-as-id-alias behavior and independent
+  cloned backing-store behavior.
+- `tests/fixtures/runtime/map_keys_values.pine` and
+  `tests/fixtures/sema/supported_map_keys_values.pine` cover insertion-order
+  `map.keys` / `map.values` array snapshots.
+- `tests/fixtures/runtime/map_put_all.pine` and
+  `tests/fixtures/sema/supported_map_put_all.pine` cover same-template
+  insertion-order `map.put_all` merge behavior.
+- `tests/fixtures/runtime/map_history.pine` and
+  `tests/fixtures/sema/supported_map_history.pine` cover scalar map history
+  snapshots as independent historical copies.
+- `tests/fixtures/runtime/map_varip.pine`,
+  `tests/fixtures/realtime/map_varip.pine`, and
+  `tests/fixtures/sema/supported_map_varip.pine` cover scalar map `varip`
+  persistence and intrabar backing-store handoff.
+- `tests/fixtures/runtime/map_udf_read.pine` and
+  `tests/fixtures/sema/supported_map_udf_read.pine` cover read-only map helper
+  calls through user-defined function parameters.
+- `tests/fixtures/runtime/map_methods.pine` and
+  `tests/fixtures/sema/supported_map_methods.pine` cover equivalent
+  `size/get/contains/put/clear/remove/copy/keys/values/put_all` method aliases.
+- `tests/fixtures/realtime/map_rollback.pine` covers ordinary realtime rollback
+  of map-store mutations, including unconfirmed `map.put` and `map.remove`
+  effects not leaking across forming updates.
 - `tests/fixtures/sema/unsupported_map_new_template.pine` calls
-  `map.new<string, float>()`, and
+  `map.new<line, float>()`, and
   `tests/fixtures/sema/unsupported_map_new_dotted_template.pine` calls
-  `map.new<chart.point, chart.point>()`. `tests/fixtures/sema/unsupported_map.pine`
-  calls `map.put(...)`,
-  `tests/fixtures/sema/unsupported_map_get.pine` calls `map.get(...)`, and
-  `tests/fixtures/sema/unsupported_map_contains.pine` calls
-  `map.contains(...)`. `tests/fixtures/sema/unsupported_map_size.pine` calls
-  `map.size(...)`, and `tests/fixtures/sema/unsupported_map_remove.pine` calls
-  `map.remove(...)`. `tests/fixtures/sema/unsupported_map_clear.pine` calls
-  `map.clear(...)`, and `tests/fixtures/sema/unsupported_map_copy.pine` calls
-  `map.copy(...)`. `tests/fixtures/sema/unsupported_map_keys.pine` calls
-  `map.keys(...)`, and `tests/fixtures/sema/unsupported_map_values.pine` calls
-  `map.values(...)`. `tests/fixtures/sema/unsupported_map_put_all.pine` calls
-  `map.put_all(...)`.
-- `crates/pine-sema/src/analyzer/unsupported.rs` reports
-  `map collections are not implemented; map.* requires a dedicated key/value
-  storage model`.
-- `crates/pine-sema/tests/fixtures.rs` asserts the unsupported diagnostic.
+  `map.new<chart.point, chart.point>()`.
+  `tests/fixtures/sema/unsupported_map.pine`,
+  `tests/fixtures/sema/unsupported_map_get.pine`,
+  `tests/fixtures/sema/unsupported_map_contains.pine`, and
+  `tests/fixtures/sema/unsupported_map_size.pine` cover non-map receivers.
+  `tests/fixtures/sema/unsupported_map_put_key_type.pine`,
+  `tests/fixtures/sema/unsupported_map_get_key_type.pine`,
+  `tests/fixtures/sema/unsupported_map_remove_key_type.pine`, and
+  `tests/fixtures/sema/unsupported_map_put_value_type.pine` cover scalar
+  template mismatch diagnostics, while
+  `tests/fixtures/sema/unsupported_map_put_udf.pine` and
+  `tests/fixtures/sema/unsupported_map_put_method_udf.pine` and
+  `tests/fixtures/sema/unsupported_map_clear_udf.pine` and
+  `tests/fixtures/sema/unsupported_map_remove_udf.pine` cover mutation
+  rejection inside user-defined functions.
+  `tests/fixtures/sema/unsupported_map_remove.pine` covers non-map
+  `map.remove(...)` receivers.
+  `tests/fixtures/sema/unsupported_map_clear.pine` covers non-map
+  `map.clear(...)` receivers, and
+  `tests/fixtures/sema/unsupported_map_copy.pine`,
+  `tests/fixtures/sema/unsupported_map_keys.pine`, and
+  `tests/fixtures/sema/unsupported_map_values.pine` cover non-map receivers.
+  `tests/fixtures/sema/unsupported_map_put_all.pine` covers a non-map source
+  receiver, and `tests/fixtures/sema/unsupported_map_put_all_template.pine`
+  covers source/target template mismatch.
+- `crates/pine-runtime/src/builtins/maps.rs` stores maps as dedicated
+  runtime-owned ids with an internal map store.
+- `crates/pine-sema/tests/fixtures.rs` asserts both the positive subset and the
+  remaining negative boundaries.
 
-Do not widen `map.*` until a runtime slice implements the behavior and updates
-fixtures, conformance, snapshots, and docs together.
+Do not widen `map.*` beyond `map.new`, `map.size`, `map.put`, `map.get`,
+`map.contains`, `map.clear`, `map.remove`, `map.copy`, `map.keys`,
+`map.values`, `map.put_all`, and their equivalent method aliases until a
+runtime slice implements the behavior and updates fixtures, conformance,
+snapshots, and docs together.
 
 ## Target Shape
 
@@ -51,10 +116,10 @@ The first positive map subset should mirror the existing array discipline:
 - rollback restores map backing storage to the confirmed snapshot;
 - map growth is bounded by a runtime limit and visible in runtime profiles.
 
-The first runtime value should add a new internal id family such as
-`PineValue::Map(u32)` with a dedicated runtime store. Do not reuse array ids or
-array element storage for map entries. Maps need key lookup, replacement,
-deletion, and iteration semantics that are different from array slot indexing.
+The first runtime value is `PineValue::Map(u32)` with a dedicated runtime store.
+It does not reuse array ids or array element storage for map entries. Future
+map mutation needs key lookup, replacement, deletion, and iteration semantics
+that are different from array slot indexing.
 
 ## Key And Value Policy
 
@@ -104,11 +169,10 @@ Initial policy:
 - `na` keys are rejected in semantic analysis or at runtime before insertion;
 - non-finite float keys are rejected.
 
-Iteration order should not be a hidden implementation detail. The first subset
-should choose insertion order for `map.keys()` and `map.values()` if those
-helpers are implemented. Replacement of an existing key should update the value
-without moving the key in order. Deleting and reinserting a key should append it
-at the new insertion point.
+Iteration order is not a hidden implementation detail. `map.keys()` and
+`map.values()` return insertion-order snapshots. Replacement of an existing key
+updates the value without moving the key in order. Deleting and reinserting a
+key appends it at the new insertion point.
 
 ## Type Model
 
@@ -121,71 +185,78 @@ Future type candidates:
 - `map<string, string>`
 - `map<simple-key, scalar-value>` only if the analyzer can keep diagnostics clear.
 
-The first slice should avoid broad generic inference. A good first constructor is
-an explicit typed constructor such as `map.new<string, float>()`, followed by
-`map.put`, `map.get`, and `map.contains` for that exact key/value pair.
+The initial slices avoid broad generic inference. They accept explicit typed
+constructors such as `map.new<string, float>()`, `map.new<int, int>()`,
+`map.new<bool, bool>()`, `map.new<color, color>()`, and
+`map.new<string, string>()`, and carry scalar key/value templates through
+`map.put`, `map.get`, and `map.contains`.
 
 Bare `map` declarations and mixed value maps should stay unsupported until type
 identity, `na` value behavior, and assignment compatibility are designed.
 
 ## Runtime Operations
 
-Candidate first operation set:
+Current operation set:
 
 - `map.new<K, V>()`
+- `map.size(id)`
 - `map.put(id, key, value)`
 - `map.get(id, key)`
 - `map.contains(id, key)`
-- `map.remove(id, key)`
 - `map.clear(id)`
-- `map.size(id)`
+- `map.remove(id, key)`
 - `map.copy(id)`
-
-Candidate later operation set:
-
 - `map.keys(id)`
 - `map.values(id)`
 - `map.put_all(target, source)`
+- equivalent `id.size()`, `id.put(key, value)`, `id.get(key)`,
+  `id.contains(key)`, `id.clear()`, `id.remove(key)`, `id.copy()`,
+  `id.keys()`, `id.values()`, and `id.put_all(source)` aliases.
 
-Keep method-call aliases out of the first positive slice unless the namespace
-calls are already fixture-backed. Method calls should lower to the same built-in
-operations only after receiver typing is stable.
+Candidate later operation set: no additional map helper is currently selected
+before history and declaration work.
+
+Method-call aliases should continue to lower to the same fixture-backed
+namespace operations after receiver typing is stable.
 
 ## History And Realtime
 
 First history policy:
 
-- no map history references in the first positive runtime slice;
-- no `varip` map values in the first positive runtime slice;
+- `previous = m[1]` returns a fresh copy of the committed scalar map snapshot,
+  not an alias into past storage;
+- dynamic history over map ids uses the same retention guardrails as other
+  supported history values;
+- scalar map `varip` slots seed from the previous forming update together with
+  the referenced map backing store;
 - map state must still roll back correctly for ordinary realtime forming updates.
 
 Later history policy:
 
-- `previous = m[1]` should return a fresh copy of the committed map snapshot, not
-  an alias into past storage;
 - nested maps or collection values require a deeper copy policy before support;
-- dynamic history over map ids should use the same retention guardrails as other
-  supported history values.
+- non-scalar map `varip` values require the same deeper copy policy before
+  support.
 
 ## Function And Method Boundaries
 
-Initial policy:
+Current policy:
 
-- passing map ids to user-defined functions is allowed only after reference and
-  mutation semantics are designed;
-- map mutation inside user-defined functions stays unsupported in the first
-  positive slice, matching the current conservative array mutation boundary;
-- method calls on maps stay unsupported until namespace-call behavior is stable.
+- read-only map helpers can consume map ids passed to user-defined functions
+  when the caller argument has known scalar map template metadata;
+- map mutation inside user-defined functions stays unsupported, matching the
+  current conservative array and matrix mutation boundary;
+- method calls on maps lower to the same namespace-call behavior.
 
 ## Diagnostics
 
-Before positive support lands, keep the current unsupported diagnostic:
+Before additional positive support lands, keep unsupported diagnostics precise.
+The legacy broad diagnostic still applies to unimplemented `map.*` operations:
 
 ```text
 map collections are not implemented; map.* requires a dedicated key/value storage model
 ```
 
-When support starts, unsupported variants should fail with precise diagnostics:
+Unsupported variants should fail with precise diagnostics:
 
 - unsupported key type;
 - unsupported value type;
@@ -193,30 +264,32 @@ When support starts, unsupported variants should fail with precise diagnostics:
 - non-finite float key;
 - unknown map method;
 - map mutation inside an unsupported side-effect context;
-- map history or `varip` use outside the supported subset.
+- map `varip` use outside the supported subset.
 
 ## Slice Order
 
 Recommended future slices:
 
-1. Semantic design lock: add type names, signatures, and negative fixtures while
-   keeping `map.*` unsupported.
-2. Runtime store skeleton: add an internal map store and profile counters with no
-   accepted Pine syntax.
+1. Semantic design lock: add type names, signatures, and negative fixtures.
+   Done.
+2. Runtime store skeleton: add an internal map store. Done.
 3. First positive scalar subset:
-   `map.new<string, float>`, `map.put`, `map.get`, `map.contains`, and
-   `map.size`.
-4. Mutation utilities: `map.remove`, `map.clear`, and replacement-order fixtures.
-5. Copy semantics: `map.copy` and assignment/reference fixtures.
-6. Realtime rollback fixtures for map mutation.
-7. Optional method-call aliases after namespace calls are stable.
-8. Optional `map.keys` / `map.values` if array return typing and insertion order
-   are fully fixture-backed.
-9. Map history snapshots only after copy/deep-copy policy is explicit.
+   `map.new<int|float|bool|string|color, int|float|bool|string|color>()` and
+   `map.size(id)`. Done.
+4. First mutation/read subset: `map.put`, `map.get`, and `map.contains`.
+   Done.
+5. Copy semantics: `map.copy` and assignment/reference fixtures. Done.
+6. Realtime rollback fixtures for map mutation. Done.
+7. Method-call aliases after namespace calls are stable. Done.
+8. `map.keys` / `map.values` array snapshots in insertion order. Done.
+9. Scalar map history snapshots using independent committed copies.
+   Done.
+10. Scalar `map<K,V>` typed declarations and `varip` intrabar handoff. Done.
+11. Same-template `map.put_all` merge behavior. Done.
 
-## Completion Gate For Future Positive Support
+## Completion Gate For Future Widening
 
-Any positive map support must include:
+Any wider map support must include:
 
 - semantic fixtures for accepted and rejected key/value forms;
 - runtime fixtures and golden snapshots;
@@ -230,6 +303,28 @@ Any positive map support must include:
 
 ## Closed Slice Result
 
-This design gate closes only the planning prerequisite. The supported runtime
-subset is unchanged. `map.*` remains unsupported until a later slice implements
-fixture-backed syntax, analysis, runtime behavior, and conformance updates.
+The first map slice added fixture-backed syntax, analysis, runtime behavior,
+conformance, and snapshot coverage for `map.new<K, V>()` empty map construction
+over scalar key/value templates and `map.size(id)`. The runtime stores maps as
+dedicated ids and serializes map values as `null`/`None` at public output
+boundaries.
+
+The second map slice added scalar namespace-call `map.put`, `map.get`, and
+`map.contains`. Map entries are stored in insertion order; `map.put` replaces
+the value for an equal existing key, `map.get` returns `na` for missing keys,
+and `map.contains` returns a series bool.
+
+The third map slice added scalar namespace-call `map.clear`. Clearing empties
+the entry list without changing the map id, so later `map.put` calls reuse the
+same backing map.
+
+The fourth map slice added scalar namespace-call `map.remove`. Removing deletes
+the matching key when present and leaves the map unchanged for missing keys.
+
+Later scalar map slices added `map.copy`, `map.keys`, `map.values`,
+`map.put_all`, equivalent method aliases, scalar `map<K,V>` typed declarations,
+read-only UDF parameter use, independent history snapshots, ordinary realtime
+rollback, and scalar map `varip` intrabar handoff. Bare map declarations,
+non-scalar key/value templates, nested collection values, and map mutation inside
+user-defined functions remain unsupported until a later slice designs and
+fixtures those semantics.

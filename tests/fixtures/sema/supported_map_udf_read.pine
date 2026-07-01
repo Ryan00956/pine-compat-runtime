@@ -1,0 +1,19 @@
+//@version=6
+indicator("Supported map UDF read")
+
+prices = map.new<string, float>()
+prices.put("open", open)
+prices.put("close", close)
+
+read_value(id, key) =>
+    map.get(id, key)
+
+read_counts(id) =>
+    keys = id.keys()
+    values = map.values(id)
+    id.size() + array.size(keys) + array.size(values)
+
+has_close(id) =>
+    map.contains(id, "close")
+
+plot(read_value(prices, "open") + read_counts(prices) + (has_close(prices) ? 1 : 0))

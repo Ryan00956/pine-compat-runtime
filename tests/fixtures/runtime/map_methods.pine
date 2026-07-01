@@ -1,0 +1,26 @@
+//@version=6
+indicator("Map methods")
+
+prices = map.new<string, float>()
+prices.put("open", 1.25)
+prices.put("close", 4.5)
+before_replace = prices.get("open")
+prices.put("open", 2.5)
+
+copied = prices.copy()
+copied.put("high", 7.75)
+prices.remove("close")
+source_size = prices.size()
+copy_size = copied.size()
+copy_has_close = copied.contains("close")
+copy_has_high = copied.contains("high")
+copy_close = copied.get("close")
+prices.clear()
+
+plot(before_replace, "before_replace")
+plot(prices.size(), "source_after_clear")
+plot(source_size, "source_size")
+plot(copy_size, "copy_size")
+plot(copy_has_close ? 1 : 0, "copy_has_close")
+plot(copy_has_high ? 1 : 0, "copy_has_high")
+plot(copy_close, "copy_close")

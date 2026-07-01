@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.new<color> initial value")
+
+values = matrix.new<color>(1, 1, close)
+plot(close)

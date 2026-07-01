@@ -1,0 +1,14 @@
+//@version=6
+indicator("Map varip")
+
+varip values = map.new<int, float>()
+next_key = values.size()
+values.put(next_key, close)
+
+varip alias = values
+alias.put(-1, close + 10)
+
+plot(values.size(), "size")
+plot(alias.size(), "alias_size")
+plot(values.get(next_key), "latest")
+plot(values.get(-1), "alias_value")

@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix<int> set float")
+
+values = matrix.new<int>(1, 1, 1)
+matrix.set(values, 0, 0, 1.5)
+plot(close)

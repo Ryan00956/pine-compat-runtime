@@ -16,6 +16,19 @@ fn first_call_site_id(program: &pine_ir::HirProgram, callee: &str) -> u32 {
                         return Some(call_site_id);
                     }
                 }
+                pine_ir::HirStmtKind::ArrayFieldReassign {
+                    array,
+                    index,
+                    value,
+                    ..
+                } => {
+                    if let Some(call_site_id) = find_in_expr(array, callee)
+                        .or_else(|| find_in_expr(index, callee))
+                        .or_else(|| find_in_expr(value, callee))
+                    {
+                        return Some(call_site_id);
+                    }
+                }
                 pine_ir::HirStmtKind::If {
                     condition,
                     then_branch,
@@ -109,6 +122,14 @@ fn first_call_site_id(program: &pine_ir::HirProgram, callee: &str) -> u32 {
             } => find_in_expr(from, callee)
                 .or_else(|| find_in_expr(to, callee))
                 .or_else(|| step.as_deref().and_then(|step| find_in_expr(step, callee)))
+                .or_else(|| find_in_stmts(statements, callee))
+                .or_else(|| find_in_expr(result, callee)),
+            pine_ir::HirExprKind::ForIn {
+                iterable,
+                statements,
+                result,
+                ..
+            } => find_in_expr(iterable, callee)
                 .or_else(|| find_in_stmts(statements, callee))
                 .or_else(|| find_in_expr(result, callee)),
             pine_ir::HirExprKind::While {

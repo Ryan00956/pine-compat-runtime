@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.elements_count method receiver")
+
+count = close.elements_count()
+plot(count)

@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported matrix pow")
+
+values = matrix.new<float>(2, 2, close)
+namespace_result = matrix.pow(values, 2)
+method_result = values.pow(3)
+plot(matrix.get(namespace_result, 0, 0))
+plot(matrix.get(method_result, 0, 0))

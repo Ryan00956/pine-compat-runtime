@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.rank method receiver")
+
+value = close.rank()
+plot(value)

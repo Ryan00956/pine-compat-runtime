@@ -1,0 +1,33 @@
+//@version=6
+indicator("Matrix transpose")
+
+values = matrix.new<float>(2, 3, na)
+matrix.set(values, 0, 0, close + 1)
+matrix.set(values, 0, 1, close + 2)
+matrix.set(values, 0, 2, close + 3)
+matrix.set(values, 1, 0, close + 4)
+matrix.set(values, 1, 1, close + 5)
+matrix.set(values, 1, 2, close + 6)
+
+transposed = matrix.transpose(values)
+method_transposed = values.transpose()
+
+matrix.set(values, 0, 0, close + 99)
+
+zero_rows = matrix.new<float>(0, 3)
+zero_columns = matrix.new<float>(3, 0)
+zero_rows_transposed = zero_rows.transpose()
+zero_columns_transposed = matrix.transpose(zero_columns)
+
+plot(matrix.rows(transposed), "rows")
+plot(matrix.columns(transposed), "columns")
+plot(matrix.get(transposed, 0, 0), "cell_0_0")
+plot(matrix.get(transposed, 0, 1), "cell_0_1")
+plot(matrix.get(transposed, 1, 0), "cell_1_0")
+plot(matrix.get(transposed, 2, 1), "cell_2_1")
+plot(matrix.get(method_transposed, 2, 1), "method_cell_2_1")
+plot(matrix.get(transposed, 0, 0) == close + 1 ? 1 : 0, "independent")
+plot(matrix.rows(zero_rows_transposed), "zero_rows_rows")
+plot(matrix.columns(zero_rows_transposed), "zero_rows_columns")
+plot(matrix.rows(zero_columns_transposed), "zero_columns_rows")
+plot(matrix.columns(zero_columns_transposed), "zero_columns_columns")

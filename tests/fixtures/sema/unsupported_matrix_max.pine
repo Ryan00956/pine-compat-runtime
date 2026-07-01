@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix max")
+
+maximum = matrix.max(na)
+plot(maximum)

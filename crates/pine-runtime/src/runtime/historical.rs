@@ -70,6 +70,8 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) matrix_store: HashMap<u32, MatrixStorage>,
     #[allow(dead_code)]
     pub(crate) next_matrix_id: u32,
+    pub(crate) map_store: HashMap<u32, MapStorage>,
+    pub(crate) next_map_id: u32,
     pub(crate) call_state: HashMap<CallSiteId, PineValue>,
     pub(crate) valuewhen_state: HashMap<CallSiteId, VecDeque<PineValue>>,
     pub(crate) rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
@@ -236,6 +238,8 @@ impl<'a> HistoricalRuntime<'a> {
             next_array_id: 0,
             matrix_store: HashMap::new(),
             next_matrix_id: 0,
+            map_store: HashMap::new(),
+            next_map_id: 0,
             call_state: HashMap::new(),
             valuewhen_state: HashMap::new(),
             rolling_windows: HashMap::new(),

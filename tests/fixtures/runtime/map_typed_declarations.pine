@@ -1,0 +1,21 @@
+//@version=6
+indicator("Map typed declarations")
+
+map<string, float> prices = na
+prices := map.new<string, float>()
+prices.put("open", 1.25)
+prices.put("close", 4.5)
+
+map<int, string> labels = map.new<int, string>()
+labels.put(0, "zero")
+labels.put(1, "one")
+
+copied = prices.copy()
+copied.put("high", 7.75)
+
+plot(prices.size(), "prices_size")
+plot(prices.get("open"), "open")
+plot(copied.size(), "copy_size")
+plot(copied.get("high"), "copy_high")
+plot(labels.get(0) == "zero" ? 1 : 0, "label0")
+plot(labels.get(1) == "one" ? 1 : 0, "label1")

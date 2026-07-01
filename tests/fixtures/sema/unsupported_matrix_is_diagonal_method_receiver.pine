@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.is_diagonal method receiver")
+
+is_diagonal = close.is_diagonal()
+plot(close)

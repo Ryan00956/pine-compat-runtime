@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported map get key type")
+
+values = map.new<string, float>()
+plot(map.get(values, 1))

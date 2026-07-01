@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.mult scalar pair")
+
+value = matrix.mult(1, 2)
+plot(value)

@@ -134,10 +134,10 @@ fn rejects_for_in_multi_value_iteration_fixture() {
 }
 
 #[test]
-fn rejects_for_in_expression_fixture() {
-    let (_, parsed) = parse_fixture("tests/fixtures/syntax/unsupported_for_in_expression.pine");
+fn parses_for_in_expression_index_value_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/for_in_expression_index_value.pine");
 
-    assert!(has_diagnostic(&parsed.diagnostics, "E_PARSE_EXPECTED"));
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
 }
 
 #[test]
@@ -177,11 +177,10 @@ fn rejects_imported_udt_array_new_template_fixture() {
 }
 
 #[test]
-fn rejects_udt_array_chained_field_mutation_fixture() {
-    let (_, parsed) =
-        parse_fixture("tests/fixtures/syntax/unsupported_udt_array_chained_field_mutation.pine");
+fn parses_udt_array_chained_field_mutation_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/udt_array_chained_field_mutation.pine");
 
-    assert!(has_diagnostic(&parsed.diagnostics, "E_PARSE_EXPR"));
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
 }
 
 fn parse_fixture(path: &str) -> (SourceFile, pine_syntax::Parse) {

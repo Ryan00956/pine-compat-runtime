@@ -1,0 +1,22 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Imported UDT array varip")
+
+varip array<lib.Point> points = array.from(lib.Point.new(close))
+points.push(lib.Point.new(close + 10))
+
+varip lib.Point[] alias = points
+alias.push(lib.Point.new(close + 20))
+
+varip copied = points.copy()
+copied.push(lib.Point.new(close + 30))
+
+first = points.get(0)
+last = alias.last()
+copy_last = copied.last()
+
+plot(points.size(), "points_size")
+plot(first.x, "first_x")
+plot(last.x, "last_x")
+plot(copied.size(), "copied_size")
+plot(copy_last.x, "copy_last_x")

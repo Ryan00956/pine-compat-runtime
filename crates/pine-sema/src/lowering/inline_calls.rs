@@ -163,4 +163,38 @@ impl Analyzer {
         let body = body?;
         Some(prepend_block_statements(arg_statements, body))
     }
+
+    pub(crate) fn lower_alias_qualified_user_method_call(
+        &mut self,
+        name: &str,
+        span: Span,
+        args: &[CallArg],
+        outer_param_exprs: &HashMap<String, HirExpr>,
+        outer_param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
+        let (alias, method_name) = alias_qualified_method_name(name)?;
+        let receiver_arg = args.first()?;
+        let ExprKind::Identifier(receiver_name) = &receiver_arg.value.kind else {
+            return None;
+        };
+        let receiver_user_type =
+            self.user_type_name_of_expr_with_params(&receiver_arg.value, outer_param_exprs)?;
+        if !receiver_user_type.starts_with(&format!("{alias}.")) {
+            return None;
+        }
+        if !self
+            .methods
+            .contains_key(&(receiver_user_type, method_name.to_owned()))
+        {
+            return None;
+        }
+        self.lower_user_method_call(
+            receiver_name,
+            method_name,
+            span,
+            &args[1..],
+            outer_param_exprs,
+            outer_param_types,
+        )
+    }
 }

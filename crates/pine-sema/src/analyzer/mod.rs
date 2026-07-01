@@ -6,6 +6,7 @@ pub(crate) mod drawing_calls;
 pub(crate) mod drawing_declarations;
 pub(crate) mod expressions;
 pub(crate) mod functions;
+pub(crate) mod maps;
 pub(crate) mod methods;
 pub(crate) mod requests;
 pub(crate) mod statements;

@@ -2,6 +2,36 @@ use crate::prelude::*;
 
 mod type_queries;
 
+fn for_in_expr_value_kind(
+    iterable_type: PineType,
+    analyzer: &Analyzer,
+    iterable: &Expr,
+) -> Option<(ValueKind, Option<String>)> {
+    match iterable_type.kind {
+        ValueKind::IntArray => Some((ValueKind::Int, None)),
+        ValueKind::FloatArray => Some((ValueKind::Float, None)),
+        ValueKind::BoolArray => Some((ValueKind::Bool, None)),
+        ValueKind::StringArray => Some((ValueKind::String, None)),
+        ValueKind::ColorArray => Some((ValueKind::Color, None)),
+        ValueKind::LabelArray => Some((ValueKind::Label, None)),
+        ValueKind::LineArray => Some((ValueKind::Line, None)),
+        ValueKind::LineFillArray => Some((ValueKind::LineFill, None)),
+        ValueKind::PolylineArray => Some((ValueKind::Polyline, None)),
+        ValueKind::BoxArray => Some((ValueKind::Box, None)),
+        ValueKind::TableArray => Some((ValueKind::Table, None)),
+        ValueKind::ChartPointArray => Some((ValueKind::ChartPoint, None)),
+        ValueKind::UserTypeArray => analyzer
+            .user_type_array_name_of_expr(iterable)
+            .map(|type_name| (ValueKind::UserType, Some(type_name))),
+        ValueKind::FloatMatrix => Some((ValueKind::FloatArray, None)),
+        ValueKind::IntMatrix => Some((ValueKind::IntArray, None)),
+        ValueKind::BoolMatrix => Some((ValueKind::BoolArray, None)),
+        ValueKind::StringMatrix => Some((ValueKind::StringArray, None)),
+        ValueKind::ColorMatrix => Some((ValueKind::ColorArray, None)),
+        _ => None,
+    }
+}
+
 impl Analyzer {
     pub(crate) fn analyze_expr(&mut self, expr: &Expr) -> Option<PineType> {
         if !self.enter_expr_analysis(expr.span) {
@@ -101,6 +131,12 @@ impl Analyzer {
                 step,
                 body,
             } => self.analyze_for_expr(counter, from, to, step.as_deref(), body, expr.span),
+            ExprKind::ForIn {
+                index,
+                value,
+                iterable,
+                body,
+            } => self.analyze_for_in_expr(index.as_deref(), value, iterable, body, expr.span),
             ExprKind::While { condition, body } => {
                 self.analyze_while_expr(condition, body, expr.span)
             }
@@ -128,12 +164,27 @@ impl Analyzer {
                     value_type.map(|pine_type| pine_type.kind),
                     Some(ValueKind::UserType)
                 ) {
+                    if let Some(type_name) = self
+                        .user_type_name_of_expr(value_expr)
+                        .filter(|type_name| self.imported_user_type_history_is_supported(type_name))
+                    {
+                        self.mark_expr_user_type(expr.span, type_name);
+                        return value_type
+                            .map(|value_type| PineType::new(Qualifier::Series, value_type.kind));
+                    }
                     self.unsupported(
                         "user-defined type history",
                         "history references on user-defined type values are not supported in the current UDT subset",
                         value_expr.span,
                     );
                     return None;
+                }
+                if matches!(
+                    value_type.map(|pine_type| pine_type.kind),
+                    Some(ValueKind::Map)
+                ) && let Some(info) = self.map_type_of_expr(value_expr)
+                {
+                    self.mark_expr_map(expr.span, info);
                 }
                 if matches!(
                     value_type.map(|pine_type| pine_type.kind),
@@ -409,6 +460,128 @@ impl Analyzer {
                             expr.span,
                         ));
                         None
+                    } else {
+                        pine_type
+                    }
+                }
+                _ => {
+                    self.analyze_stmt(last);
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_LOOP_RETURN",
+                        "for expression body must end with an expression",
+                        last.span,
+                    ));
+                    None
+                }
+            }
+        } else {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RETURN",
+                "for expression body must end with an expression",
+                span,
+            ));
+            None
+        };
+
+        self.scope.pop_scope();
+        self.loop_depth -= 1;
+        self.block_depth -= 1;
+        return_type
+    }
+
+    pub(crate) fn analyze_for_in_expr(
+        &mut self,
+        index: Option<&str>,
+        value: &str,
+        iterable: &Expr,
+        body: &[Stmt],
+        span: Span,
+    ) -> Option<PineType> {
+        let Some(iterable_type) = self.analyze_expr(iterable) else {
+            self.unsupported(
+                "for...in expression",
+                "for...in expressions currently support array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, same-local or same-imported scalar-field UDT array, and matrix iterables only",
+                span,
+            );
+            return None;
+        };
+        let Some((value_kind, user_type_name)) =
+            for_in_expr_value_kind(iterable_type, self, iterable)
+        else {
+            self.unsupported(
+                "for...in expression",
+                "for...in expressions currently support array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, same-local or same-imported scalar-field UDT array, and matrix iterables only",
+                span,
+            );
+            return None;
+        };
+
+        self.compatibility.supported.push(FeatureUse {
+            feature: "for".to_owned(),
+            span,
+        });
+
+        self.block_depth += 1;
+        self.loop_depth += 1;
+        self.scope.push_scope();
+        if let Some(index) = index {
+            let index_symbol = self.define_local_symbol(
+                index,
+                PineType::new(Qualifier::Series, ValueKind::Int),
+                None,
+                self.function_depth == 0,
+            );
+            self.bind_symbol(index, span, index_symbol);
+        }
+        let value_symbol = self.define_local_symbol(
+            value,
+            PineType::new(Qualifier::Series, value_kind),
+            None,
+            self.function_depth == 0,
+        );
+        self.bind_symbol(value, span, value_symbol);
+        if let Some(type_name) = user_type_name {
+            self.mark_symbol_id_user_type(value_symbol.id, type_name);
+        }
+
+        let return_type = if let Some((last, prefix)) = body.split_last() {
+            for statement in prefix {
+                self.analyze_stmt(statement);
+            }
+            match &last.kind {
+                StmtKind::Expr(expr) => {
+                    let pine_type = self.analyze_expr(expr);
+                    if matches!(
+                        pine_type,
+                        Some(PineType {
+                            kind: ValueKind::Void,
+                            ..
+                        })
+                    ) {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_LOOP_RETURN",
+                            "for expression body must end with a value-producing expression",
+                            expr.span,
+                        ));
+                        None
+                    } else if matches!(
+                        pine_type,
+                        Some(PineType {
+                            kind: ValueKind::UserType,
+                            ..
+                        })
+                    ) {
+                        if let Some(type_name) = self.user_type_name_of_expr(expr) {
+                            self.mark_expr_user_type(span, type_name);
+                            pine_type
+                        } else {
+                            self.diagnostics.push(Diagnostic::error(
+                                "E_LOOP_RETURN",
+                                "for...in expression user-defined type result must resolve to a known same-local UDT identity",
+                                expr.span,
+                            ));
+                            None
+                        }
                     } else {
                         pine_type
                     }

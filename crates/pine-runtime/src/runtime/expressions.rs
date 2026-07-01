@@ -89,6 +89,13 @@ impl<'a> HistoricalRuntime<'a> {
                 statements,
                 Some(result),
             )?,
+            HirExprKind::ForIn {
+                index,
+                value,
+                iterable,
+                statements,
+                result,
+            } => self.eval_for_in_expr(*index, *value, iterable, statements, result)?,
             HirExprKind::While {
                 condition,
                 statements,

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.is_identity method receiver")
+
+is_identity = close.is_identity()
+plot(close)

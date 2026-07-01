@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported map typed declaration assignment")
+
+map<string, float> values = map.new<string, int>()
+plot(close)

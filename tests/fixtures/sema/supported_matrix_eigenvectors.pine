@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported matrix eigenvectors")
+
+values = matrix.new<float>(2, 2, close)
+eigenvectors = matrix.eigenvectors(values)
+method_eigenvectors = values.eigenvectors()
+plot(matrix.get(eigenvectors, 0, 0))
+plot(matrix.get(method_eigenvectors, 0, 0))

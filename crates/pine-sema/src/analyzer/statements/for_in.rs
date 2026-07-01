@@ -1,8 +1,8 @@
 use crate::prelude::*;
 
-const FOR_IN_SUPPORTED_ITERABLES_REASON: &str = "for...in currently supports statement iteration over scalar arrays, label arrays, line arrays, linefill arrays, polyline arrays, box arrays, table arrays, chart.point arrays, and same-local scalar-field UDT arrays only; imported or non-scalar-field UDT arrays, map, matrix, and other iterable families remain unsupported";
+const FOR_IN_SUPPORTED_ITERABLES_REASON: &str = "for...in currently supports statement iteration over scalar arrays, label arrays, line arrays, linefill arrays, polyline arrays, box arrays, table arrays, chart.point arrays, same-local or same-imported scalar-field UDT arrays, and matrix rows only; non-scalar-field UDT arrays, map, and other iterable families remain unsupported";
 
-const FOR_IN_SUPPORTED_INDEX_VALUE_REASON: &str = "index/value for...in currently supports statement iteration over array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, and same-local scalar-field UDT arrays only; other array element kinds, imported or non-scalar-field UDT arrays, map, matrix, and expression-form for...in remain unsupported";
+const FOR_IN_SUPPORTED_INDEX_VALUE_REASON: &str = "index/value for...in currently supports statement iteration over array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, same-local or same-imported scalar-field UDT arrays, and matrix rows only; other array element kinds, non-scalar-field UDT arrays, map, and expression-form for...in remain unsupported";
 
 impl Analyzer {
     pub(super) fn analyze_for_in_stmt(
@@ -80,6 +80,11 @@ fn supports_index_value_for_in(iterable_kind: ValueKind) -> bool {
             | ValueKind::TableArray
             | ValueKind::ChartPointArray
             | ValueKind::UserTypeArray
+            | ValueKind::FloatMatrix
+            | ValueKind::IntMatrix
+            | ValueKind::BoolMatrix
+            | ValueKind::StringMatrix
+            | ValueKind::ColorMatrix
     )
 }
 
@@ -101,6 +106,11 @@ fn for_in_loop_value_kind(
         ValueKind::BoxArray => Some((ValueKind::Box, None)),
         ValueKind::TableArray => Some((ValueKind::Table, None)),
         ValueKind::ChartPointArray => Some((ValueKind::ChartPoint, None)),
+        ValueKind::FloatMatrix => Some((ValueKind::FloatArray, None)),
+        ValueKind::IntMatrix => Some((ValueKind::IntArray, None)),
+        ValueKind::BoolMatrix => Some((ValueKind::BoolArray, None)),
+        ValueKind::StringMatrix => Some((ValueKind::StringArray, None)),
+        ValueKind::ColorMatrix => Some((ValueKind::ColorArray, None)),
         ValueKind::UserTypeArray => analyzer
             .user_type_array_name_of_expr(iterable)
             .map(|type_name| (ValueKind::UserType, Some(type_name))),

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Matrix pow non-square")
+
+values = matrix.new<float>(1, 2, 1)
+plot(matrix.get(matrix.pow(values, 2), 0, 0))

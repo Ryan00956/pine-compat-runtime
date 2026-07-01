@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.min method receiver")
+
+minimum = close.min()
+plot(minimum)

@@ -39,6 +39,10 @@ pub(crate) const ARRAY_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/user_type_array_typed_declarations.pine",
     ),
     (
+        "runtime_user_type_array_varip.json",
+        "tests/fixtures/runtime/user_type_array_varip.pine",
+    ),
+    (
         "runtime_user_type_array_history.json",
         "tests/fixtures/runtime/user_type_array_history.pine",
     ),

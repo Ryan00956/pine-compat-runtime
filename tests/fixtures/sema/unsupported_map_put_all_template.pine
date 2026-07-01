@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported map.put_all template")
+
+target = map.new<string, float>()
+source = map.new<string, int>()
+map.put_all(target, source)
+plot(close)

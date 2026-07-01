@@ -58,6 +58,8 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
                 is_output_or_declaration_builtin(name)
                     || is_array_mutation_builtin(name)
                     || is_array_mutation_method_call_name(name)
+                    || is_map_mutation_builtin(name)
+                    || is_map_mutation_method_call_name(name)
             }) || args
                 .iter()
                 .any(|arg| contains_output_or_declaration_call(&arg.value))
@@ -121,6 +123,16 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
                     | StmtKind::TupleDecl { value, .. } => {
                         contains_output_or_declaration_call(value)
                     }
+                    StmtKind::ArrayFieldReassign {
+                        array,
+                        index,
+                        value,
+                        ..
+                    } => {
+                        contains_output_or_declaration_call(array)
+                            || contains_output_or_declaration_call(index)
+                            || contains_output_or_declaration_call(value)
+                    }
                     StmtKind::If {
                         condition,
                         then_branch,
@@ -146,6 +158,12 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
         }
         ExprKind::While { condition, body } => {
             contains_output_or_declaration_call(condition)
+                || body
+                    .iter()
+                    .any(statement_contains_output_or_declaration_call)
+        }
+        ExprKind::ForIn { iterable, body, .. } => {
+            contains_output_or_declaration_call(iterable)
                 || body
                     .iter()
                     .any(statement_contains_output_or_declaration_call)
@@ -178,6 +196,16 @@ pub(crate) fn statement_contains_output_or_declaration_call(statement: &Stmt) ->
         | StmtKind::Reassign { value, .. }
         | StmtKind::FieldReassign { value, .. }
         | StmtKind::TupleDecl { value, .. } => contains_output_or_declaration_call(value),
+        StmtKind::ArrayFieldReassign {
+            array,
+            index,
+            value,
+            ..
+        } => {
+            contains_output_or_declaration_call(array)
+                || contains_output_or_declaration_call(index)
+                || contains_output_or_declaration_call(value)
+        }
         StmtKind::If {
             condition,
             then_branch,
@@ -303,23 +331,31 @@ impl Analyzer {
         });
         let mut resolved_arg_types = vec![None; function.params.len()];
         let mut resolved_arg_user_types = vec![None; function.params.len()];
+        let mut resolved_arg_map_infos = vec![None; function.params.len()];
         for (arg_index, param_index) in arg_indices.iter().copied().enumerate() {
             resolved_arg_types[param_index] = arg_types.get(arg_index).copied().flatten();
             resolved_arg_user_types[param_index] = args
                 .get(arg_index)
                 .and_then(|arg| self.user_type_name_of_expr(&arg.value));
+            resolved_arg_map_infos[param_index] = args
+                .get(arg_index)
+                .and_then(|arg| self.map_type_of_expr(&arg.value));
         }
         self.scope.push_scope();
         let mut param_symbols = std::collections::HashSet::new();
-        for (param, (arg_type, arg_user_type)) in function
-            .params
-            .iter()
-            .zip(resolved_arg_types.into_iter().zip(resolved_arg_user_types))
-        {
+        for (param, ((arg_type, arg_user_type), arg_map_info)) in function.params.iter().zip(
+            resolved_arg_types
+                .into_iter()
+                .zip(resolved_arg_user_types)
+                .zip(resolved_arg_map_infos),
+        ) {
             let symbol = self.define_local_symbol(param, arg_type.unwrap_or(UNKNOWN), None, false);
             param_symbols.insert(symbol.id);
             if let Some(type_name) = arg_user_type {
                 self.mark_symbol_user_type(symbol, type_name);
+            }
+            if let Some(info) = arg_map_info {
+                self.mark_symbol_map(symbol, info);
             }
         }
         self.function_stack.push(name.to_owned());

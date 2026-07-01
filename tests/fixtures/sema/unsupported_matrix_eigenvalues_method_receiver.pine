@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.eigenvalues method receiver")
+
+value = close.eigenvalues()
+plot(value)

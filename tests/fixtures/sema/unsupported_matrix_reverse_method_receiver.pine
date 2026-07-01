@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.reverse method receiver")
+
+close.reverse()
+plot(close)

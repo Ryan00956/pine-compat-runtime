@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix.submatrix method receiver")
+
+values = na
+slice = values.submatrix()
+plot(close)

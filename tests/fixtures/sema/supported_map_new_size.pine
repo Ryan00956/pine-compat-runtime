@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported map new size")
+
+values = map.new<string, float>()
+count = map.size(values)
+plot(count)

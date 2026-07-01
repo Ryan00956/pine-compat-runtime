@@ -1,0 +1,20 @@
+//@version=6
+indicator("Realtime map rollback")
+
+var values = map.new<string, float>()
+
+if barstate.isnew
+    map.put(values, "bar", close)
+
+if barstate.isconfirmed
+    map.put(values, "confirmed", close)
+
+if barstate.isrealtime and not barstate.isconfirmed
+    map.put(values, close == 2 ? "first" : "second", close)
+    map.remove(values, "confirmed")
+
+plot(map.size(values), "size")
+plot(map.contains(values, "first") ? 1 : 0, "first")
+plot(map.contains(values, "second") ? 1 : 0, "second")
+plot(map.contains(values, "confirmed") ? 1 : 0, "confirmed")
+plot(map.get(values, "bar"), "bar")

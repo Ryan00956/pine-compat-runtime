@@ -62,20 +62,22 @@ Current evidence:
   `tests/fixtures/sema/unsupported_user_type_array_from_decl.pine` keep bare,
   `var` bare, bare-`na`, initializer-inferred bare, mismatched, non-scalar UDT,
   and mismatched UDT array declaration forms rejected.
-  `tests/fixtures/sema/unsupported_user_type_array_varip_decl.pine` keeps UDT
-  array `varip` declarations rejected until realtime handoff rules cover UDT
-  arrays. The explicit
+  `tests/fixtures/sema/supported_user_type_array_varip_decl.pine` covers
+  same-local scalar-field UDT array `varip` declarations after realtime handoff
+  rules were fixture-backed, while
+  `tests/fixtures/sema/unsupported_user_type_array_varip_decl.pine` keeps
+  non-scalar UDT array `varip` declarations rejected. The explicit
   `tests/fixtures/sema/unsupported_array_map_typed_decl.pine` and
   `tests/fixtures/sema/unsupported_array_matrix_typed_decl.pine` fixtures keep
   unsupported template elements rejected without adding map or matrix support.
   `tests/fixtures/sema/unsupported_map_typed_decl.pine` keeps bare map typed
   declarations rejected until map storage and key/value typing are designed.
   `tests/fixtures/runtime/matrix_typed_declarations.pine` covers
-  `matrix<float>` typed declarations, while
-  `tests/fixtures/sema/unsupported_matrix_typed_decl.pine` and
-  `tests/fixtures/sema/unsupported_matrix_int_typed_decl.pine` keep bare and
-  non-float matrix typed declarations rejected until their element typing is
-  designed.
+  `matrix<float>` and `matrix<int>` typed declarations, while
+  `tests/fixtures/sema/unsupported_matrix_typed_decl.pine` keeps bare
+  matrix typed declarations rejected and
+  `tests/fixtures/sema/unsupported_matrix_int_typed_decl.pine` keeps
+  cross-element matrix typed declaration initialization rejected.
   `tests/fixtures/sema/unsupported_array_nested_typed_decl.pine` keeps array
   elements that would require nested collection semantics rejected, and
   `tests/fixtures/sema/unsupported_array_tuple_typed_decl.pine` keeps tuple
@@ -226,9 +228,12 @@ First cleanup policy:
 - no new history families are introduced by declaration cleanup alone;
 - supported array history snapshots keep the existing element-kind list;
 - `var` declarations preserve array ids and backing storage exactly as today;
-- `varip` remains limited to scalar typed arrays;
-- drawing-id, chart-point, UDT, generic, and bare-array `varip` declarations
-  remain unsupported until realtime handoff rules are explicit.
+- `varip` remains limited to fixture-backed typed-array element families with
+  explicit realtime handoff rules, including scalar arrays, chart-point arrays,
+  and same-local scalar-field UDT arrays;
+- drawing-id, generic, bare-array, map-element, matrix-element, nested-array, and
+  other unsupported typed-array `varip` declarations remain rejected until
+  realtime handoff rules are explicit.
 
 Later policy:
 

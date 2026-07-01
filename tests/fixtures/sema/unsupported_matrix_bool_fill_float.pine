@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix<bool> fill float")
+
+values = matrix.new<bool>(1, 1, true)
+values.fill(close)
+plot(close)

@@ -1,5 +1,5 @@
 //@version=6
-indicator("Unsupported map.values")
+indicator("Unsupported map.values receiver")
 
-values = map.values(na)
+values = map.values(close)
 plot(close)

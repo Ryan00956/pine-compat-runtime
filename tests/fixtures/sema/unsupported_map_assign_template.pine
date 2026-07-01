@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported map assign template")
+
+values = map.new<string, float>()
+values := map.new<int, float>()
+plot(map.size(values))

@@ -1,0 +1,10 @@
+//@version=6
+indicator("Unsupported map put UDF")
+
+values = map.new<string, float>()
+
+update_map(id) =>
+    map.put(id, "close", close)
+    close
+
+plot(update_map(values))

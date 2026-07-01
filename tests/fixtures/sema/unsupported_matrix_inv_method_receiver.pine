@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.inv method receiver")
+
+value = close.inv()
+plot(value)

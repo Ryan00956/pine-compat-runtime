@@ -87,6 +87,7 @@ improved over time, but codes should remain stable once published.
 - `E_RECURSIVE_METHOD`: recursive user-defined method call is not supported.
 - `E_LOWERING_BUDGET`: lowering exceeded the supported inline depth, HIR node,
   or generated temporary-symbol budget.
+- `E_MAP_ASSIGN_TYPE`: reassignment changed a map key/value template identity.
 - `E_IMPORT_CYCLE`: import dependency graph contains a cycle.
 - `E_IMPORT_ALIAS_REQUIRED`: an import used by the executable subset omitted
   the required alias.

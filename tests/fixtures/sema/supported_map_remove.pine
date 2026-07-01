@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported map remove")
+
+prices = map.new<string, float>()
+map.put(prices, "open", open)
+map.remove(prices, "open")
+
+plot(map.size(prices))

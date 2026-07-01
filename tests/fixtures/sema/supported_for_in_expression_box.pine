@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported for-in expression box")
+
+values = array.from(box.new(bar_index, high, bar_index + 1, low), box.new(bar_index + 2, high + 1, bar_index + 3, low + 1))
+result = for value in values
+    value
+
+plot(box.get_left(result) == bar_index + 2 ? 1 : 0)

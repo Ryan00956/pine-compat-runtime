@@ -86,6 +86,7 @@ fn collect_series_max_bars_back_from_stmt(
         | HirStmtKind::Decl { .. }
         | HirStmtKind::Reassign { .. }
         | HirStmtKind::FieldReassign { .. }
+        | HirStmtKind::ArrayFieldReassign { .. }
         | HirStmtKind::TupleDecl { .. }
         | HirStmtKind::Break
         | HirStmtKind::Continue => {}
@@ -121,6 +122,14 @@ pub(crate) fn max_bars_back_from_stmt(statement: &HirStmt) -> Option<u32> {
         | HirStmtKind::Reassign { value: expr, .. }
         | HirStmtKind::FieldReassign { value: expr, .. }
         | HirStmtKind::TupleDecl { value: expr, .. } => max_bars_back_from_expr(expr),
+        HirStmtKind::ArrayFieldReassign {
+            array,
+            index,
+            value,
+            ..
+        } => max_bars_back_from_expr(array)
+            .or_else(|| max_bars_back_from_expr(index))
+            .or_else(|| max_bars_back_from_expr(value)),
         HirStmtKind::If {
             condition,
             then_branch,
@@ -197,6 +206,14 @@ pub(crate) fn max_bars_back_from_expr(expr: &HirExpr) -> Option<u32> {
             .or_else(|| step.as_deref().and_then(max_bars_back_from_expr))
             .or_else(|| infer_max_bars_back(statements))
             .or_else(|| max_bars_back_from_expr(result)),
+        HirExprKind::ForIn {
+            iterable,
+            statements,
+            result,
+            ..
+        } => max_bars_back_from_expr(iterable)
+            .or_else(|| infer_max_bars_back(statements))
+            .or_else(|| max_bars_back_from_expr(result)),
         HirExprKind::While {
             condition,
             statements,
@@ -245,6 +262,16 @@ impl HistoryRequirementCollector {
             | HirStmtKind::Reassign { value: expr, .. }
             | HirStmtKind::FieldReassign { value: expr, .. }
             | HirStmtKind::TupleDecl { value: expr, .. } => self.visit_expr(expr),
+            HirStmtKind::ArrayFieldReassign {
+                array,
+                index,
+                value,
+                ..
+            } => {
+                self.visit_expr(array);
+                self.visit_expr(index);
+                self.visit_expr(value);
+            }
             HirStmtKind::If {
                 condition,
                 then_branch,
@@ -332,6 +359,16 @@ impl HistoryRequirementCollector {
                 if let Some(step) = step {
                     self.visit_expr(step);
                 }
+                self.visit_stmts(statements);
+                self.visit_expr(result);
+            }
+            HirExprKind::ForIn {
+                iterable,
+                statements,
+                result,
+                ..
+            } => {
+                self.visit_expr(iterable);
                 self.visit_stmts(statements);
                 self.visit_expr(result);
             }

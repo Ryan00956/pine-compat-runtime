@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported matrix is_binary")
+
+values = matrix.new<float>(2, 2, 1)
+plot(matrix.is_binary(values) ? 1 : 0)
+plot(values.is_binary() ? 1 : 0)

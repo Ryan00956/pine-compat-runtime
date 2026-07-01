@@ -1,0 +1,248 @@
+//@version=6
+indicator("For-in expression")
+
+type Pair
+    int index
+    float price
+
+values = array.from(1, 2, 3)
+float_values = array.from(1.5, 2.5, 3.5)
+bool_values = array.from(true, false, true)
+string_values = array.from("a", "b", "c")
+color_values = array.from(color.red, color.green, color.blue)
+label_values = array.from(label.new(bar_index, high, "first"), label.new(bar_index, low, "second"))
+line_values = array.from(line.new(bar_index, high, bar_index + 1, low), line.new(bar_index + 2, high + 1, bar_index + 3, low + 1))
+linefill_upper = line.new(bar_index + 4, high + 2, bar_index + 5, high + 3)
+linefill_middle = line.new(bar_index + 6, close + 2, bar_index + 7, close + 3)
+linefill_lower = line.new(bar_index + 8, low + 2, bar_index + 9, low + 3)
+linefill_values = array.from(linefill.new(linefill_upper, linefill_middle, color.green), linefill.new(linefill_middle, linefill_lower, color.red))
+polyline_points = array.from(chart.point.from_index(bar_index, close), chart.point.from_index(bar_index + 1, close + 1))
+first_polyline = polyline.new(polyline_points, line_color=color.red)
+second_polyline = polyline.new(polyline_points, line_color=color.green)
+polyline_values = array.from(first_polyline, second_polyline)
+box_values = array.from(box.new(bar_index + 10, high + 4, bar_index + 11, low + 4), box.new(bar_index + 12, high + 5, bar_index + 13, low + 5))
+first_table = table.new(position.top_left, 1, 1)
+second_table = table.new(position.bottom_right, 1, 1)
+table_values = array.from(first_table, second_table)
+point_values = array.from(chart.point.from_index(bar_index + 20, close + 20), chart.point.from_index(bar_index + 22, close + 22))
+udt_values = array.from(Pair.new(bar_index + 30, close + 30), Pair.new(bar_index + 32, close + 32))
+matrix_values = matrix.new<float>(2, 2, 0)
+matrix.set(matrix_values, 0, 0, 1)
+matrix.set(matrix_values, 0, 1, 2)
+matrix.set(matrix_values, 1, 0, 4)
+matrix.set(matrix_values, 1, 1, 5)
+int_matrix_values = matrix.new<int>(1, 2, 7)
+bool_matrix_values = matrix.new<bool>(1, 1, true)
+string_matrix_values = matrix.new<string>(1, 1, "m")
+color_matrix_values = matrix.new<color>(1, 1, color.red)
+
+last = for value in values
+    value * 2
+
+running = bar_index * 0
+stateful = for value in values
+    running := running + value
+    running
+
+continued = for value in values
+    if value == 2
+        continue
+    value
+
+stopped = for value in values
+    if value == 3
+        break
+    value
+
+index_value_last = for index, value in values
+    index + value
+
+empty = array.new<int>(0)
+empty_result = for value in empty
+    value
+
+array<int> missing = na
+missing_result = for value in missing
+    value
+
+float_last = for value in float_values
+    value + 0.25
+
+float_running = bar_index * 0.0
+float_stateful = for value in float_values
+    float_running := float_running + value
+    float_running
+
+bool_last = for value in bool_values
+    value
+
+bool_continue = for value in bool_values
+    if not value
+        continue
+    value
+
+string_last = for value in string_values
+    value
+
+string_stopped = for value in string_values
+    if value == "c"
+        break
+    value
+
+color_last = for value in color_values
+    value
+
+color_continued = for value in color_values
+    if value == color.green
+        continue
+    value
+
+label_last = for value in label_values
+    value
+
+label_continued = for value in label_values
+    if label.get_text(value) == "first"
+        continue
+    value
+
+line_last = for value in line_values
+    value
+
+line_continued = for value in line_values
+    if line.get_x1(value) == bar_index
+        continue
+    value
+
+linefill_last = for value in linefill_values
+    value
+
+linefill_continued = for value in linefill_values
+    if line.get_x1(linefill.get_line1(value)) == bar_index + 4
+        continue
+    value
+
+polyline_last = for value in polyline_values
+    value
+
+polyline_continued = for value in polyline_values
+    if value == first_polyline
+        continue
+    value
+
+box_last = for value in box_values
+    value
+
+box_continued = for value in box_values
+    if box.get_left(value) == bar_index + 10
+        continue
+    value
+
+table_last = for value in table_values
+    value
+
+table_continued = for value in table_values
+    if value == first_table
+        continue
+    value
+
+point_last = for value in point_values
+    value
+
+point_continued = for value in point_values
+    if value.index == bar_index + 20
+        continue
+    value
+
+udt_last = for value in udt_values
+    value
+
+udt_continued = for value in udt_values
+    if value.index == bar_index + 30
+        continue
+    value
+
+udt_mutated_last = for value in udt_values
+    value.price := value.price + 5
+    value
+
+udt_first_after = udt_values.get(0)
+
+matrix_last = for row in matrix_values
+    row
+
+matrix_continued = for row in matrix_values
+    if row.get(0) == 1
+        continue
+    row
+
+matrix_stopped = for row in matrix_values
+    if row.get(0) == 4
+        break
+    row
+
+matrix_empty = for row in matrix.new<float>(0, 2)
+    row
+
+matrix_mutated_last = for row in matrix_values
+    row.set(0, 100)
+    row
+
+matrix_index_value_last = for index, row in matrix_values
+    index + row.get(0)
+
+int_matrix_sum = for row in int_matrix_values
+    row.get(0) + row.get(1)
+
+bool_matrix_last = for row in bool_matrix_values
+    row.get(0)
+
+string_matrix_last = for row in string_matrix_values
+    row.get(0)
+
+color_matrix_last = for row in color_matrix_values
+    row.get(0)
+
+plot(last, "last")
+plot(stateful, "stateful")
+plot(continued, "continued")
+plot(stopped, "stopped")
+plot(index_value_last, "index_value_last")
+plot(na(empty_result) ? 1 : 0, "empty_is_na")
+plot(na(missing_result) ? 1 : 0, "missing_is_na")
+plot(float_last, "float_last")
+plot(float_stateful, "float_stateful")
+plot(bool_last ? 1 : 0, "bool_last")
+plot(bool_continue ? 1 : 0, "bool_continue")
+plot(string_last == "c" ? 1 : 0, "string_last")
+plot(string_stopped == "b" ? 1 : 0, "string_stopped")
+plot(color_last == color.blue ? 1 : 0, "color_last")
+plot(color_continued == color.blue ? 1 : 0, "color_continued")
+plot(label.get_text(label_last) == "second" ? 1 : 0, "label_last")
+plot(label.get_text(label_continued) == "second" ? 1 : 0, "label_continued")
+plot(line.get_x1(line_last) == bar_index + 2 ? 1 : 0, "line_last")
+plot(line.get_x1(line_continued) == bar_index + 2 ? 1 : 0, "line_continued")
+plot(line.get_x1(linefill.get_line1(linefill_last)) == bar_index + 6 ? 1 : 0, "linefill_last")
+plot(line.get_x1(linefill.get_line1(linefill_continued)) == bar_index + 6 ? 1 : 0, "linefill_continued")
+plot(polyline_last == second_polyline ? 1 : 0, "polyline_last")
+plot(polyline_continued == second_polyline ? 1 : 0, "polyline_continued")
+plot(box.get_left(box_last) == bar_index + 12 ? 1 : 0, "box_last")
+plot(box.get_left(box_continued) == bar_index + 12 ? 1 : 0, "box_continued")
+plot(table_last == second_table ? 1 : 0, "table_last")
+plot(table_continued == second_table ? 1 : 0, "table_continued")
+plot(point_last.index == bar_index + 22 ? 1 : 0, "point_last")
+plot(point_continued.price == close + 22 ? 1 : 0, "point_continued")
+plot(udt_last.index == bar_index + 32 ? 1 : 0, "udt_last")
+plot(udt_continued.price == close + 32 ? 1 : 0, "udt_continued")
+plot(udt_mutated_last.price == close + 37 ? 1 : 0, "udt_mutated_last")
+plot(udt_first_after.price == close + 30 ? 1 : 0, "udt_source_unchanged")
+plot(matrix_last.get(0) == 4 ? 1 : 0, "matrix_last")
+plot(matrix_continued.get(1) == 5 ? 1 : 0, "matrix_continued")
+plot(matrix_stopped.get(0) == 1 ? 1 : 0, "matrix_stopped")
+plot(na(matrix_empty) ? 1 : 0, "matrix_empty")
+plot(matrix_mutated_last.get(0) == 100 ? 1 : 0, "matrix_mutated_last")
+plot(matrix_values.get(0, 0) == 1 ? 1 : 0, "matrix_source_unchanged")
+plot(matrix_index_value_last, "matrix_index_value_last")
+plot(int_matrix_sum, "int_matrix_sum")
+plot(bool_matrix_last ? 1 : 0, "bool_matrix_last")
+plot(string_matrix_last == "m" ? 1 : 0, "string_matrix_last")
+plot(color_matrix_last == color.red ? 1 : 0, "color_matrix_last")

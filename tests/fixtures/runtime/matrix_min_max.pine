@@ -1,0 +1,23 @@
+//@version=6
+indicator("Matrix min max")
+
+values = matrix.new<float>(2, 3, na)
+matrix.set(values, 0, 0, close + 5)
+matrix.set(values, 0, 1, close - 2)
+matrix.set(values, 1, 2, close + 10)
+namespace_min = matrix.min(values)
+method_min = values.min()
+namespace_max = matrix.max(values)
+method_max = values.max()
+
+empty = matrix.new<float>(0, 2)
+all_na = matrix.new<float>(1, 2)
+
+plot(namespace_min, "namespace_min")
+plot(method_min, "method_min")
+plot(namespace_max, "namespace_max")
+plot(method_max, "method_max")
+plot(na(matrix.min(empty)) ? 1 : 0, "empty_min_is_na")
+plot(na(all_na.min()) ? 1 : 0, "all_na_min_is_na")
+plot(na(matrix.max(empty)) ? 1 : 0, "empty_max_is_na")
+plot(na(all_na.max()) ? 1 : 0, "all_na_max_is_na")

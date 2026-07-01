@@ -1,0 +1,42 @@
+//@version=6
+indicator("Map put_all")
+
+target = map.new<string, float>()
+source = map.new<string, float>()
+
+target.put("open", 1.25)
+target.put("low", 0.5)
+source.put("open", 2.5)
+source.put("high", 7.75)
+
+map.put_all(target, source)
+keys_after_namespace = map.keys(target)
+values_after_namespace = map.values(target)
+
+method_source = map.new<string, float>()
+method_source.put("low", 0.75)
+method_source.put("close", 4.5)
+target.put_all(method_source)
+
+self_size_before = target.size()
+target.put_all(target)
+self_size_after = target.size()
+
+keys_after_method = target.keys()
+values_after_method = target.values()
+
+plot(keys_after_namespace.size(), "namespace_size")
+plot(keys_after_namespace.get(0) == "open" ? 1 : 0, "namespace_key0_open")
+plot(keys_after_namespace.get(1) == "low" ? 1 : 0, "namespace_key1_low")
+plot(keys_after_namespace.get(2) == "high" ? 1 : 0, "namespace_key2_high")
+plot(values_after_namespace.get(0), "namespace_open_replaced")
+plot(values_after_namespace.get(1), "namespace_low_original")
+plot(values_after_namespace.get(2), "namespace_high_appended")
+plot(keys_after_method.size(), "method_size")
+plot(keys_after_method.get(0) == "open" ? 1 : 0, "method_key0_open")
+plot(keys_after_method.get(1) == "low" ? 1 : 0, "method_key1_low")
+plot(keys_after_method.get(2) == "high" ? 1 : 0, "method_key2_high")
+plot(keys_after_method.get(3) == "close" ? 1 : 0, "method_key3_close")
+plot(values_after_method.get(1), "method_low_replaced")
+plot(values_after_method.get(3), "method_close_appended")
+plot(self_size_before == self_size_after ? 1 : 0, "self_put_all_no_dup")

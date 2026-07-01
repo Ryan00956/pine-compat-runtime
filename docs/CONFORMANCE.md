@@ -91,27 +91,31 @@ Typed variable declarations are partial: `int`, `float`, `bool`, `string`,
 `array<float>`, `array<bool>`, `array<string>`, `array<color>`, and
 object-id `array<label>`, `array<line>`, `array<linefill>`,
 `array<polyline>`, `array<box>`, `array<table>`, `array<chart.point>`, and
-same-local scalar-field UDT `array<T>` declarations, are fixture-backed with
+same-local scalar-field UDT `array<T>` declarations and same-imported
+scalar-field UDT `array<lib.Type>` declarations, are fixture-backed with
 compatible or `na` initializers and later compatible reassignment. The
 equivalent `type[]` aliases are fixture-backed for the same supported array
 element types, including `var` declarations, the scalar and `chart.point`
 typed-array `varip` subset, and explicitly typed same-local scalar-field UDT
 `varip` declarations initialized from `na`, same-UDT constructors, or
-fixture-backed same-UDT ternary/switch/if/for expressions, and `matrix<float>`
-declarations initialized from compatible
-matrix values or `na`. Bare `array`, non-scalar or imported UDT arrays, UDT
-array `varip`, nested-field UDT `varip`, map, bare matrix declarations,
-non-float matrix declarations, and other typed declarations remain unsupported
+fixture-backed same-UDT ternary/switch/if/for expressions, scalar map `varip`,
+same-local and same-imported scalar-field UDT array `varip`, and `matrix<float>`,
+`matrix<int>`, `matrix<bool>`, `matrix<string>`, or `matrix<color>`
+declarations initialized from compatible matrix values or `na`. Bare `array`,
+non-scalar UDT arrays, nested-field UDT `varip`, bare map declarations, matrix
+declarations beyond float/int/bool/string/color, and other typed declarations remain unsupported
 unless a narrower feature row explicitly backs them with fixtures;
 direct sema fixtures keep bare array declarations, including `var`, `na`, and
 initializer-inferred forms, non-scalar UDT array template and alias
 declarations, mismatched UDT array declarations, non-constructor-inferred UDT
-`varip`, nested-field UDT `varip`, UDT array `varip`,
+`varip`, nested-field UDT `varip`, non-scalar UDT array `varip`,
+non-scalar imported UDT array `varip`,
 unsupported map/matrix array element templates, nested array element templates,
 tuple array element templates, strategy-like record array element templates,
-plus bare map, bare matrix, and non-float matrix typed declaration boundaries
+plus bare map, bare matrix, and cross-element matrix typed declaration boundaries
 rejected, and the imported-source compatibility
-fixtures keep `array<lib.Point>` and `lib.Point[]` declarations rejected. Parser-level syntax fixtures keep
+fixtures keep non-scalar `array<lib.Wrapper>` and `lib.Wrapper[]` declarations
+rejected. Parser-level syntax fixtures keep
 non-`chart.point` dotted `array.new<...>()` templates and imported UDT
 `array.new<lib.Point>()` templates rejected, while
 same-local scalar-field UDT `array.new<T>()` expressions are fixture-backed
@@ -691,11 +695,15 @@ Deferred-field imported UDT constructors remain rejected with targeted
 diagnostics; private library UDTs remain non-exported symbols, local/imported
 structural lookalikes remain distinct assignment identities, and duplicate
 exported UDT names, UDT/const name collisions, or UDT/function name collisions
-are rejected through the shared export table. Library declarations, broader
-imported UDT flow, imported UDT history references, imported UDT
-parameter/global field mutation inside UDFs, nested imported field mutation,
-imported methods, re-exports, remote lookup, and side-effecting exported
-functions remain outside the supported matrix.
+are rejected through the shared export table. Scalar-field imported UDT value
+history is fixture-backed. Library declarations, broader imported UDT flow,
+broader imported UDT history, imported UDT parameter/global field mutation
+inside UDFs, nested imported field mutation, re-exports, remote lookup, and
+side-effecting exported functions remain outside the supported matrix. Receiver-style and
+alias-qualified scalar imported UDT method calls are fixture-backed for the
+current pure method subset, including direct same-identity, block-local alias,
+final-if alias, final-for alias, nested-method passthrough plus constructor
+returns, and method-local field mutation.
 
 Local user-defined types are partial. The supported subset is limited to
 top-level `type` declarations with scalar int/float/bool/string/color fields,
@@ -714,11 +722,11 @@ bodies, from local UDT parameter scalar fields, scalar fields read through
 block-local UDT aliases of those parameters, block-local scalar aliases of
 those fields, inferred scalar parameters, or block-local scalar aliases of
 those scalar parameters using positional or named constructor field arguments.
-Local scalar fields can be reassigned outside method bodies, including in
-branch, `for` loop, `while` loop, and UDF-local variables. Global or
-parameter field mutation inside UDFs, field mutation inside methods,
-non-constructor-inferred UDT `varip`, nested-field UDT `varip`, UDT array `varip`,
-history references on UDT values, UDT fields, UDT array operations beyond
+Local scalar fields can be reassigned in top-level, branch, `for` loop,
+`while` loop, UDF-local variables, and method-local variables. Global or
+parameter field mutation inside UDFs, receiver/parameter/global field mutation
+inside methods, non-constructor-inferred UDT `varip`, nested-field UDT `varip`,
+local UDT value history references, UDT fields, UDT array operations beyond
 same-local scalar-field `array.new<T>()` construction, `array.from`
 construction with size and `array.get` field reads plus `array.set`
 replacement, `array.push` append, and `array.pop`
@@ -732,6 +740,7 @@ calls that consume UDT array values, local pure method calls on UDT array values
 after binding them to local variables, UDT array
 `array.sort`/`array.sort_indices` by `int`, `float`, or `string` `sort_field`,
 UDT array id history snapshots, ordinary `var` realtime rollback,
+same-local scalar-field UDT array `varip` backing-store handoff,
 scalar-field imported UDT constructors with direct field reads, and ordinary
 same-imported-UDT reassignment, scalar-field imported UDT typed declarations
 initialized or reassigned from the same imported identity, and imported UDT
@@ -742,9 +751,18 @@ constructor-return UDFs. Ordinary imported UDT `var` declarations and
 scalar-field imported UDT `varip` declarations are fixture-backed, as is
 scalar-field imported UDT mutation in top-level, branch, `for`-loop, and
 `while`-loop statement contexts plus UDF-local variable mutation in pure
-functions. Imported UDT arrays, imported methods, and broader imported UDT flow
-remain outside the
-supported matrix.
+functions. Receiver-style and alias-qualified scalar imported UDT method calls,
+including direct same-identity, block-local alias, final-if alias,
+final-for alias, nested-method passthrough plus constructor returns, and
+method-local field mutation, are fixture-backed. Same-imported scalar-field UDT
+`array.from` construction is fixture-backed for size, get, first, and last field
+reads plus set/set() replacement field reads, push/push() append field reads,
+unshift/unshift() prepend field reads, insert/insert() insertion field reads, fill/fill() replacement field reads, join/join() positional stringification, includes/indexof/lastindexof structural equality search, sort/sort_indices by int/float/string sort_field, pop, remove, and shift return field
+reads, and clear/clear() size reset plus copy/copy() independent field reads,
+reverse/reverse() reordered field reads, slice/slice() window field reads, and
+concat/concat() appended field reads, plus same-imported scalar-field
+`array<lib.Type>`/`lib.Type[]` declarations. Broader imported UDT flow remains
+outside the supported matrix.
 User-defined methods are partial for pure methods on local UDT receivers with
 scalar or local UDT parameters and direct UDT passthrough returns, block-local
 receiver or local UDT parameter alias passthrough returns, final if/else or
@@ -767,20 +785,23 @@ Same-local scalar-field UDT values read from UDT arrays may also be bound to
 local variables and used as receivers for these local pure methods.
 Same-local scalar-field UDT array elements may also be iterated by
 statement-form `for...in` loops as value-copy loop locals.
-Side effects,
-recursion, unknown receiver types, imported methods, mismatched UDT parameter
-identity, and unsupported parameter families remain outside the supported
-matrix.
+Side effects, recursion, unknown receiver types, alias-qualified imported method
+receiver type mismatches, mismatched UDT parameter identity, and unsupported
+parameter families remain outside the supported matrix.
 The imported UDT subset is intentionally narrow: scalar-field constructors,
 direct field reads, ordinary same-imported-UDT reassignment, explicit
 scalar-field typed declarations, direct UDF parameter passthrough returns
 including nested passthrough chains, direct or nested constructor-return UDFs,
 same-imported-identity ternary/`if`/`switch`/`while`/`for` results, and
 scalar-field mutation in top-level, branch, `for`-loop, `while`-loop, and
-UDF-local statement contexts carry source-scoped identity through semantic
-analysis and HIR, while imported methods, collections, history, nested field
-mutation, UDF parameter/global field side effects, method field mutation, and
-broader imported UDT value flow remain a maintenance tail.
+UDF-local statement contexts, plus method-local scalar imported UDT field
+mutation, carry source-scoped identity through semantic analysis and HIR.
+Receiver-style and alias-qualified scalar imported UDT method calls, including
+direct same-identity, block-local alias, final-if alias, final-for alias,
+nested-method passthrough plus constructor returns, and method-local field
+mutation, are supported, while collections, history, nested field mutation,
+UDF parameter/global field side effects, method receiver/parameter/global field
+side effects, and broader imported UDT value flow remain a maintenance tail.
 The closed Phase J boundary and maintenance tails are summarized in
 `docs/PHASE_J_AUDIT.md`.
 
@@ -1120,12 +1141,25 @@ pop, and shift,
 same-UDT insertion, `array.remove`/`remove()` returns, and
 `array.unshift`/`unshift()` same-UDT prepend; typed `array<T>`/`T[]`
 declarations are supported for the same local scalar-field UDT array subset.
+Same-imported scalar-field UDT `array.from` construction is also fixture-backed
+for `array.size`, namespace/method `array.get`, namespace/method
+`array.first`/`array.last` field reads, namespace/method
+`array.set`/`set()` replacement field reads, namespace/method
+`array.push`/`push()` append field reads, namespace/method
+`array.unshift`/`unshift()` prepend field reads, namespace/method
+`array.insert`/`insert()` insertion field reads, namespace/method
+`array.pop`/`array.remove`/`array.shift` return field reads, and
+`array.clear`/`clear()` size reset plus `array.copy`/`copy()` independent field
+reads, `array.reverse`/`reverse()` reordered field reads,
+`array.slice`/`slice()` window field reads, and `array.concat`/`concat()`
+appended field reads.
 Same-local scalar-field UDT array id history snapshots are fixture-backed and
-clone the committed array before historical reads. Mixed UDT values, imported
-UDT values inferred through `array.from`, nested-field UDT values, UDT value
-history, UDT array `varip`, and nested-field UDT `varip` remain unsupported.
-Ordinary `var` UDT arrays roll back their backing store during realtime forming
-updates.
+clone the committed array before historical reads. Same-local scalar-field UDT
+array `varip` declarations retain array ids, backing contents, and UDT element
+identity across realtime forming updates. Mixed UDT values, non-scalar imported
+UDT arrays, nested-field UDT values, UDT value history, and
+nested-field UDT `varip` remain unsupported. Ordinary `var` UDT arrays roll
+back their backing store during realtime forming updates.
 `polyline.new` can consume those arrays and copy their values into host-neutral
 runtime snapshots, while `polyline.delete` and `polyline.all` cover the
 historical and forming-bar rollback lifecycle subset. Omitted `line_color`
@@ -1164,14 +1198,16 @@ without mutating the source array, same-local scalar-field UDT `array<T>` and
 `array.fill`/`fill()` same-UDT replacement over valid half-open ranges,
 `array.join`/`join()` positional UDT stringification,
 local field mutation of UDT values read from arrays with explicit same-UDT
-`array.set`/`set()` writeback, while direct chained slot field mutation such as
-`points.get(0).x := value` remains unsupported at the parser boundary,
+`array.set`/`set()` writeback, direct chained slot field mutation through
+`array.get(points, index).field := value` or `points.get(index).field := value`
+with slice-window parent mirroring,
 local pure UDF calls that consume UDT values read from arrays,
 local pure method calls on UDT values read from arrays into local variables,
 same-local scalar-field UDT array id history snapshots including dynamic na-offset predicate output, same-local scalar-field
 UDT array statement-form `for...in` value-copy loop variables with field reads
 and local field mutation that does not write back to the source slot, and
-ordinary `var` realtime rollback.
+ordinary `var` realtime rollback, plus same-local scalar-field UDT array
+`varip` backing-store handoff across realtime forming updates.
 
 Phase H reserves `alerts` as a top-level runtime key in `schemaVersion: 3`.
 The first supported alert subsets are `alertcondition(condition, title,
@@ -1202,28 +1238,130 @@ The official Pine Logs functions `log.info()`, `log.warning()`, and
 output contract, so the analyzer reports them as explicit unsupported `log.*`
 calls instead of treating them as unknown functions.
 
-Pine map collections remain unsupported. `map.*`, including `map.new<K, V>`
-templates with dotted type names, map access helpers such as `map.get`,
-`map.contains`, and `map.size`, mutation helpers such as `map.remove`,
-`map.clear`, and `map.put_all`, copy helpers such as `map.copy`, and
-array-returning helpers such as `map.keys` and `map.values`, requires a
-dedicated key/value storage model.
+Pine map collections are partial. `map.new<K, V>()` accepts scalar key/value
+templates using `int`, `float`, `bool`, `string`, or `color` and returns a
+runtime-owned empty map id. `map.size(id)` returns the current entry count for
+map ids. `map.put`, `map.get`, and `map.contains` are supported for those
+scalar key/value templates; put inserts or replaces entries, get returns `na`
+for missing keys, and contains returns key presence. `map.clear` removes all
+entries from the map id. `map.remove` deletes a present key and is a no-op for
+missing keys. Assignment aliases the runtime map id, while `map.copy` returns an
+independent cloned backing store with the same scalar key/value template.
+`map.keys` and `map.values` return independent insertion-order array snapshots.
+`map.put_all` merges entries from a source map into a target map with the same
+scalar key/value template, replacing existing values without moving their order
+and appending new keys in source insertion order.
+Ordinary realtime rollback restores map-store mutations from the confirmed
+runtime snapshot. Equivalent method aliases are supported for the same subset:
+`id.size()`, `id.put(key, value)`, `id.get(key)`, `id.contains(key)`,
+`id.clear()`, `id.remove(key)`, `id.copy()`, `id.keys()`, and `id.values()`.
+`id.put_all(source)` is also supported. Scalar `map<K,V>` typed declarations
+preserve map template metadata for compatible or `na` initialization and
+same-template reassignment. Scalar map history snapshots are supported with
+independent historical copies. Scalar map `varip` handoff retains map ids and
+backing stores across repeated realtime forming updates. Read-only map helper
+calls can consume map ids passed through user-defined function parameters when
+the map template is known at the caller. Bare map declarations, non-scalar
+templates, and non-map map receivers remain unsupported.
 
 Pine matrix collections are partial. Runtime-owned `matrix<float>` ids support
 `matrix.new<float>`, `matrix.get`, `matrix.set`, `matrix.fill`, `matrix.copy`,
-`matrix.reshape`, `values.reshape(rows, columns)`, `matrix.add_row`,
+`values.copy()`, `matrix.transpose`, `values.transpose()`, `matrix.reverse`,
+`values.reverse()`, `matrix.reshape`, `values.reshape(rows, columns)`,
+`matrix.kron`, `values.kron(other)`, matrix-or-scalar namespace `matrix.mult`,
+`values.mult(other)`, matrix-or-scalar namespace `matrix.diff`,
+`values.diff(other)`,
+`matrix.pow`, `values.pow(power)`, `matrix.add_row`,
 `values.add_row(row, array_id)`, `matrix.add_col`,
 `values.add_col(column, array_id)`, `matrix.remove_row`,
 `values.remove_row(row)`, `matrix.remove_col`, `values.remove_col(column)`,
+`matrix.swap_rows`, `values.swap_rows(row1, row2)`,
+`matrix.swap_columns`, `values.swap_columns(column1, column2)`,
+`matrix.sort`, `values.sort(column?, order?)`,
 `matrix.rows`, `values.rows()`, `matrix.columns`, `values.columns()`,
-`matrix.sum`, `values.sum()`, `matrix.avg`, `values.avg()`, `matrix.row`,
+`matrix.elements_count`, `values.elements_count()`, `matrix.is_square`,
+`values.is_square()`, `matrix.is_binary`, `values.is_binary()`,
+`matrix.is_diagonal`, `values.is_diagonal()`, `matrix.is_identity`,
+`values.is_identity()`, `matrix.is_symmetric`, `values.is_symmetric()`,
+`matrix.is_antisymmetric`, `values.is_antisymmetric()`,
+`matrix.is_stochastic`, `values.is_stochastic()`, `matrix.is_zero`,
+`values.is_zero()`, `matrix.sum`,
+`values.sum()`, `matrix.avg`, `values.avg()`, `matrix.min`,
+`values.min()`, `matrix.max`, `values.max()`, `matrix.mode`, `values.mode()`,
+`matrix.trace`, `values.trace()`, `matrix.det`, `values.det()`,
+`matrix.eigenvalues`, `values.eigenvalues()`, `matrix.eigenvectors`,
+`values.eigenvectors()`, `matrix.inv`, `values.inv()`, `matrix.pinv`,
+`values.pinv()`, `matrix.rank`,
+`values.rank()`,
+`matrix.row`,
 `values.row(row)`, `matrix.col`, and `values.col(column)` with rectangular storage,
+while runtime-owned `matrix<bool>` ids support `matrix.new<bool>`,
+`matrix.get`, `matrix.set`, `matrix.fill`, `matrix.copy`,
+`matrix.transpose`, `matrix.reverse`, `matrix.reshape`, `matrix.submatrix`,
+`matrix.row`, `matrix.col`, `matrix.add_row`, `matrix.add_col`,
+`matrix.remove_row`, `matrix.remove_col`, `matrix.swap_rows`,
+`matrix.swap_columns`, `matrix.rows`, `matrix.columns`,
+`matrix.elements_count`, and `matrix.is_square`, including the corresponding
+supported method aliases, bool or `na` cells, `array<bool>` row/column
+snapshots, and `matrix<bool>` typed declarations,
+while runtime-owned `matrix<string>` ids support `matrix.new<string>`,
+`matrix.get`, `matrix.set`, `matrix.fill`, `matrix.copy`,
+`matrix.transpose`, `matrix.reverse`, `matrix.reshape`, `matrix.submatrix`,
+`matrix.row`, `matrix.col`, `matrix.add_row`, `matrix.add_col`,
+`matrix.remove_row`, `matrix.remove_col`, `matrix.swap_rows`,
+`matrix.swap_columns`, `matrix.rows`, `matrix.columns`,
+`matrix.elements_count`, and `matrix.is_square`, including the corresponding
+supported method aliases, string or `na` cells, `array<string>` row/column
+snapshots, and `matrix<string>` typed declarations,
+while runtime-owned `matrix<color>` ids support `matrix.new<color>`,
+`matrix.get`, `matrix.set`, `matrix.fill`, `matrix.copy`,
+`matrix.transpose`, `matrix.reverse`, `matrix.reshape`, `matrix.submatrix`,
+`matrix.row`, `matrix.col`, `matrix.add_row`, `matrix.add_col`,
+`matrix.remove_row`, `matrix.remove_col`, `matrix.swap_rows`,
+`matrix.swap_columns`, `matrix.rows`, `matrix.columns`,
+`matrix.elements_count`, and `matrix.is_square`, including the corresponding
+supported method aliases, color or `na` cells, `array<color>` row/column
+snapshots, and `matrix<color>` typed declarations,
+while runtime-owned `matrix<int>` ids support `matrix.new<int>`, `matrix.get`,
+`matrix.set`, `matrix.fill`, `matrix.copy`, `matrix.transpose`,
+`matrix.reverse`, `matrix.reshape`, `matrix.submatrix`, `matrix.row`,
+`matrix.col`, `matrix.kron`, `matrix.mult`, `matrix.diff`, `matrix.pow`,
+`matrix.add_row`, `matrix.add_col`, `matrix.remove_row`, `matrix.remove_col`,
+`matrix.swap_rows`, `matrix.swap_columns`, `matrix.sort`, `matrix.rows`,
+`matrix.columns`, `matrix.elements_count`, and `matrix.is_square`,
+`matrix.is_binary`, `matrix.is_diagonal`,
+`matrix.is_identity`, `matrix.is_symmetric`, `matrix.is_antisymmetric`,
+`matrix.is_stochastic`, `matrix.is_zero`, `matrix.sum`, `matrix.avg`,
+`matrix.min`, `matrix.max`, `matrix.mode`, `matrix.trace`, `matrix.det`,
+`matrix.eigenvalues`, `matrix.eigenvectors`, `matrix.inv`, `matrix.pinv`, and
+`matrix.rank`, including the corresponding supported method aliases and int or
+`na` cells,
 namespace and method-call reshape preserving element order and element count,
 namespace and method-call reshape element-count mismatch errors,
+namespace and method-call matrix-by-matrix multiplication returning independent
+matrix results with multiplied shape, `na` propagation, shape-mismatch errors,
+and cell-budget errors,
+namespace and method-call matrix-by-matrix subtraction returning independent
+matrix results with matching shape, `na` propagation, and shape-mismatch
+errors,
+namespace and method-call matrix powers returning independent identity, copy,
+and powered matrices with `na` propagation, non-square errors, and
+negative-power errors,
+namespace and method-call Kronecker products returning independent
+expanded-shape matrices with `na` cell propagation and cell-budget errors,
 namespace and method-call row/column insertion from `array<float>` snapshots,
 namespace and method-call row/column deletion,
-namespace and method-call matrix sums and averages that ignore `na` cells and
-return `na` for empty or all-`na` matrices,
+namespace and method-call row swaps preserving shape,
+namespace and method-call column swaps preserving shape,
+namespace and method-call row sorting by a selected column with default column
+`0`, ascending/descending order, stable equal-key row order, and `na` placement,
+namespace and method-call element-count reads, matrix sums, averages, minimums, maximums, modes, traces, determinants, eigenvalue arrays, eigenvector matrices, inverse matrices, pseudo-inverse matrices, and ranks, where aggregate readers ignore `na` cells and
+return `na` for empty or all-`na` matrices, determinants return `na` for any `na` cell and runtime-error on non-square matrices, ranks support rectangular matrices and return `na` for any `na` cell, and modes return `na` for no repeated numeric cells,
+namespace and method-call square-shape predicates,
+namespace and method-call transposes returning independent matrix copies with
+swapped row/column counts,
+namespace and method-call matrix reversals mutating cells in place while
+preserving shape,
 numeric/na cells,
 int-to-float coercion, zero row/column dimensions, shape reads, shape reads
 through ordinary for and while loops, read-only UDF
@@ -1235,7 +1373,8 @@ persistence, committed matrix history snapshots, shape snapshots, and
 dynamic-offset matrix snapshots that return fresh copies plus na-offset matrix predicate output,
 realtime forming-bar rollback for matrix mutation and shape changes, runtime profile slot/cell
 counters, namespace and method-call row/column extraction returning independent
-`array<float>` snapshots, row/column extraction reads through ordinary branches, for loops,
+`array<float>` snapshots for float matrices and `array<int>` snapshots for int
+matrices, row/column extraction reads through ordinary branches, for loops,
 and while loops,
 and bounds errors, including row/column `matrix.get` index
 bounds, method-alias `values.get(row, column)` row/column index bounds,
@@ -1260,25 +1399,33 @@ dimensions, and the matrix
 cell-budget guard, plus `matrix.add_row` insertion row bounds and array-size
 mismatch errors, `matrix.add_col` insertion column bounds and array-size
 mismatch errors, `matrix.remove_row` row bounds and `na` row-index errors, and
-`matrix.remove_col` column bounds and `na` column-index errors.
+`matrix.remove_col` column bounds and `na` column-index errors, and
+`matrix.swap_rows` row bounds and `na` row-index errors, and
+`matrix.swap_columns` column bounds and `na` column-index errors, and
+`matrix.sort` column bounds, `na` column-index, and unsupported-order errors.
 Matrix get/copy helpers including
-`values.get(row, column)` and `values.copy()`, shape readers including
-`values.rows()`/`values.columns()`, sum/average readers including
-`values.sum()`/`values.avg()`,
+`values.get(row, column)` and `values.copy()`, transform helpers including
+`values.transpose()`, shape readers including
+`values.rows()`/`values.columns()`/`values.elements_count()`/`values.is_square()`, value predicates including
+`values.is_binary()`/`values.is_diagonal()`/`values.is_identity()`/`values.is_symmetric()`/`values.is_antisymmetric()`/`values.is_stochastic()`/`values.is_zero()`, numeric readers including
+`values.sum()`/`values.avg()`/`values.min()`/`values.max()`/`values.mode()`/`values.trace()`/`values.det()`/`values.rank()`,
 row/column extraction helpers including
-`values.row(row)`/`values.col(column)`, and mutating helpers including
+`values.row(row)`/`values.col(column)`, submatrix helpers including
+`values.submatrix(from_row?, to_row?, from_column?, to_column?)`, and mutating helpers including
 `values.set(row, column, value)`, `values.fill(value)`,
-`values.reshape(rows, columns)`, `values.add_row(row, array_id)`, and
+`values.reverse()`, `values.reshape(rows, columns)`, `values.add_row(row, array_id)`, and
 `values.add_col(column, array_id)`, `values.remove_row(row)`, and
-`values.remove_col(column)` also reject
+`values.remove_col(column)`, `values.swap_rows(row1, row2)`, and
+`values.swap_columns(column1, column2)`, and `values.sort(column?, order?)` also reject
 non-matrix receivers at semantic
 analysis time. Non-numeric `matrix.new<float>`
 initial values,
 non-int namespace `matrix.row`/`matrix.col` row/column indexes,
 non-int method-alias `values.row(row)`/`values.col(column)` row/column indexes,
-non-int namespace/method `matrix.add_row` row indexes, non-int namespace/method `matrix.add_col` column indexes, non-int namespace/method `matrix.remove_row` row indexes, non-int namespace/method `matrix.remove_col` column indexes, non-`array<float>`
-namespace/method `matrix.add_row` row data, non-`array<float>` namespace/method `matrix.add_col` column data,
-`matrix.set`/`matrix.fill` values, and method values for
+non-int namespace/method `matrix.add_row` row indexes, non-int namespace/method `matrix.add_col` column indexes, non-int namespace/method `matrix.remove_row` row indexes, non-int namespace/method `matrix.remove_col` column indexes, non-int namespace/method `matrix.swap_rows` row indexes, non-int namespace/method `matrix.swap_columns` column indexes, non-int namespace/method `matrix.sort` column indexes, non-const-string namespace/method `matrix.sort` order arguments, non-int namespace/method `matrix.submatrix` range indexes, matrix row/column insertion data whose array element kind does not match the matrix element kind,
+non-numeric float-matrix `matrix.set`/`matrix.fill` values, non-int int-matrix
+`matrix.set`/`matrix.fill` values, non-bool bool-matrix
+`matrix.set`/`matrix.fill` values, non-string string-matrix `matrix.set`/`matrix.fill` values, non-color color-matrix `matrix.set`/`matrix.fill` values, and method values for
 `values.set(row, column, value)` and `values.fill(value)` are rejected at
 semantic analysis time. Non-int `matrix.get` row/column indexes are also
 rejected at semantic analysis time, including the `values.get(row, column)`
@@ -1287,28 +1434,37 @@ indexes and `values.set(row, column, value)` method alias row/column indexes are
 rejected at semantic analysis time. Non-int namespace `matrix.reshape`
 row/column counts and method-alias `values.reshape(rows, columns)` row/column
 counts are rejected at semantic analysis time.
-`matrix.set`, `matrix.fill`, `matrix.reshape`, `matrix.add_row`,
-`matrix.add_col`, `matrix.remove_row`, and `matrix.remove_col`,
+`matrix.set`, `matrix.fill`, `matrix.reverse`, `matrix.reshape`, `matrix.add_row`,
+`matrix.add_col`, `matrix.remove_row`, `matrix.remove_col`, and
+`matrix.swap_rows`, `matrix.swap_columns`, and `matrix.sort`,
 including
 `values.set(row, column, value)`, `values.fill(value)`,
-`values.reshape(rows, columns)`, `values.add_row(row, array_id)`,
+`values.reverse()`, `values.reshape(rows, columns)`, `values.add_row(row, array_id)`,
 `values.add_col(column, array_id)`, `values.remove_row(row)`, and
-`values.remove_col(column)`, remain unsupported inside user-defined functions.
-Non-float `matrix.new<T>` templates,
-deferred element templates such as `matrix.new<label>`, method syntax beyond
+`values.remove_col(column)`, `values.swap_rows(row1, row2)`, and
+`values.swap_columns(column1, column2)`, and `values.sort(column?, order?)`,
+remain unsupported inside user-defined functions.
+Matrix templates beyond the current `float`, `int`, `bool`, `string`, and `color`
+subset, including deferred element templates such as `matrix.new<label>`,
+method syntax beyond
 `values.fill(value)`, `values.get(row, column)`,
 `values.set(row, column, value)`, `values.copy()`,
-`values.reshape(rows, columns)`, `values.rows()`, `values.columns()`,
-`values.sum()`, `values.avg()`, `values.row(row)`, `values.col(column)`, `values.add_row(row, array_id)`, and
+`values.transpose()`, `values.reverse()`, `values.reshape(rows, columns)`, `values.rows()`, `values.columns()`,
+`values.elements_count()`, `values.is_square()`, `values.is_binary()`, `values.is_diagonal()`, `values.is_identity()`, `values.is_symmetric()`, `values.is_antisymmetric()`, `values.is_stochastic()`, `values.is_zero()`, `values.sum()`, `values.avg()`, `values.min()`, `values.max()`, `values.mode()`, `values.trace()`, `values.det()`, `values.rank()`, `values.row(row)`, `values.col(column)`, `values.add_row(row, array_id)`, and
 `values.add_col(column, array_id)`, `values.remove_row(row)`, and
-`values.remove_col(column)`, non-float, deferred, or bare matrix typed
-declarations, `varip`, and for-in iteration remain unsupported until their
-semantics are designed and fixture-backed.
-`matrix<float>` typed declarations are fixture-backed. Matrix history is
-fixture-backed for committed, shape, and dynamic-offset `matrix<float>`
-snapshots that return fresh copies.
-Matrix `varip` declarations have dedicated negative fixture coverage and remain
-outside the scalar/array/UDT `varip` handoff subset.
+`values.remove_col(column)`, `values.swap_rows(row1, row2)`, and
+`values.swap_columns(column1, column2)`, `values.sort(column?, order?)`, `values.submatrix(from_row?, to_row?, from_column?, to_column?)`,
+bare matrix or matrix templates beyond float/int/bool/string/color typed
+declarations remain unsupported until their semantics are designed and
+fixture-backed.
+Statement-form matrix `for...in` iteration is fixture-backed over row snapshots
+with optional row-index binding. `matrix<float>`, `matrix<int>`,
+`matrix<bool>`, `matrix<string>`, and `matrix<color>` typed declarations are
+fixture-backed. Matrix history is fixture-backed for committed, shape, and
+dynamic-offset matrix snapshots that return fresh copies.
+Matrix `varip` declarations for `matrix<float>`, `matrix<int>`,
+`matrix<bool>`, `matrix<string>`, and `matrix<color>` retain matrix ids and
+backing contents across realtime forming updates.
 
 Runtime strategy order-fill alert payloads are exposed under `strategy.alerts`
 for supported strategy fills in the current runtime schema. Runtime
@@ -1554,11 +1710,11 @@ strategy.opentrades.max_runup partial current open-trade max runup field functio
 strategy.opentrades.max_drawdown partial current open-trade max drawdown field function in strategy-mode scripts only; can read fixture-backed pyramided long open trades by index; uses the largest low-based adverse excursion seen so far for the selected open trade; no public runtime schema expansion
 strategy.exit       partial      stop-only, limit-only, profit-only, loss-only, one-downside/one-upside bracket, trailing, and optional fixed-qty or qty-percent long exits; absolute stop/limit exits can match a requested open pyramided long entry id by `from_entry`, and omitted-`from_entry` absolute stop/limit exits can close all currently open pyramided long entries and persist for later open long entries until the position closes; single-trigger and bracket profit/loss tick exits plus trailing trail_points activation for an open pyramided long entry convert from the matched entry price; omitted-`from_entry` full profit/loss-tick exits and full stop+limit, stop+profit, loss+limit, or loss+profit brackets can close currently open pyramided long entries with unique entry ids using each entry price for relative legs when present; omitted-`from_entry` current full profit/loss-tick exits, full trail_points+trail_offset and trail_price+trail_offset trailing exits, plus full loss+profit, stop+profit, loss+limit, and stop+limit brackets can also close same-entry-id pyramided long trades using each open trade entry price; omitted-`from_entry` full profit/loss-tick exits, full trail_points+trail_offset and trail_price+trail_offset trailing exits, plus full loss+profit, stop+profit, loss+limit, and stop+limit brackets can also persist for later same-entry-id pyramided long trades using each later open trade entry price for relative legs when present; omitted-`from_entry` full profit/loss-tick exits and full loss+profit, stop+profit, and loss+limit brackets can also persist for later open long entries with unique entry ids until the position closes; omitted-`from_entry` full stop+limit brackets can also persist for later open long entries until the position closes; omitted-`from_entry` full trail_price+trail_offset trailing exits can close currently open pyramided long entries and persist for later open long entries until the position closes, and full trail_points+trail_offset trailing exits can do the same for currently open unique entry ids and persist for later open long entries with unique entry ids using each entry price for activation; exits matching multiple open trades with the same entry id emit one public exit order and one closed trade per matched ledger allocation; single-trigger same-calculation absolute stop/limit/trail_price attachment and single-trigger same-calculation entry-relative profit/loss/trail_points attachment to a pending entry are supported for the active entry id; active-entry relative bracket forms remain unsupported until Stage 10 behavior slices resolve deferred bracket legs; bracket forms are stop+limit, stop+profit, loss+limit, and loss+profit for the current one-net-long entry; trailing forms are trail_price+trail_offset and trail_points+trail_offset; profit/loss/trailing ticks convert with fixed syminfo.mintick; configured limit verification requires long limit/profit exit fills to move beyond the limit/profit price while preserving the original limit/profit fill price; qty is placement-time finite positive absolute quantity; qty_percent is placement-time finite positive percent resolved to an absolute quantity against current position size, matching open pyramided entry quantity, or matching pending entry quantity; when qty and qty_percent are both supplied, qty determines the reserved or filled quantity; omitted qty and qty_percent keep full-position one-effective-pending replacement behavior; explicit fixed-qty or qty-percent single-trigger, bracket, and trailing calls can keep multiple reserved pending exits; comment, comment_profit, comment_loss, comment_trailing, alert_message, alert_profit, alert_loss, alert_trailing, and disable_alert metadata syntax is semantically accepted and stored internally on pending and deferred exits; supported fill payloads are exposed in `strategy.alerts`; explicit Python, CLI, and WASM host helpers can render `{{strategy.order.alert_message}}` for selected public fill events, while external alert delivery remains unsupported; fills clamp to current position size, leave remaining long position open when partial, expose only absolute filled qty, and apply configured slippage to the long exit fill price after trigger selection; later-bar low <= stop/loss/active trailing stop or high >= verified limit/profit/activation price drives fills/activation; same-side touched exits fill in placement order; mixed downside/upside same-bar touches fill downside candidates only; bracket both-leg touches contribute the downside candidate; trailing activation bars do not fill; branch/switch/loop/state/history/incremental/host interactions fixture-backed
 strategy.*           unsupported  strategy order functions beyond strategy.entry, the fixture-backed explicit/default-quantity market/limit/stop/stop-limit long and explicit-quantity reduce-only market short strategy.order subset, strategy.close/strategy.close_all/strategy.cancel/strategy.cancel_all, the supported single-trigger, one-downside/one-upside bracket, trailing, optional fixed-qty and qty-percent strategy.exit subset, and fixed-qty or qty-percent single-trigger/bracket/trailing multiple-exit reservation subset; strategy.order omitted qty for strategy.short, short exposure, reversals, short price-based orders, OCA, exit attachment semantics, and broader price-based order families; strategy.exit same-side pairs stop+loss and limit+profit, 3+ trigger/invalid trailing/multiple-pending outside that subset/omitted-quantity multiple reservations/reservation outside that subset/arbitrary future binding for unmatched `from_entry` ids; rich order types, cash/contracts sizing, mutable strategy state, margin behavior beyond long-entry affordability, long-only capital_held, and long-only forced liquidation, open-trade namespace functions outside entry_price/entry_comment/entry_id/entry_bar_index/entry_time/size/profit/commission/max_runup/max_drawdown/capital_held, closed-trade namespace functions outside entry_price/entry_comment/entry_id/exit_price/exit_comment/exit_id/entry_bar_index/exit_bar_index/entry_time/exit_time/commission/size/profit/max_runup/max_drawdown, commission modes outside strategy.commission.cash_per_contract, strategy.commission.cash_per_order, and strategy.commission.percent, fill models beyond fixed-tick slippage and fixed-tick limit verification on supported long fills, and strategy reporting helpers beyond the supported position/profit/equity/count/held-quantity/runup/drawdown/buy-and-hold return and supported trade field variables are not implemented
-array.*              partial      float/int/bool/string/color and label/line/linefill/polyline/box/table creation through type-specific array.new_* calls and official array.new<type> syntax, chart.point array.new<chart.point> construction, array.from inference, same-local scalar-field UDT array.new<T>/array.from construction with typed array<T>/T[] declarations, size reads, array.get field reads, array.set replacement, array.push append, array.insert same-UDT insertion, array.pop returns, array.remove returns, array.shift returns, array.unshift same-UDT prepend, array.fill same-UDT replacement, array.join positional UDT stringification, array.first reads, array.last reads, array.clear reset/reuse, array.copy independence, array.concat same-UDT append, array.slice parent-window read/write mirroring, array.reverse reordering, UDT array.sort and array.sort_indices by int/float/string sort_field, same-local scalar-field UDT array includes/indexof/lastindexof structural equality search, same-local scalar-field UDT array id history snapshots including dynamic na-offset predicate output, label-array, line-array, linefill-array, polyline-array, box-array, and table-array for-in shallow-id iteration, chart-point and same-local scalar-field UDT array for-in value-copy iteration, array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, and same-local scalar-field UDT arrays index/value for-in iteration with a zero-based series int index loop local, and ordinary var realtime rollback, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search including linefill, polyline, and chart.point object-array search, binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, branch/loop sort and reverse mutation fixtures, scalar-array and same-local scalar-field UDT-array join, mutation, polyline array/slice history snapshots, scalar-array while-expression result history snapshots including dynamic na-offset predicates, and helper fixture subset only
-typed declarations   partial      int, float, bool, string, color, chart.point, drawing-id label/line/linefill/box/table/polyline, scalar array<int>/array<float>/array<bool>/array<string>/array<color>, object-id array<label>/array<line>/array<linefill>/array<polyline>/array<box>/array<table>, array<chart.point>, same-local scalar-field UDT array<T>, scalar-field imported UDT declarations initialized or reassigned from the same imported identity, including ordinary var and scalar-field varip declarations, and equivalent type[] aliases for those supported array element types including var declarations and the scalar typed-array varip subset, explicitly typed same-local scalar-field UDT varip declarations initialized from na, same-UDT constructors, same-UDT ternary expressions, same-UDT switch expressions, same-UDT if expressions, or same-UDT for expressions, and matrix<float> declarations with compatible or na initializers and later compatible reassignment are fixture-backed; bare array, non-scalar or imported UDT arrays, UDT array varip, nested-field UDT varip, map, bare matrix, non-float or deferred matrix, and other typed declarations remain unsupported unless covered by narrower feature rows
+array.*              partial      float/int/bool/string/color/color and label/line/linefill/polyline/box/table creation through type-specific array.new_* calls and official array.new<type> syntax, chart.point array.new<chart.point> construction, array.from inference, same-local scalar-field UDT array.new<T>/array.from construction with typed array<T>/T[] declarations, same-imported scalar-field UDT array.from and typed array<lib.Type>/lib.Type[] size/get/first/last, set replacement field reads, push append field reads, unshift prepend field reads, insert insertion field reads, fill replacement field reads, join positional stringification, includes/indexof/lastindexof structural equality search, sort/sort_indices by int/float/string sort_field, pop/remove/shift return field reads, clear size reset, copy independent field reads, reverse reordered field reads, slice window field reads, concat appended field reads, and statement/expression/index-value for-in value-copy field reads, size reads, array.get field reads, array.set replacement, array.push append, array.insert same-UDT insertion, array.pop returns, array.remove returns, array.shift returns, array.unshift same-UDT prepend, array.fill same-UDT replacement, array.join positional UDT stringification, array.first reads, array.last reads, array.clear reset/reuse, array.copy independence, array.concat same-UDT append, array.slice parent-window read/write mirroring, array.reverse reordering, same-local and same-imported UDT array.sort and array.sort_indices by int/float/string sort_field, same-local and same-imported scalar-field UDT array includes/indexof/lastindexof structural equality search, same-local scalar-field UDT array id history snapshots including dynamic na-offset predicate output, label-array, line-array, linefill-array, polyline-array, box-array, and table-array for-in shallow-id iteration, chart-point plus same-local and same-imported scalar-field UDT array for-in value-copy iteration, array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, and same-local or same-imported scalar-field UDT arrays index/value for-in iteration with a zero-based series int index loop local, and ordinary var realtime rollback, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search including linefill, polyline, and chart.point object-array search, binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, branch/loop sort and reverse mutation fixtures, scalar-array plus same-local and same-imported scalar-field UDT-array join, mutation, polyline array/slice history snapshots, scalar-array while-expression result history snapshots including dynamic na-offset predicates, and helper fixture subset only
+typed declarations   partial      int, float, bool, string, color, chart.point, drawing-id label/line/linefill/box/table/polyline, scalar array<int>/array<float>/array<bool>/array<string>/array<color>, object-id array<label>/array<line>/array<linefill>/array<polyline>/array<box>/array<table>, array<chart.point>, same-local scalar-field UDT array<T>, same-imported scalar-field UDT array<lib.Type>/lib.Type[] declarations, same-local or same-imported scalar-field UDT array varip declarations, scalar-field imported UDT declarations initialized or reassigned from the same imported identity, including ordinary var and scalar-field varip declarations, and equivalent type[] aliases for those supported array element types including var declarations and the scalar typed-array varip subset, explicitly typed same-local scalar-field UDT varip declarations initialized from na, same-UDT constructors, same-UDT ternary expressions, same-UDT switch expressions, same-UDT if expressions, or same-UDT for expressions, matrix<float>, matrix<int>, matrix<bool>, matrix<string>, or matrix<color> declarations with compatible or na initializers and later compatible reassignment, and scalar map<K,V> declarations with compatible or na initializers and later same-template reassignment are fixture-backed; bare array, non-scalar UDT arrays, nested-field UDT varip, bare map, map templates beyond int/float/bool/string/color keys and values, bare matrix, matrix templates beyond float/int/bool/string/color, cross-element matrix declaration initializers, and other typed declarations remain unsupported unless covered by narrower feature rows
 chart.point          partial      chart.point.new/now/from_index/from_time/copy constructors, time/index/price field reads, top-level field mutation, chart.point typed declarations, and array.new<chart.point>/array.from chart-point array storage/read/mutation/search are fixture-backed; line.new, line point setters, box.new, box point setters, label.new, and label.set_point consume chart.point values through dedicated partial rows, and polyline.new consumes chart-point arrays through its dedicated partial row, including omitted line_color defaulting to color.blue and default/declaration-driven max-count eviction; polyline id arrays are fixture-backed through array.new_polyline, array.new<polyline>, array.from(polyline, ...), and array/slice history snapshots
-map.*                unsupported  map collections require a dedicated key/value storage model and are not implemented
-matrix.*             partial      matrix.new<float>, matrix.get, matrix.set, matrix.fill, values.fill(value), values.get(row, column), values.set(row, column, value), matrix.copy, values.copy(), matrix.reshape, values.reshape(rows, columns), matrix.add_row, values.add_row(row, array_id), matrix.add_col, values.add_col(column, array_id), matrix.remove_row, values.remove_row(row), matrix.remove_col, values.remove_col(column), matrix.rows, values.rows(), matrix.columns, values.columns(), matrix.sum, values.sum(), matrix.avg, values.avg(), matrix.row, values.row(row), matrix.col, and values.col(column) are fixture-backed for runtime-owned float matrices with matrix<float> typed declarations, namespace and method-call reshape preserving element order and count, namespace and method-call row/column insertion from array<float> snapshots, namespace and method-call row/column deletion, namespace and method-call matrix sums and averages that ignore na cells and return na for empty or all-na matrices, namespace and method-call row/column extraction returning independent array<float> snapshots through ordinary branches, for loops, and while loops, while-expression fresh, existing-alias, zero-iteration na, break/continue, and history matrix results with caller-side reads and mutation, ordinary var persistence, committed, shape including dynamic na-offset predicates, and dynamic-offset history snapshots returning fresh copies, realtime forming-bar rollback for mutation and shape changes, semantic rejection for non-matrix get/copy receivers including values.get(row, column) and values.copy() method receivers, semantic rejection for non-matrix sum/average receivers including values.sum()/values.avg() method receivers, semantic rejection for non-int matrix.get row/column indexes including values.get(row, column) row/column indexes, semantic rejection for non-int namespace matrix.set row/column indexes including values.set(row, column, value) row/column indexes, semantic rejection for non-int namespace matrix.reshape row/column counts and values.reshape(rows, columns) method row/column counts, semantic rejection for non-int namespace/method matrix.add_row row indexes, semantic rejection for non-int namespace/method matrix.add_col column indexes, semantic rejection for non-int namespace/method matrix.remove_row row indexes, semantic rejection for non-int namespace/method matrix.remove_col column indexes, semantic rejection for non-array<float> matrix.add_row row data and matrix.add_col column data, semantic rejection for non-matrix shape-reader receivers including values.rows()/values.columns() method receivers, semantic rejection for non-matrix row/column extraction receivers including values.row(row)/values.col(column) method receivers, semantic rejection for non-int namespace matrix.row/matrix.col row/column indexes and values.row(row)/values.col(column) method row/column indexes, semantic rejection for non-matrix mutating-helper receivers including values.set(row, column, value), values.fill(value), values.reshape(rows, columns), values.add_row(row, array_id), values.add_col(column, array_id), values.remove_row(row), and values.remove_col(column) method receivers, semantic rejection for non-numeric matrix.new<float> initial values, semantic rejection for non-numeric matrix.set/fill values including values.set(row, column, value) and values.fill(value), runtime matrix.add_row row bounds and row-array size mismatch errors, runtime matrix.add_col column bounds and column-array size mismatch errors, runtime matrix.remove_row row bounds and na row-index errors, runtime matrix.remove_col column bounds and na column-index errors, and UDF side-effect rejection for matrix.add_row/values.add_row(row, array_id), matrix.add_col/values.add_col(column, array_id), matrix.remove_row/values.remove_row(row), and matrix.remove_col/values.remove_col(column); non-float templates, other method syntax, non-float, deferred, or bare matrix typed declarations, varip, and for-in iteration remain unsupported
+map.*                partial      map.new<int|float|bool|string|color, int|float|bool|string|color>() creates runtime-owned map ids, scalar map<K,V> typed declarations with compatible or na initialization are supported, map.size(id) returns the current entry count, and map.put/get/contains/clear/remove/copy/keys/values/put_all plus equivalent size/get/contains/put/clear/remove/copy/keys/values/put_all method aliases are fixture-backed for scalar key/value templates with replacement, missing-key na, key-presence, full-clear, post-clear reuse, single-key removal, missing-key remove no-op, id-alias assignment, independent map.copy backing-store behavior, insertion-order map.keys/map.values array snapshots, insertion-order map.put_all merge semantics, scalar map history snapshots with independent historical copies, scalar map varip intrabar backing-store handoff, read-only UDF map helper calls, method-alias lowering, method mutation UDF rejection, and ordinary realtime rollback of map-store mutations; bare map declarations, non-scalar key/value templates, and non-map map receivers remain unsupported
+matrix.*             partial      matrix.new<float>, matrix.new<int>, matrix.new<bool>, matrix.new<string>, matrix.new<color>, matrix.get, matrix.set, matrix.fill, values.fill(value), values.get(row, column), values.set(row, column, value), matrix.copy, values.copy(), matrix.transpose, values.transpose(), matrix.reverse, values.reverse(), matrix.reshape, values.reshape(rows, columns), matrix.kron, values.kron(other), matrix.mult, values.mult(other), matrix.diff, values.diff(other), matrix.pow, values.pow(power), matrix.add_row, values.add_row(row, array_id), matrix.add_col, values.add_col(column, array_id), matrix.remove_row, values.remove_row(row), matrix.remove_col, values.remove_col(column), matrix.swap_rows, values.swap_rows(row1, row2), matrix.swap_columns, values.swap_columns(column1, column2), matrix.sort, values.sort(column?, order?), matrix.submatrix, values.submatrix(from_row?, to_row?, from_column?, to_column?), matrix.rows, values.rows(), matrix.columns, values.columns(), matrix.elements_count, values.elements_count(), matrix.is_square, values.is_square(), matrix.is_binary, values.is_binary(), matrix.is_diagonal, values.is_diagonal(), matrix.is_identity, values.is_identity(), matrix.is_symmetric, values.is_symmetric(), matrix.is_antisymmetric, values.is_antisymmetric(), matrix.is_stochastic, values.is_stochastic(), matrix.is_zero, values.is_zero(), matrix.sum, values.sum(), matrix.avg, values.avg(), matrix.min, values.min(), matrix.max, values.max(), matrix.mode, values.mode(), matrix.trace, values.trace(), matrix.det, values.det(), matrix.eigenvalues, values.eigenvalues(), matrix.eigenvectors, values.eigenvectors(), matrix.inv, values.inv(), matrix.pinv, values.pinv(), matrix.rank, values.rank(), matrix.row, values.row(row), matrix.col, and values.col(column) are fixture-backed for runtime-owned float matrices with matrix<float> typed declarations, while matrix.new<bool> plus matrix.get, matrix.set, matrix.fill, matrix.copy, matrix.transpose, matrix.reverse, matrix.reshape, matrix.submatrix, matrix.row, matrix.col, matrix.add_row, matrix.add_col, matrix.remove_row, matrix.remove_col, matrix.swap_rows, matrix.swap_columns, matrix.rows, matrix.columns, matrix.elements_count, and matrix.is_square are fixture-backed for runtime-owned bool matrices with bool or na cells and matrix<bool> typed declarations, while matrix.new<string> plus matrix.get, matrix.set, matrix.fill, matrix.copy, matrix.transpose, matrix.reverse, matrix.reshape, matrix.submatrix, matrix.row, matrix.col, matrix.add_row, matrix.add_col, matrix.remove_row, matrix.remove_col, matrix.swap_rows, matrix.swap_columns, matrix.rows, matrix.columns, matrix.elements_count, and matrix.is_square are fixture-backed for runtime-owned string matrices with string or na cells and matrix<string> typed declarations, while matrix.new<color> plus matrix.get, matrix.set, matrix.fill, matrix.copy, matrix.transpose, matrix.reverse, matrix.reshape, matrix.submatrix, matrix.row, matrix.col, matrix.add_row, matrix.add_col, matrix.remove_row, matrix.remove_col, matrix.swap_rows, matrix.swap_columns, matrix.rows, matrix.columns, matrix.elements_count, and matrix.is_square are fixture-backed for runtime-owned color matrices with color or na cells and matrix<color> typed declarations, while matrix.new<int> plus matrix.get/set/fill/copy/transpose/reverse/reshape/submatrix/row/col/kron/mult/diff/pow/add_row/add_col/remove_row/remove_col/swap_rows/swap_columns/sort/rows/columns/elements_count/is_square/is_binary/is_diagonal/is_identity/is_symmetric/is_antisymmetric/is_stochastic/is_zero/sum/avg/min/max/mode/trace/det/eigenvalues/eigenvectors/inv/pinv/rank and corresponding supported method aliases are fixture-backed for runtime-owned int matrices with int or na cells, and matrix<int> typed declarations, namespace and method-call reshape preserving element order and count, namespace and method-call Kronecker products returning independent expanded-shape matrices with na cell propagation and cell-budget errors, namespace and method-call matrix-by-matrix multiplication returning independent matrix results with multiplied shape, scalar namespace multiplication returning same-shape independent matrix results, matrix-array and array-matrix multiplication returning independent array results, na cell propagation, shape-mismatch errors, and cell-budget errors, namespace and method-call matrix-by-matrix subtraction and scalar namespace subtraction returning independent matrix results with matching shape, na cell propagation, and shape-mismatch errors, namespace and method-call matrix powers returning independent identity, copy, and powered matrices with na propagation, non-square errors, and negative-power errors, namespace and method-call row/column insertion from element-kind-matched array snapshots, including array<float> for float matrices, array<int> for int matrices, and array<bool> for bool matrices, array<string> for string matrices, and array<color> for color matrices, namespace and method-call row/column deletion, namespace and method-call row swaps preserving shape, namespace and method-call column swaps preserving shape, namespace and method-call row sorting by a selected column with default column 0, ascending/descending order, stable equal-key row order, and na placement, namespace and method-call submatrix copies returning independent matrix ranges with default full ranges and empty row/column slices, namespace and method-call element-count reads, namespace and method-call square-shape predicates, namespace and method-call binary-value predicates over 0/1 cells that return false for `na` cells and true for zero-element matrices, namespace and method-call diagonal-value predicates that allow any main-diagonal value, require zero off-diagonal cells, return false for off-diagonal `na` cells, do not require square shapes, and return true for zero-element matrices, namespace and method-call identity-value predicates that require square shapes, exact one-valued main diagonals, exact zero-valued off-diagonals, return false for `na` cells, and return true for empty `0 x 0` matrices, namespace and method-call symmetric-value predicates that require square shapes, matching transposed numeric cells, return false for `na` cells, and return true for empty `0 x 0` matrices, namespace and method-call antisymmetric-value predicates that require square shapes, exact zero-valued main diagonals, negated transposed off-diagonal numeric cells, return false for `na` cells, and return true for empty `0 x 0` matrices, namespace and method-call stochastic-value predicates over finite non-negative numeric cells where every row or every column sums exactly to one, returning false for `na`, negative, or zero-element matrices, namespace and method-call zero-value predicates that return false for `na` cells and true for zero-element matrices, namespace and method-call transposes returning independent matrix copies with swapped row/column counts, namespace and method-call matrix reversals mutating cells in place while preserving shape, namespace and method-call matrix sums, averages, minimums, maximums, modes, traces, determinants, eigenvalue arrays, eigenvector matrices, inverse matrices, pseudo-inverse matrices, and ranks, where aggregate readers ignore na cells and return na for empty or all-na matrices, determinants return na for any na cell and runtime-error on non-square matrices, eigenvalue arrays return independent array<float> results for square matrices with real eigenvalues, return empty arrays for empty matrices, return na for any na cell or non-real eigenvalue result, and runtime-error on non-square matrices, eigenvector matrices return independent matrix<float> results whose columns are real eigenvectors for square matrices, return empty matrices for empty matrices, return na for any na cell or non-real or incomplete eigenvector result, and runtime-error on non-square matrices, inverse matrices return independent matrix results for non-singular square matrices, return na for singular or any na cell, and runtime-error on non-square matrices, pseudo-inverse matrices return independent swapped-shape matrix results for square, singular, and rectangular matrices, return zero-cell swapped-shape results for zero-row or zero-column matrices, and return na for any na cell, ranks support rectangular matrices and return na for any na cell, and modes return na for no repeated numeric cells, namespace and method-call row/column extraction returning independent array<float> snapshots for float matrices, array<int> snapshots for int matrices, array<bool> snapshots for bool matrices, array<string> snapshots for string matrices, and array<color> snapshots for color matrices through ordinary branches, for loops, and while loops, statement-form matrix for-in row snapshots with optional zero-based row indexes, empty matrices, loop control, and loop-entry snapshot independence from later shape mutation, while-expression fresh, existing-alias, zero-iteration na, break/continue, and history matrix results with caller-side reads and mutation, ordinary var persistence, committed, shape including dynamic na-offset predicates, and dynamic-offset history snapshots returning fresh copies, realtime forming-bar rollback for mutation and shape changes, semantic rejection for non-matrix get/copy/transpose/reverse receivers including values.get(row, column), values.copy(), values.transpose(), and values.reverse() method receivers, semantic rejection for non-matrix sum/average/min/max/mode/trace/det/eigenvalues/eigenvectors/kron/mult/diff/pow/inv/pinv/rank/is_binary/is_diagonal/is_identity/is_symmetric/is_antisymmetric/is_stochastic/is_zero receivers including values.sum()/values.avg()/values.min()/values.max()/values.mode()/values.trace()/values.det()/values.eigenvalues()/values.eigenvectors()/values.kron(other)/values.mult(other)/values.diff(other)/values.pow(power)/values.inv()/values.pinv()/values.rank()/values.is_binary()/values.is_diagonal()/values.is_identity()/values.is_symmetric()/values.is_antisymmetric()/values.is_stochastic()/values.is_zero() method receivers, semantic rejection for non-matrix matrix.kron second args, non-matrix-or-numeric-or-numeric-array matrix.mult operands, non-matrix-or-numeric matrix.diff operands, scalar-pair matrix.mult and matrix.diff calls, array-pair matrix.mult calls, non-numeric-array matrix.mult operands, non-matrix values.kron(other) method second args, and non-matrix-or-numeric-or-numeric-array values.mult(other) method second args and non-matrix-or-numeric values.diff(other) method second args, and non-int matrix.pow power args including values.pow(power) method power args, semantic rejection for non-int matrix.get row/column indexes including values.get(row, column) row/column indexes, semantic rejection for non-int namespace matrix.set row/column indexes including values.set(row, column, value) row/column indexes, semantic rejection for non-int namespace matrix.reshape row/column counts and values.reshape(rows, columns) method row/column counts, semantic rejection for non-int namespace/method matrix.add_row row indexes, semantic rejection for non-int namespace/method matrix.add_col column indexes, semantic rejection for non-int namespace/method matrix.remove_row row indexes, semantic rejection for non-int namespace/method matrix.remove_col column indexes, semantic rejection for matrix.add_row row data and matrix.add_col column data whose array element kind does not match the matrix element kind, semantic rejection for non-matrix shape-reader receivers including values.rows()/values.columns()/values.elements_count()/values.is_square() method receivers, semantic rejection for non-matrix row/column extraction receivers including values.row(row)/values.col(column) method receivers, semantic rejection for non-int namespace matrix.row/matrix.col row/column indexes, values.row(row)/values.col(column) method row/column indexes, non-int namespace/method matrix.sort column indexes, and non-const-string namespace/method matrix.sort order arguments, semantic rejection for non-matrix mutating-helper receivers including values.set(row, column, value), values.fill(value), values.reverse(), values.reshape(rows, columns), values.add_row(row, array_id), values.add_col(column, array_id), values.remove_row(row), values.remove_col(column), values.swap_rows(row1, row2), values.swap_columns(column1, column2), and values.sort(column?, order?) method receivers, semantic rejection for non-numeric matrix.new<float> initial values, semantic rejection for non-numeric float-matrix matrix.set/fill values, non-int int-matrix matrix.set/fill values, non-bool bool-matrix matrix.set/fill values, and non-string string-matrix matrix.set/fill values, non-color color-matrix matrix.set/fill values including values.set(row, column, value) and values.fill(value), runtime matrix.add_row row bounds and row-array size mismatch errors, runtime matrix.add_col column bounds and column-array size mismatch errors, runtime matrix.remove_row row bounds and na row-index errors, runtime matrix.remove_col column bounds and na column-index errors, matrix.swap_rows row bounds and na row-index errors, matrix.swap_columns column bounds and na column-index errors, matrix.sort column bounds, na column-index, and unsupported-order errors, matrix.submatrix bounds, na index, and reversed-range errors, and UDF side-effect rejection for matrix.add_row/values.add_row(row, array_id), matrix.add_col/values.add_col(column, array_id), matrix.remove_row/values.remove_row(row), and matrix.remove_col/values.remove_col(column), matrix.swap_rows/values.swap_rows(row1, row2), matrix.swap_columns/values.swap_columns(column1, column2), and matrix.sort/values.sort(column?, order?); matrix templates beyond float, int, bool, string, and color, other method syntax, bare matrix or matrix templates beyond float/int/bool/string/color typed declarations, cross-element matrix typed declaration initializers remain unsupported, while matrix varip backing-store handoff is fixture-backed
 linefill.new         partial      linefill object creation between existing line ids with color snapshots and official same-pair replacement semantics; na or deleted line ids return na; linefill array construction is supported through array.new_linefill and array.from for linefill ids
 linefill.set_color   partial      linefill color mutation for existing linefill ids, including namespace-call and method-call dispatch, na id no-op behavior, and no-op behavior after the linefill has been replaced/deleted by a same-pair linefill.new call
 linefill.get_line1   partial      returns the first line id referenced by an existing linefill, including namespace-call dispatch; na ids and replaced linefill ids return na
@@ -1567,9 +1723,9 @@ linefill.delete      partial      linefill id deletion snapshots, including ordi
 linefill.all         partial      snapshot array of currently existing linefill ids in creation order, including ordinary and while-loop control-flow reads; replaced or deleted linefills are omitted from subsequent reads while linefill array construction is supported through array.new_linefill and array.from for linefill ids
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets
-import               partial      host-provided exact-key imports with aliases, exported const expressions, pure exported functions, scalar-field imported UDT constructors with direct field reads, ordinary same-imported-UDT reassignment, scalar-field imported UDT typed declarations initialized or reassigned from the same imported identity, ordinary imported UDT var declarations, scalar-field imported UDT varip declarations, scalar-field imported UDT mutation in top-level, branch, for-loop, while-loop, and UDF-local statement contexts, same-imported-identity ternary, `if`, `switch`, `while`, and `for` expression results, imported UDT UDF direct or nested parameter passthrough, and direct or nested constructor-return results; deferred-field constructors, broader imported UDT flow, nested imported field mutation, imported methods, remote lookup, re-exports, unaliased imports, and side-effecting exported functions remain unsupported
-user-defined types   partial      local scalar-field type declarations, Type.new constructors, field reads, ordinary variables, local for-expression constructor results, top-level/block-local/loop-local same-UDT `for` expression initialization and reassignment, var persistence from na, same-UDT constructors, same-UDT ternary expressions, same-UDT switch expressions, same-UDT `if` expressions, or same-UDT `for` expressions, scalar field mutation outside method bodies including branch, for-loop, while-loop, and UDF-local variables, top-level/block-local/loop-local same-UDT ternary, switch, or `if` expression initialization, UDF parameter passthrough/returns through positional or named arguments with direct returns, UDT block-local aliases, final if/else or final for local UDT aliases, or nested passthrough calls, and UDF constructor returns, directly, through nested pure constructor-helper UDF calls, or through same-local-UDT ternary, switch, `if` expression, final if/else constructor branches, or final for bodies, from local UDT parameter scalar fields, scalar fields read through block-local UDT aliases of those parameters, block-local scalar aliases of those fields, inferred scalar parameters, or block-local scalar aliases of those scalar parameters using positional or named constructor field arguments only, including UDF-local typed locals initialized or reassigned through those same-local-UDT expressions, explicitly typed same-local scalar-field UDT varip values initialized from na, same-UDT constructors, same-UDT ternary expressions, same-UDT switch expressions, same-UDT if expressions, or same-UDT for expressions plus direct-constructor-inferred same-local scalar-field UDT varip values with realtime intrabar persistence, and scalar-field imported UDT constructor/direct field-read/ordinary reassignment/typed declaration/ordinary var/scalar-field varip/scalar-field mutation in top-level, branch, for-loop, while-loop, and UDF-local statement contexts/same-imported-identity ternary, `if`, `switch`, `while`, `for`, direct-or-nested UDF passthrough, and direct-or-nested UDF constructor-return identity subset
-user-defined methods partial      pure methods on local UDT receivers with scalar or local UDT parameters, direct UDT passthrough returns, block-local receiver or local UDT parameter alias passthrough returns, final if/else or final for local UDT alias passthrough returns, nested-method UDT parameter passthrough returns, and local UDT constructor returns, directly, through nested pure constructor-helper UDF calls, or through same-local-UDT ternary, switch, `if` expression, final if/else constructor branches, or final for bodies, from receiver or local UDT parameter scalar fields, scalar fields read through block-local receiver or local UDT parameter aliases, block-local scalar aliases of those fields, inferred scalar parameters, or block-local scalar aliases of those parameters using positional or named constructor field arguments only, including typed method locals initialized or reassigned through those same-local-UDT expressions
+import               partial      host-provided exact-key imports with aliases, exported const expressions, pure exported functions, scalar-field imported UDT constructors with direct field reads, ordinary same-imported-UDT reassignment, scalar-field imported UDT typed declarations initialized or reassigned from the same imported identity, ordinary imported UDT var declarations, scalar-field imported UDT varip declarations, scalar-field imported UDT value history, scalar-field imported UDT array<lib.Type>/lib.Type[] declarations, scalar-field imported UDT array varip declarations, scalar-field imported UDT array.from size/get/first/last, set replacement field reads, push append field reads, unshift prepend field reads, insert insertion field reads, fill replacement field reads, join positional stringification, includes/indexof/lastindexof structural equality search, sort/sort_indices by int/float/string sort_field, pop/remove/shift return field reads, clear size reset, copy independent field reads, reverse reordered field reads, slice window field reads, concat appended field reads, and statement/expression/index-value for-in value-copy field reads, scalar-field imported UDT mutation in top-level, branch, for-loop, while-loop, and UDF-local statement contexts, same-imported-identity ternary, `if`, `switch`, `while`, and `for` expression results, imported UDT UDF direct or nested parameter passthrough, direct or nested constructor-return results, and receiver-style or alias-qualified scalar imported UDT method calls including direct same-identity, block-local alias, final-if alias, final-for alias, and nested-method passthrough plus constructor returns, and method-local field mutation; deferred-field constructors, broader imported UDT flow, non-scalar imported UDT array declarations, nested imported field mutation, broader imported UDT history, remote lookup, re-exports, unaliased imports, and side-effecting exported functions remain unsupported
+user-defined types   partial      local scalar-field type declarations, Type.new constructors, field reads, ordinary variables, local for-expression constructor results, top-level/block-local/loop-local same-UDT `for` expression initialization and reassignment, var persistence from na, same-UDT constructors, same-UDT ternary expressions, same-UDT switch expressions, same-UDT `if` expressions, or same-UDT `for` expressions, scalar field mutation in top-level, branch, for-loop, while-loop, UDF-local variables, and method-local variables, top-level/block-local/loop-local same-UDT ternary, switch, or `if` expression initialization, UDF parameter passthrough/returns through positional or named arguments with direct returns, UDT block-local aliases, final if/else or final for local UDT aliases, or nested passthrough calls, and UDF constructor returns, directly, through nested pure constructor-helper UDF calls, or through same-local-UDT ternary, switch, `if` expression, final if/else constructor branches, or final for bodies, from local UDT parameter scalar fields, scalar fields read through block-local UDT aliases of those parameters, block-local scalar aliases of those fields, inferred scalar parameters, or block-local scalar aliases of those scalar parameters using positional or named constructor field arguments only, including UDF-local typed locals initialized or reassigned through those same-local-UDT expressions, explicitly typed same-local scalar-field UDT varip values initialized from na, same-UDT constructors, same-UDT ternary expressions, same-UDT switch expressions, same-UDT if expressions, or same-UDT for expressions plus direct-constructor-inferred same-local scalar-field UDT varip values with realtime intrabar persistence, and scalar-field imported UDT constructor/direct field-read/ordinary reassignment/typed declaration/ordinary var/scalar-field varip/scalar-field value history/scalar-field array.from size/get/first/last, set replacement field reads, push append field reads, unshift prepend field reads, insert insertion field reads, fill replacement field reads, join positional stringification, includes/indexof/lastindexof structural equality search, sort/sort_indices by int/float/string sort_field, pop/remove/shift return field reads, clear size reset, copy independent field reads, reverse reordered field reads, slice window field reads, concat appended field reads, and statement/expression/index-value for-in value-copy field reads, scalar-field mutation in top-level, branch, for-loop, while-loop, and UDF-local statement contexts/same-imported-identity ternary, `if`, `switch`, `while`, `for`, direct-or-nested UDF passthrough, and direct-or-nested UDF constructor-return identity subset
+user-defined methods partial      pure methods on local UDT receivers with scalar or local UDT parameters, direct UDT passthrough returns, block-local receiver or local UDT parameter alias passthrough returns, final if/else or final for local UDT alias passthrough returns, nested-method UDT parameter passthrough returns, local UDT constructor returns directly, through nested pure constructor-helper UDF calls, or through same-local-UDT ternary, switch, `if` expression, final if/else constructor branches, or final for bodies, and receiver-style or alias-qualified scalar imported UDT method calls including direct same-identity, block-local alias, final-if alias, final-for alias, and nested-method passthrough plus constructor returns, and method-local field mutation, from receiver or local UDT parameter scalar fields, scalar fields read through block-local receiver or local UDT parameter aliases, block-local scalar aliases of those fields, inferred scalar parameters, or block-local scalar aliases of those parameters using positional or named constructor field arguments only, including typed method locals initialized or reassigned through those same-local-UDT expressions
 ```
 
 The matrix should be generated from conformance metadata once the test harness
@@ -1633,6 +1789,6 @@ and fixture-backed.
 
 The current `varip` subset is summarized in `docs/PHASE_I_AUDIT.md`. Keep
 `varip` marked `partial` until drawing object ids, drawing-id arrays, tuples,
-maps, matrices, non-constructor-inferred or nested-field UDT values, UDT arrays,
-imports, object arrays beyond `chart.point`, generic arrays, and other value
-families have designed rollback semantics and fixture coverage.
+non-scalar maps, matrices, non-constructor-inferred or nested-field UDT values,
+UDT arrays, imports, object arrays beyond `chart.point`, generic arrays, and
+other value families have designed rollback semantics and fixture coverage.

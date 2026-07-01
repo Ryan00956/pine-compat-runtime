@@ -696,14 +696,16 @@ Typed variable declarations are fixture-backed for `int`, `float`, `bool`,
 `array<float>`, `array<bool>`, `array<string>`, `array<color>`, and
 object-id `array<label>`, `array<line>`, `array<linefill>`,
 `array<polyline>`, `array<box>`, `array<table>`, `array<chart.point>`, and
-same-local scalar-field UDT `array<T>` values, with compatible or `na`
-initializers. The equivalent `type[]` aliases are fixture-backed for the same
+same-local scalar-field UDT `array<T>` values, and same-imported scalar-field
+UDT `array<lib.Type>` values, with compatible or `na` initializers. The
+equivalent `type[]` aliases are fixture-backed for the same
 supported array element types, including `var` declarations and the scalar
 typed-array `varip` subset. These declarations assign the declared value kind to
 the symbol, so later compatible reassignment works after `na` initialization.
-Bare `array`, non-scalar or imported UDT arrays, UDT array `varip`, map, matrix,
-and other typed declarations remain unsupported with semantic diagnostics unless
-covered by a narrower fixture-backed row.
+Bare `array`, non-scalar UDT arrays, bare map,
+map templates beyond scalar key/value kinds, bare matrix, and other typed
+declarations remain unsupported with semantic diagnostics unless covered by a
+narrower fixture-backed row.
 `indicator(..., scale=...)` accepts the fixture-backed `scale.left`,
 `scale.right`, and `scale.none` named constants as declaration metadata. The
 runtime rejects other const string scale values and does not emit chart axis
@@ -1318,6 +1320,47 @@ for same-local scalar-field UDT arrays; those elements render as
 chart.point, map, and matrix arrays remain outside the join subset. Array assignment passes the runtime array
 id by reference; use `array.copy` to allocate an independent array with the same
 current element values.
+
+Map support is currently limited to runtime-owned scalar maps, size reads, and
+the first mutation/lookup helpers:
+
+```text
+map.new<K, V>() -> simple map
+map.size(id: map) -> simple int
+map.put(id: map, key: K, value: V) -> void
+map.get(id: map, key: K) -> series V
+map.contains(id: map, key: K) -> series bool
+map.clear(id: map) -> void
+map.remove(id: map, key: K) -> void
+map.copy(id: map) -> simple map
+map.keys(id: map<K, V>) -> simple array<K>
+map.values(id: map<K, V>) -> simple array<V>
+map.put_all(target: map<K, V>, source: map<K, V>) -> void
+```
+
+`map.new<K, V>()` accepts `int`, `float`, `bool`, `string`, or `color` for both
+template positions and allocates an empty map id. `map.size(id)` returns the
+current entry count for a map id. `map.put` inserts or replaces entries,
+`map.get` returns the current value or `na` for missing keys, and
+`map.contains` returns whether the key is present. `map.clear` removes all
+entries from the map id. `map.remove` deletes the entry for a present key and
+is a no-op for missing keys. Assignment copies the runtime map id by reference,
+while `map.copy` clones the backing store into an independent map id with the
+same scalar key/value template. `map.keys` and `map.values` return independent
+array snapshots in insertion order. `map.put_all` merges entries from a source
+map into a target map with the same scalar key/value template; existing keys
+replace values without moving order, and new keys append in source insertion
+order. Scalar `map<K,V>` typed declarations are supported with compatible or
+`na` initialization and later same-template reassignment. Equivalent method
+aliases are supported for the same subset:
+`id.size()`, `id.put(key, value)`, `id.get(key)`, `id.contains(key)`,
+`id.clear()`, `id.remove(key)`, `id.copy()`, `id.keys()`, `id.values()`, and
+`id.put_all(source)`. Scalar map history snapshots are supported with
+independent historical copies. Scalar map `varip` declarations retain the map id
+and backing store across repeated realtime forming updates. Read-only map
+helpers can consume map ids passed through user-defined function parameters when
+the caller supplies a known scalar map template. Bare map declarations and
+non-scalar map templates remain unsupported.
 
 ## TA Built-Ins
 

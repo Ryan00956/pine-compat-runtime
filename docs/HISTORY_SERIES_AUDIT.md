@@ -72,10 +72,11 @@ indicator-level `max_bars_back` support.
   dynamic `na` offset predicates. Matrix history snapshots are fixture-backed
   for committed matrix values, dynamic matrix offsets including `na` offset
   predicates, shape-history dynamic `na` offset predicates, and
-  while-expression matrix results. Map history,
-  UDT/imported-UDT value history, drawing-object collections beyond
-  fixture-backed id arrays/slices, and richer aliasing cases remain undesigned
-  or rejected.
+  while-expression matrix results. Scalar map history snapshots are
+  fixture-backed with independent historical copies. UDT/imported-UDT value
+  history, drawing-object collections beyond fixture-backed id arrays/slices,
+  nested map/collection map templates, and richer aliasing cases remain
+  undesigned or rejected.
 - Per-variable `max_bars_back` inference, declarations, and helper calls such
   as `max_bars_back(close, 20)` are not implemented; helper calls are rejected
   with `E_UNSUPPORTED_FEATURE`.
@@ -118,8 +119,8 @@ Completed:
 Deferred:
 
 - Per-variable `max_bars_back` declarations, helper calls, and inference.
-- Map history plus richer object-collection aliasing cases beyond the
-  fixture-backed array/slice and matrix snapshots.
+- Nested map/collection map templates plus richer object-collection aliasing
+  cases beyond the fixture-backed array/slice, matrix, and scalar map snapshots.
 - UDT and imported-UDT value history remains rejected until value identity and
   copy semantics are deliberately designed.
 - More precise user-facing diagnostics when a dynamic offset asks for history

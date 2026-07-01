@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported for-in expression color")
+
+values = array.from(color.red, color.green)
+result = for value in values
+    value
+
+plot(result == color.green ? 1 : 0)

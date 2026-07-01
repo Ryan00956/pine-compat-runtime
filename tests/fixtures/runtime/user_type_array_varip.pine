@@ -1,0 +1,25 @@
+//@version=5
+indicator("User type array varip")
+
+type Point
+    float x
+    string label
+
+varip array<Point> points = array.new<Point>()
+points.push(Point.new(close, "point"))
+
+varip Point[] alias = points
+alias.push(Point.new(close + 10, "alias"))
+
+varip copied = points.copy()
+copied.push(Point.new(close + 20, "copy"))
+
+first = points.get(0)
+last = alias.last()
+copy_last = copied.last()
+
+plot(points.size(), "points_size")
+plot(first.x, "first_x")
+plot(last.x, "last_x")
+plot(copied.size(), "copied_size")
+plot(copy_last.x, "copy_last_x")

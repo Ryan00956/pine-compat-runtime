@@ -84,7 +84,7 @@ impl Analyzer {
             self.diagnostics.push(Diagnostic::error(
                 "E_CALL_ARG_TYPE",
                 format!(
-                    "`{name}` requires a local UDT array and an int, float, or string `sort_field`"
+                    "`{name}` requires a scalar-field UDT array and an int, float, or string `sort_field`"
                 ),
                 args.get(2).map_or(span, |arg| arg.span),
             ));
@@ -100,11 +100,24 @@ impl Analyzer {
     pub(crate) fn user_type_array_sort_field_index(&self, args: &[CallArg]) -> Option<usize> {
         let type_name = self.user_type_array_name_of_expr(&args.first()?.value)?;
         let field_name = const_string_value(&args.get(2)?.value)?;
-        let (index, field) = self.user_type_field(&type_name, &field_name)?;
-        matches!(
-            field.pine_type.kind,
-            ValueKind::Int | ValueKind::Float | ValueKind::String
-        )
-        .then_some(index)
+        let (index, kind) = self.user_type_array_sort_field(&type_name, &field_name)?;
+        matches!(kind, ValueKind::Int | ValueKind::Float | ValueKind::String).then_some(index)
+    }
+
+    fn user_type_array_sort_field(
+        &self,
+        type_name: &str,
+        field_name: &str,
+    ) -> Option<(usize, ValueKind)> {
+        if let Some((index, field)) = self.user_type_field(type_name, field_name) {
+            return Some((index, field.pine_type.kind));
+        }
+        let user_type = self.imported_user_types.get(type_name)?;
+        let (index, field) = user_type
+            .fields
+            .iter()
+            .enumerate()
+            .find(|(_, field)| field.name == field_name)?;
+        Some((index, field.pine_type?.kind))
     }
 }

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.rank")
+
+value = matrix.rank(na)
+plot(value)

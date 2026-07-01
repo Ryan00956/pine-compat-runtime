@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported map clear udf")
+
+clear_map(id) =>
+    map.clear(id)
+    map.size(id)
+
+prices = map.new<string, float>()
+plot(clear_map(prices))

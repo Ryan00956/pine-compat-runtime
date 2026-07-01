@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix<bool> set float")
+
+values = matrix.new<bool>(1, 1, true)
+matrix.set(values, 0, 0, close)
+plot(close)

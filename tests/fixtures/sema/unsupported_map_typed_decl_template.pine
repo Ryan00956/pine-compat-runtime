@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported map typed declaration template")
+
+map<label, float> values = na
+plot(close)

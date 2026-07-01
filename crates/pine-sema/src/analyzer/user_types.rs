@@ -277,6 +277,7 @@ impl Analyzer {
             } => self.user_type_name_of_if_branches(then_branch, else_branch),
             ExprKind::Switch { arms, .. } => self.user_type_name_of_switch_arms(arms),
             ExprKind::For { body, .. } => self.user_type_name_of_branch_return(body),
+            ExprKind::ForIn { body, .. } => self.user_type_name_of_branch_return(body),
             ExprKind::While { body, .. } => self.user_type_name_of_branch_return(body),
             _ => None,
         }
@@ -438,6 +439,7 @@ impl Analyzer {
                 resolved_type_name
             }
             ExprKind::For { body, .. } => self.user_type_name_of_branch_return(body),
+            ExprKind::ForIn { body, .. } => self.user_type_name_of_branch_return(body),
             ExprKind::While { body, .. } => self.user_type_name_of_branch_return(body),
             _ => None,
         }

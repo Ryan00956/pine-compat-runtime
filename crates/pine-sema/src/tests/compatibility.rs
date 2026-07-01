@@ -206,6 +206,40 @@ plot(array.size(floats) + array.size(ints) + array.size(flags) + array.size(word
 }
 
 #[test]
+fn accepts_scalar_map_varip_declarations() {
+    let analysis = analyze(
+        r#"varip map<string, float> typed = na
+if na(typed)
+    typed := map.new<string, float>()
+varip inferred = map.new<string, float>()
+typed.put("close", close)
+inferred.put("open", open)
+plot(typed.get("close") + inferred.get("open"))
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    let hir = analysis.hir.expect("map varip script should lower");
+    let symbols: Vec<_> = hir
+        .symbols
+        .iter()
+        .filter(|symbol| matches!(symbol.name.as_str(), "typed" | "inferred"))
+        .collect();
+    assert_eq!(symbols.len(), 2);
+    assert!(
+        symbols
+            .iter()
+            .all(|symbol| symbol.persistence == PersistenceKind::Varip)
+    );
+    assert!(symbols.iter().all(|symbol| symbol.var_slot_id.is_some()));
+}
+
+#[test]
 fn rejects_tuple_varip_declaration() {
     let analysis = analyze("varip values = [1, 2]\nplot(close)\n");
 
@@ -3400,9 +3434,9 @@ fn import_rejects_scalar_imported_user_type_global_field_mutation() {
 }
 
 #[test]
-fn import_rejects_scalar_imported_user_type_history() {
+fn import_accepts_scalar_imported_user_type_history() {
     let analysis = analyze_with_libraries(
-        include_str!("../../../../tests/fixtures/sema/unsupported_imported_udt_history.pine"),
+        include_str!("../../../../tests/fixtures/runtime/import_udt_history.pine"),
         vec![(
             "user/udt/1",
             include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
@@ -3410,17 +3444,8 @@ fn import_rejects_scalar_imported_user_type_history() {
     );
 
     let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
-    assert!(
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .any(|feature| feature.feature == "user-defined type history"),
-        "{:?}",
-        analysis.compatibility.unsupported
-    );
-    assert!(analysis.hir.is_none());
+    assert!(codes.is_empty(), "{codes:?}");
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -3450,7 +3475,22 @@ fn import_rejects_nested_imported_user_type_field_mutation() {
 }
 
 #[test]
-fn import_rejects_imported_user_type_array_declaration() {
+fn import_accepts_imported_user_type_array_typed_declarations() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/import_udt_array_typed_declarations.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_rejects_imported_non_scalar_user_type_array_declaration() {
     let analysis = analyze_with_libraries(
         include_str!("../../../../tests/fixtures/sema/unsupported_imported_udt_array_decl.pine"),
         vec![(
@@ -3465,7 +3505,7 @@ fn import_rejects_imported_user_type_array_declaration() {
         analysis
             .diagnostics
             .iter()
-            .any(|diagnostic| diagnostic.message.contains("array<lib.Point>")),
+            .any(|diagnostic| diagnostic.message.contains("array<lib.Wrapper>")),
         "{:?}",
         analysis.diagnostics
     );
@@ -3473,7 +3513,7 @@ fn import_rejects_imported_user_type_array_declaration() {
 }
 
 #[test]
-fn import_rejects_imported_user_type_array_alias_declaration() {
+fn import_rejects_imported_non_scalar_user_type_array_alias_declaration() {
     let analysis = analyze_with_libraries(
         include_str!(
             "../../../../tests/fixtures/sema/unsupported_imported_udt_array_alias_decl.pine"
@@ -3490,7 +3530,7 @@ fn import_rejects_imported_user_type_array_alias_declaration() {
         analysis
             .diagnostics
             .iter()
-            .any(|diagnostic| diagnostic.message.contains("array<lib.Point>")),
+            .any(|diagnostic| diagnostic.message.contains("array<lib.Wrapper>")),
         "{:?}",
         analysis.diagnostics
     );
@@ -3498,9 +3538,9 @@ fn import_rejects_imported_user_type_array_alias_declaration() {
 }
 
 #[test]
-fn import_rejects_imported_user_type_array_from_inference() {
+fn import_accepts_imported_user_type_array_varip_declaration() {
     let analysis = analyze_with_libraries(
-        include_str!("../../../../tests/fixtures/sema/unsupported_imported_udt_array_from.pine"),
+        include_str!("../../../../tests/fixtures/runtime/import_udt_array_varip.pine"),
         vec![(
             "user/udt/1",
             include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
@@ -3508,16 +3548,48 @@ fn import_rejects_imported_user_type_array_from_inference() {
     );
 
     let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_CALL_ARG_TYPE"), "{codes:?}");
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_rejects_imported_non_scalar_user_type_array_varip_declaration() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/sema/unsupported_imported_udt_array_varip_decl.pine"
+        ),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_DECL_TYPE"), "{codes:?}");
     assert!(
         analysis
             .diagnostics
             .iter()
-            .any(|diagnostic| diagnostic.message.contains("does not support UDT arrays")),
+            .any(|diagnostic| diagnostic.message.contains("array<lib.Wrapper>")),
         "{:?}",
         analysis.diagnostics
     );
     assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_accepts_imported_user_type_array_from_inference() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/import_udt_array_from.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -3743,6 +3815,21 @@ fn import_accepts_for_expression_imported_user_type_result() {
 }
 
 #[test]
+fn import_accepts_for_in_expression_imported_user_type_result() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/import_udt_for_in_expression.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}");
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn import_rejects_for_expression_imported_user_type_identity_mismatch() {
     let analysis = analyze_with_libraries(
         include_str!("../../../../tests/fixtures/sema/unsupported_imported_udt_for_identity.pine"),
@@ -3773,9 +3860,11 @@ fn import_accepts_switch_block_imported_user_type_result() {
 }
 
 #[test]
-fn import_rejects_imported_user_methods() {
+fn import_accepts_imported_method_local_field_mutation() {
     let analysis = analyze_with_libraries(
-        include_str!("../../../../tests/fixtures/sema/unsupported_imported_method.pine"),
+        include_str!(
+            "../../../../tests/fixtures/runtime/import_udt_method_local_field_mutation.pine"
+        ),
         vec![(
             "user/udt/1",
             include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
@@ -3783,14 +3872,21 @@ fn import_rejects_imported_user_methods() {
     );
 
     let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_IMPORT_UNSUPPORTED_METHOD"), "{codes:?}");
-    assert!(analysis.hir.is_none());
+    assert!(codes.is_empty(), "{codes:?}");
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| { feature.feature == "user-defined type field mutation" })
+    );
 }
 
 #[test]
-fn import_rejects_alias_qualified_imported_user_methods() {
+fn import_accepts_alias_qualified_imported_user_methods() {
     let analysis = analyze_with_libraries(
-        include_str!("../../../../tests/fixtures/sema/unsupported_imported_method_qualified.pine"),
+        include_str!("../../../../tests/fixtures/runtime/import_udt_method_qualified.pine"),
         vec![(
             "user/udt/1",
             include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
@@ -3798,15 +3894,24 @@ fn import_rejects_alias_qualified_imported_user_methods() {
     );
 
     let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_IMPORT_UNSUPPORTED_METHOD"), "{codes:?}");
-    assert!(
-        analysis.diagnostics.iter().any(|diagnostic| {
-            diagnostic.code == "E_IMPORT_UNSUPPORTED_METHOD"
-                && diagnostic.message.contains("for receiver `lib.Point`")
-        }),
-        "{:?}",
-        analysis.diagnostics
+    assert!(codes.is_empty(), "{codes:?}");
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_rejects_alias_qualified_imported_user_method_receiver_type() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/sema/unsupported_imported_method_qualified_receiver.pine"
+        ),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
     );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_METHOD_ARG_TYPE"), "{codes:?}");
     assert!(analysis.hir.is_none());
 }
 

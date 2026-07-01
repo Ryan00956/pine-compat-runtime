@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.det method receiver")
+
+value = close.det()
+plot(value)

@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported matrix.sort method in UDF")
+
+order_values(values) =>
+    values.sort(0)
+    values
+
+values = matrix.new<float>(1, 1, close)
+plot(matrix.get(order_values(values), 0, 0))

@@ -2,11 +2,10 @@
 type Point
     float x
 
-method mutateLocal(Point p) =>
-    local = Point.new(p.x)
-    local.x := local.x + 1
-    local
+method mutateReceiver(Point p) =>
+    p.x := p.x + 1
+    p
 
 p = Point.new(close)
-q = p.mutateLocal()
+q = p.mutateReceiver()
 plot(q.x)

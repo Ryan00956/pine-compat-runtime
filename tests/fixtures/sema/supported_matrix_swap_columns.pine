@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported matrix.swap_columns")
+
+values = matrix.new<float>(1, 2, close)
+matrix.swap_columns(values, 0, 1)
+values.swap_columns(1, 0)
+plot(matrix.get(values, 0, 0))

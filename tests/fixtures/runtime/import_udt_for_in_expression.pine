@@ -1,0 +1,29 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Imported UDT for-in expression")
+
+points = array.from(lib.Point.new(close), lib.Point.new(close + 1), lib.Point.new(close + 2))
+
+last = for point in points
+    point
+
+continued = for point in points
+    if point.x == close + 1
+        continue
+    point
+
+stopped = for point in points
+    if point.x == close + 2
+        break
+    point
+
+mutated_last = for point in points
+    point.x := point.x + 10
+    point
+
+source_first = points.get(0)
+
+index_value_last = for index, point in points
+    index + point.x
+
+plot(last.x + continued.x + stopped.x + mutated_last.x + source_first.x + index_value_last)

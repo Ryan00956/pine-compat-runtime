@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.eigenvectors")
+
+value = matrix.eigenvectors(na)
+plot(value)

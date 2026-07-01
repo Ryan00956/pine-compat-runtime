@@ -1,0 +1,29 @@
+//@version=6
+indicator("Supported matrix for-in")
+
+floats = matrix.new<float>(2, 2, close)
+total = bar_index * 0.0
+for row in floats
+    total := total + row.get(0)
+
+ints = matrix.new<int>(2, 1, 1)
+int_total = bar_index * 0
+for i, row in ints
+    int_total := int_total + row.get(0) + i
+
+bools = matrix.new<bool>(1, 1, true)
+bool_total = bar_index * 0
+for row in bools
+    bool_total := bool_total + (row.get(0) ? 1 : 0)
+
+strings = matrix.new<string>(1, 1, "x")
+string_total = bar_index * 0
+for row in strings
+    string_total := string_total + (row.get(0) == "x" ? 1 : 0)
+
+colors = matrix.new<color>(1, 1, color.red)
+color_total = bar_index * 0
+for row in colors
+    color_total := color_total + (row.get(0) == color.red ? 1 : 0)
+
+plot(total + int_total + bool_total + string_total + color_total)

@@ -1,5 +1,6 @@
 use pine_ir::{HirExpr, HirStmt, HirStmtKind, SymbolId};
 
+use crate::builtins::matrices::matrix_array_element_kind;
 use crate::error::RuntimeLoopControl;
 use crate::*;
 
@@ -8,6 +9,17 @@ pub(crate) enum StmtControl {
     None,
     Break,
     Continue,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct ForInSymbols {
+    index: Option<SymbolId>,
+    value: SymbolId,
+}
+
+struct ForInItem {
+    index: usize,
+    value: PineValue,
 }
 
 impl StmtControl {
@@ -106,6 +118,14 @@ impl<'a> HistoricalRuntime<'a> {
                 self.assign_persistent_symbol(*symbol, updated.clone());
                 self.set_symbol_value(*symbol, updated);
             }
+            HirStmtKind::ArrayFieldReassign {
+                array,
+                index,
+                field_index,
+                value,
+            } => {
+                self.eval_array_field_reassign(array, index, *field_index, value)?;
+            }
             HirStmtKind::TupleDecl { symbols, value } => {
                 let value = self.eval_expr(value)?;
                 let PineValue::Tuple(values) = value else {
@@ -118,6 +138,47 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         Ok(StmtControl::None)
+    }
+
+    fn eval_array_field_reassign(
+        &mut self,
+        array: &HirExpr,
+        index: &HirExpr,
+        field_index: usize,
+        value: &HirExpr,
+    ) -> Result<(), RuntimeError> {
+        let array = self.eval_expr(array)?;
+        let index = self.eval_expr(index)?.as_i64();
+        let value = self.eval_expr(value)?;
+        let (PineValue::Array(array_id), Some(index)) = (array, index) else {
+            return Ok(());
+        };
+        if !matches!(
+            self.array_kinds.get(&array_id),
+            Some(crate::builtins::arrays::ArrayElementKind::UserType)
+        ) {
+            return Err(RuntimeError {
+                message: "chained field mutation receiver is not a UDT array".to_owned(),
+            });
+        }
+        let Some(slot) = self.array_get_cloned(array_id, index)? else {
+            return Ok(());
+        };
+        let updated = match slot {
+            PineValue::UserType(mut fields) => {
+                if field_index < fields.len() {
+                    fields[field_index] = value;
+                }
+                PineValue::UserType(fields)
+            }
+            PineValue::Na => return Ok(()),
+            _ => {
+                return Err(RuntimeError {
+                    message: "chained field mutation receiver is not a UDT value".to_owned(),
+                });
+            }
+        };
+        self.array_set_value(array_id, index, updated)
     }
 
     pub(crate) fn eval_for_loop(
@@ -274,7 +335,7 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(loop_result)
     }
 
-    fn eval_for_in_loop(
+    pub(crate) fn eval_for_in_loop(
         &mut self,
         index_symbol: Option<SymbolId>,
         value_symbol: SymbolId,
@@ -282,43 +343,213 @@ impl<'a> HistoricalRuntime<'a> {
         body: &[HirStmt],
     ) -> Result<(), RuntimeError> {
         let iterable = self.eval_expr(iterable)?;
-        let PineValue::Array(array_id) = iterable else {
-            if matches!(iterable, PineValue::Na) {
-                return Ok(());
-            }
-            return Err(RuntimeError {
-                message: "for...in iterable is not an array".to_owned(),
-            });
-        };
-        let Some(initial_len) = self.array_len(array_id)? else {
-            return Ok(());
-        };
+        match iterable {
+            PineValue::Array(array_id) => {
+                let Some(initial_len) = self.array_len(array_id)? else {
+                    return Ok(());
+                };
 
-        for index in 0..initial_len {
-            let value = self.array_get_cloned(array_id, index as i64)?;
-            let Some(value) = value else {
-                return Err(RuntimeError {
-                    message: "for...in array is not available".to_owned(),
-                });
-            };
-            if let Some(index_symbol) = index_symbol {
-                self.set_symbol_value(index_symbol, PineValue::Int(index as i64));
-            }
-            self.set_symbol_value(value_symbol, value);
-            for statement in body {
-                match self.eval_stmt(statement) {
-                    Ok(StmtControl::None) => {}
-                    Ok(StmtControl::Break) => return Ok(()),
-                    Ok(StmtControl::Continue) => break,
-                    Err(error) => match StmtControl::from_runtime_error(&error) {
-                        Some(StmtControl::Break) => return Ok(()),
-                        Some(StmtControl::Continue) => break,
-                        Some(StmtControl::None) => {}
-                        None => return Err(error),
-                    },
+                for index in 0..initial_len {
+                    let value = self.array_get_cloned(array_id, index as i64)?;
+                    let Some(value) = value else {
+                        return Err(RuntimeError {
+                            message: "for...in array is not available".to_owned(),
+                        });
+                    };
+                    if self.eval_for_in_iteration(index_symbol, value_symbol, index, value, body)? {
+                        return Ok(());
+                    }
                 }
+            }
+            PineValue::Matrix(matrix_id) => {
+                let Some((initial_rows, kind)) = self
+                    .matrix_store
+                    .get(&matrix_id)
+                    .map(|matrix| (matrix.rows, matrix.kind))
+                else {
+                    return Ok(());
+                };
+                let array_kind = matrix_array_element_kind(kind);
+
+                let mut row_snapshots = Vec::with_capacity(initial_rows);
+                for index in 0..initial_rows {
+                    let Some(values) = self.matrix_row_values(matrix_id, index as i64)? else {
+                        return Err(RuntimeError {
+                            message: "for...in matrix is not available".to_owned(),
+                        });
+                    };
+                    row_snapshots.push(self.new_array_from_values(array_kind, values));
+                }
+
+                for (index, value) in row_snapshots.into_iter().enumerate() {
+                    if self.eval_for_in_iteration(index_symbol, value_symbol, index, value, body)? {
+                        return Ok(());
+                    }
+                }
+            }
+            PineValue::Na => {}
+            _ => {
+                return Err(RuntimeError {
+                    message: "for...in iterable is not an array or matrix".to_owned(),
+                });
             }
         }
         Ok(())
+    }
+
+    pub(crate) fn eval_for_in_expr(
+        &mut self,
+        index_symbol: Option<SymbolId>,
+        value_symbol: SymbolId,
+        iterable: &HirExpr,
+        body: &[HirStmt],
+        result: &HirExpr,
+    ) -> Result<PineValue, RuntimeError> {
+        let iterable = self.eval_expr(iterable)?;
+        let mut loop_result = PineValue::Na;
+        let symbols = ForInSymbols {
+            index: index_symbol,
+            value: value_symbol,
+        };
+
+        match iterable {
+            PineValue::Array(array_id) => {
+                let Some(initial_len) = self.array_len(array_id)? else {
+                    return Ok(PineValue::Na);
+                };
+
+                for index in 0..initial_len {
+                    let value = self.array_get_cloned(array_id, index as i64)?;
+                    let Some(value) = value else {
+                        return Err(RuntimeError {
+                            message: "for...in array is not available".to_owned(),
+                        });
+                    };
+                    if self.eval_for_in_expr_iteration(
+                        symbols,
+                        ForInItem { index, value },
+                        body,
+                        result,
+                        &mut loop_result,
+                    )? {
+                        break;
+                    }
+                }
+            }
+            PineValue::Matrix(matrix_id) => {
+                let Some((initial_rows, kind)) = self
+                    .matrix_store
+                    .get(&matrix_id)
+                    .map(|matrix| (matrix.rows, matrix.kind))
+                else {
+                    return Ok(PineValue::Na);
+                };
+                let array_kind = matrix_array_element_kind(kind);
+
+                let mut row_snapshots = Vec::with_capacity(initial_rows);
+                for index in 0..initial_rows {
+                    let Some(values) = self.matrix_row_values(matrix_id, index as i64)? else {
+                        return Err(RuntimeError {
+                            message: "for...in matrix is not available".to_owned(),
+                        });
+                    };
+                    row_snapshots.push(self.new_array_from_values(array_kind, values));
+                }
+
+                for (index, value) in row_snapshots.into_iter().enumerate() {
+                    if self.eval_for_in_expr_iteration(
+                        symbols,
+                        ForInItem { index, value },
+                        body,
+                        result,
+                        &mut loop_result,
+                    )? {
+                        break;
+                    }
+                }
+            }
+            PineValue::Na => {}
+            _ => {
+                return Err(RuntimeError {
+                    message: "for...in expression iterable is not an array or matrix".to_owned(),
+                });
+            }
+        }
+
+        Ok(loop_result)
+    }
+
+    fn eval_for_in_expr_iteration(
+        &mut self,
+        symbols: ForInSymbols,
+        item: ForInItem,
+        body: &[HirStmt],
+        result: &HirExpr,
+        loop_result: &mut PineValue,
+    ) -> Result<bool, RuntimeError> {
+        if let Some(index_symbol) = symbols.index {
+            self.set_symbol_value(index_symbol, PineValue::Int(item.index as i64));
+        }
+        self.set_symbol_value(symbols.value, item.value);
+
+        let mut control = StmtControl::None;
+        for statement in body {
+            match self.eval_stmt(statement) {
+                Ok(StmtControl::None) => {}
+                Ok(next_control) => {
+                    control = next_control;
+                    break;
+                }
+                Err(error) => match StmtControl::from_runtime_error(&error) {
+                    Some(next_control) => {
+                        control = next_control;
+                        break;
+                    }
+                    None => return Err(error),
+                },
+            }
+        }
+        match control {
+            StmtControl::None => match self.eval_expr(result) {
+                Ok(value) => *loop_result = value,
+                Err(error) => match StmtControl::from_runtime_error(&error) {
+                    Some(StmtControl::Break) => return Ok(true),
+                    Some(StmtControl::Continue) => {}
+                    Some(StmtControl::None) => {}
+                    None => return Err(error),
+                },
+            },
+            StmtControl::Break => return Ok(true),
+            StmtControl::Continue => {}
+        }
+        Ok(false)
+    }
+
+    fn eval_for_in_iteration(
+        &mut self,
+        index_symbol: Option<SymbolId>,
+        value_symbol: SymbolId,
+        index: usize,
+        value: PineValue,
+        body: &[HirStmt],
+    ) -> Result<bool, RuntimeError> {
+        if let Some(index_symbol) = index_symbol {
+            self.set_symbol_value(index_symbol, PineValue::Int(index as i64));
+        }
+        self.set_symbol_value(value_symbol, value);
+        for statement in body {
+            match self.eval_stmt(statement) {
+                Ok(StmtControl::None) => {}
+                Ok(StmtControl::Break) => return Ok(true),
+                Ok(StmtControl::Continue) => break,
+                Err(error) => match StmtControl::from_runtime_error(&error) {
+                    Some(StmtControl::Break) => return Ok(true),
+                    Some(StmtControl::Continue) => break,
+                    Some(StmtControl::None) => {}
+                    None => return Err(error),
+                },
+            }
+        }
+        Ok(false)
     }
 }

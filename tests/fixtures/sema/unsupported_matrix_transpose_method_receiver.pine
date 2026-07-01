@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.transpose method receiver")
+
+values = close.transpose()
+plot(close)

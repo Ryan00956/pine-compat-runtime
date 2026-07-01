@@ -19,9 +19,20 @@ second_after_local_mutation = array.get(points, 1)
 points.set(1, second_read)
 second_after_writeback = array.get(points, 1)
 
+array.get(points, 0).y := low + 20
+namespace_chained = points.get(0)
+points.get(1).x := open + 20
+method_chained = array.get(points, 1)
+slice_points = array.slice(points, 0, 1)
+slice_points.get(0).x := close + 30
+slice_chained_parent = points.get(0)
+
 plot(first_after_local_mutation.x == close ? 1 : 0)
 plot(first_after_writeback.x == high ? 1 : 0)
 plot(first_after_writeback.y == open ? 1 : 0)
 plot(second_after_local_mutation.y == low ? 1 : 0)
 plot(second_after_writeback.x == high ? 1 : 0)
 plot(second_after_writeback.y == close + 10 ? 1 : 0)
+plot(namespace_chained.y == low + 20 ? 1 : 0)
+plot(method_chained.x == open + 20 ? 1 : 0)
+plot(slice_chained_parent.x == close + 30 ? 1 : 0)

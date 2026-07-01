@@ -1,0 +1,24 @@
+//@version=6
+indicator("Matrix trace")
+
+values = matrix.new<float>(3, 3, na)
+matrix.set(values, 0, 0, close + 1)
+matrix.set(values, 1, 1, close + 2)
+matrix.set(values, 2, 2, close + 3)
+matrix.set(values, 0, 2, close + 100)
+namespace_trace = matrix.trace(values)
+method_trace = values.trace()
+
+rectangle = matrix.new<float>(2, 3, na)
+matrix.set(rectangle, 0, 0, close + 10)
+matrix.set(rectangle, 1, 1, close + 20)
+matrix.set(rectangle, 1, 2, close + 30)
+
+empty = matrix.new<float>(0, 2)
+all_na = matrix.new<float>(2, 2)
+
+plot(namespace_trace, "namespace_trace")
+plot(method_trace, "method_trace")
+plot(matrix.trace(rectangle), "rectangle_trace")
+plot(na(matrix.trace(empty)) ? 1 : 0, "empty_trace_is_na")
+plot(na(all_na.trace()) ? 1 : 0, "all_na_trace_is_na")

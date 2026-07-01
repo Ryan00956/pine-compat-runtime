@@ -104,6 +104,58 @@ plot(barstate.islastconfirmedhistory ? close : 0)
 }
 
 #[test]
+fn realtime_rollback_restores_map_store_mutations() {
+    let source = SourceFile::new(
+        "test.pine",
+        include_str!("../../../../tests/fixtures/realtime/map_rollback.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let mut runtime = RealtimeRuntime::new(&hir);
+
+    let historical = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update");
+    assert_values_close(&historical.plots[0].values, &[2.0]);
+    assert_values_close(&historical.plots[1].values, &[0.0]);
+    assert_values_close(&historical.plots[2].values, &[0.0]);
+    assert_values_close(&historical.plots[3].values, &[1.0]);
+    assert_values_close(&historical.plots[4].values, &[1.0]);
+
+    let forming = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update");
+    assert_values_close(&forming.plots[0].values, &[2.0, 2.0]);
+    assert_values_close(&forming.plots[1].values, &[0.0, 1.0]);
+    assert_values_close(&forming.plots[2].values, &[0.0, 0.0]);
+    assert_values_close(&forming.plots[3].values, &[1.0, 0.0]);
+    assert_values_close(&forming.plots[4].values, &[1.0, 2.0]);
+
+    let rolled_back = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update");
+    assert_values_close(&rolled_back.plots[0].values, &[2.0, 2.0]);
+    assert_values_close(&rolled_back.plots[1].values, &[0.0, 0.0]);
+    assert_values_close(&rolled_back.plots[2].values, &[0.0, 1.0]);
+    assert_values_close(&rolled_back.plots[3].values, &[1.0, 0.0]);
+    assert_values_close(&rolled_back.plots[4].values, &[1.0, 1.0]);
+
+    let confirmed = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update");
+    assert_values_close(&confirmed.plots[0].values, &[2.0, 2.0]);
+    assert_values_close(&confirmed.plots[1].values, &[0.0, 0.0]);
+    assert_values_close(&confirmed.plots[2].values, &[0.0, 0.0]);
+    assert_values_close(&confirmed.plots[3].values, &[1.0, 1.0]);
+    assert_values_close(&confirmed.plots[4].values, &[1.0, 1.0]);
+}
+
+#[test]
 fn realtime_forming_updates_roll_back_previous_forming_output() {
     let source = SourceFile::new(
         "test.pine",
@@ -322,4 +374,50 @@ plot(alias_last.price)
     assert_values_close(&confirmed.plots[1].values, &[1.0, 4.0]);
     assert_values_close(&confirmed.plots[2].values, &[1.0, 4.0]);
     assert_values_close(&confirmed.plots[3].values, &[11.0, 14.0]);
+}
+
+#[test]
+fn realtime_varip_maps_persist_intrabar_updates() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("realtime varip maps")
+varip values = map.new<int, float>()
+next_key = values.size()
+values.put(next_key, close)
+plot(values.size())
+plot(values.get(next_key))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let mut runtime = RealtimeRuntime::new(&hir);
+
+    let historical = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update");
+    assert_values_close(&historical.plots[0].values, &[1.0]);
+    assert_values_close(&historical.plots[1].values, &[1.0]);
+
+    let forming = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update");
+    assert_values_close(&forming.plots[0].values, &[1.0, 2.0]);
+    assert_values_close(&forming.plots[1].values, &[1.0, 2.0]);
+
+    let rolled_forward = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update");
+    assert_values_close(&rolled_forward.plots[0].values, &[1.0, 3.0]);
+    assert_values_close(&rolled_forward.plots[1].values, &[1.0, 3.0]);
+
+    let confirmed = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update");
+    assert_values_close(&confirmed.plots[0].values, &[1.0, 4.0]);
+    assert_values_close(&confirmed.plots[1].values, &[1.0, 4.0]);
 }

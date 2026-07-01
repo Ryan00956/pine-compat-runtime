@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.det")
+
+value = matrix.det(na)
+plot(value)

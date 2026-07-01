@@ -1,0 +1,84 @@
+//@version=6
+indicator("Matrix color")
+
+values = matrix.new<color>(2, 2, color.green)
+matrix.set(values, 0, 1, color.red)
+values.set(1, 0, na)
+initial_green = values.get(0, 0) == color.green ? 1 : 0
+set_red = matrix.get(values, 0, 1) == color.red ? 1 : 0
+set_na = na(values.get(1, 0)) ? 1 : 0
+
+defaults = matrix.new<color>(1, 2)
+default_na = na(defaults.get(0, 1)) ? 1 : 0
+matrix.fill(defaults, color.blue)
+filled_blue = defaults.get(0, 0) == color.blue ? 1 : 0
+defaults.fill(na)
+filled_na = na(matrix.get(defaults, 0, 1)) ? 1 : 0
+
+matrix<color> typed = na
+typed := matrix.new<color>(1, 1, color.orange)
+typed.set(0, 0, color.white)
+
+copied = values.copy()
+copied.set(0, 0, color.black)
+source_after_copy = values.get(0, 0) == color.green ? 1 : 0
+copy_after_write = copied.get(0, 0) == color.black ? 1 : 0
+
+row_values = matrix.row(values, 0)
+column_values = values.col(0)
+row_before_matrix_write = row_values.get(1) == color.red ? 1 : 0
+column_before_matrix_write = na(column_values.get(1)) ? 1 : 0
+matrix.set(values, 0, 1, color.yellow)
+row_after_matrix_write = row_values.get(1) == color.red ? 1 : 0
+row_values.set(0, color.purple)
+column_values.set(0, color.gray)
+matrix_after_array_write = values.get(0, 0) == color.green ? 1 : 0
+
+transposed = matrix.transpose(values)
+reversed = values.copy()
+matrix.reverse(reversed)
+reshaped = values.copy()
+reshaped.reshape(1, 4)
+slice = values.submatrix(0, 1, 0, 2)
+
+row_added = matrix.new<color>(1, 2, color.gray)
+insert_row = array.from(color.red, na)
+matrix.add_row(row_added, 1, insert_row)
+row_added.add_row(0, array.from(color.green, color.blue))
+row_snapshot = row_added.row(1)
+insert_row.set(0, color.black)
+
+col_added = matrix.new<color>(2, 1, color.gray)
+insert_col = array.from(color.red, na)
+matrix.add_col(col_added, 1, insert_col)
+col_added.add_col(0, array.from(color.green, color.blue))
+col_snapshot = col_added.col(2)
+insert_col.set(0, color.black)
+
+row_removed = matrix.copy(row_added)
+row_removed.remove_row(0)
+col_removed = matrix.copy(col_added)
+matrix.remove_col(col_removed, 0)
+row_swapped = matrix.copy(row_added)
+row_swapped.swap_rows(0, 2)
+col_swapped = matrix.copy(col_added)
+matrix.swap_columns(col_swapped, 0, 2)
+
+plot(matrix.rows(values), "rows")
+plot(values.columns(), "columns")
+plot(matrix.elements_count(values), "elements_count")
+plot(values.is_square() ? 1 : 0, "is_square")
+plot(initial_green + set_red + set_na, "get_set")
+plot(default_na + filled_blue + filled_na, "default_fill")
+plot(typed.get(0, 0) == color.white ? 1 : 0, "typed")
+plot(source_after_copy + copy_after_write, "copy_independence")
+plot(row_before_matrix_write + column_before_matrix_write + row_after_matrix_write + matrix_after_array_write, "row_col_snapshot")
+plot(transposed.get(1, 0) == color.yellow ? 1 : 0, "transpose")
+plot(reversed.get(0, 0) == color.green ? 1 : 0, "reverse")
+plot(reshaped.columns(), "reshape_columns")
+plot(slice.get(0, 1) == color.yellow ? 1 : 0, "submatrix")
+plot(row_snapshot.get(0) == color.red ? 1 : 0, "row_added")
+plot(na(col_snapshot.get(1)) ? 1 : 0, "col_added")
+plot(row_removed.rows() + col_removed.columns(), "remove_shape")
+plot(row_swapped.get(0, 0) == color.red ? 1 : 0, "swap_rows")
+plot(col_swapped.get(0, 0) == color.red ? 1 : 0, "swap_columns")

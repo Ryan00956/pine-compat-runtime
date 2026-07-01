@@ -1,0 +1,13 @@
+//@version=6
+indicator("Matrix is_zero")
+
+zeros = matrix.new<float>(2, 2, 0)
+non_zero = matrix.copy(zeros)
+matrix.set(non_zero, 1, 1, 1)
+with_na = matrix.new<float>(1, 1, na)
+zero_rows = matrix.new<float>(0, 2)
+
+plot(matrix.is_zero(zeros) ? 1 : 0, "zeros")
+plot(non_zero.is_zero() ? 1 : 0, "non_zero")
+plot(matrix.is_zero(with_na) ? 1 : 0, "with_na")
+plot(zero_rows.is_zero() ? 1 : 0, "zero_rows")

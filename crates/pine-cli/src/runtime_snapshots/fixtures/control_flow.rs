@@ -40,6 +40,10 @@ pub(crate) const CONTROL_FLOW_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixtur
     ),
     ("runtime_for_in.json", "tests/fixtures/runtime/for_in.pine"),
     (
+        "runtime_for_in_expression.json",
+        "tests/fixtures/runtime/for_in_expression.pine",
+    ),
+    (
         "runtime_for_in_index_value.json",
         "tests/fixtures/runtime/for_in_index_value.pine",
     ),
@@ -155,6 +159,10 @@ pub(crate) const CONTROL_FLOW_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixtur
     (
         "runtime_while_expression_matrix.json",
         "tests/fixtures/runtime/while_expression_matrix.pine",
+    ),
+    (
+        "runtime_while_expression_matrix_kinds.json",
+        "tests/fixtures/runtime/while_expression_matrix_kinds.pine",
     ),
     (
         "runtime_while_expression_matrix_control.json",

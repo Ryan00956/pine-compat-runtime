@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.pinv method receiver")
+
+value = close.pinv()
+plot(value)

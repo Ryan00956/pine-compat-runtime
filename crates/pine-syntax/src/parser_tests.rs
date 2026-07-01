@@ -393,6 +393,28 @@ fn parses_matrix_typed_declaration() {
 }
 
 #[test]
+fn parses_map_typed_declaration() {
+    let parsed = parse("map<string, float> values = na\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl {
+        mode,
+        declared_type,
+        name,
+        ..
+    } = &parsed.program.statements[0].kind
+    else {
+        panic!("expected declaration");
+    };
+    assert_eq!(*mode, DeclMode::Normal);
+    assert_eq!(
+        declared_type_name(declared_type),
+        Some("map<string,float>".to_owned())
+    );
+    assert_eq!(name, "values");
+}
+
+#[test]
 fn parses_array_type_alias_declaration() {
     let parsed = parse("float[] prices = array.new_float()\n");
 
@@ -737,6 +759,52 @@ fn parses_for_expression_declaration() {
         panic!("expected for expression");
     };
     assert_eq!(counter, "i");
+    assert_eq!(body.len(), 1);
+    assert!(matches!(body[0].kind, StmtKind::Expr(_)));
+}
+
+#[test]
+fn parses_for_in_expression_declaration() {
+    let parsed = parse("x = for value in values\n    value + 1\nplot(x)\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::ForIn {
+        index,
+        value: loop_value,
+        body,
+        ..
+    } = &value.kind
+    else {
+        panic!("expected for-in expression");
+    };
+    assert_eq!(index, &None);
+    assert_eq!(loop_value, "value");
+    assert_eq!(body.len(), 1);
+    assert!(matches!(body[0].kind, StmtKind::Expr(_)));
+}
+
+#[test]
+fn parses_for_in_expression_index_value_declaration() {
+    let parsed = parse("x = for index, value in values\n    index + value\nplot(x)\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::ForIn {
+        index,
+        value: loop_value,
+        body,
+        ..
+    } = &value.kind
+    else {
+        panic!("expected for-in expression");
+    };
+    assert_eq!(index.as_deref(), Some("index"));
+    assert_eq!(loop_value, "value");
     assert_eq!(body.len(), 1);
     assert!(matches!(body[0].kind, StmtKind::Expr(_)));
 }

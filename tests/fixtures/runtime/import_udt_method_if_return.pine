@@ -1,0 +1,9 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT method if return")
+
+p = lib.Point.new(close)
+other = lib.Point.new(close + 30)
+same = p.sameIf(close > 2)
+chosen = p.chooseIf(other, close > 2)
+plot(same.x + chosen.x)

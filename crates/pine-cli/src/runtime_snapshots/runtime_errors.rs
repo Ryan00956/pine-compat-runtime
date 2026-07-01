@@ -344,6 +344,30 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "matrix cell count cannot exceed 100000",
     ),
     (
+        "tests/fixtures/regressions/matrix_kron_cell_limit.pine",
+        "matrix cell count cannot exceed 100000",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_mult_cell_limit.pine",
+        "matrix cell count cannot exceed 100000",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_mult_shape_mismatch.pine",
+        "matrix multiplication requires left column count to match right row count",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_diff_shape_mismatch.pine",
+        "matrix difference requires matching row and column counts",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_pow_non_square.pine",
+        "matrix power requires a square matrix",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_pow_negative_power.pine",
+        "matrix power cannot be negative",
+    ),
+    (
         "tests/fixtures/regressions/matrix_add_row_bounds.pine",
         "matrix row index 2 is out of bounds for size 2",
     ),
@@ -376,8 +400,68 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "matrix column index cannot be na",
     ),
     (
+        "tests/fixtures/regressions/matrix_swap_rows_bounds.pine",
+        "matrix row index 1 is out of bounds for size 1",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_swap_rows_na_index.pine",
+        "matrix row index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_swap_columns_bounds.pine",
+        "matrix column index 1 is out of bounds for size 1",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_swap_columns_na_index.pine",
+        "matrix column index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_sort_bounds.pine",
+        "matrix column index 1 is out of bounds for size 1",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_sort_na_index.pine",
+        "matrix column index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_sort_unsupported_order.pine",
+        "unsupported matrix.sort order `sideways`",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_submatrix_bounds.pine",
+        "matrix row index 4 is out of bounds for size 4",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_submatrix_na_index.pine",
+        "matrix row index cannot be na",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_submatrix_reversed_row_range.pine",
+        "matrix row range start cannot be greater than end",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_submatrix_reversed_column_range.pine",
+        "matrix column range start cannot be greater than end",
+    ),
+    (
         "tests/fixtures/regressions/matrix_reshape_mismatch.pine",
         "matrix reshape dimensions must preserve element count",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_det_non_square.pine",
+        "matrix determinant requires a square matrix",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_eigenvalues_non_square.pine",
+        "matrix eigenvalues require a square matrix",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_eigenvectors_non_square.pine",
+        "matrix eigenvectors require a square matrix",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_inv_non_square.pine",
+        "matrix inverse requires a square matrix",
     ),
     (
         "tests/fixtures/regressions/matrix_reshape_method_mismatch.pine",

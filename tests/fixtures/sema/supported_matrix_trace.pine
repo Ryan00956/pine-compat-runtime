@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported matrix trace")
+
+values = matrix.new<float>(2, 2, close)
+plot(matrix.trace(values))
+plot(values.trace())

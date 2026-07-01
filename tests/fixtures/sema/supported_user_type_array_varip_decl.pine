@@ -1,0 +1,13 @@
+//@version=5
+indicator("Supported user type array varip declaration")
+
+type Point
+    float x
+    string label
+
+varip array<Point> points = array.new<Point>()
+points.push(Point.new(close, "point"))
+
+varip Point[] aliases = points
+
+plot(aliases.size())

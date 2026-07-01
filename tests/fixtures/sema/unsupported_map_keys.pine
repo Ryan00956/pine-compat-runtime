@@ -1,5 +1,5 @@
 //@version=6
-indicator("Unsupported map.keys")
+indicator("Unsupported map.keys receiver")
 
-keys = map.keys(na)
+keys = map.keys(close)
 plot(close)

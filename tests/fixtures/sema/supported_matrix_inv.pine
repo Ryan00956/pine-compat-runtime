@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported matrix inv")
+
+values = matrix.new<float>(2, 2, close)
+inverted = matrix.inv(values)
+method_inverted = values.inv()
+plot(matrix.get(inverted, 0, 0))
+plot(matrix.get(method_inverted, 0, 0))

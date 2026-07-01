@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported for-in expression chart point")
+
+values = array.from(chart.point.from_index(bar_index, close), chart.point.from_index(bar_index + 2, close + 2))
+result = for value in values
+    value
+
+plot(result.index == bar_index + 2 ? 1 : 0)

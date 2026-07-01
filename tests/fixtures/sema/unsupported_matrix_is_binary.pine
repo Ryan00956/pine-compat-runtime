@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.is_binary")
+
+is_binary = matrix.is_binary(na)
+plot(close)

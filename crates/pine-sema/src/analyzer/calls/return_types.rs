@@ -33,6 +33,9 @@ impl Analyzer {
             ReturnSpec::ArrayElement(index) => array_element_return_type(arg_types, index),
             ReturnSpec::ArrayNumeric(index) => array_numeric_return_type(arg_types, index),
             ReturnSpec::ArrayFromArgs => array_from_return_type(arg_types),
+            ReturnSpec::MatrixElement(index) => matrix_element_return_type(arg_types, index),
+            ReturnSpec::MatrixArray(index) => matrix_array_return_type(arg_types, index),
+            ReturnSpec::MatrixMult => matrix_mult_return_type(arg_types),
             ReturnSpec::IntFromArg(index) => arg_types
                 .get(index)
                 .copied()

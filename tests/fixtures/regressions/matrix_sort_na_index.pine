@@ -1,0 +1,5 @@
+//@version=6
+indicator("Matrix sort na index")
+
+values = matrix.new<float>(1, 1, close)
+matrix.sort(values, int(na))

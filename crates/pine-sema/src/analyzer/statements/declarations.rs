@@ -10,6 +10,7 @@ impl Analyzer {
         mode: pine_syntax::DeclMode,
         value_type: PineType,
         declared_user_type_name: Option<&str>,
+        declared_user_type_array_name: Option<&str>,
         span: Span,
     ) -> (PersistenceKind, Option<pine_ir::VarSlotId>) {
         match mode {
@@ -31,6 +32,12 @@ impl Analyzer {
                         return (PersistenceKind::Varip, Some(self.alloc_var_slot()));
                     }
                     self.unsupported("varip", VARIP_UDT_UNSUPPORTED_REASON, span);
+                    return (PersistenceKind::None, None);
+                }
+                if value_type.kind == ValueKind::UserTypeArray
+                    && declared_user_type_array_name.is_none()
+                {
+                    self.unsupported("varip", VARIP_UDT_ARRAY_UNSUPPORTED_REASON, span);
                     return (PersistenceKind::None, None);
                 }
                 if !is_supported_varip_value(value_type.kind) {
@@ -128,6 +135,20 @@ impl Analyzer {
                             None
                         }
                     }
+                } else if let Some(user_type) = self.imported_user_types.get(element_type) {
+                    if self.imported_user_type_has_scalar_fields(user_type) {
+                        Some(PineType::new(Qualifier::Series, ValueKind::UserTypeArray))
+                    } else {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_DECL_TYPE",
+                            format!(
+                                "typed declaration `{}` does not support imported UDT arrays with non-scalar fields",
+                                declared_type.canonical_name()
+                            ),
+                            span,
+                        ));
+                        None
+                    }
                 } else {
                     self.diagnostics.push(Diagnostic::error(
                         "E_DECL_TYPE",
@@ -141,8 +162,28 @@ impl Analyzer {
                 }
             }
             Some(declared_type @ DeclaredType::Matrix { element_type }) => {
-                if element_type == "float" {
-                    Some(PineType::new(Qualifier::Series, ValueKind::FloatMatrix))
+                match element_type.as_str() {
+                    "float" => Some(PineType::new(Qualifier::Series, ValueKind::FloatMatrix)),
+                    "int" => Some(PineType::new(Qualifier::Series, ValueKind::IntMatrix)),
+                    "bool" => Some(PineType::new(Qualifier::Series, ValueKind::BoolMatrix)),
+                    "string" => Some(PineType::new(Qualifier::Series, ValueKind::StringMatrix)),
+                    "color" => Some(PineType::new(Qualifier::Series, ValueKind::ColorMatrix)),
+                    _ => {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_DECL_TYPE",
+                            format!(
+                                "typed declaration `{}` is not supported",
+                                declared_type.canonical_name()
+                            ),
+                            span,
+                        ));
+                        None
+                    }
+                }
+            }
+            Some(declared_type @ DeclaredType::Map { .. }) => {
+                if self.declared_map_type_info(declared_type).is_some() {
+                    Some(PineType::new(Qualifier::Series, ValueKind::Map))
                 } else {
                     self.diagnostics.push(Diagnostic::error(
                         "E_DECL_TYPE",
@@ -159,6 +200,23 @@ impl Analyzer {
         }
     }
 
+    pub(super) fn declared_map_type_info(
+        &self,
+        declared_type: &DeclaredType,
+    ) -> Option<MapTypeInfo> {
+        let DeclaredType::Map {
+            key_type,
+            value_type,
+        } = declared_type
+        else {
+            return None;
+        };
+        Some(MapTypeInfo {
+            key_kind: crate::analyzer::maps::map_kind_from_template_name(key_type)?,
+            value_kind: crate::analyzer::maps::map_kind_from_template_name(value_type)?,
+        })
+    }
+
     pub(super) fn declared_user_type_array_name(
         &self,
         declared_type: &DeclaredType,
@@ -169,6 +227,13 @@ impl Analyzer {
             std::slice::from_ref(&element_type.to_owned()),
         ) {
             Some(UserTypeArrayElementInference::SameScalarLocal(type_name)) => Some(type_name),
+            _ if self
+                .imported_user_types
+                .get(element_type)
+                .is_some_and(|user_type| self.imported_user_type_has_scalar_fields(user_type)) =>
+            {
+                Some(element_type.to_owned())
+            }
             _ => None,
         }
     }
@@ -324,6 +389,12 @@ fn is_supported_varip_value(kind: ValueKind) -> bool {
             | ValueKind::Bool
             | ValueKind::String
             | ValueKind::Color
+            | ValueKind::Map
+            | ValueKind::FloatMatrix
+            | ValueKind::IntMatrix
+            | ValueKind::BoolMatrix
+            | ValueKind::StringMatrix
+            | ValueKind::ColorMatrix
             | ValueKind::Na
     ) || is_supported_varip_array(kind)
 }
@@ -332,7 +403,6 @@ fn unsupported_varip_value_reason(kind: ValueKind) -> &'static str {
     match kind {
         ValueKind::UserType => VARIP_UDT_UNSUPPORTED_REASON,
         ValueKind::UserTypeArray => VARIP_UDT_ARRAY_UNSUPPORTED_REASON,
-        ValueKind::FloatMatrix => VARIP_MATRIX_UNSUPPORTED_REASON,
         _ => VARIP_VALUE_UNSUPPORTED_REASON,
     }
 }
@@ -361,12 +431,17 @@ fn typed_value_kind_name(kind: ValueKind) -> Option<&'static str> {
         ValueKind::Table => Some("table"),
         ValueKind::ChartPoint => Some("chart.point"),
         ValueKind::FloatMatrix => Some("matrix<float>"),
+        ValueKind::IntMatrix => Some("matrix<int>"),
+        ValueKind::BoolMatrix => Some("matrix<bool>"),
+        ValueKind::StringMatrix => Some("matrix<string>"),
+        ValueKind::ColorMatrix => Some("matrix<color>"),
         _ => None,
     }
 }
 
 fn is_supported_varip_array(kind: ValueKind) -> bool {
-    is_scalar_array_kind(kind) || kind == ValueKind::ChartPointArray
+    is_scalar_array_kind(kind)
+        || matches!(kind, ValueKind::ChartPointArray | ValueKind::UserTypeArray)
 }
 
 fn is_drawing_id_value(kind: ValueKind) -> bool {

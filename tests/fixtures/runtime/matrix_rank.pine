@@ -1,0 +1,29 @@
+//@version=6
+indicator("Matrix rank")
+
+values = matrix.new<float>(2, 3, na)
+matrix.set(values, 0, 0, 1)
+matrix.set(values, 0, 1, 2)
+matrix.set(values, 0, 2, 3)
+matrix.set(values, 1, 0, 0)
+matrix.set(values, 1, 1, 1)
+matrix.set(values, 1, 2, 4)
+namespace_rank = matrix.rank(values)
+method_rank = values.rank()
+
+dependent = matrix.new<float>(3, 2, na)
+matrix.set(dependent, 0, 0, 1)
+matrix.set(dependent, 0, 1, 2)
+matrix.set(dependent, 1, 0, 2)
+matrix.set(dependent, 1, 1, 4)
+matrix.set(dependent, 2, 0, 3)
+matrix.set(dependent, 2, 1, 6)
+
+empty = matrix.new<float>(0, 3)
+all_na = matrix.new<float>(1, 1)
+
+plot(namespace_rank, "namespace_rank")
+plot(method_rank, "method_rank")
+plot(matrix.rank(dependent), "dependent_rank")
+plot(matrix.rank(empty), "empty_rank")
+plot(na(all_na.rank()) ? 1 : 0, "all_na_rank_is_na")

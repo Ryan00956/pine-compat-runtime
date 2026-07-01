@@ -1185,7 +1185,7 @@ p.draw()
 }
 
 #[test]
-fn rejects_user_type_local_field_mutation_inside_method() {
+fn accepts_user_type_local_field_mutation_inside_method() {
     let analysis = analyze(
         r#"type Point
     float x
@@ -1195,6 +1195,36 @@ method mutateLocal(Point p) =>
     local
 p = Point.new(close)
 q = p.mutateLocal()
+plot(q.x)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| { feature.feature == "user-defined type field mutation" })
+    );
+}
+
+#[test]
+fn rejects_user_type_receiver_field_mutation_inside_method() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method mutateReceiver(Point p) =>
+    p.x := p.x + 1
+    p
+p = Point.new(close)
+q = p.mutateReceiver()
 plot(q.x)
 "#,
     );

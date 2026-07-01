@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.sort method receiver")
+
+values = na
+values.sort()

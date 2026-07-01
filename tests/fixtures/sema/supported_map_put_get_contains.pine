@@ -1,0 +1,9 @@
+//@version=6
+indicator("Supported map put get contains")
+
+prices = map.new<string, float>()
+map.put(prices, "open", 1)
+map.put(prices, "close", close)
+
+plot(map.get(prices, "open"))
+plot(map.contains(prices, "close") ? map.size(prices) : 0)

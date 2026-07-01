@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported for-in expression non-array")
+
+result = for value in close
+    value
+
+plot(1)

@@ -1,0 +1,15 @@
+//@version=6
+indicator("Supported map keys values")
+
+prices = map.new<string, float>()
+prices.put("open", open)
+prices.put("close", close)
+
+keys = map.keys(prices)
+values = map.values(prices)
+method_keys = prices.keys()
+method_values = prices.values()
+
+first_key_score = keys.get(0) == "open" ? 1 : 0
+method_key_score = method_keys.get(1) == "close" ? 1 : 0
+plot(first_key_score + method_key_score + values.get(0) + method_values.get(1))

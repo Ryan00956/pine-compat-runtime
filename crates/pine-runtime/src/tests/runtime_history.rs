@@ -71,7 +71,6 @@ plot(close[offset])
         "{:?}",
         analysis.diagnostics
     );
-
     let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
     let profiled =
         run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
@@ -140,7 +139,6 @@ plot(close[length])
         "{:?}",
         analysis.diagnostics
     );
-
     let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
@@ -170,6 +168,35 @@ plot(values.get(0))
         "{:?}",
         analysis.diagnostics
     );
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[1.0, 2.0, 3.0]);
+    assert_values_close(&result.plots[1].values, &[1.0, 2.0, 3.0, 4.0]);
+}
+
+#[test]
+fn reads_previous_map_instance_history() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("map history")
+values = map.new<string, float>()
+values.put("close", close)
+previous = values[1]
+plot(bar_index == 0 ? na : previous.get("close"))
+if bar_index > 0
+    previous.put("close", 100)
+plot(values.get("close"))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
 
     let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
@@ -178,6 +205,43 @@ plot(values.get(0))
     assert_eq!(result.plots[0].values[0], PineValue::Na);
     assert_values_close(&result.plots[0].values[1..], &[1.0, 2.0, 3.0]);
     assert_values_close(&result.plots[1].values, &[1.0, 2.0, 3.0, 4.0]);
+}
+
+#[test]
+fn runs_varip_map_with_var_like_historical_state() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("varip map")
+varip values = map.new<int, float>()
+values.put(bar_index, close)
+
+varip alias = values
+alias.put(-1, close + 10)
+
+varip copy = map.copy(values)
+copy.put(-2, close + 20)
+
+plot(values.size())
+plot(alias.size())
+plot(copy.size())
+plot(values.get(-1))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 4);
+    assert_values_close(&result.plots[0].values, &[2.0, 3.0, 4.0, 5.0]);
+    assert_values_close(&result.plots[1].values, &[2.0, 3.0, 4.0, 5.0]);
+    assert_values_close(&result.plots[2].values, &[3.0, 3.0, 3.0, 3.0]);
+    assert_values_close(&result.plots[3].values, &[11.0, 12.0, 13.0, 14.0]);
 }
 
 #[test]

@@ -1,0 +1,4 @@
+//@version=6
+indicator("Unsupported matrix.swap_columns")
+
+matrix.swap_columns(na, 0, 1)

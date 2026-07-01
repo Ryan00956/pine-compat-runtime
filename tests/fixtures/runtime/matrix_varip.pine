@@ -1,0 +1,14 @@
+//@version=6
+indicator("Matrix varip")
+
+varip values = matrix.new<float>(1, 1, 0)
+current = values.get(0, 0)
+values.set(0, 0, current + close)
+
+varip alias = values
+alias.set(0, 0, alias.get(0, 0) + 10)
+
+plot(values.get(0, 0), "value")
+plot(alias.get(0, 0), "alias_value")
+plot(values.rows(), "rows")
+plot(values.columns(), "columns")

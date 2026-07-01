@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.pow")
+
+value = matrix.pow(na, 2)
+plot(value)

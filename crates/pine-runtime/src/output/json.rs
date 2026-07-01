@@ -783,9 +783,11 @@ fn value_json(value: &PineValue) -> String {
             output.push(']');
             output
         }
-        PineValue::Array(_) | PineValue::Matrix(_) | PineValue::Na | PineValue::Void => {
-            "null".to_owned()
-        }
+        PineValue::Array(_)
+        | PineValue::Matrix(_)
+        | PineValue::Map(_)
+        | PineValue::Na
+        | PineValue::Void => "null".to_owned(),
     }
 }
 

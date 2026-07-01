@@ -1,5 +1,5 @@
 //@version=6
 indicator("Unsupported map.new template")
 
-values = map.new<string, float>()
+values = map.new<line, float>()
 plot(close)

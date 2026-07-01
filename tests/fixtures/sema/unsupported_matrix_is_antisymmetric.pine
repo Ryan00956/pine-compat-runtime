@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.is_antisymmetric")
+
+is_antisymmetric = matrix.is_antisymmetric(na)
+plot(close)

@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported matrix is_stochastic")
+
+values = matrix.new<float>(2, 2, 0)
+plot(matrix.is_stochastic(values) ? 1 : 0)
+plot(values.is_stochastic() ? 1 : 0)

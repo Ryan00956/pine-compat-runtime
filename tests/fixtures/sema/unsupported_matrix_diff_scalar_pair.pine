@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.diff scalar pair")
+
+value = matrix.diff(1, 2)
+plot(value)

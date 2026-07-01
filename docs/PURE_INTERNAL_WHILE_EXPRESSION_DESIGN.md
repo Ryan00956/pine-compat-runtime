@@ -91,6 +91,10 @@ Current evidence:
 - `tests/fixtures/runtime/while_expression_matrix.pine` covers
   `matrix<float>` while-expression results with caller-side reads and mutation,
   including fresh matrix results and existing-matrix alias returns.
+- `tests/fixtures/runtime/while_expression_matrix_kinds.pine` and
+  `tests/fixtures/sema/supported_while_expression_matrix_kinds.pine` cover
+  `matrix<int>`, `matrix<bool>`, `matrix<string>`, and `matrix<color>`
+  while-expression results with caller-side reads and mutation.
 - `tests/fixtures/runtime/while_expression_matrix_control.pine` covers
   `matrix<float>` while-expression result preservation across `continue` and
   `break`, where `continue` skips the final result expression and `break`
@@ -212,7 +216,7 @@ Keep these out of the first positive subset:
 - imported UDT identity interactions beyond the same-imported-identity
   while-expression subset;
 - nested collection semantics beyond the fixture-backed scalar-array and
-  `matrix<float>` result read/mutation subsets, including fresh results and
+  matrix result read/mutation subsets, including fresh results and
   existing-collection alias returns. Nested-array results are fixture-backed
   rejected;
 - any host-visible output change.
@@ -230,7 +234,7 @@ Recommended future slices:
 4. Done: stateful callsites, branch-local declarations, `var` declaration
    sites, and nested loop-control propagation stress fixtures.
 5. Partly done: tuple, same-local UDT, same-imported-identity UDT,
-   scalar-array, and `matrix<float>` result read/mutation fixtures, including
+   scalar-array, and matrix result read/mutation fixtures, including
    fresh collection results, existing-collection alias returns, and array/matrix
    result `continue`/`break` preservation. Nested array result rejection,
    array/matrix zero-iteration `na` results, and committed history reads from

@@ -6,3 +6,39 @@ export type Wrapper
     Point nested
 
 method shift(Point p, float delta) => p.x + delta
+method same(Point p) => p
+method sameBlock(Point p) =>
+    copy = p
+    copy
+method sameIf(Point p, bool flip) =>
+    if flip
+        copy = p
+        copy
+    else
+        copy = p
+        copy
+method sameFor(Point p, int count) =>
+    for i = 0 to count
+        copy = p
+        copy
+method choose(Point p, Point other) => other
+method chooseBlock(Point p, Point other) =>
+    copy = other
+    copy
+method chooseIf(Point p, Point other, bool flip) =>
+    if flip
+        copy = other
+        copy
+    else
+        copy = other
+        copy
+method chooseFor(Point p, Point other, int count) =>
+    for i = 0 to count
+        copy = other
+        copy
+method wrap(Point p, Point other) => p.choose(other)
+method make(Point p, float value) => Point.new(value)
+method mutateLocal(Point p, float delta) =>
+    local = Point.new(p.x)
+    local.x := local.x + delta
+    local

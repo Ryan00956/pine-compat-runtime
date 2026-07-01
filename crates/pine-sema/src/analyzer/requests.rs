@@ -240,6 +240,7 @@ fn request_expression_is_pure_scalar(expr: &Expr) -> bool {
         ExprKind::Tuple(_)
         | ExprKind::If { .. }
         | ExprKind::For { .. }
+        | ExprKind::ForIn { .. }
         | ExprKind::While { .. } => false,
     }
 }
@@ -326,6 +327,7 @@ fn request_expression_is_provider_scalar(expr: &Expr) -> bool {
         ExprKind::Tuple(_)
         | ExprKind::If { .. }
         | ExprKind::For { .. }
+        | ExprKind::ForIn { .. }
         | ExprKind::While { .. } => false,
     }
 }

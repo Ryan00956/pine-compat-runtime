@@ -108,7 +108,10 @@ impl Analyzer {
             return;
         }
         match self.array_from_user_type_element_inference(args, arg_types) {
-            Some(UserTypeArrayElementInference::SameScalarLocal(_)) => return,
+            Some(
+                UserTypeArrayElementInference::SameScalarLocal(_)
+                | UserTypeArrayElementInference::SameScalarImported(_),
+            ) => return,
             Some(_) => {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_TYPE",

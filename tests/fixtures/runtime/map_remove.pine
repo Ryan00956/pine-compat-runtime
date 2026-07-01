@@ -1,0 +1,21 @@
+//@version=6
+indicator("Map remove")
+
+prices = map.new<string, float>()
+map.put(prices, "open", 1.25)
+map.put(prices, "close", 2.5)
+before_size = map.size(prices)
+map.remove(prices, "open")
+after_size = map.size(prices)
+after_get = map.get(prices, "open")
+after_contains_open = map.contains(prices, "open")
+after_contains_close = map.contains(prices, "close")
+map.remove(prices, "missing")
+after_missing_remove_size = map.size(prices)
+
+plot(before_size, "before_size")
+plot(after_size, "after_size")
+plot(after_get, "after_get")
+plot(after_contains_open ? 1 : 0, "after_contains_open")
+plot(after_contains_close ? 1 : 0, "after_contains_close")
+plot(after_missing_remove_size, "after_missing_remove_size")

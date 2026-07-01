@@ -63,6 +63,9 @@ impl<'a> HistoricalRuntime<'a> {
         if let Some(result) = self.eval_array_call(callee, args) {
             return result;
         }
+        if let Some(result) = self.eval_map_call(callee, args) {
+            return result;
+        }
         if let Some(result) = self.eval_matrix_call(callee, args) {
             return result;
         }

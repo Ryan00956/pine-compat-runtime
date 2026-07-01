@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.max method receiver")
+
+maximum = close.max()
+plot(maximum)

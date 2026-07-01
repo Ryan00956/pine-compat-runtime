@@ -1,0 +1,24 @@
+//@version=6
+indicator("Map copy")
+
+source = map.new<string, float>()
+map.put(source, "open", 1.25)
+alias = source
+copied = map.copy(source)
+
+map.put(alias, "open", 2.5)
+map.put(copied, "close", 3.75)
+
+source_open = map.get(source, "open")
+copied_open = map.get(copied, "open")
+source_size = map.size(source)
+copied_size = map.size(copied)
+source_has_close = map.contains(source, "close")
+copied_has_close = map.contains(copied, "close")
+
+plot(source_open, "source_open")
+plot(copied_open, "copied_open")
+plot(source_size, "source_size")
+plot(copied_size, "copied_size")
+plot(source_has_close ? 1 : 0, "source_has_close")
+plot(copied_has_close ? 1 : 0, "copied_has_close")

@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported matrix is_symmetric")
+
+values = matrix.new<float>(2, 2, 0)
+plot(matrix.is_symmetric(values) ? 1 : 0)
+plot(values.is_symmetric() ? 1 : 0)

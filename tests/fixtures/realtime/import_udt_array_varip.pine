@@ -1,0 +1,11 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Realtime imported UDT array varip")
+
+varip array<lib.Point> points = array.from(lib.Point.new(close))
+points.push(lib.Point.new(close))
+
+last = points.last()
+
+plot(points.size(), "size")
+plot(last.x, "last_x")

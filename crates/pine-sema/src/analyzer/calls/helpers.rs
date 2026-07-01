@@ -17,6 +17,14 @@ pub(crate) fn method_call_parts(expr: &Expr) -> Option<(&str, &str)> {
     }
 }
 
+pub(crate) fn alias_qualified_method_name(name: &str) -> Option<(&str, &str)> {
+    let (alias, method_name) = name.split_once('.')?;
+    if alias.is_empty() || method_name.is_empty() || method_name.contains('.') {
+        return None;
+    }
+    Some((alias, method_name))
+}
+
 pub(crate) fn receiver_call_arg(receiver_name: &str, span: Span) -> CallArg {
     CallArg {
         name: None,
@@ -73,6 +81,22 @@ pub(crate) fn array_method_builtin_name(method_name: &str) -> Option<&'static st
         "reverse" => Some("array.reverse"),
         "join" => Some("array.join"),
         "clear" => Some("array.clear"),
+        _ => None,
+    }
+}
+
+pub(crate) fn map_method_builtin_name(method_name: &str) -> Option<&'static str> {
+    match method_name {
+        "size" => Some("map.size"),
+        "put" => Some("map.put"),
+        "get" => Some("map.get"),
+        "contains" => Some("map.contains"),
+        "clear" => Some("map.clear"),
+        "remove" => Some("map.remove"),
+        "copy" => Some("map.copy"),
+        "put_all" => Some("map.put_all"),
+        "keys" => Some("map.keys"),
+        "values" => Some("map.values"),
         _ => None,
     }
 }
@@ -222,10 +246,14 @@ pub(crate) fn is_array_mutation_builtin(name: &str) -> bool {
         "matrix.set"
             | "matrix.fill"
             | "matrix.reshape"
+            | "matrix.reverse"
             | "matrix.add_row"
             | "matrix.add_col"
             | "matrix.remove_col"
             | "matrix.remove_row"
+            | "matrix.sort"
+            | "matrix.swap_columns"
+            | "matrix.swap_rows"
     ) || matches!(
         name,
         "array.push"
@@ -247,6 +275,16 @@ pub(crate) fn is_array_mutation_method_call_name(name: &str) -> bool {
     name.rsplit_once('.')
         .and_then(|(_, method_name)| array_method_builtin_name(method_name))
         .is_some_and(is_array_mutation_builtin)
+}
+
+pub(crate) fn is_map_mutation_builtin(name: &str) -> bool {
+    matches!(name, "map.put" | "map.clear" | "map.remove" | "map.put_all")
+}
+
+pub(crate) fn is_map_mutation_method_call_name(name: &str) -> bool {
+    name.rsplit_once('.')
+        .and_then(|(_, method_name)| map_method_builtin_name(method_name))
+        .is_some_and(is_map_mutation_builtin)
 }
 
 pub(crate) fn is_ta_extreme_length_overload(name: &str) -> bool {

@@ -84,6 +84,9 @@ pub(super) fn validate_alias_access(
                     expr.span,
                 ));
             } else if let Some(method) = module.methods.get(symbol) {
+                if imported_method_access_is_supported(module, method) {
+                    return;
+                }
                 diagnostics.push(Diagnostic::error(
                     "E_IMPORT_UNSUPPORTED_METHOD",
                     imported_method_unsupported_message(parts[0].as_str(), symbol, method),
@@ -150,6 +153,24 @@ fn imported_udt_unsupported_diagnostic(
         ),
         span,
     )
+}
+
+fn imported_method_access_is_supported(module: &ModuleInfo, method: &ModuleMethodInfo) -> bool {
+    let Some(identity) = &method.receiver_identity else {
+        return false;
+    };
+    matches!(
+        module.exports.get(&identity.name),
+        Some(ExportInfo::UserType { .. })
+    ) && module
+        .user_types
+        .get(&identity.name)
+        .is_some_and(|user_type| {
+            user_type
+                .fields
+                .iter()
+                .all(|field| field.pine_type.is_some())
+        })
 }
 
 fn imported_udt_constructor_is_supported(

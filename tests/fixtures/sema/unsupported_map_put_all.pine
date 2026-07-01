@@ -1,5 +1,6 @@
 //@version=6
-indicator("Unsupported map.put_all")
+indicator("Unsupported map.put_all receiver")
 
-map.put_all(na, na)
+target = map.new<string, float>()
+map.put_all(target, close)
 plot(close)

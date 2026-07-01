@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported matrix pinv")
+
+values = matrix.new<float>(2, 3, close)
+pseudo_inverse = matrix.pinv(values)
+method_pseudo_inverse = values.pinv()
+plot(matrix.get(pseudo_inverse, 0, 0))
+plot(matrix.get(method_pseudo_inverse, 0, 0))

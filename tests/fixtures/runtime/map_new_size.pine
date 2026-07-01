@@ -1,0 +1,14 @@
+//@version=6
+indicator("Map new size")
+
+sf = map.new<string, float>()
+ii = map.new<int, int>()
+bb = map.new<bool, bool>()
+cc = map.new<color, color>()
+ss = map.new<string, string>()
+
+plot(map.size(sf), "string_float")
+plot(map.size(ii), "int_int")
+plot(map.size(bb), "bool_bool")
+plot(map.size(cc), "color_color")
+plot(map.size(ss), "string_string")

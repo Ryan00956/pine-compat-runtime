@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.kron method receiver")
+
+value = close.kron(matrix.new<float>(1, 1, 1))
+plot(value)
