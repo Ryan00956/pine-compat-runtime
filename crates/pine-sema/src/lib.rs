@@ -4,6 +4,7 @@ mod analysis;
 mod analyzer;
 mod cache;
 mod compatibility;
+mod constant_values;
 mod history;
 mod lowering;
 mod modules;

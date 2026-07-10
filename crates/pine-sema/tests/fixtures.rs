@@ -18024,6 +18024,21 @@ fn reports_unsupported_const_expression_negative_history_fixture() {
 }
 
 #[test]
+fn reports_unsupported_pure_const_call_negative_history_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_pure_const_call_negative_history.pine",
+        "negative_history_offset",
+        "non-negative",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_pure_const_call_negative_history.pine",
+        &[
+            "`negative_history_offset` is not supported: history offsets must be non-negative in the current supported subset",
+        ],
+    );
+}
+
+#[test]
 fn reports_unsupported_named_const_negative_history_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_named_const_negative_history.pine",
@@ -20186,6 +20201,11 @@ fn accepts_supported_max_bars_back_named_const_length_fixture() {
 }
 
 #[test]
+fn accepts_supported_pure_const_call_semantics_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_pure_const_call_semantics.pine");
+}
+
+#[test]
 fn accepts_supported_max_bars_back_alias_named_const_length_fixture() {
     assert_valid_fixture(
         "tests/fixtures/sema/supported_max_bars_back_alias_named_const_length.pine",
@@ -20282,6 +20302,14 @@ fn reports_unsupported_max_bars_back_negative_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_max_bars_back_pure_const_call_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_max_bars_back_pure_const_call_length.pine",
+        &["`max_bars_back` argument `num` must be non-negative"],
+    );
+}
+
+#[test]
 fn reports_unsupported_max_bars_back_named_negative_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_max_bars_back_named_negative_length.pine",
@@ -20293,6 +20321,14 @@ fn reports_unsupported_max_bars_back_named_negative_length_fixture() {
 fn reports_unsupported_max_bars_back_overflow_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_max_bars_back_overflow_length.pine",
+        &["`max_bars_back` argument `num` must fit in a 32-bit unsigned history bound"],
+    );
+}
+
+#[test]
+fn reports_unsupported_max_bars_back_pure_const_call_overflow_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_max_bars_back_pure_const_call_overflow_length.pine",
         &["`max_bars_back` argument `num` must fit in a 32-bit unsigned history bound"],
     );
 }

@@ -1,57 +1,335 @@
 #!/usr/bin/env python3
-"""Guard CLI runtime snapshots against missing WASM/Python host assertions."""
+"""Guard the explicit CLI/Python/WASM runtime snapshot parity baseline."""
 
 from __future__ import annotations
 
+import ast
 import re
 import sys
+from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_DIR = ROOT / "crates/pine-cli/src/runtime_snapshots/fixtures"
+REQUIRED_MANIFEST = ROOT / "scripts/host_parity_required.txt"
 WASM_TESTS = ROOT / "crates/pine-wasm/src/tests/mod.rs"
 PYTHON_TESTS = ROOT / "python/tests/test_bindings.py"
 
+# rustfmt expands most fixture tuples and leaves a trailing comma before `)`.
+# Keep the parser independent of whitespace and of that optional final comma.
 SNAPSHOT_FIXTURE = re.compile(
-    r'\(\s*"([^"]+\.json)",\s*"([^"]+\.pine)"\s*\)', re.MULTILINE
+    r'\(\s*"([^"]+\.json)"\s*,\s*"([^"]+\.pine)"\s*,?\s*\)',
+    re.DOTALL,
+)
+PYTHON_SNAPSHOT_PATH = re.compile(
+    r'(?:^|/)tests/snapshots/([^/]+\.json)$'
 )
 
 
-def runtime_snapshot_fixtures() -> list[tuple[Path, str, str]]:
-    fixtures: list[tuple[Path, str, str]] = []
+@dataclass(frozen=True)
+class RuntimeSnapshotFixture:
+    path: Path
+    snapshot: str
+    source: str
+
+
+def parse_runtime_snapshot_fixtures(
+    text: str, path: Path
+) -> list[RuntimeSnapshotFixture]:
+    return [
+        RuntimeSnapshotFixture(path, snapshot, source)
+        for snapshot, source in SNAPSHOT_FIXTURE.findall(text)
+    ]
+
+
+def runtime_snapshot_fixtures() -> list[RuntimeSnapshotFixture]:
+    fixtures: list[RuntimeSnapshotFixture] = []
     for path in sorted(FIXTURE_DIR.glob("*.rs")):
-        for snapshot, source in SNAPSHOT_FIXTURE.findall(path.read_text()):
-            fixtures.append((path, snapshot, source))
+        fixtures.extend(parse_runtime_snapshot_fixtures(path.read_text(), path))
     return fixtures
 
 
-def main() -> int:
-    wasm_tests = WASM_TESTS.read_text()
-    python_tests = PYTHON_TESTS.read_text()
-    missing: list[str] = []
+def parse_required_manifest(text: str) -> tuple[list[str], list[str]]:
+    snapshots = [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    errors: list[str] = []
+    duplicates = sorted(name for name, count in Counter(snapshots).items() if count > 1)
+    if duplicates:
+        errors.append("required manifest has duplicate entries: " + ", ".join(duplicates))
+    if snapshots != sorted(snapshots):
+        errors.append("required manifest entries must be sorted")
+    return snapshots, errors
 
-    for path, snapshot, source in runtime_snapshot_fixtures():
+
+def _skip_rust_block_comment(text: str, start: int) -> int:
+    depth = 1
+    index = start + 2
+    while index < len(text) and depth:
+        if text.startswith("/*", index):
+            depth += 1
+            index += 2
+        elif text.startswith("*/", index):
+            depth -= 1
+            index += 2
+        else:
+            index += 1
+    return index
+
+
+def _skip_rust_quoted(text: str, start: int, quote: str) -> int:
+    index = start + 1
+    while index < len(text):
+        if text[index] == "\\":
+            index += 2
+        elif text[index] == quote:
+            return index + 1
+        else:
+            index += 1
+    return index
+
+
+def _rust_char_end(text: str, start: int) -> int | None:
+    index = start + 1
+    if index >= len(text) or text[index] in {"'", "\n", "\r"}:
+        return None
+    if text[index] == "\\":
+        index += 1
+        if index >= len(text):
+            return None
+        if text[index] == "u" and index + 1 < len(text) and text[index + 1] == "{":
+            close = text.find("}", index + 2)
+            if close < 0:
+                return None
+            index = close + 1
+        else:
+            index += 1
+    else:
+        index += 1
+    return index + 1 if index < len(text) and text[index] == "'" else None
+
+
+def _rust_raw_string_end(text: str, start: int) -> int | None:
+    index = start
+    if text.startswith("br", index):
+        index += 2
+    elif text.startswith("r", index):
+        index += 1
+    else:
+        return None
+
+    hashes = 0
+    while index < len(text) and text[index] == "#":
+        hashes += 1
+        index += 1
+    if index >= len(text) or text[index] != '"':
+        return None
+
+    terminator = '"' + "#" * hashes
+    end = text.find(terminator, index + 1)
+    return len(text) if end < 0 else end + len(terminator)
+
+
+def _skip_rust_trivia(text: str, start: int) -> int:
+    index = start
+    while index < len(text):
+        if text[index].isspace():
+            index += 1
+        elif text.startswith("//", index):
+            newline = text.find("\n", index + 2)
+            index = len(text) if newline < 0 else newline + 1
+        elif text.startswith("/*", index):
+            index = _skip_rust_block_comment(text, index)
+        else:
+            break
+    return index
+
+
+def _parse_rust_plain_string(text: str, start: int) -> tuple[str, int] | None:
+    if start >= len(text) or text[start] != '"':
+        return None
+    end = _skip_rust_quoted(text, start, '"')
+    if end > len(text) or end <= start + 1 or text[end - 1] != '"':
+        return None
+    try:
+        value = ast.literal_eval(text[start:end])
+    except (SyntaxError, ValueError):
+        return None
+    return (value, end) if isinstance(value, str) else None
+
+
+def wasm_snapshot_assertions(text: str) -> set[str]:
+    """Find real assert_snapshot calls while ignoring Rust comments and strings."""
+
+    asserted: set[str] = set()
+    index = 0
+    while index < len(text):
+        if text.startswith("//", index):
+            newline = text.find("\n", index + 2)
+            index = len(text) if newline < 0 else newline + 1
+            continue
+        if text.startswith("/*", index):
+            index = _skip_rust_block_comment(text, index)
+            continue
+
+        raw_end = _rust_raw_string_end(text, index)
+        if raw_end is not None:
+            index = raw_end
+            continue
+        if text.startswith('b"', index):
+            index = _skip_rust_quoted(text, index + 1, '"')
+            continue
+        if text[index] == '"':
+            index = _skip_rust_quoted(text, index, '"')
+            continue
+        if text[index] == "'":
+            char_end = _rust_char_end(text, index)
+            if char_end is not None:
+                index = char_end
+                continue
+
+        if text[index].isalpha() or text[index] == "_":
+            end = index + 1
+            while end < len(text) and (text[end].isalnum() or text[end] == "_"):
+                end += 1
+            if text[index:end] == "assert_snapshot":
+                call_start = _skip_rust_trivia(text, end)
+                if call_start < len(text) and text[call_start] == "(":
+                    argument_start = _skip_rust_trivia(text, call_start + 1)
+                    parsed = _parse_rust_plain_string(text, argument_start)
+                    if parsed is not None:
+                        snapshot, argument_end = parsed
+                        comma = _skip_rust_trivia(text, argument_end)
+                        if comma < len(text) and text[comma] == "," and snapshot.endswith(".json"):
+                            asserted.add(snapshot)
+            index = end
+            continue
+
+        index += 1
+
+    return asserted
+
+
+def _python_snapshot_names(node: ast.AST) -> set[str]:
+    snapshots: set[str] = set()
+    for child in ast.walk(node):
+        if not isinstance(child, ast.Constant) or not isinstance(child.value, str):
+            continue
+        match = PYTHON_SNAPSHOT_PATH.search(child.value)
+        if match:
+            snapshots.add(match.group(1))
+    return snapshots
+
+
+def python_snapshot_assertions(text: str) -> set[str]:
+    tree = ast.parse(text)
+    asserted: set[str] = set()
+
+    for function in (
+        node
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and node.name.startswith("test_")
+    ):
+        snapshot_aliases: dict[str, set[str]] = {}
+        for node in ast.walk(function):
+            if not isinstance(node, (ast.Assign, ast.AnnAssign)):
+                continue
+            snapshots = _python_snapshot_names(node.value)
+            if not snapshots:
+                continue
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            for target in targets:
+                for name in ast.walk(target):
+                    if isinstance(name, ast.Name):
+                        snapshot_aliases[name.id] = snapshots
+
+        for node in ast.walk(function):
+            if not isinstance(node, ast.Assert):
+                continue
+            asserted.update(_python_snapshot_names(node.test))
+            for name in ast.walk(node.test):
+                if isinstance(name, ast.Name):
+                    asserted.update(snapshot_aliases.get(name.id, set()))
+
+    return asserted
+
+
+def parity_errors(
+    registered: set[str],
+    required: set[str],
+    wasm_assertions: set[str],
+    python_assertions: set[str],
+) -> list[str]:
+    errors: list[str] = []
+
+    for snapshot in sorted(required - registered):
+        errors.append(f"required snapshot is not registered by the CLI: {snapshot}")
+
+    for snapshot in sorted(required):
         missing_hosts = []
-        if snapshot not in wasm_tests:
+        if snapshot not in wasm_assertions:
             missing_hosts.append("WASM")
-        if snapshot not in python_tests:
+        if snapshot not in python_assertions:
             missing_hosts.append("Python")
         if missing_hosts:
-            rel_path = path.relative_to(ROOT)
-            missing.append(
-                f"{snapshot} ({source}) from {rel_path}: missing {', '.join(missing_hosts)}"
+            errors.append(
+                f"required snapshot {snapshot} is missing a "
+                + ", ".join(missing_hosts)
+                + " golden assertion"
             )
 
-    if missing:
-        print("Host parity guard failed: missing public JSON assertions.")
-        for item in missing:
-            print(f"- {item}")
+    # Paired assertions are policy, not an accidental side effect. Requiring
+    # them to be recorded keeps `registered` and `required` honest and makes a
+    # newly paired fixture an explicit baseline change.
+    paired_registered = registered & wasm_assertions & python_assertions
+    for snapshot in sorted(paired_registered - required):
+        errors.append(
+            f"paired host snapshot is not recorded in the required manifest: {snapshot}"
+        )
+
+    return errors
+
+
+def main() -> int:
+    fixtures = runtime_snapshot_fixtures()
+    registered_names = [fixture.snapshot for fixture in fixtures]
+    registered = set(registered_names)
+    required_names, errors = parse_required_manifest(REQUIRED_MANIFEST.read_text())
+    required = set(required_names)
+
+    duplicate_registered = sorted(
+        name for name, count in Counter(registered_names).items() if count > 1
+    )
+    if duplicate_registered:
+        errors.append(
+            "CLI snapshot registry has duplicate entries: "
+            + ", ".join(duplicate_registered)
+        )
+
+    errors.extend(
+        parity_errors(
+            registered,
+            required,
+            wasm_snapshot_assertions(WASM_TESTS.read_text()),
+            python_snapshot_assertions(PYTHON_TESTS.read_text()),
+        )
+    )
+
+    if errors:
+        print("Host parity guard failed:")
+        for error in errors:
+            print(f"- {error}")
         return 1
 
     print(
         "Host parity guard passed: "
-        f"checked {len(runtime_snapshot_fixtures())} CLI runtime snapshots."
+        f"found {len(registered)} registered CLI runtime snapshots; "
+        f"verified {len(required)} required Python/WASM golden assertions."
     )
     return 0
 

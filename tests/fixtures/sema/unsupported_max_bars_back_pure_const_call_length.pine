@@ -1,0 +1,4 @@
+//@version=6
+indicator("Unsupported max_bars_back pure const call length")
+max_bars_back(close, int(math.min(-1.9, 0)))
+plot(close)

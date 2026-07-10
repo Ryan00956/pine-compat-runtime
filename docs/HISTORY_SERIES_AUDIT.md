@@ -34,7 +34,13 @@ indicator-level `max_bars_back` support.
   including high/low default sources for length-only extrema overloads.
 - Constant history is fixture-covered for built-in series, constant integer
   expression offsets, expression history, branch bodies, loop bodies, and
-  user-defined function parameters.
+  user-defined function parameters. Shared scalar call evaluation additionally
+  lowers nested or cast-wrapped `int`, `float`, `math.min`, `math.max`,
+  `math.abs`, `math.floor`, `math.ceil`, and `math.trunc` results as constant
+  offsets when every argument and result are known. Finite `int(float)` follows
+  runtime truncation/saturation before the non-negative history-range check;
+  out-of-`i64` float results from `math.floor`/`math.ceil`/`math.trunc` stay
+  conservatively unknown.
 - Dynamic integer history is fixture-covered for built-in series, expression
   history, series-qualified offsets, direct ternary-produced offsets including
   returned `na` offsets and result first-bar history predicates,
@@ -64,6 +70,9 @@ indicator-level `max_bars_back` support.
 - Negative literal offsets such as `close[-1]` are rejected with
   `negative_history_offset`; literal and named-const negative offsets now have
   fixture-backed diagnostics that state history offsets must be non-negative.
+  Negative values produced by the explicit scalar constant-call whitelist are
+  also rejected statically, including cast-wrapped forms such as
+  `close[int(math.min(-1, 0))]`.
   Runtime negative dynamic offsets are fixture-backed for direct offsets,
   UDF/built-in/control-flow-produced offsets, and UDT field-produced offsets
   including direct/nested imported fields, local/imported UDF direct/nested
@@ -164,7 +173,7 @@ indicator-level `max_bars_back` support.
   `tests/fixtures/sema/supported_imported_udt_private_dependency_history.pine`
   keeps the same metadata subset accepted during semantic analysis and direct
   private imported UDT access remains rejected by private-symbol diagnostics.
-- Per-variable `max_bars_back` inference remains deferred. Top-level,
+- Broader per-variable `max_bars_back` inference remains deferred. Top-level,
   statement-block, `for`/`for...in`/`while` statement-body, statement-context switch block-arm, switch expression
   block-arm, tuple-destructured switch expression block-arm, if-expression
   block branch, tuple-destructured if-expression block branch,
@@ -210,17 +219,21 @@ indicator-level `max_bars_back` support.
   paths including named/reordered arguments and direct-constructor UDT argument
   expressions, with
   non-negative constant integer lengths, including supported constant
-  expressions, pure UDF-returned and imported exported pure UDF-returned
-  constant length values, and block/loop-local const length aliases visible to
-  the statement or result expression, that fit in the runtime history-bound
-  field and apply per-series retention bounds.
+  expressions, shared constant-call results from the exact `int`, `float`,
+  `math.min`, `math.max`, `math.abs`, `math.floor`, `math.ceil`, and
+  `math.trunc` whitelist, pure UDF-returned and imported exported pure
+  UDF-returned constant length values, and block/loop-local const length aliases
+  visible to the statement or result expression, that fit in the runtime
+  history-bound field and apply per-series retention bounds.
   Named/reordered helper arguments are fixture-backed, and repeated helper
   calls for the same series use the largest declared bound. Identity reuse is
   deliberately disabled when an expression depends on a reassigned scalar
-  symbol, so
-  a later expression cannot inherit an earlier value's per-series retention
-  bound, and inlined UDF/method locals preserve distinct pre-/post-reassignment
-  history sources. The history-expression, color-channel, and string-position slice is
+  symbol, so a later expression cannot inherit an earlier value's per-series
+  retention bound. Constant aliases retain their assignment-time dependency
+  environment, so later source-symbol reassignment cannot retroactively widen a
+  helper bound, and inlined UDF/method locals preserve distinct
+  pre-/post-reassignment history sources. The history-expression,
+  color-channel, and string-position slice is
   covered by matching historical, incremental-append, and realtime rollback
   results.
 - Implicit TA history metadata for source/length helpers is fixture-backed for
@@ -241,8 +254,10 @@ Series integer offsets are supported as a guarded dynamic subset:
 - `indicator(..., max_bars_back=N)` and
   `strategy(..., max_bars_back=N)` bound dynamic retention when `N` is a
   non-negative constant integer expression, including pure UDF-returned and
-  imported exported pure UDF-returned constant length values, that fits in the
-  runtime history-bound field
+  imported exported pure UDF-returned constant length values and nested known
+  results from the exact `int`, `float`, `math.min`, `math.max`,
+  `math.abs`, `math.floor`, `math.ceil`, and `math.trunc` static-call whitelist,
+  that fits in the runtime history-bound field
 - runtime profiles expose the retention mode, HIR history requirement fields,
   and dynamic-retention miss counters when a runtime offset exceeds the retained
   `max_bars_back` window
@@ -264,6 +279,10 @@ Completed:
 - Implemented guarded dynamic integer history, including `series int` offsets.
 - Added HIR history requirement metadata and runtime static retention trimming.
 - Added indicator-level `max_bars_back` bounds for dynamic history retention.
+- Added one shared, explicit scalar constant-call evaluator for static history
+  offsets and declaration/per-series `max_bars_back` values. It recognizes only
+  `int`, `float`, `math.min`, `math.max`, `math.abs`, `math.floor`, `math.ceil`,
+  and `math.trunc`; other runtime-pure calls are not implicitly folded.
 - Added profile fields for retention mode, static depth, dynamic-offset
   presence, `max_bars_back`, and dynamic-retention misses.
 - Added runtime diagnostics for dynamic offsets beyond explicit retention

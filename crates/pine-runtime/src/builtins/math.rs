@@ -292,41 +292,41 @@ fn eval_math_extreme(
     args: RuntimeArgs<'_>,
     mode: NumericExtreme,
 ) -> Result<PineValue, RuntimeError> {
-    let mut current = 0.0;
-    let mut has_value = false;
-    let mut has_float = false;
+    let mut current_int: Option<i64> = None;
+    let mut current_float: Option<f64> = None;
 
     for expr in args.exprs() {
         match context.eval_expr(expr)? {
             PineValue::Int(value) => {
-                let value = value as f64;
-                current = if has_value {
-                    numeric_extreme(current, value, mode)
+                if let Some(current) = current_float.as_mut() {
+                    *current = numeric_extreme(*current, value as f64, mode);
                 } else {
-                    value
-                };
-                has_value = true;
+                    current_int = Some(match current_int {
+                        Some(current) => match mode {
+                            NumericExtreme::Max => current.max(value),
+                            NumericExtreme::Min => current.min(value),
+                        },
+                        None => value,
+                    });
+                }
             }
             PineValue::Float(value) => {
-                current = if has_value {
+                current_float = Some(if let Some(current) = current_float {
                     numeric_extreme(current, value, mode)
+                } else if let Some(current) = current_int.take() {
+                    numeric_extreme(current as f64, value, mode)
                 } else {
                     value
-                };
-                has_value = true;
-                has_float = true;
+                });
             }
             PineValue::Na => return Ok(PineValue::Na),
             _ => return Ok(PineValue::Na),
         }
     }
 
-    if !has_value {
-        return Ok(PineValue::Na);
-    }
-    if has_float {
-        Ok(PineValue::Float(current))
-    } else {
-        Ok(PineValue::Int(current as i64))
+    match (current_float, current_int) {
+        (Some(value), _) => Ok(PineValue::Float(value)),
+        (None, Some(value)) => Ok(PineValue::Int(value)),
+        (None, None) => Ok(PineValue::Na),
     }
 }

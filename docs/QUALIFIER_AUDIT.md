@@ -24,6 +24,10 @@ Current inference:
   tuple-destructuring forms with statically known const selection still require
   compatible branch value kinds but use only the selected branch qualifier plus
   the condition or selector qualifier
+- known numeric conditions may include nested calls from the exact scalar
+  constant whitelist: `int`, `float`, `math.min`, `math.max`, `math.abs`,
+  `math.floor`, `math.ceil`, and `math.trunc`; these calls can select the
+  reachable branch when all arguments and the evaluator result are known
 - if-expression branches, switch block arms, and loop-expression bodies can
   return final `for`, `for...in`, or `while` loop expressions, with loop
   headers, iterables, or conditions included in the result qualifier
@@ -110,8 +114,9 @@ Important current rules:
 
 ## Current Gaps
 
-- Scalar `simple` inference is not complete, though explicit scalar typed
-  declarations, including typed-`na` scalar declarations followed by compatible
+- `Simple` inference is complete for the current fixture-backed scalar scope.
+  That scope includes explicit scalar typed declarations, including typed-`na`
+  scalar declarations followed by compatible
   scalar reassignments, scalar statement-/expression-`if`,
   statement-/expression-loop, statement-/expression-`switch`, and final-if
   UDF/user-method reassignments, UDF-local aliases, and const-condition branch
@@ -141,6 +146,11 @@ Important current rules:
   Broader whole-program qualifier inference remains intentionally limited.
 - There is no separate runtime input immutability model beyond the qualifier
   assigned by semantic analysis.
+- Constant-call reasoning is intentionally not a general purity engine. Only
+  `int`, `float`, `math.min`, `math.max`, `math.abs`, `math.floor`, `math.ceil`,
+  and `math.trunc` currently feed static branch selection, declaration checks,
+  history-offset analysis, and `max_bars_back`; other pure calls remain outside
+  this static-value boundary.
 - Built-in signature docs use descriptive Pine-like terms, while code uses a
   smaller `Accepts` enum. Qualifier-bounded scalar phrases now share the generic
   `QualifierBoundScalar` data model, but not every Pine-style collection,
@@ -214,6 +224,17 @@ argument type diagnostics for `label.new`, `line.new`, and `box.new` now use
 the same expected/got acceptor helper, including `string/int-compatible` and
 `chart.point-compatible` labels, while keeping their dedicated drawing option
 validators.
+
+The scalar const-value path is also shared rather than duplicated across
+qualifier and history consumers. Its explicit `int`, `float`, `math.min`,
+`math.max`, `math.abs`, `math.floor`, `math.ceil`, and `math.trunc` whitelist
+drives static branch selection, declaration range checks, history-offset
+classification, and `max_bars_back` inference without implying support for
+arbitrary pure-call folding. Finite `int(float)` calls use the runtime-compatible
+truncating/saturating `i64` conversion before consumer-specific range checks;
+out-of-`i64` float results from `math.floor`, `math.ceil`, and `math.trunc`
+remain unknown.
+
 Array value compatibility and concatenation diagnostics use expected/got
 call-argument helpers for element-family and array-kind labels, and
 `array.from` inference failures report the actual argument types, while

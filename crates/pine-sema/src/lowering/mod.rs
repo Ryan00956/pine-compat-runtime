@@ -1049,7 +1049,7 @@ impl Analyzer {
             }
             ExprKind::History { expr, offset } => {
                 let offset = match self
-                    .known_const_int_value(offset)
+                    .known_history_offset_int_value(offset)
                     .and_then(|value| u32::try_from(value).ok())
                 {
                     Some(offset) => HirHistoryOffset::Constant(offset),

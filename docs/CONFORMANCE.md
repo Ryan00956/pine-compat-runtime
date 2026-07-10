@@ -126,7 +126,10 @@ fixture-backed outside typed declaration syntax.
 `indicator(..., max_bars_back=N)` and `strategy(..., max_bars_back=N)` apply a
 global constant non-negative retention bound for dynamic history reads,
 including supported constant integer expressions, pure UDF-returned constant
-length values, and prior named const int alias-chain values. Statement-form
+length values, prior named const int alias-chain values, and nested known
+results from the exact `int`, `float`, `math.min`, `math.max`, `math.abs`,
+`math.floor`, `math.ceil`, and `math.trunc` scalar-call whitelist.
+Statement-form
 `max_bars_back(source, N)` helper calls are fixture-backed at top level and in
 the supported block, `for`/`for...in`/`while` statement-body, switch,
 block-expression, call-argument block, collection mutation argument block,
@@ -149,7 +152,12 @@ declaration-value calls are rejected.
 Series history offsets are partial. Dynamic integer offsets are evaluated at
 runtime with full-history retention up to the runtime cap, and returned `na`
 offsets evaluate the source expression on the current bar before returning `na`,
-including stateful built-in source callsites.
+including stateful built-in source callsites. Constant non-negative offsets may
+also use nested or cast-wrapped known results from the exact scalar-call
+whitelist above. Negative values produced by those calls are rejected with the
+same `negative_history_offset` boundary as literal and named-const negatives;
+runtime-pure calls outside the whitelist remain dynamic/unknown rather than
+being folded implicitly.
 Fixture-backed sources include direct expressions, branches, `for`/`for...in`/
 `while` loops, switch arms, UDF parameters, UDF-returned offsets and series
 values, method-returned offsets and series values, and supported built-in

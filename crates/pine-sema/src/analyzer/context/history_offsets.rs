@@ -56,7 +56,7 @@ impl Analyzer {
                     return None;
                 }
 
-                let symbol = self.scope.resolve(name)?;
+                let symbol = self.const_lookup_symbol(name, expr.span)?;
                 if let Some(value) = self.const_bool_symbols.get(&symbol.id) {
                     return Some(*value);
                 }
@@ -423,7 +423,7 @@ impl Analyzer {
         }
     }
 
-    fn known_history_offset_numeric_value_inner(
+    pub(super) fn known_history_offset_numeric_value_inner(
         &self,
         expr: &pine_syntax::Expr,
         env: &mut HistoryOffsetIntEnv,
@@ -452,7 +452,7 @@ impl Analyzer {
                     return None;
                 }
 
-                let symbol = self.scope.resolve(name)?;
+                let symbol = self.const_lookup_symbol(name, expr.span)?;
                 if let Some(value) = self.const_numeric_symbols.get(&symbol.id) {
                     return Some(*value);
                 }
@@ -465,6 +465,9 @@ impl Analyzer {
                 env.symbol_visiting.pop();
                 result
             }
+            pine_syntax::ExprKind::Call { callee, args } => self
+                .known_history_offset_call_value(callee, args, env)
+                .and_then(crate::constant_values::ConstValue::as_numeric),
             pine_syntax::ExprKind::Unary {
                 op: pine_syntax::UnaryOp::Plus,
                 expr,
@@ -740,7 +743,7 @@ impl Analyzer {
                     return None;
                 }
 
-                let symbol = self.scope.resolve(name)?;
+                let symbol = self.const_lookup_symbol(name, expr.span)?;
                 if let Some(value) = self.const_string_symbols.get(&symbol.id) {
                     return Some(value.clone());
                 }
@@ -975,7 +978,7 @@ impl Analyzer {
                     return None;
                 }
 
-                let symbol = self.scope.resolve(name)?;
+                let symbol = self.const_lookup_symbol(name, expr.span)?;
                 if let Some(value) = self.const_color_symbols.get(&symbol.id) {
                     return Some(*value);
                 }

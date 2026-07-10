@@ -10,6 +10,7 @@ run cargo fmt --check
 run cargo clippy --workspace --all-targets -- -D warnings
 run cargo test --workspace
 run python3 scripts/check_structure.py
+run python3 -m unittest scripts/tests/test_check_host_parity.py
 run python3 scripts/check_host_parity.py
 run cargo check -p pine-wasm --target wasm32-unknown-unknown
 run maturin build --manifest-path crates/pine-python/Cargo.toml --out dist

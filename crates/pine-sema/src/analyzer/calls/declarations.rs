@@ -73,8 +73,11 @@ impl Analyzer {
                         .get(index)
                         .is_some_and(|param| param.name == "precision"));
             if is_precision {
-                if let Some(value) = self.known_const_int_value(&arg.value)
-                    && !(0..=16).contains(&value)
+                if let Some(value) = self.known_const_int_for_validation(&arg.value)
+                    && match value {
+                        Ok(value) => !(0..=16).contains(&value),
+                        Err(()) => true,
+                    }
                 {
                     self.diagnostics.push(Diagnostic::error(
                         "E_CALL_ARG_VALUE",
@@ -109,14 +112,18 @@ impl Analyzer {
         arg_name: &str,
         arg: &CallArg,
     ) {
-        let Some(value) = self.known_const_int_value(&arg.value) else {
+        let Some(value) = self.known_const_int_for_validation(&arg.value) else {
             return;
         };
-        let message = if value < 0 {
+        let message = if value.is_err() {
+            Some(format!(
+                "`{call_name}` argument `{arg_name}` must fit in a 32-bit unsigned history bound"
+            ))
+        } else if value.is_ok_and(|value| value < 0) {
             Some(format!(
                 "`{call_name}` argument `{arg_name}` must be non-negative"
             ))
-        } else if u32::try_from(value).is_err() {
+        } else if value.is_ok_and(|value| u32::try_from(value).is_err()) {
             Some(format!(
                 "`{call_name}` argument `{arg_name}` must fit in a 32-bit unsigned history bound"
             ))

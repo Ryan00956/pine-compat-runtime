@@ -1,4 +1,5 @@
 use super::*;
+use crate::constant_values::{ConstValue, eval_pure_const_call, exact_i64_from_numeric};
 
 impl Analyzer {
     pub(crate) fn record_symbol_const_switch_key(
@@ -29,17 +30,119 @@ impl Analyzer {
             .find_map(|keys| keys.get(name))
     }
 
-    fn const_lookup_symbol(&self, name: &str, span: Span) -> Option<SymbolInfo> {
+    pub(super) fn const_lookup_symbol(&self, name: &str, span: Span) -> Option<SymbolInfo> {
         self.bound_symbol(name, span)
             .or_else(|| self.scope.resolve(name))
+    }
+
+    fn known_const_call_value(
+        &self,
+        callee: &pine_syntax::Expr,
+        args: &[pine_syntax::CallArg],
+    ) -> Option<ConstValue> {
+        let callee = const_call_name(callee)?;
+        let args = args
+            .iter()
+            .map(|arg| self.known_const_value(&arg.value))
+            .collect::<Option<Vec<_>>>()?;
+        eval_pure_const_call(&callee, &args)
+    }
+
+    fn known_const_value(&self, expr: &pine_syntax::Expr) -> Option<ConstValue> {
+        self.known_const_int_value(expr)
+            .map(ConstValue::Int)
+            .or_else(|| {
+                self.known_const_numeric_value(expr)
+                    .filter(|value| value.is_finite())
+                    .map(ConstValue::Float)
+            })
+            .or_else(|| self.known_const_bool_value(expr).map(ConstValue::Bool))
     }
 
     pub(crate) fn known_const_int_value(&self, expr: &pine_syntax::Expr) -> Option<i64> {
         const_int_value(expr).or_else(|| self.known_const_int_value_from_symbols(expr))
     }
 
+    /// Returns a constant integer for range validation, while preserving the
+    /// distinction between an unknown expression and a statically-int numeric
+    /// result that cannot be represented by `i64` (for example
+    /// `math.abs(i64::MIN)`, whose runtime fallback is a float).
+    pub(crate) fn known_const_int_for_validation(
+        &self,
+        expr: &pine_syntax::Expr,
+    ) -> Option<Result<i64, ()>> {
+        if let Some(value) = self.known_const_int_value(expr) {
+            return Some(Ok(value));
+        }
+
+        let pine_type = self.type_of_expr_with_params(expr, &HashMap::new())?;
+        if pine_type.kind != pine_ir::ValueKind::Int {
+            return None;
+        }
+        let value = self.known_const_numeric_value(expr)?;
+        Some(exact_i64_from_numeric(value).ok_or(()))
+    }
+
+    /// Validates arguments that the runtime consumes as an actual
+    /// `PineValue::Int`. A statically-int expression whose known runtime value
+    /// has promoted to float (notably wrappers around `math.abs(i64::MIN)`) is
+    /// invalid even when that float is mathematically integral.
+    pub(crate) fn known_strict_const_int_for_validation(
+        &self,
+        expr: &pine_syntax::Expr,
+    ) -> Option<Result<i64, ()>> {
+        if let Some(value) = self.known_const_int_value(expr) {
+            return Some(Ok(value));
+        }
+
+        let pine_type = self.type_of_expr_with_params(expr, &HashMap::new())?;
+        (pine_type.kind == pine_ir::ValueKind::Int
+            && self.known_const_numeric_value(expr).is_some())
+        .then_some(Err(()))
+    }
+
     pub(crate) fn known_history_offset_int_value(&self, expr: &pine_syntax::Expr) -> Option<i64> {
-        self.known_history_offset_int_value_inner(expr, &mut HistoryOffsetIntEnv::default())
+        let mut env = HistoryOffsetIntEnv::default();
+        self.known_history_offset_int_value_inner(expr, &mut env)
+            .or_else(|| {
+                (self.type_of_expr_with_params(expr, &HashMap::new())?.kind
+                    == pine_ir::ValueKind::Int)
+                    .then(|| self.known_history_offset_numeric_value_inner(expr, &mut env))
+                    .flatten()
+                    .and_then(exact_i64_from_numeric)
+            })
+    }
+
+    pub(super) fn known_history_offset_call_value(
+        &self,
+        callee: &pine_syntax::Expr,
+        args: &[pine_syntax::CallArg],
+        env: &mut HistoryOffsetIntEnv,
+    ) -> Option<ConstValue> {
+        let callee = const_call_name(callee)?;
+        let args = args
+            .iter()
+            .map(|arg| self.known_history_offset_value_inner(&arg.value, env))
+            .collect::<Option<Vec<_>>>()?;
+        eval_pure_const_call(&callee, &args)
+    }
+
+    fn known_history_offset_value_inner(
+        &self,
+        expr: &pine_syntax::Expr,
+        env: &mut HistoryOffsetIntEnv,
+    ) -> Option<ConstValue> {
+        self.known_history_offset_int_value_inner(expr, env)
+            .map(ConstValue::Int)
+            .or_else(|| {
+                self.known_history_offset_numeric_value_inner(expr, env)
+                    .filter(|value| value.is_finite())
+                    .map(ConstValue::Float)
+            })
+            .or_else(|| {
+                self.known_history_offset_bool_value_inner(expr, env)
+                    .map(ConstValue::Bool)
+            })
     }
 
     pub(super) fn known_history_offset_int_value_inner(
@@ -71,7 +174,7 @@ impl Analyzer {
                     return None;
                 }
 
-                let symbol = self.scope.resolve(name)?;
+                let symbol = self.const_lookup_symbol(name, expr.span)?;
                 if let Some(value) = self.const_int_symbols.get(&symbol.id) {
                     return Some(*value);
                 }
@@ -84,6 +187,9 @@ impl Analyzer {
                 env.symbol_visiting.pop();
                 result
             }
+            pine_syntax::ExprKind::Call { callee, args } => self
+                .known_history_offset_call_value(callee, args, env)
+                .and_then(ConstValue::as_int),
             pine_syntax::ExprKind::Unary {
                 op: pine_syntax::UnaryOp::Plus,
                 expr,
@@ -341,6 +447,9 @@ impl Analyzer {
                 let symbol = self.const_lookup_symbol(name, expr.span)?;
                 self.const_int_symbols.get(&symbol.id).copied()
             }
+            pine_syntax::ExprKind::Call { callee, args } => self
+                .known_const_call_value(callee, args)
+                .and_then(ConstValue::as_int),
             pine_syntax::ExprKind::Unary {
                 op: pine_syntax::UnaryOp::Plus,
                 expr,
@@ -700,6 +809,9 @@ impl Analyzer {
                 let symbol = self.const_lookup_symbol(name, expr.span)?;
                 self.const_numeric_symbols.get(&symbol.id).copied()
             }
+            pine_syntax::ExprKind::Call { callee, args } => self
+                .known_const_call_value(callee, args)
+                .and_then(ConstValue::as_numeric),
             pine_syntax::ExprKind::Unary {
                 op: pine_syntax::UnaryOp::Plus,
                 expr,
@@ -1037,5 +1149,13 @@ impl Analyzer {
             pine_syntax::BinaryOp::NotEq => Some(left != right),
             _ => None,
         }
+    }
+}
+
+fn const_call_name(callee: &pine_syntax::Expr) -> Option<String> {
+    match &callee.kind {
+        pine_syntax::ExprKind::Identifier(name) => Some(name.clone()),
+        pine_syntax::ExprKind::QualifiedName(parts) => Some(parts.join(".")),
+        _ => None,
     }
 }

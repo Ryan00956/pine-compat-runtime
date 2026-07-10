@@ -10,7 +10,8 @@ use pine_ir::{
 mod history_constants;
 
 use history_constants::{
-    ConstSymbolEnv, constant_hir_int_with_symbols, remove_reassigned_symbols_from_env,
+    ConstSymbolEnv, constant_hir_int_with_symbols, insert_const_symbol,
+    remove_reassigned_symbols_from_env,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -455,8 +456,8 @@ fn update_series_max_bars_back_const_env<'a>(
 ) {
     match &statement.kind {
         HirStmtKind::Decl { symbol, value } | HirStmtKind::Reassign { symbol, value } => {
-            if hir_const_int_symbol_value(value, const_symbols).is_some() {
-                const_symbols.insert(*symbol, value);
+            if hir_const_symbol_value(value) {
+                insert_const_symbol(const_symbols, *symbol, value);
             } else {
                 const_symbols.remove(symbol);
             }
@@ -466,8 +467,8 @@ fn update_series_max_bars_back_const_env<'a>(
                 && symbols.len() == values.len()
             {
                 for (symbol, value) in symbols.iter().zip(values) {
-                    if hir_const_int_symbol_value(value, const_symbols).is_some() {
-                        const_symbols.insert(*symbol, value);
+                    if hir_const_symbol_value(value) {
+                        insert_const_symbol(const_symbols, *symbol, value);
                     } else {
                         const_symbols.remove(symbol);
                     }
@@ -497,11 +498,8 @@ fn update_series_max_bars_back_const_env<'a>(
     }
 }
 
-fn hir_const_int_symbol_value(expr: &HirExpr, const_symbols: &ConstSymbolEnv<'_>) -> Option<i64> {
-    (expr.pine_type.qualifier == pine_ir::Qualifier::Const
-        && expr.pine_type.kind == pine_ir::ValueKind::Int)
-        .then(|| constant_hir_int_with_symbols(expr, const_symbols))
-        .flatten()
+fn hir_const_symbol_value(expr: &HirExpr) -> bool {
+    expr.pine_type.qualifier == pine_ir::Qualifier::Const
 }
 
 fn call_arg<'a>(args: &'a [HirCallArg], index: usize, name: &str) -> Option<&'a HirExpr> {

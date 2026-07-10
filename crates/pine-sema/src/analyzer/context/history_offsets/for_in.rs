@@ -42,7 +42,7 @@ impl Analyzer {
                     return None;
                 }
 
-                let symbol = self.scope.resolve(name)?;
+                let symbol = self.const_lookup_symbol(name, expr.span)?;
                 if env.symbol_visiting.contains(&symbol.id) {
                     return None;
                 }
@@ -312,7 +312,7 @@ impl Analyzer {
                     return None;
                 }
 
-                let symbol = self.scope.resolve(name)?;
+                let symbol = self.const_lookup_symbol(name, expr.span)?;
                 if env.symbol_visiting.contains(&symbol.id) {
                     return None;
                 }
@@ -941,7 +941,7 @@ impl Analyzer {
                     return None;
                 }
 
-                let symbol = self.scope.resolve(name)?;
+                let symbol = self.const_lookup_symbol(name, expr.span)?;
                 if env.symbol_visiting.contains(&symbol.id) {
                     return None;
                 }

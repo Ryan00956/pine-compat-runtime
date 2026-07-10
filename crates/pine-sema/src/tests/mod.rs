@@ -9,6 +9,8 @@ fn analyze(text: &str) -> Analysis {
 }
 
 mod compatibility;
+mod constant_call_semantics;
+mod history_constant_calls;
 mod lowering;
 mod methods;
 mod scopes;

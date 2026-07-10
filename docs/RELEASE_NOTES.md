@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+- Fixed host-parity discovery for rustfmt-expanded runtime snapshot tuples and
+  made the representative public-host contract explicit: the current gate
+  discovers 693 registered CLI snapshots and verifies the manifest-selected 358
+  snapshots against both Python and WASM golden assertions, with parser/policy
+  self-tests in the release gate.
+- Added one shared scalar constant-call evaluator for the exact `int`, `float`,
+  `math.min`, `math.max`, `math.abs`, `math.floor`, `math.ceil`, and
+  `math.trunc` whitelist. Nested supported calls now drive static branch
+  selection, declaration range checks, constant/negative history-offset
+  analysis, and declaration/per-series `max_bars_back` inference. Finite
+  `int(float)` calls match runtime truncation/saturation before downstream range
+  checks, while out-of-`i64` rounding calls, unsupported calls, `na`, and
+  non-finite results remain unknown.
+- Kept these static values aligned with execution at integer boundaries:
+  all-integer `math.min`/`math.max` preserve exact `i64` values at runtime,
+  `math.abs(i64::MIN)` is rejected by bounded integer consumers instead of
+  becoming an unchecked unknown, and HIR constant aliases retain the value
+  visible when assigned rather than following later source-symbol
+  reassignments during history-bound inference.
+- Prevented history-offset evaluation and lowering from capturing a same-named
+  global in place of a UDF or user-method parameter; dynamic callable
+  arguments now retain dynamic history behavior through lowering.
 - Fixed UDF and user-method const-argument propagation for numeric, string, and
   color comparisons, including tuple returns, while preventing tuple type
   queries from capturing unrelated same-named globals.

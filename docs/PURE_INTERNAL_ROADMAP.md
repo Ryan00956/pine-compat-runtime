@@ -170,6 +170,17 @@ Current baseline:
   numeric/bool/string/color equality-derived const conditions and const
   bool/int/string/color selector keys while still checking branch kind
   compatibility;
+- scalar `simple` inference preserves the fixture-backed typed-declaration,
+  reassignment, UDF/method argument, tuple, and statically selected
+  ternary/if/switch paths, including numeric, string, color, and bool const
+  comparisons without same-named global capture;
+- exact and at-most scalar qualifier bounds share one signature/diagnostic rule
+  path for the implemented `Simple*`, `Const*`, and `AtMostInput*` families;
+- shared scalar constant evaluation recognizes only `int(...)`, `float(...)`,
+  `math.min(...)`, `math.max(...)`, `math.abs(...)`, `math.floor(...)`,
+  `math.ceil(...)`, and `math.trunc(...)`; those calls feed static branch
+  selection, declaration-value validation, constant history offsets, and
+  declaration/per-series `max_bars_back` inference;
 - history offsets accept non-negative integer literals and guarded dynamic integer
   expressions, including `series int`;
 - `ta.pivothigh` and `ta.pivotlow` left/right bar counts accept integer values
@@ -207,25 +218,25 @@ Current baseline:
   builtin qualified constants/simple metadata, bar/session flags, positional and
   fixed-arity named stateless pure math calls, fixed-arity pure `nz`/`fixnan`
   value-helper calls, pure string numeric-source calls including `str.tonumber`
-  and `str.length`, pure numeric cast calls, and unreassigned pure scalar series
-  declaration aliases;
+  and `str.length`, pure numeric cast calls, stable nested history expressions,
+  `str.pos`, `color.r`/`color.g`/`color.b`/`color.t`, and unreassigned pure
+  scalar series declaration aliases; identity reuse is disabled across scalar
+  reassignments, including inlined UDF/method locals;
 - runtime diagnostics and profiles expose dynamic-retention misses and maximum
   missed offsets when dynamic reads exceed the explicit retained bound.
 
 Remaining internal work:
 
-- more complete scalar `simple` inference;
-- broader use of existing qualifier-bound helper APIs for "at most input" and
-  "at most simple" signature rules;
 - per-variable `max_bars_back` inference beyond the fixture-backed top-level,
   statement-block, `for`/`for...in`/`while` statement-body,
   statement-context switch block-arm, switch expression
   block-arm, tuple-destructured switch expression block-arm, if-expression
   block branch, tuple-destructured if-expression block branch, and
   value-producing block-expression prefix-statement/call-argument/block-result/
-  loop-result helper subset, including broader expression-identity reuse beyond
-  stable pure unary/binary/ternary expressions, qualified builtins, pure math
-  calls, pure numeric casts, and scalar alias expressions;
+  loop-result helper subset;
+- constant evaluation outside the explicit scalar-call whitelist, including
+  string/color/collection results and arbitrary pure built-ins, remains
+  unsupported rather than being inferred from runtime purity;
 - broader first-bar, `na`, UDF, loop, array-history, and built-in interaction
   fixtures.
 
@@ -237,8 +248,9 @@ Non-goals:
 
 Good next slice:
 
-- add a narrow qualifier helper or diagnostic improvement that reduces bespoke
-  built-in signature handling without changing broad compatibility claims.
+- choose one concrete remaining history/value-expression gap with a negative
+  boundary first; do not widen constant-call folding by treating every pure
+  runtime built-in as statically evaluable.
 
 ## Direction 3: Collections
 
@@ -482,6 +494,10 @@ Current baseline:
 
 - conformance matrix guards;
 - golden runtime snapshots;
+- an explicit public-host golden manifest: the current gate discovers all 693
+  registered ordinary CLI runtime snapshots and requires representative paired
+  Python/WASM assertions for 358 named snapshots; the smaller required set is a
+  deliberate contract policy, not an undiscovered-registry shortcut;
 - strict public `schemaVersion` checks;
 - structure guardrail;
 - runtime profiles for history and callsite state;

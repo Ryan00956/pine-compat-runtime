@@ -17,7 +17,15 @@ impl Analyzer {
             return;
         }
 
-        let Some(value) = self.known_const_int_value(&arg.value) else {
+        let Some(value) = self.known_const_int_for_validation(&arg.value) else {
+            return;
+        };
+        let Ok(value) = value else {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_VALUE",
+                format!("`{call_name}` argument `{name}` must be between 1 and {max}"),
+                arg.span,
+            ));
             return;
         };
         if !(1..=max).contains(&value) {

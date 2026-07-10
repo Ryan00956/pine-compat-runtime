@@ -32,6 +32,41 @@ In code, exact and at-most scalar qualifier bounds share the
 constants over that model, so signature tables remain readable while type
 acceptance and diagnostics use one rule path.
 
+### Static Scalar Call Evaluation
+
+The analyzer has a deliberately narrow shared evaluator for constant scalar
+calls. Its complete current whitelist is:
+
+```text
+int(value)
+float(value)
+math.min(number, ...)
+math.max(number, ...)
+math.abs(number)
+math.floor(number)
+math.ceil(number)
+math.trunc(number)
+```
+
+When every argument is a supported known scalar value and the evaluator returns
+a known result, these calls may participate in static ternary/if/switch
+selection, declaration-value validation, constant history-offset rejection or
+lowering, and declaration/per-series `max_bars_back` inference. Cast-wrapped and
+nested whitelisted calls use the same evaluator. A finite `int(float)` cast
+matches the runtime's truncating, saturating conversion to `i64`; declaration
+and history-bound range checks then reject values outside their narrower
+non-negative/u32 domains. All-integer `math.min` and `math.max` preserve exact
+`i64` precision in both analysis and execution. The `math.abs(i64::MIN)` runtime
+float fallback remains a known out-of-range result for bounded integer
+validation rather than being treated as unknown. By contrast, `math.floor`,
+`math.ceil`, and `math.trunc` float results outside `i64` remain conservatively
+unknown. `na`, non-finite, wrong-kind, and wrong-arity results are also not
+treated as known constant values.
+
+This is not a claim that every runtime-pure built-in is constant-foldable.
+Calls outside this explicit whitelist keep their existing analyzer/runtime
+behavior.
+
 ## Phase 1 Core
 
 Phase 1 should be intentionally small:

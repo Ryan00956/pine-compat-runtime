@@ -1,23 +1,55 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 use pine_ir::{
     HirBinaryOp, HirExpr, HirExprKind, HirLiteral, HirStmt, HirStmtKind, HirSwitchArm,
-    HirSwitchStmtArm, HirUnaryOp, SymbolId,
+    HirSwitchStmtArm, HirUnaryOp, SymbolId, ValueKind,
 };
 
-pub(crate) type ConstSymbolEnv<'a> = HashMap<SymbolId, &'a HirExpr>;
+use crate::constant_values::{ConstValue, eval_pure_const_call, exact_i64_from_numeric};
+
+#[derive(Debug)]
+pub(crate) struct ConstSymbolBinding<'a> {
+    expr: &'a HirExpr,
+    // A binding must retain the symbol values that were visible when it was
+    // assigned. Re-evaluating an alias against the latest environment would
+    // make a later reassignment retroactively change its value.
+    env: Rc<ConstSymbolEnv<'a>>,
+}
+
+pub(crate) type ConstSymbolEnv<'a> = HashMap<SymbolId, Rc<ConstSymbolBinding<'a>>>;
+
+pub(crate) fn insert_const_symbol<'a>(
+    env: &mut ConstSymbolEnv<'a>,
+    symbol: SymbolId,
+    expr: &'a HirExpr,
+) {
+    let captured_env = Rc::new(env.clone());
+    env.insert(
+        symbol,
+        Rc::new(ConstSymbolBinding {
+            expr,
+            env: captured_env,
+        }),
+    );
+}
 
 pub(crate) fn constant_hir_int_with_symbols(
     expr: &HirExpr,
     env: &ConstSymbolEnv<'_>,
 ) -> Option<i64> {
-    constant_hir_int_with_env(expr, Some(env), &mut Vec::new())
+    let mut visiting = Vec::new();
+    constant_hir_int_with_env(expr, Some(env), &mut visiting).or_else(|| {
+        (expr.pine_type.kind == ValueKind::Int)
+            .then(|| constant_hir_numeric_with_env(expr, Some(env), &mut visiting))
+            .flatten()
+            .and_then(exact_i64_from_numeric)
+    })
 }
 
 fn constant_hir_int_with_env(
     expr: &HirExpr,
     env: Option<&ConstSymbolEnv<'_>>,
-    visiting: &mut Vec<SymbolId>,
+    visiting: &mut Vec<usize>,
 ) -> Option<i64> {
     match &expr.kind {
         HirExprKind::Literal(HirLiteral::Int(value)) => Some(*value),
@@ -109,6 +141,39 @@ fn constant_hir_int_with_env(
             visiting,
             constant_hir_int_with_env,
         ),
+        HirExprKind::Call { callee, args, .. } => {
+            constant_hir_call_value_with_env(callee, args, env, visiting)?.as_int()
+        }
+        _ => None,
+    }
+}
+
+fn constant_hir_call_value_with_env(
+    callee: &str,
+    args: &[pine_ir::HirCallArg],
+    env: Option<&ConstSymbolEnv<'_>>,
+    visiting: &mut Vec<usize>,
+) -> Option<ConstValue> {
+    let args = args
+        .iter()
+        .map(|arg| constant_hir_scalar_value_with_env(&arg.value, env, visiting))
+        .collect::<Option<Vec<_>>>()?;
+    eval_pure_const_call(callee, &args)
+}
+
+fn constant_hir_scalar_value_with_env(
+    expr: &HirExpr,
+    env: Option<&ConstSymbolEnv<'_>>,
+    visiting: &mut Vec<usize>,
+) -> Option<ConstValue> {
+    match expr.pine_type.kind {
+        ValueKind::Int => constant_hir_int_with_env(expr, env, visiting)
+            .map(ConstValue::Int)
+            .or_else(|| constant_hir_numeric_with_env(expr, env, visiting).map(ConstValue::Float)),
+        ValueKind::Float => {
+            constant_hir_numeric_with_env(expr, env, visiting).map(ConstValue::Float)
+        }
+        ValueKind::Bool => constant_hir_bool_with_env(expr, env, visiting).map(ConstValue::Bool),
         _ => None,
     }
 }
@@ -116,15 +181,16 @@ fn constant_hir_int_with_env(
 fn with_symbol_value<T>(
     symbol: SymbolId,
     env: Option<&ConstSymbolEnv<'_>>,
-    visiting: &mut Vec<SymbolId>,
-    value_of: fn(&HirExpr, Option<&ConstSymbolEnv<'_>>, &mut Vec<SymbolId>) -> Option<T>,
+    visiting: &mut Vec<usize>,
+    value_of: fn(&HirExpr, Option<&ConstSymbolEnv<'_>>, &mut Vec<usize>) -> Option<T>,
 ) -> Option<T> {
-    if visiting.contains(&symbol) {
+    let binding = env?.get(&symbol)?;
+    let binding_id = Rc::as_ptr(binding) as usize;
+    if visiting.contains(&binding_id) {
         return None;
     }
-    let value = env?.get(&symbol)?;
-    visiting.push(symbol);
-    let result = value_of(value, env, visiting);
+    visiting.push(binding_id);
+    let result = value_of(binding.expr, Some(binding.env.as_ref()), visiting);
     visiting.pop();
     result
 }
@@ -132,7 +198,7 @@ fn with_symbol_value<T>(
 fn constant_hir_bool_with_env(
     expr: &HirExpr,
     env: Option<&ConstSymbolEnv<'_>>,
-    visiting: &mut Vec<SymbolId>,
+    visiting: &mut Vec<usize>,
 ) -> Option<bool> {
     match &expr.kind {
         HirExprKind::Literal(HirLiteral::Bool(value)) => Some(*value),
@@ -211,6 +277,12 @@ fn constant_hir_bool_with_env(
             visiting,
             constant_hir_bool_with_env,
         ),
+        HirExprKind::Call { callee, args, .. } => {
+            match constant_hir_call_value_with_env(callee, args, env, visiting)? {
+                ConstValue::Bool(value) => Some(value),
+                ConstValue::Int(_) | ConstValue::Float(_) => None,
+            }
+        }
         HirExprKind::Binary {
             op:
                 op @ (HirBinaryOp::Eq
@@ -250,7 +322,7 @@ fn constant_hir_bool_with_env(
 fn constant_hir_numeric_with_env(
     expr: &HirExpr,
     env: Option<&ConstSymbolEnv<'_>>,
-    visiting: &mut Vec<SymbolId>,
+    visiting: &mut Vec<usize>,
 ) -> Option<f64> {
     match &expr.kind {
         HirExprKind::Literal(HirLiteral::Int(value)) => Some(*value as f64),
@@ -359,6 +431,9 @@ fn constant_hir_numeric_with_env(
             visiting,
             constant_hir_numeric_with_env,
         ),
+        HirExprKind::Call { callee, args, .. } => {
+            constant_hir_call_value_with_env(callee, args, env, visiting)?.as_numeric()
+        }
         _ => None,
     }
 }
@@ -381,7 +456,7 @@ fn block_const_symbol_env<'a>(
         match &statement.kind {
             HirStmtKind::Expr(_) => {}
             HirStmtKind::Decl { symbol, value } => {
-                env.insert(*symbol, value);
+                insert_const_symbol(&mut env, *symbol, value);
             }
             HirStmtKind::TupleDecl { symbols, value } => {
                 let HirExprKind::Tuple(values) = &value.kind else {
@@ -391,7 +466,7 @@ fn block_const_symbol_env<'a>(
                     return None;
                 }
                 for (symbol, value) in symbols.iter().zip(values) {
-                    env.insert(*symbol, value);
+                    insert_const_symbol(&mut env, *symbol, value);
                 }
             }
             HirStmtKind::Reassign { symbol, .. } | HirStmtKind::FieldReassign { symbol, .. } => {
@@ -475,7 +550,7 @@ pub(crate) fn remove_reassigned_symbols_from_env(
 fn constant_hir_string_with_env(
     expr: &HirExpr,
     env: Option<&ConstSymbolEnv<'_>>,
-    visiting: &mut Vec<SymbolId>,
+    visiting: &mut Vec<usize>,
 ) -> Option<String> {
     match &expr.kind {
         HirExprKind::Literal(HirLiteral::String(value)) => Some(value.clone()),
@@ -542,7 +617,7 @@ fn constant_hir_string_with_env(
 fn constant_hir_color_with_env(
     expr: &HirExpr,
     env: Option<&ConstSymbolEnv<'_>>,
-    visiting: &mut Vec<SymbolId>,
+    visiting: &mut Vec<usize>,
 ) -> Option<u32> {
     match &expr.kind {
         HirExprKind::Literal(HirLiteral::ColorHex(value)) => parse_color_hex(value),
@@ -610,8 +685,8 @@ fn constant_hir_field_value_with_env<T>(
     value: &HirExpr,
     index: usize,
     env: Option<&ConstSymbolEnv<'_>>,
-    visiting: &mut Vec<SymbolId>,
-    value_of: fn(&HirExpr, Option<&ConstSymbolEnv<'_>>, &mut Vec<SymbolId>) -> Option<T>,
+    visiting: &mut Vec<usize>,
+    value_of: fn(&HirExpr, Option<&ConstSymbolEnv<'_>>, &mut Vec<usize>) -> Option<T>,
 ) -> Option<T>
 where
     T: PartialEq,
@@ -621,12 +696,19 @@ where
             value_of(fields.get(index)?, env, visiting)
         }
         HirExprKind::Symbol(symbol) => {
-            if visiting.contains(symbol) {
+            let binding = env?.get(symbol)?;
+            let binding_id = Rc::as_ptr(binding) as usize;
+            if visiting.contains(&binding_id) {
                 return None;
             }
-            let value = env?.get(symbol)?;
-            visiting.push(*symbol);
-            let result = constant_hir_field_value_with_env(value, index, env, visiting, value_of);
+            visiting.push(binding_id);
+            let result = constant_hir_field_value_with_env(
+                binding.expr,
+                index,
+                Some(binding.env.as_ref()),
+                visiting,
+                value_of,
+            );
             visiting.pop();
             result
         }
@@ -634,8 +716,14 @@ where
             value,
             index: inner_index,
         } => {
-            let value = constant_hir_field_expr_with_env(value, *inner_index, env, visiting)?;
-            constant_hir_field_value_with_env(value, index, env, visiting, value_of)
+            let resolved = constant_hir_field_expr_with_env(value, *inner_index, env, visiting)?;
+            constant_hir_field_value_with_env(
+                resolved.expr,
+                index,
+                resolved.env.as_deref(),
+                visiting,
+                value_of,
+            )
         }
         HirExprKind::Block { statements, result } => {
             let Some(block_env) = block_const_symbol_env(statements, env) else {
@@ -696,21 +784,35 @@ where
     }
 }
 
+struct ResolvedConstHirExpr<'a> {
+    expr: &'a HirExpr,
+    env: Option<Rc<ConstSymbolEnv<'a>>>,
+}
+
 fn constant_hir_field_expr_with_env<'a>(
     value: &'a HirExpr,
     index: usize,
     env: Option<&ConstSymbolEnv<'a>>,
-    visiting: &mut Vec<SymbolId>,
-) -> Option<&'a HirExpr> {
+    visiting: &mut Vec<usize>,
+) -> Option<ResolvedConstHirExpr<'a>> {
     match &value.kind {
-        HirExprKind::UserTypeConstruct { fields, .. } => fields.get(index),
+        HirExprKind::UserTypeConstruct { fields, .. } => Some(ResolvedConstHirExpr {
+            expr: fields.get(index)?,
+            env: env.cloned().map(Rc::new),
+        }),
         HirExprKind::Symbol(symbol) => {
-            if visiting.contains(symbol) {
+            let binding = env?.get(symbol)?;
+            let binding_id = Rc::as_ptr(binding) as usize;
+            if visiting.contains(&binding_id) {
                 return None;
             }
-            let value = env?.get(symbol)?;
-            visiting.push(*symbol);
-            let result = constant_hir_field_expr_with_env(value, index, env, visiting);
+            visiting.push(binding_id);
+            let result = constant_hir_field_expr_with_env(
+                binding.expr,
+                index,
+                Some(binding.env.as_ref()),
+                visiting,
+            );
             visiting.pop();
             result
         }
@@ -718,8 +820,13 @@ fn constant_hir_field_expr_with_env<'a>(
             value,
             index: inner_index,
         } => {
-            let value = constant_hir_field_expr_with_env(value, *inner_index, env, visiting)?;
-            constant_hir_field_expr_with_env(value, index, env, visiting)
+            let resolved = constant_hir_field_expr_with_env(value, *inner_index, env, visiting)?;
+            constant_hir_field_expr_with_env(
+                resolved.expr,
+                index,
+                resolved.env.as_deref(),
+                visiting,
+            )
         }
         _ => None,
     }
@@ -736,11 +843,11 @@ struct HirForConstParts<'a> {
 fn constant_for_result_with_env<T, F>(
     parts: HirForConstParts<'_>,
     env: Option<&ConstSymbolEnv<'_>>,
-    visiting: &mut Vec<SymbolId>,
+    visiting: &mut Vec<usize>,
     value_of: F,
 ) -> Option<T>
 where
-    F: Fn(&HirExpr, Option<&ConstSymbolEnv<'_>>, &mut Vec<SymbolId>) -> Option<T> + Copy,
+    F: Fn(&HirExpr, Option<&ConstSymbolEnv<'_>>, &mut Vec<usize>) -> Option<T> + Copy,
 {
     constant_hir_int_with_env(parts.from, env, visiting)?;
     constant_hir_int_with_env(parts.to, env, visiting)?;
@@ -799,7 +906,7 @@ enum ConstSwitchValue {
 fn constant_hir_switch_value(
     expr: &HirExpr,
     env: Option<&ConstSymbolEnv<'_>>,
-    visiting: &mut Vec<SymbolId>,
+    visiting: &mut Vec<usize>,
 ) -> Option<ConstSwitchValue> {
     constant_hir_bool_with_env(expr, env, visiting)
         .map(ConstSwitchValue::Bool)
@@ -814,7 +921,7 @@ fn constant_switch_values_equal(
     left: &ConstSwitchValue,
     right: &HirExpr,
     env: Option<&ConstSymbolEnv<'_>>,
-    visiting: &mut Vec<SymbolId>,
+    visiting: &mut Vec<usize>,
 ) -> Option<bool> {
     let right = constant_hir_switch_value(right, env, visiting)?;
     Some(match (left, right) {
@@ -830,12 +937,12 @@ fn constant_switch_result_with_env<T, F>(
     selector: Option<&HirExpr>,
     arms: &[HirSwitchArm],
     env: Option<&ConstSymbolEnv<'_>>,
-    visiting: &mut Vec<SymbolId>,
+    visiting: &mut Vec<usize>,
     value_of: F,
 ) -> Option<T>
 where
     T: PartialEq,
-    F: Fn(&HirExpr, Option<&ConstSymbolEnv<'_>>, &mut Vec<SymbolId>) -> Option<T> + Copy,
+    F: Fn(&HirExpr, Option<&ConstSymbolEnv<'_>>, &mut Vec<usize>) -> Option<T> + Copy,
 {
     if let Some(selector) = selector {
         let Some(selector_value) = constant_hir_switch_value(selector, env, visiting) else {
@@ -886,12 +993,12 @@ where
 fn constant_all_switch_results_with_default<T, F>(
     arms: &[HirSwitchArm],
     env: Option<&ConstSymbolEnv<'_>>,
-    visiting: &mut Vec<SymbolId>,
+    visiting: &mut Vec<usize>,
     value_of: F,
 ) -> Option<T>
 where
     T: PartialEq,
-    F: Fn(&HirExpr, Option<&ConstSymbolEnv<'_>>, &mut Vec<SymbolId>) -> Option<T> + Copy,
+    F: Fn(&HirExpr, Option<&ConstSymbolEnv<'_>>, &mut Vec<usize>) -> Option<T> + Copy,
 {
     if !arms.iter().any(|arm| arm.condition.is_none()) {
         return None;
@@ -917,7 +1024,7 @@ fn constant_hir_numeric_comparison_with_env(
     left: &HirExpr,
     right: &HirExpr,
     env: Option<&ConstSymbolEnv<'_>>,
-    visiting: &mut Vec<SymbolId>,
+    visiting: &mut Vec<usize>,
 ) -> Option<bool> {
     let left = constant_hir_numeric_with_env(left, env, visiting)?;
     let right = constant_hir_numeric_with_env(right, env, visiting)?;
@@ -959,7 +1066,7 @@ fn constant_hir_bool_comparison(op: HirBinaryOp, left: bool, right: bool) -> Opt
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pine_ir::{PineType, Qualifier, ValueKind};
+    use pine_ir::{HirUserTypeIdentity, PineType, Qualifier, ValueKind};
 
     fn const_int_expr(kind: HirExprKind) -> HirExpr {
         HirExpr {
@@ -967,6 +1074,24 @@ mod tests {
             pine_type: PineType::new(Qualifier::Const, ValueKind::Int),
             series_id: None,
         }
+    }
+
+    fn const_user_type_expr(kind: HirExprKind) -> HirExpr {
+        HirExpr {
+            kind,
+            pine_type: PineType::new(Qualifier::Const, ValueKind::UserType),
+            series_id: None,
+        }
+    }
+
+    fn user_type_construct(fields: Vec<HirExpr>) -> HirExpr {
+        const_user_type_expr(HirExprKind::UserTypeConstruct {
+            identity: HirUserTypeIdentity {
+                source_id: 0,
+                type_name: "Box".to_owned(),
+            },
+            fields,
+        })
     }
 
     #[test]
@@ -979,21 +1104,86 @@ mod tests {
             right: Box::new(const_int_expr(HirExprKind::Literal(HirLiteral::Int(2)))),
         });
         let mut env = ConstSymbolEnv::new();
-        env.insert(base_symbol, &base);
+        insert_const_symbol(&mut env, base_symbol, &base);
 
         assert_eq!(constant_hir_int_with_symbols(&length, &env), Some(10));
     }
 
     #[test]
-    fn returns_none_for_cyclic_int_symbols() {
+    fn returns_none_for_unbound_forward_symbol() {
         let first_symbol = SymbolId(1);
         let second_symbol = SymbolId(2);
         let first = const_int_expr(HirExprKind::Symbol(second_symbol));
         let second = const_int_expr(HirExprKind::Symbol(first_symbol));
         let mut env = ConstSymbolEnv::new();
-        env.insert(first_symbol, &first);
-        env.insert(second_symbol, &second);
+        insert_const_symbol(&mut env, first_symbol, &first);
+        insert_const_symbol(&mut env, second_symbol, &second);
 
         assert_eq!(constant_hir_int_with_symbols(&first, &env), None);
+    }
+
+    #[test]
+    fn aliases_keep_the_value_visible_at_declaration_time() {
+        let base_symbol = SymbolId(1);
+        let alias_symbol = SymbolId(2);
+        let base_two = const_int_expr(HirExprKind::Literal(HirLiteral::Int(2)));
+        let alias = const_int_expr(HirExprKind::Symbol(base_symbol));
+        let base_five = const_int_expr(HirExprKind::Literal(HirLiteral::Int(5)));
+        let alias_use = const_int_expr(HirExprKind::Symbol(alias_symbol));
+        let mut env = ConstSymbolEnv::new();
+
+        insert_const_symbol(&mut env, base_symbol, &base_two);
+        insert_const_symbol(&mut env, alias_symbol, &alias);
+        insert_const_symbol(&mut env, base_symbol, &base_five);
+
+        assert_eq!(constant_hir_int_with_symbols(&alias_use, &env), Some(2));
+    }
+
+    #[test]
+    fn self_reassignment_uses_the_previous_binding_version() {
+        let symbol = SymbolId(1);
+        let initial = const_int_expr(HirExprKind::Literal(HirLiteral::Int(2)));
+        let incremented = const_int_expr(HirExprKind::Binary {
+            op: HirBinaryOp::Add,
+            left: Box::new(const_int_expr(HirExprKind::Symbol(symbol))),
+            right: Box::new(const_int_expr(HirExprKind::Literal(HirLiteral::Int(1)))),
+        });
+        let symbol_use = const_int_expr(HirExprKind::Symbol(symbol));
+        let mut env = ConstSymbolEnv::new();
+
+        insert_const_symbol(&mut env, symbol, &initial);
+        insert_const_symbol(&mut env, symbol, &incremented);
+
+        assert_eq!(constant_hir_int_with_symbols(&symbol_use, &env), Some(3));
+    }
+
+    #[test]
+    fn nested_user_type_aliases_keep_their_assignment_time_environment() {
+        let inner_symbol = SymbolId(1);
+        let outer_symbol = SymbolId(2);
+        let initial_inner = user_type_construct(vec![const_int_expr(HirExprKind::Literal(
+            HirLiteral::Int(2),
+        ))]);
+        let outer = user_type_construct(vec![const_user_type_expr(HirExprKind::Symbol(
+            inner_symbol,
+        ))]);
+        let reassigned_inner = user_type_construct(vec![const_int_expr(HirExprKind::Literal(
+            HirLiteral::Int(5),
+        ))]);
+        let outer_inner = const_user_type_expr(HirExprKind::FieldAccess {
+            value: Box::new(const_user_type_expr(HirExprKind::Symbol(outer_symbol))),
+            index: 0,
+        });
+        let nested_length = const_int_expr(HirExprKind::FieldAccess {
+            value: Box::new(outer_inner),
+            index: 0,
+        });
+        let mut env = ConstSymbolEnv::new();
+
+        insert_const_symbol(&mut env, inner_symbol, &initial_inner);
+        insert_const_symbol(&mut env, outer_symbol, &outer);
+        insert_const_symbol(&mut env, inner_symbol, &reassigned_inner);
+
+        assert_eq!(constant_hir_int_with_symbols(&nested_length, &env), Some(2));
     }
 }

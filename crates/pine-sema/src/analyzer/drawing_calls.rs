@@ -434,10 +434,13 @@ impl Analyzer {
             if param.name != "text_formatting" {
                 continue;
             }
-            let Some(value) = self.known_const_int_value(&arg.value) else {
+            let Some(value) = self.known_strict_const_int_for_validation(&arg.value) else {
                 continue;
             };
-            if !(0..=3).contains(&value) {
+            if match value {
+                Ok(value) => !(0..=3).contains(&value),
+                Err(()) => true,
+            } {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_VALUE",
                     "`label.new` argument `text_formatting` only supports text.format_none, text.format_bold, text.format_italic, or text.format_bold + text.format_italic",
@@ -649,10 +652,13 @@ impl Analyzer {
             if param.name != "text_formatting" {
                 continue;
             }
-            let Some(value) = self.known_const_int_value(&arg.value) else {
+            let Some(value) = self.known_strict_const_int_for_validation(&arg.value) else {
                 continue;
             };
-            if !(0..=3).contains(&value) {
+            if match value {
+                Ok(value) => !(0..=3).contains(&value),
+                Err(()) => true,
+            } {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_VALUE",
                     "`box.new` argument `text_formatting` only supports text.format_none, text.format_bold, text.format_italic, or text.format_bold + text.format_italic",
