@@ -3,7 +3,7 @@ use crate::analyzer::user_types::{
     UserTypeArrayElementInference, classify_user_type_array_element_names,
 };
 use crate::prelude::*;
-use crate::source_graph::SourceId;
+use crate::source_graph::{SourceContextId, SourceId};
 
 struct MethodCallReceiver {
     type_name: String,
@@ -84,6 +84,7 @@ impl Analyzer {
                 key,
                 MethodInfo {
                     source_id: SourceId::root(),
+                    source_context_id: SourceContextId::root(),
                     receiver_type: receiver.type_name.clone(),
                     receiver_name: receiver.name.clone(),
                     params,
@@ -300,9 +301,32 @@ impl Analyzer {
             .push(param_const_switch_keys);
         self.function_context_is_method.push(true);
         self.function_depth += 1;
-        let return_type = self.analyze_function_body(&method.body, method.span);
+        let (return_type, body_user_type, body_user_type_array, body_map) = self
+            .with_source_context(method.source_context_id, |analyzer| {
+                let return_type = analyzer.analyze_function_body(&method.body, method.span);
+                let body_user_type = return_type
+                    .is_some_and(|pine_type| pine_type.kind == ValueKind::UserType)
+                    .then(|| analyzer.user_type_name_of_function_body(&method.body))
+                    .flatten();
+                let body_user_type_array = return_type
+                    .is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+                    .then(|| analyzer.user_type_array_name_of_function_body(&method.body))
+                    .flatten();
+                let body_map = return_type
+                    .is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
+                    .then(|| analyzer.map_type_of_function_body(&method.body))
+                    .flatten();
+                (return_type, body_user_type, body_user_type_array, body_map)
+            });
+        self.function_depth -= 1;
+        self.function_context_is_method.pop();
+        self.function_param_const_switch_keys.pop();
+        self.function_param_symbols.pop();
+        self.function_stack.pop();
+        self.scope.pop_scope();
+
         if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserType)
-            && let Some(type_name) = self.user_type_name_of_function_body(&method.body)
+            && let Some(type_name) = body_user_type
         {
             self.mark_expr_user_type(call_span, type_name.clone());
             self.mark_expr_user_type(receiver.span, type_name);
@@ -314,24 +338,17 @@ impl Analyzer {
                     "source-aware expression identity metadata is required before library-local spans can be safely inlined",
                     call_span,
                 );
-            } else if let Some(type_name) = self.user_type_array_name_of_function_body(&method.body)
-            {
+            } else if let Some(type_name) = body_user_type_array {
                 self.mark_expr_user_type_array(call_span, type_name.clone());
                 self.mark_expr_user_type_array(receiver.span, type_name);
             }
         }
         if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
-            && let Some(info) = self.map_type_of_function_body(&method.body)
+            && let Some(info) = body_map
         {
             self.mark_expr_map(call_span, info);
             self.mark_expr_map(receiver.span, info);
         }
-        self.function_depth -= 1;
-        self.function_context_is_method.pop();
-        self.function_param_const_switch_keys.pop();
-        self.function_param_symbols.pop();
-        self.function_stack.pop();
-        self.scope.pop_scope();
         Some(return_type)
     }
 

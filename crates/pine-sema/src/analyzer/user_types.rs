@@ -25,9 +25,10 @@ use self::flow::{
     user_type_identity_matches_name,
 };
 pub(crate) use types::{
-    ImportedUdtConstructorArgError, ImportedUdtConstructorArgPlan, UdtConstructor, UdtFieldAccess,
-    UdtFieldAccessStep, UdtFieldMutation, UserTypeArrayElementInference, UserTypeFieldInfo,
-    UserTypeIdentity, UserTypeInfo, classify_user_type_array_element_names, span_key,
+    ExprKey, ImportedUdtConstructorArgError, ImportedUdtConstructorArgPlan, UdtConstructor,
+    UdtFieldAccess, UdtFieldAccessStep, UdtFieldMutation, UserTypeArrayElementInference,
+    UserTypeFieldInfo, UserTypeIdentity, UserTypeInfo, classify_user_type_array_element_names,
+    expr_key,
 };
 
 #[derive(Debug, Clone)]
@@ -274,7 +275,7 @@ impl Analyzer {
     }
 
     pub(crate) fn expr_user_type_name(&self, expr: &Expr) -> Option<String> {
-        let type_name = self.expr_user_types.get(&span_key(expr.span))?.clone();
+        let type_name = self.expr_user_types.get(&self.expr_key(expr.span))?.clone();
         if let Some(identity) = self.expr_user_type_identity(expr) {
             debug_assert!(user_type_identity_matches_name(&identity, &type_name));
         }
@@ -283,13 +284,13 @@ impl Analyzer {
 
     pub(crate) fn expr_user_type_identity(&self, expr: &Expr) -> Option<UserTypeIdentity> {
         self.expr_user_type_identities
-            .get(&span_key(expr.span))
+            .get(&self.expr_key(expr.span))
             .cloned()
     }
 
     pub(crate) fn expr_user_type_array_name(&self, expr: &Expr) -> Option<String> {
         self.expr_user_type_arrays
-            .get(&span_key(expr.span))
+            .get(&self.expr_key(expr.span))
             .cloned()
     }
 
@@ -553,7 +554,7 @@ impl Analyzer {
             ExprKind::History { expr, .. } => self.user_type_array_result_is_na(expr),
             _ => self
                 .expr_types
-                .get(&span_key(expr.span))
+                .get(&self.expr_key(expr.span))
                 .is_some_and(|pine_type| pine_type.kind == ValueKind::Na),
         }
     }
@@ -772,16 +773,19 @@ impl Analyzer {
 
     pub(crate) fn mark_expr_user_type(&mut self, span: Span, type_name: String) {
         let identity = self.user_type_identity_for_name(&type_name);
-        let key = span_key(span);
+        let key = self.expr_key(span);
         self.expr_user_types.insert(key, type_name);
         if let Some(identity) = identity {
             self.expr_user_type_identities.insert(key, identity);
+        } else {
+            self.expr_user_type_identities.remove(&key);
         }
     }
 
     #[allow(dead_code)]
     pub(crate) fn mark_expr_user_type_array(&mut self, span: Span, type_name: String) {
-        self.expr_user_type_arrays.insert(span_key(span), type_name);
+        let key = self.expr_key(span);
+        self.expr_user_type_arrays.insert(key, type_name);
     }
 
     pub(crate) fn mark_symbol_user_type(&mut self, symbol: SymbolInfo, type_name: String) {

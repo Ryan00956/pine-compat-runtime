@@ -19,7 +19,7 @@ impl Analyzer {
                         .symbol_maps
                         .get(&symbol.id)
                         .copied()
-                        .or_else(|| self.expr_maps.get(&span_key(expr.span)).copied());
+                        .or_else(|| self.expr_maps.get(&self.expr_key(expr.span)).copied());
                 }
                 if let Some(symbol) = self.scope.resolve(name) {
                     return self.symbol_maps.get(&symbol.id).copied();
@@ -34,7 +34,7 @@ impl Analyzer {
                         .symbol_maps
                         .get(&symbol.id)
                         .copied()
-                        .or_else(|| self.expr_maps.get(&span_key(expr.span)).copied());
+                        .or_else(|| self.expr_maps.get(&self.expr_key(expr.span)).copied());
                 }
                 if let Some(symbol) = self.scope.resolve(&parts[0]) {
                     return self.symbol_maps.get(&symbol.id).copied();
@@ -43,7 +43,7 @@ impl Analyzer {
             _ => {}
         }
 
-        self.expr_maps.get(&span_key(expr.span)).copied()
+        self.expr_maps.get(&self.expr_key(expr.span)).copied()
     }
 
     pub(crate) fn map_type_of_current_symbol(&self, name: &str) -> Option<MapTypeInfo> {
@@ -53,7 +53,8 @@ impl Analyzer {
     }
 
     pub(crate) fn mark_expr_map(&mut self, span: Span, info: MapTypeInfo) {
-        self.expr_maps.insert(span_key(span), info);
+        let key = self.expr_key(span);
+        self.expr_maps.insert(key, info);
     }
 
     pub(crate) fn mark_symbol_map(&mut self, symbol: SymbolInfo, info: MapTypeInfo) {
@@ -234,7 +235,7 @@ impl Analyzer {
             ExprKind::History { expr, .. } => self.is_na_result_expr(expr),
             _ => self
                 .expr_types
-                .get(&span_key(expr.span))
+                .get(&self.expr_key(expr.span))
                 .is_some_and(|pine_type| pine_type.kind == ValueKind::Na),
         }
     }

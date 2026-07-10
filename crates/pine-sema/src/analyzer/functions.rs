@@ -2,7 +2,7 @@ use crate::analyzer::user_types::{
     UserTypeArrayElementInference, classify_user_type_array_element_names,
 };
 use crate::prelude::*;
-use crate::source_graph::SourceId;
+use crate::source_graph::{SourceContextId, SourceId};
 
 pub(crate) fn function_param_names(params: &[FunctionParam]) -> Vec<String> {
     params.iter().map(|param| param.name.clone()).collect()
@@ -379,6 +379,7 @@ impl Analyzer {
                 name.clone(),
                 FunctionInfo {
                     source_id: SourceId::root(),
+                    source_context_id: SourceContextId::root(),
                     params: param_names,
                     param_types,
                     body: body.clone(),
@@ -531,26 +532,47 @@ impl Analyzer {
             .push(param_const_switch_keys);
         self.function_context_is_method.push(false);
         self.function_depth += 1;
-        let return_type = self.analyze_function_body(&function.body, function.span);
+        let (return_type, body_user_type, body_user_type_array, body_map) = self
+            .with_source_context(function.source_context_id, |analyzer| {
+                let return_type = analyzer.analyze_function_body(&function.body, function.span);
+                let body_user_type = return_type
+                    .is_some_and(|pine_type| pine_type.kind == ValueKind::UserType)
+                    .then(|| analyzer.user_type_name_of_function_body(&function.body))
+                    .flatten();
+                let body_user_type_array = return_type
+                    .is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+                    .then(|| analyzer.user_type_array_name_of_function_body(&function.body))
+                    .flatten();
+                let body_map = return_type
+                    .is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
+                    .then(|| analyzer.map_type_of_function_body(&function.body))
+                    .flatten();
+                (return_type, body_user_type, body_user_type_array, body_map)
+            });
+        self.function_depth -= 1;
+        self.function_context_is_method.pop();
+        self.function_param_const_switch_keys.pop();
+        self.function_param_symbols.pop();
+        self.function_stack.pop();
+        self.scope.pop_scope();
+
         if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserType) {
-            let returned_type_name = self
-                .user_type_name_of_function_body(&function.body)
-                .or_else(|| {
-                    let FunctionBody::Expr(expr) = &function.body else {
-                        return None;
-                    };
-                    let ExprKind::Identifier(returned_param) = &expr.kind else {
-                        return None;
-                    };
-                    let param_index = function
-                        .params
-                        .iter()
-                        .position(|param| param == returned_param)?;
-                    let arg_index = arg_indices
-                        .iter()
-                        .position(|mapped_param_index| *mapped_param_index == param_index)?;
-                    self.user_type_name_of_expr(&args[arg_index].value)
-                });
+            let returned_type_name = body_user_type.or_else(|| {
+                let FunctionBody::Expr(expr) = &function.body else {
+                    return None;
+                };
+                let ExprKind::Identifier(returned_param) = &expr.kind else {
+                    return None;
+                };
+                let param_index = function
+                    .params
+                    .iter()
+                    .position(|param| param == returned_param)?;
+                let arg_index = arg_indices
+                    .iter()
+                    .position(|mapped_param_index| *mapped_param_index == param_index)?;
+                self.user_type_name_of_expr(&args[arg_index].value)
+            });
             if let Some(type_name) = returned_type_name {
                 self.mark_expr_user_type(call_span, type_name.clone());
                 self.mark_expr_user_type(span, type_name);
@@ -563,25 +585,17 @@ impl Analyzer {
                     "source-aware expression identity metadata is required before library-local spans can be safely inlined",
                     call_span,
                 );
-            } else if let Some(type_name) =
-                self.user_type_array_name_of_function_body(&function.body)
-            {
+            } else if let Some(type_name) = body_user_type_array {
                 self.mark_expr_user_type_array(call_span, type_name.clone());
                 self.mark_expr_user_type_array(span, type_name);
             }
         }
         if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
-            && let Some(info) = self.map_type_of_function_body(&function.body)
+            && let Some(info) = body_map
         {
             self.mark_expr_map(call_span, info);
             self.mark_expr_map(span, info);
         }
-        self.function_depth -= 1;
-        self.function_context_is_method.pop();
-        self.function_param_const_switch_keys.pop();
-        self.function_param_symbols.pop();
-        self.function_stack.pop();
-        self.scope.pop_scope();
 
         return_type
     }

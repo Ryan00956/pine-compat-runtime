@@ -70,8 +70,9 @@ impl Analyzer {
         // Function and method bodies can be analyzed repeatedly with different
         // argument templates and UDT identities. Discard span-keyed collection
         // metadata from an earlier pass before deriving the current result.
-        self.expr_maps.remove(&span_key(expr.span));
-        self.expr_user_type_arrays.remove(&span_key(expr.span));
+        let key = self.expr_key(expr.span);
+        self.expr_maps.remove(&key);
+        self.expr_user_type_arrays.remove(&key);
         if !self.enter_expr_analysis(expr.span) {
             return None;
         }
@@ -219,7 +220,8 @@ impl Analyzer {
             ExprKind::Call { callee, args } => {
                 let pine_type = self.analyze_call(callee, args, expr.span);
                 if let Some(pine_type) = pine_type {
-                    self.expr_types.insert(span_key(expr.span), pine_type);
+                    let key = self.expr_key(expr.span);
+                    self.expr_types.insert(key, pine_type);
                 }
                 pine_type
             }

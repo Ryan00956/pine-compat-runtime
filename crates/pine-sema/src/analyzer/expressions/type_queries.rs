@@ -13,7 +13,7 @@ impl Analyzer {
         expr: &Expr,
         param_types: &HashMap<String, PineType>,
     ) -> Option<PineType> {
-        if let Some(pine_type) = self.expr_types.get(&span_key(expr.span)) {
+        if let Some(pine_type) = self.expr_types.get(&self.expr_key(expr.span)) {
             return Some(*pine_type);
         }
         match &expr.kind {
@@ -179,7 +179,10 @@ impl Analyzer {
                         let param = &function.params[param_index];
                         nested_param_types.insert(param.clone(), arg_type?);
                     }
-                    self.type_of_function_body_with_params(&function.body, &nested_param_types)
+                    self.with_source_context_ref(function.source_context_id, |analyzer| {
+                        analyzer
+                            .type_of_function_body_with_params(&function.body, &nested_param_types)
+                    })
                 }
             }
             ExprKind::History { expr, .. } => self
@@ -695,13 +698,15 @@ impl Analyzer {
                         nested_param_user_types.insert(param.clone(), type_name);
                     }
                 }
-                self.tuple_element_types_of_function_body_with_params(
-                    &function.body,
-                    TupleTypeContext {
-                        param_types: &nested_param_types,
-                        param_user_types: &nested_param_user_types,
-                    },
-                )
+                self.with_source_context_ref(function.source_context_id, |analyzer| {
+                    analyzer.tuple_element_types_of_function_body_with_params(
+                        &function.body,
+                        TupleTypeContext {
+                            param_types: &nested_param_types,
+                            param_user_types: &nested_param_user_types,
+                        },
+                    )
+                })
             }
             ExprKind::For {
                 from,
@@ -957,13 +962,15 @@ impl Analyzer {
                 nested_param_user_types.insert(param.name.clone(), type_name);
             }
         }
-        self.tuple_element_types_of_function_body_with_params(
-            &method.body,
-            TupleTypeContext {
-                param_types: &nested_param_types,
-                param_user_types: &nested_param_user_types,
-            },
-        )
+        self.with_source_context_ref(method.source_context_id, |analyzer| {
+            analyzer.tuple_element_types_of_function_body_with_params(
+                &method.body,
+                TupleTypeContext {
+                    param_types: &nested_param_types,
+                    param_user_types: &nested_param_user_types,
+                },
+            )
+        })
     }
 
     fn user_type_name_of_expr_with_tuple_context(

@@ -1,6 +1,9 @@
 use super::*;
+use crate::analyzer::context::{MapTypeInfo, SourcedExpr};
 use crate::modules::{ImportedUserTypeFieldInfo, ImportedUserTypeIdentity, ImportedUserTypeInfo};
+use crate::source_graph::SourceContextId;
 use pine_syntax::{BinaryOp, FunctionBody, Literal};
+use std::cell::Cell;
 use std::collections::HashSet;
 
 fn field(name: &str, kind: ValueKind, user_type_name: Option<&str>) -> UserTypeFieldInfo {
@@ -65,6 +68,8 @@ fn analyzer() -> Analyzer {
     Analyzer {
         diagnostics: Vec::new(),
         compatibility: CompatibilityReport::default(),
+        source_context_id: Cell::new(SourceContextId::root()),
+        source_context_depth: Cell::new(0),
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),
         bindings: HashMap::new(),
         lower_symbol_overrides: Vec::new(),
@@ -610,6 +615,230 @@ fn mirrors_user_type_identity_for_symbols_and_expr_spans() {
         analyzer.expr_user_type_name(&expr),
         Some("Point".to_owned())
     );
+}
+
+#[test]
+fn source_context_isolates_same_span_metadata_and_bindings() {
+    let mut analyzer = analyzer();
+    analyzer
+        .user_types
+        .insert("RootPoint".to_owned(), scalar_type("RootPoint"));
+    analyzer.imported_user_types.insert(
+        "left.Point".to_owned(),
+        imported_type(SourceId::library(0), "Point", Vec::new()),
+    );
+    analyzer.imported_user_types.insert(
+        "right.Point".to_owned(),
+        imported_type(SourceId::library(0), "Point", Vec::new()),
+    );
+
+    let span = Span::new(40, 52);
+    let expr = Expr {
+        kind: ExprKind::Literal(Literal::Int(1)),
+        span,
+    };
+    let root = SourceContextId::root();
+    let left = SourceContextId::import_instance(0);
+    let right = SourceContextId::import_instance(1);
+
+    let root_symbol = analyzer.define_local_symbol(
+        "shared",
+        PineType::new(Qualifier::Const, ValueKind::Float),
+        None,
+        false,
+    );
+    analyzer.bind_symbol("shared", span, root_symbol);
+    analyzer.mark_expr_user_type(span, "RootPoint".to_owned());
+    analyzer.mark_expr_user_type_array(span, "RootPoint".to_owned());
+    analyzer.mark_expr_map(
+        span,
+        MapTypeInfo {
+            key_kind: ValueKind::Int,
+            value_kind: ValueKind::Float,
+        },
+    );
+    let key = analyzer.expr_key(span);
+    analyzer
+        .expr_types
+        .insert(key, PineType::new(Qualifier::Const, ValueKind::Tuple));
+
+    analyzer.with_source_context(left, |analyzer| {
+        let symbol = analyzer.define_local_symbol(
+            "shared",
+            PineType::new(Qualifier::Simple, ValueKind::Float),
+            None,
+            false,
+        );
+        analyzer.bind_symbol("shared", span, symbol);
+        analyzer.mark_expr_user_type(span, "left.Point".to_owned());
+        analyzer.mark_expr_user_type_array(span, "left.Point".to_owned());
+        analyzer.mark_expr_map(
+            span,
+            MapTypeInfo {
+                key_kind: ValueKind::Float,
+                value_kind: ValueKind::Int,
+            },
+        );
+        let key = analyzer.expr_key(span);
+        analyzer
+            .expr_types
+            .insert(key, PineType::new(Qualifier::Simple, ValueKind::Tuple));
+    });
+    analyzer.with_source_context(right, |analyzer| {
+        let symbol = analyzer.define_local_symbol(
+            "shared",
+            PineType::new(Qualifier::Series, ValueKind::Float),
+            None,
+            false,
+        );
+        analyzer.bind_symbol("shared", span, symbol);
+        analyzer.mark_expr_user_type(span, "right.Point".to_owned());
+        analyzer.mark_expr_user_type_array(span, "right.Point".to_owned());
+        analyzer.mark_expr_map(
+            span,
+            MapTypeInfo {
+                key_kind: ValueKind::String,
+                value_kind: ValueKind::Bool,
+            },
+        );
+        let key = analyzer.expr_key(span);
+        analyzer
+            .expr_types
+            .insert(key, PineType::new(Qualifier::Series, ValueKind::Tuple));
+    });
+
+    let snapshot = |analyzer: &Analyzer| {
+        (
+            analyzer.bound_symbol("shared", span).expect("bound symbol"),
+            analyzer.expr_user_type_name(&expr).expect("UDT name"),
+            analyzer
+                .expr_user_type_identity(&expr)
+                .expect("UDT identity"),
+            analyzer
+                .expr_user_type_array_name(&expr)
+                .expect("UDT array name"),
+            analyzer.map_type_of_expr(&expr).expect("map template"),
+            *analyzer
+                .expr_types
+                .get(&analyzer.expr_key(span))
+                .expect("tuple type"),
+        )
+    };
+
+    let root_snapshot = snapshot(&analyzer);
+    let left_snapshot = analyzer.with_source_context_ref(left, snapshot);
+    let right_snapshot = analyzer.with_source_context_ref(right, snapshot);
+
+    assert_eq!(analyzer.current_source_context_id(), root);
+    assert!(analyzer.source_context_stack_is_restored());
+    assert_eq!(root_snapshot.0.id, root_symbol.id);
+    assert_eq!(root_snapshot.1, "RootPoint");
+    assert_eq!(root_snapshot.2.source_id, SourceId::root());
+    assert_eq!(root_snapshot.3, "RootPoint");
+    assert_eq!(root_snapshot.4.key_kind, ValueKind::Int);
+    assert_eq!(root_snapshot.5.qualifier, Qualifier::Const);
+    assert_ne!(left_snapshot.0.id, root_snapshot.0.id);
+    assert_eq!(left_snapshot.1, "left.Point");
+    assert_eq!(left_snapshot.2.source_id, SourceId::library(0));
+    assert_eq!(left_snapshot.2, right_snapshot.2);
+    assert_eq!(left_snapshot.3, "left.Point");
+    assert_eq!(left_snapshot.4.key_kind, ValueKind::Float);
+    assert_eq!(left_snapshot.5.qualifier, Qualifier::Simple);
+    assert_ne!(right_snapshot.0.id, left_snapshot.0.id);
+    assert_eq!(right_snapshot.1, "right.Point");
+    assert_eq!(right_snapshot.3, "right.Point");
+    assert_eq!(right_snapshot.4.key_kind, ValueKind::String);
+    assert_eq!(right_snapshot.5.qualifier, Qualifier::Series);
+
+    analyzer.with_source_context(right, |analyzer| {
+        assert_eq!(
+            analyzer.analyze_expr(&expr),
+            Some(PineType::new(Qualifier::Const, ValueKind::Int))
+        );
+        assert!(analyzer.expr_user_type_array_name(&expr).is_none());
+        assert!(analyzer.map_type_of_expr(&expr).is_none());
+    });
+    assert_eq!(
+        analyzer.expr_user_type_array_name(&expr),
+        Some("RootPoint".to_owned())
+    );
+    assert_eq!(
+        analyzer.map_type_of_expr(&expr).map(|info| info.key_kind),
+        Some(ValueKind::Int)
+    );
+}
+
+#[test]
+fn source_context_restores_after_nested_early_return() {
+    let mut analyzer = analyzer();
+    let left = SourceContextId::import_instance(0);
+    let right = SourceContextId::import_instance(1);
+
+    let result = analyzer.with_source_context(left, |analyzer| {
+        assert_eq!(analyzer.current_source_context_id(), left);
+        let nested = analyzer.with_source_context(right, |analyzer| {
+            assert_eq!(analyzer.current_source_context_id(), right);
+            None::<()>
+        });
+        assert!(nested.is_none());
+        assert_eq!(analyzer.current_source_context_id(), left);
+        Some(())
+    });
+
+    assert_eq!(result, Some(()));
+    assert!(analyzer.source_context_stack_is_restored());
+}
+
+#[test]
+fn symbol_initializer_restores_its_source_context_for_binding_lookups() {
+    let mut analyzer = analyzer();
+    let span = Span::new(70, 76);
+    let left = SourceContextId::import_instance(0);
+    let root_symbol = analyzer.define_local_symbol(
+        "source",
+        PineType::new(Qualifier::Const, ValueKind::Int),
+        None,
+        false,
+    );
+    analyzer.bind_symbol("source", span, root_symbol);
+    let holder = analyzer.define_local_symbol(
+        "holder",
+        PineType::new(Qualifier::Const, ValueKind::Int),
+        None,
+        false,
+    );
+    let left_symbol = analyzer.with_source_context(left, |analyzer| {
+        let symbol = analyzer.define_local_symbol(
+            "source",
+            PineType::new(Qualifier::Series, ValueKind::Int),
+            None,
+            false,
+        );
+        analyzer.bind_symbol("source", span, symbol);
+        symbol
+    });
+    analyzer.symbol_init_exprs.insert(
+        holder.id,
+        SourcedExpr {
+            source_context_id: left,
+            expr: identifier("source", span),
+        },
+    );
+
+    let resolved = analyzer
+        .with_symbol_initializer(holder.id, |analyzer, initializer| {
+            let ExprKind::Identifier(name) = &initializer.kind else {
+                return None;
+            };
+            analyzer
+                .bound_symbol(name, initializer.span)
+                .map(|symbol| symbol.id)
+        })
+        .expect("sourced initializer lookup");
+
+    assert_eq!(resolved, left_symbol.id);
+    assert_ne!(resolved, root_symbol.id);
+    assert!(analyzer.source_context_stack_is_restored());
 }
 
 #[test]

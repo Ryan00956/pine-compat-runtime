@@ -10,10 +10,14 @@ impl Analyzer {
         let mut symbols = HashSet::new();
         self.collect_lower_reassigned_symbols_from_stmts(statements, &mut symbols);
         for function in self.functions.values() {
-            self.collect_lower_reassigned_symbols_from_body(&function.body, &mut symbols);
+            self.with_source_context_ref(function.source_context_id, |analyzer| {
+                analyzer.collect_lower_reassigned_symbols_from_body(&function.body, &mut symbols);
+            });
         }
         for method in self.methods.values() {
-            self.collect_lower_reassigned_symbols_from_body(&method.body, &mut symbols);
+            self.with_source_context_ref(method.source_context_id, |analyzer| {
+                analyzer.collect_lower_reassigned_symbols_from_body(&method.body, &mut symbols);
+            });
         }
         symbols
     }
@@ -78,7 +82,8 @@ impl Analyzer {
                     self.collect_lower_reassigned_symbols_from_expr(value, symbols);
                 }
                 StmtKind::Reassign { name, value } => {
-                    if let Some(symbol) = self.bindings.get(&binding_key(name, statement.span)) {
+                    if let Some(symbol) = self.bindings.get(&self.binding_key(name, statement.span))
+                    {
                         symbols.insert(symbol.id);
                     }
                     self.collect_lower_reassigned_symbols_from_expr(value, symbols);

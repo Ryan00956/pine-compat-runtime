@@ -38,6 +38,117 @@ method otherNestedSourceNamed(Point p, Wrapper other, float delta) => p.otherNes
 }
 
 #[test]
+fn dual_alias_nested_import_contexts_isolate_and_reuse_pure_series_for_max_bars_back_history() {
+    let library = SourceFile::new(
+        "dual_alias_source_context_lib.pine",
+        r#"library("Dual alias source context")
+export type Box
+    float value
+
+privateSource(Box box, float delta) =>
+    aliased = box
+    shifted = aliased.value + delta
+    shifted
+
+export exportedSource(Box box, float delta) => privateSource(box, delta)
+
+method inner(Box box, float delta) => privateSource(box, delta)
+method outer(Box box, float delta) => box.inner(delta)
+"#,
+    );
+    let root = SourceFile::new(
+        "dual_alias_source_context_root.pine",
+        r#"//@version=6
+import user/context/1 as left
+import user/context/1 as right
+indicator("Dual alias source context")
+
+rootSource(float value, float delta) =>
+    aliased = value
+    shifted = aliased + delta
+    shifted
+
+length = input.int(1, "Length")
+left_box = left.Box.new(close)
+right_box = right.Box.new(open)
+
+left_source = left.exportedSource(left_box, 1.0)
+right_source = right_box.outer(delta=2.0)
+root_source = rootSource(high, 3.0)
+left_again_source = left.exportedSource(left_box, 1.0)
+root_again_source = rootSource(high, 3.0)
+
+max_bars_back(left_source, 3)
+max_bars_back(right_source, 5)
+max_bars_back(root_source, 7)
+
+plot(left.exportedSource(left_box, 1.0)[length])
+plot(right_box.outer(delta=2.0)[length])
+plot(rootSource(high, 3.0)[length])
+plot(left.exportedSource(left_box, 1.0)[length])
+plot(rootSource(high, 3.0)[length])
+"#,
+    );
+    let input =
+        AnalysisInput::with_library_sources(root, vec![("user/context/1".to_owned(), library)])
+            .expect("dual-alias library input should be valid");
+    let analysis = crate::analyze_input(&input);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "dual-alias diagnostics: {:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("dual-alias script should lower to HIR");
+    let symbol_series_id = |name: &str| {
+        hir.symbols
+            .iter()
+            .find(|symbol| symbol.name == name)
+            .and_then(|symbol| symbol.series_id)
+            .unwrap_or_else(|| panic!("`{name}` should have a series id"))
+    };
+
+    let left_series = symbol_series_id("left_source");
+    let right_series = symbol_series_id("right_source");
+    let root_series = symbol_series_id("root_source");
+    assert_eq!(
+        symbol_series_id("left_again_source"),
+        left_series,
+        "the left alias should recover its pure-series identity after right/root calls"
+    );
+    assert_eq!(
+        symbol_series_id("root_again_source"),
+        root_series,
+        "the root context should be restored after the final imported call"
+    );
+    assert_ne!(left_series, right_series);
+    assert_ne!(left_series, root_series);
+    assert_ne!(right_series, root_series);
+
+    for (max_bars_back, expected_series) in [(3, left_series), (5, right_series), (7, root_series)]
+    {
+        let bound = hir
+            .series_max_bars_back
+            .iter()
+            .find(|bound| bound.max_bars_back == max_bars_back)
+            .unwrap_or_else(|| panic!("missing max_bars_back={max_bars_back} bound"));
+        assert_eq!(bound.series_id, expected_series);
+        let requirement = hir
+            .series_history
+            .iter()
+            .find(|requirement| requirement.series_id == expected_series)
+            .unwrap_or_else(|| {
+                panic!("missing dynamic history requirement for max_bars_back={max_bars_back}")
+            });
+        assert!(
+            requirement.has_dynamic_offsets,
+            "max_bars_back={max_bars_back} should reuse the dynamically indexed series: {:?}",
+            hir.series_history
+        );
+    }
+}
+
+#[test]
 fn infers_history_requirements() {
     let analysis =
         analyze("len = input.int(1, \"Length\")\nplot(close[3])\nplot((close + open)[len])\n");

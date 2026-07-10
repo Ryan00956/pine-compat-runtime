@@ -11,7 +11,7 @@ use crate::analyzer::functions::{
     contains_output_or_declaration_call, function_param_names,
     statement_contains_output_or_declaration_call,
 };
-use crate::source_graph::{AnalysisInput, SourceId};
+use crate::source_graph::{AnalysisInput, SourceContextId, SourceId};
 use crate::types::array_kind_from_element_type_name;
 
 mod alias_access;
@@ -20,6 +20,9 @@ mod model;
 #[path = "modules_rewrite.rs"]
 mod modules_rewrite;
 mod side_effects;
+#[cfg(test)]
+#[path = "modules/source_context_tests.rs"]
+mod source_context_tests;
 
 use imports::{
     detect_import_cycles, imports_in_program, validate_library_imports, validate_root_imports,
@@ -125,6 +128,9 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                         name.clone(),
                         FunctionInfo {
                             source_id: module.id,
+                            // Library declarations are re-contextualized for each root import
+                            // instance in `build_import_plan` before semantic analysis.
+                            source_context_id: SourceContextId::root(),
                             params: function_param_names(params),
                             param_types: module_function_param_types(
                                 module,
@@ -179,6 +185,9 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                     name.clone(),
                     FunctionInfo {
                         source_id: module.id,
+                        // Library declarations are re-contextualized for each root import
+                        // instance in `build_import_plan` before semantic analysis.
+                        source_context_id: SourceContextId::root(),
                         params: function_param_names(params),
                         param_types: module_function_param_types(module, params, None, diagnostics),
                         body: body.clone(),
@@ -319,7 +328,11 @@ fn build_import_plan(
     diagnostics: &mut Vec<Diagnostic>,
 ) -> ImportPlan {
     let mut plan = ImportPlan::default();
-    for import in imports_in_program(&modules[0].program) {
+    for (import_instance, import) in imports_in_program(&modules[0].program)
+        .into_iter()
+        .enumerate()
+    {
+        let source_context_id = SourceContextId::import_instance(import_instance);
         let Some((alias, _)) = import.alias else {
             continue;
         };
@@ -380,6 +393,7 @@ fn build_import_plan(
                     key,
                     FunctionInfo {
                         source_id: function.source_id,
+                        source_context_id,
                         params: function.params.clone(),
                         param_types: imported_function_param_types(
                             &alias,
@@ -400,7 +414,8 @@ fn build_import_plan(
         }
 
         for ((_, name), method) in &module.methods {
-            let Some(method_info) = imported_method_info(&alias, module, method) else {
+            let Some(method_info) = imported_method_info(&alias, module, method, source_context_id)
+            else {
                 continue;
             };
             plan.imported_methods.insert(
@@ -409,6 +424,16 @@ fn build_import_plan(
             );
         }
     }
+    debug_assert!(
+        plan.imported_functions
+            .values()
+            .all(|function| function.source_context_id != SourceContextId::root())
+    );
+    debug_assert!(
+        plan.imported_methods
+            .values()
+            .all(|method| method.source_context_id != SourceContextId::root())
+    );
     plan
 }
 
@@ -416,6 +441,7 @@ fn imported_method_info(
     alias: &str,
     module: &ModuleInfo,
     method: &ModuleMethodInfo,
+    source_context_id: SourceContextId,
 ) -> Option<MethodInfo> {
     let identity = method.receiver_identity.as_ref()?;
     if !exported_user_type(module, &identity.name) {
@@ -430,6 +456,7 @@ fn imported_method_info(
     let module_context = rewrite_context_for_module(alias, module);
     Some(MethodInfo {
         source_id: identity.source_id,
+        source_context_id,
         receiver_type: format!("{alias}.{}", identity.name),
         receiver_name: method.receiver_name.clone(),
         params,

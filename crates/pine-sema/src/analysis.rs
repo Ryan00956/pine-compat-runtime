@@ -1,3 +1,4 @@
+use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
 
 use pine_ir::{HirProgram, Qualifier, ValueKind};
@@ -8,6 +9,7 @@ use crate::compatibility::CompatibilityReport;
 use crate::modules::validate_modules;
 use crate::resolver::ScopeResolver;
 use crate::source_graph::AnalysisInput;
+use crate::source_graph::SourceContextId;
 use crate::symbols::{
     initial_series_count, initial_symbol_count, initial_symbol_order, initial_symbols,
 };
@@ -34,6 +36,8 @@ pub fn analyze_input(input: &AnalysisInput) -> Analysis {
                 .map(|version| version.version),
             ..CompatibilityReport::default()
         },
+        source_context_id: Cell::new(SourceContextId::root()),
+        source_context_depth: Cell::new(0),
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),
         bindings: HashMap::new(),
         lower_symbol_overrides: Vec::new(),

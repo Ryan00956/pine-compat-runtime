@@ -82,7 +82,9 @@ impl Analyzer {
         }
         self.function_param_const_switch_keys
             .push(param_const_switch_keys);
-        let body = self.lower_function_body(&function.body, &param_exprs, &param_types);
+        let body = self.with_source_context(function.source_context_id, |analyzer| {
+            analyzer.lower_function_body(&function.body, &param_exprs, &param_types)
+        });
         self.function_param_const_switch_keys.pop();
         self.exit_lowering_inline();
         let body = body?;
@@ -226,7 +228,9 @@ impl Analyzer {
         }
         self.function_param_const_switch_keys
             .push(param_const_switch_keys);
-        let body = self.lower_function_body(&method.body, &param_exprs, &param_types);
+        let body = self.with_source_context(method.source_context_id, |analyzer| {
+            analyzer.lower_function_body(&method.body, &param_exprs, &param_types)
+        });
         self.function_param_const_switch_keys.pop();
         self.exit_lowering_inline();
         let body = body?;

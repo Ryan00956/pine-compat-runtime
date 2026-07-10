@@ -84,7 +84,9 @@ fn pure_udf_call_series_key_inner(
     let param_keys = udf_call_param_keys(analyzer, function, args, caller_param_keys, udf_stack)?;
 
     udf_stack.push(name.to_owned());
-    let body_key = pure_function_body_series_key(analyzer, &function.body, &param_keys, udf_stack);
+    let body_key = analyzer.with_source_context_ref(function.source_context_id, |analyzer| {
+        pure_function_body_series_key(analyzer, &function.body, &param_keys, udf_stack)
+    });
     udf_stack.pop();
     let body_key = body_key?;
     Some(format!("udf:{name}:{body_key}"))
@@ -243,7 +245,9 @@ fn pure_user_method_call_series_key_inner(
     }
 
     udf_stack.push(stack_key.clone());
-    let body_key = pure_function_body_series_key(analyzer, &method.body, &param_keys, udf_stack);
+    let body_key = analyzer.with_source_context_ref(method.source_context_id, |analyzer| {
+        pure_function_body_series_key(analyzer, &method.body, &param_keys, udf_stack)
+    });
     udf_stack.pop();
     let body_key = body_key?;
     Some(format!("{stack_key}:{body_key}"))
@@ -387,7 +391,9 @@ fn pure_expr_receiver_user_method_call_series_key_inner(
     }
 
     udf_stack.push(stack_key.clone());
-    let body_key = pure_function_body_series_key(analyzer, &method.body, &param_keys, udf_stack);
+    let body_key = analyzer.with_source_context_ref(method.source_context_id, |analyzer| {
+        pure_function_body_series_key(analyzer, &method.body, &param_keys, udf_stack)
+    });
     udf_stack.pop();
     let body_key = body_key?;
     Some(format!("{stack_key}:{body_key}"))
@@ -711,16 +717,17 @@ fn receiver_field_param_keys(
     receiver_type_name: &str,
     udf_stack: &mut Vec<String>,
 ) -> Option<HashMap<String, String>> {
-    let initializer = analyzer.symbol_init_exprs.get(&receiver_symbol_id)?;
     let mut field_keys = HashMap::new();
-    collect_user_type_field_param_keys(
-        analyzer,
-        receiver_param_name,
-        initializer,
-        receiver_type_name,
-        &mut field_keys,
-        udf_stack,
-    )?;
+    analyzer.with_symbol_initializer(receiver_symbol_id, |analyzer, initializer| {
+        collect_user_type_field_param_keys(
+            analyzer,
+            receiver_param_name,
+            initializer,
+            receiver_type_name,
+            &mut field_keys,
+            udf_stack,
+        )
+    })?;
     Some(field_keys)
 }
 
@@ -761,16 +768,17 @@ fn collect_user_type_field_param_keys_with_params(
         let symbol = analyzer
             .bound_symbol(name, source_expr.span)
             .or_else(|| analyzer.scope.resolve(name))?;
-        let initializer = analyzer.symbol_init_exprs.get(&symbol.id)?;
-        return collect_user_type_field_param_keys_with_params(
-            analyzer,
-            receiver_path,
-            initializer,
-            type_name,
-            field_keys,
-            param_keys,
-            udf_stack,
-        );
+        return analyzer.with_symbol_initializer(symbol.id, |analyzer, initializer| {
+            collect_user_type_field_param_keys_with_params(
+                analyzer,
+                receiver_path,
+                initializer,
+                type_name,
+                field_keys,
+                param_keys,
+                udf_stack,
+            )
+        });
     }
     if analyzer.imported_user_types.contains_key(type_name) {
         return collect_imported_user_type_field_param_keys_with_params(
@@ -866,7 +874,7 @@ fn collect_udf_result_field_param_keys(
         BodyFieldKind::Local
     };
     udf_stack.push(name);
-    let result = {
+    let result = analyzer.with_source_context_ref(function.source_context_id, |analyzer| {
         let mut body_context = BodyFieldContext {
             analyzer,
             receiver_path,
@@ -876,7 +884,7 @@ fn collect_udf_result_field_param_keys(
             kind,
         };
         collect_body_field_param_keys(&mut body_context, &function.body, &param_keys)
-    };
+    });
     udf_stack.pop();
     result
 }
@@ -983,7 +991,7 @@ fn collect_local_user_method_result_field_param_keys(
     }
 
     udf_stack.push(stack_key);
-    let result = {
+    let result = analyzer.with_source_context_ref(method.source_context_id, |analyzer| {
         let mut body_context = BodyFieldContext {
             analyzer,
             receiver_path,
@@ -993,7 +1001,7 @@ fn collect_local_user_method_result_field_param_keys(
             kind: BodyFieldKind::Local,
         };
         collect_body_field_param_keys(&mut body_context, &method.body, &param_keys)
-    };
+    });
     udf_stack.pop();
     result
 }

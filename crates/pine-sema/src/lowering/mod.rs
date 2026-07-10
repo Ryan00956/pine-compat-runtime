@@ -195,6 +195,7 @@ fn sort_field_index_expr(index: usize) -> HirExpr {
 
 impl Analyzer {
     pub(crate) fn lower_program(&mut self, program: &Program) -> Option<HirProgram> {
+        debug_assert!(self.source_context_stack_is_restored());
         self.lower_reassigned_symbols = self.collect_lower_reassigned_symbols(&program.statements);
         let mut statements = Vec::new();
         for statement in &program.statements {
@@ -223,7 +224,7 @@ impl Analyzer {
         let script_mode = self
             .script_declaration
             .map_or(ScriptMode::Indicator, |(mode, _)| mode);
-        Some(HirProgram {
+        let program = HirProgram {
             language_version: program.version.map(|version| version.version),
             script_mode,
             strategy_settings: self.strategy_settings,
@@ -238,7 +239,9 @@ impl Analyzer {
             series_max_bars_back,
             history: history.program,
             series_history: history.series,
-        })
+        };
+        debug_assert!(self.source_context_stack_is_restored());
+        Some(program)
     }
 
     fn lower_user_types(&self) -> Vec<HirUserTypeInfo> {
@@ -342,11 +345,12 @@ impl Analyzer {
     }
 
     pub(crate) fn bind_symbol(&mut self, name: &str, span: Span, symbol: SymbolInfo) {
-        self.bindings.insert(binding_key(name, span), symbol);
+        let key = self.binding_key(name, span);
+        self.bindings.insert(key, symbol);
     }
 
     pub(crate) fn bound_symbol(&self, name: &str, span: Span) -> Option<SymbolInfo> {
-        let symbol = self.bindings.get(&binding_key(name, span)).copied()?;
+        let symbol = self.bindings.get(&self.binding_key(name, span)).copied()?;
         self.lower_symbol_overrides
             .iter()
             .rev()
@@ -362,7 +366,7 @@ impl Analyzer {
     }
 
     pub(crate) fn lower_decl_symbol(&mut self, name: &str, span: Span) -> Option<SymbolInfo> {
-        let symbol = self.bindings.get(&binding_key(name, span)).copied()?;
+        let symbol = self.bindings.get(&self.binding_key(name, span)).copied()?;
         if self.lower_symbol_overrides.is_empty() || self.scope.contains_lower_symbol(symbol.id) {
             return Some(symbol);
         }
@@ -615,7 +619,7 @@ impl Analyzer {
             && let Some(param_expr) = param_exprs.get(name)
             && self
                 .bindings
-                .get(&binding_key(name, expr.span))
+                .get(&self.binding_key(name, expr.span))
                 .is_none_or(|symbol| !self.has_lower_symbol_override(symbol.id))
         {
             return Some(param_expr.clone());

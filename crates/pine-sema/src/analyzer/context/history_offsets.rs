@@ -63,9 +63,10 @@ impl Analyzer {
                 if env.symbol_visiting.contains(&symbol.id) {
                     return None;
                 }
-                let init_expr = self.symbol_init_exprs.get(&symbol.id)?;
                 env.symbol_visiting.push(symbol.id);
-                let result = self.known_history_offset_bool_value_inner(init_expr, env);
+                let result = self.with_symbol_initializer(symbol.id, |analyzer, init_expr| {
+                    analyzer.known_history_offset_bool_value_inner(init_expr, env)
+                });
                 env.symbol_visiting.pop();
                 result
             }
@@ -459,9 +460,10 @@ impl Analyzer {
                 if env.symbol_visiting.contains(&symbol.id) {
                     return None;
                 }
-                let init_expr = self.symbol_init_exprs.get(&symbol.id)?;
                 env.symbol_visiting.push(symbol.id);
-                let result = self.known_history_offset_numeric_value_inner(init_expr, env);
+                let result = self.with_symbol_initializer(symbol.id, |analyzer, init_expr| {
+                    analyzer.known_history_offset_numeric_value_inner(init_expr, env)
+                });
                 env.symbol_visiting.pop();
                 result
             }
@@ -750,9 +752,10 @@ impl Analyzer {
                 if env.symbol_visiting.contains(&symbol.id) {
                     return None;
                 }
-                let init_expr = self.symbol_init_exprs.get(&symbol.id)?;
                 env.symbol_visiting.push(symbol.id);
-                let result = self.known_history_offset_string_value_inner(init_expr, env);
+                let result = self.with_symbol_initializer(symbol.id, |analyzer, init_expr| {
+                    analyzer.known_history_offset_string_value_inner(init_expr, env)
+                });
                 env.symbol_visiting.pop();
                 result
             }
@@ -985,9 +988,10 @@ impl Analyzer {
                 if env.symbol_visiting.contains(&symbol.id) {
                     return None;
                 }
-                let init_expr = self.symbol_init_exprs.get(&symbol.id)?;
                 env.symbol_visiting.push(symbol.id);
-                let result = self.known_history_offset_color_value_inner(init_expr, env);
+                let result = self.with_symbol_initializer(symbol.id, |analyzer, init_expr| {
+                    analyzer.known_history_offset_color_value_inner(init_expr, env)
+                });
                 env.symbol_visiting.pop();
                 result
             }

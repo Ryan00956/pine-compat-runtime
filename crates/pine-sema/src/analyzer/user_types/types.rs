@@ -4,7 +4,7 @@ use pine_ir::{PineType, ValueKind};
 use pine_syntax::{Expr, Span};
 
 use crate::resolver::SymbolInfo;
-use crate::source_graph::SourceId;
+use crate::source_graph::{SourceContextId, SourceId};
 
 #[derive(Debug, Clone)]
 pub(crate) struct UserTypeInfo {
@@ -75,8 +75,19 @@ pub(crate) struct ImportedUdtConstructorArgPlan {
     pub(crate) field_arg_indices: Vec<usize>,
 }
 
-pub(crate) fn span_key(span: Span) -> (usize, usize) {
-    (span.start, span.end)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct ExprKey {
+    pub(crate) source_context_id: SourceContextId,
+    pub(crate) span_start: usize,
+    pub(crate) span_end: usize,
+}
+
+pub(crate) fn expr_key(source_context_id: SourceContextId, span: Span) -> ExprKey {
+    ExprKey {
+        source_context_id,
+        span_start: span.start,
+        span_end: span.end,
+    }
 }
 
 pub(crate) fn classify_user_type_array_element_names(

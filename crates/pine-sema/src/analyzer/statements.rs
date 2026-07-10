@@ -9,7 +9,7 @@ pub(crate) struct SymbolState {
     scope: ScopeResolver,
     symbol_user_types: HashMap<SymbolId, String>,
     symbol_user_type_identities: HashMap<SymbolId, UserTypeIdentity>,
-    symbol_init_exprs: HashMap<SymbolId, Expr>,
+    symbol_init_exprs: HashMap<SymbolId, SourcedExpr>,
     typed_na_scalar_symbols: std::collections::HashSet<SymbolId>,
     non_scalar_udt_varip_symbols: std::collections::HashSet<SymbolId>,
     symbol_user_type_arrays: HashMap<SymbolId, String>,
@@ -422,7 +422,13 @@ impl Analyzer {
                 } else {
                     self.const_color_symbols.remove(&symbol.id);
                 }
-                self.symbol_init_exprs.insert(symbol.id, value.clone());
+                self.symbol_init_exprs.insert(
+                    symbol.id,
+                    SourcedExpr {
+                        source_context_id: self.current_source_context_id(),
+                        expr: value.clone(),
+                    },
+                );
                 self.bind_symbol(name, statement.span, symbol);
             }
             StmtKind::Reassign { name, value } => {

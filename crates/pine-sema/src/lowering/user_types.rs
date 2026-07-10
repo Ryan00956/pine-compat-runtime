@@ -1,4 +1,4 @@
-use crate::source_graph::SourceId;
+use crate::source_graph::{SourceContextId, SourceId};
 
 use super::*;
 
@@ -11,6 +11,7 @@ enum LoweredUserTypeArrayResult {
 
 struct LoweredUserTypeCall {
     key: String,
+    source_context_id: SourceContextId,
     body: FunctionBody,
     array_aliases: HashMap<String, LoweredUserTypeArrayResult>,
     user_type_aliases: HashMap<String, LoweredUserTypeArrayResult>,
@@ -452,6 +453,7 @@ impl Analyzer {
         )?;
         Some(LoweredUserTypeCall {
             key: format!("function:{name}"),
+            source_context_id: function.source_context_id,
             body: function.body,
             array_aliases,
             user_type_aliases,
@@ -490,6 +492,7 @@ impl Analyzer {
         );
         Some(LoweredUserTypeCall {
             key: format!("method:{receiver_type}.{method_name}"),
+            source_context_id: method.source_context_id,
             body: method.body,
             array_aliases,
             user_type_aliases,
@@ -551,23 +554,25 @@ impl Analyzer {
             return LoweredUserTypeArrayResult::Unknown;
         }
         call_stack.push(call.key);
-        let result = match &call.body {
-            FunctionBody::Expr(expr) => self.user_type_array_result_with_params_and_aliases(
-                expr,
-                &HashMap::new(),
-                &call.array_aliases,
-                &call.user_type_aliases,
-                call_stack,
-            ),
-            FunctionBody::Block(statements) => self
-                .user_type_array_branch_result_with_params_and_aliases(
-                    statements,
-                    &HashMap::new(),
-                    &call.array_aliases,
-                    &call.user_type_aliases,
-                    call_stack,
-                ),
-        };
+        let result =
+            self.with_source_context_ref(call.source_context_id, |analyzer| match &call.body {
+                FunctionBody::Expr(expr) => analyzer
+                    .user_type_array_result_with_params_and_aliases(
+                        expr,
+                        &HashMap::new(),
+                        &call.array_aliases,
+                        &call.user_type_aliases,
+                        call_stack,
+                    ),
+                FunctionBody::Block(statements) => analyzer
+                    .user_type_array_branch_result_with_params_and_aliases(
+                        statements,
+                        &HashMap::new(),
+                        &call.array_aliases,
+                        &call.user_type_aliases,
+                        call_stack,
+                    ),
+            });
         call_stack.pop();
         result
     }
@@ -581,23 +586,24 @@ impl Analyzer {
             return LoweredUserTypeArrayResult::Unknown;
         }
         call_stack.push(call.key);
-        let result = match &call.body {
-            FunctionBody::Expr(expr) => self.user_type_result_with_params_and_aliases(
-                expr,
-                &HashMap::new(),
-                &call.array_aliases,
-                &call.user_type_aliases,
-                call_stack,
-            ),
-            FunctionBody::Block(statements) => self
-                .user_type_branch_result_with_params_and_aliases(
-                    statements,
+        let result =
+            self.with_source_context_ref(call.source_context_id, |analyzer| match &call.body {
+                FunctionBody::Expr(expr) => analyzer.user_type_result_with_params_and_aliases(
+                    expr,
                     &HashMap::new(),
                     &call.array_aliases,
                     &call.user_type_aliases,
                     call_stack,
                 ),
-        };
+                FunctionBody::Block(statements) => analyzer
+                    .user_type_branch_result_with_params_and_aliases(
+                        statements,
+                        &HashMap::new(),
+                        &call.array_aliases,
+                        &call.user_type_aliases,
+                        call_stack,
+                    ),
+            });
         call_stack.pop();
         result
     }

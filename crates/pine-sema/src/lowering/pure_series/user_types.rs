@@ -14,8 +14,9 @@ pub(super) fn user_type_field_series_key(
         .bound_symbol(receiver_name, span)
         .or_else(|| analyzer.scope.resolve(receiver_name))?;
     let type_name = analyzer.symbol_user_types.get(&symbol.id)?;
-    let initializer = analyzer.symbol_init_exprs.get(&symbol.id)?;
-    user_type_field_path_series_key(analyzer, initializer, type_name, &parts[1..], udf_stack)
+    analyzer.with_symbol_initializer(symbol.id, |analyzer, initializer| {
+        user_type_field_path_series_key(analyzer, initializer, type_name, &parts[1..], udf_stack)
+    })
 }
 
 fn user_type_field_path_series_key(
@@ -36,23 +37,25 @@ fn user_type_field_path_series_key(
     }
     let (field_index, field) = analyzer.user_type_field(type_name, field_names.first()?)?;
     let field_arg = direct_constructor_field_arg(analyzer, source_expr, type_name, field_index)?;
-    if field_names.len() == 1 {
-        return pure_expr_series_key_with_params(
+    analyzer.with_source_context_ref(field_arg.source_context_id, |analyzer| {
+        if field_names.len() == 1 {
+            return pure_expr_series_key_with_params(
+                analyzer,
+                &field_arg.expr,
+                &HashMap::new(),
+                true,
+                udf_stack,
+            );
+        }
+        let next_type_name = field.user_type_name.as_deref()?;
+        user_type_field_path_series_key(
             analyzer,
-            &field_arg,
-            &HashMap::new(),
-            true,
+            &field_arg.expr,
+            next_type_name,
+            &field_names[1..],
             udf_stack,
-        );
-    }
-    let next_type_name = field.user_type_name.as_deref()?;
-    user_type_field_path_series_key(
-        analyzer,
-        &field_arg,
-        next_type_name,
-        &field_names[1..],
-        udf_stack,
-    )
+        )
+    })
 }
 
 fn direct_constructor_field_arg(
@@ -60,13 +63,14 @@ fn direct_constructor_field_arg(
     expr: &Expr,
     type_name: &str,
     field_index: usize,
-) -> Option<Expr> {
+) -> Option<SourcedExpr> {
     if let ExprKind::Identifier(name) = &expr.kind {
         let symbol = analyzer
             .bound_symbol(name, expr.span)
             .or_else(|| analyzer.scope.resolve(name))?;
-        let initializer = analyzer.symbol_init_exprs.get(&symbol.id)?;
-        return direct_constructor_field_arg(analyzer, initializer, type_name, field_index);
+        return analyzer.with_symbol_initializer(symbol.id, |analyzer, initializer| {
+            direct_constructor_field_arg(analyzer, initializer, type_name, field_index)
+        });
     }
     let ExprKind::Call { callee, args } = &expr.kind else {
         return None;
@@ -84,7 +88,14 @@ fn direct_constructor_field_arg(
     } else {
         analyzer.user_type_constructor_for_lowering(&constructor_name, args, &HashMap::new())?
     };
-    constructor.field_args.get(field_index).cloned()
+    constructor
+        .field_args
+        .get(field_index)
+        .cloned()
+        .map(|expr| SourcedExpr {
+            source_context_id: analyzer.current_source_context_id(),
+            expr,
+        })
 }
 
 pub(super) fn collect_imported_user_type_field_param_keys_with_params(
@@ -105,16 +116,17 @@ pub(super) fn collect_imported_user_type_field_param_keys_with_params(
         let symbol = analyzer
             .bound_symbol(name, source_expr.span)
             .or_else(|| analyzer.scope.resolve(name))?;
-        let initializer = analyzer.symbol_init_exprs.get(&symbol.id)?;
-        return collect_imported_user_type_field_param_keys_with_params(
-            analyzer,
-            receiver_path,
-            initializer,
-            type_name,
-            field_keys,
-            param_keys,
-            udf_stack,
-        );
+        return analyzer.with_symbol_initializer(symbol.id, |analyzer, initializer| {
+            collect_imported_user_type_field_param_keys_with_params(
+                analyzer,
+                receiver_path,
+                initializer,
+                type_name,
+                field_keys,
+                param_keys,
+                udf_stack,
+            )
+        });
     }
     let user_type = analyzer.imported_user_types.get(type_name)?;
     let ExprKind::Call { callee, args } = &source_expr.kind else {
@@ -281,7 +293,7 @@ fn collect_imported_user_method_result_field_param_keys(
     }
 
     udf_stack.push(stack_key);
-    let result = {
+    let result = analyzer.with_source_context_ref(method.source_context_id, |analyzer| {
         let mut body_context = BodyFieldContext {
             analyzer,
             receiver_path,
@@ -291,7 +303,7 @@ fn collect_imported_user_method_result_field_param_keys(
             kind: BodyFieldKind::Imported,
         };
         collect_body_field_param_keys(&mut body_context, &method.body, &param_keys)
-    };
+    });
     udf_stack.pop();
     result
 }
@@ -376,23 +388,25 @@ fn imported_user_type_field_path_series_key(
     )?;
     let field_index = steps.first()?.index;
     let field_arg = direct_constructor_field_arg(analyzer, source_expr, type_name, field_index)?;
-    if field_names.1.is_empty() {
-        return pure_expr_series_key_with_params(
+    analyzer.with_source_context_ref(field_arg.source_context_id, |analyzer| {
+        if field_names.1.is_empty() {
+            return pure_expr_series_key_with_params(
+                analyzer,
+                &field_arg.expr,
+                &HashMap::new(),
+                true,
+                udf_stack,
+            );
+        }
+        let next_type_name = next_type_name?;
+        imported_user_type_field_path_series_key(
             analyzer,
-            &field_arg,
-            &HashMap::new(),
-            true,
+            &field_arg.expr,
+            &next_type_name,
+            field_names.1,
             udf_stack,
-        );
-    }
-    let next_type_name = next_type_name?;
-    imported_user_type_field_path_series_key(
-        analyzer,
-        &field_arg,
-        &next_type_name,
-        field_names.1,
-        udf_stack,
-    )
+        )
+    })
 }
 
 pub(super) fn alias_field_param_keys(
