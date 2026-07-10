@@ -99,6 +99,17 @@ impl Analyzer {
         self.mark_map_results(span, [result])
     }
 
+    pub(crate) fn map_type_of_function_body(&self, body: &FunctionBody) -> Option<MapTypeInfo> {
+        let result = match body {
+            FunctionBody::Expr(expr) => self.map_result_info(expr),
+            FunctionBody::Block(statements) => self.map_branch_result_info(statements),
+        };
+        match result {
+            MapResultInfo::Known(info) => Some(info),
+            MapResultInfo::Na | MapResultInfo::Unknown => None,
+        }
+    }
+
     pub(crate) fn validate_map_value_assignment(
         &mut self,
         name: &str,
@@ -128,24 +139,28 @@ impl Analyzer {
         span: Span,
         results: impl IntoIterator<Item = MapResultInfo>,
     ) -> bool {
+        let MapResultInfo::Known(info) = Self::merge_map_results(results) else {
+            return false;
+        };
+        self.mark_expr_map(span, info);
+        true
+    }
+
+    fn merge_map_results(results: impl IntoIterator<Item = MapResultInfo>) -> MapResultInfo {
         let mut resolved = None;
         for result in results {
             match result {
                 MapResultInfo::Known(info) if resolved.is_some_and(|resolved| resolved != info) => {
-                    return false;
+                    return MapResultInfo::Unknown;
                 }
                 MapResultInfo::Known(info) => {
                     resolved.get_or_insert(info);
                 }
                 MapResultInfo::Na => {}
-                MapResultInfo::Unknown => return false,
+                MapResultInfo::Unknown => return MapResultInfo::Unknown,
             }
         }
-        let Some(info) = resolved else {
-            return false;
-        };
-        self.mark_expr_map(span, info);
-        true
+        resolved.map_or(MapResultInfo::Na, MapResultInfo::Known)
     }
 
     fn map_result_info(&self, expr: &Expr) -> MapResultInfo {
@@ -164,6 +179,14 @@ impl Analyzer {
         };
         match &last.kind {
             StmtKind::Expr(expr) => self.map_result_info(expr),
+            StmtKind::If {
+                then_branch,
+                else_branch,
+                ..
+            } => Self::merge_map_results([
+                self.map_branch_result_info(then_branch),
+                self.map_branch_result_info(else_branch),
+            ]),
             StmtKind::For { body, .. }
             | StmtKind::ForIn { body, .. }
             | StmtKind::While { body, .. } => self.map_branch_result_info(body),

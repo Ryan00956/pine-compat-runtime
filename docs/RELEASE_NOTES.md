@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Preserved scalar map templates at call sites when local UDFs return inferred
+  map parameters, or when local UDFs and user methods return visible maps,
+  block-local aliases, `map.new`/copy results, nested calls, or final
+  control-flow results. The same generic UDF can now return different map
+  templates at different call sites, including named and reordered arguments,
+  without leaking span-cached metadata; callers can use namespace helpers,
+  history, `for...in`, and map methods after binding the result. Function-body
+  map mutation and direct call-result method chaining remain outside this slice.
 - Preserved scalar map key/value templates through ternary, `if`, `switch`,
   `for`, `for...in`, and `while` expression results. This includes direct
   helper consumption, typed and inferred declarations, same-template

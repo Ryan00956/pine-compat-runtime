@@ -554,6 +554,12 @@ impl Analyzer {
                 self.mark_expr_user_type(span, type_name);
             }
         }
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
+            && let Some(info) = self.map_type_of_function_body(&function.body)
+        {
+            self.mark_expr_map(call_span, info);
+            self.mark_expr_map(span, info);
+        }
         self.function_depth -= 1;
         self.function_context_is_method.pop();
         self.function_param_const_switch_keys.pop();
@@ -685,6 +691,14 @@ impl Analyzer {
             self.diagnostics.push(Diagnostic::error(
                 "E_BRANCH_TYPE",
                 "if user-defined type branches must resolve to the same local UDT",
+                span,
+            ));
+            return None;
+        }
+        if pine_type.kind == ValueKind::Map && !self.mark_if_map(span, then_branch, else_branch) {
+            self.diagnostics.push(Diagnostic::error(
+                "E_BRANCH_TYPE",
+                "if map branches must resolve to the same map template",
                 span,
             ));
             return None;

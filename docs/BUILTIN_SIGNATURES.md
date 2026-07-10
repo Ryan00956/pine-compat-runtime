@@ -1439,8 +1439,14 @@ aliases are supported for the same subset:
 independent historical copies. Scalar map `varip` declarations retain the map id
 and backing store across repeated realtime forming updates. Read-only map
 helpers can consume map ids passed through user-defined function parameters when
-the caller supplies a known scalar map template. Bare map declarations and
-non-scalar map templates remain unsupported.
+the caller supplies a known scalar map template. Local user-defined functions
+and methods also preserve a known scalar map template when returning a direct,
+block-local, copied, newly constructed, nested-call, or final control-flow map
+result. A generic local UDF can return different templates at different call
+sites; callers can consume those results through namespace helpers, history,
+`for...in`, or map methods after first binding the result. Direct method chaining
+on a call result such as `returnMap().get(key)` remains outside the parser
+subset. Bare map declarations and non-scalar map templates remain unsupported.
 
 ## TA Built-Ins
 

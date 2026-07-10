@@ -305,6 +305,12 @@ impl Analyzer {
             self.mark_expr_user_type(call_span, type_name.clone());
             self.mark_expr_user_type(receiver.span, type_name);
         }
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
+            && let Some(info) = self.map_type_of_function_body(&method.body)
+        {
+            self.mark_expr_map(call_span, info);
+            self.mark_expr_map(receiver.span, info);
+        }
         self.function_depth -= 1;
         self.function_context_is_method.pop();
         self.function_param_const_switch_keys.pop();

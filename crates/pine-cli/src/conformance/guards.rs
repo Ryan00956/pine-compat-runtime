@@ -530,6 +530,7 @@ fn validate_map_boundary_fixture_paths(
         "tests/fixtures/sema/supported_map_udf_read.pine",
         "tests/fixtures/sema/supported_map_typed_decl.pine",
         "tests/fixtures/sema/supported_map_control_flow.pine",
+        "tests/fixtures/sema/supported_map_udf_method_returns.pine",
         "tests/fixtures/sema/unsupported_map.pine",
         "tests/fixtures/sema/unsupported_map_new_template.pine",
         "tests/fixtures/sema/unsupported_map_new_dotted_template.pine",
@@ -558,6 +559,7 @@ fn validate_map_boundary_fixture_paths(
         "tests/fixtures/sema/unsupported_map_typed_decl_template.pine",
         "tests/fixtures/sema/unsupported_map_typed_decl_assign.pine",
         "tests/fixtures/sema/unsupported_map_control_flow_template.pine",
+        "tests/fixtures/sema/unsupported_map_udf_method_return_templates.pine",
     ] {
         if !fixtures.contains(&fixture) {
             return Err(format!(
@@ -791,6 +793,7 @@ mod tests {
             "tests/fixtures/sema/supported_map_udf_read.pine",
             "tests/fixtures/sema/supported_map_typed_decl.pine",
             "tests/fixtures/sema/supported_map_control_flow.pine",
+            "tests/fixtures/sema/supported_map_udf_method_returns.pine",
             "tests/fixtures/sema/unsupported_map.pine",
             "tests/fixtures/sema/unsupported_map_new_template.pine",
             "tests/fixtures/sema/unsupported_map_new_dotted_template.pine",
@@ -818,6 +821,7 @@ mod tests {
             "tests/fixtures/sema/unsupported_map_typed_decl_template.pine",
             "tests/fixtures/sema/unsupported_map_typed_decl_assign.pine",
             "tests/fixtures/sema/unsupported_map_control_flow_template.pine",
+            "tests/fixtures/sema/unsupported_map_udf_method_return_templates.pine",
         ];
         let tsv = format!(
             "feature\tstatus\tnotes\tfixtures\nmap.*\tpartial\tmap.new/map.size/map.put/map.get/map.contains/map.clear/map.remove subset; map collections beyond that remain unsupported\t{}\n",
