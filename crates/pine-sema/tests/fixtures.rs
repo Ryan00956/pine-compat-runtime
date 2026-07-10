@@ -14498,6 +14498,25 @@ fn accepts_supported_map_typed_decl_fixture() {
 }
 
 #[test]
+fn accepts_supported_map_control_flow_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_map_control_flow.pine");
+}
+
+#[test]
+fn reports_unsupported_map_control_flow_template_fixture() {
+    let path = "tests/fixtures/sema/unsupported_map_control_flow_template.pine";
+    assert_diagnostic_messages(
+        path,
+        &[
+            "ternary map branches must resolve to the same map template",
+            "if map branches must resolve to the same map template",
+            "switch map arms must resolve to the same map template",
+        ],
+    );
+    assert_diagnostic_count(path, 3);
+}
+
+#[test]
 fn reports_unsupported_map_get_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_map_get.pine",

@@ -67,6 +67,10 @@ fn for_in_expr_kinds(
 
 impl Analyzer {
     pub(crate) fn analyze_expr(&mut self, expr: &Expr) -> Option<PineType> {
+        // Function and method bodies can be analyzed repeatedly with different
+        // argument templates. Discard span-keyed map metadata from an earlier
+        // pass before deriving the current expression result.
+        self.expr_maps.remove(&span_key(expr.span));
         if !self.enter_expr_analysis(expr.span) {
             return None;
         }
@@ -89,7 +93,13 @@ impl Analyzer {
             }
             ExprKind::Identifier(name) => {
                 self.check_feature_expr(expr);
-                self.resolve_symbol(name, expr.span)
+                let pine_type = self.resolve_symbol(name, expr.span);
+                if pine_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
+                    && let Some(info) = self.map_type_of_current_symbol(name)
+                {
+                    self.mark_expr_map(expr.span, info);
+                }
+                pine_type
             }
             ExprKind::QualifiedName(parts) => {
                 if let Some(field_type) = self.resolve_chart_point_field_access(parts, expr.span) {
@@ -141,6 +151,16 @@ impl Analyzer {
                             self.diagnostics.push(Diagnostic::error(
                                 "E_BRANCH_TYPE",
                                 "ternary user-defined type branches must resolve to the same UDT identity",
+                                expr.span,
+                            ));
+                            return None;
+                        }
+                        if pine_type.kind == ValueKind::Map
+                            && !self.mark_ternary_map(expr.span, then_expr, else_expr)
+                        {
+                            self.diagnostics.push(Diagnostic::error(
+                                "E_BRANCH_TYPE",
+                                "ternary map branches must resolve to the same map template",
                                 expr.span,
                             ));
                             return None;
@@ -301,6 +321,16 @@ impl Analyzer {
                         ));
                         return None;
                     }
+                }
+                if pine_type.kind == ValueKind::Map
+                    && !self.mark_if_map(span, then_branch, else_branch)
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_BRANCH_TYPE",
+                        "if map branches must resolve to the same map template",
+                        span,
+                    ));
+                    return None;
                 }
                 Some(pine_type)
             }
@@ -607,6 +637,14 @@ impl Analyzer {
                 ));
                 return None;
             }
+            if pine_type.kind == ValueKind::Map && !self.mark_switch_map(span, arms) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_BRANCH_TYPE",
+                    "switch map arms must resolve to the same map template",
+                    span,
+                ));
+                return None;
+            }
             Some(pine_type)
         })
     }
@@ -790,7 +828,7 @@ impl Analyzer {
             self.define_local_symbol(counter, counter_type, None, self.function_depth == 0);
         self.bind_symbol(counter, span, counter_symbol);
 
-        let return_type = if let Some((last, prefix)) = body.split_last() {
+        let mut return_type = if let Some((last, prefix)) = body.split_last() {
             for statement in prefix {
                 self.analyze_stmt(statement);
             }
@@ -803,6 +841,17 @@ impl Analyzer {
             ));
             None
         };
+
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
+            && !self.mark_loop_map(span, body)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RETURN",
+                "for expression map result must resolve to a known map template",
+                span,
+            ));
+            return_type = None;
+        }
 
         self.scope.pop_scope();
         self.assignment_qualifier_context.pop();
@@ -874,7 +923,7 @@ impl Analyzer {
             self.mark_symbol_id_user_type(value_symbol.id, type_name);
         }
 
-        let return_type = if let Some((last, prefix)) = body.split_last() {
+        let mut return_type = if let Some((last, prefix)) = body.split_last() {
             for statement in prefix {
                 self.analyze_stmt(statement);
             }
@@ -951,6 +1000,17 @@ impl Analyzer {
             None
         };
 
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
+            && !self.mark_loop_map(span, body)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RETURN",
+                "for...in expression map result must resolve to a known map template",
+                span,
+            ));
+            return_type = None;
+        }
+
         self.scope.pop_scope();
         self.assignment_qualifier_context.pop();
         self.loop_depth -= 1;
@@ -983,7 +1043,17 @@ impl Analyzer {
         self.block_depth += 1;
         self.loop_depth += 1;
         self.assignment_qualifier_context.push(condition_qualifier);
-        let return_type = self.analyze_expr_branch_return(body, "while", span, true);
+        let mut return_type = self.analyze_expr_branch_return(body, "while", span, true);
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
+            && !self.mark_loop_map(span, body)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RETURN",
+                "while expression map result must resolve to a known map template",
+                span,
+            ));
+            return_type = None;
+        }
         self.assignment_qualifier_context.pop();
         self.loop_depth -= 1;
         self.block_depth -= 1;

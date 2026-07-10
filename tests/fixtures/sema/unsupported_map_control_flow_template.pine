@@ -1,0 +1,23 @@
+//@version=6
+indicator("Unsupported map control-flow templates")
+
+string_float = map.new<string, float>()
+int_float = map.new<int, float>()
+string_int = map.new<string, int>()
+
+ternary_bad = bar_index % 2 == 0 ? string_float : int_float
+
+if_bad = if bar_index % 2 == 0
+    made = string_float.copy()
+    made
+else
+    made = string_int.copy()
+    made
+
+switch_bad = switch bar_index % 2
+    0 =>
+        made = int_float.copy()
+        made
+    =>
+        made = string_int.copy()
+        made

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Preserved scalar map key/value templates through ternary, `if`, `switch`,
+  `for`, `for...in`, and `while` expression results. This includes direct
+  helper consumption, typed and inferred declarations, same-template
+  reassignment, `map`/`na` branches, nested loop results, and block-local map or
+  `na` aliases; different branch templates now produce `E_BRANCH_TYPE` instead
+  of degrading into an unknown-template receiver error.
 - Extended `array.min` and `array.max` with their optional zero-based `nth`
   order-statistic argument for int and float arrays. Namespace and method
   calls accept positional or named ranks, namespace arguments can be reordered,

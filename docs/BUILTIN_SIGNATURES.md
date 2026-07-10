@@ -1426,7 +1426,12 @@ array snapshots in insertion order. `map.put_all` merges entries from a source
 map into a target map with the same scalar key/value template; existing keys
 replace values without moving order, and new keys append in source insertion
 order. Scalar `map<K,V>` typed declarations are supported with compatible or
-`na` initialization and later same-template reassignment. Equivalent method
+`na` initialization and later same-template reassignment. Same-template map
+metadata is preserved through ternary, `if`, `switch`, `for`, `for...in`, and
+`while` expression results, including `map`/`na` branches and block-local map
+aliases; branches with different key/value templates are rejected. These
+results can initialize typed or inferred bare-map declarations and can be used
+directly by map helpers. Equivalent method
 aliases are supported for the same subset:
 `id.size()`, `id.put(key, value)`, `id.get(key)`, `id.contains(key)`,
 `id.clear()`, `id.remove(key)`, `id.copy()`, `id.keys()`, `id.values()`, and

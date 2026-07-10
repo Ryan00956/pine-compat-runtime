@@ -513,6 +513,7 @@ fn validate_map_boundary_fixture_paths(
         "tests/fixtures/runtime/map_varip.pine",
         "tests/fixtures/runtime/map_udf_read.pine",
         "tests/fixtures/runtime/map_typed_declarations.pine",
+        "tests/fixtures/runtime/map_control_flow.pine",
         "tests/fixtures/realtime/map_rollback.pine",
         "tests/fixtures/realtime/map_varip.pine",
         "tests/fixtures/sema/supported_map_new_size.pine",
@@ -528,6 +529,7 @@ fn validate_map_boundary_fixture_paths(
         "tests/fixtures/sema/supported_map_varip.pine",
         "tests/fixtures/sema/supported_map_udf_read.pine",
         "tests/fixtures/sema/supported_map_typed_decl.pine",
+        "tests/fixtures/sema/supported_map_control_flow.pine",
         "tests/fixtures/sema/unsupported_map.pine",
         "tests/fixtures/sema/unsupported_map_new_template.pine",
         "tests/fixtures/sema/unsupported_map_new_dotted_template.pine",
@@ -555,10 +557,11 @@ fn validate_map_boundary_fixture_paths(
         "tests/fixtures/sema/unsupported_map_typed_decl.pine",
         "tests/fixtures/sema/unsupported_map_typed_decl_template.pine",
         "tests/fixtures/sema/unsupported_map_typed_decl_assign.pine",
+        "tests/fixtures/sema/unsupported_map_control_flow_template.pine",
     ] {
         if !fixtures.contains(&fixture) {
             return Err(format!(
-                "line {line_number}: `map.*` must reference `{fixture}` while map support is limited to the fixture-backed scalar map helper, direct key/value for-in, typed declaration, history, varip, read-only UDF, method-alias, and rollback subset"
+                "line {line_number}: `map.*` must reference `{fixture}` while map support is limited to the fixture-backed scalar map helper, control-flow result, direct key/value for-in, typed declaration, history, varip, read-only UDF, method-alias, and rollback subset"
             ));
         }
     }
@@ -771,6 +774,7 @@ mod tests {
             "tests/fixtures/runtime/map_varip.pine",
             "tests/fixtures/runtime/map_udf_read.pine",
             "tests/fixtures/runtime/map_typed_declarations.pine",
+            "tests/fixtures/runtime/map_control_flow.pine",
             "tests/fixtures/realtime/map_rollback.pine",
             "tests/fixtures/realtime/map_varip.pine",
             "tests/fixtures/sema/supported_map_new_size.pine",
@@ -786,6 +790,7 @@ mod tests {
             "tests/fixtures/sema/supported_map_varip.pine",
             "tests/fixtures/sema/supported_map_udf_read.pine",
             "tests/fixtures/sema/supported_map_typed_decl.pine",
+            "tests/fixtures/sema/supported_map_control_flow.pine",
             "tests/fixtures/sema/unsupported_map.pine",
             "tests/fixtures/sema/unsupported_map_new_template.pine",
             "tests/fixtures/sema/unsupported_map_new_dotted_template.pine",
@@ -812,6 +817,7 @@ mod tests {
             "tests/fixtures/sema/unsupported_map_typed_decl.pine",
             "tests/fixtures/sema/unsupported_map_typed_decl_template.pine",
             "tests/fixtures/sema/unsupported_map_typed_decl_assign.pine",
+            "tests/fixtures/sema/unsupported_map_control_flow_template.pine",
         ];
         let tsv = format!(
             "feature\tstatus\tnotes\tfixtures\nmap.*\tpartial\tmap.new/map.size/map.put/map.get/map.contains/map.clear/map.remove subset; map collections beyond that remain unsupported\t{}\n",

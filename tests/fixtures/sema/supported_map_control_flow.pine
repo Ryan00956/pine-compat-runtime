@@ -1,0 +1,88 @@
+//@version=6
+indicator("Supported map control-flow results")
+
+read_value(id, key) => map.get(id, key)
+size_of_choice(left, right) => map.size(bar_index == 0 ? left : (bar_index == 1 ? right : na))
+
+left = map.new<string, float>()
+right = map.new<string, float>()
+int_strings = map.new<int, string>()
+left.put("v", 10)
+right.put("v", 20)
+int_strings.put(1, "one")
+
+first_udf_template = read_value(left, "v")
+second_udf_template = read_value(int_strings, 1) == "one" ? 1 : 0
+first_composite_template = size_of_choice(int_strings, int_strings)
+second_composite_template = size_of_choice(left, na)
+
+direct = map.get(bar_index % 2 == 0 ? left : right, "v")
+nullable = bar_index == 0 ? left : (bar_index == 1 ? na : na)
+
+if_selected = if bar_index % 2 == 0
+    made = left.copy()
+    made
+else
+    made = right.copy()
+    made
+
+switch_selected = switch bar_index % 2
+    0 =>
+        made = left.copy()
+        made
+    =>
+        made = right.copy()
+        made
+
+for_selected = for i = 0 to 0
+    made = left.copy()
+    made
+
+for_in_selected = for item in array.from(0)
+    made = right.copy()
+    made
+
+int iterations = 0
+while_selected = while iterations < 1
+    iterations := iterations + 1
+    made = right.copy()
+    made
+
+nested = if bar_index % 2 == 0
+    for i = 0 to 0
+        made = left.copy()
+        made
+else
+    int nested_iterations = 0
+    while nested_iterations < 1
+        nested_iterations := nested_iterations + 1
+        made = right.copy()
+        made
+
+aliased_na = if bar_index == 0
+    left
+else
+    nothing = na
+    nothing
+
+map<string, float> typed = if bar_index % 2 == 0
+    left
+else
+    na
+map bare = switch bar_index % 2
+    0 => left
+    => right
+assigned = left
+assigned := for i = 0 to 0
+    right
+
+made = left
+shadowed = if bar_index % 2 == 0
+    made = int_strings.copy()
+    made
+else
+    made = int_strings.copy()
+    made
+shadowed_value = shadowed.get(1) == "one" ? 1 : 0
+
+plot(first_udf_template + second_udf_template + first_composite_template + second_composite_template + direct + nullable.size() + if_selected.get("v") + switch_selected.get("v") + for_selected.get("v") + for_in_selected.get("v") + while_selected.get("v") + nested.get("v") + aliased_na.size() + typed.size() + bare.size() + assigned.size() + shadowed_value)
