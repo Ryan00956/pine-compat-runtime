@@ -472,6 +472,9 @@ impl Analyzer {
             let arg_type = arg_type.unwrap_or(UNKNOWN);
             let symbol = self.define_local_symbol(param, arg_type, None, false);
             param_symbols.insert(symbol.id);
+            if let Some(key) = arg_const_switch_key.as_ref() {
+                self.record_symbol_const_switch_key(symbol, key);
+            }
             if let Some(expected_type) = expected_type {
                 if !can_assign(expected_type.pine_type, arg_type) {
                     self.diagnostics.push(Diagnostic::error(

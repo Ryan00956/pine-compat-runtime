@@ -101,21 +101,7 @@ fn accepts_expected_label(accepts: Accepts) -> Option<String> {
         Accepts::Matrix => Some("matrix".to_owned()),
         Accepts::NumericMatrix => Some("numeric matrix".to_owned()),
         Accepts::FloatMatrix => Some("matrix<float>".to_owned()),
-        Accepts::SimpleInt => Some("simple int".to_owned()),
-        Accepts::SimpleIntCompatible => Some("simple integer-compatible".to_owned()),
-        Accepts::SimpleNumeric => Some("simple numeric".to_owned()),
-        Accepts::SimpleNumericCompatible => Some("simple numeric-compatible".to_owned()),
-        Accepts::SimpleBool => Some("simple bool".to_owned()),
-        Accepts::SimpleBoolCompatible => Some("simple bool-compatible".to_owned()),
-        Accepts::SimpleString => Some("simple string".to_owned()),
-        Accepts::ConstString => Some("const string".to_owned()),
-        Accepts::ConstBool => Some("const bool".to_owned()),
-        Accepts::ConstNumeric => Some("const numeric".to_owned()),
-        Accepts::AtMostInputNumeric => Some("const/input numeric".to_owned()),
-        Accepts::AtMostInputInt => Some("const/input int".to_owned()),
-        Accepts::AtMostInputString => Some("const/input string".to_owned()),
-        Accepts::AtMostInputBool => Some("const/input bool".to_owned()),
-        Accepts::AtMostInputColor => Some("const/input color".to_owned()),
+        Accepts::QualifierBoundScalar(bound) => Some(bound.expected_label()),
         Accepts::Tuple => Some("tuple".to_owned()),
         Accepts::InputDefval => Some("const int/float/bool/string/color".to_owned()),
         _ => None,
@@ -461,9 +447,32 @@ pub(crate) fn is_ta_vwap_bands_call(name: &str, args: &[CallArg]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pine_builtins::{QualifierBoundScalar, ScalarKind};
 
     fn pine_type(qualifier: Qualifier, kind: ValueKind) -> PineType {
         PineType::new(qualifier, kind)
+    }
+
+    #[test]
+    fn generic_qualifier_bound_acceptor_drives_expected_label() {
+        let accepts = Accepts::QualifierBoundScalar(QualifierBoundScalar::exact(
+            Qualifier::Input,
+            ScalarKind::Bool,
+            true,
+        ));
+        let diagnostic = call_arg_accepts_type_expected_diagnostic(
+            "future.input_bool",
+            "value",
+            accepts,
+            pine_type(Qualifier::Const, ValueKind::Bool),
+            Span::default(),
+        )
+        .expect("const bool should not satisfy exact input bool-compatible");
+
+        assert_eq!(
+            diagnostic.message,
+            "`future.input_bool` argument `value` expects input bool-compatible, got const bool"
+        );
     }
 
     #[test]

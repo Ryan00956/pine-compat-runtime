@@ -61,6 +61,18 @@ Responsibilities:
 The analyzer is the boundary where unsupported features should become explicit
 diagnostics instead of runtime surprises.
 
+The semantic implementation keeps orchestration separate from focused tree
+walkers. `modules.rs` owns module-graph validation while
+`modules/side_effects.rs` owns side-effect and expression visitation;
+`analyzer/context.rs` owns analyzer state and allocation while constant and
+history-offset expression evaluation lives in `analyzer/context/const_eval.rs`;
+`lowering/mod.rs` owns the lowering entrypoints while reassignment collection
+and UDT parameter resolution live in dedicated lowering modules. Pure-series
+identity keeps its UDT field/value traversal in
+`lowering/pure_series/user_types.rs`. `scripts/check_structure.py` applies
+tighter line budgets to these split hotspots so new responsibilities continue
+to land in focused child modules.
+
 Phase J introduces a source graph scaffold and the first executable import
 subset. Public semantic analysis can now be driven by `AnalysisInput`, which
 contains a root `SourceFile` and an optional deterministic list of

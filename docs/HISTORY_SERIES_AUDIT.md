@@ -182,9 +182,11 @@ indicator-level `max_bars_back` support.
   direct-constructor local or imported scalar-tree UDT scalar field expressions
   including nested field paths,
   positional, fixed-arity named, and signature-bound fully named or mixed
-  variadic stateless pure math calls, fixed-arity pure `nz`/`fixnan`
+  variadic stateless pure math calls, stable nested history expressions,
+  fixed-arity pure `nz`/`fixnan`
   value-helper calls including named/reordered `nz` replacement, pure string
-  numeric-source calls including `str.tonumber` and `str.length`, pure numeric
+  numeric-source calls including `str.tonumber`, `str.length`, and `str.pos`,
+  pure color-channel calls `color.r`/`color.g`/`color.b`/`color.t`, pure numeric
   cast calls, and
   unreassigned pure scalar series declaration aliases plus expression-body or pure
   expression-statement-prefixed normal typed or untyped local-alias block-body
@@ -213,7 +215,14 @@ indicator-level `max_bars_back` support.
   the statement or result expression, that fit in the runtime history-bound
   field and apply per-series retention bounds.
   Named/reordered helper arguments are fixture-backed, and repeated helper
-  calls for the same series use the largest declared bound.
+  calls for the same series use the largest declared bound. Identity reuse is
+  deliberately disabled when an expression depends on a reassigned scalar
+  symbol, so
+  a later expression cannot inherit an earlier value's per-series retention
+  bound, and inlined UDF/method locals preserve distinct pre-/post-reassignment
+  history sources. The history-expression, color-channel, and string-position slice is
+  covered by matching historical, incremental-append, and realtime rollback
+  results.
 - Implicit TA history metadata for source/length helpers is fixture-backed for
   named/reordered `source` and `length` arguments, including direct-length,
   dynamic-length, rolling-window, and trend-window requirements.

@@ -5765,3 +5765,133 @@ fn simple_int_params_reject_series_int() {
     );
     assert!(analysis.hir.is_none());
 }
+
+#[test]
+fn udf_const_scalar_comparisons_preserve_selected_input_qualifiers() {
+    let analysis = analyze(
+        "choose_int(mode, x) => mode == 1 ? bar_index : x\nchoose_string(mode, x) => mode == \"dead\" ? bar_index : x\nchoose_color(mode, x) => mode == color.red ? bar_index : x\nlength = input.int(2, \"Length\")\nint_chosen = choose_int(2, length)\nstring_chosen = choose_string(\"live\", length)\ncolor_chosen = choose_color(color.green, length)\nplot(ta.ema(close, int_chosen))\nplot(ta.ema(close, string_chosen))\nplot(ta.ema(close, color_chosen))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    for name in ["int_chosen", "string_chosen", "color_chosen"] {
+        let symbol = hir
+            .symbols
+            .iter()
+            .find(|symbol| symbol.name == name)
+            .unwrap_or_else(|| panic!("{name} symbol"));
+        assert_eq!(
+            symbol.pine_type,
+            PineType::new(Qualifier::Input, ValueKind::Int),
+            "{name}"
+        );
+    }
+}
+
+#[test]
+fn tuple_method_const_selector_literal_preserves_selected_input_qualifier() {
+    let analysis = analyze(
+        "type Box\n    int seed\nmethod choose_pair(Box this, string selector, int x) =>\n    switch selector\n        \"dead\" => [bar_index]\n        \"live\" => [x]\n        => [bar_index]\nbox = Box.new(1)\nlength = input.int(2, \"Length\")\n[len] = box.choose_pair(\"live\", length)\nplot(ta.ema(close, len))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let len = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "len")
+        .expect("len symbol");
+    assert_eq!(
+        len.pine_type,
+        PineType::new(Qualifier::Input, ValueKind::Int)
+    );
+}
+
+#[test]
+fn tuple_udf_const_selector_literal_preserves_selected_input_qualifier() {
+    let analysis = analyze(
+        "choose_pair(selector, x) =>\n    switch selector\n        \"dead\" => [bar_index]\n        \"live\" => [x]\n        => [bar_index]\nlength = input.int(2, \"Length\")\n[len] = choose_pair(\"live\", length)\nplot(ta.ema(close, len))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let len = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "len")
+        .expect("len symbol");
+    assert_eq!(
+        len.pine_type,
+        PineType::new(Qualifier::Input, ValueKind::Int)
+    );
+}
+
+#[test]
+fn tuple_udf_const_selector_does_not_capture_same_named_global() {
+    let analysis = analyze(
+        "choose_pair(mode, x) =>\n    switch mode\n        \"dead\" => [bar_index]\n        \"live\" => [x]\n        => [bar_index]\nmode = \"live\"\nlength = input.int(2, \"Length\")\n[len] = choose_pair(\"dead\", length)\nplot(ta.ema(close, len))\n",
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn switch_fallback_reassignments_include_prior_series_conditions() {
+    let analysis = analyze(
+        "length = input.int(2, \"Length\")\nstatement_selected = length\nswitch\n    close > open =>\n        0\n    =>\n        statement_selected := length\nexpression_selected = length\n_ = switch\n    close > open => 0\n    =>\n        expression_selected := length\n        0\nplot(ta.ema(close, statement_selected))\nplot(ta.ema(close, expression_selected))\n",
+    );
+
+    let call_arg_type_count = analysis
+        .diagnostics
+        .iter()
+        .filter(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE")
+        .count();
+    assert_eq!(call_arg_type_count, 2, "{:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn statically_selected_switch_ignores_unreachable_tail_qualifiers() {
+    let analysis = analyze(
+        "length = input.int(2, \"Length\")\nselected = switch\n    true => length\n    close > open => bar_index\n    => bar_index\n[tuple_selected] = switch\n    true => [length]\n    close > open => [bar_index]\n    => [bar_index]\nplot(ta.ema(close, selected))\nplot(ta.ema(close, tuple_selected))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    for name in ["selected", "tuple_selected"] {
+        let symbol = hir
+            .symbols
+            .iter()
+            .find(|symbol| symbol.name == name)
+            .unwrap_or_else(|| panic!("{name} symbol"));
+        assert_eq!(
+            symbol.pine_type,
+            PineType::new(Qualifier::Input, ValueKind::Int),
+            "{name}"
+        );
+    }
+}

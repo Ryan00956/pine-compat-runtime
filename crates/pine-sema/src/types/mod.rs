@@ -39,49 +39,7 @@ pub(crate) fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
                 is_numeric(kind) || kind == ValueKind::Bool
             })
         }
-        Accepts::SimpleInt => {
-            accepts_kind_at_most(arg_type, Qualifier::Simple, |kind| kind == ValueKind::Int)
-        }
-        Accepts::SimpleIntCompatible => accepts_kind_at_most(arg_type, Qualifier::Simple, |kind| {
-            matches!(kind, ValueKind::Int | ValueKind::Na)
-        }),
-        Accepts::SimpleString => accepts_kind_at_most(arg_type, Qualifier::Simple, |kind| {
-            matches!(kind, ValueKind::String | ValueKind::Na)
-        }),
-        Accepts::SimpleNumeric => accepts_kind_at_most(arg_type, Qualifier::Simple, is_numeric),
-        Accepts::SimpleNumericCompatible => {
-            accepts_kind_at_most(arg_type, Qualifier::Simple, |kind| {
-                matches!(kind, ValueKind::Int | ValueKind::Float | ValueKind::Na)
-            })
-        }
-        Accepts::SimpleBool => {
-            accepts_kind_at_most(arg_type, Qualifier::Simple, |kind| kind == ValueKind::Bool)
-        }
-        Accepts::SimpleBoolCompatible => {
-            accepts_kind_at_most(arg_type, Qualifier::Simple, |kind| {
-                matches!(kind, ValueKind::Bool | ValueKind::Na)
-            })
-        }
-        Accepts::ConstNumeric => accepts_kind_exact(arg_type, Qualifier::Const, is_numeric),
-        Accepts::ConstString => {
-            accepts_kind_exact(arg_type, Qualifier::Const, |kind| kind == ValueKind::String)
-        }
-        Accepts::ConstBool => {
-            accepts_kind_exact(arg_type, Qualifier::Const, |kind| kind == ValueKind::Bool)
-        }
-        Accepts::AtMostInputNumeric => accepts_kind_at_most(arg_type, Qualifier::Input, is_numeric),
-        Accepts::AtMostInputInt => {
-            accepts_kind_at_most(arg_type, Qualifier::Input, |kind| kind == ValueKind::Int)
-        }
-        Accepts::AtMostInputString => {
-            accepts_kind_at_most(arg_type, Qualifier::Input, |kind| kind == ValueKind::String)
-        }
-        Accepts::AtMostInputBool => {
-            accepts_kind_at_most(arg_type, Qualifier::Input, |kind| kind == ValueKind::Bool)
-        }
-        Accepts::AtMostInputColor => {
-            accepts_kind_at_most(arg_type, Qualifier::Input, |kind| kind == ValueKind::Color)
-        }
+        Accepts::QualifierBoundScalar(bound) => bound.accepts(arg_type),
         Accepts::ColorCompatible => {
             accepts_kind_compatible(arg_type, |kind| kind == ValueKind::Color)
         }
@@ -656,7 +614,7 @@ mod tests {
                 Accepts::SimpleNumeric,
                 pine_type(qualifier, ValueKind::Float)
             ));
-            for kind in [ValueKind::Float, ValueKind::Na] {
+            for kind in [ValueKind::Int, ValueKind::Float, ValueKind::Na] {
                 assert!(accepts_type(
                     Accepts::SimpleNumericCompatible,
                     pine_type(qualifier, kind)
@@ -670,6 +628,16 @@ mod tests {
                 Accepts::SimpleString,
                 pine_type(qualifier, ValueKind::String)
             ));
+            assert!(accepts_type(
+                Accepts::SimpleString,
+                pine_type(qualifier, ValueKind::Na)
+            ));
+            for kind in [ValueKind::Bool, ValueKind::Na] {
+                assert!(accepts_type(
+                    Accepts::SimpleBoolCompatible,
+                    pine_type(qualifier, kind)
+                ));
+            }
         }
 
         assert!(!accepts_type(
@@ -685,12 +653,28 @@ mod tests {
             pine_type(Qualifier::Series, ValueKind::Float)
         ));
         assert!(!accepts_type(
+            Accepts::SimpleNumericCompatible,
+            pine_type(Qualifier::Series, ValueKind::Na)
+        ));
+        assert!(!accepts_type(
             Accepts::SimpleBool,
             pine_type(Qualifier::Series, ValueKind::Bool)
         ));
         assert!(!accepts_type(
             Accepts::SimpleString,
             pine_type(Qualifier::Series, ValueKind::String)
+        ));
+        assert!(!accepts_type(
+            Accepts::SimpleString,
+            pine_type(Qualifier::Series, ValueKind::Na)
+        ));
+        assert!(!accepts_type(
+            Accepts::SimpleBoolCompatible,
+            pine_type(Qualifier::Series, ValueKind::Bool)
+        ));
+        assert!(!accepts_type(
+            Accepts::SimpleBoolCompatible,
+            pine_type(Qualifier::Simple, ValueKind::String)
         ));
     }
 

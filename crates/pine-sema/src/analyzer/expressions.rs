@@ -462,7 +462,7 @@ impl Analyzer {
         let selector_type = selector.and_then(|selector| self.analyze_expr(selector));
         let selector_key = selector.and_then(|selector| self.known_const_switch_key(selector));
         let selector_qualifier = selector_type.map_or(Qualifier::Const, |ty| ty.qualifier);
-        let mut condition_qualifier = selector_qualifier;
+        let mut reachable_condition_qualifier = selector_qualifier;
         let mut result_type = None;
         let mut selected_result_type = None;
         let mut static_selection_open = selector.is_none() || selector_key.is_some();
@@ -475,6 +475,7 @@ impl Analyzer {
         });
 
         for arm in arms {
+            let arm_reachable = dynamic_tail || static_selection_open;
             let condition_value = if selector.is_none() {
                 arm.condition
                     .as_ref()
@@ -493,13 +494,20 @@ impl Analyzer {
             if let Some(condition) = &arm.condition {
                 let condition_type = self.analyze_expr(condition);
                 if let Some(condition_type) = condition_type {
-                    condition_qualifier =
-                        strongest_qualifier(condition_qualifier, condition_type.qualifier);
                     arm_qualifier = strongest_qualifier(arm_qualifier, condition_type.qualifier);
+                    if arm_reachable {
+                        reachable_condition_qualifier = strongest_qualifier(
+                            reachable_condition_qualifier,
+                            condition_type.qualifier,
+                        );
+                    }
                     if selector.is_none() {
                         self.expect_bool(condition_type, condition.span);
                     }
                 }
+            }
+            if arm_reachable {
+                arm_qualifier = reachable_condition_qualifier;
             }
 
             let mut statically_selected = false;
@@ -588,7 +596,7 @@ impl Analyzer {
             let branch_qualifier =
                 selected_result_type.map_or(pine_type.qualifier, |ty: PineType| ty.qualifier);
             let pine_type = PineType::new(
-                strongest_qualifier(condition_qualifier, branch_qualifier),
+                strongest_qualifier(reachable_condition_qualifier, branch_qualifier),
                 pine_type.kind,
             );
             if pine_type.kind == ValueKind::UserType && !self.mark_switch_user_type(span, arms) {
@@ -628,6 +636,7 @@ impl Analyzer {
         let selector_type = selector.and_then(|selector| self.analyze_expr(selector));
         let selector_key = selector.and_then(|selector| self.known_const_switch_key(selector));
         let selector_qualifier = selector_type.map_or(Qualifier::Const, |ty| ty.qualifier);
+        let mut reachable_condition_qualifier = selector_qualifier;
         let mut static_selection_open = selector.is_none() || selector_key.is_some();
         let mut dynamic_tail = selector.is_some() && selector_key.is_none();
         self.compatibility.supported.push(FeatureUse {
@@ -636,6 +645,7 @@ impl Analyzer {
         });
 
         for arm in arms {
+            let arm_reachable = dynamic_tail || static_selection_open;
             let condition_value = if selector.is_none() {
                 arm.condition
                     .as_ref()
@@ -655,9 +665,18 @@ impl Analyzer {
                 && let Some(condition_type) = self.analyze_expr(condition)
             {
                 arm_qualifier = strongest_qualifier(arm_qualifier, condition_type.qualifier);
+                if arm_reachable {
+                    reachable_condition_qualifier = strongest_qualifier(
+                        reachable_condition_qualifier,
+                        condition_type.qualifier,
+                    );
+                }
                 if selector.is_none() {
                     self.expect_bool(condition_type, condition.span);
                 }
+            }
+            if arm_reachable {
+                arm_qualifier = reachable_condition_qualifier;
             }
 
             let commit_symbol_effects = if dynamic_tail {

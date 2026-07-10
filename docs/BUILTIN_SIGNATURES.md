@@ -26,6 +26,12 @@ full Pine surface. In this document:
   at any implemented qualifier, including `series int`; non-integer offsets are
   rejected.
 
+In code, exact and at-most scalar qualifier bounds share the
+`QualifierBoundScalar` model. The established `Accepts::Simple*`,
+`Accepts::Const*`, and `Accepts::AtMostInput*` names are retained as associated
+constants over that model, so signature tables remain readable while type
+acceptance and diagnostics use one rule path.
+
 ## Phase 1 Core
 
 Phase 1 should be intentionally small:

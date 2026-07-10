@@ -20,4 +20,7 @@ pub use returns::{
     change_return_for_arg, color_return_for_arg, fallback_bool_for_arg, input_return_for_arg,
     tuple_return_type,
 };
-pub use signature::{Accepts, BuiltinParam, BuiltinPhase, BuiltinSignature, ReturnSpec};
+pub use signature::{
+    Accepts, BuiltinParam, BuiltinPhase, BuiltinSignature, QualifierBoundScalar, QualifierRelation,
+    ReturnSpec, ScalarKind,
+};

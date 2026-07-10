@@ -315,12 +315,15 @@ impl Analyzer {
             None => None,
         };
         let selector_key = selector.and_then(|selector| self.known_const_switch_key(selector));
-        let mut condition_qualifier = selector_type.map_or(Qualifier::Const, |ty| ty.qualifier);
+        let selector_qualifier = selector_type.map_or(Qualifier::Const, |ty| ty.qualifier);
+        let mut reachable_condition_qualifier = selector_qualifier;
         let mut result_type = None;
         let mut selected_result_type = None;
         let mut static_selection_open = selector.is_none() || selector_key.is_some();
+        let mut dynamic_tail = selector.is_some() && selector_key.is_none();
 
         for arm in arms {
+            let arm_reachable = dynamic_tail || static_selection_open;
             let condition_value = if selector.is_none() {
                 arm.condition
                     .as_ref()
@@ -337,8 +340,12 @@ impl Analyzer {
             };
             if let Some(condition) = &arm.condition {
                 let condition_type = self.type_of_expr_with_params(condition, param_types)?;
-                condition_qualifier =
-                    strongest_qualifier(condition_qualifier, condition_type.qualifier);
+                if arm_reachable {
+                    reachable_condition_qualifier = strongest_qualifier(
+                        reachable_condition_qualifier,
+                        condition_type.qualifier,
+                    );
+                }
             }
             let arm_type = self.type_of_switch_arm_result_with_params(&arm.result, param_types)?;
             if static_selection_open && selected_result_type.is_none() {
@@ -351,6 +358,7 @@ impl Analyzer {
                         (Some(_), Some(false)) => {}
                         (Some(_), None) => {
                             static_selection_open = false;
+                            dynamic_tail = true;
                         }
                     }
                 } else if let Some(selector_key) = selector_key.as_ref() {
@@ -362,6 +370,7 @@ impl Analyzer {
                         (Some(_), Some(_)) => {}
                         (Some(_), None) => {
                             static_selection_open = false;
+                            dynamic_tail = true;
                         }
                         (None, _) => {
                             selected_result_type = Some(arm_type);
@@ -377,7 +386,7 @@ impl Analyzer {
             let branch_qualifier =
                 selected_result_type.map_or(pine_type.qualifier, |ty: PineType| ty.qualifier);
             PineType::new(
-                strongest_qualifier(condition_qualifier, branch_qualifier),
+                strongest_qualifier(reachable_condition_qualifier, branch_qualifier),
                 pine_type.kind,
             )
         })
@@ -728,19 +737,22 @@ impl Analyzer {
                 ))
             }
             ExprKind::Switch { selector, arms } => {
-                let mut condition_qualifier = selector
+                let selector_qualifier = selector
                     .as_deref()
                     .and_then(|selector| {
                         self.type_of_expr_with_params(selector, context.param_types)
                     })
                     .map_or(Qualifier::Const, |ty| ty.qualifier);
+                let mut reachable_condition_qualifier = selector_qualifier;
                 let selector_key = selector
                     .as_deref()
                     .and_then(|selector| self.known_const_switch_key(selector));
                 let mut result_types: Option<Vec<PineType>> = None;
                 let mut selected_result_types: Option<Vec<PineType>> = None;
                 let mut static_selection_open = selector.is_none() || selector_key.is_some();
+                let mut dynamic_tail = selector.is_some() && selector_key.is_none();
                 for arm in arms {
+                    let arm_reachable = dynamic_tail || static_selection_open;
                     let condition_value = if selector.is_none() {
                         arm.condition
                             .as_ref()
@@ -758,8 +770,12 @@ impl Analyzer {
                     if let Some(condition) = &arm.condition {
                         let condition_type =
                             self.type_of_expr_with_params(condition, context.param_types)?;
-                        condition_qualifier =
-                            strongest_qualifier(condition_qualifier, condition_type.qualifier);
+                        if arm_reachable {
+                            reachable_condition_qualifier = strongest_qualifier(
+                                reachable_condition_qualifier,
+                                condition_type.qualifier,
+                            );
+                        }
                     }
                     let arm_types =
                         self.tuple_element_types_of_switch_arm_result(&arm.result, context)?;
@@ -773,6 +789,7 @@ impl Analyzer {
                                 (Some(_), Some(false)) => {}
                                 (Some(_), None) => {
                                     static_selection_open = false;
+                                    dynamic_tail = true;
                                 }
                             }
                         } else if let Some(selector_key) = selector_key.as_ref() {
@@ -784,6 +801,7 @@ impl Analyzer {
                                 (Some(_), Some(_)) => {}
                                 (Some(_), None) => {
                                     static_selection_open = false;
+                                    dynamic_tail = true;
                                 }
                                 (None, _) => {
                                     selected_result_types = Some(arm_types.clone());
@@ -806,7 +824,10 @@ impl Analyzer {
                                     selected_type.qualifier
                                 });
                             PineType::new(
-                                strongest_qualifier(condition_qualifier, branch_qualifier),
+                                strongest_qualifier(
+                                    reachable_condition_qualifier,
+                                    branch_qualifier,
+                                ),
                                 pine_type.1.kind,
                             )
                         })

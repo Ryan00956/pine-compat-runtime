@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+- Fixed UDF and user-method const-argument propagation for numeric, string, and
+  color comparisons, including tuple returns, while preventing tuple type
+  queries from capturing unrelated same-named globals.
+- Fixed condition-form switch qualifier propagation so fallback assignments
+  include reachable preceding conditions and statically selected results ignore
+  unreachable tail-condition qualifiers.
+- Unified scalar `Simple*`, `Const*`, and `AtMostInput*` acceptors behind one
+  exact/at-most qualifier-bound model while preserving existing signature names,
+  `na` compatibility, and diagnostic labels.
+- Extended stable pure-series identity to nested history expressions,
+  `str.pos`, and `color.r`/`color.g`/`color.b`/`color.t`, with matching
+  historical, incremental, and realtime rollback coverage.
+- Prevented pure-series identity reuse across reassigned scalar dependencies so
+  a later expression cannot inherit an earlier value's per-series
+  `max_bars_back` retention bound, and inlined UDF/method locals keep distinct
+  pre-/post-reassignment history sources.
+- Split module validation, analyzer constant evaluation, lowering reassignment
+  collection, lowering UDT resolution, and pure-series UDT traversal into
+  focused modules, with tighter structural line-budget guards for the former
+  hotspots.
 - Fixed UDT array chained field mutation index validation so `series int`
   indexes are rejected with the same simple-int diagnostic as `array.get`.
 - Added a fixture-backed diagnostic for imported UDT array chained field

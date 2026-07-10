@@ -64,6 +64,158 @@ plot(source()[maybe_offset])
 }
 
 #[test]
+fn udf_and_method_local_reassignments_keep_history_sources_distinct() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("inline reassignment history identity")
+f() =>
+    x = close
+    before = (x + 1)[1]
+    x := open
+    after = (x + 1)[1]
+    before - after
+type Box
+    int seed
+method difference(Box this) =>
+    x = close
+    before = (x + 1)[1]
+    x := open
+    after = (x + 1)[1]
+    before - after
+box = Box.new(0)
+plot(f())
+plot(box.difference())
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        bar_ohlc(1.0, 2.0, 1.0, 2.0),
+        bar_ohlc(2.0, 3.0, 2.0, 3.0),
+        bar_ohlc(3.0, 4.0, 3.0, 4.0),
+        bar_ohlc(4.0, 5.0, 4.0, 5.0),
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_values_close(&plot.values[1..], &[1.0, 1.0, 1.0]);
+    }
+}
+
+#[test]
+fn max_bars_back_pure_history_and_scalar_calls_match_all_execution_modes() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("pure history identity")
+offset = bar_index % 3
+shade = close >= open ? color.red : color.green
+text = close >= open ? "alpha" : "beta"
+lagged = close[1]
+red = color.r(shade)
+green = color.g(shade)
+blue = color.b(shade)
+transparency = color.t(shade)
+position = str.pos(text, "p")
+max_bars_back(lagged, 2)
+max_bars_back(red, 2)
+max_bars_back(green, 2)
+max_bars_back(blue, 2)
+max_bars_back(transparency, 2)
+max_bars_back(position, 2)
+plot((close[1])[offset])
+plot(color.r(shade)[offset])
+plot(color.g(shade)[offset])
+plot(color.b(shade)[offset])
+plot(color.t(shade)[offset])
+plot(str.pos(text, "p")[offset])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let bars = vec![
+        bar_ohlc(1.0, 2.0, 1.0, 2.0),
+        bar_ohlc(3.0, 3.0, 2.0, 2.0),
+        bar_ohlc(2.0, 4.0, 2.0, 4.0),
+        bar_ohlc(5.0, 5.0, 3.0, 3.0),
+        bar_ohlc(4.0, 6.0, 4.0, 6.0),
+    ];
+
+    let historical = run_historical(&hir, &bars).expect("historical result");
+    assert_eq!(historical.plots.len(), 6);
+    assert!(historical.diagnostics.is_empty(), "{historical:?}");
+
+    let mut incremental = HistoricalRuntime::new(&hir);
+    for bar in bars.iter().copied() {
+        incremental.append_bar(bar).expect("incremental append");
+    }
+    assert_eq!(incremental.result(), historical);
+
+    let mut realtime = RealtimeRuntime::new(&hir);
+    for bar in bars[..3].iter().copied() {
+        realtime
+            .update(BarUpdate::historical(bar))
+            .expect("historical realtime update");
+    }
+    realtime
+        .update(BarUpdate::forming(bar_ohlc(10.0, 12.0, 9.0, 11.0)))
+        .expect("first forming update");
+    realtime
+        .update(BarUpdate::forming(bar_ohlc(20.0, 22.0, 19.0, 21.0)))
+        .expect("rolled-back forming update");
+    realtime
+        .update(BarUpdate::confirmed(bars[3]))
+        .expect("confirmed update");
+    let realtime_result = realtime
+        .update(BarUpdate::confirmed(bars[4]))
+        .expect("final confirmed update");
+
+    assert_eq!(realtime_result, historical);
+}
+
+#[test]
+fn max_bars_back_does_not_cross_a_reassigned_expression_dependency() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("reassigned identity")
+x = close
+source = x + 1
+max_bars_back(source, 1)
+x := open
+plot((x + 1)[bar_index])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let bars = vec![
+        bar_ohlc(1.0, 3.0, 1.0, 2.0),
+        bar_ohlc(2.0, 4.0, 2.0, 3.0),
+        bar_ohlc(3.0, 5.0, 3.0, 4.0),
+        bar_ohlc(4.0, 6.0, 4.0, 5.0),
+    ];
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_values_close(&result.plots[0].values, &[2.0, 2.0, 2.0, 2.0]);
+    assert!(result.diagnostics.is_empty(), "{result:?}");
+}
+
+#[test]
 fn runs_simple_history_offset() {
     let source = SourceFile::new(
         "test.pine",

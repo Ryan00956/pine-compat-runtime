@@ -58,6 +58,13 @@ Current inference:
   qualifiers where the method body returns those arguments.
   Imported exported UDF calls are fixture-backed for scalar/simple-string
   passthrough and block-local returns.
+  Const callsite values are attached to the bound UDF/method parameter symbol,
+  so bool, numeric, string, and color comparisons select the same branch in
+  scalar and tuple type queries without capturing an unrelated same-named
+  global. Condition-form switches accumulate qualifiers only from reachable
+  preceding conditions: fallback assignments inherit earlier dynamic
+  conditions, while conditions after a statically selected arm do not promote
+  the selected result.
 - local user-defined method returns preserve fixture-backed `input` and `simple`
   scalar qualifiers through expression, block-local, final-if, final-for,
   final-for-in, final-while, final-if branch final-loop, and switch block return
@@ -71,6 +78,12 @@ Current inference:
 
 The analyzer validates built-in arguments using the `Accepts` enum in
 `pine-builtins` and `accepts_type` in `pine-sema`.
+
+The scalar `Simple*`, `Const*`, and `AtMostInput*` family is represented by one
+`QualifierBoundScalar` model containing an exact/at-most relation, qualifier
+bound, scalar kind, and `na`-compatibility flag. Existing `Accepts` names remain
+associated constants, while acceptance and expected-label diagnostics share
+the generic model.
 
 Important current rules:
 
@@ -128,10 +141,10 @@ Important current rules:
   Broader whole-program qualifier inference remains intentionally limited.
 - There is no separate runtime input immutability model beyond the qualifier
   assigned by semantic analysis.
-- Built-in signature docs use descriptive Pine-like terms, while code still uses
-  a smaller `Accepts` enum. The analyzer now has shared `qualifier_at_most` and
-  kind-filter helpers, but not every Pine-style signature phrase has a distinct
-  data-model variant.
+- Built-in signature docs use descriptive Pine-like terms, while code uses a
+  smaller `Accepts` enum. Qualifier-bounded scalar phrases now share the generic
+  `QualifierBoundScalar` data model, but not every Pine-style collection,
+  cross-parameter, or promoted-return phrase has a distinct variant.
 - History offsets accept non-negative integer literals plus integer expressions,
   including local and imported scalar-tree UDT integer field reads, and fields on
   imported UDF/method-returned scalar-tree UDT values at any implemented

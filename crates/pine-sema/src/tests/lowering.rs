@@ -1903,6 +1903,111 @@ fn reuses_str_length_call_expression_series_id_for_max_bars_back_history() {
 }
 
 #[test]
+fn reuses_history_and_stateless_scalar_call_series_ids_for_max_bars_back_history() {
+    let analysis = analyze(
+        r#"offset = bar_index % 3
+shade = close >= open ? color.red : color.green
+text = close >= open ? "alpha" : "beta"
+lagged = close[1]
+red = color.r(shade)
+green = color.g(shade)
+blue = color.b(shade)
+transparency = color.t(shade)
+position = str.pos(text, "p")
+max_bars_back(lagged, 2)
+max_bars_back(red, 2)
+max_bars_back(green, 2)
+max_bars_back(blue, 2)
+max_bars_back(transparency, 2)
+max_bars_back(position, 2)
+plot((close[1])[offset])
+plot(color.r(shade)[offset])
+plot(color.g(shade)[offset])
+plot(color.b(shade)[offset])
+plot(color.t(shade)[offset])
+plot(str.pos(text, "p")[offset])
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let bounds = hir
+        .series_max_bars_back
+        .iter()
+        .filter(|bound| bound.max_bars_back == 2)
+        .collect::<Vec<_>>();
+
+    assert_eq!(bounds.len(), 6, "{:?}", hir.series_max_bars_back);
+    for bound in bounds {
+        assert!(
+            hir.series_history.iter().any(|requirement| {
+                requirement.series_id == bound.series_id && requirement.has_dynamic_offsets
+            }),
+            "bound {bound:?} did not match a dynamic history read: {:?}",
+            hir.series_history
+        );
+    }
+}
+
+#[test]
+fn does_not_reuse_pure_expression_series_id_across_reassigned_dependency() {
+    let analysis = analyze(
+        "x = close\nsource = x + 1\nmax_bars_back(source, 1)\nx := open\nplot((x + 1)[bar_index])\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let bound = hir
+        .series_max_bars_back
+        .iter()
+        .find(|bound| bound.max_bars_back == 1)
+        .expect("source max_bars_back should be inferred");
+
+    assert!(
+        hir.series_history.iter().all(|requirement| {
+            requirement.series_id != bound.series_id || !requirement.has_dynamic_offsets
+        }),
+        "reassigned dependency must keep the later expression on a distinct series: {:?}",
+        hir.series_history
+    );
+}
+
+#[test]
+fn does_not_reuse_pure_expression_series_id_across_udf_local_reassignment() {
+    let analysis = analyze(
+        "f() =>\n    x = close\n    before = (x + 1)[1]\n    x := open\n    after = (x + 1)[1]\n    before - after\nplot(f())\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let history_series = hir
+        .series_history
+        .iter()
+        .filter(|requirement| requirement.max_constant_offset == 1)
+        .map(|requirement| requirement.series_id)
+        .collect::<std::collections::HashSet<_>>();
+
+    assert_eq!(
+        history_series.len(),
+        2,
+        "UDF-local reassignment must keep the before/after history sources distinct: {:?}",
+        hir.series_history
+    );
+}
+
+#[test]
 fn reuses_parameterized_pure_udf_call_series_id_for_max_bars_back_history() {
     let analysis = analyze(
         "len = input.int(1, \"Length\")\nsource(a, b) => a + b\nsrc = source(close, open)\nmax_bars_back(src, 5)\nplot(source(b=open, a=close)[len])\n",
