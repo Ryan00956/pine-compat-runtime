@@ -239,11 +239,12 @@ symbols split on the last colon so exchange-prefixed keys such as
 }
 ```
 
-Build-check it with:
+Build it for `wasm32-unknown-unknown`, generate the JavaScript bindings, and
+exercise the real module through Node.js with:
 
 ```text
 rustup target add wasm32-unknown-unknown
-cargo check -p pine-wasm --target wasm32-unknown-unknown
+scripts/check_wasm_node.sh
 ```
 
 ## Development Verification
@@ -255,14 +256,15 @@ scripts/verify.sh
 ```
 
 This is the same canonical command list used by CI: Rust formatting, clippy,
-workspace tests, the `wasm32-unknown-unknown` target check, Python wheel build,
-wheel reinstall, and Python binding tests.
+workspace tests, a real `wasm32-unknown-unknown` build and Node.js execution
+smoke, Python wheel build, wheel reinstall, and Python binding tests.
 
 Prerequisites for the full gate:
 
 ```text
 python3 -m pip install --upgrade pip maturin pytest
 rustup target add wasm32-unknown-unknown
+# Install Node.js 22 LTS (or newer) and ensure `node` is on PATH.
 ```
 
 ## Performance Profile Fixtures

@@ -254,8 +254,8 @@ Good next slice:
 
 ## Direction 3: Collections
 
-Goal: move from a large partial array subset toward deliberate collection
-semantics.
+Goal: extend the fixture-backed array, scalar-map, typed-matrix, and scalar-tree
+UDT-array subsets without blurring the remaining collection boundaries.
 
 Current baseline:
 
@@ -265,31 +265,43 @@ Current baseline:
   conformance;
 - many creation, mutation, search, ordering, numeric, slice, concat, and method
   call helpers;
-- array history snapshots for the fixture-backed element families.
+- array history snapshots for the fixture-backed element families;
+- scalar-key/scalar-value maps with helper calls, history, rollback, `varip`,
+  and direct key-only or key/value `for...in` iteration;
+- runtime-owned `matrix<float>`, `matrix<int>`, `matrix<bool>`,
+  `matrix<string>`, and `matrix<color>` values with typed declarations,
+  two-dimensional reads and mutations, shape/structural helpers, history,
+  realtime rollback, `varip`, and row-based `for...in` iteration as recorded in
+  conformance;
+- same-local and same-imported scalar-tree UDT arrays with fixture-backed
+  history, rollback, `varip`, and `for...in` behavior.
 
 Remaining internal work:
 
 - broader map storage and key/value type rules beyond the scalar key/value
   subset, whose helper calls, history, rollback, varip, and direct key/value
   `for...in` iteration are fixture-backed;
-- broader matrix storage model and two-dimensional indexing rules beyond the
+- matrix element/type families and collection interactions beyond the
   fixture-backed float/int/bool/string/color matrix subsets;
-- UDT array behavior beyond the same-local scalar-field subset;
+- UDT array behavior beyond the same-local and same-imported scalar-tree
+  subsets;
 - generic or bare `array` declarations beyond current fixture-backed element
   kinds;
 - `for...in` iteration beyond the fixture-backed array, matrix-row, UDT-array,
   and scalar-map key-only/key/value subsets;
 - richer aliasing, nested collection, history, and rollback rules;
-- `varip` support for non-scalar collection families only after realtime handoff
-  is designed.
+- remaining non-scalar collection `varip` families and cross-feature
+  interactions beyond the fixture-backed scalar maps, typed matrices, and
+  same-local/same-imported scalar-tree UDT arrays.
 
 Non-goals:
 
 - treating `array.*` as broadly complete because many helpers exist;
-- adding map syntax before storage lifetime and mutation rules are written down;
-- widening matrix syntax beyond the fixture-backed `matrix<float>`
-  `new/get/set/copy/rows/columns` subset before history, rollback, and typed
-  declaration semantics are written down;
+- treating map syntax or storage as broadly complete beyond the fixture-backed
+  scalar key/value subset;
+- treating `matrix.*` as broadly complete because the five fixture-backed
+  scalar element families already cover typed declarations, history, rollback,
+  `varip`, row iteration, and many namespace/method helpers;
 - host-visible collection output as part of the first internal collection slice.
 
 Good next slice:
@@ -496,11 +508,16 @@ Current baseline:
 - golden runtime snapshots;
 - an explicit public-host golden manifest: the current gate discovers all 693
   registered ordinary CLI runtime snapshots and requires representative paired
-  Python/WASM assertions for 358 named snapshots; the smaller required set is a
-  deliberate contract policy, not an undiscovered-registry shortcut;
+  Python/WASM assertions for 418 named snapshots, rejects silent single-host
+  assertions, and currently has no reasoned single-host exceptions; the smaller
+  required set is a deliberate contract policy, not an undiscovered-registry
+  shortcut;
 - strict public `schemaVersion` checks;
 - structure guardrail;
 - runtime profiles for history and callsite state;
+- a real wasm32 module build, generated JavaScript bindings, and Node.js smoke
+  covering analysis, execution, compiled execution, combined host inputs, and
+  JavaScript exceptions;
 - full release gate in `scripts/verify.sh`.
 
 Remaining internal work:

@@ -9881,3 +9881,306 @@ def test_run_script_returns_plotcandle_outputs():
     assert result["plotCandles"][0]["colors"] == [0x4CAF50, 0x4CAF50, 0x4CAF50]
     assert result["plotCandles"][0]["wickColors"] == [0xFFFFFF, 0xFFFFFF, 0xFFFFFF]
     assert result["plotCandles"][0]["borderColors"] == [0xF23645, 0xF23645, 0xF23645]
+
+
+def _runtime_fixture_result(source_name, bars_name="bars.csv"):
+    source = (ROOT / "tests/fixtures/runtime" / source_name).read_text()
+    bars = fixture_bars(f"tests/fixtures/runtime/{bars_name}")
+    return pine_compat.run_script(source, bars)
+
+
+def test_array_history_host_golden_parity():
+    actual = {
+        snapshot: _runtime_fixture_result(source)
+        for snapshot, source in [
+            ("runtime_array_history.json", "array_history.pine"),
+            ("runtime_array_label_history.json", "array_label_history.pine"),
+            ("runtime_array_line_history.json", "array_line_history.pine"),
+            ("runtime_array_box_history.json", "array_box_history.pine"),
+            ("runtime_array_linefill_history.json", "array_linefill_history.pine"),
+            ("runtime_array_polyline_history.json", "array_polyline_history.pine"),
+            ("runtime_array_table_history.json", "array_table_history.pine"),
+            (
+                "runtime_array_chart_point_history.json",
+                "array_chart_point_history.pine",
+            ),
+            ("runtime_array_slice_history.json", "array_slice_history.pine"),
+            (
+                "runtime_array_label_slice_history.json",
+                "array_label_slice_history.pine",
+            ),
+            (
+                "runtime_array_line_slice_history.json",
+                "array_line_slice_history.pine",
+            ),
+            (
+                "runtime_array_box_slice_history.json",
+                "array_box_slice_history.pine",
+            ),
+            (
+                "runtime_array_linefill_slice_history.json",
+                "array_linefill_slice_history.pine",
+            ),
+            (
+                "runtime_array_polyline_slice_history.json",
+                "array_polyline_slice_history.pine",
+            ),
+            (
+                "runtime_array_table_slice_history.json",
+                "array_table_slice_history.pine",
+            ),
+            (
+                "runtime_array_chart_point_slice_history.json",
+                "array_chart_point_slice_history.pine",
+            ),
+        ]
+    }
+    expected = {
+        Path(path).name: json.loads((ROOT / path).read_text())
+        for path in [
+            "tests/snapshots/runtime_array_history.json",
+            "tests/snapshots/runtime_array_label_history.json",
+            "tests/snapshots/runtime_array_line_history.json",
+            "tests/snapshots/runtime_array_box_history.json",
+            "tests/snapshots/runtime_array_linefill_history.json",
+            "tests/snapshots/runtime_array_polyline_history.json",
+            "tests/snapshots/runtime_array_table_history.json",
+            "tests/snapshots/runtime_array_chart_point_history.json",
+            "tests/snapshots/runtime_array_slice_history.json",
+            "tests/snapshots/runtime_array_label_slice_history.json",
+            "tests/snapshots/runtime_array_line_slice_history.json",
+            "tests/snapshots/runtime_array_box_slice_history.json",
+            "tests/snapshots/runtime_array_linefill_slice_history.json",
+            "tests/snapshots/runtime_array_polyline_slice_history.json",
+            "tests/snapshots/runtime_array_table_slice_history.json",
+            "tests/snapshots/runtime_array_chart_point_slice_history.json",
+        ]
+    }
+
+    assert actual == expected
+
+
+def test_strategy_remaining_host_golden_parity():
+    actual = {
+        snapshot: _runtime_fixture_result(source, bars)
+        for snapshot, source, bars in [
+            ("runtime_strategy_close_noop.json", "strategy_close_noop.pine", "bars.csv"),
+            (
+                "runtime_strategy_closedtrades_fields_pyramiding.json",
+                "strategy_closedtrades_fields_pyramiding.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_commission_cash_per_contract.json",
+                "strategy_commission_cash_per_contract.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_commission_cash_per_order.json",
+                "strategy_commission_cash_per_order.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_commission_percent.json",
+                "strategy_commission_percent.pine",
+                "bars.csv",
+            ),
+            ("runtime_strategy_empty.json", "strategy_no_order.pine", "bars.csv"),
+            (
+                "runtime_strategy_entry_limit.json",
+                "strategy_entry_limit.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_entry_stop.json",
+                "strategy_entry_stop.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_entry_stop_limit.json",
+                "strategy_entry_stop_limit.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_exit_active_entry_loss_attachment.json",
+                "strategy_exit_active_entry_loss_attachment.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_exit_active_entry_loss_limit_bracket.json",
+                "strategy_exit_active_entry_loss_limit_bracket.pine",
+                "strategy_exit_trailing_bars.csv",
+            ),
+            (
+                "runtime_strategy_exit_active_entry_loss_profit_bracket.json",
+                "strategy_exit_active_entry_loss_profit_bracket.pine",
+                "strategy_exit_trailing_bars.csv",
+            ),
+            (
+                "runtime_strategy_exit_active_entry_profit_attachment.json",
+                "strategy_exit_active_entry_profit_attachment.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_exit_active_entry_stop_profit_bracket.json",
+                "strategy_exit_active_entry_stop_profit_bracket.pine",
+                "strategy_exit_trailing_bars.csv",
+            ),
+            (
+                "runtime_strategy_exit_active_entry_trail_points_attachment.json",
+                "strategy_exit_active_entry_trail_points_attachment.pine",
+                "strategy_exit_trailing_bars.csv",
+            ),
+            (
+                "runtime_strategy_exit_reservation_bracket_host_parity.json",
+                "strategy_exit_reservation_bracket_host_parity.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_exit_reservation_trailing_host_parity.json",
+                "strategy_exit_reservation_trailing_host_parity.pine",
+                "strategy_exit_reservation_trailing_host_parity_bars.csv",
+            ),
+            (
+                "runtime_strategy_exit_slippage.json",
+                "strategy_exit_slippage.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_limit_verification_entry.json",
+                "strategy_limit_verification_entry.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_limit_verification_exit.json",
+                "strategy_limit_verification_exit.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_opentrades_fields_pyramiding.json",
+                "strategy_opentrades_fields_pyramiding.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_pyramiding.json",
+                "strategy_pyramiding.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_pyramiding_close.json",
+                "strategy_pyramiding_close.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_pyramiding_close_all.json",
+                "strategy_pyramiding_close_all.pine",
+                "bars.csv",
+            ),
+            (
+                "runtime_strategy_pyramiding_exit_bracket_from_entry.json",
+                "strategy_pyramiding_exit_bracket_from_entry.pine",
+                "strategy_pyramiding_exit_profit_from_entry_bars.csv",
+            ),
+            (
+                "runtime_strategy_pyramiding_exit_from_entry.json",
+                "strategy_pyramiding_exit_from_entry.pine",
+                "strategy_pyramiding_exit_from_entry_bars.csv",
+            ),
+            (
+                "runtime_strategy_pyramiding_exit_profit_from_entry.json",
+                "strategy_pyramiding_exit_profit_from_entry.pine",
+                "strategy_pyramiding_exit_profit_from_entry_bars.csv",
+            ),
+            (
+                "runtime_strategy_pyramiding_exit_same_id.json",
+                "strategy_pyramiding_exit_same_id.pine",
+                "strategy_pyramiding_exit_same_id_bars.csv",
+            ),
+            (
+                "runtime_strategy_pyramiding_exit_trail_points_from_entry.json",
+                "strategy_pyramiding_exit_trail_points_from_entry.pine",
+                "strategy_pyramiding_exit_trail_points_from_entry_bars.csv",
+            ),
+            (
+                "runtime_strategy_slippage.json",
+                "strategy_slippage.pine",
+                "bars.csv",
+            ),
+        ]
+    }
+    expected = {
+        Path(path).name: json.loads((ROOT / path).read_text())
+        for path in [
+            "tests/snapshots/runtime_strategy_close_noop.json",
+            "tests/snapshots/runtime_strategy_closedtrades_fields_pyramiding.json",
+            "tests/snapshots/runtime_strategy_commission_cash_per_contract.json",
+            "tests/snapshots/runtime_strategy_commission_cash_per_order.json",
+            "tests/snapshots/runtime_strategy_commission_percent.json",
+            "tests/snapshots/runtime_strategy_empty.json",
+            "tests/snapshots/runtime_strategy_entry_limit.json",
+            "tests/snapshots/runtime_strategy_entry_stop.json",
+            "tests/snapshots/runtime_strategy_entry_stop_limit.json",
+            "tests/snapshots/runtime_strategy_exit_active_entry_loss_attachment.json",
+            "tests/snapshots/runtime_strategy_exit_active_entry_loss_limit_bracket.json",
+            "tests/snapshots/runtime_strategy_exit_active_entry_loss_profit_bracket.json",
+            "tests/snapshots/runtime_strategy_exit_active_entry_profit_attachment.json",
+            "tests/snapshots/runtime_strategy_exit_active_entry_stop_profit_bracket.json",
+            "tests/snapshots/runtime_strategy_exit_active_entry_trail_points_attachment.json",
+            "tests/snapshots/runtime_strategy_exit_reservation_bracket_host_parity.json",
+            "tests/snapshots/runtime_strategy_exit_reservation_trailing_host_parity.json",
+            "tests/snapshots/runtime_strategy_exit_slippage.json",
+            "tests/snapshots/runtime_strategy_limit_verification_entry.json",
+            "tests/snapshots/runtime_strategy_limit_verification_exit.json",
+            "tests/snapshots/runtime_strategy_opentrades_fields_pyramiding.json",
+            "tests/snapshots/runtime_strategy_pyramiding.json",
+            "tests/snapshots/runtime_strategy_pyramiding_close.json",
+            "tests/snapshots/runtime_strategy_pyramiding_close_all.json",
+            "tests/snapshots/runtime_strategy_pyramiding_exit_bracket_from_entry.json",
+            "tests/snapshots/runtime_strategy_pyramiding_exit_from_entry.json",
+            "tests/snapshots/runtime_strategy_pyramiding_exit_profit_from_entry.json",
+            "tests/snapshots/runtime_strategy_pyramiding_exit_same_id.json",
+            "tests/snapshots/runtime_strategy_pyramiding_exit_trail_points_from_entry.json",
+            "tests/snapshots/runtime_strategy_slippage.json",
+        ]
+    }
+
+    assert actual == expected
+
+
+def test_map_matrix_representative_host_golden_parity():
+    actual = {
+        snapshot: _runtime_fixture_result(source)
+        for snapshot, source in [
+            ("runtime_map_methods.json", "map_methods.pine"),
+            ("runtime_map_history.json", "map_history.pine"),
+            ("runtime_map_for_in.json", "map_for_in.pine"),
+            ("runtime_map_varip.json", "map_varip.pine"),
+            ("runtime_matrix_int.json", "matrix_int.pine"),
+            ("runtime_matrix_bool.json", "matrix_bool.pine"),
+            ("runtime_matrix_history_shape.json", "matrix_history_shape.pine"),
+            ("runtime_matrix_for_in.json", "matrix_for_in.pine"),
+            ("runtime_matrix_mult.json", "matrix_mult.pine"),
+            ("runtime_matrix_inv.json", "matrix_inv.pine"),
+            ("runtime_matrix_varip.json", "matrix_varip.pine"),
+            ("runtime_matrix_zero_dimensions.json", "matrix_zero_dimensions.pine"),
+        ]
+    }
+    expected = {
+        Path(path).name: json.loads((ROOT / path).read_text())
+        for path in [
+            "tests/snapshots/runtime_map_methods.json",
+            "tests/snapshots/runtime_map_history.json",
+            "tests/snapshots/runtime_map_for_in.json",
+            "tests/snapshots/runtime_map_varip.json",
+            "tests/snapshots/runtime_matrix_int.json",
+            "tests/snapshots/runtime_matrix_bool.json",
+            "tests/snapshots/runtime_matrix_history_shape.json",
+            "tests/snapshots/runtime_matrix_for_in.json",
+            "tests/snapshots/runtime_matrix_mult.json",
+            "tests/snapshots/runtime_matrix_inv.json",
+            "tests/snapshots/runtime_matrix_varip.json",
+            "tests/snapshots/runtime_matrix_zero_dimensions.json",
+        ]
+    }
+
+    assert actual == expected

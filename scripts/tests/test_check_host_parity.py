@@ -111,6 +111,63 @@ assert_snapshot("real.json", &output);
             ["paired host snapshot is not recorded in the required manifest: new.json"],
         )
 
+    def test_registered_single_host_assertions_require_pair_or_reasoned_allowlist(self):
+        registered = {"wasm_only.json", "python_only.json"}
+
+        errors = check_host_parity.parity_errors(
+            registered,
+            set(),
+            {"wasm_only.json"},
+            {"python_only.json"},
+        )
+
+        self.assertEqual(
+            errors,
+            [
+                "registered snapshot python_only.json has only a Python golden assertion",
+                "registered snapshot wasm_only.json has only a WASM golden assertion",
+            ],
+        )
+        self.assertEqual(
+            check_host_parity.parity_errors(
+                registered,
+                set(),
+                {"wasm_only.json"},
+                {"python_only.json"},
+                {
+                    "python_only.json": "Python-only API boundary",
+                    "wasm_only.json": "WASM-only API boundary",
+                },
+            ),
+            [],
+        )
+
+    def test_unpaired_allowlist_requires_a_live_reasoned_exception(self):
+        errors = check_host_parity.parity_errors(
+            {"paired.json", "wasm_only.json"},
+            {"paired.json"},
+            {"paired.json", "wasm_only.json"},
+            {"paired.json"},
+            {
+                "missing.json": "not registered",
+                "paired.json": "already required",
+                "wasm_only.json": "",
+            },
+        )
+
+        self.assertIn(
+            "unpaired snapshot allowlist entry wasm_only.json must include a reason",
+            errors,
+        )
+        self.assertIn(
+            "unpaired snapshot allowlist entry is not registered by the CLI: missing.json",
+            errors,
+        )
+        self.assertIn(
+            "required snapshot cannot be exempted from host parity: paired.json",
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

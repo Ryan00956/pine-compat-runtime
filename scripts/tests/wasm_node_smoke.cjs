@@ -1,0 +1,111 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const path = require('node:path');
+
+if (process.argv.length !== 3) {
+  throw new Error('usage: node wasm_node_smoke.cjs <generated-module.js>');
+}
+
+// Requiring wasm-bindgen's Node target synchronously instantiates the real
+// WebAssembly.Module and wires its generated JS ABI adapters.
+const pine = require(path.resolve(process.argv[2]));
+
+for (const name of ['analyzeScript', 'runScriptCsv', 'compileScript']) {
+  assert.equal(typeof pine[name], 'function', `missing Wasm export ${name}`);
+}
+
+const source = '//@version=6\nindicator("node smoke")\nplot(close * 2)\n';
+const bars = [
+  'time,open,high,low,close,volume',
+  '0,1,1,1,1,10',
+  '1,2,2,2,2,20',
+  '2,3,3,3,3,30',
+  '',
+].join('\n');
+
+const analysis = JSON.parse(pine.analyzeScript(source));
+assert.equal(analysis.executable, true);
+assert.deepEqual(analysis.diagnostics, []);
+assert.ok(
+  analysis.compatibility.supported.some(({ feature }) => feature === 'plot'),
+  'analysis should report plot support',
+);
+
+const direct = JSON.parse(pine.runScriptCsv(source, bars));
+assert.deepEqual(direct.plots[0].values, [2, 4, 6]);
+assert.deepEqual(direct.diagnostics, []);
+
+const program = pine.compileScript(source);
+assert.equal(typeof program.runCsv, 'function');
+const compiled = JSON.parse(program.runCsv(bars));
+assert.deepEqual(compiled.plots[0].values, [2, 4, 6]);
+assert.deepEqual(compiled, direct);
+program.free();
+
+const combinedSource = [
+  '//@version=6',
+  'indicator("combined node smoke")',
+  'import user/lib/1 as lib',
+  'factor = input.float(1.0, "Factor")',
+  'requested = request.security("NYSE:IBM", "1", close)',
+  'plot(lib.scale(requested, factor))',
+  '',
+].join('\n');
+const librarySources = JSON.stringify({
+  'user/lib/1': [
+    '//@version=6',
+    'library("lib")',
+    'export offset = 1.0',
+    'export scale(value, factor) => value * factor + offset',
+    '',
+  ].join('\n'),
+});
+const requestBars = JSON.stringify({
+  'NYSE:IBM:1': [
+    { time: 0, open: 9, high: 11, low: 8, close: 10, volume: 100 },
+    { time: 1, open: 19, high: 21, low: 18, close: 20, volume: 200 },
+    { time: 2, open: 29, high: 31, low: 28, close: 30, volume: 300 },
+  ],
+});
+const combinedAnalysis = JSON.parse(
+  pine.analyzeScriptWithLibraries(combinedSource, librarySources),
+);
+assert.deepEqual(combinedAnalysis.diagnostics, []);
+const factorInput = combinedAnalysis.inputs.find(({ title }) => title === 'Factor');
+assert.ok(factorInput, 'combined analysis should expose the Factor input');
+assert.equal(typeof factorInput.callSiteId, 'number');
+const overrides = JSON.stringify({ [factorInput.callSiteId]: 3.0 });
+const combined = JSON.parse(
+  pine.runScriptCsvWithLibrariesAndRequestBarsAndInputOverrides(
+    combinedSource,
+    bars,
+    librarySources,
+    requestBars,
+    overrides,
+  ),
+);
+assert.deepEqual(combined.plots[0].values, [31, 61, 91]);
+assert.deepEqual(combined.diagnostics, []);
+
+assert.throws(
+  () => pine.compileScript('indicator("broken")\nplot(unknown_name)\n'),
+  (error) => {
+    // Result<_, JsValue> is intentionally thrown by wasm-bindgen. JsValue::from_str
+    // crosses the boundary as a thrown string rather than an Error instance.
+    assert.match(String(error), /unknown_name|unknown identifier/i);
+    return true;
+  },
+);
+
+assert.throws(
+  () => pine.runScriptCsv(source, 'time,open,high,low,close,volume\n0,1,2\n'),
+  (error) => {
+    assert.match(String(error), /invalid bars CSV.*expected 6 columns/i);
+    return true;
+  },
+);
+
+console.log(
+  'wasm Node smoke passed: instantiate, analyze, run, compile/run, combined hosts, JS exceptions',
+);

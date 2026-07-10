@@ -18,6 +18,9 @@ without duplicating the CLI runner's fixture-specific input setup. Add a name to
 the sorted manifest only after both host suites assert that golden snapshot.
 
 At this stage the live gate discovers 693 registered CLI snapshots and verifies
-358 manifest-required snapshots in both hosts. The script prints both live
-counts; changing either the registry or the paired-host baseline must therefore
-be an explicit, reviewable change rather than a side effect of tuple formatting.
+418 manifest-required snapshots in both hosts. Registered snapshots must either
+have no public-host assertion yet or be asserted by both hosts; a single-host
+assertion fails the gate unless it has an explicit, reasoned exception. The
+current exception set is empty. The script prints both live counts, so changing
+either the registry or the paired-host baseline is an explicit, reviewable
+change rather than a side effect of tuple formatting.

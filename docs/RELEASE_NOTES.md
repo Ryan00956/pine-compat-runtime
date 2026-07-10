@@ -4,9 +4,15 @@
 
 - Fixed host-parity discovery for rustfmt-expanded runtime snapshot tuples and
   made the representative public-host contract explicit: the current gate
-  discovers 693 registered CLI snapshots and verifies the manifest-selected 358
-  snapshots against both Python and WASM golden assertions, with parser/policy
-  self-tests in the release gate.
+  discovers 693 registered CLI snapshots and verifies the manifest-selected 418
+  snapshots against both Python and WASM golden assertions. The 48 previously
+  single-host snapshots are now paired, map/matrix coverage adds 12
+  representatives, and any future silent single-host assertion fails the gate;
+  the current reasoned-exception set is empty.
+- Replaced the wasm compile-only release check with a real Node.js execution
+  gate. It builds the wasm32 module, generates matching JavaScript bindings, and
+  exercises analysis, direct and compiled execution, library/request/input host
+  combinations, and JavaScript exception propagation.
 - Added one shared scalar constant-call evaluator for the exact `int`, `float`,
   `math.min`, `math.max`, `math.abs`, `math.floor`, `math.ceil`, and
   `math.trunc` whitelist. Nested supported calls now drive static branch

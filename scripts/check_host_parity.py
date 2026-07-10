@@ -17,6 +17,10 @@ REQUIRED_MANIFEST = ROOT / "scripts/host_parity_required.txt"
 WASM_TESTS = ROOT / "crates/pine-wasm/src/tests/mod.rs"
 PYTHON_TESTS = ROOT / "python/tests/test_bindings.py"
 
+# A registered CLI runtime snapshot should never silently remain single-host.
+# Keep exceptions explicit and reasoned; the normal state is an empty mapping.
+UNPAIRED_REGISTERED_ALLOWLIST: dict[str, str] = {}
+
 # rustfmt expands most fixture tuples and leaves a trailing comma before `)`.
 # Keep the parser independent of whitespace and of that optional final comma.
 SNAPSHOT_FIXTURE = re.compile(
@@ -264,8 +268,10 @@ def parity_errors(
     required: set[str],
     wasm_assertions: set[str],
     python_assertions: set[str],
+    unpaired_allowlist: dict[str, str] | None = None,
 ) -> list[str]:
     errors: list[str] = []
+    allowlist = unpaired_allowlist or {}
 
     for snapshot in sorted(required - registered):
         errors.append(f"required snapshot is not registered by the CLI: {snapshot}")
@@ -281,6 +287,32 @@ def parity_errors(
                 f"required snapshot {snapshot} is missing a "
                 + ", ".join(missing_hosts)
                 + " golden assertion"
+            )
+
+    single_host_registered = registered & (wasm_assertions ^ python_assertions)
+    ordinary_single_host = single_host_registered - required
+    for snapshot in sorted(ordinary_single_host - allowlist.keys()):
+        host = "WASM" if snapshot in wasm_assertions else "Python"
+        errors.append(
+            f"registered snapshot {snapshot} has only a {host} golden assertion"
+        )
+
+    for snapshot, reason in sorted(allowlist.items()):
+        if not reason.strip():
+            errors.append(
+                f"unpaired snapshot allowlist entry {snapshot} must include a reason"
+            )
+        if snapshot not in registered:
+            errors.append(
+                f"unpaired snapshot allowlist entry is not registered by the CLI: {snapshot}"
+            )
+        elif snapshot in required:
+            errors.append(
+                f"required snapshot cannot be exempted from host parity: {snapshot}"
+            )
+        elif snapshot not in ordinary_single_host:
+            errors.append(
+                f"unpaired snapshot allowlist entry is stale: {snapshot}"
             )
 
     # Paired assertions are policy, not an accidental side effect. Requiring
@@ -317,6 +349,7 @@ def main() -> int:
             required,
             wasm_snapshot_assertions(WASM_TESTS.read_text()),
             python_snapshot_assertions(PYTHON_TESTS.read_text()),
+            UNPAIRED_REGISTERED_ALLOWLIST,
         )
     )
 
