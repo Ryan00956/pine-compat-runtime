@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Extended `array.min` and `array.max` with their optional zero-based `nth`
+  order-statistic argument for int and float arrays. Namespace and method
+  calls accept positional or named ranks, namespace arguments can be reordered,
+  and dynamic series int ranks are supported; `na` elements are filtered while
+  duplicates retain independent ranks, and empty/all-`na` arrays or `na`,
+  negative, and out-of-range ranks return `na`. Non-int ranks are rejected
+  during semantic analysis.
+- Hardened built-in argument binding so required, duplicate, and positional-
+  after-named arguments are validated against signature parameter slots, and
+  indexed return types remain correct for reordered named calls. Aligned
+  `strategy.exit` metadata with the supported optional `from_entry` form while
+  preserving diagnostics for calls that omit both fixed and trailing triggers.
 - Fixed host-parity discovery for rustfmt-expanded runtime snapshot tuples and
   made the representative public-host contract explicit: the current gate
   discovers 693 registered CLI snapshots and verifies the manifest-selected 418

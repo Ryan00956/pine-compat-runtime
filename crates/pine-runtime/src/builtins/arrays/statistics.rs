@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 
 use super::*;
+use crate::builtins::args::call_arg_expr;
 
 impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_array_includes(
@@ -140,9 +141,35 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
         mode: ArrayNumericMode,
     ) -> Result<PineValue, RuntimeError> {
-        let id = self.eval_expr(&args[0].value)?;
-        let PineValue::Array(id) = id else {
-            return Ok(PineValue::Na);
+        let (id, nth) = if matches!(mode, ArrayNumericMode::Min | ArrayNumericMode::Max) {
+            let mut evaluated_args = Vec::with_capacity(args.len());
+            for arg in args {
+                evaluated_args.push(self.eval_expr(&arg.value)?);
+            }
+
+            let Some(PineValue::Array(id)) =
+                evaluated_call_arg_value(args, &evaluated_args, 0, "id")
+            else {
+                return Ok(PineValue::Na);
+            };
+            let nth = match evaluated_call_arg_value(args, &evaluated_args, 1, "nth") {
+                Some(PineValue::Int(nth)) => usize::try_from(*nth).ok(),
+                Some(_) => None,
+                None => Some(0),
+            };
+            let Some(nth) = nth else {
+                return Ok(PineValue::Na);
+            };
+            (*id, Some(nth))
+        } else {
+            let Some(id_expr) = call_arg_expr(args, 0, "id") else {
+                return Ok(PineValue::Na);
+            };
+            let id = self.eval_expr(id_expr)?;
+            let PineValue::Array(id) = id else {
+                return Ok(PineValue::Na);
+            };
+            (id, None)
         };
         let Some(kind) = self.array_kinds.get(&id).copied() else {
             return Ok(PineValue::Na);
@@ -156,19 +183,43 @@ impl<'a> HistoricalRuntime<'a> {
 
         match mode {
             ArrayNumericMode::Min | ArrayNumericMode::Max => {
-                let mut current: Option<f64> = None;
-                for value in values.iter().filter_map(PineValue::as_f64) {
-                    current = Some(match (mode, current) {
-                        (_, None) => value,
-                        (ArrayNumericMode::Min, Some(current)) => current.min(value),
-                        (ArrayNumericMode::Max, Some(current)) => current.max(value),
+                let nth = nth.expect("min/max rank is resolved before reading the array");
+                let selection_index = |len: usize| {
+                    (nth < len).then(|| match mode {
+                        ArrayNumericMode::Min => nth,
+                        ArrayNumericMode::Max => len - nth - 1,
                         _ => unreachable!("only min/max modes are handled here"),
-                    });
-                }
-                let Some(current) = current else {
-                    return Ok(PineValue::Na);
+                    })
                 };
-                Ok(array_numeric_result(kind, current))
+
+                match kind {
+                    ArrayElementKind::Int => {
+                        let mut numeric_values: Vec<_> = values
+                            .iter()
+                            .filter_map(|value| match value {
+                                PineValue::Int(value) => Some(*value),
+                                _ => None,
+                            })
+                            .collect();
+                        numeric_values.sort_unstable();
+                        Ok(selection_index(numeric_values.len())
+                            .and_then(|index| numeric_values.get(index))
+                            .copied()
+                            .map_or(PineValue::Na, PineValue::Int))
+                    }
+                    ArrayElementKind::Float => {
+                        let mut numeric_values: Vec<_> =
+                            values.iter().filter_map(PineValue::as_f64).collect();
+                        numeric_values.sort_by(|left, right| {
+                            left.partial_cmp(right).unwrap_or(Ordering::Equal)
+                        });
+                        Ok(selection_index(numeric_values.len())
+                            .and_then(|index| numeric_values.get(index))
+                            .copied()
+                            .map_or(PineValue::Na, finite_float_or_na))
+                    }
+                    _ => Ok(PineValue::Na),
+                }
             }
             ArrayNumericMode::Range => {
                 let mut min: Option<f64> = None;
@@ -535,4 +586,16 @@ impl<'a> HistoricalRuntime<'a> {
 
         Ok(finite_float_or_na(result))
     }
+}
+
+fn evaluated_call_arg_value<'a>(
+    args: &[HirCallArg],
+    evaluated_args: &'a [PineValue],
+    index: usize,
+    name: &str,
+) -> Option<&'a PineValue> {
+    args.iter()
+        .position(|arg| arg.name.as_deref() == Some(name))
+        .or_else(|| (index < args.len()).then_some(index))
+        .and_then(|arg_index| evaluated_args.get(arg_index))
 }

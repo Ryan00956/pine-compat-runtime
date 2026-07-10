@@ -1,0 +1,3 @@
+//@version=5
+strategy("Supported strategy exit omitted from_entry")
+strategy.exit("XL", stop=1)

@@ -166,7 +166,7 @@ const STRATEGY_EXIT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "from_entry",
         accepts: Accepts::SimpleString,
-        optional: false,
+        optional: true,
     },
     BuiltinParam {
         name: "stop",

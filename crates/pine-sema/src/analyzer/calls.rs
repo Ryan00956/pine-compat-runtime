@@ -102,7 +102,7 @@ impl Analyzer {
             }
             self.mark_user_type_array_element_result(&name, span, args, &arg_types);
             self.mark_user_type_array_result(&name, span, args, &arg_types);
-            return self.return_type(signature, &arg_types);
+            return self.return_type_for_call(signature, args, &arg_types);
         }
 
         if let Some(pine_type) = self.analyze_alias_qualified_user_method_call(
@@ -418,7 +418,11 @@ impl Analyzer {
             method_arg_types.extend(arg_types.iter().copied());
 
             self.validate_call_args(signature, &method_args, &method_arg_types);
-            return MethodResolution::Resolved(self.return_type(signature, &method_arg_types));
+            return MethodResolution::Resolved(self.return_type_for_call(
+                signature,
+                &method_args,
+                &method_arg_types,
+            ));
         }
 
         if matches!(
@@ -534,7 +538,11 @@ impl Analyzer {
             &method_arg_types,
         );
         self.mark_user_type_array_result(builtin_name, call_span, &method_args, &method_arg_types);
-        MethodResolution::Resolved(self.return_type(signature, &method_arg_types))
+        MethodResolution::Resolved(self.return_type_for_call(
+            signature,
+            &method_args,
+            &method_arg_types,
+        ))
     }
 
     pub(crate) fn validate_call_args(
@@ -598,6 +606,13 @@ impl Analyzer {
                 ),
                 args[signature.params.len()].span,
             ));
+        }
+
+        if !accepts_single_extreme_length
+            && !accepts_pivot_default_source
+            && !self.validate_builtin_call_arg_bindings(signature, args)
+        {
+            return;
         }
 
         for (index, arg) in args.iter().enumerate() {
@@ -715,6 +730,90 @@ impl Analyzer {
         self.validate_max_bars_back_args(signature, args);
         self.validate_alert_args(signature, args);
         self.validate_drawing_option_args(signature, args);
+    }
+
+    fn validate_builtin_call_arg_bindings(
+        &mut self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+    ) -> bool {
+        let mut bound = vec![false; signature.params.len()];
+        let mut saw_named = false;
+        let mut valid = true;
+
+        for (arg_index, arg) in args.iter().enumerate() {
+            let param_index = if let Some(name) = &arg.name {
+                saw_named = true;
+                let Some(param_index) =
+                    signature.params.iter().position(|param| param.name == name)
+                else {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARG_NAME",
+                        format!("`{}` has no argument named `{name}`", signature.name),
+                        arg.span,
+                    ));
+                    valid = false;
+                    continue;
+                };
+                param_index
+            } else {
+                if saw_named {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARG_ORDER",
+                        "positional arguments cannot follow named arguments in built-in calls",
+                        arg.span,
+                    ));
+                    valid = false;
+                    continue;
+                }
+                if arg_index < signature.params.len() {
+                    arg_index
+                } else if signature.variadic {
+                    let Some(param_index) = signature.params.len().checked_sub(1) else {
+                        continue;
+                    };
+                    param_index
+                } else {
+                    continue;
+                }
+            };
+
+            let repeated_variadic_tail =
+                signature.variadic && arg.name.is_none() && arg_index >= signature.params.len();
+            if bound[param_index] && !repeated_variadic_tail {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_DUPLICATE",
+                    format!(
+                        "`{}` argument `{}` is provided more than once",
+                        signature.name, signature.params[param_index].name
+                    ),
+                    arg.span,
+                ));
+                valid = false;
+                continue;
+            }
+            bound[param_index] = true;
+        }
+
+        if valid
+            && let Some((_, missing)) = signature
+                .params
+                .iter()
+                .enumerate()
+                .find(|(index, param)| !param.optional && !bound[*index])
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                format!(
+                    "`{}` is missing argument `{}`",
+                    signature.name, missing.name
+                ),
+                args.first().map_or(Span::default(), |arg| arg.span),
+            ));
+            valid = false;
+        }
+
+        valid
     }
 
     pub(crate) fn resolve_param<'a>(

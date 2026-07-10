@@ -39,7 +39,10 @@ improved over time, but codes should remain stable once published.
 - `E_ASSIGN_TYPE`: reassignment type mismatch.
 - `E_BRANCH_RETURN`: branch expression body does not end with an expression.
 - `E_BRANCH_TYPE`: ternary branch type mismatch.
+- `E_CALL_ARG_DUPLICATE`: a built-in call argument was provided more than once.
 - `E_CALL_ARG_NAME`: unknown named argument.
+- `E_CALL_ARG_ORDER`: positional argument followed a named argument in a
+  built-in call.
 - `E_CALL_ARG_TYPE`: argument type does not satisfy the built-in signature.
 - `E_CALL_ARG_VALUE`: argument type is valid, but the value is outside the
   supported range.

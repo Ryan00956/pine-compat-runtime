@@ -176,6 +176,19 @@ const ARRAY_NUMERIC_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const ARRAY_MIN_MAX_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::NumericArray,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "nth",
+        accepts: Accepts::IntCompatible,
+        optional: true,
+    },
+];
+
 const ARRAY_TRUTHY_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "id",
     accepts: Accepts::NumericOrBoolArray,
@@ -639,14 +652,14 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "array.min",
         phase: BuiltinPhase::Phase1Core,
-        params: ARRAY_NUMERIC_PARAMS,
+        params: ARRAY_MIN_MAX_PARAMS,
         returns: ReturnSpec::ArrayNumeric(0),
         variadic: false,
     },
     BuiltinSignature {
         name: "array.max",
         phase: BuiltinPhase::Phase1Core,
-        params: ARRAY_NUMERIC_PARAMS,
+        params: ARRAY_MIN_MAX_PARAMS,
         returns: ReturnSpec::ArrayNumeric(0),
         variadic: false,
     },

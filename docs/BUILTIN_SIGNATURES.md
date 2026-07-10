@@ -679,7 +679,7 @@ strategy.close(id: simple string, qty?: series/simple numeric, qty_percent?: ser
 strategy.close_all(comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible) -> void
 strategy.cancel(id: simple string) -> void
 strategy.cancel_all() -> void
-strategy.exit(id: simple string, from_entry: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, comment_profit?: string-compatible, comment_loss?: string-compatible, comment_trailing?: string-compatible, alert_message?: string-compatible, alert_profit?: string-compatible, alert_loss?: string-compatible, alert_trailing?: string-compatible, disable_alert?: bool-compatible)
+strategy.exit(id: simple string, from_entry?: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, comment_profit?: string-compatible, comment_loss?: string-compatible, comment_trailing?: string-compatible, alert_message?: string-compatible, alert_profit?: string-compatible, alert_loss?: string-compatible, alert_trailing?: string-compatible, disable_alert?: bool-compatible)
   -> void
 strategy.netprofit_percent -> series float
 strategy.grossprofit -> series float
@@ -1260,8 +1260,8 @@ array.binary_search(id: float-array|int-array, value: element-compatible) -> sim
 array.binary_search_leftmost(id: float-array|int-array, value: element-compatible) -> simple int
 array.binary_search_rightmost(id: float-array|int-array, value: element-compatible) -> simple int
 array.abs(id: float-array|int-array) -> same array kind
-array.min(id: float-array|int-array) -> series element
-array.max(id: float-array|int-array) -> series element
+array.min(id: float-array|int-array, nth?: int-compatible) -> series element
+array.max(id: float-array|int-array, nth?: int-compatible) -> series element
 array.sum(id: float-array|int-array) -> series element
 array.avg(id: float-array|int-array) -> series float
 array.range(id: float-array|int-array) -> series element
@@ -1357,6 +1357,12 @@ arrays; false, zero, and `na` elements are falsey, other numeric values are
 truthy, empty arrays return `true` for `every` and `false` for `some`.
 `array.abs` allocates a new same-kind array containing the absolute
 value of each source element, preserves `na`, and does not mutate the source.
+`array.min` and `array.max` ignore `na` elements and accept an optional
+zero-based `nth` rank at any integer qualifier, including a value that changes
+on each bar. The omitted rank defaults to zero, duplicate values occupy
+separate ranks, and empty/all-`na` arrays or `na`, negative, and out-of-range
+ranks return `na`. Namespace and method calls support positional and named
+`nth` arguments; namespace arguments may also be reordered by name.
 `array.range` returns max minus min while ignoring `na` elements.
 `array.median` returns the median of non-`na` values. `array.mode` returns the
 smallest value among tied most-frequent values and returns `na` when all

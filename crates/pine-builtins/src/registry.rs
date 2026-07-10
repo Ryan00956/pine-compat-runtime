@@ -273,6 +273,7 @@ mod tests {
         assert_eq!(signature.params.len(), 20);
         assert_eq!(signature.params[0].name, "id");
         assert_eq!(signature.params[1].name, "from_entry");
+        assert!(signature.params[1].optional);
         assert_eq!(signature.params[2].name, "stop");
         assert!(signature.params[2].optional);
         assert_eq!(

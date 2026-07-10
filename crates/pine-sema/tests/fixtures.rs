@@ -4377,7 +4377,15 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
             "E_CALL_ARITY",
         ),
         (
-            "tests/fixtures/sema/unsupported_strategy_exit_missing_entry.pine",
+            "tests/fixtures/sema/unsupported_strategy_exit_missing_trigger.pine",
+            "E_CALL_ARITY",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_named_missing_trigger.pine",
+            "E_CALL_ARITY",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_missing_id.pine",
             "E_CALL_ARITY",
         ),
         (
@@ -4419,6 +4427,15 @@ fn reports_strategy_exit_quantity_guardrail_messages() {
         "tests/fixtures/sema/unsupported_strategy_exit_partial_quantity.pine",
         &["`strategy.exit` requires one of `stop`, `limit`, `profit`, or `loss`"],
     );
+    for fixture in [
+        "tests/fixtures/sema/unsupported_strategy_exit_missing_trigger.pine",
+        "tests/fixtures/sema/unsupported_strategy_exit_named_missing_trigger.pine",
+    ] {
+        assert_diagnostic_messages(
+            fixture,
+            &["`strategy.exit` requires one of `stop`, `limit`, `profit`, or `loss`"],
+        );
+    }
 }
 
 #[test]
@@ -4434,6 +4451,7 @@ fn accepts_supported_strategy_exit_fixtures() {
         "tests/fixtures/sema/supported_strategy_exit_loss_profit.pine",
         "tests/fixtures/sema/supported_strategy_exit_trail_price.pine",
         "tests/fixtures/sema/supported_strategy_exit_trail_points.pine",
+        "tests/fixtures/sema/supported_strategy_exit_omitted_from_entry.pine",
         "tests/fixtures/sema/supported_strategy_exit_qty_stop.pine",
         "tests/fixtures/sema/supported_strategy_exit_qty_bracket.pine",
         "tests/fixtures/sema/supported_strategy_exit_qty_trailing.pine",
@@ -7841,6 +7859,38 @@ fn reports_unsupported_array_abs_same_as_arg_return_qualifier_fixture() {
 fn accepts_supported_array_numeric_series_return_qualifier_fixture() {
     assert_valid_fixture(
         "tests/fixtures/sema/supported_array_numeric_series_return_qualifier.pine",
+    );
+}
+
+#[test]
+fn accepts_supported_array_min_max_nth_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_array_min_max_nth.pine");
+}
+
+#[test]
+fn reports_unsupported_array_min_max_nth_type_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_min_max_nth_type.pine",
+        &[
+            "`array.min` argument `nth` expects integer-compatible, got const float",
+            "`array.max` argument `nth` expects integer-compatible, got const string",
+            "`array.min` argument `nth` expects integer-compatible, got const float",
+            "`array.max` argument `nth` expects integer-compatible, got const string",
+        ],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_min_max_nth_bindings_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_min_max_nth_bindings.pine",
+        &[
+            "`array.min` is missing argument `id`",
+            "`array.max` argument `id` is provided more than once",
+            "`array.min` argument `id` is provided more than once",
+            "positional arguments cannot follow named arguments in built-in calls",
+            "`array.min` argument `id` is provided more than once",
+        ],
     );
 }
 

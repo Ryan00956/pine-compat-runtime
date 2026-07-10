@@ -161,12 +161,13 @@ impl Analyzer {
                     if is_ta_vwap_bands_call(&name, args) {
                         return Some(pine_builtins::tuple_return_type());
                     }
-                    self.return_type(signature, &arg_types)
+                    self.return_type_for_call(signature, args, &arg_types)
                 } else if let Some((receiver_name, method_name)) = method_call_parts(callee) {
                     self.type_of_method_call_with_params(
                         receiver_name,
                         method_name,
                         callee.span,
+                        args,
                         &arg_types,
                         param_types,
                     )
@@ -192,6 +193,7 @@ impl Analyzer {
         receiver_name: &str,
         method_name: &str,
         receiver_span: Span,
+        args: &[CallArg],
         arg_types: &[Option<PineType>],
         param_types: &HashMap<String, PineType>,
     ) -> Option<PineType> {
@@ -249,7 +251,11 @@ impl Analyzer {
         let mut method_arg_types = Vec::with_capacity(arg_types.len() + 1);
         method_arg_types.push(Some(receiver_type));
         method_arg_types.extend(arg_types.iter().copied());
-        self.return_type(signature, &method_arg_types)
+        let receiver_arg = receiver_call_arg(receiver_name, receiver_span);
+        let mut method_args = Vec::with_capacity(args.len() + 1);
+        method_args.push(receiver_arg);
+        method_args.extend(args.iter().cloned());
+        self.return_type_for_call(signature, &method_args, &method_arg_types)
     }
 
     pub(crate) fn type_of_if_expr_with_params(

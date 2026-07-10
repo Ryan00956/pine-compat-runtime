@@ -450,6 +450,7 @@ impl Analyzer {
         let mut has_trail_price = false;
         let mut has_trail_points = false;
         let mut has_trail_offset = false;
+        let mut has_id = false;
         let mut has_unsupported_arg = false;
         for (index, arg) in args.iter().enumerate() {
             let Some(name) = arg
@@ -467,10 +468,11 @@ impl Analyzer {
                 continue;
             };
             let Some(family) = strategy_exit_arg_family(name) else {
+                has_unsupported_arg = true;
                 continue;
             };
             match family {
-                StrategyExitArgFamily::Identity => {}
+                StrategyExitArgFamily::Identity => has_id |= name == "id",
                 StrategyExitArgFamily::DownsidePriceTrigger => has_stop = true,
                 StrategyExitArgFamily::DownsideTickTrigger => has_loss = true,
                 StrategyExitArgFamily::UpsidePriceTrigger => has_limit = true,
@@ -556,7 +558,7 @@ impl Analyzer {
                     .or_else(|| args.get(3))
                     .map_or(Span::default(), |arg| arg.span),
             ));
-        } else if trigger_count == 0 && args.len() >= 2 && !has_unsupported_arg {
+        } else if trigger_count == 0 && has_id && !has_unsupported_arg {
             self.diagnostics.push(Diagnostic::error(
                 "E_CALL_ARITY",
                 "`strategy.exit` requires one of `stop`, `limit`, `profit`, or `loss`",
