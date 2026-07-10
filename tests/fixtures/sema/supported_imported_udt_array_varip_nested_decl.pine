@@ -1,0 +1,7 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Supported imported scalar-tree UDT array varip declaration")
+
+varip array<lib.Wrapper> points = na
+varip array<lib.Wrapper> new_points = array.new<lib.Wrapper>(1, lib.Wrapper.new(lib.Point.new(close)))
+plot(close)

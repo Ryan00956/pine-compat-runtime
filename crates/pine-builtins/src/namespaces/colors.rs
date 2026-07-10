@@ -8,7 +8,7 @@ const COLOR_NEW_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "transp",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
 ];
@@ -16,22 +16,22 @@ const COLOR_NEW_PARAMS: &[BuiltinParam] = &[
 const COLOR_RGB_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "red",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::NumericCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "green",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::NumericCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "blue",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::NumericCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "transp",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
 ];

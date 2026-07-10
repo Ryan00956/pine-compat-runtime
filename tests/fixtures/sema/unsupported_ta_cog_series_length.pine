@@ -1,3 +1,0 @@
-//@version=5
-indicator("Unsupported ta.cog Series Length")
-plot(ta.cog(close, bar_index))

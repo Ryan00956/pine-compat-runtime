@@ -1,0 +1,9 @@
+//@version=6
+indicator("Supported ta statistics return qualifier")
+
+plot(ta.correlation(close, high, 3))
+plot(ta.covariance(close, high, 3))
+plot(ta.stdev(close, 3))
+plot(ta.stdev(close, 3, false))
+plot(ta.variance(close, 3))
+plot(ta.variance(close, 3, false))

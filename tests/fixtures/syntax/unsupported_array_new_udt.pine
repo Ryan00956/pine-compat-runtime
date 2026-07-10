@@ -1,4 +1,4 @@
 //@version=5
-indicator("Unsupported dotted array.new template")
-points = array.new<library.Point>()
+indicator("Unsupported deeply dotted array.new template")
+points = array.new<library.Point.Inner>()
 plot(close)

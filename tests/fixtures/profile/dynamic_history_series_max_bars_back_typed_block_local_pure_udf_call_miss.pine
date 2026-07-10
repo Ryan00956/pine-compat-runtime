@@ -1,0 +1,8 @@
+indicator("Profile dynamic series history typed block-local pure UDF max_bars_back miss", max_bars_back=10)
+source(a, b) =>
+    float value = a + b
+    value
+src = source(close, open)
+max_bars_back(src, 2)
+offset = bar_index == 0 ? 0 : 3
+plot(source(b=open, a=close)[offset])

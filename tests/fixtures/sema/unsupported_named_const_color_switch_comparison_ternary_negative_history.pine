@@ -1,0 +1,11 @@
+//@version=6
+indicator("Unsupported named const color switch comparison ternary negative history")
+mode = 2
+paint = switch mode
+    1 => color.blue
+    2 =>
+        color.red
+    => color.blue
+use_short = paint == color.red
+length = use_short ? -1 : 1
+plot(close[length])

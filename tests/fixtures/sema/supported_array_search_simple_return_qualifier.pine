@@ -1,0 +1,22 @@
+//@version=6
+indicator("Supported array search simple return qualifier")
+
+values = array.from(1, 2, 3, 3, 5)
+
+first_index = array.indexof(values, 2)
+last_index = values.lastindexof(3)
+exact_index = array.binary_search(values, 3)
+left_index = values.binary_search_leftmost(3)
+right_index = array.binary_search_rightmost(values, 3)
+method_exact_index = values.binary_search(3)
+namespace_left_index = array.binary_search_leftmost(values, 3)
+method_right_index = values.binary_search_rightmost(3)
+
+plot(ta.sma(close, first_index))
+plot(ta.ema(close, last_index))
+plot(ta.wma(close, exact_index))
+plot(ta.rma(close, left_index))
+plot(ta.sma(open, right_index))
+plot(ta.ema(open, method_exact_index))
+plot(ta.wma(open, namespace_left_index))
+plot(ta.rma(open, method_right_index))

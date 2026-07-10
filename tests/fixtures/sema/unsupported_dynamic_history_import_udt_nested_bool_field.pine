@@ -1,0 +1,11 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported dynamic history imported UDT nested bool field")
+
+bool_box = lib.makeBoolOffsetBox(bar_index > 0)
+method_same = bool_box.sameBoolBox()
+qualified_method_same = lib.sameBoolBox(bool_box)
+
+plot(close[bool_box.offset.value])
+plot(open[method_same.offset.value])
+plot(high[qualified_method_same.offset.value])

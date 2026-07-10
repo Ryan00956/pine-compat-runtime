@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported time globals series int qualifier")
+
+plot(time)
+plot(time_close)
+plot(time_tradingday)

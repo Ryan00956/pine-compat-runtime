@@ -1,0 +1,10 @@
+//@version=6
+indicator("Supported session metadata series bool qualifier")
+
+plot(session.ismarket ? 1 : 0)
+plot(session.ispremarket ? 1 : 0)
+plot(session.ispostmarket ? 1 : 0)
+plot(session.isfirstbar ? 1 : 0)
+plot(session.islastbar ? 1 : 0)
+plot(session.isfirstbar_regular ? 1 : 0)
+plot(session.islastbar_regular ? 1 : 0)

@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported ta.valuewhen return qualifier")
+
+condition = close > open
+
+plot(close, offset=ta.valuewhen(condition, bar_index, 0))
+hline(ta.valuewhen(condition, close, 0))
+plot(ta.alma(close, 4, 0.85, 6, ta.valuewhen(condition, close > open, 0)))
+hline(0, color=ta.valuewhen(condition, color.red, 0))

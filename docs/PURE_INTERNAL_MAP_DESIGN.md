@@ -5,12 +5,16 @@ closed. The interpreter now accepts fixture-backed `map.new<K, V>()` for scalar
 key/value templates, `map.size(id)`, namespace-call `map.put`, `map.get`,
 `map.contains`, `map.clear`, `map.remove`, `map.copy`, `map.keys`,
 `map.values`, and `map.put_all` for runtime-owned map ids, plus scalar
-`map<K,V>` typed declarations. Scalar map history snapshots and ordinary
+`map<K,V>` typed declarations and bare scalar `map` declarations initialized
+from known scalar map expressions. Scalar map history snapshots and ordinary
 realtime rollback for map-store mutations are fixture-backed. Scalar map
 `varip` handoff keeps map ids and backing stores across repeated realtime
-forming updates. Equivalent method aliases for the supported namespace subset
-lower to the same runtime calls. Bare map declarations and non-scalar templates
-remain unsupported.
+forming updates. Direct scalar-map `for...in` iteration supports key-only and
+key/value loop variables in insertion order for statement and expression forms.
+Equivalent method aliases for the supported namespace subset lower to the same
+runtime calls. Scalar `map name = map.new<K, V>()` declarations infer their
+template from the initializer; bare `map` declarations without a known scalar
+map initializer and non-scalar templates remain unsupported.
 
 This document defines the first internal path for future `map.*` support. It is
 scoped to interpreter internals only: parser, semantic analysis, runtime storage,
@@ -284,7 +288,9 @@ Recommended future slices:
 8. `map.keys` / `map.values` array snapshots in insertion order. Done.
 9. Scalar map history snapshots using independent committed copies.
    Done.
-10. Scalar `map<K,V>` typed declarations and `varip` intrabar handoff. Done.
+10. Scalar `map<K,V>` typed declarations, bare scalar `map` declaration
+    inference from known scalar map expressions, and `varip` intrabar handoff.
+    Done.
 11. Same-template `map.put_all` merge behavior. Done.
 
 ## Completion Gate For Future Widening
@@ -323,8 +329,11 @@ the matching key when present and leaves the map unchanged for missing keys.
 
 Later scalar map slices added `map.copy`, `map.keys`, `map.values`,
 `map.put_all`, equivalent method aliases, scalar `map<K,V>` typed declarations,
+bare scalar `map` declaration inference from known scalar map expressions,
 read-only UDF parameter use, independent history snapshots, ordinary realtime
-rollback, and scalar map `varip` intrabar handoff. Bare map declarations,
-non-scalar key/value templates, nested collection values, and map mutation inside
-user-defined functions remain unsupported until a later slice designs and
-fixtures those semantics.
+rollback, scalar map `varip` intrabar handoff, and direct scalar-map `for...in`
+iteration where a single loop variable receives the key and `[key, value]`
+receives both entries. Template-less bare map declarations, non-scalar key/value
+templates, nested collection values, and map mutation inside user-defined
+functions remain unsupported until a later slice designs and fixtures those
+semantics.

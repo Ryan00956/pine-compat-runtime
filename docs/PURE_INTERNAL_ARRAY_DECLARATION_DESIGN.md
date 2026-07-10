@@ -21,7 +21,7 @@ Current evidence:
   `array<int>`, `array<float>`, `array<bool>`, `array<string>`,
   `array<color>`, object-id `array<label>`, `array<line>`,
   `array<linefill>`, `array<polyline>`, `array<box>`, `array<table>`,
-  `array<chart.point>`, same-local scalar-field UDT `array<T>`, and equivalent
+  `array<chart.point>`, same-local scalar-tree UDT `array<T>`, and equivalent
   `type[]` aliases.
 - `docs/ARRAY_STAGE_AUDIT.md` records that type-template declarations such as
   `array<float>` are not a general parser or semantic feature outside the
@@ -45,7 +45,7 @@ Current evidence:
 - `tests/fixtures/runtime/array_typed_declarations.pine`,
   `tests/fixtures/runtime/array_type_alias_declarations.pine`, and
   `tests/fixtures/runtime/user_type_array_typed_declarations.pine` cover
-  accepted scalar, object-id, chart-point, and same-local scalar-field UDT array
+  accepted scalar, object-id, chart-point, and same-local scalar-tree UDT array
   declaration forms.
 - `tests/fixtures/sema/varip_chart_point_array.pine` covers the accepted
   chart-point typed-array `varip` declaration subset after realtime handoff
@@ -56,17 +56,18 @@ Current evidence:
   `tests/fixtures/sema/unsupported_var_array_typed_decl.pine`,
   `tests/fixtures/sema/unsupported_array_na_typed_decl.pine`,
   `tests/fixtures/sema/unsupported_array_from_typed_decl.pine`,
-  `tests/fixtures/sema/unsupported_array_typed_decl_initial.pine`, and
-  `tests/fixtures/sema/unsupported_user_type_array_decl.pine`,
-  `tests/fixtures/sema/unsupported_user_type_array_alias_decl.pine`, and
+  `tests/fixtures/sema/unsupported_array_typed_decl_initial.pine`,
+  `tests/fixtures/sema/supported_user_type_array_decl.pine`,
+  `tests/fixtures/sema/supported_user_type_array_alias_decl.pine`, and
   `tests/fixtures/sema/unsupported_user_type_array_from_decl.pine` keep bare,
-  `var` bare, bare-`na`, initializer-inferred bare, mismatched, non-scalar UDT,
-  and mismatched UDT array declaration forms rejected.
+  `var` bare, bare-`na`, initializer-inferred bare, mismatched scalar-array
+  initializer, accepted scalar-tree UDT, and mismatched UDT array declaration
+  forms fixture-backed.
   `tests/fixtures/sema/supported_user_type_array_varip_decl.pine` covers
-  same-local scalar-field UDT array `varip` declarations after realtime handoff
+  same-local scalar-tree UDT array `varip` declarations after realtime handoff
   rules were fixture-backed, while
-  `tests/fixtures/sema/unsupported_user_type_array_varip_decl.pine` keeps
-  non-scalar UDT array `varip` declarations rejected. The explicit
+  `tests/fixtures/sema/supported_user_type_array_varip_nested_decl.pine` keeps
+  scalar-tree nested UDT array `varip` declarations accepted. The explicit
   `tests/fixtures/sema/unsupported_array_map_typed_decl.pine` and
   `tests/fixtures/sema/unsupported_array_matrix_typed_decl.pine` fixtures keep
   unsupported template elements rejected without adding map or matrix support.
@@ -230,7 +231,7 @@ First cleanup policy:
 - `var` declarations preserve array ids and backing storage exactly as today;
 - `varip` remains limited to fixture-backed typed-array element families with
   explicit realtime handoff rules, including scalar arrays, chart-point arrays,
-  and same-local scalar-field UDT arrays;
+  and same-local scalar-tree UDT arrays;
 - drawing-id, generic, bare-array, map-element, matrix-element, nested-array, and
   other unsupported typed-array `varip` declarations remain rejected until
   realtime handoff rules are explicit.
@@ -298,7 +299,7 @@ Any positive array declaration widening must include:
 This design gate closes only the planning prerequisite. A later cleanup slice
 also replaced the declaration AST field with `Option<DeclaredType>` while
 preserving the supported runtime subset, and a later positive slice added
-same-local scalar-field UDT `array<T>` and `T[]` declarations. Generic and bare
+same-local scalar-tree UDT `array<T>` and `T[]` declarations. Generic and bare
 array declaration behavior remains limited to the current fixture-backed
 accepted and rejected forms until a later slice implements syntax, analysis,
 runtime behavior, and conformance updates together.

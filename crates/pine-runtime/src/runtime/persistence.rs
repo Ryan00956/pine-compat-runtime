@@ -133,6 +133,7 @@ mod tests {
             script_mode: ScriptMode::Indicator,
             strategy_settings: StrategySettings::default(),
             drawing_settings: DrawingSettings::default(),
+            user_types: Vec::new(),
             symbols: Vec::new(),
             statements: Vec::new(),
             next_series_id: 0,

@@ -77,3 +77,14 @@ pub(crate) fn accepts_map_scalar_kind(expected: ValueKind, actual: PineType) -> 
     };
     kind_matches && qualifier_at_most(actual.qualifier, Qualifier::Series)
 }
+
+pub(crate) fn map_scalar_kind_accepts(expected: ValueKind) -> Option<pine_builtins::Accepts> {
+    match expected {
+        ValueKind::Float => Some(pine_builtins::Accepts::NumericCompatible),
+        ValueKind::Int => Some(pine_builtins::Accepts::IntCompatible),
+        ValueKind::Bool => Some(pine_builtins::Accepts::BoolCompatible),
+        ValueKind::String => Some(pine_builtins::Accepts::StringCompatible),
+        ValueKind::Color => Some(pine_builtins::Accepts::ColorCompatible),
+        _ => None,
+    }
+}

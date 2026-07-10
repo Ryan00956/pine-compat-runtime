@@ -1,0 +1,10 @@
+//@version=6
+indicator("Unsupported session metadata simple bool qualifier")
+
+plot(ta.alma(close, 4, 0.85, 6, session.ismarket))
+plot(ta.alma(close, 4, 0.85, 6, session.ispremarket))
+plot(ta.alma(close, 4, 0.85, 6, session.ispostmarket))
+plot(ta.alma(close, 4, 0.85, 6, session.isfirstbar))
+plot(ta.alma(close, 4, 0.85, 6, session.islastbar))
+plot(ta.alma(close, 4, 0.85, 6, session.isfirstbar_regular))
+plot(ta.alma(close, 4, 0.85, 6, session.islastbar_regular))

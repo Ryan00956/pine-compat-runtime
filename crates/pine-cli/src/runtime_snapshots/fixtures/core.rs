@@ -10,8 +10,32 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/scalar_typed_declarations.pine",
     ),
     (
+        "runtime_typed_declaration_qualifiers.json",
+        "tests/fixtures/runtime/typed_declaration_qualifiers.pine",
+    ),
+    (
         "runtime_array_typed_declarations.json",
         "tests/fixtures/runtime/array_typed_declarations.pine",
+    ),
+    (
+        "runtime_array_typed_udf_params.json",
+        "tests/fixtures/runtime/array_typed_udf_params.pine",
+    ),
+    (
+        "runtime_object_array_typed_udf_params.json",
+        "tests/fixtures/runtime/object_array_typed_udf_params.pine",
+    ),
+    (
+        "runtime_typed_method_params.json",
+        "tests/fixtures/runtime/typed_method_params.pine",
+    ),
+    (
+        "runtime_user_type_array_typed_udf_params.json",
+        "tests/fixtures/runtime/user_type_array_typed_udf_params.pine",
+    ),
+    (
+        "runtime_user_type_array_typed_method_params.json",
+        "tests/fixtures/runtime/user_type_array_typed_method_params.pine",
     ),
     (
         "runtime_chart_point_array_typed_declarations.json",
@@ -113,6 +137,30 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
         "tests/fixtures/runtime/chart_point_typed_decl.pine",
     ),
     (
+        "runtime_chart_point_typed_flow_decl.json",
+        "tests/fixtures/runtime/chart_point_typed_flow_decl.pine",
+    ),
+    (
+        "runtime_chart_point_history.json",
+        "tests/fixtures/runtime/chart_point_history.pine",
+    ),
+    (
+        "runtime_chart_point_flow_history.json",
+        "tests/fixtures/runtime/chart_point_flow_history.pine",
+    ),
+    (
+        "runtime_chart_point_udf_values.json",
+        "tests/fixtures/runtime/chart_point_udf_values.pine",
+    ),
+    (
+        "runtime_chart_point_method_values.json",
+        "tests/fixtures/runtime/chart_point_method_values.pine",
+    ),
+    (
+        "runtime_chart_point_typed_udf_params.json",
+        "tests/fixtures/runtime/chart_point_typed_udf_params.pine",
+    ),
+    (
         "runtime_chart_point_array.json",
         "tests/fixtures/runtime/chart_point_array.pine",
     ),
@@ -128,8 +176,24 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
         "tests/fixtures/runtime/computed_lengths.pine",
     ),
     (
+        "runtime_sma_dynamic_length.json",
+        "tests/fixtures/runtime/sma_dynamic_length.pine",
+    ),
+    (
         "runtime_conditional_ta.json",
         "tests/fixtures/runtime/conditional_ta.pine",
+    ),
+    (
+        "runtime_const_condition_qualifier_narrowing.json",
+        "tests/fixtures/runtime/const_condition_qualifier_narrowing.pine",
+    ),
+    (
+        "runtime_udf_qualifier_propagation.json",
+        "tests/fixtures/runtime/udf_qualifier_propagation.pine",
+    ),
+    (
+        "runtime_method_qualifier_propagation.json",
+        "tests/fixtures/runtime/method_qualifier_propagation.pine",
     ),
     ("runtime_ta.json", "tests/fixtures/runtime/ta.pine"),
     (
@@ -142,6 +206,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
     ),
     ("runtime_stoch.json", "tests/fixtures/runtime/stoch.pine"),
     ("runtime_wpr.json", "tests/fixtures/runtime/wpr.pine"),
+    (
+        "runtime_stoch_wpr_dynamic_length.json",
+        "tests/fixtures/runtime/stoch_wpr_dynamic_length.pine",
+    ),
     (
         "runtime_wpr_edge_cases.json",
         "tests/fixtures/runtime/wpr_edge_cases.pine",
@@ -188,10 +256,18 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
         "runtime_roc_edge_cases.json",
         "tests/fixtures/runtime/roc_edge_cases.pine",
     ),
+    (
+        "runtime_ta_named_reordered_history_reads.json",
+        "tests/fixtures/runtime/ta_named_reordered_history_reads.pine",
+    ),
     ("runtime_trend.json", "tests/fixtures/runtime/trend.pine"),
     (
         "runtime_trend_edge_cases.json",
         "tests/fixtures/runtime/trend_edge_cases.pine",
+    ),
+    (
+        "runtime_ta_named_reordered_windows.json",
+        "tests/fixtures/runtime/ta_named_reordered_windows.pine",
     ),
     (
         "runtime_barssince.json",
@@ -208,6 +284,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
     (
         "runtime_valuewhen_edge_cases.json",
         "tests/fixtures/runtime/valuewhen_edge_cases.pine",
+    ),
+    (
+        "runtime_ta_named_reordered_stateful.json",
+        "tests/fixtures/runtime/ta_named_reordered_stateful.pine",
     ),
     (
         "runtime_extremes.json",
@@ -235,6 +315,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
     (
         "runtime_linreg_edge_cases.json",
         "tests/fixtures/runtime/linreg_edge_cases.pine",
+    ),
+    (
+        "runtime_alma_linreg_dynamic_length.json",
+        "tests/fixtures/runtime/alma_linreg_dynamic_length.pine",
     ),
     (
         "runtime_accdist.json",
@@ -293,6 +377,14 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
         "tests/fixtures/runtime/correlation_edge_cases.pine",
     ),
     (
+        "runtime_ta_named_reordered_pairwise_stats.json",
+        "tests/fixtures/runtime/ta_named_reordered_pairwise_stats.pine",
+    ),
+    (
+        "runtime_pairwise_dynamic_length.json",
+        "tests/fixtures/runtime/pairwise_dynamic_length.pine",
+    ),
+    (
         "runtime_covariance.json",
         "tests/fixtures/runtime/covariance.pine",
     ),
@@ -311,6 +403,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
         "tests/fixtures/runtime/mode_edge_cases.pine",
     ),
     (
+        "runtime_distribution_dynamic_length.json",
+        "tests/fixtures/runtime/distribution_dynamic_length.pine",
+    ),
+    (
         "runtime_percentile_linear_interpolation.json",
         "tests/fixtures/runtime/percentile_linear_interpolation.pine",
     ),
@@ -325,6 +421,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
     (
         "runtime_percentile_nearest_rank_edge_cases.json",
         "tests/fixtures/runtime/percentile_nearest_rank_edge_cases.pine",
+    ),
+    (
+        "runtime_percentile_dynamic_length.json",
+        "tests/fixtures/runtime/percentile_dynamic_length.pine",
     ),
     (
         "runtime_percentrank.json",
@@ -343,8 +443,24 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
         "runtime_stdev_variance_edge_cases.json",
         "tests/fixtures/runtime/stdev_variance_edge_cases.pine",
     ),
+    (
+        "runtime_stdev_variance_dynamic_length.json",
+        "tests/fixtures/runtime/stdev_variance_dynamic_length.pine",
+    ),
+    (
+        "runtime_ta_named_reordered_distribution_stats.json",
+        "tests/fixtures/runtime/ta_named_reordered_distribution_stats.pine",
+    ),
     ("runtime_range.json", "tests/fixtures/runtime/range.pine"),
     ("runtime_dev.json", "tests/fixtures/runtime/dev.pine"),
+    (
+        "runtime_range_dev_dynamic_length.json",
+        "tests/fixtures/runtime/range_dev_dynamic_length.pine",
+    ),
+    (
+        "runtime_ta_named_reordered_range_dev.json",
+        "tests/fixtures/runtime/ta_named_reordered_range_dev.pine",
+    ),
     (
         "runtime_range_dev_edge_cases.json",
         "tests/fixtures/runtime/range_dev_edge_cases.pine",
@@ -353,6 +469,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
     (
         "runtime_vwma_edge_cases.json",
         "tests/fixtures/runtime/vwma_edge_cases.pine",
+    ),
+    (
+        "runtime_weighted_averages_dynamic_length.json",
+        "tests/fixtures/runtime/weighted_averages_dynamic_length.pine",
     ),
     ("runtime_mfi.json", "tests/fixtures/runtime/mfi.pine"),
     (
@@ -411,6 +531,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
         "runtime_cog_edge_cases.json",
         "tests/fixtures/runtime/cog_edge_cases.pine",
     ),
+    (
+        "runtime_flow_dynamic_length.json",
+        "tests/fixtures/runtime/flow_dynamic_length.pine",
+    ),
     ("runtime_ao.json", "tests/fixtures/runtime/ao.pine"),
     (
         "runtime_ao_edge_cases.json",
@@ -431,6 +555,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
         "runtime_bbw_edge_cases.json",
         "tests/fixtures/runtime/bbw_edge_cases.pine",
     ),
+    (
+        "runtime_bollinger_dynamic_length.json",
+        "tests/fixtures/runtime/bollinger_dynamic_length.pine",
+    ),
     ("runtime_kc.json", "tests/fixtures/runtime/kc.pine"),
     (
         "runtime_kc_edge_cases.json",
@@ -440,6 +568,22 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
     (
         "runtime_kcw_edge_cases.json",
         "tests/fixtures/runtime/kcw_edge_cases.pine",
+    ),
+    (
+        "runtime_kc_dynamic_length.json",
+        "tests/fixtures/runtime/kc_dynamic_length.pine",
+    ),
+    (
+        "runtime_ta_named_reordered_averages.json",
+        "tests/fixtures/runtime/ta_named_reordered_averages.pine",
+    ),
+    (
+        "runtime_ta_named_reordered_remaining_averages.json",
+        "tests/fixtures/runtime/ta_named_reordered_remaining_averages.pine",
+    ),
+    (
+        "runtime_ta_named_reordered_remaining_runtime_args.json",
+        "tests/fixtures/runtime/ta_named_reordered_remaining_runtime_args.pine",
     ),
     ("runtime_pivots.json", "tests/fixtures/runtime/pivots.pine"),
     (
@@ -471,6 +615,10 @@ pub(crate) const CORE_POST_MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFi
     (
         "runtime_math_edge_cases.json",
         "tests/fixtures/runtime/math_edge_cases.pine",
+    ),
+    (
+        "runtime_math_sum_dynamic_length.json",
+        "tests/fixtures/runtime/math_sum_dynamic_length.pine",
     ),
     (
         "runtime_syminfo.json",

@@ -1,0 +1,23 @@
+//@version=6
+indicator("Supported matrix predicate simple bool return qualifier")
+
+values = matrix.new<float>(2, 2, 1)
+
+square_namespace = ta.alma(close, 2, 0.85, 6, matrix.is_square(values))
+square_method = ta.alma(close, 2, 0.85, 6, values.is_square())
+binary_namespace = ta.alma(close, 2, 0.85, 6, matrix.is_binary(values))
+binary_method = ta.alma(close, 2, 0.85, 6, values.is_binary())
+diagonal_namespace = ta.alma(close, 2, 0.85, 6, matrix.is_diagonal(values))
+diagonal_method = ta.alma(close, 2, 0.85, 6, values.is_diagonal())
+identity_namespace = ta.alma(close, 2, 0.85, 6, matrix.is_identity(values))
+identity_method = ta.alma(close, 2, 0.85, 6, values.is_identity())
+symmetric_namespace = ta.alma(close, 2, 0.85, 6, matrix.is_symmetric(values))
+symmetric_method = ta.alma(close, 2, 0.85, 6, values.is_symmetric())
+antisymmetric_namespace = ta.alma(close, 2, 0.85, 6, matrix.is_antisymmetric(values))
+antisymmetric_method = ta.alma(close, 2, 0.85, 6, values.is_antisymmetric())
+stochastic_namespace = ta.alma(close, 2, 0.85, 6, matrix.is_stochastic(values))
+stochastic_method = ta.alma(close, 2, 0.85, 6, values.is_stochastic())
+zero_namespace = ta.alma(close, 2, 0.85, 6, matrix.is_zero(values))
+zero_method = ta.alma(close, 2, 0.85, 6, values.is_zero())
+
+plot(square_namespace + square_method + binary_namespace + binary_method + diagonal_namespace + diagonal_method + identity_namespace + identity_method + symmetric_namespace + symmetric_method + antisymmetric_namespace + antisymmetric_method + stochastic_namespace + stochastic_method + zero_namespace + zero_method)

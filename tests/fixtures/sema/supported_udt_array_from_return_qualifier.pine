@@ -1,0 +1,23 @@
+//@version=6
+indicator("Supported UDT array.from return qualifier")
+
+type Point
+    float x
+    float y
+
+type Wrapper
+    Point point
+
+first_x(array<Point> values) =>
+    point = array.get(values, 0)
+    point.x
+
+second_y(Point[] values) =>
+    point = values.get(1)
+    point.y
+
+first_nested_x(array<Wrapper> values) =>
+    wrapper = values.get(0)
+    wrapper.point.x
+
+plot(first_x(array.from(Point.new(close + 1, open + 2))) + second_y(array.from(Point.new(close + 3, open + 4), Point.new(high + 5, low + 6))) + first_nested_x(array.from(Wrapper.new(Point.new(close + 7, open + 8)))))

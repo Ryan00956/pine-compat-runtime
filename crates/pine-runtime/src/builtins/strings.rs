@@ -1,4 +1,4 @@
-use pine_ir::{HirCallArg, HirExpr};
+use pine_ir::{HirCallArg, HirExpr, HirUserTypeInfo};
 use regex::Regex;
 
 use crate::builtins::time::{
@@ -130,11 +130,31 @@ pub(crate) fn stringify_array_join_element(value: &PineValue) -> String {
     }
 }
 
-pub(crate) fn stringify_user_type_array_join_element(value: &PineValue, type_name: &str) -> String {
+pub(crate) fn stringify_user_type_array_join_element(
+    value: &PineValue,
+    type_name: &str,
+    user_types: &[HirUserTypeInfo],
+) -> String {
+    stringify_user_type_array_join_element_with_seen(value, type_name, user_types, &mut Vec::new())
+}
+
+fn stringify_user_type_array_join_element_with_seen(
+    value: &PineValue,
+    type_name: &str,
+    user_types: &[HirUserTypeInfo],
+    seen: &mut Vec<String>,
+) -> String {
     let PineValue::UserType(fields) = value else {
         return stringify_array_join_element(value);
     };
 
+    if seen.iter().any(|seen_type| seen_type == type_name) {
+        return stringify_array_join_element(value);
+    }
+    seen.push(type_name.to_owned());
+    let shape = user_types
+        .iter()
+        .find(|user_type| user_type.identity.type_name == type_name);
     let mut result = String::new();
     result.push_str(type_name);
     result.push('(');
@@ -142,9 +162,22 @@ pub(crate) fn stringify_user_type_array_join_element(value: &PineValue, type_nam
         if index > 0 {
             result.push_str(", ");
         }
-        result.push_str(&stringify_array_join_element(field));
+        if let Some(field_type_name) = shape
+            .and_then(|shape| shape.fields.get(index))
+            .and_then(|field| field.user_type_name.as_deref())
+        {
+            result.push_str(&stringify_user_type_array_join_element_with_seen(
+                field,
+                field_type_name,
+                user_types,
+                seen,
+            ));
+        } else {
+            result.push_str(&stringify_array_join_element(field));
+        }
     }
     result.push(')');
+    seen.pop();
     result
 }
 

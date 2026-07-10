@@ -1,0 +1,33 @@
+//@version=6
+indicator("Supported object array.new fixed simple return qualifier")
+
+label_count(label[] values) =>
+    array.size(values)
+
+line_count(line[] values) =>
+    array.size(values)
+
+linefill_count(array<linefill> values) =>
+    array.size(values)
+
+polyline_count(array<polyline> values) =>
+    array.size(values)
+
+box_count(box[] values) =>
+    array.size(values)
+
+table_count(array<table> values) =>
+    array.size(values)
+
+point_count(array<chart.point> values) =>
+    array.size(values)
+
+result = label_count(array.new_label()) + label_count(array.new<label>())
+result := result + line_count(array.new_line()) + line_count(array.new<line>())
+result := result + linefill_count(array.new_linefill()) + linefill_count(array.new<linefill>())
+result := result + polyline_count(array.new_polyline()) + polyline_count(array.new<polyline>())
+result := result + box_count(array.new_box()) + box_count(array.new<box>())
+result := result + table_count(array.new_table()) + table_count(array.new<table>())
+result := result + point_count(array.new<chart.point>())
+
+plot(result)

@@ -1,0 +1,11 @@
+//@version=6
+indicator("Unsupported array binary_search float const input return qualifier")
+
+floats = array.from(1.0, 2.5, 3.0, 3.0, 5.5)
+
+plot(close, show_last=array.binary_search(floats, 3.0))
+plot(open, show_last=floats.binary_search_leftmost(3.0))
+plot(high, show_last=array.binary_search_rightmost(floats, 3.0))
+plot(low, show_last=floats.binary_search(3.0))
+plot(hl2, show_last=array.binary_search_leftmost(floats, 3.0))
+plot(hlc3, show_last=floats.binary_search_rightmost(3.0))

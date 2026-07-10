@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported array sort UDT named const unknown field")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+field_base = "missing"
+field = field_base
+array.sort(values, order.ascending, field)
+plot(close)

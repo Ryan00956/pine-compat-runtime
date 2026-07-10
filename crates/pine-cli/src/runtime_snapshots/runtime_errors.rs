@@ -52,6 +52,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "map size cannot change during direct for...in iteration",
     ),
     (
+        "tests/fixtures/regressions/map_for_in_key_put_size_change.pine",
+        "map size cannot change during direct for...in iteration",
+    ),
+    (
         "tests/fixtures/regressions/array_unshift_limit.pine",
         "array.unshift cannot exceed 100000 elements",
     ),
@@ -93,6 +97,42 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     ),
     (
         "tests/fixtures/regressions/history_dynamic_negative_offset_while_result.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_udf_passthrough.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_udf_nested_passthrough.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_udf_return.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_udf_nested_return.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_method_passthrough.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_method_nested_passthrough.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_method_return.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_method_nested_return.pine",
         "history offset must be non-negative",
     ),
     (
@@ -906,5 +946,79 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     (
         "tests/fixtures/regressions/str_format_time_result_limit.pine",
         "str.format_time result cannot exceed 40960 characters",
+    ),
+];
+
+pub(crate) type RuntimeLibraryErrorFixture = (
+    &'static str,
+    &'static str,
+    &'static [(&'static str, &'static str)],
+);
+
+pub(crate) const RUNTIME_LIBRARY_ERROR_FIXTURES: &[RuntimeLibraryErrorFixture] = &[
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_nested_field.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_udf_passthrough.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_udf_return.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_udf_nested_return.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_method_passthrough.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_method_nested_passthrough.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_alias_qualified_method_passthrough.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_alias_qualified_method_nested_passthrough.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_method_return.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_alias_qualified_method_return.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_alias_qualified_method_nested_return.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_method_nested_return.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
     ),
 ];

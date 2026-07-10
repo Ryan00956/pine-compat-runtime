@@ -1,0 +1,21 @@
+//@version=5
+indicator("Supported typed na declaration qualifier reassignment")
+
+int literal_length = na
+literal_length := 2
+
+int input_length = na
+input_length := input.int(3, "Length")
+
+string chart_tf = na
+chart_tf := timeframe.period
+
+pass_length(x) =>
+    int local_length = na
+    local_length := x
+    local_length
+
+plot(ta.sma(close, literal_length))
+plot(ta.ema(close, input_length))
+plot(ta.wma(close, pass_length(input_length)))
+plot(timeframe.in_seconds(chart_tf))

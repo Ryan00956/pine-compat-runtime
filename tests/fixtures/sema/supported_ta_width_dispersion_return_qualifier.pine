@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported ta width dispersion return qualifier")
+
+plot(ta.range(close, 3))
+plot(ta.dev(close, 3))
+plot(ta.bbw(close, 3, 2))
+plot(ta.kcw(close, 3, 2))

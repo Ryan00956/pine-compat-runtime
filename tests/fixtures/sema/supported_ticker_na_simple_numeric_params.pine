@@ -1,0 +1,6 @@
+//@version=5
+indicator("Supported ticker na simple numeric params")
+kagi = ticker.kagi(syminfo.tickerid, "ATR", na)
+pnf = ticker.pointfigure(syminfo.tickerid, "hl", "ATR", na, 3)
+renko = ticker.renko(syminfo.tickerid, "ATR", na)
+plot(na(kagi) and na(pnf) and na(renko) ? 1 : 0)

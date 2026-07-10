@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported color.new simple return qualifier")
+values = array.new_int(1, 64)
+base = color.rgb(array.size(values), 128, 192)
+level_color = color.new(base, 50)
+hline(2, color=level_color)

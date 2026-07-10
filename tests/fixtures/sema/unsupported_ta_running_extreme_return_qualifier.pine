@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported ta running extreme return qualifier")
+
+hline(ta.cum(close))
+hline(ta.max(high))
+hline(ta.min(low))

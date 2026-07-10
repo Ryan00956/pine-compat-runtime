@@ -1,0 +1,13 @@
+//@version=6
+indicator("Unsupported method final for series bound qualifier")
+
+type QualifierTool
+    int seed
+
+method loop_length(QualifierTool tool, int limit, int x) =>
+    for i = 0 to limit
+        x
+
+tool = QualifierTool.new(1)
+length = input.int(2, "Length")
+plot(ta.ema(close, tool.loop_length(bar_index, length)))

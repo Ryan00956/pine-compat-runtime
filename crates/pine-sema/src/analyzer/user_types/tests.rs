@@ -1,5 +1,7 @@
 use super::*;
 use crate::modules::{ImportedUserTypeFieldInfo, ImportedUserTypeIdentity, ImportedUserTypeInfo};
+use pine_syntax::{BinaryOp, FunctionBody, Literal};
+use std::collections::HashSet;
 
 fn field(name: &str, kind: ValueKind, user_type_name: Option<&str>) -> UserTypeFieldInfo {
     UserTypeFieldInfo {
@@ -66,24 +68,35 @@ fn analyzer() -> Analyzer {
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),
         bindings: HashMap::new(),
         lower_symbol_overrides: Vec::new(),
+        lower_reassigned_symbols: HashSet::new(),
         functions: HashMap::new(),
         methods: HashMap::new(),
         imported_user_types: HashMap::new(),
         user_types: HashMap::new(),
         symbol_user_types: HashMap::new(),
         symbol_user_type_identities: HashMap::new(),
+        symbol_init_exprs: HashMap::new(),
+        typed_na_scalar_symbols: HashSet::new(),
+        non_scalar_udt_varip_symbols: HashSet::new(),
         symbol_user_type_arrays: HashMap::new(),
         symbol_maps: HashMap::new(),
+        const_int_symbols: HashMap::new(),
+        const_numeric_symbols: HashMap::new(),
+        const_string_symbols: HashMap::new(),
+        const_bool_symbols: HashMap::new(),
+        const_color_symbols: HashMap::new(),
         expr_user_types: HashMap::new(),
         expr_user_type_identities: HashMap::new(),
         expr_user_type_arrays: HashMap::new(),
         expr_maps: HashMap::new(),
         expr_types: HashMap::new(),
+        pure_expr_series_ids: HashMap::new(),
         script_declaration: None,
         strategy_settings: Default::default(),
         drawing_settings: Default::default(),
         function_stack: Vec::new(),
         function_param_symbols: Vec::new(),
+        function_param_const_switch_keys: Vec::new(),
         function_context_is_method: Vec::new(),
         next_symbol_id: initial_symbol_count(),
         next_series_id: initial_series_count(),
@@ -93,6 +106,7 @@ fn analyzer() -> Analyzer {
         function_depth: 0,
         loop_depth: 0,
         expr_depth: 0,
+        assignment_qualifier_context: Vec::new(),
         lowering_limits: Default::default(),
         lowering_inline_depth: 0,
         lowered_hir_nodes: 0,
@@ -104,6 +118,62 @@ fn analyzer() -> Analyzer {
 fn identifier(name: &str, span: Span) -> Expr {
     Expr {
         kind: ExprKind::Identifier(name.to_owned()),
+        span,
+    }
+}
+
+fn int_literal(value: i64, span: Span) -> Expr {
+    Expr {
+        kind: ExprKind::Literal(Literal::Int(value)),
+        span,
+    }
+}
+
+fn expr_stmt(expr: Expr) -> Stmt {
+    Stmt {
+        span: expr.span,
+        kind: StmtKind::Expr(expr),
+    }
+}
+
+fn binary_expr(op: BinaryOp, left: Expr, right: Expr, span: Span) -> Expr {
+    Expr {
+        kind: ExprKind::Binary {
+            op,
+            left: Box::new(left),
+            right: Box::new(right),
+        },
+        span,
+    }
+}
+
+fn if_stmt(condition: Expr, then_branch: Vec<Stmt>, else_branch: Vec<Stmt>, span: Span) -> Stmt {
+    Stmt {
+        kind: StmtKind::If {
+            condition,
+            then_branch,
+            else_branch,
+        },
+        span,
+    }
+}
+
+fn for_stmt(
+    counter: &str,
+    from: Expr,
+    to: Expr,
+    step: Option<Expr>,
+    body: Vec<Stmt>,
+    span: Span,
+) -> Stmt {
+    Stmt {
+        kind: StmtKind::For {
+            counter: counter.to_owned(),
+            from,
+            to,
+            step,
+            body,
+        },
         span,
     }
 }
@@ -121,6 +191,168 @@ fn call_arg(name: Option<&str>, value_name: &str) -> CallArg {
         value: identifier(value_name, Span::new(1, 2)),
         span: Span::new(1, 2),
     }
+}
+
+#[test]
+fn type_query_promotes_loop_expression_results_by_loop_qualifiers() {
+    let analyzer = analyzer();
+    let mut param_types = HashMap::new();
+    param_types.insert(
+        "length".to_owned(),
+        PineType::new(Qualifier::Input, ValueKind::Int),
+    );
+
+    let for_expr = Expr {
+        kind: ExprKind::For {
+            counter: "i".to_owned(),
+            from: Box::new(int_literal(0, Span::new(1, 2))),
+            to: Box::new(identifier("bar_index", Span::new(3, 12))),
+            step: None,
+            body: vec![expr_stmt(identifier("length", Span::new(13, 19)))],
+        },
+        span: Span::new(1, 19),
+    };
+    assert_eq!(
+        analyzer.type_of_expr_with_params(&for_expr, &param_types),
+        Some(PineType::new(Qualifier::Series, ValueKind::Int))
+    );
+
+    let while_expr = Expr {
+        kind: ExprKind::While {
+            condition: Box::new(binary_expr(
+                BinaryOp::Gt,
+                identifier("close", Span::new(20, 25)),
+                identifier("open", Span::new(28, 32)),
+                Span::new(20, 32),
+            )),
+            body: vec![expr_stmt(identifier("length", Span::new(33, 39)))],
+        },
+        span: Span::new(20, 39),
+    };
+    assert_eq!(
+        analyzer.type_of_expr_with_params(&while_expr, &param_types),
+        Some(PineType::new(Qualifier::Series, ValueKind::Int))
+    );
+
+    param_types.insert(
+        "values".to_owned(),
+        PineType::new(Qualifier::Series, ValueKind::IntArray),
+    );
+    let for_in_expr = Expr {
+        kind: ExprKind::ForIn {
+            index: None,
+            value: "value".to_owned(),
+            iterable: Box::new(identifier("values", Span::new(40, 46))),
+            body: vec![expr_stmt(identifier("length", Span::new(47, 53)))],
+        },
+        span: Span::new(40, 53),
+    };
+    assert_eq!(
+        analyzer.type_of_expr_with_params(&for_in_expr, &param_types),
+        Some(PineType::new(Qualifier::Series, ValueKind::Int))
+    );
+}
+
+#[test]
+fn type_query_supports_function_block_final_if_and_for_returns() {
+    let analyzer = analyzer();
+    let mut param_types = HashMap::new();
+    param_types.insert(
+        "flag".to_owned(),
+        PineType::new(Qualifier::Input, ValueKind::Bool),
+    );
+    param_types.insert(
+        "length".to_owned(),
+        PineType::new(Qualifier::Input, ValueKind::Int),
+    );
+    param_types.insert(
+        "values".to_owned(),
+        PineType::new(Qualifier::Series, ValueKind::IntArray),
+    );
+
+    let final_if_body = FunctionBody::Block(vec![if_stmt(
+        identifier("flag", Span::new(1, 5)),
+        vec![expr_stmt(identifier("length", Span::new(6, 12)))],
+        vec![expr_stmt(identifier("length", Span::new(13, 19)))],
+        Span::new(1, 19),
+    )]);
+    assert_eq!(
+        analyzer.type_of_function_body_with_params(&final_if_body, &param_types),
+        Some(PineType::new(Qualifier::Input, ValueKind::Int))
+    );
+
+    let final_for_body = FunctionBody::Block(vec![for_stmt(
+        "i",
+        int_literal(0, Span::new(20, 21)),
+        identifier("bar_index", Span::new(24, 33)),
+        None,
+        vec![expr_stmt(identifier("length", Span::new(34, 40)))],
+        Span::new(20, 40),
+    )]);
+    assert_eq!(
+        analyzer.type_of_function_body_with_params(&final_for_body, &param_types),
+        Some(PineType::new(Qualifier::Series, ValueKind::Int))
+    );
+
+    let final_for_in_body = FunctionBody::Block(vec![Stmt {
+        kind: StmtKind::ForIn {
+            index: None,
+            value: "value".to_owned(),
+            iterable: identifier("values", Span::new(41, 47)),
+            body: vec![expr_stmt(identifier("length", Span::new(48, 54)))],
+        },
+        span: Span::new(41, 54),
+    }]);
+    assert_eq!(
+        analyzer.type_of_function_body_with_params(&final_for_in_body, &param_types),
+        Some(PineType::new(Qualifier::Series, ValueKind::Int))
+    );
+
+    let final_while_body = FunctionBody::Block(vec![Stmt {
+        kind: StmtKind::While {
+            condition: binary_expr(
+                BinaryOp::Gt,
+                identifier("close", Span::new(55, 60)),
+                identifier("open", Span::new(63, 67)),
+                Span::new(55, 67),
+            ),
+            body: vec![expr_stmt(identifier("length", Span::new(68, 74)))],
+        },
+        span: Span::new(55, 74),
+    }]);
+    assert_eq!(
+        analyzer.type_of_function_body_with_params(&final_while_body, &param_types),
+        Some(PineType::new(Qualifier::Series, ValueKind::Int))
+    );
+
+    let final_if_loop_body = FunctionBody::Block(vec![if_stmt(
+        identifier("flag", Span::new(75, 79)),
+        vec![for_stmt(
+            "i",
+            int_literal(0, Span::new(80, 81)),
+            identifier("bar_index", Span::new(84, 93)),
+            None,
+            vec![expr_stmt(identifier("length", Span::new(94, 100)))],
+            Span::new(80, 100),
+        )],
+        vec![Stmt {
+            kind: StmtKind::While {
+                condition: binary_expr(
+                    BinaryOp::Gt,
+                    identifier("close", Span::new(101, 106)),
+                    identifier("open", Span::new(109, 113)),
+                    Span::new(101, 113),
+                ),
+                body: vec![expr_stmt(identifier("length", Span::new(114, 120)))],
+            },
+            span: Span::new(101, 120),
+        }],
+        Span::new(75, 120),
+    )]);
+    assert_eq!(
+        analyzer.type_of_function_body_with_params(&final_if_loop_body, &param_types),
+        Some(PineType::new(Qualifier::Series, ValueKind::Int))
+    );
 }
 
 #[test]
@@ -145,9 +377,9 @@ fn resolves_imported_user_type_constructor_metadata_without_accepting_it() {
 
     assert_eq!(point.identity.source_id, SourceId::library(0));
     assert_eq!(point.identity.name, "Point");
-    assert!(analyzer.imported_user_type_has_scalar_fields(point));
+    assert!(analyzer.imported_user_type_has_scalar_tree_fields(point));
     assert_eq!(
-        analyzer.imported_user_type_constructor_has_scalar_fields("lib.Point.new"),
+        analyzer.imported_user_type_constructor_has_supported_fields("lib.Point.new"),
         Some(true)
     );
     assert!(
@@ -191,7 +423,7 @@ fn plans_imported_user_type_constructor_args_without_accepting_it() {
             &[call_arg(None, "close"), call_arg(Some("label"), "name")]
         ),
         Some(Ok(ImportedUdtConstructorArgPlan {
-            scalar_fields: true,
+            supported_fields: true,
             field_arg_indices: vec![0, 1],
         }))
     );
@@ -204,7 +436,7 @@ fn plans_imported_user_type_constructor_args_without_accepting_it() {
             ]
         ),
         Some(Ok(ImportedUdtConstructorArgPlan {
-            scalar_fields: true,
+            supported_fields: true,
             field_arg_indices: vec![1, 0],
         }))
     );
@@ -274,9 +506,9 @@ fn detects_imported_user_type_constructor_with_deferred_field_family() {
         .imported_user_type_constructor_metadata("lib.Wrapper.new")
         .expect("imported UDT constructor metadata");
 
-    assert!(!analyzer.imported_user_type_has_scalar_fields(wrapper));
+    assert!(!analyzer.imported_user_type_has_scalar_tree_fields(wrapper));
     assert_eq!(
-        analyzer.imported_user_type_constructor_has_scalar_fields("lib.Wrapper.new"),
+        analyzer.imported_user_type_constructor_has_supported_fields("lib.Wrapper.new"),
         Some(false)
     );
     assert_eq!(
@@ -285,7 +517,44 @@ fn detects_imported_user_type_constructor_with_deferred_field_family() {
             &[call_arg(Some("nested"), "value")]
         ),
         Some(Ok(ImportedUdtConstructorArgPlan {
-            scalar_fields: false,
+            supported_fields: false,
+            field_arg_indices: vec![0],
+        }))
+    );
+}
+
+#[test]
+fn plans_imported_user_type_constructor_args_with_object_fields() {
+    let mut analyzer = analyzer();
+    analyzer.imported_user_types.insert(
+        "lib.Marker".to_owned(),
+        imported_type(
+            SourceId::library(1),
+            "Marker",
+            vec![imported_field(
+                "id",
+                "label",
+                Some(PineType::new(Qualifier::Series, ValueKind::Label)),
+            )],
+        ),
+    );
+
+    let marker = analyzer
+        .imported_user_type_constructor_metadata("lib.Marker.new")
+        .expect("imported UDT constructor metadata");
+
+    assert!(!analyzer.imported_user_type_has_scalar_tree_fields(marker));
+    assert_eq!(
+        analyzer.imported_user_type_constructor_has_supported_fields("lib.Marker.new"),
+        Some(true)
+    );
+    assert_eq!(
+        analyzer.imported_user_type_constructor_arg_plan(
+            "lib.Marker.new",
+            &[call_arg(Some("id"), "label.new(bar_index, close)")]
+        ),
+        Some(Ok(ImportedUdtConstructorArgPlan {
+            supported_fields: true,
             field_arg_indices: vec![0],
         }))
     );
@@ -439,7 +708,7 @@ fn classifies_mixed_local_user_type_array_elements() {
 }
 
 #[test]
-fn classifies_user_type_array_elements_with_nested_fields() {
+fn classifies_same_scalar_tree_local_user_type_array_elements() {
     let mut user_types = HashMap::new();
     user_types.insert("Point".to_owned(), scalar_type("Point"));
     user_types.insert(
@@ -462,7 +731,7 @@ fn classifies_user_type_array_elements_with_nested_fields() {
             &user_types,
             &["Wrapper".to_owned(), "Wrapper".to_owned()],
         ),
-        Some(UserTypeArrayElementInference::UnsupportedFieldType(
+        Some(UserTypeArrayElementInference::SameScalarLocal(
             "Wrapper".to_owned()
         ))
     );

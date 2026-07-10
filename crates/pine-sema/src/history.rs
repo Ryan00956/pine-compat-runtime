@@ -1,9 +1,16 @@
 use std::collections::{BTreeMap, HashMap};
 
 use pine_ir::{
-    HirCallArg, HirExpr, HirExprKind, HirHistoryOffset, HirHistoryRequirements, HirLiteral,
-    HirSeriesHistoryRequirement, HirSeriesMaxBarsBack, HirStmt, HirStmtKind, HirSymbol, HirUnaryOp,
-    SeriesId,
+    HirCallArg, HirExpr, HirExprKind, HirHistoryOffset, HirHistoryRequirements,
+    HirSeriesHistoryRequirement, HirSeriesMaxBarsBack, HirStmt, HirStmtKind, HirSwitchStmtArm,
+    HirSymbol, SeriesId,
+};
+
+#[path = "history_constants.rs"]
+mod history_constants;
+
+use history_constants::{
+    ConstSymbolEnv, constant_hir_int_with_symbols, remove_reassigned_symbols_from_env,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -12,10 +19,11 @@ pub(crate) struct InferredHistoryRequirements {
     pub(crate) series: Vec<HirSeriesHistoryRequirement>,
 }
 #[derive(Default)]
-struct HistoryRequirementCollector {
+struct HistoryRequirementCollector<'a> {
     pub(crate) program: HirHistoryRequirements,
     pub(crate) series: BTreeMap<SeriesId, HirHistoryRequirements>,
     pub(crate) builtin_series: HashMap<String, SeriesId>,
+    pub(crate) const_symbols: ConstSymbolEnv<'a>,
 }
 pub(crate) fn infer_history_requirements(
     statements: &[HirStmt],
@@ -49,14 +57,33 @@ pub(crate) fn infer_history_requirements(
     }
 }
 pub(crate) fn infer_max_bars_back(statements: &[HirStmt]) -> Option<u32> {
-    statements.iter().find_map(max_bars_back_from_stmt)
+    infer_max_bars_back_with_symbols(statements, &ConstSymbolEnv::new())
+}
+
+fn infer_max_bars_back_with_symbols(
+    statements: &[HirStmt],
+    outer_const_symbols: &ConstSymbolEnv<'_>,
+) -> Option<u32> {
+    let mut const_symbols = outer_const_symbols.clone();
+    infer_max_bars_back_with_mut_symbols(statements, &mut const_symbols)
+}
+
+fn infer_max_bars_back_with_mut_symbols<'a>(
+    statements: &'a [HirStmt],
+    const_symbols: &mut ConstSymbolEnv<'a>,
+) -> Option<u32> {
+    for statement in statements {
+        update_series_max_bars_back_const_env(statement, const_symbols);
+        if let Some(value) = max_bars_back_from_stmt_with_symbols(statement, const_symbols) {
+            return Some(value);
+        }
+    }
+    None
 }
 
 pub(crate) fn infer_series_max_bars_back(statements: &[HirStmt]) -> Vec<HirSeriesMaxBarsBack> {
     let mut values: BTreeMap<SeriesId, u32> = BTreeMap::new();
-    for statement in statements {
-        collect_series_max_bars_back_from_stmt(statement, &mut values);
-    }
+    collect_series_max_bars_back_from_stmts(statements, &mut values, &ConstSymbolEnv::new());
     values
         .into_iter()
         .map(|(series_id, max_bars_back)| HirSeriesMaxBarsBack {
@@ -66,34 +93,115 @@ pub(crate) fn infer_series_max_bars_back(statements: &[HirStmt]) -> Vec<HirSerie
         .collect()
 }
 
-fn collect_series_max_bars_back_from_stmt(
-    statement: &HirStmt,
+fn collect_series_max_bars_back_from_stmts(
+    statements: &[HirStmt],
     values: &mut BTreeMap<SeriesId, u32>,
+    outer_const_symbols: &ConstSymbolEnv<'_>,
 ) {
-    match &statement.kind {
-        HirStmtKind::Expr(expr) => {
-            if let Some((series_id, max_bars_back)) = series_max_bars_back_from_expr_stmt(expr) {
-                values
-                    .entry(series_id)
-                    .and_modify(|current| *current = (*current).min(max_bars_back))
-                    .or_insert(max_bars_back);
-            }
-        }
-        HirStmtKind::If { .. }
-        | HirStmtKind::For { .. }
-        | HirStmtKind::ForIn { .. }
-        | HirStmtKind::While { .. }
-        | HirStmtKind::Decl { .. }
-        | HirStmtKind::Reassign { .. }
-        | HirStmtKind::FieldReassign { .. }
-        | HirStmtKind::ArrayFieldReassign { .. }
-        | HirStmtKind::TupleDecl { .. }
-        | HirStmtKind::Break
-        | HirStmtKind::Continue => {}
+    let mut const_symbols = outer_const_symbols.clone();
+    collect_series_max_bars_back_from_stmts_with_env(statements, values, &mut const_symbols);
+}
+
+fn collect_series_max_bars_back_from_stmts_with_env<'a>(
+    statements: &'a [HirStmt],
+    values: &mut BTreeMap<SeriesId, u32>,
+    const_symbols: &mut ConstSymbolEnv<'a>,
+) {
+    for statement in statements {
+        collect_series_max_bars_back_from_stmt(statement, &mut *values, const_symbols);
+        update_series_max_bars_back_const_env(statement, const_symbols);
     }
 }
 
-fn series_max_bars_back_from_expr_stmt(expr: &HirExpr) -> Option<(SeriesId, u32)> {
+fn collect_series_max_bars_back_from_stmt(
+    statement: &HirStmt,
+    values: &mut BTreeMap<SeriesId, u32>,
+    const_symbols: &ConstSymbolEnv<'_>,
+) {
+    match &statement.kind {
+        HirStmtKind::Expr(expr) => {
+            collect_series_max_bars_back_from_expr_stmt(expr, values, const_symbols);
+        }
+        HirStmtKind::Decl { value, .. }
+        | HirStmtKind::Reassign { value, .. }
+        | HirStmtKind::FieldReassign { value, .. }
+        | HirStmtKind::TupleDecl { value, .. } => {
+            collect_nested_series_max_bars_back_from_expr(value, values, const_symbols);
+        }
+        HirStmtKind::ArrayFieldReassign {
+            array,
+            index,
+            value,
+            ..
+        } => {
+            collect_nested_series_max_bars_back_from_expr(array, values, const_symbols);
+            collect_nested_series_max_bars_back_from_expr(index, values, const_symbols);
+            collect_nested_series_max_bars_back_from_expr(value, values, const_symbols);
+        }
+        HirStmtKind::If {
+            condition,
+            then_branch,
+            else_branch,
+        } => {
+            collect_nested_series_max_bars_back_from_expr(condition, values, const_symbols);
+            collect_series_max_bars_back_from_stmts(then_branch, values, const_symbols);
+            collect_series_max_bars_back_from_stmts(else_branch, values, const_symbols);
+        }
+        HirStmtKind::Switch { selector, arms } => {
+            collect_series_max_bars_back_from_switch_stmt(
+                selector.as_ref(),
+                arms,
+                values,
+                const_symbols,
+            );
+        }
+        HirStmtKind::For {
+            from,
+            to,
+            step,
+            body,
+            ..
+        } => {
+            collect_nested_series_max_bars_back_from_expr(from, values, const_symbols);
+            collect_nested_series_max_bars_back_from_expr(to, values, const_symbols);
+            if let Some(step) = step {
+                collect_nested_series_max_bars_back_from_expr(step, values, const_symbols);
+            }
+            collect_series_max_bars_back_from_stmts(body, values, const_symbols);
+        }
+        HirStmtKind::ForIn { iterable, body, .. } => {
+            collect_nested_series_max_bars_back_from_expr(iterable, values, const_symbols);
+            collect_series_max_bars_back_from_stmts(body, values, const_symbols);
+        }
+        HirStmtKind::While { condition, body } => {
+            collect_nested_series_max_bars_back_from_expr(condition, values, const_symbols);
+            collect_series_max_bars_back_from_stmts(body, values, const_symbols);
+        }
+        HirStmtKind::Break | HirStmtKind::Continue => {}
+    }
+}
+
+fn collect_series_max_bars_back_from_switch_stmt(
+    selector: Option<&HirExpr>,
+    arms: &[HirSwitchStmtArm],
+    values: &mut BTreeMap<SeriesId, u32>,
+    const_symbols: &ConstSymbolEnv<'_>,
+) {
+    if let Some(selector) = selector {
+        collect_nested_series_max_bars_back_from_expr(selector, values, const_symbols);
+    }
+    for arm in arms {
+        if let Some(condition) = &arm.condition {
+            collect_nested_series_max_bars_back_from_expr(condition, values, const_symbols);
+        }
+        collect_series_max_bars_back_from_stmts(&arm.body, values, const_symbols);
+    }
+}
+
+fn series_max_bars_back_from_expr_stmt(
+    expr: &HirExpr,
+    const_symbols: &ConstSymbolEnv<'_>,
+) -> Option<(SeriesId, u32)> {
     let HirExprKind::Call { callee, args, .. } = &expr.kind else {
         return None;
     };
@@ -104,8 +212,296 @@ fn series_max_bars_back_from_expr_stmt(expr: &HirExpr) -> Option<(SeriesId, u32)
     let source = call_arg(args, 0, "source")?;
     let num = call_arg(args, 1, "num")?;
     let series_id = source.series_id?;
-    let max_bars_back = constant_hir_int(num).and_then(|value| u32::try_from(value).ok())?;
+    let max_bars_back = constant_hir_int_with_symbols(num, const_symbols)
+        .and_then(|value| u32::try_from(value).ok())?;
     Some((series_id, max_bars_back))
+}
+
+fn collect_series_max_bars_back_from_expr_stmt(
+    expr: &HirExpr,
+    values: &mut BTreeMap<SeriesId, u32>,
+    const_symbols: &ConstSymbolEnv<'_>,
+) {
+    collect_series_max_bars_back_from_expr_stmt_context(expr, values, const_symbols, true);
+}
+
+fn collect_nested_series_max_bars_back_from_expr(
+    expr: &HirExpr,
+    values: &mut BTreeMap<SeriesId, u32>,
+    const_symbols: &ConstSymbolEnv<'_>,
+) {
+    collect_series_max_bars_back_from_expr_stmt_context(expr, values, const_symbols, false);
+}
+
+fn collect_series_max_bars_back_from_expr_stmt_context(
+    expr: &HirExpr,
+    values: &mut BTreeMap<SeriesId, u32>,
+    const_symbols: &ConstSymbolEnv<'_>,
+    allow_direct_call: bool,
+) {
+    if allow_direct_call
+        && let Some((series_id, max_bars_back)) =
+            series_max_bars_back_from_expr_stmt(expr, const_symbols)
+    {
+        values
+            .entry(series_id)
+            .and_modify(|current| *current = (*current).max(max_bars_back))
+            .or_insert(max_bars_back);
+        return;
+    }
+
+    match &expr.kind {
+        HirExprKind::Call { args, .. } => {
+            for arg in args {
+                collect_series_max_bars_back_from_expr_stmt_context(
+                    &arg.value,
+                    values,
+                    const_symbols,
+                    false,
+                );
+            }
+        }
+        HirExprKind::Unary { expr, .. } => {
+            collect_series_max_bars_back_from_expr_stmt_context(expr, values, const_symbols, false)
+        }
+        HirExprKind::Binary { left, right, .. } => {
+            collect_series_max_bars_back_from_expr_stmt_context(left, values, const_symbols, false);
+            collect_series_max_bars_back_from_expr_stmt_context(
+                right,
+                values,
+                const_symbols,
+                false,
+            );
+        }
+        HirExprKind::Ternary {
+            condition,
+            then_expr,
+            else_expr,
+        } => {
+            collect_series_max_bars_back_from_expr_stmt_context(
+                condition,
+                values,
+                const_symbols,
+                false,
+            );
+            collect_series_max_bars_back_from_expr_stmt_context(
+                then_expr,
+                values,
+                const_symbols,
+                false,
+            );
+            collect_series_max_bars_back_from_expr_stmt_context(
+                else_expr,
+                values,
+                const_symbols,
+                false,
+            );
+        }
+        HirExprKind::Switch { selector, arms } => {
+            if let Some(selector) = selector {
+                collect_series_max_bars_back_from_expr_stmt_context(
+                    selector,
+                    values,
+                    const_symbols,
+                    false,
+                );
+            }
+            for arm in arms {
+                if let Some(condition) = &arm.condition {
+                    collect_series_max_bars_back_from_expr_stmt_context(
+                        condition,
+                        values,
+                        const_symbols,
+                        false,
+                    );
+                }
+                collect_series_max_bars_back_from_expr_stmt_context(
+                    &arm.result,
+                    values,
+                    const_symbols,
+                    false,
+                );
+            }
+        }
+        HirExprKind::For {
+            from,
+            to,
+            step,
+            statements,
+            result,
+            ..
+        } => {
+            collect_series_max_bars_back_from_expr_stmt_context(from, values, const_symbols, false);
+            collect_series_max_bars_back_from_expr_stmt_context(to, values, const_symbols, false);
+            if let Some(step) = step {
+                collect_series_max_bars_back_from_expr_stmt_context(
+                    step,
+                    values,
+                    const_symbols,
+                    false,
+                );
+            }
+            let mut loop_const_symbols = const_symbols.clone();
+            collect_series_max_bars_back_from_stmts_with_env(
+                statements,
+                values,
+                &mut loop_const_symbols,
+            );
+            collect_series_max_bars_back_from_expr_stmt_context(
+                result,
+                values,
+                &loop_const_symbols,
+                false,
+            );
+        }
+        HirExprKind::ForIn {
+            iterable,
+            statements,
+            result,
+            ..
+        } => {
+            collect_series_max_bars_back_from_expr_stmt_context(
+                iterable,
+                values,
+                const_symbols,
+                false,
+            );
+            let mut loop_const_symbols = const_symbols.clone();
+            collect_series_max_bars_back_from_stmts_with_env(
+                statements,
+                values,
+                &mut loop_const_symbols,
+            );
+            collect_series_max_bars_back_from_expr_stmt_context(
+                result,
+                values,
+                &loop_const_symbols,
+                false,
+            );
+        }
+        HirExprKind::While {
+            condition,
+            statements,
+            result,
+        } => {
+            collect_series_max_bars_back_from_expr_stmt_context(
+                condition,
+                values,
+                const_symbols,
+                false,
+            );
+            let mut loop_const_symbols = const_symbols.clone();
+            collect_series_max_bars_back_from_stmts_with_env(
+                statements,
+                values,
+                &mut loop_const_symbols,
+            );
+            collect_series_max_bars_back_from_expr_stmt_context(
+                result,
+                values,
+                &loop_const_symbols,
+                false,
+            );
+        }
+        HirExprKind::Tuple(items)
+        | HirExprKind::UserTypeConstruct { fields: items, .. }
+        | HirExprKind::UserTypeArrayConstruct {
+            elements: items, ..
+        } => {
+            for item in items {
+                collect_series_max_bars_back_from_expr_stmt_context(
+                    item,
+                    values,
+                    const_symbols,
+                    false,
+                );
+            }
+        }
+        HirExprKind::FieldAccess { value, .. } => {
+            collect_series_max_bars_back_from_expr_stmt_context(value, values, const_symbols, false)
+        }
+        HirExprKind::Block { statements, result } => {
+            let mut block_const_symbols = const_symbols.clone();
+            collect_series_max_bars_back_from_stmts_with_env(
+                statements,
+                values,
+                &mut block_const_symbols,
+            );
+            collect_series_max_bars_back_from_expr_stmt_context(
+                result,
+                values,
+                &block_const_symbols,
+                false,
+            );
+        }
+        HirExprKind::History { expr, offset } => {
+            collect_series_max_bars_back_from_expr_stmt_context(expr, values, const_symbols, false);
+            if let HirHistoryOffset::Dynamic(offset) = offset {
+                collect_series_max_bars_back_from_expr_stmt_context(
+                    offset,
+                    values,
+                    const_symbols,
+                    false,
+                );
+            }
+        }
+        HirExprKind::Literal(_) | HirExprKind::Symbol(_) | HirExprKind::Builtin(_) => {}
+    }
+}
+
+fn update_series_max_bars_back_const_env<'a>(
+    statement: &'a HirStmt,
+    const_symbols: &mut ConstSymbolEnv<'a>,
+) {
+    match &statement.kind {
+        HirStmtKind::Decl { symbol, value } | HirStmtKind::Reassign { symbol, value } => {
+            if hir_const_int_symbol_value(value, const_symbols).is_some() {
+                const_symbols.insert(*symbol, value);
+            } else {
+                const_symbols.remove(symbol);
+            }
+        }
+        HirStmtKind::TupleDecl { symbols, value } => {
+            if let HirExprKind::Tuple(values) = &value.kind
+                && symbols.len() == values.len()
+            {
+                for (symbol, value) in symbols.iter().zip(values) {
+                    if hir_const_int_symbol_value(value, const_symbols).is_some() {
+                        const_symbols.insert(*symbol, value);
+                    } else {
+                        const_symbols.remove(symbol);
+                    }
+                }
+            } else {
+                for symbol in symbols {
+                    const_symbols.remove(symbol);
+                }
+            }
+        }
+        HirStmtKind::FieldReassign { symbol, .. } => {
+            const_symbols.remove(symbol);
+        }
+        HirStmtKind::ArrayFieldReassign { array, .. } => {
+            if let HirExprKind::Symbol(symbol) = array.kind {
+                const_symbols.remove(&symbol);
+            }
+        }
+        HirStmtKind::If { .. }
+        | HirStmtKind::Switch { .. }
+        | HirStmtKind::For { .. }
+        | HirStmtKind::ForIn { .. }
+        | HirStmtKind::While { .. } => {
+            remove_reassigned_symbols_from_env(const_symbols, &statement.kind);
+        }
+        HirStmtKind::Expr(_) | HirStmtKind::Break | HirStmtKind::Continue => {}
+    }
+}
+
+fn hir_const_int_symbol_value(expr: &HirExpr, const_symbols: &ConstSymbolEnv<'_>) -> Option<i64> {
+    (expr.pine_type.qualifier == pine_ir::Qualifier::Const
+        && expr.pine_type.kind == pine_ir::ValueKind::Int)
+        .then(|| constant_hir_int_with_symbols(expr, const_symbols))
+        .flatten()
 }
 
 fn call_arg<'a>(args: &'a [HirCallArg], index: usize, name: &str) -> Option<&'a HirExpr> {
@@ -115,48 +511,84 @@ fn call_arg<'a>(args: &'a [HirCallArg], index: usize, name: &str) -> Option<&'a 
         .map(|arg| &arg.value)
 }
 
-pub(crate) fn max_bars_back_from_stmt(statement: &HirStmt) -> Option<u32> {
+fn max_bars_back_from_stmt_with_symbols(
+    statement: &HirStmt,
+    const_symbols: &ConstSymbolEnv<'_>,
+) -> Option<u32> {
     match &statement.kind {
         HirStmtKind::Expr(expr)
         | HirStmtKind::Decl { value: expr, .. }
         | HirStmtKind::Reassign { value: expr, .. }
         | HirStmtKind::FieldReassign { value: expr, .. }
-        | HirStmtKind::TupleDecl { value: expr, .. } => max_bars_back_from_expr(expr),
+        | HirStmtKind::TupleDecl { value: expr, .. } => {
+            max_bars_back_from_expr_with_symbols(expr, const_symbols)
+        }
         HirStmtKind::ArrayFieldReassign {
             array,
             index,
             value,
             ..
-        } => max_bars_back_from_expr(array)
-            .or_else(|| max_bars_back_from_expr(index))
-            .or_else(|| max_bars_back_from_expr(value)),
+        } => max_bars_back_from_expr_with_symbols(array, const_symbols)
+            .or_else(|| max_bars_back_from_expr_with_symbols(index, const_symbols))
+            .or_else(|| max_bars_back_from_expr_with_symbols(value, const_symbols)),
         HirStmtKind::If {
             condition,
             then_branch,
             else_branch,
-        } => max_bars_back_from_expr(condition)
-            .or_else(|| infer_max_bars_back(then_branch))
-            .or_else(|| infer_max_bars_back(else_branch)),
+        } => max_bars_back_from_expr_with_symbols(condition, const_symbols)
+            .or_else(|| infer_max_bars_back_with_symbols(then_branch, const_symbols))
+            .or_else(|| infer_max_bars_back_with_symbols(else_branch, const_symbols)),
+        HirStmtKind::Switch { selector, arms } => {
+            max_bars_back_from_switch_stmt_with_symbols(selector.as_ref(), arms, const_symbols)
+        }
         HirStmtKind::For {
             from,
             to,
             step,
             body,
             ..
-        } => max_bars_back_from_expr(from)
-            .or_else(|| max_bars_back_from_expr(to))
-            .or_else(|| step.as_ref().and_then(max_bars_back_from_expr))
-            .or_else(|| infer_max_bars_back(body)),
+        } => max_bars_back_from_expr_with_symbols(from, const_symbols)
+            .or_else(|| max_bars_back_from_expr_with_symbols(to, const_symbols))
+            .or_else(|| {
+                step.as_ref()
+                    .and_then(|step| max_bars_back_from_expr_with_symbols(step, const_symbols))
+            })
+            .or_else(|| infer_max_bars_back_with_symbols(body, const_symbols)),
         HirStmtKind::ForIn { iterable, body, .. } => {
-            max_bars_back_from_expr(iterable).or_else(|| infer_max_bars_back(body))
+            max_bars_back_from_expr_with_symbols(iterable, const_symbols)
+                .or_else(|| infer_max_bars_back_with_symbols(body, const_symbols))
         }
         HirStmtKind::While { condition, body } => {
-            max_bars_back_from_expr(condition).or_else(|| infer_max_bars_back(body))
+            max_bars_back_from_expr_with_symbols(condition, const_symbols)
+                .or_else(|| infer_max_bars_back_with_symbols(body, const_symbols))
         }
         HirStmtKind::Break | HirStmtKind::Continue => None,
     }
 }
-pub(crate) fn max_bars_back_from_expr(expr: &HirExpr) -> Option<u32> {
+
+fn max_bars_back_from_switch_stmt_with_symbols(
+    selector: Option<&HirExpr>,
+    arms: &[HirSwitchStmtArm],
+    const_symbols: &ConstSymbolEnv<'_>,
+) -> Option<u32> {
+    selector
+        .and_then(|selector| max_bars_back_from_expr_with_symbols(selector, const_symbols))
+        .or_else(|| {
+            arms.iter().find_map(|arm| {
+                arm.condition
+                    .as_ref()
+                    .and_then(|condition| {
+                        max_bars_back_from_expr_with_symbols(condition, const_symbols)
+                    })
+                    .or_else(|| infer_max_bars_back_with_symbols(&arm.body, const_symbols))
+            })
+        })
+}
+
+fn max_bars_back_from_expr_with_symbols(
+    expr: &HirExpr,
+    const_symbols: &ConstSymbolEnv<'_>,
+) -> Option<u32> {
     match &expr.kind {
         HirExprKind::Call { callee, args, .. } if callee == "indicator" || callee == "strategy" => {
             let index = if callee == "indicator" { 6 } else { 3 };
@@ -166,32 +598,39 @@ pub(crate) fn max_bars_back_from_expr(expr: &HirExpr) -> Option<u32> {
                     arg.name.as_deref() == Some("max_bars_back")
                         || (arg.name.is_none() && *arg_index == index)
                 })
-                .and_then(|(_, arg)| constant_hir_int(&arg.value))
+                .and_then(|(_, arg)| constant_hir_int_with_symbols(&arg.value, const_symbols))
                 .and_then(|value| u32::try_from(value).ok())
         }
         HirExprKind::Call { args, .. } => args
             .iter()
-            .find_map(|arg| max_bars_back_from_expr(&arg.value)),
-        HirExprKind::Unary { expr, .. } => max_bars_back_from_expr(expr),
+            .find_map(|arg| max_bars_back_from_expr_with_symbols(&arg.value, const_symbols)),
+        HirExprKind::Unary { expr, .. } => {
+            max_bars_back_from_expr_with_symbols(expr, const_symbols)
+        }
         HirExprKind::Binary { left, right, .. } => {
-            max_bars_back_from_expr(left).or_else(|| max_bars_back_from_expr(right))
+            max_bars_back_from_expr_with_symbols(left, const_symbols)
+                .or_else(|| max_bars_back_from_expr_with_symbols(right, const_symbols))
         }
         HirExprKind::Ternary {
             condition,
             then_expr,
             else_expr,
-        } => max_bars_back_from_expr(condition)
-            .or_else(|| max_bars_back_from_expr(then_expr))
-            .or_else(|| max_bars_back_from_expr(else_expr)),
+        } => max_bars_back_from_expr_with_symbols(condition, const_symbols)
+            .or_else(|| max_bars_back_from_expr_with_symbols(then_expr, const_symbols))
+            .or_else(|| max_bars_back_from_expr_with_symbols(else_expr, const_symbols)),
         HirExprKind::Switch { selector, arms } => selector
             .as_deref()
-            .and_then(max_bars_back_from_expr)
+            .and_then(|selector| max_bars_back_from_expr_with_symbols(selector, const_symbols))
             .or_else(|| {
                 arms.iter().find_map(|arm| {
                     arm.condition
                         .as_ref()
-                        .and_then(max_bars_back_from_expr)
-                        .or_else(|| max_bars_back_from_expr(&arm.result))
+                        .and_then(|condition| {
+                            max_bars_back_from_expr_with_symbols(condition, const_symbols)
+                        })
+                        .or_else(|| {
+                            max_bars_back_from_expr_with_symbols(&arm.result, const_symbols)
+                        })
                 })
             }),
         HirExprKind::For {
@@ -201,67 +640,77 @@ pub(crate) fn max_bars_back_from_expr(expr: &HirExpr) -> Option<u32> {
             statements,
             result,
             ..
-        } => max_bars_back_from_expr(from)
-            .or_else(|| max_bars_back_from_expr(to))
-            .or_else(|| step.as_deref().and_then(max_bars_back_from_expr))
-            .or_else(|| infer_max_bars_back(statements))
-            .or_else(|| max_bars_back_from_expr(result)),
+        } => max_bars_back_from_expr_with_symbols(from, const_symbols)
+            .or_else(|| max_bars_back_from_expr_with_symbols(to, const_symbols))
+            .or_else(|| {
+                step.as_deref()
+                    .and_then(|step| max_bars_back_from_expr_with_symbols(step, const_symbols))
+            })
+            .or_else(|| {
+                let mut loop_const_symbols = const_symbols.clone();
+                infer_max_bars_back_with_mut_symbols(statements, &mut loop_const_symbols)
+                    .or_else(|| max_bars_back_from_expr_with_symbols(result, &loop_const_symbols))
+            }),
         HirExprKind::ForIn {
             iterable,
             statements,
             result,
             ..
-        } => max_bars_back_from_expr(iterable)
-            .or_else(|| infer_max_bars_back(statements))
-            .or_else(|| max_bars_back_from_expr(result)),
+        } => max_bars_back_from_expr_with_symbols(iterable, const_symbols).or_else(|| {
+            let mut loop_const_symbols = const_symbols.clone();
+            infer_max_bars_back_with_mut_symbols(statements, &mut loop_const_symbols)
+                .or_else(|| max_bars_back_from_expr_with_symbols(result, &loop_const_symbols))
+        }),
         HirExprKind::While {
             condition,
             statements,
             result,
-        } => max_bars_back_from_expr(condition)
-            .or_else(|| infer_max_bars_back(statements))
-            .or_else(|| max_bars_back_from_expr(result)),
+        } => max_bars_back_from_expr_with_symbols(condition, const_symbols).or_else(|| {
+            let mut loop_const_symbols = const_symbols.clone();
+            infer_max_bars_back_with_mut_symbols(statements, &mut loop_const_symbols)
+                .or_else(|| max_bars_back_from_expr_with_symbols(result, &loop_const_symbols))
+        }),
         HirExprKind::Tuple(items)
         | HirExprKind::UserTypeConstruct { fields: items, .. }
         | HirExprKind::UserTypeArrayConstruct {
             elements: items, ..
-        } => items.iter().find_map(max_bars_back_from_expr),
-        HirExprKind::FieldAccess { value, .. } => max_bars_back_from_expr(value),
-        HirExprKind::Block { statements, result } => {
-            infer_max_bars_back(statements).or_else(|| max_bars_back_from_expr(result))
+        } => items
+            .iter()
+            .find_map(|item| max_bars_back_from_expr_with_symbols(item, const_symbols)),
+        HirExprKind::FieldAccess { value, .. } => {
+            max_bars_back_from_expr_with_symbols(value, const_symbols)
         }
-        HirExprKind::History { expr, offset } => max_bars_back_from_expr(expr).or_else(|| {
-            if let HirHistoryOffset::Dynamic(offset) = offset {
-                max_bars_back_from_expr(offset)
-            } else {
-                None
-            }
-        }),
+        HirExprKind::Block { statements, result } => {
+            let mut block_const_symbols = const_symbols.clone();
+            infer_max_bars_back_with_mut_symbols(statements, &mut block_const_symbols)
+                .or_else(|| max_bars_back_from_expr_with_symbols(result, &block_const_symbols))
+        }
+        HirExprKind::History { expr, offset } => {
+            max_bars_back_from_expr_with_symbols(expr, const_symbols).or_else(|| {
+                if let HirHistoryOffset::Dynamic(offset) = offset {
+                    max_bars_back_from_expr_with_symbols(offset, const_symbols)
+                } else {
+                    None
+                }
+            })
+        }
         HirExprKind::Literal(_) | HirExprKind::Symbol(_) | HirExprKind::Builtin(_) => None,
     }
 }
-pub(crate) fn constant_hir_int(expr: &HirExpr) -> Option<i64> {
-    match &expr.kind {
-        HirExprKind::Literal(HirLiteral::Int(value)) => Some(*value),
-        HirExprKind::Unary {
-            op: HirUnaryOp::Plus,
-            expr,
-        } => constant_hir_int(expr),
-        HirExprKind::Unary {
-            op: HirUnaryOp::Minus,
-            expr,
-        } => constant_hir_int(expr).and_then(i64::checked_neg),
-        _ => None,
-    }
-}
-impl HistoryRequirementCollector {
-    fn visit_stmt(&mut self, statement: &HirStmt) {
+impl<'a> HistoryRequirementCollector<'a> {
+    fn visit_stmt(&mut self, statement: &'a HirStmt) {
         match &statement.kind {
-            HirStmtKind::Expr(expr)
-            | HirStmtKind::Decl { value: expr, .. }
-            | HirStmtKind::Reassign { value: expr, .. }
-            | HirStmtKind::FieldReassign { value: expr, .. }
-            | HirStmtKind::TupleDecl { value: expr, .. } => self.visit_expr(expr),
+            HirStmtKind::Expr(expr) => self.visit_expr(expr),
+            HirStmtKind::Decl { value, .. }
+            | HirStmtKind::Reassign { value, .. }
+            | HirStmtKind::TupleDecl { value, .. } => {
+                self.visit_expr(value);
+                update_series_max_bars_back_const_env(statement, &mut self.const_symbols);
+            }
+            HirStmtKind::FieldReassign { symbol, value, .. } => {
+                self.visit_expr(value);
+                self.const_symbols.remove(symbol);
+            }
             HirStmtKind::ArrayFieldReassign {
                 array,
                 index,
@@ -271,6 +720,9 @@ impl HistoryRequirementCollector {
                 self.visit_expr(array);
                 self.visit_expr(index);
                 self.visit_expr(value);
+                if let HirExprKind::Symbol(symbol) = array.kind {
+                    self.const_symbols.remove(&symbol);
+                }
             }
             HirStmtKind::If {
                 condition,
@@ -278,8 +730,21 @@ impl HistoryRequirementCollector {
                 else_branch,
             } => {
                 self.visit_expr(condition);
-                self.visit_stmts(then_branch);
-                self.visit_stmts(else_branch);
+                self.visit_scoped_stmts(then_branch);
+                self.visit_scoped_stmts(else_branch);
+                remove_reassigned_symbols_from_env(&mut self.const_symbols, &statement.kind);
+            }
+            HirStmtKind::Switch { selector, arms } => {
+                if let Some(selector) = selector {
+                    self.visit_expr(selector);
+                }
+                for arm in arms {
+                    if let Some(condition) = &arm.condition {
+                        self.visit_expr(condition);
+                    }
+                    self.visit_scoped_stmts(&arm.body);
+                }
+                remove_reassigned_symbols_from_env(&mut self.const_symbols, &statement.kind);
             }
             HirStmtKind::For {
                 from,
@@ -293,27 +758,36 @@ impl HistoryRequirementCollector {
                 if let Some(step) = step {
                     self.visit_expr(step);
                 }
-                self.visit_stmts(body);
+                self.visit_scoped_stmts(body);
+                remove_reassigned_symbols_from_env(&mut self.const_symbols, &statement.kind);
             }
             HirStmtKind::ForIn { iterable, body, .. } => {
                 self.visit_expr(iterable);
-                self.visit_stmts(body);
+                self.visit_scoped_stmts(body);
+                remove_reassigned_symbols_from_env(&mut self.const_symbols, &statement.kind);
             }
             HirStmtKind::While { condition, body } => {
                 self.visit_expr(condition);
-                self.visit_stmts(body);
+                self.visit_scoped_stmts(body);
+                remove_reassigned_symbols_from_env(&mut self.const_symbols, &statement.kind);
             }
             HirStmtKind::Break | HirStmtKind::Continue => {}
         }
     }
 
-    fn visit_stmts(&mut self, statements: &[HirStmt]) {
+    fn visit_stmts(&mut self, statements: &'a [HirStmt]) {
         for statement in statements {
             self.visit_stmt(statement);
         }
     }
 
-    fn visit_expr(&mut self, expr: &HirExpr) {
+    fn visit_scoped_stmts(&mut self, statements: &'a [HirStmt]) {
+        let outer = self.const_symbols.clone();
+        self.visit_stmts(statements);
+        self.const_symbols = outer;
+    }
+
+    fn visit_expr(&mut self, expr: &'a HirExpr) {
         match &expr.kind {
             HirExprKind::Literal(_) | HirExprKind::Symbol(_) => {}
             HirExprKind::Builtin(name) => {
@@ -359,8 +833,10 @@ impl HistoryRequirementCollector {
                 if let Some(step) = step {
                     self.visit_expr(step);
                 }
+                let outer = self.const_symbols.clone();
                 self.visit_stmts(statements);
                 self.visit_expr(result);
+                self.const_symbols = outer;
             }
             HirExprKind::ForIn {
                 iterable,
@@ -369,8 +845,10 @@ impl HistoryRequirementCollector {
                 ..
             } => {
                 self.visit_expr(iterable);
+                let outer = self.const_symbols.clone();
                 self.visit_stmts(statements);
                 self.visit_expr(result);
+                self.const_symbols = outer;
             }
             HirExprKind::While {
                 condition,
@@ -378,8 +856,10 @@ impl HistoryRequirementCollector {
                 result,
             } => {
                 self.visit_expr(condition);
+                let outer = self.const_symbols.clone();
                 self.visit_stmts(statements);
                 self.visit_expr(result);
+                self.const_symbols = outer;
             }
             HirExprKind::Tuple(items) => {
                 for item in items {
@@ -398,8 +878,10 @@ impl HistoryRequirementCollector {
             }
             HirExprKind::FieldAccess { value, .. } => self.visit_expr(value),
             HirExprKind::Block { statements, result } => {
+                let outer = self.const_symbols.clone();
                 self.visit_stmts(statements);
                 self.visit_expr(result);
+                self.const_symbols = outer;
             }
             HirExprKind::Call { callee, args, .. } => {
                 for arg in args {
@@ -422,8 +904,13 @@ impl HistoryRequirementCollector {
             HirHistoryOffset::Constant(offset) => {
                 self.record_constant_history(series_id, *offset);
             }
-            HirHistoryOffset::Dynamic(_) => {
-                self.record_dynamic_history(series_id);
+            HirHistoryOffset::Dynamic(offset) => {
+                match constant_hir_int_with_symbols(offset, &self.const_symbols) {
+                    Some(offset) if offset >= 0 => {
+                        self.record_constant_history(series_id, offset as u32)
+                    }
+                    _ => self.record_dynamic_history(series_id),
+                }
             }
         }
     }
@@ -447,7 +934,7 @@ impl HistoryRequirementCollector {
             }
             pine_builtins::BuiltinHistoryRequirement::SourceOffset { source_arg, offset } => self
                 .record_constant_history(
-                    args.get(source_arg).and_then(|arg| arg.value.series_id),
+                    call_arg(args, source_arg, "source").and_then(|arg| arg.series_id),
                     offset,
                 ),
             pine_builtins::BuiltinHistoryRequirement::OptionalLengthOffset {
@@ -459,6 +946,11 @@ impl HistoryRequirementCollector {
                 source_arg,
                 length_arg,
             } => self.record_required_length_history(args, source_arg, length_arg),
+            pine_builtins::BuiltinHistoryRequirement::WindowLengthOffset {
+                source_arg,
+                length_arg,
+                default_source,
+            } => self.record_window_length_history(args, source_arg, length_arg, default_source),
             pine_builtins::BuiltinHistoryRequirement::Cross {
                 args: count,
                 offset,
@@ -475,14 +967,15 @@ impl HistoryRequirementCollector {
         length_arg: usize,
         default_offset: u32,
     ) {
-        let series_id = args.get(source_arg).and_then(|arg| arg.value.series_id);
-        match args
-            .get(length_arg)
-            .and_then(|arg| constant_hir_int(&arg.value))
+        let series_id = call_arg(args, source_arg, "source").and_then(|arg| arg.series_id);
+        match call_arg(args, length_arg, "length")
+            .and_then(|arg| constant_hir_int_with_symbols(arg, &self.const_symbols))
         {
             Some(length) if length > 0 => self.record_constant_history(series_id, length as u32),
             Some(_) => {}
-            None if args.len() > length_arg => self.record_dynamic_history(series_id),
+            None if call_arg(args, length_arg, "length").is_some() => {
+                self.record_dynamic_history(series_id)
+            }
             None => self.record_constant_history(series_id, default_offset),
         }
     }
@@ -493,12 +986,43 @@ impl HistoryRequirementCollector {
         source_arg: usize,
         length_arg: usize,
     ) {
-        let series_id = args.get(source_arg).and_then(|arg| arg.value.series_id);
-        match args
-            .get(length_arg)
-            .and_then(|arg| constant_hir_int(&arg.value))
+        let series_id = call_arg(args, source_arg, "source").and_then(|arg| arg.series_id);
+        match call_arg(args, length_arg, "length")
+            .and_then(|arg| constant_hir_int_with_symbols(arg, &self.const_symbols))
         {
             Some(length) if length > 0 => self.record_constant_history(series_id, length as u32),
+            Some(_) => {}
+            None => self.record_dynamic_history(series_id),
+        }
+    }
+
+    fn record_window_length_history(
+        &mut self,
+        args: &[HirCallArg],
+        source_arg: usize,
+        length_arg: usize,
+        default_source: Option<&str>,
+    ) {
+        let has_explicit_source = args.iter().any(|arg| arg.name.as_deref() == Some("source"))
+            || args
+                .get(source_arg)
+                .is_some_and(|arg| arg.name.is_none() && args.len() > length_arg);
+        let (series_id, length) = if has_explicit_source {
+            (
+                call_arg(args, source_arg, "source").and_then(|arg| arg.series_id),
+                call_arg(args, length_arg, "length"),
+            )
+        } else {
+            (
+                default_source.and_then(|name| self.builtin_series.get(name).copied()),
+                call_arg(args, source_arg, "length"),
+            )
+        };
+
+        match length.and_then(|arg| constant_hir_int_with_symbols(arg, &self.const_symbols)) {
+            Some(length) if length > 0 => {
+                self.record_constant_history(series_id, (length as u32).saturating_sub(1))
+            }
             Some(_) => {}
             None => self.record_dynamic_history(series_id),
         }

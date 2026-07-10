@@ -416,6 +416,999 @@ plot(close[2])
 }
 
 #[test]
+fn trims_constant_expression_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history expression")
+plot(close[1 + 1])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_multiplicative_constant_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history multiplication")
+plot(close[1 * 2])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_modulo_constant_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history modulo")
+plot(close[5 % 3])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_ternary_constant_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history ternary")
+plot(close[false ? 1 : 2])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_udf_constant_ta_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history udf constant ta")
+length() => 2
+plot(ta.mom(close, length()))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[2.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_udf_constant_argument_ta_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history udf constant argument ta")
+length(value) => value
+plot(ta.mom(close, length(2)))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[2.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_udf_derived_constant_argument_ta_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history udf derived constant argument ta")
+length(value) => value + 1
+plot(ta.mom(close, length(1)))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[2.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_udf_local_derived_constant_argument_ta_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history udf local derived constant argument ta")
+length(value) =>
+    adjusted = value + 1
+    adjusted
+plot(ta.mom(close, length(1)))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[2.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_udf_local_constant_after_expr_statement_ta_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history udf local constant after expr statement ta")
+length() =>
+    value = 2
+    close
+    value
+plot(ta.mom(close, length()))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[2.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_udf_local_constant_after_unrelated_if_statement_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history udf local constant after unrelated if")
+length() =>
+    value = 2
+    if close > open
+        other = 1
+    value
+plot(close[length()])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_udf_branch_invariant_local_constant_dynamic_condition_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history udf branch invariant dynamic condition")
+length() =>
+    value = 2
+    close > open ? value : value
+plot(close[length()])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_udf_selector_switch_local_constant_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history udf selector switch local constant")
+length() =>
+    mode = 1
+    value = 2
+    switch mode
+        1 => value
+        => value + 1
+plot(close[length()])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_udf_for_expression_constant_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history udf for expression constant")
+length() =>
+    for i = 0 to 1
+        2
+plot(close[length()])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_udf_tuple_destructured_local_constant_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history udf tuple destructured local constant")
+length() =>
+    [value, ignored] = [2, 99]
+    value
+plot(close[length()])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_udf_user_type_field_constant_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history udf user type field constant")
+type Settings
+    int length
+length() =>
+    settings = Settings.new(2)
+    settings.length
+plot(close[length()])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_udf_user_type_field_branch_invariant_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history udf user type field branch invariant")
+type Settings
+    int length
+length() =>
+    settings = close > open ? Settings.new(2) : Settings.new(2)
+    settings.length
+plot(close[length()])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_udf_string_constant_argument_predicate_ta_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history udf string constant argument predicate ta")
+is_a(value) => value == "A"
+plot(ta.mom(close, is_a("A") ? 2 : 1))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[2.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_boolean_expression_ternary_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history boolean ternary")
+plot(close[(true and false) ? 1 : 2])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_short_circuit_and_dynamic_rhs_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history short circuit and dynamic rhs")
+plot(close[(false and close > open) ? 1 : 2])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_bool_ternary_condition_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history bool ternary condition")
+plot(close[((true ? true : false) ? 2 : 1)])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_comparison_ternary_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history comparison ternary")
+plot(close[(1 + 1 == 2) ? 2 : 1])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_division_comparison_ternary_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history division comparison ternary")
+plot(close[(4 / 2 == 2) ? 2 : 1])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_string_comparison_ternary_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history string comparison ternary")
+plot(close[("A" == "A") ? 2 : 1])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_named_string_constant_value_comparison_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history named string constant value comparison")
+plot(close[(adjustment.none == "none") ? 2 : 1])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_string_value_ternary_ta_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history string value ternary ta")
+plot(ta.mom(close, ((true ? "A" : "B") == "A") ? 2 : 1))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[2.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_color_comparison_ternary_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history color comparison ternary")
+plot(close[(color.red == color.red) ? 2 : 1])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_color_value_ternary_comparison_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history color value ternary comparison")
+plot(close[((true ? color.red : color.green) == color.red) ? 2 : 1])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
+fn trims_named_numeric_comparison_ternary_history_to_required_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("static history named numeric comparison ternary")
+plot(close[(math.pi > 3) ? 2 : 1])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(profiled.profile.series_values, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profiled.profile.history_max_constant_offset, 2);
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert!(!profiled.profile.history_has_dynamic_offsets);
+}
+
+#[test]
 fn keeps_full_history_when_dynamic_offsets_exist() {
     let source = SourceFile::new(
         "test.pine",
@@ -487,6 +1480,154 @@ plot(close[offset])
 }
 
 #[test]
+fn max_bars_back_constant_expression_bounds_dynamic_history_retention() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("dynamic history retention", max_bars_back=1 + 1)
+offset = bar_index == 0 ? 0 : 3
+plot(close[offset])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Float(1.0));
+    assert_eq!(profiled.result.plots[0].values[1..], vec![PineValue::Na; 3]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::MaxBarsBack
+    );
+    assert_eq!(profiled.profile.history_max_bars_back, Some(2));
+    assert!(profiled.profile.history_has_dynamic_offsets);
+    assert_eq!(profiled.profile.history_dynamic_retention_misses, 3);
+    assert_eq!(
+        profiled.profile.history_dynamic_retention_max_missed_offset,
+        Some(3)
+    );
+}
+
+#[test]
+fn max_bars_back_multiplicative_constant_expression_bounds_dynamic_history_retention() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("dynamic history retention", max_bars_back=1 * 2)
+offset = bar_index == 0 ? 0 : 3
+plot(close[offset])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Float(1.0));
+    assert_eq!(profiled.result.plots[0].values[1..], vec![PineValue::Na; 3]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::MaxBarsBack
+    );
+    assert_eq!(profiled.profile.history_max_bars_back, Some(2));
+    assert!(profiled.profile.history_has_dynamic_offsets);
+    assert_eq!(profiled.profile.history_dynamic_retention_misses, 3);
+    assert_eq!(
+        profiled.profile.history_dynamic_retention_max_missed_offset,
+        Some(3)
+    );
+}
+
+#[test]
+fn strategy_max_bars_back_bounds_dynamic_history_retention() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"strategy("dynamic history retention", max_bars_back=2)
+offset = bar_index == 0 ? 0 : 3
+plot(close[offset])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Float(1.0));
+    assert_eq!(profiled.result.plots[0].values[1..], vec![PineValue::Na; 3]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::MaxBarsBack
+    );
+    assert_eq!(profiled.profile.history_max_bars_back, Some(2));
+    assert!(profiled.profile.history_has_dynamic_offsets);
+    assert_eq!(profiled.profile.history_dynamic_retention_misses, 3);
+    assert_eq!(
+        profiled.profile.history_dynamic_retention_max_missed_offset,
+        Some(3)
+    );
+}
+
+#[test]
+fn strategy_max_bars_back_constant_expression_bounds_dynamic_history_retention() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"strategy("dynamic history retention", max_bars_back=3 - 1)
+offset = bar_index == 0 ? 0 : 3
+plot(close[offset])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Float(1.0));
+    assert_eq!(profiled.result.plots[0].values[1..], vec![PineValue::Na; 3]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::MaxBarsBack
+    );
+    assert_eq!(profiled.profile.history_max_bars_back, Some(2));
+    assert!(profiled.profile.history_has_dynamic_offsets);
+    assert_eq!(profiled.profile.history_dynamic_retention_misses, 3);
+    assert_eq!(
+        profiled.profile.history_dynamic_retention_max_missed_offset,
+        Some(3)
+    );
+}
+
+#[test]
 fn max_bars_back_function_bounds_only_declared_series() {
     let source = SourceFile::new(
         "test.pine",
@@ -520,6 +1661,208 @@ plot(open[offset])
         HistoryRetentionMode::MaxBarsBack
     );
     assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert_eq!(profiled.profile.history_dynamic_retention_misses, 3);
+    assert_eq!(
+        profiled.profile.history_dynamic_retention_max_missed_offset,
+        Some(3)
+    );
+}
+
+#[test]
+fn max_bars_back_function_constant_expression_bounds_declared_series() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("series max_bars_back")
+max_bars_back(close, 1 + 1)
+offset = bar_index == 0 ? 0 : 3
+plot(close[offset])
+plot(open[offset])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 2);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Float(1.0));
+    assert_eq!(profiled.result.plots[0].values[1..], vec![PineValue::Na; 3]);
+    assert_eq!(profiled.result.plots[1].values[0], PineValue::Float(1.0));
+    assert_eq!(profiled.result.plots[1].values[1], PineValue::Na);
+    assert_eq!(profiled.result.plots[1].values[2], PineValue::Na);
+    assert_eq!(profiled.result.plots[1].values[3], PineValue::Float(1.0));
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::MaxBarsBack
+    );
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert_eq!(profiled.profile.history_dynamic_retention_misses, 3);
+    assert_eq!(
+        profiled.profile.history_dynamic_retention_max_missed_offset,
+        Some(3)
+    );
+}
+
+#[test]
+fn max_bars_back_function_bounds_declared_series_variable() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("series variable max_bars_back")
+src = close
+max_bars_back(src, 2)
+offset = bar_index == 0 ? 0 : 3
+plot(src[offset])
+plot(open[offset])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 2);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Float(1.0));
+    assert_eq!(profiled.result.plots[0].values[1..], vec![PineValue::Na; 3]);
+    assert_eq!(profiled.result.plots[1].values[0], PineValue::Float(1.0));
+    assert_eq!(profiled.result.plots[1].values[1], PineValue::Na);
+    assert_eq!(profiled.result.plots[1].values[2], PineValue::Na);
+    assert_eq!(profiled.result.plots[1].values[3], PineValue::Float(1.0));
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::MaxBarsBack
+    );
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert_eq!(profiled.profile.history_dynamic_retention_misses, 3);
+    assert_eq!(
+        profiled.profile.history_dynamic_retention_max_missed_offset,
+        Some(3)
+    );
+}
+
+#[test]
+fn max_bars_back_function_bounds_derived_series_variable() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("derived series variable max_bars_back")
+src = close + 100
+max_bars_back(src, 2)
+offset = bar_index == 0 ? 0 : 3
+plot(src[offset])
+plot(open[offset])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 2);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Float(101.0));
+    assert_eq!(profiled.result.plots[0].values[1..], vec![PineValue::Na; 3]);
+    assert_eq!(profiled.result.plots[1].values[0], PineValue::Float(1.0));
+    assert_eq!(profiled.result.plots[1].values[1], PineValue::Na);
+    assert_eq!(profiled.result.plots[1].values[2], PineValue::Na);
+    assert_eq!(profiled.result.plots[1].values[3], PineValue::Float(1.0));
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::MaxBarsBack
+    );
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert_eq!(profiled.profile.history_dynamic_retention_misses, 3);
+    assert_eq!(
+        profiled.profile.history_dynamic_retention_max_missed_offset,
+        Some(3)
+    );
+}
+
+#[test]
+fn max_bars_back_function_repeated_series_uses_largest_bound() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("repeated series max_bars_back")
+src = close
+max_bars_back(src, 2)
+max_bars_back(src, 4)
+offset = bar_index == 0 ? 0 : 3
+plot(src[offset])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Float(1.0));
+    assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[2], PineValue::Na);
+    assert_eq!(profiled.result.plots[0].values[3], PineValue::Float(1.0));
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::MaxBarsBack
+    );
+    assert_eq!(profiled.profile.history_dynamic_retention_misses, 0);
+    assert_eq!(
+        profiled.profile.history_dynamic_retention_max_missed_offset,
+        None
+    );
+}
+
+#[test]
+fn max_bars_back_diagnostic_reports_effective_series_bound() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("series max_bars_back diagnostic", max_bars_back=10)
+max_bars_back(close, 2)
+offset = bar_index == 0 ? 0 : 3
+plot(close[offset])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.diagnostics.len(), 1);
+    assert_eq!(
+        profiled.result.diagnostics[0].code,
+        "W_HISTORY_MAX_BARS_BACK"
+    );
+    assert_eq!(
+        profiled.result.diagnostics[0].message,
+        "dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"
+    );
+    assert_eq!(profiled.profile.history_max_bars_back, Some(10));
     assert_eq!(profiled.profile.history_dynamic_retention_misses, 3);
     assert_eq!(
         profiled.profile.history_dynamic_retention_max_missed_offset,

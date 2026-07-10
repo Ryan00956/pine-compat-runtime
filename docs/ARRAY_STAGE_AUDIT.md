@@ -19,17 +19,18 @@ Stage 3 arrays are complete for the current fixture-backed scalar subset. Later
 compatibility slices added fixture-backed `array.new_label` label-id arrays,
 `array.new_line` line-id arrays, `array.new_linefill` linefill-id arrays,
 `array.new_polyline` polyline-id arrays, `array.new_box` box-id arrays,
-`array.new_table` table-id arrays, same-local scalar-field UDT arrays, and
+`array.new_table` table-id arrays, same-local and same-imported scalar-tree UDT
+arrays, and
 official `array.new<type>` constructor syntax for the supported scalar,
-drawing-object, chart.point, and same-local UDT element types on top of that
+drawing-object, chart.point, and same-identity UDT element types on top of that
 scalar baseline without opening general object array families.
 
 The project should keep `array.*` marked `partial`, not `supported`, because the
 current implementation deliberately excludes general generic arrays, object
-families outside the fixture-backed drawing ids, imported or nested-field UDT
-arrays, maps, matrices, `varip` value families outside the fixture-backed
-scalar typed-array subset, richer array-history aliasing semantics, and several
-advanced sorting forms.
+families outside the fixture-backed drawing ids, non-scalar or recursive UDT
+arrays, arrays of collections, `varip` value families outside the fixture-backed
+subsets, richer array-history aliasing semantics, and several helper/type
+combinations.
 
 The next implementation work should not continue adding random array helpers.
 Future array work should be chosen from the explicit gap list below and should
@@ -153,11 +154,12 @@ are designed and fixture-backed.
 Generic arrays:
 
 - `array.new<type>()` is supported only for the scalar, drawing-object,
-  chart.point, and same-local scalar-field UDT element kinds listed above.
+  chart.point, and same-local or same-imported scalar-tree UDT element kinds
+  listed above.
 - Type-template array declarations such as `array<float>` are not a general
   parser or semantic feature outside the current fixture-backed element kinds.
 - `array.from` only infers the scalar, chart.point, drawing ids, and same-local
-  scalar-field UDT values listed above.
+  or same-imported scalar-tree UDT values listed above.
 
 Reference and object arrays:
 
@@ -169,21 +171,24 @@ Reference and object arrays:
 
 User-defined type arrays:
 
-- UDT declarations and object field access are not supported.
-- Sorting UDT arrays by `sort_field` is not supported.
-- UDT arrays should wait for the user-defined type and method-dispatch phase.
+- Same-local and same-imported scalar-tree UDT arrays have fixture-backed
+  construction, declarations, history, `varip`, structural search, and
+  `sort_field` subsets.
+- Non-scalar, recursive, nested-collection, and side-effecting UDT-array forms
+  remain unsupported.
 
 Maps and matrices:
 
-- `matrix.*` and `map.*` are out of scope for this array stage.
-- They need separate storage models, type rules, and conformance fixtures.
+- `matrix.*` and `map.*` remain out of scope for this historical array stage;
+  later dedicated design gates now own their partial storage, type, history,
+  rollback, and `varip` subsets.
 
 `varip`:
 
 - Scalar typed-array ids for `float`, `int`, `bool`, `string`, and `color`
   declarations are fixture-backed for historical var-like execution and
   realtime intrabar persistence.
-- Drawing id arrays, UDT arrays, generic arrays, tuples, and other value
+- Drawing-id arrays, generic/non-scalar UDT arrays, tuples, and other value
   families remain unsupported for `varip` until their realtime handoff and
   rollback rules are designed.
 
@@ -192,18 +197,18 @@ History and snapshots:
 - Scalar array, scalar slice, label-array, label-slice, line-array,
   line-slice, box-array, box-slice, linefill-array, linefill-slice,
   polyline-array, polyline-slice, table-array, table-slice, chart.point-array,
-  chart.point-slice, and same-local scalar-field UDT-array variable history
+  chart.point-slice, and same-local scalar-tree UDT-array variable history
   snapshots are
   fixture-backed for the official
   `previous = a[1]; na(previous) ? na : previous.get(0)` read path, with
   scalar-array, scalar-slice, label-array, label-slice, line-array, line-slice,
   box-array, box-slice, linefill-array, linefill-slice, polyline-array,
   polyline-slice, table-array, table-slice, chart.point-array,
-  chart.point-slice, and same-local scalar-field UDT-array first-bar
+  chart.point-slice, and same-local scalar-tree UDT-array first-bar
   `na(previous)` predicate outputs, plus scalar array/slice, label-array/slice,
   line-array/slice, box-array/slice, linefill-array/slice,
   polyline-array/slice, table-array/slice, chart.point-array/slice, and
-  same-local scalar-field UDT-array dynamic `na` offset predicates: runtime
+  same-local scalar-tree UDT-array dynamic `na` offset predicates: runtime
   commits retained array values as independent snapshots and returns a fresh
   copy on history reads.
 - Remaining array history behavior still needs design for broader collection

@@ -203,7 +203,7 @@ impl Parser {
                     self.error_here("E_PARSE_TYPE", "expected dedent before end of type");
                     break;
                 }
-                let (type_name, type_span) = self.expect_identifier("expected field type")?;
+                let (type_name, type_span) = self.expect_field_type_name()?;
                 let (field_name, field_span) = self.expect_identifier("expected field name")?;
                 end = field_span;
                 fields.push(UserTypeField {
@@ -268,13 +268,18 @@ impl Parser {
         }
 
         loop {
-            let (type_name, type_span) =
-                self.expect_identifier("expected method parameter type")?;
-            let (name, name_span) = self.expect_identifier("expected method parameter name")?;
+            let Some(param) = self.parse_function_param() else {
+                self.error_here("E_PARSE_METHOD", "expected method parameter");
+                return None;
+            };
+            let Some(type_name) = param.type_name else {
+                self.error_here("E_PARSE_METHOD", "method parameters must declare a type");
+                return None;
+            };
             params.push(MethodParam {
                 type_name,
-                name,
-                span: type_span.merge(name_span),
+                name: param.name,
+                span: param.span,
             });
 
             if self.at(TokenKind::Comma) {
@@ -344,6 +349,17 @@ impl Parser {
                 None
             }
         }
+    }
+
+    fn expect_field_type_name(&mut self) -> Option<(String, Span)> {
+        let (first, first_span) = self.expect_identifier("expected field type")?;
+        if self.at(TokenKind::Dot) {
+            self.bump();
+            let (second, second_span) =
+                self.expect_identifier("expected field type name after `.`")?;
+            return Some((format!("{first}.{second}"), first_span.merge(second_span)));
+        }
+        Some((first, first_span))
     }
 
     fn nth_identifier(&self, offset: usize) -> bool {
@@ -461,6 +477,27 @@ mod tests {
         assert_eq!(decl.fields.len(), 1);
         assert_eq!(decl.fields[0].type_name, "float");
         assert_eq!(decl.fields[0].name, "x");
+    }
+
+    #[test]
+    fn parses_user_type_object_and_chart_point_fields() {
+        let parsed = parse(
+            "type Handles\n    label id\n    line trend\n    box zone\n    chart.point anchor\n",
+        );
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::UserType(user_type) = &parsed.program.statements[0].kind else {
+            panic!("expected user-defined type");
+        };
+        assert_eq!(user_type.fields.len(), 4);
+        assert_eq!(user_type.fields[0].type_name, "label");
+        assert_eq!(user_type.fields[0].name, "id");
+        assert_eq!(user_type.fields[1].type_name, "line");
+        assert_eq!(user_type.fields[1].name, "trend");
+        assert_eq!(user_type.fields[2].type_name, "box");
+        assert_eq!(user_type.fields[2].name, "zone");
+        assert_eq!(user_type.fields[3].type_name, "chart.point");
+        assert_eq!(user_type.fields[3].name, "anchor");
     }
 
     #[test]

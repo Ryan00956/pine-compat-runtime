@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported for expression reassignment series bound qualifier")
+
+length = input.int(2, "Length")
+selected = length
+_ = for i = 0 to bar_index
+    selected := length
+    1
+
+plot(ta.ema(close, selected))

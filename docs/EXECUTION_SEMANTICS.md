@@ -490,20 +490,21 @@ functions lower through the same inlined UDF machinery as local functions.
 Runtime execution receives one lowered HIR program and performs no filesystem,
 network, registry, or library lookup.
 
-The executable import subset supports scalar-field imported UDT constructors,
-direct field reads, ordinary same-imported-UDT reassignment, and scalar-field
+The executable import subset supports scalar-tree imported UDT constructors,
+direct and nested field reads, ordinary same-imported-UDT reassignment, and scalar-tree
 imported UDT typed declarations, same-imported-identity ternary results, plus
 same-imported-identity `if`, `switch`, `while`, and `for` expression results,
 direct or nested UDF parameter passthrough and direct or nested constructor-return
-results, ordinary imported UDT `var` declarations, and scalar-field mutation in
+results, ordinary imported UDT `var` declarations, and scalar-tree root-field replacement in
 top-level, branch, `for`-loop, `while`-loop, and UDF-local statement contexts,
 by lowering them to ordinary UDT field-vector values with source-scoped HIR
-identity. It also supports scalar-field imported UDT `varip` declarations
-through the same intrabar value-clone slot model as local scalar-field UDT
-`varip`, plus receiver-style or alias-qualified scalar imported UDT method calls
+identity. It also supports scalar-tree imported UDT `varip` declarations
+through the same intrabar value-clone slot model as local scalar-tree UDT
+`varip`, plus receiver-style or alias-qualified scalar-tree imported UDT method calls
 including direct same-identity, block-local alias, final-if alias, final-for
-alias, nested-method passthrough plus constructor returns, and method-local
-field mutation, plus scalar-field imported UDT value history and `array.from`
+alias, final-while alias, switch-expression alias, nested-method passthrough
+plus constructor returns, and method-local
+scalar-tree root-field replacement, plus scalar-tree imported UDT value history and `array.from`
 size/get/first/last, set replacement field reads, push append field reads,
 unshift prepend field reads, insert insertion field reads, fill replacement
 field reads, join positional stringification, includes/indexof/lastindexof
@@ -512,8 +513,8 @@ pop/remove/shift return field reads, clear size reset, copy independent field
 reads, reverse reordered field reads, slice window field reads, concat appended
 field reads, and statement/expression/index-value for-in value-copy field reads.
 It intentionally excludes remote lookup, re-exports, unaliased imports,
-side-effecting exported functions, broader imported UDT flow, collections,
-broader imported UDT history, and alias-qualified imported method receiver type
+side-effecting exported functions, imported UDT flow outside the covered same-identity scalar-tree paths, collections,
+direct private imported UDT access and imported UDT value history outside the scalar-tree metadata subset, and alias-qualified imported method receiver type
 mismatches.
 
 ## Variables
@@ -577,13 +578,13 @@ same runtime error used by `array.get`. Label, line, linefill, polyline, box,
 and table array loop values are shallow-copied ids, so drawing setters or lifecycle
 operations through the loop local mutate the same drawing object while
 assignment to the loop local does not write the source array slot. Chart-point
-array and same-local or same-imported scalar-field UDT array loop values are
+array and same-local or same-imported scalar-tree UDT array loop values are
 copied into the loop-local variable, so local field mutation does not write back
 to the source slot. The narrow `for index, value in values` form supports `array<int>`,
 `array<float>`, `array<bool>`, `array<string>`, `array<color>`,
 `array<label>`, `array<line>`, `array<linefill>`, `array<polyline>`,
 `array<box>`, `array<table>`, `array<chart.point>`, and same-local or
-same-imported scalar-field UDT array iterables with a zero-based `series int`
+same-imported scalar-tree UDT array iterables with a zero-based `series int`
 index loop-local. Statement-form `for...in` also supports runtime-owned
 `matrix<float>`, `matrix<int>`, `matrix<bool>`, `matrix<string>`, and
 `matrix<color>` iterables by capturing matrix rows at loop entry and binding
@@ -594,19 +595,21 @@ execution. Expression-form `for value in values` supports `array<int>`,
 `array<float>`, `array<bool>`, `array<string>`, `array<color>`,
 `array<label>`, `array<line>`, `array<linefill>`, `array<polyline>`,
 `array<box>`, `array<table>`, `array<chart.point>`, and same-local scalar-field
-UDT array iterables, plus runtime-owned matrix row iterables, and returns the
-last expression from the last completed iteration, or `na` when the iterable is
-typed `na` or has zero rows/elements. Matrix expression-form iteration uses the
-same independent row snapshots as statement-form matrix iteration. The optional
-expression-form index local is the same zero-based `series int` slot number used
-by statement-form index/value iteration. `break` returns the previous expression
-result and `continue` skips the current iteration's result expression.
-Index/value iteration over typed imported or
-non-scalar-field UDT arrays, map iterables, expression-form `for...in` beyond
-the scalar-array, drawing-id-array, chart.point-array, same-local
-scalar-field UDT-array, and matrix-row subset,
-non-array/non-matrix iterables, and other non-scalar arrays remain outside the
-current subset.
+UDT array iterables, plus runtime-owned matrix row iterables and scalar map
+iterables, and returns the last expression from the last completed iteration, or
+`na` when the iterable is typed `na` or has zero rows/elements. Matrix
+expression-form iteration uses the same independent row snapshots as
+statement-form matrix iteration. For scalar maps, key-only forms bind the map key
+to the loop value, while key/value forms bind the key to the first loop local and
+the map value to the second loop local. The optional expression-form index local
+is the same zero-based `series int` slot number used by statement-form
+index/value iteration for arrays and matrix rows, and the map key for scalar
+maps. `break` returns the previous expression result and `continue` skips the
+current iteration's result expression. Index/value iteration over typed imported
+or non-scalar-tree UDT arrays, expression-form `for...in` beyond the
+scalar-array, drawing-id-array, chart.point-array, same-local scalar-tree
+UDT-array, matrix-row, and scalar-map subset, non-array/non-matrix/non-map
+iterables, and other non-scalar arrays remain outside the current subset.
 Ordinary `var` scalar arrays roll back
 loop-body mutation during repeated forming realtime updates, while scalar
 typed-array `varip` iteration preserves carried intrabar loop-body mutation
@@ -653,6 +656,9 @@ expression becomes the arm result. If no arm matches and no default arm exists,
 the switch returns `na`. Same-imported-identity UDT switch results are
 supported; imported/local or otherwise mismatched UDT switch results are
 rejected before runtime execution.
+Statement-context `switch` forms use the same arm-selection rules, execute only
+the selected arm, and can perform side effects, outer reassignment, or propagate
+loop control without requiring a final result expression.
 
 ### Reassignment
 
@@ -725,8 +731,9 @@ reassign to the same local UDT type; top-level, block-local, and loop-local
 typed UDT declarations may also initialize or reassign from same-local-UDT
 `for` expressions. UDFs may pass a local UDT value through a parameter and
 return that same parameter, or return a
-block-local alias chain that starts from that parameter, or return a nested
-passthrough UDF call that maps back to that parameter. Pure UDFs may also
+block-local, ternary-expression, final-if, final-for, final-for-in, final-while, or switch-expression alias chain
+that starts from that parameter, or return a nested passthrough UDF call that
+maps back to that parameter through those same alias forms. Pure UDFs may also
 construct and return a local UDT, directly,
 through nested pure constructor-helper UDF calls, or through same-local-UDT
 ternary, switch, `if` expression, final if/else constructor branches, or final
@@ -741,15 +748,16 @@ UDT variables may mutate scalar fields before returning the updated value.
 Mutating UDT fields on globals or parameters inside UDFs, field mutation inside
 methods, local UDT value history references, UDT `varip`, nested UDT fields, UDT
 arrays, and broader imported UDT values are rejected before runtime execution or
-remain outside the executable subset. Imported UDTs are executable only for
-host-provided exported scalar-field types constructed as `alias.Type.new(...)`
-read through direct scalar fields such as `value.x`, and reassigned from the
+remain outside the executable subset. Imported UDTs are executable for
+host-provided exported scalar-tree types constructed as `alias.Type.new(...)`
+read through direct scalar fields such as `value.x` or nested fields such as
+`wrapped.point.x`, and reassigned from the
 same imported UDT identity, including explicit `alias.Type` typed declarations
 with same-identity initialization or reassignment, same-imported-identity
 ternary, `if`, `switch`, `while`, and `for` expression results, direct or nested UDF
 parameter passthrough returns, direct or nested constructor-return UDFs, and
-scalar-field mutation in top-level, branch, `for`-loop, `while`-loop, and
-UDF-local statement contexts, plus scalar-field value history reads and
+scalar-tree root-field replacement in top-level, branch, `for`-loop, `while`-loop, and
+UDF-local statement contexts, plus scalar-tree value history reads and
 `array.from` size/get/first/last, set replacement field reads,
 push append field reads, unshift prepend field reads, insert insertion field reads, fill replacement field reads, join positional stringification, includes/indexof/lastindexof structural equality search, sort/sort_indices by int/float/string sort_field, pop/remove/shift return field reads, clear size reset,
 copy independent field reads, reverse reordered field reads, slice window field
@@ -765,7 +773,7 @@ unshift-prepend, insert-insertion, fill-replacement, join-stringification,
 search-structural-equality, sort-by-field, pop/remove/shift return, clear-size,
 copy-read, reverse-read, slice-window, concat-append, and for-in-value-copy
 subset,
-nested field mutation, broader imported UDT history, UDF
+nested field mutation, direct private imported UDT access and imported UDT value history outside the scalar-tree metadata subset, UDF
 parameter/global field side effects, and method
 receiver/parameter/global field side effects remain unsupported.
 
@@ -774,7 +782,8 @@ passed as the first internal argument and the method body is evaluated through
 the same lowered expression path as a local UDF body. A pure method may accept
 additional local UDT parameters and return the receiver itself, a block-local
 alias chain that starts from the receiver or another local UDT parameter,
-final if/else or final for local UDT aliases of those values, another local UDT
+ternary-expression aliases, final if/else, final for, final while, or
+switch-expression local UDT aliases of those values, another local UDT
 parameter directly or through a nested method passthrough call, or construct
 and return a local UDT directly, through nested pure constructor-helper UDF
 calls, or through same-local-UDT ternary, switch, `if` expression, final
@@ -784,10 +793,12 @@ fields through block-local receiver or local UDT parameter aliases, block-local
 scalar aliases of those fields, inferred scalar parameters, or block-local
 scalar aliases of those parameters, using positional or named constructor field
 arguments; the caller may store that returned UDT value and read its fields.
-Receiver-style and alias-qualified scalar imported UDT methods may also return
-the receiver or a same-identity UDT parameter directly and preserve that
-imported identity for caller-side field reads, or construct and return the same
-imported UDT identity for caller-side field reads.
+Receiver-style and alias-qualified scalar-tree imported UDT methods may also return
+the receiver or a same-identity UDT parameter directly, through block-local,
+ternary-expression, final-if, final-for, final-while, or switch-expression
+aliases, and preserve that imported identity for caller-side field reads, or
+directly, through a nested method call, or through a ternary expression
+construct and return the same imported UDT identity for caller-side field reads.
 Method side effects, recursive methods, unsupported parameter families,
 mismatched UDT parameter identity, unknown receivers, and alias-qualified
 imported method receiver type mismatches are rejected during semantic analysis.
@@ -801,12 +812,17 @@ varip ticks = 0
 The current executable `varip` subset supports global and local scalar
 `int`/`float`/`bool`/`string`/`color`/`na` declarations plus scalar typed-array
 ids for float, int, bool, string, and color arrays. It also supports explicitly
-typed same-local scalar-field UDT values initialized from `na`, same-UDT
-constructors, or fixture-backed same-UDT ternary/switch/if/for expressions, plus
-direct-constructor-inferred same-local scalar-field UDT values such as
-`varip p = Point.new(close)`, and scalar-field imported UDT values initialized
-from `na`, same-imported constructors, or direct constructor inference such as
-`varip p = lib.Point.new(close)`, same-local scalar-field UDT array ids,
+typed same-local scalar-tree UDT values initialized from `na`, same-UDT
+constructors, same-identity aliases, or fixture-backed same-UDT
+ternary/switch/if/for/for-in/while expressions, including nested same-local
+scalar-tree Wrapper values, plus direct-constructor-inferred
+or direct-alias-inferred same-local scalar-tree UDT values such as
+`varip p = Point.new(close)` or `varip p = existingPoint`, and scalar-tree
+imported UDT values initialized from `na`, same-imported constructors,
+same-imported aliases, same-imported ternary/switch/if/for/for-in/while
+expressions, including nested same-imported scalar-tree Wrapper values, direct
+constructor inference, or direct same-imported alias inference such as
+`varip p = lib.Point.new(close)`, same-local scalar-tree UDT array ids,
 runtime-owned scalar maps, and
 `matrix<float>`/`matrix<int>`/`matrix<bool>`/`matrix<string>`/`matrix<color>`
 ids. Local scalar declaration sites
@@ -828,6 +844,11 @@ caches, callsite state, and history reads continue to roll back to the confirmed
 baseline. A confirmed update also seeds from the latest forming `varip` values
 before executing and then commits the resulting values into the confirmed
 runtime for the next bar.
+Committed and realtime forming history reads from supported UDT `varip` values
+use the same confirmed-history baseline, including representative same-local and
+same-imported nested scalar-tree Wrapper values initialized from ternary
+expressions. Single `chart.point` value `varip` history reads use that same
+confirmed-history baseline for constant and dynamic offsets.
 
 Skipped local declaration sites do not initialize before their first executed
 reach. Assigning a `varip` scalar typed-array slot to another variable preserves
@@ -855,7 +876,7 @@ runtime errors.
 `array.fill` replaces all elements by default, or a half-open `[index_from,
 index_to)` window when bounds are supplied; invalid ranges are ignored.
 `array.includes`, `array.indexof`, and `array.lastindexof` use structural
-equality for same-local scalar-field UDT arrays and same-imported scalar-field
+equality for same-local scalar-tree UDT arrays and same-imported scalar-tree
 UDT arrays constructed through `array.from`; `array.indexof` and
 `array.lastindexof` return `-1` when no matching value is present. Numeric
 binary search helpers expect int/float arrays sorted ascending;
@@ -885,7 +906,7 @@ array; otherwise `na` element positions are preserved.
 biased population estimate by default; with `biased=false`, they use the
 sample denominator and return `na` when fewer than two numeric values remain.
 `array.sort` orders int/float/string arrays in place and supports same-local
-scalar-field UDT arrays plus same-imported scalar-field UDT arrays constructed
+scalar-tree UDT arrays plus same-imported scalar-tree UDT arrays constructed
 through `array.from` when a compile-time `sort_field` names an int, float, or
 string field. It sorts ascending by default and accepts `order.ascending` or
 `order.descending`. `na` values and empty string elements sort last in ascending
@@ -894,7 +915,7 @@ array containing the source indexes in sorted order, follows the same order and
 special-value rules, and leaves the source array unchanged. `array.reverse`
 reverses any supported typed array in place.
 `array.join` converts supported scalar array elements and fixture-backed
-same-local or same-imported scalar-field UDT array elements to string with the
+same-local or same-imported scalar-tree UDT array elements to string with the
 default numeric format, uses `,` as the default separator, and returns an empty
 string for empty arrays. Color elements render as normalized integer color
 values. Label and line arrays are intentionally not accepted by
@@ -944,7 +965,9 @@ the historical id does not mutate the current map or the retained history.
 Scalar map `varip` slots retain their map ids and backing stores across repeated
 realtime forming updates. Read-only map helpers can consume map ids passed
 through user-defined function parameters when semantic analysis can carry the
-caller's scalar map template to the parameter. Bare map declarations and
+caller's scalar map template to the parameter. Direct scalar-map `for...in`
+iteration visits entries in insertion order; a single loop variable receives the
+key, while `[key, value]` receives the key and value. Bare map declarations and
 non-scalar map templates remain unsupported.
 
 For matrices, the stored value is a runtime-owned matrix id. The current
@@ -1505,14 +1528,16 @@ array mutation inside requested expressions remain unsupported.
 
 ### `varip`
 
-Scalar, scalar typed-array, same-local scalar-field UDT array, explicitly typed
-same-local or same-imported scalar-field UDT, and direct-constructor-inferred
-same-local or same-imported scalar-field UDT `varip` declarations use
-the intrabar persistence model described above. The explicitly typed UDT subset
-includes `na`, same-UDT constructors, and fixture-backed same-UDT ternary/switch/if/for
-initializers. Drawing object ids are rejected before runtime because their
+Scalar, scalar typed-array, single `chart.point` value, same-local scalar-tree
+UDT array, explicitly typed same-local or same-imported scalar-tree UDT, and
+direct-constructor-inferred or direct-alias-inferred same-local or same-imported
+scalar-tree UDT `varip` declarations use the intrabar persistence model
+described above. The explicitly typed UDT subset
+includes `na`, same-UDT constructors, same-identity aliases, and fixture-backed
+same-UDT ternary/switch/if/for/for-in/while initializers, including nested
+same-local and same-imported scalar-tree Wrapper values. Drawing object ids are rejected before runtime because their
 object stores are not part of the `varip` handoff; tuples,
-non-constructor-inferred UDT values, nested-field UDT values, non-scalar UDT
+broader untyped non-constructor-inferred UDT expressions, nested-field UDT values, non-scalar UDT
 array `varip`, and other value families remain rejected until their
 realtime state partitions are designed. The closed Phase I boundary for the
 original scalar and scalar
@@ -1569,6 +1594,8 @@ Rules:
 - Positive offsets refer to previous committed bars.
 - Out-of-range references return `na` unless the feature later needs stricter
   runtime errors for selected cases.
+- Dynamic `na` offsets return `na`, but still evaluate the source expression on
+  the current bar so expression and UDF-result series histories stay aligned.
 - Dynamic offsets should be supported only after constant offsets are correct.
   Runtime profiles count dynamic history reads whose requested offset exceeds
   the effective retained depth in `historyDynamicRetentionMisses` and expose

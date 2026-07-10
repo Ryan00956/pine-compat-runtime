@@ -1,0 +1,13 @@
+//@version=5
+indicator("KC dynamic length")
+length = bar_index % 2 + 2
+[middle, upper, lower] = ta.kc(close, length, 2)
+[named_middle, named_upper, named_lower] = ta.kc(source=close, length=length, mult=2, useTrueRange=false)
+plot(middle)
+plot(upper)
+plot(lower)
+plot(named_middle)
+plot(named_upper)
+plot(named_lower)
+plot(ta.kcw(close, length, 2))
+plot(ta.kcw(source=close, length=length, mult=2, useTrueRange=false))

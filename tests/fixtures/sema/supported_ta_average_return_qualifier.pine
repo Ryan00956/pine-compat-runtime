@@ -1,0 +1,16 @@
+//@version=6
+indicator("Supported ta average return qualifier")
+
+sma_value = ta.sma(close, 3)
+ema_value = ta.ema(close, 3)
+dema_value = ta.dema(close, 3)
+tema_value = ta.tema(close, 3)
+rma_value = ta.rma(close, 3)
+rsi_value = ta.rsi(close, 3)
+
+plot(sma_value)
+plot(ema_value)
+plot(dema_value)
+plot(tema_value)
+plot(rma_value)
+plot(rsi_value)

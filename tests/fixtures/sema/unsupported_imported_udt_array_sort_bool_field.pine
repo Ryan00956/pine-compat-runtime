@@ -1,0 +1,7 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT array sort bool field")
+
+values = array.from(lib.BoolOffset.new(close > open))
+array.sort(values, order.ascending, "value")
+plot(close)

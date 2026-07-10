@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported ta oscillator return qualifier")
+
+plot(ta.mfi(close, 3))
+plot(ta.stoch(close, high, low, 3))
+plot(ta.wpr(3))

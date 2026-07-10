@@ -5,7 +5,25 @@ indicator("Realtime imported UDT array varip")
 varip array<lib.Point> points = array.from(lib.Point.new(close))
 points.push(lib.Point.new(close))
 
+varip array<lib.Wrapper> wrappers = array.from(lib.Wrapper.new(lib.Point.new(close + 100)))
+wrappers.push(lib.Wrapper.new(lib.Point.new(close + 100)))
+
+varip array<lib.Point> new_points = array.new<lib.Point>(1, lib.Point.new(close + 200))
+new_points.push(lib.Point.new(close + 210))
+
+varip array<lib.Wrapper> new_wrappers = array.new<lib.Wrapper>(1, lib.Wrapper.new(lib.Point.new(close + 300)))
+new_wrappers.push(lib.Wrapper.new(lib.Point.new(close + 310)))
+
 last = points.last()
+wrapper_last = wrappers.last()
+new_last = new_points.last()
+new_wrapper_last = new_wrappers.last()
 
 plot(points.size(), "size")
 plot(last.x, "last_x")
+plot(wrappers.size(), "wrapper_size")
+plot(wrapper_last.nested.x, "wrapper_last_x")
+plot(new_points.size(), "new_size")
+plot(new_last.x, "new_last_x")
+plot(new_wrappers.size(), "new_wrapper_size")
+plot(new_wrapper_last.nested.x, "new_wrapper_last_x")

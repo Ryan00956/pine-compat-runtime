@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported ta.percentile na percentage")
+nearest = ta.percentile_nearest_rank(close, 3, na)
+linear = ta.percentile_linear_interpolation(close, 3, na)
+plot(nz(nearest) + nz(linear))

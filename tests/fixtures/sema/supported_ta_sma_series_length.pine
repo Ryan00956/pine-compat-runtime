@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported ta.sma series length")
+length = bar_index % 2 + 2
+plot(ta.sma(close, length))
+plot(ta.sma(source=close, length=length))

@@ -1,0 +1,5 @@
+//@version=6
+base = 75
+count = base
+indicator("Supported indicator named const max labels count", max_labels_count=count)
+plot(close)

@@ -1,13 +1,15 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use pine_syntax::{Diagnostic, ExprKind, Span};
 
 use super::model::{
-    ExportInfo, ImportRef, ModuleInfo, ModuleMethodInfo, ModuleUserTypeFieldInfo,
-    ModuleUserTypeIdentity, module_user_type_fields_match,
+    ExportInfo, ImportRef, ModuleInfo, ModuleMethodInfo, ModuleMethodParamInfo,
+    ModuleUserTypeFieldInfo, ModuleUserTypeIdentity, imported_user_type_scalar_field_type,
+    module_user_type_fields_match,
 };
 use super::visit_statement_exprs;
 use crate::source_graph::SourceId;
+use crate::types::array_kind_from_element_type_name;
 
 pub(super) fn validate_alias_access(
     root: &ModuleInfo,
@@ -49,7 +51,7 @@ pub(super) fn validate_alias_access(
                     ExportInfo::UserType {
                         identity, fields, ..
                     } => {
-                        if imported_udt_constructor_is_supported(parts, fields) {
+                        if imported_udt_constructor_is_supported(module, parts, fields) {
                             return;
                         }
                         if let Some(user_type) = module.user_types.get(symbol) {
@@ -66,8 +68,16 @@ pub(super) fn validate_alias_access(
                     }
                 }
             }
+            if module.private_symbols.contains(symbol) {
+                diagnostics.push(Diagnostic::error(
+                    "E_IMPORT_PRIVATE_SYMBOL",
+                    format!("`{}` is not exported by `{}`", parts.join("."), key),
+                    expr.span,
+                ));
+                return;
+            }
             if let Some(user_type) = module.user_types.get(symbol) {
-                if imported_udt_constructor_is_supported(parts, &user_type.fields) {
+                if imported_udt_constructor_is_supported(module, parts, &user_type.fields) {
                     return;
                 }
                 debug_assert!(user_type.span.start <= user_type.span.end);
@@ -83,7 +93,17 @@ pub(super) fn validate_alias_access(
                     &user_type.fields,
                     expr.span,
                 ));
-            } else if let Some(method) = module.methods.get(symbol) {
+            } else if let Some((_, method)) =
+                module.methods.iter().find(|((_, method_name), method)| {
+                    method_name == symbol && imported_method_access_is_supported(module, method)
+                })
+            {
+                debug_assert!(imported_method_access_is_supported(module, method));
+            } else if let Some((_, method)) = module
+                .methods
+                .iter()
+                .find(|((_, method_name), _)| method_name == symbol)
+            {
                 if imported_method_access_is_supported(module, method) {
                     return;
                 }
@@ -92,9 +112,7 @@ pub(super) fn validate_alias_access(
                     imported_method_unsupported_message(parts[0].as_str(), symbol, method),
                     expr.span,
                 ));
-            } else if module.private_symbols.contains(symbol)
-                || module.functions.contains_key(symbol)
-            {
+            } else if module.functions.contains_key(symbol) {
                 diagnostics.push(Diagnostic::error(
                     "E_IMPORT_PRIVATE_SYMBOL",
                     format!("`{}` is not exported by `{}`", parts.join("."), key),
@@ -143,7 +161,7 @@ fn imported_udt_unsupported_diagnostic(
     let field_note = if fields.iter().all(|field| field.pine_type.is_some()) {
         "scalar-field metadata is available, but constructor/value identity is not implemented"
     } else {
-        "non-scalar or deferred field metadata remains unsupported"
+        "non-scalar or unresolved field metadata remains unsupported"
     };
     Diagnostic::error(
         "E_IMPORT_UNSUPPORTED_UDT",
@@ -159,23 +177,83 @@ fn imported_method_access_is_supported(module: &ModuleInfo, method: &ModuleMetho
     let Some(identity) = &method.receiver_identity else {
         return false;
     };
+    let Some(ExportInfo::UserType { fields, .. }) = module.exports.get(&identity.name) else {
+        return false;
+    };
+    debug_assert!(
+        module
+            .user_types
+            .get(&identity.name)
+            .is_some_and(|user_type| { module_user_type_fields_match(fields, &user_type.fields) })
+    );
+    method
+        .params
+        .iter()
+        .all(|param| imported_method_param_access_is_supported(module, param))
+}
+
+fn imported_method_param_access_is_supported(
+    module: &ModuleInfo,
+    param: &ModuleMethodParamInfo,
+) -> bool {
+    if param.type_name.starts_with("array<") && param.type_name.ends_with('>') {
+        let element_type = &param.type_name["array<".len()..param.type_name.len() - 1];
+        return array_kind_from_element_type_name(element_type).is_some()
+            || exported_scalar_tree_user_type(module, element_type);
+    }
+    imported_user_type_scalar_field_type(&param.type_name).is_some()
+        || exported_user_type(module, &param.type_name)
+}
+
+fn exported_user_type(module: &ModuleInfo, type_name: &str) -> bool {
     matches!(
-        module.exports.get(&identity.name),
+        module.exports.get(type_name),
         Some(ExportInfo::UserType { .. })
-    ) && module
-        .user_types
-        .get(&identity.name)
-        .is_some_and(|user_type| {
-            user_type
-                .fields
-                .iter()
-                .all(|field| field.pine_type.is_some())
-        })
+    )
+}
+
+fn exported_scalar_tree_user_type(module: &ModuleInfo, type_name: &str) -> bool {
+    let Some(ExportInfo::UserType { fields, .. }) = module.exports.get(type_name) else {
+        return false;
+    };
+    debug_assert!(
+        module
+            .user_types
+            .get(type_name)
+            .is_some_and(|user_type| module_user_type_fields_match(fields, &user_type.fields))
+    );
+    module_user_type_fields_are_scalar_tree(module, fields, &mut HashSet::new())
 }
 
 fn imported_udt_constructor_is_supported(
+    module: &ModuleInfo,
     parts: &[String],
     fields: &[ModuleUserTypeFieldInfo],
 ) -> bool {
-    parts.len() == 3 && parts[2] == "new" && fields.iter().all(|field| field.pine_type.is_some())
+    parts.len() == 3
+        && parts[2] == "new"
+        && module_user_type_fields_are_scalar_tree(module, fields, &mut HashSet::new())
+}
+
+fn module_user_type_fields_are_scalar_tree(
+    module: &ModuleInfo,
+    fields: &[ModuleUserTypeFieldInfo],
+    seen: &mut HashSet<String>,
+) -> bool {
+    fields.iter().all(|field| {
+        if field.pine_type.is_some() {
+            return true;
+        }
+        if !seen.insert(field.type_name.clone()) {
+            return false;
+        }
+        let supported = module
+            .user_types
+            .get(&field.type_name)
+            .is_some_and(|user_type| {
+                module_user_type_fields_are_scalar_tree(module, &user_type.fields, seen)
+            });
+        seen.remove(&field.type_name);
+        supported
+    })
 }

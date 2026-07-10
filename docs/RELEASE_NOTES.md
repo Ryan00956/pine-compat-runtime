@@ -2,7 +2,472 @@
 
 ## Unreleased
 
-- Added fixture-backed same-imported scalar-field UDT `array.from` construction
+- Fixed UDT array chained field mutation index validation so `series int`
+  indexes are rejected with the same simple-int diagnostic as `array.get`.
+- Added a fixture-backed diagnostic for imported UDT array chained field
+  mutation, keeping that writeback path explicitly unsupported instead of
+  reporting an unknown UDT element.
+- Added fixture-backed local UDT constructor and method-result call-result
+  method receivers, including `Point.new(...).method(...)` scalar returns,
+  chained UDT returns, named arguments, and caller-side history reads from
+  scalar and UDT method-returned values.
+- Added fixture-backed imported UDT method-result receiver history identity, so
+  chains such as `lib.Point.new(...).make(...).shift(...)[n]` can reuse the
+  same pure series identity as their `max_bars_back` source.
+- Extended local and imported method-result receiver history identity through
+  block-bodied pure methods that return a local UDT constructor alias.
+- Added fixture-backed local UDF-returned UDT argument history identity, so
+  repeated pure UDF calls such as `read(make(...))[n]` can reuse the
+  `max_bars_back` source series.
+- Added imported exported-UDF-returned UDT argument history coverage, so
+  `read(lib.typedPoint(...))[n]` style pure calls retain the same series
+  identity as their bounded source.
+- Added CLI profile gates for UDT/UDF/method `max_bars_back(source, N)` identity
+  paths, covering local nested UDT aliases and imported alias-qualified method
+  calls.
+- Added fixture-backed pure `if`/`switch`/`for`/`while` expression identity
+  reuse plus pure `for...in` over inline `array.from(...)` identity reuse for
+  per-series `max_bars_back(source, N)` bounds and matching dynamic history reads.
+- Added fixture-backed pure `fixnan(...)` expression identity reuse for
+  per-series `max_bars_back(source, N)` bounds and matching dynamic history
+  reads.
+- Added fixture-backed pure `str.tonumber(...)` and `str.length(...)`
+  expression identity reuse for per-series `max_bars_back(source, N)` bounds and
+  matching dynamic history reads.
+- Added fixture-backed bare scalar map declaration inference for
+  `map name = map.new<K, V>()`, preserving the inferred template through
+  method-style map reads while keeping template-less `map name = na` rejected.
+- Added fixture-backed alias-qualified imported UDT method coverage for
+  same-imported scalar-tree UDT values read directly from arrays, with mismatched
+  local/imported element receiver identities still rejected.
+- Restricted `bgcolor.show_last` and `barcolor.show_last` to const/input int
+  values, with fixture coverage for accepted `input.int` counts and rejected
+  simple integer counts.
+- Restricted `fill.show_last` to const/input int values, with fixture coverage
+  for accepted `input.int` counts and rejected simple integer counts.
+- Restricted `plotcandle.show_last` to const/input int values, with fixture
+  coverage for accepted `input.int` counts and rejected simple integer counts.
+- Restricted `plotbar.show_last` to const/input int values, with fixture
+  coverage for accepted `input.int` counts and rejected simple integer counts.
+- Restricted `plotarrow.show_last` to const/input int values, with fixture
+  coverage for accepted `input.int` counts and rejected simple integer counts.
+- Restricted `plotshape.show_last` to const/input int values, with fixture
+  coverage for accepted `input.int` counts and rejected simple integer counts.
+- Restricted `plotchar.show_last` to const/input int values, with fixture
+  coverage for accepted `input.int` counts and rejected simple integer counts.
+- Restricted `plot.show_last` to const/input int values, with fixture coverage
+  for accepted `input.int` counts and rejected simple integer counts.
+- Restricted `plot.histbase` to const/input numeric values, with fixture
+  coverage for accepted `input.float` bases and rejected simple/series numeric
+  bases.
+- Restricted `plot.linewidth` to const/input int values, with fixture coverage
+  for accepted `input.int` widths and rejected simple integer widths.
+- Restricted `hline.linewidth` to const/input int values, with fixture coverage
+  for accepted `input.int` widths and rejected simple integer widths.
+- Restricted `hline.color` to const/input color values, with fixture coverage
+  for accepted `input.color` levels and rejected dynamic series colors.
+- Added internal `AtMostInput*` scalar acceptors and shared expected/got
+  diagnostics for future const/input string, bool, and color parameter
+  signature work.
+- Added HIR and runtime/profile coverage for `max_bars_back` when `N` is
+  returned by an imported exported pure UDF, including declaration-level
+  `indicator`/`strategy` bounds and per-series helper calls.
+- Added semantic coverage for imported exported-UDF final `for`/`for...in`/`while`
+  qualifier propagation, including `switch` block-arm final loop returns, through
+  simple-compatible `ta.sma` length callsites.
+- Improved same-local UDT `array.push` value-kind diagnostics so non-UDT values
+  report the expected UDT value family with the actual Pine type.
+- Avoid false positive negative-history diagnostics for `for...in` expression
+  bodies when the iterable is statically empty, including empty copied arrays,
+  empty concatenated arrays, empty sliced arrays, empty `array.abs`,
+  `array.standardize`, and `array.sort_indices` results, empty matrices, and
+  empty transposed/sliced matrices plus empty matrix row/column and
+  eigenvalue arrays, eigenvector matrices, inverse matrices, and
+  pseudo-inverse, Kronecker-product, matrix-multiplication matrix, array, and
+  scalar results, matrix-power, and matrix-difference matrix and scalar
+  results.
+- Detect negative history offsets returned from statically non-empty `for...in`
+  expression results, including array/matrix constructor sizes, copied
+  array/matrix iterables, concatenated array iterables, statically non-empty
+  sliced array windows, `array.abs`, `array.standardize`, and
+  `array.sort_indices` result arrays, transposed matrix iterables, statically
+  non-empty matrix submatrix windows, matrix row/column and eigenvalue arrays,
+  matrix eigenvector matrices, inverse matrices, pseudo-inverse matrices, and
+  Kronecker-product, matrix-multiplication matrix, array, and scalar results,
+  matrix-power, and matrix-difference matrix and scalar results, and loop-body
+  local aliases.
+- Detect negative history offsets through `matrix.mult` and `matrix.diff`
+  `for...in` iterable results when a scalar operand is a loop-body local alias.
+- Detect negative history offsets returned from statically non-empty
+  `str.split` `for...in` expression results, while avoiding false positives for
+  statically empty empty-separator splits.
+- Detect negative history offsets returned from the fixed-slot
+  `ta.pivot_point_levels` `for...in` expression result array.
+- Detect negative history offsets returned through loop-body tuple aliases in
+  statically bounded for expressions.
+- Detect negative history offsets selected by logical condition-switch arms
+  involving values returned from statically bounded for expressions.
+- Cover const float selector-form switch qualifier narrowing, including UDF
+  parameter const-key propagation and tuple destructuring.
+- Detect negative history offsets selected by int/float/bool/string/color comparisons
+  involving values returned from statically bounded for expressions.
+- Detect negative history offsets selected by int/float/bool/string/color
+  selector-switch keys returned from statically bounded for expressions.
+- Detect negative history offsets selected by bool conditions returned from
+  statically bounded for expressions, including loop-body local aliases.
+- Detect negative history offsets returned from statically bounded for
+  expression results, including loop-body local aliases.
+- Detect negative history offsets returned through branch-local tuple aliases in
+  if and switch block results.
+- Detect negative history offsets returned through branch-local aliases in if
+  and switch block results.
+- Detect negative history offsets produced by equal-valued ternary, if, and
+  switch branches even when the controlling input condition is not constant.
+- Added semantic guard coverage for direct `array.push` calls that try to append
+  a local UDT value into a same-named imported scalar-tree UDT array.
+- Added semantic guard coverage for method-style `array.push` calls that try to
+  append a local UDT value into a same-named imported scalar-tree UDT array.
+- Added semantic guard coverage for direct `array.push` calls that try to append
+  an imported UDT value into a same-named local scalar-tree UDT array.
+- Added semantic guard coverage for method-style `array.push` calls that try to
+  append an imported UDT value into a same-named local scalar-tree UDT array.
+- Added semantic guard coverage for direct `array.set` calls that try to
+  replace a same-named imported scalar-tree UDT array element with a local UDT
+  value.
+- Added semantic guard coverage for method-style `array.set` calls that try to
+  replace a same-named imported scalar-tree UDT array element with a local UDT
+  value.
+- Added semantic guard coverage for direct `array.set` calls that try to replace
+  a same-named local scalar-tree UDT array element with an imported UDT value.
+- Added semantic guard coverage for method-style `array.set` calls that try to
+  replace a same-named local scalar-tree UDT array element with an imported UDT
+  value.
+- Added semantic guard coverage for direct `array.insert` calls that try to
+  insert a local UDT value into a same-named imported scalar-tree UDT array.
+- Added semantic guard coverage for method-style `array.insert` calls that try
+  to insert a local UDT value into a same-named imported scalar-tree UDT array.
+- Added semantic guard coverage for direct `array.insert` calls that try to
+  insert an imported UDT value into a same-named local scalar-tree UDT array.
+- Added semantic guard coverage for method-style `array.insert` calls that try
+  to insert an imported UDT value into a same-named local scalar-tree UDT array.
+- Added semantic guard coverage for direct `array.unshift` calls that try to
+  prepend a local UDT value into a same-named imported scalar-tree UDT array.
+- Added semantic guard coverage for method-style `array.unshift` calls that try
+  to prepend a local UDT value into a same-named imported scalar-tree UDT array.
+- Added semantic guard coverage for direct `array.unshift` calls that try to
+  prepend an imported UDT value into a same-named local scalar-tree UDT array.
+- Added semantic guard coverage for method-style `array.unshift` calls that try
+  to prepend an imported UDT value into a same-named local scalar-tree UDT array.
+- Added semantic guard coverage for direct `array.fill` calls that try to
+  replace same-named imported scalar-tree UDT array elements with a local UDT
+  value.
+- Added semantic guard coverage for method-style `array.fill` calls that try to
+  replace same-named imported scalar-tree UDT array elements with a local UDT
+  value.
+- Added semantic guard coverage for direct `array.fill` calls that try to
+  replace same-named local scalar-tree UDT array elements with an imported UDT
+  value.
+- Added semantic guard coverage for method-style `array.fill` calls that try to
+  replace same-named local scalar-tree UDT array elements with an imported UDT
+  value.
+- Added semantic guard coverage for direct `array.includes` calls that try to
+  search a same-named imported scalar-tree UDT array with a local UDT value.
+- Added semantic guard coverage for method-style `array.includes` calls that
+  try to search a same-named imported scalar-tree UDT array with a local UDT
+  value.
+- Added semantic guard coverage for direct `array.includes` calls that try to
+  search a same-named local scalar-tree UDT array with an imported UDT value.
+- Added semantic guard coverage for method-style `array.includes` calls that
+  try to search a same-named local scalar-tree UDT array with an imported UDT
+  value.
+- Added semantic guard coverage for direct `array.indexof` calls that try to
+  search a same-named imported scalar-tree UDT array with a local UDT value.
+- Added semantic guard coverage for method-style `array.indexof` calls that try
+  to search a same-named imported scalar-tree UDT array with a local UDT value.
+- Added semantic guard coverage for direct `array.indexof` calls that try to
+  search a same-named local scalar-tree UDT array with an imported UDT value.
+- Added semantic guard coverage for method-style `array.indexof` calls that try
+  to search a same-named local scalar-tree UDT array with an imported UDT value.
+- Added semantic guard coverage for direct `array.lastindexof` calls that try
+  to search a same-named imported scalar-tree UDT array with a local UDT value.
+- Added semantic guard coverage for method-style `array.lastindexof` calls that
+  try to search a same-named imported scalar-tree UDT array with a local UDT
+  value.
+- Added semantic guard coverage for direct `array.lastindexof` calls that try
+  to search a same-named local scalar-tree UDT array with an imported UDT value.
+- Added semantic guard coverage for method-style `array.lastindexof` calls that
+  try to search a same-named local scalar-tree UDT array with an imported UDT
+  value.
+- Added semantic guard coverage for direct `array.concat` calls that try to
+  concatenate same-named imported and local scalar-tree UDT arrays.
+- Added semantic guard coverage for method-style `array.concat` calls that try
+  to concatenate same-named imported and local scalar-tree UDT arrays.
+- Added semantic guard coverage for direct `array.concat` calls that try to
+  concatenate same-named local and imported scalar-tree UDT arrays.
+- Added semantic guard coverage for method-style `array.concat` calls that try
+  to concatenate same-named local and imported scalar-tree UDT arrays.
+- Added semantic guard coverage for imported scalar-tree UDT bool fields used
+  as dynamic history offsets, including receiver-style and alias-qualified
+  method passthrough values.
+- Added semantic guard coverage for imported nested scalar-tree UDT bool fields
+  used as dynamic history offsets, including receiver-style and alias-qualified
+  method passthrough values.
+- Added semantic guard coverage for constant-expression negative history
+  offsets.
+- Added semantic guard coverage for prior named const alias-chain negative
+  history offsets.
+- Added semantic guard coverage for prior named const expression negative
+  history offsets.
+- Added semantic guard coverage for prior named const ternary negative history
+  offsets.
+- Added syntax-level folding and semantic guard coverage for prior named const
+  if-expression negative history offsets.
+- Added semantic guard coverage for prior named const comparison-driven ternary
+  negative history offsets.
+- Added syntax-level folding and semantic guard coverage for prior named const
+  numeric if- and switch-result comparison-driven ternary negative history
+  offsets.
+- Added semantic guard coverage for prior named const string-comparison-driven
+  ternary negative history offsets.
+- Added syntax-level folding and semantic guard coverage for prior named const
+  string if- and switch-result comparison-driven ternary negative history
+  offsets.
+- Added semantic guard coverage for prior named const color-comparison-driven
+  ternary negative history offsets.
+- Added syntax-level folding and semantic guard coverage for prior named const
+  color if- and switch-result comparison-driven ternary negative history
+  offsets.
+- Added semantic guard coverage for prior named const bool-comparison-driven
+  ternary negative history offsets.
+- Added syntax-level folding and semantic guard coverage for prior named const
+  bool if- and switch-result-driven ternary negative history offsets.
+- Added semantic guard coverage for prior named const logical-expression-driven
+  ternary negative history offsets.
+- Added semantic guard coverage for prior named const selector-switch negative
+  history offsets.
+- Added syntax-level folding and semantic guard coverage for prior named const
+  selector-switch block-arm negative history offsets.
+- Added semantic guard coverage for prior named const condition-switch negative
+  history offsets.
+- Added semantic guard coverage for imported scalar-tree UDT string fields used
+  as dynamic history offsets, including receiver-style and alias-qualified
+  method passthrough values.
+- Added semantic guard coverage for imported nested scalar-tree UDT string
+  fields used as dynamic history offsets, including receiver-style and
+  alias-qualified method passthrough values.
+- Added semantic guard coverage for imported UDT array declarations, `[]`
+  aliases, `varip` declarations, and `varip` `[]` aliases whose imported UDT
+  metadata contains non-scalar fields.
+- Added semantic guard coverage for `array.new<lib.Type>()` when imported UDT
+  metadata contains non-scalar fields.
+- Added semantic guard coverage for `array.from(lib.Type.new(...))` when
+  imported UDT metadata contains non-scalar fields.
+- Added semantic guard coverage for imported UDT value history and `varip`
+  declarations on non-scalar UDT metadata, and aligned imported scalar-tree
+  checks so drawing-object fields are not treated as scalar-tree UDT fields.
+- Added fixture-backed dynamic history offsets produced by integer-valued
+  ternary, if, switch, for, for-in, while, and built-in call results.
+- Fixed `for` loop counter qualifier propagation so a series-qualified `by`
+  step promotes the counter seen inside statement and expression loop bodies.
+- Improved expression-context `if`, `switch`, `for`, and `while` return
+  diagnostics so side-effect-only or loop-control endings consistently require
+  a value-producing expression.
+- Improved `map.put_all` template mismatch diagnostics so source and target
+  key/value kinds use canonical Pine type names.
+- Improved ternary and switch branch type mismatch diagnostics so branch kinds
+  use canonical Pine type names.
+- Improved user-method parameter mismatch diagnostics so expected parameter
+  types use canonical Pine type names.
+- Improved local and imported UDT constructor field type diagnostics so they use
+  canonical Pine type names instead of Rust enum names.
+- Improved same-local UDT `array.new<T>` initial value diagnostics so non-UDT
+  values now report the expected UDT identity alongside the actual type.
+- Added runtime-backed UDF and user-method qualifier propagation coverage for
+  scalar and simple-string values returned through expression, block-local,
+  final loop, branch-loop, switch-block, nested-loop, and while-result forms,
+  plus imported exported-UDF passthrough/block-local returns and imported method
+  receiver-style and alias-qualified passthrough/block-local/final-loop returns.
+- Added runtime-backed scalar typed declaration qualifier coverage for non-`na`
+  initializer preservation, typed-`na` reassignment inheritance, UDF-local typed
+  `na` reassignment, and later series promotion.
+- Added runtime-backed const-condition qualifier narrowing coverage for
+  literal/named/equality-derived `if`, ternary, switch, tuple, UDF, nested UDF,
+  and user-method length flows into simple-only TA consumers.
+- Added runtime-backed imported UDT typed-`na` value history coverage for
+  exported UDTs whose scalar-tree metadata depends on private library UDTs.
+- Added fixture-backed named same-imported scalar-tree UDT array typed UDF and
+  method arguments, plus caller-side history reads from returned imported UDT
+  array elements.
+- Added fixture-backed receiver-style and alias-qualified imported UDT method
+  calls with named/reordered non-receiver arguments and caller-side history
+  reads from named-argument UDT returns.
+- Added fixture-backed rejection for alias-qualified imported UDT method calls
+  whose receiver is not the first argument.
+- Added fixture-backed diagnostics for imported UDT method receiver and
+  parameter field mutation side-effect boundaries.
+- Fixed imported UDT method metadata so the same method name can be exported
+  for different scalar-tree UDT receiver types.
+- Added fixture-backed `chart.point` typed-flow declaration and value history
+  coverage for values returned from `for...in` expressions.
+- Added negative coverage for non-integer and negative dynamic history offsets
+  produced by `for...in` expression results.
+- Added fixture-backed runtime and realtime typed same-local UDT `varip`
+  initialization from `for...in` and `while` expression results.
+- Extended typed same-local UDT `varip` coverage to nested scalar-tree Wrapper
+  values initialized from ternary, switch, if, for, for-in, and while expression
+  results, with historical and realtime intrabar handoff.
+- Added committed and realtime confirmed-bar history coverage for representative
+  nested scalar-tree Wrapper `varip` values initialized from same-local ternary
+  expression results.
+- Extended same-local scalar-tree UDT array `varip` coverage to nested
+  scalar-tree elements initialized through `array.from(...)` and
+  `array.new<T>()`, with historical and realtime backing-store handoff.
+- Added fixture-backed runtime coverage for `for...in`-produced dynamic series
+  history offsets, including first-bar predicates and `na` dynamic offsets.
+- Added fixture-backed user-defined method qualifier rejection for final-if
+  branches or switch block arms that return series-controlled final loops when
+  consumed by simple-only arguments.
+- Added fixture-backed user-defined method qualifier rejection for final
+  `for`, `for...in`, and `while` returns promoted by series loop controls when
+  consumed by simple-only arguments.
+- Added fixture-backed user-defined method qualifier propagation for scalar and
+  simple-string returns through expression, block-local, final-if, loop, and
+  switch return shapes, including `ta.sma` length and `timeframe.in_seconds`
+  callsites.
+- Added fixture-backed user-defined method returned history offsets and
+  method-returned scalar series values, including returned `na` offsets and
+  constant/dynamic/`na` history reads from method call results.
+- Added fixture-backed caller-side history reads from local UDT UDF and method
+  returned values, including passthrough, constructor, and control-flow returns.
+- Added fixture-backed caller-side history reads from local nested scalar-tree
+  UDT UDF and method returned values.
+- Added fixture-backed history offsets produced by local and imported
+  scalar-tree UDT integer fields, including nested local/imported fields,
+  local UDF/method-returned values, and imported UDF/method-returned values.
+- Added fixture-backed rejection for non-integer and negative history offsets
+  produced by local/imported UDT fields, including imported direct/nested fields
+  and imported UDF passthrough/constructor-returned plus receiver-style or
+  alias-qualified method-returned direct/nested fields.
+- Added fixture-backed scalar, object-id, `chart.point`, same-local
+  scalar-tree UDT array, and same-imported scalar-tree UDT array typed
+  user-defined function parameters for `array<T>` and `T[]`, including
+  `array<int>`, `float[]`, `array<chart.point>`, and `line[]` parameter syntax,
+  typed argument rejection, and history reads from UDF results.
+- Added fixture-backed scalar, `chart.point`, scalar-array, object-id-array,
+  chart.point-array, same-local scalar-tree UDT array, and same-imported
+  scalar-tree UDT array typed user-defined method parameters, including
+  receiver-style and alias-qualified imported method calls plus typed argument
+  rejection.
+- Added fixture-backed scalar and `chart.point` typed user-defined function
+  parameters, including `chart.point` constructor returns, read-only
+  passthrough, and history reads from the typed returned point value.
+- Added fixture-backed same-local UDT typed user-defined function parameters,
+  including constructor returns, read-only passthrough, caller-side field reads,
+  and history reads from the typed returned UDT value.
+- Added fixture-backed imported exported functions with same-imported UDT typed
+  parameters, preserving imported UDT identity through passthrough,
+  constructor-return, caller-side field reads, and history reads.
+- Added fixture-backed `chart.point` UDF and user-defined method value flow for
+  constructor returns and read-only passthrough, including history reads from
+  the returned point value.
+- Added fixture-backed explicit `chart.point` typed declarations initialized
+  from `if`, `switch`, `for`, and `while` expression results, plus typed `na`
+  reassignment.
+- Added fixture-backed ordinary `var chart.point` realtime rollback, covering
+  field-mutation rollback between repeated forming updates.
+- Added fixture-backed single `chart.point` value history for `if`, `switch`,
+  `for`, and `while` expression results, including dynamic `na` offsets and
+  retained previous point values after current-point mutation.
+- Added fixture-backed repeated dynamic same-bar single `chart.point` value
+  history reads for direct point values,
+  `if`/`switch`/`for`/`for...in`/`while` expression point results, and UDF- or
+  method-returned point values, proving sibling historical point copies remain
+  independent after field mutation.
+- Added fixture-backed single `chart.point` value `varip` declarations, including
+  historical var-like execution and realtime intrabar field-mutation persistence.
+- Added fixture-backed committed and realtime confirmed-bar history reads for
+  single `chart.point` value `varip` declarations with constant and dynamic
+  offsets.
+- Added fixture-backed dynamic `na` offset history reads for UDF-returned and
+  method-returned single `chart.point` values.
+- Added fixture-backed dynamic `na` offset history reads for single
+  `chart.point` values produced by `if`, `for`, `for...in`, and `while`
+  expression results, matching the existing switch-expression coverage.
+- Added fixture-backed field reads from dynamically selected historical
+  `array<chart.point>` and chart.point slice snapshots.
+- Added fixture-backed repeated dynamic same-bar `array<chart.point>` and
+  chart.point slice history reads to prove sibling historical copies remain
+  independent after mutation.
+- Added fixture-backed content reads from dynamically selected historical
+  drawing-id array and slice snapshots for label, line, box, linefill, polyline,
+  and table ids.
+- Added fixture-backed repeated dynamic same-bar label, line, box, linefill,
+  polyline, and table array/slice history reads to prove sibling historical copies remain
+  independent after slot replacement.
+- Added fixture-backed field reads from dynamically selected historical
+  same-local and same-imported scalar-tree UDT array and slice snapshots.
+- Added fixture-backed repeated dynamic same-bar same-imported scalar-tree UDT
+  array and slice history reads to prove sibling historical copies remain
+  independent after UDT slot replacement.
+- Added fixture-backed content and shape reads from dynamically selected
+  scalar array/slice, while-expression array, matrix-shape, and
+  while-expression matrix history snapshots.
+- Added fixture-backed repeated dynamic same-bar scalar array and slice history
+  reads to prove sibling historical copies remain independent after mutation.
+- Added fixture-backed repeated dynamic same-bar matrix history reads to prove
+  sibling historical matrix copies remain independent after mutation and
+  reshape.
+- Added fixture-backed single `chart.point` value history, covering constant
+  offsets, dynamic `na` offsets, and retained previous point values after
+  mutating the current point.
+- Added fixture-backed scalar map key-only direct `for...in` iteration, where
+  statement and expression forms bind the single loop variable to the map key
+  while preserving existing `[key, value]` iteration and size-change runtime
+  rejection.
+- Allowed `ta.sma` to accept integer-compatible dynamic `length` arguments
+  while preserving non-integer length and non-series source rejection.
+- Allowed `ta.bb` and `ta.bbw` to accept integer-compatible dynamic `length`
+  arguments while preserving non-integer length and non-numeric multiplier
+  rejection.
+- Allowed `ta.kc` and `ta.kcw` to accept integer-compatible dynamic `length`
+  arguments while preserving non-integer length, non-simple multiplier, and
+  non-bool `useTrueRange` rejection.
+- Allowed `math.sum` to accept integer-compatible dynamic `length` arguments
+  while preserving non-integer length rejection.
+- Allowed `ta.cmo`, `ta.cci`, `ta.cog`, and `ta.mfi` to accept
+  integer-compatible dynamic `length` arguments while preserving non-integer
+  length rejection.
+- Allowed `ta.alma` and `ta.linreg` to accept integer-compatible dynamic
+  `length` arguments while preserving non-integer length and simple-only
+  secondary parameter rejection.
+- Allowed `ta.vwma`, `ta.wma`, and `ta.hma` to accept integer-compatible
+  dynamic `length` arguments while preserving non-integer length rejection.
+- Allowed `ta.stoch` and `ta.wpr` to accept integer-compatible dynamic `length`
+  arguments while preserving non-integer length rejection.
+- Allowed `ta.percentile_nearest_rank` and
+  `ta.percentile_linear_interpolation` to accept integer-compatible dynamic
+  `length` arguments while preserving non-integer length and series-percentage
+  rejection.
+- Allowed `ta.correlation` and `ta.covariance` to accept integer-compatible
+  dynamic `length` arguments while preserving non-integer length rejection.
+- Allowed `ta.median`, `ta.mode`, and `ta.percentrank` to accept
+  integer-compatible dynamic `length` arguments while preserving non-integer
+  length rejection.
+- Allowed `ta.stdev` and `ta.variance` to accept integer-compatible dynamic
+  `length` arguments while preserving non-integer length rejection.
+- Allowed `ta.range` and `ta.dev` to accept integer-compatible dynamic
+  `length` arguments while preserving non-integer length rejection.
+- Allowed `ta.percentile_nearest_rank` and
+  `ta.percentile_linear_interpolation` to accept simple numeric `percentage`
+  arguments while preserving series-percentage semantic rejection.
+- Added fixture-backed `max_bars_back(source, N)` per-series retention for
+  matching `nz(source)` and named/reordered `nz(x=source, replacement=value)`
+  dynamic history reads, including profile miss diagnostics when source-level
+  bounds are exceeded.
+- Added fixture-backed `max_bars_back(source, N)` per-series retention when the
+  helper is declared inside `array.set`/`matrix.set` method argument blocks
+  before a dynamic history read.
+- Added fixture-backed same-imported scalar-tree UDT `array.from` construction
   with `array.size`, namespace/method `array.get`, namespace/method
   `array.first`/`array.last` field reads, namespace/method
   `array.set`/`set()` replacement field reads, namespace/method
@@ -19,22 +484,97 @@
   field reads, `array.reverse`/`reverse()` reordered field reads,
   `array.slice`/`slice()` window field reads, and
   `array.concat`/`concat()` appended field reads, plus
-  statement/expression/index-value `for...in` value-copy field reads, while
-  `array.new<lib.Type>` remains rejected.
-- Added fixture-backed same-imported scalar-field UDT typed array declarations
+  statement/expression/index-value `for...in` value-copy field reads.
+- Added fixture-backed same-imported scalar-tree UDT `array.new<lib.Type>`
+  construction, including empty arrays, seeded initial values, typed
+  declarations, nested scalar-tree imported UDT elements, post-construction
+  mutation helpers, returned-element helpers, copy/window helpers, structural
+  search, join, sort/sort_indices, and clear.
+- Extended imported scalar-tree UDT array history coverage so arrays constructed
+  via `array.new<lib.Type>()` participate in committed snapshots, first-bar
+  `na` predicates, dynamic `na` offsets, mutation isolation, and `var` array
+  history reads.
+- Added fixture-backed same-imported scalar-tree UDT typed array declarations
   for `array<lib.Type>` and `lib.Type[]`, with `na` initialization, later
   same-identity `array.from` assignment, copy/get/push reads, and statement
   `for...in` value-copy field reads. Non-scalar imported UDT array declarations
   remain rejected.
-- Added fixture-backed same-imported scalar-field UDT array `varip`
-  declarations with historical and realtime intrabar backing-store handoff.
+- Added fixture-backed same-imported scalar-tree UDT array `varip`
+  declarations initialized through `array.from(...)` or
+  `array.new<lib.Type>(...)`, with historical and realtime intrabar
+  backing-store handoff.
   Non-scalar imported UDT array `varip` declarations remain rejected.
+- Extended scalar-tree imported UDT value `varip` coverage to same-imported
+  ternary, switch, if, for, for-in, and while expression initializers with
+  historical and realtime intrabar handoff.
+- Extended scalar-tree imported UDT value `varip` coverage to nested Wrapper
+  values initialized from same-imported ternary, switch, if, for, for-in, and
+  while expression results, with historical and realtime intrabar handoff.
+- Added committed and realtime confirmed-bar history coverage for representative
+  nested scalar-tree imported Wrapper `varip` values initialized from
+  same-imported ternary expression results.
 - Added fixture-backed imported scalar-field UDT typed-array `slice()` and
   `concat()` coverage, keeping the array helper matrix aligned with the
   imported UDT array subset.
-- Added fixture-backed scalar-field imported UDT value history with caller-side
-  field reads, while local UDT value history and broader imported UDT history
-  remain rejected.
+- Added fixture-backed scalar-tree imported UDT value history with caller-side
+  field reads, while direct private imported UDT access and imported UDT value history outside the scalar-tree metadata subset
+  remains rejected.
+- Added fixture-backed repeated dynamic same-bar scalar-tree local and imported
+  UDT value history reads, proving sibling historical UDT copies remain
+  independent after root-field replacement.
+- Extended local and imported scalar-tree UDT flow-result history fixtures to
+  prove repeated dynamic same-bar sibling copies stay independent after
+  mutating direct Point if/switch/for/for-in/while results and nested Wrapper
+  if/switch/for/for-in/while result history values.
+- Extended local and imported typed-UDF UDT history fixtures to prove repeated
+  dynamic same-bar sibling copies stay independent for returned Point and
+  Wrapper values.
+- Extended local and imported direct/nested UDF passthrough UDT history fixtures
+  to prove repeated dynamic same-bar sibling copies stay independent for
+  returned Point and Wrapper values.
+- Extended local and imported direct/nested UDF constructor-returned UDT history
+  fixtures to prove repeated dynamic same-bar sibling copies stay independent
+  for returned Point and Wrapper values.
+- Completed local and imported method direct/nested passthrough and
+  direct/nested constructor-returned UDT history fixtures to prove repeated
+  dynamic same-bar sibling copies stay independent for returned Point and
+  Wrapper values.
+- Extended scalar-tree UDT field-produced dynamic history offset fixtures to
+  cover local/imported UDF passthrough/constructor-returned direct/nested
+  Settings values and local/imported method passthrough/constructor-returned
+  direct/nested Settings values, including imported receiver-style and
+  alias-qualified method calls.
+- Extended non-integer UDT field-produced history offset diagnostics to cover
+  local and imported UDF- and method-returned direct/nested values with
+  representative float, bool, and string offset fields, including local/imported
+  UDF direct/nested passthrough/constructor-returned fields, local method
+  direct/nested passthrough/constructor-returned fields plus method-returned
+  bool/string fields, and imported receiver-style or alias-qualified method
+  direct/nested passthrough/constructor-returned fields.
+- Extended negative UDT field-produced dynamic history offset regressions to
+  cover local and imported UDF- and method-returned direct/nested values,
+  including local/imported UDF direct/nested passthrough and
+  constructor-returned fields plus local/imported method direct/nested
+  passthrough and constructor-returned fields, with imported method coverage
+  including receiver-style and alias-qualified calls.
+- Added fixture-backed committed history reads for scalar-tree local and
+  imported UDT `varip` values, including constant offsets, dynamic `na` offsets,
+  scalar Point ternary-/switch-/if-/for-/for...in-/while-initialized and
+  direct-constructor- and direct-alias-inferred values, and nested scalar-tree field reads, with
+  nested Wrapper coverage for ternary-, switch-, if-, for-, for...in-,
+  while-initialized, direct-constructor-inferred, and direct-alias-inferred values.
+- Added semantic-analysis fixtures for same-local and same-imported scalar-tree
+  UDT value history over direct values, aliases, and nested Wrapper values with
+  constant and dynamic offsets.
+- Extended realtime UDT `varip` fixtures so current values persist intrabar
+  while UDT history reads still come from confirmed bars during repeated forming
+  updates, including scalar Point ternary-/switch-/if-/for-/for...in-/while-
+  initialized plus direct-constructor- and direct-alias-inferred values, switch-, if-, for-,
+  for...in-, and while-initialized nested Wrapper values plus
+  direct-constructor-inferred and direct-alias-inferred nested Wrapper values.
+- Added semantic-analysis fixtures for same-local and same-imported scalar-tree
+  UDT `varip` declarations initialized through explicit types, direct
+  constructor inference, and direct alias inference.
 - Added fixture-backed method-local scalar-field UDT mutation for local and
   imported pure methods, while keeping receiver/parameter/global method field
   side effects rejected.
@@ -43,15 +583,45 @@
   alias, final-if alias, final-for alias, and nested-method passthrough returns
   plus same-imported-identity constructor returns, using imported method receiver
   identity while keeping wrong receiver types rejected.
-- Added fixture-backed same-local scalar-field UDT array chained field mutation
+- Extended alias-qualified imported UDT method fixtures to cover direct
+  constructor receiver expressions with named/reordered non-receiver arguments
+  and direct constructor nested UDT arguments.
+- Added fixture-backed local and imported UDT method final-`for...in` alias
+  passthrough returns, covering both receiver and same-identity parameter
+  aliases.
+- Added fixture-backed imported UDT UDF final-if and final-for alias
+  passthrough returns, including nested passthrough chains.
+- Added fixture-backed imported UDT UDF block-local alias passthrough returns,
+  including nested passthrough chains.
+- Added fixture-backed imported UDT UDF constructor returns through ternary,
+  `if`, `for`, `for...in`, `while`, and `switch` result shapes, including
+  nested constructor-helper calls.
+- Added fixture-backed imported UDT method constructor returns through `if`,
+  `for`, `for...in`, `while`, and `switch` result shapes, including typed
+  imported return locals and nested scalar-tree Wrapper returns.
+- Added fixture-backed caller-side history reads from imported UDT method
+  passthrough and constructor-return values.
+- Added fixture-backed caller-side history reads from imported UDT UDF
+  passthrough and constructor-return values, including nested constructor-helper
+  calls.
+- Added fixture-backed dynamic and `na` offset history reads for local and
+  imported scalar-tree UDT values.
+- Added fixture-backed caller-side history reads from same-imported-identity
+  UDT `if`, `switch`, `for`, `for...in`, and `while` expression results.
+- Added fixture-backed caller-side history reads from same-local UDT `if`,
+  `switch`, `for`, `for...in`, and `while` expression results.
+- Added fixture-backed same-local scalar-tree UDT array chained field mutation
   for `array.get(points, index).field := value` and
   `points.get(index).field := value`, including slice-window parent writeback.
   UDF-local chained UDT array mutation remains rejected as a function side
   effect.
-- Added fixture-backed same-local scalar-field UDT array `varip` support for
+- Added fixture-backed same-local scalar-tree UDT array `varip` support for
   `array<T>` and `T[]` declarations. Realtime forming updates now carry the
   retained array id together with its backing store and UDT element metadata,
   while non-scalar UDT array `varip` declarations remain rejected.
+- Added fixture-backed repeated dynamic same-bar same-local scalar-tree UDT
+  array and slice history reads, proving sibling historical copies remain
+  independent after UDT slot replacement.
 - Added fixture-backed matrix `varip` support for runtime-owned
   `matrix<float>`, `matrix<int>`, `matrix<bool>`, `matrix<string>`, and
   `matrix<color>` ids. Realtime forming updates now carry matrix `varip` slots
@@ -69,7 +639,10 @@
   aliases lower to the same runtime calls. Ordinary realtime rollback of
   map-store mutations is fixture-backed. Scalar `map<K,V>` typed declarations
   accept compatible or `na` initialization and same-template reassignment.
-  Scalar map history snapshots now return independent historical copies.
+  Scalar map history snapshots now return independent historical copies, including
+  dynamic `na` offset predicates plus key and size reads from dynamically selected
+  historical maps, and repeated same-bar history reads remain independent when a
+  sibling historical map copy is mutated.
   Scalar map `varip` now retains map ids and backing stores across realtime
   forming updates. Read-only map helpers now work through user-defined function
   parameters when the caller supplies a known scalar map template. Bare map
@@ -81,7 +654,7 @@
   `array<int>`, `array<float>`, `array<bool>`, `array<string>`,
   `array<color>`, `array<label>`, `array<line>`, `array<linefill>`,
   `array<polyline>`, `array<box>`, `array<table>`, `array<chart.point>`, and
-  same-local scalar-field UDT array iterables plus runtime-owned matrix row
+  same-local scalar-tree UDT array iterables plus runtime-owned matrix row
   iterables, returning the loop body's last expression from the last completed
   iteration and `na` for zero-iteration or typed-`na` collections, with `break`
   returning the previous result and `continue` skipping the current result
@@ -123,10 +696,10 @@
   `array<int>` row/column insertion data and `matrix<int>` typed declarations
   with compatible matrix or `na` initializers.
 - Added fixture-backed numeric-array `matrix.mult(values, vector)`,
-  `values.mult(vector)`, and `matrix.mult(vector, values)` support, treating
-  arrays as column or row vectors and returning independent `array<float>`
-  dot-product results with `na` propagation and semantic rejection for
-  array-pair or non-numeric arrays.
+  `values.mult(vector)`, `matrix.mult(vector, values)`, and
+  `matrix.mult(left_vector, right_vector)` support, treating arrays as column
+  or row vectors and returning independent `array<float>` dot-product results
+  with `na` propagation and semantic rejection for non-numeric arrays.
 - Added fixture-backed left-scalar namespace `matrix.diff(scalar, values)`
   support for runtime-owned float or int matrices, returning independent
   same-shape `matrix<float>` results that preserve subtraction operand order
@@ -445,58 +1018,58 @@
   values, with shallow-id loop locals, cell writes, deletion, and `table.all`
   visibility.
 - Added fixture-backed statement-form `for...in` iteration for same-local
-  scalar-field UDT arrays, with value-copy loop locals, field reads, and local
+  scalar-tree UDT arrays, with value-copy loop locals, field reads, and local
   field mutation that does not write back to the source slot.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<int>` values, with a zero-based `series int` index loop-local while
-  keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<float>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT and map/matrix iteration
+  while keeping imported or non-scalar-tree UDT and map/matrix iteration
   unsupported at that slice.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<bool>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  while keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<string>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  while keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<color>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  while keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<label>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  while keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<line>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  while keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<linefill>` values, reusing the zero-based `series int` index
-  loop-local while keeping imported or non-scalar-field UDT and map/matrix
+  loop-local while keeping imported or non-scalar-tree UDT and map/matrix
   iteration unsupported at that slice.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<polyline>` values, reusing the zero-based `series int` index
-  loop-local while keeping imported or non-scalar-field UDT and map/matrix
+  loop-local while keeping imported or non-scalar-tree UDT and map/matrix
   iteration unsupported at that slice.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<box>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  while keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<table>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  while keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<chart.point>` values, reusing the zero-based `series int` index
   loop-local while preserving value-copy point locals whose field mutation does
   not write back to the source array slot.
 - Added fixture-backed statement-form `for index, value in values` iteration for
-  same-local scalar-field UDT arrays, reusing the zero-based `series int` index
+  same-local scalar-tree UDT arrays, reusing the zero-based `series int` index
   loop-local while preserving value-copy UDT locals whose field mutation does not
   write back to the source array slot.
 - Added a semantic fixture for rejecting non-array `for...in` iterables while
@@ -552,7 +1125,7 @@
 - Added fixture-backed direct chained UDT array slot field mutation for
   same-local scalar-field arrays, including `points.get(0).x := value` and
   `array.get(points, 0).x := value`.
-- Added fixture-backed same-local scalar-field UDT array element writeback
+- Added fixture-backed same-local scalar-tree UDT array element writeback
   semantics: field mutation on a value read from an array stays local until an
   explicit same-UDT `array.set`/`set()` writes it back.
 - Added fixture-backed local pure UDF calls that consume same-local
@@ -561,16 +1134,16 @@
 - Added fixture-backed local pure UDT method calls on same-local scalar-field
   UDT values read from UDT arrays into local variables.
 - Added fixture-backed `array.join` and `join()` support for same-local
-  scalar-field UDT arrays using positional `TypeName(field0, field1, ...)`
+  scalar-tree UDT arrays using positional `TypeName(field0, field1, ...)`
   element rendering, while keeping general `str.tostring(UDT)` unsupported.
 - Added fixture-backed `array.fill` and `fill()` support for same-local
-  scalar-field UDT arrays while keeping mismatched UDT fill values rejected.
+  scalar-tree UDT arrays while keeping mismatched UDT fill values rejected.
 - Added fixture-backed `array.includes`, `array.indexof`, and
-  `array.lastindexof` support for same-local scalar-field UDT arrays using
+  `array.lastindexof` support for same-local scalar-tree UDT arrays using
   structural equality over scalar fields, while keeping mismatched UDT
   identities rejected.
 - Added fixture-backed `array<T>` and `T[]` declarations for same-local
-  scalar-field UDT arrays, with `na` initialization, same-UDT reassignment, and
+  scalar-tree UDT arrays, with `na` initialization, same-UDT reassignment, and
   UDT identity checks for mismatched array assignments.
 - Added fixture-backed `array.sort_indices` support for same-local scalar-field
   UDT arrays by compile-time `int`, `float`, or `string` `sort_field`, returning
@@ -592,6 +1165,9 @@
   reassigned from same-local-UDT `for` expressions.
 - Added fixture-backed top-level typed UDT declarations initialized and
   reassigned from same-local-UDT `for` expressions.
+- Added fixture-backed typed UDT `var` declarations initialized from
+  same-local-UDT `for...in` and `while` expressions, including realtime
+  rollback coverage.
 - Added fixture-backed typed UDT `var` declarations initialized from
   same-local-UDT `for` expressions, including realtime rollback coverage.
 - Added fixture-backed typed UDT `var` declarations initialized from
@@ -636,6 +1212,12 @@
   return values from additional local UDT parameter fields through ternary,
   switch, final if/else, and final for bodies, with matching semantic analyzer
   regression tests and execution-semantics documentation.
+- Added fixture-backed UDF-local and method-local typed UDT declarations
+  initialized and reassigned through same-local-UDT `for...in` and `while`
+  expressions.
+- Added fixture-backed scalar-tree imported UDT typed declarations initialized
+  and reassigned through same-imported-identity `for...in` expression results,
+  with a matching identity-mismatch diagnostic fixture.
 - Bumped machine-readable analysis reports to `schemaVersion: 3` and added
   top-level `inputs` metadata for executable scripts, exposing each `input*`
   call's call-site id, function name, and literal title when available.

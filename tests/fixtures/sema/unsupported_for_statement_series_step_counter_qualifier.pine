@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported for statement series step counter qualifier")
+
+step = close > open ? 1 : 1
+for i = 0 to 2 by step
+    plot(ta.ema(close, i))

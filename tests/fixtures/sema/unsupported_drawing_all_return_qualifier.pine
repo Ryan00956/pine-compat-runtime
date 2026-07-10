@@ -1,0 +1,27 @@
+//@version=6
+indicator("Unsupported drawing all return qualifier")
+
+label_count(label[] values) =>
+    array.size(values)
+
+line_count(line[] values) =>
+    array.size(values)
+
+linefill_count(array<linefill> values) =>
+    array.size(values)
+
+polyline_count(array<polyline> values) =>
+    array.size(values)
+
+box_count(box[] values) =>
+    array.size(values)
+
+table_count(array<table> values) =>
+    array.size(values)
+
+plot(line_count(label.all))
+plot(label_count(line.all))
+plot(linefill_count(polyline.all))
+plot(polyline_count(linefill.all))
+plot(table_count(box.all))
+plot(box_count(table.all))

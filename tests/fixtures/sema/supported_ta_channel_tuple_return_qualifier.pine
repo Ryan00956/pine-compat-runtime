@@ -1,0 +1,12 @@
+//@version=6
+indicator("Supported ta channel tuple return qualifier")
+
+[bb_basis, bb_upper, bb_lower] = ta.bb(close, 3, 2)
+[kc_basis, kc_upper, kc_lower] = ta.kc(close, 3, 2)
+
+plot(bb_basis)
+plot(bb_upper)
+plot(bb_lower)
+plot(kc_basis)
+plot(kc_upper)
+plot(kc_lower)

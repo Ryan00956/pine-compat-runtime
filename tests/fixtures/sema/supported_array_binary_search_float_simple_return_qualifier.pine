@@ -1,0 +1,18 @@
+//@version=6
+indicator("Supported array binary_search float simple return qualifier")
+
+floats = array.from(1.0, 2.5, 3.0, 3.0, 5.5)
+
+exact_index = array.binary_search(floats, 3.0)
+left_index = floats.binary_search_leftmost(3.0)
+right_index = array.binary_search_rightmost(floats, 3.0)
+method_exact_index = floats.binary_search(3.0)
+namespace_left_index = array.binary_search_leftmost(floats, 3.0)
+method_right_index = floats.binary_search_rightmost(3.0)
+
+plot(ta.sma(close, exact_index + 1))
+plot(ta.ema(close, left_index + 1))
+plot(ta.wma(close, right_index + 1))
+plot(ta.rma(close, method_exact_index + 1))
+plot(ta.sma(open, namespace_left_index + 1))
+plot(ta.ema(open, method_right_index + 1))

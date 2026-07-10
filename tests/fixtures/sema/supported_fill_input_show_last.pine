@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported fill Input Show Last")
+
+count = input.int(5, "Show last")
+top = plot(high)
+bottom = plot(low)
+
+fill(top, bottom, show_last=count)

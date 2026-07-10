@@ -1,0 +1,19 @@
+//@version=6
+indicator("Unsupported matrix row col array return qualifier")
+
+int_matrix = matrix.new<int>(2, 2, 1)
+float_matrix = matrix.new<float>(2, 2, 1.0)
+bool_matrix = matrix.new<bool>(2, 2, false)
+string_matrix = matrix.new<string>(2, 2, "")
+color_matrix = matrix.new<color>(2, 2, color.red)
+
+matrix.add_row(float_matrix, 0, matrix.row(int_matrix, 0))
+matrix.add_col(float_matrix, 0, int_matrix.col(0))
+matrix.add_row(int_matrix, 0, matrix.row(float_matrix, 0))
+matrix.add_col(int_matrix, 0, float_matrix.col(0))
+matrix.add_row(string_matrix, 0, matrix.row(bool_matrix, 0))
+matrix.add_col(string_matrix, 0, bool_matrix.col(0))
+matrix.add_row(color_matrix, 0, matrix.row(string_matrix, 0))
+matrix.add_col(color_matrix, 0, string_matrix.col(0))
+matrix.add_row(bool_matrix, 0, matrix.row(color_matrix, 0))
+matrix.add_col(bool_matrix, 0, color_matrix.col(0))

@@ -1,0 +1,12 @@
+indicator("Profile dynamic series history matrix.set column block arg miss", max_bars_back=10)
+src = close
+offset = bar_index == 0 ? 0 : 3
+values = matrix.new<float>(1, 1, 0.0)
+values.set(0, switch
+    true =>
+        length = 2
+        max_bars_back(src, length)
+        0
+    => 0
+, src[offset])
+plot(values.get(0, 0))

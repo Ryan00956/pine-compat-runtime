@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported timeframe.from_seconds simple return qualifier")
+
+seconds = input.int(3600, "Seconds")
+const_tf = timeframe.from_seconds(3600)
+daily_tf = timeframe.from_seconds(timeframe.in_seconds("D"))
+tf = timeframe.from_seconds(seconds)
+
+plot(time(const_tf))
+plot(time(daily_tf))
+plot(time(tf))

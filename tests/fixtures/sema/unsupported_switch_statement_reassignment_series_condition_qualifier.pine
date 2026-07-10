@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported switch statement reassignment series condition qualifier")
+
+length = input.int(2, "Length")
+selected = length
+switch
+    close > open =>
+        selected := length
+
+plot(ta.ema(close, selected))

@@ -1,0 +1,18 @@
+//@version=5
+indicator("Supported label.new named const options")
+xloc_base = xloc.bar_index
+xloc_mode = xloc_base
+yloc_base = yloc.abovebar
+yloc_mode = yloc_base
+style_base = label.style_label_down
+label_style = style_base
+align_base = text.align_center
+text_align = align_base
+font_base = font.family_monospace
+font_family = font_base
+size_base = size.normal
+label_size = size_base
+format_base = text.format_bold
+label_format = format_base + text.format_italic
+label.new(bar_index, high, "High", xloc=xloc_mode, yloc=yloc_mode, style=label_style, textalign=text_align, text_font_family=font_family, size=label_size, text_formatting=label_format)
+plot(close)

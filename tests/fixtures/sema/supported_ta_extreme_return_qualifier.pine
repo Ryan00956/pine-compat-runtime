@@ -1,0 +1,12 @@
+//@version=6
+indicator("Supported ta extreme return qualifier")
+
+highest_value = ta.highest(close, 3)
+lowest_value = ta.lowest(low, 3)
+highest_offset = ta.highestbars(high, 3)
+lowest_offset = ta.lowestbars(low, 3)
+
+plot(highest_value)
+plot(lowest_value)
+plot(highest_offset)
+plot(lowest_offset)

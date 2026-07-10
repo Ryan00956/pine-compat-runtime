@@ -1,0 +1,6 @@
+//@version=5
+indicator("TA named reordered pairwise stats")
+plot(ta.correlation(length=3, source2=high, source1=close))
+plot(ta.covariance(length=3, source2=high, source1=close))
+plot(ta.correlation(source2=10, length=3, source1=close))
+plot(ta.covariance(source2=10, length=3, source1=close))

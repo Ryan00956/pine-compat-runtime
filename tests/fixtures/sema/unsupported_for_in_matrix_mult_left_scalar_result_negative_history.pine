@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported for-in matrix.mult left scalar result negative history")
+right = matrix.new<float>(1, 0, 0)
+values = matrix.mult(close, right)
+length = for row in values
+    -1
+plot(close[length])

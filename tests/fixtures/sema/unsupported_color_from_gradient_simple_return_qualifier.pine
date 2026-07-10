@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported color.from_gradient simple return qualifier")
+values = array.new_int(1, 2)
+value = array.size(values)
+level_color = color.from_gradient(value, 1, 3, color.red, color.green)
+hline(2, color=level_color)

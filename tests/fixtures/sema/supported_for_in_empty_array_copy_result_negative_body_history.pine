@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported for-in empty array.copy result negative body history")
+source = array.new<int>(0)
+values = array.copy(source)
+length = for value in values
+    -1
+plot(close[length])

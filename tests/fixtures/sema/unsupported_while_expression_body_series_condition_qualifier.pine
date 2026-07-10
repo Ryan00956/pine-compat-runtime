@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported while-expression body series condition qualifier")
+length = input.int(2, "Length")
+selected = while false
+    while close > open
+        length
+plot(ta.ema(close, selected))

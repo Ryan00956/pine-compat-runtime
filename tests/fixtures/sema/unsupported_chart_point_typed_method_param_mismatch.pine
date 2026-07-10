@@ -1,0 +1,11 @@
+//@version=5
+indicator("Unsupported chart point typed method param mismatch")
+
+type Tool
+    float base
+
+method pointPrice(Tool tool, chart.point point) =>
+    tool.base + point.price
+
+tool = Tool.new(close)
+plot(tool.pointPrice(close))

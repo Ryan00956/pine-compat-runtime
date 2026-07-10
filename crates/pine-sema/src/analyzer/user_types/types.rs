@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use pine_ir::{PineType, ValueKind};
 use pine_syntax::{Expr, Span};
@@ -13,7 +13,7 @@ pub(crate) struct UserTypeInfo {
     pub(crate) fields: Vec<UserTypeFieldInfo>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct UserTypeIdentity {
     pub(crate) source_id: SourceId,
     pub(crate) name: String,
@@ -71,7 +71,7 @@ pub(crate) enum ImportedUdtConstructorArgError {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ImportedUdtConstructorArgPlan {
-    pub(crate) scalar_fields: bool,
+    pub(crate) supported_fields: bool,
     pub(crate) field_arg_indices: Vec<usize>,
 }
 
@@ -91,7 +91,7 @@ pub(crate) fn classify_user_type_array_element_names(
     let user_type = user_types.get(first)?;
     debug_assert_eq!(user_type.identity.source_id, SourceId::root());
     debug_assert_eq!(user_type.identity.name, *first);
-    if user_type.fields.iter().all(is_scalar_user_type_array_field) {
+    if local_user_type_has_scalar_tree_fields(user_types, &user_type.name, &mut HashSet::new()) {
         Some(UserTypeArrayElementInference::SameScalarLocal(
             first.clone(),
         ))
@@ -102,14 +102,31 @@ pub(crate) fn classify_user_type_array_element_names(
     }
 }
 
+fn local_user_type_has_scalar_tree_fields(
+    user_types: &HashMap<String, UserTypeInfo>,
+    type_name: &str,
+    seen: &mut HashSet<String>,
+) -> bool {
+    if !seen.insert(type_name.to_owned()) {
+        return false;
+    }
+    let Some(user_type) = user_types.get(type_name) else {
+        return false;
+    };
+    let supported = user_type.fields.iter().all(|field| {
+        if let Some(field_type_name) = &field.user_type_name {
+            local_user_type_has_scalar_tree_fields(user_types, field_type_name, seen)
+        } else {
+            is_scalar_user_type_array_field(field)
+        }
+    });
+    seen.remove(type_name);
+    supported
+}
+
 fn is_scalar_user_type_array_field(field: &UserTypeFieldInfo) -> bool {
-    field.user_type_name.is_none()
-        && matches!(
-            field.pine_type.kind,
-            ValueKind::Int
-                | ValueKind::Float
-                | ValueKind::Bool
-                | ValueKind::String
-                | ValueKind::Color
-        )
+    matches!(
+        field.pine_type.kind,
+        ValueKind::Int | ValueKind::Float | ValueKind::Bool | ValueKind::String | ValueKind::Color
+    )
 }

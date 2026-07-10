@@ -351,12 +351,12 @@ syminfo.prefix(symbol: simple string) -> simple string
 syminfo.ticker(symbol: simple string) -> simple string
 ticker.heikinashi(tickerid: simple string) -> simple string
 ticker.inherit(from_tickerid: simple string, symbol: simple string) -> simple string
-ticker.kagi(tickerid: simple string, style: simple string, param: simple numeric) -> simple string
-ticker.linebreak(tickerid: simple string, number_of_lines: simple int) -> simple string
+ticker.kagi(tickerid: simple string, style: simple string, param: simple numeric-compatible) -> simple string
+ticker.linebreak(tickerid: simple string, number_of_lines: simple integer-compatible) -> simple string
 ticker.new(prefix: simple string, ticker: simple string, session?: simple string, adjustment?: simple string, settlement_as_close?: simple string, backadjustment?: simple string) -> simple string
 ticker.modify(tickerid: simple string, session?: simple string, adjustment?: simple string, settlement_as_close?: simple string, backadjustment?: simple string) -> simple string
-ticker.pointfigure(tickerid: simple string, source: simple string, style: simple string, param: simple numeric, reversal: simple int) -> simple string
-ticker.renko(tickerid: simple string, style: simple string, param: simple numeric) -> simple string
+ticker.pointfigure(tickerid: simple string, source: simple string, style: simple string, param: simple numeric-compatible, reversal: simple integer-compatible) -> simple string
+ticker.renko(tickerid: simple string, style: simple string, param: simple numeric-compatible) -> simple string
 ticker.standard(symbol: simple string) -> simple string
 ```
 
@@ -387,15 +387,17 @@ outside this subset.
 
 `ticker.kagi(tickerid, style, param)` currently implements the simple-string
 Kagi ticker ID constructor subset for style strings such as `"ATR"` or
-`"Traditional"` and finite simple numeric parameters. It returns a modified
-ticker ID that preserves the standard symbol for `ticker.standard()`. Actual
-Kagi OHLC data remains host/request-provider-owned through `request.security()`.
+`"Traditional"` and simple numeric-compatible parameters. Explicit `na` param
+propagates `na`. It returns a modified ticker ID that preserves the standard
+symbol for `ticker.standard()`. Actual Kagi OHLC data remains
+host/request-provider-owned through `request.security()`.
 
 `ticker.linebreak(tickerid, number_of_lines)` currently implements the
-simple-string Line Break ticker ID constructor subset with a simple integer line
-count. It returns a modified ticker ID that preserves the standard symbol for
-`ticker.standard()`. Actual Line Break OHLC data remains
-host/request-provider-owned through `request.security()`.
+simple-string Line Break ticker ID constructor subset with a simple
+integer-compatible line count. Explicit `na` line count propagates `na`. It
+returns a modified ticker ID that preserves the standard symbol for
+`ticker.standard()`. Actual Line Break OHLC data remains host/request-provider-
+owned through `request.security()`.
 
 `ticker.new(prefix, ticker)` currently implements the default ticker constructor
 subset and returns `PREFIX:TICKER`. Supplying the optional `session` and
@@ -418,17 +420,18 @@ settlement-as-close, and back-adjusted data remain outside this subset.
 `ticker.pointfigure(tickerid, source, style, param, reversal)` currently
 implements the simple-string Point & Figure ticker ID constructor subset for
 source strings such as `"hl"` or `"close"`, style strings such as `"ATR"` or
-`"Traditional"`, finite simple numeric parameters, and simple integer reversal
-amounts. It returns a modified ticker ID that preserves the standard symbol for
+`"Traditional"`, simple numeric-compatible parameters, and simple
+integer-compatible reversal amounts. Explicit `na` param or reversal propagates
+`na`. It returns a modified ticker ID that preserves the standard symbol for
 `ticker.standard()`. Actual Point & Figure OHLC data remains
 host/request-provider-owned through `request.security()`.
 
 `ticker.renko(tickerid, style, param)` currently implements the simple-string
 Renko ticker ID constructor subset for style strings such as `"ATR"` or
-`"Traditional"` and finite simple numeric parameters. It returns a modified
-ticker ID that preserves the standard symbol for `ticker.standard()`. Actual
-Renko OHLC data remains host/request-provider-owned through
-`request.security()`.
+`"Traditional"` and simple numeric-compatible parameters. Explicit `na` param
+propagates `na`. It returns a modified ticker ID that preserves the standard
+symbol for `ticker.standard()`. Actual Renko OHLC data remains
+host/request-provider-owned through `request.security()`.
 
 `ticker.standard(symbol)` currently implements the simple-string standard ticker
 ID subset. Plain `PREFIX:TICKER` values are returned unchanged, and known
@@ -582,7 +585,7 @@ Type casts:
 ```text
 int(x: int|float|bool|na) -> int with same qualifier
 float(x: int|float|bool|na) -> float with same qualifier
-bool(x: int|float|bool|na) -> bool with same qualifier
+bool(x: int|float|bool|na) -> bool with argument qualifier
 string(x: int|float|bool|string|na) -> string with same qualifier
 color(x: color|na) -> color with same qualifier
 box(x: box|na) -> box
@@ -595,10 +598,12 @@ table(x: table|na) -> table
 
 `int` truncates finite floats toward zero and maps bools to `1`/`0`.
 `float` maps ints and bools to numeric floats. `bool` maps zero and `na` to
-`false`, and nonzero numeric values to `true`. `int(na)` and `float(na)`
-return `na`. `string` maps scalar values using the default numeric text format
-and returns `na` for `string(na)`. `color` preserves color values and returns
-`na` for `color(na)`. `box` preserves box ids and returns `na` for `box(na)`.
+`false`, nonzero numeric values to `true`, and returns a bool with the argument
+qualifier through the same `BoolFromArg` rule used by `na(x)`. `int(na)` and
+`float(na)` return `na`. `string` maps scalar values using the default numeric
+text format and returns `na` for `string(na)`. `color` preserves color values and
+returns `na` for `color(na)`. `box` preserves box ids and returns `na` for
+`box(na)`.
 `label` preserves label ids and returns `na` for `label(na)`. `line` preserves
 line ids and returns `na` for `line(na)`. `linefill` preserves linefill ids and
 returns `na` for `linefill(na)`. `polyline` preserves polyline ids and returns
@@ -686,9 +691,15 @@ strategy.opentrades.max_drawdown(trade_num: series/simple numeric) -> series flo
 Only metadata arguments needed by the output and history-retention model should
 be accepted in Phase 1. Declaration-level `max_bars_back` and top-level
 `max_bars_back(source, num)` helper calls must use non-negative constant
-lengths. The helper-call subset is limited to simple series identifiers as the
-`source` argument, and applies a per-series retention bound for dynamic history
-reads.
+integer lengths, including supported constant integer expressions, that fit in
+the runtime's 32-bit unsigned history-bound field. The helper-call subset is
+limited to series numeric sources, including simple identifiers and direct
+series numeric expressions with stable pure unary/binary expression identity
+reuse plus pure ternary expression identity reuse, including builtin qualified
+constants/simple metadata, bar/session flags, and positional plus fixed-arity
+named stateless pure math calls plus pure numeric cast calls, for matching history reads and unreassigned pure scalar series
+declaration aliases, accepts positional or named
+arguments, and applies a per-series retention bound for dynamic history reads.
 Unsupported named arguments should produce compatibility diagnostics.
 Typed variable declarations are fixture-backed for `int`, `float`, `bool`,
 `string`, `color`, `chart.point`, and drawing-id `label`, `line`, `linefill`,
@@ -698,6 +709,10 @@ object-id `array<label>`, `array<line>`, `array<linefill>`,
 `array<polyline>`, `array<box>`, `array<table>`, `array<chart.point>`, and
 same-local scalar-field UDT `array<T>` values, and same-imported scalar-field
 UDT `array<lib.Type>` values, with compatible or `na` initializers. The
+fixture-backed scalar subset preserves initializer qualifiers for explicit
+typed declarations, so const/input/simple initializers remain acceptable for
+simple-parameter calls until a later reassignment promotes the symbol to a
+stronger qualifier.
 equivalent `type[]` aliases are fixture-backed for the same
 supported array element types, including `var` declarations and the scalar
 typed-array `varip` subset. These declarations assign the declared value kind to
@@ -1007,32 +1022,32 @@ alertcondition(condition: bool-compatible, title: const string, message: const s
 alert(message: string-compatible, freq?: const string)
   -> void
 
-plot(series: series/simple numeric, title?: const string, color?: color-compatible, linewidth?: simple int, style?: const string, trackprice?: const bool, histbase?: numeric, offset?: simple int, join?: const bool, editable?: const bool, show_last?: simple int, display?: const string, format?: const string, precision?: simple int, force_overlay?: const bool)
+plot(series: series/simple numeric, title?: const string, color?: color-compatible, linewidth?: input/const int, style?: const string, trackprice?: const bool, histbase?: input/const numeric, offset?: simple integer-compatible, join?: const bool, editable?: const bool, show_last?: input/const int, display?: const string, format?: const string, precision?: simple integer-compatible, force_overlay?: const bool)
   -> plot
 
-plotchar(series: series/simple numeric-or-bool, title?: const string, char?: const string, color?: color-compatible, location?: const string, offset?: simple int, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: simple int, display?: const string)
+plotchar(series: series/simple numeric-or-bool, title?: const string, char?: const string, color?: color-compatible, location?: const string, offset?: simple integer-compatible, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: input/const int, display?: const string)
   -> void
 
-plotshape(series: series/simple numeric-or-bool, title?: const string, style?: const string, location?: const string, color?: color-compatible, offset?: simple int, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: simple int, display?: const string, force_overlay?: const bool)
+plotshape(series: series/simple numeric-or-bool, title?: const string, style?: const string, location?: const string, color?: color-compatible, offset?: simple integer-compatible, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: input/const int, display?: const string, force_overlay?: const bool)
   -> void
 
-plotarrow(series: series/simple numeric, title?: const string, colorup?: color-compatible, colordown?: color-compatible, offset?: simple int, minheight?: simple int, maxheight?: simple int, editable?: const bool, show_last?: simple int, display?: const string, force_overlay?: const bool)
+plotarrow(series: series/simple numeric, title?: const string, colorup?: color-compatible, colordown?: color-compatible, offset?: simple integer-compatible, minheight?: simple integer-compatible, maxheight?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const string, force_overlay?: const bool)
   -> void
 
-plotbar(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, editable?: const bool, show_last?: simple int, display?: const string)
+plotbar(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, editable?: const bool, show_last?: input/const int, display?: const string)
   -> void
 
-plotcandle(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, wickcolor?: color-compatible, editable?: const bool, show_last?: simple int, bordercolor?: color-compatible, display?: const string)
+plotcandle(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, wickcolor?: color-compatible, editable?: const bool, show_last?: input/const int, bordercolor?: color-compatible, display?: const string)
   -> void
 
-hline(price: input/const numeric, title?: const string, color?: color-compatible, linestyle?: const string, linewidth?: simple int, editable?: const bool, display?: const string)
+hline(price: input/const numeric, title?: const string, color?: input/const color, linestyle?: const string, linewidth?: input/const int, editable?: const bool, display?: const string)
   -> hline
 
-fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, title?: const string, editable?: const bool, show_last?: simple int, fillgaps?: const bool, display?: const string)
+fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, title?: const string, editable?: const bool, show_last?: input/const int, fillgaps?: const bool, display?: const string)
   -> void
 
-bgcolor(color: color-compatible, title?: const string, offset?: simple int, editable?: const bool, show_last?: simple int, display?: const string) -> void
-barcolor(color: color-compatible, title?: const string, offset?: simple int, editable?: const bool, show_last?: simple int, display?: const string) -> void
+bgcolor(color: color-compatible, title?: const string, offset?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const string) -> void
+barcolor(color: color-compatible, title?: const string, offset?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const string) -> void
 ```
 
 `alertcondition` emits a runtime alert event when its reached condition
@@ -1135,13 +1150,14 @@ entries remain unsupported, and OCA order behavior remains unsupported.
 ## Utility
 
 ```text
-na(x: any) -> simple bool or series bool
+na(x: any) -> bool with argument qualifier
 nz(x: numeric-or-color-series) -> same kind and qualifier as x
 nz(x: T, replacement: T) -> strongest qualifier of x and replacement, kind T
 fixnan(source: series/simple int|float|color) -> same kind and qualifier as source
 ```
 
-`na(x)` returns a series-qualified bool when `x` is series-qualified.
+`na(x)` returns a bool with the argument qualifier: input, simple, and series
+arguments produce input, simple, and series bool results respectively.
 
 `nz` overloads must be explicit. Do not implement `nz` with a generic host
 language null helper.
@@ -1152,44 +1168,44 @@ callsite has observed a non-`na` value.
 ## Arrays
 
 ```text
-array.new_float(size?: simple int, initial_value?: numeric) -> simple float-array
-array.new<float>(size?: simple int, initial_value?: numeric) -> simple float-array
-array.new_int(size?: simple int, initial_value?: int-compatible) -> simple int-array
-array.new<int>(size?: simple int, initial_value?: int-compatible) -> simple int-array
-array.new_bool(size?: simple int, initial_value?: bool-compatible) -> simple bool-array
-array.new<bool>(size?: simple int, initial_value?: bool-compatible) -> simple bool-array
-array.new_string(size?: simple int, initial_value?: string-compatible) -> simple string-array
-array.new<string>(size?: simple int, initial_value?: string-compatible) -> simple string-array
-array.new_color(size?: simple int, initial_value?: color-compatible) -> simple color-array
-array.new<color>(size?: simple int, initial_value?: color-compatible) -> simple color-array
-array.new_label(size?: simple int, initial_value?: label-compatible) -> simple label-array
-array.new<label>(size?: simple int, initial_value?: label-compatible) -> simple label-array
-array.new_line(size?: simple int, initial_value?: line-compatible) -> simple line-array
-array.new<line>(size?: simple int, initial_value?: line-compatible) -> simple line-array
-array.new_linefill(size?: simple int, initial_value?: linefill-compatible) -> simple linefill-array
-array.new<linefill>(size?: simple int, initial_value?: linefill-compatible) -> simple linefill-array
-array.new_polyline(size?: simple int, initial_value?: polyline-compatible) -> simple polyline-array
-array.new<polyline>(size?: simple int, initial_value?: polyline-compatible) -> simple polyline-array
-array.new_box(size?: simple int, initial_value?: box-compatible) -> simple box-array
-array.new<box>(size?: simple int, initial_value?: box-compatible) -> simple box-array
-array.new_table(size?: simple int, initial_value?: table-compatible) -> simple table-array
-array.new<table>(size?: simple int, initial_value?: table-compatible) -> simple table-array
-array.new<chart.point>(size?: simple int, initial_value?: chart-point-compatible) -> simple chart-point-array
+array.new_float(size?: simple integer-compatible, initial_value?: numeric-compatible) -> simple float-array
+array.new<float>(size?: simple integer-compatible, initial_value?: numeric-compatible) -> simple float-array
+array.new_int(size?: simple integer-compatible, initial_value?: int-compatible) -> simple int-array
+array.new<int>(size?: simple integer-compatible, initial_value?: int-compatible) -> simple int-array
+array.new_bool(size?: simple integer-compatible, initial_value?: bool-compatible) -> simple bool-array
+array.new<bool>(size?: simple integer-compatible, initial_value?: bool-compatible) -> simple bool-array
+array.new_string(size?: simple integer-compatible, initial_value?: string-compatible) -> simple string-array
+array.new<string>(size?: simple integer-compatible, initial_value?: string-compatible) -> simple string-array
+array.new_color(size?: simple integer-compatible, initial_value?: color-compatible) -> simple color-array
+array.new<color>(size?: simple integer-compatible, initial_value?: color-compatible) -> simple color-array
+array.new_label(size?: simple integer-compatible, initial_value?: label-compatible) -> simple label-array
+array.new<label>(size?: simple integer-compatible, initial_value?: label-compatible) -> simple label-array
+array.new_line(size?: simple integer-compatible, initial_value?: line-compatible) -> simple line-array
+array.new<line>(size?: simple integer-compatible, initial_value?: line-compatible) -> simple line-array
+array.new_linefill(size?: simple integer-compatible, initial_value?: linefill-compatible) -> simple linefill-array
+array.new<linefill>(size?: simple integer-compatible, initial_value?: linefill-compatible) -> simple linefill-array
+array.new_polyline(size?: simple integer-compatible, initial_value?: polyline-compatible) -> simple polyline-array
+array.new<polyline>(size?: simple integer-compatible, initial_value?: polyline-compatible) -> simple polyline-array
+array.new_box(size?: simple integer-compatible, initial_value?: box-compatible) -> simple box-array
+array.new<box>(size?: simple integer-compatible, initial_value?: box-compatible) -> simple box-array
+array.new_table(size?: simple integer-compatible, initial_value?: table-compatible) -> simple table-array
+array.new<table>(size?: simple integer-compatible, initial_value?: table-compatible) -> simple table-array
+array.new<chart.point>(size?: simple integer-compatible, initial_value?: chart-point-compatible) -> simple chart-point-array
 array.from(value, ...) -> simple inferred scalar-or-object-array
 array.size(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> simple int
 array.push(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible) -> void
-array.get(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple int) -> series element
-array.set(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple int, value: element-compatible) -> void
-array.insert(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple int, value: element-compatible) -> void
+array.get(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple integer-compatible) -> series element
+array.set(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple integer-compatible, value: element-compatible) -> void
+array.insert(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple integer-compatible, value: element-compatible) -> void
 array.pop(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> series element
-array.remove(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple int) -> series element
+array.remove(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple integer-compatible) -> series element
 array.shift(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> series element
 array.unshift(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible) -> void
-array.fill(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible, index_from?: simple int, index_to?: simple int) -> void
+array.fill(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible, index_from?: simple integer-compatible, index_to?: simple integer-compatible) -> void
 array.first(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> series element
 array.last(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> series element
 array.copy(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> same array kind
-array.slice(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index_from: simple int, index_to: simple int) -> same array kind
+array.slice(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index_from: simple integer-compatible, index_to: simple integer-compatible) -> same array kind
 array.concat(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, id2: same array kind) -> same array kind
 array.includes(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible) -> series bool
 array.includes(id: same-local-scalar-field-UDT-array, value: same local UDT) -> series bool
@@ -1212,7 +1228,7 @@ array.median(id: float-array|int-array) -> series element
 array.mode(id: float-array|int-array) -> series element
 array.percentile_nearest_rank(id: float-array|int-array, percentage: numeric-compatible) -> series element
 array.percentile_linear_interpolation(id: float-array|int-array, percentage: numeric-compatible) -> series float
-array.percentrank(id: float-array|int-array, index: simple int) -> series float
+array.percentrank(id: float-array|int-array, index: simple integer-compatible) -> series float
 array.covariance(id1: float-array|int-array, id2: float-array|int-array, biased?: bool-compatible) -> series float
 array.standardize(id: float-array|int-array) -> float-array
 array.variance(id: float-array|int-array, biased?: bool-compatible) -> series float
@@ -1230,14 +1246,23 @@ arrays can be constructed through the supported type-specific `array.new_*`
 calls or the official `array.new<type>`
 syntax for float, int, bool, string, color, label, line, linefill, polyline,
 box, and table.
-Float arrays accept int or float values and store them as floats. Int
+The scalar constructors and their official `array.new<float>`,
+`array.new<int>`, `array.new<bool>`, `array.new<string>`, and
+`array.new<color>` template forms return fixed `simple array<T>` values
+accepted by matching element-array consumers and rejected by mismatched ones.
+Drawing-object constructors, their official `array.new<type>` template forms,
+and `array.new<chart.point>` also return fixed `simple array<T>` values
+accepted by matching typed-array consumers and rejected by mismatched ones.
+Float arrays accept int, float, or `na` values and store int values as floats. Int
 arrays accept int values. Bool arrays accept bool values. String arrays accept
 string values. Color arrays accept color values. Label, line, linefill, polyline, box,
 and table arrays accept their matching drawing ids or `na` and keep reference
-elements shallow across `array.copy`. `array.new<chart.point>()`,
-`array.from(chart.point, ...)`, and `array.from(polyline, ...)` construct
-chart-point or polyline arrays, and the generic storage/read/mutation/search
-subset can carry `chart.point` and `polyline` values;
+elements shallow across `array.copy`. `array.from(label|line|linefill|polyline|
+box|table|chart.point, ...)` returns fixed `simple array<T>` values accepted by
+matching typed-array consumers and rejected by mismatched ones.
+`array.new<chart.point>()`, `array.from(chart.point, ...)`, and
+`array.from(polyline, ...)` construct chart-point or polyline arrays, and the
+generic storage/read/mutation/search subset can carry `chart.point` and `polyline` values;
 `polyline.new` consumes these arrays as its point-list input and copies the
 values into runtime snapshots. Numeric, truth, sort, and join helpers still
 reject chart-point and polyline arrays. Array
@@ -1247,10 +1272,13 @@ remains unsupported. `array.from` infers the array
 kind from its arguments, requires at least one non-`na` supported typed value,
 allows `na` in otherwise typed arrays, and promotes mixed int/float arguments
 to a float array. `array.join` supports scalar typed arrays and the
-fixture-backed same-local scalar-field UDT array subset, while
+fixture-backed same-local scalar-tree UDT array subset, while
 `str.tostring(array)` remains limited to non-color scalar typed arrays. Color,
 linefill, drawing-id, chart-point, and UDT arrays remain outside the
-`str.tostring(array)` subset. Linefill arrays are supported for generic
+`str.tostring(array)` subset. Array size/index/range parameters are simple
+integer-compatible: explicit `na` size returns `na`, read-style `na` indexes or
+slice bounds return `na`, and mutation-style `na` indexes or fill bounds are
+no-ops. Linefill arrays are supported for generic
 object-array storage and search, chart-point arrays are supported for generic
 point-list storage and search, and `polyline.all` exposes a read-only snapshot
 polyline id array. General polyline array construction and mutation remain
@@ -1265,7 +1293,7 @@ out-of-bounds indexes are runtime errors. `array.fill` fills the whole array by
 default or the half-open
 `[index_from, index_to)` window when bounds are supplied; invalid ranges are
 no-ops. The semantic analyzer also allows `array.fill`/`fill()` for
-same-local scalar-field UDT arrays with a same-UDT value; mismatched local UDT
+same-local scalar-tree UDT arrays with a same-UDT value; mismatched local UDT
 values remain rejected. `array.slice` returns a same-kind shallow window over the parent
 array's half-open `[index_from, index_to)` range; slice reads and writes mirror
 the parent window, slice insertions widen the window and insert into the parent,
@@ -1315,7 +1343,7 @@ scalar array values.
 `array.join` supports supported scalar typed arrays, defaults the separator
 to `,`, uses the default numeric string format, and renders colors as their
 normalized integer color values. The semantic analyzer also allows `array.join`
-for same-local scalar-field UDT arrays; those elements render as
+for same-local scalar-tree UDT arrays; those elements render as
 `TypeName(field0, field1, ...)`, with `NaN` for `na` elements. Drawing-id,
 chart.point, map, and matrix arrays remain outside the join subset. Array assignment passes the runtime array
 id by reference; use `array.copy` to allocate an independent array with the same
@@ -1367,48 +1395,48 @@ non-scalar map templates remain unsupported.
 Initial signatures:
 
 ```text
-ta.sma(source: series int/float, length: simple int) -> series float
-ta.ema(source: series int/float, length: simple int) -> series float
+ta.sma(source: series int/float, length: int-compatible) -> series float
+ta.ema(source: series int/float, length: simple integer-compatible) -> series float
 ```
 
 Next signatures after Phase 1 is stable:
 
 ```text
-ta.dema(source: series int/float, length: simple int) -> series float
-ta.tema(source: series int/float, length: simple int) -> series float
-ta.rma(source: series int/float, length: simple int) -> series float
-ta.rsi(source: series int/float, length: simple int) -> series float
-ta.macd(source: series int/float, fastlen: simple int, slowlen: simple int, siglen: simple int)
+ta.dema(source: series int/float, length: simple integer-compatible) -> series float
+ta.tema(source: series int/float, length: simple integer-compatible) -> series float
+ta.rma(source: series int/float, length: simple integer-compatible) -> series float
+ta.rsi(source: series int/float, length: simple integer-compatible) -> series float
+ta.macd(source: series int/float, fastlen: simple integer-compatible, slowlen: simple integer-compatible, siglen: simple integer-compatible)
   -> tuple(series float, series float, series float)
-ta.tsi(source: series int/float, short_length: simple int, long_length: simple int) -> series float
-ta.cmo(source: series int/float, length: simple int) -> series float
-ta.cci(source: series int/float, length: simple int) -> series float
-ta.cog(source: series int/float, length: simple int) -> series float
+ta.tsi(source: series int/float, short_length: simple integer-compatible, long_length: simple integer-compatible) -> series float
+ta.cmo(source: series int/float, length: int-compatible) -> series float
+ta.cci(source: series int/float, length: int-compatible) -> series float
+ta.cog(source: series int/float, length: int-compatible) -> series float
 ta.ao() -> series float
 ta.bop() -> series float
-ta.bb(source: series int/float, length: simple int, mult: numeric)
+ta.bb(source: series int/float, length: int-compatible, mult: numeric-compatible)
   -> tuple(series float, series float, series float)
-ta.bbw(source: series int/float, length: simple int, mult: numeric) -> series float
-ta.kc(source: series int/float, length: simple int, mult: simple numeric, useTrueRange?: bool-compatible)
+ta.bbw(source: series int/float, length: int-compatible, mult: numeric-compatible) -> series float
+ta.kc(source: series int/float, length: int-compatible, mult: simple numeric-compatible, useTrueRange?: bool-compatible)
   -> tuple(series float, series float, series float)
-ta.kcw(source: series int/float, length: simple int, mult: simple numeric, useTrueRange?: bool-compatible) -> series float
-ta.pivothigh(leftbars: simple int, rightbars: simple int) -> series float
-ta.pivothigh(source: series int/float, leftbars: simple int, rightbars: simple int) -> series float
-ta.pivotlow(leftbars: simple int, rightbars: simple int) -> series float
-ta.pivotlow(source: series int/float, leftbars: simple int, rightbars: simple int) -> series float
+ta.kcw(source: series int/float, length: int-compatible, mult: simple numeric-compatible, useTrueRange?: bool-compatible) -> series float
+ta.pivothigh(leftbars: int-compatible, rightbars: int-compatible) -> series float
+ta.pivothigh(source: series int/float, leftbars: int-compatible, rightbars: int-compatible) -> series float
+ta.pivotlow(leftbars: int-compatible, rightbars: int-compatible) -> series float
+ta.pivotlow(source: series int/float, leftbars: int-compatible, rightbars: int-compatible) -> series float
 ta.pivot_point_levels(type: series string, anchor: series bool, developing?: series bool) -> float[]
-ta.stdev(source: series int/float, length: simple int, biased?: bool-compatible) -> series float
-ta.variance(source: series int/float, length: simple int, biased?: bool-compatible) -> series float
-ta.range(source: series int/float, length: simple int) -> series float
-ta.dev(source: series int/float, length: simple int) -> series float
-ta.vwma(source: series int/float, length: simple int) -> series float
-ta.wma(source: series int/float, length: simple int) -> series float
-ta.hma(source: series int/float, length: simple int) -> series float
+ta.stdev(source: series int/float, length: int-compatible, biased?: bool-compatible) -> series float
+ta.variance(source: series int/float, length: int-compatible, biased?: bool-compatible) -> series float
+ta.range(source: series int/float, length: int-compatible) -> series float
+ta.dev(source: series int/float, length: int-compatible) -> series float
+ta.vwma(source: series int/float, length: int-compatible) -> series float
+ta.wma(source: series int/float, length: int-compatible) -> series float
+ta.hma(source: series int/float, length: int-compatible) -> series float
 ta.swma(source: series int/float) -> series float
-ta.alma(series: series int/float, length: simple int, offset: simple numeric, sigma: simple numeric, floor?: simple bool) -> series float
-ta.linreg(source: series int/float, length: simple int, offset: simple int) -> series float
-ta.stoch(source: series int/float, high: series int/float, low: series int/float, length: simple int) -> series float
-ta.wpr(length: simple int) -> series float
+ta.alma(series: series int/float, length: int-compatible, offset: simple numeric-compatible, sigma: simple numeric-compatible, floor?: simple bool-compatible) -> series float
+ta.linreg(source: series int/float, length: int-compatible, offset: simple integer-compatible) -> series float
+ta.stoch(source: series int/float, high: series int/float, low: series int/float, length: int-compatible) -> series float
+ta.wpr(length: int-compatible) -> series float
 ta.cum(source: series/simple numeric) -> series float
 ta.max(source: series/simple numeric) -> series float
 ta.min(source: series/simple numeric) -> series float
@@ -1422,66 +1450,95 @@ ta.tr -> series float
 ta.vwap -> series float
 ta.vwap(source: series/simple numeric) -> series float
 ta.vwap(source: series/simple numeric, anchor: bool-compatible) -> series float
-ta.vwap(source: series/simple numeric, anchor: bool-compatible, stdev_mult: simple numeric) -> [series float, series float, series float]
+ta.vwap(source: series/simple numeric, anchor: bool-compatible, stdev_mult: simple numeric-compatible) -> [series float, series float, series float]
 ta.wad -> series float
 ta.wvad -> series float
-ta.mfi(source: series int/float, length: simple int) -> series float
-ta.atr(length: simple int) -> series float
+ta.mfi(source: series int/float, length: int-compatible) -> series float
+ta.atr(length: simple integer-compatible) -> series float
 ta.tr(handle_na?: const bool) -> series float
-ta.supertrend(factor: simple numeric, atrPeriod: simple int) -> [series float, series float]
-ta.dmi(diLength: simple int, adxSmoothing: simple int) -> [series float, series float, series float]
-ta.sar(start: simple numeric, inc: simple numeric, max: simple numeric) -> series float
-ta.change(source: series int/float/bool, length?: simple int) -> series float/bool
-ta.mom(source: series int/float, length: simple int) -> series float
-ta.roc(source: series int/float, length: simple int) -> series float
-ta.correlation(source1: series/simple numeric, source2: series/simple numeric, length: simple int) -> series float
-ta.covariance(source1: series/simple numeric, source2: series/simple numeric, length: simple int) -> series float
-ta.median(source: series/simple numeric, length: simple int) -> series float
-ta.mode(source: series/simple numeric, length: simple int) -> series float
-ta.percentile_nearest_rank(source: series/simple numeric, length: simple int, percentage: input/const numeric) -> series float
-ta.percentile_linear_interpolation(source: series/simple numeric, length: simple int, percentage: input/const numeric) -> series float
-ta.percentrank(source: series/simple numeric, length: simple int) -> series float
-ta.rising(source: series int/float, length: simple int) -> series bool
-ta.falling(source: series int/float, length: simple int) -> series bool
+ta.supertrend(factor: simple numeric-compatible, atrPeriod: simple integer-compatible) -> [series float, series float]
+ta.dmi(diLength: simple integer-compatible, adxSmoothing: simple integer-compatible) -> [series float, series float, series float]
+ta.sar(start: simple numeric-compatible, inc: simple numeric-compatible, max: simple numeric-compatible) -> series float
+ta.change(source: series int/float/bool, length?: int-compatible) -> series float/bool
+ta.mom(source: series int/float, length: int-compatible) -> series float
+ta.roc(source: series int/float, length: int-compatible) -> series float
+ta.correlation(source1: series/simple numeric, source2: series/simple numeric, length: int-compatible) -> series float
+ta.covariance(source1: series/simple numeric, source2: series/simple numeric, length: int-compatible) -> series float
+ta.median(source: series/simple numeric, length: int-compatible) -> series float
+ta.mode(source: series/simple numeric, length: int-compatible) -> series float
+ta.percentile_nearest_rank(source: series/simple numeric, length: int-compatible, percentage: simple numeric-compatible) -> series float
+ta.percentile_linear_interpolation(source: series/simple numeric, length: int-compatible, percentage: simple numeric-compatible) -> series float
+ta.percentrank(source: series/simple numeric, length: int-compatible) -> series float
+ta.rising(source: series int/float, length: int-compatible) -> series bool
+ta.falling(source: series int/float, length: int-compatible) -> series bool
 ta.barssince(condition: series bool) -> series int
-ta.valuewhen(condition: series bool, source: series int/float/bool/color, occurrence: simple int) -> series source-kind
+ta.valuewhen(condition: series bool, source: series int/float/bool/color, occurrence: int-compatible) -> series source-kind
 ta.cross(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.crossover(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.crossunder(source1: series/simple numeric, source2: series/simple numeric) -> series bool
-ta.highest(length: simple int) -> series float
-ta.highest(source: series int/float, length: simple int) -> series float
-ta.lowest(length: simple int) -> series float
-ta.lowest(source: series int/float, length: simple int) -> series float
-ta.highestbars(length: simple int) -> series int
-ta.highestbars(source: series int/float, length: simple int) -> series int
-ta.lowestbars(length: simple int) -> series int
-ta.lowestbars(source: series int/float, length: simple int) -> series int
+ta.highest(length: int-compatible) -> series float
+ta.highest(source: series int/float, length: int-compatible) -> series float
+ta.lowest(length: int-compatible) -> series float
+ta.lowest(source: series int/float, length: int-compatible) -> series float
+ta.highestbars(length: int-compatible) -> series int
+ta.highestbars(source: series int/float, length: int-compatible) -> series int
+ta.lowestbars(length: int-compatible) -> series int
+ta.lowestbars(source: series int/float, length: int-compatible) -> series int
 ```
 
 Rules:
 
-- `length` should initially be `simple int`; reject `series int` lengths.
+- Most window `length` arguments are still `simple int`; reject `series int`
+  lengths unless a function is explicitly listed as integer-compatible.
+  `ta.pivothigh`/`ta.pivotlow` left/right bar counts accept integer values at
+  any implemented qualifier. `ta.change`, `ta.mom`, `ta.roc`,
+  `ta.rising`, `ta.falling`, `ta.highest`, `ta.lowest`, `ta.highestbars`,
+  and `ta.lowestbars` follow the direct history-read qualifier policy.
 - TA source parameters documented as `series int/float` accept numeric series
   sources and evaluate through the runtime's floating-point calculation path.
-- `ta.bb` currently accepts any numeric qualifier for `mult`.
+- `ta.sma` accepts integer-compatible `length`, supports named/reordered
+  `source`/`length` argument binding, and uses the same callsite rolling-window
+  mean state.
+- `ta.ema`/`ta.rma` support named/reordered `source`/`length` argument binding
+  and use the same callsite running-average state. Explicit `na` lengths return
+  `na` without advancing callsite state.
+- `ta.bb` currently accepts integer-compatible `length` and any
+  numeric-compatible qualifier for `mult`, returning an all-`na` tuple when
+  `mult` is `na`.
 - `ta.bbw` uses the same basis/deviation window as `ta.bb` and returns
   `(upper - lower) / basis`; it returns `na` when the window is not ready or
-  basis is zero.
+  basis or `mult` is `na`. `ta.bb`/`ta.bbw` support named/reordered
+  `source`/`length`/`mult` argument binding, with integer-compatible `length`.
 - `ta.kc` returns Keltner Channels as `[ema(source, length), basis +
   ema(span, length) * mult, basis - ema(span, length) * mult]`, where `span`
-  defaults to true range and uses `high - low` when `useTrueRange` is `false`.
+  defaults to true range and uses `high - low` when `useTrueRange` is `false`;
+  `mult` accepts simple numeric-compatible values and an `na` multiplier
+  returns an all-`na` tuple.
 - `ta.kcw` uses the same Keltner Channel basis/range EMA calculation and
   returns `(upper - lower) / basis`; it returns `na` when inputs are `na`,
-  length is non-positive, or basis is zero.
+  length is non-positive, or basis is zero. `ta.kc`/`ta.kcw` support
+  named/reordered `source`/`length`/`mult`/`useTrueRange` argument binding,
+  with integer-compatible `length`.
 - `ta.dema` returns `2 * ema(source, length) - ema(ema(source, length),
-  length)` using independent callsite state.
+  length)` using independent callsite state. Named/reordered `source`/`length`
+  arguments bind to the same EMA-chain state. Explicit `na` length returns
+  `na` without advancing the chain state.
 - `ta.tema` returns `3 * ema1 - 3 * ema2 + ema3`, where each EMA is the next
   EMA of the previous EMA in the chain, using independent callsite state.
+  Named/reordered `source`/`length` arguments bind to the same EMA-chain state.
+  Explicit `na` length returns `na` without advancing the chain state.
+- `ta.rsi` supports named/reordered `source`/`length` arguments and uses the
+  same callsite RMA-smoothed gain/loss state. Explicit `na` length returns
+  `na` without advancing state.
+- `ta.macd` supports named/reordered `source`/`fastlen`/`slowlen`/`siglen`
+  arguments and uses the same callsite EMA-chain state. Explicit `na` lengths
+  return an all-`na` tuple.
 - `ta.pivothigh`/`ta.pivotlow` support the default-source two-argument forms
   and explicit-source three-argument forms. The default sources are `high` and
-  `low` respectively. The current subset uses simple integer left/right bar
-  counts and returns the confirmed pivot value `rightbars` bars after the pivot
-  bar, otherwise `na`.
+  `low` respectively. The current subset accepts integer left/right bar counts
+  at any implemented qualifier, supports named/reordered
+  `source`/`leftbars`/`rightbars` argument binding, and returns the confirmed
+  pivot value `rightbars` bars after the pivot bar, otherwise `na`.
 - `ta.pivot_point_levels` returns an 11-element float array ordered as
   `[P, R1, S1, R2, S2, R3, S3, R4, S4, R5, S5]`. The current subset supports
   `Traditional`, `Fibonacci`, `Woodie`, `Classic`, `DM`, and `Camarilla`
@@ -1491,31 +1548,52 @@ Rules:
   in-progress period. It does not request higher-timeframe/session data.
 - `ta.stdev` defaults `biased` to `true`; `false` uses sample standard
   deviation and returns `na` for windows shorter than two values.
+  Named/reordered `source`/`length`/`biased` arguments bind to the same window
+  state.
 - `ta.variance` uses the same `biased` default and sample/population window
-  rules as `ta.stdev`.
+  rules as `ta.stdev`. Named/reordered `source`/`length`/`biased` arguments
+  bind to the same window state.
 - `ta.range` returns highest minus lowest over the ready rolling window.
+  Named/reordered `source`/`length` arguments bind to the same window state.
 - `ta.dev` returns the average absolute deviation from the window mean.
+  Named/reordered `source`/`length` arguments bind to the same window state.
 - `ta.vwma` returns `sum(source * volume) / sum(volume)` over the ready rolling
-  window and returns `na` when the volume sum is zero.
+  window and returns `na` when the volume sum is zero. Named/reordered
+  `source`/`length` arguments bind to the same weighted-window state. Its
+  `length` argument is integer-compatible.
 - `ta.wma` returns a weighted mean where the oldest ready-window value has
-  weight `1` and the current value has weight `length`.
+  weight `1` and the current value has weight `length`. Named/reordered
+  `source`/`length` arguments bind to the same window state. Its `length`
+  argument is integer-compatible.
 - `ta.hma` composes `ta.wma`-style windows as
   `wma(2 * wma(source, length / 2) - wma(source, length), round(sqrt(length)))`.
+  Named/reordered `source`/`length` arguments bind to the same staged window
+  state. Its `length` argument is integer-compatible.
 - `ta.swma` returns a fixed four-bar symmetric weighted average using weights
   `1, 2, 2, 1`; it returns `na` until the fixed window is ready or when the
-  window contains `na`.
+  window contains `na`. Named/reordered `source` arguments bind to the same
+  fixed-window state.
 - `ta.alma` returns the Arnaud Legoux Moving Average using Gaussian weights
   over the ready source window. Optional `floor` floors the offset-derived
-  center before weighting.
+  center before weighting. Named/reordered `series`/`length`/`offset`/`sigma`/
+  `floor` arguments bind to the same window state. Its `length` argument is
+  integer-compatible, `offset` and `sigma` are simple numeric-compatible, and
+  `floor` is simple bool-compatible. Explicit `na` offset or sigma returns
+  `na`; explicit `na` floor uses the default non-floored center.
 - `ta.linreg` fits a least-squares line over the ready source window and
-  returns `intercept + slope * (length - 1 - offset)`.
+  returns `intercept + slope * (length - 1 - offset)`. Named/reordered
+  `source`/`length`/`offset` arguments bind to the same window state. Its
+  `length` argument is integer-compatible, while `offset` remains simple
+  integer-compatible; explicit `na` offset is treated as 0.
 - `ta.cum` returns the cumulative sum of numeric source values from the start of
   execution; a current `na` source returns `na` and resets the next cumulative
-  step to the next available source value.
+  step to the next available source value. Named/reordered `source` arguments
+  bind to the same callsite accumulator state.
 - `ta.max` and `ta.min` return the all-time maximum/minimum over executed
   non-`na` source values in their callsite state. A current `na` source leaves
   the previous extreme unchanged; if no non-`na` value has executed yet, they
-  return `na`.
+  return `na`. Named/reordered `source` arguments bind to the same callsite
+  extreme state.
 - `ta.accdist` is a built-in series variable equivalent to cumulative
   Accumulation/Distribution money flow volume:
   `(((close - low) - (high - close)) / (high - low)) * volume`. It returns
@@ -1543,9 +1621,12 @@ Rules:
   its own call-site state. `ta.vwap(source, anchor)` uses the same call-site
   cumulative state and resets it before the current bar when `anchor` is true.
   `ta.vwap(source, anchor, stdev_mult)` returns `[vwap, upper_band, lower_band]`
-  using the call-site weighted standard deviation multiplied by `stdev_mult`.
-  These forms return `na` while the cumulative volume is zero. Session-derived
-  anchoring is not implemented yet.
+  using the call-site weighted standard deviation multiplied by `stdev_mult`;
+  `stdev_mult` accepts simple numeric-compatible values, and `na` returns an
+  all-`na` tuple.
+  Named/reordered `source`/`anchor`/`stdev_mult` arguments bind to the same
+  VWAP state. These forms return `na` while the cumulative volume is zero.
+  Session-derived anchoring is not implemented yet.
 - `ta.wad` is a built-in series variable equivalent to cumulative Williams
   Accumulation/Distribution gain using `trueHigh = max(high, close[1])` and
   `trueLow = min(low, close[1])`.
@@ -1553,71 +1634,127 @@ Rules:
   `(close - open) / (high - low) * volume`; it returns `na` when
   `high == low`.
 - `ta.change` returns `source - source[length]` for numeric sources and whether
-  the value changed for bool sources. It records the required source history
-  depth.
-- `ta.mom` returns `source - source[length]` and records the required source
-  history depth.
+  the value changed for bool sources. Constant lengths record the required
+  source history depth, while dynamic integer lengths use guarded runtime
+  history reads. Named/reordered `source`/`length` arguments bind to the same
+  history-read semantics.
+- `ta.mom` returns `source - source[length]`. Constant lengths record the
+  required source history depth, while dynamic integer lengths use guarded
+  runtime history reads. Named/reordered `source`/`length` arguments bind to
+  the same history-read semantics.
 - `ta.roc` returns `100 * (source - source[length]) / source[length]` and
-  returns `na` when the historical denominator is zero.
+  returns `na` when the historical denominator is zero. Constant lengths record
+  the required source history depth, while dynamic integer lengths use guarded
+  runtime history reads. Named/reordered `source`/`length` arguments bind to
+  the same history-read semantics.
 - `ta.correlation` returns the Pearson correlation coefficient over the ready
   paired source window and returns `na` while the window is not ready, contains
-  `na`, or either source has zero variance.
+  `na`, or either source has zero variance. Named/reordered
+  `source1`/`source2`/`length` arguments bind to the same paired-window state
+  semantics.
 - `ta.covariance` returns population covariance over the ready paired source
   window and returns `na` while the window is not ready or contains `na`.
+  Named/reordered `source1`/`source2`/`length` arguments bind to the same
+  paired-window state semantics.
 - `ta.median` sorts the ready source window ascending and returns the middle
   value, or the average of the two middle values for even windows.
+  Named/reordered `source`/`length` arguments bind to the same window state.
 - `ta.mode` returns the most frequent ready-window value. Ties, including
   windows where every value is unique, resolve to the smallest value.
+  Named/reordered `source`/`length` arguments bind to the same window state.
 - `ta.percentile_nearest_rank` sorts the ready source window ascending and
   returns the nearest-rank percentile member. It returns `na` while the window
-  is not ready, contains `na`, or `percentage` is outside `0..=100`.
+  is not ready, contains `na`, when `percentage` is `na`, or when `percentage`
+  is outside `0..=100`.
+  Named/reordered `source`/`length`/`percentage` arguments bind to the same
+  window state.
 - `ta.percentile_linear_interpolation` uses the same ready sorted window and
   interpolates between adjacent ranks. It returns `na` under the same invalid
   window or percentage conditions as `ta.percentile_nearest_rank`.
+  Named/reordered `source`/`length`/`percentage` arguments bind to the same
+  window state.
 - `ta.percentrank` returns the percentage of ready-window values less than or
   equal to the current source value. It returns `na` while the window is not
-  ready or contains `na`.
-- `ta.rising`/`ta.falling` compare the current source against the previous
-  ready-window values and return `false` while that window is not ready.
+  ready or contains `na`. Named/reordered `source`/`length` arguments bind to
+  the same window state.
+- `ta.rising`/`ta.falling` compare the current source against each prior source
+  value from offset `1` through `length`, record the required source history
+  depth for constant lengths, use retained source history for dynamic integer
+  lengths, and return `false` while any required prior value is unavailable or
+  `na`. Named/reordered `source`/`length` arguments bind to the same history-read
+  semantics.
 - `ta.barssince` returns `0` on true conditions, increments after the last true
-  condition, and returns `na` before the first true condition.
+  condition, and returns `na` before the first true condition. Named
+  `condition` arguments bind to the same callsite state semantics.
 - `ta.valuewhen` returns the `source` value from the nth most recent true
-  condition, where `occurrence = 0` is the most recent match.
+  condition, where `occurrence = 0` is the most recent match. Series occurrence
+  values are evaluated per bar and keep recent-match state up to the runtime
+  retention cap. Named/reordered `condition`/`source`/`occurrence` arguments
+  bind to those same state slots.
 - `ta.highest`/`ta.highestbars` length-only overloads use `high` as the source.
   `ta.lowest`/`ta.lowestbars` length-only overloads use `low` as the source.
+- `ta.highest`/`ta.lowest` and `ta.highestbars`/`ta.lowestbars` compare the
+  current source with retained source history offsets `1..length - 1`. Constant
+  lengths record source history depth as `length - 1`, while dynamic integer
+  lengths use retained source history. Named/reordered `source`/`length`
+  arguments bind to the same explicit-source or length-only overload semantics.
 - `ta.highestbars`/`ta.lowestbars` return the offset to the most recent
   matching extreme in the ready window.
+- `ta.cross`/`ta.crossover`/`ta.crossunder` support named/reordered
+  `source1`/`source2` arguments and use the same one-bar retained history for
+  series operands.
+- `ta.tr(handle_na)` supports named/reordered `handle_na` arguments and uses
+  the same current/previous OHLC true-range path as the positional form.
+- `ta.atr` supports named/reordered `length` arguments and uses the same
+  callsite RMA-smoothed true-range state. Explicit `na` length returns `na`
+  without advancing state.
 - `ta.supertrend` returns `[line, direction]`, where direction is `-1` for the
   uptrend line and `1` for the downtrend line. The current subset follows the
   TradingView band update rules using the runtime's existing RMA-style ATR
-  behavior.
+  behavior. Named/reordered `factor`/`atrPeriod` arguments bind to the same
+  callsite trend state. An explicit `na` factor or `atrPeriod` returns
+  `[na, na]`.
 - `ta.dmi` returns `[+DI, -DI, ADX]`. The current subset uses Wilder/RMA-style
   smoothing from the first executed bar, reuses `ta.tr(true)` true range
-  semantics, and returns an all-`na` tuple for non-positive lengths.
+  semantics, and returns an all-`na` tuple for non-positive or `na` lengths.
+  Named/reordered `diLength`/`adxSmoothing` arguments bind to the same callsite
+  smoothing state.
 - `ta.sar` supports the three-argument Parabolic SAR form. It initializes from
   the previous bar, clamps against the previous two highs/lows when available,
   and returns `na` until the callsite has enough prior OHLC data to initialize.
+  The `start`/`inc`/`max` parameters accept simple numeric-compatible values;
+  an explicit `na` parameter returns `na`.
+  Named/reordered `start`/`inc`/`max` arguments bind to the same callsite SAR
+  state.
 - `ta.mfi` supports the two-argument Money Flow Index form using the supplied
   source, current `volume`, and ready positive/negative money-flow windows. It
   returns `na` before the window is ready, when source/volume is `na`, for
-  non-positive lengths, or when both flow sums are zero.
+  non-positive lengths, or when both flow sums are zero. Named/reordered
+  `source`/`length` arguments bind to the same money-flow windows. Its `length`
+  argument is integer-compatible.
 - `ta.tsi` returns the True Strength Index in the TradingView-style `[-1, 1]`
   range. The current subset double-smooths source momentum and absolute
   momentum with short then long EMA stages and returns `na` when prior source
   data is unavailable, lengths are non-positive, or the smoothed absolute
-  momentum denominator is zero.
+  momentum denominator is zero. Named/reordered
+  `source`/`short_length`/`long_length` arguments bind to the same callsite
+  smoothing state.
 - `ta.cmo` returns the Chande Momentum Oscillator as `100 * (sum(up) -
   sum(down)) / (sum(up) + sum(down))` over ready rolling source-change windows.
   It returns `na` before the window is ready, for non-positive lengths, or when
-  the denominator is zero.
+  the denominator is zero. Named/reordered `source`/`length` arguments bind to
+  the same source-change windows. Its `length` argument is integer-compatible.
 - `ta.cci` returns the Commodity Channel Index as `(source - sma(source,
   length)) / (0.015 * ta.dev(source, length))`. It returns `na` before the
   rolling window is ready, for non-positive lengths, when source is `na`, or
-  when mean absolute deviation is zero.
+  when mean absolute deviation is zero. Named/reordered `source`/`length`
+  arguments bind to the same rolling window. Its `length` argument is
+  integer-compatible.
 - `ta.cog` returns the Center of Gravity as `-sum(source[i] * (i + 1)) /
   math.sum(source, length)` over the ready source window. It returns `na` before
   the rolling window is ready, for non-positive lengths, when source is `na`, or
-  when the source sum is zero.
+  when the source sum is zero. Named/reordered `source`/`length` arguments bind
+  to the same rolling window. Its `length` argument is integer-compatible.
 - `ta.ao` returns the Awesome Oscillator as `sma(hl2, 5) - sma(hl2, 34)`.
   It returns `na` until both rolling windows are ready or when either window
   contains `na`.
@@ -1626,10 +1763,12 @@ Rules:
 - `ta.stoch` supports the four-argument stochastic oscillator form using ready
   rolling `high`/`low` windows. It returns `na` before the window is ready, when
   either window contains `na`, for non-positive lengths, or when the high-low
-  range is zero.
+  range is zero. Named/reordered `source`/`high`/`low`/`length` arguments bind
+  to the same high/low windows.
 - `ta.wpr` supports the single-argument Williams %R form over ready rolling
   `high`/`low` windows and current `close`. It returns `na` before the window is
   ready, for non-positive lengths, or when the high-low range is zero.
+  Named/reordered `length` arguments bind to the same high/low windows.
 - Stateful TA functions require callsite ids.
 - Tuple-returning functions require tuple lowering before execution.
 - Numerical formulas must be fixture-tested with tolerance.
@@ -1637,13 +1776,13 @@ Rules:
 ## Color
 
 ```text
-color.new(color: color-compatible, transp?: simple int) -> same qualifier color
-color.rgb(red: numeric, green: numeric, blue: numeric, transp?: numeric) -> color with strongest qualifier
+color.new(color: color-compatible, transp?: simple integer-compatible) -> same qualifier color
+color.rgb(red: numeric-compatible, green: numeric-compatible, blue: numeric-compatible, transp?: numeric-compatible) -> color with strongest qualifier
 color.r(color: color-compatible) -> float with same qualifier
 color.g(color: color-compatible) -> float with same qualifier
 color.b(color: color-compatible) -> float with same qualifier
 color.t(color: color-compatible) -> float with same qualifier
-color.from_gradient(value: numeric, bottom_value: numeric, top_value: numeric, bottom_color: color-compatible, top_color: color-compatible) -> color with strongest qualifier
+color.from_gradient(value: numeric-compatible, bottom_value: numeric-compatible, top_value: numeric-compatible, bottom_color: color-compatible, top_color: color-compatible) -> color with strongest qualifier
 ```
 
 Named colors include fixture-backed official RGB values for the 17 built-in
@@ -1653,17 +1792,19 @@ TradingView color constants: `color.aqua`, `color.black`, `color.blue`,
 `color.silver`, `color.teal`, `color.white`, and `color.yellow`.
 Hex color literals in `#RRGGBB` and `#RRGGBBAA` form are accepted as const
 colors.
-`color.new` defaults `transp` to 0 when omitted and clamps transparency to the
-0-100 range. Fully opaque results preserve the exact RGB color value.
+`color.new` defaults `transp` to 0 when omitted or explicitly `na` and clamps
+transparency to the 0-100 range. Fully opaque results preserve the exact RGB
+color value.
 `color.rgb` rounds channel inputs to integer RGBA channels, clamps RGB channels
 to 0-255, and clamps transparency to 0-100. Fully opaque results preserve the
-exact RGB color value.
+exact RGB color value. If any supplied channel or transparency argument is
+`na`, it returns `na`.
 `color.r`, `color.g`, `color.b`, and `color.t` return `na` for `na` colors;
 `color.t` returns transparency on the 0-100 scale.
 `color.from_gradient` linearly interpolates RGBA channels between the two
 colors, clamps values outside the numeric range to the exact endpoint color,
-and returns `na` when any required input is `na`. Equal bottom/top values return
-the top color.
+and returns `na` when any supplied numeric or color input is `na`. Equal
+bottom/top values return the top color.
 
 Hex color literals are parsed by the syntax layer and lowered to the runtime's
 single normalized `Color` representation.
@@ -1799,8 +1940,8 @@ math.hypot(number1: numeric|na, number2: numeric|na) -> float with strongest qua
 math.round(number: numeric|na) -> int with same qualifier
 math.round(number: numeric|na, precision: int|na) -> float with strongest qualifier
 math.round_to_mintick(number: numeric|na) -> float with same qualifier
-math.random(min?: numeric|na, max?: numeric|na, seed?: simple int) -> series float
-math.sum(source: series/simple numeric|na, length: simple int) -> series float
+math.random(min?: numeric|na, max?: numeric|na, seed?: simple integer-compatible) -> series float
+math.sum(source: series/simple numeric|na, length: int-compatible) -> series float
 ```
 
 Each added math function must declare its coercion and `na` behavior.
@@ -1831,9 +1972,10 @@ Current Phase 4 behavior:
   `syminfo.mintick` subset value, with ties rounding up.
 - `math.random` returns a deterministic pseudorandom `series float` sequence
   per callsite. Omitted `min`/`max` default to `0` and `1`; seeded calls are
-  reproducible for the same callsite and seed. Invalid or non-finite ranges
-  return `na`; const-or-series `na` min/max inputs return `na`.
-- `math.sum` returns the rolling sum of `source` over a ready simple-int
+  reproducible for the same callsite and seed. Explicit `na` seed uses the
+  unseeded callsite sequence. Invalid or non-finite ranges return `na`;
+  const-or-series `na` min/max inputs return `na`.
+- `math.sum` returns the rolling sum of `source` over a ready integer-compatible
   `length` window; it returns `na` for invalid lengths, until the window is
   ready, or when the window contains const-or-series `na`.
 - `math.max` and `math.min` require at least two numeric-or-`na` args and

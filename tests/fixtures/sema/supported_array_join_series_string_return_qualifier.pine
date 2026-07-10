@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported array.join series string return qualifier")
+
+words = array.from("alpha", "beta")
+
+plot(str.length(array.join(words)))
+plot(str.length(words.join("|")))

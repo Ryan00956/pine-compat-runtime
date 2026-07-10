@@ -233,7 +233,7 @@ impl Analyzer {
             };
             match name {
                 "direction" => {
-                    let Some(direction) = const_string_value(&arg.value) else {
+                    let Some(direction) = self.known_const_string_value(&arg.value) else {
                         continue;
                     };
                     if direction != "strategy.long" {
@@ -245,7 +245,7 @@ impl Analyzer {
                     }
                 }
                 "qty" => {
-                    if let Some(qty) = const_numeric_value(&arg.value)
+                    if let Some(qty) = self.known_const_numeric_value(&arg.value)
                         && qty <= 0.0
                     {
                         self.diagnostics.push(Diagnostic::error(
@@ -256,7 +256,7 @@ impl Analyzer {
                     }
                 }
                 "limit" => {
-                    if let Some(limit) = const_numeric_value(&arg.value)
+                    if let Some(limit) = self.known_const_numeric_value(&arg.value)
                         && (!limit.is_finite() || limit <= 0.0)
                     {
                         self.diagnostics.push(Diagnostic::error(
@@ -267,7 +267,7 @@ impl Analyzer {
                     }
                 }
                 "stop" => {
-                    if let Some(stop) = const_numeric_value(&arg.value)
+                    if let Some(stop) = self.known_const_numeric_value(&arg.value)
                         && (!stop.is_finite() || stop <= 0.0)
                     {
                         self.diagnostics.push(Diagnostic::error(
@@ -304,7 +304,7 @@ impl Analyzer {
         let direction = args.iter().enumerate().find_map(|(index, arg)| {
             let name = strategy_order_arg_name(index, arg)?;
             (name == "direction")
-                .then(|| const_string_value(&arg.value))
+                .then(|| self.known_const_string_value(&arg.value))
                 .flatten()
         });
         let has_qty = args
@@ -329,7 +329,7 @@ impl Analyzer {
             };
             match name {
                 "direction" => {
-                    let Some(direction) = const_string_value(&arg.value) else {
+                    let Some(direction) = self.known_const_string_value(&arg.value) else {
                         continue;
                     };
                     if !matches!(direction.as_str(), "strategy.long" | "strategy.short") {
@@ -341,7 +341,7 @@ impl Analyzer {
                     }
                 }
                 "qty" => {
-                    if let Some(qty) = const_numeric_value(&arg.value)
+                    if let Some(qty) = self.known_const_numeric_value(&arg.value)
                         && (!qty.is_finite() || qty <= 0.0)
                     {
                         self.diagnostics.push(Diagnostic::error(
@@ -359,7 +359,7 @@ impl Analyzer {
                             arg.span,
                         ));
                     }
-                    if let Some(limit) = const_numeric_value(&arg.value)
+                    if let Some(limit) = self.known_const_numeric_value(&arg.value)
                         && (!limit.is_finite() || limit <= 0.0)
                     {
                         self.diagnostics.push(Diagnostic::error(
@@ -377,7 +377,7 @@ impl Analyzer {
                             arg.span,
                         ));
                     }
-                    if let Some(stop) = const_numeric_value(&arg.value)
+                    if let Some(stop) = self.known_const_numeric_value(&arg.value)
                         && (!stop.is_finite() || stop <= 0.0)
                     {
                         self.diagnostics.push(Diagnostic::error(
@@ -416,7 +416,7 @@ impl Analyzer {
             };
             match name {
                 "qty" => {
-                    if let Some(qty) = const_numeric_value(&arg.value)
+                    if let Some(qty) = self.known_const_numeric_value(&arg.value)
                         && (!qty.is_finite() || qty <= 0.0)
                     {
                         self.diagnostics.push(Diagnostic::error(
@@ -427,7 +427,7 @@ impl Analyzer {
                     }
                 }
                 "qty_percent" => {
-                    if let Some(qty_percent) = const_numeric_value(&arg.value)
+                    if let Some(qty_percent) = self.known_const_numeric_value(&arg.value)
                         && (!qty_percent.is_finite() || qty_percent <= 0.0)
                     {
                         self.diagnostics.push(Diagnostic::error(

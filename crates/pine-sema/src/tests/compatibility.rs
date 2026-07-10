@@ -1,4 +1,5 @@
 use super::*;
+use pine_ir::{PineType, Qualifier, ValueKind};
 
 #[test]
 fn reports_supported_phase_1_calls() {
@@ -71,6 +72,136 @@ fn reports_unsupported_drawing_method_without_unknown_method_noise() {
     );
     assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
     assert!(!codes.contains(&"E_UNKNOWN_METHOD"), "{codes:?}");
+}
+
+#[test]
+fn reports_dynamic_history_offset_actual_float_type() {
+    let analysis = analyze("plot(close[close])\n");
+
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(
+        analysis.compatibility.unsupported[0].feature,
+        "dynamic_history_offset"
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("got series float")),
+        "{:?}",
+        analysis.diagnostics
+    );
+}
+
+#[test]
+fn reports_dynamic_history_offset_actual_bool_type() {
+    let analysis = analyze("offset = close > open\nplot(close[offset])\n");
+
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(
+        analysis.compatibility.unsupported[0].feature,
+        "dynamic_history_offset"
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("got series bool")),
+        "{:?}",
+        analysis.diagnostics
+    );
+}
+
+#[test]
+fn reports_builtin_call_argument_actual_series_type() {
+    let analysis = analyze("plot(ta.ema(close, bar_index))\n");
+
+    assert!(
+        analysis.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_CALL_ARG_TYPE"
+                && diagnostic.message.contains(
+                    "`ta.ema` argument `length` expects simple integer-compatible, got series int",
+                )
+        }),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        !analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("Series Int")),
+        "{:?}",
+        analysis.diagnostics
+    );
+}
+
+#[test]
+fn reports_map_call_argument_actual_const_type() {
+    let analysis = analyze("m = map.new<string, int>()\nmap.put(m, 1, 2)\n");
+
+    assert!(
+        analysis.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_CALL_ARG_TYPE"
+                && diagnostic
+                    .message
+                    .contains("`map.put` argument `key` expects string-compatible, got const int")
+        }),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        !analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("Const Int")),
+        "{:?}",
+        analysis.diagnostics
+    );
+}
+
+#[test]
+fn reports_for_in_statement_scalar_tree_udt_boundary() {
+    let analysis = analyze("for value in close\n    plot(value)\n");
+
+    assert!(
+        analysis.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_UNSUPPORTED_FEATURE"
+                && diagnostic.message.contains("scalar-tree UDT arrays")
+        }),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        !analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("scalar-field UDT")),
+        "{:?}",
+        analysis.diagnostics
+    );
+}
+
+#[test]
+fn reports_for_in_expression_scalar_tree_udt_boundary() {
+    let analysis = analyze("result = for value in close\n    value\nplot(1)\n");
+
+    assert!(
+        analysis.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_UNSUPPORTED_FEATURE"
+                && diagnostic.message.contains("scalar-tree UDT array")
+        }),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        !analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("scalar-field UDT")),
+        "{:?}",
+        analysis.diagnostics
+    );
 }
 
 #[test]
@@ -3194,6 +3325,23 @@ fn import_rejects_exported_function_side_effects() {
 }
 
 #[test]
+fn import_rejects_exported_function_switch_loop_side_effects() {
+    let analysis = analyze_with_libraries(
+        "import user/lib/1 as lib\nplot(close)\n",
+        vec![(
+            "user/lib/1",
+            "library(\"lib\")\nexport choose(flag, value) =>\n    switch\n        flag =>\n            for i = 0 to 0\n                plot(value)\n        =>\n            value\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(
+        codes.contains(&"E_IMPORT_FUNCTION_SIDE_EFFECT"),
+        "{codes:?}"
+    );
+}
+
+#[test]
 fn import_rejects_recursive_exported_functions() {
     let analysis = analyze_with_libraries(
         "import user/lib/1 as lib\nplot(lib.loop(close))\n",
@@ -3226,6 +3374,43 @@ fn import_accepts_scalar_imported_user_type_constructors() {
             .supported
             .iter()
             .any(|feature| feature.feature == "user-defined types")
+    );
+}
+
+#[test]
+fn import_accepts_nested_imported_user_type_history_references() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\np = lib.Point.new(close)\nwrapped = lib.Wrapper.new(p)\nprior = wrapped[1]\nplot(prior.nested.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\nexport type Wrapper\n    Point nested\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_accepts_nested_imported_user_type_typed_declarations_and_reassignment() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\nlib.Wrapper typed = lib.Wrapper.new(lib.Point.new(close))\ntyped := lib.Wrapper.new(lib.Point.new(open))\nplot(typed.nested.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\nexport type Wrapper\n    Point nested\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "lib.Wrapper typed declarations")
     );
 }
 
@@ -3314,7 +3499,7 @@ fn import_rejects_scalar_imported_user_type_varip_identity_mismatch() {
 }
 
 #[test]
-fn import_rejects_deferred_field_imported_user_type_varip() {
+fn import_rejects_private_dependency_imported_user_type_varip_constructor_arg() {
     let analysis = analyze_with_libraries(
         include_str!("../../../../tests/fixtures/sema/unsupported_imported_udt_varip.pine"),
         vec![(
@@ -3324,7 +3509,7 @@ fn import_rejects_deferred_field_imported_user_type_varip() {
     );
 
     let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_IMPORT_UNSUPPORTED_UDT"), "{codes:?}");
+    assert!(codes.contains(&"E_UDT_CONSTRUCTOR_ARG"), "{codes:?}");
     assert!(analysis.hir.is_none());
 }
 
@@ -3434,7 +3619,7 @@ fn import_rejects_scalar_imported_user_type_global_field_mutation() {
 }
 
 #[test]
-fn import_accepts_scalar_imported_user_type_history() {
+fn import_accepts_scalar_imported_user_type_dynamic_history() {
     let analysis = analyze_with_libraries(
         include_str!("../../../../tests/fixtures/runtime/import_udt_history.pine"),
         vec![(
@@ -3445,6 +3630,23 @@ fn import_accepts_scalar_imported_user_type_history() {
 
     let codes = diagnostic_codes(&analysis);
     assert!(codes.is_empty(), "{codes:?}");
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_accepts_exported_user_type_history_with_private_scalar_dependency_metadata() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/sema/supported_imported_udt_private_dependency_history.pine"
+        ),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
     assert!(analysis.hir.is_some());
 }
 
@@ -3490,9 +3692,9 @@ fn import_accepts_imported_user_type_array_typed_declarations() {
 }
 
 #[test]
-fn import_rejects_imported_non_scalar_user_type_array_declaration() {
+fn import_accepts_imported_scalar_tree_user_type_array_declaration() {
     let analysis = analyze_with_libraries(
-        include_str!("../../../../tests/fixtures/sema/unsupported_imported_udt_array_decl.pine"),
+        include_str!("../../../../tests/fixtures/sema/supported_imported_udt_array_decl.pine"),
         vec![(
             "user/udt/1",
             include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
@@ -3500,23 +3702,15 @@ fn import_rejects_imported_non_scalar_user_type_array_declaration() {
     );
 
     let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_DECL_TYPE"), "{codes:?}");
-    assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.message.contains("array<lib.Wrapper>")),
-        "{:?}",
-        analysis.diagnostics
-    );
-    assert!(analysis.hir.is_none());
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
-fn import_rejects_imported_non_scalar_user_type_array_alias_declaration() {
+fn import_accepts_imported_scalar_tree_user_type_array_alias_declaration() {
     let analysis = analyze_with_libraries(
         include_str!(
-            "../../../../tests/fixtures/sema/unsupported_imported_udt_array_alias_decl.pine"
+            "../../../../tests/fixtures/sema/supported_imported_udt_array_alias_decl.pine"
         ),
         vec![(
             "user/udt/1",
@@ -3525,16 +3719,8 @@ fn import_rejects_imported_non_scalar_user_type_array_alias_declaration() {
     );
 
     let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_DECL_TYPE"), "{codes:?}");
-    assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.message.contains("array<lib.Wrapper>")),
-        "{:?}",
-        analysis.diagnostics
-    );
-    assert!(analysis.hir.is_none());
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -3553,10 +3739,10 @@ fn import_accepts_imported_user_type_array_varip_declaration() {
 }
 
 #[test]
-fn import_rejects_imported_non_scalar_user_type_array_varip_declaration() {
+fn import_accepts_imported_scalar_tree_user_type_array_varip_declaration() {
     let analysis = analyze_with_libraries(
         include_str!(
-            "../../../../tests/fixtures/sema/unsupported_imported_udt_array_varip_decl.pine"
+            "../../../../tests/fixtures/sema/supported_imported_udt_array_varip_nested_decl.pine"
         ),
         vec![(
             "user/udt/1",
@@ -3565,16 +3751,8 @@ fn import_rejects_imported_non_scalar_user_type_array_varip_declaration() {
     );
 
     let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_DECL_TYPE"), "{codes:?}");
-    assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.message.contains("array<lib.Wrapper>")),
-        "{:?}",
-        analysis.diagnostics
-    );
-    assert!(analysis.hir.is_none());
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -3608,12 +3786,12 @@ fn import_accepts_scalar_imported_user_type_ternary() {
 }
 
 #[test]
-fn import_accepts_scalar_imported_user_type_if_expression() {
+fn import_accepts_scalar_imported_user_type_if_expression_history() {
     let analysis = analyze_with_libraries(
-        "import user/udt/1 as lib\np = if close > open\n    lib.Point.new(close)\nelse\n    lib.Point.new(open)\nlib.Point typed = if close > open\n    p\nelse\n    lib.Point.new(high)\nplot(p.x + typed.x)\n",
+        include_str!("../../../../tests/fixtures/runtime/import_udt_if_expression.pine"),
         vec![(
             "user/udt/1",
-            "library(\"udt\")\nexport type Point\n    float x\n",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
         )],
     );
 
@@ -3623,7 +3801,7 @@ fn import_accepts_scalar_imported_user_type_if_expression() {
 }
 
 #[test]
-fn import_accepts_scalar_imported_user_type_udf_passthrough() {
+fn import_accepts_scalar_imported_user_type_udf_passthrough_and_history_reads() {
     let analysis = analyze_with_libraries(
         "import user/udt/1 as lib\npassthrough(p) => p\np = passthrough(lib.Point.new(close))\nlib.Point typed = passthrough(lib.Point.new(open))\nplot(p.x + typed.x)\n",
         vec![(
@@ -3667,6 +3845,226 @@ fn import_accepts_scalar_imported_user_type_udf_nested_passthrough() {
 }
 
 #[test]
+fn import_accepts_scalar_imported_user_type_udf_ternary_alias_passthrough() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\naliasTernary(p, flip) =>\n    copy = p\n    flip ? copy : p\np = aliasTernary(lib.Point.new(close), bar_index % 2 == 0)\nlib.Point typed = aliasTernary(lib.Point.new(open), bar_index % 2 == 0)\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "function")
+    );
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_udf_nested_ternary_alias_passthrough() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\ninnerTernary(p, flip) =>\n    copy = p\n    flip ? copy : p\nouterTernary(p) => innerTernary(p, bar_index % 2 == 0)\np = outerTernary(lib.Point.new(close))\nlib.Point typed = outerTernary(lib.Point.new(open))\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "function")
+    );
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_udf_final_while_and_switch_alias_passthrough() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\naliasWhile(p) =>\n    active = true\n    while active\n        copy = p\n        active := false\n        copy\naliasSwitch(p, selector) =>\n    switch selector\n        0 =>\n            copy = p\n            copy\n        =>\n            copy = p\n            copy\np = aliasWhile(lib.Point.new(close))\nlib.Point typed = aliasSwitch(lib.Point.new(open), bar_index % 2)\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "function")
+    );
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_udf_block_alias_passthrough() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\naliasBlock(p) =>\n    copy = p\n    copy\np = aliasBlock(lib.Point.new(close))\nlib.Point typed = aliasBlock(lib.Point.new(open))\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "function")
+    );
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_udf_final_if_and_for_alias_passthrough() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\naliasIf(p, flip) =>\n    if flip\n        copy = p\n        copy\n    else\n        copy = p\n        copy\naliasFor(p, count) =>\n    for i = 0 to count\n        copy = p\n        copy\np = aliasIf(lib.Point.new(close), bar_index % 2 == 0)\nlib.Point typed = aliasFor(lib.Point.new(open), 2)\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "function")
+    );
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_udf_final_for_in_alias_passthrough() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\naliasForIn(p, values) =>\n    for value in values\n        copy = p\n        copy\nvalues = array.from(1, 2)\np = aliasForIn(lib.Point.new(close), values)\nlib.Point typed = aliasForIn(lib.Point.new(open), values)\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "function")
+    );
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_udf_nested_final_while_and_switch_passthrough() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\ninnerWhile(p) =>\n    active = true\n    while active\n        copy = p\n        active := false\n        copy\ninnerSwitch(p, selector) =>\n    switch selector\n        0 =>\n            copy = p\n            copy\n        =>\n            copy = p\n            copy\nouterWhile(p) => innerWhile(p)\nouterSwitch(p, selector) => innerSwitch(p, selector)\np = outerWhile(lib.Point.new(close))\nlib.Point typed = outerSwitch(lib.Point.new(open), bar_index % 2)\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "function")
+    );
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_udf_nested_final_if_and_for_passthrough() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\ninnerIf(p, flip) =>\n    if flip\n        copy = p\n        copy\n    else\n        copy = p\n        copy\ninnerFor(p, count) =>\n    for i = 0 to count\n        copy = p\n        copy\nouterIf(p) => innerIf(p, bar_index % 2 == 0)\nouterFor(p) => innerFor(p, 2)\np = outerIf(lib.Point.new(close))\nlib.Point typed = outerFor(lib.Point.new(open))\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "function")
+    );
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_udf_nested_block_alias_passthrough() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\ninnerBlock(p) =>\n    copy = p\n    copy\nouterBlock(p) => innerBlock(p)\np = outerBlock(lib.Point.new(close))\nlib.Point typed = outerBlock(lib.Point.new(open))\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "function")
+    );
+}
+
+#[test]
+fn import_accepts_scalar_imported_user_type_udf_nested_final_for_in_passthrough() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\ninnerForIn(p, values) =>\n    for value in values\n        copy = p\n        copy\nouterForIn(p, values) => innerForIn(p, values)\nvalues = array.from(1, 2)\np = outerForIn(lib.Point.new(close), values)\nlib.Point typed = outerForIn(lib.Point.new(open), values)\nplot(p.x + typed.x)\n",
+        vec![(
+            "user/udt/1",
+            "library(\"udt\")\nexport type Point\n    float x\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "function")
+    );
+}
+
+#[test]
 fn import_accepts_scalar_imported_user_type_udf_constructor_return() {
     let analysis = analyze_with_libraries(
         "import user/udt/1 as lib\nmakePoint(x) => lib.Point.new(x)\np = makePoint(close)\nlib.Point typed = makePoint(open)\nplot(p.x + typed.x)\n",
@@ -3686,6 +4084,21 @@ fn import_accepts_scalar_imported_user_type_udf_constructor_return() {
             .iter()
             .any(|feature| feature.feature == "function")
     );
+}
+
+#[test]
+fn import_accepts_imported_user_type_udf_control_flow_constructor_returns_and_history_reads() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/import_udt_udf_constructor_return.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -3726,7 +4139,25 @@ fn import_accepts_scalar_imported_user_type_udf_nested_constructor_return() {
 }
 
 #[test]
-fn import_rejects_deferred_field_imported_user_type_constructors_with_metadata_note() {
+fn import_accepts_imported_user_type_udf_nested_control_flow_constructor_returns_and_history_reads()
+{
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/runtime/import_udt_udf_nested_constructor_return.pine"
+        ),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_rejects_private_dependency_imported_user_type_constructor_arg() {
     let analysis = analyze_with_libraries(
         "import user/udt/1 as lib\np = lib.Wrapper.new(na)\nplot(close)\n",
         vec![(
@@ -3736,13 +4167,13 @@ fn import_rejects_deferred_field_imported_user_type_constructors_with_metadata_n
     );
 
     let codes = diagnostic_codes(&analysis);
-    assert!(codes.contains(&"E_IMPORT_UNSUPPORTED_UDT"), "{codes:?}");
+    assert!(codes.contains(&"E_UDT_CONSTRUCTOR_ARG"), "{codes:?}");
     assert!(
         analysis.diagnostics.iter().any(|diagnostic| {
-            diagnostic.code == "E_IMPORT_UNSUPPORTED_UDT"
+            diagnostic.code == "E_UDT_CONSTRUCTOR_ARG"
                 && diagnostic
                     .message
-                    .contains("non-scalar or deferred field metadata remains unsupported")
+                    .contains("cannot assign const na to imported field `nested`")
         }),
         "{:?}",
         analysis.diagnostics
@@ -3768,7 +4199,7 @@ fn import_rejects_private_user_type_constructors() {
 }
 
 #[test]
-fn import_accepts_while_expression_imported_user_type_result() {
+fn import_accepts_while_expression_imported_user_type_result_history() {
     let analysis = analyze_with_libraries(
         include_str!("../../../../tests/fixtures/runtime/import_udt_while_expression.pine"),
         vec![(
@@ -3800,7 +4231,7 @@ fn import_rejects_while_expression_imported_user_type_identity_mismatch() {
 }
 
 #[test]
-fn import_accepts_for_expression_imported_user_type_result() {
+fn import_accepts_for_expression_imported_user_type_result_history() {
     let analysis = analyze_with_libraries(
         include_str!("../../../../tests/fixtures/runtime/import_udt_for_expression.pine"),
         vec![(
@@ -3815,7 +4246,7 @@ fn import_accepts_for_expression_imported_user_type_result() {
 }
 
 #[test]
-fn import_accepts_for_in_expression_imported_user_type_result() {
+fn import_accepts_for_in_expression_imported_user_type_result_history() {
     let analysis = analyze_with_libraries(
         include_str!("../../../../tests/fixtures/runtime/import_udt_for_in_expression.pine"),
         vec![(
@@ -3827,6 +4258,23 @@ fn import_accepts_for_in_expression_imported_user_type_result() {
     let codes = diagnostic_codes(&analysis);
     assert!(codes.is_empty(), "{codes:?}");
     assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_rejects_for_in_expression_imported_user_type_identity_mismatch() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/sema/unsupported_imported_udt_for_in_identity.pine"
+        ),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_UDT_ASSIGN_TYPE"), "{codes:?}");
+    assert!(analysis.hir.is_none());
 }
 
 #[test]
@@ -3845,7 +4293,7 @@ fn import_rejects_for_expression_imported_user_type_identity_mismatch() {
 }
 
 #[test]
-fn import_accepts_switch_block_imported_user_type_result() {
+fn import_accepts_switch_block_imported_user_type_result_history() {
     let analysis = analyze_with_libraries(
         include_str!("../../../../tests/fixtures/runtime/import_udt_switch_statement_block.pine"),
         vec![(
@@ -3896,6 +4344,156 @@ fn import_accepts_alias_qualified_imported_user_methods() {
     let codes = diagnostic_codes(&analysis);
     assert!(codes.is_empty(), "{codes:?}");
     assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_accepts_imported_method_ternary_while_and_switch_returns() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/runtime/import_udt_method_while_switch_return.pine"
+        ),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}");
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_accepts_imported_method_final_for_in_alias_returns_and_history_reads() {
+    let analysis = analyze_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/import_udt_method_return.pine"),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}: {:?}", analysis.diagnostics);
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_accepts_imported_method_control_flow_constructor_returns_and_history_reads() {
+    let analysis = analyze_with_libraries(
+        include_str!(
+            "../../../../tests/fixtures/runtime/import_udt_method_constructor_return.pine"
+        ),
+        vec![(
+            "user/udt/1",
+            include_str!("../../../../tests/fixtures/libraries/import_udt_lib.pine"),
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}");
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_tuple_destructuring_preserves_alias_qualified_method_returned_input_and_simple_values() {
+    let analysis = analyze_with_libraries(
+        "import user/tuple/1 as lib\nbox = lib.Box.new(1)\nlength = input.int(2, \"Length\")\ntf = timeframe.period\n[len, chart_tf] = lib.pair(box, length, tf)\nplot(ta.sma(close, len))\nplot(timeframe.in_seconds(chart_tf))\n",
+        vec![(
+            "user/tuple/1",
+            "library(\"Tuple method fixture\")\nexport type Box\n    int seed\nmethod pair(Box this, int length, string tf) =>\n    [length, tf]\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}");
+    let hir = analysis.hir.expect("HIR");
+    let len = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "len")
+        .expect("len symbol");
+    let chart_tf = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "chart_tf")
+        .expect("chart_tf symbol");
+
+    assert_eq!(
+        len.pine_type,
+        PineType::new(Qualifier::Input, ValueKind::Int)
+    );
+    assert_eq!(
+        chart_tf.pine_type,
+        PineType::new(Qualifier::Simple, ValueKind::String)
+    );
+}
+
+#[test]
+fn import_tuple_destructuring_preserves_udf_param_alias_qualified_method_returned_input_and_simple_values()
+ {
+    let analysis = analyze_with_libraries(
+        "import user/tuple/1 as lib\nforward(box, length, tf) => lib.pair(box, length, tf)\nbox = lib.Box.new(1)\nlength = input.int(2, \"Length\")\ntf = timeframe.period\n[len, chart_tf] = forward(box, length, tf)\nplot(ta.sma(close, len))\nplot(timeframe.in_seconds(chart_tf))\n",
+        vec![(
+            "user/tuple/1",
+            "library(\"Tuple method fixture\")\nexport type Box\n    int seed\nmethod pair(Box this, int length, string tf) =>\n    [length, tf]\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.is_empty(), "{codes:?}");
+    let hir = analysis.hir.expect("HIR");
+    let len = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "len")
+        .expect("len symbol");
+    let chart_tf = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "chart_tf")
+        .expect("chart_tf symbol");
+
+    assert_eq!(
+        len.pine_type,
+        PineType::new(Qualifier::Input, ValueKind::Int)
+    );
+    assert_eq!(
+        chart_tf.pine_type,
+        PineType::new(Qualifier::Simple, ValueKind::String)
+    );
+}
+
+#[test]
+fn import_tuple_destructuring_rejects_alias_qualified_method_returned_series_int_for_simple_param()
+{
+    let analysis = analyze_with_libraries(
+        "import user/tuple/1 as lib\nbox = lib.Box.new(1)\nlength = input.int(2, \"Length\")\n[len] = lib.seriesPair(box, length)\nplot(ta.ema(close, len))\n",
+        vec![(
+            "user/tuple/1",
+            "library(\"Tuple method fixture\")\nexport type Box\n    int seed\nmethod seriesPair(Box this, int length) =>\n    [length + bar_index]\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_CALL_ARG_TYPE"), "{codes:?}");
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_tuple_destructuring_rejects_udf_param_alias_qualified_method_returned_series_int_for_simple_param()
+ {
+    let analysis = analyze_with_libraries(
+        "import user/tuple/1 as lib\nforward(box, length) => lib.seriesPair(box, length)\nbox = lib.Box.new(1)\nlength = input.int(2, \"Length\")\n[len] = forward(box, length)\nplot(ta.ema(close, len))\n",
+        vec![(
+            "user/tuple/1",
+            "library(\"Tuple method fixture\")\nexport type Box\n    int seed\nmethod seriesPair(Box this, int length) =>\n    [length + bar_index]\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_CALL_ARG_TYPE"), "{codes:?}");
+    assert!(analysis.hir.is_none());
 }
 
 #[test]

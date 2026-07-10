@@ -1,0 +1,16 @@
+//@version=6
+indicator("Unsupported method final for-in reassignment series iterable qualifier")
+
+type Box
+    int seed
+
+method checked_length(Box this, array<int> values, int x) =>
+    local = x
+    for value in values
+        local := x
+        ta.ema(close, local)
+
+array<int> values = na
+length = input.int(2, "Length")
+box = Box.new(1)
+plot(box.checked_length(values, length))

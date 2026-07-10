@@ -1,0 +1,11 @@
+//@version=6
+indicator("Unsupported named const numeric switch comparison ternary negative history")
+mode = 2
+fast = switch mode
+    1 => 2.0
+    2 =>
+        3.0
+    => 2.0
+use_short = fast > 2.0
+length = use_short ? -1 : 1
+plot(close[length])

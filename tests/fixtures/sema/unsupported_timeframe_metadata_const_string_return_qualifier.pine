@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported timeframe metadata const string return qualifier")
+
+plot(timestamp(dateString=timeframe.period))
+plot(timestamp(dateString=timeframe.main_period))

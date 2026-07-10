@@ -1,0 +1,5 @@
+//@version=6
+indicator("Supported color.new input return qualifier")
+base = input.color(color.blue, "Base")
+level_color = color.new(base, 50)
+hline(2, color=level_color)

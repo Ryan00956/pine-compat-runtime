@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported empty matrix.pinv method for-in result negative body history")
+source = matrix.new<float>(3, 0, 0)
+values = source.pinv()
+length = for row in values
+    -1
+plot(close[length])

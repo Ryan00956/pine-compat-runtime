@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported for-in empty matrix.copy result negative body history")
+source = matrix.new<float>(0, 1, 0)
+values = matrix.copy(source)
+length = for row in values
+    -1
+plot(close[length])

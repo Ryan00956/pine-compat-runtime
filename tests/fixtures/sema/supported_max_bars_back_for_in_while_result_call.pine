@@ -1,0 +1,21 @@
+//@version=6
+indicator("Supported max_bars_back for-in and while result call")
+src = close
+items = array.from(1)
+for_in_value = for item in items
+    length = 20
+    switch
+        bar_index >= 0 =>
+            max_bars_back(src, length)
+            src[bar_index]
+        => src[bar_index]
+i = 0
+while_value = while i < 1
+    i := i + 1
+    length = 20
+    switch
+        bar_index >= 0 =>
+            max_bars_back(src, length)
+            src[bar_index]
+        => src[bar_index]
+plot(for_in_value + while_value)

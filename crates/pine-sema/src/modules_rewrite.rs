@@ -131,7 +131,10 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
                 } => ExportItem::Function {
                     name: name.clone(),
                     params: params.clone(),
-                    body: rewrite_function_body(body, params, context),
+                    body: {
+                        let param_names = function_param_names(params);
+                        rewrite_function_body(body, &param_names, context)
+                    },
                     span: *span,
                 },
                 ExportItem::Const { name, value, span } => ExportItem::Const {
@@ -150,7 +153,10 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
         StmtKind::Function { name, params, body } => StmtKind::Function {
             name: name.clone(),
             params: params.clone(),
-            body: rewrite_function_body(body, params, context),
+            body: {
+                let param_names = function_param_names(params);
+                rewrite_function_body(body, &param_names, context)
+            },
         },
         StmtKind::Import(_)
         | StmtKind::Library(_)
@@ -178,6 +184,10 @@ pub(super) fn rewrite_function_body(
             FunctionBody::Block(rewrite_statements(statements, &context))
         }
     }
+}
+
+fn function_param_names(params: &[pine_syntax::FunctionParam]) -> Vec<String> {
+    params.iter().map(|param| param.name.clone()).collect()
 }
 
 pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {

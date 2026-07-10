@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported named const zero for loop step")
+base = 0
+step = base
+for i = 0 to 2 by step
+    plot(close)

@@ -1,0 +1,13 @@
+//@version=5
+indicator("Supported chart point varip")
+
+varip chart.point current = chart.point.from_index(bar_index, close)
+current.price := current.price + 1
+
+varip chart.point seeded = na
+seeded := chart.point.copy(current)
+
+varip inferred = chart.point.from_index(bar_index, high)
+inferred.price := inferred.price + 2
+
+plot(current.price + seeded.price + inferred.price)

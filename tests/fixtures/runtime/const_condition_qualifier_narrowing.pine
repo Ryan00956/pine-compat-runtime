@@ -1,0 +1,275 @@
+//@version=6
+indicator("Const condition qualifier narrowing")
+type QualifierBox
+    int seed
+length = input.int(2, "Length")
+use_dead = false
+use_live = not use_dead
+mode = "live"
+paint = color.orange
+selector_index = 1
+selector_bool = true
+qualifier_box = QualifierBox.new(1)
+mode_is_dead = mode == "dead"
+live_is_true = use_live == true
+paint_is_orange = paint == color.orange
+selected = if false
+    for i = 0 to bar_index
+        length
+else
+    length
+selected_ternary = false ? bar_index : length
+selected_named = if use_dead
+    for i = 0 to bar_index
+        length
+else
+    length
+selected_named_ternary = use_dead ? bar_index : length
+selected_string_cmp = if mode == "dead"
+    for i = 0 to bar_index
+        length
+else
+    length
+selected_bool_cmp = if use_live == false
+    for i = 0 to bar_index
+        length
+else
+    length
+selected_named_cmp = if mode_is_dead
+    for i = 0 to bar_index
+        length
+else
+    length
+selected_named_bool_cmp = if live_is_true
+    length
+else
+    for i = 0 to bar_index
+        length
+selected_color_cmp = if color.red == color.green
+    for i = 0 to bar_index
+        length
+else
+    length
+selected_named_color_cmp = if paint_is_orange
+    length
+else
+    for i = 0 to bar_index
+        length
+selected_switch = switch
+    use_dead =>
+        for i = 0 to bar_index
+            length
+    =>
+        length
+selected_cmp_switch = switch
+    mode == "dead" =>
+        for i = 0 to bar_index
+            length
+    use_live == true =>
+        length
+    =>
+        bar_index
+selected_color_cmp_switch = switch
+    paint != color.orange =>
+        for i = 0 to bar_index
+            length
+    paint_is_orange =>
+        length
+    =>
+        bar_index
+selected_selector_switch = switch mode
+    "dead" =>
+        for i = 0 to bar_index
+            length
+    "live" =>
+        length
+    =>
+        bar_index
+selected_selector_int_switch = switch selector_index
+    0 =>
+        for i = 0 to bar_index
+            length
+    1 =>
+        length
+    =>
+        bar_index
+selected_selector_bool_switch = switch selector_bool
+    false =>
+        for i = 0 to bar_index
+            length
+    true =>
+        length
+    =>
+        bar_index
+selected_selector_color_switch = switch paint
+    color.red =>
+        for i = 0 to bar_index
+            length
+    color.orange =>
+        length
+    =>
+        bar_index
+[tuple_length] = if false
+    [bar_index]
+else
+    [length]
+[tuple_ternary_length] = false ? [bar_index] : [length]
+[tuple_named_length] = use_live ? [length] : [bar_index]
+[tuple_string_cmp_length] = if mode != "live"
+    [bar_index]
+else
+    [length]
+[tuple_bool_cmp_length] = if use_live != true
+    [bar_index]
+else
+    [length]
+[tuple_color_cmp_length] = if paint == color.red
+    [bar_index]
+else
+    [length]
+[tuple_switch_length] = switch
+    use_dead =>
+        [bar_index]
+    =>
+        [length]
+[tuple_cmp_switch_length] = switch
+    mode_is_dead =>
+        [bar_index]
+    live_is_true =>
+        [length]
+    =>
+        [bar_index]
+[tuple_color_cmp_switch_length] = switch
+    paint == color.red =>
+        [bar_index]
+    paint_is_orange =>
+        [length]
+    =>
+        [bar_index]
+[tuple_selector_switch_length] = switch mode
+    "dead" =>
+        [bar_index]
+    "live" =>
+        [length]
+    =>
+        [bar_index]
+[tuple_selector_int_switch_length] = switch selector_index
+    0 =>
+        [bar_index]
+    1 =>
+        [length]
+    =>
+        [bar_index]
+[tuple_selector_bool_switch_length] = switch selector_bool
+    false =>
+        [bar_index]
+    true =>
+        [length]
+    =>
+        [bar_index]
+[tuple_selector_color_switch_length] = switch paint
+    color.red =>
+        [bar_index]
+    color.orange =>
+        [length]
+    =>
+        [bar_index]
+choose_length(x) =>
+    if false
+        for i = 0 to bar_index
+            x
+    else
+        x
+choose_named_length(x) =>
+    if use_dead
+        for i = 0 to bar_index
+            x
+    else
+        x
+choose_color_length(x) =>
+    if paint == color.orange
+        x
+    else
+        for i = 0 to bar_index
+            x
+choose_switch_length(x) =>
+    switch
+        use_dead =>
+            for i = 0 to bar_index
+                x
+        =>
+            x
+choose_selector_switch_length(mode, x) =>
+    switch mode
+        "dead" =>
+            for i = 0 to bar_index
+                x
+        "live" =>
+            x
+        =>
+            bar_index
+choose_selector_tuple_length(mode, x) =>
+    switch mode
+        "dead" =>
+            [bar_index]
+        "live" =>
+            [x]
+        =>
+            [bar_index]
+forward_selector_tuple_length(mode, x) => choose_selector_tuple_length(mode, x)
+method choose_selector_tuple_method_length(QualifierBox this, string mode, int x) =>
+    switch mode
+        "dead" =>
+            [bar_index]
+        "live" =>
+            [x]
+        =>
+            [bar_index]
+choose_tuple_length(x) =>
+    if false
+        [bar_index]
+    else
+        [x]
+[tuple_udf_length] = choose_tuple_length(length)
+[tuple_selector_udf_length] = choose_selector_tuple_length(mode, length)
+[tuple_selector_nested_udf_length] = forward_selector_tuple_length(mode, length)
+[tuple_selector_method_length] = qualifier_box.choose_selector_tuple_method_length(mode, length)
+plot(ta.sma(close, selected))
+plot(ta.sma(close, selected_ternary))
+plot(ta.sma(close, selected_named))
+plot(ta.sma(close, selected_named_ternary))
+plot(ta.sma(close, selected_string_cmp))
+plot(ta.sma(close, selected_bool_cmp))
+plot(ta.sma(close, selected_named_cmp))
+plot(ta.sma(close, selected_named_bool_cmp))
+plot(ta.sma(close, selected_color_cmp))
+plot(ta.sma(close, selected_named_color_cmp))
+plot(ta.sma(close, selected_switch))
+plot(ta.sma(close, selected_cmp_switch))
+plot(ta.sma(close, selected_color_cmp_switch))
+plot(ta.sma(close, selected_selector_switch))
+plot(ta.sma(close, selected_selector_int_switch))
+plot(ta.sma(close, selected_selector_bool_switch))
+plot(ta.sma(close, selected_selector_color_switch))
+plot(ta.sma(close, tuple_length))
+plot(ta.sma(close, tuple_ternary_length))
+plot(ta.sma(close, tuple_named_length))
+plot(ta.sma(close, tuple_string_cmp_length))
+plot(ta.sma(close, tuple_bool_cmp_length))
+plot(ta.sma(close, tuple_color_cmp_length))
+plot(ta.sma(close, tuple_switch_length))
+plot(ta.sma(close, tuple_cmp_switch_length))
+plot(ta.sma(close, tuple_color_cmp_switch_length))
+plot(ta.sma(close, tuple_selector_switch_length))
+plot(ta.sma(close, tuple_selector_int_switch_length))
+plot(ta.sma(close, tuple_selector_bool_switch_length))
+plot(ta.sma(close, tuple_selector_color_switch_length))
+plot(ta.sma(close, choose_length(length)))
+plot(ta.sma(close, choose_named_length(length)))
+plot(ta.sma(close, choose_color_length(length)))
+plot(ta.sma(close, choose_switch_length(length)))
+plot(ta.sma(close, choose_selector_switch_length(mode, length)))
+plot(ta.sma(close, tuple_udf_length))
+plot(ta.sma(close, tuple_selector_udf_length))
+plot(ta.sma(close, tuple_selector_nested_udf_length))
+plot(ta.sma(close, tuple_selector_method_length))

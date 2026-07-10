@@ -5,12 +5,12 @@ use super::types::*;
 const ARRAY_NEW_FLOAT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "initial_value",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
 ];
@@ -18,7 +18,7 @@ const ARRAY_NEW_FLOAT_PARAMS: &[BuiltinParam] = &[
 const ARRAY_NEW_INT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -31,7 +31,7 @@ const ARRAY_NEW_INT_PARAMS: &[BuiltinParam] = &[
 const ARRAY_NEW_BOOL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -44,7 +44,7 @@ const ARRAY_NEW_BOOL_PARAMS: &[BuiltinParam] = &[
 const ARRAY_NEW_STRING_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -57,7 +57,7 @@ const ARRAY_NEW_STRING_PARAMS: &[BuiltinParam] = &[
 const ARRAY_NEW_COLOR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -70,7 +70,7 @@ const ARRAY_NEW_COLOR_PARAMS: &[BuiltinParam] = &[
 const ARRAY_NEW_LINE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -83,7 +83,7 @@ const ARRAY_NEW_LINE_PARAMS: &[BuiltinParam] = &[
 const ARRAY_NEW_LINEFILL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -96,7 +96,7 @@ const ARRAY_NEW_LINEFILL_PARAMS: &[BuiltinParam] = &[
 const ARRAY_NEW_POLYLINE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -109,7 +109,7 @@ const ARRAY_NEW_POLYLINE_PARAMS: &[BuiltinParam] = &[
 const ARRAY_NEW_LABEL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -122,7 +122,7 @@ const ARRAY_NEW_LABEL_PARAMS: &[BuiltinParam] = &[
 const ARRAY_NEW_BOX_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -135,7 +135,7 @@ const ARRAY_NEW_BOX_PARAMS: &[BuiltinParam] = &[
 const ARRAY_NEW_TABLE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -148,7 +148,7 @@ const ARRAY_NEW_TABLE_PARAMS: &[BuiltinParam] = &[
 const ARRAY_NEW_CHART_POINT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -247,7 +247,7 @@ const ARRAY_PERCENTRANK_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "index",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
 ];
@@ -273,12 +273,12 @@ const ARRAY_SLICE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "index_from",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "index_to",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
 ];
@@ -335,12 +335,12 @@ const ARRAY_FILL_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "index_from",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "index_to",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
 ];
@@ -353,7 +353,7 @@ const ARRAY_INDEX_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "index",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
 ];
@@ -366,7 +366,7 @@ const ARRAY_SET_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "index",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
     BuiltinParam {

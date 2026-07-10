@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported max_bars_back block call")
+src = close
+if close > open
+    length = 20
+    max_bars_back(src, length)
+plot(src)

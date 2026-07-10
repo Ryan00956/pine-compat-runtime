@@ -1,0 +1,25 @@
+//@version=5
+indicator("Chart point history")
+
+point = chart.point.from_index(bar_index, close)
+previous = point[1]
+dynamic_offset = bar_index == 0 ? na : 1
+dynamic_previous = point[dynamic_offset]
+dynamic_sibling = point[dynamic_offset]
+
+float dynamic_previous_price = na
+float dynamic_sibling_price_after_dynamic_mutation = na
+if bar_index > 0
+    dynamic_previous_price := dynamic_previous.price
+    dynamic_previous.price := close + 700
+    dynamic_sibling_price_after_dynamic_mutation := dynamic_sibling.price
+
+point.price := close + 10
+previous_after_mutation = point[1]
+
+plot(na(previous) ? 1 : 0)
+plot(na(previous) ? na : previous.index)
+plot(na(dynamic_previous) ? 1 : 0)
+plot(dynamic_previous_price)
+plot(na(previous_after_mutation) ? na : previous_after_mutation.price)
+plot(dynamic_sibling_price_after_dynamic_mutation)

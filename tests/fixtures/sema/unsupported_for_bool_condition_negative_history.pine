@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported for bool condition negative history")
+flag = for i = 0 to 0
+    true
+length = flag ? -1 : 1
+plot(close[length])

@@ -1,0 +1,18 @@
+//@version=6
+indicator("Unsupported matrix.new fixed simple return qualifier")
+
+matrix.fill(matrix.new<int>(1, 1, 0), 1.5)
+matrix.fill(matrix.new<float>(1, 1, 0.0), "bad")
+matrix.fill(matrix.new<bool>(1, 1, false), 1)
+matrix.fill(matrix.new<string>(1, 1, ""), 1)
+matrix.fill(matrix.new<color>(1, 1, color.red), 1)
+int_values = matrix.new<int>(1, 1, 0)
+float_values = matrix.new<float>(1, 1, 0.0)
+bool_values = matrix.new<bool>(1, 1, false)
+string_values = matrix.new<string>(1, 1, "")
+color_values = matrix.new<color>(1, 1, color.red)
+int_values.fill(1.5)
+float_values.fill("bad")
+bool_values.fill(1)
+string_values.fill(1)
+color_values.fill(1)

@@ -1,9 +1,13 @@
 //@version=5
 indicator("Supertrend Edge Cases")
 [line, direction] = ta.supertrend(2, 3)
+[missing_factor_line, missing_factor_direction] = ta.supertrend(na, 3)
 [zero_period_line, zero_period_direction] = ta.supertrend(2, 0)
 [negative_period_line, negative_period_direction] = ta.supertrend(2, -1)
+[missing_period_line, missing_period_direction] = ta.supertrend(2, na)
 plot(line)
 plot(direction)
+plot(na(missing_factor_line) and na(missing_factor_direction) ? 1 : 0)
 plot(na(zero_period_line) and na(zero_period_direction) ? 1 : 0)
 plot(na(negative_period_line) and na(negative_period_direction) ? 1 : 0)
+plot(na(missing_period_line) and na(missing_period_direction) ? 1 : 0)

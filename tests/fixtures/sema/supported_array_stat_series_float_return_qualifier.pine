@@ -1,0 +1,10 @@
+//@version=6
+indicator("Supported array stat series float return qualifier")
+
+ints = array.from(1, 2, 3)
+floats = array.from(1.0, 2.0, 3.0)
+
+plot(array.avg(ints) + array.percentile_linear_interpolation(ints, 50) + array.percentrank(ints, 0) + array.covariance(ints, ints, false) + array.variance(ints, false) + array.stdev(ints, false))
+plot(ints.avg() + ints.percentile_linear_interpolation(50) + ints.percentrank(0) + ints.covariance(ints, false) + ints.variance(false) + ints.stdev(false))
+plot(array.avg(floats) + array.percentile_linear_interpolation(floats, 50) + array.percentrank(floats, 0) + array.covariance(floats, floats, false) + array.variance(floats, false) + array.stdev(floats, false))
+plot(floats.avg() + floats.percentile_linear_interpolation(50) + floats.percentrank(0) + floats.covariance(floats, false) + floats.variance(false) + floats.stdev(false))

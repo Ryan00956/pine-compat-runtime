@@ -1,0 +1,14 @@
+//@version=6
+indicator("Supported value helpers same-as-arg return qualifier")
+
+source_int = input.int(4, "Source int")
+source_float = input.float(2.5, "Source float")
+source_color = input.color(color.orange, "Source color")
+
+input_int = nz(source_int)
+input_float = fixnan(source_float)
+input_color = fixnan(source_color)
+
+plot(close, show_last=input_int)
+hline(input_float)
+hline(2, color=input_color)

@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported named const switch negative history")
+mode = 2
+length = switch mode
+    1 => 1
+    2 => -1
+    => 1
+plot(close[length])

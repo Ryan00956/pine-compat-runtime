@@ -1,0 +1,10 @@
+//@version=6
+indicator("Unsupported branch local alias if negative history")
+use_short = input.bool(true, "Use short")
+length = if use_short
+    base = -1
+    base
+else
+    base = -1
+    base
+plot(close[length])

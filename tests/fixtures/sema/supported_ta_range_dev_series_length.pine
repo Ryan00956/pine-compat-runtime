@@ -1,0 +1,7 @@
+//@version=5
+indicator("Supported ta.range/dev series length")
+length = bar_index % 2 + 2
+plot(ta.range(close, length))
+plot(ta.dev(close, length))
+plot(ta.range(source=high, length=length))
+plot(ta.dev(length=length, source=low))

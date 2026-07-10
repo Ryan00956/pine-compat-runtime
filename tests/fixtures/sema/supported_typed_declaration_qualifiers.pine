@@ -1,0 +1,14 @@
+//@version=5
+indicator("Supported typed declaration qualifiers")
+
+int literal_length = 2
+int input_length = input.int(3, "Length")
+string chart_tf = timeframe.period
+
+plot(ta.sma(close, literal_length))
+plot(ta.ema(close, input_length))
+plot(timeframe.in_seconds(chart_tf))
+
+int promoted = 1
+promoted := bar_index
+plot(promoted)

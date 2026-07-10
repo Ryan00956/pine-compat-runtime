@@ -1,10 +1,8 @@
 use crate::prelude::*;
 
-const FOR_IN_SUPPORTED_ITERABLES_REASON: &str = "for...in currently supports statement iteration over scalar arrays, label arrays, line arrays, linefill arrays, polyline arrays, box arrays, table arrays, chart.point arrays, same-local or same-imported scalar-field UDT arrays, matrix rows, and scalar maps with key/value loop variables only; non-scalar-field UDT arrays and other iterable families remain unsupported";
+const FOR_IN_SUPPORTED_ITERABLES_REASON: &str = "for...in currently supports statement iteration over scalar arrays, label arrays, line arrays, linefill arrays, polyline arrays, box arrays, table arrays, chart.point arrays, same-local or same-imported scalar-tree UDT arrays, matrix rows, and scalar maps with key-only or key/value loop variables; non-scalar-tree UDT arrays and other iterable families remain unsupported";
 
-const FOR_IN_SUPPORTED_INDEX_VALUE_REASON: &str = "index/value for...in currently supports statement iteration over array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, same-local or same-imported scalar-field UDT arrays, matrix rows, and scalar maps where the first variable receives the key; other array element kinds and non-scalar-field UDT arrays remain unsupported";
-
-const FOR_IN_MAP_REQUIRES_KEY_VALUE_REASON: &str = "direct map for...in iteration requires key/value loop variables such as `for [key, value] in values`";
+const FOR_IN_SUPPORTED_INDEX_VALUE_REASON: &str = "index/value for...in currently supports statement iteration over array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, same-local or same-imported scalar-tree UDT arrays, matrix rows, and scalar maps where the first variable receives the key; other array element kinds and non-scalar-tree UDT arrays remain unsupported";
 
 #[derive(Debug, Clone)]
 struct ForInLoopKinds {
@@ -31,10 +29,6 @@ impl Analyzer {
             self.unsupported("for...in", FOR_IN_SUPPORTED_INDEX_VALUE_REASON, span);
             return;
         }
-        if iterable_type.kind == ValueKind::Map && index.is_none() {
-            self.unsupported("for...in", FOR_IN_MAP_REQUIRES_KEY_VALUE_REASON, span);
-            return;
-        }
         let Some(kinds) = for_in_loop_kinds(iterable_type.kind, self, iterable, index.is_some())
         else {
             self.unsupported("for...in", FOR_IN_SUPPORTED_ITERABLES_REASON, span);
@@ -47,6 +41,8 @@ impl Analyzer {
 
         self.block_depth += 1;
         self.loop_depth += 1;
+        self.assignment_qualifier_context
+            .push(iterable_type.qualifier);
         self.scope.push_scope();
         if let Some(index) = index {
             let index_symbol = self.define_local_symbol(
@@ -74,6 +70,7 @@ impl Analyzer {
             self.analyze_stmt(body_statement);
         }
         self.scope.pop_scope();
+        self.assignment_qualifier_context.pop();
         self.loop_depth -= 1;
         self.block_depth -= 1;
     }
@@ -138,8 +135,12 @@ fn for_in_loop_kinds(
         ValueKind::Map => {
             let info = analyzer.map_type_of_expr(iterable)?;
             Some(ForInLoopKinds {
-                index_kind: Some(info.key_kind),
-                value_kind: info.value_kind,
+                index_kind: has_index.then_some(info.key_kind),
+                value_kind: if has_index {
+                    info.value_kind
+                } else {
+                    info.key_kind
+                },
                 user_type_name: None,
             })
         }

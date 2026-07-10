@@ -43,6 +43,17 @@ fn collect_input_calls_from_stmts(statements: &[HirStmt], calls: &mut Vec<InputC
                 collect_input_calls_from_stmts(then_branch, calls);
                 collect_input_calls_from_stmts(else_branch, calls);
             }
+            HirStmtKind::Switch { selector, arms } => {
+                if let Some(selector) = selector {
+                    collect_input_calls_from_expr(selector, calls);
+                }
+                for arm in arms {
+                    if let Some(condition) = &arm.condition {
+                        collect_input_calls_from_expr(condition, calls);
+                    }
+                    collect_input_calls_from_stmts(&arm.body, calls);
+                }
+            }
             HirStmtKind::For {
                 from,
                 to,

@@ -1,0 +1,17 @@
+//@version=5
+indicator("Supported user type varip declaration")
+
+type Point
+    float x
+
+varip Point typed = Point.new(close)
+typed.x := typed.x + 1
+
+varip inferred = Point.new(close + 10)
+inferred.x := inferred.x + 1
+
+aliasSource = Point.new(close + 20)
+varip alias = aliasSource
+alias.x := alias.x + 1
+
+plot(typed.x + inferred.x + alias.x)

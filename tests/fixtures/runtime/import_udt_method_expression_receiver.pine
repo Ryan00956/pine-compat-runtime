@@ -1,0 +1,30 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT method expression receiver")
+
+direct = lib.shift(lib.Point.new(close), 5)
+nested = lib.nestedShift(lib.Wrapper.new(lib.Point.new(open)), 7)
+made = lib.make(lib.Point.new(close), close + 10)
+directNamed = lib.shift(lib.Point.new(open), delta=6)
+chosenNamed = lib.choose(lib.Point.new(close + 1), other=lib.Point.new(open + 20))
+nestedNamed = lib.otherNestedSourceNamed(lib.Point.new(open), other=lib.Wrapper.new(lib.Point.new(close)), delta=3)
+wrappedMadeNamed = lib.makeWrapper(lib.Wrapper.new(lib.Point.new(high)), value=low + 30)
+receiverShifted = lib.Point.new(close).shift(5)
+receiverNested = lib.Wrapper.new(lib.Point.new(open)).nestedShift(7)
+receiverMade = lib.Point.new(close).make(close + 40).same()
+receiverWrapped = lib.Wrapper.new(lib.Point.new(high)).makeWrapper(value=low + 50).sameWrapper()
+receiverMethodResultPrior = lib.Point.new(close).make(open).shift(1)[1]
+receiverBlockMethodResultPrior = lib.Point.new(close).makeBlock(open).shift(1)[1]
+plot(direct)
+plot(nested)
+plot(made.x)
+plot(directNamed)
+plot(chosenNamed.x)
+plot(nestedNamed)
+plot(wrappedMadeNamed.nested.x)
+plot(receiverShifted)
+plot(receiverNested)
+plot(receiverMade.x)
+plot(receiverWrapped.nested.x)
+plot(receiverMethodResultPrior)
+plot(receiverBlockMethodResultPrior)

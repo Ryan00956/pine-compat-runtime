@@ -1,0 +1,19 @@
+//@version=6
+indicator("Unsupported matrix.get const input return qualifier")
+
+int_matrix = matrix.new<int>(1, 1, 1)
+float_matrix = matrix.new<float>(1, 1, 1.0)
+bool_matrix = matrix.new<bool>(1, 1, true)
+string_matrix = matrix.new<string>(1, 1, "value")
+color_matrix = matrix.new<color>(1, 1, color.green)
+
+plot(1, show_last = matrix.get(int_matrix, 0, 0))
+plot(1, show_last = int_matrix.get(0, 0))
+hline(matrix.get(float_matrix, 0, 0))
+hline(float_matrix.get(0, 0))
+input.bool(defval=matrix.get(bool_matrix, 0, 0))
+input.bool(defval=bool_matrix.get(0, 0))
+syminfo.prefix(symbol=matrix.get(string_matrix, 0, 0))
+syminfo.prefix(symbol=string_matrix.get(0, 0))
+hline(1, color=matrix.get(color_matrix, 0, 0))
+hline(2, color=color_matrix.get(0, 0))

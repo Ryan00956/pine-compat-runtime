@@ -1,0 +1,12 @@
+//@version=6
+indicator("Unsupported numeric cast simple return qualifier")
+
+values = array.new_int(1, 4)
+source_float = array.size(values) + 0.75
+source_int = array.size(values)
+
+simple_int = int(source_float)
+simple_float = float(source_int)
+
+plot(close, show_last=simple_int)
+hline(simple_float)

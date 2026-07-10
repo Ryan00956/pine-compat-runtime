@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported for-in expression alert result")
+
+values = array.from(1)
+result = for value in values
+    alert("value")
+
+plot(close)

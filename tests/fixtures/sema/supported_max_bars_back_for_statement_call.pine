@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported max_bars_back for statement call")
+src = close
+for i = 0 to 0
+    length = 20
+    max_bars_back(src, length)
+plot(src)

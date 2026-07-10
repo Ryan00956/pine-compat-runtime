@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported for-in array.sort_indices named result negative history")
+source = array.from(2.0, 1.0)
+values = array.sort_indices(id = source, order = order.descending)
+length = for value in values
+    -1
+plot(close[length])

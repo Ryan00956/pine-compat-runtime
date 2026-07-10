@@ -1,0 +1,7 @@
+//@version=5
+fmt_base = format.percent
+fmt = fmt_base
+scale_base = scale.right
+scale_value = scale_base
+indicator("Supported named const metadata", format=fmt, scale=scale_value)
+plot(close)

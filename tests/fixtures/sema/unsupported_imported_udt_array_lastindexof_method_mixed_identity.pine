@@ -1,0 +1,9 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT array.lastindexof method mixed identity")
+
+type Point
+    float x
+
+points = array.from(lib.Point.new(close))
+plot(points.lastindexof(Point.new(high)))

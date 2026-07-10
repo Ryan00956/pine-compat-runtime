@@ -1,0 +1,4 @@
+//@version=6
+import user/udt/1 as lib
+strategy("Supported imported strategy max_bars_back declaration UDF length", max_bars_back=lib.maxBarsLength())
+plot(close)

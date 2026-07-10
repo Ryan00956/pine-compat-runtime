@@ -25,8 +25,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_source_length(args)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -45,8 +44,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_source_length(args)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -60,14 +58,28 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(finite_float_or_na(window.mean_absolute_deviation(length)))
     }
 
+    fn eval_source_length(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<(PineValue, i64), RuntimeError> {
+        let source = ta_arg(args, 0, "source")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
+        let length = ta_arg(args, 1, "length")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
+        Ok((source, length))
+    }
+
     pub(crate) fn eval_correlation(
         &mut self,
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let left = self.eval_expr(&args[0].value)?;
-        let right = self.eval_expr(&args[1].value)?;
-        let length = self.eval_expr(&args[2].value)?.as_i64().unwrap_or(0);
+        let (left, right, length) = self.eval_pair_sources_length(args)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -124,9 +136,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let left = self.eval_expr(&args[0].value)?;
-        let right = self.eval_expr(&args[1].value)?;
-        let length = self.eval_expr(&args[2].value)?.as_i64().unwrap_or(0);
+        let (left, right, length) = self.eval_pair_sources_length(args)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -171,13 +181,32 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(finite_float_or_na(covariance))
     }
 
+    fn eval_pair_sources_length(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<(PineValue, PineValue, i64), RuntimeError> {
+        let left = ta_arg(args, 0, "source1")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
+        let right = ta_arg(args, 1, "source2")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
+        let length = ta_arg(args, 2, "length")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
+        Ok((left, right, length))
+    }
+
     pub(crate) fn eval_median(
         &mut self,
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_source_length(args)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -204,8 +233,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_source_length(args)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -248,9 +276,7 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
         mode: ArrayPercentileMode,
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
-        let percentage = self.eval_expr(&args[2].value)?.as_f64();
+        let (source, length, percentage) = self.eval_percentile_source_length_percentage(args)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -294,8 +320,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_source_length(args)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -324,10 +349,9 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
-        let biased = if let Some(arg) = args.get(2) {
-            matches!(self.eval_expr(&arg.value)?, PineValue::Bool(true))
+        let (source, length) = self.eval_source_length(args)?;
+        let biased = if let Some(arg) = ta_arg(args, 2, "biased") {
+            matches!(self.eval_expr(arg)?, PineValue::Bool(true))
         } else {
             true
         };
@@ -342,5 +366,17 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         Ok(finite_float_or_na(window.variance(length, biased)))
+    }
+
+    fn eval_percentile_source_length_percentage(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<(PineValue, i64, Option<f64>), RuntimeError> {
+        let (source, length) = self.eval_source_length(args)?;
+        let percentage = ta_arg(args, 2, "percentage")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_f64());
+        Ok((source, length, percentage))
     }
 }

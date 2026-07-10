@@ -540,6 +540,52 @@ const RUNTIME_TA_IMPLICIT_HISTORY_CALLS: &[(&str, BuiltinHistoryRequirement)] = 
         },
     ),
     (
+        "ta.highest",
+        BuiltinHistoryRequirement::WindowLengthOffset {
+            source_arg: 0,
+            length_arg: 1,
+            default_source: Some("high"),
+        },
+    ),
+    (
+        "ta.lowest",
+        BuiltinHistoryRequirement::WindowLengthOffset {
+            source_arg: 0,
+            length_arg: 1,
+            default_source: Some("low"),
+        },
+    ),
+    (
+        "ta.highestbars",
+        BuiltinHistoryRequirement::WindowLengthOffset {
+            source_arg: 0,
+            length_arg: 1,
+            default_source: Some("high"),
+        },
+    ),
+    (
+        "ta.lowestbars",
+        BuiltinHistoryRequirement::WindowLengthOffset {
+            source_arg: 0,
+            length_arg: 1,
+            default_source: Some("low"),
+        },
+    ),
+    (
+        "ta.rising",
+        BuiltinHistoryRequirement::RequiredLengthOffset {
+            source_arg: 0,
+            length_arg: 1,
+        },
+    ),
+    (
+        "ta.falling",
+        BuiltinHistoryRequirement::RequiredLengthOffset {
+            source_arg: 0,
+            length_arg: 1,
+        },
+    ),
+    (
         "ta.cross",
         BuiltinHistoryRequirement::Cross { args: 2, offset: 1 },
     ),

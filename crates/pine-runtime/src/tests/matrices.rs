@@ -1198,6 +1198,75 @@ fn computes_matrix_multiplication_independently() {
         err.message,
         "matrix multiplication requires array size to match matrix row count"
     );
+
+    let PineValue::Array(dot_left_id) = runtime.new_array_from_values(
+        ArrayElementKind::Float,
+        vec![
+            PineValue::Float(1.0),
+            PineValue::Float(2.0),
+            PineValue::Float(3.0),
+        ],
+    ) else {
+        panic!("expected dot left array id");
+    };
+    let PineValue::Array(dot_right_id) = runtime.new_array_from_values(
+        ArrayElementKind::Int,
+        vec![PineValue::Int(4), PineValue::Int(5), PineValue::Int(6)],
+    ) else {
+        panic!("expected dot right array id");
+    };
+    let PineValue::Array(dot_product_id) = runtime
+        .array_mult_array(dot_left_id, dot_right_id)
+        .expect("array array multiplication")
+    else {
+        panic!("expected dot product array id");
+    };
+    assert_ne!(dot_left_id, dot_product_id);
+    assert_ne!(dot_right_id, dot_product_id);
+    assert_eq!(
+        runtime
+            .array_values_clone(dot_product_id)
+            .expect("array clone should succeed"),
+        Some(vec![PineValue::Float(32.0)])
+    );
+
+    let PineValue::Array(na_dot_left_id) = runtime.new_array_from_values(
+        ArrayElementKind::Float,
+        vec![PineValue::Float(1.0), PineValue::Na],
+    ) else {
+        panic!("expected na dot left array id");
+    };
+    let PineValue::Array(na_dot_right_id) = runtime.new_array_from_values(
+        ArrayElementKind::Float,
+        vec![PineValue::Float(2.0), PineValue::Float(3.0)],
+    ) else {
+        panic!("expected na dot right array id");
+    };
+    let PineValue::Array(na_dot_product_id) = runtime
+        .array_mult_array(na_dot_left_id, na_dot_right_id)
+        .expect("na array array multiplication")
+    else {
+        panic!("expected na dot product array id");
+    };
+    assert_eq!(
+        runtime
+            .array_get_cloned(na_dot_product_id, 0)
+            .expect("array get should succeed"),
+        Some(PineValue::Na)
+    );
+
+    let PineValue::Array(short_dot_right_id) =
+        runtime.new_array_from_values(ArrayElementKind::Float, vec![PineValue::Float(1.0)])
+    else {
+        panic!("expected short dot right array id");
+    };
+    let err = runtime
+        .array_mult_array(dot_left_id, short_dot_right_id)
+        .expect_err("short right array should fail");
+    assert_eq!(
+        err.message,
+        "matrix multiplication requires left array size to match right array size"
+    );
 }
 
 #[test]

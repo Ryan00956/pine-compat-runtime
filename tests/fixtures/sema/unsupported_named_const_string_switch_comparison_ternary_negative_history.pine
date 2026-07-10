@@ -1,0 +1,11 @@
+//@version=6
+indicator("Unsupported named const string switch comparison ternary negative history")
+mode_id = 2
+mode = switch mode_id
+    1 => "slow"
+    2 =>
+        "fast"
+    => "slow"
+use_short = mode == "fast"
+length = use_short ? -1 : 1
+plot(close[length])

@@ -1,0 +1,18 @@
+//@version=6
+indicator("Unsupported syminfo metadata const string return qualifier")
+
+plot(timestamp(dateString=syminfo.tickerid))
+plot(timestamp(dateString=syminfo.main_tickerid))
+plot(timestamp(dateString=syminfo.ticker))
+plot(timestamp(dateString=syminfo.prefix))
+plot(timestamp(dateString=syminfo.description))
+plot(timestamp(dateString=syminfo.sector))
+plot(timestamp(dateString=syminfo.industry))
+plot(timestamp(dateString=syminfo.country))
+plot(timestamp(dateString=syminfo.type))
+plot(timestamp(dateString=syminfo.currency))
+plot(timestamp(dateString=syminfo.basecurrency))
+plot(timestamp(dateString=syminfo.session))
+plot(timestamp(dateString=syminfo.timezone))
+plot(timestamp(dateString=syminfo.root))
+plot(timestamp(dateString=syminfo.volumetype))

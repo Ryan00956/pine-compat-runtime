@@ -6,3 +6,11 @@ value = switch
         sample + 1
     => close
 plot(value)
+loop_value = switch
+    close > open =>
+        for i = 0 to 0
+            close + 2
+    =>
+        for i = 0 to 0
+            open + 2
+plot(loop_value)

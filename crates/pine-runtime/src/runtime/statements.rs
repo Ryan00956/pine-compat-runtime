@@ -1,8 +1,10 @@
-use pine_ir::{HirExpr, HirStmt, HirStmtKind, SymbolId};
+use pine_ir::{HirBinaryOp, HirExpr, HirStmt, HirStmtKind, HirSwitchStmtArm, SymbolId};
 
 use crate::builtins::matrices::matrix_array_element_kind;
 use crate::error::RuntimeLoopControl;
 use crate::*;
+
+use super::expressions::eval_binary;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum StmtControl {
@@ -53,6 +55,9 @@ impl<'a> HistoricalRuntime<'a> {
                         control => return Ok(control),
                     }
                 }
+            }
+            HirStmtKind::Switch { selector, arms } => {
+                return self.eval_switch_stmt(selector.as_ref(), arms);
             }
             HirStmtKind::For {
                 counter,
@@ -134,6 +139,45 @@ impl<'a> HistoricalRuntime<'a> {
                 for (symbol, value) in symbols.iter().zip(values) {
                     self.set_symbol_value(*symbol, value);
                 }
+            }
+        }
+
+        Ok(StmtControl::None)
+    }
+
+    fn eval_switch_stmt(
+        &mut self,
+        selector: Option<&HirExpr>,
+        arms: &[HirSwitchStmtArm],
+    ) -> Result<StmtControl, RuntimeError> {
+        let selector_value = match selector {
+            Some(selector) => Some(self.eval_expr(selector)?),
+            None => None,
+        };
+
+        for arm in arms {
+            let matches = match (&selector_value, &arm.condition) {
+                (Some(selector_value), Some(case_expr)) => {
+                    let case_value = self.eval_expr(case_expr)?;
+                    matches!(
+                        eval_binary(HirBinaryOp::Eq, selector_value.clone(), case_value),
+                        PineValue::Bool(true)
+                    )
+                }
+                (None, Some(condition)) => {
+                    matches!(self.eval_expr(condition)?, PineValue::Bool(true))
+                }
+                (_, None) => true,
+            };
+
+            if matches {
+                for statement in &arm.body {
+                    match self.eval_stmt(statement)? {
+                        StmtControl::None => {}
+                        control => return Ok(control),
+                    }
+                }
+                break;
             }
         }
 
@@ -409,12 +453,18 @@ impl<'a> HistoricalRuntime<'a> {
                 };
                 let initial_len = entries.len();
                 for (key, value) in entries {
-                    if index_symbol.is_none() {
-                        return Err(RuntimeError {
-                            message: "for...in map requires key/value loop variables".to_owned(),
-                        });
-                    }
-                    if self.eval_for_in_iteration(index_symbol, value_symbol, key, value, body)? {
+                    let (index_value, loop_value) = if index_symbol.is_some() {
+                        (key, value)
+                    } else {
+                        (PineValue::Na, key)
+                    };
+                    if self.eval_for_in_iteration(
+                        index_symbol,
+                        value_symbol,
+                        index_value,
+                        loop_value,
+                        body,
+                    )? {
                         return Ok(());
                     }
                     self.ensure_map_for_in_size(map_id, initial_len)?;
@@ -517,14 +567,17 @@ impl<'a> HistoricalRuntime<'a> {
                 };
                 let initial_len = entries.len();
                 for (key, value) in entries {
-                    if symbols.index.is_none() {
-                        return Err(RuntimeError {
-                            message: "for...in map requires key/value loop variables".to_owned(),
-                        });
-                    }
+                    let item = if symbols.index.is_some() {
+                        ForInItem { index: key, value }
+                    } else {
+                        ForInItem {
+                            index: PineValue::Na,
+                            value: key,
+                        }
+                    };
                     if self.eval_for_in_expr_iteration(
                         symbols,
-                        ForInItem { index: key, value },
+                        item,
                         body,
                         result,
                         &mut loop_result,

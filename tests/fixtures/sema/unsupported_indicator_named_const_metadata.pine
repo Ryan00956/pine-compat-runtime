@@ -1,0 +1,5 @@
+//@version=5
+scale_base = "custom"
+scale_value = scale_base
+indicator("Unsupported named const metadata", scale=scale_value)
+plot(close)

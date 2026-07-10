@@ -59,7 +59,9 @@ Phase 1 executable subset:
 - partial `while condition` statement loops with bool/`na` conditions, `break`,
   `continue`, local `var`, nested loops, and a runtime iteration guard
 - partial `switch` expressions with condition arms, selector/case arms,
-  expression results, and statement-block arms that end in a result expression
+  expression results, and expression statement-block arms that end in a result
+  expression, plus statement-context switch block arms for selected-arm side
+  effects, outer reassignment, and loop-control propagation
 - branch/loop interactions for `if` inside loops, loops inside `if`, `switch`
   inside loops, and loops inside UDF block bodies
 - normal and tuple declarations scoped to an `if`/`else` branch
@@ -165,15 +167,19 @@ time their declaration site is reached, then preserve state across later
 executions.
 Switch statement-block arm declarations follow the same branch-local no-leak
 rule, and supported block arms may reassign already-visible outer variables.
-When a selected statement-block arm executes inside a loop body, `break` and
+Expression-context block arms still need a final result expression.
+Statement-context switch block arms can omit that result expression. When a
+selected statement-block arm executes inside a loop body, `break` and
 `continue` propagate to the nearest enclosing loop. The `switch` expression does
 not consume loop-control statements as its own control flow.
 Tuple declaration/destructuring from selected statement-block arms is supported
 when each arm's final expression has compatible tuple arity and element types.
 Same-local UDT constructor results and block-local UDT aliases are supported
 when all selected arm result identities resolve to the same local UDT. Mismatched
-UDT identities across arms remain rejected. Imported UDT constructor results
-from selected statement-block arms are rejected by semantic fixture.
+UDT identities across arms remain rejected. Same-imported-identity UDT
+constructor or block-local alias results are supported for expression
+statement-block arms; local/imported identity mismatches remain rejected by
+semantic fixture.
 
 `for` loops support inclusive integer ranges with an optional explicit `by`
 step. The runtime increments when `from <= to` and decrements when `from > to`;
@@ -372,51 +378,36 @@ The analyzer should reject these with clear diagnostics:
   supported `alertcondition` message subset
 - `library` and root `export` declarations; `import` is partial for
   host-provided exact-key aliases that expose exported const expressions, pure
-  exported functions, and the fixture-backed same-imported-identity
-  scalar-field UDT subset, while unaliased imports, missing host sources,
-  re-exports, imported UDT tails such as history/collections, imported methods,
+  exported functions, and the fixture-backed same-imported-identity scalar-tree
+  UDT value, history, array, `varip`, and pure-method subsets, while unaliased
+  imports, missing host sources, re-exports, broader non-scalar imported values,
   and side-effecting exported functions remain rejected
-- unsupported collection families and element types, including maps and matrix
-  behavior beyond the fixture-backed `matrix<float>` subset
-- user-defined type forms outside the local scalar-field subset; Phase J
-  accepts top-level `type` declarations with int/float/bool/string/color
-  fields, `Type.new(...)` construction, local field reads, ordinary variables,
-  local for-expression constructor results, top-level/block-local/loop-local
-  same-UDT `for` expression initialization and reassignment, `var` persistence,
-  scalar field mutation including UDF-local and method-local variables,
-  and UDF constructor returns,
-  directly, through nested pure constructor-helper UDF calls, or through
-  same-local-UDT ternary, switch, final if/else constructor branches, or final
-  for bodies, from local UDT parameter scalar fields, scalar fields read through block-local UDT
-  aliases of those parameters, block-local scalar aliases of those fields,
-  inferred scalar parameters, or block-local scalar aliases of those scalar
-  parameters using positional or named constructor field arguments only; final
-  if/else branches and final for bodies may also return local UDT aliases of
-  local UDT parameters; field mutation inside functions or methods, `varip`,
-  UDT history references, UDT fields, UDT arrays, and imported UDTs remain rejected
-- user-defined method forms outside pure local-UDT receiver methods with scalar
-  or local UDT parameters, direct UDT passthrough returns, block-local receiver
-  or local UDT parameter alias passthrough returns, nested-method UDT parameter
-  passthrough returns, and local UDT constructor returns, directly, through
-  nested pure constructor-helper UDF calls, or through same-local-UDT ternary,
-  switch, final if/else constructor branches, or final for bodies, from receiver
-  or local UDT parameter scalar fields, scalar fields read through block-local
-  receiver or local UDT parameter aliases, block-local scalar aliases of those
-  fields, inferred scalar parameters, or block-local scalar aliases of those
-  parameters using positional or named constructor field arguments; final
-  if/else branches and final for bodies may also return local UDT aliases of the
-  receiver or local UDT parameters; side effects, recursion, imported methods,
-  unknown receivers, mismatched UDT parameter identity, and unsupported parameter
-  families remain rejected
-- non-array method calls outside the local UDT method subset; unsupported
-  receiver families remain ordinary receiver/type diagnostics rather than a
-  widened method claim
-- label, line, box, table, polyline objects
+- unsupported collection families and element types beyond the fixture-backed
+  scalar/object/chart-point/scalar-tree-UDT arrays, scalar maps, and
+  float/int/bool/string/color matrices; nested collections, non-scalar map
+  templates, bare generic collection declarations, and recursive/non-scalar UDT
+  arrays remain rejected
+- user-defined type forms outside the fixture-backed local and imported
+  scalar-tree subsets; construction, typed declarations, selected control-flow
+  results, `var`, scalar-tree `varip`, value history, same-identity arrays, and
+  root-field replacement are supported where recorded in conformance, while
+  recursive, object-backed, nested-collection, and broader mutation shapes
+  remain rejected
+- user-defined method forms outside the fixture-backed pure local and imported
+  scalar-tree receiver/parameter/return subsets; side effects, recursion,
+  unknown receivers, mismatched UDT identity, and unsupported parameter families
+  remain rejected
+- method calls outside the fixture-backed array, map, matrix, drawing-object,
+  chart-point, and local/imported UDT method subsets
+- drawing-object behavior outside the fixture-backed label, line, linefill,
+  box, table, polyline, and chart-point subsets
 - general multi-symbol or multi-timeframe data loading outside the documented
   `request.security` provider subset
-- broker emulation and order execution
-- `varip` drawing ids, tuple `varip`, and `varip` value families outside the
-  scalar and scalar typed-array subset
+- broker emulation and order execution outside the fixture-backed long-only
+  strategy subset
+- `varip` drawing ids, tuple `varip`, and value families outside the
+  fixture-backed scalar, chart-point, scalar-array, scalar-map, scalar-matrix,
+  and scalar-tree UDT/UDT-array subsets
 
 Longer-term work for these unsupported areas is tracked in
 [`LONG_TERM_EXECUTION_PLAN.md`](LONG_TERM_EXECUTION_PLAN.md).

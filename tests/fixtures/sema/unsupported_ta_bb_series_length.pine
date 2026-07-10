@@ -1,4 +1,0 @@
-//@version=5
-indicator("Unsupported ta.bb Series Length")
-[basis, upper, lower] = ta.bb(close, bar_index, 2)
-plot(basis)

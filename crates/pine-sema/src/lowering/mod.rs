@@ -1,8 +1,10 @@
 use crate::prelude::*;
+use std::collections::HashSet;
 
 mod budget;
 mod function_returns;
 mod inline_calls;
+mod pure_series;
 
 pub(crate) fn prepend_block_statements(mut prefix: Vec<HirStmt>, expr: HirExpr) -> HirExpr {
     match expr.kind {
@@ -37,6 +39,117 @@ pub(crate) fn lower_literal(literal: &Literal) -> HirLiteral {
         Literal::ColorHex(value) => HirLiteral::ColorHex(value.clone()),
     }
 }
+
+fn literal_series_key(literal: &Literal) -> String {
+    match literal {
+        Literal::Int(value) => format!("int:{value}"),
+        Literal::Float(value) => format!("float:{}", value.to_bits()),
+        Literal::Bool(value) => format!("bool:{value}"),
+        Literal::String(value) => format!("string:{value:?}"),
+        Literal::ColorHex(value) => format!("color:{value}"),
+    }
+}
+
+fn builtin_qualified_series_key(parts: &[String]) -> Option<String> {
+    if parts.len() < 2 {
+        return None;
+    }
+    let name = parts.join(".");
+    let is_named_const = pine_builtins::named_color(&name).is_some()
+        || pine_builtins::named_float_constant(&name).is_some()
+        || pine_builtins::named_int_constant(&name).is_some()
+        || pine_builtins::named_string_constant(&name).is_some();
+    let is_stable_builtin_value =
+        pine_builtins::builtin_series_value_type(&name).is_some_and(|pine_type| {
+            pine_type.qualifier != Qualifier::Series
+                || name.starts_with("barstate.")
+                || name.starts_with("session.")
+        });
+    (is_named_const || is_stable_builtin_value).then(|| format!("builtin:{name}"))
+}
+
+fn pure_math_call_name(name: &str) -> bool {
+    matches!(
+        name,
+        "math.abs"
+            | "math.max"
+            | "math.min"
+            | "math.avg"
+            | "math.floor"
+            | "math.ceil"
+            | "math.trunc"
+            | "math.sqrt"
+            | "math.cbrt"
+            | "math.log"
+            | "math.log10"
+            | "math.exp"
+            | "math.acos"
+            | "math.asin"
+            | "math.atan"
+            | "math.sign"
+            | "math.todegrees"
+            | "math.toradians"
+            | "math.sin"
+            | "math.cos"
+            | "math.tan"
+            | "math.pow"
+            | "math.hypot"
+            | "math.round"
+            | "math.round_to_mintick"
+    )
+}
+
+fn pure_math_variadic_call_name(name: &str) -> bool {
+    matches!(name, "math.max" | "math.min" | "math.avg")
+}
+
+fn pure_fixed_builtin_call_name(name: &str) -> bool {
+    matches!(name, "nz" | "fixnan" | "str.tonumber" | "str.length")
+}
+
+fn final_loop_statement_expr(statement: &Stmt) -> Option<Expr> {
+    match &statement.kind {
+        StmtKind::For {
+            counter,
+            from,
+            to,
+            step,
+            body,
+        } => Some(Expr {
+            span: statement.span,
+            kind: ExprKind::For {
+                counter: counter.to_owned(),
+                from: Box::new(from.clone()),
+                to: Box::new(to.clone()),
+                step: step.clone().map(Box::new),
+                body: body.to_vec(),
+            },
+        }),
+        StmtKind::ForIn {
+            index,
+            value,
+            iterable,
+            body,
+        } => Some(Expr {
+            span: statement.span,
+            kind: ExprKind::ForIn {
+                index: index.clone(),
+                value: value.to_owned(),
+                iterable: Box::new(iterable.clone()),
+                body: body.to_vec(),
+            },
+        }),
+        StmtKind::While { condition, body } => Some(Expr {
+            span: statement.span,
+            kind: ExprKind::While {
+                condition: Box::new(condition.clone()),
+                body: body.to_vec(),
+            },
+        }),
+        _ => None,
+    }
+}
+
 pub(crate) fn lower_unary_op(op: UnaryOp) -> HirUnaryOp {
     match op {
         UnaryOp::Plus => HirUnaryOp::Plus,
@@ -61,13 +174,6 @@ pub(crate) fn lower_binary_op(op: BinaryOp) -> HirBinaryOp {
         BinaryOp::Or => HirBinaryOp::Or,
     }
 }
-pub(crate) fn constant_history_offset(expr: &Expr) -> Option<u32> {
-    match expr.kind {
-        ExprKind::Literal(Literal::Int(value)) if value >= 0 => Some(value as u32),
-        _ => None,
-    }
-}
-
 fn sort_field_index_expr(index: usize) -> HirExpr {
     HirExpr {
         kind: HirExprKind::Literal(HirLiteral::Int(index as i64)),
@@ -78,6 +184,7 @@ fn sort_field_index_expr(index: usize) -> HirExpr {
 
 impl Analyzer {
     pub(crate) fn lower_program(&mut self, program: &Program) -> Option<HirProgram> {
+        self.lower_reassigned_symbols = self.collect_lower_reassigned_symbols(&program.statements);
         let mut statements = Vec::new();
         for statement in &program.statements {
             if matches!(
@@ -110,6 +217,7 @@ impl Analyzer {
             script_mode,
             strategy_settings: self.strategy_settings,
             drawing_settings: self.drawing_settings,
+            user_types: self.lower_user_types(),
             symbols,
             statements,
             next_series_id: self.next_series_id,
@@ -122,8 +230,272 @@ impl Analyzer {
         })
     }
 
+    fn lower_user_types(&self) -> Vec<HirUserTypeInfo> {
+        let mut local_user_types = self.user_types.values().collect::<Vec<_>>();
+        local_user_types.sort_by(|left, right| left.name.cmp(&right.name));
+        let mut imported_user_types = self.imported_user_types.iter().collect::<Vec<_>>();
+        imported_user_types.sort_by(|left, right| left.0.cmp(right.0));
+
+        let mut user_types = local_user_types
+            .into_iter()
+            .map(|user_type| {
+                let type_name = user_type.name.clone();
+                HirUserTypeInfo {
+                    identity: HirUserTypeIdentity {
+                        source_id: user_type.identity.source_id.get(),
+                        type_name: type_name.clone(),
+                    },
+                    fields: user_type
+                        .fields
+                        .iter()
+                        .map(|field| HirUserTypeField {
+                            name: field.name.clone(),
+                            user_type_name: field.user_type_name.clone(),
+                        })
+                        .collect(),
+                }
+            })
+            .collect::<Vec<_>>();
+
+        user_types.extend(
+            imported_user_types
+                .into_iter()
+                .map(|(type_name, user_type)| HirUserTypeInfo {
+                    identity: HirUserTypeIdentity {
+                        source_id: user_type.identity.source_id.get(),
+                        type_name: type_name.clone(),
+                    },
+                    fields: user_type
+                        .fields
+                        .iter()
+                        .map(|field| HirUserTypeField {
+                            name: field.name.clone(),
+                            user_type_name: field.pine_type.is_none().then(|| {
+                                self.imported_user_types
+                                    .iter()
+                                    .find(|(_, nested)| {
+                                        nested.identity.source_id == user_type.identity.source_id
+                                            && nested.identity.name == field.type_name
+                                    })
+                                    .map_or_else(
+                                        || field.type_name.clone(),
+                                        |(name, _)| name.clone(),
+                                    )
+                            }),
+                        })
+                        .collect(),
+                }),
+        );
+        user_types
+    }
+
     pub(crate) fn lower_symbols(&self) -> Vec<HirSymbol> {
         self.scope.lower_symbols()
+    }
+
+    fn lower_alias_decl_symbol_series_id(
+        &mut self,
+        name: &str,
+        symbol: SymbolInfo,
+        source_expr: &Expr,
+        lowered_value: &HirExpr,
+    ) -> SymbolInfo {
+        if !self.lower_symbol_overrides.is_empty()
+            || symbol.persistence != PersistenceKind::None
+            || self.lower_reassigned_symbols.contains(&symbol.id)
+            || lowered_value.pine_type.qualifier != Qualifier::Series
+            || is_collection_kind(lowered_value.pine_type.kind)
+            || lowered_value.pine_type.kind == ValueKind::Tuple
+            || self.pure_expr_series_key(source_expr).is_none()
+        {
+            return symbol;
+        }
+        let Some(series_id) = lowered_value.series_id else {
+            return symbol;
+        };
+        if symbol.series_id == Some(series_id) {
+            return symbol;
+        }
+
+        let updated = SymbolInfo {
+            series_id: Some(series_id),
+            ..symbol
+        };
+        self.scope.update(name, updated);
+        for binding in self.bindings.values_mut() {
+            if binding.id == symbol.id {
+                *binding = updated;
+            }
+        }
+        updated
+    }
+
+    fn collect_lower_reassigned_symbols(&self, statements: &[Stmt]) -> HashSet<SymbolId> {
+        let mut symbols = HashSet::new();
+        self.collect_lower_reassigned_symbols_from_stmts(statements, &mut symbols);
+        symbols
+    }
+
+    fn collect_lower_reassigned_symbols_from_stmts(
+        &self,
+        statements: &[Stmt],
+        symbols: &mut HashSet<SymbolId>,
+    ) {
+        for statement in statements {
+            match &statement.kind {
+                StmtKind::Expr(expr) => {
+                    self.collect_lower_reassigned_symbols_from_expr(expr, symbols);
+                }
+                StmtKind::If {
+                    condition,
+                    then_branch,
+                    else_branch,
+                } => {
+                    self.collect_lower_reassigned_symbols_from_expr(condition, symbols);
+                    self.collect_lower_reassigned_symbols_from_stmts(then_branch, symbols);
+                    self.collect_lower_reassigned_symbols_from_stmts(else_branch, symbols);
+                }
+                StmtKind::For {
+                    from,
+                    to,
+                    step,
+                    body,
+                    ..
+                } => {
+                    self.collect_lower_reassigned_symbols_from_expr(from, symbols);
+                    self.collect_lower_reassigned_symbols_from_expr(to, symbols);
+                    if let Some(step) = step {
+                        self.collect_lower_reassigned_symbols_from_expr(step, symbols);
+                    }
+                    self.collect_lower_reassigned_symbols_from_stmts(body, symbols);
+                }
+                StmtKind::ForIn { iterable, body, .. } => {
+                    self.collect_lower_reassigned_symbols_from_expr(iterable, symbols);
+                    self.collect_lower_reassigned_symbols_from_stmts(body, symbols);
+                }
+                StmtKind::While { condition, body } => {
+                    self.collect_lower_reassigned_symbols_from_expr(condition, symbols);
+                    self.collect_lower_reassigned_symbols_from_stmts(body, symbols);
+                }
+                StmtKind::Decl { value, .. } | StmtKind::TupleDecl { value, .. } => {
+                    self.collect_lower_reassigned_symbols_from_expr(value, symbols);
+                }
+                StmtKind::Reassign { name, value } => {
+                    if let Some(symbol) = self.bindings.get(&binding_key(name, statement.span)) {
+                        symbols.insert(symbol.id);
+                    }
+                    self.collect_lower_reassigned_symbols_from_expr(value, symbols);
+                }
+                StmtKind::FieldReassign { value, .. } => {
+                    self.collect_lower_reassigned_symbols_from_expr(value, symbols);
+                }
+                StmtKind::ArrayFieldReassign {
+                    array,
+                    index,
+                    value,
+                    ..
+                } => {
+                    self.collect_lower_reassigned_symbols_from_expr(array, symbols);
+                    self.collect_lower_reassigned_symbols_from_expr(index, symbols);
+                    self.collect_lower_reassigned_symbols_from_expr(value, symbols);
+                }
+                StmtKind::Function { .. }
+                | StmtKind::Import(_)
+                | StmtKind::Library(_)
+                | StmtKind::Export(_)
+                | StmtKind::UserType(_)
+                | StmtKind::Method(_)
+                | StmtKind::Break
+                | StmtKind::Continue
+                | StmtKind::Unsupported { .. } => {}
+            }
+        }
+    }
+
+    fn collect_lower_reassigned_symbols_from_expr(
+        &self,
+        expr: &Expr,
+        symbols: &mut HashSet<SymbolId>,
+    ) {
+        match &expr.kind {
+            ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } => {
+                self.collect_lower_reassigned_symbols_from_expr(expr, symbols);
+            }
+            ExprKind::Binary { left, right, .. } => {
+                self.collect_lower_reassigned_symbols_from_expr(left, symbols);
+                self.collect_lower_reassigned_symbols_from_expr(right, symbols);
+            }
+            ExprKind::Ternary {
+                condition,
+                then_expr,
+                else_expr,
+            } => {
+                self.collect_lower_reassigned_symbols_from_expr(condition, symbols);
+                self.collect_lower_reassigned_symbols_from_expr(then_expr, symbols);
+                self.collect_lower_reassigned_symbols_from_expr(else_expr, symbols);
+            }
+            ExprKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => {
+                self.collect_lower_reassigned_symbols_from_expr(condition, symbols);
+                self.collect_lower_reassigned_symbols_from_stmts(then_branch, symbols);
+                self.collect_lower_reassigned_symbols_from_stmts(else_branch, symbols);
+            }
+            ExprKind::Switch { selector, arms } => {
+                if let Some(selector) = selector {
+                    self.collect_lower_reassigned_symbols_from_expr(selector, symbols);
+                }
+                for arm in arms {
+                    if let Some(condition) = &arm.condition {
+                        self.collect_lower_reassigned_symbols_from_expr(condition, symbols);
+                    }
+                    match &arm.result {
+                        SwitchArmResult::Expr(expr) => {
+                            self.collect_lower_reassigned_symbols_from_expr(expr, symbols);
+                        }
+                        SwitchArmResult::Block(statements) => {
+                            self.collect_lower_reassigned_symbols_from_stmts(statements, symbols);
+                        }
+                    }
+                }
+            }
+            ExprKind::For {
+                from,
+                to,
+                step,
+                body,
+                ..
+            } => {
+                self.collect_lower_reassigned_symbols_from_expr(from, symbols);
+                self.collect_lower_reassigned_symbols_from_expr(to, symbols);
+                if let Some(step) = step {
+                    self.collect_lower_reassigned_symbols_from_expr(step, symbols);
+                }
+                self.collect_lower_reassigned_symbols_from_stmts(body, symbols);
+            }
+            ExprKind::ForIn { iterable, body, .. } => {
+                self.collect_lower_reassigned_symbols_from_expr(iterable, symbols);
+                self.collect_lower_reassigned_symbols_from_stmts(body, symbols);
+            }
+            ExprKind::While { condition, body } => {
+                self.collect_lower_reassigned_symbols_from_expr(condition, symbols);
+                self.collect_lower_reassigned_symbols_from_stmts(body, symbols);
+            }
+            ExprKind::Tuple(items) => {
+                for item in items {
+                    self.collect_lower_reassigned_symbols_from_expr(item, symbols);
+                }
+            }
+            ExprKind::Call { callee, args } => {
+                self.collect_lower_reassigned_symbols_from_expr(callee, symbols);
+                for arg in args {
+                    self.collect_lower_reassigned_symbols_from_expr(&arg.value, symbols);
+                }
+            }
+            ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => {}
+        }
     }
 
     pub(crate) fn bind_symbol(&mut self, name: &str, span: Span, symbol: SymbolInfo) {
@@ -182,9 +554,41 @@ impl Analyzer {
         }
 
         let kind = match &statement.kind {
-            StmtKind::Expr(expr) => {
-                HirStmtKind::Expr(self.lower_expr_with_params(expr, param_exprs, param_types)?)
-            }
+            StmtKind::Expr(expr) => match &expr.kind {
+                ExprKind::Switch { selector, arms } => HirStmtKind::Switch {
+                    selector: match selector {
+                        Some(selector) => {
+                            Some(self.lower_expr_with_params(selector, param_exprs, param_types)?)
+                        }
+                        None => None,
+                    },
+                    arms: arms
+                        .iter()
+                        .map(|arm| {
+                            Some(HirSwitchStmtArm {
+                                condition: match &arm.condition {
+                                    Some(condition) => Some(self.lower_expr_with_params(
+                                        condition,
+                                        param_exprs,
+                                        param_types,
+                                    )?),
+                                    None => None,
+                                },
+                                body: self.lower_switch_stmt_arm_body_with_params(
+                                    &arm.result,
+                                    param_exprs,
+                                    param_types,
+                                )?,
+                            })
+                        })
+                        .collect::<Option<_>>()?,
+                },
+                _ => HirStmtKind::Expr(self.lower_expr_with_params(
+                    expr,
+                    param_exprs,
+                    param_types,
+                )?),
+            },
             StmtKind::If {
                 condition,
                 then_branch,
@@ -263,9 +667,12 @@ impl Analyzer {
                 {
                     self.mark_symbol_id_user_type(symbol.id, type_name);
                 }
+                let lowered_value = self.lower_expr_with_params(value, param_exprs, param_types)?;
+                let symbol =
+                    self.lower_alias_decl_symbol_series_id(name, symbol, value, &lowered_value);
                 HirStmtKind::Decl {
                     symbol: symbol.id,
-                    value: self.lower_expr_with_params(value, param_exprs, param_types)?,
+                    value: lowered_value,
                 }
             }
             StmtKind::Reassign { name, value } => HirStmtKind::Reassign {
@@ -359,19 +766,7 @@ impl Analyzer {
         }
 
         let pine_type = self.type_of_expr_with_params(expr, param_types)?;
-        let series_id = if (pine_type.qualifier == Qualifier::Series
-            || is_collection_kind(pine_type.kind))
-            && pine_type.kind != ValueKind::Tuple
-        {
-            match &expr.kind {
-                ExprKind::Identifier(name) => self
-                    .bound_symbol(name, expr.span)
-                    .and_then(|symbol| symbol.series_id),
-                _ => Some(self.alloc_series()),
-            }
-        } else {
-            None
-        };
+        let series_id = self.lower_expr_series_id(expr, pine_type);
 
         let kind = match &expr.kind {
             ExprKind::Literal(literal) => HirExprKind::Literal(lower_literal(literal)),
@@ -523,8 +918,14 @@ impl Analyzer {
                 body,
             } => {
                 let (last, prefix) = body.split_last()?;
-                let StmtKind::Expr(result) = &last.kind else {
-                    return None;
+                let final_expr;
+                let result = match &last.kind {
+                    StmtKind::Expr(result) => result,
+                    StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => {
+                        final_expr = final_loop_statement_expr(last)?;
+                        &final_expr
+                    }
+                    _ => return None,
                 };
                 HirExprKind::For {
                     counter: self.lower_decl_symbol(counter, expr.span)?.id,
@@ -558,8 +959,14 @@ impl Analyzer {
                 body,
             } => {
                 let (last, prefix) = body.split_last()?;
-                let StmtKind::Expr(result) = &last.kind else {
-                    return None;
+                let final_expr;
+                let result = match &last.kind {
+                    StmtKind::Expr(result) => result,
+                    StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => {
+                        final_expr = final_loop_statement_expr(last)?;
+                        &final_expr
+                    }
+                    _ => return None,
                 };
                 HirExprKind::ForIn {
                     index: match index {
@@ -587,8 +994,14 @@ impl Analyzer {
             }
             ExprKind::While { condition, body } => {
                 let (last, prefix) = body.split_last()?;
-                let StmtKind::Expr(result) = &last.kind else {
-                    return None;
+                let final_expr;
+                let result = match &last.kind {
+                    StmtKind::Expr(result) => result,
+                    StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => {
+                        final_expr = final_loop_statement_expr(last)?;
+                        &final_expr
+                    }
+                    _ => return None,
                 };
                 HirExprKind::While {
                     condition: Box::new(self.lower_expr_with_params(
@@ -670,25 +1083,72 @@ impl Analyzer {
                     param_exprs,
                     param_types,
                 ) {
+                    let pure_call_series_id =
+                        pure_series::pure_alias_qualified_user_method_call_series_key(
+                            self, &name, args,
+                        )
+                        .and(series_id);
+                    let mut method_call = method_call;
+                    if let Some(series_id) = pure_call_series_id {
+                        method_call.series_id = Some(series_id);
+                    }
+                    return Some(method_call);
+                }
+                if let Some(method_call) = self.lower_local_qualified_user_method_call(
+                    &name,
+                    callee.span,
+                    args,
+                    param_exprs,
+                    param_types,
+                ) {
+                    let pure_call_series_id =
+                        pure_series::pure_local_qualified_user_method_call_series_key(
+                            self, &name, args,
+                        )
+                        .and(series_id);
+                    let mut method_call = method_call;
+                    if let Some(series_id) = pure_call_series_id {
+                        method_call.series_id = Some(series_id);
+                    }
                     return Some(method_call);
                 }
                 if let Some((receiver_name, method_name)) = method_call_parts(callee)
                     && self
                         .bound_symbol(receiver_name, callee.span)
+                        .or_else(|| self.scope.resolve(receiver_name))
                         .and_then(|symbol| self.symbol_user_types.get(&symbol.id))
                         .is_some()
                 {
-                    return self.lower_user_method_call(
+                    let pure_call_series_id = pure_series::pure_user_method_call_series_key(
+                        self,
+                        receiver_name,
+                        method_name,
+                        callee.span,
+                        args,
+                    )
+                    .and(series_id);
+                    let mut call = self.lower_user_method_call(
                         receiver_name,
                         method_name,
                         callee.span,
                         args,
                         param_exprs,
                         param_types,
-                    );
+                    )?;
+                    if let Some(series_id) = pure_call_series_id {
+                        call.series_id = Some(series_id);
+                    }
+                    return Some(call);
                 }
                 if self.functions.contains_key(&name) {
-                    return self.lower_udf_call(&name, expr.span, args, param_exprs, param_types);
+                    let pure_call_series_id =
+                        pure_series::pure_udf_call_series_key(self, &name, args).and(series_id);
+                    let mut call =
+                        self.lower_udf_call(&name, expr.span, args, param_exprs, param_types)?;
+                    if let Some(series_id) = pure_call_series_id {
+                        call.series_id = Some(series_id);
+                    }
+                    return Some(call);
                 }
                 if pine_builtins::get_phase_1_builtin(&name).is_none()
                     && !name.starts_with("map.")
@@ -745,7 +1205,10 @@ impl Analyzer {
                 }
             }
             ExprKind::History { expr, offset } => {
-                let offset = match constant_history_offset(offset) {
+                let offset = match self
+                    .known_const_int_value(offset)
+                    .and_then(|value| u32::try_from(value).ok())
+                {
                     Some(offset) => HirHistoryOffset::Constant(offset),
                     None => HirHistoryOffset::Dynamic(Box::new(self.lower_expr_with_params(
                         offset,
@@ -765,6 +1228,42 @@ impl Analyzer {
             pine_type,
             series_id,
         })
+    }
+
+    fn lower_expr_series_id(
+        &mut self,
+        expr: &Expr,
+        pine_type: PineType,
+    ) -> Option<pine_ir::SeriesId> {
+        if (pine_type.qualifier != Qualifier::Series && !is_collection_kind(pine_type.kind))
+            || pine_type.kind == ValueKind::Tuple
+        {
+            return None;
+        }
+
+        if let ExprKind::Identifier(name) = &expr.kind {
+            return self
+                .bound_symbol(name, expr.span)
+                .and_then(|symbol| symbol.series_id);
+        }
+
+        if pine_type.qualifier == Qualifier::Series
+            && !is_collection_kind(pine_type.kind)
+            && let Some(key) = self.pure_expr_series_key(expr)
+        {
+            if let Some(series_id) = self.pure_expr_series_ids.get(&key).copied() {
+                return Some(series_id);
+            }
+            let series_id = self.alloc_series();
+            self.pure_expr_series_ids.insert(key, series_id);
+            return Some(series_id);
+        }
+
+        Some(self.alloc_series())
+    }
+
+    fn pure_expr_series_key(&self, expr: &Expr) -> Option<String> {
+        pure_series::pure_expr_series_key(self, expr)
     }
 
     fn lower_builtin_call_args(
@@ -800,6 +1299,28 @@ impl Analyzer {
         param_exprs: &HashMap<String, HirExpr>,
     ) -> Option<String> {
         self.user_type_name_of_expr_with_params_and_aliases(expr, param_exprs, &HashMap::new())
+    }
+
+    fn user_type_array_name_of_expr_with_params(
+        &self,
+        expr: &Expr,
+        param_exprs: &HashMap<String, HirExpr>,
+    ) -> Option<String> {
+        if let Some(type_name) = self.user_type_array_name_of_expr(expr) {
+            return Some(type_name);
+        }
+        if let ExprKind::History { expr, .. } = &expr.kind {
+            return self.user_type_array_name_of_expr_with_params(expr, param_exprs);
+        }
+        let name = match &expr.kind {
+            ExprKind::Identifier(name) => name,
+            ExprKind::QualifiedName(parts) if parts.len() == 1 => &parts[0],
+            _ => return None,
+        };
+        let HirExprKind::Symbol(symbol_id) = param_exprs.get(name)?.kind else {
+            return None;
+        };
+        self.symbol_user_type_arrays.get(&symbol_id).cloned()
     }
 
     fn user_type_name_of_expr_with_params_and_aliases(

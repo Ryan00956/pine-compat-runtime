@@ -1,0 +1,4 @@
+//@version=5
+indicator("Supported ta.valuewhen Series Occurrence")
+occurrence = bar_index < 5 ? 0 : 2
+plot(ta.valuewhen(close > open, close, occurrence))

@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported ticker na simple int params")
+linebreak = ticker.linebreak(syminfo.tickerid, na)
+pnf = ticker.pointfigure(syminfo.tickerid, "hl", "ATR", 14, na)
+plot(na(linebreak) and na(pnf) ? 1 : 0)

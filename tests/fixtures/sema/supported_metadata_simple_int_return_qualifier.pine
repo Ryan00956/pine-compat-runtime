@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported metadata simple int return qualifier")
+
+plot(close, offset=timeframe.multiplier)
+plot(open, offset=chart.left_visible_bar_time)
+plot(high, offset=chart.right_visible_bar_time)

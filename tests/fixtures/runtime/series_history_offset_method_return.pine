@@ -1,0 +1,26 @@
+//@version=5
+indicator("Series history offset method return")
+
+type Tool
+    float base
+
+method offset(Tool tool) =>
+    bar_index == 0 ? 0 : 1
+
+method offsetOrNa(Tool tool) =>
+    bar_index == 2 ? na : tool.offset()
+
+method source(Tool tool) =>
+    tool.base + close + 100
+
+tool = Tool.new(open)
+offset = tool.offset()
+maybe_offset = tool.offsetOrNa()
+
+plot(close[offset])
+plot((close + open)[offset])
+plot(close[maybe_offset])
+plot(tool.source()[1])
+plot(tool.source()[offset])
+plot(tool.source()[maybe_offset])
+plot(na(close[offset][1]) ? 1 : 0)

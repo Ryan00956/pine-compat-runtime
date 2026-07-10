@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported for-in matrix.kron result negative history")
+left = matrix.new<float>(1, 0, 0)
+right = matrix.new<float>(2, 3, 0)
+values = matrix.kron(left, right)
+length = for row in values
+    -1
+plot(close[length])

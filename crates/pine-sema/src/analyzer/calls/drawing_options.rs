@@ -252,7 +252,7 @@ impl Analyzer {
             if !is_target {
                 continue;
             }
-            let Some(value) = const_int_value(&arg.value) else {
+            let Some(value) = self.known_const_int_value(&arg.value) else {
                 continue;
             };
             if !(0..=3).contains(&value) {
@@ -285,7 +285,7 @@ impl Analyzer {
             if !is_target {
                 continue;
             }
-            let Some(value) = const_string_value(&arg.value) else {
+            let Some(value) = self.known_const_string_value(&arg.value) else {
                 continue;
             };
             if !LABEL_SIZES

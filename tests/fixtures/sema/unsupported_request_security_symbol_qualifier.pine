@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported request.security symbol qualifier")
+plot(request.security(close, timeframe.period, close))

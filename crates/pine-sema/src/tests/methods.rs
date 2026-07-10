@@ -28,7 +28,7 @@ plot(p.shift(2))
 }
 
 #[test]
-fn accepts_udt_receiver_passthrough_user_method_return() {
+fn accepts_udt_receiver_passthrough_user_method_return_and_history_read() {
     let analysis = analyze(
         r#"type Point
     float x
@@ -36,7 +36,8 @@ fn accepts_udt_receiver_passthrough_user_method_return() {
 method keep(Point p) => p
 p = Point.new(close, open)
 same = p.keep()
-plot(same.x + same.y)
+prior = same[1]
+plot(prior.x + prior.y)
 "#,
     );
 
@@ -122,6 +123,34 @@ plot(same.x + same.y)
 }
 
 #[test]
+fn accepts_udt_ternary_alias_return_from_user_method_receiver_and_param() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method keepTernary(Point p, bool flip) =>
+    copy = p
+    flip ? copy : p
+method chooseTernary(Point p, Point other, bool flip) =>
+    copy = other
+    flip ? copy : other
+p = Point.new(close)
+q = Point.new(open)
+same = p.keepTernary(bar_index % 2 == 0)
+chosen = p.chooseTernary(q, bar_index % 2 == 0)
+plot(same.x + chosen.x)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_nested_udt_parameter_passthrough_user_method_return() {
     let analysis = analyze(
         r#"type Point
@@ -146,7 +175,33 @@ plot(same.x + same.y)
 }
 
 #[test]
-fn accepts_udt_constructor_return_from_user_method() {
+fn accepts_nested_udt_user_method_return_history_read() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+type Wrapper
+    Point point
+method toWrapper(Point p) => Wrapper.new(p)
+method keep(Wrapper w) => w
+p = Point.new(close)
+made = p.toWrapper()
+same = made.keep()
+prior = same[1]
+plot(prior.point.x)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_udt_constructor_return_from_user_method_and_history_read() {
     let analysis = analyze(
         r#"type Point
     float x
@@ -154,7 +209,8 @@ fn accepts_udt_constructor_return_from_user_method() {
 method clone(Point p) => Point.new(p.x, p.y)
 p = Point.new(close, open)
 copy = p.clone()
-plot(copy.x + copy.y)
+prior = copy[1]
+plot(prior.x + prior.y)
 "#,
     );
 
@@ -630,6 +686,60 @@ plot(made.x + close)
 }
 
 #[test]
+fn accepts_udt_final_while_udt_alias_return_from_user_method_receiver() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method cloneWhile(Point p, bool keepGoing) =>
+    active = keepGoing
+    while active
+        q = p
+        active := false
+        q
+p = Point.new(close)
+made = p.cloneWhile(close > 0)
+plot(made.x + close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_udt_switch_udt_alias_return_from_user_method_receiver() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method cloneSwitch(Point p, int selector) =>
+    switch selector
+        0 =>
+            q = p
+            q
+        =>
+            q = p
+            q
+p = Point.new(close)
+made = p.cloneSwitch(bar_index % 2)
+plot(made.x + close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_constructor_return_from_user_method_scalar_param() {
     let analysis = analyze(
         r#"type Point
@@ -991,6 +1101,104 @@ method makeTyped(Point p, Point other, int count) =>
         Point.new(x=px + ox + i)
     made := for i = 0 to count
         Point.new(x=made.x + i + 2)
+    made
+p = Point.new(close)
+q = Point.new(open)
+made = p.makeTyped(q, 2)
+plot(made.x + close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_udt_typed_for_in_local_return_from_user_method_aliases() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method makeTyped(Point p, Point other, array<int> values) =>
+    copy = p
+    otherCopy = other
+    px = copy.x
+    ox = otherCopy.x
+    Point made = for value in values
+        Point.new(x=px + ox + value)
+    made := for value in values
+        Point.new(x=made.x + value + 2)
+    made
+p = Point.new(close)
+q = Point.new(open)
+values = array.from(1, 2)
+made = p.makeTyped(q, values)
+plot(made.x + close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_udt_final_for_in_alias_return_from_user_method_aliases() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method keepForIn(Point p, array<int> values) =>
+    for value in values
+        copy = p
+        copy
+method chooseForIn(Point p, Point other, array<int> values) =>
+    for value in values
+        copy = other
+        copy
+p = Point.new(close)
+q = Point.new(open)
+values = array.from(1, 2)
+same = p.keepForIn(values)
+chosen = p.chooseForIn(q, values)
+plot(same.x + chosen.x)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_udt_typed_while_local_return_from_user_method_aliases() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method makeTyped(Point p, Point other, int count) =>
+    copy = p
+    otherCopy = other
+    px = copy.x
+    ox = otherCopy.x
+    i = 0
+    Point made = while i < count
+        i := i + 1
+        Point.new(x=px + ox + i)
+    j = 0
+    made := while j < count
+        j := j + 1
+        Point.new(x=made.x + j + 2)
     made
 p = Point.new(close)
 q = Point.new(open)

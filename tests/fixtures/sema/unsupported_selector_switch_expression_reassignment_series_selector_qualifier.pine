@@ -1,0 +1,13 @@
+//@version=5
+indicator("Unsupported selector switch expression reassignment series selector qualifier")
+
+length = input.int(2, "Length")
+selected = length
+_ = switch bar_index
+    0 =>
+        selected := length
+        1
+    =>
+        0
+
+plot(ta.ema(close, selected))

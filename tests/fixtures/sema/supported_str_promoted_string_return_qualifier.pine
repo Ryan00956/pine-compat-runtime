@@ -1,0 +1,24 @@
+//@version=6
+indicator("Supported str promoted string return qualifier")
+
+text = input.string("ABCDE", "Text")
+begin_pos = input.int(1, "Begin")
+end_pos = input.int(4, "End")
+repeat_count = input.int(2, "Repeat")
+target = input.string("B", "Target")
+replacement = input.string("X", "Replacement")
+
+substring_text = str.substring(text, begin_pos, end_pos)
+repeat_text = str.repeat(text, repeat_count)
+replace_text = str.replace(text, target, replacement)
+replace_all_text = str.replace_all(text, target, replacement)
+
+substring_length = str.length(substring_text)
+repeat_length = str.length(repeat_text)
+replace_length = str.length(replace_text)
+replace_all_length = str.length(replace_all_text)
+
+plot(close, show_last=substring_length)
+plot(open, show_last=repeat_length)
+plot(high, show_last=replace_length)
+plot(low, show_last=replace_all_length)

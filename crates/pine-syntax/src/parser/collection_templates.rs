@@ -84,6 +84,14 @@ impl Parser {
             return Some(("array.new<chart.point>".to_owned(), 4));
         }
 
+        let (type_name, type_width) = self.template_type_name_at(1)?;
+        let close_offset = 1 + type_width;
+        if self.nth_at(close_offset, TokenKind::Gt)
+            && self.nth_at(close_offset + 1, TokenKind::LParen)
+        {
+            return Some((format!("array.new<{type_name}>"), close_offset));
+        }
+
         None
     }
 

@@ -1,0 +1,10 @@
+//@version=6
+indicator("Unsupported barstate metadata simple bool qualifier")
+
+plot(ta.alma(close, 4, 0.85, 6, barstate.isfirst))
+plot(ta.alma(close, 4, 0.85, 6, barstate.islast))
+plot(ta.alma(close, 4, 0.85, 6, barstate.islastconfirmedhistory))
+plot(ta.alma(close, 4, 0.85, 6, barstate.isnew))
+plot(ta.alma(close, 4, 0.85, 6, barstate.isconfirmed))
+plot(ta.alma(close, 4, 0.85, 6, barstate.ishistory))
+plot(ta.alma(close, 4, 0.85, 6, barstate.isrealtime))

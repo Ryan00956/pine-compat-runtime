@@ -1,0 +1,9 @@
+//@version=5
+indicator("TA named reordered distribution stats")
+plot(ta.median(length=3, source=close))
+plot(ta.mode(length=3, source=close))
+plot(ta.percentile_nearest_rank(percentage=50, length=3, source=close))
+plot(ta.percentile_linear_interpolation(percentage=50, length=3, source=close))
+plot(ta.percentrank(length=3, source=close))
+plot(ta.stdev(biased=false, length=3, source=close))
+plot(ta.variance(biased=false, length=3, source=close))

@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported timeframe.in_seconds simple return qualifier")
+
+chart_tf = input.timeframe("60", "Timeframe")
+current_seconds = timeframe.in_seconds()
+daily_seconds = timeframe.in_seconds("D")
+seconds = timeframe.in_seconds(chart_tf)
+
+plot(ta.sma(high, current_seconds))
+plot(ta.sma(open, daily_seconds))
+plot(ta.sma(close, seconds))

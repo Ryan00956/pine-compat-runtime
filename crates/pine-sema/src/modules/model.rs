@@ -44,7 +44,7 @@ pub(super) struct ModuleInfo {
     pub(super) exports: HashMap<String, ExportInfo>,
     pub(super) private_symbols: HashSet<String>,
     pub(super) user_types: HashMap<String, ModuleUserTypeInfo>,
-    pub(super) methods: HashMap<String, ModuleMethodInfo>,
+    pub(super) methods: HashMap<(String, String), ModuleMethodInfo>,
     pub(super) functions: HashMap<String, FunctionInfo>,
     pub(super) constants: HashMap<String, Expr>,
 }
@@ -117,6 +117,25 @@ pub(super) fn imported_user_type_scalar_field_type(type_name: &str) -> Option<Pi
         "bool" => ValueKind::Bool,
         "string" => ValueKind::String,
         "color" => ValueKind::Color,
+        _ => return None,
+    };
+    Some(PineType::new(Qualifier::Series, kind))
+}
+
+pub(super) fn imported_user_type_field_type(type_name: &str) -> Option<PineType> {
+    let kind = match type_name {
+        "int" => ValueKind::Int,
+        "float" => ValueKind::Float,
+        "bool" => ValueKind::Bool,
+        "string" => ValueKind::String,
+        "color" => ValueKind::Color,
+        "label" => ValueKind::Label,
+        "line" => ValueKind::Line,
+        "linefill" => ValueKind::LineFill,
+        "polyline" => ValueKind::Polyline,
+        "box" => ValueKind::Box,
+        "table" => ValueKind::Table,
+        "chart.point" => ValueKind::ChartPoint,
         _ => return None,
     };
     Some(PineType::new(Qualifier::Series, kind))

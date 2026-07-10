@@ -1,0 +1,23 @@
+//@version=6
+indicator("Supported local constructor method receiver")
+
+type Point
+    float x
+
+method shift(Point p, float delta) => p.x + delta
+method make(Point p, float value) => Point.new(value)
+method makeBlock(Point p, float value) =>
+    made = Point.new(value)
+    made
+method same(Point p) => p
+method read(Point p) => p.x
+
+direct = Point.new(close).shift(5)
+named = Point.new(open).shift(delta=7)
+chained = Point.new(close).make(high + 9).same()
+prior = Point.new(close).make(close + 3)[1]
+scalarPrior = Point.new(close).shift(5)[1]
+methodResultScalarPrior = Point.new(close).make(open).read()[1]
+blockMethodResultScalarPrior = Point.new(close).makeBlock(open).read()[1]
+
+plot(direct + named + chained.x + prior.x + scalarPrior + methodResultScalarPrior + blockMethodResultScalarPrior)

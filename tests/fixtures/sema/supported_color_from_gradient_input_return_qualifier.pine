@@ -1,0 +1,5 @@
+//@version=6
+indicator("Supported color.from_gradient input return qualifier")
+value = input.int(2, "Value")
+level_color = color.from_gradient(value, 1, 3, color.red, color.green)
+hline(2, color=level_color)

@@ -1,6 +1,0 @@
-//@version=5
-import user/udt/1 as lib
-indicator("Unsupported imported non-scalar UDT array declaration")
-
-array<lib.Wrapper> points = na
-plot(close)

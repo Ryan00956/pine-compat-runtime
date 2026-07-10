@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported label.new named const options")
+style_base = "label.style_unknown"
+label_style = style_base
+format_base = text.format_bold
+label_format = format_base + 4
+label.new(bar_index, high, "High", style=label_style, text_formatting=label_format)
+plot(close)

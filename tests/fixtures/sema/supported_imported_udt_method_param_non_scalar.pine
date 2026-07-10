@@ -1,0 +1,7 @@
+//@version=6
+import user/non_scalar_udt/1 as lib
+indicator("Supported imported non-scalar UDT method parameter")
+
+lib.Marker marker = na
+choice = marker.choose(marker)
+plot(na(choice[1]) ? 1 : 0)

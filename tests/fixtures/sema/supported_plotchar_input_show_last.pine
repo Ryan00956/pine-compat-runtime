@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported plotchar Input Show Last")
+
+count = input.int(5, "Show last")
+
+plotchar(close > open, show_last=count)

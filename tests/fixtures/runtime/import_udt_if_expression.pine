@@ -12,4 +12,21 @@ lib.Point typed = if close > open
 else
     lib.Point.new(high)
 
+p_prior = p[1]
+
+wrapped = if close > open
+    lib.Wrapper.new(lib.Point.new(close))
+else
+    lib.Wrapper.new(lib.Point.new(open))
+
+lib.Wrapper wrapped_typed = if close > open
+    wrapped
+else
+    lib.Wrapper.new(lib.Point.new(high))
+
+wrapped_prior = wrapped[1]
+
 plot(p.x + typed.x)
+plot(wrapped.nested.x + wrapped_typed.nested.x)
+plot(p_prior.x)
+plot(wrapped_prior.nested.x)

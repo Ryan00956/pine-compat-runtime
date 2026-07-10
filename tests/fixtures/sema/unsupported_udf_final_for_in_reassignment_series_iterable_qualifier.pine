@@ -1,0 +1,12 @@
+//@version=6
+indicator("Unsupported UDF final for-in reassignment series iterable qualifier")
+
+checked_length(values, x) =>
+    local = x
+    for value in values
+        local := x
+        ta.ema(close, local)
+
+array<int> values = na
+length = input.int(2, "Length")
+plot(checked_length(values, length))

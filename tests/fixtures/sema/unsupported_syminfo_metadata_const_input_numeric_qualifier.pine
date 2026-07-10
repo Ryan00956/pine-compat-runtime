@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported syminfo metadata const/input numeric qualifier")
+
+hline(syminfo.mintick)
+hline(syminfo.mincontract)
+hline(syminfo.pointvalue)
+plot(close, show_last=syminfo.minmove)
+plot(open, show_last=syminfo.pricescale)

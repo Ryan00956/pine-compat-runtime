@@ -1,0 +1,12 @@
+//@version=5
+indicator("Unsupported array typed method param mismatch")
+
+type Tool
+    float base
+
+method firstCount(Tool tool, array<int> values) =>
+    tool.base + array.get(values, 0)
+
+tool = Tool.new(close)
+values = array.from(close)
+plot(tool.firstCount(values))

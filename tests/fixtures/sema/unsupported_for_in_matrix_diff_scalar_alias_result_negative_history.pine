@@ -1,0 +1,10 @@
+//@version=6
+indicator("Unsupported for-in matrix.diff scalar alias result negative history")
+outer = array.from(1)
+length = for item in outer
+    scalar = close
+    values = matrix.diff(matrix.new<float>(1, 1, 0), scalar)
+    inner = for row in values
+        -1
+    inner
+plot(close[length])

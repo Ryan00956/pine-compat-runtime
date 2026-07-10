@@ -1,0 +1,21 @@
+//@version=6
+indicator("Supported map operation return qualifier")
+
+prices = map.new<string, float>()
+prices.put("open", open)
+prices.put("close", close)
+
+copied = map.copy(prices)
+method_copied = prices.copy()
+
+key_matrix = matrix.new<string>(1, 2, "")
+value_matrix = matrix.new<float>(1, 2, 0.0)
+matrix.add_row(key_matrix, 0, map.keys(prices))
+matrix.add_row(key_matrix, 0, prices.keys())
+matrix.add_col(value_matrix, 0, map.values(prices))
+matrix.add_col(value_matrix, 0, prices.values())
+
+plot(map.get(copied, "open"))
+plot(method_copied.get("close"))
+plot(prices.contains("open") ? key_matrix.rows() : value_matrix.columns())
+plot(map.contains(prices, "close") ? key_matrix.columns() : value_matrix.rows())

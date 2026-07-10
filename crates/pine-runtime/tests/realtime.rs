@@ -349,6 +349,44 @@ fn user_type_array_var_fixture_rolls_back_between_forming_updates() {
 }
 
 #[test]
+fn chart_point_var_fixture_rolls_back_between_forming_updates() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/chart_point_var_rollback.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[2.0]);
+    assert_values(&result.plots[1].values, &[0.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_values(&result.plots[0].values, &[2.0, 3.0]);
+    assert_values(&result.plots[1].values, &[0.0, 0.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[2.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should roll back chart.point var state");
+    assert_values(&result.plots[0].values, &[2.0, 3.0]);
+    assert_values(&result.plots[1].values, &[0.0, 0.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[2.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit chart.point var state");
+    assert_values(&result.plots[0].values, &[2.0, 3.0]);
+    assert_values(&result.plots[1].values, &[0.0, 0.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[2.0, 3.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(5.0)))
+        .expect("next forming update should start from confirmed chart.point var state");
+    assert_values(&result.plots[0].values, &[2.0, 3.0, 4.0]);
+    assert_values(&result.plots[1].values, &[0.0, 0.0, 0.0]);
+}
+
+#[test]
 fn varip_scalar_fixture_persists_intrabar_state_between_forming_updates() {
     let mut runtime = runtime_for_fixture("tests/fixtures/realtime/varip_scalar.pine");
 
@@ -384,6 +422,61 @@ fn varip_scalar_fixture_persists_intrabar_state_between_forming_updates() {
 }
 
 #[test]
+fn chart_point_varip_fixture_persists_intrabar_value_between_forming_updates() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/chart_point_varip.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[2.0]);
+    assert_values(&result.plots[1].values, &[2.0]);
+    assert_values(&result.plots[2].values, &[0.0]);
+    assert_values(&result.plots[3].values, &[0.0]);
+    assert_values(&result.plots[4].values, &[-1.0]);
+    assert_values(&result.plots[5].values, &[-1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_values(&result.plots[0].values, &[2.0, 3.0]);
+    assert_values(&result.plots[1].values, &[2.0, 3.0]);
+    assert_values(&result.plots[2].values, &[0.0, 0.0]);
+    assert_values(&result.plots[3].values, &[0.0, 0.0]);
+    assert_values(&result.plots[4].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[5].values, &[-1.0, 2.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should retain chart.point varip state");
+    assert_values(&result.plots[0].values, &[2.0, 3.0]);
+    assert_values(&result.plots[1].values, &[2.0, 4.0]);
+    assert_values(&result.plots[2].values, &[0.0, 0.0]);
+    assert_values(&result.plots[3].values, &[0.0, 0.0]);
+    assert_values(&result.plots[4].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[5].values, &[-1.0, 2.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit chart.point varip state");
+    assert_values(&result.plots[0].values, &[2.0, 3.0]);
+    assert_values(&result.plots[1].values, &[2.0, 5.0]);
+    assert_values(&result.plots[2].values, &[0.0, 0.0]);
+    assert_values(&result.plots[3].values, &[0.0, 0.0]);
+    assert_values(&result.plots[4].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[5].values, &[-1.0, 2.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(5.0)))
+        .expect("next forming update should start from confirmed chart.point varip state");
+    assert_values(&result.plots[0].values, &[2.0, 3.0, 4.0]);
+    assert_values(&result.plots[1].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[2].values, &[0.0, 0.0, 0.0]);
+    assert_values(&result.plots[3].values, &[0.0, 0.0, 0.0]);
+    assert_values(&result.plots[4].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[5].values, &[-1.0, 2.0, 5.0]);
+}
+
+#[test]
 fn user_type_varip_fixture_persists_intrabar_value_between_forming_updates() {
     let mut runtime = runtime_for_fixture("tests/fixtures/realtime/user_type_varip.pine");
 
@@ -392,60 +485,300 @@ fn user_type_varip_fixture_persists_intrabar_value_between_forming_updates() {
         .expect("historical update should run");
     assert_values(&result.plots[0].values, &[2.0]);
     assert_values(&result.plots[1].values, &[2.0]);
-    assert_values(&result.plots[2].values, &[1.0]);
-    assert_values(&result.plots[3].values, &[2.0]);
-    assert_values(&result.plots[4].values, &[2.0]);
+    assert_values(&result.plots[2].values, &[-1.0]);
+    assert_values(&result.plots[3].values, &[-1.0]);
+    assert_values(&result.plots[4].values, &[1.0]);
     assert_values(&result.plots[5].values, &[2.0]);
-    assert_values(&result.plots[6].values, &[2.0]);
-    assert_values(&result.plots[7].values, &[3.0]);
+    assert_values(&result.plots[6].values, &[-1.0]);
+    assert_values(&result.plots[7].values, &[-1.0]);
+    assert_values(&result.plots[8].values, &[2.0]);
+    assert_values(&result.plots[9].values, &[-1.0]);
+    assert_values(&result.plots[10].values, &[-1.0]);
+    assert_values(&result.plots[11].values, &[2.0]);
+    assert_values(&result.plots[12].values, &[-1.0]);
+    assert_values(&result.plots[13].values, &[-1.0]);
+    assert_values(&result.plots[14].values, &[2.0]);
+    assert_values(&result.plots[15].values, &[-1.0]);
+    assert_values(&result.plots[16].values, &[-1.0]);
+    assert_values(&result.plots[17].values, &[2.0]);
+    assert_values(&result.plots[18].values, &[-1.0]);
+    assert_values(&result.plots[19].values, &[-1.0]);
+    assert_values(&result.plots[20].values, &[3.0]);
+    assert_values(&result.plots[21].values, &[-1.0]);
+    assert_values(&result.plots[22].values, &[-1.0]);
+    assert_values(&result.plots[23].values, &[103.0]);
+    assert_values(&result.plots[24].values, &[-1.0]);
+    assert_values(&result.plots[25].values, &[-1.0]);
+    assert_values(&result.plots[26].values, &[114.0]);
+    assert_values(&result.plots[27].values, &[-1.0]);
+    assert_values(&result.plots[28].values, &[-1.0]);
+    assert_values(&result.plots[29].values, &[122.0]);
+    assert_values(&result.plots[30].values, &[-1.0]);
+    assert_values(&result.plots[31].values, &[-1.0]);
+    assert_values(&result.plots[32].values, &[132.0]);
+    assert_values(&result.plots[33].values, &[-1.0]);
+    assert_values(&result.plots[34].values, &[-1.0]);
+    assert_values(&result.plots[35].values, &[142.0]);
+    assert_values(&result.plots[36].values, &[-1.0]);
+    assert_values(&result.plots[37].values, &[-1.0]);
+    assert_values(&result.plots[38].values, &[153.0]);
+    assert_values(&result.plots[39].values, &[-1.0]);
+    assert_values(&result.plots[40].values, &[-1.0]);
+    assert_values(&result.plots[41].values, &[163.0]);
+    assert_values(&result.plots[42].values, &[-1.0]);
+    assert_values(&result.plots[43].values, &[-1.0]);
+    assert_values(&result.plots[44].values, &[174.0]);
+    assert_values(&result.plots[45].values, &[-1.0]);
+    assert_values(&result.plots[46].values, &[-1.0]);
+    assert_values(&result.plots[47].values, &[2.0]);
+    assert_values(&result.plots[48].values, &[-1.0]);
+    assert_values(&result.plots[49].values, &[-1.0]);
+    assert_values(&result.plots[50].values, &[2.0]);
+    assert_values(&result.plots[51].values, &[-1.0]);
+    assert_values(&result.plots[52].values, &[-1.0]);
+    assert_values(&result.plots[53].values, &[2.0]);
+    assert_values(&result.plots[54].values, &[-1.0]);
+    assert_values(&result.plots[55].values, &[-1.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(2.0)))
         .expect("forming update should run");
     assert_values(&result.plots[0].values, &[2.0, 3.0]);
     assert_values(&result.plots[1].values, &[2.0, 3.0]);
-    assert_values(&result.plots[2].values, &[1.0, 2.0]);
-    assert_values(&result.plots[3].values, &[2.0, 3.0]);
-    assert_values(&result.plots[4].values, &[2.0, 3.0]);
+    assert_values(&result.plots[2].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[3].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[4].values, &[1.0, 2.0]);
     assert_values(&result.plots[5].values, &[2.0, 3.0]);
-    assert_values(&result.plots[6].values, &[2.0, 3.0]);
-    assert_values(&result.plots[7].values, &[3.0, 4.0]);
+    assert_values(&result.plots[6].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[7].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[8].values, &[2.0, 3.0]);
+    assert_values(&result.plots[9].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[10].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[11].values, &[2.0, 3.0]);
+    assert_values(&result.plots[12].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[13].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[14].values, &[2.0, 3.0]);
+    assert_values(&result.plots[15].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[16].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[17].values, &[2.0, 3.0]);
+    assert_values(&result.plots[18].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[19].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[20].values, &[3.0, 4.0]);
+    assert_values(&result.plots[21].values, &[-1.0, 3.0]);
+    assert_values(&result.plots[22].values, &[-1.0, 3.0]);
+    assert_values(&result.plots[23].values, &[103.0, 104.0]);
+    assert_values(&result.plots[24].values, &[-1.0, 103.0]);
+    assert_values(&result.plots[25].values, &[-1.0, 103.0]);
+    assert_values(&result.plots[26].values, &[114.0, 115.0]);
+    assert_values(&result.plots[27].values, &[-1.0, 114.0]);
+    assert_values(&result.plots[28].values, &[-1.0, 114.0]);
+    assert_values(&result.plots[29].values, &[122.0, 123.0]);
+    assert_values(&result.plots[30].values, &[-1.0, 122.0]);
+    assert_values(&result.plots[31].values, &[-1.0, 122.0]);
+    assert_values(&result.plots[32].values, &[132.0, 133.0]);
+    assert_values(&result.plots[33].values, &[-1.0, 132.0]);
+    assert_values(&result.plots[34].values, &[-1.0, 132.0]);
+    assert_values(&result.plots[35].values, &[142.0, 143.0]);
+    assert_values(&result.plots[36].values, &[-1.0, 142.0]);
+    assert_values(&result.plots[37].values, &[-1.0, 142.0]);
+    assert_values(&result.plots[38].values, &[153.0, 154.0]);
+    assert_values(&result.plots[39].values, &[-1.0, 153.0]);
+    assert_values(&result.plots[40].values, &[-1.0, 153.0]);
+    assert_values(&result.plots[41].values, &[163.0, 164.0]);
+    assert_values(&result.plots[42].values, &[-1.0, 163.0]);
+    assert_values(&result.plots[43].values, &[-1.0, 163.0]);
+    assert_values(&result.plots[44].values, &[174.0, 175.0]);
+    assert_values(&result.plots[45].values, &[-1.0, 174.0]);
+    assert_values(&result.plots[46].values, &[-1.0, 174.0]);
+    assert_values(&result.plots[47].values, &[2.0, 3.0]);
+    assert_values(&result.plots[48].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[49].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[50].values, &[2.0, 3.0]);
+    assert_values(&result.plots[51].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[52].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[53].values, &[2.0, 3.0]);
+    assert_values(&result.plots[54].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[55].values, &[-1.0, 2.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(3.0)))
         .expect("second forming update should retain UDT varip state");
     assert_values(&result.plots[0].values, &[2.0, 3.0]);
     assert_values(&result.plots[1].values, &[2.0, 4.0]);
-    assert_values(&result.plots[2].values, &[1.0, 3.0]);
-    assert_values(&result.plots[3].values, &[2.0, 4.0]);
-    assert_values(&result.plots[4].values, &[2.0, 4.0]);
+    assert_values(&result.plots[2].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[3].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[4].values, &[1.0, 3.0]);
     assert_values(&result.plots[5].values, &[2.0, 4.0]);
-    assert_values(&result.plots[6].values, &[2.0, 4.0]);
-    assert_values(&result.plots[7].values, &[3.0, 5.0]);
+    assert_values(&result.plots[6].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[7].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[8].values, &[2.0, 4.0]);
+    assert_values(&result.plots[9].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[10].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[11].values, &[2.0, 4.0]);
+    assert_values(&result.plots[12].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[13].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[14].values, &[2.0, 4.0]);
+    assert_values(&result.plots[15].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[16].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[17].values, &[2.0, 4.0]);
+    assert_values(&result.plots[18].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[19].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[20].values, &[3.0, 5.0]);
+    assert_values(&result.plots[21].values, &[-1.0, 3.0]);
+    assert_values(&result.plots[22].values, &[-1.0, 3.0]);
+    assert_values(&result.plots[23].values, &[103.0, 105.0]);
+    assert_values(&result.plots[24].values, &[-1.0, 103.0]);
+    assert_values(&result.plots[25].values, &[-1.0, 103.0]);
+    assert_values(&result.plots[26].values, &[114.0, 116.0]);
+    assert_values(&result.plots[27].values, &[-1.0, 114.0]);
+    assert_values(&result.plots[28].values, &[-1.0, 114.0]);
+    assert_values(&result.plots[29].values, &[122.0, 124.0]);
+    assert_values(&result.plots[30].values, &[-1.0, 122.0]);
+    assert_values(&result.plots[31].values, &[-1.0, 122.0]);
+    assert_values(&result.plots[32].values, &[132.0, 134.0]);
+    assert_values(&result.plots[33].values, &[-1.0, 132.0]);
+    assert_values(&result.plots[34].values, &[-1.0, 132.0]);
+    assert_values(&result.plots[35].values, &[142.0, 144.0]);
+    assert_values(&result.plots[36].values, &[-1.0, 142.0]);
+    assert_values(&result.plots[37].values, &[-1.0, 142.0]);
+    assert_values(&result.plots[38].values, &[153.0, 155.0]);
+    assert_values(&result.plots[39].values, &[-1.0, 153.0]);
+    assert_values(&result.plots[40].values, &[-1.0, 153.0]);
+    assert_values(&result.plots[41].values, &[163.0, 165.0]);
+    assert_values(&result.plots[42].values, &[-1.0, 163.0]);
+    assert_values(&result.plots[43].values, &[-1.0, 163.0]);
+    assert_values(&result.plots[44].values, &[174.0, 176.0]);
+    assert_values(&result.plots[45].values, &[-1.0, 174.0]);
+    assert_values(&result.plots[46].values, &[-1.0, 174.0]);
+    assert_values(&result.plots[47].values, &[2.0, 4.0]);
+    assert_values(&result.plots[48].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[49].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[50].values, &[2.0, 4.0]);
+    assert_values(&result.plots[51].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[52].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[53].values, &[2.0, 4.0]);
+    assert_values(&result.plots[54].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[55].values, &[-1.0, 2.0]);
 
     let result = runtime
         .update(BarUpdate::confirmed(bar(4.0)))
         .expect("confirmed update should commit UDT varip state");
     assert_values(&result.plots[0].values, &[2.0, 3.0]);
     assert_values(&result.plots[1].values, &[2.0, 5.0]);
-    assert_values(&result.plots[2].values, &[1.0, 4.0]);
-    assert_values(&result.plots[3].values, &[2.0, 5.0]);
-    assert_values(&result.plots[4].values, &[2.0, 5.0]);
+    assert_values(&result.plots[2].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[3].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[4].values, &[1.0, 4.0]);
     assert_values(&result.plots[5].values, &[2.0, 5.0]);
-    assert_values(&result.plots[6].values, &[2.0, 5.0]);
-    assert_values(&result.plots[7].values, &[3.0, 6.0]);
+    assert_values(&result.plots[6].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[7].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[8].values, &[2.0, 5.0]);
+    assert_values(&result.plots[9].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[10].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[11].values, &[2.0, 5.0]);
+    assert_values(&result.plots[12].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[13].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[14].values, &[2.0, 5.0]);
+    assert_values(&result.plots[15].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[16].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[17].values, &[2.0, 5.0]);
+    assert_values(&result.plots[18].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[19].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[20].values, &[3.0, 6.0]);
+    assert_values(&result.plots[21].values, &[-1.0, 3.0]);
+    assert_values(&result.plots[22].values, &[-1.0, 3.0]);
+    assert_values(&result.plots[23].values, &[103.0, 106.0]);
+    assert_values(&result.plots[24].values, &[-1.0, 103.0]);
+    assert_values(&result.plots[25].values, &[-1.0, 103.0]);
+    assert_values(&result.plots[26].values, &[114.0, 117.0]);
+    assert_values(&result.plots[27].values, &[-1.0, 114.0]);
+    assert_values(&result.plots[28].values, &[-1.0, 114.0]);
+    assert_values(&result.plots[29].values, &[122.0, 125.0]);
+    assert_values(&result.plots[30].values, &[-1.0, 122.0]);
+    assert_values(&result.plots[31].values, &[-1.0, 122.0]);
+    assert_values(&result.plots[32].values, &[132.0, 135.0]);
+    assert_values(&result.plots[33].values, &[-1.0, 132.0]);
+    assert_values(&result.plots[34].values, &[-1.0, 132.0]);
+    assert_values(&result.plots[35].values, &[142.0, 145.0]);
+    assert_values(&result.plots[36].values, &[-1.0, 142.0]);
+    assert_values(&result.plots[37].values, &[-1.0, 142.0]);
+    assert_values(&result.plots[38].values, &[153.0, 156.0]);
+    assert_values(&result.plots[39].values, &[-1.0, 153.0]);
+    assert_values(&result.plots[40].values, &[-1.0, 153.0]);
+    assert_values(&result.plots[41].values, &[163.0, 166.0]);
+    assert_values(&result.plots[42].values, &[-1.0, 163.0]);
+    assert_values(&result.plots[43].values, &[-1.0, 163.0]);
+    assert_values(&result.plots[44].values, &[174.0, 177.0]);
+    assert_values(&result.plots[45].values, &[-1.0, 174.0]);
+    assert_values(&result.plots[46].values, &[-1.0, 174.0]);
+    assert_values(&result.plots[47].values, &[2.0, 5.0]);
+    assert_values(&result.plots[48].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[49].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[50].values, &[2.0, 5.0]);
+    assert_values(&result.plots[51].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[52].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[53].values, &[2.0, 5.0]);
+    assert_values(&result.plots[54].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[55].values, &[-1.0, 2.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(5.0)))
         .expect("next forming update should start from confirmed UDT varip state");
     assert_values(&result.plots[0].values, &[2.0, 3.0, 4.0]);
     assert_values(&result.plots[1].values, &[2.0, 5.0, 6.0]);
-    assert_values(&result.plots[2].values, &[1.0, 4.0, 5.0]);
-    assert_values(&result.plots[3].values, &[2.0, 5.0, 6.0]);
-    assert_values(&result.plots[4].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[2].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[3].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[4].values, &[1.0, 4.0, 5.0]);
     assert_values(&result.plots[5].values, &[2.0, 5.0, 6.0]);
-    assert_values(&result.plots[6].values, &[2.0, 5.0, 6.0]);
-    assert_values(&result.plots[7].values, &[3.0, 6.0, 7.0]);
+    assert_values(&result.plots[6].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[7].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[8].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[9].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[10].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[11].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[12].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[13].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[14].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[15].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[16].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[17].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[18].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[19].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[20].values, &[3.0, 6.0, 7.0]);
+    assert_values(&result.plots[21].values, &[-1.0, 3.0, 6.0]);
+    assert_values(&result.plots[22].values, &[-1.0, 3.0, 6.0]);
+    assert_values(&result.plots[23].values, &[103.0, 106.0, 107.0]);
+    assert_values(&result.plots[24].values, &[-1.0, 103.0, 106.0]);
+    assert_values(&result.plots[25].values, &[-1.0, 103.0, 106.0]);
+    assert_values(&result.plots[26].values, &[114.0, 117.0, 118.0]);
+    assert_values(&result.plots[27].values, &[-1.0, 114.0, 117.0]);
+    assert_values(&result.plots[28].values, &[-1.0, 114.0, 117.0]);
+    assert_values(&result.plots[29].values, &[122.0, 125.0, 126.0]);
+    assert_values(&result.plots[30].values, &[-1.0, 122.0, 125.0]);
+    assert_values(&result.plots[31].values, &[-1.0, 122.0, 125.0]);
+    assert_values(&result.plots[32].values, &[132.0, 135.0, 136.0]);
+    assert_values(&result.plots[33].values, &[-1.0, 132.0, 135.0]);
+    assert_values(&result.plots[34].values, &[-1.0, 132.0, 135.0]);
+    assert_values(&result.plots[35].values, &[142.0, 145.0, 146.0]);
+    assert_values(&result.plots[36].values, &[-1.0, 142.0, 145.0]);
+    assert_values(&result.plots[37].values, &[-1.0, 142.0, 145.0]);
+    assert_values(&result.plots[38].values, &[153.0, 156.0, 157.0]);
+    assert_values(&result.plots[39].values, &[-1.0, 153.0, 156.0]);
+    assert_values(&result.plots[40].values, &[-1.0, 153.0, 156.0]);
+    assert_values(&result.plots[41].values, &[163.0, 166.0, 167.0]);
+    assert_values(&result.plots[42].values, &[-1.0, 163.0, 166.0]);
+    assert_values(&result.plots[43].values, &[-1.0, 163.0, 166.0]);
+    assert_values(&result.plots[44].values, &[174.0, 177.0, 178.0]);
+    assert_values(&result.plots[45].values, &[-1.0, 174.0, 177.0]);
+    assert_values(&result.plots[46].values, &[-1.0, 174.0, 177.0]);
+    assert_values(&result.plots[47].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[48].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[49].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[50].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[51].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[52].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[53].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[54].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[55].values, &[-1.0, 2.0, 5.0]);
 }
 
 #[test]
@@ -457,40 +790,300 @@ fn import_udt_varip_fixture_persists_intrabar_value_between_forming_updates() {
         .expect("historical update should run");
     assert_values(&result.plots[0].values, &[2.0]);
     assert_values(&result.plots[1].values, &[2.0]);
-    assert_values(&result.plots[2].values, &[1.0]);
-    assert_values(&result.plots[3].values, &[2.0]);
+    assert_values(&result.plots[2].values, &[-1.0]);
+    assert_values(&result.plots[3].values, &[-1.0]);
+    assert_values(&result.plots[4].values, &[1.0]);
+    assert_values(&result.plots[5].values, &[2.0]);
+    assert_values(&result.plots[6].values, &[-1.0]);
+    assert_values(&result.plots[7].values, &[-1.0]);
+    assert_values(&result.plots[8].values, &[2.0]);
+    assert_values(&result.plots[9].values, &[-1.0]);
+    assert_values(&result.plots[10].values, &[-1.0]);
+    assert_values(&result.plots[11].values, &[102.0]);
+    assert_values(&result.plots[12].values, &[-1.0]);
+    assert_values(&result.plots[13].values, &[-1.0]);
+    assert_values(&result.plots[14].values, &[112.0]);
+    assert_values(&result.plots[15].values, &[-1.0]);
+    assert_values(&result.plots[16].values, &[-1.0]);
+    assert_values(&result.plots[17].values, &[122.0]);
+    assert_values(&result.plots[18].values, &[-1.0]);
+    assert_values(&result.plots[19].values, &[-1.0]);
+    assert_values(&result.plots[20].values, &[133.0]);
+    assert_values(&result.plots[21].values, &[-1.0]);
+    assert_values(&result.plots[22].values, &[-1.0]);
+    assert_values(&result.plots[23].values, &[143.0]);
+    assert_values(&result.plots[24].values, &[-1.0]);
+    assert_values(&result.plots[25].values, &[-1.0]);
+    assert_values(&result.plots[26].values, &[154.0]);
+    assert_values(&result.plots[27].values, &[-1.0]);
+    assert_values(&result.plots[28].values, &[-1.0]);
+    assert_values(&result.plots[29].values, &[162.0]);
+    assert_values(&result.plots[30].values, &[-1.0]);
+    assert_values(&result.plots[31].values, &[-1.0]);
+    assert_values(&result.plots[32].values, &[172.0]);
+    assert_values(&result.plots[33].values, &[-1.0]);
+    assert_values(&result.plots[34].values, &[-1.0]);
+    assert_values(&result.plots[35].values, &[182.0]);
+    assert_values(&result.plots[36].values, &[-1.0]);
+    assert_values(&result.plots[37].values, &[-1.0]);
+    assert_values(&result.plots[38].values, &[193.0]);
+    assert_values(&result.plots[39].values, &[-1.0]);
+    assert_values(&result.plots[40].values, &[-1.0]);
+    assert_values(&result.plots[41].values, &[203.0]);
+    assert_values(&result.plots[42].values, &[-1.0]);
+    assert_values(&result.plots[43].values, &[-1.0]);
+    assert_values(&result.plots[44].values, &[214.0]);
+    assert_values(&result.plots[45].values, &[-1.0]);
+    assert_values(&result.plots[46].values, &[-1.0]);
+    assert_values(&result.plots[47].values, &[2.0]);
+    assert_values(&result.plots[48].values, &[-1.0]);
+    assert_values(&result.plots[49].values, &[-1.0]);
+    assert_values(&result.plots[50].values, &[2.0]);
+    assert_values(&result.plots[51].values, &[-1.0]);
+    assert_values(&result.plots[52].values, &[-1.0]);
+    assert_values(&result.plots[53].values, &[2.0]);
+    assert_values(&result.plots[54].values, &[-1.0]);
+    assert_values(&result.plots[55].values, &[-1.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(2.0)))
         .expect("forming update should run");
     assert_values(&result.plots[0].values, &[2.0, 3.0]);
     assert_values(&result.plots[1].values, &[2.0, 3.0]);
-    assert_values(&result.plots[2].values, &[1.0, 2.0]);
-    assert_values(&result.plots[3].values, &[2.0, 3.0]);
+    assert_values(&result.plots[2].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[3].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[4].values, &[1.0, 2.0]);
+    assert_values(&result.plots[5].values, &[2.0, 3.0]);
+    assert_values(&result.plots[6].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[7].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[8].values, &[2.0, 3.0]);
+    assert_values(&result.plots[9].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[10].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[11].values, &[102.0, 103.0]);
+    assert_values(&result.plots[12].values, &[-1.0, 102.0]);
+    assert_values(&result.plots[13].values, &[-1.0, 102.0]);
+    assert_values(&result.plots[14].values, &[112.0, 113.0]);
+    assert_values(&result.plots[15].values, &[-1.0, 112.0]);
+    assert_values(&result.plots[16].values, &[-1.0, 112.0]);
+    assert_values(&result.plots[17].values, &[122.0, 123.0]);
+    assert_values(&result.plots[18].values, &[-1.0, 122.0]);
+    assert_values(&result.plots[19].values, &[-1.0, 122.0]);
+    assert_values(&result.plots[20].values, &[133.0, 134.0]);
+    assert_values(&result.plots[21].values, &[-1.0, 133.0]);
+    assert_values(&result.plots[22].values, &[-1.0, 133.0]);
+    assert_values(&result.plots[23].values, &[143.0, 144.0]);
+    assert_values(&result.plots[24].values, &[-1.0, 143.0]);
+    assert_values(&result.plots[25].values, &[-1.0, 143.0]);
+    assert_values(&result.plots[26].values, &[154.0, 155.0]);
+    assert_values(&result.plots[27].values, &[-1.0, 154.0]);
+    assert_values(&result.plots[28].values, &[-1.0, 154.0]);
+    assert_values(&result.plots[29].values, &[162.0, 163.0]);
+    assert_values(&result.plots[30].values, &[-1.0, 162.0]);
+    assert_values(&result.plots[31].values, &[-1.0, 162.0]);
+    assert_values(&result.plots[32].values, &[172.0, 173.0]);
+    assert_values(&result.plots[33].values, &[-1.0, 172.0]);
+    assert_values(&result.plots[34].values, &[-1.0, 172.0]);
+    assert_values(&result.plots[35].values, &[182.0, 183.0]);
+    assert_values(&result.plots[36].values, &[-1.0, 182.0]);
+    assert_values(&result.plots[37].values, &[-1.0, 182.0]);
+    assert_values(&result.plots[38].values, &[193.0, 194.0]);
+    assert_values(&result.plots[39].values, &[-1.0, 193.0]);
+    assert_values(&result.plots[40].values, &[-1.0, 193.0]);
+    assert_values(&result.plots[41].values, &[203.0, 204.0]);
+    assert_values(&result.plots[42].values, &[-1.0, 203.0]);
+    assert_values(&result.plots[43].values, &[-1.0, 203.0]);
+    assert_values(&result.plots[44].values, &[214.0, 215.0]);
+    assert_values(&result.plots[45].values, &[-1.0, 214.0]);
+    assert_values(&result.plots[46].values, &[-1.0, 214.0]);
+    assert_values(&result.plots[47].values, &[2.0, 3.0]);
+    assert_values(&result.plots[48].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[49].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[50].values, &[2.0, 3.0]);
+    assert_values(&result.plots[51].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[52].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[53].values, &[2.0, 3.0]);
+    assert_values(&result.plots[54].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[55].values, &[-1.0, 2.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(3.0)))
         .expect("second forming update should retain imported UDT varip state");
     assert_values(&result.plots[0].values, &[2.0, 3.0]);
     assert_values(&result.plots[1].values, &[2.0, 4.0]);
-    assert_values(&result.plots[2].values, &[1.0, 3.0]);
-    assert_values(&result.plots[3].values, &[2.0, 4.0]);
+    assert_values(&result.plots[2].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[3].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[4].values, &[1.0, 3.0]);
+    assert_values(&result.plots[5].values, &[2.0, 4.0]);
+    assert_values(&result.plots[6].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[7].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[8].values, &[2.0, 4.0]);
+    assert_values(&result.plots[9].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[10].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[11].values, &[102.0, 104.0]);
+    assert_values(&result.plots[12].values, &[-1.0, 102.0]);
+    assert_values(&result.plots[13].values, &[-1.0, 102.0]);
+    assert_values(&result.plots[14].values, &[112.0, 114.0]);
+    assert_values(&result.plots[15].values, &[-1.0, 112.0]);
+    assert_values(&result.plots[16].values, &[-1.0, 112.0]);
+    assert_values(&result.plots[17].values, &[122.0, 124.0]);
+    assert_values(&result.plots[18].values, &[-1.0, 122.0]);
+    assert_values(&result.plots[19].values, &[-1.0, 122.0]);
+    assert_values(&result.plots[20].values, &[133.0, 135.0]);
+    assert_values(&result.plots[21].values, &[-1.0, 133.0]);
+    assert_values(&result.plots[22].values, &[-1.0, 133.0]);
+    assert_values(&result.plots[23].values, &[143.0, 145.0]);
+    assert_values(&result.plots[24].values, &[-1.0, 143.0]);
+    assert_values(&result.plots[25].values, &[-1.0, 143.0]);
+    assert_values(&result.plots[26].values, &[154.0, 156.0]);
+    assert_values(&result.plots[27].values, &[-1.0, 154.0]);
+    assert_values(&result.plots[28].values, &[-1.0, 154.0]);
+    assert_values(&result.plots[29].values, &[162.0, 164.0]);
+    assert_values(&result.plots[30].values, &[-1.0, 162.0]);
+    assert_values(&result.plots[31].values, &[-1.0, 162.0]);
+    assert_values(&result.plots[32].values, &[172.0, 174.0]);
+    assert_values(&result.plots[33].values, &[-1.0, 172.0]);
+    assert_values(&result.plots[34].values, &[-1.0, 172.0]);
+    assert_values(&result.plots[35].values, &[182.0, 184.0]);
+    assert_values(&result.plots[36].values, &[-1.0, 182.0]);
+    assert_values(&result.plots[37].values, &[-1.0, 182.0]);
+    assert_values(&result.plots[38].values, &[193.0, 195.0]);
+    assert_values(&result.plots[39].values, &[-1.0, 193.0]);
+    assert_values(&result.plots[40].values, &[-1.0, 193.0]);
+    assert_values(&result.plots[41].values, &[203.0, 205.0]);
+    assert_values(&result.plots[42].values, &[-1.0, 203.0]);
+    assert_values(&result.plots[43].values, &[-1.0, 203.0]);
+    assert_values(&result.plots[44].values, &[214.0, 216.0]);
+    assert_values(&result.plots[45].values, &[-1.0, 214.0]);
+    assert_values(&result.plots[46].values, &[-1.0, 214.0]);
+    assert_values(&result.plots[47].values, &[2.0, 4.0]);
+    assert_values(&result.plots[48].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[49].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[50].values, &[2.0, 4.0]);
+    assert_values(&result.plots[51].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[52].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[53].values, &[2.0, 4.0]);
+    assert_values(&result.plots[54].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[55].values, &[-1.0, 2.0]);
 
     let result = runtime
         .update(BarUpdate::confirmed(bar(4.0)))
         .expect("confirmed update should commit imported UDT varip state");
     assert_values(&result.plots[0].values, &[2.0, 3.0]);
     assert_values(&result.plots[1].values, &[2.0, 5.0]);
-    assert_values(&result.plots[2].values, &[1.0, 4.0]);
-    assert_values(&result.plots[3].values, &[2.0, 5.0]);
+    assert_values(&result.plots[2].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[3].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[4].values, &[1.0, 4.0]);
+    assert_values(&result.plots[5].values, &[2.0, 5.0]);
+    assert_values(&result.plots[6].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[7].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[8].values, &[2.0, 5.0]);
+    assert_values(&result.plots[9].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[10].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[11].values, &[102.0, 105.0]);
+    assert_values(&result.plots[12].values, &[-1.0, 102.0]);
+    assert_values(&result.plots[13].values, &[-1.0, 102.0]);
+    assert_values(&result.plots[14].values, &[112.0, 115.0]);
+    assert_values(&result.plots[15].values, &[-1.0, 112.0]);
+    assert_values(&result.plots[16].values, &[-1.0, 112.0]);
+    assert_values(&result.plots[17].values, &[122.0, 125.0]);
+    assert_values(&result.plots[18].values, &[-1.0, 122.0]);
+    assert_values(&result.plots[19].values, &[-1.0, 122.0]);
+    assert_values(&result.plots[20].values, &[133.0, 136.0]);
+    assert_values(&result.plots[21].values, &[-1.0, 133.0]);
+    assert_values(&result.plots[22].values, &[-1.0, 133.0]);
+    assert_values(&result.plots[23].values, &[143.0, 146.0]);
+    assert_values(&result.plots[24].values, &[-1.0, 143.0]);
+    assert_values(&result.plots[25].values, &[-1.0, 143.0]);
+    assert_values(&result.plots[26].values, &[154.0, 157.0]);
+    assert_values(&result.plots[27].values, &[-1.0, 154.0]);
+    assert_values(&result.plots[28].values, &[-1.0, 154.0]);
+    assert_values(&result.plots[29].values, &[162.0, 165.0]);
+    assert_values(&result.plots[30].values, &[-1.0, 162.0]);
+    assert_values(&result.plots[31].values, &[-1.0, 162.0]);
+    assert_values(&result.plots[32].values, &[172.0, 175.0]);
+    assert_values(&result.plots[33].values, &[-1.0, 172.0]);
+    assert_values(&result.plots[34].values, &[-1.0, 172.0]);
+    assert_values(&result.plots[35].values, &[182.0, 185.0]);
+    assert_values(&result.plots[36].values, &[-1.0, 182.0]);
+    assert_values(&result.plots[37].values, &[-1.0, 182.0]);
+    assert_values(&result.plots[38].values, &[193.0, 196.0]);
+    assert_values(&result.plots[39].values, &[-1.0, 193.0]);
+    assert_values(&result.plots[40].values, &[-1.0, 193.0]);
+    assert_values(&result.plots[41].values, &[203.0, 206.0]);
+    assert_values(&result.plots[42].values, &[-1.0, 203.0]);
+    assert_values(&result.plots[43].values, &[-1.0, 203.0]);
+    assert_values(&result.plots[44].values, &[214.0, 217.0]);
+    assert_values(&result.plots[45].values, &[-1.0, 214.0]);
+    assert_values(&result.plots[46].values, &[-1.0, 214.0]);
+    assert_values(&result.plots[47].values, &[2.0, 5.0]);
+    assert_values(&result.plots[48].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[49].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[50].values, &[2.0, 5.0]);
+    assert_values(&result.plots[51].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[52].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[53].values, &[2.0, 5.0]);
+    assert_values(&result.plots[54].values, &[-1.0, 2.0]);
+    assert_values(&result.plots[55].values, &[-1.0, 2.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(5.0)))
         .expect("next forming update should start from confirmed imported UDT varip state");
     assert_values(&result.plots[0].values, &[2.0, 3.0, 4.0]);
     assert_values(&result.plots[1].values, &[2.0, 5.0, 6.0]);
-    assert_values(&result.plots[2].values, &[1.0, 4.0, 5.0]);
-    assert_values(&result.plots[3].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[2].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[3].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[4].values, &[1.0, 4.0, 5.0]);
+    assert_values(&result.plots[5].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[6].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[7].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[8].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[9].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[10].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[11].values, &[102.0, 105.0, 106.0]);
+    assert_values(&result.plots[12].values, &[-1.0, 102.0, 105.0]);
+    assert_values(&result.plots[13].values, &[-1.0, 102.0, 105.0]);
+    assert_values(&result.plots[14].values, &[112.0, 115.0, 116.0]);
+    assert_values(&result.plots[15].values, &[-1.0, 112.0, 115.0]);
+    assert_values(&result.plots[16].values, &[-1.0, 112.0, 115.0]);
+    assert_values(&result.plots[17].values, &[122.0, 125.0, 126.0]);
+    assert_values(&result.plots[18].values, &[-1.0, 122.0, 125.0]);
+    assert_values(&result.plots[19].values, &[-1.0, 122.0, 125.0]);
+    assert_values(&result.plots[20].values, &[133.0, 136.0, 137.0]);
+    assert_values(&result.plots[21].values, &[-1.0, 133.0, 136.0]);
+    assert_values(&result.plots[22].values, &[-1.0, 133.0, 136.0]);
+    assert_values(&result.plots[23].values, &[143.0, 146.0, 147.0]);
+    assert_values(&result.plots[24].values, &[-1.0, 143.0, 146.0]);
+    assert_values(&result.plots[25].values, &[-1.0, 143.0, 146.0]);
+    assert_values(&result.plots[26].values, &[154.0, 157.0, 158.0]);
+    assert_values(&result.plots[27].values, &[-1.0, 154.0, 157.0]);
+    assert_values(&result.plots[28].values, &[-1.0, 154.0, 157.0]);
+    assert_values(&result.plots[29].values, &[162.0, 165.0, 166.0]);
+    assert_values(&result.plots[30].values, &[-1.0, 162.0, 165.0]);
+    assert_values(&result.plots[31].values, &[-1.0, 162.0, 165.0]);
+    assert_values(&result.plots[32].values, &[172.0, 175.0, 176.0]);
+    assert_values(&result.plots[33].values, &[-1.0, 172.0, 175.0]);
+    assert_values(&result.plots[34].values, &[-1.0, 172.0, 175.0]);
+    assert_values(&result.plots[35].values, &[182.0, 185.0, 186.0]);
+    assert_values(&result.plots[36].values, &[-1.0, 182.0, 185.0]);
+    assert_values(&result.plots[37].values, &[-1.0, 182.0, 185.0]);
+    assert_values(&result.plots[38].values, &[193.0, 196.0, 197.0]);
+    assert_values(&result.plots[39].values, &[-1.0, 193.0, 196.0]);
+    assert_values(&result.plots[40].values, &[-1.0, 193.0, 196.0]);
+    assert_values(&result.plots[41].values, &[203.0, 206.0, 207.0]);
+    assert_values(&result.plots[42].values, &[-1.0, 203.0, 206.0]);
+    assert_values(&result.plots[43].values, &[-1.0, 203.0, 206.0]);
+    assert_values(&result.plots[44].values, &[214.0, 217.0, 218.0]);
+    assert_values(&result.plots[45].values, &[-1.0, 214.0, 217.0]);
+    assert_values(&result.plots[46].values, &[-1.0, 214.0, 217.0]);
+    assert_values(&result.plots[47].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[48].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[49].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[50].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[51].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[52].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[53].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[54].values, &[-1.0, 2.0, 5.0]);
+    assert_values(&result.plots[55].values, &[-1.0, 2.0, 5.0]);
 }
 
 #[test]
@@ -896,30 +1489,50 @@ fn user_type_array_varip_fixture_persists_intrabar_backing_store_between_forming
         .expect("historical update should run");
     assert_values(&result.plots[0].values, &[1.0]);
     assert_values(&result.plots[1].values, &[1.0]);
+    assert_values(&result.plots[2].values, &[2.0]);
+    assert_values(&result.plots[3].values, &[101.0]);
+    assert_values(&result.plots[4].values, &[2.0]);
+    assert_values(&result.plots[5].values, &[211.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(2.0)))
         .expect("forming update should run");
     assert_values(&result.plots[0].values, &[1.0, 2.0]);
     assert_values(&result.plots[1].values, &[1.0, 2.0]);
+    assert_values(&result.plots[2].values, &[2.0, 3.0]);
+    assert_values(&result.plots[3].values, &[101.0, 102.0]);
+    assert_values(&result.plots[4].values, &[2.0, 3.0]);
+    assert_values(&result.plots[5].values, &[211.0, 212.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(3.0)))
         .expect("second forming update should retain UDT array varip state");
     assert_values(&result.plots[0].values, &[1.0, 3.0]);
     assert_values(&result.plots[1].values, &[1.0, 3.0]);
+    assert_values(&result.plots[2].values, &[2.0, 4.0]);
+    assert_values(&result.plots[3].values, &[101.0, 103.0]);
+    assert_values(&result.plots[4].values, &[2.0, 4.0]);
+    assert_values(&result.plots[5].values, &[211.0, 213.0]);
 
     let result = runtime
         .update(BarUpdate::confirmed(bar(4.0)))
         .expect("confirmed update should commit UDT array varip state");
     assert_values(&result.plots[0].values, &[1.0, 4.0]);
     assert_values(&result.plots[1].values, &[1.0, 4.0]);
+    assert_values(&result.plots[2].values, &[2.0, 5.0]);
+    assert_values(&result.plots[3].values, &[101.0, 104.0]);
+    assert_values(&result.plots[4].values, &[2.0, 5.0]);
+    assert_values(&result.plots[5].values, &[211.0, 214.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(5.0)))
         .expect("next forming update should start from confirmed UDT array varip state");
     assert_values(&result.plots[0].values, &[1.0, 4.0, 5.0]);
     assert_values(&result.plots[1].values, &[1.0, 4.0, 5.0]);
+    assert_values(&result.plots[2].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[3].values, &[101.0, 104.0, 105.0]);
+    assert_values(&result.plots[4].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[5].values, &[211.0, 214.0, 215.0]);
 }
 
 #[test]
@@ -931,30 +1544,60 @@ fn import_udt_array_varip_fixture_persists_intrabar_backing_store_between_formin
         .expect("historical update should run");
     assert_values(&result.plots[0].values, &[2.0]);
     assert_values(&result.plots[1].values, &[1.0]);
+    assert_values(&result.plots[2].values, &[2.0]);
+    assert_values(&result.plots[3].values, &[101.0]);
+    assert_values(&result.plots[4].values, &[2.0]);
+    assert_values(&result.plots[5].values, &[211.0]);
+    assert_values(&result.plots[6].values, &[2.0]);
+    assert_values(&result.plots[7].values, &[311.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(2.0)))
         .expect("forming update should run");
     assert_values(&result.plots[0].values, &[2.0, 3.0]);
     assert_values(&result.plots[1].values, &[1.0, 2.0]);
+    assert_values(&result.plots[2].values, &[2.0, 3.0]);
+    assert_values(&result.plots[3].values, &[101.0, 102.0]);
+    assert_values(&result.plots[4].values, &[2.0, 3.0]);
+    assert_values(&result.plots[5].values, &[211.0, 212.0]);
+    assert_values(&result.plots[6].values, &[2.0, 3.0]);
+    assert_values(&result.plots[7].values, &[311.0, 312.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(3.0)))
         .expect("second forming update should retain imported UDT array varip state");
     assert_values(&result.plots[0].values, &[2.0, 4.0]);
     assert_values(&result.plots[1].values, &[1.0, 3.0]);
+    assert_values(&result.plots[2].values, &[2.0, 4.0]);
+    assert_values(&result.plots[3].values, &[101.0, 103.0]);
+    assert_values(&result.plots[4].values, &[2.0, 4.0]);
+    assert_values(&result.plots[5].values, &[211.0, 213.0]);
+    assert_values(&result.plots[6].values, &[2.0, 4.0]);
+    assert_values(&result.plots[7].values, &[311.0, 313.0]);
 
     let result = runtime
         .update(BarUpdate::confirmed(bar(4.0)))
         .expect("confirmed update should commit imported UDT array varip state");
     assert_values(&result.plots[0].values, &[2.0, 5.0]);
     assert_values(&result.plots[1].values, &[1.0, 4.0]);
+    assert_values(&result.plots[2].values, &[2.0, 5.0]);
+    assert_values(&result.plots[3].values, &[101.0, 104.0]);
+    assert_values(&result.plots[4].values, &[2.0, 5.0]);
+    assert_values(&result.plots[5].values, &[211.0, 214.0]);
+    assert_values(&result.plots[6].values, &[2.0, 5.0]);
+    assert_values(&result.plots[7].values, &[311.0, 314.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(5.0)))
         .expect("next forming update should start from confirmed imported UDT array varip state");
     assert_values(&result.plots[0].values, &[2.0, 5.0, 6.0]);
     assert_values(&result.plots[1].values, &[1.0, 4.0, 5.0]);
+    assert_values(&result.plots[2].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[3].values, &[101.0, 104.0, 105.0]);
+    assert_values(&result.plots[4].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[5].values, &[211.0, 214.0, 215.0]);
+    assert_values(&result.plots[6].values, &[2.0, 5.0, 6.0]);
+    assert_values(&result.plots[7].values, &[311.0, 314.0, 315.0]);
 }
 
 #[test]

@@ -1,0 +1,18 @@
+//@version=6
+indicator("Supported syminfo metadata simple string return qualifier")
+
+plot(str.length(syminfo.prefix(syminfo.tickerid)))
+plot(str.length(syminfo.prefix(syminfo.main_tickerid)))
+plot(str.length(syminfo.prefix(syminfo.ticker)))
+plot(str.length(syminfo.prefix(syminfo.prefix)))
+plot(str.length(syminfo.prefix(syminfo.description)))
+plot(str.length(syminfo.prefix(syminfo.sector)))
+plot(str.length(syminfo.prefix(syminfo.industry)))
+plot(str.length(syminfo.prefix(syminfo.country)))
+plot(str.length(syminfo.prefix(syminfo.type)))
+plot(str.length(syminfo.prefix(syminfo.currency)))
+plot(str.length(syminfo.prefix(syminfo.basecurrency)))
+plot(str.length(syminfo.prefix(syminfo.session)))
+plot(str.length(syminfo.prefix(syminfo.timezone)))
+plot(str.length(syminfo.prefix(syminfo.root)))
+plot(str.length(syminfo.prefix(syminfo.volumetype)))

@@ -1,0 +1,14 @@
+//@version=6
+indicator("Unsupported string/color cast simple return qualifier")
+
+values = array.new_int(1, 64)
+source_number = array.size(values)
+source_color = color.rgb(array.size(values), 128, 192)
+
+simple_text = string(source_number)
+simple_color = color(source_color)
+
+text_length = str.length(simple_text)
+
+plot(close, show_last=text_length)
+hline(2, color=simple_color)

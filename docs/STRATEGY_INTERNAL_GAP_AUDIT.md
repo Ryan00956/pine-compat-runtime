@@ -125,10 +125,11 @@ reservations.
 
 Current repo status: the supported absolute active-entry subset is fixture
 backed. A same-calculation `strategy.exit` using absolute `stop`, `limit`, or
-`trail_price` may target a matching active pending entry id. Entry-relative
-`profit`, `loss`, and `trail_points` attachment to pending entries remains
-unsupported until deferred price resolution from the actual entry fill price is
-designed.
+`trail_price` may target a matching active pending entry id. The fixture-backed
+subset also resolves same-calculation entry-relative `profit`, `loss`, and
+`trail_points` attachments, plus the supported stop/profit/loss/limit bracket
+pairs, from the actual entry fill price. Other trigger combinations remain
+outside the supported active-entry attachment boundary.
 
 ## Internal Gap Inventory
 
@@ -184,8 +185,8 @@ Missing internal behavior:
 
 - exact next-tick parity beyond the current historical bar-open/bar-OHLC
   subset;
-- entry-relative active-entry exit attachment for `profit`, `loss`, and
-  `trail_points`;
+- active-entry attachment beyond the fixture-backed absolute, entry-relative,
+  trailing, and mixed bracket trigger forms;
 - order processing on close;
 - recalculation after order fills;
 - realtime strategy rollback and repeated tick execution;
@@ -485,7 +486,6 @@ Missing internal behavior:
 
 - `strategy.closedtrades.*()` fields beyond the supported price/id/bar-index,
   time, commission, size, profit, runup, and drawdown subset;
-- indexed trade access;
 - `strategy.opentrades.capital_held` behavior beyond the current long-only
   explicit-`margin_long` subset;
 - open-trade and closed-trade records with enough retained metadata.

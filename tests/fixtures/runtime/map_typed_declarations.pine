@@ -10,6 +10,12 @@ map<int, string> labels = map.new<int, string>()
 labels.put(0, "zero")
 labels.put(1, "one")
 
+map volumes = map.new<string, float>()
+volumes.put("volume", 10.5)
+volume_copy = volumes.copy()
+volume_keys = volumes.keys()
+volume_values = volumes.values()
+
 copied = prices.copy()
 copied.put("high", 7.75)
 
@@ -19,3 +25,5 @@ plot(copied.size(), "copy_size")
 plot(copied.get("high"), "copy_high")
 plot(labels.get(0) == "zero" ? 1 : 0, "label0")
 plot(labels.get(1) == "one" ? 1 : 0, "label1")
+plot(volume_copy.get("volume"), "volume_copy")
+plot(volume_keys.get(0) == "volume" ? volume_values.get(0) : 0, "volume_values")

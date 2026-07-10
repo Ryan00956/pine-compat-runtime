@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported line.new named const options")
+style_base = "line.style_unknown"
+line_style = style_base
+line.new(x1=bar_index, y1=low, x2=bar_index + 1, y2=high, style=line_style)
+plot(close)

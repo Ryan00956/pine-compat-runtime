@@ -1112,10 +1112,14 @@ fn runs_while_expression_scalar_result() {
     let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 3);
+    assert_eq!(result.plots.len(), 4);
     assert_values_close(&result.plots[0].values, &[2.0, 3.0, 4.0]);
     assert_eq!(result.plots[1].values, vec![PineValue::Na; 3]);
     assert_values_close(&result.plots[2].values, &[30.0, 30.0, 30.0]);
+    assert_eq!(
+        result.plots[3].values,
+        vec![PineValue::Float(4.0), PineValue::Na, PineValue::Na]
+    );
 }
 
 #[test]
@@ -1258,7 +1262,7 @@ fn runs_while_expression_array_history_result() {
     let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 5);
+    assert_eq!(result.plots.len(), 6);
     assert_values_close(&result.plots[0].values, &[3.0, 4.0, 5.0]);
     assert_eq!(result.plots[1].values[0], PineValue::Na);
     assert_values_close(&result.plots[1].values[1..], &[103.0, 104.0]);
@@ -1266,6 +1270,8 @@ fn runs_while_expression_array_history_result() {
     assert_values_close(&result.plots[2].values[1..], &[4.0, 5.0]);
     assert_values_close(&result.plots[3].values, &[1.0, 0.0, 0.0]);
     assert_values_close(&result.plots[4].values, &[1.0, 0.0, 0.0]);
+    assert_eq!(result.plots[5].values[0], PineValue::Na);
+    assert_values_close(&result.plots[5].values[1..], &[3.0, 4.0]);
 }
 
 #[test]
@@ -1853,6 +1859,33 @@ plot(close + total)
 
     assert_eq!(result.plots.len(), 1);
     assert_values_close(&result.plots[0].values, &[116.0, 117.0, 118.0]);
+}
+
+#[test]
+fn runs_switch_statement_form_block_arms() {
+    let source = SourceFile::new(
+        "tests/fixtures/runtime/switch_statement_form.pine",
+        include_str!("../../../../tests/fixtures/runtime/switch_statement_form.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        bar_ohlc(1.0, 5.0, 0.0, 2.0),
+        bar_ohlc(3.0, 6.0, 1.0, 2.0),
+        bar_ohlc(2.0, 7.0, 4.0, 2.0),
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 4);
+    assert_values_close(&result.plots[0].values, &[5.0, 1.0, 4.0]);
+    assert_values_close(&result.plots[1].values, &[15.0, 21.0, 32.0]);
+    assert_values_close(&result.plots[2].values, &[42.0, 42.0, 42.0]);
+    assert_values_close(&result.plots[3].values, &[115.0, 115.0, 115.0]);
 }
 
 #[test]

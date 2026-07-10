@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported syminfo series simple string params")
+
+dynamic_symbol = bar_index > 0 ? "NASDAQ:AAPL" : "NYSE:IBM"
+plot(syminfo.prefix(dynamic_symbol) == "NASDAQ" ? 1 : 0)
+plot(syminfo.ticker(dynamic_symbol) == "AAPL" ? 1 : 0)

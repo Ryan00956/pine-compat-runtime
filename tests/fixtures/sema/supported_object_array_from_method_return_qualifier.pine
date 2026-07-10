@@ -1,0 +1,52 @@
+//@version=6
+indicator("Supported object array.from method return qualifier")
+
+type Tool
+    float base
+
+method label_count(Tool tool, label[] values) =>
+    tool.base + array.size(values)
+
+method line_count(Tool tool, line[] values) =>
+    tool.base + array.size(values)
+
+method linefill_count(Tool tool, array<linefill> values) =>
+    tool.base + array.size(values)
+
+method polyline_count(Tool tool, array<polyline> values) =>
+    tool.base + array.size(values)
+
+method box_count(Tool tool, box[] values) =>
+    tool.base + array.size(values)
+
+method table_count(Tool tool, array<table> values) =>
+    tool.base + array.size(values)
+
+method point_count(Tool tool, array<chart.point> values) =>
+    tool.base + array.size(values)
+
+tool = Tool.new(close)
+first_label = label.new(bar_index, high, "a")
+second_label = label.new(bar_index + 1, low, "b")
+first_line = line.new(bar_index, high, bar_index + 1, low)
+second_line = line.new(bar_index + 2, high + 1, bar_index + 3, low + 1)
+third_line = line.new(bar_index + 4, close, bar_index + 5, close + 1)
+first_fill = linefill.new(first_line, second_line, color.green)
+second_fill = linefill.new(second_line, third_line, color.red)
+points = array.from(chart.point.from_index(bar_index, close), chart.point.from_index(bar_index + 1, close + 1))
+first_polyline = polyline.new(points, line_color=color.red)
+second_polyline = polyline.new(points, line_color=color.green)
+first_box = box.new(bar_index, high, bar_index + 1, low)
+second_box = box.new(bar_index + 2, high + 1, bar_index + 3, low + 1)
+first_table = table.new(position.top_left, 1, 1)
+second_table = table.new(position.bottom_right, 1, 1)
+
+result = tool.label_count(array.from(first_label, second_label))
+result := result + tool.line_count(array.from(first_line, second_line))
+result := result + tool.linefill_count(array.from(first_fill, second_fill))
+result := result + tool.polyline_count(array.from(first_polyline, second_polyline))
+result := result + tool.box_count(array.from(first_box, second_box))
+result := result + tool.table_count(array.from(first_table, second_table))
+result := result + tool.point_count(points)
+
+plot(result)

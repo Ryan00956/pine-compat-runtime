@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported derived price and bar index series qualifier")
+
+plot(hl2)
+plot(hlc3)
+plot(hlcc4)
+plot(ohlc4)
+plot(bar_index)

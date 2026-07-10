@@ -112,6 +112,101 @@ fn parses_udt_array_new_template_call() {
 }
 
 #[test]
+fn parses_imported_udt_array_new_template_call() {
+    let parsed = parse("points = array.new<lib.Point>(2, lib.Point.new(close))\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::Identifier("array.new<lib.Point>".to_owned())
+    );
+    assert_eq!(args.len(), 2);
+}
+
+#[test]
+fn parses_imported_call_result_method_receiver_as_alias_qualified_call() {
+    let parsed = parse(
+        "shifted = lib.Point.new(close).shift(5)\nchained = lib.Point.new(open).make(close + 1).same()\nlocal = Point.new(close).shift(5)\n",
+    );
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected method call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::QualifiedName(vec!["lib".to_owned(), "shift".to_owned()])
+    );
+    assert_eq!(args.len(), 2);
+    let ExprKind::Call {
+        callee: receiver_callee,
+        ..
+    } = &args[0].value.kind
+    else {
+        panic!("expected constructor receiver argument");
+    };
+    assert_eq!(
+        receiver_callee.kind,
+        ExprKind::QualifiedName(vec!["lib".to_owned(), "Point".to_owned(), "new".to_owned()])
+    );
+
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[1].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected outer method call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::QualifiedName(vec!["lib".to_owned(), "same".to_owned()])
+    );
+    assert_eq!(args.len(), 1);
+    let ExprKind::Call {
+        callee: receiver_callee,
+        ..
+    } = &args[0].value.kind
+    else {
+        panic!("expected method-result receiver argument");
+    };
+    assert_eq!(
+        receiver_callee.kind,
+        ExprKind::QualifiedName(vec!["lib".to_owned(), "make".to_owned()])
+    );
+
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[2].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected local method call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::QualifiedName(vec!["Point".to_owned(), "shift".to_owned()])
+    );
+    assert_eq!(args.len(), 2);
+    let ExprKind::Call {
+        callee: receiver_callee,
+        ..
+    } = &args[0].value.kind
+    else {
+        panic!("expected local constructor receiver argument");
+    };
+    assert_eq!(
+        receiver_callee.kind,
+        ExprKind::QualifiedName(vec!["Point".to_owned(), "new".to_owned()])
+    );
+}
+
+#[test]
 fn parses_matrix_new_template_call() {
     let parsed = parse("values = matrix.new<float>(2, 2, close)\n");
 
@@ -678,7 +773,59 @@ fn parses_function_declaration() {
         panic!("expected function statement");
     };
     assert_eq!(name, "double");
-    assert_eq!(params, &vec!["x".to_owned()]);
+    assert_eq!(params.len(), 1);
+    assert_eq!(params[0].name, "x");
+    assert_eq!(params[0].type_name, None);
+}
+
+#[test]
+fn parses_typed_function_parameters() {
+    let parsed = parse(
+        "pass(chart.point point, int offset, array<int> values, float[] weights, array<chart.point> points, line[] lines) => point.index + offset + array.get(values, 0) + array.get(weights, 0) + array.size(points) + array.size(lines)\n",
+    );
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Function { name, params, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected function statement");
+    };
+    assert_eq!(name, "pass");
+    assert_eq!(params.len(), 6);
+    assert_eq!(params[0].type_name.as_deref(), Some("chart.point"));
+    assert_eq!(params[0].name, "point");
+    assert_eq!(params[1].type_name.as_deref(), Some("int"));
+    assert_eq!(params[1].name, "offset");
+    assert_eq!(params[2].type_name.as_deref(), Some("array<int>"));
+    assert_eq!(params[2].name, "values");
+    assert_eq!(params[3].type_name.as_deref(), Some("array<float>"));
+    assert_eq!(params[3].name, "weights");
+    assert_eq!(params[4].type_name.as_deref(), Some("array<chart.point>"));
+    assert_eq!(params[4].name, "points");
+    assert_eq!(params[5].type_name.as_deref(), Some("array<line>"));
+    assert_eq!(params[5].name, "lines");
+}
+
+#[test]
+fn parses_typed_method_parameters() {
+    let parsed = parse(
+        "method pass(Point p, array<Point> values, Point[] aliases, array<lib.Point> imported, lib.Point[] imported_aliases) => p.x + array.size(values) + array.size(aliases) + array.size(imported) + array.size(imported_aliases)\n",
+    );
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Method(method) = &parsed.program.statements[0].kind else {
+        panic!("expected method statement");
+    };
+    assert_eq!(method.name, "pass");
+    assert_eq!(method.params.len(), 5);
+    assert_eq!(method.params[0].type_name, "Point");
+    assert_eq!(method.params[0].name, "p");
+    assert_eq!(method.params[1].type_name, "array<Point>");
+    assert_eq!(method.params[1].name, "values");
+    assert_eq!(method.params[2].type_name, "array<Point>");
+    assert_eq!(method.params[2].name, "aliases");
+    assert_eq!(method.params[3].type_name, "array<lib.Point>");
+    assert_eq!(method.params[3].name, "imported");
+    assert_eq!(method.params[4].type_name, "array<lib.Point>");
+    assert_eq!(method.params[4].name, "imported_aliases");
 }
 
 #[test]

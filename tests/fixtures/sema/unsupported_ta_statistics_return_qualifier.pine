@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported ta statistics return qualifier")
+
+hline(ta.correlation(close, high, 3))
+hline(ta.covariance(close, high, 3))
+hline(ta.stdev(close, 3))
+hline(ta.stdev(close, 3, false))
+hline(ta.variance(close, 3))
+hline(ta.variance(close, 3, false))

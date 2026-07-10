@@ -135,22 +135,24 @@ state.
 
 ## Direction 4: User-Defined Types And Methods
 
-Goal: expand the local structured-data subset without weakening type identity or
-method resolution.
+Goal: expand the local and imported structured-data subsets without weakening
+source-scoped type identity or method resolution.
 
 Recent closure:
 
-- Local scalar-field UDT mutation outside method bodies now has branch, `for`,
-  `while`, and UDF-local variable coverage.
-- Pure local UDT methods now have fixture-backed receiver and additional local
-  UDT parameter passthrough, alias, nested-method passthrough, constructor
-  helper, and same-local-UDT ternary, switch, `if` expression, final if/else,
-  and final `for` constructor-return coverage.
+- Local and imported scalar-tree UDT values now have fixture-backed
+  construction, typed declarations, selected control-flow results, history,
+  ordinary `var`, scalar-tree `varip`, and same-identity array subsets.
+- Pure local and imported UDT methods now have fixture-backed receiver,
+  parameter passthrough, alias, nested-method passthrough, constructor helper,
+  and selected control-flow return coverage.
 
 Good next slices:
 
-- Clearer diagnostics for unsupported imported UDT tails, imported methods, and
-  side-effecting methods.
+- Clearer diagnostics for unsupported imported UDT and imported-method tails,
+  nested mutation, and side-effecting methods.
+- One additional imported-method or imported-UDT value-flow slice outside the
+  current scalar-tree subset.
 - Negative fixture maintenance for unsupported method parameter families or
   mismatched local UDT identity.
 - Audit-only sync work when UDT/method matrix, semantic docs, and runtime
@@ -158,18 +160,18 @@ Good next slices:
 
 Keep out of scope until separately designed:
 
-- Imported UDT identity beyond the current same-imported-identity scalar-field
-  source-graph subset, including history and collection flows.
-- Imported methods.
-- UDT arrays beyond the same-local scalar-field subset, especially imported or
-  non-scalar UDT arrays.
-- UDT history references and `varip` UDT values.
+- Imported UDT identity beyond the current same-imported-identity scalar-tree
+  value, history, array, and method subsets.
+- Imported methods beyond the current pure scalar-tree receiver/parameter/return
+  subset.
+- UDT arrays beyond the fixture-backed same-local and same-imported scalar-tree
+  subsets, especially non-scalar, nested-collection, or recursive UDT arrays.
+- Object-backed non-scalar UDT `varip` values and broader UDT history shapes.
 - Side effects inside methods.
 
 Recommended first slice: one diagnostics fixture/message improvement for an
-already unsupported UDT or method boundary, without widening imported UDT tails,
-imported methods, imported/non-scalar UDT arrays, UDT history, `varip`, or
-method side effects.
+unsupported UDT or method boundary, or one narrow imported-method value-flow
+slice that keeps the current side-effect and non-scalar collection boundaries.
 
 ## Direction 5: Request Support
 

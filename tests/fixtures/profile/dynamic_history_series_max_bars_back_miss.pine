@@ -1,0 +1,4 @@
+indicator("Profile dynamic series history miss", max_bars_back=10)
+max_bars_back(close, 2)
+offset = bar_index == 0 ? 0 : 3
+plot(close[offset])

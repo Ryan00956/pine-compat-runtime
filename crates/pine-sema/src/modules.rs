@@ -2,15 +2,17 @@ use std::collections::{HashMap, HashSet};
 
 use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{
-    BinaryOp, Diagnostic, ExportItem, Expr, ExprKind, FunctionBody, Program, Span, Stmt, StmtKind,
-    SwitchArmResult, UnaryOp, parse_source,
+    BinaryOp, Diagnostic, ExportItem, Expr, ExprKind, FunctionBody, FunctionParam, Program, Span,
+    Stmt, StmtKind, SwitchArmResult, UnaryOp, UserTypeField, parse_source,
 };
 
-use crate::analyzer::context::{FunctionInfo, MethodInfo, MethodParamInfo};
+use crate::analyzer::context::{FunctionInfo, FunctionParamInfo, MethodInfo, MethodParamInfo};
 use crate::analyzer::functions::{
-    contains_output_or_declaration_call, statement_contains_output_or_declaration_call,
+    contains_output_or_declaration_call, function_param_names,
+    statement_contains_output_or_declaration_call,
 };
-use crate::source_graph::AnalysisInput;
+use crate::source_graph::{AnalysisInput, SourceId};
+use crate::types::array_kind_from_element_type_name;
 
 mod alias_access;
 mod imports;
@@ -23,8 +25,8 @@ use imports::{
 };
 use model::{
     ExportInfo, ModuleInfo, ModuleMethodInfo, ModuleMethodParamInfo, ModuleUserTypeFieldInfo,
-    ModuleUserTypeIdentity, ModuleUserTypeInfo, imported_user_type_scalar_field_type,
-    module_user_type_fields_match,
+    ModuleUserTypeIdentity, ModuleUserTypeInfo, imported_user_type_field_type,
+    imported_user_type_scalar_field_type, module_user_type_fields_match,
 };
 pub(crate) use model::{
     ImportedUserTypeFieldInfo, ImportedUserTypeIdentity, ImportedUserTypeInfo, ModuleValidation,
@@ -120,7 +122,13 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                     module.functions.insert(
                         name.clone(),
                         FunctionInfo {
-                            params: params.clone(),
+                            params: function_param_names(params),
+                            param_types: module_function_param_types(
+                                module,
+                                params,
+                                None,
+                                diagnostics,
+                            ),
                             body: body.clone(),
                             span: *span,
                         },
@@ -146,38 +154,19 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                     module.constants.insert(name.clone(), value.clone());
                 }
                 ExportItem::UserType { decl, span } => {
-                    let identity = ModuleUserTypeIdentity {
-                        source_id: module.id,
-                        name: decl.name.clone(),
-                    };
-                    let fields = decl
-                        .fields
-                        .iter()
-                        .map(|field| ModuleUserTypeFieldInfo {
-                            name: field.name.clone(),
-                            type_name: field.type_name.clone(),
-                            pine_type: imported_user_type_scalar_field_type(&field.type_name),
-                            span: field.span,
-                        })
-                        .collect::<Vec<_>>();
+                    let user_type =
+                        module_user_type_info(module.id, &decl.name, &decl.fields, *span);
                     register_export(
                         module,
                         &decl.name,
                         ExportInfo::UserType {
-                            identity: identity.clone(),
-                            fields: fields.clone(),
+                            identity: user_type.identity.clone(),
+                            fields: user_type.fields.clone(),
                             span: *span,
                         },
                         diagnostics,
                     );
-                    module.user_types.insert(
-                        decl.name.clone(),
-                        ModuleUserTypeInfo {
-                            identity,
-                            fields,
-                            span: *span,
-                        },
-                    );
+                    module.user_types.insert(decl.name.clone(), user_type);
                 }
                 ExportItem::Unknown { .. } => {}
             },
@@ -186,7 +175,8 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                 module.functions.insert(
                     name.clone(),
                     FunctionInfo {
-                        params: params.clone(),
+                        params: function_param_names(params),
+                        param_types: module_function_param_types(module, params, None, diagnostics),
                         body: body.clone(),
                         span: statement.span,
                     },
@@ -200,6 +190,15 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
             }
             StmtKind::UserType(user_type) => {
                 module.private_symbols.insert(user_type.name.clone());
+                module.user_types.insert(
+                    user_type.name.clone(),
+                    module_user_type_info(
+                        module.id,
+                        &user_type.name,
+                        &user_type.fields,
+                        statement.span,
+                    ),
+                );
             }
             StmtKind::Method(_) => {}
             _ => {}
@@ -218,7 +217,10 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
             .and_then(|type_name| module.user_types.get(type_name))
             .map(|user_type| user_type.identity.clone());
         module.methods.insert(
-            method.name.clone(),
+            (
+                receiver_type_name.clone().unwrap_or_default(),
+                method.name.clone(),
+            ),
             ModuleMethodInfo {
                 receiver_type_name,
                 receiver_identity,
@@ -255,6 +257,32 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
             "library source must contain exactly one library declaration",
             first_statement_span(&module.program).unwrap_or_else(|| Span::new(0, 0)),
         ));
+    }
+}
+
+fn module_user_type_info(
+    source_id: SourceId,
+    name: &str,
+    fields: &[UserTypeField],
+    span: Span,
+) -> ModuleUserTypeInfo {
+    let identity = ModuleUserTypeIdentity {
+        source_id,
+        name: name.to_owned(),
+    };
+    let fields = fields
+        .iter()
+        .map(|field| ModuleUserTypeFieldInfo {
+            name: field.name.clone(),
+            type_name: field.type_name.clone(),
+            pine_type: imported_user_type_field_type(&field.type_name),
+            span: field.span,
+        })
+        .collect();
+    ModuleUserTypeInfo {
+        identity,
+        fields,
+        span,
     }
 }
 
@@ -315,27 +343,26 @@ fn build_import_plan(
                     fields,
                     span,
                 } => {
+                    let Some(user_type) = module.user_types.get(name) else {
+                        diagnostics.push(Diagnostic::error(
+                            "E_IMPORT_UNKNOWN_EXPORT",
+                            format!("unknown imported user type `{name}`"),
+                            *span,
+                        ));
+                        continue;
+                    };
+                    debug_assert!(module_user_type_fields_match(fields, &user_type.fields));
                     debug_assert!(module.user_types.get(name).is_some_and(|user_type| {
                         module_user_type_fields_match(fields, &user_type.fields)
                     }));
-                    plan.imported_user_types.insert(
-                        format!("{alias}.{name}"),
-                        ImportedUserTypeInfo {
-                            identity: ImportedUserTypeIdentity {
-                                source_id: identity.source_id,
-                                name: identity.name.clone(),
-                            },
-                            fields: fields
-                                .iter()
-                                .map(|field| ImportedUserTypeFieldInfo {
-                                    name: field.name.clone(),
-                                    type_name: field.type_name.clone(),
-                                    pine_type: field.pine_type,
-                                    span: field.span,
-                                })
-                                .collect(),
-                            span: *span,
-                        },
+                    debug_assert_eq!(identity, &user_type.identity);
+                    insert_imported_user_type_metadata(
+                        &mut plan.imported_user_types,
+                        &alias,
+                        module,
+                        name,
+                        user_type,
+                        &mut HashSet::new(),
                     );
                 }
             }
@@ -349,6 +376,11 @@ fn build_import_plan(
                     key,
                     FunctionInfo {
                         params: function.params.clone(),
+                        param_types: imported_function_param_types(
+                            &alias,
+                            module,
+                            &function.param_types,
+                        ),
                         body,
                         span: function.span,
                     },
@@ -362,7 +394,7 @@ fn build_import_plan(
             }
         }
 
-        for (name, method) in &module.methods {
+        for ((_, name), method) in &module.methods {
             let Some(method_info) = imported_method_info(&alias, module, method) else {
                 continue;
             };
@@ -381,7 +413,7 @@ fn imported_method_info(
     method: &ModuleMethodInfo,
 ) -> Option<MethodInfo> {
     let identity = method.receiver_identity.as_ref()?;
-    if !exported_scalar_user_type(module, &identity.name) {
+    if !exported_user_type(module, &identity.name) {
         return None;
     }
 
@@ -405,6 +437,24 @@ fn imported_method_param_info(
     module: &ModuleInfo,
     param: &ModuleMethodParamInfo,
 ) -> Option<MethodParamInfo> {
+    if param.type_name.starts_with("array<") && param.type_name.ends_with('>') {
+        let element_type = &param.type_name["array<".len()..param.type_name.len() - 1];
+        if let Some(kind) = array_kind_from_element_type_name(element_type) {
+            return Some(MethodParamInfo {
+                name: param.name.clone(),
+                pine_type: PineType::new(Qualifier::Series, kind),
+                user_type_name: None,
+            });
+        }
+        if exported_scalar_tree_user_type(module, element_type) {
+            return Some(MethodParamInfo {
+                name: param.name.clone(),
+                pine_type: PineType::new(Qualifier::Series, ValueKind::UserTypeArray),
+                user_type_name: Some(format!("{alias}.{element_type}")),
+            });
+        }
+        return None;
+    }
     if let Some(pine_type) = imported_user_type_scalar_field_type(&param.type_name) {
         return Some(MethodParamInfo {
             name: param.name.clone(),
@@ -412,7 +462,7 @@ fn imported_method_param_info(
             user_type_name: None,
         });
     }
-    if !exported_scalar_user_type(module, &param.type_name) {
+    if !exported_user_type(module, &param.type_name) {
         return None;
     }
     Some(MethodParamInfo {
@@ -422,16 +472,218 @@ fn imported_method_param_info(
     })
 }
 
-fn exported_scalar_user_type(module: &ModuleInfo, type_name: &str) -> bool {
-    matches!(
-        module.exports.get(type_name),
-        Some(ExportInfo::UserType { .. })
-    ) && module.user_types.get(type_name).is_some_and(|user_type| {
-        user_type
-            .fields
-            .iter()
-            .all(|field| field.pine_type.is_some())
+fn module_function_param_types(
+    module: &ModuleInfo,
+    params: &[FunctionParam],
+    alias: Option<&str>,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> Vec<Option<FunctionParamInfo>> {
+    params
+        .iter()
+        .map(|param| {
+            let Some(type_name) = &param.type_name else {
+                return None;
+            };
+            module_function_param_type(module, type_name, alias, param.span, diagnostics)
+        })
+        .collect()
+}
+
+fn module_function_param_type(
+    module: &ModuleInfo,
+    type_name: &str,
+    alias: Option<&str>,
+    span: Span,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> Option<FunctionParamInfo> {
+    let (pine_type, user_type_name) = match type_name {
+        _ if type_name.starts_with("array<") && type_name.ends_with('>') => {
+            let element_type = &type_name["array<".len()..type_name.len() - 1];
+            if let Some(kind) = array_kind_from_element_type_name(element_type) {
+                (PineType::new(Qualifier::Series, kind), None)
+            } else if exported_scalar_tree_user_type(module, element_type) {
+                let type_name = alias
+                    .map(|alias| format!("{alias}.{element_type}"))
+                    .unwrap_or_else(|| element_type.to_owned());
+                (
+                    PineType::new(Qualifier::Series, ValueKind::UserTypeArray),
+                    Some(type_name),
+                )
+            } else {
+                diagnostics.push(Diagnostic::error(
+                    "E_FUNCTION_PARAM_TYPE",
+                    format!("function parameter type `{type_name}` is not supported"),
+                    span,
+                ));
+                return None;
+            }
+        }
+        "int" => (PineType::new(Qualifier::Series, ValueKind::Int), None),
+        "float" => (PineType::new(Qualifier::Series, ValueKind::Float), None),
+        "bool" => (PineType::new(Qualifier::Series, ValueKind::Bool), None),
+        "string" => (PineType::new(Qualifier::Series, ValueKind::String), None),
+        "color" => (PineType::new(Qualifier::Series, ValueKind::Color), None),
+        "label" => (PineType::new(Qualifier::Series, ValueKind::Label), None),
+        "line" => (PineType::new(Qualifier::Series, ValueKind::Line), None),
+        "linefill" => (PineType::new(Qualifier::Series, ValueKind::LineFill), None),
+        "polyline" => (PineType::new(Qualifier::Series, ValueKind::Polyline), None),
+        "box" => (PineType::new(Qualifier::Series, ValueKind::Box), None),
+        "table" => (PineType::new(Qualifier::Series, ValueKind::Table), None),
+        "chart.point" => (
+            PineType::new(Qualifier::Series, ValueKind::ChartPoint),
+            None,
+        ),
+        _ if module.user_types.contains_key(type_name) => {
+            let type_name = alias
+                .map(|alias| format!("{alias}.{type_name}"))
+                .unwrap_or_else(|| type_name.to_owned());
+            (
+                PineType::new(Qualifier::Series, ValueKind::UserType),
+                Some(type_name),
+            )
+        }
+        _ => {
+            diagnostics.push(Diagnostic::error(
+                "E_FUNCTION_PARAM_TYPE",
+                format!("function parameter type `{type_name}` is not supported"),
+                span,
+            ));
+            return None;
+        }
+    };
+    Some(FunctionParamInfo {
+        pine_type,
+        user_type_name,
+        span,
     })
+}
+
+fn imported_function_param_types(
+    alias: &str,
+    module: &ModuleInfo,
+    params: &[Option<FunctionParamInfo>],
+) -> Vec<Option<FunctionParamInfo>> {
+    params
+        .iter()
+        .map(|param| {
+            let mut param = param.clone()?;
+            if let Some(type_name) = &param.user_type_name
+                && module.user_types.contains_key(type_name)
+            {
+                param.user_type_name = Some(format!("{alias}.{type_name}"));
+            }
+            Some(param)
+        })
+        .collect()
+}
+
+fn exported_scalar_tree_user_type(module: &ModuleInfo, type_name: &str) -> bool {
+    let Some(ExportInfo::UserType { fields, .. }) = module.exports.get(type_name) else {
+        return false;
+    };
+    debug_assert!(
+        module
+            .user_types
+            .get(type_name)
+            .is_some_and(|user_type| module_user_type_fields_match(fields, &user_type.fields))
+    );
+    module_user_type_fields_are_scalar_tree(module, fields, &mut HashSet::new())
+}
+
+fn exported_user_type(module: &ModuleInfo, type_name: &str) -> bool {
+    let Some(ExportInfo::UserType { fields, .. }) = module.exports.get(type_name) else {
+        return false;
+    };
+    debug_assert!(
+        module
+            .user_types
+            .get(type_name)
+            .is_some_and(|user_type| module_user_type_fields_match(fields, &user_type.fields))
+    );
+    true
+}
+
+fn insert_imported_user_type_metadata(
+    imported_user_types: &mut HashMap<String, ImportedUserTypeInfo>,
+    alias: &str,
+    module: &ModuleInfo,
+    name: &str,
+    user_type: &ModuleUserTypeInfo,
+    seen: &mut HashSet<String>,
+) {
+    let imported_name = format!("{alias}.{name}");
+    if imported_user_types.contains_key(&imported_name) {
+        return;
+    }
+    if !seen.insert(name.to_owned()) {
+        return;
+    }
+    imported_user_types.insert(
+        imported_name,
+        ImportedUserTypeInfo {
+            identity: ImportedUserTypeIdentity {
+                source_id: user_type.identity.source_id,
+                name: user_type.identity.name.clone(),
+            },
+            fields: user_type
+                .fields
+                .iter()
+                .map(|field| ImportedUserTypeFieldInfo {
+                    name: field.name.clone(),
+                    type_name: field.type_name.clone(),
+                    pine_type: field.pine_type,
+                    span: field.span,
+                })
+                .collect(),
+            span: user_type.span,
+        },
+    );
+    for field in &user_type.fields {
+        if field.pine_type.is_some() {
+            continue;
+        }
+        if let Some(nested) = module.user_types.get(&field.type_name) {
+            insert_imported_user_type_metadata(
+                imported_user_types,
+                alias,
+                module,
+                &field.type_name,
+                nested,
+                seen,
+            );
+        }
+    }
+    seen.remove(name);
+}
+
+fn module_user_type_fields_are_scalar_tree(
+    module: &ModuleInfo,
+    fields: &[ModuleUserTypeFieldInfo],
+    seen: &mut HashSet<String>,
+) -> bool {
+    fields.iter().all(|field| {
+        if let Some(pine_type) = field.pine_type {
+            return is_scalar_user_type_field_kind(pine_type.kind);
+        }
+        if !seen.insert(field.type_name.clone()) {
+            return false;
+        }
+        let supported = module
+            .user_types
+            .get(&field.type_name)
+            .is_some_and(|user_type| {
+                module_user_type_fields_are_scalar_tree(module, &user_type.fields, seen)
+            });
+        seen.remove(&field.type_name);
+        supported
+    })
+}
+
+fn is_scalar_user_type_field_kind(kind: ValueKind) -> bool {
+    matches!(
+        kind,
+        ValueKind::Int | ValueKind::Float | ValueKind::Bool | ValueKind::String | ValueKind::Color
+    )
 }
 
 fn rewrite_context_for_module(alias: &str, module: &ModuleInfo) -> RewriteContext {
@@ -545,9 +797,133 @@ fn const_qualified_type(name: &str) -> Option<PineType> {
 fn function_body_has_side_effect(body: &FunctionBody) -> bool {
     match body {
         FunctionBody::Expr(expr) => contains_output_or_declaration_call(expr),
-        FunctionBody::Block(statements) => statements
+        FunctionBody::Block(statements) => {
+            block_return_contains_output_or_declaration_call(statements)
+        }
+    }
+}
+
+fn block_return_contains_output_or_declaration_call(statements: &[Stmt]) -> bool {
+    let Some((last, prefix)) = statements.split_last() else {
+        return false;
+    };
+    prefix
+        .iter()
+        .any(statement_contains_output_or_declaration_call)
+        || return_statement_contains_output_or_declaration_call(last)
+}
+
+fn return_statement_contains_output_or_declaration_call(statement: &Stmt) -> bool {
+    match &statement.kind {
+        StmtKind::Expr(expr) => return_expr_contains_output_or_declaration_call(expr),
+        StmtKind::If {
+            condition,
+            then_branch,
+            else_branch,
+        } => {
+            contains_output_or_declaration_call(condition)
+                || block_return_contains_output_or_declaration_call(then_branch)
+                || block_return_contains_output_or_declaration_call(else_branch)
+        }
+        StmtKind::For {
+            from,
+            to,
+            step,
+            body,
+            ..
+        } => {
+            contains_output_or_declaration_call(from)
+                || contains_output_or_declaration_call(to)
+                || step
+                    .as_ref()
+                    .is_some_and(contains_output_or_declaration_call)
+                || block_return_contains_output_or_declaration_call(body)
+        }
+        StmtKind::ForIn { iterable, body, .. } => {
+            contains_output_or_declaration_call(iterable)
+                || block_return_contains_output_or_declaration_call(body)
+        }
+        StmtKind::While { condition, body } => {
+            contains_output_or_declaration_call(condition)
+                || block_return_contains_output_or_declaration_call(body)
+        }
+        _ => statement_contains_output_or_declaration_call(statement),
+    }
+}
+
+fn return_expr_contains_output_or_declaration_call(expr: &Expr) -> bool {
+    match &expr.kind {
+        ExprKind::If {
+            condition,
+            then_branch,
+            else_branch,
+        } => {
+            contains_output_or_declaration_call(condition)
+                || block_return_contains_output_or_declaration_call(then_branch)
+                || block_return_contains_output_or_declaration_call(else_branch)
+        }
+        ExprKind::For {
+            from,
+            to,
+            step,
+            body,
+            ..
+        } => {
+            contains_output_or_declaration_call(from)
+                || contains_output_or_declaration_call(to)
+                || step
+                    .as_deref()
+                    .is_some_and(contains_output_or_declaration_call)
+                || block_return_contains_output_or_declaration_call(body)
+        }
+        ExprKind::ForIn { iterable, body, .. } => {
+            contains_output_or_declaration_call(iterable)
+                || block_return_contains_output_or_declaration_call(body)
+        }
+        ExprKind::While { condition, body } => {
+            contains_output_or_declaration_call(condition)
+                || block_return_contains_output_or_declaration_call(body)
+        }
+        ExprKind::Switch { selector, arms } => {
+            selector
+                .as_deref()
+                .is_some_and(contains_output_or_declaration_call)
+                || arms.iter().any(|arm| {
+                    arm.condition
+                        .as_ref()
+                        .is_some_and(contains_output_or_declaration_call)
+                        || switch_arm_return_contains_output_or_declaration_call(&arm.result)
+                })
+        }
+        ExprKind::Ternary {
+            condition,
+            then_expr,
+            else_expr,
+        } => {
+            contains_output_or_declaration_call(condition)
+                || return_expr_contains_output_or_declaration_call(then_expr)
+                || return_expr_contains_output_or_declaration_call(else_expr)
+        }
+        ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } => {
+            return_expr_contains_output_or_declaration_call(expr)
+        }
+        ExprKind::Binary { left, right, .. } => {
+            return_expr_contains_output_or_declaration_call(left)
+                || return_expr_contains_output_or_declaration_call(right)
+        }
+        ExprKind::Tuple(items) => items
             .iter()
-            .any(statement_contains_output_or_declaration_call),
+            .any(return_expr_contains_output_or_declaration_call),
+        _ => contains_output_or_declaration_call(expr),
+    }
+}
+
+fn switch_arm_return_contains_output_or_declaration_call(result: &SwitchArmResult) -> bool {
+    match result {
+        SwitchArmResult::Expr(expr) => return_expr_contains_output_or_declaration_call(expr),
+        SwitchArmResult::Block(statements) => {
+            block_return_contains_output_or_declaration_call(statements)
+        }
     }
 }
 
@@ -860,6 +1236,73 @@ export type Point
     }
 
     #[test]
+    fn import_plan_records_private_user_type_dependencies_for_exported_metadata() {
+        let root = ModuleInfo {
+            id: SourceId::root(),
+            key: None,
+            program: parse_source(&SourceFile::new(
+                "root.pine",
+                r#"import user/identity/1 as lib
+"#,
+            ))
+            .program,
+            exports: HashMap::new(),
+            private_symbols: HashSet::new(),
+            user_types: HashMap::new(),
+            methods: HashMap::new(),
+            functions: HashMap::new(),
+            constants: HashMap::new(),
+        };
+        let mut library = ModuleInfo {
+            id: SourceId::library(0),
+            key: Some("user/identity/1".to_owned()),
+            program: parsed_program(
+                r#"
+library("identity")
+type Point
+    float x
+export type Wrapper
+    Point nested
+"#,
+            ),
+            exports: HashMap::new(),
+            private_symbols: HashSet::new(),
+            user_types: HashMap::new(),
+            methods: HashMap::new(),
+            functions: HashMap::new(),
+            constants: HashMap::new(),
+        };
+        let mut diagnostics = Vec::new();
+        collect_library_declarations(&mut library, &mut diagnostics);
+        let modules = vec![root, library];
+        let library_index = HashMap::from([("user/identity/1".to_owned(), 1)]);
+
+        let plan = build_import_plan(&modules, &library_index, &mut diagnostics);
+
+        assert!(diagnostics.is_empty(), "{diagnostics:?}");
+        let wrapper = plan
+            .imported_user_types
+            .get("lib.Wrapper")
+            .expect("exported wrapper metadata");
+        assert_eq!(wrapper.fields.len(), 1);
+        assert_eq!(wrapper.fields[0].name, "nested");
+        assert_eq!(wrapper.fields[0].type_name, "Point");
+        assert_eq!(wrapper.fields[0].pine_type, None);
+
+        let point = plan
+            .imported_user_types
+            .get("lib.Point")
+            .expect("private dependency metadata");
+        assert_eq!(point.identity.name, "Point");
+        assert_eq!(point.fields.len(), 1);
+        assert_eq!(point.fields[0].name, "x");
+        assert_eq!(
+            point.fields[0].pine_type,
+            Some(PineType::new(Qualifier::Series, ValueKind::Float))
+        );
+    }
+
+    #[test]
     fn library_method_records_receiver_identity_metadata() {
         let mut module = ModuleInfo {
             id: SourceId::library(3),
@@ -885,7 +1328,10 @@ method shift(Point p, float delta) => p.x + delta
         collect_library_declarations(&mut module, &mut diagnostics);
 
         assert!(diagnostics.is_empty(), "{diagnostics:?}");
-        let method = module.methods.get("shift").expect("library method");
+        let method = module
+            .methods
+            .get(&("Point".to_owned(), "shift".to_owned()))
+            .expect("library method");
         assert_eq!(method.receiver_type_name.as_deref(), Some("Point"));
         assert_eq!(
             method.receiver_identity,
@@ -893,6 +1339,47 @@ method shift(Point p, float delta) => p.x + delta
                 source_id: SourceId::library(3),
                 name: "Point".to_owned(),
             })
+        );
+    }
+
+    #[test]
+    fn library_method_metadata_allows_same_name_on_different_receivers() {
+        let mut module = ModuleInfo {
+            id: SourceId::library(3),
+            key: Some("user/methods/1".to_owned()),
+            program: parsed_program(
+                r#"
+library("methods")
+export type Point
+    float x
+export type Offset
+    int value
+
+method same(Point p) => p
+method same(Offset offset) => offset
+"#,
+            ),
+            exports: HashMap::new(),
+            private_symbols: HashSet::new(),
+            user_types: HashMap::new(),
+            methods: HashMap::new(),
+            functions: HashMap::new(),
+            constants: HashMap::new(),
+        };
+        let mut diagnostics = Vec::new();
+
+        collect_library_declarations(&mut module, &mut diagnostics);
+
+        assert!(diagnostics.is_empty(), "{diagnostics:?}");
+        assert!(
+            module
+                .methods
+                .contains_key(&("Point".to_owned(), "same".to_owned()))
+        );
+        assert!(
+            module
+                .methods
+                .contains_key(&("Offset".to_owned(), "same".to_owned()))
         );
     }
 

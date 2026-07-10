@@ -1,0 +1,9 @@
+//@version=5
+strategy("Supported strategy.close named const numeric")
+strategy.entry("L", strategy.long, qty=2)
+qty_base = 1
+qty = qty_base
+percent_base = 25
+percent = percent_base * 2
+strategy.close("L", qty=qty)
+strategy.close("L", qty_percent=percent)

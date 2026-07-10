@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported ta.change return qualifier")
+
+numeric_change = ta.change(close)
+bool_change = ta.change(close > open)
+
+plot(numeric_change)
+plot(bool_change ? 1 : 0)

@@ -1,0 +1,16 @@
+//@version=6
+indicator("Supported str case trim same-as-arg return qualifier")
+
+text = input.string(" AbC ", "Text")
+
+upper_text = str.upper(text)
+lower_text = str.lower(text)
+trimmed_text = str.trim(text)
+
+upper_length = str.length(upper_text)
+lower_length = str.length(lower_text)
+trimmed_length = str.length(trimmed_text)
+
+plot(close, show_last=upper_length)
+plot(open, show_last=lower_length)
+plot(high, show_last=trimmed_length)

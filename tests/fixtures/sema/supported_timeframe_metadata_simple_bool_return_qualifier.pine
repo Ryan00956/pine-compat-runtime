@@ -1,0 +1,12 @@
+//@version=6
+indicator("Supported timeframe metadata simple bool return qualifier")
+
+seconds_alma = ta.alma(close, 2, 0.85, 6, timeframe.isseconds)
+minutes_alma = ta.alma(close, 2, 0.85, 6, timeframe.isminutes)
+intraday_alma = ta.alma(close, 2, 0.85, 6, timeframe.isintraday)
+daily_alma = ta.alma(close, 2, 0.85, 6, timeframe.isdaily)
+weekly_alma = ta.alma(close, 2, 0.85, 6, timeframe.isweekly)
+monthly_alma = ta.alma(close, 2, 0.85, 6, timeframe.ismonthly)
+dwm_alma = ta.alma(close, 2, 0.85, 6, timeframe.isdwm)
+
+plot(seconds_alma + minutes_alma + intraday_alma + daily_alma + weekly_alma + monthly_alma + dwm_alma)

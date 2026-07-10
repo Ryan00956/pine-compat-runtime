@@ -1,0 +1,15 @@
+//@version=5
+indicator("Series history offset for-in")
+
+values = array.from(0, 1)
+offset = bar_index - bar_index
+for value in values
+    offset := bar_index == 0 ? 0 : value
+
+maybe_offset = bar_index == 2 ? na : offset
+previous = close[offset]
+
+plot(previous)
+plot((close + open)[offset])
+plot(close[maybe_offset])
+plot(na(previous[1]) ? 1 : 0)

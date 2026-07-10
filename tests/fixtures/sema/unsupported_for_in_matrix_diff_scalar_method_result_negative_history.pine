@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported for-in matrix.diff scalar method result negative history")
+left = matrix.new<float>(1, 0, 0)
+values = left.diff(close)
+length = for row in values
+    -1
+plot(close[length])

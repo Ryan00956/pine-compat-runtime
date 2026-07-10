@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported named const color if comparison ternary negative history")
+paint = if true
+    color.red
+else
+    color.blue
+use_short = paint == color.red
+length = use_short ? -1 : 1
+plot(close[length])

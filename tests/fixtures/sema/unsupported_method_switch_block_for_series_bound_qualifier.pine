@@ -1,0 +1,17 @@
+//@version=6
+indicator("Unsupported method switch block for series bound qualifier")
+
+type QualifierTool
+    int seed
+
+method select_length(QualifierTool tool, bool flag, int limit, int x) =>
+    switch
+        flag =>
+            for i = 0 to limit
+                x
+        =>
+            x
+
+tool = QualifierTool.new(1)
+length = input.int(2, "Length")
+plot(ta.ema(close, tool.select_length(true, bar_index, length)))

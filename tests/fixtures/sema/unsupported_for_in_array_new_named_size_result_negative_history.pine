@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported for-in array.new named size result negative history")
+values = array.new<int>(size = 1, initial_value = 0)
+length = for value in values
+    -1
+plot(close[length])

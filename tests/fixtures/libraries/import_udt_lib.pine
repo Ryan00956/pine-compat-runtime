@@ -5,11 +5,115 @@ export type Point
 export type Wrapper
     Point nested
 
+export type Offset
+    int value
+
+export type OffsetBox
+    Offset offset
+
+export type BoolOffset
+    bool value
+
+export type BoolOffsetBox
+    BoolOffset offset
+
+export type StringOffset
+    string value
+
+export type StringOffsetBox
+    StringOffset offset
+
+type PrivatePoint
+    float x
+
+export type PrivateWrapper
+    PrivatePoint nested
+
+export typedPoint(Point p) => p
+export typedWrapper(Wrapper w) => w
+export typedShift(Point p, float delta) => Point.new(p.x + delta)
+export typedWrapperShift(Wrapper w, float delta) => Wrapper.new(Point.new(w.nested.x + delta))
+export passExportedLength(int length) => length
+export passExportedLengthBlock(int length) =>
+    local = length
+    local
+export passExportedLengthFor(int length) =>
+    for i = 0 to 0
+        length
+export passExportedLengthForIn(array<int> values, int length) =>
+    for value in values
+        length
+export passExportedLengthWhile(bool active, int length) =>
+    while active
+        length
+export passExportedLengthSwitchLoop(bool flag, int length) =>
+    switch
+        flag =>
+            for i = 0 to 0
+                length
+        =>
+            while false
+                length
+export maxBarsLength() => 20
+export passExportedTimeframe(string tf) =>
+    local = tf
+    local
+export sameOffset(Offset offset) => offset
+export sameOffsetBox(OffsetBox box) => box
+export makeOffset(int value) => Offset.new(value)
+export makeOffsetBox(int value) => OffsetBox.new(Offset.new(value))
+export makeBoolOffset(bool value) => BoolOffset.new(value)
+export makeBoolOffsetBox(bool value) => BoolOffsetBox.new(BoolOffset.new(value))
+export makeStringOffset(string value) => StringOffset.new(value)
+export makeStringOffsetBox(string value) => StringOffsetBox.new(StringOffset.new(value))
+export firstPoint(array<Point> points) => array.get(points, 0)
+export secondPoint(Point[] points) => points.get(1)
+
 method shift(Point p, float delta) => p.x + delta
+method same(Offset offset) => offset
+method sameBox(OffsetBox box) => box
+method sameBool(BoolOffset offset) => offset
+method sameBoolBox(BoolOffsetBox box) => box
+method sameString(StringOffset offset) => offset
+method sameStringBox(StringOffsetBox box) => box
+method make(Offset offset, int value) => Offset.new(value)
+method makeBox(Offset offset, int value) => OffsetBox.new(Offset.new(value))
+method firstFrom(Point p, array<Point> points) => array.get(points, 0)
+method secondFrom(Point p, Point[] points) => points.get(1)
+method nestedShift(Wrapper w, float delta) => w.nested.x + delta
+method nestedAliasShift(Wrapper w, float delta) =>
+    alias = w
+    alias.nested.x + delta
+method nestedFieldAliasShift(Wrapper w, float delta) =>
+    nested = w.nested
+    nested.x + delta
+method nestedSource(Wrapper w) => w.nestedShift(1)
+method otherNestedShift(Point p, Wrapper other, float delta) => other.nested.x + delta
+method otherNestedSource(Point p, Wrapper other) => p.otherNestedShift(other, 1)
+method otherNestedSourceNamed(Point p, Wrapper other, float delta) => p.otherNestedShift(delta=delta, other=other)
+method passLength(Point p, int length) => length
+method passLengthBlock(Point p, int length) =>
+    local = length
+    local
+method passLengthFor(Point p, int length) =>
+    for i = 0 to 0
+        length
+method passTimeframe(Point p, string tf) =>
+    local = tf
+    local
+method passTimeframeFor(Point p, string tf) =>
+    for i = 0 to 0
+        tf
 method same(Point p) => p
+method sameWrapper(Wrapper w) => w
+method sameWrapperViaMethod(Wrapper w) => w.sameWrapper()
+method chooseWrapper(Wrapper w, Wrapper other) => other
 method sameBlock(Point p) =>
     copy = p
     copy
+method sameTernary(Point p, bool flip) =>
+    copy = p
+    flip ? copy : p
 method sameIf(Point p, bool flip) =>
     if flip
         copy = p
@@ -21,10 +125,31 @@ method sameFor(Point p, int count) =>
     for i = 0 to count
         copy = p
         copy
+method sameForIn(Point p, array<int> values) =>
+    for value in values
+        copy = p
+        copy
+method sameWhile(Point p, bool keepGoing) =>
+    active = keepGoing
+    while active
+        copy = p
+        active := false
+        copy
+method sameSwitch(Point p, int selector) =>
+    switch selector
+        0 =>
+            copy = p
+            copy
+        =>
+            copy = p
+            copy
 method choose(Point p, Point other) => other
 method chooseBlock(Point p, Point other) =>
     copy = other
     copy
+method chooseTernary(Point p, Point other, bool flip) =>
+    copy = other
+    flip ? copy : other
 method chooseIf(Point p, Point other, bool flip) =>
     if flip
         copy = other
@@ -36,9 +161,81 @@ method chooseFor(Point p, Point other, int count) =>
     for i = 0 to count
         copy = other
         copy
+method chooseForIn(Point p, Point other, array<int> values) =>
+    for value in values
+        copy = other
+        copy
+method chooseWhile(Point p, Point other, bool keepGoing) =>
+    active = keepGoing
+    while active
+        copy = other
+        active := false
+        copy
+method chooseSwitch(Point p, Point other, int selector) =>
+    switch selector
+        0 =>
+            copy = other
+            copy
+        =>
+            copy = other
+            copy
 method wrap(Point p, Point other) => p.choose(other)
 method make(Point p, float value) => Point.new(value)
+method makeBlock(Point p, float value) =>
+    made = Point.new(value)
+    made
+method makeTernary(Point p, float value, bool flip) =>
+    flip ? Point.new(value) : Point.new(value + 1)
+method makeIf(Point p, float value, bool flip) =>
+    if flip
+        Point.new(value)
+    else
+        Point.new(value + 1)
+method makeFor(Point p, float value, int count) =>
+    for i = 0 to count
+        Point.new(value + i)
+method makeForIn(Point p, float value, array<int> values) =>
+    for item in values
+        Point.new(value + item)
+method makeWhile(Point p, float value, int count) =>
+    i = 0
+    while i < count
+        i := i + 1
+        Point.new(value + i)
+method makeSwitch(Point p, float value, int selector) =>
+    switch selector
+        0 => Point.new(value)
+        => Point.new(value + 1)
+method makeViaMethod(Point p, float value) => p.make(value)
+method makeWrapper(Wrapper w, float value) => Wrapper.new(Point.new(value))
+method makeWrapperTernary(Wrapper w, float value, bool flip) =>
+    flip ? Wrapper.new(Point.new(value)) : Wrapper.new(Point.new(value + 1))
+method makeWrapperIf(Wrapper w, float value, bool flip) =>
+    if flip
+        Wrapper.new(Point.new(value))
+    else
+        Wrapper.new(Point.new(value + 1))
+method makeWrapperFor(Wrapper w, float value, int count) =>
+    for i = 0 to count
+        Wrapper.new(Point.new(value + i))
+method makeWrapperForIn(Wrapper w, float value, array<int> values) =>
+    for item in values
+        Wrapper.new(Point.new(value + item))
+method makeWrapperWhile(Wrapper w, float value, int count) =>
+    i = 0
+    while i < count
+        i := i + 1
+        Wrapper.new(Point.new(value + i))
+method makeWrapperSwitch(Wrapper w, float value, int selector) =>
+    switch selector
+        0 => Wrapper.new(Point.new(value))
+        => Wrapper.new(Point.new(value + 1))
+method makeWrapperViaMethod(Wrapper w, float value) => w.makeWrapper(value)
 method mutateLocal(Point p, float delta) =>
     local = Point.new(p.x)
     local.x := local.x + delta
+    local
+method mutateWrapperLocal(Wrapper w, float delta) =>
+    local = Wrapper.new(Point.new(w.nested.x))
+    local.nested := Point.new(local.nested.x + delta)
     local

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported syminfo helper const string return qualifier")
+
+plot(timestamp(dateString=syminfo.prefix("NASDAQ:AAPL")))
+plot(timestamp(dateString=syminfo.ticker("NASDAQ:AAPL")))

@@ -1,0 +1,11 @@
+//@version=6
+indicator("Map key for-in put size change")
+
+values = map.new<string, float>()
+values.put("open", open)
+values.put("close", close)
+
+for key in values
+    values.put("next", close)
+
+plot(values.size())

@@ -46,6 +46,27 @@ fn reassignment_does_not_narrow_existing_series_symbol() {
 }
 
 #[test]
+fn reassignment_promotes_weaker_scalar_qualifier() {
+    let analysis = analyze("x = 1\nx := bar_index\nplot(x)\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let symbol = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "x")
+        .expect("x symbol");
+    assert_eq!(
+        symbol.pine_type,
+        PineType::new(Qualifier::Series, ValueKind::Int)
+    );
+}
+
+#[test]
 fn accepts_block_local_declaration_in_if() {
     let analysis = analyze("if close > open\n    x = high - low\n    plot(x)\n");
 
@@ -180,7 +201,28 @@ fn rejects_incompatible_switch_arm_results() {
         analysis
             .diagnostics
             .iter()
-            .any(|diagnostic| diagnostic.code == "E_BRANCH_TYPE"),
+            .any(|diagnostic| diagnostic.code == "E_BRANCH_TYPE"
+                && diagnostic
+                    .message
+                    .contains("switch arms have incompatible types float and bool")),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_incompatible_ternary_branch_results() {
+    let analysis = analyze("x = close > open ? high : true\nplot(x)\n");
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_BRANCH_TYPE"
+                && diagnostic
+                    .message
+                    .contains("ternary branches have incompatible types float and bool")),
         "{:?}",
         analysis.diagnostics
     );
@@ -525,6 +567,44 @@ fn accepts_for_loop_with_series_bounds_and_signed_step() {
 }
 
 #[test]
+fn rejects_for_statement_counter_as_simple_arg_with_series_step() {
+    let analysis = analyze(
+        "step = close > open ? 1 : 1\nfor i = 0 to 2 by step\n    plot(ta.ema(close, i))\n",
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains(
+                "`ta.ema` argument `length` expects simple integer-compatible, got series int"
+            )),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_for_expression_counter_as_simple_arg_with_series_step() {
+    let analysis = analyze(
+        "step = close > open ? 1 : 1\nvalue = for i = 0 to 2 by step\n    ta.ema(close, i)\nplot(value)\n",
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains(
+                "`ta.ema` argument `length` expects simple integer-compatible, got series int"
+            )),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn rejects_non_int_for_loop_range() {
     let analysis = analyze("for i = 0.5 to 2\n    plot(close)\n");
 
@@ -559,6 +639,21 @@ fn rejects_zero_for_loop_step() {
             .diagnostics
             .iter()
             .any(|diagnostic| diagnostic.code == "E_LOOP_STEP")
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_named_const_zero_for_loop_step() {
+    let analysis = analyze("base = 0\nstep = base\nfor i = 0 to 2 by step\n    plot(close)\n");
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_LOOP_STEP"),
+        "{:?}",
+        analysis.diagnostics
     );
     assert!(analysis.hir.is_none());
 }

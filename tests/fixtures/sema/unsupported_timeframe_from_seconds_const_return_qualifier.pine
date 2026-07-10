@@ -1,0 +1,11 @@
+//@version=6
+indicator("Unsupported timeframe.from_seconds const return qualifier")
+
+seconds = input.int(3600, "Seconds")
+const_tf = timeframe.from_seconds(3600)
+daily_tf = timeframe.from_seconds(timeframe.in_seconds("D"))
+tf = timeframe.from_seconds(seconds)
+
+plot(timestamp(dateString=const_tf))
+plot(timestamp(dateString=daily_tf))
+plot(timestamp(dateString=tf))

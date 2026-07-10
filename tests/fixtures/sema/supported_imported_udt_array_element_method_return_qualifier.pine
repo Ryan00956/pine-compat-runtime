@@ -1,0 +1,26 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Supported imported UDT array element method return qualifier")
+
+anchor = lib.Wrapper.new(lib.Point.new(close))
+get_wrappers = array.new<lib.Wrapper>(2, lib.Wrapper.new(lib.Point.new(close + 1)))
+first_wrappers = array.from(lib.Wrapper.new(lib.Point.new(close + 2)), lib.Wrapper.new(lib.Point.new(close + 3)))
+last_wrappers = array.from(lib.Wrapper.new(lib.Point.new(close + 4)), lib.Wrapper.new(lib.Point.new(close + 5)))
+remove_wrappers = array.new<lib.Wrapper>(2, lib.Wrapper.new(lib.Point.new(close + 6)))
+pop_wrappers = array.new<lib.Wrapper>(2, lib.Wrapper.new(lib.Point.new(close + 7)))
+shift_wrappers = array.new<lib.Wrapper>(2, lib.Wrapper.new(lib.Point.new(close + 8)))
+
+removed = array.remove(remove_wrappers, 0)
+popped = pop_wrappers.pop()
+shifted = array.shift(shift_wrappers)
+
+chosen_get = anchor.chooseWrapper(array.get(get_wrappers, 0))
+chosen_first = anchor.chooseWrapper(first_wrappers.first())
+chosen_last = anchor.chooseWrapper(array.last(last_wrappers))
+chosen_removed = anchor.chooseWrapper(removed)
+chosen_popped = anchor.chooseWrapper(popped)
+chosen_shifted = anchor.chooseWrapper(shifted)
+qualified_receiver_get = lib.sameWrapper(array.get(get_wrappers, 1))
+qualified_arg_get = lib.chooseWrapper(anchor, array.get(get_wrappers, 0))
+
+plot(chosen_get.nested.x + chosen_first.nested.x + chosen_last.nested.x + chosen_removed.nested.x + chosen_popped.nested.x + chosen_shifted.nested.x + qualified_receiver_get.nested.x + qualified_arg_get.nested.x)

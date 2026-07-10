@@ -1,0 +1,7 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported method call-result receiver")
+
+shifted = lib.Point.new(close).shift(5)
+wrappedShifted = lib.Wrapper.new(lib.Point.new(open)).nestedShift(7)
+plot(shifted + wrappedShifted)

@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported input int minval series")
+value = input.int(1, "Value", minval=close)
+plot(value)

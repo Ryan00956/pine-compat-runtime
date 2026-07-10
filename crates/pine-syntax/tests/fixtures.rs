@@ -169,16 +169,23 @@ fn rejects_array_new_udt_template_fixture() {
 }
 
 #[test]
-fn rejects_imported_udt_array_new_template_fixture() {
-    let (_, parsed) =
-        parse_fixture("tests/fixtures/syntax/unsupported_imported_udt_array_new.pine");
+fn parses_imported_udt_array_new_template_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/imported_udt_array_new.pine");
 
-    assert!(has_diagnostic(&parsed.diagnostics, "E_PARSE_EXPR"));
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
 }
 
 #[test]
 fn parses_udt_array_chained_field_mutation_fixture() {
     let (_, parsed) = parse_fixture("tests/fixtures/syntax/udt_array_chained_field_mutation.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+}
+
+#[test]
+fn parses_imported_method_call_result_receiver_fixture() {
+    let (_, parsed) =
+        parse_fixture("tests/fixtures/syntax/imported_method_call_result_receiver.pine");
 
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
 }

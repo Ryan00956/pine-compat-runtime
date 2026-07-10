@@ -31,6 +31,39 @@ plot((close + open)[1])
 }
 
 #[test]
+fn stores_udf_returned_series_history_before_reading_previous_bars() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("UDF returned series history")
+source() => close + 100
+offset = bar_index == 0 ? 0 : 1
+maybe_offset = bar_index == 2 ? na : offset
+plot(source()[1])
+plot(source()[offset])
+plot(source()[maybe_offset])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[101.0, 102.0, 103.0]);
+    assert_values_close(&result.plots[1].values, &[101.0, 101.0, 102.0, 103.0]);
+    assert_eq!(result.plots[2].values[0], PineValue::Float(101.0));
+    assert_eq!(result.plots[2].values[1], PineValue::Float(101.0));
+    assert_eq!(result.plots[2].values[2], PineValue::Na);
+    assert_eq!(result.plots[2].values[3], PineValue::Float(103.0));
+}
+
+#[test]
 fn runs_simple_history_offset() {
     let source = SourceFile::new(
         "test.pine",
@@ -391,6 +424,37 @@ plot(na(previous_line) ? na : line.get_x1(previous_line))
 }
 
 #[test]
+fn reads_previous_polyline_array_instance_history() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("polyline array history")
+points = array.new<chart.point>()
+points.push(chart.point.from_index(bar_index, close))
+current = polyline.new(points)
+ids = array.new_polyline(1)
+ids.set(0, current)
+previous_ids = ids[1]
+previous_id = na(previous_ids) ? na : previous_ids.get(0)
+visible = polyline.all
+plot(na(previous_id) ? na : array.indexof(visible, previous_id))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[0.0, 1.0, 2.0]);
+}
+
+#[test]
 fn reads_previous_table_array_instance_history() {
     let source = SourceFile::new(
         "test.pine",
@@ -583,6 +647,38 @@ previous_window = window[1]
 previous_id = na(previous_window) ? na : previous_window.get(0)
 previous_line = na(previous_id) ? na : linefill.get_line1(previous_id)
 plot(na(previous_line) ? na : line.get_x1(previous_line))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[0.0, 1.0, 2.0]);
+}
+
+#[test]
+fn reads_previous_polyline_array_slice_instance_history() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("polyline array slice history")
+points = array.new<chart.point>()
+points.push(chart.point.from_index(bar_index, close))
+current = polyline.new(points)
+source = array.new_polyline(2)
+source.set(0, current)
+window = source.slice(0, 1)
+previous_window = window[1]
+previous_id = na(previous_window) ? na : previous_window.get(0)
+visible = polyline.all
+plot(na(previous_id) ? na : array.indexof(visible, previous_id))
 "#,
     );
     let analysis = analyze_source(&source);

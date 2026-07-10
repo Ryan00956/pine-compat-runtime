@@ -2,4 +2,5 @@
 indicator("Plotarrow")
 if close > 1
     plotarrow(close - 2, title="Momentum", colorup=color.green, colordown=color.red, offset=1, minheight=5, maxheight=20, editable=true, show_last=5, display=display.all, force_overlay=false)
+    plotarrow(close - 3, title="Missing heights", offset=na, minheight=na, maxheight=na)
 plot(close)

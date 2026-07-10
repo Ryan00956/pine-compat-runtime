@@ -1,0 +1,10 @@
+indicator("Profile dynamic series history pure user method named UDT arg field max_bars_back miss", max_bars_back=10)
+type Point
+    float x
+method shift(Point p, Point other, float delta) => other.x + delta
+p = Point.new(open)
+other = Point.new(close)
+src = p.shift(delta=1, other=other)
+max_bars_back(src, 2)
+offset = bar_index == 0 ? 0 : 3
+plot(p.shift(other=other, delta=1)[offset])

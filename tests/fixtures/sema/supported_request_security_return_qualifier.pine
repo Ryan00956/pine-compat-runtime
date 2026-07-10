@@ -1,0 +1,14 @@
+//@version=6
+indicator("Supported request.security return qualifier")
+
+requested_int = request.security(syminfo.tickerid, timeframe.period, bar_index)
+requested_float = request.security(syminfo.tickerid, timeframe.period, close)
+requested_bool = request.security(syminfo.tickerid, timeframe.period, close > open)
+requested_color = request.security(syminfo.tickerid, timeframe.period, color.red)
+requested_string = request.security(syminfo.tickerid, timeframe.period, syminfo.tickerid)
+
+plot(requested_int)
+plot(requested_float)
+plot(requested_bool ? 1 : 0)
+plot(close, color=requested_color)
+plot(str.length(requested_string))

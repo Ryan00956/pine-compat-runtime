@@ -1,0 +1,20 @@
+//@version=6
+indicator("Unsupported method final switch const reassignment qualifier")
+
+type Box
+    int seed
+
+method choose_length(Box this, bool flag, int x) =>
+    local = x
+    switch
+        flag =>
+            local := bar_index
+            local
+        =>
+            local
+
+length = input.int(2, "Length")
+box = Box.new(1)
+chosen = box.choose_length(true, length)
+
+plot(ta.ema(close, chosen))

@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported map.size const input return qualifier")
+
+values = map.new<string, float>()
+values.put("close", close)
+
+plot(close, show_last=map.size(values))
+plot(open, show_last=values.size())

@@ -1,0 +1,4 @@
+//@version=6
+ticks_base = -1
+ticks = ticks_base
+strategy("Unsupported named const slippage", slippage=ticks)

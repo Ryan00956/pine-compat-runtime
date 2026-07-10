@@ -1,0 +1,13 @@
+//@version=6
+indicator("Supported string/color cast input return qualifier")
+
+source_number = input.int(42, "Source number")
+source_color = input.color(color.orange, "Source color")
+
+input_text = string(source_number)
+input_color = color(source_color)
+
+text_length = str.length(input_text)
+
+plot(close, show_last=text_length)
+hline(2, color=input_color)

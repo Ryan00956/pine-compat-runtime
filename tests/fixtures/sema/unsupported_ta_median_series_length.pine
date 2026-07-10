@@ -1,3 +1,0 @@
-//@version=5
-indicator("Unsupported ta.median Series Length")
-plot(ta.median(close, bar_index))

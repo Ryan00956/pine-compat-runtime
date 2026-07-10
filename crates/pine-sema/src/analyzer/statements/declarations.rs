@@ -11,6 +11,7 @@ impl Analyzer {
         value_type: PineType,
         declared_user_type_name: Option<&str>,
         declared_user_type_array_name: Option<&str>,
+        allow_non_scalar_udt_typed_na: bool,
         span: Span,
     ) -> (PersistenceKind, Option<pine_ir::VarSlotId>) {
         match mode {
@@ -22,8 +23,15 @@ impl Analyzer {
                     return (PersistenceKind::None, None);
                 }
                 if value_type.kind == ValueKind::UserType {
+                    if allow_non_scalar_udt_typed_na {
+                        self.compatibility.supported.push(FeatureUse {
+                            feature: "varip".to_owned(),
+                            span,
+                        });
+                        return (PersistenceKind::Varip, Some(self.alloc_var_slot()));
+                    }
                     if declared_user_type_name
-                        .is_some_and(|type_name| self.is_scalar_field_user_type(type_name))
+                        .is_some_and(|type_name| self.is_scalar_tree_user_type(type_name))
                     {
                         self.compatibility.supported.push(FeatureUse {
                             feature: "varip".to_owned(),
@@ -57,14 +65,11 @@ impl Analyzer {
         }
     }
 
-    fn is_scalar_field_user_type(&self, type_name: &str) -> bool {
+    pub(super) fn is_scalar_tree_user_type(&self, type_name: &str) -> bool {
         if let Some(user_type) = self.imported_user_types.get(type_name) {
-            return self.imported_user_type_has_scalar_fields(user_type);
+            return self.imported_user_type_has_scalar_tree_fields(user_type);
         }
-        matches!(
-            classify_user_type_array_element_names(&self.user_types, &[type_name.to_owned()]),
-            Some(UserTypeArrayElementInference::SameScalarLocal(_))
-        )
+        self.local_user_type_has_scalar_tree_fields(type_name)
     }
 
     pub(super) fn declared_pine_type(
@@ -86,6 +91,7 @@ impl Analyzer {
                 "box" => Some(PineType::new(Qualifier::Series, ValueKind::Box)),
                 "table" => Some(PineType::new(Qualifier::Series, ValueKind::Table)),
                 "chart.point" => Some(PineType::new(Qualifier::Series, ValueKind::ChartPoint)),
+                "map" => None,
                 _ if self.user_types.contains_key(type_name) => {
                     Some(PineType::new(Qualifier::Series, ValueKind::UserType))
                 }
@@ -136,13 +142,13 @@ impl Analyzer {
                         }
                     }
                 } else if let Some(user_type) = self.imported_user_types.get(element_type) {
-                    if self.imported_user_type_has_scalar_fields(user_type) {
+                    if self.imported_user_type_has_scalar_tree_fields(user_type) {
                         Some(PineType::new(Qualifier::Series, ValueKind::UserTypeArray))
                     } else {
                         self.diagnostics.push(Diagnostic::error(
                             "E_DECL_TYPE",
                             format!(
-                                "typed declaration `{}` does not support imported UDT arrays with non-scalar fields",
+                                "typed declaration `{}` does not support imported UDT arrays with non-scalar, unresolved, or recursive fields",
                                 declared_type.canonical_name()
                             ),
                             span,
@@ -230,7 +236,9 @@ impl Analyzer {
             _ if self
                 .imported_user_types
                 .get(element_type)
-                .is_some_and(|user_type| self.imported_user_type_has_scalar_fields(user_type)) =>
+                .is_some_and(|user_type| {
+                    self.imported_user_type_has_scalar_tree_fields(user_type)
+                }) =>
             {
                 Some(element_type.to_owned())
             }
@@ -256,10 +264,9 @@ impl Analyzer {
         self.diagnostics.push(Diagnostic::error(
             "E_ASSIGN_TYPE",
             format!(
-                "cannot initialize `{name}` of type {} with {:?} {:?}",
+                "cannot initialize `{name}` of type {} with {}",
                 typed_declaration_name(target_type.kind),
-                value_type.qualifier,
-                value_type.kind
+                pine_type_name(value_type)
             ),
             span,
         ));
@@ -283,8 +290,8 @@ impl Analyzer {
         self.diagnostics.push(Diagnostic::error(
             "E_ASSIGN_TYPE",
             format!(
-                "cannot assign {:?} {:?} to `{name}` of user-defined type `{target_user_type}`",
-                value_type.qualifier, value_type.kind
+                "cannot assign {} to `{name}` of user-defined type `{target_user_type}`",
+                pine_type_name(value_type)
             ),
             span,
         ));
@@ -389,6 +396,7 @@ fn is_supported_varip_value(kind: ValueKind) -> bool {
             | ValueKind::Bool
             | ValueKind::String
             | ValueKind::Color
+            | ValueKind::ChartPoint
             | ValueKind::Map
             | ValueKind::FloatMatrix
             | ValueKind::IntMatrix

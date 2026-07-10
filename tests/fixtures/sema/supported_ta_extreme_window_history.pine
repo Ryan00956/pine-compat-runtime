@@ -1,0 +1,6 @@
+//@version=5
+indicator("Supported ta extreme window history")
+plot(ta.highest(close, 3))
+plot(ta.lowest(open, 2))
+plot(ta.highestbars(4))
+plot(ta.lowestbars(length=5))

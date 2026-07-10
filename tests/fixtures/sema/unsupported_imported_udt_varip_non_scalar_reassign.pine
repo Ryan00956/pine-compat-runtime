@@ -1,0 +1,7 @@
+//@version=6
+import user/non_scalar_udt/1 as lib
+indicator("Unsupported imported non-scalar UDT varip reassign")
+
+varip lib.Marker marker = na
+marker := lib.Marker.new(label.new(bar_index, close))
+plot(close)

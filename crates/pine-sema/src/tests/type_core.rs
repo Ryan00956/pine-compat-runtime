@@ -1,4 +1,5 @@
 use super::*;
+use pine_ir::{PineType, Qualifier, ValueKind};
 
 #[test]
 fn accepts_fixnan() {
@@ -102,6 +103,17 @@ fn accepts_series_history_offset() {
 #[test]
 fn rejects_negative_history_offset() {
     let analysis = analyze("x = close[-1]\n");
+
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(
+        analysis.compatibility.unsupported[0].feature,
+        "negative_history_offset"
+    );
+}
+
+#[test]
+fn rejects_named_const_negative_history_offset() {
+    let analysis = analyze("length = -1\nx = close[length]\n");
 
     assert_eq!(analysis.compatibility.unsupported.len(), 1);
     assert_eq!(
@@ -242,6 +254,121 @@ plot(close, color=gradient)
             .iter()
             .any(|feature| feature.feature == "color.orange")
     );
+}
+
+#[test]
+fn promoted_string_and_bool_return_qualifiers_follow_arguments() {
+    let analysis = analyze(
+        r#"indicator("Promoted string/bool return qualifiers")
+input_text = input.string("ABC", "Text")
+input_count = input.int(7, "Count")
+input_string = str.tostring(input_count)
+input_bool = str.contains(input_text, "A")
+simple_string = str.format("{0}", timeframe.period)
+simple_bool = str.contains(timeframe.period, "D")
+series_string = str.tostring(close)
+series_bool = str.contains(series_string, "1")
+plot(series_bool ? 1 : 0)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    for (name, pine_type) in [
+        (
+            "input_string",
+            PineType::new(Qualifier::Input, ValueKind::String),
+        ),
+        (
+            "input_bool",
+            PineType::new(Qualifier::Input, ValueKind::Bool),
+        ),
+        (
+            "simple_string",
+            PineType::new(Qualifier::Simple, ValueKind::String),
+        ),
+        (
+            "simple_bool",
+            PineType::new(Qualifier::Simple, ValueKind::Bool),
+        ),
+        (
+            "series_string",
+            PineType::new(Qualifier::Series, ValueKind::String),
+        ),
+        (
+            "series_bool",
+            PineType::new(Qualifier::Series, ValueKind::Bool),
+        ),
+    ] {
+        let symbol = hir
+            .symbols
+            .iter()
+            .find(|symbol| symbol.name == name)
+            .unwrap_or_else(|| panic!("{name} symbol"));
+        assert_eq!(symbol.pine_type, pine_type, "{name}");
+    }
+}
+
+#[test]
+fn bool_from_arg_return_qualifiers_follow_arguments() {
+    let analysis = analyze(
+        r#"indicator("BoolFromArg return qualifiers")
+input_source = input.bool(true, "Flag")
+input_cast_bool = bool(input_source)
+input_na_bool = na(input_source)
+simple_source = timeframe.period == "1"
+simple_cast_bool = bool(simple_source)
+simple_na_bool = na(simple_source)
+series_source = close > open
+series_cast_bool = bool(series_source)
+series_na_bool = na(series_source)
+plot(series_cast_bool or series_na_bool ? 1 : 0)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    for (name, pine_type) in [
+        (
+            "input_cast_bool",
+            PineType::new(Qualifier::Input, ValueKind::Bool),
+        ),
+        (
+            "input_na_bool",
+            PineType::new(Qualifier::Input, ValueKind::Bool),
+        ),
+        (
+            "simple_cast_bool",
+            PineType::new(Qualifier::Simple, ValueKind::Bool),
+        ),
+        (
+            "simple_na_bool",
+            PineType::new(Qualifier::Simple, ValueKind::Bool),
+        ),
+        (
+            "series_cast_bool",
+            PineType::new(Qualifier::Series, ValueKind::Bool),
+        ),
+        (
+            "series_na_bool",
+            PineType::new(Qualifier::Series, ValueKind::Bool),
+        ),
+    ] {
+        let symbol = hir
+            .symbols
+            .iter()
+            .find(|symbol| symbol.name == name)
+            .unwrap_or_else(|| panic!("{name} symbol"));
+        assert_eq!(symbol.pine_type, pine_type, "{name}");
+    }
 }
 
 #[test]

@@ -1,0 +1,8 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Supported imported UDT array typed UDF params")
+
+points = array.from(lib.Point.new(close + 1), lib.Point.new(close + 2))
+first = lib.firstPoint(points)
+second = lib.secondPoint(points)
+plot(first.x + second.x)

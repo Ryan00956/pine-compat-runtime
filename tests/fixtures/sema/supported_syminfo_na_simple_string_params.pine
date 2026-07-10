@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported syminfo na simple string params")
+
+plot(na(syminfo.prefix(na)) ? 1 : 0)
+plot(na(syminfo.ticker(na)) ? 1 : 0)

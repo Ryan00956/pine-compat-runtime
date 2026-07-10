@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported for-in matrix.diff named result negative history")
+left = matrix.new<float>(1, 0, 0)
+right = matrix.new<float>(1, 0, 0)
+values = matrix.diff(id1 = left, id2 = right)
+length = for row in values
+    -1
+plot(close[length])

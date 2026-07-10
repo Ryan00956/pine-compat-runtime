@@ -1,0 +1,10 @@
+//@version=6
+indicator("Unsupported branch tuple alias if negative history")
+use_short = input.bool(true, "Use short")
+length = if use_short
+    [base, ignored] = [-1, 99]
+    base
+else
+    [base, ignored] = [-1, 99]
+    base
+plot(close[length])

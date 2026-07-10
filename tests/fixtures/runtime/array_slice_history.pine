@@ -7,9 +7,14 @@ window = source.slice(0, 1)
 previous_window = window[1]
 dynamic_offset = bar_index == 0 ? na : 1
 dynamic_previous_window = window[dynamic_offset]
+dynamic_sibling_window = window[dynamic_offset]
 plot(na(previous_window) ? na : previous_window.get(0))
 plot(na(previous_window) ? 1 : 0)
 plot(na(dynamic_previous_window) ? 1 : 0)
+plot(na(dynamic_previous_window) ? na : dynamic_previous_window.get(0))
+if not na(dynamic_previous_window)
+    dynamic_previous_window.set(0, 200)
+plot(na(dynamic_sibling_window) ? na : dynamic_sibling_window.get(0))
 if not na(previous_window)
     previous_window.set(0, 100)
 plot(window.get(0))

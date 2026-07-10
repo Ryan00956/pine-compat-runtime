@@ -1,0 +1,35 @@
+//@version=6
+indicator("Supported array.indexof object UDT simple return qualifier")
+
+type Point
+    float x
+
+first_label = label.new(bar_index, high, "a")
+second_label = label.new(bar_index + 1, low, "b")
+first_line = line.new(bar_index, high, bar_index + 1, low)
+second_line = line.new(bar_index + 2, high + 1, bar_index + 3, low + 1)
+third_line = line.new(bar_index + 4, close, bar_index + 5, close + 1)
+first_fill = linefill.new(first_line, second_line, color.green)
+second_fill = linefill.new(second_line, third_line, color.red)
+points = array.from(chart.point.from_index(bar_index, close), chart.point.from_index(bar_index + 1, close + 1))
+first_polyline = polyline.new(points, line_color=color.red)
+second_polyline = polyline.new(points, line_color=color.green)
+first_box = box.new(bar_index, high, bar_index + 1, low)
+second_box = box.new(bar_index + 2, high + 1, bar_index + 3, low + 1)
+first_table = table.new(position.top_left, 1, 1)
+second_table = table.new(position.bottom_right, 1, 1)
+labels = array.from(first_label, second_label)
+lines = array.from(first_line, second_line)
+fills = array.from(first_fill, second_fill)
+polylines = array.from(first_polyline, second_polyline)
+boxes = array.from(first_box, second_box)
+tables = array.from(first_table, second_table)
+local_points = array.from(Point.new(close), Point.new(open))
+
+index_sum = array.indexof(labels, first_label) + lines.lastindexof(second_line)
+index_sum := index_sum + array.indexof(fills, first_fill) + polylines.lastindexof(second_polyline)
+index_sum := index_sum + array.indexof(boxes, first_box) + tables.lastindexof(second_table)
+index_sum := index_sum + array.indexof(points, chart.point.from_index(bar_index, close))
+index_sum := index_sum + local_points.lastindexof(Point.new(open))
+
+plot(ta.sma(close, index_sum + 1))

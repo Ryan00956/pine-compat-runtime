@@ -1,0 +1,7 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Profile dynamic series history pure user method imported alias-qualified direct UDT arg expression max_bars_back miss", max_bars_back=10)
+src = lib.otherNestedShift(lib.Point.new(open), lib.Wrapper.new(lib.Point.new(close)), 1)
+max_bars_back(src, 2)
+offset = bar_index == 0 ? 0 : 3
+plot(lib.otherNestedShift(lib.Point.new(open), lib.Wrapper.new(lib.Point.new(close)), 1)[offset])

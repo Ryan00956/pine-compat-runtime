@@ -1,0 +1,11 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported dynamic history imported UDT string field")
+
+string_offset = lib.makeStringOffset(bar_index == 0 ? "0" : "1")
+method_same = string_offset.sameString()
+qualified_method_same = lib.sameString(string_offset)
+
+plot(close[string_offset.value])
+plot(open[method_same.value])
+plot(high[qualified_method_same.value])

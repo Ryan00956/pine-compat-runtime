@@ -1,0 +1,10 @@
+indicator("Profile dynamic series history tuple switch expression block miss", max_bars_back=10)
+src = close
+[branch] = switch
+    bar_index >= 0 =>
+        length = 2
+        max_bars_back(src, length)
+        [1]
+    => [0]
+offset = bar_index == 0 ? 0 : 3
+plot(src[offset] + branch * 0)

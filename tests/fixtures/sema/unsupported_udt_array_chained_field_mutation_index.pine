@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported UDT array chained field mutation index")
+
+type Point
+    float x
+
+points = array.from(Point.new(close))
+points.get("0").x := high

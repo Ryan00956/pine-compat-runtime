@@ -1,0 +1,38 @@
+//@version=6
+indicator("Supported UDF final selector switch numeric color const reassignment qualifier")
+
+choose_int_length(mode, x) =>
+    local = x
+    switch mode
+        1 =>
+            local := bar_index
+            local
+        =>
+            local
+
+choose_float_length(mode, x) =>
+    local = x
+    switch mode
+        1.5 =>
+            local := bar_index
+            local
+        =>
+            local
+
+choose_color_length(mode, x) =>
+    local = x
+    switch mode
+        color.red =>
+            local := bar_index
+            local
+        =>
+            local
+
+length = input.int(2, "Length")
+int_chosen = choose_int_length(2, length)
+float_chosen = choose_float_length(2.5, length)
+color_chosen = choose_color_length(color.green, length)
+
+plot(ta.ema(close, int_chosen))
+plot(ta.ema(close, float_chosen))
+plot(ta.ema(close, color_chosen))

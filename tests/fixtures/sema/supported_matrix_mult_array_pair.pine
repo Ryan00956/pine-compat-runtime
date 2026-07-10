@@ -1,0 +1,9 @@
+//@version=6
+indicator("Supported matrix.mult array pair")
+
+left = array.from(close, open)
+right = array.from(high, low)
+result = matrix.mult(left, right)
+float_rows = matrix.new<float>(1, 1, 0.0)
+matrix.add_row(float_rows, 0, result)
+plot(array.get(result, 0))

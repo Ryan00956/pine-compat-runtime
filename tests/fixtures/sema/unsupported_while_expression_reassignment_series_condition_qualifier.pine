@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported while expression reassignment series condition qualifier")
+
+length = input.int(2, "Length")
+selected = length
+_ = while close > open
+    selected := length
+    1
+
+plot(ta.ema(close, selected))

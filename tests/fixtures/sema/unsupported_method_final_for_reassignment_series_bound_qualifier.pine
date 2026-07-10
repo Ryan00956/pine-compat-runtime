@@ -1,0 +1,15 @@
+//@version=6
+indicator("Unsupported method final for reassignment series bound qualifier")
+
+type Box
+    int seed
+
+method checked_length(Box this, int limit, int x) =>
+    local = x
+    for i = 0 to limit
+        local := x
+        ta.ema(close, local)
+
+length = input.int(2, "Length")
+box = Box.new(1)
+plot(box.checked_length(bar_index, length))

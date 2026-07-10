@@ -1,0 +1,20 @@
+//@version=6
+indicator("Unsupported UDT array SameAsArg method return qualifier")
+
+type Point
+    float x
+
+type Other
+    float x
+
+method first_x(Point anchor, array<Point> values) =>
+    point = array.get(values, 0)
+    anchor.x + point.x
+
+anchor = Point.new(close)
+others = array.new<Other>(2, Other.new(close))
+
+plot(anchor.first_x(array.copy(others)))
+plot(anchor.first_x(others.copy()))
+plot(anchor.first_x(array.slice(others, 0, 1)))
+plot(anchor.first_x(others.slice(0, 1)))

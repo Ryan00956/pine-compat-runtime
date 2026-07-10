@@ -1,0 +1,10 @@
+//@version=6
+indicator("Unsupported input return qualifiers")
+
+mode = input.string("Close", "Mode")
+enabled = input.bool(true, "Enabled")
+source = input.source(close, "Source")
+
+plot(close, title=mode)
+plot(close, trackprice=enabled)
+plot(ta.alma(close, 4, source, 6))

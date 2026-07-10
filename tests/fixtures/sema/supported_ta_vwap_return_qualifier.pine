@@ -1,0 +1,12 @@
+//@version=6
+indicator("Supported ta.vwap return qualifier")
+
+variable_value = ta.vwap
+source_value = ta.vwap(close)
+anchor_value = ta.vwap(close, bar_index == 1)
+[basis, upper, lower] = ta.vwap(close, false, 2.0)
+
+plot(variable_value)
+plot(source_value)
+plot(anchor_value)
+plot(basis + upper + lower)

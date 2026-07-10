@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported array.size const/input return qualifier")
+
+values = array.from(1.0, 2.0, 3.0)
+
+plot(close, show_last=array.size(values))
+plot(open, show_last=values.size())

@@ -1,3 +1,0 @@
-//@version=5
-indicator("Unsupported ta.range Series Length")
-plot(ta.range(close, bar_index))

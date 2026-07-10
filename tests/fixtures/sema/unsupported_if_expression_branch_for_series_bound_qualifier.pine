@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported if-expression branch for series bound qualifier")
+length = input.int(2, "Length")
+selected = if true
+    for i = 0 to bar_index
+        length
+else
+    length
+plot(ta.ema(close, selected))

@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported max_bars_back loop result call")
+src = close
+value = for i = 0 to 0
+    length = 20
+    switch
+        bar_index >= 0 =>
+            max_bars_back(src, length)
+            src[bar_index]
+        => src[bar_index]
+plot(value)

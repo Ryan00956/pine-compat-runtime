@@ -13,6 +13,20 @@ negative_right = ta.pivotlow(low_source, 1, -1)
 zero_bars_high = ta.pivothigh(high_source, 0, 0)
 default_high = ta.pivothigh(0, 0)
 default_low = ta.pivotlow(0, 0)
+dynamic_left = bar_index == 0 ? 0 : 1
+dynamic_right = bar_index == 0 ? 0 : 1
+dynamic_high = ta.pivothigh(high_source, dynamic_left, dynamic_right)
+dynamic_low = ta.pivotlow(low_source, dynamic_left, dynamic_right)
+dynamic_default_left = bar_index - bar_index
+dynamic_default_right = bar_index == bar_index ? 0 : 1
+dynamic_default_high = ta.pivothigh(dynamic_default_left, dynamic_default_right)
+dynamic_default_low = ta.pivotlow(dynamic_default_left, dynamic_default_right)
+udf_leftbars() => bar_index == 0 ? 0 : 1
+udf_rightbars() => bar_index == 0 ? 0 : 1
+udf_high = ta.pivothigh(high_source, udf_leftbars(), udf_rightbars())
+udf_low = ta.pivotlow(low_source, udf_leftbars(), udf_rightbars())
+udf_default_high = ta.pivothigh(udf_leftbars(), udf_rightbars())
+udf_default_low = ta.pivotlow(udf_leftbars(), udf_rightbars())
 plot(pivot_high)
 plot(pivot_low)
 plot(na(tie_high) ? 1 : 0)
@@ -22,3 +36,11 @@ plot(na(negative_right) ? 1 : 0)
 plot(zero_bars_high)
 plot(default_high)
 plot(default_low)
+plot(dynamic_high)
+plot(dynamic_low)
+plot(dynamic_default_high)
+plot(dynamic_default_low)
+plot(udf_high)
+plot(udf_low)
+plot(udf_default_high)
+plot(udf_default_low)

@@ -6,7 +6,7 @@ use pine_syntax::{CallArg, Diagnostic, Expr, Span};
 use super::{UdtConstructor, UserTypeFieldInfo, UserTypeInfo};
 use crate::analyzer::context::Analyzer;
 use crate::compatibility::FeatureUse;
-use crate::types::{UNKNOWN, can_assign, strongest_qualifier};
+use crate::types::{UNKNOWN, can_assign, pine_type_name, strongest_qualifier, value_kind_name};
 
 impl Analyzer {
     pub(crate) fn user_type_constructor(
@@ -38,8 +38,10 @@ impl Analyzer {
                 self.diagnostics.push(Diagnostic::error(
                     "E_UDT_CONSTRUCTOR_ARG",
                     format!(
-                        "cannot assign {:?} {:?} to field `{}` of type {:?}",
-                        arg_type.qualifier, arg_type.kind, field.name, field.pine_type.kind
+                        "cannot assign {} to field `{}` of type {}",
+                        pine_type_name(arg_type),
+                        field.name,
+                        value_kind_name(field.pine_type.kind)
                     ),
                     arg.span,
                 ));

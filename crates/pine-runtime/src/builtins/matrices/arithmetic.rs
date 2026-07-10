@@ -31,6 +31,9 @@ impl<'a> HistoricalRuntime<'a> {
             (PineValue::Array(left_id), PineValue::Matrix(right_id)) => {
                 self.array_mult_matrix(left_id, right_id)
             }
+            (PineValue::Array(left_id), PineValue::Array(right_id)) => {
+                self.array_mult_array(left_id, right_id)
+            }
             (PineValue::Matrix(left_id), scalar) => self.matrix_mult_scalar(left_id, scalar),
             (scalar, PineValue::Matrix(right_id)) => self.matrix_mult_scalar(right_id, scalar),
             _ => Ok(PineValue::Na),
@@ -238,6 +241,48 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         Ok(self.new_array_from_values(ArrayElementKind::Float, values))
+    }
+
+    pub(crate) fn array_mult_array(
+        &mut self,
+        left_id: u32,
+        right_id: u32,
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(left) = self.array_values_clone(left_id)? else {
+            return Ok(PineValue::Na);
+        };
+        let Some(right) = self.array_values_clone(right_id)? else {
+            return Ok(PineValue::Na);
+        };
+        if left.len() != right.len() {
+            return Err(RuntimeError {
+                message: "matrix multiplication requires left array size to match right array size"
+                    .to_owned(),
+            });
+        }
+
+        let mut sum = 0.0;
+        let mut valid = true;
+        for (left_value, right_value) in left.iter().zip(right.iter()) {
+            let (Some(left_number), Some(right_number)) =
+                (left_value.as_f64(), right_value.as_f64())
+            else {
+                valid = false;
+                break;
+            };
+            if !left_number.is_finite() || !right_number.is_finite() {
+                valid = false;
+                break;
+            }
+            sum += left_number * right_number;
+        }
+
+        let value = if valid {
+            finite_float_or_na(sum)
+        } else {
+            PineValue::Na
+        };
+        Ok(self.new_array_from_values(ArrayElementKind::Float, vec![value]))
     }
 
     pub(crate) fn matrix_diff(

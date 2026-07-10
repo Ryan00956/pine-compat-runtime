@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported time positional overload types")
+plot(time(timeframe.period, 1.5))
+plot(time_close(timeframe.period, 1.5))
+plot(time(timeframe.period, "0930-1600", 1.5))
+plot(timestamp(1.5, 1, 1))

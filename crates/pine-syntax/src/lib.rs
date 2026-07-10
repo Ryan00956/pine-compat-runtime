@@ -10,8 +10,9 @@ mod source;
 
 pub use ast::{
     BinaryOp, CallArg, DeclMode, DeclaredType, ExportDecl, ExportItem, Expr, ExprKind,
-    FunctionBody, ImportAlias, ImportDecl, LibraryDecl, Literal, MethodDecl, MethodParam, Program,
-    Stmt, StmtKind, SwitchArm, SwitchArmResult, UnaryOp, UserTypeDecl, UserTypeField, VersionDecl,
+    FunctionBody, FunctionParam, ImportAlias, ImportDecl, LibraryDecl, Literal, MethodDecl,
+    MethodParam, Program, Stmt, StmtKind, SwitchArm, SwitchArmResult, UnaryOp, UserTypeDecl,
+    UserTypeField, VersionDecl,
 };
 pub use diagnostic::{Diagnostic, Severity};
 pub use lexer::{Lexed, Token, TokenKind, lex};

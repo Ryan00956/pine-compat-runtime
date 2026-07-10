@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported ta.kc na mult")
+[middle, upper, lower] = ta.kc(close, 3, na)
+width = ta.kcw(close, 3, na)
+plot(nz(middle) + nz(upper) + nz(lower) + nz(width))

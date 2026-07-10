@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported ta.change series length")
+length = bar_index == 0 ? 1 : 2
+plot(ta.change(close, length))
+plot(ta.change(close > open, length) ? 1 : 0)

@@ -1,0 +1,5 @@
+//@version=5
+indicator("Math sum dynamic length")
+length = bar_index % 2 + 2
+plot(math.sum(close, length))
+plot(math.sum(source=close, length=length))

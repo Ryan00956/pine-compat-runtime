@@ -6,8 +6,15 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let source = ta_arg(args, 0, "source")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
+        let length = ta_arg(args, 1, "length")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -26,9 +33,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
-        let mult = self.eval_expr(&args[2].value)?.as_f64().unwrap_or(0.0);
+        let (source, length, mult) = self.eval_average_source_length_mult(args)?;
         if length <= 0 {
             return Ok(PineValue::Tuple(vec![
                 PineValue::Na,
@@ -46,6 +51,13 @@ impl<'a> HistoricalRuntime<'a> {
                 PineValue::Na,
             ]));
         }
+        let Some(mult) = mult else {
+            return Ok(PineValue::Tuple(vec![
+                PineValue::Na,
+                PineValue::Na,
+                PineValue::Na,
+            ]));
+        };
 
         let basis = window.mean(length);
         let variance = window.variance(length, true);
@@ -63,9 +75,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
-        let mult = self.eval_expr(&args[2].value)?.as_f64().unwrap_or(0.0);
+        let (source, length, mult) = self.eval_average_source_length_mult(args)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -75,6 +85,9 @@ impl<'a> HistoricalRuntime<'a> {
         if !window.is_ready(length) {
             return Ok(PineValue::Na);
         }
+        let Some(mult) = mult else {
+            return Ok(PineValue::Na);
+        };
 
         let basis = window.mean(length);
         if basis == 0.0 {
@@ -121,15 +134,19 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<Option<(f64, f64, f64)>, RuntimeError> {
-        let Some(source) = self.eval_expr(&args[0].value)?.as_f64() else {
+        let (source, length) = self.eval_average_source_length(args)?;
+        let Some(source) = source.as_f64() else {
             return Ok(None);
         };
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
-        let Some(mult) = self.eval_expr(&args[2].value)?.as_f64() else {
+        let Some(mult) = ta_arg(args, 2, "mult")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_f64())
+        else {
             return Ok(None);
         };
-        let use_true_range = if let Some(arg) = args.get(3) {
-            match self.eval_expr(&arg.value)? {
+        let use_true_range = if let Some(arg) = ta_arg(args, 3, "useTrueRange") {
+            match self.eval_expr(arg)? {
                 PineValue::Bool(value) => value,
                 PineValue::Na => true,
                 _ => false,
@@ -172,8 +189,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_average_source_length(args)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -192,8 +208,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_average_source_length(args)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -235,12 +250,43 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(finite_float_or_na(smooth.weighted_mean(smooth_length)))
     }
 
+    fn eval_average_source_length(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<(PineValue, i64), RuntimeError> {
+        let source = ta_arg(args, 0, "source")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
+        let length = ta_arg(args, 1, "length")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
+        Ok((source, length))
+    }
+
+    fn eval_average_source_length_mult(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<(PineValue, i64, Option<f64>), RuntimeError> {
+        let (source, length) = self.eval_average_source_length(args)?;
+        let mult = ta_arg(args, 2, "mult")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_f64());
+        Ok((source, length, mult))
+    }
+
     pub(crate) fn eval_swma(
         &mut self,
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
+        let source = ta_arg(args, 0, "source")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
         let length = 4_usize;
         let window = self.update_rolling_window(call_site_id, source, length);
         if !window.is_ready(length) {
@@ -257,13 +303,25 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
-        let offset = self.eval_expr(&args[2].value)?.as_f64();
-        let sigma = self.eval_expr(&args[3].value)?.as_f64();
-        let floor_center = args
-            .get(4)
-            .map(|arg| self.eval_expr(&arg.value))
+        let source = ta_arg(args, 0, "series")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
+        let length = ta_arg(args, 1, "length")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
+        let offset = ta_arg(args, 2, "offset")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_f64());
+        let sigma = ta_arg(args, 3, "sigma")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_f64());
+        let floor_center = ta_arg(args, 4, "floor")
+            .map(|arg| self.eval_expr(arg))
             .transpose()?
             .is_some_and(|value| matches!(value, PineValue::Bool(true)));
         if length <= 0 {
@@ -311,9 +369,12 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
-        let offset = self.eval_expr(&args[2].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_average_source_length(args)?;
+        let offset = ta_arg(args, 2, "offset")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -357,8 +418,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_average_source_length(args)?;
         let Some(source) = source.as_f64() else {
             return Ok(PineValue::Na);
         };
@@ -425,8 +485,7 @@ impl<'a> HistoricalRuntime<'a> {
         &mut self,
         args: &[HirCallArg],
     ) -> Result<Option<(f64, i64)>, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_average_source_length(args)?;
         let Some(source) = source.as_f64() else {
             return Ok(None);
         };
@@ -441,8 +500,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_average_source_length(args)?;
         let Some(source) = source.as_f64() else {
             return Ok(PineValue::Na);
         };
@@ -467,8 +525,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_average_source_length(args)?;
         let Some(source) = source.as_f64() else {
             return Ok(PineValue::Na);
         };
@@ -509,10 +566,25 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let fast_length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
-        let slow_length = self.eval_expr(&args[2].value)?.as_i64().unwrap_or(0);
-        let signal_length = self.eval_expr(&args[3].value)?.as_i64().unwrap_or(0);
+        let source = ta_arg(args, 0, "source")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
+        let fast_length = ta_arg(args, 1, "fastlen")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
+        let slow_length = ta_arg(args, 2, "slowlen")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
+        let signal_length = ta_arg(args, 3, "siglen")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
         let Some(source) = source.as_f64() else {
             return Ok(PineValue::Tuple(vec![
                 PineValue::Na,

@@ -1,0 +1,4 @@
+//@version=6
+indicator("Unsupported max_bars_back declaration value")
+value = max_bars_back(close, 20)
+plot(close)

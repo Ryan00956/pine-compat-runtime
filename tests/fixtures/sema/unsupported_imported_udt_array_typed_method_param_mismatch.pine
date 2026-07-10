@@ -1,0 +1,11 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT array typed method param mismatch")
+
+type Point
+    float x
+
+anchor = lib.Point.new(close)
+points = array.from(Point.new(close + 1), Point.new(close + 2))
+first = anchor.firstFrom(points)
+plot(first.x)

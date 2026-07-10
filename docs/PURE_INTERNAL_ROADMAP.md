@@ -97,20 +97,23 @@ preserving deterministic execution and diagnostics.
 Current baseline:
 
 - `if`/`else` blocks and scalar `if` expressions are fixture-backed.
-- `switch` supports expression arms plus fixture-backed statement-block arms
-  whose block ends in a result expression, including selected-arm outer
-  reassignment, branch-local no-leak fixtures, and loop-control propagation
-  from selected arms inside loop bodies, plus tuple declaration/destructuring
-  results, same-local UDT results from selected block arms,
-  same-imported-identity UDT results from selected block arms, and message-level
-  diagnostics for no-final-expression block arms.
+- `switch` supports expression arms plus fixture-backed expression
+  statement-block arms whose block ends in a result expression, including
+  selected-arm outer reassignment, branch-local no-leak fixtures, and
+  loop-control propagation from selected arms inside loop bodies, plus tuple
+  declaration/destructuring results, same-local UDT results from selected block
+  arms, same-imported-identity UDT results from selected block arms, and
+  message-level diagnostics for no-final-expression expression block arms.
+  Statement-context `switch` block arms also execute selected condition,
+  selector, and default arms for side effects, outer reassignment, and loop
+  control without requiring dummy result expressions.
 - `for` and `while` loops support statement execution, expression loops where
   currently claimed, local declarations, loop control, stateful callsite
   interaction fixtures, statement-form `for...in` over supported array element
   families including the narrow `array<int>`/`array<float>`/`array<bool>`/
   `array<string>`/`array<color>`/`array<label>`/`array<line>`/
   `array<linefill>`/`array<polyline>`/`array<box>`/`array<table>`/
-  `array<chart.point>`/same-local scalar-field UDT array index/value form, and
+  `array<chart.point>`/same-local scalar-tree UDT array index/value form, and
   `while` statement-body history-read/pure-UDF interaction fixtures, with
   fixture-backed diagnostics for loop control used outside loops.
 - Scalar, tuple, same-local UDT, scalar-array, and `matrix<float>` `while`
@@ -131,7 +134,7 @@ Remaining internal work:
 
 - broader positive `while` expression nested collection interaction semantics;
 - broader `for...in` index/value element families and collection iteration;
-- better diagnostics for other unsupported switch forms;
+- better diagnostics for remaining unsupported expression-context switch forms;
 - additional stress fixtures for nested control flow and stateful built-ins.
 
 Non-goals:
@@ -158,11 +161,54 @@ Goal: make the static model closer to Pine without weakening runtime safety.
 Current baseline:
 
 - qualifiers use the current `const < input < simple < series` model;
+- explicit scalar typed declarations preserve non-`na` initializer qualifiers,
+  while explicit scalar typed declarations initialized with `na` can take the
+  qualifier from a later compatible scalar reassignment;
+- const-condition ternary, if-expression, condition-form switch, const-key
+  selector-form switch, final-if UDF returns, and their tuple-destructuring
+  forms preserve the selected branch qualifier for literal, named, or
+  numeric/bool/string/color equality-derived const conditions and const
+  bool/int/string/color selector keys while still checking branch kind
+  compatibility;
 - history offsets accept non-negative integer literals and guarded dynamic integer
   expressions, including `series int`;
+- `ta.pivothigh` and `ta.pivotlow` left/right bar counts accept integer values
+  at any implemented qualifier while runtime guards invalid counts to `na`;
+- `ta.change` length accepts integer values at any implemented qualifier and
+  uses guarded runtime history reads for dynamic lengths;
+- `ta.mom` and `ta.roc` length accept integer values at any implemented
+  qualifier and use guarded runtime history reads for dynamic lengths;
+- `ta.rising` and `ta.falling` length accept integer values at any implemented
+  qualifier and compare against retained source history for dynamic lengths;
+- `ta.highest`, `ta.lowest`, `ta.highestbars`, and `ta.lowestbars` length
+  accept integer values at any implemented qualifier, including length-only
+  default-source overloads, and use retained source history for dynamic lengths;
+- `ta.valuewhen` occurrence accepts integer values at any implemented qualifier
+  and retains per-callsite match state for dynamic occurrence reads;
 - static-only scripts use HIR history metadata to trim committed history;
 - dynamic-history scripts keep full committed history up to the runtime cap;
-- `indicator(..., max_bars_back=N)` bounds dynamic retention;
+- `indicator(..., max_bars_back=N)` and `strategy(..., max_bars_back=N)` with
+  supported non-negative constant integer expressions, including pure
+  UDF-returned and imported exported-UDF-returned constant length values, plus
+  fixture-backed top-level, block expression-statement,
+  `for`/`for...in`/`while` statement-body, statement-context switch block-arm,
+  switch expression block-arm, tuple-destructured switch expression block-arm,
+  if-expression block branch, tuple-destructured if-expression block branch,
+  call-argument block expression / block-result /
+  `for`/`for...in`/`while` loop-result nested expression
+  `max_bars_back(source, N)` helper calls bound dynamic retention when `N` is a
+  supported non-negative constant integer expression, including pure
+  UDF-returned and imported exported-UDF-returned constant length values, for
+  built-in, derived, alias-chain, or direct expression series numeric sources,
+  including stable pure
+  unary/binary/ternary plus pure `if`/`switch`/`for`/`while` expression identity
+  reuse and pure `for...in` over inline `array.from(...)` identity reuse for
+  matching history reads,
+  builtin qualified constants/simple metadata, bar/session flags, positional and
+  fixed-arity named stateless pure math calls, fixed-arity pure `nz`/`fixnan`
+  value-helper calls, pure string numeric-source calls including `str.tonumber`
+  and `str.length`, pure numeric cast calls, and unreassigned pure scalar series
+  declaration aliases;
 - runtime diagnostics and profiles expose dynamic-retention misses and maximum
   missed offsets when dynamic reads exceed the explicit retained bound.
 
@@ -171,7 +217,15 @@ Remaining internal work:
 - more complete scalar `simple` inference;
 - broader use of existing qualifier-bound helper APIs for "at most input" and
   "at most simple" signature rules;
-- per-variable `max_bars_back` declarations or inference;
+- per-variable `max_bars_back` inference beyond the fixture-backed top-level,
+  statement-block, `for`/`for...in`/`while` statement-body,
+  statement-context switch block-arm, switch expression
+  block-arm, tuple-destructured switch expression block-arm, if-expression
+  block branch, tuple-destructured if-expression block branch, and
+  value-producing block-expression prefix-statement/call-argument/block-result/
+  loop-result helper subset, including broader expression-identity reuse beyond
+  stable pure unary/binary/ternary expressions, qualified builtins, pure math
+  calls, pure numeric casts, and scalar alias expressions;
 - broader first-bar, `na`, UDF, loop, array-history, and built-in interaction
   fixtures.
 
@@ -212,7 +266,7 @@ Remaining internal work:
 - generic or bare `array` declarations beyond current fixture-backed element
   kinds;
 - `for...in` iteration beyond the fixture-backed array, matrix-row, UDT-array,
-  and scalar-map key/value subsets;
+  and scalar-map key-only/key/value subsets;
 - richer aliasing, nested collection, history, and rollback rules;
 - `varip` support for non-scalar collection families only after realtime handoff
   is designed.
@@ -247,33 +301,42 @@ side-effect boundaries.
 
 Current baseline:
 
-- local scalar-field UDT construction, reads, ordinary variables, and `var`
+- local scalar-tree UDT construction, reads, ordinary variables, and `var`
   persistence;
 - local typed UDT declarations from fixture-backed same-UDT expressions;
 - pure local UDT methods with receiver, local UDT parameter passthrough, nested
-  method passthrough, constructor helpers, and selected control-flow returns;
+  method passthrough, ternary-expression alias passthrough, constructor helpers,
+  and selected control-flow returns;
 - exact-key source graph import subset for exported const expressions, pure
-  exported functions, scalar-field imported UDT constructors with direct field
-  reads, ordinary same-imported-UDT reassignment, and scalar-field imported UDT
-  typed declarations initialized or reassigned from the same imported identity,
-  imported UDT ternary, `if`, `switch`, `while`, and `for` expression results
-  from the same imported identity, plus imported UDT UDF direct or nested parameter
-  passthrough, direct or nested constructor-return results, and ordinary
-  imported UDT `var` declarations, scalar-field same-imported-identity
-  `varip` declarations, and scalar-field mutation in top-level, branch,
-  `for`-loop, `while`-loop, and UDF-local statement contexts.
+  exported functions, scalar-tree imported UDT constructors with direct and
+  nested field reads, ordinary same-imported-UDT reassignment, and scalar-tree
+  imported UDT typed declarations initialized or reassigned from the same
+  imported identity, imported UDT ternary, `if`, `switch`, `while`, and `for`
+  expression results from the same imported identity, plus imported UDT UDF
+  direct, ternary-expression alias, final-`for in`, final-`while`,
+  switch-expression alias, or nested parameter passthrough, direct or nested
+  constructor-return results, and ordinary imported UDT `var` declarations,
+  scalar-tree same-imported-identity `varip` declarations, and scalar-tree
+  root-field replacement in top-level, branch, `for`-loop, `while`-loop, and
+  UDF-local statement contexts, plus receiver-style or alias-qualified
+  scalar-tree imported UDT method ternary-expression alias passthrough and
+  alias-qualified imported method calls over direct same-imported receiver
+  expressions, including direct constructor receiver expressions and
+  named/reordered non-receiver arguments.
 
 Remaining internal work:
 
 - broader imported UDT identity flow across source graphs, including history
   and collections;
-- broader imported methods beyond the receiver-style scalar imported UDT subset;
-- UDT arrays beyond the same-local scalar-field subset and UDT history
-  references;
-- broader `varip` UDT values beyond the typed same-local scalar-field subset;
+- broader imported methods beyond the scalar-tree imported UDT subset, with
+  imported constructor and imported method call-result receiver chains covered
+  by the current parser-normalized receiver-style path;
+- UDT arrays beyond the fixture-backed same-local and same-imported scalar-tree
+  subsets, and UDT history references beyond the current value shapes;
+- broader `varip` UDT values beyond the typed/direct-constructor scalar-tree subset;
 - side effects inside methods or UDFs, if ever accepted;
-- clearer diagnostics for unsupported imported UDT, broader imported method, and method
-  side-effect boundaries.
+- clearer diagnostics for unsupported imported UDT and method side-effect
+  boundaries.
 
 Non-goals:
 
@@ -283,8 +346,8 @@ Non-goals:
 
 Good next slice:
 
-- one diagnostics fixture/message improvement for an unsupported UDT or method
-  boundary, or a design gate for imported UDT identity.
+- one additional positive imported-method value-flow slice or a diagnostics
+  fixture/message improvement for an unsupported UDT or method boundary.
 
 The imported UDT identity design gate is closed in
 `docs/PURE_INTERNAL_IMPORTED_UDT_DESIGN.md`. Use it before any positive imported
@@ -292,7 +355,7 @@ UDT constructor, value, assignment, or method support.
 
 The UDT `varip` design gate is closed in
 `docs/PURE_INTERNAL_UDT_VARIP_DESIGN.md`. The typed and direct-constructor
-same-local scalar-field subset is fixture-backed; use the gate before broadening
+same-local scalar-tree subset is fixture-backed; use the gate before broadening
 UDT `varip` value support.
 
 ## Direction 5: Pure Built-In Coverage

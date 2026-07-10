@@ -1,0 +1,14 @@
+//@version=6
+indicator("Supported na return qualifier")
+
+input_source = input.bool(true, "Input source")
+simple_source = timeframe.isdaily
+series_source = close
+
+input_result = na(input_source)
+simple_result = na(simple_source)
+series_result = na(series_source)
+
+plot(ta.alma(close, 4, 0.85, 6, input_result))
+plot(ta.alma(close, 4, 0.85, 6, simple_result))
+plot(series_result ? 1 : 0)

@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported plotbar Simple Show Last")
+
+values = array.new_int(1, 1)
+
+plotbar(open, high, low, close, show_last=array.size(values))

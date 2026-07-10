@@ -11,6 +11,10 @@ pub(crate) const CONTROL_FLOW_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixtur
     ),
     ("runtime_switch.json", "tests/fixtures/runtime/switch.pine"),
     (
+        "runtime_switch_statement_form.json",
+        "tests/fixtures/runtime/switch_statement_form.pine",
+    ),
+    (
         "runtime_block_statements.json",
         "tests/fixtures/runtime/block_statements.pine",
     ),
@@ -201,6 +205,10 @@ pub(crate) const CONTROL_FLOW_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixtur
         "tests/fixtures/runtime/dynamic_history_scopes.pine",
     ),
     (
+        "runtime_dynamic_history_integer_result_offsets.json",
+        "tests/fixtures/runtime/dynamic_history_integer_result_offsets.pine",
+    ),
+    (
         "runtime_series_history_offset.json",
         "tests/fixtures/runtime/series_history_offset.pine",
     ),
@@ -213,12 +221,32 @@ pub(crate) const CONTROL_FLOW_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixtur
         "tests/fixtures/runtime/series_history_offset_udf_return.pine",
     ),
     (
+        "runtime_series_history_offset_udf_series_return.json",
+        "tests/fixtures/runtime/series_history_offset_udf_series_return.pine",
+    ),
+    (
+        "runtime_series_history_offset_method_return.json",
+        "tests/fixtures/runtime/series_history_offset_method_return.pine",
+    ),
+    (
         "runtime_series_history_offset_loop.json",
         "tests/fixtures/runtime/series_history_offset_loop.pine",
     ),
     (
+        "runtime_series_history_offset_for_in.json",
+        "tests/fixtures/runtime/series_history_offset_for_in.pine",
+    ),
+    (
         "runtime_series_history_offset_branch.json",
         "tests/fixtures/runtime/series_history_offset_branch.pine",
+    ),
+    (
+        "runtime_series_history_offset_switch.json",
+        "tests/fixtures/runtime/series_history_offset_switch.pine",
+    ),
+    (
+        "runtime_series_history_offset_statement_switch.json",
+        "tests/fixtures/runtime/series_history_offset_statement_switch.pine",
     ),
     (
         "runtime_series_history_offset_while.json",
@@ -233,6 +261,10 @@ pub(crate) const CONTROL_FLOW_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixtur
         "tests/fixtures/runtime/series_history_offset_stateful_builtin.pine",
     ),
     (
+        "runtime_series_history_offset_ta_tuple_return.json",
+        "tests/fixtures/runtime/series_history_offset_ta_tuple_return.pine",
+    ),
+    (
         "runtime_series_history_offset_builtin_return.json",
         "tests/fixtures/runtime/series_history_offset_builtin_return.pine",
     ),
@@ -245,6 +277,14 @@ pub(crate) const CONTROL_FLOW_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixtur
         "tests/fixtures/runtime/max_bars_back_function.pine",
     ),
     (
+        "runtime_max_bars_back_function_named.json",
+        "tests/fixtures/runtime/max_bars_back_function_named.pine",
+    ),
+    (
+        "runtime_max_bars_back_function_contexts.json",
+        "tests/fixtures/runtime/max_bars_back_function_contexts.pine",
+    ),
+    (
         "runtime_varip_scalar.json",
         "tests/fixtures/runtime/varip_scalar.pine",
     ),
@@ -255,6 +295,10 @@ pub(crate) const CONTROL_FLOW_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixtur
     (
         "runtime_varip_array.json",
         "tests/fixtures/runtime/varip_array.pine",
+    ),
+    (
+        "runtime_chart_point_varip.json",
+        "tests/fixtures/runtime/chart_point_varip.pine",
     ),
     (
         "runtime_user_type_varip.json",
@@ -273,7 +317,15 @@ pub(crate) const CONTROL_FLOW_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixtur
         "tests/fixtures/runtime/user_type_functions.pine",
     ),
     (
+        "runtime_user_type_typed_udf_params.json",
+        "tests/fixtures/runtime/user_type_typed_udf_params.pine",
+    ),
+    (
         "runtime_user_methods.json",
         "tests/fixtures/runtime/user_methods.pine",
+    ),
+    (
+        "runtime_local_constructor_method_receiver.json",
+        "tests/fixtures/runtime/local_constructor_method_receiver.pine",
     ),
 ];

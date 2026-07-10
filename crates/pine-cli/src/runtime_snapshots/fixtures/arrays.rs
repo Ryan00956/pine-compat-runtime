@@ -15,6 +15,10 @@ pub(crate) const ARRAY_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/computed_array_operands.pine",
     ),
     (
+        "runtime_array_na_simple_int_params.json",
+        "tests/fixtures/runtime/array_na_simple_int_params.pine",
+    ),
+    (
         "runtime_array_from.json",
         "tests/fixtures/runtime/array_from.pine",
     ),
@@ -39,12 +43,32 @@ pub(crate) const ARRAY_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/user_type_array_typed_declarations.pine",
     ),
     (
+        "runtime_user_type_array_scalar_tree.json",
+        "tests/fixtures/runtime/user_type_array_scalar_tree.pine",
+    ),
+    (
+        "runtime_user_type_array_scalar_tree_helpers.json",
+        "tests/fixtures/runtime/user_type_array_scalar_tree_helpers.pine",
+    ),
+    (
         "runtime_user_type_array_varip.json",
         "tests/fixtures/runtime/user_type_array_varip.pine",
     ),
     (
         "runtime_user_type_array_history.json",
         "tests/fixtures/runtime/user_type_array_history.pine",
+    ),
+    (
+        "runtime_user_type_history.json",
+        "tests/fixtures/runtime/user_type_history.pine",
+    ),
+    (
+        "runtime_user_type_non_scalar_typed_na_history.json",
+        "tests/fixtures/runtime/user_type_non_scalar_typed_na_history.pine",
+    ),
+    (
+        "runtime_user_type_non_scalar_constructed_history.json",
+        "tests/fixtures/runtime/user_type_non_scalar_constructed_history.pine",
     ),
     (
         "runtime_user_type_array_writeback.json",

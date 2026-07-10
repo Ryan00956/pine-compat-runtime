@@ -130,6 +130,13 @@ impl Parser {
                 left = self.finish_call(left)?;
                 continue;
             }
+            if self.at(TokenKind::Dot)
+                && self.nth_is_identifier(1)
+                && self.nth_at(2, TokenKind::LParen)
+            {
+                left = self.finish_call_result_method_call(left)?;
+                continue;
+            }
             if self.at(TokenKind::LBracket) {
                 left = self.finish_history(left)?;
                 continue;
@@ -537,6 +544,73 @@ impl Parser {
         })
     }
 
+    fn finish_call_result_method_call(&mut self, receiver: Expr) -> Option<Expr> {
+        let Some(alias) = call_result_import_alias(&receiver) else {
+            self.error_here(
+                "E_PARSE_EXPR",
+                "method calls on call-result receivers require an imported UDT constructor or imported method result receiver",
+            );
+            return None;
+        };
+        let start = receiver.span;
+        let receiver_span = receiver.span;
+        self.expect(TokenKind::Dot, "expected `.` before method name")?;
+        let method_span = self.current().span;
+        let TokenKind::Identifier(method_name) = self.current().kind.clone() else {
+            self.error_here("E_PARSE_NAME", "expected method name after `.`");
+            return None;
+        };
+        self.bump();
+        self.expect(TokenKind::LParen, "expected `(` after method name")?;
+
+        let mut args = vec![CallArg {
+            name: None,
+            value: receiver,
+            span: receiver_span,
+        }];
+
+        if !self.at(TokenKind::RParen) {
+            loop {
+                let arg_start = self.current().span;
+                let name = if let TokenKind::Identifier(name) = self.current().kind.clone() {
+                    if self.nth_at(1, TokenKind::Eq) {
+                        self.bump();
+                        self.bump();
+                        Some(name)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+                let value = self.parse_expr(0)?;
+                args.push(CallArg {
+                    span: arg_start.merge(value.span),
+                    name,
+                    value,
+                });
+
+                if self.at(TokenKind::Comma) {
+                    self.bump();
+                    continue;
+                }
+                break;
+            }
+        }
+
+        let end = self.expect(TokenKind::RParen, "expected `)` after arguments")?;
+        Some(Expr {
+            span: start.merge(end),
+            kind: ExprKind::Call {
+                callee: Box::new(Expr {
+                    span: method_span,
+                    kind: ExprKind::QualifiedName(vec![alias, method_name]),
+                }),
+                args,
+            },
+        })
+    }
+
     fn finish_history(&mut self, expr: Expr) -> Option<Expr> {
         self.expect(TokenKind::LBracket, "expected `[`")?;
         let offset = self.parse_expr(0)?;
@@ -567,6 +641,13 @@ impl Parser {
             TokenKind::Percent => Some((BinaryOp::Mod, 12, 13)),
             _ => None,
         }
+    }
+
+    fn nth_is_identifier(&self, n: usize) -> bool {
+        matches!(
+            self.tokens.get(self.pos + n).map(|token| &token.kind),
+            Some(TokenKind::Identifier(_))
+        )
     }
 
     fn skip_newlines(&mut self) {
@@ -675,4 +756,49 @@ impl Parser {
             self.pos += 1;
         }
     }
+}
+
+fn call_result_import_alias(receiver: &Expr) -> Option<String> {
+    let ExprKind::Call { callee, .. } = &receiver.kind else {
+        return None;
+    };
+    let ExprKind::QualifiedName(parts) = &callee.kind else {
+        return None;
+    };
+    match parts.as_slice() {
+        [alias, _method] if !is_builtin_namespace(alias) => Some(alias.clone()),
+        [alias, _type_name, constructor]
+            if constructor == "new" && !is_builtin_namespace(alias) =>
+        {
+            Some(alias.clone())
+        }
+        _ => None,
+    }
+}
+
+fn is_builtin_namespace(name: &str) -> bool {
+    matches!(
+        name,
+        "array"
+            | "box"
+            | "chart"
+            | "color"
+            | "hline"
+            | "label"
+            | "line"
+            | "linefill"
+            | "map"
+            | "math"
+            | "matrix"
+            | "plot"
+            | "polyline"
+            | "request"
+            | "str"
+            | "strategy"
+            | "syminfo"
+            | "ta"
+            | "table"
+            | "ticker"
+            | "timeframe"
+    )
 }

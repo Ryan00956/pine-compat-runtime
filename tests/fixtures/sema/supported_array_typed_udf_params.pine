@@ -1,0 +1,12 @@
+//@version=5
+indicator("Supported array typed UDF params")
+
+first_int(array<int> values) =>
+    array.get(values, 0)
+
+first_float(float[] values) =>
+    array.get(values, 0)
+
+ints = array.from(bar_index + 1, bar_index + 10)
+floats = array.from(close + 0.5, close + 10.5)
+plot(first_int(ints) + first_float(floats))

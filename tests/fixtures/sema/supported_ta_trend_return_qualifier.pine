@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported ta trend return qualifier")
+
+rising_value = ta.rising(close, 3)
+falling_value = ta.falling(open, 2)
+
+plot(rising_value ? 1 : 0)
+plot(falling_value ? 1 : 0)

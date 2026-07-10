@@ -1641,7 +1641,7 @@ def test_compile_script_reports_unsupported_user_type_varip_fixture():
         assert "E_UNSUPPORTED_FEATURE" in message
         assert "`varip` is not supported" in message
         assert (
-            "UDT varip supports only explicit scalar-field declarations"
+            "UDT varip supports only explicit scalar-tree declarations"
             in message
         )
     else:

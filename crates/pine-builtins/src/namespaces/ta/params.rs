@@ -12,12 +12,12 @@ pub(super) const TA_SOURCE_LENGTH_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "length",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
 ];
 
-pub(super) const TA_SOURCE_LENGTH_OFFSET_PARAMS: &[BuiltinParam] = &[
+pub(super) const TA_SOURCE_DYNAMIC_LENGTH_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
         accepts: Accepts::SeriesNumeric,
@@ -25,12 +25,25 @@ pub(super) const TA_SOURCE_LENGTH_OFFSET_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "length",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+];
+
+pub(super) const TA_SOURCE_DYNAMIC_LENGTH_OFFSET_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::SeriesNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "length",
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "offset",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
 ];
@@ -43,12 +56,12 @@ pub(super) const TA_PIVOT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "leftbars",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "rightbars",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
 ];
@@ -79,22 +92,22 @@ pub(super) const TA_ALMA_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "length",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "offset",
-        accepts: Accepts::SimpleNumeric,
+        accepts: Accepts::SimpleNumericCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "sigma",
-        accepts: Accepts::SimpleNumeric,
+        accepts: Accepts::SimpleNumericCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "floor",
-        accepts: Accepts::SimpleBool,
+        accepts: Accepts::SimpleBoolCompatible,
         optional: true,
     },
 ];
@@ -124,12 +137,12 @@ pub(super) const TA_VWAP_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "stdev_mult",
-        accepts: Accepts::SimpleNumeric,
+        accepts: Accepts::SimpleNumericCompatible,
         optional: true,
     },
 ];
 
-pub(super) const TA_SOURCE_LENGTH_BIASED_PARAMS: &[BuiltinParam] = &[
+pub(super) const TA_SOURCE_DYNAMIC_LENGTH_BIASED_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
         accepts: Accepts::SeriesNumeric,
@@ -137,7 +150,7 @@ pub(super) const TA_SOURCE_LENGTH_BIASED_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "length",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
@@ -147,7 +160,7 @@ pub(super) const TA_SOURCE_LENGTH_BIASED_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
-pub(super) const TA_SOURCE_OR_SIMPLE_LENGTH_PARAMS: &[BuiltinParam] = &[
+pub(super) const TA_SOURCE_OR_SIMPLE_DYNAMIC_LENGTH_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
         accepts: Accepts::SeriesOrSimpleNumeric,
@@ -155,12 +168,12 @@ pub(super) const TA_SOURCE_OR_SIMPLE_LENGTH_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "length",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
 ];
 
-pub(super) const TA_SOURCE_LENGTH_PERCENTAGE_PARAMS: &[BuiltinParam] = &[
+pub(super) const TA_SOURCE_DYNAMIC_LENGTH_PERCENTAGE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
         accepts: Accepts::SeriesOrSimpleNumeric,
@@ -168,12 +181,12 @@ pub(super) const TA_SOURCE_LENGTH_PERCENTAGE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "length",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "percentage",
-        accepts: Accepts::AtMostInputNumeric,
+        accepts: Accepts::SimpleNumericCompatible,
         optional: false,
     },
 ];
@@ -197,7 +210,7 @@ pub(super) const TA_VALUEWHEN_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "occurrence",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
 ];
@@ -210,7 +223,7 @@ pub(super) const TA_SOURCE_OPTIONAL_LENGTH_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "length",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: true,
     },
 ];
@@ -228,7 +241,7 @@ pub(super) const TA_TWO_SOURCE_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
-pub(super) const TA_TWO_SOURCE_LENGTH_PARAMS: &[BuiltinParam] = &[
+pub(super) const TA_TWO_SOURCE_DYNAMIC_LENGTH_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source1",
         accepts: Accepts::SeriesOrSimpleNumeric,
@@ -241,7 +254,7 @@ pub(super) const TA_TWO_SOURCE_LENGTH_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "length",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
 ];
@@ -264,14 +277,20 @@ pub(super) const TA_STOCH_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "length",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
 ];
 
+pub(super) const TA_DYNAMIC_LENGTH_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "length",
+    accepts: Accepts::IntCompatible,
+    optional: false,
+}];
+
 pub(super) const TA_LENGTH_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "length",
-    accepts: Accepts::SimpleInt,
+    accepts: Accepts::SimpleIntCompatible,
     optional: false,
 }];
 
@@ -293,17 +312,17 @@ pub(super) const TA_MACD_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "fastlen",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "slowlen",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "siglen",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
 ];
@@ -316,12 +335,12 @@ pub(super) const TA_TSI_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "short_length",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "long_length",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
 ];
@@ -334,12 +353,12 @@ pub(super) const TA_BB_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "length",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "mult",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::NumericCompatible,
         optional: false,
     },
 ];
@@ -352,12 +371,12 @@ pub(super) const TA_KC_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "length",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "mult",
-        accepts: Accepts::SimpleNumeric,
+        accepts: Accepts::SimpleNumericCompatible,
         optional: false,
     },
     BuiltinParam {
@@ -370,12 +389,12 @@ pub(super) const TA_KC_PARAMS: &[BuiltinParam] = &[
 pub(super) const TA_SUPERTREND_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "factor",
-        accepts: Accepts::SimpleNumeric,
+        accepts: Accepts::SimpleNumericCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "atrPeriod",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
 ];
@@ -383,12 +402,12 @@ pub(super) const TA_SUPERTREND_PARAMS: &[BuiltinParam] = &[
 pub(super) const TA_DMI_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "diLength",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "adxSmoothing",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
 ];
@@ -396,17 +415,17 @@ pub(super) const TA_DMI_PARAMS: &[BuiltinParam] = &[
 pub(super) const TA_SAR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "start",
-        accepts: Accepts::SimpleNumeric,
+        accepts: Accepts::SimpleNumericCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "inc",
-        accepts: Accepts::SimpleNumeric,
+        accepts: Accepts::SimpleNumericCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "max",
-        accepts: Accepts::SimpleNumeric,
+        accepts: Accepts::SimpleNumericCompatible,
         optional: false,
     },
 ];

@@ -192,7 +192,11 @@ const IMPORTED_UDT_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/import_udt_var.pine",
     "tests/fixtures/runtime/import_udt_varip.pine",
     "tests/fixtures/runtime/import_udt_history.pine",
+    "tests/fixtures/runtime/import_udt_private_dependency_history.pine",
     "tests/fixtures/runtime/import_udt_array_from.pine",
+    "tests/fixtures/runtime/import_udt_array_new.pine",
+    "tests/fixtures/runtime/import_udt_array_scalar_tree.pine",
+    "tests/fixtures/runtime/import_udt_array_sort_field.pine",
     "tests/fixtures/runtime/import_udt_field_mutation.pine",
     "tests/fixtures/runtime/import_udt_field_mutation_control_flow.pine",
     "tests/fixtures/runtime/import_udt_ternary.pine",
@@ -201,6 +205,8 @@ const IMPORTED_UDT_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/import_udt_while_expression.pine",
     "tests/fixtures/runtime/import_udt_for_expression.pine",
     "tests/fixtures/runtime/import_udt_udf_passthrough.pine",
+    "tests/fixtures/runtime/import_udt_array_typed_udf_params.pine",
+    "tests/fixtures/runtime/import_udt_array_typed_method_params.pine",
     "tests/fixtures/runtime/import_udt_udf_nested_passthrough.pine",
     "tests/fixtures/runtime/import_udt_udf_constructor_return.pine",
     "tests/fixtures/runtime/import_udt_udf_local_field_mutation.pine",
@@ -221,9 +227,9 @@ const IMPORTED_UDT_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/unsupported_imported_udt_parameter_field_mutation.pine",
     "tests/fixtures/sema/unsupported_imported_udt_global_field_mutation.pine",
     "tests/fixtures/sema/unsupported_imported_udt_nested_field_mutation.pine",
-    "tests/fixtures/sema/unsupported_imported_udt_array_decl.pine",
-    "tests/fixtures/sema/unsupported_imported_udt_array_alias_decl.pine",
-    "tests/fixtures/syntax/unsupported_imported_udt_array_new.pine",
+    "tests/fixtures/sema/supported_imported_udt_array_decl.pine",
+    "tests/fixtures/sema/supported_imported_udt_array_alias_decl.pine",
+    "tests/fixtures/sema/supported_imported_udt_array_new.pine",
     "tests/fixtures/sema/unsupported_imported_udt_assignment_identity.pine",
     "tests/fixtures/sema/unsupported_imported_udt_typed_decl_identity.pine",
     "tests/fixtures/sema/unsupported_imported_udt_var_identity.pine",
@@ -243,6 +249,7 @@ const IMPORTED_UDT_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/import_udt_method_block_return.pine",
     "tests/fixtures/runtime/import_udt_method_if_return.pine",
     "tests/fixtures/runtime/import_udt_method_for_return.pine",
+    "tests/fixtures/runtime/import_udt_method_while_switch_return.pine",
     "tests/fixtures/runtime/import_udt_method_nested_return.pine",
     "tests/fixtures/runtime/import_udt_method_local_field_mutation.pine",
     "tests/fixtures/runtime/import_udt_method_constructor_return.pine",
@@ -254,15 +261,18 @@ const UDT_VARIP_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/realtime/user_type_varip.pine",
     "tests/fixtures/runtime/user_type_array_varip.pine",
     "tests/fixtures/realtime/user_type_array_varip.pine",
+    "tests/fixtures/sema/supported_user_type_varip_decl.pine",
     "tests/fixtures/sema/supported_user_type_array_varip_decl.pine",
     "tests/fixtures/runtime/import_udt_varip.pine",
     "tests/fixtures/realtime/import_udt_varip.pine",
     "tests/fixtures/runtime/import_udt_array_varip.pine",
     "tests/fixtures/realtime/import_udt_array_varip.pine",
+    "tests/fixtures/sema/supported_imported_udt_varip_decl.pine",
     "tests/fixtures/sema/unsupported_user_type_varip.pine",
-    "tests/fixtures/sema/unsupported_user_type_array_varip_decl.pine",
-    "tests/fixtures/sema/unsupported_imported_udt_array_varip_decl.pine",
-    "tests/fixtures/sema/unsupported_user_type_varip_nested_field.pine",
+    "tests/fixtures/sema/supported_user_type_array_varip_nested_decl.pine",
+    "tests/fixtures/sema/supported_imported_udt_array_decl.pine",
+    "tests/fixtures/sema/supported_imported_udt_array_alias_decl.pine",
+    "tests/fixtures/sema/supported_imported_udt_array_varip_nested_decl.pine",
     "tests/fixtures/sema/unsupported_user_type_varip_assign_identity.pine",
     "tests/fixtures/sema/unsupported_imported_udt_varip.pine",
     "tests/fixtures/sema/unsupported_imported_udt_varip_identity.pine",
@@ -284,6 +294,7 @@ pub(super) fn validate_entry(
         notes,
         fixtures,
     )?;
+    validate_scalar_tree_udt_contract_notes(line_number, feature, notes)?;
     validate_label_getter_feature(line_number, feature)?;
     validate_array_unsupported_type_fixture_paths(line_number, feature, notes, fixtures)?;
     validate_switch_statement_block_fixture_paths(line_number, feature, fixtures)?;
@@ -296,6 +307,27 @@ pub(super) fn validate_entry(
     validate_matrix_unsupported_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_typed_declaration_collection_fixture_paths(line_number, feature, fixtures)?;
     strategy::validate_entry(line_number, feature, fixtures)?;
+
+    Ok(())
+}
+
+fn validate_scalar_tree_udt_contract_notes(
+    line_number: usize,
+    feature: &str,
+    notes: &str,
+) -> Result<(), String> {
+    for stale_phrase in [
+        "same-local scalar-field UDT array",
+        "same-local scalar-field UDT-array",
+        "same-imported scalar-field UDT",
+        "non-scalar-field UDT",
+    ] {
+        if notes.contains(stale_phrase) {
+            return Err(format!(
+                "line {line_number}: `{feature}` uses stale UDT boundary phrase `{stale_phrase}`; use scalar-tree terminology for the fixture-backed UDT subset"
+            ));
+        }
+    }
 
     Ok(())
 }
@@ -430,7 +462,7 @@ fn validate_imported_udt_boundary_fixture_paths(
     for fixture in IMPORTED_UDT_BOUNDARY_FIXTURES {
         if !fixtures.contains(fixture) {
             return Err(format!(
-                "line {line_number}: `import` must reference `{fixture}` while imported UDT support remains limited to the fixture-backed scalar-field identity subset"
+                "line {line_number}: `import` must reference `{fixture}` while imported UDT support remains limited to the fixture-backed scalar-tree identity subset"
             ));
         }
     }
@@ -450,7 +482,7 @@ fn validate_udt_varip_boundary_fixture_paths(
     for fixture in UDT_VARIP_BOUNDARY_FIXTURES {
         if !fixtures.contains(fixture) {
             return Err(format!(
-                "line {line_number}: `user-defined types` must reference `{fixture}` while UDT varip support remains limited to the fixture-backed scalar-field local/imported subset"
+                "line {line_number}: `user-defined types` must reference `{fixture}` while UDT varip support remains limited to the fixture-backed scalar-tree local/imported subset"
             ));
         }
     }
@@ -581,12 +613,12 @@ fn validate_typed_declaration_collection_fixture_paths(
         "tests/fixtures/sema/unsupported_array_na_typed_decl.pine",
         "tests/fixtures/sema/unsupported_array_from_typed_decl.pine",
         "tests/fixtures/sema/unsupported_array_typed_decl_initial.pine",
-        "tests/fixtures/sema/unsupported_user_type_array_decl.pine",
-        "tests/fixtures/sema/unsupported_user_type_array_alias_decl.pine",
+        "tests/fixtures/sema/supported_user_type_array_decl.pine",
+        "tests/fixtures/sema/supported_user_type_array_alias_decl.pine",
         "tests/fixtures/sema/unsupported_user_type_array_from_decl.pine",
         "tests/fixtures/runtime/user_type_array_varip.pine",
         "tests/fixtures/sema/supported_user_type_array_varip_decl.pine",
-        "tests/fixtures/sema/unsupported_user_type_array_varip_decl.pine",
+        "tests/fixtures/sema/supported_user_type_array_varip_nested_decl.pine",
         "tests/fixtures/sema/unsupported_array_map_typed_decl.pine",
         "tests/fixtures/sema/unsupported_array_matrix_typed_decl.pine",
         "tests/fixtures/sema/unsupported_array_nested_typed_decl.pine",
@@ -831,6 +863,16 @@ mod tests {
     }
 
     #[test]
+    fn rejects_stale_scalar_field_udt_boundary_notes() {
+        let tsv = "feature\tstatus\tnotes\tfixtures\narray.from\tpartial\tsame-imported scalar-field UDT element kinds remain fixture-backed\ttests/fixtures/runtime/array_from_udt_size.pine\n";
+        let error = try_conformance_entries_from_tsv(tsv)
+            .expect_err("stale scalar-field UDT boundary phrase should fail");
+
+        assert!(error.contains("same-imported scalar-field UDT"));
+        assert!(error.contains("scalar-tree terminology"));
+    }
+
+    #[test]
     fn rejects_typed_declarations_without_collection_boundary_fixtures() {
         let fixtures = [
             "tests/fixtures/runtime/scalar_typed_declarations.pine",
@@ -839,12 +881,12 @@ mod tests {
             "tests/fixtures/sema/unsupported_array_na_typed_decl.pine",
             "tests/fixtures/sema/unsupported_array_from_typed_decl.pine",
             "tests/fixtures/sema/unsupported_array_typed_decl_initial.pine",
-            "tests/fixtures/sema/unsupported_user_type_array_decl.pine",
-            "tests/fixtures/sema/unsupported_user_type_array_alias_decl.pine",
+            "tests/fixtures/sema/supported_user_type_array_decl.pine",
+            "tests/fixtures/sema/supported_user_type_array_alias_decl.pine",
             "tests/fixtures/sema/unsupported_user_type_array_from_decl.pine",
             "tests/fixtures/runtime/user_type_array_varip.pine",
             "tests/fixtures/sema/supported_user_type_array_varip_decl.pine",
-            "tests/fixtures/sema/unsupported_user_type_array_varip_decl.pine",
+            "tests/fixtures/sema/supported_user_type_array_varip_nested_decl.pine",
             "tests/fixtures/sema/unsupported_array_map_typed_decl.pine",
             "tests/fixtures/sema/unsupported_array_nested_typed_decl.pine",
             "tests/fixtures/sema/unsupported_array_tuple_typed_decl.pine",
@@ -946,7 +988,7 @@ mod tests {
         );
 
         let tsv = format!(
-            "feature\tstatus\tnotes\tfixtures\nimport\tpartial\timported UDT identity is supported for the scalar-field subset plus receiver-style scalar imported UDT methods including direct same-identity, block-local alias, final-if alias, final-for alias, and nested-method passthrough plus constructor returns, and method-local field mutation while  remain unsupported\t{}\n",
+            "feature\tstatus\tnotes\tfixtures\nimport\tpartial\timported UDT identity is supported for the scalar-tree subset plus receiver-style scalar imported UDT methods including direct same-identity, block-local alias, final-if alias, final-for alias, final-while alias, switch-expression alias, and nested-method passthrough plus constructor returns, and method-local field mutation while broader imported method flow remains unsupported\t{}\n",
             fixtures.join(";")
         );
         let error = try_conformance_entries_from_tsv(&tsv)
@@ -957,7 +999,7 @@ mod tests {
 
     #[test]
     fn rejects_user_defined_types_row_without_udt_varip_boundary_fixture_set() {
-        let missing = "tests/fixtures/sema/unsupported_user_type_varip_nested_field.pine";
+        let missing = "tests/fixtures/sema/unsupported_imported_udt_varip.pine";
         let mut fixtures = vec!["tests/fixtures/runtime/user_types.pine"];
         fixtures.extend(
             UDT_VARIP_BOUNDARY_FIXTURES
@@ -967,7 +1009,7 @@ mod tests {
         );
 
         let tsv = format!(
-            "feature\tstatus\tnotes\tfixtures\nuser-defined types\tpartial\tUDT varip is limited to scalar-field local and imported identities while nested-field UDT varip remains unsupported\t{}\n",
+            "feature\tstatus\tnotes\tfixtures\nuser-defined types\tpartial\tUDT varip supports scalar-tree local and imported identities while unresolved imported UDT varip remains unsupported\t{}\n",
             fixtures.join(";")
         );
         let error = try_conformance_entries_from_tsv(&tsv)

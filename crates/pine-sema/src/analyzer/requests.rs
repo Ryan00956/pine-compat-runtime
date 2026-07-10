@@ -142,7 +142,7 @@ impl Analyzer {
                     }
                 },
             };
-            let Some(value) = const_string_value(&arg.value) else {
+            let Some(value) = self.known_const_string_value(&arg.value) else {
                 continue;
             };
             let allowed_value = if allowed_name == "gaps" {

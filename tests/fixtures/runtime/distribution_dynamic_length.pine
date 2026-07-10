@@ -1,0 +1,9 @@
+//@version=5
+indicator("Distribution dynamic length")
+length = bar_index % 2 + 2
+plot(ta.median(close, length))
+plot(ta.mode(close, length))
+plot(ta.percentrank(close, length))
+plot(ta.median(source=3, length=length))
+plot(ta.mode(length=length, source=3))
+plot(ta.percentrank(length=length, source=3))

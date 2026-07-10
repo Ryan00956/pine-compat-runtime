@@ -1,0 +1,7 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Dynamic negative history offset imported UDT field method return")
+
+source = lib.Offset.new(0)
+offset = source.make(bar_index == 0 ? 0 : -1)
+plot(close[offset.value])

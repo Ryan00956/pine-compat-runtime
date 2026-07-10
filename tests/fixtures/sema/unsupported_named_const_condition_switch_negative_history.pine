@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported named const condition switch negative history")
+use_short = true
+length = switch
+    use_short => -1
+    => 1
+plot(close[length])

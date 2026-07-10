@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported for color selector switch local alias negative history")
+key = for i = 0 to 0
+    value = color.red
+    value
+length = switch key
+    color.red => -1
+    => 1
+plot(close[length])

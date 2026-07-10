@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported UDF final for series bound qualifier")
+loop_length(limit, x) =>
+    for i = 0 to limit
+        x
+length = input.int(2, "Length")
+plot(ta.ema(close, loop_length(bar_index, length)))

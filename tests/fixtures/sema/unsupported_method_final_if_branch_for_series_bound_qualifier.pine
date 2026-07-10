@@ -1,0 +1,16 @@
+//@version=6
+indicator("Unsupported method final-if branch for series bound qualifier")
+
+type QualifierTool
+    int seed
+
+method choose_length(QualifierTool tool, bool flag, int limit, int x) =>
+    if flag
+        for i = 0 to limit
+            x
+    else
+        x
+
+tool = QualifierTool.new(1)
+length = input.int(2, "Length")
+plot(ta.ema(close, tool.choose_length(true, bar_index, length)))

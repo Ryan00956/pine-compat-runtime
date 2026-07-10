@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use pine_syntax::{Expr, ExprKind, FunctionBody, Stmt, StmtKind};
+use pine_syntax::{Expr, ExprKind, FunctionBody, Stmt, StmtKind, SwitchArmResult};
 
 use super::UserTypeIdentity;
 use crate::analyzer::calls::expr_name;
@@ -58,6 +58,12 @@ fn returned_statements_param_index(
         StmtKind::For { body, .. } => {
             returned_statements_param_index(body, params, functions, &aliases, depth)
         }
+        StmtKind::ForIn { body, .. } => {
+            returned_statements_param_index(body, params, functions, &aliases, depth)
+        }
+        StmtKind::While { body, .. } => {
+            returned_statements_param_index(body, params, functions, &aliases, depth)
+        }
         _ => None,
     }
 }
@@ -81,24 +87,73 @@ fn returned_expr_param_index_with_aliases(
     if let Some(returned_name) = identifier_name(expr) {
         return aliased_param_index(returned_name, params, aliases);
     }
-    let ExprKind::Call { callee, args } = &expr.kind else {
-        return None;
-    };
-    let callee_name = expr_name(callee)?;
-    let function = functions.get(&callee_name)?;
-    let returned_param_index =
-        returned_udf_param_index(&function.body, &function.params, functions, depth + 1)?;
-    let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
-    let arg_index = arg_indices
-        .iter()
-        .position(|mapped_param_index| *mapped_param_index == returned_param_index)?;
-    returned_expr_param_index_with_aliases(
-        &args[arg_index].value,
-        params,
-        functions,
-        aliases,
-        depth,
-    )
+    match &expr.kind {
+        ExprKind::Call { callee, args } => {
+            let callee_name = expr_name(callee)?;
+            let function = functions.get(&callee_name)?;
+            let returned_param_index =
+                returned_udf_param_index(&function.body, &function.params, functions, depth + 1)?;
+            let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
+            let arg_index = arg_indices
+                .iter()
+                .position(|mapped_param_index| *mapped_param_index == returned_param_index)?;
+            returned_expr_param_index_with_aliases(
+                &args[arg_index].value,
+                params,
+                functions,
+                aliases,
+                depth,
+            )
+        }
+        ExprKind::Ternary {
+            then_expr,
+            else_expr,
+            ..
+        } => {
+            let then_index = returned_expr_param_index_with_aliases(
+                then_expr, params, functions, aliases, depth,
+            )?;
+            let else_index = returned_expr_param_index_with_aliases(
+                else_expr, params, functions, aliases, depth,
+            )?;
+            (then_index == else_index).then_some(then_index)
+        }
+        ExprKind::Switch { arms, .. } => {
+            let mut resolved = None;
+            for arm in arms {
+                let index = returned_switch_arm_param_index(
+                    &arm.result,
+                    params,
+                    functions,
+                    aliases,
+                    depth,
+                )?;
+                if resolved.is_some_and(|resolved| resolved != index) {
+                    return None;
+                }
+                resolved = Some(index);
+            }
+            resolved
+        }
+        _ => None,
+    }
+}
+
+fn returned_switch_arm_param_index(
+    result: &SwitchArmResult,
+    params: &[String],
+    functions: &HashMap<String, FunctionInfo>,
+    aliases: &HashMap<String, String>,
+    depth: usize,
+) -> Option<usize> {
+    match result {
+        SwitchArmResult::Expr(expr) => {
+            returned_expr_param_index_with_aliases(expr, params, functions, aliases, depth)
+        }
+        SwitchArmResult::Block(statements) => {
+            returned_statements_param_index(statements, params, functions, aliases, depth)
+        }
+    }
 }
 
 fn aliased_param_index(

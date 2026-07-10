@@ -1,0 +1,12 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Unsupported imported UDT for-in identity")
+
+type Point
+    float x
+
+points = array.from(Point.new(close), Point.new(close + 1))
+lib.Point p = for point in points
+    point
+
+plot(close)

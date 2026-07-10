@@ -9,4 +9,7 @@ p = for i = 0 to 2
 lib.Point typed = for i = 0 to 1
     p
 
+p_prior = p[1]
+
 plot(p.x + typed.x)
+plot(p_prior.x)

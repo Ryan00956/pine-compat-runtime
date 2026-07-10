@@ -4,7 +4,94 @@ indicator("Imported UDT UDF nested passthrough")
 
 inner(p) => p
 outer(p) => inner(p)
+innerBlock(p) =>
+    copy = p
+    copy
+innerTernary(p, flip) =>
+    copy = p
+    flip ? copy : p
+innerIf(p, flip) =>
+    if flip
+        copy = p
+        copy
+    else
+        copy = p
+        copy
+innerFor(p, count) =>
+    for i = 0 to count
+        copy = p
+        copy
+innerWhile(p) =>
+    active = true
+    while active
+        copy = p
+        active := false
+        copy
+innerSwitch(p, selector) =>
+    switch selector
+        0 =>
+            copy = p
+            copy
+        =>
+            copy = p
+            copy
+innerForIn(p, values) =>
+    for value in values
+        copy = p
+        copy
+outerBlock(p) => innerBlock(p)
+outerWhile(p) => innerWhile(p)
+outerSwitch(p, selector) => innerSwitch(p, selector)
+outerForIn(p, values) => innerForIn(p, values)
+outerTernary(p) => innerTernary(p, bar_index % 2 == 0)
+outerIf(p) => innerIf(p, bar_index % 2 == 0)
+outerFor(p) => innerFor(p, 2)
 
+steps = array.from(1, 2)
 p = outer(lib.Point.new(close))
 lib.Point typed = outer(lib.Point.new(open))
+blockPoint = outerBlock(lib.Point.new(close + 5))
+lib.Point typedBlock = outerBlock(lib.Point.new(open + 5))
+ternaryPoint = outerTernary(lib.Point.new(close + 2))
+lib.Point typedTernary = outerTernary(lib.Point.new(open + 2))
+ifPoint = outerIf(lib.Point.new(close + 3))
+lib.Point typedIf = outerIf(lib.Point.new(open + 3))
+forPoint = outerFor(lib.Point.new(high + 4))
+lib.Point typedFor = outerFor(lib.Point.new(low + 4))
+whilePoint = outerWhile(lib.Point.new(high))
+lib.Point typedWhile = outerWhile(lib.Point.new(low))
+switchPoint = outerSwitch(lib.Point.new(close + 1), bar_index % 2)
+lib.Point typedSwitch = outerSwitch(lib.Point.new(open + 1), bar_index % 2)
+forInPoint = outerForIn(lib.Point.new(high + 1), steps)
+lib.Point typedForIn = outerForIn(lib.Point.new(low + 1), steps)
+wrapped = outer(lib.Wrapper.new(lib.Point.new(close)))
+lib.Wrapper wrapped_typed = outer(lib.Wrapper.new(lib.Point.new(open)))
+dyn = bar_index == 0 ? na : 1
+p_dynamic = p[dyn]
+p_dynamic_sibling = p[dyn]
+float p_dynamic_x = na
+float p_dynamic_sibling_x_after_mutation = na
+wrapped_dynamic = wrapped[dyn]
+wrapped_dynamic_sibling = wrapped[dyn]
+float wrapped_dynamic_x = na
+float wrapped_dynamic_sibling_x_after_mutation = na
+if bar_index > 0
+    p_dynamic_x := p_dynamic.x
+    p_dynamic.x := close + 700
+    p_dynamic_sibling_x_after_mutation := p_dynamic_sibling.x
+    wrapped_dynamic_x := wrapped_dynamic.nested.x
+    wrapped_dynamic.nested := lib.Point.new(close + 800)
+    wrapped_dynamic_sibling_x_after_mutation := wrapped_dynamic_sibling.nested.x
 plot(p.x + typed.x)
+plot(blockPoint.x + typedBlock.x)
+plot(ternaryPoint.x + typedTernary.x)
+plot(ifPoint.x + typedIf.x)
+plot(forPoint.x + typedFor.x)
+plot(whilePoint.x + typedWhile.x)
+plot(switchPoint.x + typedSwitch.x)
+plot(forInPoint.x + typedForIn.x)
+plot(wrapped.nested.x + wrapped_typed.nested.x)
+plot(p_dynamic_x)
+plot(p_dynamic_sibling_x_after_mutation)
+plot(wrapped_dynamic_x)
+plot(wrapped_dynamic_sibling_x_after_mutation)

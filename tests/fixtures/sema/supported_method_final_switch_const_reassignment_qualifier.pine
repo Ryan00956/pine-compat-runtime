@@ -1,0 +1,31 @@
+//@version=6
+indicator("Supported method final switch const reassignment qualifier")
+
+type Box
+    int seed
+
+method choose_condition_length(Box this, bool flag, int x) =>
+    local = x
+    switch
+        flag =>
+            local := bar_index
+            local
+        =>
+            local
+
+method choose_selector_length(Box this, string mode, int x) =>
+    local = x
+    switch mode
+        "dead" =>
+            local := bar_index
+            local
+        =>
+            local
+
+length = input.int(2, "Length")
+box = Box.new(1)
+condition_chosen = box.choose_condition_length(false, length)
+selector_chosen = box.choose_selector_length("live", length)
+
+plot(ta.ema(close, condition_chosen))
+plot(ta.ema(close, selector_chosen))

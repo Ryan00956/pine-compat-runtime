@@ -1,0 +1,47 @@
+//@version=5
+indicator("Unsupported dynamic history UDT field")
+type Settings
+    float offset
+type SettingsBox
+    Settings settings
+type BoolSettings
+    bool offset
+type StringSettingsBox
+    string offset
+
+makeSettings(float value) => Settings.new(value)
+makeSettingsBox(float value) => SettingsBox.new(Settings.new(value))
+sameSettings(Settings settings) => settings
+sameSettingsBox(SettingsBox box) => box
+
+method same(Settings settings) => settings
+method sameBox(SettingsBox box) => box
+method make(Settings settings, float value) => Settings.new(value)
+method makeBox(Settings settings, float value) => SettingsBox.new(Settings.new(value))
+method makeBool(Settings settings, bool value) => BoolSettings.new(value)
+method makeStringBox(Settings settings, string value) => StringSettingsBox.new(value)
+
+settings = Settings.new(1.5)
+settings_box = SettingsBox.new(Settings.new(2.5))
+udf_same = sameSettings(settings)
+udf_same_box = sameSettingsBox(settings_box)
+udf_settings = makeSettings(bar_index == 0 ? 0.5 : 1.5)
+udf_box = makeSettingsBox(bar_index == 0 ? 0.5 : 1.5)
+method_same = settings.same()
+method_same_box = settings_box.sameBox()
+method_made = settings.make(bar_index == 0 ? 0.5 : 1.5)
+method_box = settings.makeBox(bar_index == 0 ? 0.5 : 1.5)
+method_bool = settings.makeBool(bar_index > 0)
+method_string = settings.makeStringBox(bar_index == 0 ? "0" : "1")
+
+plot(close[settings.offset])
+plot(open[udf_same.offset])
+plot(high[udf_same_box.settings.offset])
+plot(low[udf_settings.offset])
+plot(close[udf_box.settings.offset])
+plot(open[method_same.offset])
+plot(high[method_same_box.settings.offset])
+plot(low[method_made.offset])
+plot(close[method_box.settings.offset])
+plot(low[method_bool.offset])
+plot(close[method_string.offset])

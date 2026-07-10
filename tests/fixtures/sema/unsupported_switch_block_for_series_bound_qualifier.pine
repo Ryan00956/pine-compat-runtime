@@ -1,0 +1,10 @@
+//@version=6
+indicator("Unsupported switch block for series bound qualifier")
+length = input.int(2, "Length")
+selected = switch
+    true =>
+        for i = 0 to bar_index
+            length
+    =>
+        length
+plot(ta.ema(close, selected))

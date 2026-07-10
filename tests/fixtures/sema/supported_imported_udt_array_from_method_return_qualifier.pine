@@ -1,0 +1,9 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Supported imported UDT array.from method return qualifier")
+
+anchor = lib.Point.new(close)
+first = anchor.firstFrom(array.from(lib.Point.new(close + 1), lib.Point.new(close + 2)))
+second = lib.secondFrom(anchor, array.from(lib.Point.new(open + 3), lib.Point.new(open + 4)))
+
+plot(first.x + second.x)

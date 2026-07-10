@@ -1,0 +1,4 @@
+//@version=6
+indicator("Supported hline Input Color")
+level_color = input.color(color.gray, "Level color")
+hline(2, color=level_color)

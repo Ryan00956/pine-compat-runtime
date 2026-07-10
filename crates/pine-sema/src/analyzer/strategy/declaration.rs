@@ -47,8 +47,11 @@ impl Analyzer {
             };
 
             match name {
+                "max_bars_back" => {
+                    self.validate_max_bars_back_bound_value("strategy", "max_bars_back", arg);
+                }
                 "initial_capital" => {
-                    let Some(initial_capital) = const_numeric_value(&arg.value) else {
+                    let Some(initial_capital) = self.known_const_numeric_value(&arg.value) else {
                         continue;
                     };
                     if !initial_capital.is_finite() || initial_capital <= 0.0 {
@@ -63,7 +66,7 @@ impl Analyzer {
                 }
                 "default_qty_type" => {
                     default_qty_type_arg = Some(arg);
-                    let Some(default_qty_type) = const_string_value(&arg.value) else {
+                    let Some(default_qty_type) = self.known_const_string_value(&arg.value) else {
                         continue;
                     };
                     match default_qty_type.as_str() {
@@ -97,7 +100,7 @@ impl Analyzer {
                 }
                 "default_qty_value" => {
                     default_qty_value_arg = Some(arg);
-                    let Some(qty) = const_numeric_value(&arg.value) else {
+                    let Some(qty) = self.known_const_numeric_value(&arg.value) else {
                         continue;
                     };
                     if !qty.is_finite() || qty <= 0.0 {
@@ -112,7 +115,7 @@ impl Analyzer {
                 }
                 "commission_type" => {
                     commission_type_arg = Some(arg);
-                    let Some(commission_type) = const_string_value(&arg.value) else {
+                    let Some(commission_type) = self.known_const_string_value(&arg.value) else {
                         continue;
                     };
                     match commission_type.as_str() {
@@ -146,7 +149,7 @@ impl Analyzer {
                 }
                 "commission_value" => {
                     commission_value_arg = Some(arg);
-                    let Some(value) = const_numeric_value(&arg.value) else {
+                    let Some(value) = self.known_const_numeric_value(&arg.value) else {
                         continue;
                     };
                     if !value.is_finite() || value < 0.0 {
@@ -160,7 +163,7 @@ impl Analyzer {
                     commission_value = Some(value);
                 }
                 "slippage" => {
-                    let Some(value) = const_numeric_value(&arg.value) else {
+                    let Some(value) = self.known_const_numeric_value(&arg.value) else {
                         continue;
                     };
                     if !value.is_finite() || value < 0.0 || value.fract() != 0.0 {
@@ -174,7 +177,7 @@ impl Analyzer {
                     self.strategy_settings.slippage_ticks = value;
                 }
                 "backtest_fill_limits_assumption" => {
-                    let Some(value) = const_numeric_value(&arg.value) else {
+                    let Some(value) = self.known_const_numeric_value(&arg.value) else {
                         continue;
                     };
                     if !value.is_finite() || value < 0.0 || value.fract() != 0.0 {
@@ -188,7 +191,7 @@ impl Analyzer {
                     self.strategy_settings.backtest_fill_limit_ticks = value;
                 }
                 "margin_long" | "margin_short" => {
-                    let Some(value) = const_numeric_value(&arg.value) else {
+                    let Some(value) = self.known_const_numeric_value(&arg.value) else {
                         continue;
                     };
                     if !value.is_finite() || value < 0.0 {
@@ -207,7 +210,7 @@ impl Analyzer {
                     }
                 }
                 "pyramiding" => {
-                    let Some(value) = const_numeric_value(&arg.value) else {
+                    let Some(value) = self.known_const_numeric_value(&arg.value) else {
                         continue;
                     };
                     if !value.is_finite()
@@ -225,7 +228,7 @@ impl Analyzer {
                     self.strategy_settings.pyramiding_limit = value as usize;
                 }
                 "close_entries_rule" => {
-                    let Some(value) = const_string_value(&arg.value) else {
+                    let Some(value) = self.known_const_string_value(&arg.value) else {
                         continue;
                     };
                     self.strategy_settings.close_entries_rule = match value.as_str() {
@@ -242,92 +245,16 @@ impl Analyzer {
                     };
                 }
                 "max_labels_count" => {
-                    if arg.name.is_none() {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_NAME",
-                            "`strategy` argument `max_labels_count` must be named in the current subset",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    let Some(value) = const_int_value(&arg.value) else {
-                        continue;
-                    };
-                    if !(1..=500).contains(&value) {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `max_labels_count` must be between 1 and 500",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    self.drawing_settings.max_labels_count = Some(value as u32);
+                    self.validate_named_drawing_count_arg("strategy", name, 500, arg);
                 }
                 "max_boxes_count" => {
-                    if arg.name.is_none() {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_NAME",
-                            "`strategy` argument `max_boxes_count` must be named in the current subset",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    let Some(value) = const_int_value(&arg.value) else {
-                        continue;
-                    };
-                    if !(1..=500).contains(&value) {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `max_boxes_count` must be between 1 and 500",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    self.drawing_settings.max_boxes_count = Some(value as u32);
+                    self.validate_named_drawing_count_arg("strategy", name, 500, arg);
                 }
                 "max_lines_count" => {
-                    if arg.name.is_none() {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_NAME",
-                            "`strategy` argument `max_lines_count` must be named in the current subset",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    let Some(value) = const_int_value(&arg.value) else {
-                        continue;
-                    };
-                    if !(1..=500).contains(&value) {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `max_lines_count` must be between 1 and 500",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    self.drawing_settings.max_lines_count = Some(value as u32);
+                    self.validate_named_drawing_count_arg("strategy", name, 500, arg);
                 }
                 "max_polylines_count" => {
-                    if arg.name.is_none() {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_NAME",
-                            "`strategy` argument `max_polylines_count` must be named in the current subset",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    let Some(value) = const_int_value(&arg.value) else {
-                        continue;
-                    };
-                    if !(1..=100).contains(&value) {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `max_polylines_count` must be between 1 and 100",
-                            arg.span,
-                        ));
-                        continue;
-                    }
-                    self.drawing_settings.max_polylines_count = Some(value as u32);
+                    self.validate_named_drawing_count_arg("strategy", name, 100, arg);
                 }
                 _ => {}
             }

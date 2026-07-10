@@ -4,6 +4,13 @@ use crate::prelude::*;
 
 use super::prepend_block_statements;
 
+struct LoweredMethodReceiver {
+    label: String,
+    type_name: String,
+    span: Span,
+    expr: HirExpr,
+}
+
 impl Analyzer {
     pub(crate) fn lower_udf_call(
         &mut self,
@@ -22,20 +29,26 @@ impl Analyzer {
             let arg_expr =
                 self.lower_expr_with_params(&arg.value, outer_param_exprs, outer_param_types)?;
             let arg_type = self.type_of_expr_with_params(&arg.value, outer_param_types)?;
-            resolved_args[param_index] = Some((arg_expr, arg_type, arg_user_type));
+            let arg_const_switch_key = self.known_const_switch_key(&arg.value);
+            resolved_args[param_index] =
+                Some((arg_expr, arg_type, arg_user_type, arg_const_switch_key));
         }
 
         let mut param_exprs = HashMap::new();
         let mut param_types = HashMap::new();
+        let mut param_const_switch_keys = HashMap::new();
         let mut arg_statements = Vec::new();
         for (param, resolved_arg) in function.params.iter().zip(resolved_args) {
-            let (arg_expr, arg_type, arg_user_type) = resolved_arg?;
+            let (arg_expr, arg_type, arg_user_type, arg_const_switch_key) = resolved_arg?;
             if !self.record_lowering_temp_symbol(span) {
                 return None;
             }
             let symbol = self.fresh_temp_symbol(&format!("{name}.{param}"), arg_type);
             if let Some(type_name) = arg_user_type {
                 self.mark_symbol_id_user_type(symbol.id, type_name);
+            }
+            if let Some(key) = arg_const_switch_key {
+                param_const_switch_keys.insert(param.clone(), key);
             }
             arg_statements.push(HirStmt {
                 kind: HirStmtKind::Decl {
@@ -56,7 +69,10 @@ impl Analyzer {
         if !self.enter_lowering_inline(span) {
             return None;
         }
+        self.function_param_const_switch_keys
+            .push(param_const_switch_keys);
         let body = self.lower_function_body(&function.body, &param_exprs, &param_types);
+        self.function_param_const_switch_keys.pop();
         self.exit_lowering_inline();
         let body = body?;
         Some(prepend_block_statements(arg_statements, body))
@@ -75,9 +91,39 @@ impl Analyzer {
             .bound_symbol(receiver_name, receiver_span)
             .or_else(|| self.scope.resolve(receiver_name))?;
         let receiver_type_name = self.symbol_user_types.get(&receiver_symbol.id)?.clone();
+        let receiver_expr = outer_param_exprs
+            .get(receiver_name)
+            .cloned()
+            .unwrap_or(HirExpr {
+                kind: HirExprKind::Symbol(receiver_symbol.id),
+                pine_type: receiver_symbol.pine_type,
+                series_id: receiver_symbol.series_id,
+            });
+        self.lower_user_method_call_with_receiver_expr(
+            LoweredMethodReceiver {
+                label: receiver_name.to_owned(),
+                type_name: receiver_type_name,
+                span: receiver_span,
+                expr: receiver_expr,
+            },
+            method_name,
+            args,
+            outer_param_exprs,
+            outer_param_types,
+        )
+    }
+
+    fn lower_user_method_call_with_receiver_expr(
+        &mut self,
+        receiver: LoweredMethodReceiver,
+        method_name: &str,
+        args: &[CallArg],
+        outer_param_exprs: &HashMap<String, HirExpr>,
+        outer_param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
         let method = self
             .methods
-            .get(&(receiver_type_name, method_name.to_owned()))?
+            .get(&(receiver.type_name, method_name.to_owned()))?
             .clone();
         let param_names: Vec<_> = method
             .params
@@ -88,27 +134,20 @@ impl Analyzer {
 
         let mut param_exprs = HashMap::new();
         let mut param_types = HashMap::new();
+        let mut param_const_switch_keys = HashMap::new();
         let mut arg_statements = Vec::new();
-        let receiver_expr = outer_param_exprs
-            .get(receiver_name)
-            .cloned()
-            .unwrap_or(HirExpr {
-                kind: HirExprKind::Symbol(receiver_symbol.id),
-                pine_type: receiver_symbol.pine_type,
-                series_id: receiver_symbol.series_id,
-            });
-        if !self.record_lowering_temp_symbol(receiver_span) {
+        if !self.record_lowering_temp_symbol(receiver.span) {
             return None;
         }
         let receiver_temp = self.fresh_temp_symbol(
-            &format!("{method_name}.{receiver_name}"),
-            receiver_expr.pine_type,
+            &format!("{method_name}.{}", receiver.label),
+            receiver.expr.pine_type,
         );
         self.mark_symbol_id_user_type(receiver_temp.id, method.receiver_type.clone());
         arg_statements.push(HirStmt {
             kind: HirStmtKind::Decl {
                 symbol: receiver_temp.id,
-                value: receiver_expr,
+                value: receiver.expr,
             },
         });
         param_exprs.insert(
@@ -125,19 +164,35 @@ impl Analyzer {
         for (arg, param_index) in args.iter().zip(arg_indices) {
             let arg_user_type =
                 self.user_type_name_of_expr_with_params(&arg.value, outer_param_exprs);
+            let arg_user_type_array =
+                self.user_type_array_name_of_expr_with_params(&arg.value, outer_param_exprs);
             let arg_expr =
                 self.lower_expr_with_params(&arg.value, outer_param_exprs, outer_param_types)?;
             let arg_type = self.type_of_expr_with_params(&arg.value, outer_param_types)?;
-            resolved_args[param_index] = Some((arg_expr, arg_type, arg_user_type));
+            let arg_const_switch_key = self.known_const_switch_key(&arg.value);
+            resolved_args[param_index] = Some((
+                arg_expr,
+                arg_type,
+                arg_user_type,
+                arg_user_type_array,
+                arg_const_switch_key,
+            ));
         }
         for (param, resolved_arg) in method.params.iter().zip(resolved_args) {
-            let (arg_expr, arg_type, arg_user_type) = resolved_arg?;
-            if !self.record_lowering_temp_symbol(receiver_span) {
+            let (arg_expr, arg_type, arg_user_type, arg_user_type_array, arg_const_switch_key) =
+                resolved_arg?;
+            if !self.record_lowering_temp_symbol(receiver.span) {
                 return None;
             }
             let symbol = self.fresh_temp_symbol(&format!("{method_name}.{}", param.name), arg_type);
             if let Some(type_name) = arg_user_type {
                 self.mark_symbol_id_user_type(symbol.id, type_name);
+            }
+            if let Some(type_name) = arg_user_type_array {
+                self.mark_symbol_user_type_array(symbol, type_name);
+            }
+            if let Some(key) = arg_const_switch_key {
+                param_const_switch_keys.insert(param.name.clone(), key);
             }
             arg_statements.push(HirStmt {
                 kind: HirStmtKind::Decl {
@@ -155,10 +210,13 @@ impl Analyzer {
             );
             param_types.insert(param.name.clone(), arg_type);
         }
-        if !self.enter_lowering_inline(receiver_span) {
+        if !self.enter_lowering_inline(receiver.span) {
             return None;
         }
+        self.function_param_const_switch_keys
+            .push(param_const_switch_keys);
         let body = self.lower_function_body(&method.body, &param_exprs, &param_types);
+        self.function_param_const_switch_keys.pop();
         self.exit_lowering_inline();
         let body = body?;
         Some(prepend_block_statements(arg_statements, body))
@@ -167,16 +225,13 @@ impl Analyzer {
     pub(crate) fn lower_alias_qualified_user_method_call(
         &mut self,
         name: &str,
-        span: Span,
+        _span: Span,
         args: &[CallArg],
         outer_param_exprs: &HashMap<String, HirExpr>,
         outer_param_types: &HashMap<String, PineType>,
     ) -> Option<HirExpr> {
         let (alias, method_name) = alias_qualified_method_name(name)?;
         let receiver_arg = args.first()?;
-        let ExprKind::Identifier(receiver_name) = &receiver_arg.value.kind else {
-            return None;
-        };
         let receiver_user_type =
             self.user_type_name_of_expr_with_params(&receiver_arg.value, outer_param_exprs)?;
         if !receiver_user_type.starts_with(&format!("{alias}.")) {
@@ -184,14 +239,60 @@ impl Analyzer {
         }
         if !self
             .methods
-            .contains_key(&(receiver_user_type, method_name.to_owned()))
+            .contains_key(&(receiver_user_type.clone(), method_name.to_owned()))
         {
             return None;
         }
-        self.lower_user_method_call(
-            receiver_name,
+        let receiver_expr =
+            self.lower_expr_with_params(&receiver_arg.value, outer_param_exprs, outer_param_types)?;
+        self.lower_user_method_call_with_receiver_expr(
+            LoweredMethodReceiver {
+                label: alias.to_owned(),
+                type_name: receiver_user_type,
+                span: receiver_arg.span,
+                expr: receiver_expr,
+            },
             method_name,
-            span,
+            &args[1..],
+            outer_param_exprs,
+            outer_param_types,
+        )
+    }
+
+    pub(crate) fn lower_local_qualified_user_method_call(
+        &mut self,
+        name: &str,
+        _span: Span,
+        args: &[CallArg],
+        outer_param_exprs: &HashMap<String, HirExpr>,
+        outer_param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
+        let (type_name, method_name) = alias_qualified_method_name(name)?;
+        if !self.user_types.contains_key(type_name) {
+            return None;
+        }
+        let receiver_arg = args.first()?;
+        let receiver_user_type =
+            self.user_type_name_of_expr_with_params(&receiver_arg.value, outer_param_exprs)?;
+        if receiver_user_type != type_name {
+            return None;
+        }
+        if !self
+            .methods
+            .contains_key(&(receiver_user_type.clone(), method_name.to_owned()))
+        {
+            return None;
+        }
+        let receiver_expr =
+            self.lower_expr_with_params(&receiver_arg.value, outer_param_exprs, outer_param_types)?;
+        self.lower_user_method_call_with_receiver_expr(
+            LoweredMethodReceiver {
+                label: type_name.to_owned(),
+                type_name: receiver_user_type,
+                span: receiver_arg.span,
+                expr: receiver_expr,
+            },
+            method_name,
             &args[1..],
             outer_param_exprs,
             outer_param_types,

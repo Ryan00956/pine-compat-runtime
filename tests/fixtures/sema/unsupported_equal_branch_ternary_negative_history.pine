@@ -1,0 +1,4 @@
+//@version=6
+indicator("Unsupported equal branch ternary negative history")
+use_short = input.bool(true, "Use short")
+plot(close[use_short ? -1 : -1])

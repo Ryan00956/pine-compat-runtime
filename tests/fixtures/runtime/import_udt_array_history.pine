@@ -1,0 +1,118 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT array history")
+
+values = array.from(lib.Wrapper.new(lib.Point.new(close)), lib.Wrapper.new(lib.Point.new(close + 10)))
+previous = values[1]
+dynamic_offset = bar_index == 0 ? na : 1
+dynamic_previous = values[dynamic_offset]
+dynamic_sibling = values[dynamic_offset]
+window = values.slice(0, 1)
+previous_window = window[1]
+dynamic_previous_window = window[dynamic_offset]
+dynamic_sibling_window = window[dynamic_offset]
+
+source = array.from(lib.Wrapper.new(lib.Point.new(close + 20)), lib.Wrapper.new(lib.Point.new(close + 30)))
+prior_source = source[1]
+source.set(0, lib.Wrapper.new(lib.Point.new(close + 200)))
+
+var array<lib.Wrapper> persistent = array.from(lib.Wrapper.new(lib.Point.new(close + 40)))
+persistent.push(lib.Wrapper.new(lib.Point.new(close + 50)))
+persistent_prior = persistent[1]
+
+new_values = array.new<lib.Wrapper>(2, lib.Wrapper.new(lib.Point.new(close + 300)))
+new_values.set(1, lib.Wrapper.new(lib.Point.new(close + 310)))
+new_previous = new_values[1]
+new_dynamic_previous = new_values[dynamic_offset]
+new_dynamic_sibling = new_values[dynamic_offset]
+
+new_source = array.new<lib.Wrapper>(2, lib.Wrapper.new(lib.Point.new(close + 320)))
+new_source.set(1, lib.Wrapper.new(lib.Point.new(close + 330)))
+new_prior_source = new_source[1]
+new_source.set(0, lib.Wrapper.new(lib.Point.new(close + 500)))
+
+var array<lib.Wrapper> new_persistent = array.new<lib.Wrapper>(1, lib.Wrapper.new(lib.Point.new(close + 340)))
+new_persistent.push(lib.Wrapper.new(lib.Point.new(close + 350)))
+new_persistent_prior = new_persistent[1]
+
+float previous_first_x = na
+float previous_second_x = na
+float dynamic_previous_first_x = na
+float previous_window_first_x = na
+float dynamic_previous_window_first_x = na
+float dynamic_sibling_first_x_after_dynamic_mutation = na
+float dynamic_sibling_window_first_x_after_dynamic_mutation = na
+float prior_source_first_x = na
+int persistent_prior_size = 0
+float persistent_prior_last_x = na
+float new_previous_first_x = na
+float new_previous_second_x = na
+float new_dynamic_previous_first_x = na
+float new_dynamic_sibling_first_x_after_dynamic_mutation = na
+float new_prior_source_first_x = na
+int new_persistent_prior_size = 0
+float new_persistent_prior_last_x = na
+if bar_index > 0
+    previous_first = previous.get(0)
+    previous_second = previous.get(1)
+    dynamic_previous_first = dynamic_previous.get(0)
+    previous_window_first = previous_window.get(0)
+    dynamic_previous_window_first = dynamic_previous_window.get(0)
+    prior_source_first = prior_source.first()
+    persistent_prior_last = persistent_prior.last()
+    previous_first_x := previous_first.nested.x
+    previous_second_x := previous_second.nested.x
+    dynamic_previous_first_x := dynamic_previous_first.nested.x
+    previous_window_first_x := previous_window_first.nested.x
+    dynamic_previous_window_first_x := dynamic_previous_window_first.nested.x
+    dynamic_previous.set(0, lib.Wrapper.new(lib.Point.new(close + 700)))
+    dynamic_sibling_first = dynamic_sibling.get(0)
+    dynamic_sibling_first_x_after_dynamic_mutation := dynamic_sibling_first.nested.x
+    dynamic_previous_window.set(0, lib.Wrapper.new(lib.Point.new(close + 800)))
+    dynamic_sibling_window_first = dynamic_sibling_window.get(0)
+    dynamic_sibling_window_first_x_after_dynamic_mutation := dynamic_sibling_window_first.nested.x
+    prior_source_first_x := prior_source_first.nested.x
+    persistent_prior_size := persistent_prior.size()
+    persistent_prior_last_x := persistent_prior_last.nested.x
+    new_previous_first = new_previous.get(0)
+    new_previous_second = new_previous.get(1)
+    new_dynamic_previous_first = new_dynamic_previous.first()
+    new_dynamic_previous.set(0, lib.Wrapper.new(lib.Point.new(close + 900)))
+    new_dynamic_sibling_first = new_dynamic_sibling.first()
+    new_prior_source_first = new_prior_source.first()
+    new_persistent_prior_last = new_persistent_prior.last()
+    new_previous_first_x := new_previous_first.nested.x
+    new_previous_second_x := new_previous_second.nested.x
+    new_dynamic_previous_first_x := new_dynamic_previous_first.nested.x
+    new_dynamic_sibling_first_x_after_dynamic_mutation := new_dynamic_sibling_first.nested.x
+    new_prior_source_first_x := new_prior_source_first.nested.x
+    new_persistent_prior_size := new_persistent_prior.size()
+    new_persistent_prior_last_x := new_persistent_prior_last.nested.x
+source_first = source.first()
+new_source_first = new_source.first()
+
+plot(na(previous) ? 1 : 0)
+plot(na(dynamic_previous) ? 1 : 0)
+plot(na(previous_window) ? 1 : 0)
+plot(na(dynamic_previous_window) ? 1 : 0)
+plot(previous_first_x)
+plot(previous_second_x)
+plot(dynamic_previous_first_x)
+plot(previous_window_first_x)
+plot(dynamic_previous_window_first_x)
+plot(dynamic_sibling_first_x_after_dynamic_mutation)
+plot(dynamic_sibling_window_first_x_after_dynamic_mutation)
+plot(prior_source_first_x)
+plot(source_first.nested.x)
+plot(persistent_prior_size)
+plot(persistent_prior_last_x)
+plot(na(new_previous) ? 1 : 0)
+plot(na(new_dynamic_previous) ? 1 : 0)
+plot(new_previous_first_x)
+plot(new_previous_second_x)
+plot(new_dynamic_previous_first_x)
+plot(new_dynamic_sibling_first_x_after_dynamic_mutation)
+plot(new_prior_source_first_x)
+plot(new_source_first.nested.x)
+plot(new_persistent_prior_size)
+plot(new_persistent_prior_last_x)

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Supported chart metadata simple color return qualifier")
+
+plot(close, color=chart.bg_color)
+plot(open, color=chart.fg_color)

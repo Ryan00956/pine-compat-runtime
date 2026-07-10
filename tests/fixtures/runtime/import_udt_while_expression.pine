@@ -13,4 +13,7 @@ lib.Point typed = while j < 1
     j := j + 1
     p
 
+p_prior = p[1]
+
 plot(p.x + typed.x)
+plot(p_prior.x)

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported max_bars_back named negative length")
+length = -1
+max_bars_back(close, length)
+plot(close)

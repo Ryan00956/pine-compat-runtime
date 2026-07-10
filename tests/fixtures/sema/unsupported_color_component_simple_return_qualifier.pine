@@ -1,0 +1,15 @@
+//@version=6
+indicator("Unsupported color component simple return qualifier")
+
+values = array.new_int(1, 64)
+level_color = color.rgb(array.size(values), 128, 192, 25)
+
+red_value = color.r(level_color)
+green_value = color.g(level_color)
+blue_value = color.b(level_color)
+transparency_value = color.t(level_color)
+
+hline(red_value)
+hline(green_value)
+hline(blue_value)
+hline(transparency_value)

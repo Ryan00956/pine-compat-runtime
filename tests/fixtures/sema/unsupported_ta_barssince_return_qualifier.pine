@@ -1,0 +1,4 @@
+//@version=6
+indicator("Unsupported ta.barssince return qualifier")
+
+plot(close, offset=ta.barssince(close > open))

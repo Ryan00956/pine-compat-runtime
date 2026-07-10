@@ -22,28 +22,31 @@ public serialization changes.
 ## Current Boundary
 
 The current import subset supports host-provided exact-key imports with aliases,
-exported const expressions, pure exported functions, scalar-field imported UDT
-constructors with direct field reads, and ordinary same-imported-UDT
-reassignment, plus scalar-field imported UDT typed declarations initialized or
+exported const expressions, pure exported functions, scalar-tree imported UDT
+constructors with direct and nested field reads, and ordinary same-imported-UDT
+reassignment, plus scalar-tree imported UDT typed declarations initialized or
 reassigned from the same imported identity, same-imported-identity ternary,
 `if`, `switch`, `while`, and `for` expression results, direct or nested imported
 UDT UDF parameter passthrough returns, direct or nested constructor-return UDFs,
-and ordinary imported UDT `var` declarations, plus scalar-field imported UDT
+and ordinary imported UDT `var` declarations, plus scalar-tree imported UDT
 `varip` declarations initialized from `na`, same-imported constructors, or direct
-constructor inference, plus same-imported scalar-field UDT
+constructor inference, plus same-imported scalar-tree UDT
 `array<lib.Type>`/`lib.Type[]` declarations, including `varip` declarations
-that retain their backing store across forming updates, plus scalar-field mutation in top-level, branch,
+initialized through `array.from(...)` or `array.new<lib.Type>(...)` that retain
+their backing store across forming updates, plus scalar-tree root-field replacement in top-level, branch,
 `for`-loop, `while`-loop, UDF-local statement contexts, and method-local
 statement contexts outside receiver/parameter/global side-effect boundaries,
 plus receiver-style pure
-methods on scalar-field imported UDT receivers, including alias-qualified
+methods on scalar-tree imported UDT receivers, including alias-qualified
 `lib.method(receiver, ...)` calls when the first argument is a same-identity
 imported UDT receiver and the method parameters stay inside the
 scalar/imported-UDT subset, including direct same-identity, block-local alias,
-final-if alias, final-for alias, nested-method passthrough plus constructor
-returns, method-local field mutation, scalar-field imported UDT value history,
-and `array.from` construction with direct size/get/first/last, set replacement
-field reads, push append field reads, unshift prepend field reads, insert
+ternary-expression alias, final-if alias, final-for alias, final-while alias,
+switch-expression alias, nested-method passthrough plus direct, nested, or ternary constructor returns,
+method-local scalar-tree root-field replacement, scalar-tree imported UDT value
+history, imported scalar-tree UDT array history snapshots, and `array.from`
+construction with direct size/get/first/last, set replacement field reads, push
+append field reads, unshift prepend field reads, insert
 insertion field reads, fill replacement field reads, join positional
 stringification, includes/indexof/lastindexof structural equality search,
 sort/sort_indices by int/float/string sort_field, pop/remove/shift return field
@@ -59,11 +62,12 @@ Current evidence:
 - `docs/PURE_INTERNAL_ROADMAP.md` lists broader imported UDT identity across
   source graphs and imported method tails as remaining structured-data work.
 - `tests/fixtures/conformance.tsv` marks `import` partial and records the
-  scalar-field imported UDT constructor/direct field-read/reassignment/typed
+  scalar-tree imported UDT constructor/direct-or-nested field-read/reassignment/typed
   declaration/direct-or-nested UDF passthrough subset plus receiver-style or
-  alias-qualified scalar imported UDT methods with direct same-identity,
-  block-local alias, final-if alias, final-for alias, nested-method passthrough
-  plus constructor returns, method-local field mutation, scalar-field value
+  alias-qualified scalar-tree imported UDT methods with direct same-identity,
+  block-local alias, ternary-expression alias, final-if alias, final-for alias,
+  final-while alias, switch-expression alias, nested-method passthrough plus direct, nested, or ternary constructor returns,
+  method-local scalar-tree root-field replacement, scalar-tree value
   history, and `array.from` size/get/first/last plus set replacement field
   reads, push append field reads, unshift prepend field reads, insert insertion
   field reads, fill replacement field reads, join positional stringification,
@@ -72,14 +76,15 @@ Current evidence:
   clear-size reset, copy independent field reads, reverse reordered field
   reads, slice window field reads, concat appended field reads, and
   statement/expression/index-value for-in value-copy field reads, while
-  broader imported UDT flow remains unsupported.
+  imported UDT flow outside the covered same-identity scalar-tree paths remains unsupported.
 - `docs/CONFORMANCE.md`, `docs/EXECUTION_SEMANTICS.md`, and
   `docs/SEMANTIC_MODEL.md` describe the narrow executable imported UDT
   constructor/direct field-read/reassignment/typed declaration/direct UDF
   passthrough plus nested passthrough-chain subset, receiver-style or
-  alias-qualified scalar imported UDT methods with direct same-identity,
-  block-local alias, final-if alias, final-for alias, nested-method passthrough
-  plus constructor returns, method-local field mutation, scalar-field value
+  alias-qualified scalar-tree imported UDT methods with direct same-identity,
+  block-local alias, ternary-expression alias, final-if alias, final-for alias,
+  final-while alias, switch-expression alias, nested-method passthrough plus direct, nested, or ternary constructor returns,
+  method-local scalar-tree root-field replacement, scalar-tree value
   history, and `array.from` size/get/first/last plus set replacement field
   reads, push append field reads, unshift prepend field reads, insert insertion
   field reads, fill replacement field reads, join positional stringification,
@@ -88,7 +93,7 @@ Current evidence:
   clear-size reset, copy independent field reads, reverse reordered field
   reads, slice window field reads, concat appended field reads, and
   statement/expression/index-value for-in value-copy field reads, while
-  broader imported UDT flow remains outside the executable subset.
+  imported UDT flow outside the covered same-identity scalar-tree paths remains outside the executable subset.
 - `crates/pine-sema/src/source_graph.rs` assigns deterministic root/library
   `SourceId`s from host-provided source text and normalized exact import keys.
 - `crates/pine-sema/src/modules.rs` currently collects exported constants,
@@ -124,17 +129,22 @@ Current evidence:
   imported UDT `varip` declarations use the existing value-clone intrabar
   slot path; local/imported `varip` identity mismatches remain rejected.
   Deferred-field imported constructors remain rejected. The existing pure-UDF passthrough
-  identity path now also accepts direct imported UDT parameter returns such as
-  `passthrough(p) => p` when the call argument and target use the same imported
-  identity. Runtime UDT values still execute as field-vector values; source
+  identity path now also accepts direct imported UDT parameter returns, block-local
+  aliases returned from ternary expressions, final `for in` bodies, final `while` bodies, or switch-expression arms, and nested
+  passthrough calls over those alias forms when the call argument and target use
+  the same imported identity. Runtime UDT values still execute as field-vector values; source
   identity is carried in semantic and HIR metadata for compatibility checks
   rather than in `PineValue`.
 - Library method collection now records the declared receiver type name and,
   when it resolves to a library UDT, the receiver's source-scoped identity.
   Receiver-style and alias-qualified imported UDT method calls use the imported
-  method table entries for the scalar-field receiver subset, including
-  same-identity passthrough returns; alias-qualified imported method receiver
-  type mismatches remain rejected.
+  method table entries for the scalar-tree receiver and parameter subset,
+  including same-identity passthrough returns; alias-qualified imported method
+  receiver type mismatches remain rejected. Receiver-style calls over imported
+  UDT constructor or imported method call-result receivers such as
+  `lib.Point.new(...).method(...)` and
+  `lib.Point.new(...).make(...).same()` are parsed as alias-qualified imported
+  method calls with the receiver passed as the first internal argument.
 - `tests/fixtures/libraries/import_udt_lib.pine` provides a library with an
   exported scalar UDT for `tests/fixtures/runtime/import_udt_constructor.pine`,
   plus a deferred-field exported UDT and method for rejected boundaries, while
@@ -155,16 +165,16 @@ Current evidence:
   `lib.Point` `var` declarations plus same-imported-UDT reassignment
   executable,
   and `tests/fixtures/runtime/import_udt_varip.pine` plus
-  `tests/fixtures/realtime/import_udt_varip.pine` keep scalar-field imported
+  `tests/fixtures/realtime/import_udt_varip.pine` keep scalar-tree imported
   UDT `varip` declarations executable through historical and realtime
   intrabar persistence,
-  and `tests/fixtures/runtime/import_udt_field_mutation.pine` keeps scalar-field
-  imported UDT mutation executable at top level,
+  and `tests/fixtures/runtime/import_udt_field_mutation.pine` keeps scalar-tree
+  imported UDT root-field replacement executable at top level,
   and `tests/fixtures/runtime/import_udt_field_mutation_control_flow.pine`
-  keeps scalar-field imported UDT mutation executable in branch, `for`-loop,
+  keeps scalar-tree imported UDT root-field replacement executable in branch, `for`-loop,
   and `while`-loop statement contexts,
   and `tests/fixtures/runtime/import_udt_udf_local_field_mutation.pine` keeps
-  scalar-field imported UDT mutation executable for UDF-local variables returned
+  scalar-tree imported UDT root-field replacement executable for UDF-local variables returned
   from pure functions,
   while
   `tests/fixtures/sema/unsupported_imported_udt_parameter_field_mutation.pine`
@@ -174,38 +184,47 @@ Current evidence:
   `tests/fixtures/sema/unsupported_imported_udt_global_field_mutation.pine`
   keeps imported UDT global field mutation inside pure functions rejected as a
   side-effect boundary,
-  `tests/fixtures/runtime/import_udt_history.pine` keeps scalar-field imported
-  UDT value history and caller-side field reads fixture-backed,
+  `tests/fixtures/runtime/import_udt_history.pine` keeps scalar-tree imported
+  UDT value history and caller-side direct/nested field reads fixture-backed,
   and
   `tests/fixtures/sema/unsupported_imported_udt_nested_field_mutation.pine`
   keeps parser-level nested imported field mutation rejected,
-  and `tests/fixtures/runtime/import_udt_array_typed_declarations.pine` keeps
-  same-imported scalar-field `array<lib.Point>` and `lib.Point[]`
+  and `tests/fixtures/runtime/import_udt_array_typed_declarations.pine` plus
+  `tests/fixtures/runtime/import_udt_array_scalar_tree.pine` keep
+  same-imported scalar-tree `array<lib.Type>` and `lib.Type[]`
   declarations fixture-backed,
-  while `tests/fixtures/sema/unsupported_imported_udt_array_decl.pine` plus
-  `tests/fixtures/sema/unsupported_imported_udt_array_alias_decl.pine` keep
-  non-scalar imported UDT array declarations rejected,
+  while `tests/fixtures/sema/supported_imported_udt_array_decl.pine` plus
+  `tests/fixtures/sema/supported_imported_udt_array_alias_decl.pine` keep the
+  declaration acceptance boundary fixture-backed,
   `tests/fixtures/runtime/import_udt_array_from.pine` keeps same-imported
   scalar-field UDT `array.from` size/get/first/last plus set replacement field
   reads, push append field reads, unshift prepend field reads, insert insertion
   field reads, fill replacement field reads, join positional stringification,
   includes/indexof/lastindexof structural equality search, sort/sort_indices by
-  int/float/string sort_field, pop/remove/shift return field reads, clear-size
-  reset, copy independent field reads, reverse reordered field reads, slice
-  window field reads, concat appended field reads, and
+  int/float/string root sort_field, pop/remove/shift return field reads,
+  clear-size reset, copy independent field reads, reverse reordered field
+  reads, slice window field reads, concat appended field reads, and
   statement/expression/index-value for-in value-copy field reads fixture-backed,
-  and `tests/fixtures/syntax/unsupported_imported_udt_array_new.pine` keeps
-  imported UDT `array.new<lib.Point>()` templates rejected at the parser
-  boundary,
-  and `tests/fixtures/runtime/import_udt_udf_passthrough.pine` keeps direct
-  imported UDT UDF parameter passthrough executable,
+  and `tests/fixtures/runtime/import_udt_array_scalar_tree.pine` keeps nested
+  same-imported scalar-tree UDT arrays executable for typed declarations,
+  `array.from`, field reads, set/copy/push/unshift/insert, pop/remove/shift
+  returns, first/last, clear/fill/reverse/slice/concat, join, structural
+  equality search, `for...in`, and `varip`, while
+  `tests/fixtures/runtime/import_udt_array_history.pine` keeps committed array
+  history snapshots from `array.from` and `array.new<lib.Type>()` construction
+  with first-bar and dynamic na-offset predicates executable,
+  `tests/fixtures/runtime/import_udt_array_new.pine` keeps imported UDT
+  `array.new<lib.Point>()` templates and post-construction array helper
+  operations executable,
+  and `tests/fixtures/runtime/import_udt_udf_passthrough.pine` keeps direct plus
+  ternary-expression alias, final-`for in`, final-`while`, and switch-expression alias imported UDT UDF parameter passthrough executable,
   and `tests/fixtures/runtime/import_udt_udf_nested_passthrough.pine` keeps
-  nested imported UDT UDF parameter passthrough chains executable,
+  nested imported UDT UDF parameter passthrough chains over those forms executable,
   while
   `tests/fixtures/sema/unsupported_imported_udt_constructor.pine` keeps a
-  deferred-field imported constructor rejected, and
-  `tests/fixtures/sema/unsupported_imported_udt_varip.pine` keeps deferred-field
-  imported UDT construction rejected in a `varip` initializer, while
+  unresolved-field imported constructor rejected, and
+  `tests/fixtures/sema/unsupported_imported_udt_varip.pine` keeps nested-field
+  imported UDT values rejected in a `varip` initializer, while
   `tests/fixtures/sema/unsupported_imported_udt_assignment_identity.pine` keeps
   local/imported structural lookalikes rejected as different identities, while
   `tests/fixtures/sema/unsupported_imported_udt_typed_decl_identity.pine` keeps
@@ -214,13 +233,18 @@ Current evidence:
   declarations from accepting local/imported structural lookalikes, while
   `tests/fixtures/sema/unsupported_imported_udt_varip_identity.pine` keeps
   `varip` declarations from accepting local/imported structural lookalikes,
-  while
+  `tests/fixtures/sema/unsupported_imported_udt_while_identity.pine` and
+  `tests/fixtures/sema/unsupported_imported_udt_for_identity.pine` keep
+  `while`/`for` expression results from accepting local/imported structural
+  lookalikes, while
   `tests/fixtures/sema/unsupported_imported_udt_udf_passthrough_identity.pine`
   keeps direct UDF passthrough from erasing local/imported identity mismatches,
   while
   `tests/fixtures/sema/unsupported_imported_udt_udf_nested_passthrough_identity.pine`
   keeps nested passthrough chains from erasing local/imported identity
-  mismatches, while
+  mismatches. These local/imported identity mismatch fixtures lock the
+  user-facing assignment and branch diagnostics instead of only the diagnostic
+  codes, while
   `tests/fixtures/sema/unsupported_imported_private_udt_constructor.pine` keeps
   private library UDT construction rejected as private symbol access,
   `tests/fixtures/sema/unsupported_import_duplicate_exported_udt.pine` keeps
@@ -229,11 +253,23 @@ Current evidence:
   keeps duplicate exported UDT/const names rejected,
   `tests/fixtures/sema/unsupported_import_duplicate_exported_udt_function.pine`
   keeps duplicate exported UDT/function names rejected,
-  `tests/fixtures/runtime/import_udt_method.pine` keeps receiver-style scalar
+  `tests/fixtures/runtime/import_udt_method.pine` keeps receiver-style scalar-tree
   imported UDT method calls executable,
   `tests/fixtures/runtime/import_udt_method_qualified.pine` keeps
   alias-qualified imported UDT method calls executable when the first argument
-  is a same-identity imported UDT receiver,
+  is a same-identity scalar-tree imported UDT receiver, including nested UDT
+  receiver fields, named/reordered non-receiver arguments, same-identity
+  scalar-tree UDT parameters, caller-side history reads from named-argument UDT
+  returns, and method-local scalar-tree root-field replacement,
+  `tests/fixtures/runtime/import_udt_method_expression_receiver.pine` keeps
+  alias-qualified imported UDT method calls over direct constructor receiver
+  expressions executable, including named/reordered non-receiver arguments,
+  direct constructor nested UDT arguments, and receiver-style imported UDT
+  method calls over imported constructor or imported method call-result receiver
+  chains,
+  `tests/fixtures/syntax/imported_method_call_result_receiver.pine` keeps
+  receiver-style imported UDT method calls over call-result receiver
+  expressions accepted by the parser boundary,
   `tests/fixtures/runtime/import_udt_method_return.pine` keeps direct receiver
   passthrough returns executable,
   `tests/fixtures/runtime/import_udt_method_param_return.pine` keeps direct
@@ -244,28 +280,54 @@ Current evidence:
   `if`/`else` receiver and parameter alias passthrough returns executable,
   `tests/fixtures/runtime/import_udt_method_for_return.pine` keeps final
   `for` receiver and parameter alias passthrough returns executable,
+  `tests/fixtures/runtime/import_udt_method_while_switch_return.pine` keeps final
+  ternary-expression alias, `while`, and switch-expression receiver and
+  parameter alias passthrough returns executable,
   `tests/fixtures/runtime/import_udt_method_nested_return.pine` keeps nested
   method passthrough returns executable,
-  `tests/fixtures/runtime/import_udt_method_local_field_mutation.pine` keeps
-  method-local imported UDT field mutation executable,
+`tests/fixtures/runtime/import_udt_method_local_field_mutation.pine` keeps
+method-local imported UDT scalar-tree root-field replacement executable,
   `tests/fixtures/runtime/import_udt_method_constructor_return.pine` keeps
-  same-imported-identity constructor returns executable, and
+  direct, nested, or ternary same-imported-identity constructor returns executable,
+  `tests/fixtures/runtime/import_udt_array_typed_udf_params.pine` keeps
+  same-imported scalar-tree UDT array typed UDF parameters executable with
+  positional and named array arguments plus caller-side history reads from
+  returned imported UDT array elements, and
+  `tests/fixtures/runtime/import_udt_array_typed_method_params.pine` keeps
+  same-imported scalar-tree UDT array typed method parameters executable with
+  positional and named array arguments plus caller-side history reads from
+  returned imported UDT array elements, and
   `tests/fixtures/sema/unsupported_imported_method_qualified_receiver.pine`
-  keeps alias-qualified imported method receiver type mismatches rejected.
-- `crates/pine-sema/src/tests/compatibility.rs` also asserts scalar-field
-  imported UDT constructors analyze successfully, deferred-field imported UDT
-  constructors fail with `E_IMPORT_UNSUPPORTED_UDT`, private imported UDT
-  constructors fail with `E_IMPORT_PRIVATE_SYMBOL`, local/imported assignment
-  identity mismatches fail with `E_UDT_ASSIGN_TYPE`, scalar imported UDT typed
-  declarations analyze successfully, typed declaration identity mismatches fail
+  and `tests/fixtures/sema/unsupported_imported_method_qualified_receiver_order.pine`
+  keep alias-qualified imported method receiver type/order mismatches rejected,
+  while
+  `tests/fixtures/sema/unsupported_imported_method_field_mutation.pine`
+  plus `tests/fixtures/libraries/import_udt_method_side_effect_lib.pine`
+  keep imported method receiver and parameter field mutation rejected through
+  `function_side_effect` diagnostics.
+- `crates/pine-sema/src/tests/compatibility.rs` also asserts scalar-tree
+  imported UDT constructors analyze successfully, exported imported UDT
+  metadata can include private scalar-tree UDT dependencies for typed-`na`
+  history, with
+  `tests/fixtures/runtime/import_udt_private_dependency_history.pine` keeping
+  whole-value private-dependency history executable, while
+  private-dependency constructor calls fail with
+  `E_UDT_CONSTRUCTOR_ARG` when the nested private value cannot be supplied,
+  private imported UDT constructors fail with `E_IMPORT_PRIVATE_SYMBOL`,
+  local/imported assignment identity mismatches fail with `E_UDT_ASSIGN_TYPE`,
+  scalar imported UDT typed declarations analyze successfully, typed
+  declaration identity mismatches fail
   with `E_UDT_ASSIGN_TYPE`, direct imported UDT UDF passthrough analyzes
-  successfully, nested imported UDT UDF passthrough analyzes successfully,
+  successfully, ternary-expression alias, final-`for in`, final-`while`, and switch-expression alias imported UDT UDF
+  passthrough analyzes successfully, nested imported UDT UDF passthrough over
+  those forms analyzes successfully,
   passthrough identity mismatches fail with `E_UDT_ASSIGN_TYPE`, duplicate
   exported UDT names plus UDT/const and UDT/function export name collisions
   fail with `E_IMPORT_DUPLICATE_EXPORT`,
-  receiver-style or alias-qualified scalar imported UDT method calls including
-  direct same-identity, block-local alias, final-if alias, final-for alias,
-  nested-method passthrough plus constructor returns, and method-local field
+  receiver-style or alias-qualified scalar-tree imported UDT method calls including
+  direct same-identity, block-local alias, ternary-expression alias, final-if
+  alias, final-for alias, final-while alias, switch-expression alias,
+  nested-method passthrough plus direct, nested, or ternary constructor returns, and method-local field
   mutation analyze successfully, and alias-qualified imported method receiver
   type mismatches fail with `E_METHOD_ARG_TYPE`.
 
@@ -273,8 +335,8 @@ Do not widen imported UDTs beyond the scalar constructor/direct field-read,
 ordinary reassignment, explicit typed declaration, same-imported-identity
 ternary/`if`/`switch`/`while`/`for` expression results, direct or nested UDF
 passthrough, direct or nested constructor-return subset, ordinary `var`,
-scalar-field `varip`, scalar-field mutation in top-level, branch, `for`-loop,
-`while`-loop, and UDF-local statement contexts, and receiver-style scalar
+scalar-tree `varip`, scalar-tree root-field replacement in top-level, branch, `for`-loop,
+`while`-loop, and UDF-local statement contexts, and receiver-style scalar-tree
 imported UDT method calls until a runtime slice implements the behavior and
 updates fixtures, conformance, snapshots, and docs together.
 
@@ -321,8 +383,8 @@ Initial import policy:
 - bare `Point.new(...)` never resolves to an imported type without a local type
   declaration or explicit import alias qualification;
 - `array<lib.Point>` and `lib.Point[]` resolve only for same-imported
-  scalar-field UDT arrays; `array.new<lib.Point>()` templates remain deferred
-  at the parser boundary.
+  scalar-tree UDT arrays; `array.new<lib.Point>()` templates are supported for
+  the same scalar-tree imported UDT subset.
 
 ## Field And Constructor Policy
 
@@ -366,13 +428,14 @@ Initial policy:
 - imported methods must satisfy the same pure-method and no-side-effect rules as
   local methods;
 - method return identity is tracked for direct same-identity, block-local alias,
-  final-if alias, final-for alias, and nested-method passthrough plus
-  constructor returns and should keep following constructor and parameter
-  identity as the subset widens.
+  ternary-expression alias, final-if alias, final-for alias, final-while alias,
+  switch-expression alias, and nested-method passthrough plus direct, nested, or ternary constructor returns and should keep
+  following constructor and parameter identity as the subset widens.
 
-Receiver-style scalar imported UDT methods are supported for scalar returns and
-direct same-identity, block-local alias, final-if alias, final-for alias, and
-nested-method passthrough plus constructor returns.
+Receiver-style scalar-tree imported UDT methods are supported for scalar returns and
+direct same-identity, block-local alias, ternary-expression alias, final-if alias, final-for alias,
+final-while alias, switch-expression alias, and nested-method passthrough plus
+direct, nested, or ternary constructor returns.
 Broader imported method parameter/return flow should remain rejected until it is
 fixture-backed through analysis, lowering, runtime snapshots, conformance, and
 docs.
@@ -402,18 +465,19 @@ contract slice.
 
 First imported UDT support should not introduce new persistence behavior:
 
-- ordinary, `var`, and scalar-field `varip` imported UDT values behave like
+- ordinary, `var`, and scalar-tree `varip` imported UDT values behave like
   local UDT values;
-- scalar-field imported UDT value history follows existing series history, and
-  same-imported scalar-field UDT `array.from` can construct fixture-backed
+- scalar-tree imported UDT value history follows existing series history, and
+  same-imported scalar-tree UDT `array.from` can construct fixture-backed
   arrays for size/get/first/last, set replacement field reads, push append
   field reads, unshift prepend field reads, insert insertion field reads, fill
   replacement field reads, join positional stringification,
   includes/indexof/lastindexof structural equality search, sort/sort_indices by
   int/float/string sort_field, pop/remove/shift return field reads, clear size
   reset, copy independent field reads, reverse reordered field reads, slice
-  window field reads, concat appended field reads, and
-  statement/expression/index-value for-in value-copy field reads;
+  window field reads, concat appended field reads,
+  statement/expression/index-value for-in value-copy field reads, and committed
+  array history snapshots with first-bar and dynamic na-offset predicates;
   broader UDT arrays and nested collection storage remain deferred until local
   equivalents and imported identity rules are both fixture-backed;
 - realtime rollback follows existing value rollback once imported UDT values are
@@ -441,8 +505,8 @@ Recommended future slices:
    `HirUserTypeIdentity { source_id, type_name }` metadata for both root-local
    and supported imported constructors.
 3. Constructor, field-read, and ordinary reassignment subset:
-   `lib.Point.new(...)` for scalar-field imported UDTs with runtime snapshots
-   proving direct field-read value behavior is implemented. Ordinary
+   `lib.Point.new(...)` for scalar-tree imported UDTs with runtime snapshots
+   proving direct and nested field-read value behavior is implemented. Ordinary
    same-imported-UDT reassignment is also fixture-backed, while local/imported
    structural lookalikes remain rejected as distinct identities. Explicit
    scalar imported typed declarations initialized or reassigned from the same
@@ -458,21 +522,23 @@ Recommended future slices:
    clear-size reset, copy independent field reads, reverse reordered field
    reads, slice window field reads, concat appended field reads, and
    statement/expression/index-value for-in value-copy field reads are
-   fixture-backed, while deferred-field constructors, unsupported field
+   fixture-backed, while unresolved-field constructors, unsupported field
    mutation, and broader collections remain rejected.
 4. UDF passthrough: allow imported UDT values to flow through pure UDFs while
    rejecting mismatched identities. Direct parameter passthrough returns such
    as `passthrough(p) => p` are now fixture-backed for same imported identity,
-   while local/imported identity mismatches remain rejected. Broader UDF flow,
-   including constructor-return helpers and control expression returns, remains
-   deferred. Nested passthrough chains are now fixture-backed for same imported
+   while local/imported identity mismatches remain rejected. Final `for in`,
+   final `while`, switch-expression alias passthrough, nested passthrough chains,
+   and direct or nested constructor-return helpers are fixture-backed for same imported
    identity, while nested local/imported identity mismatches remain rejected.
 5. Imported methods: support pure methods whose receiver identity is imported
    and whose parameters/returns stay inside the supported identity subset.
-   Receiver-style and alias-qualified scalar imported UDT method calls plus
-   direct same-identity, block-local alias, final-if alias, final-for alias,
-   nested-method passthrough plus constructor returns, and method-local field
-   mutation are fixture-backed; broader imported method return/parameter flow
-   remains deferred.
+Receiver-style and alias-qualified scalar-tree imported UDT method calls plus
+named/reordered non-receiver arguments, direct same-identity, scalar-tree parameters, block-local alias,
+ternary-expression alias, final-if alias, final-for alias, final-while alias,
+switch-expression alias, nested-method passthrough plus direct, nested, or ternary constructor returns,
+and method-local scalar-tree root-field replacement are fixture-backed.
+Receiver-style calls over call-result receiver expressions remain parser-gated;
+broader imported method return/parameter flow remains deferred.
 6. Broader collections and broader history only after imported value identity is
    stable across those storage families.

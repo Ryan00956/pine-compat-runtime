@@ -1,0 +1,35 @@
+//@version=6
+indicator("Unsupported object array.new method return qualifier")
+
+type Tool
+    float base
+
+method label_count(Tool tool, label[] values) =>
+    tool.base + array.size(values)
+
+method line_count(Tool tool, line[] values) =>
+    tool.base + array.size(values)
+
+method linefill_count(Tool tool, array<linefill> values) =>
+    tool.base + array.size(values)
+
+method polyline_count(Tool tool, array<polyline> values) =>
+    tool.base + array.size(values)
+
+method box_count(Tool tool, box[] values) =>
+    tool.base + array.size(values)
+
+method table_count(Tool tool, array<table> values) =>
+    tool.base + array.size(values)
+
+method point_count(Tool tool, array<chart.point> values) =>
+    tool.base + array.size(values)
+
+tool = Tool.new(close)
+plot(tool.line_count(array.new_label()))
+plot(tool.label_count(array.new<line>()))
+plot(tool.linefill_count(array.new<polyline>()))
+plot(tool.polyline_count(array.new<linefill>()))
+plot(tool.table_count(array.new<box>()))
+plot(tool.box_count(array.new<table>()))
+plot(tool.point_count(array.new<label>()))

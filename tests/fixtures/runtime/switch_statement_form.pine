@@ -1,0 +1,43 @@
+//@version=5
+indicator("Switch statement form fixture")
+
+condition_value = 0.0
+switch
+    close > open =>
+        condition_value := high
+    =>
+        condition_value := low
+
+direction = close > open ? 1 : close < open ? -1 : 0
+selector_value = 0.0
+switch direction
+    1 =>
+        selector_value := high + 10
+    -1 =>
+        selector_value := low + 20
+    =>
+        selector_value := close + 30
+
+default_value = 0.0
+switch
+    close < 0 =>
+        default_value := -1
+    =>
+        default_value := close + 40
+
+loop_total = 0
+for i = 0 to 5
+    switch i
+        1 =>
+            loop_total := loop_total + 10
+            continue
+        4 =>
+            loop_total := loop_total + 100
+            break
+        =>
+            loop_total := loop_total + i
+
+plot(condition_value)
+plot(selector_value)
+plot(default_value)
+plot(loop_total)

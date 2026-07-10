@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported ta volume variable return qualifier")
+
+plot(ta.accdist)
+plot(ta.iii)
+plot(ta.nvi)
+plot(ta.obv)
+plot(ta.pvi)
+plot(ta.pvt)
+plot(ta.wad)
+plot(ta.wvad)

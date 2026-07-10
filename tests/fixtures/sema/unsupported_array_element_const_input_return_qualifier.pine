@@ -1,0 +1,30 @@
+//@version=6
+indicator("Unsupported array element const input return qualifier")
+
+get_values = array.from(1, 2)
+remove_values = array.from(1, 2)
+pop_values = array.from(1, 2)
+shift_values = array.from(1, 2)
+first_values = array.from(1, 2)
+last_values = array.from(1, 2)
+
+method_get_values = array.from(1, 2)
+method_remove_values = array.from(1, 2)
+method_pop_values = array.from(1, 2)
+method_shift_values = array.from(1, 2)
+method_first_values = array.from(1, 2)
+method_last_values = array.from(1, 2)
+
+plot(close, show_last=array.get(get_values, 0))
+plot(close, show_last=array.remove(remove_values, 0))
+plot(close, show_last=array.pop(pop_values))
+plot(close, show_last=array.shift(shift_values))
+plot(close, show_last=array.first(first_values))
+plot(close, show_last=array.last(last_values))
+
+plot(close, show_last=method_get_values.get(0))
+plot(close, show_last=method_remove_values.remove(0))
+plot(close, show_last=method_pop_values.pop())
+plot(close, show_last=method_shift_values.shift())
+plot(close, show_last=method_first_values.first())
+plot(close, show_last=method_last_values.last())

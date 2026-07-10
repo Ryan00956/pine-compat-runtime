@@ -1,0 +1,57 @@
+//@version=5
+indicator("User type typed UDF params")
+
+type Point
+    float x
+    float y
+
+type Wrapper
+    Point point
+
+make(float x, float y) =>
+    Point.new(x, y)
+
+makeWrapper(Point point) =>
+    Wrapper.new(point)
+
+pass(Point point) =>
+    point
+
+passWrapper(Wrapper wrapper) =>
+    wrapper
+
+clone(Point point) =>
+    Point.new(point.x + 10, point.y + 20)
+
+point = pass(make(close, open))
+cloned = clone(point)
+previous = point[1]
+dyn = bar_index == 0 ? na : 1
+dynamic_previous = point[dyn]
+dynamic_sibling = point[dyn]
+float dynamic_previous_x = na
+float dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    dynamic_previous_x := dynamic_previous.x
+    dynamic_previous.x := close + 700
+    dynamic_sibling_x_after_dynamic_mutation := dynamic_sibling.x
+
+wrapped = passWrapper(makeWrapper(point))
+wrapped_previous = wrapped[1]
+wrapped_dynamic_previous = wrapped[dyn]
+wrapped_dynamic_sibling = wrapped[dyn]
+float wrapped_dynamic_previous_x = na
+float wrapped_dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    wrapped_dynamic_previous_x := wrapped_dynamic_previous.point.x
+    wrapped_dynamic_previous.point := Point.new(close + 800, open + 800)
+    wrapped_dynamic_sibling_x_after_dynamic_mutation := wrapped_dynamic_sibling.point.x
+
+plot(point.x)
+plot(cloned.y)
+plot(na(previous) ? na : previous.x)
+plot(dynamic_previous_x)
+plot(dynamic_sibling_x_after_dynamic_mutation)
+plot(na(wrapped_previous) ? na : wrapped_previous.point.x)
+plot(wrapped_dynamic_previous_x)
+plot(wrapped_dynamic_sibling_x_after_dynamic_mutation)

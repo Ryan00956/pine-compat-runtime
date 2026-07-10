@@ -1,0 +1,17 @@
+//@version=5
+indicator("Supported user type array typed UDF params")
+
+type Point
+    float x
+    float y
+
+first_x(array<Point> values) =>
+    point = array.get(values, 0)
+    point.x
+
+second_y(Point[] values) =>
+    point = values.get(1)
+    point.y
+
+points = array.from(Point.new(close + 1, open + 2), Point.new(high + 3, low + 4))
+plot(first_x(points) + second_y(points))

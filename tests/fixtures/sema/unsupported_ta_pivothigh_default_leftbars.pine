@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.pivothigh default leftbars")
+plot(ta.pivothigh(1.5, 1))

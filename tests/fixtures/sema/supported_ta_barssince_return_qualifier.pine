@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported ta.barssince return qualifier")
+
+bars_since_up = ta.barssince(close > open)
+bars_since_down = ta.barssince(condition=close < open)
+
+plot(bars_since_up)
+plot(bars_since_down)

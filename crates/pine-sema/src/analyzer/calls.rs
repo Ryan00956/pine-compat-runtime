@@ -1,4 +1,6 @@
-use crate::analyzer::maps::{accepts_map_scalar_kind, map_kind_from_template_name};
+use crate::analyzer::maps::{
+    accepts_map_scalar_kind, map_kind_from_template_name, map_scalar_kind_accepts,
+};
 use crate::analyzer::user_type_array_sort as ut_array_sort;
 use crate::analyzer::user_types::UserTypeArrayElementInference;
 use crate::prelude::*;
@@ -11,12 +13,14 @@ mod helpers;
 mod return_types;
 
 pub(crate) use helpers::{
-    alias_qualified_method_name, array_method_builtin_name, drawing_method_builtin_name, expr_name,
-    is_array_mutation_builtin, is_array_mutation_method_call_name, is_map_mutation_builtin,
-    is_map_mutation_method_call_name, is_output_or_declaration_builtin,
-    is_ta_extreme_length_overload, is_ta_pivot_default_source_overload, is_ta_vwap_bands_call,
-    is_time_function_overload, is_timestamp_overload, map_method_builtin_name, method_call_parts,
-    receiver_call_arg,
+    alias_qualified_method_name, array_method_builtin_name,
+    call_arg_accepts_type_expected_diagnostic, call_arg_expected_label_diagnostic,
+    call_arg_expected_type_diagnostic, call_arg_type_diagnostic, call_requirement_diagnostic,
+    drawing_method_builtin_name, expr_name, is_array_mutation_builtin,
+    is_array_mutation_method_call_name, is_map_mutation_builtin, is_map_mutation_method_call_name,
+    is_output_or_declaration_builtin, is_ta_extreme_length_overload,
+    is_ta_pivot_default_source_overload, is_ta_vwap_bands_call, is_time_function_overload,
+    is_timestamp_overload, map_method_builtin_name, method_call_parts, receiver_call_arg,
 };
 
 impl Analyzer {
@@ -102,6 +106,15 @@ impl Analyzer {
         }
 
         if let Some(pine_type) = self.analyze_alias_qualified_user_method_call(
+            &name,
+            callee.span,
+            span,
+            args,
+            &arg_types,
+        ) {
+            return pine_type;
+        }
+        if let Some(pine_type) = self.analyze_local_qualified_user_method_call(
             &name,
             callee.span,
             span,
@@ -226,14 +239,15 @@ impl Analyzer {
             return Some(None);
         };
         if receiver_type.kind != ValueKind::Map {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_TYPE",
-                format!(
-                    "`{name}` argument `id` does not accept {:?} {:?}",
-                    receiver_type.qualifier, receiver_type.kind
-                ),
+            if let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
+                name,
+                "id",
+                Accepts::Map,
+                receiver_type,
                 args[0].span,
-            ));
+            ) {
+                self.diagnostics.push(diagnostic);
+            }
             return Some(None);
         }
         let Some(map_info) = self.map_type_of_expr(&args[0].value) else {
@@ -250,14 +264,15 @@ impl Analyzer {
                 return Some(None);
             };
             if source_type.kind != ValueKind::Map {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_TYPE",
-                    format!(
-                        "`{name}` argument `source` does not accept {:?} {:?}",
-                        source_type.qualifier, source_type.kind
-                    ),
+                if let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
+                    name,
+                    "source",
+                    Accepts::Map,
+                    source_type,
                     args[1].span,
-                ));
+                ) {
+                    self.diagnostics.push(diagnostic);
+                }
                 return Some(None);
             }
             let Some(source_info) = self.map_type_of_expr(&args[1].value) else {
@@ -272,11 +287,11 @@ impl Analyzer {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_TYPE",
                     format!(
-                        "`{name}` source map template {:?}/{:?} does not match target {:?}/{:?}",
-                        source_info.key_kind,
-                        source_info.value_kind,
-                        map_info.key_kind,
-                        map_info.value_kind
+                        "`{name}` source map template {}/{} does not match target {}/{}",
+                        value_kind_name(source_info.key_kind),
+                        value_kind_name(source_info.value_kind),
+                        value_kind_name(map_info.key_kind),
+                        value_kind_name(map_info.value_kind)
                     ),
                     args[1].span,
                 ));
@@ -287,29 +302,31 @@ impl Analyzer {
         if matches!(name, "map.put" | "map.get" | "map.contains" | "map.remove")
             && let Some(key_type) = arg_types.get(1).copied().flatten()
             && !accepts_map_scalar_kind(map_info.key_kind, key_type)
-        {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_TYPE",
-                format!(
-                    "`{name}` argument `key` does not accept {:?} {:?}",
-                    key_type.qualifier, key_type.kind
-                ),
+            && let Some(accepts) = map_scalar_kind_accepts(map_info.key_kind)
+            && let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
+                name,
+                "key",
+                accepts,
+                key_type,
                 args[1].span,
-            ));
+            )
+        {
+            self.diagnostics.push(diagnostic);
         }
 
         if name == "map.put"
             && let Some(value_type) = arg_types.get(2).copied().flatten()
             && !accepts_map_scalar_kind(map_info.value_kind, value_type)
-        {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_TYPE",
-                format!(
-                    "`{name}` argument `value` does not accept {:?} {:?}",
-                    value_type.qualifier, value_type.kind
-                ),
+            && let Some(accepts) = map_scalar_kind_accepts(map_info.value_kind)
+            && let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
+                name,
+                "value",
+                accepts,
+                value_type,
                 args[2].span,
-            ));
+            )
+        {
+            self.diagnostics.push(diagnostic);
         }
 
         self.compatibility.supported.push(FeatureUse {
@@ -329,7 +346,7 @@ impl Analyzer {
             "map.remove" => PineType::new(Qualifier::Series, ValueKind::Void),
             "map.copy" => PineType::new(Qualifier::Simple, ValueKind::Map),
             "map.put_all" => PineType::new(Qualifier::Series, ValueKind::Void),
-            "map.size" => PineType::new(Qualifier::Series, ValueKind::Int),
+            "map.size" => PineType::new(Qualifier::Simple, ValueKind::Int),
             "map.keys" => PineType::new(
                 Qualifier::Simple,
                 map_info
@@ -465,8 +482,8 @@ impl Analyzer {
             self.diagnostics.push(Diagnostic::error(
                 "E_METHOD_RECEIVER_TYPE",
                 format!(
-                    "method `{method_name}` is not supported for {:?} {:?}",
-                    receiver_type.qualifier, receiver_type.kind
+                    "method `{method_name}` is not supported for {}",
+                    pine_type_name(receiver_type)
                 ),
                 callee.span,
             ));
@@ -585,32 +602,38 @@ impl Analyzer {
 
         for (index, arg) in args.iter().enumerate() {
             if accepts_pivot_default_source {
-                let expected_name = if index == 0 { "leftbars" } else { "rightbars" };
-                if let Some(name) = &arg.name
-                    && name != expected_name
-                {
-                    self.diagnostics.push(Diagnostic::error(
-                        "E_CALL_ARG_NAME",
-                        format!(
-                            "`{}` two-argument overload has no argument named `{name}`",
-                            signature.name
-                        ),
-                        arg.span,
-                    ));
-                    continue;
-                }
+                let expected_name = match arg.name.as_deref() {
+                    Some("leftbars" | "rightbars") => arg.name.as_deref().unwrap(),
+                    Some(name) => {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_NAME",
+                            format!(
+                                "`{}` two-argument overload has no argument named `{name}`",
+                                signature.name
+                            ),
+                            arg.span,
+                        ));
+                        continue;
+                    }
+                    None => {
+                        if index == 0 {
+                            "leftbars"
+                        } else {
+                            "rightbars"
+                        }
+                    }
+                };
                 let Some(arg_type) = arg_types.get(index).copied().flatten() else {
                     continue;
                 };
-                if !accepts_type(Accepts::SimpleInt, arg_type) {
-                    self.diagnostics.push(Diagnostic::error(
-                        "E_CALL_ARG_TYPE",
-                        format!(
-                            "`{}` argument `{expected_name}` does not accept {:?} {:?}",
-                            signature.name, arg_type.qualifier, arg_type.kind
-                        ),
-                        arg.span,
-                    ));
+                if let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
+                    signature.name,
+                    expected_name,
+                    Accepts::IntCompatible,
+                    arg_type,
+                    arg.span,
+                ) {
+                    self.diagnostics.push(diagnostic);
                 }
                 continue;
             }
@@ -631,15 +654,14 @@ impl Analyzer {
                 let Some(arg_type) = arg_types.first().copied().flatten() else {
                     continue;
                 };
-                if !accepts_type(Accepts::SimpleInt, arg_type) {
-                    self.diagnostics.push(Diagnostic::error(
-                        "E_CALL_ARG_TYPE",
-                        format!(
-                            "`{}` argument `length` does not accept {:?} {:?}",
-                            signature.name, arg_type.qualifier, arg_type.kind
-                        ),
-                        arg.span,
-                    ));
+                if let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
+                    signature.name,
+                    "length",
+                    Accepts::IntCompatible,
+                    arg_type,
+                    arg.span,
+                ) {
+                    self.diagnostics.push(diagnostic);
                 }
                 continue;
             }
@@ -658,14 +680,28 @@ impl Analyzer {
             }
 
             if !call_arg_accepts_type(signature, args, arg_types, param.accepts, arg_type) {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_TYPE",
-                    format!(
-                        "`{}` argument `{}` does not accept {:?} {:?}",
-                        signature.name, param.name, arg_type.qualifier, arg_type.kind
-                    ),
+                let diagnostic = call_arg_matrix_cross_param_expected_diagnostic(
+                    signature,
+                    args,
+                    arg_types,
+                    param.name,
+                    param.accepts,
+                    arg_type,
                     arg.span,
-                ));
+                )
+                .or_else(|| {
+                    call_arg_accepts_type_expected_diagnostic(
+                        signature.name,
+                        param.name,
+                        param.accepts,
+                        arg_type,
+                        arg.span,
+                    )
+                })
+                .unwrap_or_else(|| {
+                    call_arg_type_diagnostic(signature.name, param.name, arg_type, arg.span)
+                });
+                self.diagnostics.push(diagnostic);
             }
         }
 
@@ -761,20 +797,126 @@ fn call_arg_accepts_type(
             if is_numeric_matrix_kind(arg_type.kind) {
                 return true;
             }
-            let accepts_compatible_value = accepts_type(Accepts::NumericCompatible, arg_type)
-                || accepts_type(Accepts::NumericArray, arg_type);
-            if !accepts_compatible_value {
-                return false;
-            }
             let Some(counterpart_type) =
                 arg_type_for_param_index(signature, args, arg_types, counterpart_param_index)
             else {
-                return true;
+                return accepts_type(Accepts::NumericCompatible, arg_type)
+                    || accepts_type(Accepts::NumericArray, arg_type);
             };
-            is_numeric_matrix_kind(counterpart_type.kind)
+            if accepts_type(Accepts::NumericArray, arg_type) {
+                return is_numeric_matrix_kind(counterpart_type.kind)
+                    || accepts_type(Accepts::NumericArray, counterpart_type);
+            }
+            accepts_type(Accepts::NumericCompatible, arg_type)
+                && is_numeric_matrix_kind(counterpart_type.kind)
         }
         _ => accepts_type(accepts, arg_type),
     }
+}
+
+fn call_arg_matrix_cross_param_expected_diagnostic(
+    signature: &BuiltinSignature,
+    args: &[CallArg],
+    arg_types: &[Option<PineType>],
+    param_name: &str,
+    accepts: Accepts,
+    arg_type: PineType,
+    span: Span,
+) -> Option<Diagnostic> {
+    let expected = match accepts {
+        Accepts::MatrixElementCompatible(matrix_param_index) => {
+            let matrix_type =
+                arg_type_for_param_index(signature, args, arg_types, matrix_param_index)?;
+            matrix_element_expected_label(matrix_type)?.to_owned()
+        }
+        Accepts::MatrixElementArray(matrix_param_index) => {
+            let matrix_type =
+                arg_type_for_param_index(signature, args, arg_types, matrix_param_index)?;
+            pine_type_name(matrix_element_array_expected_type(matrix_type)?)
+        }
+        Accepts::MatrixOrNumericCompatibleWithMatrixCounterpart(counterpart_param_index) => {
+            matrix_pair_expected_label(
+                signature,
+                args,
+                arg_types,
+                counterpart_param_index,
+                MatrixPairScalarPolicy::Numeric,
+            )?
+            .to_owned()
+        }
+        Accepts::MatrixOrNumericOrNumericArrayCompatibleWithMatrixCounterpart(
+            counterpart_param_index,
+        ) => matrix_pair_expected_label(
+            signature,
+            args,
+            arg_types,
+            counterpart_param_index,
+            MatrixPairScalarPolicy::NumericOrNumericArray,
+        )?
+        .to_owned(),
+        _ => return None,
+    };
+    Some(call_arg_expected_type_diagnostic(
+        signature.name,
+        param_name,
+        &expected,
+        arg_type,
+        span,
+    ))
+}
+
+fn matrix_element_expected_label(matrix_type: PineType) -> Option<&'static str> {
+    match matrix_type.kind {
+        ValueKind::FloatMatrix => Some("numeric-compatible"),
+        ValueKind::IntMatrix => Some("integer-compatible"),
+        ValueKind::BoolMatrix => Some("bool-compatible"),
+        ValueKind::StringMatrix => Some("string-compatible"),
+        ValueKind::ColorMatrix => Some("color-compatible"),
+        _ => None,
+    }
+}
+
+fn matrix_element_array_expected_type(matrix_type: PineType) -> Option<PineType> {
+    let kind = match matrix_type.kind {
+        ValueKind::FloatMatrix => ValueKind::FloatArray,
+        ValueKind::IntMatrix => ValueKind::IntArray,
+        ValueKind::BoolMatrix => ValueKind::BoolArray,
+        ValueKind::StringMatrix => ValueKind::StringArray,
+        ValueKind::ColorMatrix => ValueKind::ColorArray,
+        _ => return None,
+    };
+    Some(PineType::new(Qualifier::Simple, kind))
+}
+
+#[derive(Clone, Copy)]
+enum MatrixPairScalarPolicy {
+    Numeric,
+    NumericOrNumericArray,
+}
+
+fn matrix_pair_expected_label(
+    signature: &BuiltinSignature,
+    args: &[CallArg],
+    arg_types: &[Option<PineType>],
+    counterpart_param_index: usize,
+    scalar_policy: MatrixPairScalarPolicy,
+) -> Option<&'static str> {
+    let counterpart_type =
+        arg_type_for_param_index(signature, args, arg_types, counterpart_param_index)?;
+    if !is_numeric_matrix_kind(counterpart_type.kind) {
+        if matches!(scalar_policy, MatrixPairScalarPolicy::NumericOrNumericArray)
+            && accepts_type(Accepts::NumericArray, counterpart_type)
+        {
+            return Some("numeric matrix or numeric array");
+        }
+        return Some("numeric matrix");
+    }
+    Some(match scalar_policy {
+        MatrixPairScalarPolicy::Numeric => "numeric matrix or numeric-compatible",
+        MatrixPairScalarPolicy::NumericOrNumericArray => {
+            "numeric matrix, numeric-compatible, or numeric array"
+        }
+    })
 }
 
 fn arg_type_for_param_index(

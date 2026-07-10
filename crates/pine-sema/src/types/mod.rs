@@ -1,9 +1,15 @@
 use pine_builtins::Accepts;
 use pine_ir::{PineType, Qualifier, ValueKind};
-use pine_syntax::{BinaryOp, Expr, ExprKind, Literal, UnaryOp};
+use pine_syntax::BinaryOp;
 
+mod constants;
+mod formatting;
 mod matrices;
 
+pub(crate) use constants::{
+    const_color_value, const_int_value, const_numeric_value, const_string_value, literal_type,
+};
+pub(crate) use formatting::{pine_type_name, value_kind_name};
 pub(crate) use matrices::{
     accepts_matrix_element_arg, accepts_matrix_element_array_arg, is_matrix_kind,
     is_numeric_matrix_kind, matrix_array_return_type, matrix_element_return_type,
@@ -11,62 +17,7 @@ pub(crate) use matrices::{
 };
 
 pub(crate) const UNKNOWN: PineType = PineType::new(Qualifier::Series, ValueKind::Na);
-pub(crate) fn const_int_value(expr: &Expr) -> Option<i64> {
-    match &expr.kind {
-        ExprKind::Literal(Literal::Int(value)) => Some(*value),
-        ExprKind::QualifiedName(parts) => pine_builtins::named_int_constant(&parts.join(".")),
-        ExprKind::Unary {
-            op: UnaryOp::Plus,
-            expr,
-        } => const_int_value(expr),
-        ExprKind::Unary {
-            op: UnaryOp::Minus,
-            expr,
-        } => const_int_value(expr).and_then(i64::checked_neg),
-        ExprKind::Binary {
-            op: BinaryOp::Add,
-            left,
-            right,
-        } => const_int_value(left)?.checked_add(const_int_value(right)?),
-        ExprKind::Binary {
-            op: BinaryOp::Sub,
-            left,
-            right,
-        } => const_int_value(left)?.checked_sub(const_int_value(right)?),
-        _ => None,
-    }
-}
-pub(crate) fn const_numeric_value(expr: &Expr) -> Option<f64> {
-    match &expr.kind {
-        ExprKind::Literal(Literal::Int(value)) => Some(*value as f64),
-        ExprKind::Literal(Literal::Float(value)) => Some(*value),
-        ExprKind::Unary {
-            op: UnaryOp::Plus,
-            expr,
-        } => const_numeric_value(expr),
-        ExprKind::Unary {
-            op: UnaryOp::Minus,
-            expr,
-        } => const_numeric_value(expr).map(|value| -value),
-        _ => None,
-    }
-}
-pub(crate) fn const_string_value(expr: &Expr) -> Option<String> {
-    match &expr.kind {
-        ExprKind::Literal(Literal::String(value)) => Some(value.clone()),
-        ExprKind::QualifiedName(parts) => Some(parts.join(".")),
-        _ => None,
-    }
-}
-pub(crate) fn literal_type(literal: &Literal) -> PineType {
-    match literal {
-        Literal::Int(_) => PineType::new(Qualifier::Const, ValueKind::Int),
-        Literal::Float(_) => PineType::new(Qualifier::Const, ValueKind::Float),
-        Literal::Bool(_) => PineType::new(Qualifier::Const, ValueKind::Bool),
-        Literal::String(_) => PineType::new(Qualifier::Const, ValueKind::String),
-        Literal::ColorHex(_) => PineType::new(Qualifier::Const, ValueKind::Color),
-    }
-}
+
 pub(crate) fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
     match accepts {
         Accepts::Any => true,
@@ -74,15 +25,12 @@ pub(crate) fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
         Accepts::Kind(kind) => arg_type.kind == kind,
         Accepts::Numeric => is_numeric(arg_type.kind),
         Accepts::SeriesFloat => {
-            arg_type.qualifier == Qualifier::Series && arg_type.kind == ValueKind::Float
+            accepts_kind_exact(arg_type, Qualifier::Series, |kind| kind == ValueKind::Float)
         }
-        Accepts::SeriesNumeric => {
-            arg_type.qualifier == Qualifier::Series && is_numeric(arg_type.kind)
-        }
-        Accepts::SeriesNumericOrBool => {
-            arg_type.qualifier == Qualifier::Series
-                && (is_numeric(arg_type.kind) || arg_type.kind == ValueKind::Bool)
-        }
+        Accepts::SeriesNumeric => accepts_kind_exact(arg_type, Qualifier::Series, is_numeric),
+        Accepts::SeriesNumericOrBool => accepts_kind_exact(arg_type, Qualifier::Series, |kind| {
+            is_numeric(kind) || kind == ValueKind::Bool
+        }),
         Accepts::SeriesOrSimpleNumeric => {
             accepts_kind_at_most(arg_type, Qualifier::Series, is_numeric)
         }
@@ -101,30 +49,48 @@ pub(crate) fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
             matches!(kind, ValueKind::String | ValueKind::Na)
         }),
         Accepts::SimpleNumeric => accepts_kind_at_most(arg_type, Qualifier::Simple, is_numeric),
+        Accepts::SimpleNumericCompatible => {
+            accepts_kind_at_most(arg_type, Qualifier::Simple, |kind| {
+                matches!(kind, ValueKind::Int | ValueKind::Float | ValueKind::Na)
+            })
+        }
         Accepts::SimpleBool => {
             accepts_kind_at_most(arg_type, Qualifier::Simple, |kind| kind == ValueKind::Bool)
         }
-        Accepts::ConstNumeric => {
-            arg_type.qualifier == Qualifier::Const && is_numeric(arg_type.kind)
+        Accepts::SimpleBoolCompatible => {
+            accepts_kind_at_most(arg_type, Qualifier::Simple, |kind| {
+                matches!(kind, ValueKind::Bool | ValueKind::Na)
+            })
         }
+        Accepts::ConstNumeric => accepts_kind_exact(arg_type, Qualifier::Const, is_numeric),
         Accepts::ConstString => {
-            arg_type.qualifier == Qualifier::Const && arg_type.kind == ValueKind::String
+            accepts_kind_exact(arg_type, Qualifier::Const, |kind| kind == ValueKind::String)
         }
         Accepts::ConstBool => {
-            arg_type.qualifier == Qualifier::Const && arg_type.kind == ValueKind::Bool
+            accepts_kind_exact(arg_type, Qualifier::Const, |kind| kind == ValueKind::Bool)
         }
         Accepts::AtMostInputNumeric => accepts_kind_at_most(arg_type, Qualifier::Input, is_numeric),
+        Accepts::AtMostInputInt => {
+            accepts_kind_at_most(arg_type, Qualifier::Input, |kind| kind == ValueKind::Int)
+        }
+        Accepts::AtMostInputString => {
+            accepts_kind_at_most(arg_type, Qualifier::Input, |kind| kind == ValueKind::String)
+        }
+        Accepts::AtMostInputBool => {
+            accepts_kind_at_most(arg_type, Qualifier::Input, |kind| kind == ValueKind::Bool)
+        }
+        Accepts::AtMostInputColor => {
+            accepts_kind_at_most(arg_type, Qualifier::Input, |kind| kind == ValueKind::Color)
+        }
         Accepts::ColorCompatible => {
-            matches!(arg_type.kind, ValueKind::Color | ValueKind::Na)
-                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+            accepts_kind_compatible(arg_type, |kind| kind == ValueKind::Color)
         }
         Accepts::StringCompatible => {
-            matches!(arg_type.kind, ValueKind::String | ValueKind::Na)
-                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+            accepts_kind_compatible(arg_type, |kind| kind == ValueKind::String)
         }
-        Accepts::StringConvertible => {
+        Accepts::StringConvertible => accepts_kind_compatible(arg_type, |kind| {
             matches!(
-                arg_type.kind,
+                kind,
                 ValueKind::Int
                     | ValueKind::Float
                     | ValueKind::Bool
@@ -133,84 +99,52 @@ pub(crate) fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
                     | ValueKind::IntArray
                     | ValueKind::BoolArray
                     | ValueKind::StringArray
-                    | ValueKind::Na
-            ) && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
-        }
-        Accepts::StringOrIntCompatible => {
+            )
+        }),
+        Accepts::StringOrIntCompatible => accepts_kind_compatible(arg_type, |kind| {
+            matches!(kind, ValueKind::String | ValueKind::Int)
+        }),
+        Accepts::CastScalar => accepts_kind_compatible(arg_type, |kind| {
+            matches!(kind, ValueKind::Int | ValueKind::Float | ValueKind::Bool)
+        }),
+        Accepts::StringCastScalar => accepts_kind_compatible(arg_type, |kind| {
             matches!(
-                arg_type.kind,
-                ValueKind::String | ValueKind::Int | ValueKind::Na
-            ) && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
-        }
-        Accepts::CastScalar => {
+                kind,
+                ValueKind::Int | ValueKind::Float | ValueKind::Bool | ValueKind::String
+            )
+        }),
+        Accepts::ValueWhenSource => accepts_kind_compatible(arg_type, |kind| {
             matches!(
-                arg_type.kind,
-                ValueKind::Int | ValueKind::Float | ValueKind::Bool | ValueKind::Na
-            ) && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
-        }
-        Accepts::StringCastScalar => {
-            matches!(
-                arg_type.kind,
-                ValueKind::Int
-                    | ValueKind::Float
-                    | ValueKind::Bool
-                    | ValueKind::String
-                    | ValueKind::Na
-            ) && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
-        }
-        Accepts::ValueWhenSource => {
-            matches!(
-                arg_type.kind,
-                ValueKind::Int
-                    | ValueKind::Float
-                    | ValueKind::Bool
-                    | ValueKind::Color
-                    | ValueKind::Na
-            ) && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
-        }
-        Accepts::NumericOrColorCompatible => {
-            (is_numeric(arg_type.kind) || matches!(arg_type.kind, ValueKind::Color | ValueKind::Na))
-                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
-        }
-        Accepts::NumericCompatible => {
-            (is_numeric(arg_type.kind) || arg_type.kind == ValueKind::Na)
-                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
-        }
-        Accepts::IntCompatible => {
-            matches!(arg_type.kind, ValueKind::Int | ValueKind::Na)
-                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
-        }
+                kind,
+                ValueKind::Int | ValueKind::Float | ValueKind::Bool | ValueKind::Color
+            )
+        }),
+        Accepts::NumericOrColorCompatible => accepts_kind_compatible(arg_type, |kind| {
+            is_numeric(kind) || kind == ValueKind::Color
+        }),
+        Accepts::NumericCompatible => accepts_kind_compatible(arg_type, is_numeric),
+        Accepts::IntCompatible => accepts_kind_compatible(arg_type, |kind| kind == ValueKind::Int),
         Accepts::BoolCompatible => {
-            matches!(arg_type.kind, ValueKind::Bool | ValueKind::Na)
-                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+            accepts_kind_compatible(arg_type, |kind| kind == ValueKind::Bool)
         }
         Accepts::LabelCompatible => {
-            matches!(arg_type.kind, ValueKind::Label | ValueKind::Na)
-                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+            accepts_kind_compatible(arg_type, |kind| kind == ValueKind::Label)
         }
         Accepts::LineCompatible => {
-            matches!(arg_type.kind, ValueKind::Line | ValueKind::Na)
-                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+            accepts_kind_compatible(arg_type, |kind| kind == ValueKind::Line)
         }
         Accepts::LineFillCompatible => {
-            matches!(arg_type.kind, ValueKind::LineFill | ValueKind::Na)
-                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+            accepts_kind_compatible(arg_type, |kind| kind == ValueKind::LineFill)
         }
         Accepts::PolylineCompatible => {
-            matches!(arg_type.kind, ValueKind::Polyline | ValueKind::Na)
-                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+            accepts_kind_compatible(arg_type, |kind| kind == ValueKind::Polyline)
         }
-        Accepts::BoxCompatible => {
-            matches!(arg_type.kind, ValueKind::Box | ValueKind::Na)
-                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
-        }
+        Accepts::BoxCompatible => accepts_kind_compatible(arg_type, |kind| kind == ValueKind::Box),
         Accepts::TableCompatible => {
-            matches!(arg_type.kind, ValueKind::Table | ValueKind::Na)
-                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+            accepts_kind_compatible(arg_type, |kind| kind == ValueKind::Table)
         }
         Accepts::ChartPointCompatible => {
-            matches!(arg_type.kind, ValueKind::ChartPoint | ValueKind::Na)
-                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+            accepts_kind_compatible(arg_type, |kind| kind == ValueKind::ChartPoint)
         }
         Accepts::PlotOrHLine => matches!(arg_type.kind, ValueKind::Plot | ValueKind::HLine),
         Accepts::Array => is_array_kind(arg_type.kind),
@@ -239,18 +173,24 @@ pub(crate) fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
             arg_type.kind.array_element_kind(),
             Some(ValueKind::Float | ValueKind::Int | ValueKind::String)
         ),
-        Accepts::InputDefval => {
-            arg_type.qualifier == Qualifier::Const
-                && matches!(
-                    arg_type.kind,
-                    ValueKind::Int
-                        | ValueKind::Float
-                        | ValueKind::Bool
-                        | ValueKind::String
-                        | ValueKind::Color
-                )
-        }
+        Accepts::InputDefval => accepts_kind_exact(arg_type, Qualifier::Const, |kind| {
+            matches!(
+                kind,
+                ValueKind::Int
+                    | ValueKind::Float
+                    | ValueKind::Bool
+                    | ValueKind::String
+                    | ValueKind::Color
+            )
+        }),
     }
+}
+fn accepts_kind_exact(
+    arg_type: PineType,
+    qualifier: Qualifier,
+    accepts_kind: impl Fn(ValueKind) -> bool,
+) -> bool {
+    arg_type.qualifier == qualifier && accepts_kind(arg_type.kind)
 }
 fn accepts_kind_at_most(
     arg_type: PineType,
@@ -259,6 +199,12 @@ fn accepts_kind_at_most(
 ) -> bool {
     qualifier_at_most(arg_type.qualifier, max_qualifier) && accepts_kind(arg_type.kind)
 }
+
+fn accepts_kind_compatible(arg_type: PineType, accepts_kind: impl Fn(ValueKind) -> bool) -> bool {
+    qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+        && (arg_type.kind == ValueKind::Na || accepts_kind(arg_type.kind))
+}
+
 pub(crate) fn can_assign(target: PineType, value: PineType) -> bool {
     if target.kind == value.kind {
         return qualifier_at_most(value.qualifier, target.qualifier)
@@ -585,6 +531,121 @@ mod tests {
     }
 
     #[test]
+    fn at_most_input_scalar_acceptors_accept_only_const_or_input_matching_kinds() {
+        for (accepts, kind, wrong_kind) in [
+            (Accepts::AtMostInputInt, ValueKind::Int, ValueKind::Float),
+            (
+                Accepts::AtMostInputString,
+                ValueKind::String,
+                ValueKind::Bool,
+            ),
+            (Accepts::AtMostInputBool, ValueKind::Bool, ValueKind::String),
+            (Accepts::AtMostInputColor, ValueKind::Color, ValueKind::Int),
+        ] {
+            assert!(accepts_type(accepts, pine_type(Qualifier::Const, kind)));
+            assert!(accepts_type(accepts, pine_type(Qualifier::Input, kind)));
+            assert!(!accepts_type(accepts, pine_type(Qualifier::Simple, kind)));
+            assert!(!accepts_type(accepts, pine_type(Qualifier::Series, kind)));
+            assert!(!accepts_type(
+                accepts,
+                pine_type(Qualifier::Input, wrong_kind)
+            ));
+            assert!(!accepts_type(
+                accepts,
+                pine_type(Qualifier::Input, ValueKind::Na)
+            ));
+        }
+    }
+
+    #[test]
+    fn series_acceptors_require_exact_series_qualifier() {
+        assert!(accepts_type(
+            Accepts::SeriesFloat,
+            pine_type(Qualifier::Series, ValueKind::Float)
+        ));
+        assert!(accepts_type(
+            Accepts::SeriesNumeric,
+            pine_type(Qualifier::Series, ValueKind::Int)
+        ));
+        assert!(accepts_type(
+            Accepts::SeriesNumericOrBool,
+            pine_type(Qualifier::Series, ValueKind::Bool)
+        ));
+
+        for qualifier in [Qualifier::Const, Qualifier::Input, Qualifier::Simple] {
+            assert!(!accepts_type(
+                Accepts::SeriesFloat,
+                pine_type(qualifier, ValueKind::Float)
+            ));
+            assert!(!accepts_type(
+                Accepts::SeriesNumeric,
+                pine_type(qualifier, ValueKind::Int)
+            ));
+            assert!(!accepts_type(
+                Accepts::SeriesNumericOrBool,
+                pine_type(qualifier, ValueKind::Bool)
+            ));
+        }
+
+        assert!(!accepts_type(
+            Accepts::SeriesNumeric,
+            pine_type(Qualifier::Series, ValueKind::Bool)
+        ));
+        assert!(!accepts_type(
+            Accepts::SeriesNumericOrBool,
+            pine_type(Qualifier::Series, ValueKind::String)
+        ));
+    }
+
+    #[test]
+    fn const_acceptors_require_exact_const_qualifier() {
+        assert!(accepts_type(
+            Accepts::ConstNumeric,
+            pine_type(Qualifier::Const, ValueKind::Float)
+        ));
+        assert!(accepts_type(
+            Accepts::ConstString,
+            pine_type(Qualifier::Const, ValueKind::String)
+        ));
+        assert!(accepts_type(
+            Accepts::ConstBool,
+            pine_type(Qualifier::Const, ValueKind::Bool)
+        ));
+        assert!(accepts_type(
+            Accepts::InputDefval,
+            pine_type(Qualifier::Const, ValueKind::Color)
+        ));
+
+        for qualifier in [Qualifier::Input, Qualifier::Simple, Qualifier::Series] {
+            assert!(!accepts_type(
+                Accepts::ConstNumeric,
+                pine_type(qualifier, ValueKind::Float)
+            ));
+            assert!(!accepts_type(
+                Accepts::ConstString,
+                pine_type(qualifier, ValueKind::String)
+            ));
+            assert!(!accepts_type(
+                Accepts::ConstBool,
+                pine_type(qualifier, ValueKind::Bool)
+            ));
+            assert!(!accepts_type(
+                Accepts::InputDefval,
+                pine_type(qualifier, ValueKind::Int)
+            ));
+        }
+
+        assert!(!accepts_type(
+            Accepts::ConstNumeric,
+            pine_type(Qualifier::Const, ValueKind::String)
+        ));
+        assert!(!accepts_type(
+            Accepts::InputDefval,
+            pine_type(Qualifier::Const, ValueKind::Line)
+        ));
+    }
+
+    #[test]
     fn simple_acceptors_accept_weaker_qualifiers_and_reject_series() {
         for qualifier in [Qualifier::Const, Qualifier::Input, Qualifier::Simple] {
             assert!(accepts_type(
@@ -595,6 +656,12 @@ mod tests {
                 Accepts::SimpleNumeric,
                 pine_type(qualifier, ValueKind::Float)
             ));
+            for kind in [ValueKind::Float, ValueKind::Na] {
+                assert!(accepts_type(
+                    Accepts::SimpleNumericCompatible,
+                    pine_type(qualifier, kind)
+                ));
+            }
             assert!(accepts_type(
                 Accepts::SimpleBool,
                 pine_type(qualifier, ValueKind::Bool)
@@ -611,6 +678,10 @@ mod tests {
         ));
         assert!(!accepts_type(
             Accepts::SimpleNumeric,
+            pine_type(Qualifier::Series, ValueKind::Float)
+        ));
+        assert!(!accepts_type(
+            Accepts::SimpleNumericCompatible,
             pine_type(Qualifier::Series, ValueKind::Float)
         ));
         assert!(!accepts_type(
@@ -651,6 +722,30 @@ mod tests {
     }
 
     #[test]
+    fn compatible_acceptors_allow_series_values_and_na_for_matching_kinds() {
+        assert!(accepts_type(
+            Accepts::LabelCompatible,
+            pine_type(Qualifier::Series, ValueKind::Label)
+        ));
+        assert!(accepts_type(
+            Accepts::LabelCompatible,
+            pine_type(Qualifier::Series, ValueKind::Na)
+        ));
+        assert!(accepts_type(
+            Accepts::NumericCompatible,
+            pine_type(Qualifier::Input, ValueKind::Float)
+        ));
+        assert!(!accepts_type(
+            Accepts::LabelCompatible,
+            pine_type(Qualifier::Series, ValueKind::Line)
+        ));
+        assert!(!accepts_type(
+            Accepts::NumericCompatible,
+            pine_type(Qualifier::Series, ValueKind::String)
+        ));
+    }
+
+    #[test]
     fn series_or_simple_acceptors_accept_all_numeric_qualifiers() {
         for qualifier in [
             Qualifier::Const,
@@ -687,14 +782,9 @@ mod tests {
         assert!(is_array_kind(ValueKind::UserTypeArray));
         assert!(!is_numeric_array_kind(ValueKind::UserTypeArray));
         assert!(!is_scalar_array_kind(ValueKind::UserTypeArray));
+        let user_type_array = PineType::new(Qualifier::Simple, ValueKind::UserTypeArray);
         assert_eq!(
-            array_element_return_type(
-                &[Some(PineType::new(
-                    Qualifier::Simple,
-                    ValueKind::UserTypeArray,
-                ))],
-                0,
-            ),
+            array_element_return_type(&[Some(user_type_array)], 0),
             Some(PineType::new(Qualifier::Series, ValueKind::UserType))
         );
     }

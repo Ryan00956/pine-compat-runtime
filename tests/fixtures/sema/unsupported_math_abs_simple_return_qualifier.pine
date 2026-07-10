@@ -1,0 +1,12 @@
+//@version=6
+indicator("Unsupported math abs simple return qualifier")
+
+values = array.from(1, 2)
+simple_count = array.size(values) - 5
+simple_price = array.size(values) - 3.5
+
+abs_count = math.abs(simple_count)
+abs_price = math.abs(simple_price)
+
+plot(close, show_last=abs_count)
+hline(abs_price)

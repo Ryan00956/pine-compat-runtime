@@ -4,8 +4,43 @@ indicator("Series history offset built-in")
 offset = bar_index == 0 ? 0 : 1
 maybe_offset = bar_index == 2 ? na : offset
 previous = ta.change(close)[offset]
+abs_value = math.abs(close - 2)
+abs_previous = abs_value[offset]
+length = bar_index == 0 ? 1 : 2
+occurrence = bar_index < 4 ? 0 : 1
+mom_value = ta.mom(close, length)
+roc_value = ta.roc(close, length)
+rising_value = ta.rising(close, length)
+falling_value = ta.falling(close, length)
+highest_value = ta.highest(close, length)
+lowest_value = ta.lowest(close, length)
+highestbars_value = ta.highestbars(close, length)
+lowestbars_value = ta.lowestbars(close, length)
+valuewhen_value = ta.valuewhen(close > open, close, occurrence)
+mom_previous = mom_value[offset]
+highest_previous = highest_value[offset]
+highestbars_previous = highestbars_value[offset]
+valuewhen_previous = valuewhen_value[offset]
 
 plot(previous)
 plot(ta.change(close + open)[offset])
 plot(ta.change(close)[maybe_offset])
+plot(abs_previous)
+plot(abs_value[maybe_offset])
+plot(mom_previous)
+plot(roc_value[offset])
+plot(rising_value[offset] ? 1 : 0)
+plot(falling_value[offset] ? 1 : 0)
+plot(highest_previous)
+plot(lowest_value[offset])
+plot(highestbars_previous)
+plot(lowestbars_value[offset])
+plot(valuewhen_previous)
+plot(highest_value[maybe_offset])
+plot(valuewhen_value[maybe_offset])
 plot(na(previous[1]) ? 1 : 0)
+plot(na(abs_previous[1]) ? 1 : 0)
+plot(na(mom_previous[1]) ? 1 : 0)
+plot(na(highest_previous[1]) ? 1 : 0)
+plot(na(highestbars_previous[1]) ? 1 : 0)
+plot(na(valuewhen_previous[1]) ? 1 : 0)

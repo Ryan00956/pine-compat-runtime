@@ -1,0 +1,5 @@
+//@version=6
+indicator("Supported color.rgb input return qualifier")
+red = input.int(64, "Red")
+level_color = color.rgb(red, 128, 192)
+hline(2, color=level_color)

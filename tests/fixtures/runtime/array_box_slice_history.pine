@@ -8,6 +8,13 @@ previous_window = window[1]
 previous_id = na(previous_window) ? na : previous_window.get(0)
 dynamic_offset = bar_index == 0 ? na : 1
 dynamic_previous_window = window[dynamic_offset]
+dynamic_sibling_window = window[dynamic_offset]
+dynamic_previous_id = na(dynamic_previous_window) ? na : dynamic_previous_window.get(0)
+if not na(dynamic_previous_window)
+    dynamic_previous_window.set(0, current)
+dynamic_sibling_id_after_dynamic_replacement = na(dynamic_sibling_window) ? na : dynamic_sibling_window.get(0)
 plot(na(previous_window) ? 1 : 0)
 plot(na(dynamic_previous_window) ? 1 : 0)
 plot(na(previous_id) ? na : box.get_left(previous_id))
+plot(na(dynamic_previous_id) ? na : box.get_left(dynamic_previous_id))
+plot(na(dynamic_sibling_id_after_dynamic_replacement) ? na : box.get_left(dynamic_sibling_id_after_dynamic_replacement))

@@ -1,0 +1,15 @@
+//@version=5
+indicator("Supported user type typed UDF params")
+
+type Point
+    float x
+    float y
+
+make(float x, float y) =>
+    Point.new(x, y)
+
+pass(Point point) =>
+    point
+
+point = pass(make(close, open))
+plot(point.x)

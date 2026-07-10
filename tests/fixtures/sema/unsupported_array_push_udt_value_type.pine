@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported array.push UDT value type")
+
+type Point
+    float x
+
+points = array.new<Point>()
+array.push(points, close)
+plot(close)

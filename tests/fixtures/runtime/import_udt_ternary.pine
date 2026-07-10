@@ -4,4 +4,7 @@ indicator("Imported UDT ternary")
 
 p = close > open ? lib.Point.new(close) : lib.Point.new(open)
 lib.Point typed = close > open ? p : lib.Point.new(high)
+wrapped = close > open ? lib.Wrapper.new(lib.Point.new(close)) : lib.Wrapper.new(lib.Point.new(open))
+lib.Wrapper wrapped_typed = close > open ? wrapped : lib.Wrapper.new(lib.Point.new(high))
 plot(p.x + typed.x)
+plot(wrapped.nested.x + wrapped_typed.nested.x)

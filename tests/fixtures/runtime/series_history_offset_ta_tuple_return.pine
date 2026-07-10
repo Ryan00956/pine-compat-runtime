@@ -1,0 +1,54 @@
+//@version=5
+indicator("Series history offset TA tuple return")
+
+offset = bar_index == 0 ? 0 : 1
+maybe_offset = bar_index == 2 ? na : offset
+
+[macd_line, signal_line, hist_line] = ta.macd(close, 2, 3, 2)
+[bb_basis, bb_upper, bb_lower] = ta.bb(close, 3, 2)
+[kc_middle, kc_upper, kc_lower] = ta.kc(close, 2, 2)
+[vwap_basis, vwap_upper, vwap_lower] = ta.vwap(close, false, 2.0)
+[supertrend_line, supertrend_direction] = ta.supertrend(2, 3)
+[dmi_plus, dmi_minus, dmi_adx] = ta.dmi(3, 2)
+
+macd_previous = macd_line[offset]
+signal_maybe_previous = signal_line[maybe_offset]
+hist_previous = hist_line[offset]
+bb_basis_previous = bb_basis[offset]
+bb_upper_maybe_previous = bb_upper[maybe_offset]
+bb_lower_previous = bb_lower[offset]
+kc_middle_previous = kc_middle[offset]
+kc_upper_maybe_previous = kc_upper[maybe_offset]
+kc_lower_previous = kc_lower[offset]
+vwap_basis_previous = vwap_basis[offset]
+vwap_upper_maybe_previous = vwap_upper[maybe_offset]
+vwap_lower_previous = vwap_lower[offset]
+supertrend_line_previous = supertrend_line[offset]
+supertrend_direction_maybe_previous = supertrend_direction[maybe_offset]
+dmi_plus_previous = dmi_plus[offset]
+dmi_minus_maybe_previous = dmi_minus[maybe_offset]
+dmi_adx_previous = dmi_adx[offset]
+
+plot(macd_previous)
+plot(signal_maybe_previous)
+plot(hist_previous)
+plot(bb_basis_previous)
+plot(bb_upper_maybe_previous)
+plot(bb_lower_previous)
+plot(kc_middle_previous)
+plot(kc_upper_maybe_previous)
+plot(kc_lower_previous)
+plot(vwap_basis_previous)
+plot(vwap_upper_maybe_previous)
+plot(vwap_lower_previous)
+plot(supertrend_line_previous)
+plot(supertrend_direction_maybe_previous)
+plot(dmi_plus_previous)
+plot(dmi_minus_maybe_previous)
+plot(dmi_adx_previous)
+plot(na(macd_previous[1]) ? 1 : 0)
+plot(na(bb_basis_previous[1]) ? 1 : 0)
+plot(na(kc_middle_previous[1]) ? 1 : 0)
+plot(na(vwap_basis_previous[1]) ? 1 : 0)
+plot(na(supertrend_line_previous[1]) ? 1 : 0)
+plot(na(dmi_plus_previous[1]) ? 1 : 0)

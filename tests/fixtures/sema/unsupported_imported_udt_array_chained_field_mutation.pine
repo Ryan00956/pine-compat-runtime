@@ -1,0 +1,6 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Unsupported imported UDT array chained field mutation")
+
+points = array.from(lib.Point.new(close))
+points.get(0).x := high

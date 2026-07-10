@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported for result local alias negative history")
+length = for i = 0 to 0
+    base = -1
+    base
+plot(close[length])

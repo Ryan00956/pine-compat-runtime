@@ -1,0 +1,19 @@
+//@version=6
+indicator("Unsupported array.indexof object UDT const input return qualifier")
+
+type Point
+    float x
+
+first_label = label.new(bar_index, high, "a")
+second_label = label.new(bar_index + 1, low, "b")
+first_line = line.new(bar_index, high, bar_index + 1, low)
+second_line = line.new(bar_index + 2, high + 1, bar_index + 3, low + 1)
+points = array.from(chart.point.from_index(bar_index, close), chart.point.from_index(bar_index + 1, close + 1))
+labels = array.from(first_label, second_label)
+lines = array.from(first_line, second_line)
+local_points = array.from(Point.new(close), Point.new(open))
+
+plot(close, show_last=array.indexof(labels, first_label))
+plot(open, show_last=lines.lastindexof(second_line))
+plot(high, show_last=array.indexof(points, chart.point.from_index(bar_index, close)))
+plot(low, show_last=local_points.lastindexof(Point.new(open)))

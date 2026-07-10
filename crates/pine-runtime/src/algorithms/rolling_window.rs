@@ -34,7 +34,6 @@ pub(crate) enum RollingWindowKey {
     HmaHalf(CallSiteId),
     HmaFull(CallSiteId),
     HmaSmooth(CallSiteId),
-    RisingFalling(CallSiteId),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -118,22 +117,6 @@ impl RollingWindowState {
         Some(highest - lowest)
     }
 
-    pub(crate) fn extreme_offset(&self, mode: WindowExtreme) -> Option<usize> {
-        self.values
-            .iter()
-            .flatten()
-            .copied()
-            .enumerate()
-            .reduce(|current, value| {
-                let better = match mode {
-                    WindowExtreme::Highest => value.1 >= current.1,
-                    WindowExtreme::Lowest => value.1 <= current.1,
-                };
-                if better { value } else { current }
-            })
-            .map(|(index, _)| self.values.len().saturating_sub(1 + index))
-    }
-
     pub(crate) fn mean_absolute_deviation(&self, length: usize) -> f64 {
         let mean = self.mean(length);
         self.values
@@ -165,12 +148,5 @@ impl RollingWindowState {
             .sum::<f64>();
         let denominator = length * (length + 1) / 2;
         weighted_sum / denominator as f64
-    }
-
-    pub(crate) fn trend(&self, current: f64, mode: RisingFallingMode) -> bool {
-        self.values.iter().flatten().all(|value| match mode {
-            RisingFallingMode::Rising => current > *value,
-            RisingFallingMode::Falling => current < *value,
-        })
     }
 }

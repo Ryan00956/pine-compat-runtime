@@ -1,0 +1,32 @@
+indicator("Array na simple int params")
+values = array.from(1, 2, 3)
+
+maybe_values = array.new_int(na)
+plot(na(maybe_values) ? 1 : 0)
+
+plot(array.get(values, na))
+plot(values.get(na))
+
+array.set(values, na, 9)
+values.set(na, 8)
+plot(values.size() * 100 + values.get(0) * 10 + values.get(2))
+
+array.insert(values, na, 7)
+values.insert(na, 6)
+plot(values.size() * 100 + values.get(0) * 10 + values.get(2))
+
+plot(array.remove(values, na))
+plot(values.remove(na))
+plot(values.size() * 100 + values.get(0) * 10 + values.get(2))
+
+array.fill(values, 9, na, 2)
+values.fill(8, 0, na)
+plot(values.size() * 100 + values.get(0) * 10 + values.get(2))
+
+window = array.slice(values, na, 2)
+method_window = values.slice(0, na)
+plot(na(window) ? 1 : 0)
+plot(na(method_window) ? 1 : 0)
+
+plot(array.percentrank(values, na))
+plot(values.percentrank(na))

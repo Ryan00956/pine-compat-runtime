@@ -1,5 +1,14 @@
 use crate::analyzer::functions::contains_output_or_declaration_call;
+use crate::analyzer::user_types::{
+    UserTypeArrayElementInference, classify_user_type_array_element_names,
+};
 use crate::prelude::*;
+
+struct MethodCallReceiver {
+    type_name: String,
+    pine_type: PineType,
+    span: Span,
+}
 
 impl Analyzer {
     pub(crate) fn register_methods(&mut self, program: &Program) {
@@ -93,26 +102,51 @@ impl Analyzer {
         arg_types: &[Option<PineType>],
     ) -> Option<Option<PineType>> {
         let receiver_symbol = self.scope.resolve(receiver_name)?;
-        let receiver_type_name = self.symbol_user_types.get(&receiver_symbol.id).cloned()?;
+        let receiver = MethodCallReceiver {
+            type_name: self.symbol_user_types.get(&receiver_symbol.id).cloned()?,
+            pine_type: receiver_symbol.pine_type,
+            span,
+        };
+        self.analyze_user_method_call_with_receiver(
+            receiver,
+            method_name,
+            call_span,
+            args,
+            arg_types,
+        )
+    }
+
+    fn analyze_user_method_call_with_receiver(
+        &mut self,
+        receiver: MethodCallReceiver,
+        method_name: &str,
+        call_span: Span,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> Option<Option<PineType>> {
         let Some(method) = self
             .methods
-            .get(&(receiver_type_name.clone(), method_name.to_owned()))
+            .get(&(receiver.type_name.clone(), method_name.to_owned()))
             .cloned()
         else {
-            if self.imported_user_types.contains_key(&receiver_type_name) {
+            if self.imported_user_types.contains_key(&receiver.type_name) {
                 self.diagnostics.push(Diagnostic::error(
                     "E_IMPORT_UNSUPPORTED_METHOD",
                     format!(
-                        "imported method `{method_name}` for receiver `{receiver_type_name}` is not supported; imported method dispatch requires imported UDT identity"
+                        "imported method `{method_name}` for receiver `{}` is not supported; imported method dispatch requires imported UDT identity",
+                        receiver.type_name
                     ),
-                    span,
+                    receiver.span,
                 ));
                 return Some(None);
             }
             self.diagnostics.push(Diagnostic::error(
                 "E_UNKNOWN_METHOD",
-                format!("unknown method `{method_name}` for `{receiver_type_name}`"),
-                span,
+                format!(
+                    "unknown method `{method_name}` for `{}`",
+                    receiver.type_name
+                ),
+                receiver.span,
             ));
             return Some(None);
         };
@@ -125,7 +159,7 @@ impl Analyzer {
             self.diagnostics.push(Diagnostic::error(
                 "E_RECURSIVE_METHOD",
                 format!("recursive method `{method_name}` is not supported"),
-                span,
+                receiver.span,
             ));
             return Some(None);
         }
@@ -133,7 +167,7 @@ impl Analyzer {
             self.diagnostics.push(Diagnostic::error(
                 "E_FUNCTION_CALL_DEPTH",
                 "user-defined method call chain is too deep",
-                span,
+                receiver.span,
             ));
             return Some(None);
         }
@@ -154,7 +188,13 @@ impl Analyzer {
         let arg_indices = match resolve_udf_arg_indices(&params, args) {
             Ok(arg_indices) => arg_indices,
             Err(error) => {
-                self.report_udf_arg_error(method_name, span, params.len(), args.len(), error);
+                self.report_udf_arg_error(
+                    method_name,
+                    receiver.span,
+                    params.len(),
+                    args.len(),
+                    error,
+                );
                 return Some(None);
             }
         };
@@ -164,27 +204,36 @@ impl Analyzer {
             span: method.span,
         });
         self.scope.push_scope();
-        let receiver = self.define_local_symbol(
-            &method.receiver_name,
-            receiver_symbol.pine_type,
-            None,
-            false,
-        );
-        self.mark_symbol_user_type(receiver, method.receiver_type.clone());
+        let receiver_symbol =
+            self.define_local_symbol(&method.receiver_name, receiver.pine_type, None, false);
+        self.mark_symbol_user_type(receiver_symbol, method.receiver_type.clone());
 
-        let mut param_symbols = std::collections::HashSet::from([receiver.id]);
+        let mut param_symbols = std::collections::HashSet::from([receiver_symbol.id]);
         let mut resolved_arg_types = vec![None; method.params.len()];
         let mut resolved_arg_user_types = vec![None; method.params.len()];
+        let mut resolved_arg_user_type_arrays = vec![None; method.params.len()];
+        let mut resolved_arg_const_switch_keys = vec![None; method.params.len()];
         for (arg_index, param_index) in arg_indices.iter().copied().enumerate() {
             resolved_arg_types[param_index] = arg_types.get(arg_index).copied().flatten();
             resolved_arg_user_types[param_index] = args
                 .get(arg_index)
                 .and_then(|arg| self.user_type_name_of_expr(&arg.value));
+            resolved_arg_user_type_arrays[param_index] = args
+                .get(arg_index)
+                .and_then(|arg| self.user_type_array_name_of_expr(&arg.value));
+            resolved_arg_const_switch_keys[param_index] = args
+                .get(arg_index)
+                .and_then(|arg| self.known_const_switch_key(&arg.value));
         }
-        for (param, (arg_type, arg_user_type)) in method
-            .params
-            .iter()
-            .zip(resolved_arg_types.into_iter().zip(resolved_arg_user_types))
+        let mut param_const_switch_keys = std::collections::HashMap::new();
+        for (param, (((arg_type, arg_user_type), arg_user_type_array), arg_const_switch_key)) in
+            method.params.iter().zip(
+                resolved_arg_types
+                    .into_iter()
+                    .zip(resolved_arg_user_types)
+                    .zip(resolved_arg_user_type_arrays)
+                    .zip(resolved_arg_const_switch_keys),
+            )
         {
             let arg_type = arg_type.unwrap_or(UNKNOWN);
             let symbol = self.define_local_symbol(&param.name, arg_type, None, false);
@@ -193,13 +242,30 @@ impl Analyzer {
                 self.diagnostics.push(Diagnostic::error(
                     "E_METHOD_ARG_TYPE",
                     format!(
-                        "cannot pass {:?} {:?} to method parameter `{}` of type {:?}",
-                        arg_type.qualifier, arg_type.kind, param.name, param.pine_type.kind
+                        "cannot pass {} to method parameter `{}` of type {}",
+                        pine_type_name(arg_type),
+                        param.name,
+                        value_kind_name(param.pine_type.kind)
                     ),
-                    span,
+                    receiver.span,
                 ));
             }
-            if let Some(expected_type_name) = &param.user_type_name {
+            if param.pine_type.kind == ValueKind::UserTypeArray {
+                if let Some(expected_type_name) = &param.user_type_name {
+                    if arg_user_type_array.as_deref() == Some(expected_type_name.as_str()) {
+                        self.mark_symbol_user_type_array(symbol, expected_type_name.clone());
+                    } else if arg_type.kind == ValueKind::UserTypeArray {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_METHOD_ARG_TYPE",
+                            format!(
+                                "cannot pass a different user-defined type array to method parameter `{}`",
+                                param.name
+                            ),
+                            receiver.span,
+                        ));
+                    }
+                }
+            } else if let Some(expected_type_name) = &param.user_type_name {
                 if arg_user_type.as_deref() == Some(expected_type_name.as_str()) {
                     self.mark_symbol_user_type(symbol, expected_type_name.clone());
                 } else {
@@ -209,13 +275,24 @@ impl Analyzer {
                             "cannot pass argument to method parameter `{}` of user-defined type `{}`",
                             param.name, expected_type_name
                         ),
-                        span,
+                        receiver.span,
                     ));
                 }
+            }
+            if let Some(type_name) = arg_user_type {
+                self.mark_symbol_user_type(symbol, type_name);
+            }
+            if let Some(type_name) = arg_user_type_array {
+                self.mark_symbol_user_type_array(symbol, type_name);
+            }
+            if let Some(key) = arg_const_switch_key {
+                param_const_switch_keys.insert(param.name.clone(), key);
             }
         }
         self.function_stack.push(stack_name);
         self.function_param_symbols.push(param_symbols);
+        self.function_param_const_switch_keys
+            .push(param_const_switch_keys);
         self.function_context_is_method.push(true);
         self.function_depth += 1;
         let return_type = self.analyze_function_body(&method.body, method.span);
@@ -223,10 +300,11 @@ impl Analyzer {
             && let Some(type_name) = self.user_type_name_of_function_body(&method.body)
         {
             self.mark_expr_user_type(call_span, type_name.clone());
-            self.mark_expr_user_type(span, type_name);
+            self.mark_expr_user_type(receiver.span, type_name);
         }
         self.function_depth -= 1;
         self.function_context_is_method.pop();
+        self.function_param_const_switch_keys.pop();
         self.function_param_symbols.pop();
         self.function_stack.pop();
         self.scope.pop_scope();
@@ -255,22 +333,14 @@ impl Analyzer {
             ));
             return Some(None);
         };
-        let ExprKind::Identifier(receiver_name) = &receiver_arg.value.kind else {
-            self.diagnostics.push(Diagnostic::error(
-                "E_IMPORT_UNSUPPORTED_METHOD",
-                format!("alias-qualified imported method `{name}` requires an identifier receiver"),
-                receiver_arg.span,
-            ));
-            return Some(None);
-        };
         let receiver_type = arg_types.first().copied().flatten();
         let Some(receiver_user_type) = self.user_type_name_of_expr(&receiver_arg.value) else {
             if let Some(receiver_type) = receiver_type {
                 self.diagnostics.push(Diagnostic::error(
                     "E_METHOD_ARG_TYPE",
                     format!(
-                        "cannot pass {:?} {:?} as receiver to imported method `{name}`",
-                        receiver_type.qualifier, receiver_type.kind
+                        "cannot pass {} as receiver to imported method `{name}`",
+                        pine_type_name(receiver_type)
                     ),
                     receiver_arg.span,
                 ));
@@ -287,19 +357,88 @@ impl Analyzer {
         }
         if !self
             .methods
-            .contains_key(&(receiver_user_type, method_name.to_owned()))
+            .contains_key(&(receiver_user_type.clone(), method_name.to_owned()))
         {
             self.diagnostics.push(Diagnostic::error(
                 "E_UNKNOWN_METHOD",
-                format!("unknown imported method `{name}` for receiver `{receiver_name}`"),
+                format!("unknown imported method `{name}` for receiver `{receiver_user_type}`"),
                 span,
             ));
             return Some(None);
         }
-        self.analyze_user_method_call(
-            receiver_name,
+        self.analyze_user_method_call_with_receiver(
+            MethodCallReceiver {
+                type_name: receiver_user_type,
+                pine_type: receiver_type.unwrap_or(UNKNOWN),
+                span,
+            },
             method_name,
-            span,
+            call_span,
+            &args[1..],
+            &arg_types[1..],
+        )
+    }
+
+    pub(crate) fn analyze_local_qualified_user_method_call(
+        &mut self,
+        name: &str,
+        span: Span,
+        call_span: Span,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> Option<Option<PineType>> {
+        let (type_name, method_name) = alias_qualified_method_name(name)?;
+        if !self.user_types.contains_key(type_name) {
+            return None;
+        }
+        let Some(receiver_arg) = args.first() else {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                format!("`{name}` expects a receiver argument"),
+                span,
+            ));
+            return Some(None);
+        };
+        let receiver_type = arg_types.first().copied().flatten();
+        let Some(receiver_user_type) = self.user_type_name_of_expr(&receiver_arg.value) else {
+            if let Some(receiver_type) = receiver_type {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_METHOD_ARG_TYPE",
+                    format!(
+                        "cannot pass {} as receiver to method `{name}`",
+                        pine_type_name(receiver_type)
+                    ),
+                    receiver_arg.span,
+                ));
+            }
+            return Some(None);
+        };
+        if receiver_user_type != type_name {
+            self.diagnostics.push(Diagnostic::error(
+                "E_METHOD_ARG_TYPE",
+                format!("cannot pass receiver `{receiver_user_type}` to method `{name}`"),
+                receiver_arg.span,
+            ));
+            return Some(None);
+        }
+        if !self
+            .methods
+            .contains_key(&(receiver_user_type.clone(), method_name.to_owned()))
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_UNKNOWN_METHOD",
+                format!("unknown method `{name}` for receiver `{receiver_user_type}`"),
+                span,
+            ));
+            return Some(None);
+        }
+        self.analyze_user_method_call_with_receiver(
+            MethodCallReceiver {
+                type_name: receiver_user_type,
+                pine_type: receiver_type.unwrap_or(UNKNOWN),
+                span,
+            },
+            method_name,
             call_span,
             &args[1..],
             &arg_types[1..],
@@ -307,27 +446,67 @@ impl Analyzer {
     }
 
     fn method_param_type(&mut self, name: &str, span: Span) -> Option<(PineType, Option<String>)> {
-        let kind = match name {
-            "int" => ValueKind::Int,
-            "float" => ValueKind::Float,
-            "bool" => ValueKind::Bool,
-            "string" => ValueKind::String,
-            "color" => ValueKind::Color,
-            _ if self.user_types.contains_key(name) => {
-                return Some((
-                    PineType::new(Qualifier::Series, ValueKind::UserType),
-                    Some(name.to_owned()),
-                ));
-            }
-            _ => {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_METHOD_PARAM",
-                    format!("unsupported or unknown method parameter type `{name}`"),
-                    span,
-                ));
-                return None;
-            }
-        };
+        let kind =
+            match name {
+                _ if name.starts_with("array<") && name.ends_with('>') => {
+                    let element_type = &name["array<".len()..name.len() - 1];
+                    if let Some(kind) = array_kind_from_element_type_name(element_type) {
+                        return Some((PineType::new(Qualifier::Series, kind), None));
+                    } else if matches!(
+                        classify_user_type_array_element_names(
+                            &self.user_types,
+                            &[element_type.to_owned()]
+                        ),
+                        Some(UserTypeArrayElementInference::SameScalarLocal(_))
+                    ) || self.imported_user_types.get(element_type).is_some_and(
+                        |user_type| self.imported_user_type_has_scalar_tree_fields(user_type),
+                    ) {
+                        return Some((
+                            PineType::new(Qualifier::Series, ValueKind::UserTypeArray),
+                            Some(element_type.to_owned()),
+                        ));
+                    } else {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_METHOD_PARAM",
+                            format!("unsupported or unknown method parameter type `{name}`"),
+                            span,
+                        ));
+                        return None;
+                    }
+                }
+                "int" => ValueKind::Int,
+                "float" => ValueKind::Float,
+                "bool" => ValueKind::Bool,
+                "string" => ValueKind::String,
+                "color" => ValueKind::Color,
+                "label" => ValueKind::Label,
+                "line" => ValueKind::Line,
+                "linefill" => ValueKind::LineFill,
+                "polyline" => ValueKind::Polyline,
+                "box" => ValueKind::Box,
+                "table" => ValueKind::Table,
+                "chart.point" => ValueKind::ChartPoint,
+                _ if self.user_types.contains_key(name) => {
+                    return Some((
+                        PineType::new(Qualifier::Series, ValueKind::UserType),
+                        Some(name.to_owned()),
+                    ));
+                }
+                _ if self.imported_user_types.contains_key(name) => {
+                    return Some((
+                        PineType::new(Qualifier::Series, ValueKind::UserType),
+                        Some(name.to_owned()),
+                    ));
+                }
+                _ => {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_METHOD_PARAM",
+                        format!("unsupported or unknown method parameter type `{name}`"),
+                        span,
+                    ));
+                    return None;
+                }
+            };
         Some((PineType::new(Qualifier::Series, kind), None))
     }
 }

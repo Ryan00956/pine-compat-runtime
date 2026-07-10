@@ -5,4 +5,27 @@ indicator("Imported UDT method nested return")
 p = lib.Point.new(close)
 other = lib.Point.new(close + 50)
 wrapped = p.wrap(other)
+wrappedSource = lib.Wrapper.new(lib.Point.new(close))
+wrappedNested = wrappedSource.sameWrapperViaMethod()
+dyn = bar_index == 0 ? na : 1
+wrapped_dynamic = wrapped[dyn]
+wrapped_dynamic_sibling = wrapped[dyn]
+float wrapped_dynamic_x = na
+float wrapped_dynamic_sibling_x_after_mutation = na
+wrapped_nested_dynamic = wrappedNested[dyn]
+wrapped_nested_dynamic_sibling = wrappedNested[dyn]
+float wrapped_nested_dynamic_x = na
+float wrapped_nested_dynamic_sibling_x_after_mutation = na
+if bar_index > 0
+    wrapped_dynamic_x := wrapped_dynamic.x
+    wrapped_dynamic.x := close + 700
+    wrapped_dynamic_sibling_x_after_mutation := wrapped_dynamic_sibling.x
+    wrapped_nested_dynamic_x := wrapped_nested_dynamic.nested.x
+    wrapped_nested_dynamic.nested := lib.Point.new(close + 800)
+    wrapped_nested_dynamic_sibling_x_after_mutation := wrapped_nested_dynamic_sibling.nested.x
 plot(wrapped.x)
+plot(wrappedNested.nested.x)
+plot(wrapped_dynamic_x)
+plot(wrapped_dynamic_sibling_x_after_mutation)
+plot(wrapped_nested_dynamic_x)
+plot(wrapped_nested_dynamic_sibling_x_after_mutation)

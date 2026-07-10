@@ -1,0 +1,18 @@
+//@version=5
+indicator("Supported user type array typed method params")
+
+type Point
+    float x
+    float y
+
+method first_x(Point anchor, array<Point> values) =>
+    point = array.get(values, 0)
+    anchor.x + point.x
+
+method second_y(Point anchor, Point[] values) =>
+    point = values.get(1)
+    anchor.y + point.y
+
+anchor = Point.new(close, open)
+points = array.from(Point.new(close + 1, open + 2), Point.new(high + 3, low + 4))
+plot(anchor.first_x(points) + anchor.second_y(points))

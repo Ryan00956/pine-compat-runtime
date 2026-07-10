@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported for-in result local alias negative history")
+values = array.from(0)
+length = for value in values
+    base = -1
+    base
+plot(close[length])

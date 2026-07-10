@@ -3,6 +3,8 @@ indicator("User type functions")
 type Point
     float x
     float y
+type Wrapper
+    Point point
 
 identity(p) => p
 wrap(p) =>
@@ -27,6 +29,7 @@ cloneFromNamedObjectAlias(p) =>
     copy = p
     Point.new(y=copy.y, x=copy.x)
 make(x, y) => Point.new(x, y)
+readPoint(p) => p.x
 makeAlias(x, y) =>
     ax = x
     ay = y
@@ -114,12 +117,45 @@ makeTypedForFrom(p, count) =>
     typed := for i = 0 to count
         Point.new(y=typed.y, x=typed.x + i + 5)
     typed
+makeTypedForInFrom(p, values) =>
+    copy = p
+    ax = copy.x
+    ay = copy.y
+    Point typed = for value in values
+        Point.new(y=ay, x=ax + value + 140)
+    typed := for value in values
+        Point.new(y=typed.y, x=typed.x + value + 5)
+    typed
+makeTypedWhileFrom(p, count) =>
+    copy = p
+    ax = copy.x
+    ay = copy.y
+    i = 0
+    Point typed = while i < count
+        i := i + 1
+        Point.new(y=ay, x=ax + i + 150)
+    j = 0
+    typed := while j < count
+        j := j + 1
+        Point.new(y=typed.y, x=typed.x + j + 5)
+    typed
+makeWrapper(p) => Wrapper.new(p)
+passWrapper(w) =>
+    copy = w
+    copy
+outerWrapper(w) => passWrapper(w)
+makeWrapperSwitch(p, mode) =>
+    switch mode
+        0 => Wrapper.new(Point.new(p.x + 170, p.y))
+        1 => Wrapper.new(Point.new(p.x + 175, p.y))
+        => Wrapper.new(Point.new(p.x + 180, p.y))
 makeLocalMutated(x, y) =>
     local = Point.new(x + 130, y)
     local.x := local.x + 5
     local
 cloneViaMake(p) => make(p.x, p.y)
 cloneViaMakeNamed(p) => makeNamed(p.x, p.y)
+makeWrapperViaMake(p) => makeWrapper(make(p.x, p.y))
 cloneTernary(p, flip) => flip ? Point.new(p.x, p.y) : Point.new(p.x + 10, p.y)
 cloneSwitch(p, mode) =>
     switch mode
@@ -138,6 +174,23 @@ aliasIf(p, flip) =>
     else
         q = p
         q
+aliasTernary(p, flip) =>
+    q = p
+    flip ? q : p
+aliasWhile(p, keepGoing) =>
+    active = keepGoing
+    while active
+        q = p
+        active := false
+        q
+aliasSwitch(p, mode) =>
+    switch mode
+        0 =>
+            q = p
+            q
+        =>
+            q = p
+            q
 cloneFor(p, count) =>
     for i = 0 to count
         Point.new(p.x + i, p.y)
@@ -145,11 +198,23 @@ cloneForAlias(p, count) =>
     for i = 0 to count
         q = p
         q
+cloneForInAlias(p, values) =>
+    for value in values
+        q = p
+        q
+outerForIn(p, values) => cloneForInAlias(p, values)
+outerTernary(p) => aliasTernary(p, bar_index % 2 == 0)
+outerWhile(p) => aliasWhile(p, close > 0)
+outerSwitch(p) => aliasSwitch(p, bar_index % 2)
 
 p = Point.new(close, open)
+steps = array.from(1, 2)
 same = identity(p)
 wrapped = wrap(p)
+wrappedSource = Wrapper.new(p)
+wrappedPassed = passWrapper(wrappedSource)
 nested = outer(p)
+nestedWrapped = outerWrapper(wrappedSource)
 chosen = choose(p=p, delta=bar_index)
 cloned = cloneFrom(p)
 clonedNamed = cloneFromNamed(p)
@@ -163,9 +228,18 @@ clonedTernary = cloneTernary(p, bar_index < 2)
 clonedSwitch = cloneSwitch(p, bar_index)
 clonedIf = cloneIf(p, bar_index < 2)
 aliasedIf = aliasIf(p, bar_index < 2)
+aliasedTernary = aliasTernary(p, bar_index % 2 == 0)
+aliasedWhile = aliasWhile(p, close > 0)
+aliasedSwitch = aliasSwitch(p, bar_index % 2)
 clonedFor = cloneFor(p, 2)
 clonedForAlias = cloneForAlias(p, 2)
+clonedForInAlias = cloneForInAlias(p, steps)
+nestedForIn = outerForIn(p, steps)
+nestedTernary = outerTernary(p)
+nestedWhile = outerWhile(p)
+nestedSwitch = outerSwitch(p)
 made = make(close, open)
+udfResultScalarPrior = readPoint(make(close, open))[1]
 madeAlias = makeAlias(close, open)
 madeNamed = makeNamed(close, open)
 madeNamedAlias = makeNamedAlias(close, open)
@@ -179,7 +253,79 @@ madeTypedSwitch = makeTypedSwitch(close, open, bar_index)
 madeTypedSwitchFrom = makeTypedSwitchFrom(p, bar_index)
 madeTypedIfFrom = makeTypedIfFrom(p, bar_index < 2)
 madeTypedForFrom = makeTypedForFrom(p, 2)
+madeTypedForInFrom = makeTypedForInFrom(p, steps)
+madeTypedWhileFrom = makeTypedWhileFrom(p, 2)
+wrappedMade = makeWrapper(p)
+wrappedViaMake = makeWrapperViaMake(p)
+wrappedSwitch = makeWrapperSwitch(p, bar_index)
 madeLocalMutated = makeLocalMutated(close, open)
+samePrior = same[1]
+aliasedSwitchPrior = aliasedSwitch[1]
+clonedSwitchPrior = clonedSwitch[1]
+clonedForInAliasPrior = clonedForInAlias[1]
+madeTypedSwitchFromPrior = madeTypedSwitchFrom[1]
+madeTypedForInFromPrior = madeTypedForInFrom[1]
+madeTypedWhileFromPrior = madeTypedWhileFrom[1]
+wrappedMadePrior = wrappedMade[1]
+wrappedSwitchPrior = wrappedSwitch[1]
+dyn = bar_index == 0 ? na : 1
+sameDynamic = same[dyn]
+sameDynamicSibling = same[dyn]
+float sameDynamicX = na
+float sameDynamicSiblingXAfterMutation = na
+wrappedPassedDynamic = wrappedPassed[dyn]
+wrappedPassedDynamicSibling = wrappedPassed[dyn]
+float wrappedPassedDynamicX = na
+float wrappedPassedDynamicSiblingXAfterMutation = na
+nestedDynamic = nested[dyn]
+nestedDynamicSibling = nested[dyn]
+float nestedDynamicX = na
+float nestedDynamicSiblingXAfterMutation = na
+nestedWrappedDynamic = nestedWrapped[dyn]
+nestedWrappedDynamicSibling = nestedWrapped[dyn]
+float nestedWrappedDynamicX = na
+float nestedWrappedDynamicSiblingXAfterMutation = na
+clonedViaMakeDynamic = clonedViaMake[dyn]
+clonedViaMakeDynamicSibling = clonedViaMake[dyn]
+float clonedViaMakeDynamicX = na
+float clonedViaMakeDynamicSiblingXAfterMutation = na
+wrappedViaMakeDynamic = wrappedViaMake[dyn]
+wrappedViaMakeDynamicSibling = wrappedViaMake[dyn]
+float wrappedViaMakeDynamicX = na
+float wrappedViaMakeDynamicSiblingXAfterMutation = na
+madeDynamic = made[dyn]
+madeDynamicSibling = made[dyn]
+float madeDynamicX = na
+float madeDynamicSiblingXAfterMutation = na
+wrappedMadeDynamic = wrappedMade[dyn]
+wrappedMadeDynamicSibling = wrappedMade[dyn]
+float wrappedMadeDynamicX = na
+float wrappedMadeDynamicSiblingXAfterMutation = na
+if bar_index > 0
+    sameDynamicX := sameDynamic.x
+    sameDynamic.x := close + 900
+    sameDynamicSiblingXAfterMutation := sameDynamicSibling.x
+    wrappedPassedDynamicX := wrappedPassedDynamic.point.x
+    wrappedPassedDynamic.point := Point.new(close + 1000, open)
+    wrappedPassedDynamicSiblingXAfterMutation := wrappedPassedDynamicSibling.point.x
+    nestedDynamicX := nestedDynamic.x
+    nestedDynamic.x := close + 1100
+    nestedDynamicSiblingXAfterMutation := nestedDynamicSibling.x
+    nestedWrappedDynamicX := nestedWrappedDynamic.point.x
+    nestedWrappedDynamic.point := Point.new(close + 1200, open)
+    nestedWrappedDynamicSiblingXAfterMutation := nestedWrappedDynamicSibling.point.x
+    clonedViaMakeDynamicX := clonedViaMakeDynamic.x
+    clonedViaMakeDynamic.x := close + 1300
+    clonedViaMakeDynamicSiblingXAfterMutation := clonedViaMakeDynamicSibling.x
+    wrappedViaMakeDynamicX := wrappedViaMakeDynamic.point.x
+    wrappedViaMakeDynamic.point := Point.new(close + 1400, open)
+    wrappedViaMakeDynamicSiblingXAfterMutation := wrappedViaMakeDynamicSibling.point.x
+    madeDynamicX := madeDynamic.x
+    madeDynamic.x := close + 700
+    madeDynamicSiblingXAfterMutation := madeDynamicSibling.x
+    wrappedMadeDynamicX := wrappedMadeDynamic.point.x
+    wrappedMadeDynamic.point := Point.new(close + 800, open)
+    wrappedMadeDynamicSiblingXAfterMutation := wrappedMadeDynamicSibling.point.x
 plot(same.x - same.y)
 plot(same.x + same.y)
 plot(wrapped.x + wrapped.y + bar_index)
@@ -197,9 +343,18 @@ plot(clonedTernary.x + clonedTernary.y + bar_index)
 plot(clonedSwitch.x + clonedSwitch.y + bar_index)
 plot(clonedIf.x + clonedIf.y + bar_index)
 plot(aliasedIf.x + aliasedIf.y + bar_index + 20)
+plot(aliasedTernary.x + aliasedTernary.y + bar_index + 25)
+plot(aliasedWhile.x + aliasedWhile.y + bar_index + 30)
+plot(aliasedSwitch.x + aliasedSwitch.y + bar_index + 40)
 plot(clonedFor.x + clonedFor.y + bar_index)
 plot(clonedForAlias.x + clonedForAlias.y + bar_index)
+plot(clonedForInAlias.x + clonedForInAlias.y + bar_index + 70)
+plot(nestedForIn.x + nestedForIn.y + bar_index + 80)
+plot(nestedTernary.x + nestedTernary.y + bar_index + 85)
+plot(nestedWhile.x + nestedWhile.y + bar_index + 50)
+plot(nestedSwitch.x + nestedSwitch.y + bar_index + 60)
 plot(made.x + made.y + bar_index)
+plot(udfResultScalarPrior)
 plot(madeAlias.x + madeAlias.y + bar_index)
 plot(madeNamed.x + madeNamed.y + bar_index)
 plot(madeNamedAlias.x + madeNamedAlias.y + bar_index)
@@ -213,4 +368,34 @@ plot(madeTypedSwitch.x + madeTypedSwitch.y + bar_index)
 plot(madeTypedSwitchFrom.x + madeTypedSwitchFrom.y + bar_index)
 plot(madeTypedIfFrom.x + madeTypedIfFrom.y + bar_index)
 plot(madeTypedForFrom.x + madeTypedForFrom.y + bar_index)
+plot(madeTypedForInFrom.x + madeTypedForInFrom.y + bar_index)
+plot(madeTypedWhileFrom.x + madeTypedWhileFrom.y + bar_index)
+plot(wrappedMade.point.x + wrappedMade.point.y + bar_index)
+plot(wrappedViaMake.point.x + wrappedViaMake.point.y + bar_index)
+plot(wrappedSwitch.point.x + wrappedSwitch.point.y + bar_index)
 plot(madeLocalMutated.x + madeLocalMutated.y + bar_index)
+plot(samePrior.x + samePrior.y)
+plot(aliasedSwitchPrior.x + aliasedSwitchPrior.y + bar_index)
+plot(clonedSwitchPrior.x + clonedSwitchPrior.y + bar_index)
+plot(clonedForInAliasPrior.x + clonedForInAliasPrior.y + bar_index)
+plot(madeTypedSwitchFromPrior.x + madeTypedSwitchFromPrior.y + bar_index)
+plot(madeTypedForInFromPrior.x + madeTypedForInFromPrior.y + bar_index)
+plot(madeTypedWhileFromPrior.x + madeTypedWhileFromPrior.y + bar_index)
+plot(wrappedMadePrior.point.x + wrappedMadePrior.point.y + bar_index)
+plot(wrappedSwitchPrior.point.x + wrappedSwitchPrior.point.y + bar_index)
+plot(sameDynamicX)
+plot(sameDynamicSiblingXAfterMutation)
+plot(wrappedPassedDynamicX)
+plot(wrappedPassedDynamicSiblingXAfterMutation)
+plot(nestedDynamicX)
+plot(nestedDynamicSiblingXAfterMutation)
+plot(nestedWrappedDynamicX)
+plot(nestedWrappedDynamicSiblingXAfterMutation)
+plot(clonedViaMakeDynamicX)
+plot(clonedViaMakeDynamicSiblingXAfterMutation)
+plot(wrappedViaMakeDynamicX)
+plot(wrappedViaMakeDynamicSiblingXAfterMutation)
+plot(madeDynamicX)
+plot(madeDynamicSiblingXAfterMutation)
+plot(wrappedMadeDynamicX)
+plot(wrappedMadeDynamicSiblingXAfterMutation)

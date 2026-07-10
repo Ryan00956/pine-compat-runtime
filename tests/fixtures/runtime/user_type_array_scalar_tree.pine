@@ -1,0 +1,28 @@
+//@version=5
+indicator("User type array scalar tree")
+type Point
+    float x
+    float y
+
+type Wrapper
+    Point inner
+    float weight
+
+array<Wrapper> declared = na
+declared := array.new<Wrapper>()
+declared.push(Wrapper.new(Point.new(close, open), high))
+
+Wrapper[] inferred = array.from(Wrapper.new(Point.new(high, low), close))
+seeded = array.new<Wrapper>(1, Wrapper.new(Point.new(open, close), low))
+
+declared_value = declared.get(0)
+inferred_value = array.get(inferred, 0)
+seeded_value = seeded.get(0)
+prior_inferred = inferred_value[1]
+
+plot(declared_value.inner.x)
+plot(inferred_value.inner.x)
+plot(inferred_value.inner.y)
+plot(seeded_value.inner.y)
+plot(prior_inferred.inner.x)
+plot(declared.size() + inferred.size() + seeded.size())

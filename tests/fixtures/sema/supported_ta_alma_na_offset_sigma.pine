@@ -1,0 +1,4 @@
+//@version=5
+indicator("Supported ta.alma na offset sigma")
+plot(nz(ta.alma(close, 3, na, 6)))
+plot(nz(ta.alma(close, 3, 0.85, na)))

@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported equal branch if negative history")
+use_short = input.bool(true, "Use short")
+length = if use_short
+    -1
+else
+    -1
+plot(close[length])

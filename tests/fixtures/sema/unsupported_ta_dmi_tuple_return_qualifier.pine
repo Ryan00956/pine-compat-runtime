@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported ta dmi tuple return qualifier")
+
+[plus, minus, adx] = ta.dmi(2, 2)
+
+hline(plus)
+hline(minus)
+hline(adx)

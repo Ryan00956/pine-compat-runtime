@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported named const expression negative history")
+base = 1 - 2
+length = base
+plot(close[length])

@@ -7,6 +7,13 @@ previous_ids = ids[1]
 previous_point = na(previous_ids) ? na : previous_ids.get(0)
 dynamic_offset = bar_index == 0 ? na : 1
 dynamic_previous_ids = ids[dynamic_offset]
+dynamic_sibling_ids = ids[dynamic_offset]
+dynamic_previous_point = na(dynamic_previous_ids) ? na : dynamic_previous_ids.get(0)
+if not na(dynamic_previous_ids)
+    dynamic_previous_ids.set(0, chart.point.from_index(999, 999))
+dynamic_sibling_point_after_dynamic_mutation = na(dynamic_sibling_ids) ? na : dynamic_sibling_ids.get(0)
 plot(na(previous_ids) ? 1 : 0)
 plot(na(dynamic_previous_ids) ? 1 : 0)
 plot(na(previous_point) ? na : previous_point.index)
+plot(na(dynamic_previous_point) ? na : dynamic_previous_point.index)
+plot(na(dynamic_sibling_point_after_dynamic_mutation) ? na : dynamic_sibling_point_after_dynamic_mutation.index)

@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported alertcondition named const placeholder")
+msg_base = "{{close}}"
+msg = msg_base
+alertcondition(close > open, "Cross", msg)

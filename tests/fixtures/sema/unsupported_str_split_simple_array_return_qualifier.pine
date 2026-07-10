@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported str.split simple array return qualifier")
+
+color_matrix = matrix.new<color>(1, 2, color.red)
+
+matrix.add_row(color_matrix, 0, str.split("A,B", ","))

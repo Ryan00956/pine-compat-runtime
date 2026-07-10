@@ -51,8 +51,16 @@ impl<'a> HistoricalRuntime<'a> {
         mode: WindowExtreme,
     ) -> Result<(PineValue, i64, i64), RuntimeError> {
         if args.len() == 2 {
-            let leftbars = self.eval_expr(&args[0].value)?.as_i64().unwrap_or(-1);
-            let rightbars = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(-1);
+            let leftbars = ta_arg(args, 0, "leftbars")
+                .map(|arg| self.eval_expr(arg))
+                .transpose()?
+                .and_then(|value| value.as_i64())
+                .unwrap_or(-1);
+            let rightbars = ta_arg(args, 1, "rightbars")
+                .map(|arg| self.eval_expr(arg))
+                .transpose()?
+                .and_then(|value| value.as_i64())
+                .unwrap_or(-1);
             let source_name = match mode {
                 WindowExtreme::Highest => "high",
                 WindowExtreme::Lowest => "low",
@@ -63,9 +71,20 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok((source, leftbars, rightbars));
         }
 
-        let source = self.eval_expr(&args[0].value)?;
-        let leftbars = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(-1);
-        let rightbars = self.eval_expr(&args[2].value)?.as_i64().unwrap_or(-1);
+        let source = ta_arg(args, 0, "source")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
+        let leftbars = ta_arg(args, 1, "leftbars")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(-1);
+        let rightbars = ta_arg(args, 2, "rightbars")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(-1);
         Ok((source, leftbars, rightbars))
     }
 

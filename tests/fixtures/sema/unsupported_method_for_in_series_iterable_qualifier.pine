@@ -1,0 +1,14 @@
+//@version=6
+indicator("Unsupported method for-in series iterable qualifier")
+
+type QualifierTool
+    int seed
+
+method loop_length(QualifierTool tool, array<int> values, int x) =>
+    for value in values
+        x
+
+tool = QualifierTool.new(1)
+array<int> values = na
+length = input.int(2, "Length")
+plot(ta.ema(close, tool.loop_length(values, length)))

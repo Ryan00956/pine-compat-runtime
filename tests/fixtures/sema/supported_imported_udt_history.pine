@@ -1,0 +1,17 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Supported imported UDT history")
+
+dyn = bar_index == 0 ? na : 1
+
+p = lib.Point.new(close)
+p_alias = p
+p_prior = p[1]
+p_dynamic = p[dyn]
+alias_prior = p_alias[1]
+
+wrapped = lib.Wrapper.new(lib.Point.new(high))
+wrapped_prior = wrapped[1]
+wrapped_dynamic = wrapped[dyn]
+
+plot(p_prior.x + p_dynamic.x + alias_prior.x + wrapped_prior.nested.x + wrapped_dynamic.nested.x)

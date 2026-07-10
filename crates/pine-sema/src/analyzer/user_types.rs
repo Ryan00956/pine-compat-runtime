@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use pine_ir::{PineType, Qualifier, SymbolId, ValueKind};
 use pine_syntax::{
@@ -7,6 +7,7 @@ use pine_syntax::{
 };
 
 use crate::analyzer::calls::expr_name;
+use crate::analyzer::chart_points::{chart_point_field_index, chart_point_field_type};
 use crate::analyzer::context::Analyzer;
 use crate::analyzer::functions::resolve_udf_arg_indices;
 use crate::resolver::SymbolInfo;
@@ -30,6 +31,43 @@ pub(crate) use types::{
 };
 
 impl Analyzer {
+    pub(crate) fn local_user_type_has_scalar_tree_fields(&self, type_name: &str) -> bool {
+        self.local_user_type_scalar_tree_fields_are_supported(type_name, &mut HashSet::new())
+    }
+
+    pub(crate) fn local_user_type_history_is_supported(&self, type_name: &str) -> bool {
+        self.user_types.contains_key(type_name)
+    }
+
+    fn local_user_type_scalar_tree_fields_are_supported(
+        &self,
+        type_name: &str,
+        seen: &mut HashSet<String>,
+    ) -> bool {
+        if !seen.insert(type_name.to_owned()) {
+            return false;
+        }
+        let Some(user_type) = self.user_types.get(type_name) else {
+            return false;
+        };
+        let supported = user_type.fields.iter().all(|field| {
+            if let Some(field_type_name) = &field.user_type_name {
+                self.local_user_type_scalar_tree_fields_are_supported(field_type_name, seen)
+            } else {
+                matches!(
+                    field.pine_type.kind,
+                    ValueKind::Int
+                        | ValueKind::Float
+                        | ValueKind::Bool
+                        | ValueKind::String
+                        | ValueKind::Color
+                )
+            }
+        });
+        seen.remove(type_name);
+        supported
+    }
+
     pub(crate) fn register_user_types(&mut self, program: &Program) {
         for statement in &program.statements {
             let StmtKind::UserType(decl) = &statement.kind else {
@@ -295,6 +333,20 @@ impl Analyzer {
         None
     }
 
+    pub(crate) fn direct_user_type_alias_name(&self, expr: &Expr) -> Option<String> {
+        match &expr.kind {
+            ExprKind::Identifier(name) => self
+                .scope
+                .resolve(name)
+                .and_then(|symbol| self.symbol_user_types.get(&symbol.id).cloned()),
+            ExprKind::QualifiedName(parts) if parts.len() == 1 => self
+                .scope
+                .resolve(&parts[0])
+                .and_then(|symbol| self.symbol_user_types.get(&symbol.id).cloned()),
+            _ => None,
+        }
+    }
+
     pub(crate) fn user_type_array_name_of_expr(&self, expr: &Expr) -> Option<String> {
         if let Some(type_name) = self.expr_user_type_array_name(expr) {
             return Some(type_name);
@@ -496,6 +548,8 @@ impl Analyzer {
                         ..
                     } => self.user_type_name_of_if_branches(then_branch, else_branch),
                     StmtKind::For { body, .. } => self.user_type_name_of_branch_return(body),
+                    StmtKind::ForIn { body, .. } => self.user_type_name_of_branch_return(body),
+                    StmtKind::While { body, .. } => self.user_type_name_of_branch_return(body),
                     _ => None,
                 }
             }
@@ -584,6 +638,21 @@ impl Analyzer {
                 return None;
             };
             if field_index + 1 < field_names.len() {
+                if field.pine_type.kind == ValueKind::ChartPoint
+                    && field_index + 2 == field_names.len()
+                {
+                    let chart_point_type = PineType::new(qualifier, field.pine_type.kind);
+                    let field_name = &field_names[field_index + 1];
+                    if chart_point_field_type(chart_point_type, field_name).is_some() {
+                        break;
+                    }
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CHART_POINT_UNKNOWN_FIELD",
+                        format!("unknown field `{field_name}` on `chart.point`"),
+                        span,
+                    ));
+                    return None;
+                }
                 let Some(next_type_name) = &field.user_type_name else {
                     self.diagnostics.push(Diagnostic::error(
                         "E_UDT_UNKNOWN_FIELD",
@@ -620,6 +689,19 @@ impl Analyzer {
             final_user_type_name = field.user_type_name.clone();
             fields.push(UdtFieldAccessStep { index, pine_type });
             if field_index + 1 < field_names.len() {
+                if field.pine_type.kind == ValueKind::ChartPoint
+                    && field_index + 2 == field_names.len()
+                {
+                    let chart_point_field_name = &field_names[field_index + 1];
+                    let chart_point_type =
+                        chart_point_field_type(pine_type, chart_point_field_name)?;
+                    let chart_point_index = chart_point_field_index(chart_point_field_name)?;
+                    fields.push(UdtFieldAccessStep {
+                        index: chart_point_index,
+                        pine_type: chart_point_type,
+                    });
+                    return Some((chart_point_type, None, fields));
+                }
                 current_type_name = field.user_type_name.clone()?;
             }
         }
@@ -650,6 +732,13 @@ impl Analyzer {
             "bool" => ValueKind::Bool,
             "string" => ValueKind::String,
             "color" => ValueKind::Color,
+            "label" => ValueKind::Label,
+            "line" => ValueKind::Line,
+            "linefill" => ValueKind::LineFill,
+            "polyline" => ValueKind::Polyline,
+            "box" => ValueKind::Box,
+            "table" => ValueKind::Table,
+            "chart.point" => ValueKind::ChartPoint,
             other if self.user_types.contains_key(other) => {
                 return Some((
                     PineType::new(Qualifier::Series, ValueKind::UserType),

@@ -1,0 +1,30 @@
+//@version=6
+indicator("Unsupported UDT array element method return qualifier")
+
+type Point
+    float x
+
+type Other
+    float x
+
+method sum_with(Point anchor, Point other) =>
+    anchor.x + other.x
+
+anchor = Point.new(close)
+get_others = array.new<Other>(2, Other.new(close))
+first_others = array.new<Other>(2, Other.new(close))
+last_others = array.new<Other>(2, Other.new(close))
+remove_others = array.new<Other>(2, Other.new(close))
+pop_others = array.new<Other>(2, Other.new(close))
+shift_others = array.new<Other>(2, Other.new(close))
+
+removed = array.remove(remove_others, 0)
+popped = pop_others.pop()
+shifted = array.shift(shift_others)
+
+plot(anchor.sum_with(array.get(get_others, 0)))
+plot(anchor.sum_with(first_others.first()))
+plot(anchor.sum_with(array.last(last_others)))
+plot(anchor.sum_with(removed))
+plot(anchor.sum_with(popped))
+plot(anchor.sum_with(shifted))

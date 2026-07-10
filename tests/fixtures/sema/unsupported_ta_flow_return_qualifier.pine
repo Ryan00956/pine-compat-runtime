@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported ta flow return qualifier")
+
+hline(ta.tsi(close, 2, 3))
+hline(ta.cmo(close, 3))
+hline(ta.cci(close, 3))
+hline(ta.cog(close, 3))

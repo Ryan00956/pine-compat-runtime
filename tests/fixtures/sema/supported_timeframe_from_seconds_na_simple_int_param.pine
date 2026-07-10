@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported timeframe.from_seconds na simple int param")
+
+plot(na(timeframe.from_seconds(na)) ? 1 : 0)
+plot(na(timeframe.from_seconds(seconds = na)) ? 1 : 0)

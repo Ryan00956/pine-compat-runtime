@@ -1,0 +1,7 @@
+//@version=6
+indicator("Max bars back named function")
+src = close
+max_bars_back(num=2, source=src)
+offset = bar_index == 0 ? 0 : 3
+plot(src[offset])
+plot(open[offset])

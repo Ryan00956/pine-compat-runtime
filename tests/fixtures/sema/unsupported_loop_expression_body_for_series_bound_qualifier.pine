@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported loop expression body for series bound qualifier")
+length = input.int(2, "Length")
+selected = for outer = 0 to 0
+    for inner = 0 to bar_index
+        length
+plot(ta.ema(close, selected))

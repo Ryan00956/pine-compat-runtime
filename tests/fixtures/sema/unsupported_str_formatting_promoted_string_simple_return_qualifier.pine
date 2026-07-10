@@ -1,0 +1,18 @@
+//@version=6
+indicator("Unsupported str formatting promoted string simple return qualifier")
+
+values = array.new_int(1, 64)
+value = array.size(values) + 0.25
+timestamp_value = array.size(values) + 1704067200000
+
+tostring_text = str.tostring(value, "#.00")
+format_result = str.format("{0,number,#.00}", value)
+time_text = str.format_time(timestamp_value, "yyyy-MM-dd", "UTC")
+
+tostring_length = str.length(tostring_text)
+format_length = str.length(format_result)
+time_length = str.length(time_text)
+
+plot(close, show_last=tostring_length)
+plot(open, show_last=format_length)
+plot(high, show_last=time_length)

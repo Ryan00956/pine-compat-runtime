@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported ticker series simple int params")
+linebreak = ticker.linebreak(syminfo.tickerid, bar_index)
+pnf = ticker.pointfigure(syminfo.tickerid, "hl", "ATR", 14, bar_index)
+plot(close)

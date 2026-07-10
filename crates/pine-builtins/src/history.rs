@@ -20,6 +20,11 @@ pub enum BuiltinHistoryRequirement {
         source_arg: usize,
         length_arg: usize,
     },
+    WindowLengthOffset {
+        source_arg: usize,
+        length_arg: usize,
+        default_source: Option<&'static str>,
+    },
     Cross {
         args: usize,
         offset: u32,
@@ -134,6 +139,52 @@ pub const BUILTIN_HISTORY_METADATA: &[BuiltinHistoryMetadata] = &[
     },
     BuiltinHistoryMetadata {
         name: "ta.roc",
+        requirement: BuiltinHistoryRequirement::RequiredLengthOffset {
+            source_arg: 0,
+            length_arg: 1,
+        },
+    },
+    BuiltinHistoryMetadata {
+        name: "ta.highest",
+        requirement: BuiltinHistoryRequirement::WindowLengthOffset {
+            source_arg: 0,
+            length_arg: 1,
+            default_source: Some("high"),
+        },
+    },
+    BuiltinHistoryMetadata {
+        name: "ta.lowest",
+        requirement: BuiltinHistoryRequirement::WindowLengthOffset {
+            source_arg: 0,
+            length_arg: 1,
+            default_source: Some("low"),
+        },
+    },
+    BuiltinHistoryMetadata {
+        name: "ta.highestbars",
+        requirement: BuiltinHistoryRequirement::WindowLengthOffset {
+            source_arg: 0,
+            length_arg: 1,
+            default_source: Some("high"),
+        },
+    },
+    BuiltinHistoryMetadata {
+        name: "ta.lowestbars",
+        requirement: BuiltinHistoryRequirement::WindowLengthOffset {
+            source_arg: 0,
+            length_arg: 1,
+            default_source: Some("low"),
+        },
+    },
+    BuiltinHistoryMetadata {
+        name: "ta.rising",
+        requirement: BuiltinHistoryRequirement::RequiredLengthOffset {
+            source_arg: 0,
+            length_arg: 1,
+        },
+    },
+    BuiltinHistoryMetadata {
+        name: "ta.falling",
         requirement: BuiltinHistoryRequirement::RequiredLengthOffset {
             source_arg: 0,
             length_arg: 1,

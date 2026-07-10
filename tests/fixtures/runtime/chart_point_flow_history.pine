@@ -1,0 +1,81 @@
+//@version=5
+indicator("Chart point flow history")
+
+branch_point = if bar_index % 2 == 0
+    chart.point.from_index(bar_index, close)
+else
+    chart.point.from_index(bar_index + 10, close + 10)
+
+switch_point = switch
+    bar_index == 0 => chart.point.from_index(bar_index + 20, close + 20)
+    => chart.point.from_index(bar_index + 30, close + 30)
+
+for_point = for i = 0 to 0
+    chart.point.from_index(bar_index + 40, close + 40)
+
+point_values = array.from(chart.point.from_index(bar_index + 60, close + 60), chart.point.from_index(bar_index + 70, close + 70))
+for_in_point = for point in point_values
+    point
+
+j = 0
+while_point = while j < 1
+    j := j + 1
+    chart.point.from_index(bar_index + 50, close + 50)
+
+dynamic_offset = bar_index == 0 ? na : 1
+previous_branch = branch_point[1]
+dynamic_branch = branch_point[dynamic_offset]
+dynamic_branch_sibling = branch_point[dynamic_offset]
+dynamic_switch = switch_point[dynamic_offset]
+dynamic_switch_sibling = switch_point[dynamic_offset]
+previous_for = for_point[1]
+dynamic_for = for_point[dynamic_offset]
+dynamic_for_sibling = for_point[dynamic_offset]
+previous_for_in = for_in_point[1]
+dynamic_for_in = for_in_point[dynamic_offset]
+dynamic_for_in_sibling = for_in_point[dynamic_offset]
+previous_while = while_point[1]
+dynamic_while = while_point[dynamic_offset]
+dynamic_while_sibling = while_point[dynamic_offset]
+
+float dynamic_branch_sibling_price_after_dynamic_mutation = na
+float dynamic_switch_sibling_price_after_dynamic_mutation = na
+float dynamic_for_sibling_price_after_dynamic_mutation = na
+float dynamic_for_in_sibling_price_after_dynamic_mutation = na
+float dynamic_while_sibling_price_after_dynamic_mutation = na
+if bar_index > 0
+    dynamic_branch.price := close + 700
+    dynamic_branch_sibling_price_after_dynamic_mutation := dynamic_branch_sibling.price
+    dynamic_switch.price := close + 710
+    dynamic_switch_sibling_price_after_dynamic_mutation := dynamic_switch_sibling.price
+    dynamic_for.price := close + 720
+    dynamic_for_sibling_price_after_dynamic_mutation := dynamic_for_sibling.price
+    dynamic_for_in.price := close + 730
+    dynamic_for_in_sibling_price_after_dynamic_mutation := dynamic_for_in_sibling.price
+    dynamic_while.price := close + 740
+    dynamic_while_sibling_price_after_dynamic_mutation := dynamic_while_sibling.price
+
+branch_point.price := close + 100
+previous_branch_after_mutation = branch_point[1]
+
+plot(na(previous_branch) ? 1 : 0)
+plot(na(previous_branch) ? na : previous_branch.index)
+plot(na(dynamic_branch) ? 1 : 0)
+plot(na(dynamic_branch) ? na : dynamic_branch.index)
+plot(na(dynamic_switch) ? 1 : 0)
+plot(na(dynamic_switch) ? na : dynamic_switch.index)
+plot(na(previous_for) ? na : previous_for.index)
+plot(na(dynamic_for) ? 1 : 0)
+plot(na(dynamic_for) ? na : dynamic_for.index)
+plot(na(previous_for_in) ? na : previous_for_in.index)
+plot(na(dynamic_for_in) ? 1 : 0)
+plot(na(dynamic_for_in) ? na : dynamic_for_in.index)
+plot(na(previous_while) ? na : previous_while.index)
+plot(na(dynamic_while) ? 1 : 0)
+plot(na(dynamic_while) ? na : dynamic_while.index)
+plot(na(previous_branch_after_mutation) ? na : previous_branch_after_mutation.price)
+plot(dynamic_branch_sibling_price_after_dynamic_mutation)
+plot(dynamic_switch_sibling_price_after_dynamic_mutation)
+plot(dynamic_for_sibling_price_after_dynamic_mutation)
+plot(dynamic_for_in_sibling_price_after_dynamic_mutation)
+plot(dynamic_while_sibling_price_after_dynamic_mutation)

@@ -1,0 +1,10 @@
+//@version=5
+indicator("Dynamic negative history offset UDT field method passthrough")
+type Settings
+    int offset
+
+method same(Settings settings) => settings
+
+settings = Settings.new(bar_index == 0 ? 0 : -1)
+same = settings.same()
+plot(close[same.offset])

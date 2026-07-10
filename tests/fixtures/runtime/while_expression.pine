@@ -19,6 +19,14 @@ controlled = while j < 5
         break
     j * 10
 
+nested_limit = bar_index == 0 ? 1 : 0
+nested_i = 0
+nested_loop = while nested_i < nested_limit
+    nested_i := nested_i + 1
+    for k = 0 to 0
+        close + 3
+
 plot(latest)
 plot(zero)
 plot(controlled)
+plot(nested_loop)

@@ -1,0 +1,3 @@
+//@version=5
+indicator("Supported color.new na transp")
+plot(close, color=color.new(color.blue, na))

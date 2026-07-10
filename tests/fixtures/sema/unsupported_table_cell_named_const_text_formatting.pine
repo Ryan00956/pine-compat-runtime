@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported table.cell named const text formatting")
+id = table.new(position.top_left, 1, 1)
+format_base = text.format_bold + 4
+text_formatting = format_base
+table.cell(id, 0, 0, "A", text_formatting=text_formatting)

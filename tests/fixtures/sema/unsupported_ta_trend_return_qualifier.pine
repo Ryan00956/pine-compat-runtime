@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported ta trend return qualifier")
+
+ta.alma(close, 3, 0.85, 6, floor=ta.rising(close, 3))
+ta.alma(close, 3, 0.85, 6, floor=ta.falling(open, 2))

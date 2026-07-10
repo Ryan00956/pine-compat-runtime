@@ -1,7 +1,7 @@
 # Pure Internal Matrix Design Gate
 
-Status: closed design gate with the first positive float subset and copy
-semantics implemented. The runtime store skeleton is implemented internally,
+Status: closed design gate with fixture-backed float, int, bool, string, and
+color matrix subsets. The runtime store is implemented internally,
 ordinary `var` matrix ids roll back across realtime forming updates, and
 `matrix.new<float>`, `matrix.new<int>`, `matrix.new<bool>`, `matrix.get`, `matrix.set`, `matrix.fill`,
 `values.fill(value)`, `values.get(row, column)`,
@@ -53,8 +53,8 @@ host UI, external services, or public JSON/Python/WASM matrix serialization.
 
 ## Current Boundary
 
-`matrix.*` is partially supported today for runtime-owned float matrices plus
-runtime-owned int and bool matrix subsets.
+`matrix.*` is partially supported today for runtime-owned float, int, bool,
+string, and color matrix subsets.
 
 Current evidence:
 
@@ -700,8 +700,10 @@ dot-product results with one element per matrix row. Namespace
 `matrix.mult(vector, values)` accepts left-hand `array<float>` or `array<int>`
 operands as row vectors, requires the array size to match the matrix row count,
 and returns independent `array<float>` dot-product results with one element per
-matrix column. Array-pair and non-numeric-array `matrix.mult` overloads remain
-outside this slice.
+matrix column. Namespace `matrix.mult(left_vector, right_vector)` accepts
+numeric array pairs with equal length, treats them as a row vector and column
+vector, and returns an independent single-element `array<float>` dot-product
+result. Non-numeric-array `matrix.mult` overloads remain outside this slice.
 Matrix-by-matrix `matrix.diff(left, right)` returns an independent
 `matrix<float>` element-wise difference whose shape matches both operands,
 requires identical row and column counts, propagates `na` to a result cell when
@@ -863,7 +865,9 @@ Current history policy:
 - committed, shape, and dynamic-offset matrix history fixtures, including
   dynamic `na` offset predicates, should match full recomputation under
   incremental append execution;
-- no `varip` matrix values in the current runtime slice;
+- `matrix<float>`, `matrix<int>`, `matrix<bool>`, `matrix<string>`, and
+  `matrix<color>` `varip` declarations retain matrix ids and backing stores
+  across repeated realtime forming updates;
 - matrix state and shape roll back correctly for ordinary realtime forming
   updates.
 
@@ -948,9 +952,9 @@ Recommended future slices:
     alias `values.eigenvectors()`.
 20. Matrix Kronecker product: done for namespace `matrix.kron` and method alias
     `values.kron(other)`.
-21. Matrix multiplication: done for matrix-by-matrix and scalar namespace
-    `matrix.mult` plus method alias `values.mult(other)`. Array overloads
-    remain unsupported.
+21. Matrix multiplication: done for matrix-by-matrix, scalar, matrix-array,
+    array-matrix, and numeric array-pair namespace `matrix.mult`, plus the
+    matrix-receiver method alias `values.mult(other)`.
 22. Matrix subtraction: done for matrix-by-matrix and scalar namespace
     `matrix.diff` plus method alias `values.diff(other)`.
 23. Matrix power: done for namespace `matrix.pow` and method alias

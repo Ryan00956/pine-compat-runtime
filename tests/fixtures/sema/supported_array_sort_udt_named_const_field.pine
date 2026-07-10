@@ -1,0 +1,11 @@
+//@version=5
+indicator("Supported array sort UDT named const field")
+type Point
+    float x
+
+values = array.from(Point.new(close), Point.new(open))
+field_base = "x"
+field = field_base
+array.sort(values, order.ascending, field)
+indices = array.sort_indices(values, order.descending, field)
+plot(array.size(values) + array.size(indices))

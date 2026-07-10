@@ -2,17 +2,183 @@
 import user/udt/1 as lib
 indicator("Imported UDT varip")
 
+dyn = bar_index == 0 ? na : 1
+
 varip lib.Point seeded = na
 if bar_index == 0
     seeded := lib.Point.new(close)
 else
     seeded := lib.Point.new(seeded.x + 1)
 plot(seeded.x)
+seeded_prior = seeded[1]
+seeded_dynamic_prior = seeded[dyn]
+plot(seeded_prior.x)
+plot(seeded_dynamic_prior.x)
 
 varip lib.Point constructed = lib.Point.new(close + 10)
 constructed := lib.Point.new(constructed.x + 1)
 plot(constructed.x)
+constructed_prior = constructed[1]
+constructed_dynamic_prior = constructed[dyn]
+plot(constructed_prior.x)
+plot(constructed_dynamic_prior.x)
 
 varip inferred = lib.Point.new(close + 20)
 inferred := lib.Point.new(inferred.x + 1)
 plot(inferred.x)
+inferred_prior = inferred[1]
+inferred_dynamic_prior = inferred[dyn]
+plot(inferred_prior.x)
+plot(inferred_dynamic_prior.x)
+
+aliasPointSource = lib.Point.new(close + 25)
+varip aliasPoint = aliasPointSource
+aliasPoint := lib.Point.new(aliasPoint.x + 1)
+plot(aliasPoint.x)
+aliasPoint_prior = aliasPoint[1]
+aliasPoint_dynamic_prior = aliasPoint[dyn]
+plot(aliasPoint_prior.x)
+plot(aliasPoint_dynamic_prior.x)
+
+varip lib.Point typed_ternary = bar_index == 0 ? lib.Point.new(close + 100) : lib.Point.new(open + 100)
+typed_ternary := lib.Point.new(typed_ternary.x + 1)
+plot(typed_ternary.x)
+typed_ternary_prior = typed_ternary[1]
+typed_ternary_dynamic_prior = typed_ternary[dyn]
+plot(typed_ternary_prior.x)
+plot(typed_ternary_dynamic_prior.x)
+
+varip lib.Point typed_switch = switch bar_index
+    0 => lib.Point.new(close + 110)
+    => lib.Point.new(open + 110)
+typed_switch := lib.Point.new(typed_switch.x + 1)
+plot(typed_switch.x)
+typed_switch_prior = typed_switch[1]
+typed_switch_dynamic_prior = typed_switch[dyn]
+plot(typed_switch_prior.x)
+plot(typed_switch_dynamic_prior.x)
+
+varip lib.Point typed_if = if bar_index == 0
+    lib.Point.new(close + 120)
+else
+    lib.Point.new(open + 120)
+typed_if := lib.Point.new(typed_if.x + 1)
+plot(typed_if.x)
+typed_if_prior = typed_if[1]
+typed_if_dynamic_prior = typed_if[dyn]
+plot(typed_if_prior.x)
+plot(typed_if_dynamic_prior.x)
+
+varip lib.Point typed_for = for i = 0 to 1
+    lib.Point.new(close + 130 + i)
+typed_for := lib.Point.new(typed_for.x + 1)
+plot(typed_for.x)
+typed_for_prior = typed_for[1]
+typed_for_dynamic_prior = typed_for[dyn]
+plot(typed_for_prior.x)
+plot(typed_for_dynamic_prior.x)
+
+point_values = array.from(lib.Point.new(close + 140), lib.Point.new(close + 141))
+varip lib.Point typed_for_in = for point in point_values
+    point
+typed_for_in := lib.Point.new(typed_for_in.x + 1)
+plot(typed_for_in.x)
+typed_for_in_prior = typed_for_in[1]
+typed_for_in_dynamic_prior = typed_for_in[dyn]
+plot(typed_for_in_prior.x)
+plot(typed_for_in_dynamic_prior.x)
+
+counter = 0
+varip lib.Point typed_while = while counter < 2
+    counter := counter + 1
+    lib.Point.new(close + 150 + counter)
+typed_while := lib.Point.new(typed_while.x + 1)
+plot(typed_while.x)
+typed_while_prior = typed_while[1]
+typed_while_dynamic_prior = typed_while[dyn]
+plot(typed_while_prior.x)
+plot(typed_while_dynamic_prior.x)
+
+varip lib.Wrapper wrapped_ternary = bar_index == 0 ? lib.Wrapper.new(lib.Point.new(close + 160)) : lib.Wrapper.new(lib.Point.new(open + 160))
+wrapped_ternary := lib.Wrapper.new(lib.Point.new(wrapped_ternary.nested.x + 1))
+plot(wrapped_ternary.nested.x)
+wrapped_ternary_prior = wrapped_ternary[1]
+wrapped_ternary_dynamic_prior = wrapped_ternary[dyn]
+plot(wrapped_ternary_prior.nested.x)
+plot(wrapped_ternary_dynamic_prior.nested.x)
+
+varip lib.Wrapper wrapped_switch = switch bar_index
+    0 => lib.Wrapper.new(lib.Point.new(close + 170))
+    => lib.Wrapper.new(lib.Point.new(open + 170))
+wrapped_switch := lib.Wrapper.new(lib.Point.new(wrapped_switch.nested.x + 1))
+plot(wrapped_switch.nested.x)
+wrapped_switch_prior = wrapped_switch[1]
+wrapped_switch_dynamic_prior = wrapped_switch[dyn]
+plot(wrapped_switch_prior.nested.x)
+plot(wrapped_switch_dynamic_prior.nested.x)
+
+varip lib.Wrapper wrapped_if = if bar_index == 0
+    lib.Wrapper.new(lib.Point.new(close + 180))
+else
+    lib.Wrapper.new(lib.Point.new(open + 180))
+wrapped_if := lib.Wrapper.new(lib.Point.new(wrapped_if.nested.x + 1))
+plot(wrapped_if.nested.x)
+wrapped_if_prior = wrapped_if[1]
+wrapped_if_dynamic_prior = wrapped_if[dyn]
+plot(wrapped_if_prior.nested.x)
+plot(wrapped_if_dynamic_prior.nested.x)
+
+varip lib.Wrapper wrapped_for = for i = 0 to 1
+    lib.Wrapper.new(lib.Point.new(close + 190 + i))
+wrapped_for := lib.Wrapper.new(lib.Point.new(wrapped_for.nested.x + 1))
+plot(wrapped_for.nested.x)
+wrapped_for_prior = wrapped_for[1]
+wrapped_for_dynamic_prior = wrapped_for[dyn]
+plot(wrapped_for_prior.nested.x)
+plot(wrapped_for_dynamic_prior.nested.x)
+
+wrapper_values = array.from(lib.Wrapper.new(lib.Point.new(close + 200)), lib.Wrapper.new(lib.Point.new(close + 201)))
+varip lib.Wrapper wrapped_for_in = for item in wrapper_values
+    item
+wrapped_for_in := lib.Wrapper.new(lib.Point.new(wrapped_for_in.nested.x + 1))
+plot(wrapped_for_in.nested.x)
+wrapped_for_in_prior = wrapped_for_in[1]
+wrapped_for_in_dynamic_prior = wrapped_for_in[dyn]
+plot(wrapped_for_in_prior.nested.x)
+plot(wrapped_for_in_dynamic_prior.nested.x)
+
+wrapped_counter = 0
+varip lib.Wrapper wrapped_while = while wrapped_counter < 2
+    wrapped_counter := wrapped_counter + 1
+    lib.Wrapper.new(lib.Point.new(close + 210 + wrapped_counter))
+wrapped_while := lib.Wrapper.new(lib.Point.new(wrapped_while.nested.x + 1))
+plot(wrapped_while.nested.x)
+wrapped_while_prior = wrapped_while[1]
+wrapped_while_dynamic_prior = wrapped_while[dyn]
+plot(wrapped_while_prior.nested.x)
+plot(wrapped_while_dynamic_prior.nested.x)
+
+varip lib.Wrapper wrapped = lib.Wrapper.new(lib.Point.new(close + 30))
+wrapped := lib.Wrapper.new(lib.Point.new(wrapped.nested.x + 1))
+plot(wrapped.nested.x)
+wrapped_prior = wrapped[1]
+wrapped_dynamic_prior = wrapped[dyn]
+plot(wrapped_prior.nested.x)
+plot(wrapped_dynamic_prior.nested.x)
+
+varip inferredWrapped = lib.Wrapper.new(lib.Point.new(close + 40))
+inferredWrapped := lib.Wrapper.new(lib.Point.new(inferredWrapped.nested.x + 1))
+plot(inferredWrapped.nested.x)
+inferredWrapped_prior = inferredWrapped[1]
+inferredWrapped_dynamic_prior = inferredWrapped[dyn]
+plot(inferredWrapped_prior.nested.x)
+plot(inferredWrapped_dynamic_prior.nested.x)
+
+aliasSource = lib.Wrapper.new(lib.Point.new(close + 50))
+varip aliasWrapped = aliasSource
+aliasWrapped := lib.Wrapper.new(lib.Point.new(aliasWrapped.nested.x + 1))
+plot(aliasWrapped.nested.x)
+aliasWrapped_prior = aliasWrapped[1]
+aliasWrapped_dynamic_prior = aliasWrapped[dyn]
+plot(aliasWrapped_prior.nested.x)
+plot(aliasWrapped_dynamic_prior.nested.x)

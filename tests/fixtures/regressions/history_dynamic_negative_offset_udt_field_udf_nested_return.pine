@@ -1,0 +1,11 @@
+//@version=5
+indicator("Dynamic negative history offset UDT field UDF nested return")
+type Settings
+    int offset
+type SettingsBox
+    Settings settings
+
+makeSettingsBox(int value) => SettingsBox.new(Settings.new(value))
+
+box = makeSettingsBox(bar_index == 0 ? 0 : -1)
+plot(close[box.settings.offset])

@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported math rounding input return qualifier")
+
+seed = input.float(4.5, "Seed")
+floor_count = math.floor(seed)
+ceil_count = math.ceil(seed)
+trunc_count = math.trunc(seed)
+
+plot(close, show_last=floor_count)
+plot(open, show_last=ceil_count)
+plot(high, show_last=trunc_count)

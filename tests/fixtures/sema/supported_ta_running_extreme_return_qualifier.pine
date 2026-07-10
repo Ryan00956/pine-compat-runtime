@@ -1,0 +1,10 @@
+//@version=6
+indicator("Supported ta running extreme return qualifier")
+
+running_sum = ta.cum(close)
+running_max = ta.max(high)
+running_min = ta.min(low)
+
+plot(running_sum)
+plot(running_max)
+plot(running_min)

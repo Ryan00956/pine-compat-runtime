@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported request.security merge qualifier")
+dynamic_gaps = bar_index > 0 ? barmerge.gaps_off : barmerge.gaps_on
+dynamic_lookahead = bar_index > 0 ? barmerge.lookahead_off : barmerge.lookahead_on
+bad_gaps = request.security(syminfo.tickerid, timeframe.period, close, gaps=dynamic_gaps)
+bad_lookahead = request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_off, lookahead=dynamic_lookahead)
+plot(bad_gaps + bad_lookahead)

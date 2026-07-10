@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported for-in matrix.new named rows result negative history")
+values = matrix.new<float>(rows = 1, columns = 1, initial_value = 0)
+length = for row in values
+    -1
+plot(close[length])

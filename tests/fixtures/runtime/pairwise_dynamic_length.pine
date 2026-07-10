@@ -1,0 +1,7 @@
+//@version=5
+indicator("Pairwise dynamic length")
+length = bar_index % 2 + 2
+plot(ta.correlation(close, high, length))
+plot(ta.covariance(close, high, length))
+plot(ta.correlation(source1=close, source2=high, length=length))
+plot(ta.covariance(length=length, source2=high, source1=close))

@@ -1,0 +1,33 @@
+//@version=5
+indicator("Typed declaration qualifiers")
+
+int literal_length = 2
+int input_length = input.int(3, "Length")
+string chart_tf = timeframe.period
+
+plot(ta.sma(close, literal_length))
+plot(ta.ema(close, input_length))
+plot(timeframe.in_seconds(chart_tf))
+
+int promoted = 1
+promoted := bar_index
+plot(promoted)
+
+int reassigned_literal_length = na
+reassigned_literal_length := 2
+
+int reassigned_input_length = na
+reassigned_input_length := input.int(3, "Reassigned length")
+
+string reassigned_chart_tf = na
+reassigned_chart_tf := timeframe.period
+
+pass_length(x) =>
+    int local_length = na
+    local_length := x
+    local_length
+
+plot(ta.sma(close, reassigned_literal_length))
+plot(ta.ema(close, reassigned_input_length))
+plot(ta.wma(close, pass_length(reassigned_input_length)))
+plot(timeframe.in_seconds(reassigned_chart_tf))

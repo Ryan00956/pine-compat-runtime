@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported ta volatility return qualifier")
+
+plot(ta.tr)
+plot(ta.tr())
+plot(ta.tr(false))
+plot(ta.atr(3))
+plot(ta.sar(0.02, 0.02, 0.2))

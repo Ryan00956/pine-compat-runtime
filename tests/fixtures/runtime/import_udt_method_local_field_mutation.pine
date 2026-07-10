@@ -5,3 +5,7 @@ indicator("Imported UDT method local field mutation")
 p = lib.Point.new(close)
 mutated = p.mutateLocal(60)
 plot(mutated.x)
+
+wrapped = lib.Wrapper.new(p)
+mutatedWrapper = wrapped.mutateWrapperLocal(70)
+plot(mutatedWrapper.nested.x)

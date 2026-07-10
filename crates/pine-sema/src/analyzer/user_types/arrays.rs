@@ -2,8 +2,12 @@ use pine_builtins::{Accepts, BuiltinSignature};
 use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{CallArg, Diagnostic, Span};
 
+use crate::analyzer::calls::{
+    call_arg_accepts_type_expected_diagnostic, call_arg_expected_label_diagnostic,
+    call_arg_expected_type_diagnostic, call_requirement_diagnostic,
+};
 use crate::analyzer::context::Analyzer;
-use crate::types::accepts_type;
+use crate::prelude::pine_type_name;
 
 use super::{UserTypeArrayElementInference, classify_user_type_array_element_names};
 
@@ -44,7 +48,7 @@ impl Analyzer {
         if type_names.iter().any(|type_name| type_name != first) {
             return Some(UserTypeArrayElementInference::MixedLocal);
         }
-        if self.imported_user_type_history_is_supported(first) {
+        if self.imported_user_type_array_is_supported(first) {
             return Some(UserTypeArrayElementInference::SameScalarImported(
                 first.clone(),
             ));
@@ -77,10 +81,11 @@ impl Analyzer {
                     span,
                 ));
             }
+            _ if self.imported_user_type_array_is_supported(type_name) => {}
             _ => {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_TYPE",
-                    format!("`{name}` requires a local scalar-field UDT"),
+                self.diagnostics.push(call_requirement_diagnostic(
+                    name,
+                    "a local or imported scalar-tree UDT",
                     span,
                 ));
             }
@@ -105,33 +110,31 @@ impl Analyzer {
                 continue;
             };
             if index == 0 {
-                if !accepts_type(Accepts::SimpleInt, arg_type) {
-                    self.diagnostics.push(Diagnostic::error(
-                        "E_CALL_ARG_TYPE",
-                        format!(
-                            "`array.new<{type_name}>` argument `size` does not accept {:?} {:?}",
-                            arg_type.qualifier, arg_type.kind
-                        ),
-                        arg.span,
-                    ));
+                if let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
+                    &format!("array.new<{type_name}>"),
+                    "size",
+                    Accepts::SimpleIntCompatible,
+                    arg_type,
+                    arg.span,
+                ) {
+                    self.diagnostics.push(diagnostic);
                 }
             } else if arg_type.kind != ValueKind::UserType {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_TYPE",
-                    format!(
-                        "`array.new<{type_name}>` argument `initial_value` does not accept {:?} {:?}",
-                        arg_type.qualifier, arg_type.kind
-                    ),
+                self.diagnostics.push(call_arg_expected_label_diagnostic(
+                    &format!("array.new<{type_name}>"),
+                    "initial_value",
+                    &format!("UDT `{type_name}`"),
+                    &pine_type_name(arg_type),
                     arg.span,
                 ));
             } else if let Some(value_type_name) = self.user_type_name_of_expr(&arg.value)
                 && value_type_name != type_name
             {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_TYPE",
-                    format!(
-                        "`array.new<{type_name}>` argument `initial_value` expects UDT `{type_name}`, got `{value_type_name}`"
-                    ),
+                self.diagnostics.push(call_arg_expected_label_diagnostic(
+                    &format!("array.new<{type_name}>"),
+                    "initial_value",
+                    &format!("UDT `{type_name}`"),
+                    &format!("`{value_type_name}`"),
                     arg.span,
                 ));
             }
@@ -280,12 +283,11 @@ impl Analyzer {
             return;
         };
         if value_type.kind != ValueKind::UserType {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_TYPE",
-                format!(
-                    "`{}` argument `value` does not accept {:?} {:?} for UDT arrays",
-                    signature.name, value_type.qualifier, value_type.kind
-                ),
+            self.diagnostics.push(call_arg_expected_type_diagnostic(
+                signature.name,
+                "value",
+                "UDT value",
+                value_type,
                 value_arg.span,
             ));
             return;
@@ -299,12 +301,11 @@ impl Analyzer {
         if let (Some(array_type_name), Some(value_type_name)) = (array_type_name, value_type_name)
             && array_type_name != value_type_name
         {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_TYPE",
-                format!(
-                    "`{}` argument `value` expects UDT `{array_type_name}`, got `{value_type_name}`",
-                    signature.name
-                ),
+            self.diagnostics.push(call_arg_expected_label_diagnostic(
+                signature.name,
+                "value",
+                &format!("UDT `{array_type_name}`"),
+                &format!("`{value_type_name}`"),
                 value_arg.span,
             ));
         }
@@ -341,11 +342,11 @@ impl Analyzer {
         if let (Some(first_type_name), Some(second_type_name)) = (first_type_name, second_type_name)
             && first_type_name != second_type_name
         {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_TYPE",
-                format!(
-                    "`array.concat` argument `id2` expects UDT array `{first_type_name}`, got `{second_type_name}`"
-                ),
+            self.diagnostics.push(call_arg_expected_label_diagnostic(
+                "array.concat",
+                "id2",
+                &format!("UDT array `{first_type_name}`"),
+                &format!("`{second_type_name}`"),
                 second_arg.span,
             ));
         }

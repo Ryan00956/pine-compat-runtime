@@ -1,0 +1,3 @@
+//@version=5
+indicator("Supported ta.linreg na offset")
+plot(ta.linreg(close, 3, na))

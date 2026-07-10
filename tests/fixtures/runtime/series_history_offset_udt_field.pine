@@ -1,0 +1,69 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Series history offset UDT field")
+
+type Settings
+    int offset
+
+type SettingsBox
+    Settings settings
+
+makeSettings(int value) => Settings.new(value)
+sameSettings(Settings settings) => settings
+makeSettingsBox(int value) => SettingsBox.new(Settings.new(value))
+sameSettingsBox(SettingsBox box) => box
+
+method offset(Settings settings) => settings.offset
+method same(Settings settings) => settings
+method make(Settings settings, int value) => Settings.new(value)
+method makeBox(Settings settings, int value) => SettingsBox.new(Settings.new(value))
+
+local_settings = Settings.new(bar_index == 0 ? 0 : 1)
+local_box = SettingsBox.new(Settings.new(bar_index == 0 ? 0 : 1))
+udf_settings = makeSettings(bar_index == 0 ? 0 : 1)
+udf_same = sameSettings(local_settings)
+udf_box = makeSettingsBox(bar_index == 0 ? 0 : 1)
+udf_same_box = sameSettingsBox(local_box)
+method_settings = Settings.new(bar_index == 0 ? 0 : 1)
+method_same = method_settings.same()
+method_made = method_settings.make(bar_index == 0 ? 0 : 1)
+method_box = method_settings.makeBox(bar_index == 0 ? 0 : 1)
+imported_offset = lib.Offset.new(bar_index == 0 ? 0 : 1)
+imported_box = lib.OffsetBox.new(lib.Offset.new(bar_index == 0 ? 0 : 1))
+imported_udf_same = lib.sameOffset(imported_offset)
+imported_udf_same_box = lib.sameOffsetBox(imported_box)
+imported_udf_made = lib.makeOffset(bar_index == 0 ? 0 : 1)
+imported_udf_box = lib.makeOffsetBox(bar_index == 0 ? 0 : 1)
+imported_method_same = imported_offset.same()
+imported_method_made = imported_offset.make(bar_index == 0 ? 0 : 1)
+imported_method_box = imported_offset.makeBox(bar_index == 0 ? 0 : 1)
+imported_method_same_qualified = lib.same(imported_offset)
+imported_method_made_qualified = lib.make(imported_offset, bar_index == 0 ? 0 : 1)
+imported_method_same_box = imported_box.sameBox()
+imported_method_same_box_qualified = lib.sameBox(imported_box)
+imported_method_box_qualified = lib.makeBox(imported_offset, bar_index == 0 ? 0 : 1)
+
+plot(close[local_settings.offset])
+plot(open[local_box.settings.offset])
+plot(high[udf_settings.offset])
+plot(low[method_settings.offset()])
+plot((close + high)[udf_same.offset])
+plot((open + low)[udf_box.settings.offset])
+plot((high + open)[udf_same_box.settings.offset])
+plot((high + close)[method_same.offset])
+plot((low + open)[method_made.offset])
+plot((close + low)[method_box.settings.offset])
+plot((close + open)[imported_offset.value])
+plot((high + low)[imported_box.offset.value])
+plot(close[imported_udf_same.value])
+plot(open[imported_udf_made.value])
+plot(high[imported_udf_box.offset.value])
+plot(low[imported_udf_same_box.offset.value])
+plot(low[imported_method_same.value])
+plot((close + open)[imported_method_made.value])
+plot((high + low)[imported_method_box.offset.value])
+plot(close[imported_method_same_qualified.value])
+plot((close + open)[imported_method_made_qualified.value])
+plot(open[imported_method_same_box.offset.value])
+plot(high[imported_method_same_box_qualified.offset.value])
+plot((high + low)[imported_method_box_qualified.offset.value])

@@ -1,0 +1,7 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Profile dynamic series history nested pure user method imported alias-qualified named direct nested UDT arg expression max_bars_back miss", max_bars_back=10)
+src = lib.otherNestedSourceNamed(lib.Point.new(open), delta=1, other=lib.Wrapper.new(lib.Point.new(close)))
+max_bars_back(src, 2)
+offset = bar_index == 0 ? 0 : 3
+plot(lib.otherNestedSourceNamed(lib.Point.new(open), other=lib.Wrapper.new(lib.Point.new(close)), delta=1)[offset])

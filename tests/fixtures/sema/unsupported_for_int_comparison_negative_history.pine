@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported for int comparison negative history")
+fast = for i = 0 to 0
+    3
+slow = 2
+length = fast > slow ? -1 : 1
+plot(close[length])

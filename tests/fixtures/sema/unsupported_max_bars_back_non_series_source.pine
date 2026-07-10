@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported max_bars_back non-series source")
+length = input.int(2, "Length")
+max_bars_back(length, 20)
+plot(close)

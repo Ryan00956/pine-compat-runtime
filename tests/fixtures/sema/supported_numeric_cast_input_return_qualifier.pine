@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported numeric cast input return qualifier")
+
+source_float = input.float(3.75, "Source float")
+source_int = input.int(4, "Source int")
+
+input_int = int(source_float)
+input_float = float(source_int)
+
+plot(close, show_last=input_int)
+hline(input_float)

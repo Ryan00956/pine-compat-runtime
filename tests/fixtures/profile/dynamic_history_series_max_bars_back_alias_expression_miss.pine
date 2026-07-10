@@ -1,0 +1,5 @@
+indicator("Profile dynamic series history alias expression miss", max_bars_back=10)
+spread = close + open
+max_bars_back(spread, 2)
+offset = bar_index == 0 ? 0 : 3
+plot((close + open)[offset])

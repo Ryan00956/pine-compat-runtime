@@ -1,0 +1,5 @@
+//@version=5
+strategy("Unsupported strategy entry named const qty")
+qty_base = 0
+qty = qty_base
+strategy.entry("L", strategy.long, qty=qty)

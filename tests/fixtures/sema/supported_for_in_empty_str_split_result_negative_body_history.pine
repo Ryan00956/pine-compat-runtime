@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported empty str.split for-in result negative body history")
+values = str.split("", "")
+length = for value in values
+    -1
+plot(close[length])

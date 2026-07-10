@@ -1,0 +1,17 @@
+//@version=6
+indicator("Supported matrix dimension simple return qualifier")
+
+values = matrix.new<float>(2, 3, close)
+row_count = matrix.rows(values)
+column_count = values.columns()
+element_count = matrix.elements_count(values)
+method_row_count = values.rows()
+namespace_column_count = matrix.columns(values)
+method_element_count = values.elements_count()
+
+plot(ta.sma(close, row_count))
+plot(ta.ema(close, column_count))
+plot(ta.wma(close, element_count))
+plot(ta.rma(close, method_row_count))
+plot(ta.sma(open, namespace_column_count))
+plot(ta.ema(open, method_element_count))

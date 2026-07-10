@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported plot Input Show Last")
+
+count = input.int(5, "Show last")
+
+plot(close, show_last=count)

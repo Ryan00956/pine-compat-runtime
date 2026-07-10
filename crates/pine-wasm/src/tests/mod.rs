@@ -1606,7 +1606,7 @@ fn analyze_script_reports_unsupported_user_type_varip_fixture() {
         parsed["compatibility"]["unsupported"][0]["reason"]
             .as_str()
             .expect("unsupported reason should be a string")
-            .contains("UDT varip supports only explicit scalar-field declarations")
+            .contains("UDT varip supports only explicit scalar-tree declarations")
     );
 }
 

@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported map.size simple return qualifier")
+
+values = map.new<string, float>()
+values.put("close", close)
+
+namespace_size = map.size(values)
+method_size = values.size()
+
+plot(ta.sma(close, namespace_size))
+plot(ta.ema(close, method_size))

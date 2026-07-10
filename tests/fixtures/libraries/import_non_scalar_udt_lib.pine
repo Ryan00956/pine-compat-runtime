@@ -1,0 +1,24 @@
+library("Imported non-scalar UDT fixture")
+export type Marker
+    label id
+
+export type Handles
+    label id
+    line trend
+    box zone
+    chart.point anchor
+
+export passMarker(Marker value) =>
+    value
+
+export nestedPassMarker(Marker value) =>
+    passMarker(value)
+
+method retain(Marker value) =>
+    value
+
+method nestedRetain(Marker value) =>
+    value.retain()
+
+method choose(Marker value, Marker other) =>
+    other

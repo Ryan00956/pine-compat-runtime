@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported empty matrix.submatrix for-in result negative body history")
+source = matrix.new<float>(3, 2, 0)
+values = matrix.submatrix(source, 1, 1, 0, 2)
+length = for row in values
+    -1
+plot(close[length])

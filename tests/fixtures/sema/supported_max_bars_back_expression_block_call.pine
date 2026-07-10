@@ -1,0 +1,10 @@
+//@version=6
+indicator("Supported max_bars_back expression block call")
+src = close
+branch = switch
+    close > open =>
+        length = 20
+        max_bars_back(src, length)
+        1
+    => 0
+plot(src + branch)

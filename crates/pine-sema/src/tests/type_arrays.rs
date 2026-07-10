@@ -486,7 +486,7 @@ fn rejects_while_expression_nested_array_result() {
             .iter()
             .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"
                 && diagnostic.message.contains(
-                    "`array.from` arguments must infer one supported array element kind"
+                    "`array.from` expects one supported array element kind, got simple array<float>"
                 )),
         "{:?}",
         analysis.diagnostics

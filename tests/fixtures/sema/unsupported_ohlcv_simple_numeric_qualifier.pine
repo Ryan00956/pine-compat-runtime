@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported OHLCV simple numeric qualifier")
+
+plot(ta.alma(close, 4, open, 6))
+plot(ta.alma(close, 4, high, 6))
+plot(ta.alma(close, 4, 0.85, low))
+plot(ta.alma(close, 4, close, 6))
+plot(ta.alma(close, 4, 0.85, volume))

@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported ta distribution return qualifier")
+
+plot(ta.median(close, 3))
+plot(ta.mode(close, 3))
+plot(ta.percentile_nearest_rank(close, 3, 50))
+plot(ta.percentile_linear_interpolation(close, 3, 50))
+plot(ta.percentrank(close, 3))

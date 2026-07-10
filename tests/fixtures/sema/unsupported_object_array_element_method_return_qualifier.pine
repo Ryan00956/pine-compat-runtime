@@ -1,0 +1,34 @@
+//@version=6
+indicator("Unsupported object array element method return qualifier")
+
+type Tool
+    float base
+
+method label_value(Tool tool, label value) =>
+    tool.base + 1
+
+method line_value(Tool tool, line value) =>
+    tool.base + 1
+
+method point_value(Tool tool, chart.point value) =>
+    tool.base + 1
+
+tool = Tool.new(close)
+first_label = label.new(bar_index, high, "a")
+second_label = label.new(bar_index + 1, low, "b")
+first_line = line.new(bar_index, high, bar_index + 1, low)
+second_line = line.new(bar_index + 2, high + 1, bar_index + 3, low + 1)
+points = array.from(chart.point.from_index(bar_index, close), chart.point.from_index(bar_index + 1, close + 1))
+labels = array.from(first_label, second_label)
+lines = array.from(first_line, second_line)
+
+removed_label = array.remove(labels, 0)
+popped_label = labels.pop()
+shifted_point = array.shift(points)
+
+plot(tool.line_value(array.get(labels, 0)))
+plot(tool.point_value(lines.first()))
+plot(tool.label_value(array.last(points)))
+plot(tool.line_value(removed_label))
+plot(tool.point_value(popped_label))
+plot(tool.label_value(shifted_point))

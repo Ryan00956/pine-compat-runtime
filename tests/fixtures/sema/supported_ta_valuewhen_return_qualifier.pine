@@ -1,0 +1,13 @@
+//@version=6
+indicator("Supported ta.valuewhen return qualifier")
+
+condition = close > open
+int_value = ta.valuewhen(condition, bar_index, 0)
+float_value = ta.valuewhen(condition, close, 0)
+bool_value = ta.valuewhen(condition, close > open, 0)
+color_value = ta.valuewhen(condition, color.red, 0)
+
+plot(int_value)
+plot(float_value)
+plot(bool_value ? 1 : 0)
+plot(close, color=color_value)

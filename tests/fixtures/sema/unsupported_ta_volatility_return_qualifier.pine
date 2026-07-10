@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported ta volatility return qualifier")
+
+hline(ta.tr)
+hline(ta.tr())
+hline(ta.tr(false))
+hline(ta.atr(3))
+hline(ta.sar(0.02, 0.02, 0.2))

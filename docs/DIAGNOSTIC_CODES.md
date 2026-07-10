@@ -24,6 +24,7 @@ improved over time, but codes should remain stable once published.
 - `E_PARSE_EXPORT`: invalid export declaration.
 - `E_PARSE_FOR`: invalid for-loop declaration.
 - `E_PARSE_FUNCTION`: invalid function declaration.
+- `E_PARSE_METHOD`: invalid user-defined method declaration.
 - `E_PARSE_IF_EXPR`: invalid if expression.
 - `E_PARSE_IMPORT`: invalid import declaration.
 - `E_PARSE_LIBRARY`: invalid library declaration.
@@ -53,6 +54,8 @@ improved over time, but codes should remain stable once published.
 - `E_FUNCTION_ARG_NAME`: unknown user-defined function named argument.
 - `E_FUNCTION_ARG_ORDER`: positional argument followed a named argument in a
   user-defined function call.
+- `E_FUNCTION_ARG_TYPE`: user-defined function argument type does not match the
+  declared parameter.
 - `E_FUNCTION_ARITY`: wrong number of user-defined function arguments.
 - `E_FUNCTION_DUPLICATE`: user-defined function name was declared more than
   once.
@@ -61,6 +64,8 @@ improved over time, but codes should remain stable once published.
 - `E_FUNCTION_NAME`: user-defined function name conflicts with an existing
   symbol or built-in.
 - `E_FUNCTION_PARAM`: user-defined function parameter list is invalid.
+- `E_FUNCTION_PARAM_TYPE`: user-defined function parameter declares a type
+  outside the supported subset.
 - `E_FUNCTION_RETURN`: user-defined function block does not end with an
   expression.
 - `E_UDT_ASSIGN_TYPE`: reassignment changed a local user-defined type identity.

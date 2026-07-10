@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported ta flow return qualifier")
+
+plot(ta.tsi(close, 2, 3))
+plot(ta.cmo(close, 3))
+plot(ta.cci(close, 3))
+plot(ta.cog(close, 3))
