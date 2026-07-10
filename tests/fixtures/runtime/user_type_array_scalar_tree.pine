@@ -16,6 +16,47 @@ type Second
     float other
     float shared
 
+type ReturnAnchor
+    int tag
+
+return_identity(values) => values
+
+return_block_alias(values) =>
+    made = values
+    made
+
+return_copy(values) => values.copy()
+
+return_fresh(value) => array.from(value)
+
+return_rebuild(values) =>
+    nested = return_identity(values)
+    item = nested.get(0)
+    array.from(item)
+
+return_new_first() => array.new<First>(1, First.new(110.0, 1100.0))
+
+return_nested(values) => return_block_alias(return_identity(values))
+
+return_named(values, bool use_copy, int tag) => use_copy ? values.copy() : values
+
+return_final_if(values) =>
+    if bar_index >= 0
+        made = values.copy()
+        made
+    else
+        values
+
+method returnFirst(ReturnAnchor self, array<First> values) => return_nested(values)
+
+method returnSecond(ReturnAnchor self, Second[] values) =>
+    made = values.copy()
+    made
+
+method copy(ReturnAnchor self, array<First> values) => values.copy()
+
+method returnStatic(First self, array<First> values) => return_nested(values)
+
 read_flow_shared(values) =>
     selected = bar_index >= 0 ? array.copy(values) : na
     item = array.first(selected)
@@ -122,3 +163,60 @@ plot(read_flow_shared_method(first_layout))
 plot(read_flow_shared_method(second_layout))
 plot(rebuild_flow_shared(First.new(30.0, 300.0)))
 plot(rebuild_flow_shared(Second.new(400.0, 40.0)))
+
+return_first_source = array.from(First.new(60.0, 600.0))
+return_second_source = array.from(Second.new(700.0, 70.0))
+return_first_once = return_nested(return_first_source)
+return_second_once = return_nested(return_second_source)
+return_first_again = return_nested(return_first_source)
+return_first_value = array.get(return_first_once, 0)
+return_second_value = array.get(return_second_once, 0)
+return_first_again_value = array.get(return_first_again, 0)
+plot(return_first_value.shared)
+plot(return_second_value.shared)
+plot(return_first_again_value.shared)
+
+return_named_first = return_named(tag=1, values=return_first_source, use_copy=true)
+return_if_second = return_final_if(return_second_source)
+return_anchor = ReturnAnchor.new(1)
+return_method_first = return_anchor.returnFirst(return_first_source)
+return_method_second = return_anchor.returnSecond(values=return_second_source)
+return_named_first_value = array.get(return_named_first, 0)
+return_if_second_value = array.get(return_if_second, 0)
+return_method_first_value = array.get(return_method_first, 0)
+return_method_second_value = array.get(return_method_second, 0)
+plot(return_named_first_value.shared + return_if_second_value.shared + return_method_first_value.shared + return_method_second_value.shared)
+
+return_identity_source = array.from(First.new(80.0, 800.0))
+return_identity_alias = return_identity(return_identity_source)
+return_identity_alias.push(First.new(81.0, 810.0))
+plot(return_identity_source.size() * 10 + return_identity_alias.size())
+
+return_copy_source = array.from(First.new(90.0, 900.0))
+return_copy_result = return_copy(return_copy_source)
+return_copy_result.push(First.new(91.0, 910.0))
+plot(return_copy_source.size() * 10 + return_copy_result.size())
+
+return_fresh_value = First.new(100.0, 1000.0)
+return_fresh_first = return_fresh(return_fresh_value)
+return_fresh_second = return_fresh(return_fresh_value)
+return_fresh_first.push(First.new(101.0, 1010.0))
+plot(return_fresh_first.size() * 10 + return_fresh_second.size())
+
+return_rebuilt_first_once = return_rebuild(return_first_source)
+return_rebuilt_second = return_rebuild(return_second_source)
+return_rebuilt_first_again = return_rebuild(return_first_source)
+plot(array.join(return_rebuilt_first_once, "|") == "First(60, 600)" ? 1 : 0)
+plot(array.join(return_rebuilt_second, "|") == "Second(700, 70)" ? 1 : 0)
+plot(array.join(return_rebuilt_first_again, "|") == "First(60, 600)" ? 1 : 0)
+
+return_new_first_result = return_new_first()
+plot(array.join(return_new_first_result, "|") == "First(110, 1100)" ? 1 : 0)
+
+return_method_copy_result = return_anchor.copy(return_first_source)
+plot(array.join(return_method_copy_result, "|") == "First(60, 600)" ? 1 : 0)
+
+return_static_receiver = First.new(120.0, 1200.0)
+First = Second.new(1300.0, 130.0)
+return_static_result = First.returnStatic(return_static_receiver, return_first_source)
+plot(array.join(return_static_result, "|") == "First(60, 600)" ? 1 : 0)

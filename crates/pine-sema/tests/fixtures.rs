@@ -6545,6 +6545,25 @@ fn accepts_supported_user_type_array_control_flow_fixture() {
 }
 
 #[test]
+fn accepts_supported_user_type_array_udf_method_returns_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_user_type_array_udf_method_returns.pine");
+}
+
+#[test]
+fn reports_unsupported_user_type_array_udf_method_return_identities_fixture() {
+    let path = "tests/fixtures/sema/unsupported_user_type_array_udf_method_return_identities.pine";
+    assert_diagnostic_messages(
+        path,
+        &[
+            "ternary UDT array branches must resolve to the same element identity",
+            "if UDT array branches must resolve to the same element identity",
+            "cannot assign a different user-defined type array to `wrong_typed`",
+        ],
+    );
+    assert_diagnostic_count(path, 3);
+}
+
+#[test]
 fn reports_unsupported_user_type_array_control_flow_identity_fixture() {
     let path = "tests/fixtures/sema/unsupported_user_type_array_control_flow_identity.pine";
     assert_diagnostic_messages(
@@ -12642,6 +12661,62 @@ fn reports_unsupported_imported_user_type_array_control_flow_identity_fixture() 
         "tests/fixtures/libraries/import_udt_lib.pine",
         3,
     );
+}
+
+#[test]
+fn reports_unsupported_imported_user_type_array_returns_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/unsupported_imported_user_type_array_returns.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let library_path =
+        workspace_fixture("tests/fixtures/libraries/import_udt_array_return_boundary_lib.pine");
+    let library_text =
+        fs::read_to_string(&library_path).expect("library fixture should be readable");
+    let library_source = SourceFile::new(library_path.display().to_string(), library_text);
+    let input = AnalysisInput::with_library_sources(
+        source,
+        vec![("user/udt_array_returns/1".to_owned(), library_source)],
+    )
+    .expect("library fixture input should be valid");
+    let analysis = analyze_input(&input);
+
+    let reason = "source-aware expression identity metadata is required before library-local spans can be safely inlined";
+    for feature in [
+        "imported UDT array function returns",
+        "imported UDT array method returns",
+    ] {
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|unsupported| {
+                    unsupported.feature == feature && unsupported.reason == reason
+                }),
+            "{} unsupported features: {:?}",
+            path.display(),
+            analysis.compatibility.unsupported
+        );
+        assert!(
+            analysis.diagnostics.iter().any(|diagnostic| {
+                diagnostic.code == "E_UNSUPPORTED_FEATURE"
+                    && diagnostic.message.contains(feature)
+                    && diagnostic.message.contains(reason)
+            }),
+            "{} diagnostics: {:?}",
+            path.display(),
+            analysis.diagnostics
+        );
+    }
+    assert_eq!(
+        analysis.diagnostics.len(),
+        2,
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
 }
 
 #[test]

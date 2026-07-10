@@ -3,6 +3,7 @@ use crate::analyzer::user_types::{
     UserTypeArrayElementInference, classify_user_type_array_element_names,
 };
 use crate::prelude::*;
+use crate::source_graph::SourceId;
 
 struct MethodCallReceiver {
     type_name: String,
@@ -82,6 +83,7 @@ impl Analyzer {
             self.methods.insert(
                 key,
                 MethodInfo {
+                    source_id: SourceId::root(),
                     receiver_type: receiver.type_name.clone(),
                     receiver_name: receiver.name.clone(),
                     params,
@@ -304,6 +306,19 @@ impl Analyzer {
         {
             self.mark_expr_user_type(call_span, type_name.clone());
             self.mark_expr_user_type(receiver.span, type_name);
+        }
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray) {
+            if method.source_id != SourceId::root() {
+                self.unsupported(
+                    "imported UDT array method returns",
+                    "source-aware expression identity metadata is required before library-local spans can be safely inlined",
+                    call_span,
+                );
+            } else if let Some(type_name) = self.user_type_array_name_of_function_body(&method.body)
+            {
+                self.mark_expr_user_type_array(call_span, type_name.clone());
+                self.mark_expr_user_type_array(receiver.span, type_name);
+            }
         }
         if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
             && let Some(info) = self.map_type_of_function_body(&method.body)

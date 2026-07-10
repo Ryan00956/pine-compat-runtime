@@ -1,0 +1,33 @@
+//@version=6
+indicator("Unsupported UDT array UDF and method return identities")
+
+type First
+    float shared
+    float other
+
+type Second
+    float other
+    float shared
+
+type Anchor
+    int tag
+
+identity(values) => values
+
+badTernary(left, right, bool use_left) => use_left ? left : right
+
+method badIf(Anchor self, array<First> left, array<Second> right, bool use_left) =>
+    if use_left
+        left
+    else
+        right
+
+first_values = array.from(First.new(10.0, 100.0))
+second_values = array.from(Second.new(200.0, 20.0))
+
+bad_udf = badTernary(first_values, second_values, true)
+
+anchor = Anchor.new(1)
+bad_method = anchor.badIf(first_values, second_values, true)
+
+array<First> wrong_typed = identity(second_values)

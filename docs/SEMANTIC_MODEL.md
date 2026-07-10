@@ -538,6 +538,19 @@ identities produce an `E_BRANCH_TYPE` diagnostic instead of an unlowerable HIR.
 Generic UDF lowering resolves array parameters, local flow aliases, element
 helper results, and `array.from` reconstruction against the current call's UDT
 identity rather than shared function-body span metadata.
+Local pure UDF and user-method return analysis extends that rule to
+same-local scalar-tree UDT arrays returned through direct parameters,
+block-local aliases, `array.copy`, `array.new<T>`, `array.from`, nested local
+calls, and final control-flow expressions. Positional, named, and reordered
+arguments seed a call-local identity environment, so repeated calls over UDTs
+with different field declaration orders preserve the concrete A-to-B-to-A
+layout instead of inheriting the most recently analyzed call span. Mixed return
+identities and incompatible explicitly typed destinations remain semantic
+errors. Imported UDF/method UDT array returns are not included because imported
+return metadata spans are not yet source-aware. Tuple-contained UDT arrays and
+direct array-method chaining on a call result are also outside this subset.
+This does not yet make a generic UDT-array parameter iterable inside its UDF;
+the fixture-backed `for...in` consumer is on the caller side of the return.
 Supported operations are
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
 `array.new_color`, `array.new_label`, `array.new_line`, `array.new_linefill`,
@@ -757,6 +770,12 @@ direct, nested scalar-tree, ternary, if, for, for-in, while, or switch
 same-imported-identity constructor returns, and method-local scalar field
 mutation before returning a local UDT value. Returned imported UDT values in
 that subset support caller-side history reads followed by scalar-tree field reads.
+Local methods may return same-local scalar-tree UDT arrays from typed array
+parameters or fresh local array construction. Direct and block-alias returns
+retain the argument identity, while copy/new/from and nested/final-control-flow
+returns preserve the identity selected for the current call. This return
+support does not widen imported methods, tuple-carried arrays, or parser support
+for chaining an array helper directly from an arbitrary call result.
 Methods with receiver/parameter/global field side effects, recursion,
 unsupported parameter families, mismatched UDT parameter identity, unknown
 receivers, and alias-qualified imported method receiver type mismatches remain

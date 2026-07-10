@@ -417,6 +417,20 @@ impl Analyzer {
         self.mark_user_type_array_results(span, [result])
     }
 
+    pub(crate) fn user_type_array_name_of_function_body(
+        &self,
+        body: &FunctionBody,
+    ) -> Option<String> {
+        let result = match body {
+            FunctionBody::Expr(expr) => self.user_type_array_result_name(expr),
+            FunctionBody::Block(statements) => self.user_type_array_branch_result_name(statements),
+        };
+        match result {
+            UserTypeArrayResultName::Known(type_name) => Some(type_name),
+            UserTypeArrayResultName::Na | UserTypeArrayResultName::Unknown => None,
+        }
+    }
+
     fn mark_user_type_array_results(
         &mut self,
         span: Span,

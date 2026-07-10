@@ -2,6 +2,7 @@ use crate::analyzer::user_types::{
     UserTypeArrayElementInference, classify_user_type_array_element_names,
 };
 use crate::prelude::*;
+use crate::source_graph::SourceId;
 
 pub(crate) fn function_param_names(params: &[FunctionParam]) -> Vec<String> {
     params.iter().map(|param| param.name.clone()).collect()
@@ -377,6 +378,7 @@ impl Analyzer {
             self.functions.insert(
                 name.clone(),
                 FunctionInfo {
+                    source_id: SourceId::root(),
                     params: param_names,
                     param_types,
                     body: body.clone(),
@@ -554,6 +556,20 @@ impl Analyzer {
                 self.mark_expr_user_type(span, type_name);
             }
         }
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray) {
+            if function.source_id != SourceId::root() {
+                self.unsupported(
+                    "imported UDT array function returns",
+                    "source-aware expression identity metadata is required before library-local spans can be safely inlined",
+                    call_span,
+                );
+            } else if let Some(type_name) =
+                self.user_type_array_name_of_function_body(&function.body)
+            {
+                self.mark_expr_user_type_array(call_span, type_name.clone());
+                self.mark_expr_user_type_array(span, type_name);
+            }
+        }
         if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
             && let Some(info) = self.map_type_of_function_body(&function.body)
         {
@@ -699,6 +715,16 @@ impl Analyzer {
             self.diagnostics.push(Diagnostic::error(
                 "E_BRANCH_TYPE",
                 "if map branches must resolve to the same map template",
+                span,
+            ));
+            return None;
+        }
+        if pine_type.kind == ValueKind::UserTypeArray
+            && !self.mark_if_user_type_array(span, then_branch, else_branch)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_BRANCH_TYPE",
+                "if UDT array branches must resolve to the same element identity",
                 span,
             ));
             return None;

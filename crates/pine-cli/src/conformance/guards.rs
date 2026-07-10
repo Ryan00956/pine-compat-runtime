@@ -287,6 +287,17 @@ const UDT_ARRAY_CONTROL_FLOW_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/unsupported_imported_user_type_array_control_flow_identity.pine",
 ];
 
+const LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/user_type_array_scalar_tree.pine",
+    "tests/fixtures/sema/supported_user_type_array_udf_method_returns.pine",
+    "tests/fixtures/sema/unsupported_user_type_array_udf_method_return_identities.pine",
+];
+
+const IMPORTED_UDT_ARRAY_CALL_RETURN_BOUNDARY_FIXTURES: &[&str] = &[
+    "tests/fixtures/sema/unsupported_imported_user_type_array_returns.pine",
+    "tests/fixtures/libraries/import_udt_array_return_boundary_lib.pine",
+];
+
 pub(super) fn validate_entry(
     line_number: usize,
     feature: &str,
@@ -312,6 +323,8 @@ pub(super) fn validate_entry(
     validate_imported_udt_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_udt_varip_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_udt_array_control_flow_fixture_paths(line_number, feature, fixtures)?;
+    validate_local_udt_array_call_return_fixture_paths(line_number, feature, fixtures)?;
+    validate_imported_udt_array_call_return_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_array_binary_search_fixture_pairs(line_number, feature, fixtures)?;
     validate_map_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_matrix_unsupported_boundary_fixture_paths(line_number, feature, fixtures)?;
@@ -345,6 +358,67 @@ fn validate_udt_array_control_flow_fixture_paths(
         if !fixtures.contains(fixture) {
             return Err(format!(
                 "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed local/imported UDT array control-flow identity"
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+fn validate_local_udt_array_call_return_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if !matches!(
+        feature,
+        "array.new<UDT>"
+            | "array.from"
+            | "array.*"
+            | "expression-body functions"
+            | "multi-statement functions"
+            | "typed declarations"
+            | "user-defined types"
+            | "user-defined methods"
+    ) {
+        return Ok(());
+    }
+
+    for fixture in LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES {
+        if !fixtures.contains(fixture) {
+            return Err(format!(
+                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed local UDF/user-method UDT array return identity"
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+fn validate_imported_udt_array_call_return_boundary_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if !matches!(
+        feature,
+        "array.new<UDT>"
+            | "array.from"
+            | "array.*"
+            | "expression-body functions"
+            | "multi-statement functions"
+            | "typed declarations"
+            | "import"
+            | "user-defined types"
+            | "user-defined methods"
+    ) {
+        return Ok(());
+    }
+
+    for fixture in IMPORTED_UDT_ARRAY_CALL_RETURN_BOUNDARY_FIXTURES {
+        if !fixtures.contains(fixture) {
+            return Err(format!(
+                "line {line_number}: `{feature}` must reference `{fixture}` while imported UDF/user-method UDT array returns remain unsupported"
             ));
         }
     }
@@ -796,10 +870,14 @@ fn validate_status_fixture_paths(
 mod tests {
     use super::super::try_conformance_entries_from_tsv;
     use super::{
-        FOR_IN_BOUNDARY_FIXTURES, IMPORTED_UDT_BOUNDARY_FIXTURES,
+        FOR_IN_BOUNDARY_FIXTURES, IMPORTED_UDT_ARRAY_CALL_RETURN_BOUNDARY_FIXTURES,
+        IMPORTED_UDT_BOUNDARY_FIXTURES, LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES,
         MATRIX_UNSUPPORTED_BOUNDARY_FIXTURES, SWITCH_STATEMENT_BLOCK_BOUNDARY_FIXTURES,
         UDT_ARRAY_CONTROL_FLOW_FIXTURES, UDT_VARIP_BOUNDARY_FIXTURES,
-        WHILE_EXPRESSION_BOUNDARY_FIXTURES, validate_udt_array_control_flow_fixture_paths,
+        WHILE_EXPRESSION_BOUNDARY_FIXTURES,
+        validate_imported_udt_array_call_return_boundary_fixture_paths,
+        validate_local_udt_array_call_return_fixture_paths,
+        validate_udt_array_control_flow_fixture_paths,
     };
 
     #[test]
@@ -937,6 +1015,49 @@ mod tests {
     }
 
     #[test]
+    fn rejects_local_udt_array_return_rows_without_current_fixture_set() {
+        let fixtures =
+            &LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES[..LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES.len() - 1];
+        let error = validate_local_udt_array_call_return_fixture_paths(
+            1,
+            "expression-body functions",
+            fixtures,
+        )
+        .expect_err("missing local UDT array call-return fixture should fail");
+
+        assert!(error.contains(
+            "tests/fixtures/sema/unsupported_user_type_array_udf_method_return_identities.pine"
+        ));
+    }
+
+    #[test]
+    fn import_row_requires_imported_udt_array_return_boundary_fixtures() {
+        let error =
+            validate_imported_udt_array_call_return_boundary_fixture_paths(1, "import", &[])
+                .expect_err("import row must retain the imported UDT array return boundary");
+
+        assert!(
+            error.contains("tests/fixtures/sema/unsupported_imported_user_type_array_returns.pine")
+        );
+    }
+
+    #[test]
+    fn rejects_local_return_rows_without_imported_call_return_library_fixture() {
+        let fixtures = &IMPORTED_UDT_ARRAY_CALL_RETURN_BOUNDARY_FIXTURES
+            [..IMPORTED_UDT_ARRAY_CALL_RETURN_BOUNDARY_FIXTURES.len() - 1];
+        let error = validate_imported_udt_array_call_return_boundary_fixture_paths(
+            1,
+            "user-defined methods",
+            fixtures,
+        )
+        .expect_err("local return rows must retain the imported return boundary library");
+
+        assert!(
+            error.contains("tests/fixtures/libraries/import_udt_array_return_boundary_lib.pine")
+        );
+    }
+
+    #[test]
     fn rejects_typed_declarations_without_collection_boundary_fixtures() {
         let mut fixtures = vec![
             "tests/fixtures/runtime/scalar_typed_declarations.pine",
@@ -965,6 +1086,12 @@ mod tests {
             "tests/fixtures/sema/unsupported_matrix_label_typed_decl.pine",
         ];
         fixtures.extend(UDT_ARRAY_CONTROL_FLOW_FIXTURES.iter().copied());
+        fixtures.extend(LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES.iter().copied());
+        fixtures.extend(
+            IMPORTED_UDT_ARRAY_CALL_RETURN_BOUNDARY_FIXTURES
+                .iter()
+                .copied(),
+        );
         let tsv = format!(
             "feature\tstatus\tnotes\tfixtures\ntyped declarations\tpartial\tbare array, bare map, non-scalar map templates, bare matrix, non-float matrix, and other typed declarations remain unsupported\t{}\n",
             fixtures.join(";")
@@ -1050,6 +1177,11 @@ mod tests {
                 .iter()
                 .copied()
                 .filter(|fixture| *fixture != missing),
+        );
+        fixtures.extend(
+            IMPORTED_UDT_ARRAY_CALL_RETURN_BOUNDARY_FIXTURES
+                .iter()
+                .copied(),
         );
 
         let tsv = format!(

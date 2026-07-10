@@ -768,6 +768,17 @@ For both local and imported scalar-tree UDT arrays, ternary, `if`, `switch`,
 `for`, `for...in`, and `while` results preserve the concrete element identity
 through HIR lowering. Array/`na` branches are allowed, while branches carrying
 different UDT identities fail semantic analysis.
+Local pure UDF and local user-method calls also preserve same-local scalar-tree
+UDT array identity through direct parameter, block-alias, copy, new/from,
+nested-call, and final control-flow returns. A direct or alias return keeps the
+source array id; `array.copy`, `array.new<T>`, and `array.from` allocate a new
+array id. Lowering derives the element layout from the current call arguments,
+so interleaved calls over field-order variants A, B, then A read the correct
+fields on every result. Imported UDF/method UDT array returns remain deferred
+until imported return metadata spans are source-aware. Tuple-contained UDT
+arrays and direct call-result array method chains remain unsupported boundaries.
+Caller-side `for...in` may consume a returned array, but iterating a generic
+UDT-array parameter inside the UDF remains a separate lowering boundary.
 Scalar-field imported UDT `varip` declarations may persist the same imported
 identity by value across forming updates.
 Local/imported structural lookalikes are distinct assignment identities;
@@ -803,6 +814,11 @@ ternary-expression, final-if, final-for, final-while, or switch-expression
 aliases, and preserve that imported identity for caller-side field reads, or
 directly, through a nested method call, or through a ternary expression
 construct and return the same imported UDT identity for caller-side field reads.
+For local methods only, a typed same-local scalar-tree UDT array parameter may
+be returned directly or through block aliases, copies, fresh constructors,
+nested local calls, and final control flow with call-specific identity. The
+caller must bind the result or use namespace-form array helpers; arbitrary
+function/method call results cannot yet be parsed as array-method receivers.
 Method side effects, recursive methods, unsupported parameter families,
 mismatched UDT parameter identity, unknown receivers, and alias-qualified
 imported method receiver type mismatches are rejected during semantic analysis.

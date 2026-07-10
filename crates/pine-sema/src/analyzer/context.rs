@@ -14,6 +14,7 @@ use crate::compatibility::CompatibilityReport;
 use crate::modules::ImportedUserTypeInfo;
 use crate::prelude::{UserTypeIdentity, UserTypeInfo};
 use crate::resolver::{BindingKey, ScopeResolver, SymbolInfo};
+use crate::source_graph::SourceId;
 use crate::types::{
     const_color_value, const_int_value, const_numeric_value, const_string_value, is_collection_kind,
 };
@@ -103,6 +104,7 @@ struct HistoryOffsetIntEnv {
 
 #[derive(Debug, Clone)]
 pub(crate) struct FunctionInfo {
+    pub(crate) source_id: SourceId,
     pub(crate) params: Vec<String>,
     pub(crate) param_types: Vec<Option<FunctionParamInfo>>,
     pub(crate) body: FunctionBody,
@@ -116,6 +118,7 @@ pub(crate) struct FunctionParamInfo {
 }
 #[derive(Debug, Clone)]
 pub(crate) struct MethodInfo {
+    pub(crate) source_id: SourceId,
     pub(crate) receiver_type: String,
     pub(crate) receiver_name: String,
     pub(crate) params: Vec<MethodParamInfo>,

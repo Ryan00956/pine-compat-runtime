@@ -1,0 +1,151 @@
+//@version=6
+indicator("Supported UDT array UDF and method returns")
+
+type First
+    float shared
+    float other
+
+type Second
+    float other
+    float shared
+
+type Anchor
+    int tag
+
+identity(values) => values
+
+__import_prefixedIdentity(values) => values
+
+blockAlias(values) =>
+    made = values
+    made
+
+copyValues(values) => values.copy()
+
+fromValue(value) => array.from(value)
+
+nestedRebuild(values) =>
+    returned = identity(values)
+    item = returned.get(0)
+    array.from(item)
+
+newFirst() => array.new<First>(1, First.new(35.0, 350.0))
+
+nested(values) => blockAlias(identity(values))
+
+namedResult(values, bool use_copy, int tag) => use_copy ? values.copy() : values
+
+finalIf(values) =>
+    if bar_index >= 0
+        made = values.copy()
+        made
+    else
+        values
+
+finalSwitch(values) =>
+    switch bar_index % 2
+        0 => values
+        => values.copy()
+
+finalFor(values) =>
+    for i = 0 to 0
+        made = values.copy()
+        made
+
+finalForIn(values) =>
+    for item in array.from(0)
+        made = values.copy()
+        made
+
+finalWhile(values) =>
+    int iterations = 0
+    while iterations < 1
+        iterations := iterations + 1
+        made = values.copy()
+        made
+
+method exposeFirst(Anchor self, array<First> values) => values
+
+method exposeSecondBlock(Anchor self, Second[] values) =>
+    made = values.copy()
+    made
+
+method exposeFirstFresh(Anchor self, First value) => array.from(value)
+
+method exposeSecondNested(Anchor self, array<Second> values) => nested(values)
+
+method exposeStatic(First self, array<First> values) => nested(values)
+
+first_values = array.from(First.new(10.0, 100.0))
+second_values = array.from(Second.new(200.0, 20.0))
+anchor = Anchor.new(1)
+
+first_once = nested(first_values)
+second_once = nested(second_values)
+first_again = nested(first_values)
+prefixed_local = __import_prefixedIdentity(first_values)
+
+first_copy = copyValues(first_values)
+second_copy = copyValues(second_values)
+first_fresh = fromValue(First.new(30.0, 300.0))
+second_fresh = fromValue(Second.new(400.0, 40.0))
+first_rebuilt = nestedRebuild(first_values)
+second_rebuilt = nestedRebuild(second_values)
+first_rebuilt_again = nestedRebuild(first_values)
+first_new = newFirst()
+
+first_named = namedResult(tag=1, values=first_values, use_copy=true)
+second_named = namedResult(use_copy=false, tag=2, values=second_values)
+first_if = finalIf(first_values)
+second_switch = finalSwitch(second_values)
+array<First> first_for = finalFor(first_values)
+Second[] second_for_in = finalForIn(second_values)
+array<First> first_while = finalWhile(first_values)
+
+method_first = anchor.exposeFirst(first_values)
+method_second = anchor.exposeSecondBlock(values=second_values)
+method_first_fresh = anchor.exposeFirstFresh(value=First.new(50.0, 500.0))
+method_second_nested = anchor.exposeSecondNested(values=second_values)
+method_qualified = Anchor.exposeFirst(anchor, first_values)
+
+array<First> typed_first = nested(first_values)
+Second[] typed_second = anchor.exposeSecondBlock(second_values)
+
+direct_namespace_item = array.get(nested(first_values), 0)
+float direct_iterated_shared = 0.0
+for item in nested(second_values)
+    direct_iterated_shared := direct_iterated_shared + item.shared
+
+static_receiver = First.new(55.0, 550.0)
+First = Second.new(600.0, 60.0)
+static_result = First.exposeStatic(static_receiver, first_values)
+
+first_item = array.get(first_once, 0)
+second_item = array.get(second_once, 0)
+first_again_item = array.get(first_again, 0)
+prefixed_local_item = array.get(prefixed_local, 0)
+first_copy_item = array.get(first_copy, 0)
+second_copy_item = array.get(second_copy, 0)
+first_fresh_item = array.get(first_fresh, 0)
+second_fresh_item = array.get(second_fresh, 0)
+first_rebuilt_item = array.get(first_rebuilt, 0)
+second_rebuilt_item = array.get(second_rebuilt, 0)
+first_rebuilt_again_item = array.get(first_rebuilt_again, 0)
+first_new_item = array.get(first_new, 0)
+first_named_item = array.get(first_named, 0)
+second_named_item = array.get(second_named, 0)
+first_if_item = array.get(first_if, 0)
+second_switch_item = array.get(second_switch, 0)
+first_for_item = array.get(first_for, 0)
+second_for_in_item = array.get(second_for_in, 0)
+first_while_item = array.get(first_while, 0)
+method_first_item = array.get(method_first, 0)
+method_second_item = array.get(method_second, 0)
+method_first_fresh_item = array.get(method_first_fresh, 0)
+method_second_nested_item = array.get(method_second_nested, 0)
+method_qualified_item = array.get(method_qualified, 0)
+typed_first_item = array.get(typed_first, 0)
+typed_second_item = array.get(typed_second, 0)
+static_item = array.get(static_result, 0)
+
+plot(first_item.shared + second_item.shared + first_again_item.shared + prefixed_local_item.shared + first_copy_item.shared + second_copy_item.shared + first_fresh_item.shared + second_fresh_item.shared + first_rebuilt_item.shared + second_rebuilt_item.shared + first_rebuilt_again_item.shared + first_new_item.shared + first_named_item.shared + second_named_item.shared + first_if_item.shared + second_switch_item.shared + first_for_item.shared + second_for_in_item.shared + first_while_item.shared + method_first_item.shared + method_second_item.shared + method_first_fresh_item.shared + method_second_nested_item.shared + method_qualified_item.shared + typed_first_item.shared + typed_second_item.shared + direct_namespace_item.shared + direct_iterated_shared + static_item.shared)

@@ -124,6 +124,7 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                     module.functions.insert(
                         name.clone(),
                         FunctionInfo {
+                            source_id: module.id,
                             params: function_param_names(params),
                             param_types: module_function_param_types(
                                 module,
@@ -177,6 +178,7 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
                 module.functions.insert(
                     name.clone(),
                     FunctionInfo {
+                        source_id: module.id,
                         params: function_param_names(params),
                         param_types: module_function_param_types(module, params, None, diagnostics),
                         body: body.clone(),
@@ -377,6 +379,7 @@ fn build_import_plan(
                 plan.imported_functions.insert(
                     key,
                     FunctionInfo {
+                        source_id: function.source_id,
                         params: function.params.clone(),
                         param_types: imported_function_param_types(
                             &alias,
@@ -426,6 +429,7 @@ fn imported_method_info(
 
     let module_context = rewrite_context_for_module(alias, module);
     Some(MethodInfo {
+        source_id: identity.source_id,
         receiver_type: format!("{alias}.{}", identity.name),
         receiver_name: method.receiver_name.clone(),
         params,

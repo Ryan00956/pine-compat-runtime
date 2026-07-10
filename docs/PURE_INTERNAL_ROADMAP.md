@@ -274,7 +274,9 @@ Current baseline:
   realtime rollback, `varip`, and row-based `for...in` iteration as recorded in
   conformance;
 - same-local and same-imported scalar-tree UDT arrays with fixture-backed
-  history, rollback, `varip`, and `for...in` behavior.
+  history, rollback, `varip`, and `for...in` behavior, plus same-local UDT
+  array returns from local UDFs and user methods through direct, alias, copy,
+  constructor, nested-call, and final-control-flow paths with per-call identity.
 
 Remaining internal work:
 
@@ -284,7 +286,10 @@ Remaining internal work:
 - matrix element/type families and collection interactions beyond the
   fixture-backed float/int/bool/string/color matrix subsets;
 - UDT array behavior beyond the same-local and same-imported scalar-tree
-  subsets;
+  subsets, including imported UDF/method array returns until imported metadata
+  spans are source-aware, tuple-contained UDT arrays, and direct call-result
+  array method chaining, plus in-callee `for...in` over generic UDT-array
+  parameters;
 - generic or bare `array` declarations beyond current fixture-backed element
   kinds;
 - `for...in` iteration beyond the fixture-backed array, matrix-row, UDT-array,
