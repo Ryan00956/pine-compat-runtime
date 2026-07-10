@@ -530,6 +530,14 @@ Normal declarations allocate a fresh array whenever the declaration executes.
 Same-local scalar-tree UDT arrays may be declared with `array<T>` or `T[]`
 when initialized with `na` or a same-UDT array expression; the declaration keeps
 the concrete local UDT identity for later assignment and helper checks.
+Same-local and same-imported scalar-tree UDT array identities also flow through
+ternary, `if`, `switch`, `for`, `for...in`, and `while` results. Array/`na`
+branches and block-local aliases retain the known element identity for typed or
+inferred declarations, helper calls, history, and iteration; different element
+identities produce an `E_BRANCH_TYPE` diagnostic instead of an unlowerable HIR.
+Generic UDF lowering resolves array parameters, local flow aliases, element
+helper results, and `array.from` reconstruction against the current call's UDT
+identity rather than shared function-body span metadata.
 Supported operations are
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
 `array.new_color`, `array.new_label`, `array.new_line`, `array.new_linefill`,

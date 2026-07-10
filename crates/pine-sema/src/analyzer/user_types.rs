@@ -30,6 +30,13 @@ pub(crate) use types::{
     UserTypeIdentity, UserTypeInfo, classify_user_type_array_element_names, span_key,
 };
 
+#[derive(Debug, Clone)]
+enum UserTypeArrayResultName {
+    Known(String),
+    Na,
+    Unknown,
+}
+
 impl Analyzer {
     pub(crate) fn local_user_type_has_scalar_tree_fields(&self, type_name: &str) -> bool {
         self.local_user_type_scalar_tree_fields_are_supported(type_name, &mut HashSet::new())
@@ -353,15 +360,208 @@ impl Analyzer {
         }
         match &expr.kind {
             ExprKind::Identifier(name) => self
-                .scope
-                .resolve(name)
+                .bound_symbol(name, expr.span)
+                .or_else(|| self.scope.resolve(name))
                 .and_then(|symbol| self.symbol_user_type_arrays.get(&symbol.id).cloned()),
             ExprKind::QualifiedName(parts) if parts.len() == 1 => self
-                .scope
-                .resolve(&parts[0])
+                .bound_symbol(&parts[0], expr.span)
+                .or_else(|| self.scope.resolve(&parts[0]))
                 .and_then(|symbol| self.symbol_user_type_arrays.get(&symbol.id).cloned()),
             ExprKind::History { expr, .. } => self.user_type_array_name_of_expr(expr),
             _ => None,
+        }
+    }
+
+    pub(crate) fn user_type_array_name_of_current_symbol(&self, name: &str) -> Option<String> {
+        self.scope
+            .resolve(name)
+            .and_then(|symbol| self.symbol_user_type_arrays.get(&symbol.id).cloned())
+    }
+
+    pub(crate) fn mark_ternary_user_type_array(
+        &mut self,
+        span: Span,
+        then_expr: &Expr,
+        else_expr: &Expr,
+    ) -> bool {
+        let results = [
+            self.user_type_array_result_name(then_expr),
+            self.user_type_array_result_name(else_expr),
+        ];
+        self.mark_user_type_array_results(span, results)
+    }
+
+    pub(crate) fn mark_if_user_type_array(
+        &mut self,
+        span: Span,
+        then_branch: &[Stmt],
+        else_branch: &[Stmt],
+    ) -> bool {
+        let results = [
+            self.user_type_array_branch_result_name(then_branch),
+            self.user_type_array_branch_result_name(else_branch),
+        ];
+        self.mark_user_type_array_results(span, results)
+    }
+
+    pub(crate) fn mark_switch_user_type_array(&mut self, span: Span, arms: &[SwitchArm]) -> bool {
+        let results: Vec<_> = arms
+            .iter()
+            .map(|arm| self.user_type_array_switch_result_name(&arm.result))
+            .collect();
+        self.mark_user_type_array_results(span, results)
+    }
+
+    pub(crate) fn mark_loop_user_type_array(&mut self, span: Span, body: &[Stmt]) -> bool {
+        let result = self.user_type_array_branch_result_name(body);
+        self.mark_user_type_array_results(span, [result])
+    }
+
+    fn mark_user_type_array_results(
+        &mut self,
+        span: Span,
+        results: impl IntoIterator<Item = UserTypeArrayResultName>,
+    ) -> bool {
+        let UserTypeArrayResultName::Known(type_name) =
+            Self::merge_user_type_array_results(results)
+        else {
+            return false;
+        };
+        self.mark_expr_user_type_array(span, type_name);
+        true
+    }
+
+    fn merge_user_type_array_results(
+        results: impl IntoIterator<Item = UserTypeArrayResultName>,
+    ) -> UserTypeArrayResultName {
+        let mut resolved = None;
+        for result in results {
+            match result {
+                UserTypeArrayResultName::Known(type_name)
+                    if resolved
+                        .as_ref()
+                        .is_some_and(|resolved| resolved != &type_name) =>
+                {
+                    return UserTypeArrayResultName::Unknown;
+                }
+                UserTypeArrayResultName::Known(type_name) => {
+                    resolved.get_or_insert(type_name);
+                }
+                UserTypeArrayResultName::Na => {}
+                UserTypeArrayResultName::Unknown => return UserTypeArrayResultName::Unknown,
+            }
+        }
+        resolved.map_or(UserTypeArrayResultName::Na, UserTypeArrayResultName::Known)
+    }
+
+    fn user_type_array_result_name(&self, expr: &Expr) -> UserTypeArrayResultName {
+        if let Some(type_name) = self.user_type_array_name_of_expr(expr) {
+            UserTypeArrayResultName::Known(type_name)
+        } else if self.user_type_array_result_is_na(expr) {
+            UserTypeArrayResultName::Na
+        } else {
+            UserTypeArrayResultName::Unknown
+        }
+    }
+
+    fn user_type_array_branch_result_name(&self, branch: &[Stmt]) -> UserTypeArrayResultName {
+        let Some(last) = branch.last() else {
+            return UserTypeArrayResultName::Unknown;
+        };
+        match &last.kind {
+            StmtKind::Expr(expr) => self.user_type_array_result_name(expr),
+            StmtKind::If {
+                then_branch,
+                else_branch,
+                ..
+            } => Self::merge_user_type_array_results([
+                self.user_type_array_branch_result_name(then_branch),
+                self.user_type_array_branch_result_name(else_branch),
+            ]),
+            StmtKind::For { body, .. }
+            | StmtKind::ForIn { body, .. }
+            | StmtKind::While { body, .. } => self.user_type_array_branch_result_name(body),
+            _ => UserTypeArrayResultName::Unknown,
+        }
+    }
+
+    fn user_type_array_switch_result_name(
+        &self,
+        result: &SwitchArmResult,
+    ) -> UserTypeArrayResultName {
+        match result {
+            SwitchArmResult::Expr(expr) => self.user_type_array_result_name(expr),
+            SwitchArmResult::Block(statements) => {
+                self.user_type_array_branch_result_name(statements)
+            }
+        }
+    }
+
+    fn user_type_array_result_is_na(&self, expr: &Expr) -> bool {
+        if is_na_expr(expr) {
+            return true;
+        }
+        match &expr.kind {
+            ExprKind::Identifier(name) => self
+                .bound_symbol(name, expr.span)
+                .is_some_and(|symbol| symbol.pine_type.kind == ValueKind::Na),
+            ExprKind::QualifiedName(parts) if parts.len() == 1 => self
+                .bound_symbol(&parts[0], expr.span)
+                .is_some_and(|symbol| symbol.pine_type.kind == ValueKind::Na),
+            ExprKind::Ternary {
+                then_expr,
+                else_expr,
+                ..
+            } => {
+                self.user_type_array_result_is_na(then_expr)
+                    && self.user_type_array_result_is_na(else_expr)
+            }
+            ExprKind::If {
+                then_branch,
+                else_branch,
+                ..
+            } => {
+                self.user_type_array_branch_is_na(then_branch)
+                    && self.user_type_array_branch_is_na(else_branch)
+            }
+            ExprKind::Switch { arms, .. } => {
+                !arms.is_empty()
+                    && arms.iter().all(|arm| match &arm.result {
+                        SwitchArmResult::Expr(expr) => self.user_type_array_result_is_na(expr),
+                        SwitchArmResult::Block(statements) => {
+                            self.user_type_array_branch_is_na(statements)
+                        }
+                    })
+            }
+            ExprKind::For { body, .. }
+            | ExprKind::ForIn { body, .. }
+            | ExprKind::While { body, .. } => self.user_type_array_branch_is_na(body),
+            ExprKind::History { expr, .. } => self.user_type_array_result_is_na(expr),
+            _ => self
+                .expr_types
+                .get(&span_key(expr.span))
+                .is_some_and(|pine_type| pine_type.kind == ValueKind::Na),
+        }
+    }
+
+    fn user_type_array_branch_is_na(&self, branch: &[Stmt]) -> bool {
+        let Some(last) = branch.last() else {
+            return false;
+        };
+        match &last.kind {
+            StmtKind::Expr(expr) => self.user_type_array_result_is_na(expr),
+            StmtKind::If {
+                then_branch,
+                else_branch,
+                ..
+            } => {
+                self.user_type_array_branch_is_na(then_branch)
+                    && self.user_type_array_branch_is_na(else_branch)
+            }
+            StmtKind::For { body, .. }
+            | StmtKind::ForIn { body, .. }
+            | StmtKind::While { body, .. } => self.user_type_array_branch_is_na(body),
+            _ => false,
         }
     }
 

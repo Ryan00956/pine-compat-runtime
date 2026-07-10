@@ -8,6 +8,34 @@ type Wrapper
     Point inner
     float weight
 
+type First
+    float shared
+    float other
+
+type Second
+    float other
+    float shared
+
+read_flow_shared(values) =>
+    selected = bar_index >= 0 ? array.copy(values) : na
+    item = array.first(selected)
+    item.shared
+
+read_flow_shared_method(values) =>
+    selected = if bar_index >= 0
+        made = values.copy()
+        made
+    else
+        na
+    item = selected.last()
+    item.shared
+
+rebuild_flow_shared(value) =>
+    alias = value
+    rebuilt = array.from(bar_index >= 0 ? alias : na, bar_index < 0 ? na : na)
+    item = array.get(rebuilt, 0)
+    item.shared
+
 array<Wrapper> declared = na
 declared := array.new<Wrapper>()
 declared.push(Wrapper.new(Point.new(close, open), high))
@@ -26,3 +54,71 @@ plot(inferred_value.inner.y)
 plot(seeded_value.inner.y)
 plot(prior_inferred.inner.x)
 plot(declared.size() + inferred.size() + seeded.size())
+
+flow_left = array.new<Wrapper>(1, Wrapper.new(Point.new(close + 10, open + 20), 100.0))
+flow_right = array.from(Wrapper.new(Point.new(high + 30, low + 40), 200.0))
+
+flow_ternary = bar_index % 2 == 0 ? flow_left : flow_right
+flow_nullable = bar_index % 2 == 0 ? flow_left : na
+
+flow_if = if bar_index % 2 == 0
+    made = flow_left.copy()
+    made
+else
+    made = flow_right.copy()
+    made
+
+flow_switch = switch bar_index % 2
+    0 =>
+        made = flow_left.copy()
+        made
+    =>
+        made = flow_right.copy()
+        made
+
+flow_for = for i = 0 to 0
+    made = flow_left.copy()
+    made
+
+flow_for_in = for item in array.from(0)
+    made = flow_right.copy()
+    made
+
+int flow_iterations = 0
+flow_while = while flow_iterations < 1
+    flow_iterations := flow_iterations + 1
+    made = flow_right.copy()
+    made
+
+array<Wrapper> flow_typed = if bar_index % 2 == 0
+    flow_left
+else
+    flow_right
+
+flow_ternary_value = flow_ternary.get(0)
+flow_if_value = flow_if.get(0)
+flow_switch_value = flow_switch.get(0)
+flow_for_value = flow_for.get(0)
+flow_for_in_value = flow_for_in.get(0)
+flow_while_value = flow_while.get(0)
+flow_typed_value = flow_typed.get(0)
+flow_history_value = array.get(flow_ternary[1], 0)
+
+plot(flow_ternary_value.weight)
+plot(nz(flow_nullable.size(), -1))
+plot(flow_if_value.inner.x)
+plot(flow_switch_value.inner.y)
+plot(flow_for_value.weight)
+plot(flow_for_in_value.weight)
+plot(flow_while_value.weight)
+plot(flow_typed_value.weight)
+plot(flow_history_value.weight)
+
+first_layout = array.from(First.new(10.0, 100.0))
+second_layout = array.from(Second.new(200.0, 20.0))
+plot(read_flow_shared(first_layout))
+plot(read_flow_shared(second_layout))
+plot(read_flow_shared_method(first_layout))
+plot(read_flow_shared_method(second_layout))
+plot(rebuild_flow_shared(First.new(30.0, 300.0)))
+plot(rebuild_flow_shared(Second.new(400.0, 40.0)))

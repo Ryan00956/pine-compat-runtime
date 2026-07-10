@@ -6540,6 +6540,25 @@ fn accepts_supported_user_type_array_alias_decl_fixture() {
 }
 
 #[test]
+fn accepts_supported_user_type_array_control_flow_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_user_type_array_control_flow.pine");
+}
+
+#[test]
+fn reports_unsupported_user_type_array_control_flow_identity_fixture() {
+    let path = "tests/fixtures/sema/unsupported_user_type_array_control_flow_identity.pine";
+    assert_diagnostic_messages(
+        path,
+        &[
+            "ternary UDT array branches must resolve to the same element identity",
+            "if UDT array branches must resolve to the same element identity",
+            "switch UDT array arms must resolve to the same element identity",
+        ],
+    );
+    assert_diagnostic_count(path, 3);
+}
+
+#[test]
 fn reports_unsupported_user_type_array_from_decl_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_user_type_array_from_decl.pine",
@@ -12594,6 +12613,35 @@ fn accepts_supported_imported_udt_varip_fixture() {
 #[test]
 fn accepts_supported_imported_udt_history_fixture() {
     assert_import_ok_fixture("tests/fixtures/sema/supported_imported_udt_history.pine");
+}
+
+#[test]
+fn accepts_supported_imported_user_type_array_control_flow_fixture() {
+    assert_import_ok_fixture(
+        "tests/fixtures/sema/supported_imported_user_type_array_control_flow.pine",
+    );
+}
+
+#[test]
+fn reports_unsupported_imported_user_type_array_control_flow_identity_fixture() {
+    let path =
+        "tests/fixtures/sema/unsupported_imported_user_type_array_control_flow_identity.pine";
+    assert_import_diagnostic_messages_with_library(
+        path,
+        "user/udt/1",
+        "tests/fixtures/libraries/import_udt_lib.pine",
+        &[
+            "ternary UDT array branches must resolve to the same element identity",
+            "if UDT array branches must resolve to the same element identity",
+            "switch UDT array arms must resolve to the same element identity",
+        ],
+    );
+    assert_import_diagnostic_count_with_library(
+        path,
+        "user/udt/1",
+        "tests/fixtures/libraries/import_udt_lib.pine",
+        3,
+    );
 }
 
 #[test]

@@ -121,6 +121,40 @@ mutation_total = set_first.nested.x + set_second.nested.x + unshift_first.nested
 returned_total = popped.nested.x + method_popped.nested.x + shifted.nested.x + method_shifted.nested.x + removed.nested.x + method_removed.nested.x + clear_reader.nested.x + method_clear_reader.nested.x + clear_values.size() + method_clear_values.size() + first_value.nested.x + last_value.nested.x
 window_total = reverse_first.nested.x + method_reverse_second.nested.x + slice_first.nested.x + slice_second.nested.x + slice_parent_third.nested.x + method_slice_second.nested.x + concat_reader.nested.x + method_concat_reader.nested.x + concat_returned.size() + method_concat_returned.size()
 
+flow_left = array.new<lib.Wrapper>(1, lib.Wrapper.new(lib.Point.new(close + 600)))
+flow_right = array.from(lib.Wrapper.new(lib.Point.new(close + 700)))
+flow_ternary = bar_index % 2 == 0 ? flow_left : flow_right
+flow_if = if bar_index % 2 == 0
+    made = flow_left.copy()
+    made
+else
+    made = flow_right.copy()
+    made
+flow_switch = switch bar_index % 2
+    0 => flow_left
+    => flow_right
+flow_for = for i = 0 to 0
+    flow_left
+flow_for_in = for item in array.from(0)
+    flow_right
+int flow_iterations = 0
+flow_while = while flow_iterations < 1
+    flow_iterations := flow_iterations + 1
+    flow_right
+array<lib.Wrapper> flow_typed = if bar_index % 2 == 0
+    flow_left
+else
+    flow_right
+flow_ternary_value = flow_ternary.get(0)
+flow_if_value = flow_if.get(0)
+flow_switch_value = flow_switch.get(0)
+flow_for_value = flow_for.get(0)
+flow_for_in_value = flow_for_in.get(0)
+flow_while_value = flow_while.get(0)
+flow_typed_value = flow_typed.get(0)
+flow_history_value = array.get(flow_ternary[1], 0)
+flow_total = flow_ternary_value.nested.x + flow_if_value.nested.x + flow_switch_value.nested.x + flow_for_value.nested.x + flow_for_in_value.nested.x + flow_while_value.nested.x + flow_typed_value.nested.x
+
 plot(first.nested.x)
 plot(second.nested.x)
 plot(copied_last.nested.x)
@@ -133,3 +167,5 @@ plot(persistent_last.nested.x)
 plot(mutation_total)
 plot(returned_total)
 plot(window_total)
+plot(flow_total)
+plot(flow_history_value.nested.x)

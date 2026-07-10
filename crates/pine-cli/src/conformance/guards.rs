@@ -278,6 +278,15 @@ const UDT_VARIP_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/unsupported_imported_udt_varip_identity.pine",
 ];
 
+const UDT_ARRAY_CONTROL_FLOW_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/user_type_array_scalar_tree.pine",
+    "tests/fixtures/runtime/import_udt_array_scalar_tree.pine",
+    "tests/fixtures/sema/supported_user_type_array_control_flow.pine",
+    "tests/fixtures/sema/unsupported_user_type_array_control_flow_identity.pine",
+    "tests/fixtures/sema/supported_imported_user_type_array_control_flow.pine",
+    "tests/fixtures/sema/unsupported_imported_user_type_array_control_flow_identity.pine",
+];
+
 pub(super) fn validate_entry(
     line_number: usize,
     feature: &str,
@@ -302,11 +311,43 @@ pub(super) fn validate_entry(
     validate_for_in_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_imported_udt_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_udt_varip_boundary_fixture_paths(line_number, feature, fixtures)?;
+    validate_udt_array_control_flow_fixture_paths(line_number, feature, fixtures)?;
     validate_array_binary_search_fixture_pairs(line_number, feature, fixtures)?;
     validate_map_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_matrix_unsupported_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_typed_declaration_collection_fixture_paths(line_number, feature, fixtures)?;
     strategy::validate_entry(line_number, feature, fixtures)?;
+
+    Ok(())
+}
+
+fn validate_udt_array_control_flow_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if !matches!(
+        feature,
+        "if" | "switch"
+            | "for"
+            | "while"
+            | "array.new<UDT>"
+            | "array.from"
+            | "array.*"
+            | "typed declarations"
+            | "import"
+            | "user-defined types"
+    ) {
+        return Ok(());
+    }
+
+    for fixture in UDT_ARRAY_CONTROL_FLOW_FIXTURES {
+        if !fixtures.contains(fixture) {
+            return Err(format!(
+                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed local/imported UDT array control-flow identity"
+            ));
+        }
+    }
 
     Ok(())
 }
@@ -757,7 +798,8 @@ mod tests {
     use super::{
         FOR_IN_BOUNDARY_FIXTURES, IMPORTED_UDT_BOUNDARY_FIXTURES,
         MATRIX_UNSUPPORTED_BOUNDARY_FIXTURES, SWITCH_STATEMENT_BLOCK_BOUNDARY_FIXTURES,
-        UDT_VARIP_BOUNDARY_FIXTURES, WHILE_EXPRESSION_BOUNDARY_FIXTURES,
+        UDT_ARRAY_CONTROL_FLOW_FIXTURES, UDT_VARIP_BOUNDARY_FIXTURES,
+        WHILE_EXPRESSION_BOUNDARY_FIXTURES, validate_udt_array_control_flow_fixture_paths,
     };
 
     #[test]
@@ -883,8 +925,20 @@ mod tests {
     }
 
     #[test]
+    fn rejects_udt_array_rows_without_control_flow_identity_fixtures() {
+        let fixtures =
+            &UDT_ARRAY_CONTROL_FLOW_FIXTURES[..UDT_ARRAY_CONTROL_FLOW_FIXTURES.len() - 1];
+        let error = validate_udt_array_control_flow_fixture_paths(1, "import", fixtures)
+            .expect_err("missing UDT array control-flow fixture should fail");
+
+        assert!(error.contains(
+            "tests/fixtures/sema/unsupported_imported_user_type_array_control_flow_identity.pine"
+        ));
+    }
+
+    #[test]
     fn rejects_typed_declarations_without_collection_boundary_fixtures() {
-        let fixtures = [
+        let mut fixtures = vec![
             "tests/fixtures/runtime/scalar_typed_declarations.pine",
             "tests/fixtures/sema/unsupported_array_typed_decl.pine",
             "tests/fixtures/sema/unsupported_var_array_typed_decl.pine",
@@ -910,6 +964,7 @@ mod tests {
             "tests/fixtures/sema/unsupported_matrix_int_typed_decl.pine",
             "tests/fixtures/sema/unsupported_matrix_label_typed_decl.pine",
         ];
+        fixtures.extend(UDT_ARRAY_CONTROL_FLOW_FIXTURES.iter().copied());
         let tsv = format!(
             "feature\tstatus\tnotes\tfixtures\ntyped declarations\tpartial\tbare array, bare map, non-scalar map templates, bare matrix, non-float matrix, and other typed declarations remain unsupported\t{}\n",
             fixtures.join(";")

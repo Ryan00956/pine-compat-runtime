@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Preserved same-local and same-imported scalar-tree UDT array element
+  identities through ternary, `if`, `switch`, `for`, `for...in`, and `while`
+  results, including array/`na` branches, block-local aliases, typed or
+  inferred declarations, and caller-side helper or iteration consumption.
+  Mixed UDT array identities now produce precise branch diagnostics instead of
+  passing analysis without executable HIR. Generic UDF inlining now resolves
+  UDT array parameters, flow aliases, array-element helpers, and reconstructed
+  `array.from` values per call, preventing the final call's element layout from
+  leaking into earlier calls. UDF and method return propagation remains a
+  separate follow-up slice.
 - Preserved scalar map templates at call sites when local UDFs return inferred
   map parameters, or when local UDFs and user methods return visible maps,
   block-local aliases, `map.new`/copy results, nested calls, or final

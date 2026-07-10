@@ -1225,6 +1225,12 @@ for `array.size`, namespace/method `array.get`, namespace/method
 reads, `array.reverse`/`reverse()` reordered field reads,
 `array.slice`/`slice()` window field reads, and `array.concat`/`concat()`
 appended field reads.
+Same-local and same-imported scalar-tree UDT array identities are preserved
+through ternary, `if`, `switch`, `for`, `for...in`, and `while` expression
+results, including array/`na` branches and block-local aliases. Those results
+can initialize typed or inferred declarations and be consumed by the existing
+array helper, history, and iteration subsets. Mixed UDT identities remain
+diagnostic-only unsupported.
 Same-local scalar-tree UDT array id history snapshots are fixture-backed and
 clone the committed array before historical reads. Same-local scalar-tree UDT
 array `varip` declarations retain array ids, backing contents, and UDT element

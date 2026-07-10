@@ -1,0 +1,28 @@
+//@version=6
+indicator("Unsupported UDT array control-flow identities")
+
+type Point
+    float x
+
+type Marker
+    float x
+
+points = array.from(Point.new(close))
+markers = array.from(Marker.new(open))
+
+ternary_bad = bar_index % 2 == 0 ? points : markers
+
+if_bad = if bar_index % 2 == 0
+    made = points.copy()
+    made
+else
+    made = markers.copy()
+    made
+
+switch_bad = switch bar_index % 2
+    0 =>
+        made = points.copy()
+        made
+    =>
+        made = markers.copy()
+        made

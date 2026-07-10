@@ -68,9 +68,10 @@ fn for_in_expr_kinds(
 impl Analyzer {
     pub(crate) fn analyze_expr(&mut self, expr: &Expr) -> Option<PineType> {
         // Function and method bodies can be analyzed repeatedly with different
-        // argument templates. Discard span-keyed map metadata from an earlier
-        // pass before deriving the current expression result.
+        // argument templates and UDT identities. Discard span-keyed collection
+        // metadata from an earlier pass before deriving the current result.
         self.expr_maps.remove(&span_key(expr.span));
+        self.expr_user_type_arrays.remove(&span_key(expr.span));
         if !self.enter_expr_analysis(expr.span) {
             return None;
         }
@@ -98,6 +99,11 @@ impl Analyzer {
                     && let Some(info) = self.map_type_of_current_symbol(name)
                 {
                     self.mark_expr_map(expr.span, info);
+                }
+                if pine_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+                    && let Some(type_name) = self.user_type_array_name_of_current_symbol(name)
+                {
+                    self.mark_expr_user_type_array(expr.span, type_name);
                 }
                 pine_type
             }
@@ -161,6 +167,16 @@ impl Analyzer {
                             self.diagnostics.push(Diagnostic::error(
                                 "E_BRANCH_TYPE",
                                 "ternary map branches must resolve to the same map template",
+                                expr.span,
+                            ));
+                            return None;
+                        }
+                        if pine_type.kind == ValueKind::UserTypeArray
+                            && !self.mark_ternary_user_type_array(expr.span, then_expr, else_expr)
+                        {
+                            self.diagnostics.push(Diagnostic::error(
+                                "E_BRANCH_TYPE",
+                                "ternary UDT array branches must resolve to the same element identity",
                                 expr.span,
                             ));
                             return None;
@@ -328,6 +344,16 @@ impl Analyzer {
                     self.diagnostics.push(Diagnostic::error(
                         "E_BRANCH_TYPE",
                         "if map branches must resolve to the same map template",
+                        span,
+                    ));
+                    return None;
+                }
+                if pine_type.kind == ValueKind::UserTypeArray
+                    && !self.mark_if_user_type_array(span, then_branch, else_branch)
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_BRANCH_TYPE",
+                        "if UDT array branches must resolve to the same element identity",
                         span,
                     ));
                     return None;
@@ -645,6 +671,16 @@ impl Analyzer {
                 ));
                 return None;
             }
+            if pine_type.kind == ValueKind::UserTypeArray
+                && !self.mark_switch_user_type_array(span, arms)
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_BRANCH_TYPE",
+                    "switch UDT array arms must resolve to the same element identity",
+                    span,
+                ));
+                return None;
+            }
             Some(pine_type)
         })
     }
@@ -852,6 +888,16 @@ impl Analyzer {
             ));
             return_type = None;
         }
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+            && !self.mark_loop_user_type_array(span, body)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RETURN",
+                "for expression UDT array result must resolve to a known element identity",
+                span,
+            ));
+            return_type = None;
+        }
 
         self.scope.pop_scope();
         self.assignment_qualifier_context.pop();
@@ -1010,6 +1056,16 @@ impl Analyzer {
             ));
             return_type = None;
         }
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+            && !self.mark_loop_user_type_array(span, body)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RETURN",
+                "for...in expression UDT array result must resolve to a known element identity",
+                span,
+            ));
+            return_type = None;
+        }
 
         self.scope.pop_scope();
         self.assignment_qualifier_context.pop();
@@ -1050,6 +1106,16 @@ impl Analyzer {
             self.diagnostics.push(Diagnostic::error(
                 "E_LOOP_RETURN",
                 "while expression map result must resolve to a known map template",
+                span,
+            ));
+            return_type = None;
+        }
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+            && !self.mark_loop_user_type_array(span, body)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RETURN",
+                "while expression UDT array result must resolve to a known element identity",
                 span,
             ));
             return_type = None;

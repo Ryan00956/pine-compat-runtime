@@ -764,6 +764,10 @@ copy independent field reads, reverse reordered field reads, slice window field
 reads, concat appended field reads, and statement/expression/index-value for-in
 value-copy field reads, plus `array<lib.Type>`/`lib.Type[]` declarations
 initialized from `na` or same-identity imported UDT array values.
+For both local and imported scalar-tree UDT arrays, ternary, `if`, `switch`,
+`for`, `for...in`, and `while` results preserve the concrete element identity
+through HIR lowering. Array/`na` branches are allowed, while branches carrying
+different UDT identities fail semantic analysis.
 Scalar-field imported UDT `varip` declarations may persist the same imported
 identity by value across forming updates.
 Local/imported structural lookalikes are distinct assignment identities;

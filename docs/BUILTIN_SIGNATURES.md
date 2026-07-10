@@ -1395,6 +1395,11 @@ for same-local scalar-tree UDT arrays; those elements render as
 chart.point, map, and matrix arrays remain outside the join subset. Array assignment passes the runtime array
 id by reference; use `array.copy` to allocate an independent array with the same
 current element values.
+Same-local and same-imported scalar-tree UDT array element identities are
+preserved through ternary, `if`, `switch`, `for`, `for...in`, and `while`
+results. This includes array/`na` branches, block-local aliases, typed or
+inferred declarations, and caller-side array helpers or iteration. Branches
+that resolve to different UDT identities are rejected before lowering.
 
 Map support is currently limited to runtime-owned scalar maps, size reads, and
 the first mutation/lookup helpers:

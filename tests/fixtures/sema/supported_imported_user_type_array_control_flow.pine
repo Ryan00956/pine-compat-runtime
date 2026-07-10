@@ -1,0 +1,51 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Supported imported UDT array control-flow results")
+
+left = array.new<lib.Wrapper>(1, lib.Wrapper.new(lib.Point.new(close)))
+right = array.from(lib.Wrapper.new(lib.Point.new(open)))
+
+ternary_selected = bar_index % 2 == 0 ? left : right
+nullable = bar_index == 0 ? left : na
+
+if_selected = if bar_index % 2 == 0
+    made = left.copy()
+    made
+else
+    made = right.copy()
+    made
+
+switch_selected = switch bar_index % 2
+    0 => left
+    => right
+
+for_selected = for i = 0 to 0
+    left
+
+for_in_selected = for item in array.from(0)
+    right
+
+int iterations = 0
+while_selected = while iterations < 1
+    iterations := iterations + 1
+    right
+
+array<lib.Wrapper> typed = if bar_index % 2 == 0
+    left
+else
+    right
+
+ternary_value = ternary_selected.get(0)
+if_value = array.get(if_selected, 0)
+switch_value = switch_selected.first()
+for_value = for_selected.last()
+for_in_value = for_in_selected.get(0)
+while_value = while_selected.get(0)
+typed_value = typed.get(0)
+history_value = array.get(ternary_selected[1], 0)
+
+float iterated = 0.0
+for value in ternary_selected
+    iterated := iterated + value.nested.x
+
+plot(ternary_value.nested.x + nullable.size() + if_value.nested.x + switch_value.nested.x + for_value.nested.x + for_in_value.nested.x + while_value.nested.x + typed_value.nested.x + nz(history_value.nested.x) + iterated)

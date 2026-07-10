@@ -48,6 +48,12 @@ Ordinary `var` UDT arrays roll back to the
 confirmed backing store during realtime forming updates, while same-local and
 same-imported scalar-tree `varip` UDT arrays initialized through `array.from`
 or `array.new<T>`/`array.new<lib.Type>` retain their backing stores intrabar.
+Same-local and same-imported scalar-tree UDT array identities are preserved
+through ternary, `if`, `switch`, `for`, `for...in`, and `while` results,
+including array/`na` branches, block-local aliases, typed or inferred
+declarations, and caller-side helper or iteration consumers. Mixed element
+identities remain rejected. UDF and method return propagation is a separate
+follow-up boundary.
 
 Current evidence:
 
@@ -152,6 +158,15 @@ Current evidence:
 - `tests/fixtures/runtime/user_type_array_udf_values.pine` covers local pure
   UDF calls that consume same-local scalar-tree UDT values read from UDT
   arrays and preserve UDT identity through passthrough or constructor returns.
+- `tests/fixtures/runtime/user_type_array_scalar_tree.pine` and
+  `tests/fixtures/runtime/import_udt_array_scalar_tree.pine` cover local and
+  imported scalar-tree UDT array identities returned by control-flow
+  expressions. The matching supported and mixed-identity semantic fixtures
+  cover ternary, `if`, `switch`, `for`, `for...in`, and `while`, array/`na`
+  branches, aliases, typed declarations, helper calls, and iteration. The local
+  runtime fixture also interleaves generic UDF calls over UDTs with different
+  field orders to lock per-call lowering identity for namespace/method element
+  helpers and `array.from` reconstruction.
 - `tests/fixtures/runtime/array_sort_udt_field.pine` covers `array.sort` and
   `sort()` over same-local scalar-tree UDT arrays by root `int`, `float`, or
   `string` `sort_field`. `tests/fixtures/sema/unsupported_array_sort_udt.pine`,

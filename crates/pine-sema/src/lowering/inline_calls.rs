@@ -26,12 +26,19 @@ impl Analyzer {
         for (arg, param_index) in args.iter().zip(arg_indices) {
             let arg_user_type =
                 self.user_type_name_of_expr_with_params(&arg.value, outer_param_exprs);
+            let arg_user_type_array =
+                self.user_type_array_name_of_expr_with_params(&arg.value, outer_param_exprs);
             let arg_expr =
                 self.lower_expr_with_params(&arg.value, outer_param_exprs, outer_param_types)?;
             let arg_type = self.type_of_expr_with_params(&arg.value, outer_param_types)?;
             let arg_const_switch_key = self.known_const_switch_key(&arg.value);
-            resolved_args[param_index] =
-                Some((arg_expr, arg_type, arg_user_type, arg_const_switch_key));
+            resolved_args[param_index] = Some((
+                arg_expr,
+                arg_type,
+                arg_user_type,
+                arg_user_type_array,
+                arg_const_switch_key,
+            ));
         }
 
         let mut param_exprs = HashMap::new();
@@ -39,13 +46,17 @@ impl Analyzer {
         let mut param_const_switch_keys = HashMap::new();
         let mut arg_statements = Vec::new();
         for (param, resolved_arg) in function.params.iter().zip(resolved_args) {
-            let (arg_expr, arg_type, arg_user_type, arg_const_switch_key) = resolved_arg?;
+            let (arg_expr, arg_type, arg_user_type, arg_user_type_array, arg_const_switch_key) =
+                resolved_arg?;
             if !self.record_lowering_temp_symbol(span) {
                 return None;
             }
             let symbol = self.fresh_temp_symbol(&format!("{name}.{param}"), arg_type);
             if let Some(type_name) = arg_user_type {
                 self.mark_symbol_id_user_type(symbol.id, type_name);
+            }
+            if let Some(type_name) = arg_user_type_array {
+                self.mark_symbol_user_type_array(symbol, type_name);
             }
             if let Some(key) = arg_const_switch_key {
                 param_const_switch_keys.insert(param.clone(), key);

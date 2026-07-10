@@ -510,6 +510,11 @@ impl Analyzer {
                 {
                     self.mark_symbol_id_user_type(symbol.id, type_name);
                 }
+                if let Some(type_name) =
+                    self.user_type_array_name_of_expr_with_params(value, param_exprs)
+                {
+                    self.mark_symbol_user_type_array(symbol, type_name);
+                }
                 let lowered_value = self.lower_expr_with_params(value, param_exprs, param_types)?;
                 let symbol =
                     self.lower_alias_decl_symbol_series_id(name, symbol, value, &lowered_value);
@@ -899,7 +904,8 @@ impl Analyzer {
                 }
                 if name == "array.from"
                     && pine_type.kind == ValueKind::UserTypeArray
-                    && let Some(type_name) = self.expr_user_type_array_name(expr)
+                    && let Some(type_name) =
+                        self.user_type_array_name_of_expr_with_params(expr, param_exprs)
                 {
                     return Some(HirExpr {
                         pine_type,
