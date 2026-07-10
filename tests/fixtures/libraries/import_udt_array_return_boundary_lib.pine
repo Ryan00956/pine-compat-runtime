@@ -1,8 +1,0 @@
-library("Imported UDT array return boundary")
-
-export type Point
-    float x
-
-export returnArray(array<Point> values) => values
-
-method retainArray(Point self, array<Point> values) => values

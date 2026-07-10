@@ -606,6 +606,23 @@ impl Analyzer {
         self.tuple_element_types_with_params(expr, &HashMap::new())
     }
 
+    pub(crate) fn function_body_tuple_contains_user_type_array(&self, body: &FunctionBody) -> bool {
+        let param_types = HashMap::new();
+        let param_user_types = HashMap::new();
+        self.tuple_element_types_of_function_body_with_params(
+            body,
+            TupleTypeContext {
+                param_types: &param_types,
+                param_user_types: &param_user_types,
+            },
+        )
+        .is_some_and(|types| {
+            types
+                .iter()
+                .any(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+        })
+    }
+
     fn tuple_element_types_with_params(
         &self,
         expr: &Expr,

@@ -532,29 +532,51 @@ impl Analyzer {
             .push(param_const_switch_keys);
         self.function_context_is_method.push(false);
         self.function_depth += 1;
-        let (return_type, body_user_type, body_user_type_array, body_map) = self
-            .with_source_context(function.source_context_id, |analyzer| {
-                let return_type = analyzer.analyze_function_body(&function.body, function.span);
-                let body_user_type = return_type
-                    .is_some_and(|pine_type| pine_type.kind == ValueKind::UserType)
-                    .then(|| analyzer.user_type_name_of_function_body(&function.body))
-                    .flatten();
-                let body_user_type_array = return_type
-                    .is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
-                    .then(|| analyzer.user_type_array_name_of_function_body(&function.body))
-                    .flatten();
-                let body_map = return_type
-                    .is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
-                    .then(|| analyzer.map_type_of_function_body(&function.body))
-                    .flatten();
-                (return_type, body_user_type, body_user_type_array, body_map)
-            });
+        let (
+            return_type,
+            body_user_type,
+            body_user_type_array,
+            body_map,
+            tuple_contains_user_type_array,
+        ) = self.with_source_context(function.source_context_id, |analyzer| {
+            let return_type = analyzer.analyze_function_body(&function.body, function.span);
+            let body_user_type = return_type
+                .is_some_and(|pine_type| pine_type.kind == ValueKind::UserType)
+                .then(|| analyzer.user_type_name_of_function_body(&function.body))
+                .flatten();
+            let body_user_type_array = return_type
+                .is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+                .then(|| analyzer.user_type_array_name_of_function_body(&function.body))
+                .flatten();
+            let body_map = return_type
+                .is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
+                .then(|| analyzer.map_type_of_function_body(&function.body))
+                .flatten();
+            let tuple_contains_user_type_array = return_type
+                .is_some_and(|pine_type| pine_type.kind == ValueKind::Tuple)
+                && analyzer.function_body_tuple_contains_user_type_array(&function.body);
+            (
+                return_type,
+                body_user_type,
+                body_user_type_array,
+                body_map,
+                tuple_contains_user_type_array,
+            )
+        });
         self.function_depth -= 1;
         self.function_context_is_method.pop();
         self.function_param_const_switch_keys.pop();
         self.function_param_symbols.pop();
         self.function_stack.pop();
         self.scope.pop_scope();
+
+        if tuple_contains_user_type_array {
+            self.unsupported(
+                "function UDT-array tuple return",
+                "tuple-contained UDT arrays do not preserve their element identity through user-defined function returns",
+                call_span,
+            );
+        }
 
         if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserType) {
             let returned_type_name = body_user_type.or_else(|| {
@@ -578,17 +600,11 @@ impl Analyzer {
                 self.mark_expr_user_type(span, type_name);
             }
         }
-        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray) {
-            if function.source_id != SourceId::root() {
-                self.unsupported(
-                    "imported UDT array function returns",
-                    "source-aware expression identity metadata is required before library-local spans can be safely inlined",
-                    call_span,
-                );
-            } else if let Some(type_name) = body_user_type_array {
-                self.mark_expr_user_type_array(call_span, type_name.clone());
-                self.mark_expr_user_type_array(span, type_name);
-            }
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+            && let Some(type_name) = body_user_type_array
+        {
+            self.mark_expr_user_type_array(call_span, type_name.clone());
+            self.mark_expr_user_type_array(span, type_name);
         }
         if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
             && let Some(info) = body_map

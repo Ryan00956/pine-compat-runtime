@@ -3,11 +3,11 @@
 Status: closed design gate, maintained as the current UDT array support
 boundary.
 
-This document defines the first internal path for future arrays of local
+This document defines the internal path for arrays of local or imported
 user-defined type values. It is scoped to interpreter internals only: parser,
 semantic analysis, HIR lowering, runtime array storage, history, rollback, and
-conformance. It does not cover host UI, rendering, remote data, imported UDT
-identity, or public JSON/Python/WASM serialization of UDT array values.
+conformance. It does not cover host UI, rendering, remote library lookup, or
+public JSON/Python/WASM serialization of UDT array values.
 
 ## Current Boundary
 
@@ -52,15 +52,20 @@ Same-local and same-imported scalar-tree UDT array identities are preserved
 through ternary, `if`, `switch`, `for`, `for...in`, and `while` results,
 including array/`na` branches, block-local aliases, typed or inferred
 declarations, and caller-side helper or iteration consumers. Mixed element
-identities remain rejected. Local pure UDFs and local user methods may also
-return same-local scalar-tree UDT arrays through direct parameters,
-block-local aliases, `array.copy`, `array.new<T>`, `array.from`, nested local
-calls, and final control-flow results. Lowering resolves those identities per
-call, so interleaved calls over same-shaped UDTs with different field order
-retain the correct A-to-B-to-A element layout. Imported UDF and method UDT
-array returns remain deferred because imported return metadata spans are not
-yet source-aware. Tuple-contained UDT arrays and array-method chaining directly
-from a function or method call result remain deferred as well.
+identities remain rejected. Local pure UDFs and local user methods may return
+same-local scalar-tree UDT arrays, and imported pure exported UDFs and imported
+user methods may return same-imported scalar-tree UDT arrays, through direct
+parameters, block-local aliases, `array.copy`,
+`array.new<T>`/`array.new<alias.Type>`, `array.from`, private nested calls, and
+final control-flow results. Direct and alias returns preserve the source array
+id, while copy/new/from returns allocate independently. Imported type positions
+are rewritten for the active alias, and source-aware return metadata isolates
+call sites when the same physical library is imported under multiple aliases.
+Interleaved calls over distinct identities therefore retain the correct
+A-to-B-to-A element layout. Tuple-contained UDT arrays and array-method chaining
+directly from a function or method call result remain deferred; mixed imported
+identities, non-scalar imported UDT array returns, and UDF/method mutation side
+effects remain rejected.
 Local UDFs and typed local user methods may also iterate a generic same-local
 scalar-tree UDT-array parameter. Value-only and index/value statement loops,
 block-local array aliases, and final expression-form loops preserve the
@@ -190,6 +195,19 @@ Current evidence:
   the accepted return shapes fixture-backed, while
   `tests/fixtures/sema/unsupported_user_type_array_udf_method_return_identities.pine`
   rejects mixed return branches and incompatible typed destinations.
+- `tests/fixtures/runtime/import_udt_array_udf_method_returns.pine` and
+  `tests/fixtures/sema/supported_imported_user_type_array_udf_method_returns.pine`
+  cover imported same-scalar-tree UDF and user-method array returns through
+  direct and block-alias returns, copy/new/from allocation, private nested calls,
+  final control flow, typed method arguments, imported type-position rewrites,
+  and same-library dual-alias call-site isolation. The shared definitions live
+  in `tests/fixtures/libraries/import_udt_array_return_lib.pine`.
+  `tests/fixtures/sema/unsupported_imported_user_type_array_udf_method_return_identities.pine`,
+  `tests/fixtures/sema/unsupported_imported_user_type_array_tuple_returns.pine`,
+  and
+  `tests/fixtures/sema/unsupported_imported_user_type_array_call_result_chaining.pine`
+  preserve the mixed-identity, tuple-contained, and direct call-result chaining
+  boundaries.
 - `tests/fixtures/runtime/user_type_array_scalar_tree.pine` and
   `tests/fixtures/sema/supported_user_type_array_param_for_in.pine` cover
   value-only and index/value statement `for...in`, block-local array aliases,
@@ -578,13 +596,16 @@ Initial policy:
 - UDT values read from arrays may be passed to local pure UDFs, including
   passthrough and constructor-return UDFs;
 - passing same-local scalar-tree UDT array ids to local pure UDFs and local user
-  methods is fixture-backed, including direct, alias, copy, constructor, nested
-  call, and final control-flow return paths;
+  methods, or same-imported scalar-tree UDT array ids to imported pure exported
+  UDFs and imported user methods, is fixture-backed, including direct, alias,
+  copy, constructor, private nested call, and final control-flow return paths;
 - direct and alias returns preserve the source array id, while `array.copy`,
   `array.new<T>`, and `array.from` return independently allocated array ids;
 - returned identities are resolved from the current call arguments rather than
   shared function-body spans, including interleaved A-to-B-to-A calls across
-  same-shaped UDTs with different field order;
+  same-shaped UDTs with different field order and same-library dual-alias calls;
+- imported type positions are rewritten to the active alias, while source-aware
+  expression metadata keeps separate import instances isolated;
 - local UDFs and typed local user methods may use value-only or index/value
   `for...in` over same-local scalar-tree UDT-array parameters, including
   block-local aliases and final expression results that return a field/scalar
@@ -599,9 +620,10 @@ Initial policy:
 - receiver-style scalar-tree imported UDT methods and alias-qualified imported
   method calls over same-imported scalar-tree UDT values read from arrays are
   supported, with mismatched local/imported identities rejected.
-- imported UDF/method UDT array returns remain deferred until imported metadata
-  spans are source-aware; tuple-contained UDT arrays and direct array-method
-  chaining on call results remain separate parser/lowering boundaries.
+- imported UDF/method same-scalar-tree UDT array returns are fixture-backed;
+  mixed imported identities, non-scalar arrays, tuple-contained UDT arrays,
+  mutation side effects, and direct array-method chaining on call results remain
+  separate semantic/parser/lowering boundaries.
 
 ## Diagnostics
 
@@ -647,13 +669,17 @@ Recommended future slices:
     arrays. Done.
 11. Local UDF and user-method returns preserve same-local scalar-tree UDT array
     identity through direct, alias, copy, constructor, nested-call, and final
-    control-flow paths with call-specific A-to-B-to-A lowering. Done. Imported
-    call returns, tuple-contained UDT arrays, and direct call-result array
-    method chaining remain later slices.
+    control-flow paths with call-specific A-to-B-to-A lowering. Done.
 12. Local UDF and typed-method `for...in` over same-local scalar-tree UDT-array
     parameters preserves fresh value-loop identity for value-only/index-value
     statements and final scalar/field, UDT-element, or element-rebuilt UDT-array
     results, including aliases, named arguments, and A-to-B-to-A calls. Done.
+13. Imported UDF and user-method returns preserve same-imported scalar-tree UDT
+    array identity through direct, alias, copy/new/from, private nested, typed
+    method, and final-control-flow paths. Source-aware type-position rewrites and
+    import-instance metadata isolate the same physical library under two aliases.
+    Done. Tuple-contained arrays and direct call-result array method chaining
+    remain later slices.
 
 ## Completion Gate For Future Positive Support
 
@@ -675,11 +701,13 @@ Any positive UDT array support must include:
 ## Closed Slice Result
 
 This design gate started as a planning prerequisite and is now kept synchronized
-with incremental positive runtime slices. The current supported subset is the
-same-local scalar-tree UDT `array.new<T>()` and `array.from` paths with the
-helper set listed in Current Boundary and Accepted Forms, plus ordinary `var`
-realtime rollback, same-local scalar-tree UDT array `varip`, and typed
-`array<T>`/`T[]` declarations for that same UDT array subset. Broader UDT
-element families, UDT value history references, and helpers not listed there
-remain unsupported until later fixture-backed slices implement syntax, analysis,
-runtime behavior, and conformance updates together.
+with incremental positive runtime slices. The current supported subset includes
+the same-local and same-imported scalar-tree UDT `array.new<T>()`/`array.from`
+paths with the helper set listed in Current Boundary and Accepted Forms,
+ordinary `var` realtime rollback, fixture-backed scalar-tree UDT array `varip`,
+typed `array<T>`/`T[]` declarations, and local or imported UDF/user-method array
+returns within the call-boundary subset above. Broader UDT element families,
+tuple-contained arrays, direct call-result array method chaining, unsupported
+mutation contexts, and helpers not listed there remain unsupported until later
+fixture-backed slices implement syntax, analysis, runtime behavior, and
+conformance updates together.

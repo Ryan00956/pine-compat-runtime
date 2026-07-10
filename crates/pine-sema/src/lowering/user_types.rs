@@ -1,4 +1,4 @@
-use crate::source_graph::{SourceContextId, SourceId};
+use crate::source_graph::SourceContextId;
 
 use super::*;
 
@@ -15,7 +15,6 @@ struct LoweredUserTypeCall {
     body: FunctionBody,
     array_aliases: HashMap<String, LoweredUserTypeArrayResult>,
     user_type_aliases: HashMap<String, LoweredUserTypeArrayResult>,
-    supports_array_return: bool,
 }
 
 enum LoweredUserTypeCallResolution {
@@ -457,7 +456,6 @@ impl Analyzer {
             body: function.body,
             array_aliases,
             user_type_aliases,
-            supports_array_return: function.source_id == SourceId::root(),
         })
     }
 
@@ -496,7 +494,6 @@ impl Analyzer {
             body: method.body,
             array_aliases,
             user_type_aliases,
-            supports_array_return: method.source_id == SourceId::root(),
         })
     }
 
@@ -547,10 +544,7 @@ impl Analyzer {
         call: LoweredUserTypeCall,
         call_stack: &mut Vec<String>,
     ) -> LoweredUserTypeArrayResult {
-        if !call.supports_array_return
-            || call_stack.len() >= MAX_FUNCTION_CALL_DEPTH
-            || call_stack.contains(&call.key)
-        {
+        if call_stack.len() >= MAX_FUNCTION_CALL_DEPTH || call_stack.contains(&call.key) {
             return LoweredUserTypeArrayResult::Unknown;
         }
         call_stack.push(call.key);

@@ -546,17 +546,22 @@ identities produce an `E_BRANCH_TYPE` diagnostic instead of an unlowerable HIR.
 Generic UDF lowering resolves array parameters, local flow aliases, element
 helper results, and `array.from` reconstruction against the current call's UDT
 identity rather than shared function-body span metadata.
-Local pure UDF and user-method return analysis extends that rule to
-same-local scalar-tree UDT arrays returned through direct parameters,
-block-local aliases, `array.copy`, `array.new<T>`, `array.from`, nested local
-calls, and final control-flow expressions. Positional, named, and reordered
-arguments seed a call-local identity environment, so repeated calls over UDTs
-with different field declaration orders preserve the concrete A-to-B-to-A
-layout instead of inheriting the most recently analyzed call span. Mixed return
-identities and incompatible explicitly typed destinations remain semantic
-errors. Imported UDF/method UDT array returns are not included because imported
-return metadata spans are not yet source-aware. Tuple-contained UDT arrays and
-direct array-method chaining on a call result are also outside this subset.
+Local pure UDF and user-method return analysis extends that rule to same-local
+scalar-tree UDT arrays, while imported pure exported UDF and imported
+user-method return analysis covers same-imported scalar-tree UDT arrays. The
+fixture-backed return paths include direct parameters, block-local aliases,
+`array.copy`, `array.new<T>`/`array.new<alias.Type>`, `array.from`, private nested
+calls, typed methods with named/reordered arguments, and final control-flow
+expressions. Positional, named, and reordered arguments seed a call-local
+identity environment. Imported type positions are rewritten for the active
+alias, and source-aware expression metadata separates import instances, so
+repeated calls over different field orders or two aliases of the same physical
+library preserve the concrete A-to-B-to-A layout instead of inheriting another
+call's span metadata. Mixed return identities and incompatible explicitly typed
+destinations remain semantic errors. Tuple-contained UDT arrays, non-scalar
+imported UDT array returns, direct array-method chaining on a call result, and
+mutation through unsupported UDF/method side-effect contexts remain outside
+this subset.
 Generic UDT-array parameters are therefore iterable inside local UDFs and typed
 local methods for the fixture-backed statement and final-expression forms,
 including final results that return the UDT element itself or rebuild a
@@ -712,17 +717,22 @@ or alias-qualified methods including same-imported non-receiver method
 parameters, read through history, expose direct fields from typed `na` values
 through field reads/history, and be tested with `na()`, while their constructors
 remain outside the supported non-scalar subset.
-Imported UDT collections beyond the
-scalar-field `array.from` size/get/first/last, set-replacement, push-append,
+The imported collection claim also includes same-imported scalar-tree UDT array
+returns from imported UDFs and user methods within the direct/alias,
+copy/new/from, private-nested, typed-method, final-control-flow, and dual-alias
+isolation subset above. Imported UDT collections beyond those returns and the
+scalar-tree `array.from` size/get/first/last, set-replacement, push-append,
 unshift-prepend, insert-insertion, fill-replacement, join-stringification,
 search-structural-equality, sort-by-field, pop/remove/shift return, clear-size,
 copy-read, reverse-read, slice-window, concat-append, and for-in-value-copy
-subset, direct private imported UDT access, non-scalar UDT value history outside
-the local/imported label/line/box/chart.point-field fixture with direct
-`chart.point` field chains, imported UDT value history outside the
-scalar-tree metadata subset and typed-`na` non-scalar identity subset, nested
-field mutation, UDF parameter/global field side effects, and method
-receiver/parameter/global field side effects remain outside the claim.
+subset remain outside the claim. The same applies to direct private imported UDT
+access, mixed or non-scalar imported array-return identities, tuple-contained
+arrays, direct call-result array method chaining, nested field mutation, UDF
+parameter/global field side effects, and method receiver/parameter/global field
+side effects. Non-scalar UDT value history outside the local/imported
+label/line/box/chart.point-field fixture with direct `chart.point` field chains,
+and imported UDT value history outside the scalar-tree metadata and typed-`na`
+non-scalar identity subsets, also remain outside the claim.
 
 Pure user-defined methods are supported for local UDT receivers with scalar,
 `chart.point`, scalar array, object-id array, chart.point array, local UDT,

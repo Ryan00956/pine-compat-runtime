@@ -52,15 +52,22 @@ stringification, includes/indexof/lastindexof structural equality search,
 sort/sort_indices by int/float/string sort_field, pop/remove/shift return field
 reads, clear-size reset, copy independent field reads, reverse reordered field
 reads, slice window field reads, concat appended field reads, and
-statement/expression/index-value for-in value-copy field reads.
-Imported UDT collections beyond that `array.from`/typed-array subset, nested
-field mutation, and method receiver/parameter/global field side effects remain
-unsupported.
+statement/expression/index-value for-in value-copy field reads. Imported pure
+exported UDFs and imported user methods may also return same-imported scalar-tree
+UDT arrays through direct or block-alias paths, copy/new/from allocation, private
+nested calls, typed methods with named/reordered arguments, and final control
+flow. Imported type positions are rewritten for the active alias and
+source-aware metadata isolates two aliases of the same physical library.
+Imported UDT collections beyond that helper/typed-array/call-return subset,
+mixed or non-scalar array-return identities, tuple-contained arrays, direct
+call-result array method chaining, nested field mutation, and method
+receiver/parameter/global field side effects remain unsupported.
 
 Current evidence:
 
-- `docs/PURE_INTERNAL_ROADMAP.md` lists broader imported UDT identity across
-  source graphs and imported method tails as remaining structured-data work.
+- `docs/PURE_INTERNAL_ROADMAP.md` records source-aware same-library dual-alias
+  UDT array returns as complete and keeps broader imported collection and method
+  tails as remaining structured-data work.
 - `tests/fixtures/conformance.tsv` marks `import` partial and records the
   scalar-tree imported UDT constructor/direct-or-nested field-read/reassignment/typed
   declaration/direct-or-nested UDF passthrough subset plus receiver-style or
@@ -77,6 +84,12 @@ Current evidence:
   reads, slice window field reads, concat appended field reads, and
   statement/expression/index-value for-in value-copy field reads, while
   imported UDT flow outside the covered same-identity scalar-tree paths remains unsupported.
+- `tests/fixtures/runtime/import_udt_array_udf_method_returns.pine`,
+  `tests/fixtures/sema/supported_imported_user_type_array_udf_method_returns.pine`,
+  and `tests/fixtures/libraries/import_udt_array_return_lib.pine` cover the
+  accepted imported UDF/method array-return subset. The matching identity,
+  tuple-return, and direct call-result chaining fixtures keep those negative
+  boundaries explicit.
 - `docs/CONFORMANCE.md`, `docs/EXECUTION_SEMANTICS.md`, and
   `docs/SEMANTIC_MODEL.md` describe the narrow executable imported UDT
   constructor/direct field-read/reassignment/typed declaration/direct UDF
@@ -523,7 +536,8 @@ Recommended future slices:
    reads, slice window field reads, concat appended field reads, and
    statement/expression/index-value for-in value-copy field reads are
    fixture-backed, while unresolved-field constructors, unsupported field
-   mutation, and broader collections remain rejected.
+   mutation, and collections beyond the explicit helper and call-return subsets
+   remain rejected.
 4. UDF passthrough: allow imported UDT values to flow through pure UDFs while
    rejecting mismatched identities. Direct parameter passthrough returns such
    as `passthrough(p) => p` are now fixture-backed for same imported identity,
@@ -539,6 +553,11 @@ ternary-expression alias, final-if alias, final-for alias, final-while alias,
 switch-expression alias, nested-method passthrough plus direct, nested, or ternary constructor returns,
 and method-local scalar-tree root-field replacement are fixture-backed.
 Receiver-style calls over call-result receiver expressions remain parser-gated;
-broader imported method return/parameter flow remains deferred.
-6. Broader collections and broader history only after imported value identity is
-   stable across those storage families.
+same-imported scalar-tree UDT array returns from typed methods are also
+fixture-backed, while broader imported method return/parameter flow remains
+deferred.
+6. Imported UDF/user-method same-scalar-tree UDT array returns preserve direct,
+   alias, copy/new/from, private nested, final-flow, type-position, and dual-alias
+   call-site identity. Tuple-contained arrays, direct call-result method
+   chaining, non-scalar returns, and unsupported mutation contexts remain later
+   collection boundaries.

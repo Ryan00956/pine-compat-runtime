@@ -1,0 +1,87 @@
+library("Imported UDT array returns")
+
+export type Point
+    float x
+
+export type First
+    float shared
+    float other
+
+export type Second
+    float other
+    float shared
+
+identity(values) => values
+
+copyValues(values) => array.copy(values)
+
+export returnArray(array<Point> values) => values
+
+export direct(values) => values
+
+export aliasReturn(values) =>
+    source = values
+    source
+
+export copyReturn(values) => array.copy(values)
+
+export nestedReturn(values) => identity(values)
+
+export nestedCopyReturn(values) => copyValues(values)
+
+export firstFrom(First value) => array.from(value)
+
+export secondNew(Second value) => array.new<Second>(1, value)
+
+export shadowedTyped(First First) =>
+    First selected = First
+    array<First> values = array.new<First>(1, selected)
+    First[] aliases = values
+    aliases
+
+export flowReturn(values) =>
+    if bar_index >= 0
+        source = values
+        source
+    else
+        na
+
+export loopReturn(values) =>
+    for index = 0 to 0
+        values
+
+export mixedReturn(first, second, bool choose) => choose ? first : second
+
+export tupleReturn(values) => [values, values]
+
+method retainArray(Point self, array<Point> values) => values
+
+method retainFirst(First self, array<First> values) => values
+
+method retainSecond(Second self, array<Second> values) => values
+
+method retain(First self, array<First> values, bool copy_values) => copy_values ? values.copy() : values
+
+method retain(Second self, array<Second> values, bool copy_values) => copy_values ? values.copy() : values
+
+method copyFirst(First self, array<First> values) => values.copy()
+
+method nestedSecond(Second self, array<Second> values) => identity(values)
+
+method fromFirst(First self) => array.from(self)
+
+method newSecond(Second self) => array.new<Second>(1, self)
+
+method flowFirst(First self, array<First> values) =>
+    if bar_index >= 0
+        values
+    else
+        na
+
+method mixedFirst(First self, array<First> first, array<Second> second, bool choose) =>
+    if choose
+        first
+    else
+        second
+
+method tupleFirst(First self, array<First> values) => [values, values]

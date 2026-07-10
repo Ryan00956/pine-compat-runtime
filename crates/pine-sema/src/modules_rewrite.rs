@@ -1,8 +1,8 @@
 use std::collections::{HashMap, HashSet};
 
 use pine_syntax::{
-    CallArg, ExportDecl, ExportItem, Expr, ExprKind, FunctionBody, Program, Stmt, StmtKind,
-    SwitchArm, SwitchArmResult,
+    CallArg, DeclaredType, ExportDecl, ExportItem, Expr, ExprKind, FunctionBody, Program, Stmt,
+    StmtKind, SwitchArm, SwitchArmResult,
 };
 
 use crate::analyzer::calls::expr_name;
@@ -89,7 +89,9 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
             value,
         } => StmtKind::Decl {
             mode: *mode,
-            declared_type: declared_type.clone(),
+            declared_type: declared_type
+                .as_ref()
+                .map(|declared_type| rewrite_declared_type(declared_type, context)),
             name: name.clone(),
             value: rewrite_expr(value, context),
         },
@@ -204,6 +206,13 @@ pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
             {
                 Expr {
                     kind: ExprKind::Identifier(target.clone()),
+                    span: callee.span,
+                }
+            } else if let Some(name) = expr_name(callee)
+                && let Some(target) = rewrite_array_new_type_target(&name, context)
+            {
+                Expr {
+                    kind: ExprKind::Identifier(target),
                     span: callee.span,
                 }
             } else {
@@ -335,6 +344,30 @@ fn rewrite_switch_arm_result(
     }
 }
 
+fn rewrite_declared_type(declared_type: &DeclaredType, context: &RewriteContext) -> DeclaredType {
+    match declared_type {
+        DeclaredType::Named(type_name) => DeclaredType::Named(
+            context
+                .type_target_in_type_position(type_name)
+                .cloned()
+                .unwrap_or_else(|| type_name.clone()),
+        ),
+        DeclaredType::Array { element_type } => DeclaredType::Array {
+            element_type: context
+                .type_target_in_type_position(element_type)
+                .cloned()
+                .unwrap_or_else(|| element_type.clone()),
+        },
+        DeclaredType::Matrix { .. } | DeclaredType::Map { .. } => declared_type.clone(),
+    }
+}
+
+fn rewrite_array_new_type_target(name: &str, context: &RewriteContext) -> Option<String> {
+    let type_name = name.strip_prefix("array.new<")?.strip_suffix('>')?;
+    let target = context.type_target_in_type_position(type_name)?;
+    Some(format!("array.new<{target}>"))
+}
+
 impl RewriteContext {
     fn shadowing(&self, name: &str) -> Self {
         let mut context = self.clone();
@@ -371,6 +404,10 @@ impl RewriteContext {
         self.type_targets.get(name)
     }
 
+    fn type_target_in_type_position(&self, name: &str) -> Option<&String> {
+        self.type_targets.get(name)
+    }
+
     fn is_shadowed(&self, name: &str) -> bool {
         self.shadowed_names.contains(name)
             || name
@@ -396,5 +433,79 @@ fn record_statement_bindings(statement: &Stmt, context: &mut RewriteContext) {
             context.shadowed_names.extend(names.iter().cloned());
         }
         _ => {}
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pine_syntax::Span;
+
+    fn context() -> RewriteContext {
+        RewriteContext {
+            type_targets: HashMap::from([("Point".to_owned(), "lib.Point".to_owned())]),
+            ..RewriteContext::default()
+        }
+    }
+
+    #[test]
+    fn alias_qualifies_user_type_array_new_templates() {
+        let expr = Expr {
+            kind: ExprKind::Call {
+                callee: Box::new(Expr {
+                    kind: ExprKind::Identifier("array.new<Point>".to_owned()),
+                    span: Span::new(2, 18),
+                }),
+                args: Vec::new(),
+            },
+            span: Span::new(2, 20),
+        };
+
+        let rewritten = rewrite_expr(&expr, &context());
+
+        let ExprKind::Call { callee, .. } = rewritten.kind else {
+            panic!("call expected");
+        };
+        assert_eq!(expr_name(&callee).as_deref(), Some("array.new<lib.Point>"));
+    }
+
+    #[test]
+    fn alias_qualifies_user_type_declarations() {
+        assert_eq!(
+            rewrite_declared_type(&DeclaredType::Named("Point".to_owned()), &context()),
+            DeclaredType::Named("lib.Point".to_owned())
+        );
+        assert_eq!(
+            rewrite_declared_type(
+                &DeclaredType::Array {
+                    element_type: "Point".to_owned(),
+                },
+                &context(),
+            ),
+            DeclaredType::Array {
+                element_type: "lib.Point".to_owned(),
+            }
+        );
+    }
+
+    #[test]
+    fn value_shadowing_does_not_hide_names_in_type_positions() {
+        let context = context().shadowing("Point");
+
+        assert_eq!(
+            rewrite_array_new_type_target("array.new<Point>", &context),
+            Some("array.new<lib.Point>".to_owned())
+        );
+        assert_eq!(
+            rewrite_declared_type(
+                &DeclaredType::Array {
+                    element_type: "Point".to_owned(),
+                },
+                &context,
+            ),
+            DeclaredType::Array {
+                element_type: "lib.Point".to_owned(),
+            }
+        );
     }
 }

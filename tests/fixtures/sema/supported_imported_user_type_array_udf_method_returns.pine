@@ -1,6 +1,6 @@
 //@version=6
 import user/udt_array_returns/1 as lib
-indicator("Unsupported imported UDT array returns")
+indicator("Supported imported UDT array returns")
 
 points = array.from(lib.Point.new(close))
 anchor = lib.Point.new(open)

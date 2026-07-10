@@ -776,15 +776,20 @@ For both local and imported scalar-tree UDT arrays, ternary, `if`, `switch`,
 `for`, `for...in`, and `while` results preserve the concrete element identity
 through HIR lowering. Array/`na` branches are allowed, while branches carrying
 different UDT identities fail semantic analysis.
-Local pure UDF and local user-method calls also preserve same-local scalar-tree
-UDT array identity through direct parameter, block-alias, copy, new/from,
-nested-call, and final control-flow returns. A direct or alias return keeps the
-source array id; `array.copy`, `array.new<T>`, and `array.from` allocate a new
-array id. Lowering derives the element layout from the current call arguments,
-so interleaved calls over field-order variants A, B, then A read the correct
-fields on every result. Imported UDF/method UDT array returns remain deferred
-until imported return metadata spans are source-aware. Tuple-contained UDT
-arrays and direct call-result array method chains remain unsupported boundaries.
+Local pure UDF/local user-method calls preserve same-local scalar-tree UDT array
+identity, and imported pure exported UDF/imported user-method calls preserve
+same-imported scalar-tree UDT array identity, through direct parameter,
+block-alias, copy, new/from, private nested-call, typed-method, and final
+control-flow returns. A direct or alias return keeps the source array id;
+`array.copy`, `array.new<T>`/`array.new<alias.Type>`, and `array.from` allocate a
+new array id. Lowering derives the element layout from the current call
+arguments, rewrites imported type positions for the active alias, and keys
+expression metadata by import instance. Interleaved calls over field-order
+variants A, B, then A, including two aliases of one physical library, therefore
+read the correct fields on every result. Mixed imported identities, non-scalar
+imported returns, tuple-contained UDT arrays, direct call-result array method
+chains, and mutation through unsupported UDF/method side-effect contexts remain
+unsupported boundaries.
 Both caller-side `for...in` over returned arrays and in-callee `for...in` over
 generic same-local scalar-tree UDT-array parameters preserve concrete identity,
 including final expression results that return the loop element itself or use
@@ -792,8 +797,9 @@ it to rebuild a same-identity UDT array.
 Scalar-field imported UDT `varip` declarations may persist the same imported
 identity by value across forming updates.
 Local/imported structural lookalikes are distinct assignment identities;
-imported UDT collections beyond scalar-field `array.from` and
-`array<lib.Type>`/`lib.Type[]` size/get/first/last, set-replacement, push-append,
+imported UDT collections beyond the fixture-backed same-scalar-tree call-return
+subset above, scalar-tree `array.from`, and `array<lib.Type>`/`lib.Type[]`
+size/get/first/last, set-replacement, push-append,
 unshift-prepend, insert-insertion, fill-replacement, join-stringification,
 search-structural-equality, sort-by-field, pop/remove/shift return, clear-size,
 copy-read, reverse-read, slice-window, concat-append, and for-in-value-copy

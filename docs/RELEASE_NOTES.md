@@ -10,8 +10,17 @@
   passing analysis without executable HIR. Generic UDF inlining now resolves
   UDT array parameters, flow aliases, array-element helpers, and reconstructed
   `array.from` values per call, preventing the final call's element layout from
-  leaking into earlier calls. UDF and method return propagation remains a
-  separate follow-up slice.
+  leaking into earlier calls. The local and imported UDF/method return slices
+  below build on that call-specific identity model.
+- Added fixture-backed imported UDF and user-method returns for same-imported
+  scalar-tree UDT arrays. Direct and block-alias returns preserve the source
+  array id, copy/new/from paths allocate independently, and private nested calls,
+  final control flow, typed methods with named/reordered arguments, and imported
+  type-position rewrites retain the caller's concrete identity. Source-aware
+  import-instance metadata isolates interleaved calls through two aliases of the
+  same physical library. Mixed imported identities, non-scalar returns,
+  tuple-contained UDT arrays, direct call-result array method chaining, and
+  mutation through unsupported UDF/method side-effect contexts remain rejected.
 - Preserved scalar map templates at call sites when local UDFs return inferred
   map parameters, or when local UDFs and user methods return visible maps,
   block-local aliases, `map.new`/copy results, nested calls, or final

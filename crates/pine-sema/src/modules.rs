@@ -424,16 +424,13 @@ fn build_import_plan(
             );
         }
     }
-    debug_assert!(
-        plan.imported_functions
-            .values()
-            .all(|function| function.source_context_id != SourceContextId::root())
-    );
-    debug_assert!(
-        plan.imported_methods
-            .values()
-            .all(|method| method.source_context_id != SourceContextId::root())
-    );
+    debug_assert!(plan.imported_functions.values().all(|function| {
+        function.source_id != SourceId::root()
+            && function.source_context_id != SourceContextId::root()
+    }));
+    debug_assert!(plan.imported_methods.values().all(|method| {
+        method.source_id != SourceId::root() && method.source_context_id != SourceContextId::root()
+    }));
     plan
 }
 
