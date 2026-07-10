@@ -167,9 +167,30 @@ impl Analyzer {
                     )
                 }));
             }
-            ExprKind::For { body, .. }
-            | ExprKind::ForIn { body, .. }
-            | ExprKind::While { body, .. } => {
+            ExprKind::ForIn {
+                value,
+                iterable,
+                body,
+                ..
+            } => {
+                let mut loop_user_type_aliases = user_type_aliases.clone();
+                let element_result = self.user_type_array_result_with_params_and_aliases(
+                    iterable,
+                    param_exprs,
+                    array_aliases,
+                    user_type_aliases,
+                    call_stack,
+                );
+                loop_user_type_aliases.insert(value.clone(), element_result);
+                return self.user_type_array_branch_result_with_params_and_aliases(
+                    body,
+                    param_exprs,
+                    array_aliases,
+                    &loop_user_type_aliases,
+                    call_stack,
+                );
+            }
+            ExprKind::For { body, .. } | ExprKind::While { body, .. } => {
                 return self.user_type_array_branch_result_with_params_and_aliases(
                     body,
                     param_exprs,
@@ -642,9 +663,30 @@ impl Analyzer {
                     call_stack,
                 ),
             ]),
-            StmtKind::For { body, .. }
-            | StmtKind::ForIn { body, .. }
-            | StmtKind::While { body, .. } => self
+            StmtKind::ForIn {
+                value,
+                iterable,
+                body,
+                ..
+            } => {
+                let mut loop_user_type_aliases = user_type_aliases.clone();
+                let element_result = self.user_type_array_result_with_params_and_aliases(
+                    iterable,
+                    param_exprs,
+                    &array_aliases,
+                    &user_type_aliases,
+                    call_stack,
+                );
+                loop_user_type_aliases.insert(value.clone(), element_result);
+                self.user_type_array_branch_result_with_params_and_aliases(
+                    body,
+                    param_exprs,
+                    &array_aliases,
+                    &loop_user_type_aliases,
+                    call_stack,
+                )
+            }
+            StmtKind::For { body, .. } | StmtKind::While { body, .. } => self
                 .user_type_array_branch_result_with_params_and_aliases(
                     body,
                     param_exprs,
@@ -871,9 +913,30 @@ impl Analyzer {
                     )
                 }));
             }
-            ExprKind::For { body, .. }
-            | ExprKind::ForIn { body, .. }
-            | ExprKind::While { body, .. } => {
+            ExprKind::ForIn {
+                value,
+                iterable,
+                body,
+                ..
+            } => {
+                let mut loop_user_type_aliases = user_type_aliases.clone();
+                let element_result = self.user_type_array_result_with_params_and_aliases(
+                    iterable,
+                    param_exprs,
+                    array_aliases,
+                    user_type_aliases,
+                    call_stack,
+                );
+                loop_user_type_aliases.insert(value.clone(), element_result);
+                return self.user_type_branch_result_with_params_and_aliases(
+                    body,
+                    param_exprs,
+                    array_aliases,
+                    &loop_user_type_aliases,
+                    call_stack,
+                );
+            }
+            ExprKind::For { body, .. } | ExprKind::While { body, .. } => {
                 return self.user_type_branch_result_with_params_and_aliases(
                     body,
                     param_exprs,
@@ -952,15 +1015,37 @@ impl Analyzer {
                     call_stack,
                 ),
             ]),
-            StmtKind::For { body, .. }
-            | StmtKind::ForIn { body, .. }
-            | StmtKind::While { body, .. } => self.user_type_branch_result_with_params_and_aliases(
+            StmtKind::ForIn {
+                value,
+                iterable,
                 body,
-                param_exprs,
-                &array_aliases,
-                &user_type_aliases,
-                call_stack,
-            ),
+                ..
+            } => {
+                let mut loop_user_type_aliases = user_type_aliases.clone();
+                let element_result = self.user_type_array_result_with_params_and_aliases(
+                    iterable,
+                    param_exprs,
+                    &array_aliases,
+                    &user_type_aliases,
+                    call_stack,
+                );
+                loop_user_type_aliases.insert(value.clone(), element_result);
+                self.user_type_branch_result_with_params_and_aliases(
+                    body,
+                    param_exprs,
+                    &array_aliases,
+                    &loop_user_type_aliases,
+                    call_stack,
+                )
+            }
+            StmtKind::For { body, .. } | StmtKind::While { body, .. } => self
+                .user_type_branch_result_with_params_and_aliases(
+                    body,
+                    param_exprs,
+                    &array_aliases,
+                    &user_type_aliases,
+                    call_stack,
+                ),
             _ => LoweredUserTypeArrayResult::Unknown,
         }
     }

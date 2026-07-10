@@ -479,20 +479,28 @@ impl Analyzer {
                 value,
                 iterable,
                 body,
-            } => HirStmtKind::ForIn {
-                index: match index {
-                    Some(index) => Some(self.lower_decl_symbol(index, statement.span)?.id),
-                    None => None,
-                },
-                value: self.lower_decl_symbol(value, statement.span)?.id,
-                iterable: self.lower_expr_with_params(iterable, param_exprs, param_types)?,
-                body: body
-                    .iter()
-                    .map(|statement| {
-                        self.lower_stmt_with_params(statement, param_exprs, param_types)
-                    })
-                    .collect::<Option<_>>()?,
-            },
+            } => {
+                let value_symbol = self.lower_decl_symbol(value, statement.span)?;
+                if let Some(type_name) =
+                    self.user_type_array_name_of_expr_with_params(iterable, param_exprs)
+                {
+                    self.mark_symbol_id_user_type(value_symbol.id, type_name);
+                }
+                HirStmtKind::ForIn {
+                    index: match index {
+                        Some(index) => Some(self.lower_decl_symbol(index, statement.span)?.id),
+                        None => None,
+                    },
+                    value: value_symbol.id,
+                    iterable: self.lower_expr_with_params(iterable, param_exprs, param_types)?,
+                    body: body
+                        .iter()
+                        .map(|statement| {
+                            self.lower_stmt_with_params(statement, param_exprs, param_types)
+                        })
+                        .collect::<Option<_>>()?,
+                }
+            }
             StmtKind::While { condition, body } => HirStmtKind::While {
                 condition: self.lower_expr_with_params(condition, param_exprs, param_types)?,
                 body: body
@@ -816,12 +824,18 @@ impl Analyzer {
                     }
                     _ => return None,
                 };
+                let value_symbol = self.lower_decl_symbol(value, expr.span)?;
+                if let Some(type_name) =
+                    self.user_type_array_name_of_expr_with_params(iterable, param_exprs)
+                {
+                    self.mark_symbol_id_user_type(value_symbol.id, type_name);
+                }
                 HirExprKind::ForIn {
                     index: match index {
                         Some(index) => Some(self.lower_decl_symbol(index, expr.span)?.id),
                         None => None,
                     },
-                    value: self.lower_decl_symbol(value, expr.span)?.id,
+                    value: value_symbol.id,
                     iterable: Box::new(self.lower_expr_with_params(
                         iterable,
                         param_exprs,

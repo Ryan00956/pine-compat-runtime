@@ -6550,6 +6550,11 @@ fn accepts_supported_user_type_array_udf_method_returns_fixture() {
 }
 
 #[test]
+fn accepts_supported_user_type_array_param_for_in_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_user_type_array_param_for_in.pine");
+}
+
+#[test]
 fn reports_unsupported_user_type_array_udf_method_return_identities_fixture() {
     let path = "tests/fixtures/sema/unsupported_user_type_array_udf_method_return_identities.pine";
     assert_diagnostic_messages(

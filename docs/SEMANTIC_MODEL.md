@@ -367,6 +367,14 @@ forming updates. The scalar-array, label-array, line-array, linefill-array,
 polyline-array, box-array, and table-array shallow-id fixtures, chart-point-array
 value-copy fixture, and UDT-array value-copy fixture have explicit incremental
 append execution parity with full historical recomputation.
+Inside a local UDF or typed local user method, `for...in` over a same-local
+scalar-tree UDT-array parameter gives each value loop local the concrete
+element identity resolved for that call. Value-only and index/value statement
+loops, block-local aliases of the parameter, and final expression-form loops
+returning a UDT field/scalar result, the UDT element itself, or a same-identity
+UDT array rebuilt from that element are supported. Named method arguments and
+interleaved A-to-B-to-A calls preserve their own field layouts, returned
+element identities, and rebuilt array identities.
 
 `while` supports statement loops and a scalar expression subset:
 
@@ -549,8 +557,10 @@ identities and incompatible explicitly typed destinations remain semantic
 errors. Imported UDF/method UDT array returns are not included because imported
 return metadata spans are not yet source-aware. Tuple-contained UDT arrays and
 direct array-method chaining on a call result are also outside this subset.
-This does not yet make a generic UDT-array parameter iterable inside its UDF;
-the fixture-backed `for...in` consumer is on the caller side of the return.
+Generic UDT-array parameters are therefore iterable inside local UDFs and typed
+local methods for the fixture-backed statement and final-expression forms,
+including final results that return the UDT element itself or rebuild a
+same-identity array from that element.
 Supported operations are
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
 `array.new_color`, `array.new_label`, `array.new_line`, `array.new_linefill`,

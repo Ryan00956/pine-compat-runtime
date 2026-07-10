@@ -276,7 +276,10 @@ Current baseline:
 - same-local and same-imported scalar-tree UDT arrays with fixture-backed
   history, rollback, `varip`, and `for...in` behavior, plus same-local UDT
   array returns from local UDFs and user methods through direct, alias, copy,
-  constructor, nested-call, and final-control-flow paths with per-call identity.
+  constructor, nested-call, and final-control-flow paths with per-call identity,
+  and local UDF/typed-method parameter iteration with call-local value identity
+  for statement loops and final scalar, UDT-element, or rebuilt UDT-array
+  results.
 
 Remaining internal work:
 
@@ -288,8 +291,7 @@ Remaining internal work:
 - UDT array behavior beyond the same-local and same-imported scalar-tree
   subsets, including imported UDF/method array returns until imported metadata
   spans are source-aware, tuple-contained UDT arrays, and direct call-result
-  array method chaining, plus in-callee `for...in` over generic UDT-array
-  parameters;
+  array method chaining;
 - generic or bare `array` declarations beyond current fixture-backed element
   kinds;
 - `for...in` iteration beyond the fixture-backed array, matrix-row, UDT-array,

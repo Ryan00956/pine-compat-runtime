@@ -298,6 +298,11 @@ const IMPORTED_UDT_ARRAY_CALL_RETURN_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/libraries/import_udt_array_return_boundary_lib.pine",
 ];
 
+const LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/user_type_array_scalar_tree.pine",
+    "tests/fixtures/sema/supported_user_type_array_param_for_in.pine",
+];
+
 pub(super) fn validate_entry(
     line_number: usize,
     feature: &str,
@@ -325,6 +330,7 @@ pub(super) fn validate_entry(
     validate_udt_array_control_flow_fixture_paths(line_number, feature, fixtures)?;
     validate_local_udt_array_call_return_fixture_paths(line_number, feature, fixtures)?;
     validate_imported_udt_array_call_return_boundary_fixture_paths(line_number, feature, fixtures)?;
+    validate_local_udt_array_param_for_in_fixture_paths(line_number, feature, fixtures)?;
     validate_array_binary_search_fixture_pairs(line_number, feature, fixtures)?;
     validate_map_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_matrix_unsupported_boundary_fixture_paths(line_number, feature, fixtures)?;
@@ -419,6 +425,36 @@ fn validate_imported_udt_array_call_return_boundary_fixture_paths(
         if !fixtures.contains(fixture) {
             return Err(format!(
                 "line {line_number}: `{feature}` must reference `{fixture}` while imported UDF/user-method UDT array returns remain unsupported"
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+fn validate_local_udt_array_param_for_in_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if !matches!(
+        feature,
+        "for"
+            | "array.from"
+            | "array.*"
+            | "expression-body functions"
+            | "multi-statement functions"
+            | "typed declarations"
+            | "user-defined types"
+            | "user-defined methods"
+    ) {
+        return Ok(());
+    }
+
+    for fixture in LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES {
+        if !fixtures.contains(fixture) {
+            return Err(format!(
+                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed local UDF/typed-method for-in over UDT-array parameters"
             ));
         }
     }
@@ -872,11 +908,12 @@ mod tests {
     use super::{
         FOR_IN_BOUNDARY_FIXTURES, IMPORTED_UDT_ARRAY_CALL_RETURN_BOUNDARY_FIXTURES,
         IMPORTED_UDT_BOUNDARY_FIXTURES, LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES,
-        MATRIX_UNSUPPORTED_BOUNDARY_FIXTURES, SWITCH_STATEMENT_BLOCK_BOUNDARY_FIXTURES,
-        UDT_ARRAY_CONTROL_FLOW_FIXTURES, UDT_VARIP_BOUNDARY_FIXTURES,
-        WHILE_EXPRESSION_BOUNDARY_FIXTURES,
+        LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES, MATRIX_UNSUPPORTED_BOUNDARY_FIXTURES,
+        SWITCH_STATEMENT_BLOCK_BOUNDARY_FIXTURES, UDT_ARRAY_CONTROL_FLOW_FIXTURES,
+        UDT_VARIP_BOUNDARY_FIXTURES, WHILE_EXPRESSION_BOUNDARY_FIXTURES,
         validate_imported_udt_array_call_return_boundary_fixture_paths,
         validate_local_udt_array_call_return_fixture_paths,
+        validate_local_udt_array_param_for_in_fixture_paths,
         validate_udt_array_control_flow_fixture_paths,
     };
 
@@ -1058,6 +1095,16 @@ mod tests {
     }
 
     #[test]
+    fn rejects_udt_array_param_for_in_rows_without_current_fixture_set() {
+        let fixtures = &LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES
+            [..LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES.len() - 1];
+        let error = validate_local_udt_array_param_for_in_fixture_paths(1, "for", fixtures)
+            .expect_err("missing UDT-array parameter for-in fixture should fail");
+
+        assert!(error.contains("tests/fixtures/sema/supported_user_type_array_param_for_in.pine"));
+    }
+
+    #[test]
     fn rejects_typed_declarations_without_collection_boundary_fixtures() {
         let mut fixtures = vec![
             "tests/fixtures/runtime/scalar_typed_declarations.pine",
@@ -1092,6 +1139,7 @@ mod tests {
                 .iter()
                 .copied(),
         );
+        fixtures.extend(LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES.iter().copied());
         let tsv = format!(
             "feature\tstatus\tnotes\tfixtures\ntyped declarations\tpartial\tbare array, bare map, non-scalar map templates, bare matrix, non-float matrix, and other typed declarations remain unsupported\t{}\n",
             fixtures.join(";")
@@ -1112,6 +1160,7 @@ mod tests {
                 .copied()
                 .filter(|fixture| *fixture != missing),
         );
+        fixtures.extend(LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES.iter().copied());
 
         let tsv = format!(
             "feature\tstatus\tnotes\tfixtures\nfor\tpartial\tstatement for...in over supported arrays and expression-form scalar-array, drawing-id-array, chart.point-array, UDT-array, and matrix-row for...in including optional index locals are fixture-backed\t{}\n",

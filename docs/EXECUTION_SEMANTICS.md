@@ -610,6 +610,14 @@ or non-scalar-tree UDT arrays, expression-form `for...in` beyond the
 scalar-array, drawing-id-array, chart.point-array, same-local scalar-tree
 UDT-array, matrix-row, and scalar-map subset, non-array/non-matrix/non-map
 iterables, and other non-scalar arrays remain outside the current subset.
+When the iterable is a same-local scalar-tree UDT-array parameter of a local
+UDF or typed local user method, lowering binds the value loop local with the
+element identity resolved for that call. Value-only and index/value statement
+loops, block-local aliases, and final expression-form loops may return a field
+or other scalar result, the UDT element itself, or a same-identity UDT array
+rebuilt from that element. Interleaved A-to-B-to-A UDF calls and named
+typed-method arguments retain independent field layouts, returned-element
+identities, and rebuilt-array identities.
 Ordinary `var` scalar arrays roll back
 loop-body mutation during repeated forming realtime updates, while scalar
 typed-array `varip` iteration preserves carried intrabar loop-body mutation
@@ -777,8 +785,10 @@ so interleaved calls over field-order variants A, B, then A read the correct
 fields on every result. Imported UDF/method UDT array returns remain deferred
 until imported return metadata spans are source-aware. Tuple-contained UDT
 arrays and direct call-result array method chains remain unsupported boundaries.
-Caller-side `for...in` may consume a returned array, but iterating a generic
-UDT-array parameter inside the UDF remains a separate lowering boundary.
+Both caller-side `for...in` over returned arrays and in-callee `for...in` over
+generic same-local scalar-tree UDT-array parameters preserve concrete identity,
+including final expression results that return the loop element itself or use
+it to rebuild a same-identity UDT array.
 Scalar-field imported UDT `varip` declarations may persist the same imported
 identity by value across forming updates.
 Local/imported structural lookalikes are distinct assignment identities;

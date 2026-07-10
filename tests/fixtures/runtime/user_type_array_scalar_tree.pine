@@ -57,6 +57,63 @@ method copy(ReturnAnchor self, array<First> values) => values.copy()
 
 method returnStatic(First self, array<First> values) => return_nested(values)
 
+sum_udt_values(values) =>
+    float total = 0.0
+    for item in values
+        total := total + item.shared
+    total
+
+sum_indexed_udt_values(values) =>
+    float total = 0.0
+    for index, item in values
+        total := total + index + item.shared
+    total
+
+sum_aliased_udt_values(values) =>
+    source = values
+    float total = 0.0
+    for item in source
+        total := total + item.shared
+    total
+
+sum_nested_udt_values(values) =>
+    float total = 0.0
+    for item in return_identity(values)
+        total := total + item.shared
+    total
+
+last_indexed_udt_value(values) =>
+    for index, item in values
+        item.shared + index
+
+last_udt_value(values) =>
+    for item in values
+        item
+
+rebuild_last_udt_array(values) =>
+    for item in values
+        array.from(item)
+
+method sumFirstIndexed(ReturnAnchor self, array<First> values) =>
+    float total = 0.0
+    for index, item in values
+        total := total + index + item.shared
+    total
+
+method sumSecondValues(ReturnAnchor self, Second[] values) =>
+    float total = 0.0
+    for item in values
+        total := total + item.shared
+    total
+
+method lastFirstIndexed(ReturnAnchor self, array<First> values) =>
+    for index, item in values
+        item.shared + index
+
+method lastSecondValue(ReturnAnchor self, Second[] values) =>
+    for item in values
+        item
+
 read_flow_shared(values) =>
     selected = bar_index >= 0 ? array.copy(values) : na
     item = array.first(selected)
@@ -220,3 +277,38 @@ return_static_receiver = First.new(120.0, 1200.0)
 First = Second.new(1300.0, 130.0)
 return_static_result = First.returnStatic(return_static_receiver, return_first_source)
 plot(array.join(return_static_result, "|") == "First(60, 600)" ? 1 : 0)
+
+for_in_first_values = array.from(First.new(10.0, 100.0), First.new(11.0, 110.0))
+for_in_second_values = array.from(Second.new(200.0, 20.0), Second.new(210.0, 21.0))
+plot(sum_udt_values(for_in_first_values))
+plot(sum_udt_values(for_in_second_values))
+plot(sum_udt_values(for_in_first_values))
+plot(sum_indexed_udt_values(for_in_first_values))
+plot(sum_indexed_udt_values(for_in_second_values))
+plot(sum_indexed_udt_values(for_in_first_values))
+plot(sum_aliased_udt_values(for_in_first_values))
+plot(sum_aliased_udt_values(for_in_second_values))
+plot(sum_aliased_udt_values(for_in_first_values))
+plot(sum_nested_udt_values(for_in_first_values))
+plot(sum_nested_udt_values(for_in_second_values))
+plot(sum_nested_udt_values(for_in_first_values))
+plot(last_indexed_udt_value(for_in_first_values))
+plot(last_indexed_udt_value(for_in_second_values))
+plot(last_indexed_udt_value(for_in_first_values))
+for_in_last_first = last_udt_value(for_in_first_values)
+for_in_last_second = last_udt_value(for_in_second_values)
+for_in_last_first_again = last_udt_value(for_in_first_values)
+plot(for_in_last_first.shared)
+plot(for_in_last_second.shared)
+plot(for_in_last_first_again.shared)
+for_in_rebuilt_first = rebuild_last_udt_array(for_in_first_values)
+for_in_rebuilt_second = rebuild_last_udt_array(for_in_second_values)
+for_in_rebuilt_first_again = rebuild_last_udt_array(for_in_first_values)
+plot(array.join(for_in_rebuilt_first, "|") == "First(11, 110)" ? 1 : 0)
+plot(array.join(for_in_rebuilt_second, "|") == "Second(210, 21)" ? 1 : 0)
+plot(array.join(for_in_rebuilt_first_again, "|") == "First(11, 110)" ? 1 : 0)
+plot(return_anchor.sumFirstIndexed(for_in_first_values))
+plot(return_anchor.sumSecondValues(values=for_in_second_values))
+plot(return_anchor.lastFirstIndexed(for_in_first_values))
+for_in_method_last_second = return_anchor.lastSecondValue(values=for_in_second_values)
+plot(for_in_method_last_second.shared)

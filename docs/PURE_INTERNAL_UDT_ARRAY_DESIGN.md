@@ -61,8 +61,12 @@ retain the correct A-to-B-to-A element layout. Imported UDF and method UDT
 array returns remain deferred because imported return metadata spans are not
 yet source-aware. Tuple-contained UDT arrays and array-method chaining directly
 from a function or method call result remain deferred as well.
-Caller-side `for...in` over a returned array is covered; `for...in` over a
-generic UDT-array parameter inside the callee remains a separate lowering slice.
+Local UDFs and typed local user methods may also iterate a generic same-local
+scalar-tree UDT-array parameter. Value-only and index/value statement loops,
+block-local array aliases, and final expression-form loops preserve the
+call-local element identity for field/scalar results, a returned UDT element,
+or a same-identity UDT array rebuilt from that element, including named method
+arguments and interleaved A-to-B-to-A calls.
 
 Current evidence:
 
@@ -186,6 +190,14 @@ Current evidence:
   the accepted return shapes fixture-backed, while
   `tests/fixtures/sema/unsupported_user_type_array_udf_method_return_identities.pine`
   rejects mixed return branches and incompatible typed destinations.
+- `tests/fixtures/runtime/user_type_array_scalar_tree.pine` and
+  `tests/fixtures/sema/supported_user_type_array_param_for_in.pine` cover
+  value-only and index/value statement `for...in`, block-local array aliases,
+  final expression-form scalar/field results, final UDT-element results, and
+  same-identity UDT arrays rebuilt from the loop element inside local UDFs,
+  plus typed methods and named method arguments. Repeated `First`, `Second`,
+  then `First` calls lock the fresh loop-value identity and returned element or
+  array layout to each call.
 - `tests/fixtures/runtime/array_sort_udt_field.pine` covers `array.sort` and
   `sort()` over same-local scalar-tree UDT arrays by root `int`, `float`, or
   `string` `sort_field`. `tests/fixtures/sema/unsupported_array_sort_udt.pine`,
@@ -573,6 +585,11 @@ Initial policy:
 - returned identities are resolved from the current call arguments rather than
   shared function-body spans, including interleaved A-to-B-to-A calls across
   same-shaped UDTs with different field order;
+- local UDFs and typed local user methods may use value-only or index/value
+  `for...in` over same-local scalar-tree UDT-array parameters, including
+  block-local aliases and final expression results that return a field/scalar
+  value, the UDT element itself, or a same-identity UDT array rebuilt from that
+  element; loop-value identity remains call-local;
 - mutating UDT arrays inside user-defined functions stays unsupported in the
   first positive slice;
 - mutating fields inside methods stays unsupported, including fields on UDT
@@ -633,6 +650,10 @@ Recommended future slices:
     control-flow paths with call-specific A-to-B-to-A lowering. Done. Imported
     call returns, tuple-contained UDT arrays, and direct call-result array
     method chaining remain later slices.
+12. Local UDF and typed-method `for...in` over same-local scalar-tree UDT-array
+    parameters preserves fresh value-loop identity for value-only/index-value
+    statements and final scalar/field, UDT-element, or element-rebuilt UDT-array
+    results, including aliases, named arguments, and A-to-B-to-A calls. Done.
 
 ## Completion Gate For Future Positive Support
 
