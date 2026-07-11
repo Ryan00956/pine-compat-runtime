@@ -13,6 +13,14 @@ export type Second
 
 identity(values) => values
 
+builtinReaders(First value, array<First> values) =>
+    new_item = array.new<First>(1, value).first()
+    from_item = array.from(value).get(0)
+    copy_item = array.copy(values).copy().last()
+    slice_item = array.slice(id=values, index_from=0, index_to=1).first()
+    sorted_index = array.sort_indices(values, order.ascending, "shared").last()
+    new_item.shared + from_item.shared + copy_item.shared + slice_item.shared + sorted_index
+
 copyValues(values) => array.copy(values)
 
 tupleIdentity(values) => [values, values.copy()]
@@ -26,6 +34,8 @@ export localSize(values) => identity(values).size()
 export localLast(values) => identity(values).copy().last()
 
 export localScalarSize(First value) => identity(value).size()
+
+export localBuiltinReaders(First value, array<First> values) => builtinReaders(value, values)
 
 export scalar(First value) => value
 

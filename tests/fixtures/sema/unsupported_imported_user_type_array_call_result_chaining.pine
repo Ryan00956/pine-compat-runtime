@@ -3,7 +3,12 @@ import user/udt_array_returns/1 as lib
 indicator("Unsupported imported UDT array call result chaining")
 
 values = array.from(lib.First.new(10.0, 100.0))
+second_values = array.from(lib.Second.new(200.0, 20.0))
 anchor = lib.First.new(20.0, 200.0)
 
 udf_pop = lib.direct(values).pop()
 method_slice = anchor.retainFirst(values).slice(0, 1)
+builtin_copy_pop = array.copy(values).pop()
+builtin_slice_again = array.slice(values, 0, 1).slice(0, 1)
+builtin_concat_mixed = array.concat(values, second_values).copy()
+builtin_sort_missing_field = array.sort_indices(values).size()

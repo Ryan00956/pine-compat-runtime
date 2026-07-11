@@ -1,4 +1,7 @@
 use super::*;
+use std::collections::BTreeSet;
+
+use pine_builtins::{Accepts, PHASE_1_BUILTINS, ReturnSpec};
 use pine_ir::{PineType, Qualifier, ValueKind};
 
 #[test]
@@ -24,6 +27,77 @@ fn reports_supported_phase_1_calls() {
             .iter()
             .any(|feature| feature.feature == "ta.sma")
     );
+}
+
+#[test]
+fn builtin_array_result_producer_parser_allowlist_matches_registry() {
+    let registered = PHASE_1_BUILTINS
+        .iter()
+        .filter(|signature| signature.name.starts_with("array."))
+        .filter(|signature| match signature.returns {
+            ReturnSpec::Fixed(pine_type) => crate::types::is_array_kind(pine_type.kind),
+            ReturnSpec::ArrayFromArgs => true,
+            ReturnSpec::SameAsArg(index) => signature.params.get(index).is_some_and(|param| {
+                matches!(
+                    param.accepts,
+                    Accepts::Array | Accepts::NumericArray | Accepts::ScalarArray
+                )
+            }),
+            _ => false,
+        })
+        .map(|signature| signature.name)
+        .collect::<BTreeSet<_>>();
+    let expected = BTreeSet::from([
+        "array.abs",
+        "array.concat",
+        "array.copy",
+        "array.from",
+        "array.new<chart.point>",
+        "array.new_bool",
+        "array.new_box",
+        "array.new_color",
+        "array.new_float",
+        "array.new_int",
+        "array.new_label",
+        "array.new_line",
+        "array.new_linefill",
+        "array.new_polyline",
+        "array.new_string",
+        "array.new_table",
+        "array.slice",
+        "array.sort_indices",
+        "array.standardize",
+    ]);
+    assert_eq!(registered, expected);
+
+    for name in &registered {
+        let source = SourceFile::new("test.pine", format!("value = {name}().size()\n"));
+        let parsed = pine_syntax::parse_source(&source);
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "registered array producer `{name}` was parser-gated: {:?}",
+            parsed.diagnostics
+        );
+    }
+
+    for signature in PHASE_1_BUILTINS.iter().filter(|signature| {
+        signature.name.starts_with("array.") && !registered.contains(signature.name)
+    }) {
+        let source = SourceFile::new(
+            "test.pine",
+            format!("value = {}().size()\n", signature.name),
+        );
+        let parsed = pine_syntax::parse_source(&source);
+        assert!(
+            parsed
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR"),
+            "non-producer array builtin `{}` unexpectedly admitted a call-result method: {:?}",
+            signature.name,
+            parsed.diagnostics
+        );
+    }
 }
 
 #[test]

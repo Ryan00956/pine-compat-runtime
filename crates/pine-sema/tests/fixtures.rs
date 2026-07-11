@@ -6714,6 +6714,43 @@ fn reports_unsupported_local_user_type_array_call_result_chaining_fixture() {
 }
 
 #[test]
+fn accepts_supported_builtin_array_call_result_reads_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_builtin_array_call_result_reads.pine");
+}
+
+#[test]
+fn reports_unsupported_builtin_array_call_result_reads_fixture() {
+    let path = "tests/fixtures/sema/unsupported_builtin_array_call_result_reads.pine";
+    assert_diagnostic_messages(
+        path,
+        &[
+            "`array.get` argument `index` expects simple integer-compatible, got const string",
+            "`array.pop` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.transform` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.push` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.slice` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.clear` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.from` expects one scalar-tree UDT identity, got mixed UDT identities",
+            "`array.concat` argument `id2` expects UDT array `First`, got `Second`",
+            "`array.new<Nested>` does not support UDT arrays with non-scalar fields",
+            "`array.size` is not supported: direct UDT-array call-result methods require a known same-local or same-imported element identity",
+            "`array.new<Missing>` requires a local or imported scalar-tree UDT",
+            "`array.size` is not supported: direct UDT-array call-result methods require a known same-local or same-imported element identity",
+            "`array.from` expects one supported array element kind, got const na and const na",
+            "`array.abs` argument `id` expects numeric array, got simple array<UDT>",
+            "`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`",
+            "`array.size` is not supported: direct UDT-array call-result methods require one concrete same-local or same-imported element identity",
+            "`array.standardize` argument `id` expects numeric array, got simple array<string>",
+            "`array.sort_indices` requires `sort_field` for UDT arrays",
+            "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
+            "`array.slice` argument `index_from` expects simple integer-compatible, got const string",
+            "`function_side_effect` is not supported: collection mutation via `array.concat` is not supported inside user-defined functions",
+        ],
+    );
+    assert_diagnostic_count(path, 21);
+}
+
+#[test]
 fn reports_unsupported_user_type_array_control_flow_identity_fixture() {
     let path = "tests/fixtures/sema/unsupported_user_type_array_control_flow_identity.pine";
     assert_diagnostic_messages(
@@ -12974,9 +13011,14 @@ fn reports_unsupported_imported_user_type_array_call_result_chaining_fixture() {
         &[
             "`array.pop` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
             "`array.slice` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.pop` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.slice` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.concat` argument `id2` expects UDT array `lib.First`, got `lib.Second`",
+            "`array.sort_indices` requires `sort_field` for UDT arrays",
+            "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
         ],
     );
-    assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 2);
+    assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 7);
 }
 
 #[test]

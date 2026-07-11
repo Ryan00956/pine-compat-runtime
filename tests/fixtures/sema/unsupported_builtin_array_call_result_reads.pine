@@ -1,0 +1,37 @@
+//@version=6
+indicator("Unsupported builtin array call-result reads")
+
+type First
+    float shared
+    float other
+
+type Second
+    float other
+    float shared
+
+type Nested
+    label id
+
+badConcat(left, right) => array.concat(left, right).size()
+
+first_values = array.from(First.new(10.0, 100.0))
+second_values = array.from(Second.new(200.0, 20.0))
+
+copy_bad_get = array.copy(first_values).get("bad")
+copy_pop = array.copy(first_values).pop()
+from_transform = array.from(First.new(11.0, 110.0)).transform()
+new_push = array.new<First>().push(First.new(12.0, 120.0))
+slice_again = array.slice(first_values, 0, 1).slice(0, 1)
+concat_clear = array.concat(first_values, array.from(First.new(13.0, 130.0))).clear()
+
+mixed_from = array.from(First.new(14.0, 140.0), Second.new(150.0, 15.0)).copy()
+mixed_concat = array.concat(first_values, second_values).copy()
+non_scalar_new = array.new<Nested>().size()
+unknown_new = array.new<Missing>().size()
+all_na_from = array.from(na, na).size()
+udt_abs = array.abs(first_values).size()
+string_standardize = array.standardize(array.from("a", "b")).size()
+udt_sort_missing_field = array.sort_indices(first_values).size()
+bad_slice_index = array.slice(array.from(1, 2), "bad", 1).size()
+
+concat_inside_udf = badConcat(array.from(1), array.from(2))

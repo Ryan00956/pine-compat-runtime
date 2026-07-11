@@ -548,7 +548,7 @@ impl Parser {
         let Some(prefix) = call_result_receiver_prefix(&receiver) else {
             self.error_here(
                 "E_PARSE_EXPR",
-                "method calls on call-result receivers require an unqualified call or qualified user-defined result receiver",
+                "method calls on call-result receivers require an unqualified call, qualified user-defined result, or supported built-in array producer receiver",
             );
             return None;
         };
@@ -766,7 +766,19 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
         ExprKind::Identifier(name) if is_plain_identifier(name) => {
             Some(UNQUALIFIED_CALL_RESULT_PREFIX.to_owned())
         }
+        ExprKind::Identifier(name) if is_builtin_array_result_callee(name) => {
+            Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
+        }
         ExprKind::QualifiedName(parts) => match parts.as_slice() {
+            [prefix, method] if prefix == BUILTIN_ARRAY_CALL_RESULT_PREFIX && method == "copy" => {
+                Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
+            }
+            [prefix, _method] if prefix == BUILTIN_ARRAY_CALL_RESULT_PREFIX => None,
+            [namespace, member]
+                if namespace == "array" && is_builtin_array_result_member(member) =>
+            {
+                Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
+            }
             [alias, _method] if !is_builtin_namespace(alias) => Some(alias.clone()),
             [alias, _type_name, constructor]
                 if constructor == "new" && !is_builtin_namespace(alias) =>
@@ -780,6 +792,7 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
 }
 
 const UNQUALIFIED_CALL_RESULT_PREFIX: &str = "$call_result";
+const BUILTIN_ARRAY_CALL_RESULT_PREFIX: &str = "$builtin_array_result";
 
 fn is_plain_identifier(name: &str) -> bool {
     let mut chars = name.chars();
@@ -787,6 +800,37 @@ fn is_plain_identifier(name: &str) -> bool {
         .next()
         .is_some_and(|ch| ch == '_' || ch.is_ascii_alphabetic())
         && chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric())
+}
+
+fn is_builtin_array_result_callee(name: &str) -> bool {
+    name.strip_prefix("array.").is_some_and(|member| {
+        is_builtin_array_result_member(member)
+            || (member.starts_with("new<") && member.ends_with('>'))
+    })
+}
+
+fn is_builtin_array_result_member(member: &str) -> bool {
+    matches!(
+        member,
+        "new_float"
+            | "new_int"
+            | "new_bool"
+            | "new_string"
+            | "new_color"
+            | "new_line"
+            | "new_linefill"
+            | "new_polyline"
+            | "new_label"
+            | "new_box"
+            | "new_table"
+            | "from"
+            | "copy"
+            | "slice"
+            | "concat"
+            | "abs"
+            | "standardize"
+            | "sort_indices"
+    )
 }
 
 fn is_builtin_namespace(name: &str) -> bool {

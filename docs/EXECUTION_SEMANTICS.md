@@ -800,23 +800,51 @@ identity is rejected before HIR emission. Qualified user-defined UDF/method
 results and unqualified plain local UDF results support direct `.size()`,
 `.get(index)`, `.first()`, `.last()`, and `.copy()` calls when the result is any
 currently supported array kind, including nested copy/read chains. The parser
-rewrites the unqualified form to the impossible internal prefix `$call_result`,
-and only does so for a plain lexical callee. Qualified user-defined forms retain
-their source alias/type prefix. Built-in-qualified and template call results
-therefore remain parser boundaries instead of being confused with local UDFs
-named after a built-in namespace. For UDT arrays, analysis still requires a
-concrete same-local or same-imported scalar-tree identity; `get` preserves that
-element identity and the existing named/`na`/negative-index and bounds
-behavior, while `size` and `last` retain the existing empty and typed-`na`
-semantics.
-The postfix receiver is lowered as an array helper rather than as a same-named
-local method or imported function, and `copy` remains independent from the
-source array. An unqualified local UDF result carrying a concrete local or
-imported scalar UDT identity may instead invoke an existing pure user method.
-Mixed scalar-return identities, non-scalar UDT-array returns,
-non-array/non-UDT results, unknown/`na` results without a concrete supported
-type or identity, array helpers outside the read-only set, and mutation through
-unsupported UDF/method side-effect contexts remain unsupported boundaries.
+rewrites the unqualified form to the impossible internal prefix `$call_result`
+only for a plain lexical callee; qualified user-defined forms retain their
+source alias/type prefix.
+
+Built-in array producers have one separate, closed receiver path. Its exact
+admitted producer set is `array.new_float`, `array.new_int`, `array.new_bool`,
+`array.new_string`, `array.new_color`, `array.new_line`, `array.new_linefill`,
+`array.new_polyline`, `array.new_label`, `array.new_box`, `array.new_table`,
+`array.new<chart.point>`, supported `array.new<UDT>`, `array.from`,
+`array.copy`, `array.slice`, `array.concat`, `array.abs`,
+`array.standardize`, and `array.sort_indices`.
+Existing supported `array.new<T>` scalar, drawing-id, `chart.point`, and
+same-local/same-imported scalar-tree UDT source templates reach that path
+through their canonical constructor or checked UDT-template form. The parser
+marks the receiver with `$builtin_array_result`; only `.size()`, `.get(index)`,
+`.first()`, `.last()`, and `.copy()` are admitted after it. The lexical prefix
+`array` is reserved for built-in producer recognition, so a user or import
+qualifier named `array` cannot use this qualified call-result path.
+Only `.copy()` returns an array that may continue through another allowed
+read/copy step. The terminal `.size()`, `.get()`, `.first()`, and `.last()`
+results cannot continue into a user method or any other call-result method,
+including a method on a returned scalar UDT element.
+
+Analysis then fails closed unless the producer arguments resolve to the exact
+supported array kind and, for UDT arrays, one concrete same-local or
+same-imported scalar-tree identity. `get` preserves that element identity and
+the existing named/`na`/negative-index and bounds behavior; `size` and `last`
+retain the existing empty and typed-`na` semantics. The postfix receiver is
+lowered as an array helper rather than as a same-named local method or imported
+function, and `copy` allocates independently from the source array. An
+unqualified local UDF result carrying a concrete local or imported scalar UDT
+identity may instead invoke an existing pure user method.
+
+The allowed postfix helper does not change the producer's own semantics.
+`array.slice(...)` returns a live shallow window into its parent, so direct
+postfix reads observe that window; `array.slice(...).copy()` snapshots its
+current values into an independent array. `array.concat(left, right)` appends
+to `left` in place and returns the first array id. A following postfix read is
+itself non-mutating, but the concat call is still a collection side effect and
+remains rejected inside UDFs. Mixed scalar-return identities, non-scalar
+UDT-array returns, unsupported or unknown templates, non-array/non-UDT results,
+unknown/`na` results without a concrete supported type or identity, other
+`array.*` producer/member calls, other built-in namespaces and templates,
+postfix helpers outside the five-item read/copy set, and postfix mutation remain
+unsupported boundaries.
 Both caller-side `for...in` over returned arrays and in-callee `for...in` over
 generic same-local scalar-tree UDT-array parameters preserve concrete identity,
 including final expression results that return the loop element itself or use
@@ -860,13 +888,15 @@ construct and return the same imported UDT identity for caller-side field reads.
 For local methods, a typed same-local scalar-tree UDT array parameter may be
 returned directly or through block aliases, copies, fresh constructors, nested
 local calls, and final control flow with call-specific identity. Qualified
-user-defined results returning any supported array kind and unqualified plain
-local UDF results support direct
-`.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`. Concrete
+user-defined results returning any supported array kind, unqualified plain
+local UDF results, and the exact built-in array producer allowlist support
+direct `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`. Concrete
 same-local/same-imported scalar-tree identity remains mandatory for UDT-array
 results, and concrete scalar UDT results from unqualified local UDFs may call
-the existing pure method subset. Built-in-qualified/template call results and
-other array methods remain parser/semantic boundaries.
+the existing pure method subset. Built-in producer element readers are
+terminal and do not open that method path; only producer `.copy()` may continue
+with another allowed array read/copy. Other built-in-qualified/template call
+results and other array methods remain parser/semantic boundaries.
 Method side effects, recursive methods, unsupported parameter families,
 mismatched UDT parameter identity, unknown receivers, and alias-qualified
 imported method receiver type mismatches are rejected during semantic analysis.

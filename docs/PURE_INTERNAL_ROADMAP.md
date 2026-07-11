@@ -291,13 +291,33 @@ Current baseline:
   Qualified user-defined UDF/method results and unqualified plain local UDF
   results returning any currently supported array kind support direct
   `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()` and nested copy/read
-  chains. UDT arrays still require one concrete same-local or same-imported
-  scalar-tree identity and preserve A-to-B-to-A identity, imported dual-alias
-  isolation, named-index binding, empty/typed-`na` behavior, and copy
-  independence. Unqualified local UDF results carrying a concrete scalar UDT
-  identity may invoke the existing pure user-method subset. The parser-only
-  `$call_result` prefix is limited to plain lexical callees; built-in-qualified
-  and template call-result receivers remain gated.
+  chains. The completed built-in array producer slice admits the same five
+  postfix helpers for the exact admitted producer set `array.new_float`,
+  `array.new_int`, `array.new_bool`, `array.new_string`, `array.new_color`,
+  `array.new_line`, `array.new_linefill`, `array.new_polyline`,
+  `array.new_label`, `array.new_box`, `array.new_table`,
+  `array.new<chart.point>`, supported `array.new<UDT>`, `array.from`,
+  `array.copy`, `array.slice`, `array.concat`, `array.abs`,
+  `array.standardize`, and `array.sort_indices`,
+  plus the existing supported scalar/drawing-id/`chart.point` and concrete
+  scalar-tree UDT `array.new<T>` source forms through their canonical or
+  checked template paths. The parser uses `$builtin_array_result` for this
+  closed path. Only `.copy()` can yield another array receiver for a nested
+  allowed read/copy; `.size()`/`.get()`/`.first()`/`.last()` are terminal and
+  cannot continue into a user or other call-result method.
+  UDT arrays still require one concrete same-local or same-imported scalar-tree
+  identity and preserve A-to-B-to-A identity, imported dual-alias isolation,
+  named-index binding, empty/typed-`na` behavior, and copy independence.
+  Unqualified local UDF results carrying a concrete scalar UDT identity may
+  invoke the existing pure user-method subset, but built-in producer element
+  reads do not open that composition. The lexical `array` prefix is reserved
+  for built-in producer recognition; a user/import qualifier with that spelling
+  is not a supported qualified call-result path. Other namespaces, unsupported
+  templates, non-producer `array.*` members, and postfix mutation fail closed.
+  `array.slice` retains its live parent-window semantics while postfix `copy`
+  snapshots the current window independently. `array.concat` still mutates and
+  returns its first array; a following reader is non-mutating but does not make
+  concat legal inside a UDF.
 
 Remaining internal work:
 
@@ -311,10 +331,12 @@ Remaining internal work:
   returns, conflicting identities within one tuple slot, direct helpers beyond
   the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` set, and
   mutation through unsupported UDF/method side-effect contexts;
-- call-result receivers outside the qualified user-defined/unqualified plain
-  local-UDF subset, including built-in-qualified/template calls,
-  non-array/non-UDT results, unknown/`na` results without a concrete supported
-  type or identity, and array mutation;
+- call-result receivers outside the qualified user-defined, unqualified plain
+  local-UDF, and exact built-in array producer subsets, including other
+  built-in namespaces/templates, non-producer `array.*` calls, unsupported
+  `array.new<T>` templates, non-array/non-UDT results, unknown/`na` results
+  without a concrete supported type or identity, terminal producer readers
+  followed by another method, and array mutation;
 - generic or bare `array` declarations beyond current fixture-backed element
   kinds;
 - `for...in` iteration beyond the fixture-backed array, matrix-row, UDT-array,

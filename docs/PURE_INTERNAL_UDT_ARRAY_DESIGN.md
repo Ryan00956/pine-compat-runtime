@@ -77,17 +77,27 @@ results returning any currently supported array kind support direct `.size()`,
 `.get(index)`, `.first()`, `.last()`, and `.copy()`, including nested copy/read
 chains. The unqualified form uses the impossible parser-only `$call_result`
 prefix and is admitted only for a plain lexical callee; qualified user-defined
-forms retain their alias/type prefix. Built-in-qualified results such as
-`array.copy(values).first()` and template results such as
-`array.new<int>(...).size()` remain parser boundaries. UDT-array results require
-one concrete same-local or same-imported scalar-tree identity. Named/`na`/
-negative `get` indexes, precise bounds errors, empty and typed-`na` results,
-A-to-B-to-A calls, and imported dual aliases are fixture-backed. Unqualified
-local UDF results carrying a concrete local or imported scalar UDT identity may
-also invoke existing pure user methods. Mixed scalar-return identities,
-non-scalar UDT-array returns, non-array/non-UDT results, unknown/`na` results
-without a concrete supported type or identity, other direct array helpers, and
-UDF/method mutation side effects remain rejected.
+forms retain their alias/type prefix. The completed built-in producer slice in
+historical item 19 adds `$builtin_array_result` for its exact `array.*`
+producer allowlist and exposes only the same five postfix helpers. Only
+`.copy()` may return another array receiver for a nested allowed read/copy;
+`.size()`, `.get()`, `.first()`, and `.last()` are terminal and cannot continue
+into a user method or other call-result method, including a method on a UDT
+element. UDT-array results require one concrete same-local or same-imported
+scalar-tree identity. Named/`na`/negative `get` indexes, precise bounds errors,
+empty and typed-`na` results, A-to-B-to-A calls, and imported dual aliases are
+fixture-backed. Unqualified local UDF results carrying a concrete local or
+imported scalar UDT identity may also invoke existing pure user methods; the
+built-in producer path does not gain that scalar-method composition. The
+lexical prefix `array` is reserved for built-in recognition, so a user/import
+qualifier named `array` is not a supported qualified call-result receiver.
+Other namespaces and templates, unsupported `array.new<T>` element families,
+non-producer `array.*` calls, mixed or non-scalar UDT-array returns,
+non-array/non-UDT or unresolved results, other postfix helpers, and postfix
+mutation remain fail-closed. `array.slice` remains a live parent view, while a
+postfix `.copy()` independently captures its current values. `array.concat`
+still mutates and returns its first array id; a following reader is itself
+non-mutating, but concat remains rejected inside UDFs.
 Local UDFs and typed local user methods may also iterate a generic same-local
 scalar-tree UDT-array parameter. Value-only and index/value statement loops,
 block-local array aliases, and final expression-form loops preserve the
@@ -677,12 +687,15 @@ Initial policy:
   supported array kind support direct
   `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()` chaining. Concrete
   scalar UDT results from unqualified local UDFs may invoke existing pure user
-  methods. Mixed identities within one scalar return or tuple slot, non-scalar
-  UDT arrays, non-array/non-UDT results, unknown/`na` results without a concrete
-  supported type or identity,
-  built-in-qualified/template call receivers, mutation side effects, and other
-  direct array methods on call results remain semantic/parser/lowering
-  boundaries.
+  methods. Exact allowlisted built-in array producers support those same five
+  helpers, but only `.copy()` may continue a nested array chain and terminal
+  element reads cannot invoke UDT methods. Mixed identities within one scalar
+  return or tuple slot, non-scalar UDT arrays, non-array/non-UDT results,
+  unknown/`na` results without a concrete supported type or identity,
+  built-in-qualified/template call receivers outside the producer allowlist,
+  mutation side effects, and other direct array methods on call results remain
+  semantic/parser/lowering boundaries. In particular, concat remains rejected
+  inside UDFs even when followed by an allowed reader.
 
 ## Diagnostics
 
@@ -773,11 +786,35 @@ Recommended future slices:
     qualified user-defined results; concrete same-local/same-imported
     scalar-tree identity remains mandatory for UDT arrays. Concrete scalar UDT
     results may invoke existing pure user methods. Plain-callee validation keeps
-    local UDFs named after built-in namespaces unambiguous, while
-    built-in-qualified/template call results remain parser-gated. Mixed or
-    non-scalar UDT-array identities, non-array/non-UDT results, unknown/`na`
-    results without a concrete supported type or identity, other array helpers,
-    and call-result mutation remain rejected. Done.
+    local UDFs named after built-in namespaces unambiguous. At this historical
+    slice boundary, built-in-qualified/template call results remained
+    parser-gated. Mixed or non-scalar UDT-array identities, non-array/non-UDT
+    results, unknown/`na` results without a concrete supported type or identity,
+    other array helpers, and call-result mutation remained rejected. Done.
+19. Exact built-in array producers normalize through the separate
+    `$builtin_array_result` prefix. The exact admitted producer set is
+    `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
+    `array.new_color`, `array.new_line`, `array.new_linefill`,
+    `array.new_polyline`, `array.new_label`, `array.new_box`,
+    `array.new_table`, `array.new<chart.point>`, supported `array.new<UDT>`,
+    `array.from`, `array.copy`, `array.slice`, `array.concat`, `array.abs`,
+    `array.standardize`, and `array.sort_indices`; existing supported
+    scalar/drawing-id/`chart.point`
+    and concrete same-local/same-imported scalar-tree UDT `array.new<T>` source
+    forms use their canonical constructor or checked UDT-template path. Only
+    `.size()`, `.get(index)`, `.first()`, `.last()`, and `.copy()` may follow a
+    producer. Only `.copy()` may return another array receiver for a nested
+    allowed read/copy; the four readers are terminal and cannot invoke a user
+    method or another call-result method, including on a returned UDT element.
+    Producer arguments, supported array kind, and concrete scalar-tree UDT
+    identity are revalidated and fail closed. Other `array.*` members, other
+    namespaces/templates, unsupported UDT templates, and postfix mutation stay
+    gated. The lexical `array` prefix is reserved for built-in recognition, so
+    a user/import qualifier of that name is not a supported qualified
+    call-result path. `array.slice` keeps live-view semantics and postfix
+    `.copy()` snapshots its current window independently. `array.concat`
+    mutates and returns its first input; its postfix reader is non-mutating, but
+    concat remains rejected inside UDFs. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -809,9 +846,14 @@ unqualified plain local UDF results returning any supported array kind share
 the direct `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()` path;
 UDT-array results still require a concrete same-local/same-imported scalar-tree
 identity, and scalar UDT local-UDF results may invoke existing pure methods.
-Broader UDT element families, built-in-qualified/template call-result
-receivers, non-array/non-UDT results, unknown/`na` results without a concrete
-supported type or identity, unsupported mutation contexts, and helpers not
-listed there remain unsupported until later
+The exact built-in array producer allowlist in item 19 also shares those five
+helpers through `$builtin_array_result`, with only `.copy()` nestable and
+terminal element readers unable to invoke UDT methods. Broader UDT element
+families, built-in-qualified/template call-result receivers outside that
+allowlist, unsupported `array.new<T>` templates, non-array/non-UDT results,
+unknown/`na` results without a concrete supported type or identity, unsupported
+mutation contexts, and helpers not listed there remain unsupported until later
 fixture-backed slices implement syntax, analysis, runtime behavior, and
-conformance updates together.
+conformance updates together. The `array` lexical prefix remains reserved for
+the built-in path; slice live-view/copy independence and concat's in-place,
+UDF-rejected mutation keep their existing semantics.

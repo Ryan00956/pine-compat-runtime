@@ -291,19 +291,117 @@ fn parses_unqualified_call_result_method_receiver() {
 }
 
 #[test]
-fn rejects_builtin_qualified_call_result_method_receiver() {
+fn parses_builtin_array_result_method_receivers() {
     for source in [
-        "bad = array.copy(values).first()\n",
-        "bad = array.new<int>(2, 1).size()\n",
+        "value = array.new_float(1, 1.0).size()\n",
+        "value = array.new_int(2, 1).size()\n",
+        "value = array.new_bool(1, true).size()\n",
+        "value = array.new_string(1, \"value\").size()\n",
+        "value = array.new_color(1, color.red).size()\n",
+        "value = array.new_line().size()\n",
+        "value = array.new_linefill().size()\n",
+        "value = array.new_polyline().size()\n",
+        "value = array.new_label().size()\n",
+        "value = array.new_box().size()\n",
+        "value = array.new_table().size()\n",
+        "value = array.new<int>(2, 1).get(index=0)\n",
+        "value = array.new<chart.point>().copy()\n",
+        "value = array.new<Point>().first()\n",
+        "value = array.new<lib.Point>().last()\n",
+        "value = array.from(1, 2).size()\n",
+        "value = array.copy(values).first()\n",
+        "value = array.slice(values, 0, 1).last()\n",
+        "value = array.concat(values, more).copy()\n",
+        "value = array.abs(values).get(0)\n",
+        "value = array.standardize(values).first()\n",
+        "value = array.sort_indices(values).last()\n",
+    ] {
+        let parsed = parse(source);
+
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "{source}: {:?}",
+            parsed.diagnostics
+        );
+        let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected declaration for {source}");
+        };
+        let ExprKind::Call { callee, args } = &value.kind else {
+            panic!("expected call-result method call for {source}");
+        };
+        let ExprKind::QualifiedName(parts) = &callee.kind else {
+            panic!("expected synthetic qualified callee for {source}");
+        };
+        assert_eq!(parts[0], "$builtin_array_result", "{source}");
+        assert!(args[0].value.span.end < callee.span.start, "{source}");
+    }
+
+    let parsed = parse("value = array.copy(values).copy().last()\n");
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected outer call-result method call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::QualifiedName(vec!["$builtin_array_result".to_owned(), "last".to_owned()])
+    );
+    let ExprKind::Call {
+        callee: inner_callee,
+        ..
+    } = &args[0].value.kind
+    else {
+        panic!("expected inner call-result method call");
+    };
+    assert_eq!(
+        inner_callee.kind,
+        ExprKind::QualifiedName(vec!["$builtin_array_result".to_owned(), "copy".to_owned()])
+    );
+}
+
+#[test]
+fn rejects_methods_after_scalar_builtin_array_result_reads() {
+    for source in [
+        "bad = array.from(Point.new(1)).get(0).size()\n",
+        "bad = array.new<Point>(1, Point.new(1)).first().custom()\n",
+        "bad = array.copy(values).last().custom()\n",
+        "bad = array.new_int(1, 1).size().custom()\n",
+    ] {
+        let parsed = parse(source);
+        assert!(
+            parsed
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR"),
+            "{source}: {:?}",
+            parsed.diagnostics
+        );
+    }
+}
+
+#[test]
+fn rejects_other_builtin_call_result_method_receivers() {
+    for source in [
+        "bad = array.size(values).size()\n",
+        "bad = array.get(values, 0).size()\n",
+        "bad = array.push(values, 1).size()\n",
+        "bad = array.min(values).size()\n",
+        "bad = str.split(\"a,b\", \",\").size()\n",
+        "bad = matrix.row(values, 0).size()\n",
+        "bad = map.keys(values).size()\n",
+        "bad = matrix.new<float>(1, 1, 0).size()\n",
+        "bad = map.new<int, int>().size()\n",
         "bad = input.string(\"value\").size()\n",
         "bad = log.info(\"value\").size()\n",
     ] {
         let parsed = parse(source);
 
         assert!(parsed.diagnostics.iter().any(|diagnostic| {
-            diagnostic.code == "E_PARSE_EXPR"
+                diagnostic.code == "E_PARSE_EXPR"
                 && diagnostic.message.contains(
-                    "method calls on call-result receivers require an unqualified call or qualified user-defined result receiver",
+                    "method calls on call-result receivers require an unqualified call, qualified user-defined result, or supported built-in array producer receiver",
                 )
         }));
     }

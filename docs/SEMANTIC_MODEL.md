@@ -483,7 +483,7 @@ local/imported identity mismatches remain rejected during semantic analysis.
 ## Arrays
 
 The current array subset supports float, int, bool, string, color, label-id,
-line-id, linefill-id, box-id, table-id, and chart-point arrays:
+line-id, linefill-id, polyline-id, box-id, table-id, and chart-point arrays:
 
 ```pine
 var values = array.new_float()
@@ -523,16 +523,18 @@ tables.push(table.new(position.top_right, 1, 1))
 
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`, and
 `array.new_color` return runtime-owned scalar array ids. `array.new_label`,
-`array.new_line`, `array.new_linefill`, `array.new_box`, and `array.new_table`
-return runtime-owned drawing-id arrays with `na` as the default initial value.
+`array.new_line`, `array.new_linefill`, `array.new_polyline`, `array.new_box`,
+and `array.new_table` return runtime-owned drawing-id arrays with `na` as the
+default initial value.
 The supported scalar and drawing-id array constructors can also be written with
 official `array.new<type>` syntax for float, int, bool, string, color, label,
-line, linefill, box, and table. `array.new<chart.point>` returns a runtime-owned
-chart-point array id. `array.from` allocates a runtime-owned array id with an
-element kind inferred from its arguments; at
+line, linefill, polyline, box, and table. `array.new<chart.point>` returns a
+runtime-owned chart-point array id. `array.from` allocates a runtime-owned array
+id with an element kind inferred from its arguments; at
 least one non-`na` supported typed value is required, `na` may be mixed into an
 otherwise typed array, mixed int/float arguments produce a float array, and
-label, line, linefill, box, or table ids infer the matching drawing-id array.
+label, line, linefill, polyline, box, or table ids infer the matching drawing-id
+array.
 Normal declarations allocate a fresh array whenever the declaration executes.
 `var` declarations preserve the array id and backing storage across bars.
 Same-local scalar-tree UDT arrays may be declared with `array<T>` or `T[]`
@@ -574,18 +576,42 @@ direct `.size()`, `.get(index)`, `.first()`, `.last()`, and `.copy()` dispatch
 for every currently supported array kind, including nested copy/read chains.
 The parser assigns the unqualified form the impossible internal prefix
 `$call_result`; the normalization requires a plain lexical callee, while
-qualified user-defined forms keep their source prefix. Built-in-qualified and
-template call-result receivers remain parser boundaries. UDT-array results
-must still carry one concrete same-local or same-imported scalar-tree identity.
-`get` retains that element identity across named indexes and nested copy chains,
-while `size`/`last` retain existing empty and typed-`na` behavior. Unqualified
-local UDF results carrying a concrete local or imported scalar UDT identity may
-also use the existing pure user-method dispatch. Explicit same-named local
-methods and imported functions remain distinct. Mixed or non-scalar UDT-array
-returns, non-array/non-UDT results, unknown/`na` results without a concrete
-supported type or identity, other direct array call-result helpers, and
-mutation through unsupported UDF/method side-effect contexts remain outside
-this subset.
+qualified user-defined forms keep their source prefix.
+
+The separate built-in array call-result path is an exact producer allowlist:
+`array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
+`array.new_color`, `array.new_line`, `array.new_linefill`,
+`array.new_polyline`, `array.new_label`, `array.new_box`, `array.new_table`,
+`array.new<chart.point>`, supported `array.new<UDT>`, `array.from`,
+`array.copy`, `array.slice`, `array.concat`, `array.abs`,
+`array.standardize`, and `array.sort_indices`.
+Supported scalar, drawing-id, `chart.point`, and concrete same-local or
+same-imported scalar-tree UDT `array.new<T>` source templates use the matching
+canonical constructor or checked UDT-template path. The parser marks only
+those receivers with `$builtin_array_result`, and semantic analysis admits only
+`.size()`, `.get(index)`, `.first()`, `.last()`, and `.copy()` after them.
+Only `.copy()` produces another array receiver that may continue with a nested
+allowed read/copy; `.size()`, `.get()`, `.first()`, and `.last()` are terminal
+on this synthetic path and cannot continue into a user method or any other
+call-result method, including a method on a returned scalar UDT element.
+`array` is reserved as the built-in lexical prefix for this path; a qualified
+user or import alias with that spelling cannot use call-result dispatch.
+
+The receiver must resolve to a supported array kind. UDT-array producers must
+also carry one concrete same-local or same-imported scalar-tree identity;
+`get` retains that identity across named indexes and nested copy chains, while
+`size`/`last` retain existing empty and typed-`na` behavior. Unsupported or
+mixed identities, invalid producer arguments, and unknown templates fail
+closed rather than falling through to a same-named method. Unqualified local
+UDF results carrying a concrete local or imported scalar UDT identity may still
+use the existing pure user-method dispatch, and explicit same-named local
+methods and imported functions remain distinct. Other `array.*` calls, other
+built-in namespaces and templates, helpers beyond the five-item postfix
+read/copy set, non-array/non-UDT results, unknown/`na` results without a
+concrete supported type or identity, and postfix mutation remain outside this
+subset. A postfix read does not make a mutating producer pure:
+`array.concat(...).size()` still mutates the first concat input and is rejected
+inside UDFs.
 Generic UDT-array parameters are therefore iterable inside local UDFs and typed
 local methods for the fixture-backed statement and final-expression forms,
 including final results that return the UDT element itself or rebuild a
@@ -593,7 +619,8 @@ same-identity array from that element.
 Supported operations are
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
 `array.new_color`, `array.new_label`, `array.new_line`, `array.new_linefill`,
-`array.new_box`, `array.new_table`, `array.new<chart.point>`,
+`array.new_polyline`, `array.new_box`, `array.new_table`,
+`array.new<chart.point>`,
 `array.from`, `array.push`, `array.get`, `array.set`, `array.size`,
 `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`,
 `array.fill`, `array.first`, `array.last`, and `array.copy`, `array.slice`,
@@ -753,13 +780,16 @@ subset remain outside the claim. The same applies to direct private imported UDT
 access, mixed or non-scalar imported array-return identities, conflicting
 identities within one tuple UDT-array slot, direct call-result array methods
 outside the read-only `size`/`get`/`first`/`last`/`copy` set,
-built-in-qualified/template call-result receivers, nested field mutation, UDF
-parameter/global field side effects, and method receiver/parameter/global field
-side effects. Qualified user-defined and unqualified plain local UDF results
-support those five array helpers for currently supported array kinds; UDT
-arrays retain the concrete same-local/same-imported scalar-tree identity gate,
-and scalar UDT results from unqualified local UDFs may invoke existing pure
-methods.
+built-in-qualified/template call-result receivers outside the exact built-in
+array producer allowlist, nested field mutation, UDF parameter/global field
+side effects, and method receiver/parameter/global field side effects.
+Qualified user-defined and unqualified plain local UDF results plus the
+allowlisted built-in array producers support those five array helpers for
+currently supported array kinds; UDT arrays retain the concrete
+same-local/same-imported scalar-tree identity gate, and scalar UDT results from
+unqualified local UDFs may invoke existing pure methods. Built-in producer
+`get`/`first`/`last` element results remain terminal and do not open that scalar
+UDT method composition path.
 Tuple-contained
 same-imported scalar-tree UDT arrays are supported when destructured, with
 identity tracked independently per slot. Non-scalar UDT value history outside the local/imported
@@ -827,13 +857,15 @@ Local methods may return same-local scalar-tree UDT arrays from typed array
 parameters or fresh local array construction. Direct and block-alias returns
 retain the argument identity, while copy/new/from and nested/final-control-flow
 returns preserve the identity selected for the current call. Qualified
-user-defined results returning any currently supported array kind and
-unqualified plain local UDF array results support direct
-`.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()` without widening
-arbitrary call-result receivers. UDT arrays retain the concrete
+user-defined results returning any currently supported array kind, unqualified
+plain local UDF array results, and the exact built-in array producer allowlist
+support direct `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()` without
+widening arbitrary call-result receivers. UDT arrays retain the concrete
 same-local/same-imported scalar-tree identity gate; scalar UDT results from an
-unqualified local UDF may invoke the existing pure method subset.
-Built-in-qualified/template call results and other array helpers remain gated.
+unqualified local UDF may invoke the existing pure method subset. That scalar
+method exception does not apply to a built-in producer's terminal
+`.get()`/`.first()`/`.last()` result. Other built-in-qualified/template call
+results and other array helpers remain gated.
 Methods with receiver/parameter/global field side effects, recursion,
 unsupported parameter families, mismatched UDT parameter identity, unknown
 receivers, and alias-qualified imported method receiver type mismatches remain
@@ -852,9 +884,13 @@ mutations do not affect the source. `array.slice` returns a same-kind shallow
 window over the parent array's half-open `[index_from, index_to)` range; slice
 mutations mirror the parent window, slice insertions widen the window, invalid
 creation bounds return `na`, and later parent mutations that move the window
-out of bounds are runtime errors. `array.concat` requires two arrays of the
-same kind, appends the second array's current values to the first array in
-place, and returns the first array id. `array.get`, `array.set`, `array.insert`,
+out of bounds are runtime errors. An immediate allowed postfix read observes
+that live window, whereas `array.slice(...).copy()` captures the window's
+current values in an independent array. `array.concat` requires two arrays of
+the same kind, appends the second array's current values to the first array in
+place, and returns the first array id. Its immediate postfix reader is
+non-mutating, but the concat producer remains a mutation and is rejected inside
+UDFs. `array.get`, `array.set`, `array.insert`,
 and `array.remove`
 support negative indexes from the array end. `array.insert` inserts before a
 valid index, appends when the positive index equals the current size, and

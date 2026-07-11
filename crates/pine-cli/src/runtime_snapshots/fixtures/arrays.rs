@@ -15,6 +15,10 @@ pub(crate) const ARRAY_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/computed_array_operands.pine",
     ),
     (
+        "runtime_builtin_array_call_result_reads.json",
+        "tests/fixtures/runtime/builtin_array_call_result_reads.pine",
+    ),
+    (
         "runtime_array_na_simple_int_params.json",
         "tests/fixtures/runtime/array_na_simple_int_params.pine",
     ),
