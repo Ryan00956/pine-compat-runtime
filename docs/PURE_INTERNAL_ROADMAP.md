@@ -281,7 +281,13 @@ Current baseline:
   instances isolate calls through two aliases of the same physical library.
   Local UDF/typed-method parameter iteration also preserves call-local value
   identity for statement loops and final scalar, UDT-element, or rebuilt
-  UDT-array results.
+  UDT-array results. Tuple literals and local/imported UDF or method tuple
+  returns preserve same-local or same-imported scalar-tree UDT-array identity
+  independently per destructured UDT-array slot, including tuple-valued
+  ordinary declaration direct/self alias, control-flow alias,
+  later-destructuring, fresh shadowing, typed-`na`, A-to-B-to-A, and dual-alias
+  paths. Same-identity or `na` tuple reassignment preserves the fixed slot
+  layout; cross-identity direct/control-flow reassignment fails closed.
 
 Remaining internal work:
 
@@ -292,8 +298,9 @@ Remaining internal work:
   fixture-backed float/int/bool/string/color matrix subsets;
 - UDT array behavior beyond the same-local and same-imported scalar-tree
   subsets, including mixed imported return identities, non-scalar imported
-  returns, tuple-contained UDT arrays, direct call-result array method chaining,
-  and mutation through unsupported UDF/method side-effect contexts;
+  returns, conflicting identities within one tuple slot, direct call-result
+  array method chaining, and mutation through unsupported UDF/method side-effect
+  contexts;
 - generic or bare `array` declarations beyond current fixture-backed element
   kinds;
 - `for...in` iteration beyond the fixture-backed array, matrix-row, UDT-array,
@@ -515,7 +522,7 @@ Current baseline:
 
 - conformance matrix guards;
 - golden runtime snapshots;
-- an explicit public-host golden manifest: the current gate discovers all 693
+- an explicit public-host golden manifest: the current gate discovers all 695
   registered ordinary CLI runtime snapshots and requires representative paired
   Python/WASM assertions for 418 named snapshots, rejects silent single-host
   assertions, and currently has no reasoned single-host exceptions; the smaller

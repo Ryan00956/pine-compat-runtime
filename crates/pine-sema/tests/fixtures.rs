@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf};
+use std::{collections::HashSet, fs, path::PathBuf};
 
 use pine_sema::{AnalysisInput, analyze_input, analyze_source};
 use pine_syntax::SourceFile;
@@ -6550,6 +6550,118 @@ fn accepts_supported_user_type_array_udf_method_returns_fixture() {
 }
 
 #[test]
+fn accepts_supported_user_type_array_tuple_returns_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_user_type_array_tuple_returns.pine");
+}
+
+#[test]
+fn reports_unsupported_user_type_array_tuple_return_identities_fixture() {
+    let path = "tests/fixtures/sema/unsupported_user_type_array_tuple_return_identities.pine";
+    assert_diagnostic_messages(
+        path,
+        &[
+            "tuple element 1 user-defined type array must resolve to one element identity",
+            "tuple element 2 user-defined type array must resolve to one element identity",
+            "cannot assign a different user-defined type array to `wrong_typed`",
+        ],
+    );
+    assert_diagnostic_count(path, 24);
+
+    let path = workspace_fixture(path);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text.clone());
+    let analysis = analyze_source(&source);
+    let mut locations = HashSet::new();
+    let tuple_diagnostics: Vec<_> = analysis
+        .diagnostics
+        .iter()
+        .filter(|diagnostic| diagnostic.code == "E_TUPLE_UDT_ARRAY_IDENTITY")
+        .collect();
+    assert_eq!(tuple_diagnostics.len(), 23);
+    for diagnostic in tuple_diagnostics {
+        let excerpt = text
+            .get(diagnostic.span.start..diagnostic.span.end)
+            .expect("tuple identity diagnostic should point into the root fixture");
+        assert!(
+            excerpt.contains("bad"),
+            "unexpected diagnostic span: {excerpt}"
+        );
+        assert!(locations.insert((
+            diagnostic.message.clone(),
+            diagnostic.span.start,
+            diagnostic.span.end,
+        )));
+    }
+}
+
+#[test]
+fn reports_unsupported_user_type_array_tuple_alias_mutation_fixture() {
+    let path = "tests/fixtures/sema/unsupported_user_type_array_tuple_alias_mutation.pine";
+    assert_diagnostic_messages(
+        path,
+        &[
+            "tuple element 1 user-defined type array must resolve to one element identity",
+            "tuple element 2 user-defined type array must resolve to one element identity",
+        ],
+    );
+    assert_diagnostic_count(path, 16);
+
+    let path = workspace_fixture(path);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text.clone());
+    let analysis = analyze_source(&source);
+    let mut locations = HashSet::new();
+    let root_markers = [
+        "direct_mixed =",
+        "direct_reassigned :=",
+        "branch_reassigned :=",
+        "bad_scalar =",
+        "bad_loop =",
+        "bad_tuple_decl_sink =",
+        "bad_method_scalar =",
+        "bad_method_tuple_decl_sink =",
+    ];
+    for diagnostic in analysis
+        .diagnostics
+        .iter()
+        .filter(|diagnostic| diagnostic.code == "E_TUPLE_UDT_ARRAY_IDENTITY")
+    {
+        let line_start = text[..diagnostic.span.start]
+            .rfind('\n')
+            .map_or(0, |index| index + 1);
+        let line_end = text[diagnostic.span.end..]
+            .find('\n')
+            .map_or(text.len(), |index| diagnostic.span.end + index);
+        let line = &text[line_start..line_end];
+        assert!(
+            root_markers.iter().any(|marker| line.contains(marker)),
+            "tuple identity diagnostic should point at a root call or reassignment, got `{line}`"
+        );
+        assert!(locations.insert((
+            diagnostic.message.clone(),
+            diagnostic.span.start,
+            diagnostic.span.end,
+        )));
+    }
+    assert_eq!(locations.len(), 16);
+}
+
+#[test]
+fn reports_recursive_tuple_declarations_without_overflowing() {
+    let path = "tests/fixtures/sema/unsupported_recursive_tuple_declarations.pine";
+    assert_diagnostic_messages(
+        path,
+        &[
+            "recursive function `direct` is not supported",
+            "recursive function `wrapped` is not supported",
+            "recursive function `mutualA` is not supported",
+            "recursive method `recursive` is not supported",
+        ],
+    );
+    assert_diagnostic_count(path, 4);
+}
+
+#[test]
 fn accepts_supported_user_type_array_param_for_in_fixture() {
     assert_valid_fixture("tests/fixtures/sema/supported_user_type_array_param_for_in.pine");
 }
@@ -12697,24 +12809,125 @@ fn reports_unsupported_imported_user_type_array_return_identities_fixture() {
 }
 
 #[test]
-fn reports_unsupported_imported_user_type_array_tuple_returns_fixture() {
-    let path = "tests/fixtures/sema/unsupported_imported_user_type_array_tuple_returns.pine";
+fn accepts_supported_imported_user_type_array_tuple_returns_fixture() {
+    assert_import_ok_fixture_with_library(
+        "tests/fixtures/sema/supported_imported_user_type_array_tuple_returns.pine",
+        "user/udt_array_returns/1",
+        "tests/fixtures/libraries/import_udt_array_return_lib.pine",
+    );
+}
+
+#[test]
+fn reports_unsupported_imported_user_type_array_tuple_return_identities_fixture() {
+    let path =
+        "tests/fixtures/sema/unsupported_imported_user_type_array_tuple_return_identities.pine";
     let library = "tests/fixtures/libraries/import_udt_array_return_lib.pine";
-    assert_import_unsupported_fixture_with_library(
+    assert_import_diagnostic_messages_with_library(
         path,
         "user/udt_array_returns/1",
         library,
-        "function UDT-array tuple return",
-        "tuple-contained UDT arrays do not preserve their element identity",
+        &[
+            "tuple element 1 user-defined type array must resolve to one element identity",
+            "tuple element 2 user-defined type array must resolve to one element identity",
+        ],
     );
-    assert_import_unsupported_fixture_with_library(
+    assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 27);
+
+    let path = workspace_fixture(path);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text.clone());
+    let library_path = workspace_fixture(library);
+    let library_text =
+        fs::read_to_string(&library_path).expect("library fixture should be readable");
+    let library_source = SourceFile::new(library_path.display().to_string(), library_text);
+    let input = AnalysisInput::with_library_sources(
+        source,
+        vec![("user/udt_array_returns/1".to_owned(), library_source)],
+    )
+    .expect("library fixture input should be valid");
+    let analysis = analyze_input(&input);
+    let mut locations = HashSet::new();
+    let tuple_diagnostics: Vec<_> = analysis
+        .diagnostics
+        .iter()
+        .filter(|diagnostic| diagnostic.code == "E_TUPLE_UDT_ARRAY_IDENTITY")
+        .collect();
+    assert_eq!(tuple_diagnostics.len(), 27);
+    for diagnostic in tuple_diagnostics {
+        let excerpt = text
+            .get(diagnostic.span.start..diagnostic.span.end)
+            .expect("tuple identity diagnostic should point into the root fixture");
+        assert!(
+            excerpt.contains("tupleMixed"),
+            "unexpected diagnostic span: {excerpt}"
+        );
+        assert!(locations.insert((
+            diagnostic.message.clone(),
+            diagnostic.span.start,
+            diagnostic.span.end,
+        )));
+    }
+}
+
+#[test]
+fn reports_unsupported_imported_user_type_array_tuple_alias_mutation_fixture() {
+    let path = "tests/fixtures/sema/unsupported_imported_user_type_array_tuple_alias_mutation.pine";
+    let library = "tests/fixtures/libraries/import_udt_array_return_lib.pine";
+    assert_import_diagnostic_messages_with_library(
         path,
         "user/udt_array_returns/1",
         library,
-        "user-defined method UDT-array tuple return",
-        "tuple-contained UDT arrays do not preserve their element identity",
+        &[
+            "tuple element 1 user-defined type array must resolve to one element identity",
+            "tuple element 2 user-defined type array must resolve to one element identity",
+        ],
     );
-    assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 2);
+    assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 9);
+
+    let path = workspace_fixture(path);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text.clone());
+    let library_path = workspace_fixture(library);
+    let library_text =
+        fs::read_to_string(&library_path).expect("library fixture should be readable");
+    let library_source = SourceFile::new(library_path.display().to_string(), library_text);
+    let input = AnalysisInput::with_library_sources(
+        source,
+        vec![("user/udt_array_returns/1".to_owned(), library_source)],
+    )
+    .expect("library fixture input should be valid");
+    let analysis = analyze_input(&input);
+    let mut locations = HashSet::new();
+    let root_markers = [
+        "direct_mixed =",
+        "direct_reassigned :=",
+        "branch_reassigned :=",
+        "bad_tuple_decl_sink =",
+        "bad_method_tuple_decl_sink =",
+    ];
+    for diagnostic in analysis
+        .diagnostics
+        .iter()
+        .filter(|diagnostic| diagnostic.code == "E_TUPLE_UDT_ARRAY_IDENTITY")
+    {
+        let line_start = text[..diagnostic.span.start]
+            .rfind('\n')
+            .map_or(0, |index| index + 1);
+        let line_end = text[diagnostic.span.end..]
+            .find('\n')
+            .map_or(text.len(), |index| diagnostic.span.end + index);
+        let line = &text[line_start..line_end];
+        assert!(
+            root_markers.iter().any(|marker| line.contains(marker)),
+            "tuple identity diagnostic should point at a root call or reassignment, got `{line}`"
+        );
+        assert!(locations.insert((
+            diagnostic.message.clone(),
+            diagnostic.span.start,
+            diagnostic.span.end,
+        )));
+    }
+    assert_eq!(locations.len(), 9);
 }
 
 #[test]

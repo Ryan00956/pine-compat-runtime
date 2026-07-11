@@ -558,10 +558,19 @@ alias, and source-aware expression metadata separates import instances, so
 repeated calls over different field orders or two aliases of the same physical
 library preserve the concrete A-to-B-to-A layout instead of inheriting another
 call's span metadata. Mixed return identities and incompatible explicitly typed
-destinations remain semantic errors. Tuple-contained UDT arrays, non-scalar
-imported UDT array returns, direct array-method chaining on a call result, and
-mutation through unsupported UDF/method side-effect contexts remain outside
-this subset.
+destinations remain semantic errors. Tuple returns may contain same-local or
+same-imported scalar-tree UDT arrays: tuple literals and UDF/method direct,
+block, nested, and final-control-flow results preserve one concrete identity per
+destructured slot, including typed-`na` locals and distinct UDT identities in
+different slots. Tuple-valued ordinary declarations also retain their element
+types and per-slot identities through direct and self aliases,
+ternary/`switch` results, assigned `if` results, shadowing, and later tuple
+destructuring. The first declaration fixes each UDT-array slot identity.
+Same-identity or `na` reassignment preserves it, while direct or control-flow
+reassignment to a different identity and unresolved nested tuple consumers
+emit root-spanned `E_TUPLE_UDT_ARRAY_IDENTITY` diagnostics. Non-scalar imported UDT array returns, direct
+array-method chaining on a call result, and mutation through unsupported
+UDF/method side-effect contexts remain outside this subset.
 Generic UDT-array parameters are therefore iterable inside local UDFs and typed
 local methods for the fixture-backed statement and final-expression forms,
 including final results that return the UDT element itself or rebuild a
@@ -726,10 +735,12 @@ unshift-prepend, insert-insertion, fill-replacement, join-stringification,
 search-structural-equality, sort-by-field, pop/remove/shift return, clear-size,
 copy-read, reverse-read, slice-window, concat-append, and for-in-value-copy
 subset remain outside the claim. The same applies to direct private imported UDT
-access, mixed or non-scalar imported array-return identities, tuple-contained
-arrays, direct call-result array method chaining, nested field mutation, UDF
-parameter/global field side effects, and method receiver/parameter/global field
-side effects. Non-scalar UDT value history outside the local/imported
+access, mixed or non-scalar imported array-return identities, conflicting
+identities within one tuple UDT-array slot, direct call-result array method
+chaining, nested field mutation, UDF parameter/global field side effects, and
+method receiver/parameter/global field side effects. Tuple-contained
+same-imported scalar-tree UDT arrays are supported when destructured, with
+identity tracked independently per slot. Non-scalar UDT value history outside the local/imported
 label/line/box/chart.point-field fixture with direct `chart.point` field chains,
 and imported UDT value history outside the scalar-tree metadata and typed-`na`
 non-scalar identity subsets, also remain outside the claim.

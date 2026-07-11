@@ -5,7 +5,8 @@ mod function_returns;
 mod inline_calls;
 mod pure_series;
 mod reassignments;
-mod user_types;
+mod tuple_returns;
+pub(crate) mod user_types;
 
 pub(crate) fn prepend_block_statements(mut prefix: Vec<HirStmt>, expr: HirExpr) -> HirExpr {
     match expr.kind {
@@ -518,6 +519,18 @@ impl Analyzer {
             StmtKind::Continue => HirStmtKind::Continue,
             StmtKind::Decl { name, value, .. } => {
                 let symbol = self.lower_decl_symbol(name, statement.span)?;
+                if symbol.pine_type.kind == ValueKind::Tuple {
+                    if let Some(results) =
+                        self.tuple_user_type_array_results_with_params(value, param_exprs)
+                    {
+                        self.symbol_tuple_user_type_arrays
+                            .insert(symbol.id, results);
+                    } else {
+                        self.symbol_tuple_user_type_arrays.remove(&symbol.id);
+                    }
+                } else {
+                    self.symbol_tuple_user_type_arrays.remove(&symbol.id);
+                }
                 if let Some(type_name) = self.user_type_name_of_expr_with_params(value, param_exprs)
                 {
                     self.mark_symbol_id_user_type(symbol.id, type_name);
@@ -583,16 +596,32 @@ impl Analyzer {
                     value: self.lower_expr_with_params(value, param_exprs, param_types)?,
                 }
             }
-            StmtKind::TupleDecl { names, value } => HirStmtKind::TupleDecl {
-                symbols: names
+            StmtKind::TupleDecl { names, value } => {
+                let user_type_array_results =
+                    self.tuple_user_type_array_results_with_params(value, param_exprs);
+                let symbols = names
                     .iter()
-                    .map(|name| {
-                        self.lower_decl_symbol(name, statement.span)
-                            .map(|symbol| symbol.id)
-                    })
-                    .collect::<Option<_>>()?,
-                value: self.lower_expr_with_params(value, param_exprs, param_types)?,
-            },
+                    .map(|name| self.lower_decl_symbol(name, statement.span))
+                    .collect::<Option<Vec<_>>>()?;
+                for (index, symbol) in symbols.iter().copied().enumerate() {
+                    self.symbol_tuple_user_type_arrays.remove(&symbol.id);
+                    if symbol.pine_type.kind != ValueKind::UserTypeArray {
+                        continue;
+                    }
+                    let Some(UserTypeArrayIdentityResult::Known(type_name)) =
+                        user_type_array_results
+                            .as_ref()
+                            .and_then(|results| results.get(index))
+                    else {
+                        return None;
+                    };
+                    self.mark_symbol_user_type_array(symbol, type_name.clone());
+                }
+                HirStmtKind::TupleDecl {
+                    symbols: symbols.into_iter().map(|symbol| symbol.id).collect(),
+                    value: self.lower_expr_with_params(value, param_exprs, param_types)?,
+                }
+            }
             StmtKind::Function { .. }
             | StmtKind::Import(_)
             | StmtKind::Library(_)

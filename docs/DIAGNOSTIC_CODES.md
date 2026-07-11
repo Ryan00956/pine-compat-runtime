@@ -132,6 +132,9 @@ improved over time, but codes should remain stable once published.
   not in a supported top-level location.
 - `E_SEMA_EXPR_DEPTH`: expression nesting exceeds the semantic analysis limit.
 - `E_TUPLE_ARITY`: tuple assignment target count does not match value count.
+- `E_TUPLE_UDT_ARRAY_IDENTITY`: a tuple expression, ordinary declaration,
+  reassignment, or call-return slot containing a user-defined-type array does
+  not resolve to one stable concrete element identity.
 - `E_TUPLE_TYPE`: tuple assignment value is not a tuple.
 - `E_UNKNOWN_COLOR`: color literal or color constant cannot be resolved.
 - `E_UNKNOWN_FUNCTION`: function call target cannot be resolved.

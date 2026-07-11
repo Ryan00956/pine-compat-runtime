@@ -62,10 +62,19 @@ id, while copy/new/from returns allocate independently. Imported type positions
 are rewritten for the active alias, and source-aware return metadata isolates
 call sites when the same physical library is imported under multiple aliases.
 Interleaved calls over distinct identities therefore retain the correct
-A-to-B-to-A element layout. Tuple-contained UDT arrays and array-method chaining
-directly from a function or method call result remain deferred; mixed imported
-identities, non-scalar imported UDT array returns, and UDF/method mutation side
-effects remain rejected.
+A-to-B-to-A element layout. Tuple literals and local/imported UDF or method
+tuple returns now preserve a concrete UDT-array identity independently for each
+destructured slot through direct, block, nested, final-flow, typed-`na`, typed
+destination, A-to-B-to-A, and dual-alias paths. Different identities may occupy
+different slots. Tuple-valued ordinary declarations preserve type and identity
+metadata through direct and self aliases, ternary/`switch`, assigned-`if`,
+fresh shadowing, and later-destructuring paths. A declaration fixes each
+UDT-array slot identity: same-identity or `na` reassignment is accepted, while
+cross-identity direct/control-flow reassignment and unresolved nested consumers
+are rejected at the root span.
+Array-method chaining directly from a function or method call result remains
+deferred; mixed scalar-return identities, non-scalar imported UDT array returns,
+and UDF/method mutation side effects remain rejected.
 Local UDFs and typed local user methods may also iterate a generic same-local
 scalar-tree UDT-array parameter. Value-only and index/value statement loops,
 block-local array aliases, and final expression-form loops preserve the
@@ -202,12 +211,23 @@ Current evidence:
   final control flow, typed method arguments, imported type-position rewrites,
   and same-library dual-alias call-site isolation. The shared definitions live
   in `tests/fixtures/libraries/import_udt_array_return_lib.pine`.
-  `tests/fixtures/sema/unsupported_imported_user_type_array_udf_method_return_identities.pine`,
-  `tests/fixtures/sema/unsupported_imported_user_type_array_tuple_returns.pine`,
+  `tests/fixtures/sema/unsupported_imported_user_type_array_udf_method_return_identities.pine`
+  preserves the scalar-return mixed-identity boundary.
+- `tests/fixtures/runtime/user_type_array_tuple_returns.pine`,
+  `tests/fixtures/sema/supported_user_type_array_tuple_returns.pine`,
+  `tests/fixtures/runtime/import_udt_array_tuple_returns.pine`, and
+  `tests/fixtures/sema/supported_imported_user_type_array_tuple_returns.pine`
+  cover per-slot tuple-return identity, distinct identities in different slots,
+  function-local tuple destructuring, tuple-valued declaration aliases through
+  ternary/`switch`/assigned-`if` and later destructuring, typed-`na`, A-to-B-to-A calls, and
+  same-library dual aliases. The matching local/imported identity fixtures
+  reject conflicts within one slot;
+  `tests/fixtures/sema/unsupported_user_type_array_tuple_alias_mutation.pine`
   and
+  `tests/fixtures/sema/unsupported_imported_user_type_array_tuple_alias_mutation.pine`
+  lock the stable-slot reassignment and root-span boundaries. Finally,
   `tests/fixtures/sema/unsupported_imported_user_type_array_call_result_chaining.pine`
-  preserve the mixed-identity, tuple-contained, and direct call-result chaining
-  boundaries.
+  preserves the direct call-result chaining boundary.
 - `tests/fixtures/runtime/user_type_array_scalar_tree.pine` and
   `tests/fixtures/sema/supported_user_type_array_param_for_in.pine` cover
   value-only and index/value statement `for...in`, block-local array aliases,
@@ -621,9 +641,10 @@ Initial policy:
   method calls over same-imported scalar-tree UDT values read from arrays are
   supported, with mismatched local/imported identities rejected.
 - imported UDF/method same-scalar-tree UDT array returns are fixture-backed;
-  mixed imported identities, non-scalar arrays, tuple-contained UDT arrays,
-  mutation side effects, and direct array-method chaining on call results remain
-  separate semantic/parser/lowering boundaries.
+  their tuple returns preserve identity per destructured slot. Mixed identities
+  within one scalar return or tuple slot, non-scalar arrays, mutation side
+  effects, and direct array-method chaining on call results remain separate
+  semantic/parser/lowering boundaries.
 
 ## Diagnostics
 
@@ -678,8 +699,16 @@ Recommended future slices:
     array identity through direct, alias, copy/new/from, private nested, typed
     method, and final-control-flow paths. Source-aware type-position rewrites and
     import-instance metadata isolate the same physical library under two aliases.
-    Done. Tuple-contained arrays and direct call-result array method chaining
-    remain later slices.
+    Done.
+14. Tuple literals and local/imported UDF or user-method tuple returns preserve
+    same-local or same-imported scalar-tree UDT-array identity independently per
+    destructured slot, including direct/block/nested/final-flow, typed-`na`,
+    typed-destination, tuple-valued ordinary declaration direct/self alias,
+    control, shadow, and destructuring paths, A-to-B-to-A, and dual-alias
+    paths. Same-identity or `na` reassignment preserves the fixed slot layout;
+    conflicting identities in one slot or cross-identity direct/control-flow
+    reassignment fail closed with `E_TUPLE_UDT_ARRAY_IDENTITY`. Done. Direct
+    call-result array method chaining remains a later slice.
 
 ## Completion Gate For Future Positive Support
 
@@ -707,7 +736,6 @@ paths with the helper set listed in Current Boundary and Accepted Forms,
 ordinary `var` realtime rollback, fixture-backed scalar-tree UDT array `varip`,
 typed `array<T>`/`T[]` declarations, and local or imported UDF/user-method array
 returns within the call-boundary subset above. Broader UDT element families,
-tuple-contained arrays, direct call-result array method chaining, unsupported
-mutation contexts, and helpers not listed there remain unsupported until later
-fixture-backed slices implement syntax, analysis, runtime behavior, and
-conformance updates together.
+direct call-result array method chaining, unsupported mutation contexts, and
+helpers not listed there remain unsupported until later fixture-backed slices
+implement syntax, analysis, runtime behavior, and conformance updates together.

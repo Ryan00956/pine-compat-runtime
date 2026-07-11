@@ -865,6 +865,9 @@ impl Analyzer {
         let counter_symbol =
             self.define_local_symbol(counter, counter_type, None, self.function_depth == 0);
         self.bind_symbol(counter, span, counter_symbol);
+        self.symbol_tuple_element_types.remove(&counter_symbol.id);
+        self.symbol_tuple_user_type_arrays
+            .remove(&counter_symbol.id);
 
         let mut return_type = if let Some((last, prefix)) = body.split_last() {
             for statement in prefix {
@@ -959,6 +962,8 @@ impl Analyzer {
                 self.function_depth == 0,
             );
             self.bind_symbol(index, span, index_symbol);
+            self.symbol_tuple_element_types.remove(&index_symbol.id);
+            self.symbol_tuple_user_type_arrays.remove(&index_symbol.id);
         }
         let value_symbol = self.define_local_symbol(
             value,
@@ -967,6 +972,8 @@ impl Analyzer {
             self.function_depth == 0,
         );
         self.bind_symbol(value, span, value_symbol);
+        self.symbol_tuple_element_types.remove(&value_symbol.id);
+        self.symbol_tuple_user_type_arrays.remove(&value_symbol.id);
         if let Some(type_name) = kinds.user_type_name {
             self.mark_symbol_id_user_type(value_symbol.id, type_name);
         }

@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::analyzer::user_types::{
     UserTypeArrayElementInference, classify_user_type_array_element_names,
 };
@@ -531,38 +533,42 @@ impl Analyzer {
         self.function_param_const_switch_keys
             .push(param_const_switch_keys);
         self.function_context_is_method.push(false);
+        self.function_tuple_identity_slots.push(HashSet::new());
         self.function_depth += 1;
-        let (
-            return_type,
-            body_user_type,
-            body_user_type_array,
-            body_map,
-            tuple_contains_user_type_array,
-        ) = self.with_source_context(function.source_context_id, |analyzer| {
-            let return_type = analyzer.analyze_function_body(&function.body, function.span);
-            let body_user_type = return_type
-                .is_some_and(|pine_type| pine_type.kind == ValueKind::UserType)
-                .then(|| analyzer.user_type_name_of_function_body(&function.body))
-                .flatten();
-            let body_user_type_array = return_type
-                .is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
-                .then(|| analyzer.user_type_array_name_of_function_body(&function.body))
-                .flatten();
-            let body_map = return_type
-                .is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
-                .then(|| analyzer.map_type_of_function_body(&function.body))
-                .flatten();
-            let tuple_contains_user_type_array = return_type
-                .is_some_and(|pine_type| pine_type.kind == ValueKind::Tuple)
-                && analyzer.function_body_tuple_contains_user_type_array(&function.body);
-            (
-                return_type,
-                body_user_type,
-                body_user_type_array,
-                body_map,
-                tuple_contains_user_type_array,
-            )
-        });
+        let (return_type, body_user_type, body_user_type_array, body_map, unresolved_tuple_slots) =
+            self.with_source_context(function.source_context_id, |analyzer| {
+                let diagnostic_start = analyzer.diagnostics.len();
+                let return_type = analyzer.analyze_function_body(&function.body, function.span);
+                let body_user_type = return_type
+                    .is_some_and(|pine_type| pine_type.kind == ValueKind::UserType)
+                    .then(|| analyzer.user_type_name_of_function_body(&function.body))
+                    .flatten();
+                let body_user_type_array = return_type
+                    .is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+                    .then(|| analyzer.user_type_array_name_of_function_body(&function.body))
+                    .flatten();
+                let body_map = return_type
+                    .is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
+                    .then(|| analyzer.map_type_of_function_body(&function.body))
+                    .flatten();
+                let has_new_errors = analyzer.diagnostics[diagnostic_start..]
+                    .iter()
+                    .any(|diagnostic| diagnostic.severity == Severity::Error);
+                let unresolved_tuple_slots = if !has_new_errors
+                    && return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Tuple)
+                {
+                    analyzer.unresolved_function_body_user_type_array_tuple_slots(&function.body)
+                } else {
+                    Vec::new()
+                };
+                (
+                    return_type,
+                    body_user_type,
+                    body_user_type_array,
+                    body_map,
+                    unresolved_tuple_slots,
+                )
+            });
         self.function_depth -= 1;
         self.function_context_is_method.pop();
         self.function_param_const_switch_keys.pop();
@@ -570,12 +576,26 @@ impl Analyzer {
         self.function_stack.pop();
         self.scope.pop_scope();
 
-        if tuple_contains_user_type_array {
-            self.unsupported(
-                "function UDT-array tuple return",
-                "tuple-contained UDT arrays do not preserve their element identity through user-defined function returns",
-                call_span,
-            );
+        let mut tuple_identity_slots = self
+            .function_tuple_identity_slots
+            .pop()
+            .expect("tuple identity call scope should exist");
+        tuple_identity_slots.extend(unresolved_tuple_slots);
+        if let Some(parent_slots) = self.function_tuple_identity_slots.last_mut() {
+            parent_slots.extend(tuple_identity_slots);
+        } else {
+            let mut tuple_identity_slots: Vec<_> = tuple_identity_slots.into_iter().collect();
+            tuple_identity_slots.sort_unstable();
+            for index in tuple_identity_slots {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_TUPLE_UDT_ARRAY_IDENTITY",
+                    format!(
+                        "tuple element {} user-defined type array must resolve to one element identity",
+                        index + 1
+                    ),
+                    call_span,
+                ));
+            }
         }
 
         if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserType) {

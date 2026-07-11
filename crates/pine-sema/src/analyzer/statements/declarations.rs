@@ -5,6 +5,64 @@ use crate::prelude::*;
 use crate::types::is_scalar_array_kind;
 
 impl Analyzer {
+    pub(super) fn validate_tuple_user_type_array_identity_results(
+        &mut self,
+        element_types: &[PineType],
+        results: Option<&[UserTypeArrayIdentityResult]>,
+        previous_results: Option<&[UserTypeArrayIdentityResult]>,
+        span: Span,
+    ) -> bool {
+        let slot_count = element_types
+            .len()
+            .max(previous_results.map_or(0, <[UserTypeArrayIdentityResult]>::len));
+        let mut valid = true;
+        for index in 0..slot_count {
+            let current_type = element_types.get(index);
+            let current_result = results.and_then(|results| results.get(index));
+            let previous_result = previous_results.and_then(|results| results.get(index));
+            let is_udt_array_slot = current_type
+                .is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+                || matches!(previous_result, Some(UserTypeArrayIdentityResult::Known(_)));
+            if !is_udt_array_slot {
+                continue;
+            }
+            let identity_is_valid = match (previous_result, current_result) {
+                (
+                    Some(UserTypeArrayIdentityResult::Known(previous)),
+                    Some(UserTypeArrayIdentityResult::Known(current)),
+                ) => previous == current,
+                (
+                    Some(UserTypeArrayIdentityResult::Known(_)),
+                    Some(UserTypeArrayIdentityResult::Na),
+                ) => true,
+                (
+                    Some(UserTypeArrayIdentityResult::Na),
+                    Some(UserTypeArrayIdentityResult::Known(_)),
+                )
+                | (Some(UserTypeArrayIdentityResult::Na), Some(UserTypeArrayIdentityResult::Na))
+                | (None, Some(UserTypeArrayIdentityResult::Known(_))) => true,
+                _ => false,
+            };
+            if identity_is_valid {
+                continue;
+            }
+            valid = false;
+            if let Some(pending_slots) = self.function_tuple_identity_slots.last_mut() {
+                pending_slots.insert(index);
+            } else {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_TUPLE_UDT_ARRAY_IDENTITY",
+                    format!(
+                        "tuple element {} user-defined type array must resolve to one element identity",
+                        index + 1
+                    ),
+                    span,
+                ));
+            }
+        }
+        valid
+    }
+
     pub(super) fn declaration_persistence(
         &mut self,
         mode: pine_syntax::DeclMode,
@@ -347,7 +405,15 @@ impl Analyzer {
         let StmtKind::TupleDecl { names, value } = &statement.kind else {
             return;
         };
-        self.analyze_expr(value);
+        let diagnostic_start = self.diagnostics.len();
+        let analyzed_type = self.analyze_expr(value);
+        if analyzed_type.is_none()
+            || self.diagnostics[diagnostic_start..]
+                .iter()
+                .any(|diagnostic| diagnostic.severity == Severity::Error)
+        {
+            return;
+        }
 
         let Some(element_types) = self.tuple_element_types(value) else {
             self.diagnostics.push(Diagnostic::error(
@@ -371,17 +437,42 @@ impl Analyzer {
             return;
         }
 
-        if self.block_depth > 0 || self.function_depth > 0 {
-            for (name, pine_type) in names.iter().zip(element_types) {
-                let symbol =
-                    self.define_local_symbol(name, pine_type, None, self.function_depth == 0);
-                self.bind_symbol(name, statement.span, symbol);
+        let user_type_array_results = self.tuple_user_type_array_results(value);
+
+        let local = self.block_depth > 0 || self.function_depth > 0;
+        for (index, (name, pine_type)) in names.iter().zip(element_types).enumerate() {
+            let symbol = if local {
+                self.define_local_symbol(name, pine_type, None, self.function_depth == 0)
+            } else {
+                self.define_symbol(name, pine_type, None)
+            };
+            self.bind_symbol(name, statement.span, symbol);
+            self.symbol_tuple_element_types.remove(&symbol.id);
+            self.symbol_tuple_user_type_arrays.remove(&symbol.id);
+            if pine_type.kind != ValueKind::UserTypeArray {
+                continue;
             }
-        } else {
-            for (name, pine_type) in names.iter().zip(element_types) {
-                self.define_symbol(name, pine_type, None);
-                if let Some(symbol) = self.scope.resolve(name) {
-                    self.bind_symbol(name, statement.span, symbol);
+            match user_type_array_results
+                .as_ref()
+                .and_then(|results| results.get(index))
+            {
+                Some(UserTypeArrayIdentityResult::Known(type_name)) => {
+                    self.mark_symbol_user_type_array(symbol, type_name.clone());
+                }
+                Some(UserTypeArrayIdentityResult::Na | UserTypeArrayIdentityResult::Unknown)
+                | None => {
+                    if let Some(pending_slots) = self.function_tuple_identity_slots.last_mut() {
+                        pending_slots.insert(index);
+                    } else {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_TUPLE_UDT_ARRAY_IDENTITY",
+                            format!(
+                                "tuple element {} user-defined type array must resolve to one element identity",
+                                index + 1
+                            ),
+                            value.span,
+                        ));
+                    }
                 }
             }
         }

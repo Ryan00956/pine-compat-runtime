@@ -59,9 +59,15 @@ nested calls, typed methods with named/reordered arguments, and final control
 flow. Imported type positions are rewritten for the active alias and
 source-aware metadata isolates two aliases of the same physical library.
 Imported UDT collections beyond that helper/typed-array/call-return subset,
-mixed or non-scalar array-return identities, tuple-contained arrays, direct
-call-result array method chaining, nested field mutation, and method
-receiver/parameter/global field side effects remain unsupported.
+mixed or non-scalar scalar-return identities, conflicting tuple-slot identities,
+direct call-result array method chaining, nested field mutation, and method
+receiver/parameter/global field side effects remain unsupported. Same-imported
+scalar-tree UDT-array tuple returns are supported when destructured, with each
+UDT-array slot retaining its own alias-qualified identity through direct and
+tuple-valued ordinary declaration direct/self alias, control, shadowing, and
+destructuring paths. Same-identity or `na` reassignment preserves the fixed
+slot identity; cross-identity direct/control-flow reassignment fails closed at
+the root span.
 
 Current evidence:
 
@@ -87,9 +93,16 @@ Current evidence:
 - `tests/fixtures/runtime/import_udt_array_udf_method_returns.pine`,
   `tests/fixtures/sema/supported_imported_user_type_array_udf_method_returns.pine`,
   and `tests/fixtures/libraries/import_udt_array_return_lib.pine` cover the
-  accepted imported UDF/method array-return subset. The matching identity,
-  tuple-return, and direct call-result chaining fixtures keep those negative
-  boundaries explicit.
+  accepted imported UDF/method array-return subset.
+- `tests/fixtures/runtime/import_udt_array_tuple_returns.pine` and
+  `tests/fixtures/sema/supported_imported_user_type_array_tuple_returns.pine`
+  cover per-slot imported tuple-return identity, typed-`na`, nested tuple
+  destructuring, tuple-valued declaration aliases through ternary/`switch`/
+  assigned-`if` and later destructuring, and same-library dual aliases. The
+  matching identity-negative fixture,
+  `tests/fixtures/sema/unsupported_imported_user_type_array_tuple_alias_mutation.pine`,
+  and direct call-result chaining fixture keep the conflict, stable-slot
+  reassignment, root-span, and chaining boundaries explicit.
 - `docs/CONFORMANCE.md`, `docs/EXECUTION_SEMANTICS.md`, and
   `docs/SEMANTIC_MODEL.md` describe the narrow executable imported UDT
   constructor/direct field-read/reassignment/typed declaration/direct UDF
@@ -558,6 +571,11 @@ fixture-backed, while broader imported method return/parameter flow remains
 deferred.
 6. Imported UDF/user-method same-scalar-tree UDT array returns preserve direct,
    alias, copy/new/from, private nested, final-flow, type-position, and dual-alias
-   call-site identity. Tuple-contained arrays, direct call-result method
-   chaining, non-scalar returns, and unsupported mutation contexts remain later
-   collection boundaries.
+   call-site identity. Tuple returns preserve that identity independently per
+   destructured UDT-array slot, including block/nested/final-flow and typed-`na`
+   paths plus tuple-valued ordinary declaration direct/self alias, control,
+   shadowing, and destructuring. Same-identity or `na` reassignment preserves
+   the fixed slot layout, while conflicting identities and cross-identity
+   direct/control-flow reassignment fail closed. Direct call-result
+   method chaining, non-scalar returns, and unsupported mutation contexts remain
+   later collection boundaries.

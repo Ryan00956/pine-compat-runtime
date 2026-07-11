@@ -55,6 +55,8 @@ impl Analyzer {
                 self.function_depth == 0,
             );
             self.bind_symbol(index, span, index_symbol);
+            self.symbol_tuple_element_types.remove(&index_symbol.id);
+            self.symbol_tuple_user_type_arrays.remove(&index_symbol.id);
         }
         let value_symbol = self.define_local_symbol(
             value,
@@ -63,6 +65,8 @@ impl Analyzer {
             self.function_depth == 0,
         );
         self.bind_symbol(value, span, value_symbol);
+        self.symbol_tuple_element_types.remove(&value_symbol.id);
+        self.symbol_tuple_user_type_arrays.remove(&value_symbol.id);
         if let Some(type_name) = kinds.user_type_name {
             self.mark_symbol_id_user_type(value_symbol.id, type_name);
         }

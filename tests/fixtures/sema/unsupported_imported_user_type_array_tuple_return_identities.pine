@@ -1,0 +1,29 @@
+//@version=6
+import user/udt_array_returns/1 as left
+import user/udt_array_returns/1 as right
+indicator("Unsupported imported UDT array tuple return identities")
+
+left_first = array.from(left.First.new(10.0, 100.0))
+left_second = array.from(left.Second.new(200.0, 20.0))
+right_first = array.from(right.First.new(30.0, 300.0))
+
+[bad_first, bad_second] = left.tupleMixed(left_first, left_second, true)
+escaped_bad = left.tupleMixed(left_first, left_second, true)
+escaped_alias_bad = left.tupleMixedAliasReturn(left_first, left_second, true)
+escaped_wrapper_one = left.tupleMixedWrapperReturn(left_first, left_second, true)
+escaped_wrapper_two = left.tupleMixedWrapperReturn(left_first, left_second, true)
+escaped_scalar_sink = left.tupleMixedScalarSinkReturn(left_first, left_second, true)
+escaped_tuple_sink = left.tupleMixedTupleSinkReturn(left_first, left_second, true)
+escaped_final_if_alias = left.tupleMixedFinalIfAliasReturn(left_first, left_second, true)
+
+anchor = left.First.new(40.0, 400.0)
+[bad_method_first, good_method_first] = anchor.tupleMixedFirst(left_first, left_second, true)
+escaped_bad_method = anchor.tupleMixedFirst(left_first, left_second, true)
+escaped_alias_bad_method = anchor.tupleMixedAlias(left_first, left_second, true)
+escaped_bad_method_wrapper = anchor.tupleMixedWrapper(left_first, left_second, true)
+escaped_bad_method_scalar_sink = anchor.tupleMixedScalarSink(left_first, left_second, true)
+escaped_bad_method_tuple_sink = anchor.tupleMixedTupleSink(left_first, left_second, true)
+escaped_bad_method_final_if_alias = anchor.tupleMixedFinalIfAlias(left_first, left_second, true)
+
+[cross_alias_first, cross_alias_second] = left.tupleMixed(left_first, right_first, true)
+escaped_cross_alias = left.tupleMixed(left_first, right_first, true)

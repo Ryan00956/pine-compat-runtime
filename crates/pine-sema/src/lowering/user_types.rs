@@ -2,22 +2,15 @@ use crate::source_graph::SourceContextId;
 
 use super::*;
 
-#[derive(Clone)]
-enum LoweredUserTypeArrayResult {
-    Known(String),
-    Na,
-    Unknown,
+pub(super) struct LoweredUserTypeCall {
+    pub(super) key: String,
+    pub(super) source_context_id: SourceContextId,
+    pub(super) body: FunctionBody,
+    pub(super) array_aliases: HashMap<String, UserTypeArrayIdentityResult>,
+    pub(super) user_type_aliases: HashMap<String, UserTypeArrayIdentityResult>,
 }
 
-struct LoweredUserTypeCall {
-    key: String,
-    source_context_id: SourceContextId,
-    body: FunctionBody,
-    array_aliases: HashMap<String, LoweredUserTypeArrayResult>,
-    user_type_aliases: HashMap<String, LoweredUserTypeArrayResult>,
-}
-
-enum LoweredUserTypeCallResolution {
+pub(super) enum LoweredUserTypeCallResolution {
     Resolved(Box<LoweredUserTypeCall>),
     Unresolved,
 }
@@ -35,8 +28,8 @@ impl Analyzer {
             &HashMap::new(),
             &mut Vec::new(),
         ) {
-            LoweredUserTypeArrayResult::Known(type_name) => Some(type_name),
-            LoweredUserTypeArrayResult::Na | LoweredUserTypeArrayResult::Unknown => None,
+            UserTypeArrayIdentityResult::Known(type_name) => Some(type_name),
+            UserTypeArrayIdentityResult::Na | UserTypeArrayIdentityResult::Unknown => None,
         }
     }
 
@@ -52,19 +45,19 @@ impl Analyzer {
             &HashMap::new(),
             &mut Vec::new(),
         ) {
-            LoweredUserTypeArrayResult::Known(type_name) => Some(type_name),
-            LoweredUserTypeArrayResult::Na | LoweredUserTypeArrayResult::Unknown => None,
+            UserTypeArrayIdentityResult::Known(type_name) => Some(type_name),
+            UserTypeArrayIdentityResult::Na | UserTypeArrayIdentityResult::Unknown => None,
         }
     }
 
-    fn user_type_array_result_with_params_and_aliases(
+    pub(super) fn user_type_array_result_with_params_and_aliases(
         &self,
         expr: &Expr,
         param_exprs: &HashMap<String, HirExpr>,
-        array_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
-        user_type_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
+        array_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
+        user_type_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
         call_stack: &mut Vec<String>,
-    ) -> LoweredUserTypeArrayResult {
+    ) -> UserTypeArrayIdentityResult {
         let identifier_name = match &expr.kind {
             ExprKind::Identifier(name) => Some(name),
             ExprKind::QualifiedName(parts) if parts.len() == 1 => Some(&parts[0]),
@@ -72,7 +65,7 @@ impl Analyzer {
         };
         if let Some(name) = identifier_name {
             if name == "na" {
-                return LoweredUserTypeArrayResult::Na;
+                return UserTypeArrayIdentityResult::Na;
             }
             if let Some(result) = array_aliases.get(name) {
                 return result.clone();
@@ -83,23 +76,23 @@ impl Analyzer {
             }) = param_exprs.get(name)
                 && let Some(type_name) = self.symbol_user_type_arrays.get(symbol_id)
             {
-                return LoweredUserTypeArrayResult::Known(type_name.clone());
+                return UserTypeArrayIdentityResult::Known(type_name.clone());
             }
             if let Some(symbol) = self.bound_symbol(name, expr.span)
                 && let Some(type_name) = self.symbol_user_type_arrays.get(&symbol.id)
             {
-                return LoweredUserTypeArrayResult::Known(type_name.clone());
+                return UserTypeArrayIdentityResult::Known(type_name.clone());
             }
             if let Some(type_name) = self.user_type_array_name_of_expr(expr) {
-                return LoweredUserTypeArrayResult::Known(type_name);
+                return UserTypeArrayIdentityResult::Known(type_name);
             }
             if self
                 .bound_symbol(name, expr.span)
                 .is_some_and(|symbol| symbol.pine_type.kind == ValueKind::Na)
             {
-                return LoweredUserTypeArrayResult::Na;
+                return UserTypeArrayIdentityResult::Na;
             }
-            return LoweredUserTypeArrayResult::Unknown;
+            return UserTypeArrayIdentityResult::Unknown;
         }
 
         match &expr.kind {
@@ -201,7 +194,7 @@ impl Analyzer {
             }
             ExprKind::Call { callee, args } => {
                 let Some(name) = expr_name(callee) else {
-                    return LoweredUserTypeArrayResult::Unknown;
+                    return UserTypeArrayIdentityResult::Unknown;
                 };
                 if let Some(type_name) = name
                     .strip_prefix("array.new<")
@@ -209,12 +202,12 @@ impl Analyzer {
                     && (self.user_types.contains_key(type_name)
                         || self.imported_user_type_array_is_supported(type_name))
                 {
-                    return LoweredUserTypeArrayResult::Known(type_name.to_owned());
+                    return UserTypeArrayIdentityResult::Known(type_name.to_owned());
                 }
                 if matches!(name.as_str(), "array.copy" | "array.slice" | "array.concat") {
                     return args
                         .first()
-                        .map_or(LoweredUserTypeArrayResult::Unknown, |arg| {
+                        .map_or(UserTypeArrayIdentityResult::Unknown, |arg| {
                             self.user_type_array_result_with_params_and_aliases(
                                 &arg.value,
                                 param_exprs,
@@ -245,7 +238,7 @@ impl Analyzer {
                         param_exprs,
                         array_aliases,
                     );
-                    if !matches!(result, LoweredUserTypeArrayResult::Unknown) {
+                    if !matches!(result, UserTypeArrayIdentityResult::Unknown) {
                         return result;
                     }
                 }
@@ -262,7 +255,7 @@ impl Analyzer {
                             self.user_type_array_call_result(*call, call_stack)
                         }
                         LoweredUserTypeCallResolution::Unresolved => {
-                            LoweredUserTypeArrayResult::Unknown
+                            UserTypeArrayIdentityResult::Unknown
                         }
                     };
                 }
@@ -271,8 +264,8 @@ impl Analyzer {
         }
 
         self.user_type_array_name_of_expr(expr).map_or(
-            LoweredUserTypeArrayResult::Unknown,
-            LoweredUserTypeArrayResult::Known,
+            UserTypeArrayIdentityResult::Unknown,
+            UserTypeArrayIdentityResult::Known,
         )
     }
 
@@ -281,8 +274,8 @@ impl Analyzer {
         name: &str,
         span: Span,
         param_exprs: &HashMap<String, HirExpr>,
-        aliases: &HashMap<String, LoweredUserTypeArrayResult>,
-    ) -> LoweredUserTypeArrayResult {
+        aliases: &HashMap<String, UserTypeArrayIdentityResult>,
+    ) -> UserTypeArrayIdentityResult {
         if let Some(result) = aliases.get(name) {
             return result.clone();
         }
@@ -292,18 +285,18 @@ impl Analyzer {
         }) = param_exprs.get(name)
             && let Some(type_name) = self.symbol_user_type_arrays.get(symbol_id)
         {
-            return LoweredUserTypeArrayResult::Known(type_name.clone());
+            return UserTypeArrayIdentityResult::Known(type_name.clone());
         }
         let Some(symbol) = self
             .bound_symbol(name, span)
             .or_else(|| self.scope.resolve(name))
         else {
-            return LoweredUserTypeArrayResult::Unknown;
+            return UserTypeArrayIdentityResult::Unknown;
         };
         self.symbol_user_type_arrays
             .get(&symbol.id)
-            .map_or(LoweredUserTypeArrayResult::Unknown, |type_name| {
-                LoweredUserTypeArrayResult::Known(type_name.clone())
+            .map_or(UserTypeArrayIdentityResult::Unknown, |type_name| {
+                UserTypeArrayIdentityResult::Known(type_name.clone())
             })
     }
 
@@ -312,8 +305,8 @@ impl Analyzer {
         name: &str,
         span: Span,
         param_exprs: &HashMap<String, HirExpr>,
-        aliases: &HashMap<String, LoweredUserTypeArrayResult>,
-    ) -> LoweredUserTypeArrayResult {
+        aliases: &HashMap<String, UserTypeArrayIdentityResult>,
+    ) -> UserTypeArrayIdentityResult {
         if let Some(result) = aliases.get(name) {
             return result.clone();
         }
@@ -323,28 +316,28 @@ impl Analyzer {
         }) = param_exprs.get(name)
             && let Some(type_name) = self.symbol_user_types.get(symbol_id)
         {
-            return LoweredUserTypeArrayResult::Known(type_name.clone());
+            return UserTypeArrayIdentityResult::Known(type_name.clone());
         }
         let Some(symbol) = self
             .bound_symbol(name, span)
             .or_else(|| self.scope.resolve(name))
         else {
-            return LoweredUserTypeArrayResult::Unknown;
+            return UserTypeArrayIdentityResult::Unknown;
         };
         self.symbol_user_types
             .get(&symbol.id)
-            .map_or(LoweredUserTypeArrayResult::Unknown, |type_name| {
-                LoweredUserTypeArrayResult::Known(type_name.clone())
+            .map_or(UserTypeArrayIdentityResult::Unknown, |type_name| {
+                UserTypeArrayIdentityResult::Known(type_name.clone())
             })
     }
 
-    fn lowered_user_type_call(
+    pub(super) fn lowered_user_type_call(
         &self,
         callee: &Expr,
         args: &[CallArg],
         param_exprs: &HashMap<String, HirExpr>,
-        array_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
-        user_type_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
+        array_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
+        user_type_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
         call_stack: &mut Vec<String>,
     ) -> Option<LoweredUserTypeCallResolution> {
         let name = expr_name(callee)?;
@@ -352,7 +345,7 @@ impl Analyzer {
             && let [qualifier, method_name] = parts.as_slice()
         {
             if let Some(receiver_arg) = args.first()
-                && let LoweredUserTypeArrayResult::Known(receiver_type) = self
+                && let UserTypeArrayIdentityResult::Known(receiver_type) = self
                     .user_type_result_with_params_and_aliases(
                         &receiver_arg.value,
                         param_exprs,
@@ -384,7 +377,7 @@ impl Analyzer {
                 );
             }
 
-            if let LoweredUserTypeArrayResult::Known(receiver_type) = self
+            if let UserTypeArrayIdentityResult::Known(receiver_type) = self
                 .user_type_named_result_with_params_and_aliases(
                     qualifier,
                     callee.span,
@@ -438,8 +431,8 @@ impl Analyzer {
         function: FunctionInfo,
         args: &[CallArg],
         param_exprs: &HashMap<String, HirExpr>,
-        array_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
-        user_type_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
+        array_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
+        user_type_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
         call_stack: &mut Vec<String>,
     ) -> Option<LoweredUserTypeCall> {
         let (array_aliases, user_type_aliases) = self.lowered_user_type_call_aliases(
@@ -467,8 +460,8 @@ impl Analyzer {
         method: MethodInfo,
         args: &[CallArg],
         param_exprs: &HashMap<String, HirExpr>,
-        array_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
-        user_type_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
+        array_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
+        user_type_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
         call_stack: &mut Vec<String>,
     ) -> Option<LoweredUserTypeCall> {
         let param_names: Vec<_> = method
@@ -486,7 +479,7 @@ impl Analyzer {
         )?;
         user_type_aliases.insert(
             method.receiver_name,
-            LoweredUserTypeArrayResult::Known(receiver_type.clone()),
+            UserTypeArrayIdentityResult::Known(receiver_type.clone()),
         );
         Some(LoweredUserTypeCall {
             key: format!("method:{receiver_type}.{method_name}"),
@@ -503,16 +496,16 @@ impl Analyzer {
         params: &[String],
         args: &[CallArg],
         param_exprs: &HashMap<String, HirExpr>,
-        array_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
-        user_type_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
+        array_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
+        user_type_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
         call_stack: &mut Vec<String>,
     ) -> Option<(
-        HashMap<String, LoweredUserTypeArrayResult>,
-        HashMap<String, LoweredUserTypeArrayResult>,
+        HashMap<String, UserTypeArrayIdentityResult>,
+        HashMap<String, UserTypeArrayIdentityResult>,
     )> {
         let arg_indices = resolve_udf_arg_indices(params, args).ok()?;
-        let mut resolved_array_args = vec![LoweredUserTypeArrayResult::Unknown; params.len()];
-        let mut resolved_user_type_args = vec![LoweredUserTypeArrayResult::Unknown; params.len()];
+        let mut resolved_array_args = vec![UserTypeArrayIdentityResult::Unknown; params.len()];
+        let mut resolved_user_type_args = vec![UserTypeArrayIdentityResult::Unknown; params.len()];
         for (arg, param_index) in args.iter().zip(arg_indices) {
             resolved_array_args[param_index] = self.user_type_array_result_with_params_and_aliases(
                 &arg.value,
@@ -543,9 +536,9 @@ impl Analyzer {
         &self,
         call: LoweredUserTypeCall,
         call_stack: &mut Vec<String>,
-    ) -> LoweredUserTypeArrayResult {
+    ) -> UserTypeArrayIdentityResult {
         if call_stack.len() >= MAX_FUNCTION_CALL_DEPTH || call_stack.contains(&call.key) {
-            return LoweredUserTypeArrayResult::Unknown;
+            return UserTypeArrayIdentityResult::Unknown;
         }
         call_stack.push(call.key);
         let result =
@@ -571,13 +564,33 @@ impl Analyzer {
         result
     }
 
+    pub(super) fn declared_user_type_array_result(
+        &self,
+        declared_type: Option<&DeclaredType>,
+        result: UserTypeArrayIdentityResult,
+    ) -> UserTypeArrayIdentityResult {
+        if matches!(result, UserTypeArrayIdentityResult::Known(_)) {
+            return result;
+        }
+        let Some(DeclaredType::Array { element_type }) = declared_type else {
+            return result;
+        };
+        if self.user_types.contains_key(element_type)
+            || self.imported_user_type_array_is_supported(element_type)
+        {
+            UserTypeArrayIdentityResult::Known(element_type.clone())
+        } else {
+            result
+        }
+    }
+
     fn user_type_call_result(
         &self,
         call: LoweredUserTypeCall,
         call_stack: &mut Vec<String>,
-    ) -> LoweredUserTypeArrayResult {
+    ) -> UserTypeArrayIdentityResult {
         if call_stack.len() >= MAX_FUNCTION_CALL_DEPTH || call_stack.contains(&call.key) {
-            return LoweredUserTypeArrayResult::Unknown;
+            return UserTypeArrayIdentityResult::Unknown;
         }
         call_stack.push(call.key);
         let result =
@@ -606,33 +619,109 @@ impl Analyzer {
         &self,
         branch: &[Stmt],
         param_exprs: &HashMap<String, HirExpr>,
-        outer_array_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
-        outer_user_type_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
+        outer_array_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
+        outer_user_type_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
         call_stack: &mut Vec<String>,
-    ) -> LoweredUserTypeArrayResult {
+    ) -> UserTypeArrayIdentityResult {
+        self.user_type_array_branch_result_with_tuple_aliases(
+            branch,
+            param_exprs,
+            outer_array_aliases,
+            outer_user_type_aliases,
+            &HashMap::new(),
+            call_stack,
+        )
+    }
+
+    fn user_type_array_branch_result_with_tuple_aliases(
+        &self,
+        branch: &[Stmt],
+        param_exprs: &HashMap<String, HirExpr>,
+        outer_array_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
+        outer_user_type_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
+        outer_tuple_aliases: &HashMap<String, Vec<UserTypeArrayIdentityResult>>,
+        call_stack: &mut Vec<String>,
+    ) -> UserTypeArrayIdentityResult {
         let Some((last, prefix)) = branch.split_last() else {
-            return LoweredUserTypeArrayResult::Unknown;
+            return UserTypeArrayIdentityResult::Unknown;
         };
         let mut array_aliases = outer_array_aliases.clone();
         let mut user_type_aliases = outer_user_type_aliases.clone();
+        let mut tuple_aliases = outer_tuple_aliases.clone();
         for statement in prefix {
-            if let StmtKind::Decl { name, value, .. } = &statement.kind {
-                let result = self.user_type_array_result_with_params_and_aliases(
+            match &statement.kind {
+                StmtKind::Decl {
+                    declared_type,
+                    name,
                     value,
-                    param_exprs,
-                    &array_aliases,
-                    &user_type_aliases,
-                    call_stack,
-                );
-                array_aliases.insert(name.clone(), result);
-                let user_type_result = self.user_type_result_with_params_and_aliases(
-                    value,
-                    param_exprs,
-                    &array_aliases,
-                    &user_type_aliases,
-                    call_stack,
-                );
-                user_type_aliases.insert(name.clone(), user_type_result);
+                    ..
+                } => {
+                    let tuple_result = self.tuple_user_type_array_results_with_params_and_aliases(
+                        value,
+                        param_exprs,
+                        &array_aliases,
+                        &user_type_aliases,
+                        &tuple_aliases,
+                        call_stack,
+                    );
+                    if let Some(tuple_result) = tuple_result {
+                        tuple_aliases.insert(name.clone(), tuple_result);
+                    } else {
+                        tuple_aliases.remove(name);
+                    }
+                    let result = self.declared_user_type_array_result(
+                        declared_type.as_ref(),
+                        self.user_type_array_result_with_params_and_aliases(
+                            value,
+                            param_exprs,
+                            &array_aliases,
+                            &user_type_aliases,
+                            call_stack,
+                        ),
+                    );
+                    array_aliases.insert(name.clone(), result);
+                    let user_type_result = self.user_type_result_with_params_and_aliases(
+                        value,
+                        param_exprs,
+                        &array_aliases,
+                        &user_type_aliases,
+                        call_stack,
+                    );
+                    user_type_aliases.insert(name.clone(), user_type_result);
+                }
+                StmtKind::Reassign { name, value } if tuple_aliases.contains_key(name) => {
+                    let tuple_result = self.tuple_user_type_array_results_with_params_and_aliases(
+                        value,
+                        param_exprs,
+                        &array_aliases,
+                        &user_type_aliases,
+                        &tuple_aliases,
+                        call_stack,
+                    );
+                    if let Some(tuple_result) = tuple_result {
+                        tuple_aliases.insert(name.clone(), tuple_result);
+                    } else if let Some(previous) = tuple_aliases.get_mut(name) {
+                        previous.fill(UserTypeArrayIdentityResult::Unknown);
+                    }
+                }
+                StmtKind::TupleDecl { names, value } => {
+                    for name in names {
+                        tuple_aliases.remove(name);
+                    }
+                    if let Some(results) = self
+                        .tuple_user_type_array_results_with_params_and_aliases(
+                            value,
+                            param_exprs,
+                            &array_aliases,
+                            &user_type_aliases,
+                            &tuple_aliases,
+                            call_stack,
+                        )
+                    {
+                        array_aliases.extend(names.iter().cloned().zip(results));
+                    }
+                }
+                _ => {}
             }
         }
         match &last.kind {
@@ -648,28 +737,35 @@ impl Analyzer {
                 else_branch,
                 ..
             } => Self::merge_lowered_user_type_array_results([
-                self.user_type_array_branch_result_with_params_and_aliases(
+                self.user_type_array_branch_result_with_tuple_aliases(
                     then_branch,
                     param_exprs,
                     &array_aliases,
                     &user_type_aliases,
+                    &tuple_aliases,
                     call_stack,
                 ),
-                self.user_type_array_branch_result_with_params_and_aliases(
+                self.user_type_array_branch_result_with_tuple_aliases(
                     else_branch,
                     param_exprs,
                     &array_aliases,
                     &user_type_aliases,
+                    &tuple_aliases,
                     call_stack,
                 ),
             ]),
             StmtKind::ForIn {
+                index,
                 value,
                 iterable,
                 body,
-                ..
             } => {
                 let mut loop_user_type_aliases = user_type_aliases.clone();
+                let mut loop_tuple_aliases = tuple_aliases.clone();
+                if let Some(index) = index {
+                    loop_tuple_aliases.remove(index);
+                }
+                loop_tuple_aliases.remove(value);
                 let element_result = self.user_type_array_result_with_params_and_aliases(
                     iterable,
                     param_exprs,
@@ -678,23 +774,36 @@ impl Analyzer {
                     call_stack,
                 );
                 loop_user_type_aliases.insert(value.clone(), element_result);
-                self.user_type_array_branch_result_with_params_and_aliases(
+                self.user_type_array_branch_result_with_tuple_aliases(
                     body,
                     param_exprs,
                     &array_aliases,
                     &loop_user_type_aliases,
+                    &loop_tuple_aliases,
                     call_stack,
                 )
             }
-            StmtKind::For { body, .. } | StmtKind::While { body, .. } => self
-                .user_type_array_branch_result_with_params_and_aliases(
+            StmtKind::For { counter, body, .. } => {
+                let mut loop_tuple_aliases = tuple_aliases.clone();
+                loop_tuple_aliases.remove(counter);
+                self.user_type_array_branch_result_with_tuple_aliases(
                     body,
                     param_exprs,
                     &array_aliases,
                     &user_type_aliases,
+                    &loop_tuple_aliases,
                     call_stack,
-                ),
-            _ => LoweredUserTypeArrayResult::Unknown,
+                )
+            }
+            StmtKind::While { body, .. } => self.user_type_array_branch_result_with_tuple_aliases(
+                body,
+                param_exprs,
+                &array_aliases,
+                &user_type_aliases,
+                &tuple_aliases,
+                call_stack,
+            ),
+            _ => UserTypeArrayIdentityResult::Unknown,
         }
     }
 
@@ -702,10 +811,10 @@ impl Analyzer {
         &self,
         result: &SwitchArmResult,
         param_exprs: &HashMap<String, HirExpr>,
-        array_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
-        user_type_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
+        array_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
+        user_type_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
         call_stack: &mut Vec<String>,
-    ) -> LoweredUserTypeArrayResult {
+    ) -> UserTypeArrayIdentityResult {
         match result {
             SwitchArmResult::Expr(expr) => self.user_type_array_result_with_params_and_aliases(
                 expr,
@@ -725,42 +834,42 @@ impl Analyzer {
         }
     }
 
-    fn merge_lowered_user_type_array_results(
-        results: impl IntoIterator<Item = LoweredUserTypeArrayResult>,
-    ) -> LoweredUserTypeArrayResult {
+    pub(super) fn merge_lowered_user_type_array_results(
+        results: impl IntoIterator<Item = UserTypeArrayIdentityResult>,
+    ) -> UserTypeArrayIdentityResult {
         let mut resolved = None;
         for result in results {
             match result {
-                LoweredUserTypeArrayResult::Known(type_name)
+                UserTypeArrayIdentityResult::Known(type_name)
                     if resolved
                         .as_ref()
                         .is_some_and(|resolved| resolved != &type_name) =>
                 {
-                    return LoweredUserTypeArrayResult::Unknown;
+                    return UserTypeArrayIdentityResult::Unknown;
                 }
-                LoweredUserTypeArrayResult::Known(type_name) => {
+                UserTypeArrayIdentityResult::Known(type_name) => {
                     resolved.get_or_insert(type_name);
                 }
-                LoweredUserTypeArrayResult::Na => {}
-                LoweredUserTypeArrayResult::Unknown => {
-                    return LoweredUserTypeArrayResult::Unknown;
+                UserTypeArrayIdentityResult::Na => {}
+                UserTypeArrayIdentityResult::Unknown => {
+                    return UserTypeArrayIdentityResult::Unknown;
                 }
             }
         }
         resolved.map_or(
-            LoweredUserTypeArrayResult::Na,
-            LoweredUserTypeArrayResult::Known,
+            UserTypeArrayIdentityResult::Na,
+            UserTypeArrayIdentityResult::Known,
         )
     }
 
-    fn user_type_result_with_params_and_aliases(
+    pub(super) fn user_type_result_with_params_and_aliases(
         &self,
         expr: &Expr,
         param_exprs: &HashMap<String, HirExpr>,
-        array_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
-        user_type_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
+        array_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
+        user_type_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
         call_stack: &mut Vec<String>,
-    ) -> LoweredUserTypeArrayResult {
+    ) -> UserTypeArrayIdentityResult {
         let identifier_name = match &expr.kind {
             ExprKind::Identifier(name) => Some(name),
             ExprKind::QualifiedName(parts) if parts.len() == 1 => Some(&parts[0]),
@@ -768,7 +877,7 @@ impl Analyzer {
         };
         if let Some(name) = identifier_name {
             if name == "na" {
-                return LoweredUserTypeArrayResult::Na;
+                return UserTypeArrayIdentityResult::Na;
             }
             if let Some(result) = user_type_aliases.get(name) {
                 return result.clone();
@@ -779,23 +888,23 @@ impl Analyzer {
             }) = param_exprs.get(name)
                 && let Some(type_name) = self.symbol_user_types.get(symbol_id)
             {
-                return LoweredUserTypeArrayResult::Known(type_name.clone());
+                return UserTypeArrayIdentityResult::Known(type_name.clone());
             }
             if let Some(symbol) = self.bound_symbol(name, expr.span)
                 && let Some(type_name) = self.symbol_user_types.get(&symbol.id)
             {
-                return LoweredUserTypeArrayResult::Known(type_name.clone());
+                return UserTypeArrayIdentityResult::Known(type_name.clone());
             }
             if let Some(type_name) = self.user_type_name_of_expr(expr) {
-                return LoweredUserTypeArrayResult::Known(type_name);
+                return UserTypeArrayIdentityResult::Known(type_name);
             }
             if self
                 .bound_symbol(name, expr.span)
                 .is_some_and(|symbol| symbol.pine_type.kind == ValueKind::Na)
             {
-                return LoweredUserTypeArrayResult::Na;
+                return UserTypeArrayIdentityResult::Na;
             }
-            return LoweredUserTypeArrayResult::Unknown;
+            return UserTypeArrayIdentityResult::Unknown;
         }
 
         if let ExprKind::Call { callee, args } = &expr.kind
@@ -805,7 +914,7 @@ impl Analyzer {
             if let Some(helper) = name.strip_prefix("array.")
                 && ELEMENT_HELPERS.contains(&helper)
                 && let Some(array_arg) = args.first()
-                && let LoweredUserTypeArrayResult::Known(type_name) = self
+                && let UserTypeArrayIdentityResult::Known(type_name) = self
                     .user_type_array_result_with_params_and_aliases(
                         &array_arg.value,
                         param_exprs,
@@ -814,12 +923,12 @@ impl Analyzer {
                         call_stack,
                     )
             {
-                return LoweredUserTypeArrayResult::Known(type_name);
+                return UserTypeArrayIdentityResult::Known(type_name);
             }
             if let ExprKind::QualifiedName(parts) = &callee.kind
                 && let [receiver, method] = parts.as_slice()
                 && ELEMENT_HELPERS.contains(&method.as_str())
-                && let LoweredUserTypeArrayResult::Known(type_name) = self
+                && let UserTypeArrayIdentityResult::Known(type_name) = self
                     .user_type_array_named_result_with_params_and_aliases(
                         receiver,
                         callee.span,
@@ -827,7 +936,7 @@ impl Analyzer {
                         array_aliases,
                     )
             {
-                return LoweredUserTypeArrayResult::Known(type_name);
+                return UserTypeArrayIdentityResult::Known(type_name);
             }
             if let Some(call) = self.lowered_user_type_call(
                 callee,
@@ -842,7 +951,7 @@ impl Analyzer {
                         self.user_type_call_result(*call, call_stack)
                     }
                     LoweredUserTypeCallResolution::Unresolved => {
-                        LoweredUserTypeArrayResult::Unknown
+                        UserTypeArrayIdentityResult::Unknown
                     }
                 };
             }
@@ -949,8 +1058,8 @@ impl Analyzer {
         }
 
         self.user_type_name_of_expr(expr).map_or(
-            LoweredUserTypeArrayResult::Unknown,
-            LoweredUserTypeArrayResult::Known,
+            UserTypeArrayIdentityResult::Unknown,
+            UserTypeArrayIdentityResult::Known,
         )
     }
 
@@ -958,12 +1067,12 @@ impl Analyzer {
         &self,
         branch: &[Stmt],
         param_exprs: &HashMap<String, HirExpr>,
-        outer_array_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
-        outer_user_type_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
+        outer_array_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
+        outer_user_type_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
         call_stack: &mut Vec<String>,
-    ) -> LoweredUserTypeArrayResult {
+    ) -> UserTypeArrayIdentityResult {
         let Some((last, prefix)) = branch.split_last() else {
-            return LoweredUserTypeArrayResult::Unknown;
+            return UserTypeArrayIdentityResult::Unknown;
         };
         let mut array_aliases = outer_array_aliases.clone();
         let mut user_type_aliases = outer_user_type_aliases.clone();
@@ -1046,7 +1155,7 @@ impl Analyzer {
                     &user_type_aliases,
                     call_stack,
                 ),
-            _ => LoweredUserTypeArrayResult::Unknown,
+            _ => UserTypeArrayIdentityResult::Unknown,
         }
     }
 
@@ -1054,10 +1163,10 @@ impl Analyzer {
         &self,
         result: &SwitchArmResult,
         param_exprs: &HashMap<String, HirExpr>,
-        array_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
-        user_type_aliases: &HashMap<String, LoweredUserTypeArrayResult>,
+        array_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
+        user_type_aliases: &HashMap<String, UserTypeArrayIdentityResult>,
         call_stack: &mut Vec<String>,
-    ) -> LoweredUserTypeArrayResult {
+    ) -> UserTypeArrayIdentityResult {
         match result {
             SwitchArmResult::Expr(expr) => self.user_type_result_with_params_and_aliases(
                 expr,

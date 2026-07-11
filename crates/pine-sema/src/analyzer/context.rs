@@ -62,6 +62,8 @@ pub(crate) struct Analyzer {
     pub(crate) typed_na_scalar_symbols: HashSet<SymbolId>,
     pub(crate) non_scalar_udt_varip_symbols: HashSet<SymbolId>,
     pub(crate) symbol_user_type_arrays: HashMap<SymbolId, String>,
+    pub(crate) symbol_tuple_element_types: HashMap<SymbolId, Vec<PineType>>,
+    pub(crate) symbol_tuple_user_type_arrays: HashMap<SymbolId, Vec<UserTypeArrayIdentityResult>>,
     pub(crate) symbol_maps: HashMap<SymbolId, MapTypeInfo>,
     pub(crate) const_int_symbols: HashMap<SymbolId, i64>,
     pub(crate) const_numeric_symbols: HashMap<SymbolId, f64>,
@@ -81,6 +83,7 @@ pub(crate) struct Analyzer {
     pub(crate) function_param_symbols: Vec<HashSet<SymbolId>>,
     pub(crate) function_param_const_switch_keys: Vec<HashMap<String, ConstSwitchKey>>,
     pub(crate) function_context_is_method: Vec<bool>,
+    pub(crate) function_tuple_identity_slots: Vec<HashSet<usize>>,
     pub(crate) next_symbol_id: u32,
     pub(crate) next_series_id: u32,
     pub(crate) next_call_site_id: u32,
@@ -167,6 +170,13 @@ pub(crate) enum ConstSwitchKey {
 pub(crate) struct MapTypeInfo {
     pub(crate) key_kind: pine_ir::ValueKind,
     pub(crate) value_kind: pine_ir::ValueKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum UserTypeArrayIdentityResult {
+    Known(String),
+    Na,
+    Unknown,
 }
 
 impl Analyzer {

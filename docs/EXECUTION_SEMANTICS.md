@@ -786,10 +786,20 @@ new array id. Lowering derives the element layout from the current call
 arguments, rewrites imported type positions for the active alias, and keys
 expression metadata by import instance. Interleaved calls over field-order
 variants A, B, then A, including two aliases of one physical library, therefore
-read the correct fields on every result. Mixed imported identities, non-scalar
-imported returns, tuple-contained UDT arrays, direct call-result array method
-chains, and mutation through unsupported UDF/method side-effect contexts remain
-unsupported boundaries.
+read the correct fields on every result. Tuple-return lowering applies the same
+rule independently to each destructured slot, including tuple literals,
+direct/block/nested/final-flow UDF or method results, typed-`na` locals, and
+different UDT array identities in different slots. Fresh lower symbols receive
+the current call's slot identity before later array element field reads.
+Tuple-valued ordinary declarations preserve their element types and per-slot
+identities through direct and self aliases, ternary, `if`, or `switch` aliases,
+fresh local shadowing, and later tuple destructuring. The first declaration
+fixes each UDT-array slot identity; same-identity or `na` reassignment keeps the
+existing layout, while direct or control-flow reassignment to a different
+identity is rejected before HIR emission. Mixed
+scalar-return identities, non-scalar imported returns, direct call-result array
+method chains, and mutation through unsupported UDF/method side-effect contexts
+remain unsupported boundaries.
 Both caller-side `for...in` over returned arrays and in-callee `for...in` over
 generic same-local scalar-tree UDT-array parameters preserve concrete identity,
 including final expression results that return the loop element itself or use

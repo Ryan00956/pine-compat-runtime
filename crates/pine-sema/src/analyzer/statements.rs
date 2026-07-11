@@ -13,6 +13,8 @@ pub(crate) struct SymbolState {
     typed_na_scalar_symbols: std::collections::HashSet<SymbolId>,
     non_scalar_udt_varip_symbols: std::collections::HashSet<SymbolId>,
     symbol_user_type_arrays: HashMap<SymbolId, String>,
+    symbol_tuple_element_types: HashMap<SymbolId, Vec<PineType>>,
+    symbol_tuple_user_type_arrays: HashMap<SymbolId, Vec<UserTypeArrayIdentityResult>>,
     symbol_maps: HashMap<SymbolId, MapTypeInfo>,
     const_int_symbols: HashMap<SymbolId, i64>,
     const_numeric_symbols: HashMap<SymbolId, f64>,
@@ -160,6 +162,9 @@ impl Analyzer {
                 let counter_symbol =
                     self.define_local_symbol(counter, counter_type, None, self.function_depth == 0);
                 self.bind_symbol(counter, statement.span, counter_symbol);
+                self.symbol_tuple_element_types.remove(&counter_symbol.id);
+                self.symbol_tuple_user_type_arrays
+                    .remove(&counter_symbol.id);
                 for body_statement in body {
                     self.analyze_stmt(body_statement);
                 }
@@ -233,7 +238,11 @@ impl Analyzer {
                 name,
                 value,
             } => {
+                let diagnostic_start = self.diagnostics.len();
                 let value_type = self.analyze_expr(value).unwrap_or(UNKNOWN);
+                let value_has_errors = self.diagnostics[diagnostic_start..]
+                    .iter()
+                    .any(|diagnostic| diagnostic.severity == Severity::Error);
                 if value_type.kind == ValueKind::Void {
                     self.diagnostics.push(Diagnostic::error(
                         "E_DECL_VALUE",
@@ -327,6 +336,30 @@ impl Analyzer {
                 let symbol_type = declared_pine_type
                     .map(|target_type| declared_symbol_type(target_type, value_type))
                     .unwrap_or(value_type);
+                let tuple_element_types = (symbol_type.kind == ValueKind::Tuple)
+                    .then(|| self.tuple_element_types(value))
+                    .flatten();
+                let tuple_user_type_arrays = (symbol_type.kind == ValueKind::Tuple)
+                    .then(|| self.tuple_user_type_array_results(value))
+                    .flatten();
+                let existing_tuple_user_type_arrays = (self.block_depth == 0
+                    && self.function_depth == 0)
+                    .then(|| {
+                        self.scope.resolve(name).and_then(|symbol| {
+                            self.symbol_tuple_user_type_arrays.get(&symbol.id).cloned()
+                        })
+                    })
+                    .flatten();
+                let tuple_identity_is_valid = symbol_type.kind != ValueKind::Tuple
+                    || value_has_errors
+                    || tuple_element_types.as_ref().is_some_and(|element_types| {
+                        self.validate_tuple_user_type_array_identity_results(
+                            element_types,
+                            tuple_user_type_arrays.as_deref(),
+                            existing_tuple_user_type_arrays.as_deref(),
+                            value.span,
+                        )
+                    });
                 let is_typed_na_scalar_decl = declared_pine_type.is_some()
                     && value_type.kind == ValueKind::Na
                     && is_scalar_assignment_kind(symbol_type.kind)
@@ -372,6 +405,19 @@ impl Analyzer {
                 } else {
                     self.define_symbol_with_persistence(name, symbol_type, persistence, var_slot_id)
                 };
+                if symbol_type.kind != ValueKind::Tuple {
+                    self.symbol_tuple_element_types.remove(&symbol.id);
+                    self.symbol_tuple_user_type_arrays.remove(&symbol.id);
+                } else if tuple_identity_is_valid {
+                    if let Some(element_types) = tuple_element_types {
+                        self.symbol_tuple_element_types
+                            .insert(symbol.id, element_types);
+                    }
+                    if let Some(results) = tuple_user_type_arrays {
+                        self.symbol_tuple_user_type_arrays
+                            .insert(symbol.id, results);
+                    }
+                }
                 if let Some(type_name) = declared_user_type_name {
                     self.mark_symbol_user_type(symbol, type_name);
                 } else if let Some(type_name) = declared_user_type_array_name {
@@ -432,6 +478,7 @@ impl Analyzer {
                 self.bind_symbol(name, statement.span, symbol);
             }
             StmtKind::Reassign { name, value } => {
+                let diagnostic_start = self.diagnostics.len();
                 if self.scope.resolve(name).is_none() {
                     self.diagnostics.push(Diagnostic::error(
                         "E_UNKNOWN_SYMBOL",
@@ -446,6 +493,9 @@ impl Analyzer {
                     );
                 }
                 let value_type = self.analyze_expr(value);
+                let value_has_errors = self.diagnostics[diagnostic_start..]
+                    .iter()
+                    .any(|diagnostic| diagnostic.severity == Severity::Error);
                 if let (Some(target_type), Some(value_type)) = (
                     self.scope.resolve(name).map(|symbol| symbol.pine_type),
                     value_type,
@@ -473,6 +523,27 @@ impl Analyzer {
                     } else {
                         reassigned_symbol_type(target_type, value_type)
                     };
+                    let tuple_element_types = (target_type.kind == ValueKind::Tuple
+                        && value_type.kind == ValueKind::Tuple)
+                        .then(|| self.tuple_element_types(value))
+                        .flatten();
+                    let tuple_user_type_arrays = (target_type.kind == ValueKind::Tuple
+                        && value_type.kind == ValueKind::Tuple)
+                        .then(|| self.tuple_user_type_array_results(value))
+                        .flatten();
+                    let previous_tuple_user_type_arrays = symbol
+                        .and_then(|symbol| self.symbol_tuple_user_type_arrays.get(&symbol.id))
+                        .cloned();
+                    let tuple_identity_is_valid = target_type.kind != ValueKind::Tuple
+                        || value_has_errors
+                        || tuple_element_types.as_ref().is_some_and(|element_types| {
+                            self.validate_tuple_user_type_array_identity_results(
+                                element_types,
+                                tuple_user_type_arrays.as_deref(),
+                                previous_tuple_user_type_arrays.as_deref(),
+                                value.span,
+                            )
+                        });
                     let const_int_value =
                         const_int_symbol_value(reassigned_type, self.known_const_int_value(value));
                     let const_numeric_value = const_numeric_symbol_value(
@@ -541,6 +612,23 @@ impl Analyzer {
                         self.update_symbol_type(name, reassigned_type);
                     }
                     if let Some(symbol) = symbol {
+                        if can_reassign(target_type, value_type)
+                            && target_type.kind == ValueKind::Tuple
+                            && tuple_identity_is_valid
+                        {
+                            if !self.symbol_tuple_element_types.contains_key(&symbol.id)
+                                && let Some(element_types) = tuple_element_types
+                            {
+                                self.symbol_tuple_element_types
+                                    .insert(symbol.id, element_types);
+                            }
+                            if !self.symbol_tuple_user_type_arrays.contains_key(&symbol.id)
+                                && let Some(results) = tuple_user_type_arrays
+                            {
+                                self.symbol_tuple_user_type_arrays
+                                    .insert(symbol.id, results);
+                            }
+                        }
                         if can_reassign(target_type, value_type)
                             && value_type.kind != ValueKind::Na
                             && !invalid_non_scalar_udt_varip_reassign
@@ -844,6 +932,8 @@ impl Analyzer {
             typed_na_scalar_symbols: self.typed_na_scalar_symbols.clone(),
             non_scalar_udt_varip_symbols: self.non_scalar_udt_varip_symbols.clone(),
             symbol_user_type_arrays: self.symbol_user_type_arrays.clone(),
+            symbol_tuple_element_types: self.symbol_tuple_element_types.clone(),
+            symbol_tuple_user_type_arrays: self.symbol_tuple_user_type_arrays.clone(),
             symbol_maps: self.symbol_maps.clone(),
             const_int_symbols: self.const_int_symbols.clone(),
             const_numeric_symbols: self.const_numeric_symbols.clone(),
@@ -861,6 +951,8 @@ impl Analyzer {
         self.typed_na_scalar_symbols = state.typed_na_scalar_symbols;
         self.non_scalar_udt_varip_symbols = state.non_scalar_udt_varip_symbols;
         self.symbol_user_type_arrays = state.symbol_user_type_arrays;
+        self.symbol_tuple_element_types = state.symbol_tuple_element_types;
+        self.symbol_tuple_user_type_arrays = state.symbol_tuple_user_type_arrays;
         self.symbol_maps = state.symbol_maps;
         self.const_int_symbols = state.const_int_symbols;
         self.const_numeric_symbols = state.const_numeric_symbols;

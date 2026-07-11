@@ -83,6 +83,10 @@ pub(crate) const ARRAY_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/user_type_array_udf_values.pine",
     ),
     (
+        "runtime_user_type_array_tuple_returns.json",
+        "tests/fixtures/runtime/user_type_array_tuple_returns.pine",
+    ),
+    (
         "runtime_array_search_udt.json",
         "tests/fixtures/runtime/array_search_udt.pine",
     ),

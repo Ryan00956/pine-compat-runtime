@@ -5,6 +5,7 @@ use crate::prelude::*;
 struct TupleTypeContext<'a> {
     param_types: &'a HashMap<String, PineType>,
     param_user_types: &'a HashMap<String, String>,
+    tuple_aliases: &'a HashMap<String, Vec<PineType>>,
 }
 
 impl Analyzer {
@@ -606,21 +607,21 @@ impl Analyzer {
         self.tuple_element_types_with_params(expr, &HashMap::new())
     }
 
-    pub(crate) fn function_body_tuple_contains_user_type_array(&self, body: &FunctionBody) -> bool {
+    pub(crate) fn function_body_tuple_element_types(
+        &self,
+        body: &FunctionBody,
+    ) -> Option<Vec<PineType>> {
         let param_types = HashMap::new();
         let param_user_types = HashMap::new();
+        let tuple_aliases = HashMap::new();
         self.tuple_element_types_of_function_body_with_params(
             body,
             TupleTypeContext {
                 param_types: &param_types,
                 param_user_types: &param_user_types,
+                tuple_aliases: &tuple_aliases,
             },
         )
-        .is_some_and(|types| {
-            types
-                .iter()
-                .any(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
-        })
     }
 
     fn tuple_element_types_with_params(
@@ -629,11 +630,13 @@ impl Analyzer {
         param_types: &HashMap<String, PineType>,
     ) -> Option<Vec<PineType>> {
         let param_user_types = HashMap::new();
+        let tuple_aliases = HashMap::new();
         self.tuple_element_types_with_context(
             expr,
             TupleTypeContext {
                 param_types,
                 param_user_types: &param_user_types,
+                tuple_aliases: &tuple_aliases,
             },
         )
     }
@@ -643,6 +646,22 @@ impl Analyzer {
         expr: &Expr,
         context: TupleTypeContext<'_>,
     ) -> Option<Vec<PineType>> {
+        let tuple_alias_name = match &expr.kind {
+            ExprKind::Identifier(name) => Some(name.as_str()),
+            ExprKind::QualifiedName(parts) if parts.len() == 1 => Some(parts[0].as_str()),
+            _ => None,
+        };
+        if let Some(name) = tuple_alias_name {
+            if let Some(types) = context.tuple_aliases.get(name) {
+                return Some(types.clone());
+            }
+            let symbol = self
+                .bindings
+                .get(&self.binding_key(name, expr.span))
+                .copied()
+                .or_else(|| self.scope.resolve(name))?;
+            return self.symbol_tuple_element_types.get(&symbol.id).cloned();
+        }
         match &expr.kind {
             ExprKind::Tuple(items) => items
                 .iter()
@@ -706,6 +725,7 @@ impl Analyzer {
                 let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
                 let mut nested_param_types = HashMap::new();
                 let mut nested_param_user_types = HashMap::new();
+                let nested_tuple_aliases = HashMap::new();
                 for ((arg, arg_type), param_index) in args.iter().zip(arg_types).zip(arg_indices) {
                     let param = &function.params[param_index];
                     nested_param_types.insert(param.clone(), arg_type?);
@@ -721,16 +741,17 @@ impl Analyzer {
                         TupleTypeContext {
                             param_types: &nested_param_types,
                             param_user_types: &nested_param_user_types,
+                            tuple_aliases: &nested_tuple_aliases,
                         },
                     )
                 })
             }
             ExprKind::For {
+                counter,
                 from,
                 to,
                 step,
                 body,
-                ..
             } => {
                 let loop_qualifier = self.loop_header_qualifier_with_params(
                     from,
@@ -738,16 +759,40 @@ impl Analyzer {
                     step.as_deref(),
                     context.param_types,
                 )?;
-                let last = body.last()?;
-                let types =
-                    self.tuple_element_types_of_loop_body_return_with_params(last, context)?;
+                let mut tuple_aliases = context.tuple_aliases.clone();
+                tuple_aliases.remove(counter);
+                let loop_context = TupleTypeContext {
+                    param_types: context.param_types,
+                    param_user_types: context.param_user_types,
+                    tuple_aliases: &tuple_aliases,
+                };
+                let types = self.tuple_element_types_of_function_branch_return_with_params(
+                    body,
+                    loop_context,
+                )?;
                 Some(promote_tuple_element_qualifiers(types, loop_qualifier))
             }
-            ExprKind::ForIn { iterable, body, .. } => {
+            ExprKind::ForIn {
+                index,
+                value,
+                iterable,
+                body,
+            } => {
                 let iterable_type = self.type_of_expr_with_params(iterable, context.param_types)?;
-                let last = body.last()?;
-                let types =
-                    self.tuple_element_types_of_loop_body_return_with_params(last, context)?;
+                let mut tuple_aliases = context.tuple_aliases.clone();
+                if let Some(index) = index {
+                    tuple_aliases.remove(index);
+                }
+                tuple_aliases.remove(value);
+                let loop_context = TupleTypeContext {
+                    param_types: context.param_types,
+                    param_user_types: context.param_user_types,
+                    tuple_aliases: &tuple_aliases,
+                };
+                let types = self.tuple_element_types_of_function_branch_return_with_params(
+                    body,
+                    loop_context,
+                )?;
                 Some(promote_tuple_element_qualifiers(
                     types,
                     iterable_type.qualifier,
@@ -756,9 +801,8 @@ impl Analyzer {
             ExprKind::While { condition, body } => {
                 let condition_type =
                     self.type_of_expr_with_params(condition, context.param_types)?;
-                let last = body.last()?;
                 let types =
-                    self.tuple_element_types_of_loop_body_return_with_params(last, context)?;
+                    self.tuple_element_types_of_function_branch_return_with_params(body, context)?;
                 Some(promote_tuple_element_qualifiers(
                     types,
                     condition_type.qualifier,
@@ -959,6 +1003,7 @@ impl Analyzer {
         let arg_indices = resolve_udf_arg_indices(&param_names, args).ok()?;
         let mut nested_param_types = HashMap::new();
         let mut nested_param_user_types = HashMap::new();
+        let nested_tuple_aliases = HashMap::new();
         nested_param_types.insert(method.receiver_name.clone(), receiver_type);
         nested_param_user_types.insert(method.receiver_name.clone(), method.receiver_type.clone());
         let mut resolved_arg_types = vec![None; method.params.len()];
@@ -985,6 +1030,7 @@ impl Analyzer {
                 TupleTypeContext {
                     param_types: &nested_param_types,
                     param_user_types: &nested_param_user_types,
+                    tuple_aliases: &nested_tuple_aliases,
                 },
             )
         })
@@ -1092,20 +1138,7 @@ impl Analyzer {
         match body {
             FunctionBody::Expr(expr) => self.tuple_element_types_with_context(expr, context),
             FunctionBody::Block(statements) => {
-                let last = statements.last()?;
-                match &last.kind {
-                    StmtKind::If {
-                        condition,
-                        then_branch,
-                        else_branch,
-                    } => self.tuple_element_types_of_function_if_return_with_params(
-                        condition,
-                        then_branch,
-                        else_branch,
-                        context,
-                    ),
-                    _ => self.tuple_element_types_of_loop_body_return_with_params(last, context),
-                }
+                self.tuple_element_types_of_function_branch_return_with_params(statements, context)
             }
         }
     }
@@ -1142,8 +1175,56 @@ impl Analyzer {
         branch: &[Stmt],
         context: TupleTypeContext<'_>,
     ) -> Option<Vec<PineType>> {
-        let last = branch.last()?;
-        self.tuple_element_types_of_loop_body_return_with_params(last, context)
+        let (last, prefix) = branch.split_last()?;
+        let mut tuple_aliases = context.tuple_aliases.clone();
+        for statement in prefix {
+            let nested_context = TupleTypeContext {
+                param_types: context.param_types,
+                param_user_types: context.param_user_types,
+                tuple_aliases: &tuple_aliases,
+            };
+            match &statement.kind {
+                StmtKind::Decl { name, value, .. } => {
+                    if let Some(types) =
+                        self.tuple_element_types_with_context(value, nested_context)
+                    {
+                        tuple_aliases.insert(name.clone(), types);
+                    } else {
+                        tuple_aliases.remove(name);
+                    }
+                }
+                StmtKind::Reassign { name, value } if tuple_aliases.contains_key(name) => {
+                    let types = self
+                        .tuple_element_types_with_context(value, nested_context)
+                        .unwrap_or_default();
+                    tuple_aliases.insert(name.clone(), types);
+                }
+                StmtKind::TupleDecl { names, .. } => {
+                    for name in names {
+                        tuple_aliases.remove(name);
+                    }
+                }
+                _ => {}
+            }
+        }
+        let nested_context = TupleTypeContext {
+            param_types: context.param_types,
+            param_user_types: context.param_user_types,
+            tuple_aliases: &tuple_aliases,
+        };
+        match &last.kind {
+            StmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => self.tuple_element_types_of_function_if_return_with_params(
+                condition,
+                then_branch,
+                else_branch,
+                nested_context,
+            ),
+            _ => self.tuple_element_types_of_loop_body_return_with_params(last, nested_context),
+        }
     }
 
     fn tuple_element_types_of_loop_body_return_with_params(
@@ -1154,11 +1235,11 @@ impl Analyzer {
         match &statement.kind {
             StmtKind::Expr(expr) => self.tuple_element_types_with_context(expr, context),
             StmtKind::For {
+                counter,
                 from,
                 to,
                 step,
                 body,
-                ..
             } => {
                 let loop_qualifier = self.loop_header_qualifier_with_params(
                     from,
@@ -1166,16 +1247,40 @@ impl Analyzer {
                     step.as_ref(),
                     context.param_types,
                 )?;
-                let last = body.last()?;
-                let types =
-                    self.tuple_element_types_of_loop_body_return_with_params(last, context)?;
+                let mut tuple_aliases = context.tuple_aliases.clone();
+                tuple_aliases.remove(counter);
+                let loop_context = TupleTypeContext {
+                    param_types: context.param_types,
+                    param_user_types: context.param_user_types,
+                    tuple_aliases: &tuple_aliases,
+                };
+                let types = self.tuple_element_types_of_function_branch_return_with_params(
+                    body,
+                    loop_context,
+                )?;
                 Some(promote_tuple_element_qualifiers(types, loop_qualifier))
             }
-            StmtKind::ForIn { iterable, body, .. } => {
+            StmtKind::ForIn {
+                index,
+                value,
+                iterable,
+                body,
+            } => {
                 let iterable_type = self.type_of_expr_with_params(iterable, context.param_types)?;
-                let last = body.last()?;
-                let types =
-                    self.tuple_element_types_of_loop_body_return_with_params(last, context)?;
+                let mut tuple_aliases = context.tuple_aliases.clone();
+                if let Some(index) = index {
+                    tuple_aliases.remove(index);
+                }
+                tuple_aliases.remove(value);
+                let loop_context = TupleTypeContext {
+                    param_types: context.param_types,
+                    param_user_types: context.param_user_types,
+                    tuple_aliases: &tuple_aliases,
+                };
+                let types = self.tuple_element_types_of_function_branch_return_with_params(
+                    body,
+                    loop_context,
+                )?;
                 Some(promote_tuple_element_qualifiers(
                     types,
                     iterable_type.qualifier,
@@ -1184,9 +1289,8 @@ impl Analyzer {
             StmtKind::While { condition, body } => {
                 let condition_type =
                     self.type_of_expr_with_params(condition, context.param_types)?;
-                let last = body.last()?;
                 let types =
-                    self.tuple_element_types_of_loop_body_return_with_params(last, context)?;
+                    self.tuple_element_types_of_function_branch_return_with_params(body, context)?;
                 Some(promote_tuple_element_qualifiers(
                     types,
                     condition_type.qualifier,

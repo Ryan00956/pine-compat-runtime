@@ -291,13 +291,20 @@ const LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/user_type_array_scalar_tree.pine",
     "tests/fixtures/sema/supported_user_type_array_udf_method_returns.pine",
     "tests/fixtures/sema/unsupported_user_type_array_udf_method_return_identities.pine",
+    "tests/fixtures/runtime/user_type_array_tuple_returns.pine",
+    "tests/fixtures/sema/supported_user_type_array_tuple_returns.pine",
+    "tests/fixtures/sema/unsupported_user_type_array_tuple_return_identities.pine",
+    "tests/fixtures/sema/unsupported_user_type_array_tuple_alias_mutation.pine",
 ];
 
 const IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/import_udt_array_udf_method_returns.pine",
     "tests/fixtures/sema/supported_imported_user_type_array_udf_method_returns.pine",
     "tests/fixtures/sema/unsupported_imported_user_type_array_udf_method_return_identities.pine",
-    "tests/fixtures/sema/unsupported_imported_user_type_array_tuple_returns.pine",
+    "tests/fixtures/runtime/import_udt_array_tuple_returns.pine",
+    "tests/fixtures/sema/supported_imported_user_type_array_tuple_returns.pine",
+    "tests/fixtures/sema/unsupported_imported_user_type_array_tuple_return_identities.pine",
+    "tests/fixtures/sema/unsupported_imported_user_type_array_tuple_alias_mutation.pine",
     "tests/fixtures/sema/unsupported_imported_user_type_array_call_result_chaining.pine",
     "tests/fixtures/libraries/import_udt_array_return_lib.pine",
 ];
@@ -397,7 +404,7 @@ fn validate_local_udt_array_call_return_fixture_paths(
     for fixture in LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES {
         if !fixtures.contains(fixture) {
             return Err(format!(
-                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed local UDF/user-method UDT array return identity"
+                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed local UDF/user-method UDT array return and per-slot tuple-return identity"
             ));
         }
     }
@@ -428,7 +435,7 @@ fn validate_imported_udt_array_call_return_fixture_paths(
     for fixture in IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES {
         if !fixtures.contains(fixture) {
             return Err(format!(
-                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed imported UDF/user-method UDT array return support plus retained identity, tuple-return, and call-result-chaining boundaries"
+                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed imported UDF/user-method UDT array return and per-slot tuple-return identity plus retained call-result-chaining boundaries"
             ));
         }
     }
@@ -1066,9 +1073,11 @@ mod tests {
         )
         .expect_err("missing local UDT array call-return fixture should fail");
 
-        assert!(error.contains(
-            "tests/fixtures/sema/unsupported_user_type_array_udf_method_return_identities.pine"
-        ));
+        assert!(
+            error.contains(
+                "tests/fixtures/sema/unsupported_user_type_array_tuple_alias_mutation.pine"
+            )
+        );
     }
 
     #[test]

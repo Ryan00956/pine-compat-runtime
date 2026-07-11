@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Preserved same-local and same-imported scalar-tree UDT-array identity for
+  every destructured UDT-array slot of tuple literals and local/imported UDF or
+  user-method tuple returns. Direct, block, nested, final-control-flow,
+  typed-`na`, typed-destination, A-to-B-to-A, and same-library dual-alias paths
+  now lower and execute with the correct element layout; different identities
+  may occupy different tuple slots. Tuple-valued ordinary declarations retain
+  their element types and identities through direct and self aliases,
+  ternary/`switch` results, assigned `if` results, shadowing, and later
+  destructuring. The first declaration fixes each UDT-array slot identity;
+  same-identity or `na` reassignment remains valid, while direct or
+  control-flow reassignment to another identity and unresolved nested tuple
+  consumers emit root-spanned `E_TUPLE_UDT_ARRAY_IDENTITY` diagnostics.
+  Recursive tuple-declaration right-hand sides now stop after the existing
+  recursion diagnostic instead of re-entering tuple type queries and
+  overflowing the stack.
 - Preserved same-local and same-imported scalar-tree UDT array element
   identities through ternary, `if`, `switch`, `for`, `for...in`, and `while`
   results, including array/`na` branches, block-local aliases, typed or
@@ -19,8 +34,9 @@
   type-position rewrites retain the caller's concrete identity. Source-aware
   import-instance metadata isolates interleaved calls through two aliases of the
   same physical library. Mixed imported identities, non-scalar returns,
-  tuple-contained UDT arrays, direct call-result array method chaining, and
-  mutation through unsupported UDF/method side-effect contexts remain rejected.
+  direct call-result array method chaining, and mutation through unsupported
+  UDF/method side-effect contexts remain rejected; tuple-return conflicts are
+  rejected per destructured UDT-array slot.
 - Preserved scalar map templates at call sites when local UDFs return inferred
   map parameters, or when local UDFs and user methods return visible maps,
   block-local aliases, `map.new`/copy results, nested calls, or final
@@ -49,7 +65,7 @@
   preserving diagnostics for calls that omit both fixed and trailing triggers.
 - Fixed host-parity discovery for rustfmt-expanded runtime snapshot tuples and
   made the representative public-host contract explicit: the current gate
-  discovers 693 registered CLI snapshots and verifies the manifest-selected 418
+  discovers 695 registered CLI snapshots and verifies the manifest-selected 418
   snapshots against both Python and WASM golden assertions. The 48 previously
   single-host snapshots are now paired, map/matrix coverage adds 12
   representatives, and any future silent single-host assertion fails the gate;

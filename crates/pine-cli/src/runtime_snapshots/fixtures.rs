@@ -175,6 +175,14 @@ pub(crate) const RUNTIME_LIBRARY_SNAPSHOT_FIXTURES: &[RuntimeLibrarySnapshotFixt
         )],
     ),
     (
+        "runtime_import_udt_array_tuple_returns.json",
+        "tests/fixtures/runtime/import_udt_array_tuple_returns.pine",
+        &[(
+            "user/udt_array_returns/1",
+            "tests/fixtures/libraries/import_udt_array_return_lib.pine",
+        )],
+    ),
+    (
         "runtime_import_udt_array_sort_field.json",
         "tests/fixtures/runtime/import_udt_array_sort_field.pine",
         &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
