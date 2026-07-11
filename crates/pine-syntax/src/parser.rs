@@ -545,10 +545,10 @@ impl Parser {
     }
 
     fn finish_call_result_method_call(&mut self, receiver: Expr) -> Option<Expr> {
-        let Some(alias) = call_result_import_alias(&receiver) else {
+        let Some(prefix) = call_result_receiver_prefix(&receiver) else {
             self.error_here(
                 "E_PARSE_EXPR",
-                "method calls on call-result receivers require an imported UDT constructor or imported method result receiver",
+                "method calls on call-result receivers require a qualified constructor, function, or method result receiver",
             );
             return None;
         };
@@ -604,7 +604,7 @@ impl Parser {
             kind: ExprKind::Call {
                 callee: Box::new(Expr {
                     span: method_span,
-                    kind: ExprKind::QualifiedName(vec![alias, method_name]),
+                    kind: ExprKind::QualifiedName(vec![prefix, method_name]),
                 }),
                 args,
             },
@@ -758,7 +758,7 @@ impl Parser {
     }
 }
 
-fn call_result_import_alias(receiver: &Expr) -> Option<String> {
+fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
     let ExprKind::Call { callee, .. } = &receiver.kind else {
         return None;
     };

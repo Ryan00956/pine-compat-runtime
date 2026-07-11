@@ -20,25 +20,24 @@ impl Analyzer {
         ) {
             return Some(result);
         }
-        let result = self.lower_postfix_user_type_call_result_method(
-            callee,
-            args,
-            param_exprs,
-            param_types,
-        )?;
-        let mut method_call = match result {
-            Some(method_call) => method_call,
-            None => return Some(None),
-        };
-        if super::pure_series::pure_postfix_user_type_call_result_method_series_key(
-            self, callee, args,
-        )
-        .and(series_id)
-        .is_some()
+        if let Some(result) =
+            self.lower_postfix_user_type_call_result_method(callee, args, param_exprs, param_types)
         {
-            method_call.series_id = series_id;
+            let mut method_call = match result {
+                Some(method_call) => method_call,
+                None => return Some(None),
+            };
+            if super::pure_series::pure_postfix_user_type_call_result_method_series_key(
+                self, callee, args,
+            )
+            .and(series_id)
+            .is_some()
+            {
+                method_call.series_id = series_id;
+            }
+            return Some(Some(method_call));
         }
-        Some(Some(method_call))
+        postfix_call_result_method_parts(callee, args).map(|_| None)
     }
 
     pub(super) fn lower_postfix_udt_array_call_result_method(
@@ -58,7 +57,7 @@ impl Analyzer {
         {
             return None;
         }
-        let builtin_name = imported_udt_array_call_result_builtin_name(method_name)?;
+        let builtin_name = udt_array_call_result_builtin_name(method_name)?;
         let Some(args) = self.lower_builtin_call_args(builtin_name, args, param_exprs, param_types)
         else {
             return Some(None);

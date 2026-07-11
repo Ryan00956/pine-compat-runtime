@@ -288,10 +288,10 @@ Current baseline:
   later-destructuring, fresh shadowing, typed-`na`, A-to-B-to-A, and dual-alias
   paths. Same-identity or `na` tuple reassignment preserves the fixed slot
   layout; cross-identity direct/control-flow reassignment fails closed.
-  Qualified imported UDF/method results with a concrete same-imported
-  scalar-tree UDT-array identity also support direct `.first()`/`.copy()` and
-  nested `.copy().first()` while preserving A-to-B-to-A and dual-alias identity
-  plus copy independence.
+  Qualified same-local user-method and imported UDF/method results with a
+  concrete scalar-tree UDT-array identity also support direct
+  `.first()`/`.copy()` and nested `.copy().first()` while preserving A-to-B-to-A
+  identity, imported dual-alias isolation, and copy independence.
 
 Remaining internal work:
 
@@ -302,10 +302,9 @@ Remaining internal work:
   fixture-backed float/int/bool/string/color matrix subsets;
 - UDT array behavior beyond the same-local and same-imported scalar-tree
   subsets, including mixed imported return identities, non-scalar imported
-  returns, conflicting identities within one tuple slot, same-local or broader
-  direct call-result array method chaining beyond the imported
-  `.first()`/`.copy()` slice, and mutation through unsupported UDF/method
-  side-effect contexts;
+  returns, conflicting identities within one tuple slot, unqualified local UDF
+  call-result chaining, direct helpers beyond `.first()`/`.copy()`, and mutation
+  through unsupported UDF/method side-effect contexts;
 - generic or bare `array` declarations beyond current fixture-backed element
   kinds;
 - `for...in` iteration beyond the fixture-backed array, matrix-row, UDT-array,

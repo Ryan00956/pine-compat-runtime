@@ -149,8 +149,7 @@ impl Analyzer {
                         .copied()
                         .flatten()
                         .is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
-                    && let Some(builtin_name) =
-                        imported_udt_array_call_result_builtin_name(method_name)
+                    && let Some(builtin_name) = udt_array_call_result_builtin_name(method_name)
                     && let Some(signature) = pine_builtins::get_phase_1_builtin(builtin_name)
                 {
                     return self.return_type_for_call(signature, args, &arg_types);

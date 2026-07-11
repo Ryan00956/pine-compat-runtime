@@ -32,9 +32,7 @@ pub(crate) fn postfix_call_result_method_parts<'a>(
     Some(parts)
 }
 
-pub(crate) fn imported_udt_array_call_result_builtin_name(
-    method_name: &str,
-) -> Option<&'static str> {
+pub(crate) fn udt_array_call_result_builtin_name(method_name: &str) -> Option<&'static str> {
     match method_name {
         "first" => Some("array.first"),
         "copy" => Some("array.copy"),

@@ -130,7 +130,7 @@ fn parses_imported_udt_array_new_template_call() {
 }
 
 #[test]
-fn parses_imported_call_result_method_receiver_as_alias_qualified_call() {
+fn parses_qualified_call_result_method_receiver() {
     let parsed = parse(
         "shifted = lib.Point.new(close).shift(5)\nchained = lib.Point.new(open).make(close + 1).same()\nlocal = Point.new(close).shift(5)\nbound = anchor.make(close).same()\n",
     );
@@ -239,7 +239,7 @@ fn rejects_unqualified_call_result_method_receiver() {
     assert!(parsed.diagnostics.iter().any(|diagnostic| {
         diagnostic.code == "E_PARSE_EXPR"
             && diagnostic.message.contains(
-                "method calls on call-result receivers require an imported UDT constructor or imported method result receiver",
+                "method calls on call-result receivers require a qualified constructor, function, or method result receiver",
             )
     }));
 }

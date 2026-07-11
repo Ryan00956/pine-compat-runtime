@@ -796,14 +796,14 @@ identities through direct and self aliases, ternary, `if`, or `switch` aliases,
 fresh local shadowing, and later tuple destructuring. The first declaration
 fixes each UDT-array slot identity; same-identity or `na` reassignment keeps the
 existing layout, while direct or control-flow reassignment to a different
-identity is rejected before HIR emission. Qualified imported UDF/method results
-with a concrete same-imported scalar-tree UDT-array identity support direct
-`.first()` and `.copy()` calls, including `.copy().first()`. The postfix
-receiver is lowered as an array helper rather than as a same-named imported
-function, and `copy` remains independent from the source array. Mixed
-scalar-return identities, non-scalar imported returns, same-local or other
-direct call-result array methods, and mutation through unsupported UDF/method
-side-effect contexts remain unsupported boundaries.
+identity is rejected before HIR emission. Qualified same-local user-method and
+imported UDF/method results with a concrete scalar-tree UDT-array identity
+support direct `.first()` and `.copy()` calls, including `.copy().first()`.
+The postfix receiver is lowered as an array helper rather than as a same-named
+local method or imported function, and `copy` remains independent from the
+source array. Mixed scalar-return identities, non-scalar returns, unqualified
+local UDF results, other direct call-result array methods, and mutation through
+unsupported UDF/method side-effect contexts remain unsupported boundaries.
 Both caller-side `for...in` over returned arrays and in-callee `for...in` over
 generic same-local scalar-tree UDT-array parameters preserve concrete identity,
 including final expression results that return the loop element itself or use
@@ -844,13 +844,13 @@ ternary-expression, final-if, final-for, final-while, or switch-expression
 aliases, and preserve that imported identity for caller-side field reads, or
 directly, through a nested method call, or through a ternary expression
 construct and return the same imported UDT identity for caller-side field reads.
-For local methods only, a typed same-local scalar-tree UDT array parameter may
-be returned directly or through block aliases, copies, fresh constructors,
-nested local calls, and final control flow with call-specific identity. The
-caller must bind same-local results or use namespace-form array helpers.
+For local methods, a typed same-local scalar-tree UDT array parameter may be
+returned directly or through block aliases, copies, fresh constructors, nested
+local calls, and final control flow with call-specific identity. Qualified
+receiver-style or type-qualified results support direct `.first()`/`.copy()`.
 Parser-normalized qualified calls returning a same-imported scalar-tree UDT
-array additionally support direct `.first()`/`.copy()`; unqualified local UDF
-results and other array methods remain parser/semantic boundaries.
+array support the same narrow helper pair; unqualified local UDF results and
+other array methods remain parser/semantic boundaries.
 Method side effects, recursive methods, unsupported parameter families,
 mismatched UDT parameter identity, unknown receivers, and alias-qualified
 imported method receiver type mismatches are rejected during semantic analysis.

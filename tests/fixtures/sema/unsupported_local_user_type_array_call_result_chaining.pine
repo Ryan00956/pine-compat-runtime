@@ -5,6 +5,10 @@ type First
     float shared
     float other
 
+type Second
+    float other
+    float shared
+
 type Anchor
     int tag
 
@@ -12,8 +16,25 @@ method retain(Anchor self, array<First> values) => values
 
 method copy(Anchor self, array<First> values) => array.from(First.new(999.0, 9990.0))
 
+method transform(Anchor self, array<First> values) => array.from(First.new(777.0, 7770.0))
+
+method mixed(Anchor self, array<First> first, array<Second> second, bool choose) => choose ? first : second
+
+method first(Anchor self, array<First> values) => collisionMarker()
+
+method none(Anchor self, array<First> values) => na
+
 values = array.from(First.new(10.0, 100.0))
+second_values = array.from(Second.new(200.0, 20.0))
 anchor = Anchor.new(1)
 
+chained_first = anchor.retain(values).first()
 chained_copy = anchor.retain(values).copy()
+chained_size = anchor.retain(values).size()
+chained_get = anchor.retain(values).get(0)
+chained_transform = anchor.retain(values).transform()
+mixed_first = anchor.mixed(values, second_values, true).first()
+none_first = anchor.none(values).first()
+none_copy = anchor.none(values).copy()
 explicit_copy = anchor.copy(values)
+explicit_transform = anchor.transform(values)

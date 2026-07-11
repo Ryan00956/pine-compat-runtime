@@ -53,9 +53,19 @@ method returnSecond(ReturnAnchor self, Second[] values) =>
     made = values.copy()
     made
 
-method copy(ReturnAnchor self, array<First> values) => values.copy()
+method first(ReturnAnchor self, array<First> values) => array.size(values) + 700
+
+method copy(ReturnAnchor self, array<First> values) => array.from(First.new(999.0, 9990.0))
+
+method retain(First self, array<First> values) => values
+
+method retain(Second self, array<Second> values) => values
 
 method returnStatic(First self, array<First> values) => return_nested(values)
+
+readPostfix(receiver, values) =>
+    item = receiver.retain(values).copy().first()
+    item.shared
 
 sum_udt_values(values) =>
     float total = 0.0
@@ -271,7 +281,46 @@ return_new_first_result = return_new_first()
 plot(array.join(return_new_first_result, "|") == "First(110, 1100)" ? 1 : 0)
 
 return_method_copy_result = return_anchor.copy(return_first_source)
-plot(array.join(return_method_copy_result, "|") == "First(60, 600)" ? 1 : 0)
+plot(array.join(return_method_copy_result, "|") == "First(999, 9990)" ? 1 : 0)
+
+postfix_method_first = return_anchor.returnFirst(return_first_source).first()
+postfix_method_second = return_anchor.returnSecond(return_second_source).first()
+postfix_method_first_again = return_anchor.returnFirst(return_first_source).first()
+postfix_copy_first = return_anchor.returnFirst(return_first_source).copy().first()
+postfix_copy_second = return_anchor.returnSecond(return_second_source).copy().first()
+postfix_copy_first_again = return_anchor.returnFirst(return_first_source).copy().first()
+postfix_method_qualified = ReturnAnchor.returnFirst(return_anchor, return_first_source).copy().first()
+postfix_method_named = return_anchor.returnSecond(values=return_second_source).copy().first()
+plot(postfix_method_first.shared)
+plot(postfix_method_second.shared)
+plot(postfix_method_first_again.shared)
+plot(postfix_copy_first.shared)
+plot(postfix_copy_second.shared)
+plot(postfix_copy_first_again.shared)
+plot(postfix_method_qualified.shared)
+plot(postfix_method_named.shared)
+
+wrapped_postfix_first = readPostfix(First.new(1.0, 10.0), return_first_source)
+wrapped_postfix_second = readPostfix(Second.new(20.0, 2.0), return_second_source)
+wrapped_postfix_first_again = readPostfix(First.new(3.0, 30.0), return_first_source)
+plot(wrapped_postfix_first)
+plot(wrapped_postfix_second)
+plot(wrapped_postfix_first_again)
+
+postfix_copy_source = array.from(First.new(140.0, 1400.0))
+postfix_independent_copy = return_anchor.returnFirst(postfix_copy_source).copy()
+postfix_independent_copy.push(First.new(141.0, 1410.0))
+plot(postfix_copy_source.size())
+plot(postfix_independent_copy.size())
+
+explicit_method_first = return_anchor.first(return_first_source)
+explicit_method_copy = return_anchor.copy(return_anchor.returnFirst(return_first_source))
+explicit_static_copy = ReturnAnchor.copy(return_anchor, return_anchor.returnFirst(return_first_source))
+explicit_method_copy_item = array.first(explicit_method_copy)
+explicit_static_copy_item = array.first(explicit_static_copy)
+plot(explicit_method_first)
+plot(explicit_method_copy_item.shared)
+plot(explicit_static_copy_item.shared)
 
 return_static_receiver = First.new(120.0, 1200.0)
 First = Second.new(1300.0, 130.0)

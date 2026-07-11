@@ -6686,10 +6686,15 @@ fn reports_unsupported_local_user_type_array_call_result_chaining_fixture() {
     assert_diagnostic_messages(
         path,
         &[
-            "direct same-local UDT-array call-result methods are not supported; bind the result or use the namespace helper",
+            "`array.size` is not supported: direct UDT-array call-result methods currently support only qualified `.first()` and `.copy()`; bind the result or use the namespace helper",
+            "`array.get` is not supported: direct UDT-array call-result methods currently support only qualified `.first()` and `.copy()`; bind the result or use the namespace helper",
+            "`array.transform` is not supported: direct UDT-array call-result methods currently support only qualified `.first()` and `.copy()`; bind the result or use the namespace helper",
+            "ternary UDT array branches must resolve to the same element identity",
+            "`call_result.first` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
+            "`call_result.copy` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
         ],
     );
-    assert_diagnostic_count(path, 1);
+    assert_diagnostic_count(path, 6);
 }
 
 #[test]
@@ -12951,8 +12956,8 @@ fn reports_unsupported_imported_user_type_array_call_result_chaining_fixture() {
         "user/udt_array_returns/1",
         library,
         &[
-            "`array.size` is not supported: direct UDT-array call-result methods currently support only imported `.first()` and `.copy()`; bind the result or use the namespace helper",
-            "`array.get` is not supported: direct UDT-array call-result methods currently support only imported `.first()` and `.copy()`; bind the result or use the namespace helper",
+            "`array.size` is not supported: direct UDT-array call-result methods currently support only qualified `.first()` and `.copy()`; bind the result or use the namespace helper",
+            "`array.get` is not supported: direct UDT-array call-result methods currently support only qualified `.first()` and `.copy()`; bind the result or use the namespace helper",
         ],
     );
     assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 2);

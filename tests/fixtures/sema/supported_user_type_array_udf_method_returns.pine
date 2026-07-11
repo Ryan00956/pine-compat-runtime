@@ -76,6 +76,18 @@ method exposeSecondNested(Anchor self, array<Second> values) => nested(values)
 
 method exposeStatic(First self, array<First> values) => nested(values)
 
+method first(Anchor self, array<First> values) => array.size(values) + 700
+
+method copy(Anchor self, array<First> values) => array.from(First.new(999.0, 9990.0))
+
+method retain(First self, array<First> values) => values
+
+method retain(Second self, array<Second> values) => values
+
+readPostfix(receiver, values) =>
+    item = receiver.retain(values).copy().first()
+    item.shared
+
 first_values = array.from(First.new(10.0, 100.0))
 second_values = array.from(Second.new(200.0, 20.0))
 anchor = Anchor.new(1)
@@ -107,6 +119,18 @@ method_second = anchor.exposeSecondBlock(values=second_values)
 method_first_fresh = anchor.exposeFirstFresh(value=First.new(50.0, 500.0))
 method_second_nested = anchor.exposeSecondNested(values=second_values)
 method_qualified = Anchor.exposeFirst(anchor, first_values)
+postfix_method_first = anchor.exposeFirst(first_values).first()
+postfix_method_second = anchor.exposeSecondBlock(second_values).first()
+postfix_method_first_again = anchor.exposeFirst(first_values).first()
+postfix_copy_first = anchor.exposeFirst(first_values).copy().first()
+postfix_copy_second = anchor.exposeSecondBlock(second_values).copy().first()
+postfix_copy_first_again = anchor.exposeFirst(first_values).copy().first()
+postfix_method_qualified = Anchor.exposeFirst(anchor, first_values).copy().first()
+explicit_method_first = anchor.first(first_values)
+explicit_method_copy_item = array.first(anchor.copy(first_values))
+wrapped_postfix_first = readPostfix(First.new(1.0, 10.0), first_values)
+wrapped_postfix_second = readPostfix(Second.new(20.0, 2.0), second_values)
+wrapped_postfix_first_again = readPostfix(First.new(3.0, 30.0), first_values)
 
 array<First> typed_first = nested(first_values)
 Second[] typed_second = anchor.exposeSecondBlock(second_values)
@@ -119,6 +143,7 @@ for item in nested(second_values)
 static_receiver = First.new(55.0, 550.0)
 First = Second.new(600.0, 60.0)
 static_result = First.exposeStatic(static_receiver, first_values)
+postfix_static_item = First.exposeStatic(static_receiver, first_values).copy().first()
 
 first_item = array.get(first_once, 0)
 second_item = array.get(second_once, 0)
@@ -148,4 +173,4 @@ typed_first_item = array.get(typed_first, 0)
 typed_second_item = array.get(typed_second, 0)
 static_item = array.get(static_result, 0)
 
-plot(first_item.shared + second_item.shared + first_again_item.shared + prefixed_local_item.shared + first_copy_item.shared + second_copy_item.shared + first_fresh_item.shared + second_fresh_item.shared + first_rebuilt_item.shared + second_rebuilt_item.shared + first_rebuilt_again_item.shared + first_new_item.shared + first_named_item.shared + second_named_item.shared + first_if_item.shared + second_switch_item.shared + first_for_item.shared + second_for_in_item.shared + first_while_item.shared + method_first_item.shared + method_second_item.shared + method_first_fresh_item.shared + method_second_nested_item.shared + method_qualified_item.shared + typed_first_item.shared + typed_second_item.shared + direct_namespace_item.shared + direct_iterated_shared + static_item.shared)
+plot(first_item.shared + second_item.shared + first_again_item.shared + prefixed_local_item.shared + first_copy_item.shared + second_copy_item.shared + first_fresh_item.shared + second_fresh_item.shared + first_rebuilt_item.shared + second_rebuilt_item.shared + first_rebuilt_again_item.shared + first_new_item.shared + first_named_item.shared + second_named_item.shared + first_if_item.shared + second_switch_item.shared + first_for_item.shared + second_for_in_item.shared + first_while_item.shared + method_first_item.shared + method_second_item.shared + method_first_fresh_item.shared + method_second_nested_item.shared + method_qualified_item.shared + typed_first_item.shared + typed_second_item.shared + direct_namespace_item.shared + direct_iterated_shared + static_item.shared + postfix_method_first.shared + postfix_method_second.shared + postfix_method_first_again.shared + postfix_copy_first.shared + postfix_copy_second.shared + postfix_copy_first_again.shared + postfix_method_qualified.shared + explicit_method_first + explicit_method_copy_item.shared + postfix_static_item.shared + wrapped_postfix_first + wrapped_postfix_second + wrapped_postfix_first_again)

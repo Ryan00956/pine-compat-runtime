@@ -60,9 +60,10 @@ flow. Imported type positions are rewritten for the active alias and
 source-aware metadata isolates two aliases of the same physical library.
 Qualified imported UDF/method results carrying a concrete same-imported
 scalar-tree UDT-array identity support direct `.first()`/`.copy()` and nested
-`.copy().first()` dispatch. Imported UDT collections beyond that
-helper/typed-array/call-return subset, mixed or non-scalar scalar-return
-identities, conflicting tuple-slot identities, same-local or other direct
+`.copy().first()` dispatch; qualified same-local user-method results have the
+same narrow helper support in the local UDT subset. Imported UDT collections
+beyond that helper/typed-array/call-return subset, mixed or non-scalar
+scalar-return identities, unqualified local UDF results, other direct
 call-result array methods, nested field mutation, and method
 receiver/parameter/global field side effects remain unsupported. Same-imported
 scalar-tree UDT-array tuple returns are supported when destructured, with each
@@ -572,6 +573,7 @@ switch-expression alias, nested-method passthrough plus direct, nested, or terna
 and method-local scalar-tree root-field replacement are fixture-backed.
 Receiver-style scalar imported UDT call-result expressions and qualified
 same-imported UDT-array result `.first()`/`.copy()` are fixture-backed;
+qualified same-local user-method results have equivalent local coverage, while
 unqualified local UDF results and broader array helpers remain parser/semantic
 boundaries. Same-imported scalar-tree UDT array returns from typed methods are
 also fixture-backed, while broader imported method return/parameter flow
@@ -584,6 +586,7 @@ remains deferred.
    shadowing, and destructuring. Same-identity or `na` reassignment preserves
    the fixed slot layout, while conflicting identities and cross-identity
    direct/control-flow reassignment fail closed. Qualified same-imported array
-   results support direct `.first()`/`.copy()`; same-local or broader direct
-   methods, non-scalar returns, and unsupported mutation contexts remain later
+   results and qualified same-local user-method results support direct
+   `.first()`/`.copy()`; unqualified local UDF results, broader direct methods,
+   non-scalar returns, and unsupported mutation contexts remain later
    collection boundaries.
