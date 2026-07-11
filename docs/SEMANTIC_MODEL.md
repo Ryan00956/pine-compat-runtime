@@ -578,7 +578,7 @@ The parser assigns the unqualified form the impossible internal prefix
 `$call_result`; the normalization requires a plain lexical callee, while
 qualified user-defined forms keep their source prefix.
 
-The separate built-in array call-result path is an exact producer allowlist:
+The separate built-in `array.*` call-result path is an exact producer allowlist:
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
 `array.new_color`, `array.new_line`, `array.new_linefill`,
 `array.new_polyline`, `array.new_label`, `array.new_box`, `array.new_table`,
@@ -597,6 +597,32 @@ call-result method, including a method on a returned scalar UDT element.
 `array` is reserved as the built-in lexical prefix for this path; a qualified
 user or import alias with that spelling cannot use call-result dispatch.
 
+The same `$builtin_array_result` path has a second, exact producer set outside
+the `array` namespace: `str.split`, `ta.pivot_point_levels`, `matrix.row`,
+`matrix.col`, `matrix.eigenvalues`, `map.keys`, and `map.values`. Each result
+admits only `.size()`, `.get(index)`, `.first()`, `.last()`, and `.copy()`;
+only `.copy()` returns an array receiver eligible for another allowed
+read/copy. The four scalar/element readers are terminal. Return kinds stay
+producer-specific: `array<string>` for `str.split`, `array<float>` for
+`ta.pivot_point_levels`, the matching scalar element array for `matrix.row`
+and `matrix.col` over float/int/bool/string/color matrices, `array<float>` for
+`matrix.eigenvalues` over its supported numeric matrices, and the matching
+scalar key/value array for `map.keys`/`map.values` when each map template side
+is int, float, bool, string, or color. Matrix row/column/eigenvalue arrays and
+map key/value arrays retain their existing independent snapshot semantics;
+postfix copies are independent again. Empty/`na`, negative index, bounds, and
+element-type checks still come from the ordinary producer and array-helper
+analysis/runtime rules.
+
+This second set excludes namespace-qualified `matrix.mult(...)` direct-result
+receivers even for array-returning overloads; the existing bound-receiver
+`matrix_id.mult(array).size()` path is unchanged. It also excludes
+matrix-returning calls, map/matrix templates such as `map.new` and
+`matrix.new`, every other namespace or non-producer member, and postfix
+mutation. Built-in namespace prefixes remain reserved and cannot be treated as
+same-named user/import qualifiers. No UDT or imported-type identity is inferred
+from these scalar-array producers, and public schemas remain unchanged.
+
 The receiver must resolve to a supported array kind. UDT-array producers must
 also carry one concrete same-local or same-imported scalar-tree identity;
 `get` retains that identity across named indexes and nested copy chains, while
@@ -605,8 +631,9 @@ mixed identities, invalid producer arguments, and unknown templates fail
 closed rather than falling through to a same-named method. Unqualified local
 UDF results carrying a concrete local or imported scalar UDT identity may still
 use the existing pure user-method dispatch, and explicit same-named local
-methods and imported functions remain distinct. Other `array.*` calls, other
-built-in namespaces and templates, helpers beyond the five-item postfix
+methods and imported functions remain distinct. Other `array.*` calls,
+built-in namespaces and templates outside the exact seven-producer set,
+helpers beyond the five-item postfix
 read/copy set, non-array/non-UDT results, unknown/`na` results without a
 concrete supported type or identity, and postfix mutation remain outside this
 subset. A postfix read does not make a mutating producer pure:
@@ -780,16 +807,18 @@ subset remain outside the claim. The same applies to direct private imported UDT
 access, mixed or non-scalar imported array-return identities, conflicting
 identities within one tuple UDT-array slot, direct call-result array methods
 outside the read-only `size`/`get`/`first`/`last`/`copy` set,
-built-in-qualified/template call-result receivers outside the exact built-in
-array producer allowlist, nested field mutation, UDF parameter/global field
-side effects, and method receiver/parameter/global field side effects.
+built-in-qualified/template call-result receivers outside the two exact
+built-in array-producing allowlists, nested field mutation, UDF
+parameter/global field side effects, and method receiver/parameter/global field
+side effects.
 Qualified user-defined and unqualified plain local UDF results plus the
-allowlisted built-in array producers support those five array helpers for
+two allowlisted built-in producer sets support those five array helpers for
 currently supported array kinds; UDT arrays retain the concrete
 same-local/same-imported scalar-tree identity gate, and scalar UDT results from
 unqualified local UDFs may invoke existing pure methods. Built-in producer
 `get`/`first`/`last` element results remain terminal and do not open that scalar
-UDT method composition path.
+UDT method composition path. The seven cross-namespace producers return only
+scalar arrays and add no UDT/import identity flow.
 Tuple-contained
 same-imported scalar-tree UDT arrays are supported when destructured, with
 identity tracked independently per slot. Non-scalar UDT value history outside the local/imported
@@ -858,14 +887,16 @@ parameters or fresh local array construction. Direct and block-alias returns
 retain the argument identity, while copy/new/from and nested/final-control-flow
 returns preserve the identity selected for the current call. Qualified
 user-defined results returning any currently supported array kind, unqualified
-plain local UDF array results, and the exact built-in array producer allowlist
-support direct `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()` without
-widening arbitrary call-result receivers. UDT arrays retain the concrete
+plain local UDF array results, and the two exact built-in array-producing
+allowlists support direct `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`
+without widening arbitrary call-result receivers. UDT arrays retain the concrete
 same-local/same-imported scalar-tree identity gate; scalar UDT results from an
 unqualified local UDF may invoke the existing pure method subset. That scalar
 method exception does not apply to a built-in producer's terminal
-`.get()`/`.first()`/`.last()` result. Other built-in-qualified/template call
-results and other array helpers remain gated.
+`.get()`/`.first()`/`.last()` result. The seven cross-namespace producers are
+scalar-array-only and do not widen UDT identity. Built-in-qualified/template
+call results outside the two exact allowlists and other array helpers remain
+gated.
 Methods with receiver/parameter/global field side effects, recursion,
 unsupported parameter families, mismatched UDT parameter identity, unknown
 receivers, and alias-qualified imported method receiver type mismatches remain
@@ -971,7 +1002,13 @@ be reused by later `map.put` calls. `map.remove` deletes a present key and is a
 no-op for missing keys. Assignment passes the runtime map id by reference, and
 `map.copy` returns an independent cloned backing store carrying the same scalar
 key/value template. `map.keys` and `map.values` return independent array
-snapshots in insertion order using the map's scalar key or value kind.
+snapshots in insertion order using the map's scalar key or value kind. For the
+five-scalar-template subset on each side, those namespace-call results may use
+`.size()`, `.get(index)`, `.first()`, `.last()`, or `.copy()` directly. The
+key/value return kind follows the corresponding template side; only `.copy()`
+may continue into another allowed read/copy and remains independent of both the
+map and the first snapshot. Empty and typed-`na` maps plus negative and
+out-of-bounds indexes keep ordinary array-result semantics.
 `map.put_all` requires source and target maps to have the same scalar key/value
 template and mutates the target by replacing existing values without moving
 their keys and appending new keys in source insertion order. Ordinary realtime
@@ -1070,7 +1107,11 @@ row/column range, defaulting omitted bounds to the source matrix's full row or
 column extent and allowing empty row or column slices.
 `matrix.row` and `matrix.col` return independent row/column snapshots:
 `array<float>` for float matrices, `array<int>` for int matrices, and
-`array<bool>` for bool matrices. Ordinary
+`array<bool>` for bool matrices, `array<string>` for string matrices, and
+`array<color>` for color matrices. Namespace-call results may immediately use
+`.size()`, `.get(index)`, `.first()`, `.last()`, or `.copy()`; only `.copy()`
+may continue into another allowed read/copy, and the copy remains independent
+of the source matrix and the first row/column snapshot. Ordinary
 `var` matrix ids persist across bars, and
 realtime forming-bar rollback restores the confirmed matrix store for
 non-`varip` updates. Matrix construction rejects negative row or column counts
@@ -1199,7 +1240,9 @@ or non-finite cell, and raises a runtime error for non-square matrices.
 for square runtime-owned float or int matrices, returns an empty array for
 empty `0 x 0` matrices, returns `na` for any `na` or non-finite cell and for
 non-real eigenvalue results, and raises a runtime error for non-square
-matrices.
+matrices. Its namespace-call result may immediately use the same five
+read/copy helpers, with only `.copy()` nestable and with existing empty/`na`,
+index, and bounds semantics retained.
 `matrix.eigenvectors` returns an independent `matrix<float>` whose columns are
 real eigenvectors for square runtime-owned float or int matrices, returns an
 independent empty `0 x 0` matrix for empty `0 x 0` input, returns `na` for any

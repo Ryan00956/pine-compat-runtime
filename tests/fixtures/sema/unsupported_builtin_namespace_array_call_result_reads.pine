@@ -1,0 +1,21 @@
+//@version=6
+indicator("Unsupported builtin namespace array call-result reads")
+
+float_matrix = matrix.new<float>(1, 1, 0.0)
+prices = map.new<string, float>()
+prices.put("open", 1.0)
+
+split_bad_index = str.split("a,b", ",").get("bad")
+split_pop = str.split("a,b", ",").pop()
+split_push = str.split("a,b", ",").push("c")
+pivot_bad_index = ta.pivot_point_levels("Traditional", true, true).get("bad")
+pivot_clear = ta.pivot_point_levels("Traditional", true, true).clear()
+matrix_row_bad_index = matrix.row(float_matrix, "bad").size()
+matrix_col_bad_index = matrix.col(float_matrix, "bad").first()
+matrix_row_bad_get = matrix.row(float_matrix, 0).get("bad")
+matrix_eigen_bad_get = matrix.eigenvalues(float_matrix).get("bad")
+matrix_eigen_reverse = matrix.eigenvalues(float_matrix).reverse()
+map_keys_bad_get = map.keys(prices).get("bad")
+map_values_bad_get = map.values(prices).get("bad")
+map_keys_remove = map.keys(prices).remove(0)
+map_values_set = map.values(prices).set(0, 2.0)

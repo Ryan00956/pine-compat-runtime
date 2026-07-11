@@ -804,7 +804,7 @@ rewrites the unqualified form to the impossible internal prefix `$call_result`
 only for a plain lexical callee; qualified user-defined forms retain their
 source alias/type prefix.
 
-Built-in array producers have one separate, closed receiver path. Its exact
+Built-in `array.*` producers have one separate, closed receiver path. Its exact
 admitted producer set is `array.new_float`, `array.new_int`, `array.new_bool`,
 `array.new_string`, `array.new_color`, `array.new_line`, `array.new_linefill`,
 `array.new_polyline`, `array.new_label`, `array.new_box`, `array.new_table`,
@@ -842,9 +842,36 @@ itself non-mutating, but the concat call is still a collection side effect and
 remains rejected inside UDFs. Mixed scalar-return identities, non-scalar
 UDT-array returns, unsupported or unknown templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, other
-`array.*` producer/member calls, other built-in namespaces and templates,
+`array.*` producer/member calls, built-in namespaces and templates outside the
+exact cross-namespace producer set below,
 postfix helpers outside the five-item read/copy set, and postfix mutation remain
 unsupported boundaries.
+
+The same `$builtin_array_result` lowering now has one additional exact
+cross-namespace producer set: `str.split`, `ta.pivot_point_levels`,
+`matrix.row`, `matrix.col`, `matrix.eigenvalues`, `map.keys`, and `map.values`.
+Each admits only `.size()`, `.get(index)`, `.first()`, `.last()`, and `.copy()`;
+only `.copy()` can continue with another allowed array read/copy. The other
+four results are terminal. `str.split` and `ta.pivot_point_levels` retain their
+existing `array<string>` and `array<float>` results. `matrix.row` and
+`matrix.col` return independent element-array snapshots for runtime-owned
+float, int, bool, string, and color matrices, while `matrix.eigenvalues`
+retains its independent `array<float>` result for the supported numeric-matrix
+subset. `map.keys` and `map.values` return independent insertion-order arrays
+whose element kind matches the scalar key or value template, where each map
+template side is one of int, float, bool, string, or color. A postfix helper
+does not change empty/`na`, negative-index, bounds-error, element-kind, or
+snapshot-copy behavior.
+
+This set deliberately excludes namespace-qualified `matrix.mult(...)` as a
+direct-result receiver, including its array-returning overloads. The existing
+bound-receiver `matrix_id.mult(array).size()` path is unchanged. Every
+matrix-returning call, `map.new` and `matrix.new` template, other
+namespace/non-producer call, and postfix mutation remains outside this set.
+Built-in namespace prefixes remain reserved, so same-named user or import
+qualifiers do not enter this path. The extension carries no UDT/import identity
+and changes no public output schema.
+
 Both caller-side `for...in` over returned arrays and in-callee `for...in` over
 generic same-local scalar-tree UDT-array parameters preserve concrete identity,
 including final expression results that return the loop element itself or use
@@ -889,14 +916,16 @@ For local methods, a typed same-local scalar-tree UDT array parameter may be
 returned directly or through block aliases, copies, fresh constructors, nested
 local calls, and final control flow with call-specific identity. Qualified
 user-defined results returning any supported array kind, unqualified plain
-local UDF results, and the exact built-in array producer allowlist support
+local UDF results, and the two exact built-in array-producing allowlists support
 direct `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`. Concrete
 same-local/same-imported scalar-tree identity remains mandatory for UDT-array
 results, and concrete scalar UDT results from unqualified local UDFs may call
 the existing pure method subset. Built-in producer element readers are
 terminal and do not open that method path; only producer `.copy()` may continue
-with another allowed array read/copy. Other built-in-qualified/template call
-results and other array methods remain parser/semantic boundaries.
+with another allowed array read/copy. The seven cross-namespace producers are
+scalar-array-only and add no UDT/import identity path. Built-in-qualified or
+template call results outside the two exact allowlists, and other array
+methods, remain parser/semantic boundaries.
 Method side effects, recursive methods, unsupported parameter families,
 mismatched UDT parameter identity, unknown receivers, and alias-qualified
 imported method receiver type mismatches are rejected during semantic analysis.
@@ -1049,7 +1078,14 @@ presence, `map.clear` empties the entry list while keeping the id reusable, and
 Assigning a map to another variable copies the id, not the backing store;
 `map.copy` clones the current backing store into an independent map id.
 `map.keys` and `map.values` return independent array snapshots in insertion
-order. `map.put_all(target, source)` mutates the target map by iterating source
+order. For maps whose key and value templates are each `int`, `float`, `bool`,
+`string`, or `color`, those two namespace-call results may be consumed directly
+through `.size()`, `.get(index)`, `.first()`, `.last()`, or `.copy()`. The
+returned key/value array kind follows the corresponding map template side;
+only `.copy()` can continue into another direct read/copy, and it is independent
+of both the map and the first snapshot. Empty maps, typed-`na` maps, negative
+indexes, and bounds errors retain the ordinary array-helper behavior.
+`map.put_all(target, source)` mutates the target map by iterating source
 entries in insertion order; equal keys replace existing values without moving
 target order, and new keys append.
 Realtime forming updates start from the confirmed runtime clone, so ordinary
@@ -1238,6 +1274,10 @@ fresh matrix copies. `matrix.row(values, row)` and
 `matrix.col(values, column)` return independent row/column snapshots:
 `array<float>` for float matrices, `array<int>` for int matrices,
 `array<bool>` for bool matrices, `array<string>` for string matrices, and `array<color>` for color matrices.
+The namespace-call results may immediately use `.size()`, `.get(index)`,
+`.first()`, `.last()`, or `.copy()` without first binding the snapshot. Only a
+postfix `.copy()` can continue into another allowed read/copy; mutating the
+postfix copy does not mutate the matrix or an earlier row/column snapshot.
 `values.row(row)` lowers to
 `matrix.row(values, row)` and returns the same independent row snapshot.
 `values.col(column)` lowers to `matrix.col(values, column)` and returns the same
@@ -1290,7 +1330,9 @@ raises a runtime error for non-square matrices.
 eigenvalues for square runtime-owned float or int matrices, returns an empty
 array for empty `0 x 0` matrices, returns `na` for any `na` or non-finite cell
 and for non-real eigenvalue results, and raises a runtime error for non-square
-matrices.
+matrices. Its namespace-call result may immediately use the same five
+read/copy helpers, with only `.copy()` nestable and with ordinary empty/`na`
+and bounds behavior retained.
 `matrix.eigenvectors(values)` returns an independent `matrix<float>` whose
 columns are real eigenvectors for square runtime-owned float or int matrices,
 returns an independent empty `0 x 0` matrix for empty `0 x 0` input, returns

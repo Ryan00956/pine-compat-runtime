@@ -774,9 +774,7 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
                 Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
             }
             [prefix, _method] if prefix == BUILTIN_ARRAY_CALL_RESULT_PREFIX => None,
-            [namespace, member]
-                if namespace == "array" && is_builtin_array_result_member(member) =>
-            {
+            [namespace, member] if is_builtin_array_result_qualified_callee(namespace, member) => {
                 Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
             }
             [alias, _method] if !is_builtin_namespace(alias) => Some(alias.clone()),
@@ -807,6 +805,17 @@ fn is_builtin_array_result_callee(name: &str) -> bool {
         is_builtin_array_result_member(member)
             || (member.starts_with("new<") && member.ends_with('>'))
     })
+}
+
+fn is_builtin_array_result_qualified_callee(namespace: &str, member: &str) -> bool {
+    (namespace == "array" && is_builtin_array_result_member(member))
+        || matches!(
+            (namespace, member),
+            ("str", "split")
+                | ("ta", "pivot_point_levels")
+                | ("matrix", "eigenvalues" | "row" | "col")
+                | ("map", "keys" | "values")
+        )
 }
 
 fn is_builtin_array_result_member(member: &str) -> bool {

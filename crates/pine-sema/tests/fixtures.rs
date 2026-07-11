@@ -6719,6 +6719,38 @@ fn accepts_supported_builtin_array_call_result_reads_fixture() {
 }
 
 #[test]
+fn accepts_supported_builtin_namespace_array_call_result_reads_fixture() {
+    assert_valid_fixture(
+        "tests/fixtures/sema/supported_builtin_namespace_array_call_result_reads.pine",
+    );
+}
+
+#[test]
+fn reports_unsupported_builtin_namespace_array_call_result_reads_fixture() {
+    let path = "tests/fixtures/sema/unsupported_builtin_namespace_array_call_result_reads.pine";
+    assert_exact_diagnostic_messages(
+        path,
+        &[
+            "`array.get` argument `index` expects simple integer-compatible, got const string",
+            "`array.pop` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.push` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.get` argument `index` expects simple integer-compatible, got const string",
+            "`array.clear` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`matrix.row` argument `row` expects simple int, got const string",
+            "`matrix.col` argument `column` expects simple int, got const string",
+            "`array.get` argument `index` expects simple integer-compatible, got const string",
+            "`array.get` argument `index` expects simple integer-compatible, got const string",
+            "`array.reverse` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.get` argument `index` expects simple integer-compatible, got const string",
+            "`array.get` argument `index` expects simple integer-compatible, got const string",
+            "`array.remove` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.set` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+        ],
+    );
+    assert_diagnostic_count(path, 14);
+}
+
+#[test]
 fn reports_unsupported_builtin_array_call_result_reads_fixture() {
     let path = "tests/fixtures/sema/unsupported_builtin_array_call_result_reads.pine";
     assert_diagnostic_messages(
@@ -21663,6 +21695,21 @@ fn assert_diagnostic_messages(path: &str, messages: &[&str]) {
             analysis.diagnostics
         );
     }
+    assert!(analysis.hir.is_none());
+}
+
+fn assert_exact_diagnostic_messages(path: &str, messages: &[&str]) {
+    let path = workspace_fixture(path);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    let actual = analysis
+        .diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.message.as_str())
+        .collect::<Vec<_>>();
+
+    assert_eq!(actual, messages, "{} diagnostics changed", path.display());
     assert!(analysis.hir.is_none());
 }
 

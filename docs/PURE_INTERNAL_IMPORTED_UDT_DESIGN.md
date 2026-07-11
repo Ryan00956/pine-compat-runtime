@@ -76,9 +76,19 @@ are fixture-backed. An unqualified root-local UDF result carrying a concrete
 imported scalar UDT identity may also invoke existing pure user methods; the
 built-in producer path does not gain that composition. The lexical prefix
 `array` is reserved for built-in recognition, so an imported or user qualifier
-with that spelling is not a supported qualified call-result path. Other
-namespaces/templates, unsupported `array.new<T>` types, non-producer `array.*`
-calls, mixed or non-scalar return identities, non-array/non-UDT or unresolved
+with that spelling is not a supported qualified call-result path. At the
+historical item 9 boundary, other namespaces/templates remained gated. Item 10
+later admits exactly `str.split`, `ta.pivot_point_levels`, `matrix.row`,
+`matrix.col`, `matrix.eigenvalues`, `map.keys`, and `map.values` on the same
+synthetic path, with the same five helpers and only `.copy()` nestable. These
+are scalar-array producers only: matrix row/column snapshots follow the five
+supported scalar matrix kinds, eigenvalues retain the numeric-matrix
+`array<float>` result, and map keys/values retain insertion order and the
+corresponding five-scalar template kind. The new set does not carry or infer
+imported UDT identity. Outside the two exact producer sets, unsupported
+`array.new<T>` types, non-producer calls, map/matrix templates,
+matrix-returning calls, namespace-qualified `matrix.mult(...)` direct-result
+chains, mixed or non-scalar return identities, non-array/non-UDT or unresolved
 results, other postfix helpers, nested field mutation, postfix mutation, and
 method receiver/parameter/global field side effects remain fail-closed.
 `array.slice` retains its live parent view and postfix `.copy()` captures its
@@ -661,3 +671,20 @@ return/parameter flow remains deferred.
    import-alias call-result path. Slice remains a live parent view and postfix
    copy is independent. Concat mutates and returns its first input; the outer
    reader is non-mutating, but concat remains rejected inside UDFs. Done.
+10. A later scalar-array producer slice reuses `$builtin_array_result` for
+    exactly `str.split`, `ta.pivot_point_levels`, `matrix.row`, `matrix.col`,
+    `matrix.eigenvalues`, `map.keys`, and `map.values`. Each exposes only
+    `.size()`, `.get(index)`, `.first()`, `.last()`, and `.copy()`; only
+    `.copy()` can continue into another allowed read/copy. Row/column results
+    are independent arrays matching the float/int/bool/string/color matrix
+    element kind, eigenvalues retain the independent `array<float>` result for
+    supported numeric matrices, and map key/value results are independent
+    insertion-order arrays matching the corresponding
+    int/float/bool/string/color template side. Empty/`na`, negative-index,
+    bounds, typed destinations, UDF reads, and copy independence are
+    fixture-backed. Namespace-qualified `matrix.mult(...)` direct-result
+    chains, matrix-returning calls, map/matrix templates, all other
+    namespaces/non-producers, and mutation remain gated; the existing
+    bound-receiver `matrix_id.mult(array).size()` path is unchanged. Built-in
+    prefixes stay reserved. This slice deliberately adds no imported
+    UDT identity and no public schema field. Done.

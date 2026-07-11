@@ -1,3 +1,4 @@
+mod call_results;
 mod strategy;
 const MATRIX_UNSUPPORTED_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/unsupported_matrix.pine",
@@ -287,88 +288,6 @@ const UDT_ARRAY_CONTROL_FLOW_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/unsupported_imported_user_type_array_control_flow_identity.pine",
 ];
 
-const LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES: &[&str] = &[
-    "tests/fixtures/runtime/user_type_array_scalar_tree.pine",
-    "tests/fixtures/sema/supported_user_type_array_udf_method_returns.pine",
-    "tests/fixtures/sema/unsupported_user_type_array_udf_method_return_identities.pine",
-    "tests/fixtures/runtime/user_type_array_tuple_returns.pine",
-    "tests/fixtures/sema/supported_user_type_array_tuple_returns.pine",
-    "tests/fixtures/sema/unsupported_user_type_array_tuple_return_identities.pine",
-    "tests/fixtures/sema/unsupported_user_type_array_tuple_alias_mutation.pine",
-    "tests/fixtures/sema/unsupported_local_user_type_array_call_result_chaining.pine",
-];
-
-const IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES: &[&str] = &[
-    "tests/fixtures/runtime/import_udt_array_udf_method_returns.pine",
-    "tests/fixtures/sema/supported_imported_user_type_array_udf_method_returns.pine",
-    "tests/fixtures/sema/unsupported_imported_user_type_array_udf_method_return_identities.pine",
-    "tests/fixtures/runtime/import_udt_array_tuple_returns.pine",
-    "tests/fixtures/sema/supported_imported_user_type_array_tuple_returns.pine",
-    "tests/fixtures/sema/unsupported_imported_user_type_array_tuple_return_identities.pine",
-    "tests/fixtures/sema/unsupported_imported_user_type_array_tuple_alias_mutation.pine",
-    "tests/fixtures/sema/unsupported_imported_user_type_array_call_result_chaining.pine",
-    "tests/fixtures/libraries/import_udt_array_return_lib.pine",
-];
-
-const UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES: &[&str] = &[
-    "tests/fixtures/runtime/user_type_array_scalar_tree.pine",
-    "tests/fixtures/sema/supported_user_type_array_udf_method_returns.pine",
-    "tests/fixtures/sema/unsupported_local_user_type_array_call_result_chaining.pine",
-    "tests/fixtures/runtime/import_udt_array_udf_method_returns.pine",
-    "tests/fixtures/sema/supported_imported_user_type_array_udf_method_returns.pine",
-    "tests/fixtures/sema/unsupported_imported_user_type_array_call_result_chaining.pine",
-    "tests/fixtures/libraries/import_udt_array_return_lib.pine",
-];
-
-const BUILTIN_ARRAY_CALL_RESULT_FIXTURES: &[&str] = &[
-    "tests/fixtures/runtime/builtin_array_call_result_reads.pine",
-    "tests/fixtures/sema/supported_builtin_array_call_result_reads.pine",
-    "tests/fixtures/sema/unsupported_builtin_array_call_result_reads.pine",
-];
-
-const BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
-    "array.new_float",
-    "array.new_int",
-    "array.new_bool",
-    "array.new_string",
-    "array.new_color",
-    "array.new_line",
-    "array.new_linefill",
-    "array.new_polyline",
-    "array.new_label",
-    "array.new_box",
-    "array.new_table",
-    "array.new<chart.point>",
-    "array.new<UDT>",
-    "array.from",
-    "array.size",
-    "array.get",
-    "array.first",
-    "array.last",
-    "array.copy",
-    "array.abs",
-    "array.standardize",
-    "array.sort_indices",
-    "array.slice",
-    "array.concat",
-    "array method calls",
-    "expression-body functions",
-    "multi-statement functions",
-    "typed declarations",
-    "array.*",
-    "import",
-    "user-defined types",
-    "user-defined methods",
-];
-
-const UDT_IDENTITY_BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
-    "array.new<UDT>",
-    "array.from",
-    "array.copy",
-    "array.slice",
-    "array.concat",
-];
-
 const LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/user_type_array_scalar_tree.pine",
     "tests/fixtures/sema/supported_user_type_array_param_for_in.pine",
@@ -399,11 +318,7 @@ pub(super) fn validate_entry(
     validate_imported_udt_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_udt_varip_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_udt_array_control_flow_fixture_paths(line_number, feature, fixtures)?;
-    validate_local_udt_array_call_return_fixture_paths(line_number, feature, fixtures)?;
-    validate_imported_udt_array_call_return_fixture_paths(line_number, feature, fixtures)?;
-    validate_builtin_array_call_result_fixture_paths(line_number, feature, fixtures)?;
-    validate_udt_identity_builtin_array_call_result_fixture_paths(line_number, feature, fixtures)?;
-    validate_udt_array_call_result_helper_fixture_paths(line_number, feature, fixtures)?;
+    call_results::validate_fixture_paths(line_number, feature, fixtures)?;
     validate_local_udt_array_param_for_in_fixture_paths(line_number, feature, fixtures)?;
     validate_array_binary_search_fixture_pairs(line_number, feature, fixtures)?;
     validate_map_boundary_fixture_paths(line_number, feature, fixtures)?;
@@ -438,130 +353,6 @@ fn validate_udt_array_control_flow_fixture_paths(
         if !fixtures.contains(fixture) {
             return Err(format!(
                 "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed local/imported UDT array control-flow identity"
-            ));
-        }
-    }
-
-    Ok(())
-}
-
-fn validate_local_udt_array_call_return_fixture_paths(
-    line_number: usize,
-    feature: &str,
-    fixtures: &[&str],
-) -> Result<(), String> {
-    if !matches!(
-        feature,
-        "array.new<UDT>"
-            | "array.from"
-            | "array.*"
-            | "expression-body functions"
-            | "multi-statement functions"
-            | "typed declarations"
-            | "user-defined types"
-            | "user-defined methods"
-    ) {
-        return Ok(());
-    }
-
-    for fixture in LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES {
-        if !fixtures.contains(fixture) {
-            return Err(format!(
-                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed local UDF/user-method UDT array return and per-slot tuple-return identity"
-            ));
-        }
-    }
-
-    Ok(())
-}
-
-fn validate_imported_udt_array_call_return_fixture_paths(
-    line_number: usize,
-    feature: &str,
-    fixtures: &[&str],
-) -> Result<(), String> {
-    if !matches!(
-        feature,
-        "array.new<UDT>"
-            | "array.from"
-            | "array.*"
-            | "expression-body functions"
-            | "multi-statement functions"
-            | "typed declarations"
-            | "import"
-            | "user-defined types"
-            | "user-defined methods"
-    ) {
-        return Ok(());
-    }
-
-    for fixture in IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES {
-        if !fixtures.contains(fixture) {
-            return Err(format!(
-                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed imported UDF/user-method UDT array return and per-slot tuple-return identity plus retained call-result-chaining boundaries"
-            ));
-        }
-    }
-
-    Ok(())
-}
-
-fn validate_udt_array_call_result_helper_fixture_paths(
-    line_number: usize,
-    feature: &str,
-    fixtures: &[&str],
-) -> Result<(), String> {
-    if !matches!(
-        feature,
-        "array.size" | "array.get" | "array.first" | "array.last" | "array.copy"
-    ) {
-        return Ok(());
-    }
-
-    for fixture in UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES {
-        if !fixtures.contains(fixture) {
-            return Err(format!(
-                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed qualified user-defined and unqualified local-UDF array/scalar-UDT call-result dispatch plus retained fail-closed boundaries"
-            ));
-        }
-    }
-
-    Ok(())
-}
-
-fn validate_builtin_array_call_result_fixture_paths(
-    line_number: usize,
-    feature: &str,
-    fixtures: &[&str],
-) -> Result<(), String> {
-    if !BUILTIN_ARRAY_CALL_RESULT_FEATURES.contains(&feature) {
-        return Ok(());
-    }
-
-    for fixture in BUILTIN_ARRAY_CALL_RESULT_FIXTURES {
-        if !fixtures.contains(fixture) {
-            return Err(format!(
-                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed static-array builtin/template call-result size/get/first/last/copy dispatch and retained producer/helper boundaries"
-            ));
-        }
-    }
-
-    Ok(())
-}
-
-fn validate_udt_identity_builtin_array_call_result_fixture_paths(
-    line_number: usize,
-    feature: &str,
-    fixtures: &[&str],
-) -> Result<(), String> {
-    if !UDT_IDENTITY_BUILTIN_ARRAY_CALL_RESULT_FEATURES.contains(&feature) {
-        return Ok(());
-    }
-
-    for fixture in UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES {
-        if !fixtures.contains(fixture) {
-            return Err(format!(
-                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed local/imported UDT identity through static-array builtin/template call-result dispatch"
             ));
         }
     }
@@ -1042,25 +833,22 @@ fn validate_status_fixture_paths(
 #[cfg(test)]
 mod tests {
     use super::super::try_conformance_entries_from_tsv;
+    use super::call_results::{
+        BUILTIN_ARRAY_CALL_RESULT_FIXTURES, BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES,
+        IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES, LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES,
+    };
     use super::{
-        BUILTIN_ARRAY_CALL_RESULT_FIXTURES, FOR_IN_BOUNDARY_FIXTURES,
-        IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES, IMPORTED_UDT_BOUNDARY_FIXTURES,
-        LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES, LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES,
-        MATRIX_UNSUPPORTED_BOUNDARY_FIXTURES, SWITCH_STATEMENT_BLOCK_BOUNDARY_FIXTURES,
-        UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES, UDT_ARRAY_CONTROL_FLOW_FIXTURES,
+        FOR_IN_BOUNDARY_FIXTURES, IMPORTED_UDT_BOUNDARY_FIXTURES,
+        LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES, MATRIX_UNSUPPORTED_BOUNDARY_FIXTURES,
+        SWITCH_STATEMENT_BLOCK_BOUNDARY_FIXTURES, UDT_ARRAY_CONTROL_FLOW_FIXTURES,
         UDT_VARIP_BOUNDARY_FIXTURES, WHILE_EXPRESSION_BOUNDARY_FIXTURES,
-        validate_builtin_array_call_result_fixture_paths,
-        validate_imported_udt_array_call_return_fixture_paths,
-        validate_local_udt_array_call_return_fixture_paths,
         validate_local_udt_array_param_for_in_fixture_paths,
-        validate_udt_array_call_result_helper_fixture_paths,
         validate_udt_array_control_flow_fixture_paths,
-        validate_udt_identity_builtin_array_call_result_fixture_paths,
     };
 
     #[test]
     fn rejects_map_row_without_current_boundary_fixture_set() {
-        let fixtures = [
+        let mut fixtures = vec![
             "tests/fixtures/runtime/map_new_size.pine",
             "tests/fixtures/runtime/map_put_get_contains.pine",
             "tests/fixtures/runtime/map_clear.pine",
@@ -1121,6 +909,7 @@ mod tests {
             "tests/fixtures/sema/unsupported_map_control_flow_template.pine",
             "tests/fixtures/sema/unsupported_map_udf_method_return_templates.pine",
         ];
+        fixtures.extend(BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES.iter().copied());
         let tsv = format!(
             "feature\tstatus\tnotes\tfixtures\nmap.*\tpartial\tmap.new/map.size/map.put/map.get/map.contains/map.clear/map.remove subset; map collections beyond that remain unsupported\t{}\n",
             fixtures.join(";")
@@ -1193,80 +982,6 @@ mod tests {
     }
 
     #[test]
-    fn rejects_local_udt_array_return_rows_without_current_fixture_set() {
-        let fixtures =
-            &LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES[..LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES.len() - 1];
-        let error = validate_local_udt_array_call_return_fixture_paths(
-            1,
-            "expression-body functions",
-            fixtures,
-        )
-        .expect_err("missing local UDT array call-return fixture should fail");
-
-        assert!(error.contains(
-            "tests/fixtures/sema/unsupported_local_user_type_array_call_result_chaining.pine"
-        ));
-    }
-
-    #[test]
-    fn import_row_requires_imported_udt_array_return_fixture_set() {
-        let error = validate_imported_udt_array_call_return_fixture_paths(1, "import", &[])
-            .expect_err("import row must retain the imported UDT array return fixture set");
-
-        assert!(error.contains("tests/fixtures/runtime/import_udt_array_udf_method_returns.pine"));
-    }
-
-    #[test]
-    fn rejects_udt_array_return_rows_without_imported_call_return_library_fixture() {
-        let fixtures = &IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES
-            [..IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES.len() - 1];
-        let error = validate_imported_udt_array_call_return_fixture_paths(
-            1,
-            "user-defined methods",
-            fixtures,
-        )
-        .expect_err("UDT array return rows must retain the imported return library");
-
-        assert!(error.contains("tests/fixtures/libraries/import_udt_array_return_lib.pine"));
-    }
-
-    #[test]
-    fn rejects_udt_array_helper_rows_without_call_result_fixture_set() {
-        let fixtures = &UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES
-            [..UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES.len() - 1];
-        let error = validate_udt_array_call_result_helper_fixture_paths(1, "array.get", fixtures)
-            .expect_err("UDT-array helper rows must retain the call-result fixture set");
-
-        assert!(error.contains("tests/fixtures/libraries/import_udt_array_return_lib.pine"));
-    }
-
-    #[test]
-    fn rejects_builtin_array_result_rows_without_comprehensive_fixture_set() {
-        let fixtures =
-            &BUILTIN_ARRAY_CALL_RESULT_FIXTURES[..BUILTIN_ARRAY_CALL_RESULT_FIXTURES.len() - 1];
-        let error = validate_builtin_array_call_result_fixture_paths(1, "array.abs", fixtures)
-            .expect_err("builtin array-result rows must retain the comprehensive fixture set");
-
-        assert!(
-            error.contains("tests/fixtures/sema/unsupported_builtin_array_call_result_reads.pine")
-        );
-    }
-
-    #[test]
-    fn rejects_udt_identity_builtin_array_result_rows_without_local_import_fixture_set() {
-        let fixtures = &UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES
-            [..UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES.len() - 1];
-        let error = validate_udt_identity_builtin_array_call_result_fixture_paths(
-            1,
-            "array.slice",
-            fixtures,
-        )
-        .expect_err("UDT-preserving builtin array-result rows must retain local/import fixtures");
-
-        assert!(error.contains("tests/fixtures/libraries/import_udt_array_return_lib.pine"));
-    }
-
-    #[test]
     fn rejects_udt_array_param_for_in_rows_without_current_fixture_set() {
         let fixtures = &LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES
             [..LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES.len() - 1];
@@ -1308,6 +1023,7 @@ mod tests {
         fixtures.extend(LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES.iter().copied());
         fixtures.extend(IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES.iter().copied());
         fixtures.extend(BUILTIN_ARRAY_CALL_RESULT_FIXTURES.iter().copied());
+        fixtures.extend(BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES.iter().copied());
         fixtures.extend(LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES.iter().copied());
         let tsv = format!(
             "feature\tstatus\tnotes\tfixtures\ntyped declarations\tpartial\tbare array, bare map, non-scalar map templates, bare matrix, non-float matrix, and other typed declarations remain unsupported\t{}\n",
@@ -1444,6 +1160,7 @@ mod tests {
                 .copied()
                 .filter(|fixture| *fixture != missing),
         );
+        fixtures.extend(BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES.iter().copied());
 
         let tsv = format!(
             "feature\tstatus\tnotes\tfixtures\nmatrix.*\tpartial\tfloat matrices and matrix varip are supported while selected boundaries remain unsupported\t{}\n",

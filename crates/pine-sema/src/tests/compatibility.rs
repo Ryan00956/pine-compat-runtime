@@ -98,6 +98,71 @@ fn builtin_array_result_producer_parser_allowlist_matches_registry() {
             parsed.diagnostics
         );
     }
+
+    let registered_cross_namespace = PHASE_1_BUILTINS
+        .iter()
+        .filter(|signature| !signature.name.starts_with("array."))
+        .filter(|signature| match signature.returns {
+            ReturnSpec::Fixed(pine_type) => crate::types::is_array_kind(pine_type.kind),
+            ReturnSpec::MatrixArray(_) => true,
+            _ => false,
+        })
+        .map(|signature| signature.name)
+        .collect::<BTreeSet<_>>();
+    let expected_cross_namespace = BTreeSet::from([
+        "matrix.col",
+        "matrix.eigenvalues",
+        "matrix.row",
+        "str.split",
+        "ta.pivot_point_levels",
+    ]);
+    assert_eq!(registered_cross_namespace, expected_cross_namespace);
+
+    for name in &registered_cross_namespace {
+        let source = SourceFile::new("test.pine", format!("value = {name}().size()\n"));
+        let parsed = pine_syntax::parse_source(&source);
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "registered cross-namespace array producer `{name}` was parser-gated: {:?}",
+            parsed.diagnostics
+        );
+    }
+
+    for signature in PHASE_1_BUILTINS.iter().filter(|signature| {
+        matches!(
+            signature
+                .name
+                .split_once('.')
+                .map(|(namespace, _)| namespace),
+            Some("str" | "ta" | "matrix")
+        ) && !registered_cross_namespace.contains(signature.name)
+    }) {
+        let source = SourceFile::new(
+            "test.pine",
+            format!("value = {}().size()\n", signature.name),
+        );
+        let parsed = pine_syntax::parse_source(&source);
+        assert!(
+            parsed
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR"),
+            "non-producer cross-namespace builtin `{}` unexpectedly admitted a call-result method: {:?}",
+            signature.name,
+            parsed.diagnostics
+        );
+    }
+
+    let custom_map_array_producers = BTreeSet::from(["map.keys", "map.values"]);
+    for name in custom_map_array_producers {
+        let source = SourceFile::new("test.pine", format!("value = {name}().size()\n"));
+        let parsed = pine_syntax::parse_source(&source);
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "custom map array producer `{name}` was parser-gated: {:?}",
+            parsed.diagnostics
+        );
+    }
 }
 
 #[test]

@@ -91,10 +91,20 @@ imported scalar UDT identity may also invoke existing pure user methods; the
 built-in producer path does not gain that scalar-method composition. The
 lexical prefix `array` is reserved for built-in recognition, so a user/import
 qualifier named `array` is not a supported qualified call-result receiver.
-Other namespaces and templates, unsupported `array.new<T>` element families,
-non-producer `array.*` calls, mixed or non-scalar UDT-array returns,
-non-array/non-UDT or unresolved results, other postfix helpers, and postfix
-mutation remain fail-closed. `array.slice` remains a live parent view, while a
+At the historical item 19 boundary, other namespaces and templates remained
+gated. Historical item 20 later admits only `str.split`,
+`ta.pivot_point_levels`, `matrix.row`, `matrix.col`,
+`matrix.eigenvalues`, `map.keys`, and `map.values` on the same synthetic path,
+with the same five helpers and only `.copy()` nestable. Those producers return
+only scalar arrays: row/column snapshots follow the five supported scalar
+matrix element kinds, eigenvalues keep the existing numeric-matrix
+`array<float>` result, and map key/value snapshots follow the corresponding
+five-scalar template kind in insertion order. They add no local/imported UDT
+identity. Outside the two exact producer sets, unsupported `array.new<T>`
+element families, non-producer calls, map/matrix templates, matrix-returning
+calls, namespace-qualified `matrix.mult(...)` direct-result chains, other
+postfix helpers, and postfix mutation remain fail-closed. `array.slice` remains
+a live parent view, while a
 postfix `.copy()` independently captures its current values. `array.concat`
 still mutates and returns its first array id; a following reader is itself
 non-mutating, but concat remains rejected inside UDFs.
@@ -687,12 +697,14 @@ Initial policy:
   supported array kind support direct
   `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()` chaining. Concrete
   scalar UDT results from unqualified local UDFs may invoke existing pure user
-  methods. Exact allowlisted built-in array producers support those same five
+  methods. The two exact built-in array-producing sets support those same five
   helpers, but only `.copy()` may continue a nested array chain and terminal
-  element reads cannot invoke UDT methods. Mixed identities within one scalar
-  return or tuple slot, non-scalar UDT arrays, non-array/non-UDT results,
+  element reads cannot invoke UDT methods. The later seven cross-namespace
+  producers return scalar arrays only and add no UDT/import identity. Mixed
+  identities within one scalar return or tuple slot, non-scalar UDT arrays,
+  non-array/non-UDT results,
   unknown/`na` results without a concrete supported type or identity,
-  built-in-qualified/template call receivers outside the producer allowlist,
+  built-in-qualified/template call receivers outside the two producer allowlists,
   mutation side effects, and other direct array methods on call results remain
   semantic/parser/lowering boundaries. In particular, concat remains rejected
   inside UDFs even when followed by an allowed reader.
@@ -815,6 +827,24 @@ Recommended future slices:
     `.copy()` snapshots its current window independently. `array.concat`
     mutates and returns its first input; its postfix reader is non-mutating, but
     concat remains rejected inside UDFs. Done.
+20. A later cross-namespace scalar-array producer slice reuses
+    `$builtin_array_result` for exactly `str.split`,
+    `ta.pivot_point_levels`, `matrix.row`, `matrix.col`,
+    `matrix.eigenvalues`, `map.keys`, and `map.values`. Each exposes only
+    `.size()`, `.get(index)`, `.first()`, `.last()`, and `.copy()`; only
+    `.copy()` may continue to another allowed read/copy. Row and column results
+    are independent arrays matching the float/int/bool/string/color matrix
+    element kind, eigenvalues retain the existing independent `array<float>`
+    result for supported numeric matrices, and map key/value results are
+    independent insertion-order arrays matching the corresponding
+    int/float/bool/string/color template side. Empty/`na`, negative-index,
+    bounds, typed destinations, UDF reads, and copy independence are
+    fixture-backed. Namespace-qualified `matrix.mult(...)` direct-result
+    chains, matrix-returning calls, map/matrix templates, all other
+    namespaces/non-producers, and postfix mutation remain gated; the existing
+    bound-receiver `matrix_id.mult(array).size()` path is unchanged. Built-in
+    prefixes remain reserved. This scalar-only slice adds no
+    UDT/import identity and no public schema field. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -848,9 +878,11 @@ UDT-array results still require a concrete same-local/same-imported scalar-tree
 identity, and scalar UDT local-UDF results may invoke existing pure methods.
 The exact built-in array producer allowlist in item 19 also shares those five
 helpers through `$builtin_array_result`, with only `.copy()` nestable and
-terminal element readers unable to invoke UDT methods. Broader UDT element
-families, built-in-qualified/template call-result receivers outside that
-allowlist, unsupported `array.new<T>` templates, non-array/non-UDT results,
+terminal element readers unable to invoke UDT methods. Item 20 adds the exact
+seven cross-namespace scalar-array producers under the same five-helper and
+copy-only continuation rule, without adding UDT/import identity. Broader UDT
+element families, built-in-qualified/template call-result receivers outside
+the two allowlists, unsupported `array.new<T>` templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, unsupported
 mutation contexts, and helpers not listed there remain unsupported until later
 fixture-backed slices implement syntax, analysis, runtime behavior, and

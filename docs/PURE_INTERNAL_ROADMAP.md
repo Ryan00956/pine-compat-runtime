@@ -312,8 +312,20 @@ Current baseline:
   invoke the existing pure user-method subset, but built-in producer element
   reads do not open that composition. The lexical `array` prefix is reserved
   for built-in producer recognition; a user/import qualifier with that spelling
-  is not a supported qualified call-result path. Other namespaces, unsupported
-  templates, non-producer `array.*` members, and postfix mutation fail closed.
+  is not a supported qualified call-result path. A later closed slice adds the
+  exact non-`array` producer set `str.split`, `ta.pivot_point_levels`,
+  `matrix.row`, `matrix.col`, `matrix.eigenvalues`, `map.keys`, and
+  `map.values` to the same `$builtin_array_result` path. They share only the
+  same five read/copy helpers, and only `.copy()` may continue a chain.
+  Row/column results preserve the element kind of the five supported scalar
+  matrix templates, eigenvalues preserve the existing numeric-matrix
+  `array<float>` result, and map key/value results preserve insertion order and
+  the corresponding five-scalar key/value template kind. All of those results
+  keep independent snapshot/copy semantics. Built-in namespace prefixes stay
+  reserved. The scalar-only extension adds no UDT/import identity and no public
+  schema field. Unsupported templates, non-producer `array.*` members,
+  namespaces and members outside the exact seven-producer set, and postfix
+  mutation fail closed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -332,11 +344,15 @@ Remaining internal work:
   the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
-  local-UDF, and exact built-in array producer subsets, including other
-  built-in namespaces/templates, non-producer `array.*` calls, unsupported
-  `array.new<T>` templates, non-array/non-UDT results, unknown/`na` results
+  local-UDF, and two exact built-in array-producing subsets, including
+  namespace-qualified `matrix.mult(...)` direct-result chains even for array
+  overloads, matrix-returning calls, map/matrix templates,
+  other built-in namespaces or non-producer members, non-producer `array.*`
+  calls, unsupported `array.new<T>` templates, non-array/non-UDT results,
+  unknown/`na` results
   without a concrete supported type or identity, terminal producer readers
-  followed by another method, and array mutation;
+  followed by another method, and array mutation. The existing bound-receiver
+  `matrix_id.mult(array).size()` path is not part of that namespace exclusion;
 - generic or bare `array` declarations beyond current fixture-backed element
   kinds;
 - `for...in` iteration beyond the fixture-backed array, matrix-row, UDT-array,

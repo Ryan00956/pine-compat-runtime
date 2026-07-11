@@ -362,12 +362,73 @@ fn parses_builtin_array_result_method_receivers() {
 }
 
 #[test]
+fn parses_cross_namespace_builtin_array_result_method_receivers() {
+    for source in [
+        "value = str.split(\"a,b\", \",\").size()\n",
+        "value = ta.pivot_point_levels(\"Traditional\", true).get(0)\n",
+        "value = matrix.eigenvalues(values).first()\n",
+        "value = matrix.row(values, 0).last()\n",
+        "value = matrix.col(values, 0).copy()\n",
+        "value = map.keys(values).size()\n",
+        "value = map.values(values).get(0)\n",
+    ] {
+        let parsed = parse(source);
+
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "{source}: {:?}",
+            parsed.diagnostics
+        );
+        let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected declaration for {source}");
+        };
+        let ExprKind::Call { callee, args } = &value.kind else {
+            panic!("expected call-result method call for {source}");
+        };
+        assert!(matches!(
+            &callee.kind,
+            ExprKind::QualifiedName(parts)
+                if parts.first().is_some_and(|part| part == "$builtin_array_result")
+        ));
+        assert!(args[0].value.span.end < callee.span.start, "{source}");
+    }
+
+    let parsed = parse("value = str.split(\"a,b\", \",\").copy().last()\n");
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected outer call-result method call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::QualifiedName(vec!["$builtin_array_result".to_owned(), "last".to_owned()])
+    );
+    let ExprKind::Call {
+        callee: inner_callee,
+        ..
+    } = &args[0].value.kind
+    else {
+        panic!("expected inner call-result method call");
+    };
+    assert_eq!(
+        inner_callee.kind,
+        ExprKind::QualifiedName(vec!["$builtin_array_result".to_owned(), "copy".to_owned()])
+    );
+}
+
+#[test]
 fn rejects_methods_after_scalar_builtin_array_result_reads() {
     for source in [
         "bad = array.from(Point.new(1)).get(0).size()\n",
         "bad = array.new<Point>(1, Point.new(1)).first().custom()\n",
         "bad = array.copy(values).last().custom()\n",
         "bad = array.new_int(1, 1).size().custom()\n",
+        "bad = str.split(\"a,b\", \",\").size().custom()\n",
+        "bad = ta.pivot_point_levels(\"Traditional\", true).last().custom()\n",
+        "bad = matrix.row(values, 0).get(0).custom()\n",
+        "bad = map.keys(values).first().custom()\n",
     ] {
         let parsed = parse(source);
         assert!(
@@ -388,9 +449,12 @@ fn rejects_other_builtin_call_result_method_receivers() {
         "bad = array.get(values, 0).size()\n",
         "bad = array.push(values, 1).size()\n",
         "bad = array.min(values).size()\n",
-        "bad = str.split(\"a,b\", \",\").size()\n",
-        "bad = matrix.row(values, 0).size()\n",
-        "bad = map.keys(values).size()\n",
+        "bad = str.length(\"value\").size()\n",
+        "bad = ta.sma(close, 14).size()\n",
+        "bad = matrix.mult(values, other).size()\n",
+        "bad = matrix.copy(values).size()\n",
+        "bad = matrix.eigenvectors(values).size()\n",
+        "bad = map.copy(values).size()\n",
         "bad = matrix.new<float>(1, 1, 0).size()\n",
         "bad = map.new<int, int>().size()\n",
         "bad = input.string(\"value\").size()\n",
