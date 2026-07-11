@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Extended qualified same-local user-method and imported UDF/user-method
+  UDT-array call-result sugar with `.size()`, `.get(index)`, and `.last()`,
+  alongside the existing `.first()` and `.copy()` paths. The new read-only
+  accessors preserve simple-int or concrete UDT element return types through
+  named indexes, nested copy chains, generic A-to-B-to-A calls, and two aliases
+  of one library. Empty and typed-`na` results, `na` and negative indexes,
+  precise `get` bounds errors, and explicit same-named local/imported or scalar
+  UDT methods are fixture-backed. Unqualified local UDF results, mixed or
+  non-scalar identities, other direct helpers, and call-result mutation remain
+  gated.
 - Added direct `.first()` and `.copy()` method sugar for qualified same-local
   user-method results carrying a concrete scalar-tree UDT-array identity.
   Receiver-style and type-qualified calls, independent `.first()` and
@@ -9,7 +19,8 @@
   and copy independence are fixture-backed. Parser-synthetic postfix calls stay
   distinct from explicit local methods named `first` or `copy`, including when
   the explicit argument is itself a method call. Unqualified local UDF results
-  and direct helpers beyond `first`/`copy` remain gated.
+  and helpers beyond the read-only `size`/`get`/`first`/`last`/`copy` set
+  remain gated.
 - Added direct `.first()` and `.copy()` method sugar for qualified imported UDF
   or user-method results that carry a concrete same-imported scalar-tree UDT
   array identity. Multi-segment `.copy().first()` chains, First-to-Second-to-
@@ -22,7 +33,8 @@
   method-result call chains remain user methods without a duplicated receiver,
   including method chains whose returned UDT identity differs from the input.
   Unqualified local UDF call-result receivers and direct array helpers beyond
-  `first`/`copy` remain explicitly rejected; namespace helpers stay available.
+  the read-only `size`/`get`/`first`/`last`/`copy` set remain explicitly
+  rejected; namespace helpers stay available.
 - Preserved same-local and same-imported scalar-tree UDT-array identity for
   every destructured UDT-array slot of tuple literals and local/imported UDF or
   user-method tuple returns. Direct, block, nested, final-control-flow,
@@ -55,7 +67,8 @@
   type-position rewrites retain the caller's concrete identity. Source-aware
   import-instance metadata isolates interleaved calls through two aliases of the
   same physical library. Mixed imported identities, non-scalar returns,
-  unqualified local UDF or non-`first`/`copy` direct call-result array method chaining, and mutation
+  unqualified local UDF or direct call-result array methods outside the
+  read-only `size`/`get`/`first`/`last`/`copy` set, and mutation
   through unsupported UDF/method side-effect contexts remain rejected;
   tuple-return conflicts are rejected per destructured UDT-array slot.
 - Preserved scalar map templates at call sites when local UDFs return inferred

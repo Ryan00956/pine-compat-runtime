@@ -198,7 +198,7 @@ impl Analyzer {
         let Some(builtin_name) = udt_array_call_result_builtin_name(method_name) else {
             self.unsupported(
                 &format!("array.{method_name}"),
-                "direct UDT-array call-result methods currently support only qualified `.first()` and `.copy()`; bind the result or use the namespace helper",
+                "direct UDT-array call-result methods currently support only qualified `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
                 callee.span,
             );
             return Some(None);

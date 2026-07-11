@@ -571,10 +571,13 @@ reassignment to a different identity and unresolved nested tuple consumers
 emit root-spanned `E_TUPLE_UDT_ARRAY_IDENTITY` diagnostics. Qualified same-local
 user-method and imported UDF/method results carrying a concrete scalar-tree
 UDT-array identity support direct `.first()` and `.copy()` dispatch, including
-a nested `.copy().first()` chain; explicit same-named local methods and imported
-functions remain distinct. Non-scalar UDT array returns, unqualified local UDF
-results, other direct call-result array methods, and mutation through
-unsupported UDF/method side-effect contexts remain outside this subset.
+a nested `.copy().first()` chain, plus direct `.size()`, `.get(index)`, and
+`.last()` reads. `get` retains the concrete element identity across named
+indexes and nested copy chains, while `size`/`last` retain existing empty and
+typed-`na` behavior. Explicit same-named local methods and imported functions
+remain distinct. Non-scalar UDT array returns, unqualified local UDF results,
+other direct call-result array methods, and mutation through unsupported
+UDF/method side-effect contexts remain outside this subset.
 Generic UDT-array parameters are therefore iterable inside local UDFs and typed
 local methods for the fixture-backed statement and final-expression forms,
 including final results that return the UDT element itself or rebuild a
@@ -741,10 +744,12 @@ copy-read, reverse-read, slice-window, concat-append, and for-in-value-copy
 subset remain outside the claim. The same applies to direct private imported UDT
 access, mixed or non-scalar imported array-return identities, conflicting
 identities within one tuple UDT-array slot, unqualified local UDF or
-non-`first`/`copy` direct call-result array methods, nested field mutation, UDF
+direct call-result array methods outside the read-only
+`size`/`get`/`first`/`last`/`copy` set, nested field mutation, UDF
 parameter/global field side effects, and method receiver/parameter/global field
 side effects. Qualified same-local user-method and same-imported UDT-array
-results support direct `.first()`/`.copy()`.
+results support direct
+`.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`.
 Tuple-contained
 same-imported scalar-tree UDT arrays are supported when destructured, with
 identity tracked independently per slot. Non-scalar UDT value history outside the local/imported
@@ -812,10 +817,11 @@ Local methods may return same-local scalar-tree UDT arrays from typed array
 parameters or fresh local array construction. Direct and block-alias returns
 retain the argument identity, while copy/new/from and nested/final-control-flow
 returns preserve the identity selected for the current call. Qualified
-same-local method results support direct `.first()`/`.copy()` without widening
+same-local method results support direct
+`.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()` without widening
 arbitrary call-result receivers. The narrow qualified same-imported UDT-array
-path supports the same helper pair; unqualified local UDF results and other
-helpers remain gated.
+path supports the same read-only helper set; unqualified local UDF results and
+other helpers remain gated.
 Methods with receiver/parameter/global field side effects, recursion,
 unsupported parameter families, mismatched UDT parameter identity, unknown
 receivers, and alias-qualified imported method receiver type mismatches remain

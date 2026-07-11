@@ -290,8 +290,9 @@ Current baseline:
   layout; cross-identity direct/control-flow reassignment fails closed.
   Qualified same-local user-method and imported UDF/method results with a
   concrete scalar-tree UDT-array identity also support direct
-  `.first()`/`.copy()` and nested `.copy().first()` while preserving A-to-B-to-A
-  identity, imported dual-alias isolation, and copy independence.
+  `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()` and nested copy/read
+  chains while preserving A-to-B-to-A identity, imported dual-alias isolation,
+  named-index binding, empty/typed-`na` behavior, and copy independence.
 
 Remaining internal work:
 
@@ -303,8 +304,9 @@ Remaining internal work:
 - UDT array behavior beyond the same-local and same-imported scalar-tree
   subsets, including mixed imported return identities, non-scalar imported
   returns, conflicting identities within one tuple slot, unqualified local UDF
-  call-result chaining, direct helpers beyond `.first()`/`.copy()`, and mutation
-  through unsupported UDF/method side-effect contexts;
+  call-result chaining, direct helpers beyond the read-only
+  `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` set, and mutation through
+  unsupported UDF/method side-effect contexts;
 - generic or bare `array` declarations beyond current fixture-backed element
   kinds;
 - `for...in` iteration beyond the fixture-backed array, matrix-row, UDT-array,

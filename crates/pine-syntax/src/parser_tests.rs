@@ -132,7 +132,7 @@ fn parses_imported_udt_array_new_template_call() {
 #[test]
 fn parses_qualified_call_result_method_receiver() {
     let parsed = parse(
-        "shifted = lib.Point.new(close).shift(5)\nchained = lib.Point.new(open).make(close + 1).same()\nlocal = Point.new(close).shift(5)\nbound = anchor.make(close).same()\n",
+        "shifted = lib.Point.new(close).shift(5)\nchained = lib.Point.new(open).make(close + 1).same()\nlocal = Point.new(close).shift(5)\nbound = anchor.make(close).same()\nindexed = anchor.make(values).get(index=0)\n",
     );
 
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
@@ -230,6 +230,21 @@ fn parses_qualified_call_result_method_receiver() {
         receiver_callee.kind,
         ExprKind::QualifiedName(vec!["anchor".to_owned(), "make".to_owned()])
     );
+
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[4].kind else {
+        panic!("expected indexed call-result declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected indexed call-result method call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::QualifiedName(vec!["anchor".to_owned(), "get".to_owned()])
+    );
+    assert_eq!(args.len(), 2);
+    assert!(args[0].name.is_none());
+    assert!(args[0].value.span.end < callee.span.start);
+    assert_eq!(args[1].name.as_deref(), Some("index"));
 }
 
 #[test]

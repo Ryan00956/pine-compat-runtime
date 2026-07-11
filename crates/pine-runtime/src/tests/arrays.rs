@@ -1854,6 +1854,38 @@ plot(array.get(values, -4))
 }
 
 #[test]
+fn rejects_udt_array_call_result_get_out_of_bounds_indexes() {
+    assert_array_bounds_error(
+        r#"//@version=6
+indicator("UDT call-result get empty bounds")
+type Point
+    float x
+type Anchor
+    int tag
+method values(Anchor self) => array.new<Point>()
+anchor = Anchor.new(1)
+item = anchor.values().get(0)
+plot(item.x)
+"#,
+        "array index 0 is out of bounds for array of size 0",
+    );
+    assert_array_bounds_error(
+        r#"//@version=6
+indicator("UDT call-result get negative bounds")
+type Point
+    float x
+type Anchor
+    int tag
+method values(Anchor self) => array.from(Point.new(10.0))
+anchor = Anchor.new(1)
+item = anchor.values().get(-2)
+plot(item.x)
+"#,
+        "array index -2 is out of bounds for array of size 1",
+    );
+}
+
+#[test]
 fn rejects_array_mutation_out_of_bounds_indexes() {
     assert_array_bounds_error(
         r#"indicator("array set bounds")

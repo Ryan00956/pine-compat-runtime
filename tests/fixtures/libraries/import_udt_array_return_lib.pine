@@ -27,6 +27,18 @@ export first(array<First> values) => array.size(values) + 900
 
 export copy(array<First> values) => array.from(First.new(999.0, 9990.0))
 
+export size(array<First> values) => array.size(values) + 900
+
+export get(array<First> values, int index) => array.size(values) + index + 901
+
+export last(array<First> values) => array.size(values) + 902
+
+export emptyFirst() => array.new<First>()
+
+export noneFirst() =>
+    array<First> values = na
+    values
+
 export aliasReturn(values) =>
     source = values
     source
@@ -179,6 +191,12 @@ method retainSecond(Second self, array<Second> values) => values
 method first(First self) => self.shared + 1000.0
 
 method copy(First self) => self.shared + 2000.0
+
+method size(First self) => self.shared + 3000.0
+
+method get(First self, int index) => self.shared + index + 4000.0
+
+method last(First self) => self.shared + 5000.0
 
 method scalar(First self) => First.new(self.shared + 1.0, self.other)
 

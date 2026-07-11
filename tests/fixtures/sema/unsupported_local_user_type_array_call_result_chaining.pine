@@ -22,6 +22,12 @@ method mixed(Anchor self, array<First> first, array<Second> second, bool choose)
 
 method first(Anchor self, array<First> values) => collisionMarker()
 
+method size(Anchor self, array<First> values) => sizeCollisionMarker()
+
+method get(Anchor self, array<First> values, int index) => getCollisionMarker()
+
+method last(Anchor self, array<First> values) => lastCollisionMarker()
+
 method none(Anchor self, array<First> values) => na
 
 values = array.from(First.new(10.0, 100.0))
@@ -32,9 +38,18 @@ chained_first = anchor.retain(values).first()
 chained_copy = anchor.retain(values).copy()
 chained_size = anchor.retain(values).size()
 chained_get = anchor.retain(values).get(0)
+chained_last = anchor.retain(values).last()
+chained_bad_get = anchor.retain(values).get("bad")
+chained_pop = anchor.retain(values).pop()
 chained_transform = anchor.retain(values).transform()
 mixed_first = anchor.mixed(values, second_values, true).first()
+mixed_size = anchor.mixed(values, second_values, true).size()
+mixed_get = anchor.mixed(values, second_values, true).get(0)
+mixed_last = anchor.mixed(values, second_values, true).last()
 none_first = anchor.none(values).first()
 none_copy = anchor.none(values).copy()
+none_size = anchor.none(values).size()
+none_get = anchor.none(values).get(0)
+none_last = anchor.none(values).last()
 explicit_copy = anchor.copy(values)
 explicit_transform = anchor.transform(values)

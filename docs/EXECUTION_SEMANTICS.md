@@ -799,6 +799,10 @@ existing layout, while direct or control-flow reassignment to a different
 identity is rejected before HIR emission. Qualified same-local user-method and
 imported UDF/method results with a concrete scalar-tree UDT-array identity
 support direct `.first()` and `.copy()` calls, including `.copy().first()`.
+The same parser-synthetic dispatch now supports `.size()`, `.get(index)`, and
+`.last()`. `get` preserves the concrete element identity and the existing
+named/`na`/negative-index and bounds behavior; `size` and `last` retain the
+existing empty and typed-`na` semantics.
 The postfix receiver is lowered as an array helper rather than as a same-named
 local method or imported function, and `copy` remains independent from the
 source array. Mixed scalar-return identities, non-scalar returns, unqualified
@@ -847,10 +851,11 @@ construct and return the same imported UDT identity for caller-side field reads.
 For local methods, a typed same-local scalar-tree UDT array parameter may be
 returned directly or through block aliases, copies, fresh constructors, nested
 local calls, and final control flow with call-specific identity. Qualified
-receiver-style or type-qualified results support direct `.first()`/`.copy()`.
+receiver-style or type-qualified results support direct
+`.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`.
 Parser-normalized qualified calls returning a same-imported scalar-tree UDT
-array support the same narrow helper pair; unqualified local UDF results and
-other array methods remain parser/semantic boundaries.
+array support the same narrow read-only helper set; unqualified local UDF
+results and other array methods remain parser/semantic boundaries.
 Method side effects, recursive methods, unsupported parameter families,
 mismatched UDT parameter identity, unknown receivers, and alias-qualified
 imported method receiver type mismatches are rejected during semantic analysis.

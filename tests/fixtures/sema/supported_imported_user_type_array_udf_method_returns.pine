@@ -6,6 +6,11 @@ readPostfix(values) =>
     item = lib.direct(values).copy().first()
     item.shared
 
+readAccessors(values) =>
+    head = lib.direct(values).get(index=0)
+    tail = lib.direct(values).last()
+    lib.direct(values).size() + head.shared + tail.shared
+
 points = array.from(lib.Point.new(close))
 anchor = lib.Point.new(open)
 
@@ -15,6 +20,7 @@ method_returned = anchor.retainArray(points)
 plot(array.size(udf_returned) + array.size(method_returned))
 
 first_values = array.from(lib.First.new(10.0, 100.0))
+second_values = array.from(lib.Second.new(200.0, 20.0), lib.Second.new(210.0, 21.0))
 first_anchor = lib.First.new(20.0, 200.0)
 
 postfix_udf_item = lib.direct(first_values).first()
@@ -36,4 +42,34 @@ scalar_method_result_copy = lib.First.new(80.0, 800.0).scalar().copy()
 type_changed_method_result = first_anchor.toSecond().readShared()
 wrapped_postfix = readPostfix(first_values)
 
-plot(postfix_udf_item.shared + postfix_nested_item.shared + postfix_method_item.shared + postfix_udf_copy_item.shared + postfix_method_copy_item.shared + explicit_first + explicit_copy_item.shared + scalar_method_first + scalar_method_copy + scalar_udf_result_first + scalar_udf_result_copy + scalar_method_result_first + scalar_method_result_copy + type_changed_method_result + wrapped_postfix)
+access_first_values = array.from(lib.First.new(60.0, 600.0), lib.First.new(61.0, 610.0))
+postfix_size_first = lib.direct(access_first_values).size()
+postfix_size_second = lib.direct(second_values).size()
+postfix_size_first_again = lib.direct(access_first_values).size()
+postfix_get_first = lib.direct(access_first_values).get(index=0)
+postfix_get_second = lib.direct(second_values).get(0)
+postfix_get_first_again = lib.direct(access_first_values).get(0)
+postfix_last_first = lib.direct(access_first_values).last()
+postfix_last_second = lib.direct(second_values).last()
+postfix_last_first_again = lib.direct(access_first_values).last()
+postfix_copy_get = lib.direct(access_first_values).copy().get(index=1)
+postfix_copy_last = lib.direct(second_values).copy().last()
+postfix_method_get = first_anchor.retainFirst(access_first_values).get(index=1)
+postfix_method_last = first_anchor.retainFirst(values=access_first_values).last()
+wrapped_access_first = readAccessors(access_first_values)
+wrapped_access_second = readAccessors(second_values)
+wrapped_access_first_again = readAccessors(access_first_values)
+explicit_size = lib.size(lib.direct(access_first_values))
+explicit_get = lib.get(lib.direct(access_first_values), 0)
+explicit_last = lib.last(lib.direct(access_first_values))
+scalar_result_size = lib.First.new(2.0, 20.0).size()
+scalar_result_get = lib.First.new(3.0, 30.0).get(index=1)
+scalar_result_last = lib.First.new(4.0, 40.0).last()
+empty_size = lib.emptyFirst().size()
+empty_last = lib.emptyFirst().last()
+none_size = lib.noneFirst().size()
+none_get = lib.noneFirst().get(0)
+none_last = lib.noneFirst().last()
+na_index_get = lib.direct(access_first_values).get(na)
+
+plot(postfix_udf_item.shared + postfix_nested_item.shared + postfix_method_item.shared + postfix_udf_copy_item.shared + postfix_method_copy_item.shared + explicit_first + explicit_copy_item.shared + scalar_method_first + scalar_method_copy + scalar_udf_result_first + scalar_udf_result_copy + scalar_method_result_first + scalar_method_result_copy + type_changed_method_result + wrapped_postfix + postfix_size_first + postfix_size_second + postfix_size_first_again + postfix_get_first.shared + postfix_get_second.shared + postfix_get_first_again.shared + postfix_last_first.shared + postfix_last_second.shared + postfix_last_first_again.shared + postfix_copy_get.shared + postfix_copy_last.shared + postfix_method_get.shared + postfix_method_last.shared + wrapped_access_first + wrapped_access_second + wrapped_access_first_again + explicit_size + explicit_get + explicit_last + scalar_result_size + scalar_result_get + scalar_result_last + empty_size + (na(empty_last) ? 1 : 0) + (na(none_size) and na(none_get) and na(none_last) ? 1 : 0) + (na(na_index_get) ? 1 : 0))

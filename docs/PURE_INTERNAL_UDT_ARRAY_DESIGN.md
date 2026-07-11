@@ -73,12 +73,14 @@ UDT-array slot identity: same-identity or `na` reassignment is accepted, while
 cross-identity direct/control-flow reassignment and unresolved nested consumers
 are rejected at the root span.
 Qualified same-local user-method and imported UDF/method results with a concrete
-scalar-tree UDT-array identity support direct `.first()` and `.copy()`,
-including nested `.copy().first()` chains, without confusing the postfix helper
-with an explicit same-named local method or imported function. Unqualified local
-UDF results and other direct call-result array methods remain deferred; mixed
-scalar-return identities, non-scalar UDT array returns, and UDF/method mutation
-side effects remain rejected.
+scalar-tree UDT-array identity support direct `.size()`, `.get(index)`,
+`.first()`, `.last()`, and `.copy()`, including nested copy/read chains, without
+confusing the postfix helper with an explicit same-named local method or
+imported function. Named/`na`/negative `get` indexes, precise bounds errors,
+empty and typed-`na` results, A-to-B-to-A calls, and imported dual aliases are
+fixture-backed. Unqualified local UDF results and other direct call-result array
+methods remain deferred; mixed scalar-return identities, non-scalar UDT array
+returns, and UDF/method mutation side effects remain rejected.
 Local UDFs and typed local user methods may also iterate a generic same-local
 scalar-tree UDT-array parameter. Value-only and index/value statement loops,
 block-local array aliases, and final expression-form loops preserve the
@@ -210,9 +212,11 @@ Current evidence:
   rejects mixed return branches and incompatible typed destinations.
 - `tests/fixtures/runtime/user_type_array_scalar_tree.pine` and
   `tests/fixtures/sema/supported_user_type_array_udf_method_returns.pine` cover
-  qualified same-local user-method result `.first()`/`.copy()`, separate
-  A-to-B-to-A sequences, generic UDF wrappers, receiver/type-qualified forms,
-  explicit same-named local method dispatch, and copy independence;
+  qualified same-local user-method result
+  `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`, separate A-to-B-to-A
+  sequences, generic UDF wrappers, receiver/type-qualified and named-index
+  forms, empty/typed-`na` reads, negative indexes, explicit same-named local or
+  scalar-UDT method dispatch, bounds errors, and copy independence;
 - `tests/fixtures/runtime/import_udt_array_udf_method_returns.pine` and
   `tests/fixtures/sema/supported_imported_user_type_array_udf_method_returns.pine`
   cover imported same-scalar-tree UDF and user-method array returns through
@@ -237,10 +241,12 @@ Current evidence:
   lock the stable-slot reassignment and root-span boundaries.
 - `tests/fixtures/runtime/import_udt_array_udf_method_returns.pine` and
   `tests/fixtures/sema/supported_imported_user_type_array_udf_method_returns.pine`
-  cover qualified imported UDF/method result `.first()`/`.copy()`, nested
-  `.copy().first()`, A-to-B-to-A, dual aliases, explicit same-named export
+  cover qualified imported UDF/method result
+  `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`, nested copy/read
+  chains, A-to-B-to-A, dual aliases, named and negative indexes,
+  empty/typed-`na` reads, explicit same-named export or scalar-UDT method
   dispatch, and copy independence. The imported call-result negative fixture
-  retains the other-helper boundary, while
+  retains the broader-helper boundary, while
   `tests/fixtures/sema/unsupported_local_user_type_array_call_result_chaining.pine`
   retains the unqualified-UDF/other-helper boundary and prevents silent dispatch
   to a same-named local user method.
@@ -659,10 +665,10 @@ Initial policy:
 - local/imported UDF or method same-scalar-tree UDT array returns are
   fixture-backed; their tuple returns preserve identity per destructured slot,
   and qualified same-local user-method or imported UDF/method results support
-  direct `.first()`/`.copy()` chaining. Mixed identities within one scalar
-  return or tuple slot, non-scalar arrays, mutation side effects, unqualified
-  local UDF results, and other direct array methods on call results remain
-  separate semantic/parser/lowering boundaries.
+  direct `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()` chaining. Mixed
+  identities within one scalar return or tuple slot, non-scalar arrays,
+  mutation side effects, unqualified local UDF results, and other direct array
+  methods on call results remain separate semantic/parser/lowering boundaries.
 
 ## Diagnostics
 
@@ -735,8 +741,17 @@ Recommended future slices:
     UDT-array identity lower direct `.first()`/`.copy()` and nested
     `.copy().first()` through the same helper path. Receiver/type-qualified,
     A-to-B-to-A, generic-wrapper, explicit same-named method, and copy
-    independence paths are fixture-backed. Done. Unqualified local UDF results
-    and broader direct helpers remain later slices.
+    independence paths are fixture-backed. Done. At this historical slice
+    boundary, unqualified local UDF results and broader direct helpers remained
+    deferred.
+17. The qualified same-local/imported call-result path extends the read-only
+    helper set with `.size()`, `.get(index)`, and `.last()`. Simple-int and UDT
+    element return types, named/`na`/negative indexes, precise bounds errors,
+    empty and typed-`na` results, nested copy/read chains, A-to-B-to-A and
+    dual-alias isolation, generic wrappers, and explicit same-named local,
+    imported, or scalar-UDT dispatch controls are fixture-backed. Broader
+    helpers, unqualified local UDF results, mixed/non-scalar identities, and
+    call-result mutation remain gated. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -764,7 +779,9 @@ paths with the helper set listed in Current Boundary and Accepted Forms,
 ordinary `var` realtime rollback, fixture-backed scalar-tree UDT array `varip`,
 typed `array<T>`/`T[]` declarations, and local or imported UDF/user-method array
 returns within the call-boundary subset above, including qualified same-local
-user-method and imported UDF/method call-result `.first()`/`.copy()`. Broader
-UDT element families, unqualified local UDF or other direct call-result methods,
-unsupported mutation contexts, and helpers not listed there remain unsupported until later fixture-backed slices implement
-syntax, analysis, runtime behavior, and conformance updates together.
+user-method and imported UDF/method call-result
+`.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`. Broader UDT element
+families, unqualified local UDF or other direct call-result methods, unsupported
+mutation contexts, and helpers not listed there remain unsupported until later
+fixture-backed slices implement syntax, analysis, runtime behavior, and
+conformance updates together.

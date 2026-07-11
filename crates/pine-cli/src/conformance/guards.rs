@@ -310,6 +310,16 @@ const IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES: &[&str] = &[
     "tests/fixtures/libraries/import_udt_array_return_lib.pine",
 ];
 
+const UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/user_type_array_scalar_tree.pine",
+    "tests/fixtures/sema/supported_user_type_array_udf_method_returns.pine",
+    "tests/fixtures/sema/unsupported_local_user_type_array_call_result_chaining.pine",
+    "tests/fixtures/runtime/import_udt_array_udf_method_returns.pine",
+    "tests/fixtures/sema/supported_imported_user_type_array_udf_method_returns.pine",
+    "tests/fixtures/sema/unsupported_imported_user_type_array_call_result_chaining.pine",
+    "tests/fixtures/libraries/import_udt_array_return_lib.pine",
+];
+
 const LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/user_type_array_scalar_tree.pine",
     "tests/fixtures/sema/supported_user_type_array_param_for_in.pine",
@@ -342,6 +352,7 @@ pub(super) fn validate_entry(
     validate_udt_array_control_flow_fixture_paths(line_number, feature, fixtures)?;
     validate_local_udt_array_call_return_fixture_paths(line_number, feature, fixtures)?;
     validate_imported_udt_array_call_return_fixture_paths(line_number, feature, fixtures)?;
+    validate_udt_array_call_result_helper_fixture_paths(line_number, feature, fixtures)?;
     validate_local_udt_array_param_for_in_fixture_paths(line_number, feature, fixtures)?;
     validate_array_binary_search_fixture_pairs(line_number, feature, fixtures)?;
     validate_map_boundary_fixture_paths(line_number, feature, fixtures)?;
@@ -437,6 +448,29 @@ fn validate_imported_udt_array_call_return_fixture_paths(
         if !fixtures.contains(fixture) {
             return Err(format!(
                 "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed imported UDF/user-method UDT array return and per-slot tuple-return identity plus retained call-result-chaining boundaries"
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+fn validate_udt_array_call_result_helper_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if !matches!(
+        feature,
+        "array.size" | "array.get" | "array.first" | "array.last" | "array.copy"
+    ) {
+        return Ok(());
+    }
+
+    for fixture in UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES {
+        if !fixtures.contains(fixture) {
+            return Err(format!(
+                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed qualified local/imported UDT-array call-result helper dispatch and retained fail-closed boundaries"
             ));
         }
     }
@@ -921,11 +955,12 @@ mod tests {
         FOR_IN_BOUNDARY_FIXTURES, IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES,
         IMPORTED_UDT_BOUNDARY_FIXTURES, LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES,
         LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES, MATRIX_UNSUPPORTED_BOUNDARY_FIXTURES,
-        SWITCH_STATEMENT_BLOCK_BOUNDARY_FIXTURES, UDT_ARRAY_CONTROL_FLOW_FIXTURES,
-        UDT_VARIP_BOUNDARY_FIXTURES, WHILE_EXPRESSION_BOUNDARY_FIXTURES,
-        validate_imported_udt_array_call_return_fixture_paths,
+        SWITCH_STATEMENT_BLOCK_BOUNDARY_FIXTURES, UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES,
+        UDT_ARRAY_CONTROL_FLOW_FIXTURES, UDT_VARIP_BOUNDARY_FIXTURES,
+        WHILE_EXPRESSION_BOUNDARY_FIXTURES, validate_imported_udt_array_call_return_fixture_paths,
         validate_local_udt_array_call_return_fixture_paths,
         validate_local_udt_array_param_for_in_fixture_paths,
+        validate_udt_array_call_result_helper_fixture_paths,
         validate_udt_array_control_flow_fixture_paths,
     };
 
@@ -1097,6 +1132,16 @@ mod tests {
             fixtures,
         )
         .expect_err("UDT array return rows must retain the imported return library");
+
+        assert!(error.contains("tests/fixtures/libraries/import_udt_array_return_lib.pine"));
+    }
+
+    #[test]
+    fn rejects_udt_array_helper_rows_without_call_result_fixture_set() {
+        let fixtures = &UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES
+            [..UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES.len() - 1];
+        let error = validate_udt_array_call_result_helper_fixture_paths(1, "array.get", fixtures)
+            .expect_err("UDT-array helper rows must retain the call-result fixture set");
 
         assert!(error.contains("tests/fixtures/libraries/import_udt_array_return_lib.pine"));
     }

@@ -57,15 +57,38 @@ method first(ReturnAnchor self, array<First> values) => array.size(values) + 700
 
 method copy(ReturnAnchor self, array<First> values) => array.from(First.new(999.0, 9990.0))
 
+method size(ReturnAnchor self, array<First> values) => array.size(values) + 900
+
+method get(ReturnAnchor self, array<First> values, int index) => array.size(values) + index + 901
+
+method last(ReturnAnchor self, array<First> values) => array.size(values) + 902
+
 method retain(First self, array<First> values) => values
 
 method retain(Second self, array<Second> values) => values
+
+method size(First self) => self.shared + 1000.0
+
+method get(First self, int index) => self.shared + index + 2000.0
+
+method last(First self) => self.shared + 3000.0
+
+method returnEmptyFirst(ReturnAnchor self) => array.new<First>()
+
+method returnNoneFirst(ReturnAnchor self) =>
+    array<First> values = na
+    values
 
 method returnStatic(First self, array<First> values) => return_nested(values)
 
 readPostfix(receiver, values) =>
     item = receiver.retain(values).copy().first()
     item.shared
+
+readAccessors(receiver, values) =>
+    head = receiver.retain(values).get(index=0)
+    tail = receiver.retain(values).last()
+    receiver.retain(values).size() + head.shared + tail.shared
 
 sum_udt_values(values) =>
     float total = 0.0
@@ -306,6 +329,69 @@ wrapped_postfix_first_again = readPostfix(First.new(3.0, 30.0), return_first_sou
 plot(wrapped_postfix_first)
 plot(wrapped_postfix_second)
 plot(wrapped_postfix_first_again)
+
+access_first_values = array.from(First.new(160.0, 1600.0), First.new(161.0, 1610.0))
+access_second_values = array.from(Second.new(1700.0, 170.0), Second.new(1710.0, 171.0))
+postfix_size_first = return_anchor.returnFirst(access_first_values).size()
+postfix_size_second = return_anchor.returnSecond(access_second_values).size()
+postfix_size_first_again = return_anchor.returnFirst(access_first_values).size()
+postfix_get_first = return_anchor.returnFirst(access_first_values).get(index=0)
+postfix_get_second = return_anchor.returnSecond(access_second_values).get(0)
+postfix_get_first_again = return_anchor.returnFirst(access_first_values).get(0)
+postfix_last_first = return_anchor.returnFirst(access_first_values).last()
+postfix_last_second = return_anchor.returnSecond(access_second_values).last()
+postfix_last_first_again = return_anchor.returnFirst(access_first_values).last()
+postfix_copy_get = return_anchor.returnFirst(access_first_values).copy().get(index=1)
+postfix_copy_last = return_anchor.returnSecond(access_second_values).copy().last()
+postfix_access_qualified = ReturnAnchor.returnFirst(return_anchor, access_first_values).get(index=1)
+postfix_access_named = return_anchor.returnSecond(values=access_second_values).last()
+plot(postfix_size_first)
+plot(postfix_size_second)
+plot(postfix_size_first_again)
+plot(postfix_get_first.shared)
+plot(postfix_get_second.shared)
+plot(postfix_get_first_again.shared)
+plot(postfix_last_first.shared)
+plot(postfix_last_second.shared)
+plot(postfix_last_first_again.shared)
+plot(postfix_copy_get.shared)
+plot(postfix_copy_last.shared)
+plot(postfix_access_qualified.shared)
+plot(postfix_access_named.shared)
+
+wrapped_access_first = readAccessors(First.new(1.0, 10.0), access_first_values)
+wrapped_access_second = readAccessors(Second.new(20.0, 2.0), access_second_values)
+wrapped_access_first_again = readAccessors(First.new(3.0, 30.0), access_first_values)
+plot(wrapped_access_first)
+plot(wrapped_access_second)
+plot(wrapped_access_first_again)
+
+explicit_method_size = return_anchor.size(return_anchor.returnFirst(access_first_values))
+explicit_method_get = ReturnAnchor.get(return_anchor, return_anchor.returnFirst(access_first_values), 0)
+explicit_method_last = return_anchor.last(access_first_values)
+scalar_result_size = First.new(2.0, 20.0).size()
+scalar_result_get = First.new(3.0, 30.0).get(index=1)
+scalar_result_last = First.new(4.0, 40.0).last()
+plot(explicit_method_size)
+plot(explicit_method_get)
+plot(explicit_method_last)
+plot(scalar_result_size)
+plot(scalar_result_get)
+plot(scalar_result_last)
+
+empty_result_size = return_anchor.returnEmptyFirst().size()
+empty_result_last = return_anchor.returnEmptyFirst().last()
+none_result_size = return_anchor.returnNoneFirst().size()
+none_result_get = return_anchor.returnNoneFirst().get(0)
+none_result_last = return_anchor.returnNoneFirst().last()
+none_copy_last = return_anchor.returnNoneFirst().copy().last()
+na_index_get = return_anchor.returnFirst(access_first_values).get(na)
+negative_index_get = return_anchor.returnFirst(access_first_values).get(-1)
+plot(empty_result_size)
+plot(na(empty_result_last) ? 1 : 0)
+plot(na(none_result_size) and na(none_result_get) and na(none_result_last) and na(none_copy_last) ? 1 : 0)
+plot(na(na_index_get) ? 1 : 0)
+plot(negative_index_get.shared)
 
 postfix_copy_source = array.from(First.new(140.0, 1400.0))
 postfix_independent_copy = return_anchor.returnFirst(postfix_copy_source).copy()

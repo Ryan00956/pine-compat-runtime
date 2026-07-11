@@ -927,7 +927,7 @@ impl Analyzer {
         {
             const ELEMENT_HELPERS: &[&str] = &["get", "pop", "remove", "shift", "first", "last"];
             if let Some((_, method_name)) = postfix_call_result_method_parts(callee, args)
-                && method_name == "first"
+                && matches!(method_name, "get" | "first" | "last")
                 && let Some(receiver) = args.first()
                 && let UserTypeArrayIdentityResult::Known(type_name) = self
                     .user_type_array_result_with_params_and_aliases(
