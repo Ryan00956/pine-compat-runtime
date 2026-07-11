@@ -21,6 +21,18 @@ type ReturnAnchor
 
 return_identity(values) => values
 
+array(values) => values
+
+size(values) => array.size(values) + 9000
+
+get(values, int index) => array.size(values) + index + 9100
+
+first(values) => array.size(values) + 9200
+
+last(values) => array.size(values) + 9300
+
+copy(values) => array.from(First.new(9400.0, 94000.0))
+
 return_block_alias(values) =>
     made = values
     made
@@ -35,6 +47,12 @@ return_rebuild(values) =>
     array.from(item)
 
 return_new_first() => array.new<First>(1, First.new(110.0, 1100.0))
+
+return_empty_first() => array.new<First>()
+
+return_none_first() =>
+    array<First> values = na
+    values
 
 return_nested(values) => return_block_alias(return_identity(values))
 
@@ -52,6 +70,8 @@ method returnFirst(ReturnAnchor self, array<First> values) => return_nested(valu
 method returnSecond(ReturnAnchor self, Second[] values) =>
     made = values.copy()
     made
+
+method returnInts(ReturnAnchor self, array<int> values) => return_identity(values)
 
 method first(ReturnAnchor self, array<First> values) => array.size(values) + 700
 
@@ -73,6 +93,20 @@ method get(First self, int index) => self.shared + index + 2000.0
 
 method last(First self) => self.shared + 3000.0
 
+method first(First self) => self.shared + 4000.0
+
+method copy(First self) => self.shared + 5000.0
+
+method size(Second self) => self.shared + 10000.0
+
+method get(Second self, int index) => self.shared + index + 20000.0
+
+method first(Second self) => self.shared + 30000.0
+
+method last(Second self) => self.shared + 40000.0
+
+method copy(Second self) => self.shared + 50000.0
+
 method returnEmptyFirst(ReturnAnchor self) => array.new<First>()
 
 method returnNoneFirst(ReturnAnchor self) =>
@@ -89,6 +123,21 @@ readAccessors(receiver, values) =>
     head = receiver.retain(values).get(index=0)
     tail = receiver.retain(values).last()
     receiver.retain(values).size() + head.shared + tail.shared
+
+readUnqualifiedArray(values) =>
+    head = return_nested(values).get(index=0)
+    first_item = return_nested(values).first()
+    tail = return_nested(values).copy().last()
+    return_nested(values).size() + head.shared + first_item.shared + tail.shared + return_nested(values).copy().size()
+
+readUnqualifiedScalarArray(values) =>
+    head = return_identity(values).get(index=0)
+    first_item = return_identity(values).first()
+    tail = return_identity(values).copy().last()
+    return_identity(values).size() + head + first_item + tail + return_identity(values).copy().size()
+
+readUnqualifiedScalar(value) =>
+    return_identity(value).size() + return_identity(value).get(index=1) + return_identity(value).first() + return_identity(value).last() + return_identity(value).copy()
 
 sum_udt_values(values) =>
     float total = 0.0
@@ -392,6 +441,98 @@ plot(na(empty_result_last) ? 1 : 0)
 plot(na(none_result_size) and na(none_result_get) and na(none_result_last) and na(none_copy_last) ? 1 : 0)
 plot(na(na_index_get) ? 1 : 0)
 plot(negative_index_get.shared)
+
+unqualified_size_first = return_nested(access_first_values).size()
+unqualified_size_second = return_nested(access_second_values).size()
+unqualified_size_first_again = return_nested(access_first_values).size()
+unqualified_get_first = return_nested(access_first_values).get(index=0)
+unqualified_get_second = return_nested(access_second_values).get(0)
+unqualified_get_first_again = return_nested(access_first_values).get(0)
+unqualified_first_item = return_nested(access_first_values).first()
+unqualified_last_item = return_nested(access_second_values).last()
+unqualified_copy_get = return_nested(access_first_values).copy().get(index=1)
+unqualified_named_get = return_named(tag=3, values=access_first_values, use_copy=true).get(index=1)
+unqualified_builtin_named_last = array(access_first_values).copy().last()
+plot(unqualified_size_first)
+plot(unqualified_size_second)
+plot(unqualified_size_first_again)
+plot(unqualified_get_first.shared)
+plot(unqualified_get_second.shared)
+plot(unqualified_get_first_again.shared)
+plot(unqualified_first_item.shared)
+plot(unqualified_last_item.shared)
+plot(unqualified_copy_get.shared)
+plot(unqualified_named_get.shared)
+plot(unqualified_builtin_named_last.shared)
+
+unqualified_wrapped_first = readUnqualifiedArray(access_first_values)
+unqualified_wrapped_second = readUnqualifiedArray(access_second_values)
+unqualified_wrapped_first_again = readUnqualifiedArray(access_first_values)
+plot(unqualified_wrapped_first)
+plot(unqualified_wrapped_second)
+plot(unqualified_wrapped_first_again)
+
+unqualified_empty_size = return_empty_first().size()
+unqualified_empty_last = return_empty_first().last()
+unqualified_none_size = return_none_first().size()
+unqualified_none_get = return_none_first().get(0)
+unqualified_none_last = return_none_first().last()
+plot(unqualified_empty_size)
+plot(na(unqualified_empty_last) ? 1 : 0)
+plot(na(unqualified_none_size) and na(unqualified_none_get) and na(unqualified_none_last) ? 1 : 0)
+
+unqualified_int_values = array.from(10, 11)
+unqualified_float_values = array.from(20.0, 21.0)
+unqualified_scalar_array_first = readUnqualifiedScalarArray(unqualified_int_values)
+unqualified_scalar_array_second = readUnqualifiedScalarArray(unqualified_float_values)
+unqualified_scalar_array_first_again = readUnqualifiedScalarArray(unqualified_int_values)
+plot(unqualified_scalar_array_first)
+plot(unqualified_scalar_array_second)
+plot(unqualified_scalar_array_first_again)
+
+unqualified_scalar_copy_source = array.from(30, 31)
+unqualified_scalar_copy = return_identity(unqualified_scalar_copy_source).copy()
+unqualified_scalar_copy.push(32)
+plot(unqualified_scalar_copy_source.size())
+plot(unqualified_scalar_copy.size())
+
+qualified_scalar_values = array.from(40, 41)
+qualified_scalar_size = return_anchor.returnInts(qualified_scalar_values).size()
+qualified_scalar_get = return_anchor.returnInts(qualified_scalar_values).get(index=1)
+qualified_scalar_last = return_anchor.returnInts(qualified_scalar_values).copy().last()
+plot(qualified_scalar_size)
+plot(qualified_scalar_get)
+plot(qualified_scalar_last)
+
+unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
+unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))
+unqualified_scalar_first_again = readUnqualifiedScalar(First.new(4.0, 40.0))
+plot(unqualified_scalar_first)
+plot(unqualified_scalar_second)
+plot(unqualified_scalar_first_again)
+
+scalar_udf_size = return_identity(First.new(5.0, 50.0)).size()
+scalar_udf_get = return_identity(First.new(6.0, 60.0)).get(index=1)
+scalar_udf_first = return_identity(First.new(7.0, 70.0)).first()
+scalar_udf_last = return_identity(First.new(8.0, 80.0)).last()
+scalar_udf_copy = return_identity(First.new(9.0, 90.0)).copy()
+plot(scalar_udf_size)
+plot(scalar_udf_get)
+plot(scalar_udf_first)
+plot(scalar_udf_last)
+plot(scalar_udf_copy)
+
+explicit_udf_size = size(return_nested(access_first_values))
+explicit_udf_get = get(return_nested(access_first_values), 0)
+explicit_udf_first = first(return_nested(access_first_values))
+explicit_udf_last = last(return_nested(access_first_values))
+explicit_udf_copy = copy(return_nested(access_first_values))
+explicit_udf_copy_item = array.first(explicit_udf_copy)
+plot(explicit_udf_size)
+plot(explicit_udf_get)
+plot(explicit_udf_first)
+plot(explicit_udf_last)
+plot(explicit_udf_copy_item.shared)
 
 postfix_copy_source = array.from(First.new(140.0, 1400.0))
 postfix_independent_copy = return_anchor.returnFirst(postfix_copy_source).copy()

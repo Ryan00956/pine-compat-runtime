@@ -58,17 +58,22 @@ UDT arrays through direct or block-alias paths, copy/new/from allocation, privat
 nested calls, typed methods with named/reordered arguments, and final control
 flow. Imported type positions are rewritten for the active alias and
 source-aware metadata isolates two aliases of the same physical library.
-Qualified imported UDF/method results carrying a concrete same-imported
-scalar-tree UDT-array identity support direct
+Qualified user-defined UDF/method results and unqualified plain root-local UDF
+results returning any currently supported array kind support direct
 `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()` and nested copy/read
-dispatch; qualified same-local user-method results have the same narrow helper
-support in the local UDT subset. Named/`na`/negative indexes, bounds errors,
-empty and typed-`na` reads, A-to-B-to-A calls, and dual aliases are
-fixture-backed. Imported UDT collections beyond that
-helper/typed-array/call-return subset, mixed or non-scalar scalar-return
-identities, unqualified local UDF results, other direct call-result array
-methods, nested field mutation, and method receiver/parameter/global field
-side effects remain unsupported. Same-imported
+dispatch. The unqualified form uses the impossible parser-only `$call_result`
+prefix and is limited to plain lexical callees; library-private local UDF
+bodies use the same normalization after module rewriting. Built-in-qualified
+and template call results remain parser boundaries. Imported UDT-array results
+must carry one concrete same-imported scalar-tree identity. Named/`na`/negative
+indexes, bounds errors, empty and typed-`na` reads, A-to-B-to-A calls, and dual
+aliases are fixture-backed. An unqualified root-local UDF result carrying a
+concrete imported scalar UDT identity may also invoke existing pure user
+methods. Imported UDT collections beyond that helper/typed-array/call-return
+subset, mixed or non-scalar scalar-return identities, non-array/non-UDT
+results, unknown/`na` results without a concrete supported type or identity,
+other direct call-result array methods, nested field mutation, and method
+receiver/parameter/global field side effects remain unsupported. Same-imported
 scalar-tree UDT-array tuple returns are supported when destructured, with each
 UDT-array slot retaining its own alias-qualified identity through direct and
 tuple-valued ordinary declaration direct/self alias, control, shadowing, and
@@ -110,11 +115,13 @@ Current evidence:
   `tests/fixtures/sema/unsupported_imported_user_type_array_tuple_alias_mutation.pine`,
   and direct call-result chaining fixture keep the conflict, stable-slot
   reassignment, root-span, and broader-helper boundaries explicit. The imported
-  UDF/method return runtime fixture covers direct
+  UDF/method return runtime fixture covers qualified user-defined and
+  unqualified root-local-wrapper direct
   `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`, nested copy/read
   chains, named/`na`/negative indexes, empty and typed-`na` reads, A-to-B-to-A,
   dual aliases, explicit same-named exports or scalar methods, and copy
-  independence.
+  independence. The library fixture also covers the unqualified postfix path
+  inside a private library UDF after module rewriting.
 - `docs/CONFORMANCE.md`, `docs/EXECUTION_SEMANTICS.md`, and
   `docs/SEMANTIC_MODEL.md` describe the narrow executable imported UDT
   constructor/direct field-read/reassignment/typed declaration/direct UDF
@@ -601,5 +608,18 @@ return/parameter flow remains deferred.
    element results, named/`na`/negative indexes, precise bounds errors, empty
    and typed-`na` reads, nested copy/read chains, A-to-B-to-A and dual-alias
    isolation, generic wrappers, and explicit same-named imported, local, or
-   scalar-UDT dispatch controls. Other direct helpers, unqualified local UDF
-   results, mixed/non-scalar identities, and mutation remain gated.
+   scalar-UDT dispatch controls. Done. At this historical slice boundary, other
+   direct helpers, unqualified local UDF results, mixed/non-scalar identities,
+   and mutation remained gated.
+8. Unqualified plain local UDF call-result receivers normalize through the
+   impossible parser-only `$call_result` prefix, including private library UDF
+   bodies after module rewriting. Results returning any currently supported
+   array kind share the read-only
+   `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()` path with qualified
+   user-defined results; imported UDT arrays still require one concrete
+   same-imported scalar-tree identity. Concrete imported scalar UDT results may
+   invoke existing pure user methods. Plain-callee validation keeps local UDFs
+   named after built-in namespaces unambiguous; built-in-qualified/template
+   results remain parser-gated, and mixed/non-scalar UDT arrays,
+   non-array/non-UDT results, unknown/`na` results without a concrete supported
+   type or identity, broader array helpers, and mutation remain rejected. Done.

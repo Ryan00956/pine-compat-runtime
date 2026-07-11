@@ -6687,8 +6687,8 @@ fn reports_unsupported_local_user_type_array_call_result_chaining_fixture() {
         path,
         &[
             "`array.get` argument `index` expects simple integer-compatible, got const string",
-            "`array.pop` is not supported: direct UDT-array call-result methods currently support only qualified `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
-            "`array.transform` is not supported: direct UDT-array call-result methods currently support only qualified `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.pop` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.transform` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
             "ternary UDT array branches must resolve to the same element identity",
             "ternary UDT array branches must resolve to the same element identity",
             "ternary UDT array branches must resolve to the same element identity",
@@ -6698,9 +6698,19 @@ fn reports_unsupported_local_user_type_array_call_result_chaining_fixture() {
             "`call_result.size` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`call_result.get` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`call_result.last` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
+            "`array.pop` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.transform` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "ternary UDT array branches must resolve to the same element identity",
+            "`call_result.first` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
+            "`call_result.copy` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
+            "`call_result.size` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
+            "`call_result.get` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
+            "`call_result.last` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
+            "`call_result.size` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
+            "`call_result.copy` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
         ],
     );
-    assert_diagnostic_count(path, 12);
+    assert_diagnostic_count(path, 22);
 }
 
 #[test]
@@ -12962,8 +12972,8 @@ fn reports_unsupported_imported_user_type_array_call_result_chaining_fixture() {
         "user/udt_array_returns/1",
         library,
         &[
-            "`array.pop` is not supported: direct UDT-array call-result methods currently support only qualified `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
-            "`array.slice` is not supported: direct UDT-array call-result methods currently support only qualified `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.pop` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.slice` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
         ],
     );
     assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 2);

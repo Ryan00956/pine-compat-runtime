@@ -14,6 +14,18 @@ type Anchor
 
 identity(values) => values
 
+array(values) => values
+
+size(values) => array.size(values) + 9000
+
+get(values, int index) => array.size(values) + index + 9100
+
+first(values) => array.size(values) + 9200
+
+last(values) => array.size(values) + 9300
+
+copy(values) => array.from(First.new(9400.0, 94000.0))
+
 __import_prefixedIdentity(values) => values
 
 blockAlias(values) =>
@@ -30,6 +42,12 @@ nestedRebuild(values) =>
     array.from(item)
 
 newFirst() => array.new<First>(1, First.new(35.0, 350.0))
+
+emptyFirst() => array.new<First>()
+
+noneFirst() =>
+    array<First> values = na
+    values
 
 nested(values) => blockAlias(identity(values))
 
@@ -70,6 +88,8 @@ method exposeSecondBlock(Anchor self, Second[] values) =>
     made = values.copy()
     made
 
+method exposeInts(Anchor self, array<int> values) => identity(values)
+
 method exposeFirstFresh(Anchor self, First value) => array.from(value)
 
 method exposeSecondNested(Anchor self, array<Second> values) => nested(values)
@@ -96,6 +116,20 @@ method get(First self, int index) => self.shared + index + 2000.0
 
 method last(First self) => self.shared + 3000.0
 
+method first(First self) => self.shared + 4000.0
+
+method copy(First self) => self.shared + 5000.0
+
+method size(Second self) => self.shared + 10000.0
+
+method get(Second self, int index) => self.shared + index + 20000.0
+
+method first(Second self) => self.shared + 30000.0
+
+method last(Second self) => self.shared + 40000.0
+
+method copy(Second self) => self.shared + 50000.0
+
 readPostfix(receiver, values) =>
     item = receiver.retain(values).copy().first()
     item.shared
@@ -104,6 +138,21 @@ readAccessors(receiver, values) =>
     head = receiver.retain(values).get(index=0)
     tail = receiver.retain(values).last()
     receiver.retain(values).size() + head.shared + tail.shared
+
+readUnqualifiedArray(values) =>
+    head = nested(values).get(index=0)
+    first_item = nested(values).first()
+    tail = nested(values).copy().last()
+    nested(values).size() + head.shared + first_item.shared + tail.shared + nested(values).copy().size()
+
+readUnqualifiedScalarArray(values) =>
+    head = identity(values).get(index=0)
+    first_item = identity(values).first()
+    tail = identity(values).copy().last()
+    identity(values).size() + head + first_item + tail + identity(values).copy().size()
+
+readUnqualifiedScalar(value) =>
+    identity(value).size() + identity(value).get(index=1) + identity(value).first() + identity(value).last() + identity(value).copy()
 
 first_values = array.from(First.new(10.0, 100.0))
 second_values = array.from(Second.new(200.0, 20.0))
@@ -174,6 +223,48 @@ scalar_result_size = First.new(2.0, 20.0).size()
 scalar_result_get = First.new(3.0, 30.0).get(index=1)
 scalar_result_last = First.new(4.0, 40.0).last()
 
+unqualified_size_first = nested(access_first_values).size()
+unqualified_size_second = nested(access_second_values).size()
+unqualified_size_first_again = nested(access_first_values).size()
+unqualified_get_first = nested(access_first_values).get(index=0)
+unqualified_get_second = nested(access_second_values).get(0)
+unqualified_get_first_again = nested(access_first_values).get(0)
+unqualified_first_item = nested(access_first_values).first()
+unqualified_last_item = nested(access_second_values).last()
+unqualified_copy_get = nested(access_first_values).copy().get(index=1)
+unqualified_named_get = namedResult(tag=3, values=access_first_values, use_copy=true).get(index=1)
+unqualified_builtin_named_last = array(access_first_values).copy().last()
+unqualified_wrapped_first = readUnqualifiedArray(access_first_values)
+unqualified_wrapped_second = readUnqualifiedArray(access_second_values)
+unqualified_wrapped_first_again = readUnqualifiedArray(access_first_values)
+unqualified_empty_size = emptyFirst().size()
+unqualified_empty_last = emptyFirst().last()
+unqualified_none_size = noneFirst().size()
+unqualified_none_get = noneFirst().get(0)
+unqualified_none_last = noneFirst().last()
+
+unqualified_int_values = array.from(10, 11)
+unqualified_float_values = array.from(20.0, 21.0)
+unqualified_scalar_array_first = readUnqualifiedScalarArray(unqualified_int_values)
+unqualified_scalar_array_second = readUnqualifiedScalarArray(unqualified_float_values)
+unqualified_scalar_array_first_again = readUnqualifiedScalarArray(unqualified_int_values)
+
+qualified_scalar_values = array.from(40, 41)
+qualified_scalar_size = anchor.exposeInts(qualified_scalar_values).size()
+qualified_scalar_get = anchor.exposeInts(qualified_scalar_values).get(index=1)
+qualified_scalar_last = anchor.exposeInts(qualified_scalar_values).copy().last()
+
+unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
+unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))
+unqualified_scalar_first_again = readUnqualifiedScalar(First.new(4.0, 40.0))
+
+explicit_udf_size = size(nested(access_first_values))
+explicit_udf_get = get(nested(access_first_values), 0)
+explicit_udf_first = first(nested(access_first_values))
+explicit_udf_last = last(nested(access_first_values))
+explicit_udf_copy = copy(nested(access_first_values))
+explicit_udf_copy_item = array.first(explicit_udf_copy)
+
 array<First> typed_first = nested(first_values)
 Second[] typed_second = anchor.exposeSecondBlock(second_values)
 
@@ -216,3 +307,4 @@ typed_second_item = array.get(typed_second, 0)
 static_item = array.get(static_result, 0)
 
 plot(first_item.shared + second_item.shared + first_again_item.shared + prefixed_local_item.shared + first_copy_item.shared + second_copy_item.shared + first_fresh_item.shared + second_fresh_item.shared + first_rebuilt_item.shared + second_rebuilt_item.shared + first_rebuilt_again_item.shared + first_new_item.shared + first_named_item.shared + second_named_item.shared + first_if_item.shared + second_switch_item.shared + first_for_item.shared + second_for_in_item.shared + first_while_item.shared + method_first_item.shared + method_second_item.shared + method_first_fresh_item.shared + method_second_nested_item.shared + method_qualified_item.shared + typed_first_item.shared + typed_second_item.shared + direct_namespace_item.shared + direct_iterated_shared + static_item.shared + postfix_method_first.shared + postfix_method_second.shared + postfix_method_first_again.shared + postfix_copy_first.shared + postfix_copy_second.shared + postfix_copy_first_again.shared + postfix_method_qualified.shared + explicit_method_first + explicit_method_copy_item.shared + postfix_static_item.shared + wrapped_postfix_first + wrapped_postfix_second + wrapped_postfix_first_again + postfix_size_first + postfix_size_second + postfix_size_first_again + postfix_get_first.shared + postfix_get_second.shared + postfix_get_first_again.shared + postfix_last_first.shared + postfix_last_second.shared + postfix_last_first_again.shared + postfix_copy_get.shared + postfix_copy_last.shared + postfix_access_qualified.shared + postfix_access_named.shared + wrapped_access_first + wrapped_access_second + wrapped_access_first_again + explicit_method_size + explicit_method_get + explicit_method_last + scalar_result_size + scalar_result_get + scalar_result_last)
+plot(unqualified_size_first + unqualified_size_second + unqualified_size_first_again + unqualified_get_first.shared + unqualified_get_second.shared + unqualified_get_first_again.shared + unqualified_first_item.shared + unqualified_last_item.shared + unqualified_copy_get.shared + unqualified_named_get.shared + unqualified_builtin_named_last.shared + unqualified_wrapped_first + unqualified_wrapped_second + unqualified_wrapped_first_again + unqualified_empty_size + (na(unqualified_empty_last) ? 1 : 0) + (na(unqualified_none_size) and na(unqualified_none_get) and na(unqualified_none_last) ? 1 : 0) + unqualified_scalar_array_first + unqualified_scalar_array_second + unqualified_scalar_array_first_again + unqualified_scalar_first + unqualified_scalar_second + unqualified_scalar_first_again + explicit_udf_size + explicit_udf_get + explicit_udf_first + explicit_udf_last + explicit_udf_copy_item.shared)

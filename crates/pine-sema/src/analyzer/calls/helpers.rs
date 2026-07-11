@@ -32,7 +32,7 @@ pub(crate) fn postfix_call_result_method_parts<'a>(
     Some(parts)
 }
 
-pub(crate) fn udt_array_call_result_builtin_name(method_name: &str) -> Option<&'static str> {
+pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'static str> {
     match method_name {
         "size" => Some("array.size"),
         "get" => Some("array.get"),

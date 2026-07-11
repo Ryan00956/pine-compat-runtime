@@ -548,7 +548,7 @@ impl Parser {
         let Some(prefix) = call_result_receiver_prefix(&receiver) else {
             self.error_here(
                 "E_PARSE_EXPR",
-                "method calls on call-result receivers require a qualified constructor, function, or method result receiver",
+                "method calls on call-result receivers require an unqualified call or qualified user-defined result receiver",
             );
             return None;
         };
@@ -762,18 +762,31 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
     let ExprKind::Call { callee, .. } = &receiver.kind else {
         return None;
     };
-    let ExprKind::QualifiedName(parts) = &callee.kind else {
-        return None;
-    };
-    match parts.as_slice() {
-        [alias, _method] if !is_builtin_namespace(alias) => Some(alias.clone()),
-        [alias, _type_name, constructor]
-            if constructor == "new" && !is_builtin_namespace(alias) =>
-        {
-            Some(alias.clone())
+    match &callee.kind {
+        ExprKind::Identifier(name) if is_plain_identifier(name) => {
+            Some(UNQUALIFIED_CALL_RESULT_PREFIX.to_owned())
         }
+        ExprKind::QualifiedName(parts) => match parts.as_slice() {
+            [alias, _method] if !is_builtin_namespace(alias) => Some(alias.clone()),
+            [alias, _type_name, constructor]
+                if constructor == "new" && !is_builtin_namespace(alias) =>
+            {
+                Some(alias.clone())
+            }
+            _ => None,
+        },
         _ => None,
     }
+}
+
+const UNQUALIFIED_CALL_RESULT_PREFIX: &str = "$call_result";
+
+fn is_plain_identifier(name: &str) -> bool {
+    let mut chars = name.chars();
+    chars
+        .next()
+        .is_some_and(|ch| ch == '_' || ch.is_ascii_alphabetic())
+        && chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric())
 }
 
 fn is_builtin_namespace(name: &str) -> bool {
@@ -784,9 +797,11 @@ fn is_builtin_namespace(name: &str) -> bool {
             | "chart"
             | "color"
             | "hline"
+            | "input"
             | "label"
             | "line"
             | "linefill"
+            | "log"
             | "map"
             | "math"
             | "matrix"

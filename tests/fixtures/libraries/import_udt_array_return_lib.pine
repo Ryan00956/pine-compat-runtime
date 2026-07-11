@@ -21,6 +21,12 @@ export returnArray(array<Point> values) => values
 
 export direct(values) => values
 
+export localSize(values) => identity(values).size()
+
+export localLast(values) => identity(values).copy().last()
+
+export localScalarSize(First value) => identity(value).size()
+
 export scalar(First value) => value
 
 export first(array<First> values) => array.size(values) + 900

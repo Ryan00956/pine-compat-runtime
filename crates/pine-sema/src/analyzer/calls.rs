@@ -13,7 +13,7 @@ mod helpers;
 mod return_types;
 
 pub(crate) use helpers::{
-    alias_qualified_method_name, array_method_builtin_name,
+    alias_qualified_method_name, array_call_result_builtin_name, array_method_builtin_name,
     call_arg_accepts_type_expected_diagnostic, call_arg_expected_label_diagnostic,
     call_arg_expected_type_diagnostic, call_arg_type_diagnostic, call_requirement_diagnostic,
     drawing_method_builtin_name, expr_name, is_array_mutation_builtin,
@@ -21,7 +21,7 @@ pub(crate) use helpers::{
     is_output_or_declaration_builtin, is_ta_extreme_length_overload,
     is_ta_pivot_default_source_overload, is_ta_vwap_bands_call, is_time_function_overload,
     is_timestamp_overload, map_method_builtin_name, method_call_parts,
-    postfix_call_result_method_parts, receiver_call_arg, udt_array_call_result_builtin_name,
+    postfix_call_result_method_parts, receiver_call_arg,
 };
 
 impl Analyzer {
@@ -54,8 +54,7 @@ impl Analyzer {
             .map(|arg| self.analyze_expr(&arg.value))
             .collect();
 
-        if let Some(result) =
-            self.analyze_udt_array_call_result_method(callee, args, span, &arg_types)
+        if let Some(result) = self.analyze_array_call_result_method(callee, args, span, &arg_types)
         {
             return result;
         }
@@ -181,7 +180,7 @@ impl Analyzer {
         None
     }
 
-    fn analyze_udt_array_call_result_method(
+    fn analyze_array_call_result_method(
         &mut self,
         callee: &Expr,
         args: &[CallArg],
@@ -192,17 +191,24 @@ impl Analyzer {
         let Some(receiver_type) = arg_types.first().copied().flatten() else {
             return Some(None);
         };
-        if receiver_type.kind != ValueKind::UserTypeArray {
+        if !is_array_kind(receiver_type.kind) {
             return None;
         }
-        let Some(builtin_name) = udt_array_call_result_builtin_name(method_name) else {
+        let Some(builtin_name) = array_call_result_builtin_name(method_name) else {
             self.unsupported(
                 &format!("array.{method_name}"),
-                "direct UDT-array call-result methods currently support only qualified `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+                "direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
                 callee.span,
             );
             return Some(None);
         };
+        if receiver_type.kind != ValueKind::UserTypeArray {
+            let signature = pine_builtins::get_phase_1_builtin(builtin_name)
+                .expect("supported call-result array helper must be registered");
+            self.check_feature_name(builtin_name, callee.span);
+            self.validate_call_args(signature, args, arg_types);
+            return Some(self.return_type_for_call(signature, args, arg_types));
+        }
         let Some(receiver_type_name) = self.user_type_array_name_of_expr(&args.first()?.value)
         else {
             self.unsupported(
@@ -223,7 +229,7 @@ impl Analyzer {
             return Some(None);
         }
         let signature = pine_builtins::get_phase_1_builtin(builtin_name)
-            .expect("supported call-result UDT-array helper must be registered");
+            .expect("supported call-result array helper must be registered");
         self.check_feature_name(builtin_name, callee.span);
         self.validate_call_args(signature, args, arg_types);
         self.mark_user_type_array_element_result(builtin_name, span, args, arg_types);

@@ -470,7 +470,7 @@ fn validate_udt_array_call_result_helper_fixture_paths(
     for fixture in UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES {
         if !fixtures.contains(fixture) {
             return Err(format!(
-                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed qualified local/imported UDT-array call-result helper dispatch and retained fail-closed boundaries"
+                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed qualified user-defined and unqualified local-UDF array/scalar-UDT call-result dispatch plus retained fail-closed boundaries"
             ));
         }
     }

@@ -29,13 +29,13 @@ mod prelude {
     };
 
     pub(crate) use crate::analyzer::calls::{
-        alias_qualified_method_name, array_method_builtin_name,
+        alias_qualified_method_name, array_call_result_builtin_name, array_method_builtin_name,
         call_arg_accepts_type_expected_diagnostic, call_arg_expected_type_diagnostic,
         drawing_method_builtin_name, expr_name, is_array_mutation_builtin,
         is_array_mutation_method_call_name, is_map_mutation_builtin,
         is_map_mutation_method_call_name, is_output_or_declaration_builtin, is_ta_vwap_bands_call,
         map_method_builtin_name, method_call_parts, postfix_call_result_method_parts,
-        receiver_call_arg, udt_array_call_result_builtin_name,
+        receiver_call_arg,
     };
     pub(crate) use crate::analyzer::context::{
         Analyzer, FunctionInfo, FunctionParamInfo, MAX_FUNCTION_CALL_DEPTH, MAX_SEMA_EXPR_DEPTH,

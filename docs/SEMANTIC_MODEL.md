@@ -568,16 +568,24 @@ ternary/`switch` results, assigned `if` results, shadowing, and later tuple
 destructuring. The first declaration fixes each UDT-array slot identity.
 Same-identity or `na` reassignment preserves it, while direct or control-flow
 reassignment to a different identity and unresolved nested tuple consumers
-emit root-spanned `E_TUPLE_UDT_ARRAY_IDENTITY` diagnostics. Qualified same-local
-user-method and imported UDF/method results carrying a concrete scalar-tree
-UDT-array identity support direct `.first()` and `.copy()` dispatch, including
-a nested `.copy().first()` chain, plus direct `.size()`, `.get(index)`, and
-`.last()` reads. `get` retains the concrete element identity across named
-indexes and nested copy chains, while `size`/`last` retain existing empty and
-typed-`na` behavior. Explicit same-named local methods and imported functions
-remain distinct. Non-scalar UDT array returns, unqualified local UDF results,
-other direct call-result array methods, and mutation through unsupported
-UDF/method side-effect contexts remain outside this subset.
+emit root-spanned `E_TUPLE_UDT_ARRAY_IDENTITY` diagnostics. Qualified
+user-defined UDF/method results and unqualified plain local UDF results support
+direct `.size()`, `.get(index)`, `.first()`, `.last()`, and `.copy()` dispatch
+for every currently supported array kind, including nested copy/read chains.
+The parser assigns the unqualified form the impossible internal prefix
+`$call_result`; the normalization requires a plain lexical callee, while
+qualified user-defined forms keep their source prefix. Built-in-qualified and
+template call-result receivers remain parser boundaries. UDT-array results
+must still carry one concrete same-local or same-imported scalar-tree identity.
+`get` retains that element identity across named indexes and nested copy chains,
+while `size`/`last` retain existing empty and typed-`na` behavior. Unqualified
+local UDF results carrying a concrete local or imported scalar UDT identity may
+also use the existing pure user-method dispatch. Explicit same-named local
+methods and imported functions remain distinct. Mixed or non-scalar UDT-array
+returns, non-array/non-UDT results, unknown/`na` results without a concrete
+supported type or identity, other direct array call-result helpers, and
+mutation through unsupported UDF/method side-effect contexts remain outside
+this subset.
 Generic UDT-array parameters are therefore iterable inside local UDFs and typed
 local methods for the fixture-backed statement and final-expression forms,
 including final results that return the UDT element itself or rebuild a
@@ -743,13 +751,15 @@ search-structural-equality, sort-by-field, pop/remove/shift return, clear-size,
 copy-read, reverse-read, slice-window, concat-append, and for-in-value-copy
 subset remain outside the claim. The same applies to direct private imported UDT
 access, mixed or non-scalar imported array-return identities, conflicting
-identities within one tuple UDT-array slot, unqualified local UDF or
-direct call-result array methods outside the read-only
-`size`/`get`/`first`/`last`/`copy` set, nested field mutation, UDF
+identities within one tuple UDT-array slot, direct call-result array methods
+outside the read-only `size`/`get`/`first`/`last`/`copy` set,
+built-in-qualified/template call-result receivers, nested field mutation, UDF
 parameter/global field side effects, and method receiver/parameter/global field
-side effects. Qualified same-local user-method and same-imported UDT-array
-results support direct
-`.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`.
+side effects. Qualified user-defined and unqualified plain local UDF results
+support those five array helpers for currently supported array kinds; UDT
+arrays retain the concrete same-local/same-imported scalar-tree identity gate,
+and scalar UDT results from unqualified local UDFs may invoke existing pure
+methods.
 Tuple-contained
 same-imported scalar-tree UDT arrays are supported when destructured, with
 identity tracked independently per slot. Non-scalar UDT value history outside the local/imported
@@ -817,11 +827,13 @@ Local methods may return same-local scalar-tree UDT arrays from typed array
 parameters or fresh local array construction. Direct and block-alias returns
 retain the argument identity, while copy/new/from and nested/final-control-flow
 returns preserve the identity selected for the current call. Qualified
-same-local method results support direct
+user-defined results returning any currently supported array kind and
+unqualified plain local UDF array results support direct
 `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()` without widening
-arbitrary call-result receivers. The narrow qualified same-imported UDT-array
-path supports the same read-only helper set; unqualified local UDF results and
-other helpers remain gated.
+arbitrary call-result receivers. UDT arrays retain the concrete
+same-local/same-imported scalar-tree identity gate; scalar UDT results from an
+unqualified local UDF may invoke the existing pure method subset.
+Built-in-qualified/template call results and other array helpers remain gated.
 Methods with receiver/parameter/global field side effects, recursion,
 unsupported parameter families, mismatched UDT parameter identity, unknown
 receivers, and alias-qualified imported method receiver type mismatches remain

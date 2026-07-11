@@ -248,15 +248,65 @@ fn parses_qualified_call_result_method_receiver() {
 }
 
 #[test]
-fn rejects_unqualified_call_result_method_receiver() {
-    let parsed = parse("bad = make(values).first()\n");
+fn parses_unqualified_call_result_method_receiver() {
+    let parsed = parse("item = make(values).get(index=0)\nnested = array(values).copy().last()\n");
 
-    assert!(parsed.diagnostics.iter().any(|diagnostic| {
-        diagnostic.code == "E_PARSE_EXPR"
-            && diagnostic.message.contains(
-                "method calls on call-result receivers require a qualified constructor, function, or method result receiver",
-            )
-    }));
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected call-result method call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::QualifiedName(vec!["$call_result".to_owned(), "get".to_owned()])
+    );
+    assert_eq!(args.len(), 2);
+    assert!(args[0].value.span.end < callee.span.start);
+    assert_eq!(args[1].name.as_deref(), Some("index"));
+
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[1].kind else {
+        panic!("expected nested declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected nested outer call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::QualifiedName(vec!["$call_result".to_owned(), "last".to_owned()])
+    );
+    let ExprKind::Call {
+        callee: inner_callee,
+        args: inner_args,
+    } = &args[0].value.kind
+    else {
+        panic!("expected nested inner call");
+    };
+    assert_eq!(
+        inner_callee.kind,
+        ExprKind::QualifiedName(vec!["$call_result".to_owned(), "copy".to_owned()])
+    );
+    assert!(inner_args[0].value.span.end < inner_callee.span.start);
+}
+
+#[test]
+fn rejects_builtin_qualified_call_result_method_receiver() {
+    for source in [
+        "bad = array.copy(values).first()\n",
+        "bad = array.new<int>(2, 1).size()\n",
+        "bad = input.string(\"value\").size()\n",
+        "bad = log.info(\"value\").size()\n",
+    ] {
+        let parsed = parse(source);
+
+        assert!(parsed.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_PARSE_EXPR"
+                && diagnostic.message.contains(
+                    "method calls on call-result receivers require an unqualified call or qualified user-defined result receiver",
+                )
+        }));
+    }
 }
 
 #[test]

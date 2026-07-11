@@ -288,11 +288,16 @@ Current baseline:
   later-destructuring, fresh shadowing, typed-`na`, A-to-B-to-A, and dual-alias
   paths. Same-identity or `na` tuple reassignment preserves the fixed slot
   layout; cross-identity direct/control-flow reassignment fails closed.
-  Qualified same-local user-method and imported UDF/method results with a
-  concrete scalar-tree UDT-array identity also support direct
+  Qualified user-defined UDF/method results and unqualified plain local UDF
+  results returning any currently supported array kind support direct
   `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()` and nested copy/read
-  chains while preserving A-to-B-to-A identity, imported dual-alias isolation,
-  named-index binding, empty/typed-`na` behavior, and copy independence.
+  chains. UDT arrays still require one concrete same-local or same-imported
+  scalar-tree identity and preserve A-to-B-to-A identity, imported dual-alias
+  isolation, named-index binding, empty/typed-`na` behavior, and copy
+  independence. Unqualified local UDF results carrying a concrete scalar UDT
+  identity may invoke the existing pure user-method subset. The parser-only
+  `$call_result` prefix is limited to plain lexical callees; built-in-qualified
+  and template call-result receivers remain gated.
 
 Remaining internal work:
 
@@ -303,10 +308,13 @@ Remaining internal work:
   fixture-backed float/int/bool/string/color matrix subsets;
 - UDT array behavior beyond the same-local and same-imported scalar-tree
   subsets, including mixed imported return identities, non-scalar imported
-  returns, conflicting identities within one tuple slot, unqualified local UDF
-  call-result chaining, direct helpers beyond the read-only
-  `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` set, and mutation through
-  unsupported UDF/method side-effect contexts;
+  returns, conflicting identities within one tuple slot, direct helpers beyond
+  the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` set, and
+  mutation through unsupported UDF/method side-effect contexts;
+- call-result receivers outside the qualified user-defined/unqualified plain
+  local-UDF subset, including built-in-qualified/template calls,
+  non-array/non-UDT results, unknown/`na` results without a concrete supported
+  type or identity, and array mutation;
 - generic or bare `array` declarations beyond current fixture-backed element
   kinds;
 - `for...in` iteration beyond the fixture-backed array, matrix-row, UDT-array,

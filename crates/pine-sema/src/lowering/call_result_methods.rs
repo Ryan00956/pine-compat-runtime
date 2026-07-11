@@ -10,7 +10,7 @@ impl Analyzer {
         param_exprs: &HashMap<String, HirExpr>,
         param_types: &HashMap<String, PineType>,
     ) -> Option<Option<HirExpr>> {
-        if let Some(result) = self.lower_postfix_udt_array_call_result_method(
+        if let Some(result) = self.lower_postfix_array_call_result_method(
             callee,
             args,
             pine_type,
@@ -40,7 +40,7 @@ impl Analyzer {
         postfix_call_result_method_parts(callee, args).map(|_| None)
     }
 
-    pub(super) fn lower_postfix_udt_array_call_result_method(
+    pub(super) fn lower_postfix_array_call_result_method(
         &mut self,
         callee: &Expr,
         args: &[CallArg],
@@ -53,11 +53,11 @@ impl Analyzer {
         let receiver = args.first()?;
         if !self
             .type_of_expr_with_params(&receiver.value, param_types)
-            .is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+            .is_some_and(|pine_type| is_array_kind(pine_type.kind))
         {
             return None;
         }
-        let builtin_name = udt_array_call_result_builtin_name(method_name)?;
+        let builtin_name = array_call_result_builtin_name(method_name)?;
         let Some(args) = self.lower_builtin_call_args(builtin_name, args, param_exprs, param_types)
         else {
             return Some(None);

@@ -11,6 +11,17 @@ readAccessors(values) =>
     tail = lib.direct(values).last()
     lib.direct(values).size() + head.shared + tail.shared
 
+localIdentity(values) => values
+
+readLocalArray(values) =>
+    head = localIdentity(values).get(index=0)
+    first_item = localIdentity(values).first()
+    tail = localIdentity(values).copy().last()
+    localIdentity(values).size() + head.shared + first_item.shared + tail.shared + localIdentity(values).copy().size()
+
+readLocalScalar(value) =>
+    localIdentity(value).size() + localIdentity(value).get(index=1) + localIdentity(value).first() + localIdentity(value).last() + localIdentity(value).copy()
+
 points = array.from(lib.Point.new(close))
 anchor = lib.Point.new(open)
 
@@ -72,4 +83,28 @@ none_get = lib.noneFirst().get(0)
 none_last = lib.noneFirst().last()
 na_index_get = lib.direct(access_first_values).get(na)
 
+local_size_first = localIdentity(access_first_values).size()
+local_size_second = localIdentity(second_values).size()
+local_size_first_again = localIdentity(access_first_values).size()
+local_get_first = localIdentity(access_first_values).get(index=0)
+local_get_second = localIdentity(second_values).get(0)
+local_get_first_again = localIdentity(access_first_values).get(0)
+local_first_item = localIdentity(access_first_values).first()
+local_last_item = localIdentity(second_values).last()
+local_copy_get = localIdentity(access_first_values).copy().get(index=1)
+local_wrapped_first = readLocalArray(access_first_values)
+local_wrapped_second = readLocalArray(second_values)
+local_wrapped_first_again = readLocalArray(access_first_values)
+local_scalar_first = readLocalScalar(lib.First.new(2.0, 20.0))
+local_scalar_second = readLocalScalar(lib.First.new(3.0, 30.0))
+local_scalar_first_again = readLocalScalar(lib.First.new(4.0, 40.0))
+private_size = lib.localSize(access_first_values)
+private_last = lib.localLast(access_first_values)
+private_scalar_size = lib.localScalarSize(lib.First.new(5.0, 50.0))
+qualified_scalar_values = array.from(60, 61)
+qualified_import_size = lib.direct(qualified_scalar_values).size()
+qualified_import_get = lib.direct(qualified_scalar_values).get(index=1)
+qualified_import_last = lib.direct(qualified_scalar_values).copy().last()
+
 plot(postfix_udf_item.shared + postfix_nested_item.shared + postfix_method_item.shared + postfix_udf_copy_item.shared + postfix_method_copy_item.shared + explicit_first + explicit_copy_item.shared + scalar_method_first + scalar_method_copy + scalar_udf_result_first + scalar_udf_result_copy + scalar_method_result_first + scalar_method_result_copy + type_changed_method_result + wrapped_postfix + postfix_size_first + postfix_size_second + postfix_size_first_again + postfix_get_first.shared + postfix_get_second.shared + postfix_get_first_again.shared + postfix_last_first.shared + postfix_last_second.shared + postfix_last_first_again.shared + postfix_copy_get.shared + postfix_copy_last.shared + postfix_method_get.shared + postfix_method_last.shared + wrapped_access_first + wrapped_access_second + wrapped_access_first_again + explicit_size + explicit_get + explicit_last + scalar_result_size + scalar_result_get + scalar_result_last + empty_size + (na(empty_last) ? 1 : 0) + (na(none_size) and na(none_get) and na(none_last) ? 1 : 0) + (na(na_index_get) ? 1 : 0))
+plot(local_size_first + local_size_second + local_size_first_again + local_get_first.shared + local_get_second.shared + local_get_first_again.shared + local_first_item.shared + local_last_item.shared + local_copy_get.shared + local_wrapped_first + local_wrapped_second + local_wrapped_first_again + local_scalar_first + local_scalar_second + local_scalar_first_again + private_size + private_last.shared + private_scalar_size + qualified_import_size + qualified_import_get + qualified_import_last)
