@@ -2,6 +2,10 @@
 import user/udt_array_returns/1 as lib
 indicator("Supported imported UDT array returns")
 
+readPostfix(values) =>
+    item = lib.direct(values).copy().first()
+    item.shared
+
 points = array.from(lib.Point.new(close))
 anchor = lib.Point.new(open)
 
@@ -9,3 +13,27 @@ udf_returned = lib.returnArray(points)
 method_returned = anchor.retainArray(points)
 
 plot(array.size(udf_returned) + array.size(method_returned))
+
+first_values = array.from(lib.First.new(10.0, 100.0))
+first_anchor = lib.First.new(20.0, 200.0)
+
+postfix_udf_item = lib.direct(first_values).first()
+postfix_udf_copy = lib.direct(first_values).copy()
+postfix_nested_item = lib.direct(first_values).copy().first()
+postfix_method_item = first_anchor.retainFirst(first_values).first()
+postfix_method_copy = first_anchor.retainFirst(first_values).copy()
+
+postfix_udf_copy_item = array.first(postfix_udf_copy)
+postfix_method_copy_item = array.first(postfix_method_copy)
+explicit_first = lib.first(first_values)
+explicit_copy_item = array.first(lib.copy(first_values))
+scalar_method_first = lib.First.new(30.0, 300.0).first()
+scalar_method_copy = lib.First.new(40.0, 400.0).copy()
+scalar_udf_result_first = lib.scalar(lib.First.new(50.0, 500.0)).first()
+scalar_udf_result_copy = lib.scalar(lib.First.new(60.0, 600.0)).copy()
+scalar_method_result_first = lib.First.new(70.0, 700.0).scalar().first()
+scalar_method_result_copy = lib.First.new(80.0, 800.0).scalar().copy()
+type_changed_method_result = first_anchor.toSecond().readShared()
+wrapped_postfix = readPostfix(first_values)
+
+plot(postfix_udf_item.shared + postfix_nested_item.shared + postfix_method_item.shared + postfix_udf_copy_item.shared + postfix_method_copy_item.shared + explicit_first + explicit_copy_item.shared + scalar_method_first + scalar_method_copy + scalar_udf_result_first + scalar_udf_result_copy + scalar_method_result_first + scalar_method_result_copy + type_changed_method_result + wrapped_postfix)

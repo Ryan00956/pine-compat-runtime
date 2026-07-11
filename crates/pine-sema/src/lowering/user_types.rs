@@ -193,6 +193,21 @@ impl Analyzer {
                 );
             }
             ExprKind::Call { callee, args } => {
+                if let Some((_, method_name)) = postfix_call_result_method_parts(callee, args)
+                    && method_name == "copy"
+                    && let Some(receiver) = args.first()
+                {
+                    let result = self.user_type_array_result_with_params_and_aliases(
+                        &receiver.value,
+                        param_exprs,
+                        array_aliases,
+                        user_type_aliases,
+                        call_stack,
+                    );
+                    if !matches!(result, UserTypeArrayIdentityResult::Unknown) {
+                        return result;
+                    }
+                }
                 let Some(name) = expr_name(callee) else {
                     return UserTypeArrayIdentityResult::Unknown;
                 };
@@ -911,6 +926,20 @@ impl Analyzer {
             && let Some(name) = expr_name(callee)
         {
             const ELEMENT_HELPERS: &[&str] = &["get", "pop", "remove", "shift", "first", "last"];
+            if let Some((_, method_name)) = postfix_call_result_method_parts(callee, args)
+                && method_name == "first"
+                && let Some(receiver) = args.first()
+                && let UserTypeArrayIdentityResult::Known(type_name) = self
+                    .user_type_array_result_with_params_and_aliases(
+                        &receiver.value,
+                        param_exprs,
+                        array_aliases,
+                        user_type_aliases,
+                        call_stack,
+                    )
+            {
+                return UserTypeArrayIdentityResult::Known(type_name);
+            }
             if let Some(helper) = name.strip_prefix("array.")
                 && ELEMENT_HELPERS.contains(&helper)
                 && let Some(array_arg) = args.first()

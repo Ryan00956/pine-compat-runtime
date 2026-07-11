@@ -17,6 +17,31 @@ pub(crate) fn method_call_parts(expr: &Expr) -> Option<(&str, &str)> {
     }
 }
 
+pub(crate) fn postfix_call_result_method_parts<'a>(
+    callee: &'a Expr,
+    args: &[CallArg],
+) -> Option<(&'a str, &'a str)> {
+    let parts = method_call_parts(callee)?;
+    let receiver = args.first()?;
+    if receiver.name.is_some()
+        || !matches!(receiver.value.kind, ExprKind::Call { .. })
+        || receiver.value.span.end >= callee.span.start
+    {
+        return None;
+    }
+    Some(parts)
+}
+
+pub(crate) fn imported_udt_array_call_result_builtin_name(
+    method_name: &str,
+) -> Option<&'static str> {
+    match method_name {
+        "first" => Some("array.first"),
+        "copy" => Some("array.copy"),
+        _ => None,
+    }
+}
+
 pub(crate) fn alias_qualified_method_name(name: &str) -> Option<(&str, &str)> {
     let (alias, method_name) = name.split_once('.')?;
     if alias.is_empty() || method_name.is_empty() || method_name.contains('.') {

@@ -6681,6 +6681,18 @@ fn reports_unsupported_user_type_array_udf_method_return_identities_fixture() {
 }
 
 #[test]
+fn reports_unsupported_local_user_type_array_call_result_chaining_fixture() {
+    let path = "tests/fixtures/sema/unsupported_local_user_type_array_call_result_chaining.pine";
+    assert_diagnostic_messages(
+        path,
+        &[
+            "direct same-local UDT-array call-result methods are not supported; bind the result or use the namespace helper",
+        ],
+    );
+    assert_diagnostic_count(path, 1);
+}
+
+#[test]
 fn reports_unsupported_user_type_array_control_flow_identity_fixture() {
     let path = "tests/fixtures/sema/unsupported_user_type_array_control_flow_identity.pine";
     assert_diagnostic_messages(
@@ -12939,12 +12951,11 @@ fn reports_unsupported_imported_user_type_array_call_result_chaining_fixture() {
         "user/udt_array_returns/1",
         library,
         &[
-            "unknown export `first` in `user/udt_array_returns/1`",
-            "unknown function `lib.first`",
-            "imported method `copy` for receiver `lib.First` is not supported; imported method dispatch requires imported UDT identity",
+            "`array.size` is not supported: direct UDT-array call-result methods currently support only imported `.first()` and `.copy()`; bind the result or use the namespace helper",
+            "`array.get` is not supported: direct UDT-array call-result methods currently support only imported `.first()` and `.copy()`; bind the result or use the namespace helper",
         ],
     );
-    assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 3);
+    assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 2);
 }
 
 #[test]

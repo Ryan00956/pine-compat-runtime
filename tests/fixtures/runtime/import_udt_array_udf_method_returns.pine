@@ -3,6 +3,10 @@ import user/udt_array_returns/1 as left
 import user/udt_array_returns/1 as right
 indicator("Imported UDT array UDF and method returns")
 
+readPostfix(values) =>
+    item = left.direct(values).copy().first()
+    item.shared
+
 left_first_values = array.from(left.First.new(11.0, 101.0), left.First.new(12.0, 102.0))
 left_second_values = array.from(left.Second.new(201.0, 21.0), left.Second.new(202.0, 22.0))
 right_first_values = array.from(right.First.new(31.0, 301.0), right.First.new(32.0, 302.0))
@@ -116,6 +120,67 @@ plot(typed_left_first_item.shared)
 
 direct_namespace_item = array.first(left.direct(left_first_values))
 plot(direct_namespace_item.shared)
+
+postfix_udf_first_item = left.direct(left_first_values).first()
+postfix_udf_second_item = left.direct(left_second_values).first()
+postfix_udf_first_again_item = left.direct(left_first_values).first()
+postfix_right_first_item = right.direct(right_first_values).first()
+postfix_left_after_right_item = left.direct(left_first_values).first()
+plot(postfix_udf_first_item.shared)
+plot(postfix_udf_second_item.shared)
+plot(postfix_udf_first_again_item.shared)
+plot(postfix_right_first_item.shared)
+plot(postfix_left_after_right_item.shared)
+
+postfix_method_first_item = left_first_anchor.retainFirst(left_first_values).first()
+postfix_method_second_item = left_second_anchor.retainSecond(left_second_values).first()
+postfix_method_first_again_item = left_first_anchor.retainFirst(left_first_values).first()
+plot(postfix_method_first_item.shared)
+plot(postfix_method_second_item.shared)
+plot(postfix_method_first_again_item.shared)
+
+postfix_copy_first_item = left.direct(left_first_values).copy().first()
+postfix_copy_second_item = left.direct(left_second_values).copy().first()
+postfix_copy_first_again_item = left.direct(left_first_values).copy().first()
+postfix_method_copy = left_first_anchor.retainFirst(left_first_values).copy()
+postfix_method_copy_item = array.first(postfix_method_copy)
+plot(postfix_copy_first_item.shared)
+plot(postfix_copy_second_item.shared)
+plot(postfix_copy_first_again_item.shared)
+plot(postfix_method_copy_item.shared)
+
+explicit_first = left.first(left_first_values)
+explicit_copy_item = array.first(left.copy(left_first_values))
+plot(explicit_first)
+plot(explicit_copy_item.shared)
+
+scalar_method_first = left.First.new(30.0, 300.0).first()
+scalar_method_copy = left.First.new(40.0, 400.0).copy()
+plot(scalar_method_first)
+plot(scalar_method_copy)
+
+scalar_udf_result_first = left.scalar(left.First.new(50.0, 500.0)).first()
+scalar_udf_result_copy = left.scalar(left.First.new(60.0, 600.0)).copy()
+scalar_method_result_first = left.First.new(70.0, 700.0).scalar().first()
+scalar_method_result_copy = left.First.new(80.0, 800.0).scalar().copy()
+type_changed_method_result = left_first_anchor.toSecond().readShared()
+plot(scalar_udf_result_first)
+plot(scalar_udf_result_copy)
+plot(scalar_method_result_first)
+plot(scalar_method_result_copy)
+plot(type_changed_method_result)
+
+postfix_independent_copy = left.direct(left_first_values).copy()
+array.push(postfix_independent_copy, left.First.new(17.0, 107.0))
+plot(array.size(left_first_values))
+plot(array.size(postfix_independent_copy))
+
+postfix_wrapper_first = readPostfix(left_first_values)
+postfix_wrapper_second = readPostfix(left_second_values)
+postfix_wrapper_first_again = readPostfix(left_first_values)
+plot(postfix_wrapper_first)
+plot(postfix_wrapper_second)
+plot(postfix_wrapper_first_again)
 
 historical_return = left.direct(left_first_values)[1]
 historical_item = array.first(historical_return)

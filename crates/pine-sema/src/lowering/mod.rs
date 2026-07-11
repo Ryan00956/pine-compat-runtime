@@ -1,12 +1,16 @@
 use crate::prelude::*;
 
 mod budget;
+mod call_result_methods;
 mod function_returns;
 mod inline_calls;
+mod literals;
 mod pure_series;
 mod reassignments;
 mod tuple_returns;
 pub(crate) mod user_types;
+
+pub(crate) use literals::lower_literal;
 
 pub(crate) fn prepend_block_statements(mut prefix: Vec<HirStmt>, expr: HirExpr) -> HirExpr {
     match expr.kind {
@@ -29,26 +33,6 @@ pub(crate) fn prepend_block_statements(mut prefix: Vec<HirStmt>, expr: HirExpr) 
                 result: Box::new(expr),
             },
         },
-    }
-}
-
-pub(crate) fn lower_literal(literal: &Literal) -> HirLiteral {
-    match literal {
-        Literal::Int(value) => HirLiteral::Int(*value),
-        Literal::Float(value) => HirLiteral::Float(*value),
-        Literal::Bool(value) => HirLiteral::Bool(*value),
-        Literal::String(value) => HirLiteral::String(value.clone()),
-        Literal::ColorHex(value) => HirLiteral::ColorHex(value.clone()),
-    }
-}
-
-fn literal_series_key(literal: &Literal) -> String {
-    match literal {
-        Literal::Int(value) => format!("int:{value}"),
-        Literal::Float(value) => format!("float:{}", value.to_bits()),
-        Literal::Bool(value) => format!("bool:{value}"),
-        Literal::String(value) => format!("string:{value:?}"),
-        Literal::ColorHex(value) => format!("color:{value}"),
     }
 }
 
@@ -972,13 +956,25 @@ impl Analyzer {
                         },
                     });
                 }
-                if let Some(method_call) = self.lower_alias_qualified_user_method_call(
-                    &name,
-                    callee.span,
+                if let Some(result) = self.lower_postfix_call_result_method(
+                    callee,
                     args,
+                    pine_type,
+                    series_id,
                     param_exprs,
                     param_types,
                 ) {
+                    return result;
+                }
+                if matches!(callee.kind, ExprKind::QualifiedName(_))
+                    && let Some(method_call) = self.lower_alias_qualified_user_method_call(
+                        &name,
+                        callee.span,
+                        args,
+                        param_exprs,
+                        param_types,
+                    )
+                {
                     let pure_call_series_id =
                         pure_series::pure_alias_qualified_user_method_call_series_key(
                             self, &name, args,

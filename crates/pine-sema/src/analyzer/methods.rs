@@ -14,6 +14,33 @@ struct MethodCallReceiver {
 }
 
 impl Analyzer {
+    pub(crate) fn analyze_postfix_user_type_call_result_method(
+        &mut self,
+        callee: &Expr,
+        args: &[CallArg],
+        call_span: Span,
+        arg_types: &[Option<PineType>],
+    ) -> Option<Option<PineType>> {
+        let (_, method_name) = postfix_call_result_method_parts(callee, args)?;
+        let receiver = args.first()?;
+        let receiver_type = arg_types.first().copied().flatten()?;
+        if receiver_type.kind != ValueKind::UserType {
+            return None;
+        }
+        let receiver_type_name = self.user_type_name_of_expr(&receiver.value)?;
+        self.analyze_user_method_call_with_receiver(
+            MethodCallReceiver {
+                type_name: receiver_type_name,
+                pine_type: receiver_type,
+                span: callee.span,
+            },
+            method_name,
+            call_span,
+            &args[1..],
+            &arg_types[1..],
+        )
+    }
+
     pub(crate) fn register_methods(&mut self, program: &Program) {
         for statement in &program.statements {
             let StmtKind::Method(method) = &statement.kind else {

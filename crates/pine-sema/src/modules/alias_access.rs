@@ -8,6 +8,7 @@ use super::model::{
     module_user_type_fields_match,
 };
 use super::visit_statement_exprs;
+use crate::prelude::postfix_call_result_method_parts;
 use crate::source_graph::SourceId;
 use crate::types::array_kind_from_element_type_name;
 
@@ -29,11 +30,26 @@ pub(super) fn validate_alias_access(
         return;
     }
 
+    let mut postfix_call_result_callees = HashSet::new();
+    for statement in &root.program.statements {
+        visit_statement_exprs(statement, &mut |expr| {
+            let ExprKind::Call { callee, args } = &expr.kind else {
+                return;
+            };
+            if postfix_call_result_method_parts(callee, args).is_some() {
+                postfix_call_result_callees.insert((callee.span.start, callee.span.end));
+            }
+        });
+    }
+
     for statement in &root.program.statements {
         visit_statement_exprs(statement, &mut |expr| {
             let ExprKind::QualifiedName(parts) = &expr.kind else {
                 return;
             };
+            if postfix_call_result_callees.contains(&(expr.span.start, expr.span.end)) {
+                return;
+            }
             if parts.len() < 2 {
                 return;
             }

@@ -5,7 +5,7 @@ use pine_syntax::{
     StmtKind, SwitchArm, SwitchArmResult,
 };
 
-use crate::analyzer::calls::expr_name;
+use crate::analyzer::calls::{expr_name, postfix_call_result_method_parts};
 
 #[derive(Clone, Default)]
 pub(super) struct RewriteContext {
@@ -201,7 +201,10 @@ pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
 
     let kind = match &expr.kind {
         ExprKind::Call { callee, args } => {
-            let callee = if let Some(name) = expr_name(callee)
+            let postfix_call_result_method =
+                postfix_call_result_method_parts(callee, args).is_some();
+            let callee = if !postfix_call_result_method
+                && let Some(name) = expr_name(callee)
                 && let Some(target) = context.function_target(&name)
             {
                 Expr {
@@ -507,5 +510,69 @@ mod tests {
                 element_type: "lib.Point".to_owned(),
             }
         );
+    }
+
+    #[test]
+    fn postfix_call_result_method_callee_is_not_rewritten_as_an_exported_function() {
+        let receiver = Expr {
+            kind: ExprKind::Call {
+                callee: Box::new(Expr {
+                    kind: ExprKind::QualifiedName(vec!["lib".to_owned(), "direct".to_owned()]),
+                    span: Span::new(2, 12),
+                }),
+                args: Vec::new(),
+            },
+            span: Span::new(2, 14),
+        };
+        let postfix = Expr {
+            kind: ExprKind::Call {
+                callee: Box::new(Expr {
+                    kind: ExprKind::QualifiedName(vec!["lib".to_owned(), "copy".to_owned()]),
+                    span: Span::new(15, 19),
+                }),
+                args: vec![CallArg {
+                    name: None,
+                    value: receiver.clone(),
+                    span: receiver.span,
+                }],
+            },
+            span: Span::new(2, 21),
+        };
+        let explicit = Expr {
+            kind: ExprKind::Call {
+                callee: Box::new(Expr {
+                    kind: ExprKind::QualifiedName(vec!["lib".to_owned(), "copy".to_owned()]),
+                    span: Span::new(2, 10),
+                }),
+                args: vec![CallArg {
+                    name: None,
+                    value: receiver,
+                    span: Span::new(11, 23),
+                }],
+            },
+            span: Span::new(2, 24),
+        };
+        let context = RewriteContext {
+            function_targets: HashMap::from([("lib.copy".to_owned(), "lib.copy".to_owned())]),
+            ..RewriteContext::default()
+        };
+
+        let ExprKind::Call {
+            callee: postfix_callee,
+            ..
+        } = rewrite_expr(&postfix, &context).kind
+        else {
+            panic!("postfix call expected");
+        };
+        assert!(matches!(postfix_callee.kind, ExprKind::QualifiedName(_)));
+
+        let ExprKind::Call {
+            callee: explicit_callee,
+            ..
+        } = rewrite_expr(&explicit, &context).kind
+        else {
+            panic!("explicit call expected");
+        };
+        assert!(matches!(explicit_callee.kind, ExprKind::Identifier(_)));
     }
 }

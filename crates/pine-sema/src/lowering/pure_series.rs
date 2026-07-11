@@ -70,6 +70,20 @@ pub(super) fn pure_local_qualified_user_method_call_series_key(
     )
 }
 
+pub(super) fn pure_postfix_user_type_call_result_method_series_key(
+    analyzer: &Analyzer,
+    callee: &Expr,
+    args: &[CallArg],
+) -> Option<String> {
+    pure_postfix_user_type_call_result_method_series_key_inner(
+        analyzer,
+        callee,
+        args,
+        &HashMap::new(),
+        &mut Vec::new(),
+    )
+}
+
 fn pure_udf_call_series_key_inner(
     analyzer: &Analyzer,
     name: &str,
@@ -304,6 +318,27 @@ fn pure_local_qualified_user_method_call_series_key_inner(
     )
 }
 
+fn pure_postfix_user_type_call_result_method_series_key_inner(
+    analyzer: &Analyzer,
+    callee: &Expr,
+    args: &[CallArg],
+    caller_param_keys: &HashMap<String, String>,
+    udf_stack: &mut Vec<String>,
+) -> Option<String> {
+    let (_, method_name) = postfix_call_result_method_parts(callee, args)?;
+    let receiver_arg = args.first()?;
+    let receiver_type_name = analyzer.user_type_name_of_expr(&receiver_arg.value)?;
+    pure_expr_receiver_user_method_call_series_key_inner(
+        analyzer,
+        receiver_type_name,
+        method_name,
+        receiver_arg,
+        &args[1..],
+        caller_param_keys,
+        udf_stack,
+    )
+}
+
 fn pure_expr_receiver_user_method_call_series_key_inner(
     analyzer: &Analyzer,
     receiver_type_name: String,
@@ -467,7 +502,10 @@ fn pure_expr_series_key_with_params(
     udf_stack: &mut Vec<String>,
 ) -> Option<String> {
     match &expr.kind {
-        ExprKind::Literal(literal) => Some(format!("lit:{}", super::literal_series_key(literal))),
+        ExprKind::Literal(literal) => Some(format!(
+            "lit:{}",
+            super::literals::literal_series_key(literal)
+        )),
         ExprKind::Identifier(name) => param_keys.get(name).cloned().or_else(|| {
             let symbol = analyzer.bound_symbol(name, expr.span)?;
             (!analyzer.lower_reassigned_symbols.contains(&symbol.id))
@@ -632,7 +670,17 @@ fn pure_expr_series_key_with_params(
         )),
         ExprKind::Call { callee, args } => {
             let name = expr_name(callee)?;
-            if allow_udf_calls && analyzer.functions.contains_key(&name) {
+            if allow_udf_calls
+                && let Some(method_key) = pure_postfix_user_type_call_result_method_series_key_inner(
+                    analyzer, callee, args, param_keys, udf_stack,
+                )
+            {
+                return Some(method_key);
+            }
+            if allow_udf_calls
+                && matches!(callee.kind, ExprKind::Identifier(_))
+                && analyzer.functions.contains_key(&name)
+            {
                 return pure_udf_call_series_key_inner(
                     analyzer, &name, args, param_keys, udf_stack,
                 );

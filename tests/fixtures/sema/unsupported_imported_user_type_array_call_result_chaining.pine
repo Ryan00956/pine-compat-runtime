@@ -5,5 +5,5 @@ indicator("Unsupported imported UDT array call result chaining")
 values = array.from(lib.First.new(10.0, 100.0))
 anchor = lib.First.new(20.0, 200.0)
 
-udf_item = lib.direct(values).first()
-method_copy = anchor.retainFirst(values).copy()
+udf_size = lib.direct(values).size()
+method_item = anchor.retainFirst(values).get(0)

@@ -1,0 +1,19 @@
+//@version=6
+indicator("Unsupported local UDT array call result chaining")
+
+type First
+    float shared
+    float other
+
+type Anchor
+    int tag
+
+method retain(Anchor self, array<First> values) => values
+
+method copy(Anchor self, array<First> values) => array.from(First.new(999.0, 9990.0))
+
+values = array.from(First.new(10.0, 100.0))
+anchor = Anchor.new(1)
+
+chained_copy = anchor.retain(values).copy()
+explicit_copy = anchor.copy(values)

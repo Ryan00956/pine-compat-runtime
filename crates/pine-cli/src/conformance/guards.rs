@@ -295,6 +295,7 @@ const LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/supported_user_type_array_tuple_returns.pine",
     "tests/fixtures/sema/unsupported_user_type_array_tuple_return_identities.pine",
     "tests/fixtures/sema/unsupported_user_type_array_tuple_alias_mutation.pine",
+    "tests/fixtures/sema/unsupported_local_user_type_array_call_result_chaining.pine",
 ];
 
 const IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES: &[&str] = &[
@@ -1073,11 +1074,9 @@ mod tests {
         )
         .expect_err("missing local UDT array call-return fixture should fail");
 
-        assert!(
-            error.contains(
-                "tests/fixtures/sema/unsupported_user_type_array_tuple_alias_mutation.pine"
-            )
-        );
+        assert!(error.contains(
+            "tests/fixtures/sema/unsupported_local_user_type_array_call_result_chaining.pine"
+        ));
     }
 
     #[test]

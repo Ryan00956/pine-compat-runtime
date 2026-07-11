@@ -58,9 +58,12 @@ UDT arrays through direct or block-alias paths, copy/new/from allocation, privat
 nested calls, typed methods with named/reordered arguments, and final control
 flow. Imported type positions are rewritten for the active alias and
 source-aware metadata isolates two aliases of the same physical library.
-Imported UDT collections beyond that helper/typed-array/call-return subset,
-mixed or non-scalar scalar-return identities, conflicting tuple-slot identities,
-direct call-result array method chaining, nested field mutation, and method
+Qualified imported UDF/method results carrying a concrete same-imported
+scalar-tree UDT-array identity support direct `.first()`/`.copy()` and nested
+`.copy().first()` dispatch. Imported UDT collections beyond that
+helper/typed-array/call-return subset, mixed or non-scalar scalar-return
+identities, conflicting tuple-slot identities, same-local or other direct
+call-result array methods, nested field mutation, and method
 receiver/parameter/global field side effects remain unsupported. Same-imported
 scalar-tree UDT-array tuple returns are supported when destructured, with each
 UDT-array slot retaining its own alias-qualified identity through direct and
@@ -102,7 +105,9 @@ Current evidence:
   matching identity-negative fixture,
   `tests/fixtures/sema/unsupported_imported_user_type_array_tuple_alias_mutation.pine`,
   and direct call-result chaining fixture keep the conflict, stable-slot
-  reassignment, root-span, and chaining boundaries explicit.
+  reassignment, root-span, and broader-helper boundaries explicit. The imported
+  UDF/method return runtime fixture covers direct `.first()`/`.copy()`, nested
+  `.copy().first()`, explicit same-named exports, and copy independence.
 - `docs/CONFORMANCE.md`, `docs/EXECUTION_SEMANTICS.md`, and
   `docs/SEMANTIC_MODEL.md` describe the narrow executable imported UDT
   constructor/direct field-read/reassignment/typed declaration/direct UDF
@@ -565,10 +570,12 @@ named/reordered non-receiver arguments, direct same-identity, scalar-tree parame
 ternary-expression alias, final-if alias, final-for alias, final-while alias,
 switch-expression alias, nested-method passthrough plus direct, nested, or ternary constructor returns,
 and method-local scalar-tree root-field replacement are fixture-backed.
-Receiver-style calls over call-result receiver expressions remain parser-gated;
-same-imported scalar-tree UDT array returns from typed methods are also
-fixture-backed, while broader imported method return/parameter flow remains
-deferred.
+Receiver-style scalar imported UDT call-result expressions and qualified
+same-imported UDT-array result `.first()`/`.copy()` are fixture-backed;
+unqualified local UDF results and broader array helpers remain parser/semantic
+boundaries. Same-imported scalar-tree UDT array returns from typed methods are
+also fixture-backed, while broader imported method return/parameter flow
+remains deferred.
 6. Imported UDF/user-method same-scalar-tree UDT array returns preserve direct,
    alias, copy/new/from, private nested, final-flow, type-position, and dual-alias
    call-site identity. Tuple returns preserve that identity independently per
@@ -576,6 +583,7 @@ deferred.
    paths plus tuple-valued ordinary declaration direct/self alias, control,
    shadowing, and destructuring. Same-identity or `na` reassignment preserves
    the fixed slot layout, while conflicting identities and cross-identity
-   direct/control-flow reassignment fail closed. Direct call-result
-   method chaining, non-scalar returns, and unsupported mutation contexts remain
-   later collection boundaries.
+   direct/control-flow reassignment fail closed. Qualified same-imported array
+   results support direct `.first()`/`.copy()`; same-local or broader direct
+   methods, non-scalar returns, and unsupported mutation contexts remain later
+   collection boundaries.

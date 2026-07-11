@@ -143,6 +143,18 @@ impl Analyzer {
                     .map(|arg| self.type_of_expr_with_params(&arg.value, param_types))
                     .collect();
                 let name = expr_name(callee)?;
+                if let Some((_, method_name)) = postfix_call_result_method_parts(callee, args)
+                    && arg_types
+                        .first()
+                        .copied()
+                        .flatten()
+                        .is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+                    && let Some(builtin_name) =
+                        imported_udt_array_call_result_builtin_name(method_name)
+                    && let Some(signature) = pine_builtins::get_phase_1_builtin(builtin_name)
+                {
+                    return self.return_type_for_call(signature, args, &arg_types);
+                }
                 if let Some(pine_type) =
                     self.type_of_user_type_constructor_with_params(&name, args, param_types)
                 {

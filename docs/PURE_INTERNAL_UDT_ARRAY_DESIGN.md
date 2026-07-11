@@ -72,9 +72,12 @@ fresh shadowing, and later-destructuring paths. A declaration fixes each
 UDT-array slot identity: same-identity or `na` reassignment is accepted, while
 cross-identity direct/control-flow reassignment and unresolved nested consumers
 are rejected at the root span.
-Array-method chaining directly from a function or method call result remains
-deferred; mixed scalar-return identities, non-scalar imported UDT array returns,
-and UDF/method mutation side effects remain rejected.
+Qualified imported UDF/method results with a concrete same-imported scalar-tree
+UDT-array identity support direct `.first()` and `.copy()`, including nested
+`.copy().first()` chains, without confusing the postfix helper with an explicit
+same-named imported function. Same-local or other direct call-result array
+methods remain deferred; mixed scalar-return identities, non-scalar imported
+UDT array returns, and UDF/method mutation side effects remain rejected.
 Local UDFs and typed local user methods may also iterate a generic same-local
 scalar-tree UDT-array parameter. Value-only and index/value statement loops,
 block-local array aliases, and final expression-form loops preserve the
@@ -225,9 +228,15 @@ Current evidence:
   `tests/fixtures/sema/unsupported_user_type_array_tuple_alias_mutation.pine`
   and
   `tests/fixtures/sema/unsupported_imported_user_type_array_tuple_alias_mutation.pine`
-  lock the stable-slot reassignment and root-span boundaries. Finally,
-  `tests/fixtures/sema/unsupported_imported_user_type_array_call_result_chaining.pine`
-  preserves the direct call-result chaining boundary.
+  lock the stable-slot reassignment and root-span boundaries.
+- `tests/fixtures/runtime/import_udt_array_udf_method_returns.pine` and
+  `tests/fixtures/sema/supported_imported_user_type_array_udf_method_returns.pine`
+  cover qualified imported UDF/method result `.first()`/`.copy()`, nested
+  `.copy().first()`, A-to-B-to-A, dual aliases, explicit same-named export
+  dispatch, and copy independence. The imported call-result negative fixture
+  retains the other-helper boundary, while
+  `tests/fixtures/sema/unsupported_local_user_type_array_call_result_chaining.pine`
+  prevents silent dispatch to a same-named local user method.
 - `tests/fixtures/runtime/user_type_array_scalar_tree.pine` and
   `tests/fixtures/sema/supported_user_type_array_param_for_in.pine` cover
   value-only and index/value statement `for...in`, block-local array aliases,
@@ -641,10 +650,11 @@ Initial policy:
   method calls over same-imported scalar-tree UDT values read from arrays are
   supported, with mismatched local/imported identities rejected.
 - imported UDF/method same-scalar-tree UDT array returns are fixture-backed;
-  their tuple returns preserve identity per destructured slot. Mixed identities
-  within one scalar return or tuple slot, non-scalar arrays, mutation side
-  effects, and direct array-method chaining on call results remain separate
-  semantic/parser/lowering boundaries.
+  their tuple returns preserve identity per destructured slot, and qualified
+  imported results support direct `.first()`/`.copy()` chaining. Mixed
+  identities within one scalar return or tuple slot, non-scalar arrays,
+  mutation side effects, and same-local or other direct array methods on call
+  results remain separate semantic/parser/lowering boundaries.
 
 ## Diagnostics
 
@@ -707,8 +717,13 @@ Recommended future slices:
     control, shadow, and destructuring paths, A-to-B-to-A, and dual-alias
     paths. Same-identity or `na` reassignment preserves the fixed slot layout;
     conflicting identities in one slot or cross-identity direct/control-flow
-    reassignment fail closed with `E_TUPLE_UDT_ARRAY_IDENTITY`. Done. Direct
-    call-result array method chaining remains a later slice.
+    reassignment fail closed with `E_TUPLE_UDT_ARRAY_IDENTITY`. Done.
+15. Qualified imported UDF/method results carrying a concrete same-imported
+    scalar-tree UDT-array identity lower direct `.first()`/`.copy()` and nested
+    `.copy().first()` through the array helper path, preserve A-to-B-to-A and
+    dual-alias identity, keep copies independent, and do not hijack explicit
+    same-named imported functions. Done. Same-local and broader direct helper
+    chaining remain later slices.
 
 ## Completion Gate For Future Positive Support
 
@@ -735,7 +750,8 @@ the same-local and same-imported scalar-tree UDT `array.new<T>()`/`array.from`
 paths with the helper set listed in Current Boundary and Accepted Forms,
 ordinary `var` realtime rollback, fixture-backed scalar-tree UDT array `varip`,
 typed `array<T>`/`T[]` declarations, and local or imported UDF/user-method array
-returns within the call-boundary subset above. Broader UDT element families,
-direct call-result array method chaining, unsupported mutation contexts, and
-helpers not listed there remain unsupported until later fixture-backed slices
-implement syntax, analysis, runtime behavior, and conformance updates together.
+returns within the call-boundary subset above, including imported qualified
+call-result `.first()`/`.copy()`. Broader UDT element families, same-local or
+other direct call-result methods, unsupported mutation contexts, and helpers
+not listed there remain unsupported until later fixture-backed slices implement
+syntax, analysis, runtime behavior, and conformance updates together.

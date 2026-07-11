@@ -12,6 +12,49 @@ struct LoweredMethodReceiver {
 }
 
 impl Analyzer {
+    pub(crate) fn lower_postfix_user_type_call_result_method(
+        &mut self,
+        callee: &Expr,
+        args: &[CallArg],
+        outer_param_exprs: &HashMap<String, HirExpr>,
+        outer_param_types: &HashMap<String, PineType>,
+    ) -> Option<Option<HirExpr>> {
+        let (_, method_name) = postfix_call_result_method_parts(callee, args)?;
+        let receiver = args.first()?;
+        if !self
+            .type_of_expr_with_params(&receiver.value, outer_param_types)
+            .is_some_and(|pine_type| pine_type.kind == ValueKind::UserType)
+        {
+            return None;
+        }
+        let receiver_type_name =
+            self.user_type_name_of_expr_with_params(&receiver.value, outer_param_exprs)?;
+        if !self
+            .methods
+            .contains_key(&(receiver_type_name.clone(), method_name.to_owned()))
+        {
+            return None;
+        }
+        let receiver_expr =
+            self.lower_expr_with_params(&receiver.value, outer_param_exprs, outer_param_types)?;
+        let label = receiver_type_name
+            .split_once('.')
+            .map_or(receiver_type_name.as_str(), |(alias, _)| alias)
+            .to_owned();
+        Some(self.lower_user_method_call_with_receiver_expr(
+            LoweredMethodReceiver {
+                label,
+                type_name: receiver_type_name,
+                span: receiver.span,
+                expr: receiver_expr,
+            },
+            method_name,
+            &args[1..],
+            outer_param_exprs,
+            outer_param_types,
+        ))
+    }
+
     pub(crate) fn lower_udf_call(
         &mut self,
         name: &str,

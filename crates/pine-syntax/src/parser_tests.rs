@@ -132,7 +132,7 @@ fn parses_imported_udt_array_new_template_call() {
 #[test]
 fn parses_imported_call_result_method_receiver_as_alias_qualified_call() {
     let parsed = parse(
-        "shifted = lib.Point.new(close).shift(5)\nchained = lib.Point.new(open).make(close + 1).same()\nlocal = Point.new(close).shift(5)\n",
+        "shifted = lib.Point.new(close).shift(5)\nchained = lib.Point.new(open).make(close + 1).same()\nlocal = Point.new(close).shift(5)\nbound = anchor.make(close).same()\n",
     );
 
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
@@ -147,6 +147,7 @@ fn parses_imported_call_result_method_receiver_as_alias_qualified_call() {
         ExprKind::QualifiedName(vec!["lib".to_owned(), "shift".to_owned()])
     );
     assert_eq!(args.len(), 2);
+    assert!(args[0].value.span.end < callee.span.start);
     let ExprKind::Call {
         callee: receiver_callee,
         ..
@@ -170,6 +171,7 @@ fn parses_imported_call_result_method_receiver_as_alias_qualified_call() {
         ExprKind::QualifiedName(vec!["lib".to_owned(), "same".to_owned()])
     );
     assert_eq!(args.len(), 1);
+    assert!(args[0].value.span.end < callee.span.start);
     let ExprKind::Call {
         callee: receiver_callee,
         ..
@@ -204,6 +206,42 @@ fn parses_imported_call_result_method_receiver_as_alias_qualified_call() {
         receiver_callee.kind,
         ExprKind::QualifiedName(vec!["Point".to_owned(), "new".to_owned()])
     );
+
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[3].kind else {
+        panic!("expected bound-receiver method-result declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected bound-receiver outer method call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::QualifiedName(vec!["anchor".to_owned(), "same".to_owned()])
+    );
+    assert_eq!(args.len(), 1);
+    assert!(args[0].value.span.end < callee.span.start);
+    let ExprKind::Call {
+        callee: receiver_callee,
+        ..
+    } = &args[0].value.kind
+    else {
+        panic!("expected bound-receiver method-result argument");
+    };
+    assert_eq!(
+        receiver_callee.kind,
+        ExprKind::QualifiedName(vec!["anchor".to_owned(), "make".to_owned()])
+    );
+}
+
+#[test]
+fn rejects_unqualified_call_result_method_receiver() {
+    let parsed = parse("bad = make(values).first()\n");
+
+    assert!(parsed.diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == "E_PARSE_EXPR"
+            && diagnostic.message.contains(
+                "method calls on call-result receivers require an imported UDT constructor or imported method result receiver",
+            )
+    }));
 }
 
 #[test]

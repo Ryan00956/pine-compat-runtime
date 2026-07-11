@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Added direct `.first()` and `.copy()` method sugar for qualified imported UDF
+  or user-method results that carry a concrete same-imported scalar-tree UDT
+  array identity. Multi-segment `.copy().first()` chains, First-to-Second-to-
+  First calls, two aliases of one library, and copy independence now lower and
+  execute without binding the producer first. Import validation and rewriting
+  preserve the parser's postfix receiver shape, while explicit same-named
+  exports such as `lib.first(values)` and `lib.copy(values)` retain normal
+  function dispatch, even when the same library also defines scalar UDT methods
+  named `first` or `copy`; those scalar constructor, UDF-result, and
+  method-result call chains remain user methods without a duplicated receiver,
+  including method chains whose returned UDT identity differs from the input.
+  Same-local UDT-array call-result receivers and direct array helpers beyond
+  `first`/`copy` remain explicitly rejected; namespace helpers stay available
+  for those paths.
 - Preserved same-local and same-imported scalar-tree UDT-array identity for
   every destructured UDT-array slot of tuple literals and local/imported UDF or
   user-method tuple returns. Direct, block, nested, final-control-flow,
@@ -33,10 +47,10 @@
   final control flow, typed methods with named/reordered arguments, and imported
   type-position rewrites retain the caller's concrete identity. Source-aware
   import-instance metadata isolates interleaved calls through two aliases of the
-  same physical library. Mixed imported identities, non-scalar returns,
-  direct call-result array method chaining, and mutation through unsupported
-  UDF/method side-effect contexts remain rejected; tuple-return conflicts are
-  rejected per destructured UDT-array slot.
+  same physical library. Mixed imported identities, non-scalar returns, local
+  or non-`first`/`copy` direct call-result array method chaining, and mutation
+  through unsupported UDF/method side-effect contexts remain rejected;
+  tuple-return conflicts are rejected per destructured UDT-array slot.
 - Preserved scalar map templates at call sites when local UDFs return inferred
   map parameters, or when local UDFs and user methods return visible maps,
   block-local aliases, `map.new`/copy results, nested calls, or final

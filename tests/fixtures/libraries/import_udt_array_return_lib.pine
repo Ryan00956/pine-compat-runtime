@@ -21,6 +21,12 @@ export returnArray(array<Point> values) => values
 
 export direct(values) => values
 
+export scalar(First value) => value
+
+export first(array<First> values) => array.size(values) + 900
+
+export copy(array<First> values) => array.from(First.new(999.0, 9990.0))
+
 export aliasReturn(values) =>
     source = values
     source
@@ -169,6 +175,16 @@ method retainArray(Point self, array<Point> values) => values
 method retainFirst(First self, array<First> values) => values
 
 method retainSecond(Second self, array<Second> values) => values
+
+method first(First self) => self.shared + 1000.0
+
+method copy(First self) => self.shared + 2000.0
+
+method scalar(First self) => First.new(self.shared + 1.0, self.other)
+
+method toSecond(First self) => Second.new(self.other, self.shared)
+
+method readShared(Second self) => self.shared
 
 method retain(First self, array<First> values, bool copy_values) => copy_values ? values.copy() : values
 

@@ -4,6 +4,9 @@ indicator("Local constructor method receiver")
 type Point
     float x
 
+type Shifted
+    float x
+
 method shift(Point p, float delta) => p.x + delta
 method make(Point p, float value) => Point.new(value)
 method makeBlock(Point p, float value) =>
@@ -11,6 +14,9 @@ method makeBlock(Point p, float value) =>
     made
 method same(Point p) => p
 method read(Point p) => p.x
+method copy(Point p) => p.x + 10
+method makeShifted(Point p) => Shifted.new(p.x + 20)
+method read(Shifted p) => p.x
 
 direct = Point.new(close).shift(5)
 named = Point.new(open).shift(delta=7)
@@ -19,6 +25,8 @@ prior = Point.new(close).make(close + 3)[1]
 scalarPrior = Point.new(close).shift(5)[1]
 methodResultScalarPrior = Point.new(close).make(open).read()[1]
 blockMethodResultScalarPrior = Point.new(close).makeBlock(open).read()[1]
+scalarMethodNamedCopy = Point.new(close).make(close + 1).copy()
+typeChangedMethodResult = Point.new(close).makeShifted().read()
 
 plot(direct, "direct")
 plot(named, "named")
@@ -27,3 +35,5 @@ plot(prior.x, "prior")
 plot(scalarPrior, "scalarPrior")
 plot(methodResultScalarPrior, "methodResultScalarPrior")
 plot(blockMethodResultScalarPrior, "blockMethodResultScalarPrior")
+plot(scalarMethodNamedCopy, "scalarMethodNamedCopy")
+plot(typeChangedMethodResult, "typeChangedMethodResult")
