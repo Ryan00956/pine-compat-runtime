@@ -114,6 +114,10 @@ pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &
         "tests/fixtures/runtime/matrix_mult.pine",
     ),
     (
+        "runtime_builtin_namespace_matrix_call_result_reads.json",
+        "tests/fixtures/runtime/builtin_namespace_matrix_call_result_reads.pine",
+    ),
+    (
         "runtime_matrix_diff.json",
         "tests/fixtures/runtime/matrix_diff.pine",
     ),

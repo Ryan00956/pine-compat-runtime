@@ -1,0 +1,26 @@
+//@version=6
+indicator("Unsupported builtin namespace matrix call-result reads")
+
+matrixFactory(id1, id2) => matrix.mult(id1, id2)
+
+left = matrix.new<float>(2, 2, 1.0)
+right = matrix.new<float>(2, 2, 2.0)
+vector = array.from(3.0, 4.0)
+
+matrix_bad_row = matrix.mult(left, right).get("bad", 0)
+matrix_bad_column = matrix.mult(left, right).get(0, "bad")
+matrix_set = matrix.mult(left, right).set(0, 0, 3.0)
+matrix_reverse = matrix.mult(left, 2.0).copy().reverse()
+matrix_size = matrix.mult(2.0, left).size()
+
+array_rows = matrix.mult(left, vector).rows()
+array_columns = matrix.mult(vector, left).columns()
+array_elements = matrix.mult(vector, vector).elements_count()
+array_matrix_get = matrix.mult(left, vector).get(0, 0)
+array_copy_rows = matrix.mult(vector, left).copy().rows()
+
+bound_matrix_rows = left.mult(right).rows()
+bound_scalar_get = left.mult(2.0).get(0, 0)
+udf_matrix_rows = matrixFactory(left, right).rows()
+
+plot(close)

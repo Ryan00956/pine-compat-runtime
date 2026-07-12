@@ -86,6 +86,12 @@ pub(super) const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/unsupported_builtin_namespace_array_call_result_reads.pine",
 ];
 
+pub(super) const BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/builtin_namespace_matrix_call_result_reads.pine",
+    "tests/fixtures/sema/supported_builtin_namespace_matrix_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_builtin_namespace_matrix_call_result_reads.pine",
+];
+
 const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "str.split",
     "ta.pivot_point_levels",
@@ -103,6 +109,13 @@ const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "matrix.*",
 ];
 
+const BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FEATURES: &[&str] = &[
+    "expression-body functions",
+    "multi-statement functions",
+    "typed declarations",
+    "matrix.*",
+];
+
 pub(super) fn validate_fixture_paths(
     line_number: usize,
     feature: &str,
@@ -113,7 +126,8 @@ pub(super) fn validate_fixture_paths(
     validate_builtin_array_call_result_fixture_paths(line_number, feature, fixtures)?;
     validate_udt_identity_builtin_array_call_result_fixture_paths(line_number, feature, fixtures)?;
     validate_udt_array_call_result_helper_fixture_paths(line_number, feature, fixtures)?;
-    validate_builtin_namespace_array_call_result_fixture_paths(line_number, feature, fixtures)
+    validate_builtin_namespace_array_call_result_fixture_paths(line_number, feature, fixtures)?;
+    validate_builtin_namespace_matrix_call_result_fixture_paths(line_number, feature, fixtures)
 }
 
 fn validate_local_udt_array_call_return_fixture_paths(
@@ -248,6 +262,24 @@ fn validate_builtin_namespace_array_call_result_fixture_paths(
     )
 }
 
+fn validate_builtin_namespace_matrix_call_result_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if !BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FEATURES.contains(&feature) {
+        return Ok(());
+    }
+
+    require_fixtures(
+        line_number,
+        feature,
+        fixtures,
+        BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES,
+        "fixture-backed namespace matrix.mult matrix-result rows/columns/elements_count/get/copy dispatch and retained result-type/helper/bound-receiver boundaries",
+    )
+}
+
 fn require_fixtures(
     line_number: usize,
     feature: &str,
@@ -368,6 +400,34 @@ mod tests {
 
         assert!(
             error.contains("tests/fixtures/runtime/builtin_namespace_array_call_result_reads.pine")
+        );
+    }
+
+    #[test]
+    fn rejects_namespace_matrix_result_row_without_negative_fixture() {
+        let fixtures = &BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES
+            [..BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES.len() - 1];
+        let error =
+            validate_builtin_namespace_matrix_call_result_fixture_paths(1, "matrix.*", fixtures)
+                .expect_err(
+                    "namespace matrix-result rows must retain the negative boundary fixture",
+                );
+
+        assert!(error.contains(
+            "tests/fixtures/sema/unsupported_builtin_namespace_matrix_call_result_reads.pine"
+        ));
+    }
+
+    #[test]
+    fn rejects_namespace_matrix_result_row_without_runtime_fixture() {
+        let fixtures = &BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES[1..];
+        let error =
+            validate_builtin_namespace_matrix_call_result_fixture_paths(1, "matrix.*", fixtures)
+                .expect_err("namespace matrix-result rows must retain runtime evidence");
+
+        assert!(
+            error
+                .contains("tests/fixtures/runtime/builtin_namespace_matrix_call_result_reads.pine")
         );
     }
 }

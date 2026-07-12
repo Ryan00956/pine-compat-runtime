@@ -863,17 +863,23 @@ template side is one of int, float, bool, string, or color. A postfix helper
 does not change empty/`na`, negative-index, bounds-error, element-kind, or
 snapshot-copy behavior.
 
-The path additionally admits namespace-qualified `matrix.mult(...)` as a
-type-checked candidate. Matrix-by-array, array-by-matrix, and array-by-array
-overloads resolve to `array<float>` and may use the same five helpers; only
-`.copy()` can continue another allowed chain. Matrix-by-matrix,
+Namespace-qualified `matrix.mult(...)` uses a separate, closed
+`$builtin_matrix_result` candidate path whose helper family is selected from
+the resolved `MatrixMult` result type. Matrix-by-array, array-by-matrix, and
+array-by-array overloads resolve to `array<float>` and may use `.size()`,
+`.get(index)`, `.first()`, `.last()`, and `.copy()`. Matrix-by-matrix,
 matrix-by-scalar, and scalar-by-matrix overloads resolve to `matrix<float>` and
-fail closed through the generic direct call-result diagnostic. The existing
-bound-receiver `matrix_id.mult(array).size()` path is unchanged. Every other
-matrix-returning call, `map.new` and `matrix.new` template, other
-namespace/non-producer call, and postfix mutation remains outside this path.
-Built-in namespace prefixes remain reserved, so same-named user or import
-qualifiers do not enter this path. The extension carries no UDT/import identity
+may use `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
+`.copy()`. Int inputs still produce float collections. Only `.copy()` can
+continue another allowed read/copy chain for either result kind; terminal
+readers, wrong-result helpers, invalid arity or argument types, broader helpers,
+and mutation fail closed. The existing bound-receiver
+`matrix_id.mult(array).size()` path is unchanged, while helpers on bound
+matrix-returning `matrix_id.mult(...)` results retain the generic direct
+call-result rejection. Every other matrix-returning call, `map.new` and
+`matrix.new` template, and other namespace/non-producer call remains outside
+this path. Built-in namespace prefixes remain reserved, so same-named user or
+import qualifiers do not enter it. The extension carries no UDT/import identity
 and changes no public output schema.
 
 Both caller-side `for...in` over returned arrays and in-callee `for...in` over
@@ -929,9 +935,11 @@ the existing pure method subset. Built-in producer element readers are
 terminal and do not open that method path; only producer `.copy()` may continue
 with another allowed array read/copy. The seven fixed cross-namespace producers
 and array-returning `matrix.mult` overloads are scalar-array-only and add no
-UDT/import identity path. Built-in-qualified or template call results outside
-the exact static and array-capable paths, and other array methods, remain
-parser/semantic boundaries.
+UDT/import identity path. Namespace matrix-returning `matrix.mult` overloads
+add only the five matrix readers/copy above and likewise carry no UDT/import
+identity. Bound or UDF matrix-result receivers, built-in-qualified or template
+call results outside the exact static and dynamic paths, and other array or
+matrix methods remain parser/semantic boundaries.
 Method side effects, recursive methods, unsupported parameter families,
 mismatched UDT parameter identity, unknown receivers, and alias-qualified
 imported method receiver type mismatches are rejected during semantic analysis.

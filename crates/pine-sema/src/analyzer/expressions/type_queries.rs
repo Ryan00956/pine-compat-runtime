@@ -154,6 +154,17 @@ impl Analyzer {
                 {
                     return self.return_type_for_call(signature, args, &arg_types);
                 }
+                if let Some(method_name) = builtin_matrix_call_result_method_name(callee, args)
+                    && arg_types
+                        .first()
+                        .copied()
+                        .flatten()
+                        .is_some_and(|pine_type| is_matrix_kind(pine_type.kind))
+                    && let Some(builtin_name) = matrix_call_result_builtin_name(method_name)
+                    && let Some(signature) = pine_builtins::get_phase_1_builtin(builtin_name)
+                {
+                    return self.return_type_for_call(signature, args, &arg_types);
+                }
                 if let Some(pine_type) =
                     self.type_of_user_type_constructor_with_params(&name, args, param_types)
                 {

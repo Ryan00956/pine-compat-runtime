@@ -326,12 +326,17 @@ Current baseline:
   schema field. Unsupported templates, non-producer `array.*` members,
   namespaces and members outside the seven fixed producers, and postfix
   mutation fail closed. A following closed slice admits namespace-qualified
-  `matrix.mult(...)` as a dynamic candidate only for its matrix-by-array,
-  array-by-matrix, and array-by-array `array<float>` results. Those overloads
-  share the same five helpers and copy-only continuation rule. Matrix-by-matrix,
-  matrix-by-scalar, and scalar-by-matrix results remain fail-closed because
-  they resolve to `matrix<float>`; the existing bound-receiver
-  `matrix_id.mult(array).size()` path is unchanged.
+  `matrix.mult(...)` through the separate `$builtin_matrix_result` candidate
+  path. Matrix-by-array, array-by-matrix, and array-by-array `array<float>`
+  results share the existing `.size()`/`.get(index)`/`.first()`/`.last()`/
+  `.copy()` set. The next closed slice admits matrix-by-matrix,
+  matrix-by-scalar, and scalar-by-matrix `matrix<float>` results through only
+  `.rows()`/`.columns()`/`.elements_count()`/`.get(row, column)`/`.copy()`.
+  Int inputs still produce float collections, and only `.copy()` may continue
+  another allowed read/copy chain on either result kind. Wrong-result helpers,
+  invalid arity or argument types, broader helpers, and mutation fail closed.
+  The existing bound-receiver `matrix_id.mult(array).size()` path is unchanged,
+  while bound or UDF matrix-result call-result helpers remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -350,10 +355,9 @@ Remaining internal work:
   the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
-  local-UDF, exact built-in array-producing subsets, and the array-returning
-  namespace-qualified `matrix.mult(...)` overloads, including
-  matrix-returning `matrix.mult` overloads and other matrix-returning calls,
-  map/matrix templates,
+  local-UDF, exact built-in array-producing subsets, and the result-type-checked
+  namespace-qualified `matrix.mult(...)` array/matrix paths, including bound or
+  UDF matrix-result receivers, other matrix-returning calls, map/matrix templates,
   other built-in namespaces or non-producer members, non-producer `array.*`
   calls, unsupported `array.new<T>` templates, non-array/non-UDT results,
   unknown/`na` results

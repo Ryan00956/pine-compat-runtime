@@ -614,20 +614,28 @@ postfix copies are independent again. Empty/`na`, negative index, bounds, and
 element-type checks still come from the ordinary producer and array-helper
 analysis/runtime rules.
 
-The path also recognizes namespace-qualified `matrix.mult(...)` as a dynamic
-array-capable candidate. Its matrix-by-array, array-by-matrix, and
-array-by-array overloads resolve to `array<float>` and admit the same five
-helpers, while matrix-by-matrix, matrix-by-scalar, and scalar-by-matrix resolve
-to `matrix<float>` and remain fail-closed for direct array-result helpers. The
-existing bound-receiver `matrix_id.mult(array).size()` path is unchanged.
-Map/matrix templates such as `map.new` and `matrix.new`, every other namespace
-or non-producer member, other matrix-returning calls, and postfix mutation stay
-excluded. Built-in namespace prefixes remain reserved and cannot be treated as
-same-named user/import qualifiers. No UDT or imported-type identity is inferred
-from these scalar-array producers, and public schemas remain unchanged.
+Namespace-qualified `matrix.mult(...)` instead uses the separate
+`$builtin_matrix_result` synthetic prefix, with semantic dispatch selected by
+the resolved `ReturnSpec::MatrixMult` result. Matrix-by-array, array-by-matrix,
+and array-by-array overloads resolve to `array<float>` and admit `.size()`,
+`.get(index)`, `.first()`, `.last()`, and `.copy()`. Matrix-by-matrix,
+matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
+`.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
+`.copy()`. Int inputs still resolve to float collection results. Only `.copy()`
+may continue another allowed read/copy chain. Helper selection is result-type
+checked, so wrong-result helpers, invalid arity or argument types, broader
+helpers, and mutation fail closed. The existing bound-receiver
+`matrix_id.mult(array).size()` path is unchanged, while bound or UDF
+matrix-result call-result helpers retain the generic rejection. Map/matrix
+templates such as `map.new` and `matrix.new`, every other namespace or
+non-producer member, and other matrix-returning calls stay excluded. Built-in
+namespace prefixes remain reserved and cannot be treated as same-named
+user/import qualifiers. No UDT or imported-type identity is inferred, and
+public schemas remain unchanged.
 
-The receiver must resolve to a supported array kind. UDT-array producers must
-also carry one concrete same-local or same-imported scalar-tree identity;
+For the array-helper branch, the receiver must resolve to a supported array
+kind. UDT-array producers must also carry one concrete same-local or
+same-imported scalar-tree identity;
 `get` retains that identity across named indexes and nested copy chains, while
 `size`/`last` retain existing empty and typed-`na` behavior. Unsupported or
 mixed identities, invalid producer arguments, and unknown templates fail
@@ -636,11 +644,10 @@ UDF results carrying a concrete local or imported scalar UDT identity may still
 use the existing pure user-method dispatch, and explicit same-named local
 methods and imported functions remain distinct. Other `array.*` calls,
 built-in namespaces and templates outside the seven fixed producers plus the
-array-returning `matrix.mult` overloads,
-helpers beyond the five-item postfix
-read/copy set, non-array/non-UDT results, unknown/`na` results without a
-concrete supported type or identity, and postfix mutation remain outside this
-subset. A postfix read does not make a mutating producer pure:
+result-type-checked namespace `matrix.mult` paths, helpers beyond the applicable
+five-item postfix read/copy set, non-array/non-matrix/non-UDT results,
+unknown/`na` results without a concrete supported type or identity, and postfix
+mutation remain outside this subset. A postfix read does not make a mutating producer pure:
 `array.concat(...).size()` still mutates the first concat input and is rejected
 inside UDFs.
 Generic UDT-array parameters are therefore iterable inside local UDFs and typed
@@ -811,8 +818,9 @@ subset remain outside the claim. The same applies to direct private imported UDT
 access, mixed or non-scalar imported array-return identities, conflicting
 identities within one tuple UDT-array slot, direct call-result array methods
 outside the read-only `size`/`get`/`first`/`last`/`copy` set,
-built-in-qualified/template call-result receivers outside the exact static
-`array.*` allowlist and cross-namespace array-capable path, nested field mutation, UDF
+bound or UDF matrix-result call-result receivers, built-in-qualified/template
+call-result receivers outside the exact static `array.*` allowlist and
+cross-namespace dynamic paths, nested field mutation, UDF
 parameter/global field side effects, and method receiver/parameter/global field
 side effects.
 Qualified user-defined and unqualified plain local UDF results plus the
@@ -824,7 +832,9 @@ unqualified local UDFs may invoke existing pure methods. Built-in producer
 `get`/`first`/`last` element results remain terminal and do not open that scalar
 UDT method composition path. The seven fixed cross-namespace producers and
 array-returning `matrix.mult` overloads return only scalar arrays and add no
-UDT/import identity flow.
+UDT/import identity flow. Namespace matrix-returning `matrix.mult` overloads
+add only the exact matrix read/copy set above and likewise carry no UDT/import
+identity.
 Tuple-contained
 same-imported scalar-tree UDT arrays are supported when destructured, with
 identity tracked independently per slot. Non-scalar UDT value history outside the local/imported
@@ -902,14 +912,17 @@ unqualified local UDF may invoke the existing pure method subset. That scalar
 method exception does not apply to a built-in producer's terminal
 `.get()`/`.first()`/`.last()` result. The seven fixed cross-namespace producers
 and the array-returning `matrix.mult` overloads are scalar-array-only and do
-not widen UDT identity. Built-in-qualified/template call results outside the
-exact static and array-capable paths and other array helpers remain gated.
+not widen UDT identity. Namespace matrix-returning `matrix.mult` overloads add
+only the exact matrix read/copy set above and likewise do not widen UDT
+identity. Bound or UDF matrix-result receivers, built-in-qualified/template
+call results outside the exact static and dynamic paths, and other array or
+matrix helpers remain gated.
 Methods with receiver/parameter/global field side effects, recursion,
 unsupported parameter families, mismatched UDT parameter identity, unknown
 receivers, and alias-qualified imported method receiver type mismatches remain
-rejected. Non-array
-method calls outside the local/imported UDT method subset continue to fail with
-receiver/type diagnostics.
+rejected. Non-array method calls outside the local/imported UDT method subset
+and the exact namespace matrix-result path continue to fail with receiver/type
+diagnostics.
 Float arrays accept int or float values and store them as floats. Int arrays
 accept int values. Bool arrays accept bool values. String
 arrays accept string values. Color arrays accept color values. Label and line

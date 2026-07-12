@@ -369,9 +369,6 @@ fn parses_cross_namespace_builtin_array_result_method_receivers() {
         "value = matrix.eigenvalues(values).first()\n",
         "value = matrix.row(values, 0).last()\n",
         "value = matrix.col(values, 0).copy()\n",
-        "value = matrix.mult(values, array.from(1.0, 2.0)).size()\n",
-        "value = matrix.mult(array.from(1.0, 2.0), values).get(0)\n",
-        "value = matrix.mult(array.from(1.0, 2.0), array.from(3.0, 4.0)).copy()\n",
         "value = map.keys(values).size()\n",
         "value = map.values(values).get(0)\n",
     ] {
@@ -396,7 +393,7 @@ fn parses_cross_namespace_builtin_array_result_method_receivers() {
         assert!(args[0].value.span.end < callee.span.start, "{source}");
     }
 
-    let parsed = parse("value = matrix.mult(values, array.from(1.0, 2.0)).copy().last()\n");
+    let parsed = parse("value = str.split(\"a,b\", \",\").copy().last()\n");
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
     let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
         panic!("expected declaration");
@@ -422,7 +419,80 @@ fn parses_cross_namespace_builtin_array_result_method_receivers() {
 }
 
 #[test]
-fn rejects_methods_after_scalar_builtin_array_result_reads() {
+fn parses_matrix_mult_result_method_receivers_with_separate_provenance() {
+    for source in [
+        "value = matrix.mult(left, right).rows()\n",
+        "value = matrix.mult(left, right).columns()\n",
+        "value = matrix.mult(left, right).elements_count()\n",
+        "value = matrix.mult(left, right).get(0, 0)\n",
+        "value = matrix.mult(left, right).copy()\n",
+        "value = matrix.mult(left, array.from(1.0, 2.0)).size()\n",
+        "value = matrix.mult(array.from(1.0, 2.0), left).first()\n",
+        "value = matrix.mult(array.from(1.0, 2.0), array.from(3.0, 4.0)).last()\n",
+    ] {
+        let parsed = parse(source);
+
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "{source}: {:?}",
+            parsed.diagnostics
+        );
+        let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected declaration for {source}");
+        };
+        let ExprKind::Call { callee, args } = &value.kind else {
+            panic!("expected call-result method call for {source}");
+        };
+        assert!(matches!(
+            &callee.kind,
+            ExprKind::QualifiedName(parts)
+                if parts.first().is_some_and(|part| part == "$builtin_matrix_result")
+        ));
+        assert!(args[0].value.span.end < callee.span.start, "{source}");
+    }
+
+    for (source, terminal_method) in [
+        ("value = matrix.mult(left, right).copy().rows()\n", "rows"),
+        (
+            "value = matrix.mult(left, array.from(1.0, 2.0)).copy().last()\n",
+            "last",
+        ),
+    ] {
+        let parsed = parse(source);
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "{source}: {:?}",
+            parsed.diagnostics
+        );
+        let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected declaration for {source}");
+        };
+        let ExprKind::Call { callee, args } = &value.kind else {
+            panic!("expected outer call-result method call for {source}");
+        };
+        assert_eq!(
+            callee.kind,
+            ExprKind::QualifiedName(vec![
+                "$builtin_matrix_result".to_owned(),
+                terminal_method.to_owned(),
+            ])
+        );
+        let ExprKind::Call {
+            callee: inner_callee,
+            ..
+        } = &args[0].value.kind
+        else {
+            panic!("expected inner call-result method call for {source}");
+        };
+        assert_eq!(
+            inner_callee.kind,
+            ExprKind::QualifiedName(vec!["$builtin_matrix_result".to_owned(), "copy".to_owned(),])
+        );
+    }
+}
+
+#[test]
+fn rejects_methods_after_terminal_builtin_collection_result_reads() {
     for source in [
         "bad = array.from(Point.new(1)).get(0).size()\n",
         "bad = array.new<Point>(1, Point.new(1)).first().custom()\n",
@@ -432,6 +502,7 @@ fn rejects_methods_after_scalar_builtin_array_result_reads() {
         "bad = ta.pivot_point_levels(\"Traditional\", true).last().custom()\n",
         "bad = matrix.row(values, 0).get(0).custom()\n",
         "bad = matrix.mult(values, array.from(1.0, 2.0)).size().custom()\n",
+        "bad = matrix.mult(values, other).rows().custom()\n",
         "bad = map.keys(values).first().custom()\n",
     ] {
         let parsed = parse(source);
@@ -468,7 +539,7 @@ fn rejects_other_builtin_call_result_method_receivers() {
         assert!(parsed.diagnostics.iter().any(|diagnostic| {
                 diagnostic.code == "E_PARSE_EXPR"
                 && diagnostic.message.contains(
-                    "method calls on call-result receivers require an unqualified call, qualified user-defined result, or supported built-in array producer receiver",
+                    "method calls on call-result receivers require an unqualified call, qualified user-defined result, or supported built-in collection producer receiver",
                 )
         }));
     }

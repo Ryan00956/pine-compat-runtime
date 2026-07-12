@@ -14,14 +14,15 @@ mod return_types;
 
 pub(crate) use helpers::{
     alias_qualified_method_name, array_call_result_builtin_name, array_method_builtin_name,
-    call_arg_accepts_type_expected_diagnostic, call_arg_expected_label_diagnostic,
-    call_arg_expected_type_diagnostic, call_arg_type_diagnostic, call_requirement_diagnostic,
-    drawing_method_builtin_name, expr_name, is_array_mutation_builtin,
-    is_array_mutation_method_call_name, is_map_mutation_builtin, is_map_mutation_method_call_name,
-    is_output_or_declaration_builtin, is_ta_extreme_length_overload,
-    is_ta_pivot_default_source_overload, is_ta_vwap_bands_call, is_time_function_overload,
-    is_timestamp_overload, map_method_builtin_name, method_call_parts,
-    postfix_call_result_method_parts, receiver_call_arg,
+    builtin_matrix_call_result_method_name, call_arg_accepts_type_expected_diagnostic,
+    call_arg_expected_label_diagnostic, call_arg_expected_type_diagnostic,
+    call_arg_type_diagnostic, call_requirement_diagnostic, drawing_method_builtin_name, expr_name,
+    is_array_mutation_builtin, is_array_mutation_method_call_name, is_map_mutation_builtin,
+    is_map_mutation_method_call_name, is_output_or_declaration_builtin,
+    is_ta_extreme_length_overload, is_ta_pivot_default_source_overload, is_ta_vwap_bands_call,
+    is_time_function_overload, is_timestamp_overload, map_method_builtin_name,
+    matrix_call_result_builtin_name, method_call_parts, postfix_call_result_method_parts,
+    receiver_call_arg,
 };
 
 impl Analyzer {
@@ -56,6 +57,9 @@ impl Analyzer {
 
         if let Some(result) = self.analyze_array_call_result_method(callee, args, span, &arg_types)
         {
+            return result;
+        }
+        if let Some(result) = self.analyze_matrix_call_result_method(callee, args, &arg_types) {
             return result;
         }
         if let Some(result) =
@@ -234,6 +238,34 @@ impl Analyzer {
         self.validate_call_args(signature, args, arg_types);
         self.mark_user_type_array_element_result(builtin_name, span, args, arg_types);
         self.mark_user_type_array_result(builtin_name, span, args, arg_types);
+        Some(self.return_type_for_call(signature, args, arg_types))
+    }
+
+    fn analyze_matrix_call_result_method(
+        &mut self,
+        callee: &Expr,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> Option<Option<PineType>> {
+        let method_name = builtin_matrix_call_result_method_name(callee, args)?;
+        let Some(receiver_type) = arg_types.first().copied().flatten() else {
+            return Some(None);
+        };
+        if !is_matrix_kind(receiver_type.kind) {
+            return None;
+        }
+        let Some(builtin_name) = matrix_call_result_builtin_name(method_name) else {
+            self.unsupported(
+                &format!("matrix.{method_name}"),
+                "direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, and `.copy()`; bind the result or use the namespace helper",
+                callee.span,
+            );
+            return Some(None);
+        };
+        let signature = pine_builtins::get_phase_1_builtin(builtin_name)
+            .expect("supported call-result matrix helper must be registered");
+        self.check_feature_name(builtin_name, callee.span);
+        self.validate_call_args(signature, args, arg_types);
         Some(self.return_type_for_call(signature, args, arg_types))
     }
 

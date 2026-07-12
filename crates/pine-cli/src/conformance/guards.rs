@@ -835,7 +835,8 @@ mod tests {
     use super::super::try_conformance_entries_from_tsv;
     use super::call_results::{
         BUILTIN_ARRAY_CALL_RESULT_FIXTURES, BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES,
-        IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES, LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES,
+        BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES, IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES,
+        LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES,
     };
     use super::{
         FOR_IN_BOUNDARY_FIXTURES, IMPORTED_UDT_BOUNDARY_FIXTURES,
@@ -1024,6 +1025,11 @@ mod tests {
         fixtures.extend(IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES.iter().copied());
         fixtures.extend(BUILTIN_ARRAY_CALL_RESULT_FIXTURES.iter().copied());
         fixtures.extend(BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES.iter().copied());
+        fixtures.extend(
+            BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES
+                .iter()
+                .copied(),
+        );
         fixtures.extend(LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES.iter().copied());
         let tsv = format!(
             "feature\tstatus\tnotes\tfixtures\ntyped declarations\tpartial\tbare array, bare map, non-scalar map templates, bare matrix, non-float matrix, and other typed declarations remain unsupported\t{}\n",
@@ -1161,6 +1167,11 @@ mod tests {
                 .filter(|fixture| *fixture != missing),
         );
         fixtures.extend(BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES.iter().copied());
+        fixtures.extend(
+            BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES
+                .iter()
+                .copied(),
+        );
 
         let tsv = format!(
             "feature\tstatus\tnotes\tfixtures\nmatrix.*\tpartial\tfloat matrices and matrix varip are supported while selected boundaries remain unsupported\t{}\n",

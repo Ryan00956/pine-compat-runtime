@@ -30,12 +30,12 @@ mod prelude {
 
     pub(crate) use crate::analyzer::calls::{
         alias_qualified_method_name, array_call_result_builtin_name, array_method_builtin_name,
-        call_arg_accepts_type_expected_diagnostic, call_arg_expected_type_diagnostic,
-        drawing_method_builtin_name, expr_name, is_array_mutation_builtin,
-        is_array_mutation_method_call_name, is_map_mutation_builtin,
+        builtin_matrix_call_result_method_name, call_arg_accepts_type_expected_diagnostic,
+        call_arg_expected_type_diagnostic, drawing_method_builtin_name, expr_name,
+        is_array_mutation_builtin, is_array_mutation_method_call_name, is_map_mutation_builtin,
         is_map_mutation_method_call_name, is_output_or_declaration_builtin, is_ta_vwap_bands_call,
-        map_method_builtin_name, method_call_parts, postfix_call_result_method_parts,
-        receiver_call_arg,
+        map_method_builtin_name, matrix_call_result_builtin_name, method_call_parts,
+        postfix_call_result_method_parts, receiver_call_arg,
     };
     pub(crate) use crate::analyzer::context::{
         Analyzer, FunctionInfo, FunctionParamInfo, MAX_FUNCTION_CALL_DEPTH, MAX_SEMA_EXPR_DEPTH,
@@ -61,12 +61,13 @@ mod prelude {
         UNKNOWN, accepts_matrix_element_arg, accepts_matrix_element_array_arg, accepts_type,
         array_element_return_type, array_from_return_type, array_kind_from_element_type_name,
         array_numeric_return_type, can_assign, common_kind, float_return_for_arg,
-        int_return_for_arg, is_array_kind, is_collection_kind, is_numeric, literal_type,
-        matrix_array_return_type, matrix_element_return_type, matrix_method_builtin_name,
-        matrix_mult_return_type, merge_result_types, numeric_result_kind, pine_type_name,
-        promoted_bool_type, promoted_color_type, promoted_float_type, promoted_int_type,
-        promoted_numeric_type, promoted_string_type, qualifier_at_most, round_return_type,
-        series_return_for_arg, strongest_qualifier, value_kind_name,
+        int_return_for_arg, is_array_kind, is_collection_kind, is_matrix_kind, is_numeric,
+        literal_type, matrix_array_return_type, matrix_element_return_type,
+        matrix_method_builtin_name, matrix_mult_return_type, merge_result_types,
+        numeric_result_kind, pine_type_name, promoted_bool_type, promoted_color_type,
+        promoted_float_type, promoted_int_type, promoted_numeric_type, promoted_string_type,
+        qualifier_at_most, round_return_type, series_return_for_arg, strongest_qualifier,
+        value_kind_name,
     };
 }
 

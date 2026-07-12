@@ -548,7 +548,7 @@ impl Parser {
         let Some(prefix) = call_result_receiver_prefix(&receiver) else {
             self.error_here(
                 "E_PARSE_EXPR",
-                "method calls on call-result receivers require an unqualified call, qualified user-defined result, or supported built-in array producer receiver",
+                "method calls on call-result receivers require an unqualified call, qualified user-defined result, or supported built-in collection producer receiver",
             );
             return None;
         };
@@ -770,10 +770,17 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
             Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
         }
         ExprKind::QualifiedName(parts) => match parts.as_slice() {
+            [prefix, method] if prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX && method == "copy" => {
+                Some(BUILTIN_MATRIX_CALL_RESULT_PREFIX.to_owned())
+            }
+            [prefix, _method] if prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX => None,
             [prefix, method] if prefix == BUILTIN_ARRAY_CALL_RESULT_PREFIX && method == "copy" => {
                 Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
             }
             [prefix, _method] if prefix == BUILTIN_ARRAY_CALL_RESULT_PREFIX => None,
+            [namespace, member] if is_builtin_matrix_result_qualified_callee(namespace, member) => {
+                Some(BUILTIN_MATRIX_CALL_RESULT_PREFIX.to_owned())
+            }
             [namespace, member] if is_builtin_array_result_qualified_callee(namespace, member) => {
                 Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
             }
@@ -791,6 +798,7 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
 
 const UNQUALIFIED_CALL_RESULT_PREFIX: &str = "$call_result";
 const BUILTIN_ARRAY_CALL_RESULT_PREFIX: &str = "$builtin_array_result";
+const BUILTIN_MATRIX_CALL_RESULT_PREFIX: &str = "$builtin_matrix_result";
 
 fn is_plain_identifier(name: &str) -> bool {
     let mut chars = name.chars();
@@ -808,17 +816,18 @@ fn is_builtin_array_result_callee(name: &str) -> bool {
 }
 
 fn is_builtin_array_result_qualified_callee(namespace: &str, member: &str) -> bool {
-    // `matrix.mult` is only a syntactic candidate here. Semantic analysis
-    // admits the postfix array helpers only when MatrixMult resolves to an
-    // actual array result.
     (namespace == "array" && is_builtin_array_result_member(member))
         || matches!(
             (namespace, member),
             ("str", "split")
                 | ("ta", "pivot_point_levels")
-                | ("matrix", "eigenvalues" | "row" | "col" | "mult")
+                | ("matrix", "eigenvalues" | "row" | "col")
                 | ("map", "keys" | "values")
         )
+}
+
+fn is_builtin_matrix_result_qualified_callee(namespace: &str, member: &str) -> bool {
+    namespace == "matrix" && member == "mult"
 }
 
 fn is_builtin_array_result_member(member: &str) -> bool {

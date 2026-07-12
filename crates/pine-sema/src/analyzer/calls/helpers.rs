@@ -32,6 +32,16 @@ pub(crate) fn postfix_call_result_method_parts<'a>(
     Some(parts)
 }
 
+const BUILTIN_MATRIX_CALL_RESULT_PREFIX: &str = "$builtin_matrix_result";
+
+pub(crate) fn builtin_matrix_call_result_method_name<'a>(
+    callee: &'a Expr,
+    args: &[CallArg],
+) -> Option<&'a str> {
+    let (prefix, method_name) = postfix_call_result_method_parts(callee, args)?;
+    (prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX).then_some(method_name)
+}
+
 pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'static str> {
     match method_name {
         "size" => Some("array.size"),
@@ -39,6 +49,17 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "first" => Some("array.first"),
         "last" => Some("array.last"),
         "copy" => Some("array.copy"),
+        _ => None,
+    }
+}
+
+pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'static str> {
+    match method_name {
+        "rows" => Some("matrix.rows"),
+        "columns" => Some("matrix.columns"),
+        "elements_count" => Some("matrix.elements_count"),
+        "get" => Some("matrix.get"),
+        "copy" => Some("matrix.copy"),
         _ => None,
     }
 }
@@ -477,6 +498,40 @@ mod tests {
 
     fn pine_type(qualifier: Qualifier, kind: ValueKind) -> PineType {
         PineType::new(qualifier, kind)
+    }
+
+    #[test]
+    fn matrix_call_result_helpers_are_a_closed_registered_read_set() {
+        for (method_name, builtin_name) in [
+            ("rows", "matrix.rows"),
+            ("columns", "matrix.columns"),
+            ("elements_count", "matrix.elements_count"),
+            ("get", "matrix.get"),
+            ("copy", "matrix.copy"),
+        ] {
+            assert_eq!(
+                matrix_call_result_builtin_name(method_name),
+                Some(builtin_name)
+            );
+            assert!(
+                pine_builtins::get_phase_1_builtin(builtin_name).is_some(),
+                "matrix call-result helper `{builtin_name}` must stay registered"
+            );
+        }
+
+        for method_name in [
+            "size",
+            "set",
+            "fill",
+            "reverse",
+            "transpose",
+            "row",
+            "col",
+            "sum",
+            "is_square",
+        ] {
+            assert_eq!(matrix_call_result_builtin_name(method_name), None);
+        }
     }
 
     #[test]

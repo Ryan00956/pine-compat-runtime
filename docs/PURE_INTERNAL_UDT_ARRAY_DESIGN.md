@@ -100,14 +100,19 @@ only scalar arrays: row/column snapshots follow the five supported scalar
 matrix element kinds, eigenvalues keep the existing numeric-matrix
 `array<float>` result, and map key/value snapshots follow the corresponding
 five-scalar template kind in insertion order. They add no local/imported UDT
-identity. Item 21 additionally admits namespace-qualified `matrix.mult(...)`
-only for its matrix-by-array, array-by-matrix, and array-by-array
-`array<float>` results. Those dynamic results share the same five helpers and
-copy-only continuation rule; matrix-by-matrix, matrix-by-scalar, and
-scalar-by-matrix results remain fail-closed. Outside the exact static producer
-sets and that array-returning exception, unsupported `array.new<T>` element
-families, non-producer calls, map/matrix templates, matrix-returning calls,
-other postfix helpers, and postfix mutation remain fail-closed. `array.slice`
+identity. Item 21 additionally admitted namespace-qualified
+`matrix.mult(...)` for its matrix-by-array, array-by-matrix, and array-by-array
+`array<float>` results. Item 22 routes that namespace-only dynamic candidate
+through `$builtin_matrix_result`, retains those five array helpers, and admits
+matrix-by-matrix, matrix-by-scalar, and scalar-by-matrix `matrix<float>` results
+through only `.rows()`, `.columns()`, `.elements_count()`,
+`.get(row, column)`, and `.copy()`. Int inputs still produce float collections,
+and only `.copy()` may continue another allowed read/copy chain for either
+result kind. Bound or UDF matrix-result helpers, wrong-result or broader
+helpers, invalid helper arguments, and mutation remain fail-closed. Outside the
+exact static producer sets and this namespace-only exception, unsupported
+`array.new<T>` element families, non-producer calls, map/matrix templates, and
+other matrix-returning calls remain fail-closed. `array.slice`
 remains a live parent view, while a
 postfix `.copy()` independently captures its current values. `array.concat`
 still mutates and returns its first array id; a following reader is itself
@@ -706,13 +711,15 @@ Initial policy:
   continue a nested array chain and terminal element reads cannot invoke UDT
   methods. The later seven fixed cross-namespace producers and array-returning
   `matrix.mult` overloads return scalar arrays only and add no UDT/import
+  identity. Namespace matrix-returning `matrix.mult` overloads add only the
+  exact five matrix readers/copy from item 22 and likewise carry no UDT/import
   identity. Mixed
   identities within one scalar return or tuple slot, non-scalar UDT arrays,
   non-array/non-UDT results,
   unknown/`na` results without a concrete supported type or identity,
-  built-in-qualified/template call receivers outside the exact static and
-  array-capable paths,
-  mutation side effects, and other direct array methods on call results remain
+  bound or UDF matrix-result receivers, built-in-qualified/template call
+  receivers outside the exact static and dynamic paths, mutation side effects,
+  and other direct array or matrix methods on call results remain
   semantic/parser/lowering boundaries. In particular, concat remains rejected
   inside UDFs even when followed by an allowed reader.
 
@@ -863,6 +870,20 @@ Recommended future slices:
     independence are fixture-backed. The existing bound-receiver
     `matrix_id.mult(array).size()` path remains unchanged. This slice adds no
     UDT/import identity and no public schema field. Done.
+22. The namespace matrix-result continuation routes `matrix.mult(...)` through
+    `$builtin_matrix_result` and keeps result-type-directed dispatch. The three
+    array-returning overload families retain the item 21 five-helper contract.
+    Matrix-by-matrix, matrix-by-scalar, and scalar-by-matrix resolve to
+    `matrix<float>` and expose only `.rows()`, `.columns()`,
+    `.elements_count()`, `.get(row, column)`, and `.copy()`, including int-input
+    float-result matrices. Only `.copy()` may continue another allowed
+    read/copy chain. Wrong-result helpers, bad helper arity or types, mutation,
+    and broader helpers fail closed; bound or UDF matrix-result receivers retain
+    the generic direct call-result rejection, while the existing bound
+    `matrix_id.mult(array).size()` path is unchanged. Empty/`na` values, typed
+    destinations, UDF-contained namespace calls, copy independence, and the
+    retained boundaries are fixture-backed. No UDT/import identity or public
+    schema field is added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -898,9 +919,12 @@ The exact built-in array producer allowlist in item 19 also shares those five
 helpers through `$builtin_array_result`, with only `.copy()` nestable and
 terminal element readers unable to invoke UDT methods. Item 20 adds the exact
 seven cross-namespace scalar-array producers under the same five-helper and
-copy-only continuation rule, without adding UDT/import identity. Broader UDT
-element families, built-in-qualified/template call-result receivers outside
-the two allowlists, unsupported `array.new<T>` templates, non-array/non-UDT results,
+copy-only continuation rule, without adding UDT/import identity. Item 21 adds
+the array-returning `matrix.mult` overloads, and item 22 adds the exact
+namespace-only matrix-result read/copy set through `$builtin_matrix_result`;
+neither adds UDT/import identity. Broader UDT element families, bound or UDF
+matrix-result receivers, built-in-qualified/template call-result receivers
+outside the closed paths, unsupported `array.new<T>` templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, unsupported
 mutation contexts, and helpers not listed there remain unsupported until later
 fixture-backed slices implement syntax, analysis, runtime behavior, and
