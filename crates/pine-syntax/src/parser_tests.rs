@@ -369,6 +369,9 @@ fn parses_cross_namespace_builtin_array_result_method_receivers() {
         "value = matrix.eigenvalues(values).first()\n",
         "value = matrix.row(values, 0).last()\n",
         "value = matrix.col(values, 0).copy()\n",
+        "value = matrix.mult(values, array.from(1.0, 2.0)).size()\n",
+        "value = matrix.mult(array.from(1.0, 2.0), values).get(0)\n",
+        "value = matrix.mult(array.from(1.0, 2.0), array.from(3.0, 4.0)).copy()\n",
         "value = map.keys(values).size()\n",
         "value = map.values(values).get(0)\n",
     ] {
@@ -393,7 +396,7 @@ fn parses_cross_namespace_builtin_array_result_method_receivers() {
         assert!(args[0].value.span.end < callee.span.start, "{source}");
     }
 
-    let parsed = parse("value = str.split(\"a,b\", \",\").copy().last()\n");
+    let parsed = parse("value = matrix.mult(values, array.from(1.0, 2.0)).copy().last()\n");
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
     let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
         panic!("expected declaration");
@@ -428,6 +431,7 @@ fn rejects_methods_after_scalar_builtin_array_result_reads() {
         "bad = str.split(\"a,b\", \",\").size().custom()\n",
         "bad = ta.pivot_point_levels(\"Traditional\", true).last().custom()\n",
         "bad = matrix.row(values, 0).get(0).custom()\n",
+        "bad = matrix.mult(values, array.from(1.0, 2.0)).size().custom()\n",
         "bad = map.keys(values).first().custom()\n",
     ] {
         let parsed = parse(source);
@@ -451,7 +455,6 @@ fn rejects_other_builtin_call_result_method_receivers() {
         "bad = array.min(values).size()\n",
         "bad = str.length(\"value\").size()\n",
         "bad = ta.sma(close, 14).size()\n",
-        "bad = matrix.mult(values, other).size()\n",
         "bad = matrix.copy(values).size()\n",
         "bad = matrix.eigenvectors(values).size()\n",
         "bad = map.copy(values).size()\n",

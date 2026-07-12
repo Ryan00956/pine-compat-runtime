@@ -99,31 +99,35 @@ fn builtin_array_result_producer_parser_allowlist_matches_registry() {
         );
     }
 
-    let registered_cross_namespace = PHASE_1_BUILTINS
+    let registered_cross_namespace_array_capable = PHASE_1_BUILTINS
         .iter()
         .filter(|signature| !signature.name.starts_with("array."))
         .filter(|signature| match signature.returns {
             ReturnSpec::Fixed(pine_type) => crate::types::is_array_kind(pine_type.kind),
-            ReturnSpec::MatrixArray(_) => true,
+            ReturnSpec::MatrixArray(_) | ReturnSpec::MatrixMult => true,
             _ => false,
         })
         .map(|signature| signature.name)
         .collect::<BTreeSet<_>>();
-    let expected_cross_namespace = BTreeSet::from([
+    let expected_cross_namespace_array_capable = BTreeSet::from([
         "matrix.col",
         "matrix.eigenvalues",
+        "matrix.mult",
         "matrix.row",
         "str.split",
         "ta.pivot_point_levels",
     ]);
-    assert_eq!(registered_cross_namespace, expected_cross_namespace);
+    assert_eq!(
+        registered_cross_namespace_array_capable,
+        expected_cross_namespace_array_capable
+    );
 
-    for name in &registered_cross_namespace {
+    for name in &registered_cross_namespace_array_capable {
         let source = SourceFile::new("test.pine", format!("value = {name}().size()\n"));
         let parsed = pine_syntax::parse_source(&source);
         assert!(
             parsed.diagnostics.is_empty(),
-            "registered cross-namespace array producer `{name}` was parser-gated: {:?}",
+            "registered cross-namespace array-capable producer `{name}` was parser-gated: {:?}",
             parsed.diagnostics
         );
     }
@@ -135,7 +139,7 @@ fn builtin_array_result_producer_parser_allowlist_matches_registry() {
                 .split_once('.')
                 .map(|(namespace, _)| namespace),
             Some("str" | "ta" | "matrix")
-        ) && !registered_cross_namespace.contains(signature.name)
+        ) && !registered_cross_namespace_array_capable.contains(signature.name)
     }) {
         let source = SourceFile::new(
             "test.pine",

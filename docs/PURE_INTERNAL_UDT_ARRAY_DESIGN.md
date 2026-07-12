@@ -100,11 +100,15 @@ only scalar arrays: row/column snapshots follow the five supported scalar
 matrix element kinds, eigenvalues keep the existing numeric-matrix
 `array<float>` result, and map key/value snapshots follow the corresponding
 five-scalar template kind in insertion order. They add no local/imported UDT
-identity. Outside the two exact producer sets, unsupported `array.new<T>`
-element families, non-producer calls, map/matrix templates, matrix-returning
-calls, namespace-qualified `matrix.mult(...)` direct-result chains, other
-postfix helpers, and postfix mutation remain fail-closed. `array.slice` remains
-a live parent view, while a
+identity. Item 21 additionally admits namespace-qualified `matrix.mult(...)`
+only for its matrix-by-array, array-by-matrix, and array-by-array
+`array<float>` results. Those dynamic results share the same five helpers and
+copy-only continuation rule; matrix-by-matrix, matrix-by-scalar, and
+scalar-by-matrix results remain fail-closed. Outside the exact static producer
+sets and that array-returning exception, unsupported `array.new<T>` element
+families, non-producer calls, map/matrix templates, matrix-returning calls,
+other postfix helpers, and postfix mutation remain fail-closed. `array.slice`
+remains a live parent view, while a
 postfix `.copy()` independently captures its current values. `array.concat`
 still mutates and returns its first array id; a following reader is itself
 non-mutating, but concat remains rejected inside UDFs.
@@ -697,14 +701,17 @@ Initial policy:
   supported array kind support direct
   `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()` chaining. Concrete
   scalar UDT results from unqualified local UDFs may invoke existing pure user
-  methods. The two exact built-in array-producing sets support those same five
-  helpers, but only `.copy()` may continue a nested array chain and terminal
-  element reads cannot invoke UDT methods. The later seven cross-namespace
-  producers return scalar arrays only and add no UDT/import identity. Mixed
+  methods. The exact built-in `array.*` producer allowlist and cross-namespace
+  array-capable path support those same five helpers, but only `.copy()` may
+  continue a nested array chain and terminal element reads cannot invoke UDT
+  methods. The later seven fixed cross-namespace producers and array-returning
+  `matrix.mult` overloads return scalar arrays only and add no UDT/import
+  identity. Mixed
   identities within one scalar return or tuple slot, non-scalar UDT arrays,
   non-array/non-UDT results,
   unknown/`na` results without a concrete supported type or identity,
-  built-in-qualified/template call receivers outside the two producer allowlists,
+  built-in-qualified/template call receivers outside the exact static and
+  array-capable paths,
   mutation side effects, and other direct array methods on call results remain
   semantic/parser/lowering boundaries. In particular, concat remains rejected
   inside UDFs even when followed by an allowed reader.
@@ -844,6 +851,17 @@ Recommended future slices:
     namespaces/non-producers, and postfix mutation remain gated; the existing
     bound-receiver `matrix_id.mult(array).size()` path is unchanged. Built-in
     prefixes remain reserved. This scalar-only slice adds no
+    UDT/import identity and no public schema field. Done.
+21. The conditional `matrix.mult` result slice admits the namespace call as a
+    parser candidate, then relies on `ReturnSpec::MatrixMult` to expose the
+    five read/copy helpers only for matrix-by-array, array-by-matrix, and
+    array-by-array results. All three resolve to `array<float>`, including int
+    inputs. Matrix-by-matrix, matrix-by-scalar, and scalar-by-matrix resolve to
+    `matrix<float>` and retain the generic direct call-result rejection. Only
+    `.copy()` may continue a chain; invalid indexes, other helpers, mutation,
+    empty/`na` values, typed destinations, UDF reads, and nested-copy
+    independence are fixture-backed. The existing bound-receiver
+    `matrix_id.mult(array).size()` path remains unchanged. This slice adds no
     UDT/import identity and no public schema field. Done.
 
 ## Completion Gate For Future Positive Support

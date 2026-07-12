@@ -85,11 +85,15 @@ are scalar-array producers only: matrix row/column snapshots follow the five
 supported scalar matrix kinds, eigenvalues retain the numeric-matrix
 `array<float>` result, and map keys/values retain insertion order and the
 corresponding five-scalar template kind. The new set does not carry or infer
-imported UDT identity. Outside the two exact producer sets, unsupported
+imported UDT identity. Item 11 additionally admits namespace-qualified
+`matrix.mult(...)` only when matrix-by-array, array-by-matrix, or
+array-by-array resolution produces `array<float>`; matrix-by-matrix,
+matrix-by-scalar, and scalar-by-matrix remain fail-closed. Outside the exact
+static producer sets and that dynamic array-returning exception, unsupported
 `array.new<T>` types, non-producer calls, map/matrix templates,
-matrix-returning calls, namespace-qualified `matrix.mult(...)` direct-result
-chains, mixed or non-scalar return identities, non-array/non-UDT or unresolved
-results, other postfix helpers, nested field mutation, postfix mutation, and
+matrix-returning calls, mixed or non-scalar return identities,
+non-array/non-UDT or unresolved results, other postfix helpers, nested field
+mutation, postfix mutation, and
 method receiver/parameter/global field side effects remain fail-closed.
 `array.slice` retains its live parent view and postfix `.copy()` captures its
 current values independently. `array.concat` still mutates and returns its
@@ -688,3 +692,14 @@ return/parameter flow remains deferred.
     bound-receiver `matrix_id.mult(array).size()` path is unchanged. Built-in
     prefixes stay reserved. This slice deliberately adds no imported
     UDT identity and no public schema field. Done.
+11. A conditional namespace `matrix.mult` slice adds that callee as a parser
+    candidate while preserving semantic result-type gating. Matrix-by-array,
+    array-by-matrix, and array-by-array overloads resolve to `array<float>` and
+    expose only `.size()`, `.get(index)`, `.first()`, `.last()`, and `.copy()`;
+    only `.copy()` may continue. Matrix-by-matrix, matrix-by-scalar, and
+    scalar-by-matrix overloads resolve to `matrix<float>` and keep the generic
+    direct call-result rejection. Invalid indexes, other helpers, mutation,
+    empty/`na` values, typed destinations, UDF reads, and nested-copy behavior
+    are fixture-backed. The existing bound-receiver
+    `matrix_id.mult(array).size()` path is unchanged. No imported UDT identity
+    or public schema field is added. Done.

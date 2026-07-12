@@ -6745,9 +6745,17 @@ fn reports_unsupported_builtin_namespace_array_call_result_reads_fixture() {
             "`array.get` argument `index` expects simple integer-compatible, got const string",
             "`array.remove` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
             "`array.set` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.get` argument `index` expects simple integer-compatible, got const string",
+            "`array.pop` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.reverse` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "`call_result.size` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
+            "`call_result.copy` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
+            "`call_result.get` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
+            "`call_result.first` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
+            "`call_result.last` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
         ],
     );
-    assert_diagnostic_count(path, 14);
+    assert_diagnostic_count(path, 22);
 }
 
 #[test]

@@ -808,12 +808,15 @@ fn is_builtin_array_result_callee(name: &str) -> bool {
 }
 
 fn is_builtin_array_result_qualified_callee(namespace: &str, member: &str) -> bool {
+    // `matrix.mult` is only a syntactic candidate here. Semantic analysis
+    // admits the postfix array helpers only when MatrixMult resolves to an
+    // actual array result.
     (namespace == "array" && is_builtin_array_result_member(member))
         || matches!(
             (namespace, member),
             ("str", "split")
                 | ("ta", "pivot_point_levels")
-                | ("matrix", "eigenvalues" | "row" | "col")
+                | ("matrix", "eigenvalues" | "row" | "col" | "mult")
                 | ("map", "keys" | "values")
         )
 }

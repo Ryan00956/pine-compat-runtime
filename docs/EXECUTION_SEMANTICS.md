@@ -847,8 +847,8 @@ exact cross-namespace producer set below,
 postfix helpers outside the five-item read/copy set, and postfix mutation remain
 unsupported boundaries.
 
-The same `$builtin_array_result` lowering now has one additional exact
-cross-namespace producer set: `str.split`, `ta.pivot_point_levels`,
+The same `$builtin_array_result` lowering now has one additional exact set of
+seven fixed cross-namespace producers: `str.split`, `ta.pivot_point_levels`,
 `matrix.row`, `matrix.col`, `matrix.eigenvalues`, `map.keys`, and `map.values`.
 Each admits only `.size()`, `.get(index)`, `.first()`, `.last()`, and `.copy()`;
 only `.copy()` can continue with another allowed array read/copy. The other
@@ -863,11 +863,15 @@ template side is one of int, float, bool, string, or color. A postfix helper
 does not change empty/`na`, negative-index, bounds-error, element-kind, or
 snapshot-copy behavior.
 
-This set deliberately excludes namespace-qualified `matrix.mult(...)` as a
-direct-result receiver, including its array-returning overloads. The existing
-bound-receiver `matrix_id.mult(array).size()` path is unchanged. Every
+The path additionally admits namespace-qualified `matrix.mult(...)` as a
+type-checked candidate. Matrix-by-array, array-by-matrix, and array-by-array
+overloads resolve to `array<float>` and may use the same five helpers; only
+`.copy()` can continue another allowed chain. Matrix-by-matrix,
+matrix-by-scalar, and scalar-by-matrix overloads resolve to `matrix<float>` and
+fail closed through the generic direct call-result diagnostic. The existing
+bound-receiver `matrix_id.mult(array).size()` path is unchanged. Every other
 matrix-returning call, `map.new` and `matrix.new` template, other
-namespace/non-producer call, and postfix mutation remains outside this set.
+namespace/non-producer call, and postfix mutation remains outside this path.
 Built-in namespace prefixes remain reserved, so same-named user or import
 qualifiers do not enter this path. The extension carries no UDT/import identity
 and changes no public output schema.
@@ -916,16 +920,18 @@ For local methods, a typed same-local scalar-tree UDT array parameter may be
 returned directly or through block aliases, copies, fresh constructors, nested
 local calls, and final control flow with call-specific identity. Qualified
 user-defined results returning any supported array kind, unqualified plain
-local UDF results, and the two exact built-in array-producing allowlists support
+local UDF results, the exact built-in `array.*` producer allowlist, and the
+cross-namespace array-capable path support
 direct `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`. Concrete
 same-local/same-imported scalar-tree identity remains mandatory for UDT-array
 results, and concrete scalar UDT results from unqualified local UDFs may call
 the existing pure method subset. Built-in producer element readers are
 terminal and do not open that method path; only producer `.copy()` may continue
-with another allowed array read/copy. The seven cross-namespace producers are
-scalar-array-only and add no UDT/import identity path. Built-in-qualified or
-template call results outside the two exact allowlists, and other array
-methods, remain parser/semantic boundaries.
+with another allowed array read/copy. The seven fixed cross-namespace producers
+and array-returning `matrix.mult` overloads are scalar-array-only and add no
+UDT/import identity path. Built-in-qualified or template call results outside
+the exact static and array-capable paths, and other array methods, remain
+parser/semantic boundaries.
 Method side effects, recursive methods, unsupported parameter families,
 mismatched UDT parameter identity, unknown receivers, and alias-qualified
 imported method receiver type mismatches are rejected during semantic analysis.

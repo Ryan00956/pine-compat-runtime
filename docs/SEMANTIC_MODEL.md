@@ -597,8 +597,8 @@ call-result method, including a method on a returned scalar UDT element.
 `array` is reserved as the built-in lexical prefix for this path; a qualified
 user or import alias with that spelling cannot use call-result dispatch.
 
-The same `$builtin_array_result` path has a second, exact producer set outside
-the `array` namespace: `str.split`, `ta.pivot_point_levels`, `matrix.row`,
+The same `$builtin_array_result` path has a second set of seven fixed producers
+outside the `array` namespace: `str.split`, `ta.pivot_point_levels`, `matrix.row`,
 `matrix.col`, `matrix.eigenvalues`, `map.keys`, and `map.values`. Each result
 admits only `.size()`, `.get(index)`, `.first()`, `.last()`, and `.copy()`;
 only `.copy()` returns an array receiver eligible for another allowed
@@ -614,12 +614,15 @@ postfix copies are independent again. Empty/`na`, negative index, bounds, and
 element-type checks still come from the ordinary producer and array-helper
 analysis/runtime rules.
 
-This second set excludes namespace-qualified `matrix.mult(...)` direct-result
-receivers even for array-returning overloads; the existing bound-receiver
-`matrix_id.mult(array).size()` path is unchanged. It also excludes
-matrix-returning calls, map/matrix templates such as `map.new` and
-`matrix.new`, every other namespace or non-producer member, and postfix
-mutation. Built-in namespace prefixes remain reserved and cannot be treated as
+The path also recognizes namespace-qualified `matrix.mult(...)` as a dynamic
+array-capable candidate. Its matrix-by-array, array-by-matrix, and
+array-by-array overloads resolve to `array<float>` and admit the same five
+helpers, while matrix-by-matrix, matrix-by-scalar, and scalar-by-matrix resolve
+to `matrix<float>` and remain fail-closed for direct array-result helpers. The
+existing bound-receiver `matrix_id.mult(array).size()` path is unchanged.
+Map/matrix templates such as `map.new` and `matrix.new`, every other namespace
+or non-producer member, other matrix-returning calls, and postfix mutation stay
+excluded. Built-in namespace prefixes remain reserved and cannot be treated as
 same-named user/import qualifiers. No UDT or imported-type identity is inferred
 from these scalar-array producers, and public schemas remain unchanged.
 
@@ -632,7 +635,8 @@ closed rather than falling through to a same-named method. Unqualified local
 UDF results carrying a concrete local or imported scalar UDT identity may still
 use the existing pure user-method dispatch, and explicit same-named local
 methods and imported functions remain distinct. Other `array.*` calls,
-built-in namespaces and templates outside the exact seven-producer set,
+built-in namespaces and templates outside the seven fixed producers plus the
+array-returning `matrix.mult` overloads,
 helpers beyond the five-item postfix
 read/copy set, non-array/non-UDT results, unknown/`na` results without a
 concrete supported type or identity, and postfix mutation remain outside this
@@ -807,18 +811,20 @@ subset remain outside the claim. The same applies to direct private imported UDT
 access, mixed or non-scalar imported array-return identities, conflicting
 identities within one tuple UDT-array slot, direct call-result array methods
 outside the read-only `size`/`get`/`first`/`last`/`copy` set,
-built-in-qualified/template call-result receivers outside the two exact
-built-in array-producing allowlists, nested field mutation, UDF
+built-in-qualified/template call-result receivers outside the exact static
+`array.*` allowlist and cross-namespace array-capable path, nested field mutation, UDF
 parameter/global field side effects, and method receiver/parameter/global field
 side effects.
 Qualified user-defined and unqualified plain local UDF results plus the
-two allowlisted built-in producer sets support those five array helpers for
+exact static `array.*` allowlist and cross-namespace array-capable path support
+those five array helpers for
 currently supported array kinds; UDT arrays retain the concrete
 same-local/same-imported scalar-tree identity gate, and scalar UDT results from
 unqualified local UDFs may invoke existing pure methods. Built-in producer
 `get`/`first`/`last` element results remain terminal and do not open that scalar
-UDT method composition path. The seven cross-namespace producers return only
-scalar arrays and add no UDT/import identity flow.
+UDT method composition path. The seven fixed cross-namespace producers and
+array-returning `matrix.mult` overloads return only scalar arrays and add no
+UDT/import identity flow.
 Tuple-contained
 same-imported scalar-tree UDT arrays are supported when destructured, with
 identity tracked independently per slot. Non-scalar UDT value history outside the local/imported
@@ -887,16 +893,17 @@ parameters or fresh local array construction. Direct and block-alias returns
 retain the argument identity, while copy/new/from and nested/final-control-flow
 returns preserve the identity selected for the current call. Qualified
 user-defined results returning any currently supported array kind, unqualified
-plain local UDF array results, and the two exact built-in array-producing
-allowlists support direct `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`
+plain local UDF array results, the exact built-in `array.*` producer allowlist,
+and the cross-namespace array-capable path support direct
+`.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`
 without widening arbitrary call-result receivers. UDT arrays retain the concrete
 same-local/same-imported scalar-tree identity gate; scalar UDT results from an
 unqualified local UDF may invoke the existing pure method subset. That scalar
 method exception does not apply to a built-in producer's terminal
-`.get()`/`.first()`/`.last()` result. The seven cross-namespace producers are
-scalar-array-only and do not widen UDT identity. Built-in-qualified/template
-call results outside the two exact allowlists and other array helpers remain
-gated.
+`.get()`/`.first()`/`.last()` result. The seven fixed cross-namespace producers
+and the array-returning `matrix.mult` overloads are scalar-array-only and do
+not widen UDT identity. Built-in-qualified/template call results outside the
+exact static and array-capable paths and other array helpers remain gated.
 Methods with receiver/parameter/global field side effects, recursion,
 unsupported parameter families, mismatched UDT parameter identity, unknown
 receivers, and alias-qualified imported method receiver type mismatches remain

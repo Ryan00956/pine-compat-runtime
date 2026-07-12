@@ -244,7 +244,7 @@ fn validate_builtin_namespace_array_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES,
-        "fixture-backed exact non-array-namespace array-producer call-result size/get/first/last/copy dispatch and retained producer/helper boundaries",
+        "fixture-backed non-array-namespace array-capable producer call-result size/get/first/last/copy dispatch and retained result-type/helper boundaries",
     )
 }
 
