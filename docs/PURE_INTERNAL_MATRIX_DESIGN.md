@@ -1543,6 +1543,13 @@ Recommended future slices:
     the repeated-value requirement, receiver-derived series int/float, empty/
     all-`na`/upstream-`na` and all-unique behavior, invalid type/arity, and
     terminal continuation. Matrix-valued continuation is unchanged.
+100. Numeric array-valued call results additionally expose terminal
+    `.percentile_nearest_rank(percentage)`. Matrix row/column/eigenvalue arrays
+    and array-returning `matrix.mult` overloads retain filtered ceiling-based
+    nearest-rank selection, 0/100 endpoints, positional or named series/simple
+    numeric percentages, receiver-derived series int/float, empty/all-`na`/
+    upstream-`na`, runtime typed-`na` and out-of-range behavior, invalid type/
+    arity, and terminal continuation. Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

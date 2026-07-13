@@ -467,6 +467,13 @@ Recommended future slices:
     upstream-`na` and all-unique behavior, invalid type/arity, local/imported
     provenance, and terminal continuation are fixture-backed. Map storage and
     template rules are unchanged. Done.
+30. Numeric key/value snapshots additionally expose terminal
+    `.percentile_nearest_rank(percentage)`. Filtered ceiling-based nearest-rank
+    selection, 0/100 endpoints, positional or named series/simple numeric
+    percentages, receiver-derived series int/float, empty/all-`na`/upstream-
+    `na`, runtime typed-`na` and out-of-range behavior, invalid type/arity,
+    local/imported provenance, and terminal continuation are fixture-backed.
+    Map storage and template rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

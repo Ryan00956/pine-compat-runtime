@@ -148,6 +148,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "range" => Some("array.range"),
         "median" => Some("array.median"),
         "mode" => Some("array.mode"),
+        "percentile_nearest_rank" => Some("array.percentile_nearest_rank"),
         _ => None,
     }
 }

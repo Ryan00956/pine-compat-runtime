@@ -290,6 +290,12 @@ frequent filtered value in the receiver-derived series int/float kind, chooses
 the smaller value for tied frequencies, and requires at least one repetition.
 Empty/all-`na`/upstream-`na` and all-unique arrays yield `na`; UDT, arity,
 provenance, and terminal-continuation boundaries remain closed.
+Item 96 adds terminal `.percentile_nearest_rank(percentage)` over the same
+result set. It filters and sorts values, applies ceiling-based nearest-rank
+selection with 0/100 endpoints, preserves receiver-derived series int/float,
+and accepts positional or named series/simple numeric percentages. Empty/all-
+`na`/upstream-`na`, runtime typed-`na`, out-of-range, UDT, arity, provenance,
+and terminal-continuation boundaries remain closed.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1822,6 +1828,12 @@ Item 95 adds terminal receiver-typed `.mode()` over that result set, preserving
 filtered frequency counting, smaller-value tie selection, the repeated-value
 requirement, empty/all-`na`/upstream-`na` and all-unique `na`, arity,
 provenance, terminal-continuation, and UDT-identity boundaries.
+Item 96 adds terminal receiver-typed
+`.percentile_nearest_rank(percentage)` over that result set, preserving
+filtered ceiling-based nearest-rank selection, 0/100 endpoints, positional or
+named series/simple numeric percentages, empty/all-`na`/upstream-`na`, runtime
+typed-`na`, out-of-range, arity, provenance, terminal-continuation, and UDT-
+identity boundaries.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

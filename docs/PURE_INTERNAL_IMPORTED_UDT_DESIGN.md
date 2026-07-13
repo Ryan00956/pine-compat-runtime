@@ -1493,3 +1493,10 @@ return/parameter flow remains deferred.
     repetition. Empty/all-`na`/upstream-`na` and all-unique arrays return `na`;
     nonnumeric/imported-UDT, arity, provenance, and terminal-continuation
     boundaries remain closed. Done.
+86. The same numeric producer set exposes terminal
+    `.percentile_nearest_rank(percentage)`. It filters and sorts values, applies
+    ceiling-based nearest-rank selection with 0/100 endpoints, preserves
+    receiver-derived series int/float, and accepts positional or named series/
+    simple numeric percentages. Empty/all-`na`/upstream-`na`, runtime typed-
+    `na`, out-of-range, nonnumeric/imported-UDT, arity, provenance, and terminal-
+    continuation boundaries remain closed. Done.

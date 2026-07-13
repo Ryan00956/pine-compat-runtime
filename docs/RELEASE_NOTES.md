@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal `.percentile_nearest_rank(percentage)` to every existing
+  concrete numeric array call result. It filters and sorts values, uses
+  ceiling-based nearest-rank selection with 0/100 endpoints, preserves the
+  receiver-derived `series int`/`series float`, and accepts positional or named
+  series/simple numeric percentages. Empty/all-`na`/upstream-`na`, runtime
+  typed-`na`, negative, and above-100 percentages return `na`; the read remains
+  non-mutating and terminal. Static/cross-namespace, matrix/map-derived, local/
+  imported function/method, invalid type/arity, provenance, and continuation
+  paths are fixture-backed.
 - Added terminal `.mode()` to every existing concrete numeric array call
   result. It filters `na`, returns the most frequent value in the receiver-
   derived `series int`/`series float` kind, chooses the smaller value for tied
