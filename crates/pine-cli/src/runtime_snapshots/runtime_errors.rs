@@ -392,6 +392,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "matrix cell count cannot exceed 100000",
     ),
     (
+        "tests/fixtures/regressions/matrix_call_result_kron_cell_limit.pine",
+        "matrix cell count cannot exceed 100000",
+    ),
+    (
         "tests/fixtures/regressions/matrix_mult_cell_limit.pine",
         "matrix cell count cannot exceed 100000",
     ),

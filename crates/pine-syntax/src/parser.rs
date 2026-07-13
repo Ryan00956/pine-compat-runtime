@@ -789,6 +789,7 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
                         "copy"
                             | "eigenvectors"
                             | "inv"
+                            | "kron"
                             | "pinv"
                             | "pow"
                             | "submatrix"

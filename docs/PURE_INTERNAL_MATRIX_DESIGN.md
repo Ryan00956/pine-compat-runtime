@@ -1405,6 +1405,17 @@ Recommended future slices:
     to-float lowering, nested powers, source independence, provenance/dual
     aliases, invalid types/arity, and runtime failure boundaries are fixture-
     backed. Mutation and the remaining matrix-valued helpers stay gated.
+83. Numeric matrix call-result Kronecker products: done for the same concrete
+    float/int producer set. `.kron(other)` retains the numeric receiver and
+    numeric-matrix operand checks, always returns an independent fixed
+    `matrix<float>`, multiplies both source row and column dimensions,
+    preserves `na` cells and zero dimensions, propagates upstream `na`, keeps
+    the matrix cell-budget error, and retains the matrix-result prefix.
+    Namespace and bound operations, local/imported functions and methods, int-
+    to-float lowering, nested Kronecker products, source independence,
+    provenance/dual aliases, invalid types/arity, and runtime failure
+    boundaries are fixture-backed. Mutation and the remaining matrix-valued
+    helpers stay gated.
 
 ## Completion Gate For Future Positive Support
 

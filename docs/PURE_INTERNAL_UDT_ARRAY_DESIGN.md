@@ -1520,6 +1520,16 @@ Recommended future slices:
     and methods, int-to-float lowering, nested powers, source independence,
     provenance/dual aliases, invalid types/arity, and runtime failure
     boundaries are fixture-backed. Done.
+79. The same concrete numeric matrix call-result producer set additionally
+    exposes `.kron(other)` as an independent fixed-`matrix<float>`
+    continuation. It retains the numeric-matrix operand gate, multiplies both
+    source row and column dimensions, preserves `na` cells and zero dimensions,
+    propagates upstream `na`, keeps the matrix cell-budget error, and retains
+    the matrix-result prefix without adding UDT/import identity or a public
+    schema field. Namespace/bound operations, local/imported functions and
+    methods, int-to-float lowering, nested Kronecker products, source
+    independence, provenance/dual aliases, invalid types/arity, and runtime
+    failure boundaries are fixture-backed. Done.
 
 ## Completion Gate For Future Positive Support
 

@@ -108,5 +108,8 @@ eigenvectors_extra_arg = matrix.copy(left).eigenvectors(0)
 bool_pow_continuation = matrix.copy(bool_values).pow(2)
 pow_bad_power_continuation = matrix.copy(left).pow("bad")
 pow_extra_arg_continuation = matrix.copy(left).pow(2, 3)
+bool_kron_continuation = matrix.copy(bool_values).kron(left)
+kron_bad_other_continuation = matrix.copy(left).kron(vector)
+kron_extra_arg_continuation = matrix.copy(left).kron(right, left)
 
 plot(close)

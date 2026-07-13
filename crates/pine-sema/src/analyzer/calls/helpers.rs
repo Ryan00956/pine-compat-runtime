@@ -54,7 +54,14 @@ pub(crate) fn local_udf_call_result_method_parts<'a>(
                 local_udf_call_result_method_parts(producer, producer_args)?;
             matches!(
                 producer_method,
-                "copy" | "eigenvectors" | "inv" | "pinv" | "pow" | "submatrix" | "transpose"
+                "copy"
+                    | "eigenvectors"
+                    | "inv"
+                    | "kron"
+                    | "pinv"
+                    | "pow"
+                    | "submatrix"
+                    | "transpose"
             )
             .then_some((function_name, method_name))
         }
@@ -138,6 +145,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "copy" => Some("matrix.copy"),
         "eigenvectors" => Some("matrix.eigenvectors"),
         "inv" => Some("matrix.inv"),
+        "kron" => Some("matrix.kron"),
         "pinv" => Some("matrix.pinv"),
         "pow" => Some("matrix.pow"),
         "submatrix" => Some("matrix.submatrix"),
@@ -623,6 +631,7 @@ mod tests {
             ("copy", "matrix.copy"),
             ("eigenvectors", "matrix.eigenvectors"),
             ("inv", "matrix.inv"),
+            ("kron", "matrix.kron"),
             ("pinv", "matrix.pinv"),
             ("pow", "matrix.pow"),
             ("submatrix", "matrix.submatrix"),

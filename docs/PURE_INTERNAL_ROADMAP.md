@@ -709,6 +709,16 @@ Current baseline:
   lowering, nested powers, source independence, provenance/dual aliases,
   invalid types/arity, and runtime failure boundaries are fixture-backed;
   mutation and other matrix-valued transforms remain gated.
+  The following numeric matrix-valued continuation slice adds `.kron(other)`
+  across the same concrete producer set. It retains the numeric receiver and
+  numeric-matrix operand checks, always returns an independent fixed
+  `matrix<float>`, multiplies both source row and column dimensions, preserves
+  `na` cells and zero dimensions, propagates upstream `na`, keeps the matrix
+  cell-budget error, and retains the matrix-result prefix. Namespace and bound
+  operations, local/imported functions and methods, int-to-float lowering,
+  nested Kronecker products, source independence, provenance/dual aliases,
+  invalid types/arity, and runtime failure boundaries are fixture-backed;
+  mutation and other matrix-valued transforms remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

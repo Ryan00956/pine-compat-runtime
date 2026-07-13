@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Added matrix-valued `.kron(other)` continuation to every existing concrete
+  numeric matrix call result. It retains the numeric receiver and numeric-
+  matrix operand checks, always returns an independent `matrix<float>`,
+  multiplies both source row and column dimensions, preserves `na` cells and
+  zero dimensions, propagates upstream `na`, keeps the matrix cell-budget
+  error, and retains the matrix-result prefix. Namespace and bound operations,
+  local/imported functions and methods, int-to-float lowering, nested
+  Kronecker products, source independence, provenance, dual aliases, invalid
+  types/arity, and runtime failure boundaries are fixture-backed; mutation and
+  the remaining matrix-valued helpers stay gated.
 - Added matrix-valued `.pow(power)` continuation to every existing concrete
   numeric matrix call result. It retains the numeric receiver and simple-int
   power checks, always returns an independent `matrix<float>`, preserves the
