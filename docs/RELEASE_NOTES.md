@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added terminal `.avg()` to every existing concrete numeric array call result.
+  It ignores `na`, always returns `series float`, yields `na` for empty/all-
+  `na`/upstream-`na` or non-finite results, and remains non-mutating. Static/
+  cross-namespace, matrix/map-derived, local/imported function/method, invalid
+  type/arity, and terminal-continuation paths are fixture-backed.
 - Added terminal `.sum()` to every existing concrete numeric array call result.
   It preserves receiver-derived `series int`/`series float`, ignores `na`
   elements, returns `na` for empty/all-`na`/upstream-`na` arrays, and remains

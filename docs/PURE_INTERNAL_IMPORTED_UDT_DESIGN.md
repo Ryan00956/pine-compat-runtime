@@ -1472,3 +1472,7 @@ return/parameter flow remains deferred.
     all-`na`, or upstream-`na` arrays, and keeps nonnumeric/imported-UDT,
     arity, and terminal-continuation boundaries closed without widening
     imported identity or public schemas. Done.
+82. The same numeric producer set exposes terminal `.avg()`. It always returns
+    series float, shares filtered `na` and empty/all-`na`/upstream-`na`
+    behavior, converts non-finite results to `na`, and keeps nonnumeric/
+    imported-UDT, arity, and terminal-continuation boundaries closed. Done.

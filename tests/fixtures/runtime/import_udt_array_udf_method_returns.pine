@@ -381,6 +381,9 @@ local_float_max = localIdentity(array.from(20.0, na, 22.0)).copy().max(nth=1)
 qualified_import_sum = left.direct(array.from(60, 61, 62)).sum()
 local_int_sum = localIdentity(array.from(10, 11, 12)).sum()
 local_float_sum = localIdentity(array.from(20.0, na, 22.0)).copy().sum()
+qualified_import_avg = left.direct(array.from(60, 61, 62)).avg()
+local_int_avg = localIdentity(array.from(10, 11, 12)).avg()
+local_float_avg = localIdentity(array.from(20.0, na, 22.0)).copy().avg()
 plot(qualified_import_size)
 plot(qualified_import_get)
 plot(qualified_import_last)
@@ -394,6 +397,7 @@ plot(qualified_import_abs == 60 and local_int_abs == 11 and local_float_abs == 2
 plot(qualified_import_min == 61 and local_int_min == 10 and local_float_min == 22.0 ? 1 : 0)
 plot(qualified_import_max == 61 and local_int_max == 12 and local_float_max == 20.0 ? 1 : 0)
 plot(qualified_import_sum == 183 and local_int_sum == 33 and local_float_sum == 42.0 ? 1 : 0)
+plot(qualified_import_avg == 61.0 and local_int_avg == 11.0 and local_float_avg == 21.0 ? 1 : 0)
 
 historical_return = left.direct(left_first_values)[1]
 historical_item = array.first(historical_return)

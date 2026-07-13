@@ -1521,6 +1521,11 @@ Recommended future slices:
     overloads retain receiver-derived series numeric kind, filtered `na`,
     empty/all-`na`/upstream-`na`, invalid type/arity, and terminal continuation.
     Matrix-valued continuation is unchanged.
+96. Numeric array-valued call results additionally expose terminal `.avg()`.
+    Matrix row/column/eigenvalue arrays and array-returning `matrix.mult`
+    overloads return fixed series float, retain filtered `na`, empty/all-`na`/
+    upstream-`na` and non-finite behavior, invalid type/arity, and terminal
+    continuation. Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

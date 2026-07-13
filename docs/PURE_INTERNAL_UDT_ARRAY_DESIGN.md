@@ -271,6 +271,10 @@ Item 91 adds terminal `.sum()` over the same concrete numeric result set. It
 preserves receiver-derived series int/float results, filters `na`, returns `na`
 for empty/all-`na`/upstream-`na` arrays, and keeps UDT, arity, and terminal-
 continuation boundaries closed.
+Item 92 adds terminal `.avg()` over the same result set. It always returns
+series float, shares filtered `na` and empty/all-`na`/upstream-`na` behavior,
+converts non-finite results to `na`, and keeps UDT, arity, and continuation
+boundaries closed.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1788,6 +1792,9 @@ using descending zero-based ranks without widening UDT identity.
 Item 91 adds terminal `.sum()` over the same numeric result set, preserving
 receiver-derived series int/float, filtered `na`, empty/all-`na`/upstream-`na`,
 arity, terminal-continuation, and UDT-identity boundaries.
+Item 92 adds terminal fixed-float `.avg()` over that result set, preserving the
+same filtered `na`, empty/all-`na`/upstream-`na`, non-finite-result, arity,
+terminal-continuation, and UDT-identity boundaries.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

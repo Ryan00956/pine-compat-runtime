@@ -445,6 +445,11 @@ Recommended future slices:
     `na`, invalid type/arity, local/imported provenance, and terminal
     continuation are fixture-backed. Map storage and template rules are
     unchanged. Done.
+26. Numeric key/value snapshots additionally expose terminal `.avg()`.
+    Fixed series-float results, filtered `na`, empty/all-`na`/upstream-`na` and
+    non-finite behavior, invalid type/arity, local/imported provenance, and
+    terminal continuation are fixture-backed. Map storage and template rules
+    are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

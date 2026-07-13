@@ -1086,6 +1086,8 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = array.from(1, 2, 3).copy().max(1).custom()\n",
         "bad = array.from(1, 2, 3).sum().custom()\n",
         "bad = array.from(1, 2, 3).copy().sum().custom()\n",
+        "bad = array.from(1, 2, 3).avg().custom()\n",
+        "bad = array.from(1, 2, 3).copy().avg().custom()\n",
         "bad = matrix.mult(values, other).rows().custom()\n",
         "bad = matrix.new<float>(2, 2, 1.0).row(0).size().custom()\n",
         "bad = matrix.copy(values).row(0).first().custom()\n",
