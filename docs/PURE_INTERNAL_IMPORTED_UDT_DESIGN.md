@@ -1573,3 +1573,12 @@ return/parameter flow remains deferred.
     character limit are preserved. Object/chart-point, invalid separator/
     arity, unresolved identity, and terminal-continuation boundaries remain
     closed. Done.
+97. Every concrete array call result additionally exposes transforming
+    `.slice(index_from, index_to)`. The result preserves scalar, object,
+    `chart.point`, and concrete same-imported scalar-tree UDT identity, retains
+    the ordinary half-open shallow live-window aliasing, and may continue
+    through the closed array helper set. Parent-to-window and window-to-parent
+    writes, nested slices, empty/upstream-`na`/invalid-range behavior,
+    positional or named simple-int-compatible bounds, invalid type/arity,
+    same-library identity isolation, and matrix/map-derived snapshot
+    boundaries are fixture-backed. Done.

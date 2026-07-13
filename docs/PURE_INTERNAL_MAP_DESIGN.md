@@ -545,6 +545,15 @@ Recommended future slices:
     independence, and the 40960-character limit. Invalid separator/arity and
     terminal-continuation boundaries remain closed. Map storage and template
     rules are unchanged. Done.
+41. Every concrete scalar key/value snapshot additionally exposes transforming
+    `.slice(index_from, index_to)`. It preserves the key/value element kind and
+    insertion order, returns a live shallow window over the fresh snapshot,
+    and may continue through the closed array-result helper set. The slice is
+    independent of the source map but retains bidirectional aliasing with its
+    own snapshot parent. Empty and typed-`na` maps, invalid range type/arity,
+    negative/reversed/out-of-range bounds, scalar-template interleaving, and
+    terminal or mutation boundaries remain fixture-backed. Map storage and
+    template rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

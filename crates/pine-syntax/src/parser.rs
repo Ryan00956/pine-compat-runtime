@@ -780,7 +780,13 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
                 if prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX
                     && matches!(
                         method.as_str(),
-                        "row" | "col" | "eigenvalues" | "abs" | "standardize" | "sort_indices"
+                        "row"
+                            | "col"
+                            | "eigenvalues"
+                            | "slice"
+                            | "abs"
+                            | "standardize"
+                            | "sort_indices"
                     ) =>
             {
                 Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
@@ -818,7 +824,7 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
                 if prefix == BUILTIN_ARRAY_CALL_RESULT_PREFIX
                     && matches!(
                         method.as_str(),
-                        "copy" | "abs" | "standardize" | "sort_indices"
+                        "copy" | "slice" | "abs" | "standardize" | "sort_indices"
                     ) =>
             {
                 Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())

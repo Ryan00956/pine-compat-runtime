@@ -1958,6 +1958,17 @@ and local/imported producers. It preserves ordinary separator and
 stringification rules, empty-string/upstream-`na` results, source non-mutation,
 and the 40960-character limit. Object/chart-point, invalid separator/arity,
 unresolved identity, and terminal continuation remain closed.
+Item 107 adds transforming `.slice(index_from, index_to)` to every concrete
+array call result across static, cross-namespace, matrix/map-derived, and
+local/imported function or method producers. It preserves scalar, drawing-id,
+`chart.point`, same-local UDT, or same-imported UDT element identity; returns
+the ordinary shallow half-open live parent window; mirrors parent and window
+writes in both directions; and may continue through the closed helper set.
+Empty windows, upstream `na`, negative/reversed/out-of-range bounds, nested
+slices, positional/named simple-int-compatible bounds, invalid type/arity,
+matrix-mult result-type switching, and independent upstream matrix/map
+snapshot boundaries are fixture-backed. Postfix mutation outside the existing
+bound-array path remains closed.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

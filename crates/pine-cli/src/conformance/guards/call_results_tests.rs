@@ -185,6 +185,7 @@ fn rejects_extended_array_helper_rows_without_namespace_result_fixture_set() {
         "array.stdev",
         "array.sort_indices",
         "array.join",
+        "array.slice",
     ] {
         let error =
             validate_builtin_namespace_array_call_result_fixture_paths(1, feature, fixtures)

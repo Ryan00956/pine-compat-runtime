@@ -315,6 +315,10 @@ fn parses_builtin_array_result_method_receivers() {
         "value = array.from(true, true).every()\n",
         "value = array.from(false, true).some()\n",
         "value = array.from(1, 2).join(\"|\")\n",
+        "value = array.from(1, 2, 3).slice(1, 3).get(0)\n",
+        "value = array.new<chart.point>(1, chart.point.now(close)).slice(0, 1).copy().last()\n",
+        "value = array.new<Point>(1, Point.new(1)).slice(0, 1).first()\n",
+        "value = array.new<lib.Point>(1, lib.Point.new(1)).slice(0, 1).last()\n",
         "value = array.abs(values).get(0)\n",
         "value = array.from(-1, 2).abs()\n",
         "value = array.from(1, 2, 3).standardize().get(1)\n",
@@ -413,6 +417,10 @@ fn parses_cross_namespace_builtin_array_result_method_receivers() {
         "value = matrix.col(values, 0).copy()\n",
         "value = map.keys(values).size()\n",
         "value = map.values(values).get(0)\n",
+        "value = str.split(\"a,b\", \",\").slice(0, 1).last()\n",
+        "value = matrix.row(values, 0).slice(0, 1).copy().size()\n",
+        "value = map.values(values).slice(0, 1).first()\n",
+        "value = matrix.mult(values, vector).slice(0, 1).copy().last()\n",
     ] {
         let parsed = parse(source);
 

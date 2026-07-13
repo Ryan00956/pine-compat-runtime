@@ -798,7 +798,7 @@ fixes each UDT-array slot identity; same-identity or `na` reassignment keeps the
 existing layout, while direct or control-flow reassignment to a different
 identity is rejected before HIR emission. Qualified user-defined UDF/method
 results and unqualified plain local UDF results support direct `.size()`,
-`.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`,
+`.get(index)`, `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.includes(value)`,
 `.indexof(value)`, and `.lastindexof(value)` calls when the result is any
 currently supported array kind. Bool/int/float results additionally support
 terminal `.every()` and `.some()`. Numeric `array<int>` and `array<float>` results
@@ -812,6 +812,9 @@ scalar-tree UDT-array result also admits terminal `.join(separator?)`. The parse
 rewrites the unqualified form to the impossible internal prefix `$call_result`
 only for a plain lexical callee; qualified user-defined forms retain their
 source alias/type prefix.
+Direct `.slice(index_from, index_to)` results preserve the concrete array kind
+and UDT identity, share the ordinary live parent window, and may continue
+through the closed array-result helper set.
 
 Built-in `array.*` producers have one separate, closed receiver path. Its exact
 admitted producer set is `array.new_float`, `array.new_int`, `array.new_bool`,
@@ -824,13 +827,13 @@ Existing supported `array.new<T>` scalar, drawing-id, `chart.point`, and
 same-local/same-imported scalar-tree UDT source templates reach that path
 through their canonical constructor or checked UDT-template form. The parser
 marks the receiver with `$builtin_array_result`; only `.size()`, `.get(index)`,
-`.first()`, `.last()`, `.copy()`, `.includes(value)`, `.indexof(value)`, and
+`.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.includes(value)`, `.indexof(value)`, and
 `.lastindexof(value)`, plus bool/int/float-only `.every()`/`.some()` and numeric-only `.binary_search(value)` and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)` and
 `.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` and scalar/same-identity scalar-tree UDT `.join(separator?)`, are admitted after it. The lexical prefix
 `array` is reserved for built-in producer recognition, so a user or import
 qualifier named `array` cannot use this qualified call-result path.
-Only `.copy()`, numeric `.abs()`, numeric `.standardize()`, and numeric-or-string `.sort_indices(order?)` return arrays
+Only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()`, numeric `.standardize()`, and numeric-or-string `.sort_indices(order?)` return arrays
 that may continue through another allowed step. The terminal `.size()`, `.get()`, `.first()`, `.last()`,
 `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, and
 `.binary_search_leftmost()`/`.binary_search_rightmost()`/`.min()`/`.max()`/
@@ -1003,12 +1006,12 @@ without an identity-preserving binding remain fail closed.
 The same `$builtin_array_result` lowering now has one additional exact set of
 seven fixed cross-namespace producers: `str.split`, `ta.pivot_point_levels`,
 `matrix.row`, `matrix.col`, `matrix.eigenvalues`, `map.keys`, and `map.values`.
-Each admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
+Each admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`,
 `.includes(value)`, `.indexof(value)`, `.lastindexof(value)`, bool/int/float-only
 `.every()`/`.some()`, and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
-`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` and all-scalar terminal `.join(separator?)`; only `.copy()`, numeric `.abs()`, numeric `.standardize()`, and numeric-or-string `.sort_indices(order?)` can continue with another allowed array chain. The other
+`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` and all-scalar terminal `.join(separator?)`; only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()`, numeric `.standardize()`, and numeric-or-string `.sort_indices(order?)` can continue with another allowed array chain. The other
 twenty-six results are
 terminal. `str.split` and
 `ta.pivot_point_levels` retain their
@@ -1026,7 +1029,7 @@ Namespace-qualified `matrix.mult(...)` uses a separate, closed
 `$builtin_matrix_result` candidate path whose helper family is selected from
 the resolved `MatrixMult` result type. Matrix-by-array, array-by-matrix, and
 array-by-array overloads resolve to `array<float>` and may use `.size()`,
-`.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`,
+`.get(index)`, `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.includes(value)`,
 `.indexof(value)`, `.lastindexof(value)`, `.every()`, `.some()`, `.binary_search(value)`, and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
 `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`/`.sort_indices(order?)`/`.join(separator?)`.
@@ -1247,9 +1250,9 @@ separate `$builtin_map_result` path, preserve known key/value kinds, allocate a
 fresh empty map, and expose `.size()`, `.get(key)`, `.contains(key)`, `.copy()`,
 `.keys()`, and `.values()`. Only `.copy()` may continue another map helper;
 `.keys()` and `.values()` return fresh key/value-kind-preserving arrays that
-admit direct binding and the closed array read/search set plus bool/int/float
+admit direct binding and the closed array read/search set plus `.slice(index_from, index_to)` and bool/int/float
 `.every()`/`.some()`, all-scalar terminal `.join(separator?)`, and numeric `.abs()`
-and terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`, plus transforming `.standardize()` and `.sort_indices(order?)` with copy/abs/standardize/sort_indices array continuation. Mutation and
+and terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`, plus transforming `.standardize()` and `.sort_indices(order?)` with copy/slice/abs/standardize/sort_indices array continuation. Mutation and
 unsupported map templates remain gated. Exact namespace
 `map.copy(existing)` results enter the same path, retain the source key/value
 kinds and entries in independent backing storage, and expose the same helpers

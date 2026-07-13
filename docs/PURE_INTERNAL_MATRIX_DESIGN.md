@@ -1625,6 +1625,16 @@ Recommended future slices:
     independence, and the 40960-character limit. Invalid separator/arity and
     terminal-continuation boundaries remain closed; matrix-valued continuation
     is unchanged.
+111. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes transforming
+    `.slice(index_from, index_to)`. It preserves the resolved element kind,
+    returns a half-open live window over the fresh array result, and may
+    continue through the closed array helper set. Row/column/eigenvalue slices
+    remain independent of the source matrix; vector `matrix.mult` overloads
+    switch from the parser's matrix-result prefix to the array-result prefix.
+    Scalar kinds, nested copy/read continuation, empty/upstream-`na`, invalid
+    bounds/type/arity, and retained matrix-valued overload boundaries are
+    fixture-backed. Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

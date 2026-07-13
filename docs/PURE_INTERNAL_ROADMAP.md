@@ -924,6 +924,15 @@ Current baseline:
   and the 40960-character runtime limit; object/chart-point, invalid separator/
   arity, unresolved UDT identity, and terminal-continuation boundaries remain
   closed.
+  The slice-window continuation adds `.slice(index_from, index_to)` to every
+  concrete array call result across static, cross-namespace, matrix/map-
+  derived, and local/imported function or method producers. It preserves
+  scalar/object/`chart.point` kinds and same-local/same-imported UDT identity,
+  returns the ordinary half-open shallow live parent window, mirrors writes in
+  both directions, and may continue through the closed helper set. Empty and
+  upstream-`na` receivers, negative/reversed/out-of-range bounds, nested
+  slices, invalid type/arity, and the result-type-directed `matrix.mult`
+  parser transition are fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

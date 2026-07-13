@@ -261,6 +261,7 @@ const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.stdev",
     "array.sort_indices",
     "array.join",
+    "array.slice",
     "array method calls",
     "expression-body functions",
     "multi-statement functions",
@@ -406,6 +407,7 @@ fn validate_udt_array_call_result_helper_fixture_paths(
             | "array.stdev"
             | "array.sort_indices"
             | "array.join"
+            | "array.slice"
     ) {
         return Ok(());
     }

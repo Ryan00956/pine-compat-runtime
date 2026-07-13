@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added transforming `.slice(index_from, index_to)` to every concrete array
+  call result. The direct path preserves scalar/object/`chart.point` element
+  kinds and same-local/same-imported scalar-tree UDT identity, returns the
+  ordinary half-open shallow live parent window, mirrors parent and window
+  writes in both directions, and can continue through the closed array helper
+  set. Static/cross-namespace, matrix/map-derived, local/imported function or
+  method, nested continuation, empty/upstream-`na`, invalid bounds/type/arity,
+  and result-type-directed `matrix.mult` parser boundaries are fixture-backed.
 - Added terminal `.join(separator?)` to every concrete scalar array call
   result and to same-local/same-imported scalar-tree UDT array results. The
   direct path preserves omitted/`na` comma fallback, explicit separators,
