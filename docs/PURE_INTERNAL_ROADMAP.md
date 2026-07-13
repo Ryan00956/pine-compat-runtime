@@ -595,6 +595,13 @@ Current baseline:
   `na`, true for empty 0×0 matrices, propagates upstream `na`, and creates no
   result prefix. Numeric rejection, provenance/dual aliases, invalid arity,
   and terminal continuation are fixture-backed.
+  The following numeric predicate slice adds terminal `.is_stochastic()`
+  across the same producer set. It requires a non-empty matrix of finite non-
+  negative values and returns true when every row or every column sums exactly
+  to one; empty matrices, invalid cells, and negative values are false, while
+  upstream `na` propagates. It creates no result prefix, and numeric rejection,
+  provenance/dual aliases, invalid arity, and terminal continuation are
+  fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

@@ -1283,6 +1283,14 @@ Recommended future slices:
     results propagate `na`. It returns a simple bool and is terminal without a
     result-prefix transition. Numeric rejection, provenance/dual aliases,
     invalid arity, and terminal continuation are fixture-backed.
+68. Numeric matrix call-result stochastic checks: done for the same concrete
+    float/int producer set. `.is_stochastic()` requires a non-empty matrix of
+    finite non-negative values and returns true when every row or every column
+    sums exactly to one; empty matrices, invalid cells, and negative values are
+    false, while upstream `na` matrix results propagate `na`. It returns a
+    simple bool and is terminal without a result-prefix transition. Numeric
+    rejection, provenance/dual aliases, invalid arity, and terminal
+    continuation are fixture-backed.
 
 ## Completion Gate For Future Positive Support
 

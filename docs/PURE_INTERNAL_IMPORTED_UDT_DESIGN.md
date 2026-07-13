@@ -1224,3 +1224,11 @@ return/parameter flow remains deferred.
     result prefix. Numeric rejection, provenance/dual aliases, invalid arity,
     and terminal continuation are fixture-backed. No imported UDT identity or
     public schema field is added. Done.
+54. The same concrete numeric matrix call-result producer set exposes terminal
+    `.is_stochastic()`. It requires a non-empty matrix of finite non-negative
+    values and returns true when every row or every column sums exactly to one;
+    empty matrices, invalid cells, and negative values are false, while
+    upstream `na` propagates. It creates no result prefix. Numeric rejection,
+    provenance/dual aliases, invalid arity, and terminal continuation are
+    fixture-backed. No imported UDT identity or public schema field is added.
+    Done.

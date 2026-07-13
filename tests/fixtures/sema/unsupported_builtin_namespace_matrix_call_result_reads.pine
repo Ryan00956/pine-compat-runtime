@@ -88,5 +88,7 @@ bool_is_symmetric = matrix.copy(bool_values).is_symmetric()
 is_symmetric_extra_arg = matrix.copy(left).is_symmetric(0)
 bool_is_antisymmetric = matrix.copy(bool_values).is_antisymmetric()
 is_antisymmetric_extra_arg = matrix.copy(left).is_antisymmetric(0)
+bool_is_stochastic = matrix.copy(bool_values).is_stochastic()
+is_stochastic_extra_arg = matrix.copy(left).is_stochastic(0)
 
 plot(close)

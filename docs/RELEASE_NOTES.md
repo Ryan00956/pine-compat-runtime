@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added terminal `.is_stochastic()` reads to every existing concrete numeric
+  matrix call result. The helper retains the float/int check and ordinary
+  stochastic rule: a non-empty matrix of finite non-negative values is true
+  when every row or every column sums exactly to one; empty matrices, invalid
+  cells, and negative values are false, while upstream `na` matrices propagate
+  `na`. Producer provenance, dual aliases, non-numeric rejection, invalid
+  arity, and terminal continuation are fixture-backed.
 - Added terminal `.is_antisymmetric()` reads to every existing concrete numeric
   matrix call result. The helper retains the float/int check and ordinary
   antisymmetric rule: square shape, exact-zero main diagonal, exact negated
