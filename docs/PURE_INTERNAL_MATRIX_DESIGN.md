@@ -1505,6 +1505,12 @@ Recommended future slices:
     upstream-`na`, source independence, and copy/abs/read continuation.
     Nonnumeric results and invalid arity remain rejected; matrix-valued
     continuation is unchanged.
+93. Numeric array-valued call results additionally expose terminal `.min(nth?)`.
+    Matrix row/column/eigenvalue arrays and array-returning `matrix.mult`
+    overloads preserve receiver-derived series numeric kind, filtered ascending
+    zero-based ranks, dynamic integer ranks, empty/upstream-`na`, invalid rank/
+    type/arity, and terminal continuation. Matrix-valued continuation is
+    unchanged.
 
 ## Completion Gate For Future Positive Support
 

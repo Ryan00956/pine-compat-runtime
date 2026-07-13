@@ -430,6 +430,11 @@ Recommended future slices:
     upstream-`na` results, source independence, invalid nonnumeric/arity cases,
     and copy/abs/read continuation are fixture-backed. Map storage and template
     rules are unchanged. Done.
+23. Numeric key/value snapshots additionally expose terminal `.min(nth?)`.
+    Receiver-derived series int/float results, filtered ascending zero-based
+    ranks, dynamic integer ranks, empty/upstream-`na`, invalid type/rank/arity,
+    local/imported provenance, and terminal continuation are fixture-backed.
+    Map storage and template rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

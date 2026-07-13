@@ -262,6 +262,9 @@ Item 88 adds `.abs()` as a fresh same-kind transformation only for concrete
 numeric array results. It preserves `na`, empty, upstream-`na`, and source
 independence semantics and permits subsequent admitted array chains without
 widening UDT support.
+Item 89 adds terminal `.min(nth?)` only to concrete numeric array results. It
+retains series int/float kind, filtered zero-based ascending rank semantics,
+dynamic integer ranks, and `na` boundaries without widening UDT support.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1770,6 +1773,10 @@ nearest-right clamping for misses, without widening UDT identity.
 Item 88 adds non-mutating `.abs()` transformation chains only to concrete
 numeric array results. They retain int/float kind, allocate independently,
 preserve `na`, empty, and upstream-`na` behavior, and do not widen UDT identity.
+Item 89 adds terminal `.min(nth?)` only to concrete numeric array results. It
+retains filtered ascending zero-based rank semantics, dynamic integer ranks,
+series int/float results, and empty/all-`na`/upstream-`na` boundaries without
+widening UDT identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

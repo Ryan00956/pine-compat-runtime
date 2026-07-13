@@ -141,6 +141,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "binary_search_leftmost" => Some("array.binary_search_leftmost"),
         "binary_search_rightmost" => Some("array.binary_search_rightmost"),
         "abs" => Some("array.abs"),
+        "min" => Some("array.min"),
         _ => None,
     }
 }
@@ -699,6 +700,7 @@ mod tests {
             ("binary_search_leftmost", "array.binary_search_leftmost"),
             ("binary_search_rightmost", "array.binary_search_rightmost"),
             ("abs", "array.abs"),
+            ("min", "array.min"),
         ] {
             assert_eq!(
                 array_call_result_builtin_name(method_name),
@@ -706,7 +708,7 @@ mod tests {
             );
             assert!(pine_builtins::get_phase_1_builtin(builtin_name).is_some());
         }
-        assert_eq!(array_call_result_builtin_name("min"), None);
+        assert_eq!(array_call_result_builtin_name("max"), None);
         assert_eq!(array_call_result_builtin_name("push"), None);
     }
 

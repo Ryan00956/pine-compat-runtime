@@ -807,6 +807,14 @@ Current baseline:
   `.copy()`, or `.abs()`. Static/cross-namespace, matrix/map-derived, local/
   imported function/method, nonnumeric/UDT rejection, invalid arity, empty/
   `na`, and continuation paths are fixture-backed.
+  The following terminal aggregate slice adds `.min(nth?)` to every concrete
+  numeric array call result. It returns the receiver element's series numeric
+  kind, ranks filtered non-`na` values in ascending order with a zero-based
+  optional dynamic integer rank defaulting to `0`, and preserves duplicate
+  ranks. Empty/all-`na`/upstream-`na` arrays and `na`, negative, or out-of-range
+  ranks return `na`. Static/cross-namespace, matrix/map-derived, local/imported
+  function/method, int/float, rank binding, invalid type/arity, and terminal-
+  continuation paths are fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -825,7 +833,7 @@ Remaining internal work:
   the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
   `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus numeric-only
   `.binary_search(value)`/`.binary_search_leftmost(value)`/
-  `.binary_search_rightmost(value)`/`.abs()` set, and
+  `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked

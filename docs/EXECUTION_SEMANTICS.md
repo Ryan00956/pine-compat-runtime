@@ -803,8 +803,8 @@ results and unqualified plain local UDF results support direct `.size()`,
 currently supported array kind. Numeric `array<int>` and `array<float>`
 results additionally support terminal `.binary_search(value)` and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`,
-plus non-mutating `.abs()` transformation chains that return a fresh same-kind
-array. The parser
+terminal `.min(nth?)`, plus non-mutating `.abs()` transformation chains that
+return a fresh same-kind array. The parser
 rewrites the unqualified form to the impossible internal prefix `$call_result`
 only for a plain lexical callee; qualified user-defined forms retain their
 source alias/type prefix.
@@ -823,13 +823,13 @@ marks the receiver with `$builtin_array_result`; only `.size()`, `.get(index)`,
 `.first()`, `.last()`, `.copy()`, `.includes(value)`, `.indexof(value)`, and
 `.lastindexof(value)`, plus numeric-only `.binary_search(value)` and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)` and
-`.abs()`, are admitted after it. The lexical prefix
+`.abs()`/`.min(nth?)`, are admitted after it. The lexical prefix
 `array` is reserved for built-in producer recognition, so a user or import
 qualifier named `array` cannot use this qualified call-result path.
 Only `.copy()` and numeric `.abs()` return arrays that may continue through
 another allowed step. The terminal `.size()`, `.get()`, `.first()`, `.last()`,
 `.includes()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, and
-`.binary_search_leftmost()`/`.binary_search_rightmost()` results cannot continue
+`.binary_search_leftmost()`/`.binary_search_rightmost()`/`.min()` results cannot continue
 into a user method or any other call-result method,
 including a method on a returned scalar UDT element.
 
@@ -854,7 +854,7 @@ UDT-array returns, unsupported or unknown templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, other
 `array.*` producer/member calls, built-in namespaces and templates outside the
 exact cross-namespace producer set below,
-postfix helpers outside the twelve-item read/copy/search/transform set, and postfix
+postfix helpers outside the thirteen-item read/copy/search/transform/aggregate set, and postfix
 mutation remain unsupported boundaries.
 The first/last index readers reuse ordinary element-kind, concrete UDT-identity, and
 structural/object equality rules. `.indexof(value)` returns the first
@@ -886,14 +886,22 @@ concrete array, it may continue through `.copy()`, another `.abs()`, or any
 currently admitted terminal reader. Bool, string, color, drawing/object,
 chart-point, and UDT array results remain rejected.
 
+Numeric-only `.min(nth?)` returns the same `series int` or `series float` kind
+as the receiver element type. After filtering `na` elements, `nth` is a zero-
+based rank in ascending order and defaults to `0`; duplicate values retain
+separate ranks. Dynamic integer ranks are accepted. Empty, all-`na`, and
+upstream-`na` arrays, plus `na`, negative, or out-of-range ranks, return `na`.
+The helper does not mutate its receiver and its scalar result is terminal.
+
 The same `$builtin_array_result` lowering now has one additional exact set of
 seven fixed cross-namespace producers: `str.split`, `ta.pivot_point_levels`,
 `matrix.row`, `matrix.col`, `matrix.eigenvalues`, `map.keys`, and `map.values`.
 Each admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 `.includes(value)`, `.indexof(value)`, `.lastindexof(value)`, and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
-`.binary_search_rightmost(value)`/`.abs()`; only `.copy()` and numeric `.abs()`
-can continue with another allowed array chain. The other ten results are
+`.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`; only `.copy()` and
+numeric `.abs()` can continue with another allowed array chain. The other
+eleven results are
 terminal. `str.split` and
 `ta.pivot_point_levels` retain their
 existing `array<string>` and `array<float>` results. `matrix.row` and
@@ -912,7 +920,8 @@ the resolved `MatrixMult` result type. Matrix-by-array, array-by-matrix, and
 array-by-array overloads resolve to `array<float>` and may use `.size()`,
 `.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`,
 `.indexof(value)`, `.lastindexof(value)`, `.binary_search(value)`, and
-`.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`.
+`.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
+`.min(nth?)`.
 Matrix-by-matrix,
 matrix-by-scalar, and scalar-by-matrix overloads resolve to `matrix<float>` and
 may use `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
@@ -929,7 +938,7 @@ Matrix `.copy()` may continue with another admitted matrix helper;
 switch to the closed `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
 `.includes(value)`/`.indexof(value)`/`.lastindexof(value)`/
 `.binary_search(value)`/`.binary_search_leftmost(value)` array-result path,
-plus `.binary_search_rightmost(value)` and `.abs()`, where array `.copy()` and
+plus `.binary_search_rightmost(value)`, `.abs()`, and `.min(nth?)`, where array `.copy()` and
 numeric `.abs()` continue
 and the six search results are terminal.
 `.is_square()`
@@ -1128,9 +1137,9 @@ separate `$builtin_map_result` path, preserve known key/value kinds, allocate a
 fresh empty map, and expose `.size()`, `.get(key)`, `.contains(key)`, `.copy()`,
 `.keys()`, and `.values()`. Only `.copy()` may continue another map helper;
 `.keys()` and `.values()` return fresh key/value-kind-preserving arrays that
-admit direct binding and the closed array read/search set plus numeric `.abs()`,
-with copy/abs array continuation. Mutation and unsupported map templates remain
-gated. Exact namespace
+admit direct binding and the closed array read/search set plus numeric `.abs()`
+and terminal `.min(nth?)`, with copy/abs array continuation. Mutation and
+unsupported map templates remain gated. Exact namespace
 `map.copy(existing)` results enter the same path, retain the source key/value
 kinds and entries in independent backing storage, and expose the same helpers
 with copy-only continuation; non-map inputs remain errors. Unqualified
@@ -1391,7 +1400,8 @@ order. For maps whose key and value templates are each `int`, `float`, `bool`,
 `string`, or `color`, those two namespace-call results may be consumed directly
 through `.size()`, `.get(index)`, `.first()`, `.last()`, or `.copy()`. The
 returned key/value array kind follows the corresponding map template side;
-numeric sides additionally admit the three binary searches and `.abs()`. Only
+numeric sides additionally admit the three binary searches, `.abs()`, and
+terminal `.min(nth?)` with ordinary numeric-array rank rules. Only
 `.copy()` and numeric `.abs()` can continue into another array chain, and each
 is independent of both the map and the first snapshot. Empty maps, typed-`na`
 maps, negative
@@ -1642,8 +1652,8 @@ eigenvalues for square runtime-owned float or int matrices, returns an empty
 array for empty `0 x 0` matrices, returns `na` for any `na` or non-finite cell
 and for non-real eigenvalue results, and raises a runtime error for non-square
 matrices. Its namespace-call result may immediately use the same closed
-read/copy/search helpers plus numeric `.abs()`, with `.copy()` and `.abs()`
-nestable and with ordinary empty/
+read/copy/search helpers plus numeric `.abs()` and terminal `.min(nth?)`, with
+`.copy()` and `.abs()` nestable and with ordinary empty/
 `na` and bounds behavior retained.
 `matrix.eigenvectors(values)` returns an independent `matrix<float>` whose
 columns are real eigenvectors for square runtime-owned float or int matrices,

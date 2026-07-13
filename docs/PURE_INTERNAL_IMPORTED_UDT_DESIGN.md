@@ -1456,3 +1456,9 @@ return/parameter flow remains deferred.
     reads/copy/abs chains are preserved. Imported UDT and every nonnumeric
     result remain rejected; no imported identity or public schema field is
     widened. Done.
+79. The same numeric producer set exposes terminal `.min(nth?)`. It preserves
+    receiver-derived series int/float results, filtered ascending zero-based
+    rank semantics, dynamic integer ranks, duplicates, and empty/all-`na`/
+    upstream-`na` plus invalid-rank `na` boundaries. Imported UDT and nonnumeric
+    arrays remain rejected; no imported identity or public schema field is
+    widened. Done.

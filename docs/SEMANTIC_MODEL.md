@@ -576,7 +576,8 @@ direct `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)` dispatch for
 every currently supported array kind. Concrete numeric results additionally
 admit `.binary_search(value)`, `.binary_search_leftmost(value)`,
-`.binary_search_rightmost(value)`, and fresh same-kind `.abs()` chains.
+`.binary_search_rightmost(value)`, terminal `.min(nth?)`, and fresh same-kind
+`.abs()` chains.
 The parser assigns the unqualified form the impossible internal prefix
 `$call_result`; the normalization requires a plain lexical callee, while
 qualified user-defined forms keep their source prefix.
@@ -595,7 +596,7 @@ those receivers with `$builtin_array_result`, and semantic analysis admits only
 `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)`, plus
 numeric-only `.binary_search(value)`, `.binary_search_leftmost(value)`,
-`.binary_search_rightmost(value)`, and `.abs()` after them. Only `.copy()` and
+`.binary_search_rightmost(value)`, `.abs()`, and `.min(nth?)` after them. Only `.copy()` and
 numeric `.abs()` produce array receivers that may continue; the reads/searches
 are terminal and cannot continue into a user method or any other call-result
 method, including a method on a returned scalar UDT element.
@@ -608,8 +609,8 @@ outside the `array` namespace: `str.split`, `ta.pivot_point_levels`, `matrix.row
 admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)`, plus
 numeric-only `.binary_search(value)`, `.binary_search_leftmost(value)`,
-`.binary_search_rightmost(value)`, and `.abs()`; only `.copy()` and numeric
-`.abs()` return array receivers eligible for another allowed chain. The ten
+`.binary_search_rightmost(value)`, `.abs()`, and `.min(nth?)`; only `.copy()`
+and numeric `.abs()` return array receivers eligible for another allowed chain. The eleven
 read/search results are terminal. Return
 kinds stay
 producer-specific: `array<string>` for `str.split`, `array<float>` for
@@ -634,7 +635,7 @@ and array-by-array overloads resolve to `array<float>` and admit `.size()`,
 `.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`,
 `.indexof(value)`, `.lastindexof(value)`, `.binary_search(value)`,
 `.binary_search_leftmost(value)`, `.binary_search_rightmost(value)`, and
-`.abs()`.
+`.abs()`/`.min(nth?)`.
 Matrix-by-matrix,
 matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
 `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
@@ -651,8 +652,9 @@ while `.eigenvalues()` retains its fixed `simple array<float>` result and
 numeric-matrix parameter check. All three switch to the array-result prefix and
 admit `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)`/`.binary_search(value)`/
-`.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()` with
-copy/abs array continuation and terminal read/search checks.
+`.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
+`.min(nth?)` with copy/abs array continuation and terminal read/search/
+aggregate checks.
 `.is_square()` retains the ordinary `MATRIX_ANY_ID_PARAMS`
 signature and `simple bool` return, accepts every supported concrete matrix
 kind, and is terminal without changing the parser marker. `.is_zero()` retains
@@ -841,8 +843,8 @@ and return fresh key/value-kind-preserving arrays, which admit direct binding
 plus `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)` and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
-`.binary_search_rightmost(value)`/`.abs()`, with copy/abs array continuation and
-terminal read/search checks. The ordinary map analyzer validates
+`.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`, with copy/abs array
+continuation and terminal read/search/aggregate checks. The ordinary map analyzer validates
 key types and marks copy
 results with the same template metadata. Exact namespace `map.copy(existing)`
 results use the same prefix and retain both source template metadata and
@@ -878,10 +880,10 @@ use the existing pure user-method dispatch, and explicit same-named local
 methods and imported functions remain distinct. Other `array.*` calls,
 built-in namespaces and templates outside the seven fixed producers plus the
 result-type-checked namespace `matrix.mult` paths, helpers beyond the applicable
-twelve-item postfix read/copy/search/transform set, non-array/non-matrix/non-UDT
-results, unknown/`na` results without a concrete supported type or identity,
-and postfix mutation remain outside this subset. A postfix read does not make
-a mutating producer pure:
+thirteen-item postfix read/copy/search/transform/aggregate set, non-array/non-
+matrix/non-UDT results, unknown/`na` results without a concrete supported type
+or identity, and postfix mutation remain outside this subset. A postfix read
+does not make a mutating producer pure:
 `array.concat(...).size()` still mutates the first concat input and is rejected
 inside UDFs. `.includes(value)` reuses the ordinary array element-kind and UDT-
 identity argument checks plus structural/object equality, returns `series bool`,
@@ -908,6 +910,12 @@ non-mutating and terminal.
 duplicates return their last index and misses return the nearest-right element,
 with the same below-min/above-max clamps, empty/upstream-`na` `-1`, numeric gate,
 `simple int`, non-mutation, and terminal boundaries.
+`.abs()` returns a fresh same-kind numeric array, preserves `na`, empty, and
+upstream-`na` behavior, leaves its source unchanged, and may continue through
+the closed array path. `.min(nth?)` returns a terminal `series int` or `series
+float`; it ranks filtered non-`na` values in ascending order with a zero-based
+optional dynamic integer rank that defaults to `0`. Empty/all-`na`/upstream-
+`na` inputs and `na`, negative, or out-of-range ranks return `na`.
 Generic UDT-array parameters are therefore iterable inside local UDFs and typed
 local methods for the fixture-backed statement and final-expression forms,
 including final results that return the UDT element itself or rebuild a
@@ -1195,7 +1203,7 @@ and the cross-namespace array-capable path support direct
 `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)`, plus numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
-`.binary_search_rightmost(value)`/`.abs()`, without widening arbitrary call-
+`.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`, without widening arbitrary call-
 result receivers. UDT arrays retain the concrete
 same-local/same-imported scalar-tree identity gate; scalar UDT results from an
 unqualified local UDF may invoke the existing pure method subset. That scalar

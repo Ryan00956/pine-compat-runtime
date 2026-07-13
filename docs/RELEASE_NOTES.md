@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added terminal `.min(nth?)` to every existing concrete numeric array call
+  result. It returns the receiver element's `series int` or `series float`,
+  filters `na`, ranks remaining values in ascending zero-based order, accepts
+  dynamic integer ranks, and defaults to rank `0`. Empty/all-`na`/upstream-`na`
+  arrays and `na`, negative, or out-of-range ranks return `na`. Static/cross-
+  namespace, matrix/map-derived, local/imported function/method, int/float,
+  rank binding, invalid type/arity, and terminal-continuation paths are fixture-
+  backed.
 - Added `.abs()` to every existing concrete numeric array call result. It
   allocates a fresh same-kind int/float array, preserves `na` elements, leaves
   the source unchanged, returns an empty array for an empty receiver, and
