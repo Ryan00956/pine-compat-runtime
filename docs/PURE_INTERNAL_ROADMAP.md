@@ -555,6 +555,14 @@ Current baseline:
   and method provenance, true/false shapes, dual aliases, invalid arity, and
   terminal continuation are fixture-backed; other broader helpers and mutation
   remain gated.
+  The following numeric matrix-result predicate slice adds terminal
+  `.is_zero()` to every concrete float/int matrix producer. It retains the
+  ordinary exact-zero, zero-element, `na`-cell, and upstream-`na` result rules,
+  returns a simple bool, and creates no further result prefix. Namespace/bound
+  operations, exact numeric templates, local/imported function and method
+  provenance, dual aliases, non-numeric rejection, invalid arity, and terminal
+  continuation are fixture-backed; remaining broader helpers and mutation stay
+  gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

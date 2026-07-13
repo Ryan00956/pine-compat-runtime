@@ -76,5 +76,7 @@ col_push = matrix.mult(left, right).col(0).push(3.0)
 eigenvalues_push = matrix.mult(left, right).eigenvalues().push(3.0)
 bool_eigenvalues = matrix.copy(bool_values).eigenvalues()
 is_square_extra_arg = matrix.copy(left).is_square(0)
+bool_is_zero = matrix.copy(bool_values).is_zero()
+is_zero_extra_arg = matrix.copy(left).is_zero(0)
 
 plot(close)

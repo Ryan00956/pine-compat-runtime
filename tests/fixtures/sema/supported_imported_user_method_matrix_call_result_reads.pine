@@ -33,5 +33,7 @@ float_eigenvalues = left_point.exposeMatrix().eigenvalues().copy()
 dual_alias_eigenvalues = right_point.exposeMatrix().eigenvalues().size()
 float_is_square = left_point.exposeMatrix().is_square()
 color_is_square = left_point.exposeColorMatrix().is_square()
+float_is_zero = left_point.exposeMatrix().is_zero()
+int_is_zero = right_point.exposeIntMatrix().is_zero()
 
-plot(rows + columns + elements + get + copy_chain + int_get + empty + block_return + nested_return + control_flow + alias_qualified + constructor_receiver + dual_alias + nested_copy + float_row.size() + int_row.size() + dual_alias_row + float_col.size() + int_col.size() + dual_alias_col + float_eigenvalues.size() + dual_alias_eigenvalues + (float_is_square ? 1 : 0) + (color_is_square ? 1 : 0))
+plot(rows + columns + elements + get + copy_chain + int_get + empty + block_return + nested_return + control_flow + alias_qualified + constructor_receiver + dual_alias + nested_copy + float_row.size() + int_row.size() + dual_alias_row + float_col.size() + int_col.size() + dual_alias_col + float_eigenvalues.size() + dual_alias_eigenvalues + (float_is_square ? 1 : 0) + (color_is_square ? 1 : 0) + (float_is_zero ? 1 : 0) + (int_is_zero ? 1 : 0))

@@ -51,5 +51,7 @@ array<float> float_eigenvalues = identity(matrix.new<float>(2, 2, 1.0)).eigenval
 array<float> int_eigenvalues = identity(matrix.new<int>(2, 2, 1)).eigenvalues()
 bool float_is_square = identity(floats).is_square()
 bool bool_is_square = identity(bools).is_square()
+bool float_is_zero = identity(floats).is_zero()
+bool int_is_zero = identity(ints).is_zero()
 
-plot(direct_rows + direct_columns + direct_elements + direct_get + float_copy.get(0, 0) + int_get + (bool_get ? 1 : 0) + (string_get == "pine" ? 1 : 0) + (color_get == color.red ? 1 : 0) + block_get + nested_get + selected_get + multiplied_get + constructed_copy.get(0, 0) + float_row.size() + int_row.size() + bool_row.size() + string_row.size() + color_row.size() + float_col.size() + int_col.size() + bool_col.size() + string_col.size() + color_col.size() + float_eigenvalues.size() + int_eigenvalues.size() + (float_is_square ? 1 : 0) + (bool_is_square ? 1 : 0))
+plot(direct_rows + direct_columns + direct_elements + direct_get + float_copy.get(0, 0) + int_get + (bool_get ? 1 : 0) + (string_get == "pine" ? 1 : 0) + (color_get == color.red ? 1 : 0) + block_get + nested_get + selected_get + multiplied_get + constructed_copy.get(0, 0) + float_row.size() + int_row.size() + bool_row.size() + string_row.size() + color_row.size() + float_col.size() + int_col.size() + bool_col.size() + string_col.size() + color_col.size() + float_eigenvalues.size() + int_eigenvalues.size() + (float_is_square ? 1 : 0) + (bool_is_square ? 1 : 0) + (float_is_zero ? 1 : 0) + (int_is_zero ? 1 : 0))

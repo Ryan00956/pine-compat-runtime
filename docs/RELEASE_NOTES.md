@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added terminal `.is_zero()` reads to every existing concrete numeric matrix
+  call result. The helper retains the float/int matrix check and ordinary
+  zero-value rules: all-zero and zero-element results are true, a nonzero or
+  `na` cell is false, and an upstream `na` matrix result propagates `na`.
+  Namespace/bound operations, exact numeric templates, local/imported function
+  and method provenance, dual aliases, non-numeric rejection, invalid arity,
+  and terminal continuation are fixture-backed.
 - Added terminal `.is_square()` reads to every existing concrete matrix call
   result. The helper accepts float/int/bool/string/color matrices, returns a
   simple bool, preserves the ordinary `matrix.is_square` shape rule, and does

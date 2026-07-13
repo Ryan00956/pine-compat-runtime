@@ -1238,6 +1238,14 @@ Recommended future slices:
     exact five-scalar templates, local/imported functions and methods, true and
     false shapes, dual aliases, invalid arity, and terminal continuation are
     fixture-backed. Broader helpers and mutation remain fail closed.
+62. Numeric matrix call-result zero checks: done for every existing concrete
+    float/int matrix producer. `.is_zero()` reuses the numeric-matrix signature
+    and exact-zero rules, including true zero-element results, false nonzero or
+    `na` cells, and `na` propagation from an upstream `na` matrix result. It
+    returns a simple bool and is terminal without a result-prefix transition.
+    Namespace/bound operations, exact numeric templates, local/imported
+    functions and methods, dual aliases, non-numeric rejection, invalid arity,
+    and terminal continuation are fixture-backed.
 
 ## Completion Gate For Future Positive Support
 
