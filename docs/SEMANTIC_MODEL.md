@@ -625,18 +625,24 @@ and array-by-array overloads resolve to `array<float>` and admit `.size()`,
 `.get(index)`, `.first()`, `.last()`, and `.copy()`. Matrix-by-matrix,
 matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
 `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
-`.copy()`. Int inputs still resolve to float collection results. Only `.copy()`
-may continue another allowed read/copy chain. Helper selection is result-type
-checked, so wrong-result helpers, invalid arity or argument types, broader
-helpers, and mutation fail closed. The existing bound-receiver
+`.copy()`, plus `.row(index)`. Int inputs still resolve to float collection
+results. Matrix `.copy()` continues on the matrix-result prefix;
+`.row(index)` uses `ReturnSpec::MatrixArray(0)` and switches the parser marker
+to `$builtin_array_result`, producing a fresh element-kind-preserving array
+that admits `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` with copy-only
+array continuation. Other terminal readers, `.col()`, wrong-result helpers,
+invalid arity or argument types, broader helpers, and mutation fail closed. The
+existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the five matrix
-helpers for matrix or scalar operands with copy-only continuation. Unqualified
-local-UDF results with an inferred concrete supported matrix kind share the
-same helpers through `$call_result`, preserve per-call float/int/bool/string/
-color kinds, and allow only copy continuation; qualified user methods,
-imported functions, unknown/`na`, and non-matrix returns retain generic or
-result-family rejection. Exact namespace
+exact bound matrix-valued `matrix_id.mult(other)` results share the six matrix
+helpers for matrix or scalar operands with the copy/row continuation rules.
+Unqualified local-UDF results with an inferred concrete supported matrix kind
+share the same helpers through `$call_result`, preserve per-call float/int/bool/
+string/color kinds, and use the same continuation rules. Concrete local or
+imported user methods and registered imported functions share the row-array
+transition; unknown/`na` and non-matrix returns retain generic or result-family
+rejection. Producer-specific “copy-only” wording below refers only to
+continuing as a matrix result. Exact namespace
 `matrix.copy` always takes the matrix branch, preserves the source
 float/int/bool/string/color matrix kind through `SameAsArg`, and retains
 independent-copy storage semantics. Exact bound matrix-receiver

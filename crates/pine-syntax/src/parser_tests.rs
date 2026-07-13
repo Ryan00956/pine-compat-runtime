@@ -523,6 +523,36 @@ fn parses_matrix_copy_result_method_receivers_with_matrix_provenance() {
 }
 
 #[test]
+fn parses_matrix_call_result_rows_as_array_result_receivers() {
+    for source in [
+        "value = matrix.new<float>(2, 2, 1.0).row(0).size()\n",
+        "value = matrix.copy(values).row(0).copy().first()\n",
+        "value = matrix.transpose(values).row(1).get(0)\n",
+        "value = matrix.mult(values, other).copy().row(0).copy().last()\n",
+    ] {
+        let parsed = parse(source);
+
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "{source}: {:?}",
+            parsed.diagnostics
+        );
+        let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected declaration for {source}");
+        };
+        let ExprKind::Call { callee, args } = &value.kind else {
+            panic!("expected call-result method call for {source}");
+        };
+        assert!(matches!(
+            &callee.kind,
+            ExprKind::QualifiedName(parts)
+                if parts.first().is_some_and(|part| part == "$builtin_array_result")
+        ));
+        assert!(args[0].value.span.end < callee.span.start, "{source}");
+    }
+}
+
+#[test]
 fn parses_matrix_transpose_result_method_receivers_with_matrix_provenance() {
     for source in [
         "value = matrix.transpose(values).rows()\n",
@@ -934,6 +964,8 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = matrix.row(values, 0).get(0).custom()\n",
         "bad = matrix.mult(values, array.from(1.0, 2.0)).size().custom()\n",
         "bad = matrix.mult(values, other).rows().custom()\n",
+        "bad = matrix.new<float>(2, 2, 1.0).row(0).size().custom()\n",
+        "bad = matrix.copy(values).row(0).first().custom()\n",
         "bad = map.keys(values).first().custom()\n",
         "bad = map.new<string, float>().size().custom()\n",
         "bad = map.new<string, float>().get(\"missing\").custom()\n",

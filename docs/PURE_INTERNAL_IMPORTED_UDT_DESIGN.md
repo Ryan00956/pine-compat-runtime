@@ -1149,3 +1149,12 @@ return/parameter flow remains deferred.
     call-result-array mutation, unsupported templates, broader helpers, and
     terminal key/value-reader continuation remain fail closed. No imported UDT
     identity or public schema field is added. Done.
+44. Every existing concrete matrix call-result producer exposes `.row(index)`
+    as a fresh element-kind-preserving scalar array. Namespace and bound matrix
+    operations, exact five-scalar `matrix.new<T>` templates, local UDFs,
+    local/imported user methods, and imported pure functions support direct
+    binding plus size/get/first/last/copy with copy-only array continuation.
+    Index checking, copy independence, five scalar element kinds, and imported
+    dual-alias paths are fixture-backed; `.col()`, mutation, broader helpers,
+    and terminal row-reader continuation remain fail closed. No imported UDT
+    identity or public schema field is added. Done.

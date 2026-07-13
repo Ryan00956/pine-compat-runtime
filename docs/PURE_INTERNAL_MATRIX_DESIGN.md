@@ -1205,6 +1205,15 @@ Recommended future slices:
     fixture-backed. Map or call-result-array mutation, unsupported templates,
     broader helpers, and terminal key/value-reader continuation remain fail
     closed.
+58. Matrix call-result row arrays: done for every existing concrete matrix
+    producer. `.row(index)` returns a fresh element-kind-preserving scalar array
+    and switches to size/get/first/last/copy with copy-only array continuation.
+    Namespace and bound matrix operations, exact five-scalar `matrix.new<T>`
+    templates, local UDFs, local/imported user methods, and imported pure
+    functions are fixture-backed across direct binding, copy independence, and
+    dual aliases. Bad indexes use the ordinary `matrix.row` checks; `.col()`,
+    matrix or call-result-array mutation, broader helpers, and terminal row-
+    reader continuation remain fail closed.
 
 ## Completion Gate For Future Positive Support
 

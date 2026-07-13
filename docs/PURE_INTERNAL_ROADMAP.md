@@ -524,6 +524,16 @@ Current baseline:
   and source-map-independence paths. Map or call-result-array mutation,
   unsupported templates, broader helpers, and continuation after a terminal
   key/value-array reader remain gated.
+  The following read-only matrix-result slice adds `.row(index)` to every
+  existing concrete matrix call-result producer: namespace and bound matrix
+  operations, exact `matrix.new<float|int|bool|string|color>` templates, local
+  UDFs, local/imported user methods, and registered imported pure functions.
+  The result is a fresh element-kind-preserving scalar array and supports
+  direct binding plus `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`, with
+  copy-only array continuation, source-matrix independence, and dual-alias
+  isolation. Bad indexes retain the ordinary `matrix.row` checks. `.col()`,
+  matrix or call-result-array mutation, broader helpers, and continuation after
+  a terminal row-array reader remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

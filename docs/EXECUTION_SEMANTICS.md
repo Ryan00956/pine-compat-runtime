@@ -870,16 +870,19 @@ array-by-array overloads resolve to `array<float>` and may use `.size()`,
 `.get(index)`, `.first()`, `.last()`, and `.copy()`. Matrix-by-matrix,
 matrix-by-scalar, and scalar-by-matrix overloads resolve to `matrix<float>` and
 may use `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
-`.copy()`. Int inputs still produce float collections. Only `.copy()` can
-continue another allowed read/copy chain for either result kind; terminal
-readers, wrong-result helpers, invalid arity or argument types, broader helpers,
-and mutation fail closed. The existing bound-receiver
+`.copy()`, plus `.row(index)`. Int inputs still produce float collections.
+Matrix `.copy()` may continue with another admitted matrix helper;
+`.row(index)` returns a fresh element-kind-preserving array and switches to the
+closed `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` array-result path,
+where only array `.copy()` continues. Other terminal readers, `.col()`, wrong-
+result helpers, invalid arity or argument types, broader helpers, and mutation
+fail closed. The existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch. Exact
 bound numeric-matrix-receiver matrix-valued `matrix_id.mult(other)` results now
-share the five matrix helpers and copy-only continuation for matrix or scalar
-operands while preserving the existing overload, shape, `na`, empty inner
-dimension, and cell-budget boundaries. Unqualified local-UDF results that infer
-a concrete supported matrix kind now share the five matrix helpers through
+share the six matrix helpers and the copy/row continuation rules for matrix or
+scalar operands while preserving the existing overload, shape, `na`, empty
+inner dimension, and cell-budget boundaries. Unqualified local-UDF results that infer
+a concrete supported matrix kind now share the six matrix helpers through
 `$call_result`. Parameter passthrough, block aliases, nested calls, same-kind
 control flow, constructed and matrix-operation returns, named/reordered
 arguments, and zero dimensions keep their normal call-specific float/int/bool/
@@ -892,8 +895,11 @@ results with a concrete supported matrix kind share those helpers across alias-
 qualified, block/nested/control-flow, five-kind, zero-dimension, dual-alias,
 independent-copy, and copy-only-continuation paths. Unknown/`na`, scalar, array,
 map, unregistered or unresolved user-function matrix results, broader-helper,
-mutation, and terminal-read continuation cases remain fail closed. Exact
-namespace `matrix.copy(values)`
+mutation, and terminal-read continuation cases remain fail closed. The row-
+array transition applies uniformly to every concrete matrix producer described
+below; producer-specific “copy-only” wording refers only to continuing as a
+matrix result, while `.row(index)` continues as an array result. Exact namespace
+`matrix.copy(values)`
 also enters this
 prefix, always resolves through the matrix helper family, and preserves the
 source float/int/bool/string/color matrix kind through `SameAsArg`; its returned

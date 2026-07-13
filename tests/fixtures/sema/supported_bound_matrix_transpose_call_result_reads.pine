@@ -18,5 +18,6 @@ int int_get = ints.transpose().get(0, 0)
 bool bool_get = bools.transpose().get(0, 0)
 string string_get = strings.transpose().get(0, 0)
 color color_get = colors.transpose().get(0, 0)
+array<float> direct_row = floats.transpose().row(1).copy()
 
-plot(direct_rows + direct_columns + direct_elements + direct_get + nested_copy.get(0, 0) + int_get + (bool_get ? 1 : 0) + (string_get == "value" ? 1 : 0) + (color_get == color.red ? 1 : 0) + transposeRows(floats))
+plot(direct_rows + direct_columns + direct_elements + direct_get + nested_copy.get(0, 0) + int_get + (bool_get ? 1 : 0) + (string_get == "value" ? 1 : 0) + (color_get == color.red ? 1 : 0) + direct_row.size() + transposeRows(floats))

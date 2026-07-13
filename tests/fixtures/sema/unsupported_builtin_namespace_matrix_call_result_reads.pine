@@ -68,5 +68,8 @@ array_columns = matrix.mult(vector, left).columns()
 array_elements = matrix.mult(vector, vector).elements_count()
 array_matrix_get = matrix.mult(left, vector).get(0, 0)
 array_copy_rows = matrix.mult(vector, left).copy().rows()
+row_bad_index = matrix.mult(left, right).row("bad")
+row_push = matrix.mult(left, right).row(0).push(3.0)
+col_unsupported = matrix.mult(left, right).col(0)
 
 plot(close)
