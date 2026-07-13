@@ -699,6 +699,16 @@ Current baseline:
   to-float lowering, nested/double chains, source independence, provenance/
   dual aliases, invalid types/arity, and runtime failure boundaries are
   fixture-backed; mutation and other matrix-valued transforms remain gated.
+  The following numeric matrix-valued continuation slice adds `.pow(power)`
+  across the same concrete producer set. It retains the numeric receiver and
+  simple-int power checks, always returns an independent fixed `matrix<float>`,
+  keeps the runtime square-matrix boundary, supports identity/copy/positive
+  powers and empty `0 x 0`, preserves `na` cells for positive powers, retains
+  negative and `na` power errors, and keeps the matrix-result prefix. Namespace
+  and bound operations, local/imported functions and methods, int-to-float
+  lowering, nested powers, source independence, provenance/dual aliases,
+  invalid types/arity, and runtime failure boundaries are fixture-backed;
+  mutation and other matrix-valued transforms remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

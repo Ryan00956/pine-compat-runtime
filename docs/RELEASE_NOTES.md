@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Added matrix-valued `.pow(power)` continuation to every existing concrete
+  numeric matrix call result. It retains the numeric receiver and simple-int
+  power checks, always returns an independent `matrix<float>`, preserves the
+  runtime square-matrix boundary, supports identity/copy/positive powers and
+  empty `0 x 0`, preserves `na` cells for positive powers, retains negative and
+  `na` power errors, and keeps the matrix-result prefix. Namespace and bound
+  operations, local/imported functions and methods, int-to-float lowering,
+  nested powers, source independence, provenance, dual aliases, invalid types/
+  arity, and runtime failure boundaries are fixture-backed; mutation and the
+  remaining matrix-valued helpers stay gated.
 - Added matrix-valued `.eigenvectors()` continuation to every existing
   concrete numeric matrix call result. It retains the numeric receiver check,
   always returns an independent `matrix<float>`, preserves square shape for a

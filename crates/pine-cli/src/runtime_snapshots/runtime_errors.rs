@@ -408,8 +408,20 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "matrix power requires a square matrix",
     ),
     (
+        "tests/fixtures/regressions/matrix_call_result_pow_non_square.pine",
+        "matrix power requires a square matrix",
+    ),
+    (
         "tests/fixtures/regressions/matrix_pow_negative_power.pine",
         "matrix power cannot be negative",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_call_result_pow_negative_power.pine",
+        "matrix power cannot be negative",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_call_result_pow_na_power.pine",
+        "matrix power cannot be na",
     ),
     (
         "tests/fixtures/regressions/matrix_add_row_bounds.pine",

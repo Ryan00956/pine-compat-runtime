@@ -105,5 +105,8 @@ bool_pinv = matrix.copy(bool_values).pinv()
 pinv_extra_arg = matrix.copy(left).pinv(0)
 bool_eigenvectors_continuation = matrix.copy(bool_values).eigenvectors()
 eigenvectors_extra_arg = matrix.copy(left).eigenvectors(0)
+bool_pow_continuation = matrix.copy(bool_values).pow(2)
+pow_bad_power_continuation = matrix.copy(left).pow("bad")
+pow_extra_arg_continuation = matrix.copy(left).pow(2, 3)
 
 plot(close)

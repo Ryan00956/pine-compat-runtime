@@ -1,0 +1,8 @@
+//@version=6
+indicator("Matrix call-result na power")
+
+values = matrix.new<float>(2, 2, 1.0)
+invalid = matrix.new<float>(1, 1)
+power = matrix.inv(invalid).rows()
+rows = matrix.copy(values).pow(power).rows()
+plot(rows)

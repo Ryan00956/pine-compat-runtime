@@ -1510,6 +1510,16 @@ Recommended future slices:
     local/imported functions and methods, int-to-float lowering, nested/double
     chains, source independence, provenance/dual aliases, invalid types/arity,
     and runtime failure boundaries are fixture-backed. Done.
+78. The same concrete numeric matrix call-result producer set additionally
+    exposes `.pow(power)` as an independent fixed-`matrix<float>` continuation.
+    It retains the simple-int argument gate and runtime square-matrix boundary,
+    supports identity/copy/positive powers and empty `0 x 0`, preserves `na`
+    cells for positive powers, retains negative and `na` power errors, and
+    keeps the matrix-result prefix without adding UDT/import identity or a
+    public schema field. Namespace/bound operations, local/imported functions
+    and methods, int-to-float lowering, nested powers, source independence,
+    provenance/dual aliases, invalid types/arity, and runtime failure
+    boundaries are fixture-backed. Done.
 
 ## Completion Gate For Future Positive Support
 
