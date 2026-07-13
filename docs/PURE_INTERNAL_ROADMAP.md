@@ -510,6 +510,14 @@ Current baseline:
   independent-copy, and copy-only-continuation cases share the four helpers;
   wrong-template/key, broader-helper, mutation, scalar-return, and terminal-
   reader boundaries remain gated.
+  The following read-only map-result slice admits `.keys()` on every existing
+  concrete scalar-map call-result producer: supported `map.new<K,V>`,
+  `map.copy(existing)`, local/imported pure functions, and local/imported user
+  methods. The result is a fresh key-kind-preserving scalar array and supports
+  direct binding plus `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`, with
+  copy-only array continuation and source-map independence. Direct `.values()`,
+  map or call-result-array mutation, unsupported templates, broader helpers,
+  and continuation after a terminal key-array reader remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -551,7 +559,8 @@ Remaining internal work:
   calls, unsupported `array.new<T>` templates, non-array/non-UDT results,
   unknown/`na` results
   without a concrete supported type or identity, terminal producer readers
-  followed by another method, and array mutation. The existing bound-receiver
+  other than the supported map-result `.keys()` array path followed by another
+  method, and array mutation. The existing bound-receiver
   `matrix_id.mult(array).size()` path is not part of that namespace exclusion;
 - generic or bare `array` declarations beyond current fixture-backed element
   kinds;

@@ -142,6 +142,7 @@ pub(crate) fn map_call_result_builtin_name(method_name: &str) -> Option<&'static
         "get" => Some("map.get"),
         "contains" => Some("map.contains"),
         "copy" => Some("map.copy"),
+        "keys" => Some("map.keys"),
         _ => None,
     }
 }

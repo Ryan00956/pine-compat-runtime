@@ -50,3 +50,7 @@ plot(choose(second=string_float_other, first=string_float, use_first=false).get(
 plot(fresh().size(), "constructed_result")
 plot(readValue(string_float, "close"), "nested_direct_read")
 plot(identity(string_float).copy().copy().get("open"), "nested_copy")
+plot(identity(string_float).keys().first() == "open" ? 1 : 0, "keys_first")
+plot(identity(int_string).keys().get(0), "int_key")
+plot(identity(bool_color).keys().first() ? 1 : 0, "bool_key")
+plot(identity(color_bool).keys().copy().last() == color.blue ? 1 : 0, "color_key")

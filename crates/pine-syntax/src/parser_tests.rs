@@ -863,6 +863,36 @@ fn parses_map_copy_result_method_receivers_with_map_provenance() {
 }
 
 #[test]
+fn parses_map_call_result_keys_as_array_result_receivers() {
+    for source in [
+        "value = map.new<string,float>().keys().size()\n",
+        "value = map.new<int,float>().copy().keys().copy().first()\n",
+        "value = map.copy(values).keys().get(0)\n",
+        "value = map.copy(values).copy().keys().copy().last()\n",
+    ] {
+        let parsed = parse(source);
+
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "{source}: {:?}",
+            parsed.diagnostics
+        );
+        let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected declaration for {source}");
+        };
+        let ExprKind::Call { callee, args } = &value.kind else {
+            panic!("expected call-result method call for {source}");
+        };
+        assert!(matches!(
+            &callee.kind,
+            ExprKind::QualifiedName(parts)
+                if parts.first().is_some_and(|part| part == "$builtin_array_result")
+        ));
+        assert!(args[0].value.span.end < callee.span.start, "{source}");
+    }
+}
+
+#[test]
 fn rejects_methods_after_terminal_builtin_collection_result_reads() {
     for source in [
         "bad = array.from(Point.new(1)).get(0).size()\n",
@@ -881,6 +911,8 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = map.copy(values).size().custom()\n",
         "bad = map.copy(values).get(1).custom()\n",
         "bad = map.copy(values).contains(1).custom()\n",
+        "bad = map.new<string, float>().keys().size().custom()\n",
+        "bad = map.copy(values).keys().first().custom()\n",
     ] {
         let parsed = parse(source);
         assert!(

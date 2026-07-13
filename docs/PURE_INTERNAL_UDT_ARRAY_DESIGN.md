@@ -224,6 +224,11 @@ matrix kind through the same five helpers. Alias-qualified, block/nested/same-
 kind-control-flow, five-kind, zero-dimension, dual-alias, independent-copy, and
 copy-only-continuation paths carry registered function provenance but no UDT/
 import identity in matrix metadata.
+Item 52 adds `.keys()` to every existing concrete scalar-map call-result
+producer. The read returns a fresh key-kind-preserving array and switches to
+the closed array-result size/get/first/last/copy path, including copy-only
+array continuation, without adding UDT/import identity to map or array
+metadata.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1300,6 +1305,15 @@ Recommended future slices:
     `na`, non-matrix, unregistered or unresolved function results, broader
     helpers, mutation, and terminal-read continuation remain fail closed. No
     UDT/import identity or public schema field is added. Done.
+52. Concrete scalar-map call results from supported constructors, namespace
+    copies, local/imported pure functions, and local/imported user methods
+    expose `.keys()` as a fresh key-kind-preserving array. Direct binding,
+    int/float/bool/string/color key kinds, size/get/first/last/copy, copy-only
+    array continuation, dual-alias paths, and source-map independence are
+    fixture-backed. Direct `.values()`, map or call-result-array mutation,
+    unsupported templates, broader helpers, and terminal key-reader
+    continuation remain fail closed. No UDT/import identity or public schema
+    field is added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1401,6 +1415,9 @@ isolation, and concrete matrix-kind metadata but no UDT/import identity.
 Item 51 adds registered imported pure-function concrete matrix-result reads with
 qualified-function provenance, same-library dual-alias isolation, and concrete
 matrix-kind metadata but no UDT/import identity.
+Item 52 adds concrete scalar-map call-result `.keys()` reads with fresh,
+key-kind-preserving scalar-array metadata and the existing closed array-reader
+continuation, but no UDT/import identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

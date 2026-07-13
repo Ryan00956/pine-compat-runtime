@@ -14,6 +14,8 @@ plot(na(map.new<string, float>().get(key="missing")) ? 1 : 0, "map_new_missing_g
 plot(map.new<string, float>().contains(key="missing") ? 1 : 0, "map_new_missing_contains")
 plot(map.new<string, float>().copy().size(), "map_new_copy_size")
 plot(map.new<string, float>().copy().copy().size(), "map_new_nested_copy_size")
+plot(map.new<string, float>().keys().size(), "map_new_keys_size")
+plot(map.new<string, float>().copy().keys().copy().size(), "map_new_copy_keys_size")
 
 plot(map.new<int, float>().contains(1) ? 1 : 0, "map_new_int_key")
 plot(map.new<float, bool>().contains(1.5) ? 1 : 0, "map_new_float_key")

@@ -209,6 +209,10 @@ matrix kind through the same five helpers. Alias-qualified, block/nested/same-
 kind-control-flow, five-kind, zero-dimension, dual-alias, independent-copy, and
 copy-only-continuation paths carry registered function provenance but no
 imported identity in matrix metadata.
+Item 42 adds `.keys()` to every existing concrete scalar-map call-result
+producer. The read returns a fresh key-kind-preserving array and switches to
+the closed array-result size/get/first/last/copy path, including copy-only
+array continuation, without adding imported identity to map or array metadata.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` types, non-producer calls, unsupported matrix
 templates and map templates,
@@ -1125,4 +1129,13 @@ return/parameter flow remains deferred.
     `na`, non-matrix, unregistered or unresolved function results, broader
     helpers, mutation, and terminal-read continuation remain fail closed. No
     imported UDT identity is carried into matrix metadata and no public schema
+    field is added. Done.
+42. Concrete scalar-map call results from supported constructors, namespace
+    copies, local/imported pure functions, and local/imported user methods
+    expose `.keys()` as a fresh key-kind-preserving array. Direct binding,
+    int/float/bool/string/color key kinds, size/get/first/last/copy, copy-only
+    array continuation, dual-alias paths, and source-map independence are
+    fixture-backed. Direct `.values()`, map or call-result-array mutation,
+    unsupported templates, broader helpers, and terminal key-reader
+    continuation remain fail closed. No imported UDT identity or public schema
     field is added. Done.

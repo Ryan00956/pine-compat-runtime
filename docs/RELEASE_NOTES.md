@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added direct `.keys()` reads for every existing concrete scalar-map call
+  result, including supported `map.new<K,V>`, `map.copy(existing)`, local and
+  imported pure functions, and local and imported user methods. The result is
+  a fresh key-kind-preserving scalar array that supports direct binding and
+  `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` with copy-only array
+  continuation. Direct `.values()`, map or call-result-array mutation,
+  unsupported templates, broader helpers, and terminal key-reader
+  continuation remain gated.
 - Extended qualified same-local user-method and imported UDF/user-method
   UDT-array call-result sugar with `.size()`, `.get(index)`, and `.last()`,
   alongside the existing `.first()` and `.copy()` paths. The new read-only

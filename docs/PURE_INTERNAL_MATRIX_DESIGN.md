@@ -1189,6 +1189,14 @@ Recommended future slices:
     Unknown/`na`, non-matrix, unregistered or unresolved function results,
     broader helpers, mutation, and terminal-read continuation remain fail
     closed.
+56. Scalar-map call-result key arrays: done for every existing concrete
+    scalar-map producer. `.keys()` returns a fresh key-kind-preserving array
+    and switches to size/get/first/last/copy with copy-only array continuation.
+    Built-in constructor/copy, local/imported pure-function, local/imported
+    user-method, five scalar key kinds, dual-alias, and source-independence paths
+    are fixture-backed. Direct `.values()`, map or call-result-array mutation,
+    unsupported templates, broader helpers, and terminal key-reader
+    continuation remain fail closed.
 
 ## Completion Gate For Future Positive Support
 

@@ -10,7 +10,7 @@ put_result = map.copy(source).put("key", 1.0)
 clear_result = map.copy(source).clear()
 remove_result = map.copy(source).remove("key")
 put_all_result = map.copy(source).put_all(source)
-keys_result = map.copy(source).keys()
+keys_mutation = map.copy(source).keys().push("extra")
 values_result = map.copy(source).values()
 wrong_receiver = map.copy(close).size()
 
