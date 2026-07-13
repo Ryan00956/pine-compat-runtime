@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added terminal `.median()` to every existing concrete numeric array call
+  result. It filters `na`, sorts remaining values, returns the middle value for
+  odd counts and the middle-pair arithmetic mean for even counts, preserves
+  receiver-derived `series int`/`series float`, and truncates integer means
+  toward zero. Empty/all-`na`/upstream-`na` arrays and non-finite float results
+  return `na`. Static/cross-namespace, matrix/map-derived, local/imported
+  function/method, invalid type/arity, provenance, and terminal-continuation
+  paths are fixture-backed.
 - Added terminal `.range()` to every existing concrete numeric array call
   result. It returns filtered maximum minus minimum with receiver-derived
   `series int`/`series float`, yields `na` for empty/all-`na`/upstream-`na` or

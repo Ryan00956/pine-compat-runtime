@@ -1531,6 +1531,12 @@ Recommended future slices:
     overloads retain receiver-derived series int/float, filtered maximum-minus-
     minimum, empty/all-`na`/upstream-`na` and non-finite behavior, invalid type/
     arity, and terminal continuation. Matrix-valued continuation is unchanged.
+98. Numeric array-valued call results additionally expose terminal `.median()`.
+    Matrix row/column/eigenvalue arrays and array-returning `matrix.mult`
+    overloads retain filtered odd-middle/even-middle-pair semantics, receiver-
+    derived series int/float, integer truncation toward zero, empty/all-`na`/
+    upstream-`na` and non-finite-float behavior, invalid type/arity, and
+    terminal continuation. Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

@@ -146,6 +146,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "sum" => Some("array.sum"),
         "avg" => Some("array.avg"),
         "range" => Some("array.range"),
+        "median" => Some("array.median"),
         _ => None,
     }
 }
@@ -709,6 +710,7 @@ mod tests {
             ("sum", "array.sum"),
             ("avg", "array.avg"),
             ("range", "array.range"),
+            ("median", "array.median"),
         ] {
             assert_eq!(
                 array_call_result_builtin_name(method_name),
@@ -716,7 +718,7 @@ mod tests {
             );
             assert!(pine_builtins::get_phase_1_builtin(builtin_name).is_some());
         }
-        assert_eq!(array_call_result_builtin_name("median"), None);
+        assert_eq!(array_call_result_builtin_name("mode"), None);
         assert_eq!(array_call_result_builtin_name("push"), None);
     }
 

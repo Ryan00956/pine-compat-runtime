@@ -279,6 +279,12 @@ Item 93 adds terminal `.range()` over the same result set. It preserves
 receiver-derived series int/float, computes filtered maximum minus minimum,
 returns `na` for empty/all-`na`/upstream-`na` or non-finite float differences,
 and keeps UDT, arity, and continuation boundaries closed.
+Item 94 adds terminal `.median()` over the same result set. It sorts the
+filtered non-`na` values, returns the middle value for odd counts and the
+middle-pair arithmetic mean for even counts, preserves receiver-derived series
+int/float, and truncates integer means toward zero. Empty/all-`na`/upstream-
+`na` arrays and non-finite float results yield `na`; UDT, arity, provenance,
+and terminal-continuation boundaries remain closed.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1802,6 +1808,11 @@ terminal-continuation, and UDT-identity boundaries.
 Item 93 adds terminal receiver-typed `.range()` over that result set,
 preserving filtered `na`, empty/all-`na`/upstream-`na`, non-finite-difference,
 arity, terminal-continuation, and UDT-identity boundaries.
+Item 94 adds terminal receiver-typed `.median()` over that result set. It sorts
+filtered values, selects the odd middle or even middle-pair mean, truncates
+integer means toward zero, and preserves empty/all-`na`/upstream-`na`, non-
+finite-float, arity, provenance, terminal-continuation, and UDT-identity
+boundaries.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

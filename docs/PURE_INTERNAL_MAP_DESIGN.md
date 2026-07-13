@@ -455,6 +455,12 @@ Recommended future slices:
     all-`na`/upstream-`na` and non-finite behavior, invalid type/arity, local/
     imported provenance, and terminal continuation are fixture-backed. Map
     storage and template rules are unchanged. Done.
+28. Numeric key/value snapshots additionally expose terminal `.median()`.
+    Filtered sorting, odd-middle and even middle-pair means, receiver-derived
+    series int/float, integer truncation toward zero, empty/all-`na`/upstream-
+    `na` and non-finite-float behavior, invalid type/arity, local/imported
+    provenance, and terminal continuation are fixture-backed. Map storage and
+    template rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

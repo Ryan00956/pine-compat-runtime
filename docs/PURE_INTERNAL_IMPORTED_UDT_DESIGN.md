@@ -1481,3 +1481,9 @@ return/parameter flow remains deferred.
     returns `na` for empty/all-`na`/upstream-`na` or non-finite float
     differences, and keeps nonnumeric/imported-UDT, arity, and terminal-
     continuation boundaries closed. Done.
+84. The same numeric producer set exposes terminal `.median()`. It sorts
+    filtered non-`na` values, returns the odd middle or even middle-pair mean,
+    preserves receiver-derived series int/float, and truncates integer means
+    toward zero. Empty/all-`na`/upstream-`na` arrays and non-finite float
+    results return `na`; nonnumeric/imported-UDT, arity, provenance, and
+    terminal-continuation boundaries remain closed. Done.
