@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added terminal `.mode()` to every existing concrete numeric array call
+  result. It filters `na`, returns the most frequent value in the receiver-
+  derived `series int`/`series float` kind, chooses the smaller value for tied
+  frequencies, and requires at least one repeated value. Empty/all-`na`/
+  upstream-`na` and all-unique arrays return `na`; the read remains non-
+  mutating and terminal. Static/cross-namespace, matrix/map-derived, local/
+  imported function/method, invalid type/arity, provenance, and terminal-
+  continuation paths are fixture-backed.
 - Added terminal `.median()` to every existing concrete numeric array call
   result. It filters `na`, sorts remaining values, returns the middle value for
   odd counts and the middle-pair arithmetic mean for even counts, preserves

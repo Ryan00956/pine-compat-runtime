@@ -461,6 +461,12 @@ Recommended future slices:
     `na` and non-finite-float behavior, invalid type/arity, local/imported
     provenance, and terminal continuation are fixture-backed. Map storage and
     template rules are unchanged. Done.
+29. Numeric key/value snapshots additionally expose terminal `.mode()`.
+    Filtered frequency counting, smaller-value tie selection, the repeated-
+    value requirement, receiver-derived series int/float, empty/all-`na`/
+    upstream-`na` and all-unique behavior, invalid type/arity, local/imported
+    provenance, and terminal continuation are fixture-backed. Map storage and
+    template rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

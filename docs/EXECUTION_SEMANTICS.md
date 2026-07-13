@@ -803,7 +803,7 @@ results and unqualified plain local UDF results support direct `.size()`,
 currently supported array kind. Numeric `array<int>` and `array<float>`
 results additionally support terminal `.binary_search(value)` and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`,
-terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`, plus non-mutating `.abs()` transformation chains that
+terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`, plus non-mutating `.abs()` transformation chains that
 return a fresh same-kind array. The parser
 rewrites the unqualified form to the impossible internal prefix `$call_result`
 only for a plain lexical callee; qualified user-defined forms retain their
@@ -823,14 +823,14 @@ marks the receiver with `$builtin_array_result`; only `.size()`, `.get(index)`,
 `.first()`, `.last()`, `.copy()`, `.includes(value)`, `.indexof(value)`, and
 `.lastindexof(value)`, plus numeric-only `.binary_search(value)` and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)` and
-`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`, are admitted after it. The lexical prefix
+`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`, are admitted after it. The lexical prefix
 `array` is reserved for built-in producer recognition, so a user or import
 qualifier named `array` cannot use this qualified call-result path.
 Only `.copy()` and numeric `.abs()` return arrays that may continue through
 another allowed step. The terminal `.size()`, `.get()`, `.first()`, `.last()`,
 `.includes()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, and
 `.binary_search_leftmost()`/`.binary_search_rightmost()`/`.min()`/`.max()`/
-`.sum()`/`.avg()`/`.range()`/`.median()` results cannot continue
+`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()` results cannot continue
 into a user method or any other call-result method,
 including a method on a returned scalar UDT element.
 
@@ -914,6 +914,11 @@ returns the receiver's `series int` or `series float`; integer pair means
 truncate toward zero. Empty, all-`na`, upstream-`na`, and non-finite float
 medians return `na`; the result is non-mutating and terminal.
 
+Numeric-only `.mode()` sorts filtered non-`na` values and returns the most
+frequent value as the receiver's `series int` or `series float`. Equal maximum
+frequencies select the smaller value. Empty, all-`na`, upstream-`na`, and
+all-unique arrays return `na`; the result is non-mutating and terminal.
+
 The same `$builtin_array_result` lowering now has one additional exact set of
 seven fixed cross-namespace producers: `str.split`, `ta.pivot_point_levels`,
 `matrix.row`, `matrix.col`, `matrix.eigenvalues`, `map.keys`, and `map.values`.
@@ -921,9 +926,9 @@ Each admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 `.includes(value)`, `.indexof(value)`, `.lastindexof(value)`, and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
-`.avg()`/`.range()`/`.median()`; only `.copy()` and
+`.avg()`/`.range()`/`.median()`/`.mode()`; only `.copy()` and
 numeric `.abs()` can continue with another allowed array chain. The other
-sixteen results are
+seventeen results are
 terminal. `str.split` and
 `ta.pivot_point_levels` retain their
 existing `array<string>` and `array<float>` results. `matrix.row` and
@@ -943,7 +948,7 @@ array-by-array overloads resolve to `array<float>` and may use `.size()`,
 `.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`,
 `.indexof(value)`, `.lastindexof(value)`, `.binary_search(value)`, and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`.
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`.
 Matrix-by-matrix,
 matrix-by-scalar, and scalar-by-matrix overloads resolve to `matrix<float>` and
 may use `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
@@ -961,8 +966,8 @@ switch to the closed `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
 `.includes(value)`/`.indexof(value)`/`.lastindexof(value)`/
 `.binary_search(value)`/`.binary_search_leftmost(value)` array-result path,
 plus `.binary_search_rightmost(value)`, `.abs()`, and
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`, where array
-`.copy()` and numeric `.abs()` continue and the other sixteen read, search, and aggregate results
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`, where array
+`.copy()` and numeric `.abs()` continue and the other seventeen read, search, and aggregate results
 are terminal.
 `.is_square()`
 instead
@@ -1161,7 +1166,7 @@ fresh empty map, and expose `.size()`, `.get(key)`, `.contains(key)`, `.copy()`,
 `.keys()`, and `.values()`. Only `.copy()` may continue another map helper;
 `.keys()` and `.values()` return fresh key/value-kind-preserving arrays that
 admit direct binding and the closed array read/search set plus numeric `.abs()`
-and terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`, with copy/abs array continuation. Mutation and
+and terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`, with copy/abs array continuation. Mutation and
 unsupported map templates remain gated. Exact namespace
 `map.copy(existing)` results enter the same path, retain the source key/value
 kinds and entries in independent backing storage, and expose the same helpers
@@ -1424,7 +1429,7 @@ order. For maps whose key and value templates are each `int`, `float`, `bool`,
 through `.size()`, `.get(index)`, `.first()`, `.last()`, or `.copy()`. The
 returned key/value array kind follows the corresponding map template side;
 numeric sides additionally admit the three binary searches, `.abs()`, and
-terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()` with ordinary numeric-array
+terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()` with ordinary numeric-array
 aggregate rules. Only
 `.copy()` and numeric `.abs()` can continue into another array chain, and each
 is independent of both the map and the first snapshot. Empty maps, typed-`na`
@@ -1677,7 +1682,7 @@ array for empty `0 x 0` matrices, returns `na` for any `na` or non-finite cell
 and for non-real eigenvalue results, and raises a runtime error for non-square
 matrices. Its namespace-call result may immediately use the same closed
 read/copy/search helpers plus numeric `.abs()` and terminal
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`, with
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`, with
 `.copy()` and `.abs()` nestable and with ordinary empty/
 `na` and bounds behavior retained.
 `matrix.eigenvectors(values)` returns an independent `matrix<float>` whose

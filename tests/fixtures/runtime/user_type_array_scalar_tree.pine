@@ -582,6 +582,9 @@ unqualified_float_range = return_identity(array.from(20.0, na, 22.0)).copy().ran
 qualified_scalar_median = return_anchor.returnInts(array.from(40, 41, 42)).median()
 unqualified_int_median = return_identity(array.from(10, 11, 12)).median()
 unqualified_float_median = return_identity(array.from(20.0, na, 22.0)).copy().median()
+qualified_scalar_mode = return_anchor.returnInts(array.from(40, 41, 41)).mode()
+unqualified_int_mode = return_identity(array.from(10, 11, 11)).mode()
+unqualified_float_mode = return_identity(array.from(20.0, na, 22.0, 22.0)).copy().mode()
 plot(qualified_scalar_size)
 plot(qualified_scalar_get)
 plot(qualified_scalar_last)
@@ -598,6 +601,7 @@ plot(qualified_scalar_sum == 123 and unqualified_int_sum == 33 and unqualified_f
 plot(qualified_scalar_avg == 41.0 and unqualified_int_avg == 11.0 and unqualified_float_avg == 21.0 ? 1 : 0)
 plot(qualified_scalar_range == 2 and unqualified_int_range == 2 and unqualified_float_range == 2.0 ? 1 : 0)
 plot(qualified_scalar_median == 41 and unqualified_int_median == 11 and unqualified_float_median == 21.0 ? 1 : 0)
+plot(qualified_scalar_mode == 41 and unqualified_int_mode == 11 and unqualified_float_mode == 22.0 ? 1 : 0)
 
 unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
 unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))

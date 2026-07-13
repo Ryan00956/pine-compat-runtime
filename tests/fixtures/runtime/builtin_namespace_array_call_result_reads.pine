@@ -79,6 +79,9 @@ plot(na(pivot_namespace_range) ? (na(pivot_range) ? 1 : 0) : (pivot_range == piv
 pivot_median = ta.pivot_point_levels("Traditional", true, true).median()
 pivot_namespace_median = array.median(ta.pivot_point_levels("Traditional", true, true))
 plot(na(pivot_namespace_median) ? (na(pivot_median) ? 1 : 0) : (pivot_median == pivot_namespace_median ? 1 : 0), "pivot_call_result_median")
+pivot_mode = ta.pivot_point_levels("Traditional", true, true).mode()
+pivot_namespace_mode = array.mode(ta.pivot_point_levels("Traditional", true, true))
+plot(na(pivot_namespace_mode) ? (na(pivot_mode) ? 1 : 0) : (pivot_mode == pivot_namespace_mode ? 1 : 0), "pivot_call_result_mode")
 
 pivot_state_size = ta.pivot_point_levels("Traditional", bar_index == 2).size()
 pivot_state_first = ta.pivot_point_levels("Traditional", bar_index == 2).first()
@@ -141,6 +144,7 @@ plot(matrix.row(float_matrix, 0).sum() == 4.0 and matrix.row(int_matrix, 0).sum(
 plot(matrix.row(float_matrix, 0).avg() == 2.0 and matrix.row(int_matrix, 0).avg() == 15.0 ? 1 : 0, "matrix_row_col_call_result_avg")
 plot(matrix.row(float_matrix, 0).range() == 1.0 and matrix.row(int_matrix, 0).range() == 10 ? 1 : 0, "matrix_row_col_call_result_range")
 plot(matrix.row(float_matrix, 0).median() == 2.0 and matrix.row(int_matrix, 0).median() == 15 ? 1 : 0, "matrix_row_col_call_result_median")
+plot(na(matrix.row(float_matrix, 0).mode()) and na(matrix.row(int_matrix, 0).mode()) ? 1 : 0, "matrix_row_col_call_result_mode")
 
 matrix<float> na_float_matrix = na
 na_cell_matrix = matrix.new<float>(1, 1)
@@ -160,6 +164,7 @@ plot(na(matrix.row(na_float_matrix, 0).sum()) ? 1 : 0, "matrix_na_row_call_resul
 plot(na(matrix.row(na_float_matrix, 0).avg()) ? 1 : 0, "matrix_na_row_call_result_avg")
 plot(na(matrix.row(na_float_matrix, 0).range()) ? 1 : 0, "matrix_na_row_call_result_range")
 plot(na(matrix.row(na_float_matrix, 0).median()) ? 1 : 0, "matrix_na_row_call_result_median")
+plot(na(matrix.row(na_float_matrix, 0).mode()) ? 1 : 0, "matrix_na_row_call_result_mode")
 
 float_diagonal = matrix.new<float>(2, 2, 0.0)
 float_diagonal.set(0, 0, 2.0)
@@ -189,6 +194,7 @@ plot(matrix.eigenvalues(float_diagonal).sum() == 5.0 ? 1 : 0, "eigen_call_result
 plot(matrix.eigenvalues(float_diagonal).avg() == 2.5 ? 1 : 0, "eigen_call_result_avg")
 plot(matrix.eigenvalues(float_diagonal).range() == 1.0 ? 1 : 0, "eigen_call_result_range")
 plot(matrix.eigenvalues(float_diagonal).median() == 2.5 ? 1 : 0, "eigen_call_result_median")
+plot(na(matrix.eigenvalues(float_diagonal).mode()) ? 1 : 0, "eigen_call_result_mode")
 plot(matrix.eigenvalues(matrix.new<float>(0, 0)).size(), "eigen_empty_size")
 plot(na(matrix.eigenvalues(matrix.new<float>(0, 0)).first()) ? 1 : 0, "eigen_empty_first")
 matrix<float> na_eigen_matrix = na
@@ -255,6 +261,7 @@ plot(map.keys(int_float).sum() == 30 and map.values(int_float).copy().sum() == 6
 plot(map.keys(int_float).avg() == 15.0 and map.values(int_float).copy().avg() == 3.0 ? 1 : 0, "map_call_result_avg")
 plot(map.keys(int_float).range() == 10 and map.values(int_float).copy().range() == 1.0 ? 1 : 0, "map_call_result_range")
 plot(map.keys(int_float).median() == 15 and map.values(int_float).copy().median() == 3.0 ? 1 : 0, "map_call_result_median")
+plot(na(map.keys(int_float).mode()) and na(map.values(int_float).copy().mode()) ? 1 : 0, "map_call_result_mode")
 
 empty_map = map.new<string, float>()
 map<string, float> na_map = na
@@ -282,6 +289,7 @@ plot(na(map.values(empty_map).sum()) and na(map.values(na_map).sum()) ? 1 : 0, "
 plot(na(map.values(empty_map).avg()) and na(map.values(na_map).avg()) ? 1 : 0, "map_empty_na_call_result_avg")
 plot(na(map.values(empty_map).range()) and na(map.values(na_map).range()) ? 1 : 0, "map_empty_na_call_result_range")
 plot(na(map.values(empty_map).median()) and na(map.values(na_map).median()) ? 1 : 0, "map_empty_na_call_result_median")
+plot(na(map.values(empty_map).mode()) and na(map.values(na_map).mode()) ? 1 : 0, "map_empty_na_call_result_mode")
 plot(readMatrixAndMap(float_matrix, int_float), "block_udf")
 
 mult_matrix = matrix.new<float>(2, 2, 0.0)
@@ -330,6 +338,7 @@ plot(matrix.mult(mult_matrix, mult_vector).sum() == 56.0 and mult_matrix.mult(mu
 plot(matrix.mult(mult_matrix, mult_vector).avg() == 28.0 and mult_matrix.mult(mult_vector).avg() == 28.0 ? 1 : 0, "mult_call_result_avg")
 plot(matrix.mult(mult_matrix, mult_vector).range() == 22.0 and mult_matrix.mult(mult_vector).range() == 22.0 ? 1 : 0, "mult_call_result_range")
 plot(matrix.mult(mult_matrix, mult_vector).median() == 28.0 and mult_matrix.mult(mult_vector).median() == 28.0 ? 1 : 0, "mult_call_result_median")
+plot(matrix.mult(matrix.new<float>(2, 2, 1.0), array.from(1.0, 1.0)).mode() == 2.0 and matrix.new<float>(2, 2, 1.0).mult(array.from(1.0, 1.0)).mode() == 2.0 ? 1 : 0, "mult_call_result_mode")
 
 int_mult_matrix = matrix.new<int>(2, 2, 0)
 int_mult_matrix.set(0, 0, 1)
@@ -361,6 +370,7 @@ plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).sum()) and na(m
 plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).avg()) and na(matrix.mult(mult_na_matrix, mult_vector).avg()) ? 1 : 0, "mult_empty_na_call_result_avg")
 plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).range()) and na(matrix.mult(mult_na_matrix, mult_vector).range()) ? 1 : 0, "mult_empty_na_call_result_range")
 plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).median()) and na(matrix.mult(mult_na_matrix, mult_vector).median()) ? 1 : 0, "mult_empty_na_call_result_median")
+plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).mode()) and na(matrix.mult(mult_na_matrix, mult_vector).mode()) ? 1 : 0, "mult_empty_na_call_result_mode")
 plot(matrix.mult(array.new_float(0), matrix.new<float>(0, 0)).size(), "mult_left_empty_size")
 plot(na(matrix.mult(array.new_float(0), matrix.new<float>(0, 0)).first()) ? 1 : 0, "mult_left_empty_first")
 plot(matrix.mult(array.new_float(0), array.new_float(0)).size(), "mult_pair_empty_size")

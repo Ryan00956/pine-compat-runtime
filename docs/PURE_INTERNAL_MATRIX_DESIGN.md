@@ -1537,6 +1537,12 @@ Recommended future slices:
     derived series int/float, integer truncation toward zero, empty/all-`na`/
     upstream-`na` and non-finite-float behavior, invalid type/arity, and
     terminal continuation. Matrix-valued continuation is unchanged.
+99. Numeric array-valued call results additionally expose terminal `.mode()`.
+    Matrix row/column/eigenvalue arrays and array-returning `matrix.mult`
+    overloads retain filtered frequency counting, smaller-value tie selection,
+    the repeated-value requirement, receiver-derived series int/float, empty/
+    all-`na`/upstream-`na` and all-unique behavior, invalid type/arity, and
+    terminal continuation. Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

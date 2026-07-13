@@ -285,6 +285,11 @@ middle-pair arithmetic mean for even counts, preserves receiver-derived series
 int/float, and truncates integer means toward zero. Empty/all-`na`/upstream-
 `na` arrays and non-finite float results yield `na`; UDT, arity, provenance,
 and terminal-continuation boundaries remain closed.
+Item 95 adds terminal `.mode()` over the same result set. It returns the most
+frequent filtered value in the receiver-derived series int/float kind, chooses
+the smaller value for tied frequencies, and requires at least one repetition.
+Empty/all-`na`/upstream-`na` and all-unique arrays yield `na`; UDT, arity,
+provenance, and terminal-continuation boundaries remain closed.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1813,6 +1818,10 @@ filtered values, selects the odd middle or even middle-pair mean, truncates
 integer means toward zero, and preserves empty/all-`na`/upstream-`na`, non-
 finite-float, arity, provenance, terminal-continuation, and UDT-identity
 boundaries.
+Item 95 adds terminal receiver-typed `.mode()` over that result set, preserving
+filtered frequency counting, smaller-value tie selection, the repeated-value
+requirement, empty/all-`na`/upstream-`na` and all-unique `na`, arity,
+provenance, terminal-continuation, and UDT-identity boundaries.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

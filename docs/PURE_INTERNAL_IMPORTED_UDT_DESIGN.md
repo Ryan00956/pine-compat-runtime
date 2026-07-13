@@ -1487,3 +1487,9 @@ return/parameter flow remains deferred.
     toward zero. Empty/all-`na`/upstream-`na` arrays and non-finite float
     results return `na`; nonnumeric/imported-UDT, arity, provenance, and
     terminal-continuation boundaries remain closed. Done.
+85. The same numeric producer set exposes terminal `.mode()`. It returns the
+    most frequent filtered value in the receiver-derived series int/float kind,
+    chooses the smaller value for tied frequencies, and requires at least one
+    repetition. Empty/all-`na`/upstream-`na` and all-unique arrays return `na`;
+    nonnumeric/imported-UDT, arity, provenance, and terminal-continuation
+    boundaries remain closed. Done.

@@ -147,6 +147,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "avg" => Some("array.avg"),
         "range" => Some("array.range"),
         "median" => Some("array.median"),
+        "mode" => Some("array.mode"),
         _ => None,
     }
 }
@@ -711,6 +712,7 @@ mod tests {
             ("avg", "array.avg"),
             ("range", "array.range"),
             ("median", "array.median"),
+            ("mode", "array.mode"),
         ] {
             assert_eq!(
                 array_call_result_builtin_name(method_name),
@@ -718,7 +720,10 @@ mod tests {
             );
             assert!(pine_builtins::get_phase_1_builtin(builtin_name).is_some());
         }
-        assert_eq!(array_call_result_builtin_name("mode"), None);
+        assert_eq!(
+            array_call_result_builtin_name("percentile_nearest_rank"),
+            None
+        );
         assert_eq!(array_call_result_builtin_name("push"), None);
     }
 
