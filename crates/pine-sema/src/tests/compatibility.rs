@@ -148,8 +148,12 @@ fn builtin_collection_result_producer_parser_allowlists_match_registry() {
         })
         .map(|signature| signature.name)
         .collect::<BTreeSet<_>>();
-    let expected_matrix_call_result_producers =
-        BTreeSet::from(["matrix.copy", "matrix.mult", "matrix.transpose"]);
+    let expected_matrix_call_result_producers = BTreeSet::from([
+        "matrix.copy",
+        "matrix.mult",
+        "matrix.submatrix",
+        "matrix.transpose",
+    ]);
     assert!(
         expected_matrix_call_result_producers
             .iter()

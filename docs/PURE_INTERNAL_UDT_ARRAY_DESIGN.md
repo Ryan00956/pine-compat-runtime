@@ -116,7 +116,10 @@ matrix kind and admits the same five matrix helpers with copy-only continuation;
 bound `values.copy()` results remain gated. Item 24 adds exact namespace
 `matrix.transpose(values)` with the same five element kinds and helpers,
 row/column shape swapping, independent storage, and a retained bound
-`values.transpose()` gate. Outside the
+`values.transpose()` gate. Item 25 adds exact namespace
+`matrix.submatrix(values, ...)` with preserved element kind, independent
+half-open/default-full/empty range copies, the same helpers, and a retained
+bound `values.submatrix()` gate. Outside the
 exact static producer sets and these namespace-only paths, unsupported
 `array.new<T>` element families, non-producer calls, map/matrix templates, and
 other matrix-returning calls remain fail-closed. `array.slice`
@@ -719,8 +722,8 @@ Initial policy:
   methods. The later seven fixed cross-namespace producers and array-returning
   `matrix.mult` overloads return scalar arrays only and add no UDT/import
   identity. Namespace matrix-returning `matrix.mult` overloads and exact
-  namespace `matrix.copy`/`matrix.transpose` add only the exact five matrix
-  readers/copy from items 22 through 24 and likewise carry no UDT/import
+  namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix` add only the
+  exact five matrix readers/copy from items 22 through 25 and likewise carry no UDT/import
   identity. Mixed
   identities within one scalar return or tuple slot, non-scalar UDT arrays,
   non-array/non-UDT results,
@@ -911,6 +914,16 @@ Recommended future slices:
     Wrong receivers, invalid helper arguments, mutation, broader helpers, and
     bound `values.transpose()` call-result reads fail closed. No UDT/import
     identity or public schema field is added. Done.
+25. The exact namespace matrix-submatrix continuation routes
+    `matrix.submatrix(values, ...)` through `$builtin_matrix_result`. Its
+    `SameAsArg` result preserves all five supported scalar element kinds while
+    returning independent half-open ranges with default full bounds and empty
+    row/column slices. It exposes only the five matrix read/copy helpers with
+    named arguments and copy-only continuation. `na`, coordinate mapping,
+    nested copies, UDF-contained namespace reads, and source independence are
+    fixture-backed. Wrong producer/helper arguments, wrong receivers, mutation,
+    broader helpers, and bound `values.submatrix()` call-result reads fail
+    closed. No UDT/import identity or public schema field is added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -951,7 +964,8 @@ the array-returning `matrix.mult` overloads, item 22 adds the exact
 namespace-only `matrix.mult` matrix-result read/copy set, and item 23 adds exact
 namespace `matrix.copy` through `$builtin_matrix_result`; none adds UDT/import
 identity. Item 24 adds exact namespace `matrix.transpose` on the same path with
-shape swapping and no UDT/import identity. Broader UDT element families, bound or UDF
+shape swapping, and item 25 adds exact namespace `matrix.submatrix` with range
+copies; neither adds UDT/import identity. Broader UDT element families, bound or UDF
 matrix-result receivers, built-in-qualified/template call-result receivers
 outside the closed paths, unsupported `array.new<T>` templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, unsupported

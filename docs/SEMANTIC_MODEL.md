@@ -614,11 +614,11 @@ postfix copies are independent again. Empty/`na`, negative index, bounds, and
 element-type checks still come from the ordinary producer and array-helper
 analysis/runtime rules.
 
-Namespace-qualified `matrix.mult(...)`, `matrix.copy(...)`, and
-`matrix.transpose(...)` instead use the separate `$builtin_matrix_result`
-synthetic prefix. `matrix.mult` semantic
-dispatch is selected by the resolved `ReturnSpec::MatrixMult` result. Matrix-by-array,
-array-by-matrix,
+Namespace-qualified `matrix.mult(...)`, `matrix.copy(...)`,
+`matrix.transpose(...)`, and `matrix.submatrix(...)` instead use the separate
+`$builtin_matrix_result` synthetic prefix. `matrix.mult` semantic
+dispatch is selected by the resolved `ReturnSpec::MatrixMult` result.
+Matrix-by-array, array-by-matrix,
 and array-by-array overloads resolve to `array<float>` and admit `.size()`,
 `.get(index)`, `.first()`, `.last()`, and `.copy()`. Matrix-by-matrix,
 matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
@@ -635,10 +635,13 @@ independent-copy storage semantics. Bound `matrix_id.copy()` results remain
 generic call-result rejections. Exact namespace `matrix.transpose` also takes
 the matrix branch, preserves the source scalar element kind through `SameAsArg`,
 swaps row/column shape, and retains independent storage. Bound
-`matrix_id.transpose()` results remain generic rejections. Map/matrix templates
+`matrix_id.transpose()` results remain generic rejections.
+Exact namespace `matrix.submatrix` also takes the matrix branch, preserves the
+source element kind through `SameAsArg`, and returns an independent half-open
+range with default full bounds and empty row/column slices. Bound
+`matrix_id.submatrix()` results remain generic rejections. Map/matrix templates
 such as `map.new` and `matrix.new`, every other namespace or non-producer member,
-and other
-matrix-returning calls stay excluded. Built-in
+and other matrix-returning calls stay excluded. Built-in
 namespace prefixes remain reserved and cannot be treated as same-named
 user/import qualifiers. No UDT or imported-type identity is inferred, and
 public schemas remain unchanged.
@@ -843,9 +846,10 @@ unqualified local UDFs may invoke existing pure methods. Built-in producer
 UDT method composition path. The seven fixed cross-namespace producers and
 array-returning `matrix.mult` overloads return only scalar arrays and add no
 UDT/import identity flow. Namespace matrix-returning `matrix.mult` overloads
-and exact namespace `matrix.copy`/`matrix.transpose` add only the exact matrix
-read/copy set above. Both preserve the scalar matrix element kind, transpose
-swaps shape, and none of these paths carries UDT/import identity.
+and exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix` add only
+the exact matrix read/copy set above. All preserve the scalar matrix element
+kind; transpose swaps shape, submatrix selects a range, and none of these paths
+carries UDT/import identity.
 Tuple-contained
 same-imported scalar-tree UDT arrays are supported when destructured, with
 identity tracked independently per slot. Non-scalar UDT value history outside the local/imported
@@ -924,9 +928,9 @@ method exception does not apply to a built-in producer's terminal
 `.get()`/`.first()`/`.last()` result. The seven fixed cross-namespace producers
 and the array-returning `matrix.mult` overloads are scalar-array-only and do
 not widen UDT identity. Namespace matrix-returning `matrix.mult` overloads and
-exact namespace `matrix.copy`/`matrix.transpose` add only the exact matrix
-read/copy set above and likewise do not widen UDT identity. Bound or UDF
-matrix-result receivers, built-in-qualified/template
+exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix` add only the
+exact matrix read/copy set above and likewise do not widen UDT identity. Bound
+or UDF matrix-result receivers, built-in-qualified/template
 call results outside the exact static and dynamic paths, and other array or
 matrix helpers remain gated.
 Methods with receiver/parameter/global field side effects, recursion,

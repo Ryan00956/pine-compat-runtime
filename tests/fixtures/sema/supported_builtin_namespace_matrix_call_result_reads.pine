@@ -7,6 +7,8 @@ matrixCopyExpressionRead(values) => matrix.copy(values).copy().get(1, 0)
 
 matrixTransposeExpressionRead(values) => matrix.transpose(values).copy().get(2, 1)
 
+matrixSubmatrixExpressionRead(values) => matrix.submatrix(values, 0, 2, 1, 3).copy().get(1, 1)
+
 matrixMultMatrixBlockRead(values, scalar) =>
     int rows = matrix.mult(values, scalar).rows()
     int columns = matrix.mult(scalar, values).columns()
@@ -23,6 +25,12 @@ matrixTransposeBlockRead(values) =>
     int rows = matrix.transpose(values).rows()
     int columns = matrix.transpose(values).columns()
     float first = matrix.transpose(values).get(0, 0)
+    rows * 100 + columns * 10 + first
+
+matrixSubmatrixBlockRead(values) =>
+    int rows = matrix.submatrix(values).rows()
+    int columns = matrix.submatrix(values).columns()
+    float first = matrix.submatrix(values).get(0, 0)
     rows * 100 + columns * 10 + first
 
 left = matrix.new<float>(2, 3, 1.0)
@@ -59,6 +67,11 @@ int matrix_transpose_columns = matrix.transpose(left).columns()
 int matrix_transpose_elements = matrix.transpose(left).elements_count()
 float matrix_transpose_named_get = matrix.transpose(id=left).get(row=2, column=1)
 matrix<float> matrix_transpose_nested = matrix.transpose(left).copy().copy()
+int matrix_submatrix_rows = matrix.submatrix(left, 0, 2, 1, 2).rows()
+int matrix_submatrix_columns = matrix.submatrix(left, 0, 2, 1, 2).columns()
+int matrix_submatrix_elements = matrix.submatrix(left, 0, 2, 1, 2).elements_count()
+float matrix_submatrix_named_get = matrix.submatrix(id=left, from_row=0, to_row=2, from_column=1, to_column=2).get(row=1, column=0)
+matrix<float> matrix_submatrix_nested = matrix.submatrix(left).copy().copy()
 
 int_left = matrix.new<int>(2, 2, 1)
 int_right = matrix.new<int>(2, 2, 2)
@@ -80,6 +93,10 @@ int matrix_transpose_int_get = matrix.transpose(int_left).get(0, 0)
 bool matrix_transpose_bool_get = matrix.transpose(bool_matrix).copy().get(0, 0)
 string matrix_transpose_string_get = matrix.transpose(string_matrix).get(0, 0)
 color matrix_transpose_color_get = matrix.transpose(color_matrix).get(0, 0)
+int matrix_submatrix_int_get = matrix.submatrix(int_left).get(0, 0)
+bool matrix_submatrix_bool_get = matrix.submatrix(bool_matrix).copy().get(0, 0)
+string matrix_submatrix_string_get = matrix.submatrix(string_matrix).get(0, 0)
+color matrix_submatrix_color_get = matrix.submatrix(color_matrix).get(0, 0)
 
 bound_matrix_result = left.mult(right)
 bound_scalar_result = right.mult(2.0)
@@ -94,5 +111,7 @@ float matrix_copy_expression_udf = matrixCopyExpressionRead(left)
 float matrix_copy_block_udf = matrixCopyBlockRead(left)
 float matrix_transpose_expression_udf = matrixTransposeExpressionRead(left)
 float matrix_transpose_block_udf = matrixTransposeBlockRead(left)
+float matrix_submatrix_expression_udf = matrixSubmatrixExpressionRead(left)
+float matrix_submatrix_block_udf = matrixSubmatrixBlockRead(left)
 
-plot(matrix_matrix_rows + matrix_matrix_columns + matrix_matrix_elements + matrix_matrix_get + matrix_matrix_copy.get(0, 0) + matrix_matrix_copy_get + matrix_scalar_rows + matrix_scalar_columns + matrix_scalar_elements + matrix_scalar_get + matrix_scalar_copy.get(0, 0) + matrix_scalar_copy_get + scalar_matrix_rows + scalar_matrix_columns + scalar_matrix_elements + scalar_matrix_get + scalar_matrix_copy.get(0, 0) + scalar_matrix_copy_get + matrix_copy_rows + matrix_copy_columns + matrix_copy_elements + matrix_copy_named_get + matrix_copy_nested.get(0, 0) + matrix_transpose_rows + matrix_transpose_columns + matrix_transpose_elements + matrix_transpose_named_get + matrix_transpose_nested.get(0, 0) + int_matrix_matrix_get + int_matrix_matrix_copy.get(0, 0) + int_matrix_scalar_get + int_matrix_scalar_copy.get(0, 0) + int_scalar_matrix_get + int_scalar_matrix_copy.get(0, 0) + matrix_copy_int_get + (matrix_copy_bool_get ? 1 : 0) + (matrix_copy_string_get == "copy" ? 1 : 0) + (matrix_copy_color_get == color.red ? 1 : 0) + matrix_transpose_int_get + (matrix_transpose_bool_get ? 1 : 0) + (matrix_transpose_string_get == "copy" ? 1 : 0) + (matrix_transpose_color_get == color.red ? 1 : 0) + bound_matrix_rows + bound_matrix_get + bound_scalar_columns + bound_scalar_get + matrix_expression_udf + matrix_block_udf + matrix_copy_expression_udf + matrix_copy_block_udf + matrix_transpose_expression_udf + matrix_transpose_block_udf)
+plot(matrix_matrix_rows + matrix_matrix_columns + matrix_matrix_elements + matrix_matrix_get + matrix_matrix_copy.get(0, 0) + matrix_matrix_copy_get + matrix_scalar_rows + matrix_scalar_columns + matrix_scalar_elements + matrix_scalar_get + matrix_scalar_copy.get(0, 0) + matrix_scalar_copy_get + scalar_matrix_rows + scalar_matrix_columns + scalar_matrix_elements + scalar_matrix_get + scalar_matrix_copy.get(0, 0) + scalar_matrix_copy_get + matrix_copy_rows + matrix_copy_columns + matrix_copy_elements + matrix_copy_named_get + matrix_copy_nested.get(0, 0) + matrix_transpose_rows + matrix_transpose_columns + matrix_transpose_elements + matrix_transpose_named_get + matrix_transpose_nested.get(0, 0) + matrix_submatrix_rows + matrix_submatrix_columns + matrix_submatrix_elements + matrix_submatrix_named_get + matrix_submatrix_nested.get(0, 0) + int_matrix_matrix_get + int_matrix_matrix_copy.get(0, 0) + int_matrix_scalar_get + int_matrix_scalar_copy.get(0, 0) + int_scalar_matrix_get + int_scalar_matrix_copy.get(0, 0) + matrix_copy_int_get + (matrix_copy_bool_get ? 1 : 0) + (matrix_copy_string_get == "copy" ? 1 : 0) + (matrix_copy_color_get == color.red ? 1 : 0) + matrix_transpose_int_get + (matrix_transpose_bool_get ? 1 : 0) + (matrix_transpose_string_get == "copy" ? 1 : 0) + (matrix_transpose_color_get == color.red ? 1 : 0) + matrix_submatrix_int_get + (matrix_submatrix_bool_get ? 1 : 0) + (matrix_submatrix_string_get == "copy" ? 1 : 0) + (matrix_submatrix_color_get == color.red ? 1 : 0) + bound_matrix_rows + bound_matrix_get + bound_scalar_columns + bound_scalar_get + matrix_expression_udf + matrix_block_udf + matrix_copy_expression_udf + matrix_copy_block_udf + matrix_transpose_expression_udf + matrix_transpose_block_udf + matrix_submatrix_expression_udf + matrix_submatrix_block_udf)

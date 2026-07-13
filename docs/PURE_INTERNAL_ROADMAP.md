@@ -348,6 +348,11 @@ Current baseline:
   kinds through `SameAsArg`, swaps row/column shape, returns independent
   storage, and shares the five matrix helpers plus copy-only continuation;
   bound `values.transpose()` results stay gated.
+  The next closed slice admits exact namespace `matrix.submatrix(values, ...)`.
+  Its `SameAsArg` result preserves the five element kinds, returns independent
+  half-open ranges with default full bounds and empty row/column slices, and
+  shares the five matrix helpers plus copy-only continuation; bound
+  `values.submatrix()` results stay gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -368,7 +373,8 @@ Remaining internal work:
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked
   namespace-qualified `matrix.mult(...)` array/matrix paths plus the exact
-  namespace `matrix.copy(...)`/`matrix.transpose(...)` matrix paths, including bound or UDF
+  namespace `matrix.copy(...)`/`matrix.transpose(...)`/`matrix.submatrix(...)`
+  matrix paths, including bound or UDF
   matrix-result receivers, other matrix-returning calls, map/matrix templates,
   other built-in namespaces or non-producer members, non-producer `array.*`
   calls, unsupported `array.new<T>` templates, non-array/non-UDT results,

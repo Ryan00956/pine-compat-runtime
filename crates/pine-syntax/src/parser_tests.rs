@@ -554,6 +554,37 @@ fn parses_matrix_transpose_result_method_receivers_with_matrix_provenance() {
 }
 
 #[test]
+fn parses_matrix_submatrix_result_method_receivers_with_matrix_provenance() {
+    for source in [
+        "value = matrix.submatrix(values).rows()\n",
+        "value = matrix.submatrix(values, 0, 1).columns()\n",
+        "value = matrix.submatrix(values, 0, 1, 0, 1).elements_count()\n",
+        "value = matrix.submatrix(values, 0, 1, 0, 1).get(0, 0)\n",
+        "value = matrix.submatrix(values, 0, 1, 0, 1).copy().get(0, 0)\n",
+    ] {
+        let parsed = parse(source);
+
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "{source}: {:?}",
+            parsed.diagnostics
+        );
+        let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected declaration for {source}");
+        };
+        let ExprKind::Call { callee, args } = &value.kind else {
+            panic!("expected call-result method call for {source}");
+        };
+        assert!(matches!(
+            &callee.kind,
+            ExprKind::QualifiedName(parts)
+                if parts.first().is_some_and(|part| part == "$builtin_matrix_result")
+        ));
+        assert!(args[0].value.span.end < callee.span.start, "{source}");
+    }
+}
+
+#[test]
 fn rejects_methods_after_terminal_builtin_collection_result_reads() {
     for source in [
         "bad = array.from(Point.new(1)).get(0).size()\n",

@@ -883,8 +883,11 @@ store and every postfix copy are independent. Bound `values.copy()` results
 remain on the generic rejected path. Exact namespace `matrix.transpose(values)`
 shares that five-helper and element-kind contract, swaps row/column shape, and
 returns independent storage; bound `values.transpose()` results remain generic
-rejections. Every other matrix-returning call,
-`map.new` and `matrix.new` template, and other namespace/non-producer call
+rejections. Exact namespace `matrix.submatrix(values, ...)` also shares the
+five-helper and element-kind contract, returning an independent half-open range
+with default full bounds and empty row/column slices; bound
+`values.submatrix()` results remain generic rejections. Every other
+matrix-returning call, `map.new` and `matrix.new` template, and other namespace/non-producer call
 remains outside this path. Built-in namespace prefixes remain reserved, so
 same-named user or import qualifiers do not enter it. The extension carries no
 UDT/import identity and changes no public output schema.
@@ -943,9 +946,10 @@ terminal and do not open that method path; only producer `.copy()` may continue
 with another allowed array read/copy. The seven fixed cross-namespace producers
 and array-returning `matrix.mult` overloads are scalar-array-only and add no
 UDT/import identity path. Namespace matrix-returning `matrix.mult` overloads
-and exact namespace `matrix.copy`/`matrix.transpose` add only the five matrix
-readers/copy above. Both preserve the source scalar element kind, transpose
-swaps shape, and none of these paths carries UDT/import identity. Bound or UDF
+and exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix` add only
+the five matrix readers/copy above. All preserve the source scalar element kind;
+transpose swaps shape, submatrix selects a range, and none of these paths
+carries UDT/import identity. Bound or UDF
 matrix-result receivers, built-in-qualified or template call results outside
 the exact static and dynamic paths, and other
 array or matrix methods remain parser/semantic boundaries.

@@ -7,6 +7,8 @@ matrixCopyExpressionRead(values) => matrix.copy(values).copy().get(1, 0)
 
 matrixTransposeExpressionRead(values) => matrix.transpose(values).copy().get(2, 1)
 
+matrixSubmatrixExpressionRead(values) => matrix.submatrix(values, 0, 2, 1, 3).copy().get(1, 1)
+
 matrixMultMatrixBlockRead(values, scalar) =>
     int rows = matrix.mult(values, scalar).rows()
     int columns = matrix.mult(scalar, values).columns()
@@ -23,6 +25,12 @@ matrixTransposeBlockRead(values) =>
     int rows = matrix.transpose(values).rows()
     int columns = matrix.transpose(values).columns()
     float first = matrix.transpose(values).get(0, 0)
+    rows * 100 + columns * 10 + first
+
+matrixSubmatrixBlockRead(values) =>
+    int rows = matrix.submatrix(values).rows()
+    int columns = matrix.submatrix(values).columns()
+    float first = matrix.submatrix(values).get(0, 0)
     rows * 100 + columns * 10 + first
 
 left = matrix.new<float>(2, 3, 0.0)
@@ -67,6 +75,10 @@ plot(matrix.copy(left).copy().copy().get(0, 1), "matrix_copy_nested_get")
 plot(matrix.transpose(left).rows() * 100 + matrix.transpose(left).columns() * 10 + matrix.transpose(left).elements_count(), "matrix_transpose_shape")
 plot(matrix.transpose(id=left).get(row=2, column=1), "matrix_transpose_named_get")
 plot(matrix.transpose(left).copy().copy().get(1, 0), "matrix_transpose_nested_get")
+plot(matrix.submatrix(left, 0, 2, 1, 3).rows() * 100 + matrix.submatrix(left, 0, 2, 1, 3).columns() * 10 + matrix.submatrix(left, 0, 2, 1, 3).elements_count(), "matrix_submatrix_shape")
+plot(matrix.submatrix(id=left, from_row=0, to_row=2, from_column=1, to_column=3).get(row=1, column=1), "matrix_submatrix_named_get")
+plot(matrix.submatrix(left, 0, 1, 0, 2).copy().copy().get(0, 1), "matrix_submatrix_nested_get")
+plot(matrix.submatrix(left).rows() * 100 + matrix.submatrix(left).columns() * 10 + matrix.submatrix(left).elements_count(), "matrix_submatrix_default_shape")
 
 int_left = matrix.new<int>(2, 2, 0)
 int_left.set(0, 0, 1)
@@ -87,6 +99,7 @@ plot(matrix.mult(3, int_left).get(0, 0), "int_scalar_matrix_get")
 plot(matrix.mult(3, int_left).copy().get(1, 1), "int_scalar_matrix_copy_get")
 plot(matrix.copy(int_left).get(1, 1), "matrix_copy_int_get")
 plot(matrix.transpose(int_left).get(1, 0), "matrix_transpose_int_get")
+plot(matrix.submatrix(int_left, 0, 2, 0, 1).get(1, 0), "matrix_submatrix_int_get")
 
 bool_values = matrix.new<bool>(1, 1, true)
 string_values = matrix.new<string>(1, 1, "copy")
@@ -97,6 +110,9 @@ plot(matrix.copy(color_values).get(0, 0) == color.red ? 1 : 0, "matrix_copy_colo
 plot(matrix.transpose(bool_values).copy().get(0, 0) ? 1 : 0, "matrix_transpose_bool_get")
 plot(matrix.transpose(string_values).get(0, 0) == "copy" ? 1 : 0, "matrix_transpose_string_get")
 plot(matrix.transpose(color_values).get(0, 0) == color.red ? 1 : 0, "matrix_transpose_color_get")
+plot(matrix.submatrix(bool_values).copy().get(0, 0) ? 1 : 0, "matrix_submatrix_bool_get")
+plot(matrix.submatrix(string_values).get(0, 0) == "copy" ? 1 : 0, "matrix_submatrix_string_get")
+plot(matrix.submatrix(color_values).get(0, 0) == color.red ? 1 : 0, "matrix_submatrix_color_get")
 
 na_left = matrix.new<float>(2, 2, 0.0)
 na_left.set(0, 0, 1.0)
@@ -113,6 +129,7 @@ plot(na(matrix.mult(right, na).get(0, 0)) ? matrix.mult(right, na).rows() * 100 
 plot(na(matrix.mult(na, right).get(2, 1)) ? matrix.mult(na, right).rows() * 100 + matrix.mult(na, right).columns() * 10 + matrix.mult(na, right).elements_count() : -1, "scalar_matrix_na")
 plot(na(matrix.copy(na_left).get(0, 1)) ? 1 : 0, "matrix_copy_na_get")
 plot(na(matrix.transpose(na_left).get(1, 0)) ? 1 : 0, "matrix_transpose_na_get")
+plot(na(matrix.submatrix(na_left, 0, 1, 0, 2).get(0, 1)) ? 1 : 0, "matrix_submatrix_na_get")
 
 empty_zero_rows_shape = matrix.mult(matrix.new<float>(0, 2), matrix.new<float>(2, 3, 1.0)).rows() * 100 + matrix.mult(matrix.new<float>(0, 2), matrix.new<float>(2, 3, 1.0)).columns() * 10 + matrix.mult(matrix.new<float>(0, 2), matrix.new<float>(2, 3, 1.0)).elements_count()
 empty_inner_shape = matrix.mult(matrix.new<float>(2, 0), matrix.new<float>(0, 3)).rows() * 100 + matrix.mult(matrix.new<float>(2, 0), matrix.new<float>(0, 3)).columns() * 10 + matrix.mult(matrix.new<float>(2, 0), matrix.new<float>(0, 3)).elements_count()
@@ -125,6 +142,8 @@ plot(empty_matrix_scalar_shape, "empty_matrix_scalar_shape")
 plot(empty_scalar_matrix_shape, "empty_scalar_matrix_shape")
 plot(matrix.copy(matrix.new<float>(0, 2)).rows() * 100 + matrix.copy(matrix.new<float>(0, 2)).columns() * 10 + matrix.copy(matrix.new<float>(0, 2)).elements_count(), "matrix_copy_empty_shape")
 plot(matrix.transpose(matrix.new<float>(0, 2)).rows() * 100 + matrix.transpose(matrix.new<float>(0, 2)).columns() * 10 + matrix.transpose(matrix.new<float>(0, 2)).elements_count(), "matrix_transpose_empty_shape")
+plot(matrix.submatrix(left, 1, 1, 0, 3).rows() * 100 + matrix.submatrix(left, 1, 1, 0, 3).columns() * 10 + matrix.submatrix(left, 1, 1, 0, 3).elements_count(), "matrix_submatrix_empty_rows_shape")
+plot(matrix.submatrix(left, 0, 2, 2, 2).rows() * 100 + matrix.submatrix(left, 0, 2, 2, 2).columns() * 10 + matrix.submatrix(left, 0, 2, 2, 2).elements_count(), "matrix_submatrix_empty_columns_shape")
 
 direct_copy = matrix.mult(left, right).copy().copy()
 direct_copy.set(0, 0, 999.0)
@@ -142,6 +161,11 @@ namespace_transpose.set(0, 0, 888.0)
 plot(namespace_transpose.get(0, 0), "matrix_transpose_mutation")
 plot(left.get(0, 0), "matrix_transpose_source_unchanged")
 
+namespace_submatrix = matrix.submatrix(left, 0, 2, 0, 3).copy()
+namespace_submatrix.set(0, 0, 666.0)
+plot(namespace_submatrix.get(0, 0), "matrix_submatrix_mutation")
+plot(left.get(0, 0), "matrix_submatrix_source_unchanged")
+
 bound_matrix_result = left.mult(right)
 bound_scalar_result = right.mult(2.0)
 plot(bound_matrix_result.rows() * 100 + bound_matrix_result.columns() * 10 + bound_matrix_result.elements_count() + bound_matrix_result.get(0, 0), "bound_matrix_result")
@@ -152,3 +176,5 @@ plot(matrixCopyExpressionRead(left), "matrix_copy_expression_udf")
 plot(matrixCopyBlockRead(left), "matrix_copy_block_udf")
 plot(matrixTransposeExpressionRead(left), "matrix_transpose_expression_udf")
 plot(matrixTransposeBlockRead(left), "matrix_transpose_block_udf")
+plot(matrixSubmatrixExpressionRead(left), "matrix_submatrix_expression_udf")
+plot(matrixSubmatrixBlockRead(left), "matrix_submatrix_block_udf")
