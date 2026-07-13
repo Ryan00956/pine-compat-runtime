@@ -98,7 +98,10 @@ helpers, invalid helper arguments, and mutation remain fail-closed. Item 13
 adds exact namespace `matrix.copy(values)` to the same matrix-result path. Its
 `SameAsArg` result preserves the source float/int/bool/string/color matrix kind
 and admits the same five matrix helpers with copy-only continuation; bound
-`values.copy()` results remain gated. Outside the exact static producer sets
+`values.copy()` results remain gated. Item 14 adds exact namespace
+`matrix.transpose(values)` with the same five element kinds and helpers,
+row/column shape swapping, independent storage, and a retained bound
+`values.transpose()` gate. Outside the exact static producer sets
 and those namespace-only exceptions,
 unsupported `array.new<T>` types, non-producer calls, map/matrix templates,
 other matrix-returning calls, mixed or non-scalar return identities,
@@ -735,3 +738,13 @@ return/parameter flow remains deferred.
     fixture-backed. Wrong receivers, invalid helper arguments, mutation,
     broader helpers, and bound `values.copy()` call-result reads fail closed.
     No imported UDT identity or public schema field is added. Done.
+14. The exact namespace matrix-transpose continuation routes
+    `matrix.transpose(values)` through `$builtin_matrix_result`. Its `SameAsArg`
+    result preserves all five supported scalar element kinds while swapping
+    row/column shape and allocating independent storage. It exposes only the
+    five matrix read/copy helpers with named arguments and copy-only
+    continuation. Zero dimensions, `na`, coordinate mapping, nested copies,
+    UDF-contained namespace reads, and source independence are fixture-backed.
+    Wrong receivers, invalid helper arguments, mutation, broader helpers, and
+    bound `values.transpose()` call-result reads fail closed. No imported UDT
+    identity or public schema field is added. Done.
