@@ -1173,3 +1173,10 @@ return/parameter flow remains deferred.
     imported function/method provenance, dual aliases, copy independence, non-
     numeric rejection, and array-mutation rejection are fixture-backed. No
     imported UDT identity or public schema field is added. Done.
+47. Every existing concrete matrix call-result producer exposes terminal
+    `.is_square()`. It accepts all five supported scalar matrix kinds, reuses
+    the ordinary row/column equality rule, and returns a simple bool without a
+    result-prefix transition. Namespace/bound operations, exact templates,
+    local/imported function and method provenance, true/false shapes, dual
+    aliases, invalid arity, and terminal continuation are fixture-backed. No
+    imported UDT identity or public schema field is added. Done.

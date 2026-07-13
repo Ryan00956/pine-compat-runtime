@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added terminal `.is_square()` reads to every existing concrete matrix call
+  result. The helper accepts float/int/bool/string/color matrices, returns a
+  simple bool, preserves the ordinary `matrix.is_square` shape rule, and does
+  not create another postfix receiver. Namespace/bound operations, exact
+  `matrix.new<T>` templates, local and imported function or method provenance,
+  true/false shapes, dual aliases, invalid arity, and terminal continuation are
+  fixture-backed.
 - Added direct `.eigenvalues()` reads to concrete numeric matrix call results.
   The method preserves the existing numeric-matrix type check and square-
   matrix runtime boundary, returns a fresh `array<float>`, and supports direct

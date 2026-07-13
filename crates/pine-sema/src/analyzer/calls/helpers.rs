@@ -135,6 +135,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "row" => Some("matrix.row"),
         "col" => Some("matrix.col"),
         "eigenvalues" => Some("matrix.eigenvalues"),
+        "is_square" => Some("matrix.is_square"),
         _ => None,
     }
 }
@@ -598,6 +599,7 @@ mod tests {
             ("row", "matrix.row"),
             ("col", "matrix.col"),
             ("eigenvalues", "matrix.eigenvalues"),
+            ("is_square", "matrix.is_square"),
         ] {
             assert_eq!(
                 matrix_call_result_builtin_name(method_name),
@@ -609,15 +611,7 @@ mod tests {
             );
         }
 
-        for method_name in [
-            "size",
-            "set",
-            "fill",
-            "reverse",
-            "transpose",
-            "sum",
-            "is_square",
-        ] {
+        for method_name in ["size", "set", "fill", "reverse", "transpose", "sum"] {
             assert_eq!(matrix_call_result_builtin_name(method_name), None);
         }
     }

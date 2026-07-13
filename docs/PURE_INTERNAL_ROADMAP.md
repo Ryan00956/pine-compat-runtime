@@ -547,6 +547,14 @@ Current baseline:
   result behavior, and source independence remain unchanged. Non-numeric
   matrix results, array mutation, broader matrix helpers, and continuation
   after a terminal eigenvalue-array reader remain gated.
+  The next matrix-result predicate slice adds terminal `.is_square()` across
+  the same concrete producer set. It accepts all five supported scalar matrix
+  kinds, returns a simple bool using the ordinary row/column equality rule,
+  and intentionally does not transition to another matrix or array call-result
+  prefix. Namespace/bound operations, exact templates, local/imported function
+  and method provenance, true/false shapes, dual aliases, invalid arity, and
+  terminal continuation are fixture-backed; other broader helpers and mutation
+  remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

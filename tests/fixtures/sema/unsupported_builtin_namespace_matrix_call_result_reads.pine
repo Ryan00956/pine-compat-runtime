@@ -75,5 +75,6 @@ col_bad_index = matrix.mult(left, right).col("bad")
 col_push = matrix.mult(left, right).col(0).push(3.0)
 eigenvalues_push = matrix.mult(left, right).eigenvalues().push(3.0)
 bool_eigenvalues = matrix.copy(bool_values).eigenvalues()
+is_square_extra_arg = matrix.copy(left).is_square(0)
 
 plot(close)

@@ -1231,6 +1231,13 @@ Recommended future slices:
     methods, dual aliases, copy independence, non-numeric rejection, and array-
     mutation rejection are fixture-backed. Broader matrix helpers and terminal
     eigenvalue-reader continuation remain fail closed.
+61. Matrix call-result square checks: done for every existing concrete matrix
+    producer. `.is_square()` reuses the all-kind matrix signature and ordinary
+    row/column equality rule, returns a simple bool, and is terminal without a
+    matrix- or array-result prefix transition. Namespace/bound operations,
+    exact five-scalar templates, local/imported functions and methods, true and
+    false shapes, dual aliases, invalid arity, and terminal continuation are
+    fixture-backed. Broader helpers and mutation remain fail closed.
 
 ## Completion Gate For Future Positive Support
 
