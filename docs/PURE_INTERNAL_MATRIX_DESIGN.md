@@ -1490,6 +1490,15 @@ Recommended future slices:
     method, float/int, clamp, nonnumeric rejection, invalid types/arity, copy-
     continuation, and terminal-continuation paths are fixture-backed. Matrix-
     valued continuation is unchanged.
+91. Terminal rightmost binary searches on numeric array-valued call results:
+    done for numeric matrix row/column/eigenvalue arrays, array-returning
+    `matrix.mult`, and the remaining numeric array-result producers. Exact
+    duplicates return their last index; misses return the nearest-right index,
+    with the same below-min/above-max clamps, numeric/ascending gates, empty/
+    upstream-`na` `-1`, `simple int`, non-mutation, and terminal boundaries.
+    Namespace/bound, local/imported function/method, float/int, nonnumeric
+    rejection, invalid types/arity, copy-continuation, and terminal-continuation
+    paths are fixture-backed. Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

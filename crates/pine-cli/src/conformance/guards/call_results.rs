@@ -62,6 +62,7 @@ const BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.lastindexof",
     "array.binary_search",
     "array.binary_search_leftmost",
+    "array.binary_search_rightmost",
     "array.abs",
     "array.standardize",
     "array.sort_indices",
@@ -223,6 +224,7 @@ const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.lastindexof",
     "array.binary_search",
     "array.binary_search_leftmost",
+    "array.binary_search_rightmost",
     "array method calls",
     "expression-body functions",
     "multi-statement functions",
@@ -348,6 +350,7 @@ fn validate_udt_array_call_result_helper_fixture_paths(
             | "array.lastindexof"
             | "array.binary_search"
             | "array.binary_search_leftmost"
+            | "array.binary_search_rightmost"
     ) {
         return Ok(());
     }
@@ -375,7 +378,7 @@ fn validate_builtin_array_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_ARRAY_CALL_RESULT_FIXTURES,
-        "fixture-backed static-array builtin/template call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search/binary_search_leftmost dispatch and retained producer/helper boundaries",
+        "fixture-backed static-array builtin/template call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search/binary_search_leftmost/binary_search_rightmost dispatch and retained producer/helper boundaries",
     )
 }
 
@@ -411,7 +414,7 @@ fn validate_builtin_namespace_array_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES,
-        "fixture-backed non-array-namespace array-capable producer call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search/binary_search_leftmost dispatch and retained result-type/helper boundaries",
+        "fixture-backed non-array-namespace array-capable producer call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search/binary_search_leftmost/binary_search_rightmost dispatch and retained result-type/helper boundaries",
     )
 }
 
@@ -755,21 +758,20 @@ mod tests {
     }
 
     #[test]
-    fn rejects_array_binary_search_leftmost_row_without_namespace_result_fixture_set() {
+    fn rejects_ordered_binary_search_rows_without_namespace_result_fixture_set() {
         let fixtures = &BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES
             [..BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES.len() - 1];
-        let error = validate_builtin_namespace_array_call_result_fixture_paths(
-            1,
+        for feature in [
             "array.binary_search_leftmost",
-            fixtures,
-        )
-        .expect_err(
-            "array.binary_search_leftmost must retain cross-namespace call-result evidence",
-        );
-
-        assert!(error.contains(
-            "tests/fixtures/sema/unsupported_builtin_namespace_array_call_result_reads.pine"
-        ));
+            "array.binary_search_rightmost",
+        ] {
+            let error =
+                validate_builtin_namespace_array_call_result_fixture_paths(1, feature, fixtures)
+                    .expect_err("ordered binary-search rows must retain cross-namespace evidence");
+            assert!(error.contains(
+                "tests/fixtures/sema/unsupported_builtin_namespace_array_call_result_reads.pine"
+            ));
+        }
     }
 
     #[test]

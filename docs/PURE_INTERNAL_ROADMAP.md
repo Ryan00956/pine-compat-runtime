@@ -792,6 +792,14 @@ Current baseline:
   map-derived, local/imported function/method, duplicate, between-value, clamp,
   empty/`na`, invalid type/arity, copy-continuation, and terminal-continuation
   paths are fixture-backed.
+  The following symmetric slice adds `.binary_search_rightmost(value)` to that
+  numeric producer set. Exact duplicates return their last index; misses return
+  the nearest-right element index, with the same below-min/above-max clamps,
+  empty/upstream-`na` `-1`, numeric/ascending gates, fixed `simple int`, non-
+  mutation, and terminal boundaries. Static/cross-namespace, numeric matrix/
+  map-derived, local/imported function/method, duplicate, between-value, clamp,
+  invalid type/arity, copy-continuation, and terminal-continuation paths are
+  fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -809,7 +817,8 @@ Remaining internal work:
   returns, conflicting identities within one tuple slot, direct helpers beyond
   the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
   `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus numeric-only
-  `.binary_search(value)`/`.binary_search_leftmost(value)` set, and
+  `.binary_search(value)`/`.binary_search_leftmost(value)`/
+  `.binary_search_rightmost(value)` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked

@@ -366,6 +366,9 @@ local_float_binary_search = localIdentity(array.from(20.0, 21.0, 22.0)).copy().b
 qualified_import_binary_search_leftmost = left.direct(array.from(60, 62, 62, 70)).binary_search_leftmost(62)
 local_int_binary_search_leftmost = localIdentity(array.from(10, 12, 14)).binary_search_leftmost(13)
 local_float_binary_search_leftmost = localIdentity(array.from(20.0, 22.0, 24.0)).copy().binary_search_leftmost(99.0)
+qualified_import_binary_search_rightmost = left.direct(array.from(60, 62, 62, 70)).binary_search_rightmost(62)
+local_int_binary_search_rightmost = localIdentity(array.from(10, 12, 14)).binary_search_rightmost(13)
+local_float_binary_search_rightmost = localIdentity(array.from(20.0, 22.0, 24.0)).copy().binary_search_rightmost(99.0)
 plot(qualified_import_size)
 plot(qualified_import_get)
 plot(qualified_import_last)
@@ -374,6 +377,7 @@ plot(qualified_import_indexof == 1 ? 1 : 0)
 plot(qualified_import_lastindexof == 2 ? 1 : 0)
 plot(qualified_import_binary_search == 1 and local_int_binary_search == 1 and local_float_binary_search == 1 ? 1 : 0)
 plot(qualified_import_binary_search_leftmost == 1 and local_int_binary_search_leftmost == 1 and local_float_binary_search_leftmost == 2 ? 1 : 0)
+plot(qualified_import_binary_search_rightmost == 2 and local_int_binary_search_rightmost == 2 and local_float_binary_search_rightmost == 2 ? 1 : 0)
 
 historical_return = left.direct(left_first_values)[1]
 historical_item = array.first(historical_return)

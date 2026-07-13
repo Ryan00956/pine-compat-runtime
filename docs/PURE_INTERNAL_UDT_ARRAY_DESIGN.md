@@ -255,6 +255,9 @@ Item 86 extends concrete numeric array call results with terminal
 `.binary_search_leftmost(value)`. It keeps the numeric and ascending-input
 gates, returns the first exact duplicate or the clamped nearest-left index for
 a miss, returns `-1` for empty/upstream-`na`, and does not widen UDT support.
+Item 87 adds the symmetric terminal `.binary_search_rightmost(value)`, returning
+the last exact duplicate or clamped nearest-right index without widening UDT
+support.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1632,6 +1635,15 @@ Recommended future slices:
     imported function/method, duplicate, between-value, clamp, invalid type/
     arity, copy-continuation, and terminal-continuation paths are fixture-backed.
     Nonnumeric and UDT result arrays remain rejected. Done.
+87. The same numeric producer set exposes terminal
+    `.binary_search_rightmost(value)`. Exact duplicates return their last index;
+    misses return the nearest-right element index, clamped to `0` below the
+    minimum and the last index above the maximum. It retains the numeric/
+    ascending, empty/upstream-`na` `-1`, `simple int`, non-mutation, and terminal
+    boundaries. Static/cross-namespace, matrix/map-derived, local/imported
+    function/method, duplicate, between-value, clamp, invalid type/arity, copy-
+    continuation, and terminal-continuation paths are fixture-backed.
+    Nonnumeric and UDT result arrays remain rejected. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1749,6 +1761,8 @@ Item 85 adds terminal exact binary search only to concrete numeric array call
 results, retaining the numeric gate and excluding UDT arrays.
 Item 86 adds terminal leftmost binary search over that numeric producer set,
 including nearest-left clamping for misses, without widening UDT identity.
+Item 87 adds terminal rightmost binary search over the same set, including
+nearest-right clamping for misses, without widening UDT identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

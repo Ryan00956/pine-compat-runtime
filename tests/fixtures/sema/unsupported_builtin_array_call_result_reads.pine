@@ -54,5 +54,11 @@ bool_binary_search_leftmost = array.new_bool(2, true).binary_search_leftmost(tru
 chart_point_binary_search_leftmost = array.new<chart.point>(1, chart.point.now(close)).binary_search_leftmost(chart.point.now(close))
 binary_search_leftmost_wrong_value = array.from(1, 2).binary_search_leftmost("bad")
 binary_search_leftmost_extra_arg = array.copy(array.from(1, 2)).binary_search_leftmost(1, 2)
+copy_binary_search_rightmost_udt = array.copy(first_values).binary_search_rightmost(First.new(10.0, 100.0))
+string_binary_search_rightmost = array.from("a", "b").binary_search_rightmost("a")
+bool_binary_search_rightmost = array.new_bool(2, true).binary_search_rightmost(true)
+chart_point_binary_search_rightmost = array.new<chart.point>(1, chart.point.now(close)).binary_search_rightmost(chart.point.now(close))
+binary_search_rightmost_wrong_value = array.from(1, 2).binary_search_rightmost("bad")
+binary_search_rightmost_extra_arg = array.copy(array.from(1, 2)).binary_search_rightmost(1, 2)
 
 concat_inside_udf = badConcat(array.from(1), array.from(2))

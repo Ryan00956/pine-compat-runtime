@@ -37,6 +37,7 @@ int pivot_indexof = ta.pivot_point_levels("Traditional", true, true).indexof(piv
 int pivot_lastindexof = ta.pivot_point_levels("Traditional", true, true).lastindexof(pivot_first)
 int pivot_binary_search = ta.pivot_point_levels("Traditional", true, true).binary_search(pivot_first)
 int pivot_binary_search_leftmost = ta.pivot_point_levels("Traditional", true, true).binary_search_leftmost(pivot_first)
+int pivot_binary_search_rightmost = ta.pivot_point_levels("Traditional", true, true).binary_search_rightmost(pivot_first)
 
 float_matrix = matrix.new<float>(1, 2, 0.0)
 int_matrix = matrix.new<int>(1, 2, 0)
@@ -59,6 +60,7 @@ int matrix_rows_index = matrix.row(float_matrix, 0).indexof(0.0) + matrix.col(in
 int matrix_rows_last_index = matrix.row(float_matrix, 0).lastindexof(0.0) + matrix.col(int_matrix, 0).lastindexof(0) + matrix.row(bool_matrix, 0).lastindexof(false) + matrix.col(string_matrix, 0).lastindexof("") + matrix.row(color_matrix, 0).lastindexof(color.black)
 int matrix_numeric_binary_search = matrix.row(float_matrix, 0).binary_search(0.0) + matrix.col(int_matrix, 0).binary_search(0)
 int matrix_numeric_binary_search_leftmost = matrix.row(float_matrix, 0).binary_search_leftmost(0.0) + matrix.col(int_matrix, 0).binary_search_leftmost(0)
+int matrix_numeric_binary_search_rightmost = matrix.row(float_matrix, 0).binary_search_rightmost(0.0) + matrix.col(int_matrix, 0).binary_search_rightmost(0)
 
 float_diagonal = matrix.new<float>(2, 2, 0.0)
 int_diagonal = matrix.new<int>(2, 2, 0)
@@ -73,6 +75,7 @@ int eigen_indexof = matrix.eigenvalues(float_diagonal).copy().indexof(0.0)
 int eigen_lastindexof = matrix.eigenvalues(float_diagonal).copy().lastindexof(0.0)
 int eigen_binary_search = matrix.eigenvalues(float_diagonal).copy().binary_search(0.0)
 int eigen_binary_search_leftmost = matrix.eigenvalues(float_diagonal).copy().binary_search_leftmost(0.0)
+int eigen_binary_search_rightmost = matrix.eigenvalues(float_diagonal).copy().binary_search_rightmost(0.0)
 
 int_float = map.new<int, float>()
 int_float.put(10, 1.5)
@@ -105,6 +108,7 @@ int map_indexof = map.keys(int_float).indexof(10) + map.values(int_float).copy()
 int map_lastindexof = map.keys(int_float).lastindexof(10) + map.values(int_float).copy().lastindexof(1.5) + map.keys(float_bool).lastindexof(1.25) + map.values(bool_string).lastindexof("off") + map.values(string_color).lastindexof(color.red) + map.values(color_int).lastindexof(9)
 int map_numeric_binary_search = map.keys(int_float).binary_search(10) + map.values(int_float).copy().binary_search(1.5) + map.keys(float_bool).binary_search(1.25) + map.values(color_int).binary_search(9)
 int map_numeric_binary_search_leftmost = map.keys(int_float).binary_search_leftmost(10) + map.values(int_float).copy().binary_search_leftmost(1.5) + map.keys(float_bool).binary_search_leftmost(1.25) + map.values(color_int).binary_search_leftmost(9)
+int map_numeric_binary_search_rightmost = map.keys(int_float).binary_search_rightmost(10) + map.values(int_float).copy().binary_search_rightmost(1.5) + map.keys(float_bool).binary_search_rightmost(1.25) + map.values(color_int).binary_search_rightmost(9)
 
 mult_matrix = matrix.new<float>(2, 2, 1.0)
 mult_vector = array.from(2.0, 3.0)
@@ -127,5 +131,6 @@ int mult_indexof = matrix.mult(mult_matrix, mult_vector).copy().indexof(5.0) + m
 int mult_lastindexof = matrix.mult(mult_matrix, mult_vector).copy().lastindexof(5.0) + matrix.mult(mult_vector, mult_matrix).lastindexof(5.0) + matrix.mult(mult_vector, mult_other).lastindexof(23.0) + mult_matrix.mult(mult_vector).lastindexof(5.0)
 int mult_binary_search = matrix.mult(mult_matrix, mult_vector).copy().binary_search(5.0) + matrix.mult(mult_vector, mult_matrix).binary_search(5.0) + matrix.mult(mult_vector, mult_other).binary_search(23.0) + mult_matrix.mult(mult_vector).binary_search(5.0)
 int mult_binary_search_leftmost = matrix.mult(mult_matrix, mult_vector).copy().binary_search_leftmost(5.0) + matrix.mult(mult_vector, mult_matrix).binary_search_leftmost(5.0) + matrix.mult(mult_vector, mult_other).binary_search_leftmost(23.0) + mult_matrix.mult(mult_vector).binary_search_leftmost(5.0)
+int mult_binary_search_rightmost = matrix.mult(mult_matrix, mult_vector).copy().binary_search_rightmost(5.0) + matrix.mult(mult_vector, mult_matrix).binary_search_rightmost(5.0) + matrix.mult(mult_vector, mult_other).binary_search_rightmost(23.0) + mult_matrix.mult(mult_vector).binary_search_rightmost(5.0)
 
 plot(split_size + pivot_size + eigen_size + map_size + matrix_int_row + matrix_int_col + map_int_key + map_int_value + map_nested_copy + (split_get == split_first or split_last == split_nested_copy ? 1 : 0) + (split_empty_first and split_na_size and eigen_empty and map_empty and map_na ? 1 : 0) + (pivot_get + pivot_first + pivot_last + pivot_nested_copy) + matrix_float_row + matrix_float_col + matrix_nested_copy + eigen_get + eigen_first + eigen_last + eigen_nested_copy + map_float_value + map_float_key + (matrix_bool_row and matrix_bool_col and map_bool_value ? 1 : 0) + (not map_bool_key ? 1 : 0) + (matrix_string_row == matrix_string_col or map_string_value == map_string_key ? 1 : 0) + (matrix_color_row == matrix_color_col or map_color_value == map_color_key ? 1 : 0) + (splitExpressionRead() == "left" ? 1 : 0) + readMatrixAndMap(float_matrix, int_float) + split_empty_size + mult_matrix_array_size + mult_matrix_array_get + mult_matrix_array_first + mult_matrix_array_last + mult_matrix_array_copy.first() + mult_array_matrix_get + mult_array_matrix_size + mult_array_pair_first + mult_array_pair_last + mult_int_array_pair + mult_bound_method_size + mult_expression_udf + mult_block_udf + split_indexof + pivot_indexof + matrix_rows_index + eigen_indexof + map_indexof + mult_indexof + split_lastindexof + pivot_lastindexof + matrix_rows_last_index + eigen_lastindexof + map_lastindexof + mult_lastindexof + pivot_binary_search + matrix_numeric_binary_search + eigen_binary_search + map_numeric_binary_search + mult_binary_search + (split_includes and pivot_includes and matrix_rows_include and eigen_includes and map_includes and mult_includes ? 1 : 0))

@@ -318,9 +318,9 @@ pub(super) fn validate_entry(
     validate_imported_udt_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_udt_varip_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_udt_array_control_flow_fixture_paths(line_number, feature, fixtures)?;
+    validate_array_binary_search_fixture_pairs(line_number, feature, fixtures)?;
     call_results::validate_fixture_paths(line_number, feature, fixtures)?;
     validate_local_udt_array_param_for_in_fixture_paths(line_number, feature, fixtures)?;
-    validate_array_binary_search_fixture_pairs(line_number, feature, fixtures)?;
     validate_map_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_matrix_unsupported_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_typed_declaration_collection_fixture_paths(line_number, feature, fixtures)?;

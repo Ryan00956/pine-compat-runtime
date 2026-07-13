@@ -1440,3 +1440,13 @@ return/parameter flow remains deferred.
     arity, dual-alias, copy-continuation, and terminal-continuation paths are
     fixture-backed. Imported UDT and nonnumeric result arrays remain rejected;
     no imported identity or public schema field is widened. Done.
+77. The same numeric producer set exposes terminal
+    `.binary_search_rightmost(value)`. Exact duplicates return their last index;
+    misses return the nearest-right element index, clamped to `0` below the
+    minimum and the last index above the maximum. It retains the numeric/
+    ascending, empty/upstream-`na` `-1`, `simple int`, non-mutation, and terminal
+    boundaries. Static/cross-namespace, matrix/map-derived, local/imported
+    function/method, duplicate, between-value, clamp, invalid type/arity, dual-
+    alias, copy-continuation, and terminal-continuation paths are fixture-backed.
+    Imported UDT and nonnumeric result arrays remain rejected; no imported
+    identity or public schema field is widened. Done.

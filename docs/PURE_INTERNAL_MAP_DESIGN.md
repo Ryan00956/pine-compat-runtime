@@ -418,6 +418,13 @@ Recommended future slices:
     Bool/string/color sides, local/imported provenance, dual aliases, invalid
     types/arity, copy continuation, and terminal continuation are fixture-
     backed. Done.
+21. The same numeric key/value snapshots expose terminal
+    `.binary_search_rightmost(value)`. Exact duplicates return their last index;
+    misses return the nearest-right index, with the same below-min/above-max
+    clamps, numeric/ascending gates, empty/upstream-`na` `-1`, `simple int`,
+    non-mutation, and terminal boundaries. Bool/string/color sides, local/
+    imported provenance, dual aliases, invalid types/arity, copy continuation,
+    and terminal continuation are fixture-backed. Done.
 
 ## Completion Gate For Future Widening
 

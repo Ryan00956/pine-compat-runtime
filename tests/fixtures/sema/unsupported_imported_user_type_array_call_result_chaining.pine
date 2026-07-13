@@ -32,3 +32,7 @@ udf_binary_search_leftmost_udt = lib.direct(values).binary_search_leftmost(lib.F
 method_binary_search_leftmost_udt = anchor.retainFirst(values).copy().binary_search_leftmost(lib.First.new(10.0, 100.0))
 scalar_binary_search_leftmost_string = lib.direct(array.from("a", "b")).binary_search_leftmost("a")
 binary_search_leftmost_extra_arg = lib.direct(array.from(1, 2)).binary_search_leftmost(1, 2)
+udf_binary_search_rightmost_udt = lib.direct(values).binary_search_rightmost(lib.First.new(10.0, 100.0))
+method_binary_search_rightmost_udt = anchor.retainFirst(values).copy().binary_search_rightmost(lib.First.new(10.0, 100.0))
+scalar_binary_search_rightmost_string = lib.direct(array.from("a", "b")).binary_search_rightmost("a")
+binary_search_rightmost_extra_arg = lib.direct(array.from(1, 2)).binary_search_rightmost(1, 2)
