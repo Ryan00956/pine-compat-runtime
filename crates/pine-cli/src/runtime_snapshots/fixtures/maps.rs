@@ -58,6 +58,10 @@ pub(crate) const MAP_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/local_udf_map_call_result_reads.pine",
     ),
     (
+        "runtime_local_user_method_map_call_result_reads.json",
+        "tests/fixtures/runtime/local_user_method_map_call_result_reads.pine",
+    ),
+    (
         "runtime_map_typed_declarations.json",
         "tests/fixtures/runtime/map_typed_declarations.pine",
     ),

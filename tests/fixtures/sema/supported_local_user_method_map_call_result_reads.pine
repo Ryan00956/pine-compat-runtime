@@ -1,0 +1,54 @@
+//@version=6
+indicator("Supported local user-method map call-result reads")
+
+type Anchor
+    int tag
+
+method expose(Anchor self) => string_float
+
+method exposeBlock(Anchor self) =>
+    made = string_float.copy()
+    made
+
+method exposeFresh(Anchor self) => map.new<int, string>()
+
+method exposeBoolColor(Anchor self) => bool_color
+
+method exposeColorBool(Anchor self) => color_bool
+
+method exposeIf(Anchor self, bool use_other) => use_other ? string_float_other : string_float.copy()
+
+method exposeNested(Anchor self) => self.exposeBlock()
+
+string_float = map.new<string, float>()
+string_float.put("open", 1.5)
+string_float.put("close", 2.5)
+
+string_float_other = map.new<string, float>()
+string_float_other.put("open", 8.0)
+
+bool_color = map.new<bool, color>()
+bool_color.put(true, color.red)
+
+color_bool = map.new<color, bool>()
+color_bool.put(color.blue, true)
+
+anchor = Anchor.new(1)
+copied = anchor.expose().copy()
+copied.put("copy", 9.0)
+
+size = anchor.expose().size()
+get = anchor.expose().get("open")
+contains = anchor.expose().contains("close")
+copy_chain = anchor.expose().copy().get("close")
+fresh = anchor.exposeFresh().size()
+bool_color_get = anchor.exposeBoolColor().get(true)
+color_bool_get = anchor.exposeColorBool().get(color.blue)
+block_return = anchor.exposeBlock().get("close")
+nested_return = anchor.exposeNested().get("open")
+named_control_flow = anchor.exposeIf(use_other=true).get("open")
+qualified_method = Anchor.expose(anchor).get("open")
+constructor_receiver = Anchor.new(2).expose().get("close")
+nested_copy = anchor.expose().copy().copy().get("open")
+
+plot(size + get + copy_chain + fresh + block_return + nested_return + named_control_flow + qualified_method + constructor_receiver + nested_copy)

@@ -23,9 +23,14 @@ Unqualified local-UDF results with one concrete supported scalar map template
 share the same four helpers through `$call_result`, preserve call-specific
 template/content metadata across parameter passthrough, block aliases, nested
 calls, same-template control flow, constructed/copied returns, and named/
-reordered arguments, and allow only copy continuation. Unknown/`na`, scalar,
-array, matrix, qualified user-method/imported-function, wrong-template/key,
-broader-helper, mutation, and terminal-read continuation cases remain gated.
+reordered arguments, and allow only copy continuation. Local user-method
+results retaining one concrete supported scalar map template use the same
+helpers across receiver-style, local-type-qualified, direct-constructor-
+receiver, block-return, nested-method, same-template control-flow,
+constructed-result, scalar-template-interleaving, and independent-copy paths.
+Unknown/`na`, scalar, array, matrix, imported user-method/imported-function,
+wrong-template/key, broader-helper, mutation, and terminal-read continuation
+cases remain gated.
 Equivalent method aliases for the supported namespace subset lower to the same
 runtime calls. Scalar `map name = map.new<K, V>()` declarations infer their
 template from the initializer; bare `map` declarations without a known scalar
@@ -64,9 +69,16 @@ Current evidence:
   aliases, nested calls, same-template control flow, constructed/copied
   returns, named/reordered arguments, per-call scalar template interleaving,
   empty maps, independent copies, and copy-only continuation. Unknown/`na`,
-  scalar, array, matrix, qualified user-method/imported-function results,
-  wrong templates/keys, broader helpers, mutation, and terminal-read
-  continuation remain gated.
+  scalar, array, matrix, imported user-method/imported-function results, wrong
+  templates/keys, broader helpers, mutation, and terminal-read continuation
+  remain gated; the local user-method path is covered separately below.
+- `tests/fixtures/runtime/local_user_method_map_call_result_reads.pine` plus
+  the matching supported/unsupported local-method semantic fixtures cover
+  direct size/get/contains/copy through receiver-style, local-type-qualified,
+  direct-constructor-receiver, block-return, nested-method, same-template
+  control-flow, constructed-result, scalar-template-interleaving,
+  independent-copy, and copy-only-continuation paths. The imported-method
+  negative fixture confirms that source provenance remains module-local.
 - `tests/fixtures/runtime/map_put_get_contains.pine` and
   `tests/fixtures/sema/supported_map_put_get_contains.pine` cover scalar
   `map.put`, `map.get`, and `map.contains` namespace calls, including
@@ -331,6 +343,12 @@ Recommended future slices:
     template share direct size/get/contains/copy with copy-only continuation,
     per-call template isolation, and retained non-local/unresolved/broader/
     mutation boundaries. Done.
+13. Local user-method call results with one concrete supported scalar map
+    template share direct size/get/contains/copy for receiver-style,
+    local-type-qualified, and direct-constructor receivers, with block/nested/
+    control-flow/template/copy coverage and retained imported-method,
+    unresolved, broader-helper, mutation, and terminal-reader boundaries.
+    Done.
 
 ## Completion Gate For Future Widening
 
@@ -377,5 +395,7 @@ templates, nested collection values, and map mutation inside user-defined
 functions remain unsupported until a later slice designs and fixtures those
 semantics. Unqualified local-UDF results with a concrete supported scalar map
 template now share size/get/contains/copy with copy-only continuation and
-per-call template isolation; qualified user-method/imported-function and
-unresolved/mixed-template direct result receivers remain gated.
+per-call template isolation. Local user-method results with a concrete
+supported scalar map template now share the same helpers with copy-only
+continuation; imported user-method/imported-function and unresolved or
+mixed-template direct result receivers remain gated.

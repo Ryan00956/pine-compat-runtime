@@ -469,8 +469,17 @@ Current baseline:
   flow, constructed/copied results, named/reordered arguments, empty maps,
   per-call scalar key/value kinds, and independent copies share the four map
   helpers with copy-only continuation. Unknown/`na`, scalar, array, matrix,
-  qualified user-method/imported-function, wrong-template/key, broader-helper,
-  mutation, and terminal-read continuation remain gated.
+  local user-method, imported user-method/imported-function,
+  wrong-template/key, broader-helper, mutation, and terminal-read continuation
+  remain gated.
+  The following closed map call-boundary slice admits local user-method results
+  with one concrete supported scalar map template. Receiver-style,
+  local-type-qualified, direct-constructor-receiver, block-return,
+  nested-method, same-template control-flow, constructed-result,
+  scalar-template-interleaving, independent-copy, and copy-only-continuation
+  paths share the four helpers. Imported methods, unresolved or mixed
+  templates, broader helpers, mutation, and terminal-read continuation remain
+  gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -504,10 +513,10 @@ Remaining internal work:
   matrix-valued `values.mult(other)`, qualified user-method/imported-function
   matrix-result receivers, unqualified local-UDF results without a concrete
   supported matrix kind,
-  other matrix-returning calls, unsupported matrix/map templates, qualified
-  user-method/imported-function map-result receivers, unqualified local-UDF
-  map results without one concrete supported scalar template, and other map
-  call-result receivers,
+  other matrix-returning calls, unsupported matrix/map templates, imported
+  user-method/imported-function map-result receivers, local user-method or
+  unqualified local-UDF map results without one concrete supported scalar
+  template, and other map call-result receivers,
   other built-in namespaces or non-producer members, non-producer `array.*`
   calls, unsupported `array.new<T>` templates, non-array/non-UDT results,
   unknown/`na` results

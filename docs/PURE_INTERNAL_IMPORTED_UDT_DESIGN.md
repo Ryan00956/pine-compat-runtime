@@ -1059,3 +1059,12 @@ return/parameter flow remains deferred.
     results, wrong templates/keys, broader helpers, mutation, and terminal-read
     continuation remain fail closed. No imported UDT identity or public schema
     field is added. Done.
+37. Local user-method results whose call-specific result retains one concrete
+    supported scalar map template expose only size/get/contains/copy with
+    copy-only continuation. Analysis records root-source method-call
+    provenance so receiver-style, local-type-qualified, direct-constructor-
+    receiver, block-return, nested-method, same-template control-flow,
+    constructed-result, scalar-template-interleaving, and independent-copy
+    paths lower without admitting imported methods. Unresolved/mixed templates,
+    broader helpers, mutation, and terminal-read continuation remain fail
+    closed. No imported UDT identity or public schema field is added. Done.

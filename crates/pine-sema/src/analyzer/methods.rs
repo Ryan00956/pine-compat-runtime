@@ -412,6 +412,10 @@ impl Analyzer {
             self.mark_expr_map(call_span, info);
             self.mark_expr_map(receiver.span, info);
         }
+        if method.source_id == SourceId::root() {
+            self.local_user_method_call_results
+                .insert(self.expr_key(call_span));
+        }
         Some(return_type)
     }
 

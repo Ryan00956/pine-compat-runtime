@@ -1,0 +1,39 @@
+//@version=6
+indicator("Unsupported local user-method map call-result reads")
+
+type Anchor
+    int tag
+
+method expose(Anchor self) => string_float
+
+method exposeMixed(Anchor self, bool choose_first) => choose_first ? string_float : int_string
+
+method noneResult(Anchor self) => na
+
+method numberResult(Anchor self) => 1
+
+method arrayResult(Anchor self) => array.from(1.0, 2.0)
+
+method matrixResult(Anchor self) => matrix.new<float>(1, 1, 1.0)
+
+string_float = map.new<string, float>()
+int_string = map.new<int, string>()
+anchor = Anchor.new(1)
+
+bad_get_key = anchor.expose().get(1)
+bad_contains_key = anchor.expose().contains(1)
+bad_get_arity = anchor.expose().get("v", "extra")
+put_result = anchor.expose().put("v", 1.0)
+clear_result = anchor.expose().clear()
+remove_result = anchor.expose().remove("v")
+keys_result = anchor.expose().keys()
+values_result = anchor.expose().values()
+copy_keys_result = anchor.expose().copy().keys()
+terminal_chain = anchor.expose().size().copy()
+mixed_size = anchor.exposeMixed(true).size()
+none_size = anchor.noneResult().size()
+number_size = anchor.numberResult().size()
+array_contains = anchor.arrayResult().contains(1.0)
+matrix_contains = anchor.matrixResult().contains("v")
+
+plot(close)

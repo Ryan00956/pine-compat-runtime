@@ -135,6 +135,17 @@ pub(super) const BUILTIN_MAP_CALL_RESULT_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/local_udf_map_call_result_reads.pine",
     "tests/fixtures/sema/supported_local_udf_map_call_result_reads.pine",
     "tests/fixtures/sema/unsupported_local_udf_map_call_result_reads.pine",
+    "tests/fixtures/runtime/local_user_method_map_call_result_reads.pine",
+    "tests/fixtures/sema/supported_local_user_method_map_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_local_user_method_map_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_imported_user_method_map_call_result_reads.pine",
+];
+
+const LOCAL_USER_METHOD_MAP_CALL_RESULT_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/local_user_method_map_call_result_reads.pine",
+    "tests/fixtures/sema/supported_local_user_method_map_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_local_user_method_map_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_imported_user_method_map_call_result_reads.pine",
 ];
 
 const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
@@ -187,7 +198,8 @@ pub(super) fn validate_map_fixture_paths(
     feature: &str,
     fixtures: &[&str],
 ) -> Result<(), String> {
-    validate_builtin_map_call_result_fixture_paths(line_number, feature, fixtures)
+    validate_builtin_map_call_result_fixture_paths(line_number, feature, fixtures)?;
+    validate_local_user_method_map_call_result_fixture_paths(line_number, feature, fixtures)
 }
 
 fn validate_local_udt_array_call_return_fixture_paths(
@@ -354,7 +366,25 @@ fn validate_builtin_map_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_MAP_CALL_RESULT_FIXTURES,
-        "fixture-backed exact scalar map.new template, namespace map.copy result, and concrete unqualified local-UDF map-result size/get/contains/copy dispatch with retained per-call template/content metadata and helper/template/non-local-producer/mutation boundaries",
+        "fixture-backed exact scalar map.new template, namespace map.copy result, concrete unqualified local-UDF map results, and concrete local user-method map results with size/get/contains/copy dispatch plus retained per-call template/content metadata and helper/template/imported-producer/mutation boundaries",
+    )
+}
+
+fn validate_local_user_method_map_call_result_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if feature != "user-defined methods" {
+        return Ok(());
+    }
+
+    require_fixtures(
+        line_number,
+        feature,
+        fixtures,
+        LOCAL_USER_METHOD_MAP_CALL_RESULT_FIXTURES,
+        "fixture-backed concrete local user-method map-result size/get/contains/copy dispatch and retained imported-method/helper/template/mutation boundaries",
     )
 }
 
@@ -1005,9 +1035,14 @@ mod tests {
 
     #[test]
     fn rejects_local_udf_map_result_row_without_negative_fixture() {
-        let fixtures =
-            &BUILTIN_MAP_CALL_RESULT_FIXTURES[..BUILTIN_MAP_CALL_RESULT_FIXTURES.len() - 1];
-        let error = validate_builtin_map_call_result_fixture_paths(1, "map.*", fixtures)
+        let fixtures: Vec<_> = BUILTIN_MAP_CALL_RESULT_FIXTURES
+            .iter()
+            .copied()
+            .filter(|fixture| {
+                *fixture != "tests/fixtures/sema/unsupported_local_udf_map_call_result_reads.pine"
+            })
+            .collect();
+        let error = validate_builtin_map_call_result_fixture_paths(1, "map.*", &fixtures)
             .expect_err("local UDF map-result rows must retain the negative boundary fixture");
 
         assert!(
@@ -1028,5 +1063,44 @@ mod tests {
             .expect_err("local UDF map-result rows must retain runtime evidence");
 
         assert!(error.contains("tests/fixtures/runtime/local_udf_map_call_result_reads.pine"));
+    }
+
+    #[test]
+    fn rejects_local_user_method_map_result_row_without_runtime_fixture() {
+        let fixtures: Vec<_> = BUILTIN_MAP_CALL_RESULT_FIXTURES
+            .iter()
+            .copied()
+            .filter(|fixture| {
+                *fixture != "tests/fixtures/runtime/local_user_method_map_call_result_reads.pine"
+            })
+            .collect();
+        let error = validate_builtin_map_call_result_fixture_paths(1, "map.*", &fixtures)
+            .expect_err("local user-method map-result rows must retain runtime evidence");
+
+        assert!(
+            error.contains("tests/fixtures/runtime/local_user_method_map_call_result_reads.pine")
+        );
+    }
+
+    #[test]
+    fn rejects_local_user_method_map_result_row_without_imported_boundary_fixture() {
+        let fixtures: Vec<_> = LOCAL_USER_METHOD_MAP_CALL_RESULT_FIXTURES
+            .iter()
+            .copied()
+            .filter(|fixture| {
+                *fixture
+                    != "tests/fixtures/sema/unsupported_imported_user_method_map_call_result_reads.pine"
+            })
+            .collect();
+        let error = validate_local_user_method_map_call_result_fixture_paths(
+            1,
+            "user-defined methods",
+            &fixtures,
+        )
+        .expect_err("user-method rows must retain the imported-method boundary");
+
+        assert!(error.contains(
+            "tests/fixtures/sema/unsupported_imported_user_method_map_call_result_reads.pine"
+        ));
     }
 }

@@ -239,3 +239,4 @@ method mutateWrapperLocal(Wrapper w, float delta) =>
     local = Wrapper.new(Point.new(w.nested.x))
     local.nested := Point.new(local.nested.x + delta)
     local
+method exposeMap(Point p) => map.new<string, float>()

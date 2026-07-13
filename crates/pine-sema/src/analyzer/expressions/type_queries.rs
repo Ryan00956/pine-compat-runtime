@@ -186,6 +186,7 @@ impl Analyzer {
                 }
                 if let Some(method_name) = builtin_map_call_result_method_name(callee, args)
                     .or_else(|| self.local_udf_call_result_method_name(callee, args))
+                    .or_else(|| self.local_user_method_call_result_method_name(callee, args))
                     && arg_types
                         .first()
                         .copied()

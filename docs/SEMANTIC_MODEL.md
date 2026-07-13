@@ -714,10 +714,15 @@ one concrete supported scalar map template share the same four helpers through
 `$call_result`; parameter passthrough, block aliases, nested calls,
 same-template control flow, constructed/copied results, named/reordered
 arguments, empty maps, and per-call scalar key/value templates retain their
-existing semantics. Only copy may continue. Unknown/`na`, scalar, array,
-matrix, qualified user-method/imported-function, wrong-template/key, broader
-helpers, mutation, and terminal-read continuation remain gated. This path adds
-no UDT/import identity or public schema field.
+existing semantics. Local user-method results with one concrete supported
+scalar map template enter the same helper lowering only when analysis marked
+the producer call as a root-source method; receiver-style,
+local-type-qualified, direct-constructor-receiver, block-return, nested-method,
+same-template control-flow, constructed-result, scalar-template-interleaving,
+and independent-copy paths are preserved. Only copy may continue. Unknown/
+`na`, scalar, array, matrix, imported user-method/imported-function,
+wrong-template/key, broader helpers, mutation, and terminal-read continuation
+remain gated. This path adds no UDT/import identity or public schema field.
 
 For the array-helper branch, the receiver must resolve to a supported array
 kind. UDT-array producers must also carry one concrete same-local or

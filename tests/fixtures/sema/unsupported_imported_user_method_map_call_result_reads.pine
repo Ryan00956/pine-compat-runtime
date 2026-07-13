@@ -1,0 +1,8 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Unsupported imported user-method map call-result reads")
+
+point = lib.Point.new(1.0)
+imported_size = point.exposeMap().size()
+
+plot(close)

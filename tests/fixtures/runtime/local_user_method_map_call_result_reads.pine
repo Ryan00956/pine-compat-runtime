@@ -1,0 +1,58 @@
+//@version=6
+indicator("Local user-method map call-result reads")
+
+type Anchor
+    int tag
+
+method expose(Anchor self) => string_float
+
+method exposeBlock(Anchor self) =>
+    made = string_float.copy()
+    made
+
+method exposeFresh(Anchor self) => map.new<int, string>()
+
+method exposeBoolColor(Anchor self) => bool_color
+
+method exposeColorBool(Anchor self) => color_bool
+
+method exposeIf(Anchor self, bool use_other) =>
+    if use_other
+        string_float_other
+    else
+        string_float.copy()
+
+method exposeNested(Anchor self) => self.exposeBlock()
+
+string_float = map.new<string, float>()
+string_float.put("open", 1.5)
+string_float.put("close", 2.5)
+
+string_float_other = map.new<string, float>()
+string_float_other.put("open", 8.0)
+
+bool_color = map.new<bool, color>()
+bool_color.put(true, color.red)
+
+color_bool = map.new<color, bool>()
+color_bool.put(color.blue, true)
+
+anchor = Anchor.new(1)
+copied = anchor.expose().copy()
+copied.put("copy", 9.0)
+
+plot(anchor.expose().size(), "size")
+plot(anchor.expose().get("open"), "get")
+plot(anchor.expose().contains("close") ? 1 : 0, "contains")
+plot(anchor.expose().copy().get("close"), "copy_chain")
+plot(na(string_float.get("copy")) ? 1 : 0, "source_independent")
+plot(copied.get("copy"), "copy_independent")
+plot(anchor.exposeFresh().size(), "fresh")
+plot(anchor.exposeBoolColor().get(true) == color.red ? 1 : 0, "bool_color")
+plot(anchor.exposeColorBool().get(color.blue) ? 1 : 0, "color_bool")
+plot(anchor.exposeBlock().get("close"), "block_return")
+plot(anchor.exposeNested().get("open"), "nested_return")
+plot(anchor.exposeIf(use_other=true).get("open"), "named_control_flow")
+plot(Anchor.expose(anchor).get("open"), "qualified_method")
+plot(Anchor.new(2).expose().get("close"), "constructor_receiver")
+plot(anchor.expose().copy().copy().get("open"), "nested_copy")

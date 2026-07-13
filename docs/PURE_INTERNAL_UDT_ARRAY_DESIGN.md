@@ -1234,6 +1234,15 @@ Recommended future slices:
     results, wrong templates/keys, broader helpers, mutation, and terminal-read
     continuation remain fail closed. No UDT/import identity or public schema
     field is added. Done.
+47. Local user-method results whose call-specific result retains one concrete
+    supported scalar map template expose only size/get/contains/copy with
+    copy-only continuation. Root-source method-call provenance keeps
+    receiver-style, local-type-qualified, direct-constructor-receiver,
+    block-return, nested-method, same-template control-flow,
+    constructed-result, scalar-template-interleaving, and independent-copy
+    paths separate from imported methods. Unresolved/mixed templates, broader
+    helpers, mutation, and terminal-read continuation remain fail closed. No
+    UDT/import identity or public schema field is added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1320,8 +1329,12 @@ Item 45 adds unqualified local-UDF concrete matrix-result reads with only
 call-specific matrix-kind metadata and no UDT/import identity.
 Item 46 adds unqualified local-UDF concrete scalar-map-result reads with only
 call-specific key/value template metadata and no UDT/import identity.
+Item 47 adds local user-method concrete scalar-map-result reads with
+root-source call provenance plus key/value template metadata and no
+UDT/import identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
-closed set, qualified user-method/imported-function matrix/map-result receivers,
+closed set, qualified user-method/imported-function matrix-result receivers,
+imported user-method/imported-function map-result receivers,
 built-in-qualified/template call-result receivers
 outside the closed paths, unsupported `array.new<T>` templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, unsupported

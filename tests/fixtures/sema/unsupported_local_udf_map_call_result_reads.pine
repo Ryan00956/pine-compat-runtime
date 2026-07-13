@@ -1,9 +1,6 @@
 //@version=6
 indicator("Unsupported local UDF map call-result reads")
 
-type Anchor
-    int tag
-
 identity(id) => id
 
 noneResult() => na
@@ -14,10 +11,7 @@ arrayResult() => array.from(1.0, 2.0)
 
 matrixResult() => matrix.new<float>(1, 1, 1.0)
 
-method expose(Anchor self) => string_float
-
 string_float = map.new<string, float>()
-anchor = Anchor.new(1)
 
 bad_get_key = identity(string_float).get(1)
 bad_contains_key = identity(string_float).contains(1)
@@ -33,6 +27,5 @@ none_size = noneResult().size()
 number_size = numberResult().size()
 array_contains = arrayResult().contains(1.0)
 matrix_contains = matrixResult().contains("v")
-method_size = anchor.expose().size()
 
 plot(close)
