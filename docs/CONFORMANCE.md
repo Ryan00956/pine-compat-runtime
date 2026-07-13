@@ -229,11 +229,11 @@ constructor or checked UDT-template path. Only `.size()`, `.get(index)`,
 `.first()`, `.last()`, `.copy()`, `.includes(value)`, `.indexof(value)`, and
 `.lastindexof(value)`, plus numeric-only `.binary_search(value)` and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
-`.min(nth?)`/`.max(nth?)`, may follow one of those producer calls;
+`.min(nth?)`/`.max(nth?)`/`.sum()`, may follow one of those producer calls;
 the parser uses the impossible synthetic prefix `$builtin_array_result` and
 semantic analysis rechecks the receiver type, producer arguments, and concrete
 UDT identity before lowering. Only `.copy()` and numeric `.abs()` may continue
-with another allowed array chain; the ten terminal readers cannot continue
+with another allowed array chain; the thirteen terminal readers cannot continue
 into a user method or any other call-result method, including a scalar UDT
 element method.
 `.includes(value)` reuses the ordinary element-kind and same-identity UDT
@@ -273,6 +273,9 @@ descending order for `max`, with a zero-based optional `nth` that defaults to
 `0`; dynamic integer ranks are accepted. Empty, all-`na`, and
 upstream-`na` arrays, plus `na`, negative, or out-of-range ranks, return `na`.
 The scalar result is non-mutating and terminal.
+`.sum()` returns the same series numeric kind as the receiver element type,
+adds all non-`na` elements, and returns `na` for empty, all-`na`, or upstream-
+`na` arrays. It is also non-mutating and terminal.
 Unsupported element templates, all other `array.*` members, built-in
 namespaces and templates outside the exact cross-namespace producer set below,
 and postfix mutation remain fail-closed. The
@@ -292,13 +295,13 @@ an independent array containing the window's current values.
 One later closed slice admits exactly seven fixed non-`array` namespace
 producers on that same `$builtin_array_result` path: `str.split`,
 `ta.pivot_point_levels`, `matrix.row`, `matrix.col`,
-`matrix.eigenvalues`, `map.keys`, and `map.values`. They share the same fourteen
+`matrix.eigenvalues`, `map.keys`, and `map.values`. They share the same fifteen
 parser helpers: `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 `.includes(value)`, `.indexof(value)`, `.lastindexof(value)`, and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
-`.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`. Only `.copy()` and
+`.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`. Only `.copy()` and
 numeric `.abs()` may continue into another allowed array chain; the other
-twelve results are
+thirteen results are
 terminal.
 `str.split` produces
 `array<string>` and
@@ -319,7 +322,7 @@ array-by-matrix, and array-by-array results resolve to `array<float>` and may
 use `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 `.includes(value)`, `.indexof(value)`, `.lastindexof(value)`, and
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
-`.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`.
+`.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`.
 Matrix-by-matrix, matrix-by-scalar, and scalar-by-matrix results resolve to
 `matrix<float>` and may use `.rows()`, `.columns()`, `.elements_count()`,
 `.get(row, column)`, `.copy()`, `.row(index)`, `.col(index)`, and numeric-only
@@ -335,7 +338,7 @@ square-matrix runtime boundary, and fresh `array<float>` result before switching
 to `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)`/`.binary_search(value)`/
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
-`.min(nth?)`/`.max(nth?)` with copy/abs array continuation and terminal read/search/
+`.min(nth?)`/`.max(nth?)`/`.sum()` with copy/abs array continuation and terminal read/search/
 aggregate checks. `.is_square()`
 returns the ordinary simple bool for every
 supported concrete matrix kind and is terminal without a result-prefix

@@ -143,6 +143,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "abs" => Some("array.abs"),
         "min" => Some("array.min"),
         "max" => Some("array.max"),
+        "sum" => Some("array.sum"),
         _ => None,
     }
 }
@@ -703,6 +704,7 @@ mod tests {
             ("abs", "array.abs"),
             ("min", "array.min"),
             ("max", "array.max"),
+            ("sum", "array.sum"),
         ] {
             assert_eq!(
                 array_call_result_builtin_name(method_name),
@@ -710,7 +712,7 @@ mod tests {
             );
             assert!(pine_builtins::get_phase_1_builtin(builtin_name).is_some());
         }
-        assert_eq!(array_call_result_builtin_name("sum"), None);
+        assert_eq!(array_call_result_builtin_name("avg"), None);
         assert_eq!(array_call_result_builtin_name("push"), None);
     }
 

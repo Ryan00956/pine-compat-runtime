@@ -570,6 +570,9 @@ unqualified_float_min = return_identity(array.from(20.0, na, 22.0)).copy().min(n
 qualified_scalar_max = return_anchor.returnInts(array.from(40, 41, 42)).max(nth=1)
 unqualified_int_max = return_identity(array.from(10, 11, 12)).max()
 unqualified_float_max = return_identity(array.from(20.0, na, 22.0)).copy().max(nth=1)
+qualified_scalar_sum = return_anchor.returnInts(array.from(40, 41, 42)).sum()
+unqualified_int_sum = return_identity(array.from(10, 11, 12)).sum()
+unqualified_float_sum = return_identity(array.from(20.0, na, 22.0)).copy().sum()
 plot(qualified_scalar_size)
 plot(qualified_scalar_get)
 plot(qualified_scalar_last)
@@ -582,6 +585,7 @@ plot(qualified_scalar_binary_search_rightmost == 2 and unqualified_int_binary_se
 plot(qualified_scalar_abs == 40 and unqualified_int_abs == 11 and unqualified_float_abs == 20.5 ? 1 : 0)
 plot(qualified_scalar_min == 41 and unqualified_int_min == 10 and unqualified_float_min == 22.0 ? 1 : 0)
 plot(qualified_scalar_max == 41 and unqualified_int_max == 12 and unqualified_float_max == 20.0 ? 1 : 0)
+plot(qualified_scalar_sum == 123 and unqualified_int_sum == 33 and unqualified_float_sum == 42.0 ? 1 : 0)
 
 unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
 unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))

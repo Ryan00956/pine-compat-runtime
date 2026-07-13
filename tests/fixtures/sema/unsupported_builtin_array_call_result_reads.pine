@@ -82,5 +82,11 @@ chart_point_call_result_max = array.new<chart.point>(1, chart.point.now(close)).
 call_result_max_float_nth = array.from(1, 2).max(1.5)
 call_result_max_string_nth = array.copy(array.from(1, 2)).max(nth="1")
 call_result_max_extra_arg = array.from(1, 2).max(0, 1)
+copy_sum_udt = array.copy(first_values).sum()
+string_call_result_sum = array.from("a", "b").sum()
+bool_call_result_sum = array.new_bool(2, true).sum()
+color_call_result_sum = array.new_color(1, color.red).sum()
+chart_point_call_result_sum = array.new<chart.point>(1, chart.point.now(close)).sum()
+call_result_sum_extra_arg = array.from(1, 2).sum(0)
 
 concat_inside_udf = badConcat(array.from(1), array.from(2))

@@ -820,6 +820,12 @@ Current baseline:
   while retaining receiver-derived series int/float results, filtered `na`,
   duplicate ranks, dynamic integer ranks, empty/all-`na`/upstream-`na`, invalid
   rank, nonnumeric/UDT, arity, and terminal-continuation boundaries.
+  The next terminal aggregate slice adds `.sum()` to the same numeric result
+  set. It preserves receiver-derived series int/float results, ignores `na`
+  elements, returns `na` for empty/all-`na`/upstream-`na` arrays, does not
+  mutate the receiver, and retains nonnumeric/UDT, arity, and terminal-chain
+  boundaries across static, cross-namespace, matrix/map-derived, and local/
+  imported function/method producers.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -838,7 +844,8 @@ Remaining internal work:
   the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
   `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus numeric-only
   `.binary_search(value)`/`.binary_search_leftmost(value)`/
-  `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)` set, and
+  `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/
+  `.sum()` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked

@@ -1516,6 +1516,11 @@ Recommended future slices:
     array-returning `matrix.mult` overloads retain receiver-derived series
     numeric kind, dynamic ranks, empty/upstream-`na`, invalid rank/type/arity,
     and terminal continuation. Matrix-valued continuation is unchanged.
+95. Numeric array-valued call results additionally expose terminal `.sum()`.
+    Matrix row/column/eigenvalue arrays and array-returning `matrix.mult`
+    overloads retain receiver-derived series numeric kind, filtered `na`,
+    empty/all-`na`/upstream-`na`, invalid type/arity, and terminal continuation.
+    Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

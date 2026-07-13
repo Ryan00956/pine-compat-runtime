@@ -1467,3 +1467,8 @@ return/parameter flow remains deferred.
     dynamic integer ranks, duplicates, empty/all-`na`/upstream-`na`, invalid-
     rank `na`, and nonnumeric/imported-UDT rejection without widening imported
     identity or public schemas. Done.
+81. The same numeric producer set exposes terminal `.sum()`. It retains
+    receiver-derived series int/float, filters `na`, returns `na` for empty,
+    all-`na`, or upstream-`na` arrays, and keeps nonnumeric/imported-UDT,
+    arity, and terminal-continuation boundaries closed without widening
+    imported identity or public schemas. Done.
