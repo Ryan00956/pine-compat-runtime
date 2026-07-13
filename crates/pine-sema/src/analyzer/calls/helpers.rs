@@ -150,6 +150,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "mode" => Some("matrix.mode"),
         "trace" => Some("matrix.trace"),
         "det" => Some("matrix.det"),
+        "rank" => Some("matrix.rank"),
         _ => None,
     }
 }
@@ -628,6 +629,7 @@ mod tests {
             ("mode", "matrix.mode"),
             ("trace", "matrix.trace"),
             ("det", "matrix.det"),
+            ("rank", "matrix.rank"),
         ] {
             assert_eq!(
                 matrix_call_result_builtin_name(method_name),

@@ -629,8 +629,8 @@ matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
 `.eigenvalues()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`,
 `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, and
 `.is_stochastic()`, plus numeric-only terminal
-`.sum()`/`.avg()`/`.min()`/`.max()`/`.mode()`/`.trace()`/`.det()` and all-kind
-terminal `.is_square()`. Int inputs still resolve to float collection results. Matrix
+`.sum()`/`.avg()`/`.min()`/`.max()`/`.mode()`/`.trace()`/`.det()`/`.rank()` and
+all-kind terminal `.is_square()`. Int inputs still resolve to float collection results. Matrix
 `.copy()` continues on the matrix-result prefix;
 `.row(index)` and `.col(index)` use `ReturnSpec::MatrixArray(0)` and switch the
 parser marker to `$builtin_array_result`, producing fresh element-kind-preserving arrays
@@ -678,11 +678,14 @@ diagonal has no numeric value or the sum is non-finite.
 `.det()` shares the numeric/`series float` terminal signature and retains the
 ordinary runtime square-matrix error, `0 x 0 = 1.0`, singular zero, and invalid-
 cell/non-finite `na` rules without adding static shape inference.
+`.rank()` retains `MATRIX_NUMERIC_ID_PARAMS`, returns a fixed `series int`,
+supports rectangular and singular matrices, returns `0` for zero-element
+matrices, returns `na` for invalid/non-finite cells, and is terminal.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
 broader helpers, and mutation fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the twenty-three
+exact bound matrix-valued `matrix_id.mult(other)` results share the twenty-four
 matrix helpers for matrix or scalar operands with the
 copy/row/column/eigenvalue/predicate/aggregate-reader continuation rules.
 Unqualified local-UDF results with an inferred concrete supported matrix kind
@@ -691,7 +694,7 @@ string/color kinds, and use the same continuation rules. Concrete local or
 imported user methods and registered imported functions share the row/column/
 numeric-eigenvalue-array
 transition plus terminal all-kind square and numeric zero/binary/diagonal/
-identity/symmetric/antisymmetric/stochastic/sum/avg/min/max/mode/trace/det reads; unknown/`na` and non-matrix
+identity/symmetric/antisymmetric/stochastic/sum/avg/min/max/mode/trace/det/rank reads; unknown/`na` and non-matrix
 returns retain generic or result-family
 rejection. Producer-specific “copy-only” wording below refers only to
 continuing as a matrix result. Exact namespace

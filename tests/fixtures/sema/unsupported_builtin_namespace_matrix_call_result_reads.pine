@@ -94,5 +94,7 @@ bool_trace = matrix.copy(bool_values).trace()
 trace_extra_arg = matrix.copy(left).trace(0)
 bool_det = matrix.copy(bool_values).det()
 det_extra_arg = matrix.copy(left).det(0)
+bool_rank = matrix.copy(bool_values).rank()
+rank_extra_arg = matrix.copy(left).rank(0)
 
 plot(close)

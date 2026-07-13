@@ -1456,6 +1456,13 @@ Recommended future slices:
     result prefix. Numeric rejection, copy continuation, provenance/dual
     aliases, invalid arity, and terminal continuation are fixture-backed. No
     UDT/import identity or public schema field is added. Done.
+72. The same concrete numeric matrix call-result producer set exposes terminal
+    `.rank()` with its fixed `series int` result. It supports rectangular and
+    singular matrices, returns `0` for zero-element matrices, returns `na` for
+    invalid/non-finite cells or upstream `na`, and creates no result prefix.
+    Numeric rejection, copy continuation, provenance/dual aliases, invalid
+    arity, and terminal continuation are fixture-backed. No UDT/import identity
+    or public schema field is added. Done.
 
 ## Completion Gate For Future Positive Support
 

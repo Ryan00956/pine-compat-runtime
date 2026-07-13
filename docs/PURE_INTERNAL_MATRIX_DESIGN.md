@@ -1336,6 +1336,13 @@ Recommended future slices:
     is terminal without a result-prefix transition. Numeric rejection, copy
     continuation, provenance/dual aliases, invalid arity, and terminal
     continuation are fixture-backed.
+76. Numeric matrix call-result ranks: done for the same concrete float/int
+    producer set. `.rank()` retains the fixed `series int` result, supports
+    rectangular and singular matrices, returns `0` for zero-element matrices,
+    returns `na` for invalid/non-finite cells or upstream `na`, and is terminal
+    without a result-prefix transition. Numeric rejection, copy continuation,
+    provenance/dual aliases, invalid arity, and terminal continuation are
+    fixture-backed.
 
 ## Completion Gate For Future Positive Support
 

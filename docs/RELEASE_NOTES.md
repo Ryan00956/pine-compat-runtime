@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added terminal `.rank()` reads to every existing concrete numeric matrix call
+  result. The helper retains the float/int check and fixed `series int` result,
+  supports rectangular and singular matrices, returns `0` for zero-element
+  matrices, and returns `na` for invalid/non-finite cells or upstream `na`.
+  Copy continuation, producer provenance, dual aliases, non-numeric rejection,
+  invalid arity, and terminal continuation are fixture-backed.
 - Added terminal `.det()` reads to every existing concrete numeric matrix call
   result. The helper retains the float/int check and fixed `series float`
   result, the runtime square-matrix boundary, `0 x 0 = 1.0`, singular zero,

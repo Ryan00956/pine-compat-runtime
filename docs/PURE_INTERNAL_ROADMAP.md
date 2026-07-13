@@ -644,6 +644,12 @@ Current baseline:
   upstream-`na` propagation without adding static shape inference. Numeric
   rejection, copy continuation, provenance/dual aliases, invalid arity, and
   terminal continuation are fixture-backed.
+  The following linear-algebra reader slice adds terminal `.rank()` across the
+  same producer set. It retains the fixed `series int` result, supports
+  rectangular and singular matrices, returns `0` for zero-element matrices,
+  returns `na` for invalid/non-finite cells or upstream `na`, and creates no
+  result prefix. Numeric rejection, copy continuation, provenance/dual aliases,
+  invalid arity, and terminal continuation are fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
