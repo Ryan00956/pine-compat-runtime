@@ -139,6 +139,11 @@ result that swaps rectangular row/column counts, preserves singular
 matrix-valued results, returns swapped zero-cell shapes, exposes the same
 helpers, yields `na` for invalid-cell inputs, and retains the bound
 `values.pinv()` gate.
+Item 31 adds exact namespace `matrix.eigenvectors(values)` with a fixed
+float-matrix result that preserves square shape for real complete eigenvector
+columns, returns empty `0 x 0`, yields `na` for invalid-cell/non-real/incomplete
+results, exposes the same helpers, and retains the bound
+`values.eigenvectors()` gate plus non-square runtime error.
 Outside the exact static producer sets and these namespace-only paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 templates, and other matrix-returning calls remain fail-closed. `array.slice`
@@ -743,8 +748,8 @@ Initial policy:
   identity. Namespace matrix-returning `matrix.mult` overloads and exact
   namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix` plus fixed-float
   namespace `matrix.kron`/`matrix.diff`/`matrix.pow`/`matrix.inv`/
-  `matrix.pinv` add only the exact five matrix readers/copy from items 22
-  through 30 and likewise carry no UDT/import
+  `matrix.pinv`/`matrix.eigenvectors` add only the exact five matrix
+  readers/copy from items 22 through 31 and likewise carry no UDT/import
   identity. Mixed
   identities within one scalar return or tuple slot, non-scalar UDT arrays,
   non-array/non-UDT results,
@@ -996,6 +1001,18 @@ Recommended future slices:
     fixture-backed. Wrong producer/helper arguments, mutation, broader
     helpers, and bound `values.pinv()` call-result reads fail closed. No
     UDT/import identity or public schema field is added. Done.
+31. The exact namespace matrix-eigenvector continuation routes
+    `matrix.eigenvectors(values)` through `$builtin_matrix_result`. Its fixed
+    `simple matrix<float>` result preserves square shape for real complete
+    eigenvector columns, returns an empty `0 x 0` matrix for empty input, and
+    yields `na` for invalid-cell, non-real, or incomplete results. It exposes
+    only the five matrix read/copy helpers with named arguments and copy-only
+    continuation. Int-input float results, nested copies, UDF-contained
+    namespace reads, and source independence are fixture-backed. Wrong
+    producer/helper arguments, mutation, broader helpers, and bound
+    `values.eigenvectors()` call-result reads fail closed; non-square runtime
+    errors are unchanged. No UDT/import identity or public schema field is
+    added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1045,6 +1062,9 @@ with identity/copy/positive powers. Item 29 adds fixed-float namespace
 adds UDT/import identity. Item 30 adds fixed-float namespace `matrix.pinv` with
 rectangular shape swapping, singular matrix-valued results, zero-cell shape
 swapping, and invalid-cell `na`; it likewise adds no UDT/import identity.
+Item 31 adds fixed-float namespace `matrix.eigenvectors` with square-shape real
+complete results, empty `0 x 0`, and invalid/non-real/incomplete `na`; it also
+adds no UDT/import identity.
 Broader UDT element families, bound or UDF
 matrix-result receivers, built-in-qualified/template call-result receivers
 outside the closed paths, unsupported `array.new<T>` templates, non-array/non-UDT results,

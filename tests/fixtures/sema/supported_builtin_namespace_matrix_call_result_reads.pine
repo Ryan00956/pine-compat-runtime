@@ -19,6 +19,8 @@ matrixInvExpressionRead(values) => matrix.inv(values).copy().get(0, 1)
 
 matrixPinvExpressionRead(values) => matrix.pinv(values).copy().get(1, 1)
 
+matrixEigenvectorsExpressionRead(values) => matrix.eigenvectors(values).copy().get(1, 1)
+
 matrixMultMatrixBlockRead(values, scalar) =>
     int rows = matrix.mult(values, scalar).rows()
     int columns = matrix.mult(scalar, values).columns()
@@ -73,12 +75,19 @@ matrixPinvBlockRead(values) =>
     float first = matrix.pinv(values).get(0, 0)
     rows * 100 + columns * 10 + first
 
+matrixEigenvectorsBlockRead(values) =>
+    int rows = matrix.eigenvectors(values).rows()
+    int columns = matrix.eigenvectors(values).columns()
+    float first = matrix.eigenvectors(values).get(0, 0)
+    rows * 100 + columns * 10 + first
+
 left = matrix.new<float>(2, 3, 1.0)
 right = matrix.new<float>(3, 2, 2.0)
 diff_right = matrix.new<float>(2, 3, 0.5)
 pow_values = matrix.new<float>(2, 2, 1.0)
 inv_values = matrix.new<float>(2, 2, 1.0)
 pinv_values = matrix.new<float>(2, 3, 1.0)
+eigenvectors_values = matrix.new<float>(2, 2, 1.0)
 
 int matrix_matrix_rows = matrix.mult(left, right).rows()
 int matrix_matrix_columns = matrix.mult(left, right).columns()
@@ -143,6 +152,11 @@ int matrix_pinv_columns = matrix.pinv(pinv_values).columns()
 int matrix_pinv_elements = matrix.pinv(pinv_values).elements_count()
 float matrix_pinv_named_get = matrix.pinv(id=pinv_values).get(row=0, column=0)
 matrix<float> matrix_pinv_nested = matrix.pinv(pinv_values).copy().copy()
+int matrix_eigenvectors_rows = matrix.eigenvectors(eigenvectors_values).rows()
+int matrix_eigenvectors_columns = matrix.eigenvectors(eigenvectors_values).columns()
+int matrix_eigenvectors_elements = matrix.eigenvectors(eigenvectors_values).elements_count()
+float matrix_eigenvectors_named_get = matrix.eigenvectors(id=eigenvectors_values).get(row=0, column=0)
+matrix<float> matrix_eigenvectors_nested = matrix.eigenvectors(eigenvectors_values).copy().copy()
 
 int_left = matrix.new<int>(2, 2, 1)
 int_right = matrix.new<int>(2, 2, 2)
@@ -162,6 +176,8 @@ float matrix_inv_int_get = matrix.inv(int_left).get(0, 0)
 matrix<float> matrix_inv_int_copy = matrix.inv(int_left).copy()
 float matrix_pinv_int_get = matrix.pinv(int_left).get(0, 0)
 matrix<float> matrix_pinv_int_copy = matrix.pinv(int_left).copy()
+float matrix_eigenvectors_int_get = matrix.eigenvectors(int_left).get(0, 0)
+matrix<float> matrix_eigenvectors_int_copy = matrix.eigenvectors(int_left).copy()
 
 bool_matrix = matrix.new<bool>(1, 1, true)
 string_matrix = matrix.new<string>(1, 1, "copy")
@@ -204,6 +220,9 @@ float matrix_inv_expression_udf = matrixInvExpressionRead(inv_values)
 float matrix_inv_block_udf = matrixInvBlockRead(inv_values)
 float matrix_pinv_expression_udf = matrixPinvExpressionRead(pinv_values)
 float matrix_pinv_block_udf = matrixPinvBlockRead(pinv_values)
+float matrix_eigenvectors_expression_udf = matrixEigenvectorsExpressionRead(eigenvectors_values)
+float matrix_eigenvectors_block_udf = matrixEigenvectorsBlockRead(eigenvectors_values)
 
 plot(matrix_matrix_rows + matrix_matrix_columns + matrix_matrix_elements + matrix_matrix_get + matrix_matrix_copy.get(0, 0) + matrix_matrix_copy_get + matrix_scalar_rows + matrix_scalar_columns + matrix_scalar_elements + matrix_scalar_get + matrix_scalar_copy.get(0, 0) + matrix_scalar_copy_get + scalar_matrix_rows + scalar_matrix_columns + scalar_matrix_elements + scalar_matrix_get + scalar_matrix_copy.get(0, 0) + scalar_matrix_copy_get + matrix_copy_rows + matrix_copy_columns + matrix_copy_elements + matrix_copy_named_get + matrix_copy_nested.get(0, 0) + matrix_transpose_rows + matrix_transpose_columns + matrix_transpose_elements + matrix_transpose_named_get + matrix_transpose_nested.get(0, 0) + matrix_submatrix_rows + matrix_submatrix_columns + matrix_submatrix_elements + matrix_submatrix_named_get + matrix_submatrix_nested.get(0, 0) + matrix_kron_rows + matrix_kron_columns + matrix_kron_elements + matrix_kron_named_get + matrix_kron_nested.get(0, 0) + matrix_diff_rows + matrix_diff_columns + matrix_diff_elements + matrix_diff_named_get + matrix_diff_nested.get(0, 0) + matrix_diff_matrix_scalar_get + matrix_diff_scalar_matrix_get + matrix_pow_rows + matrix_pow_columns + matrix_pow_elements + matrix_pow_named_get + matrix_pow_nested.get(0, 0) + matrix_inv_rows + matrix_inv_columns + matrix_inv_elements + matrix_inv_named_get + matrix_inv_nested.get(0, 0) + int_matrix_matrix_get + int_matrix_matrix_copy.get(0, 0) + int_matrix_scalar_get + int_matrix_scalar_copy.get(0, 0) + int_scalar_matrix_get + int_scalar_matrix_copy.get(0, 0) + matrix_kron_int_get + matrix_kron_int_copy.get(0, 0) + matrix_diff_int_get + matrix_diff_int_copy.get(0, 0) + matrix_pow_int_get + matrix_pow_int_copy.get(0, 0) + matrix_inv_int_get + matrix_inv_int_copy.get(0, 0) + matrix_copy_int_get + (matrix_copy_bool_get ? 1 : 0) + (matrix_copy_string_get == "copy" ? 1 : 0) + (matrix_copy_color_get == color.red ? 1 : 0) + matrix_transpose_int_get + (matrix_transpose_bool_get ? 1 : 0) + (matrix_transpose_string_get == "copy" ? 1 : 0) + (matrix_transpose_color_get == color.red ? 1 : 0) + matrix_submatrix_int_get + (matrix_submatrix_bool_get ? 1 : 0) + (matrix_submatrix_string_get == "copy" ? 1 : 0) + (matrix_submatrix_color_get == color.red ? 1 : 0) + bound_matrix_rows + bound_matrix_get + bound_scalar_columns + bound_scalar_get + matrix_expression_udf + matrix_block_udf + matrix_copy_expression_udf + matrix_copy_block_udf + matrix_transpose_expression_udf + matrix_transpose_block_udf + matrix_submatrix_expression_udf + matrix_submatrix_block_udf + matrix_kron_expression_udf + matrix_kron_block_udf + matrix_diff_expression_udf + matrix_diff_block_udf + matrix_pow_expression_udf + matrix_pow_block_udf + matrix_inv_expression_udf + matrix_inv_block_udf)
 plot(matrix_pinv_rows + matrix_pinv_columns + matrix_pinv_elements + matrix_pinv_named_get + matrix_pinv_nested.get(0, 0) + matrix_pinv_int_get + matrix_pinv_int_copy.get(0, 0) + matrix_pinv_expression_udf + matrix_pinv_block_udf)
+plot(matrix_eigenvectors_rows + matrix_eigenvectors_columns + matrix_eigenvectors_elements + matrix_eigenvectors_named_get + matrix_eigenvectors_nested.get(0, 0) + matrix_eigenvectors_int_get + matrix_eigenvectors_int_copy.get(0, 0) + matrix_eigenvectors_expression_udf + matrix_eigenvectors_block_udf)

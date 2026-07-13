@@ -830,7 +830,16 @@ fn is_builtin_matrix_result_qualified_callee(namespace: &str, member: &str) -> b
     namespace == "matrix"
         && matches!(
             member,
-            "copy" | "diff" | "inv" | "kron" | "mult" | "pinv" | "pow" | "submatrix" | "transpose"
+            "copy"
+                | "diff"
+                | "eigenvectors"
+                | "inv"
+                | "kron"
+                | "mult"
+                | "pinv"
+                | "pow"
+                | "submatrix"
+                | "transpose"
         )
 }
 

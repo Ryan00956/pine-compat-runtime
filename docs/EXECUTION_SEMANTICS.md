@@ -907,7 +907,12 @@ returns an independent fixed `matrix<float>` pseudo-inverse for numeric inputs,
 swaps row and column counts for rectangular matrices, preserves singular
 matrix-valued results, returns the corresponding zero-cell swapped shape for
 zero-row or zero-column inputs, and yields `na` for invalid-cell inputs; bound
-`values.pinv()` results remain generic rejections. Every other
+`values.pinv()` results remain generic rejections. Exact namespace
+`matrix.eigenvectors(values)` returns an independent fixed `matrix<float>`
+whose columns are real eigenvectors for numeric square inputs, returns empty
+`0 x 0` for empty input, and yields `na` for invalid-cell, non-real, or
+incomplete results; bound `values.eigenvectors()` results remain generic
+rejections. Every other
 matrix-returning call, `map.new`
 and `matrix.new` template, and other namespace/non-producer call
 remains outside this path. Built-in namespace prefixes remain reserved, so
@@ -970,14 +975,15 @@ and array-returning `matrix.mult` overloads are scalar-array-only and add no
 UDT/import identity path. Namespace matrix-returning `matrix.mult` overloads,
 exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix`, and
 fixed-float namespace `matrix.kron`/`matrix.diff`/`matrix.pow`/`matrix.inv`/
-`matrix.pinv` add
+`matrix.pinv`/`matrix.eigenvectors` add
 only the five matrix readers/copy above. Copy/transpose/submatrix preserve the
 source scalar element kind; transpose swaps shape, submatrix selects a range,
 kron expands both dimensions, diff preserves its selected matrix operand's
 shape and left-to-right subtraction order, pow preserves square shape across
 identity/copy/positive powers, inv preserves square shape for invertible inputs
-or yields `na` for singular/invalid-cell inputs, and pinv swaps rectangular
-shape while preserving singular matrix results. All fixed producers
+or yields `na` for singular/invalid-cell inputs, pinv swaps rectangular shape
+while preserving singular matrix results, and eigenvectors preserves square
+shape or yields `na` for invalid-cell/non-real/incomplete results. All fixed producers
 return float matrices, and none of these paths carries
 UDT/import identity. Bound or UDF matrix-result receivers, built-in-qualified
 or template call results outside

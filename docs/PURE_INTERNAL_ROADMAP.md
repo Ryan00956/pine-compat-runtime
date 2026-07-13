@@ -380,6 +380,13 @@ Current baseline:
   returns swapped zero-cell shapes for zero-row or zero-column inputs, and
   shares the five matrix helpers plus copy-only continuation; invalid-cell
   inputs yield `na`, and bound `values.pinv()` results stay gated.
+  The next closed slice admits exact namespace `matrix.eigenvectors(values)`.
+  Its fixed `simple matrix<float>` result accepts numeric square matrices,
+  preserves square shape for real complete eigenvector columns, returns empty
+  `0 x 0`, and yields `na` for invalid-cell, non-real, or incomplete results.
+  It shares the five matrix helpers plus copy-only continuation; bound
+  `values.eigenvectors()` results stay gated and non-square runtime errors are
+  unchanged.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -402,7 +409,7 @@ Remaining internal work:
   namespace-qualified `matrix.mult(...)` array/matrix paths plus the exact
   namespace `matrix.copy(...)`/`matrix.transpose(...)`/`matrix.submatrix(...)`/
   `matrix.kron(...)`/`matrix.diff(...)`/`matrix.pow(...)`/`matrix.inv(...)`/
-  `matrix.pinv(...)`
+  `matrix.pinv(...)`/`matrix.eigenvectors(...)`
   matrix paths,
   including bound or UDF
   matrix-result receivers, other matrix-returning calls, map/matrix templates,

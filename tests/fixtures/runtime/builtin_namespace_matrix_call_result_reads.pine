@@ -19,6 +19,8 @@ matrixInvExpressionRead(values) => matrix.inv(values).copy().get(0, 1)
 
 matrixPinvExpressionRead(values) => matrix.pinv(values).copy().get(1, 1)
 
+matrixEigenvectorsExpressionRead(values) => matrix.eigenvectors(values).copy().get(1, 1)
+
 matrixMultMatrixBlockRead(values, scalar) =>
     int rows = matrix.mult(values, scalar).rows()
     int columns = matrix.mult(scalar, values).columns()
@@ -73,6 +75,12 @@ matrixPinvBlockRead(values) =>
     float first = matrix.pinv(values).get(0, 0)
     rows * 100 + columns * 10 + first
 
+matrixEigenvectorsBlockRead(values) =>
+    int rows = matrix.eigenvectors(values).rows()
+    int columns = matrix.eigenvectors(values).columns()
+    float first = matrix.eigenvectors(values).get(0, 0)
+    rows * 100 + columns * 10 + first
+
 left = matrix.new<float>(2, 3, 0.0)
 left.set(0, 0, 1.0)
 left.set(0, 1, 2.0)
@@ -110,6 +118,14 @@ pinv_values.set(0, 0, 1.0)
 pinv_values.set(1, 1, 1.0)
 pinv_singular = matrix.new<float>(2, 2, 1.0)
 pinv_na = matrix.new<float>(1, 1)
+
+eigenvectors_values = matrix.new<float>(2, 2, 0.0)
+eigenvectors_values.set(0, 0, 2.0)
+eigenvectors_values.set(1, 1, 3.0)
+eigenvectors_na = matrix.new<float>(1, 1)
+eigenvectors_complex = matrix.new<float>(2, 2, 0.0)
+eigenvectors_complex.set(0, 1, -1.0)
+eigenvectors_complex.set(1, 0, 1.0)
 
 matrix_matrix_shape = matrix.mult(left, right).rows() * 100 + matrix.mult(left, right).columns() * 10 + matrix.mult(left, right).elements_count()
 matrix_matrix_get = matrix.mult(left, right).get(0, 0)
@@ -160,6 +176,9 @@ plot(matrix.inv(inv_values).copy().copy().get(0, 1), "matrix_inv_nested_get")
 plot(matrix.pinv(pinv_values).rows() * 100 + matrix.pinv(pinv_values).columns() * 10 + matrix.pinv(pinv_values).elements_count(), "matrix_pinv_shape")
 plot(matrix.pinv(id=pinv_values).get(row=1, column=1), "matrix_pinv_named_get")
 plot(matrix.pinv(pinv_values).copy().copy().get(2, 0), "matrix_pinv_nested_get")
+plot(matrix.eigenvectors(eigenvectors_values).rows() * 100 + matrix.eigenvectors(eigenvectors_values).columns() * 10 + matrix.eigenvectors(eigenvectors_values).elements_count(), "matrix_eigenvectors_shape")
+plot(matrix.eigenvectors(id=eigenvectors_values).get(row=1, column=1), "matrix_eigenvectors_named_get")
+plot(matrix.eigenvectors(eigenvectors_values).copy().copy().get(0, 1), "matrix_eigenvectors_nested_get")
 
 int_left = matrix.new<int>(2, 2, 0)
 int_left.set(0, 0, 1)
@@ -186,6 +205,10 @@ plot(matrix.diff(int_left, int_right).get(0, 0), "matrix_diff_int_get")
 plot(matrix.pow(int_left, 2).get(1, 1), "matrix_pow_int_get")
 plot(matrix.inv(int_left).get(1, 1), "matrix_inv_int_get")
 plot(matrix.pinv(int_left).get(1, 1), "matrix_pinv_int_get")
+eigenvectors_int = matrix.new<int>(2, 2, 0)
+eigenvectors_int.set(0, 0, 2)
+eigenvectors_int.set(1, 1, 3)
+plot(matrix.eigenvectors(eigenvectors_int).get(1, 1), "matrix_eigenvectors_int_get")
 
 bool_values = matrix.new<bool>(1, 1, true)
 string_values = matrix.new<string>(1, 1, "copy")
@@ -223,6 +246,8 @@ plot(na(matrix.inv(inv_singular).rows()) ? 1 : 0, "matrix_inv_singular_rows_na")
 plot(na(matrix.inv(inv_na).rows()) ? 1 : 0, "matrix_inv_na_rows_na")
 plot(matrix.pinv(pinv_singular).rows(), "matrix_pinv_singular_rows")
 plot(na(matrix.pinv(pinv_na).rows()) ? 1 : 0, "matrix_pinv_na_rows_na")
+plot(na(matrix.eigenvectors(eigenvectors_na).rows()) ? 1 : 0, "matrix_eigenvectors_na_rows_na")
+plot(na(matrix.eigenvectors(eigenvectors_complex).rows()) ? 1 : 0, "matrix_eigenvectors_complex_rows_na")
 
 empty_zero_rows_shape = matrix.mult(matrix.new<float>(0, 2), matrix.new<float>(2, 3, 1.0)).rows() * 100 + matrix.mult(matrix.new<float>(0, 2), matrix.new<float>(2, 3, 1.0)).columns() * 10 + matrix.mult(matrix.new<float>(0, 2), matrix.new<float>(2, 3, 1.0)).elements_count()
 empty_inner_shape = matrix.mult(matrix.new<float>(2, 0), matrix.new<float>(0, 3)).rows() * 100 + matrix.mult(matrix.new<float>(2, 0), matrix.new<float>(0, 3)).columns() * 10 + matrix.mult(matrix.new<float>(2, 0), matrix.new<float>(0, 3)).elements_count()
@@ -245,6 +270,7 @@ plot(matrix.pow(matrix.new<float>(0, 0), 2).rows() * 100 + matrix.pow(matrix.new
 plot(matrix.inv(matrix.new<float>(0, 0)).rows() * 100 + matrix.inv(matrix.new<float>(0, 0)).columns() * 10 + matrix.inv(matrix.new<float>(0, 0)).elements_count(), "matrix_inv_empty_shape")
 plot(matrix.pinv(matrix.new<float>(0, 3)).rows() * 100 + matrix.pinv(matrix.new<float>(0, 3)).columns() * 10 + matrix.pinv(matrix.new<float>(0, 3)).elements_count(), "matrix_pinv_empty_rows_shape")
 plot(matrix.pinv(matrix.new<float>(2, 0)).rows() * 100 + matrix.pinv(matrix.new<float>(2, 0)).columns() * 10 + matrix.pinv(matrix.new<float>(2, 0)).elements_count(), "matrix_pinv_empty_columns_shape")
+plot(matrix.eigenvectors(matrix.new<float>(0, 0)).rows() * 100 + matrix.eigenvectors(matrix.new<float>(0, 0)).columns() * 10 + matrix.eigenvectors(matrix.new<float>(0, 0)).elements_count(), "matrix_eigenvectors_empty_shape")
 
 direct_copy = matrix.mult(left, right).copy().copy()
 direct_copy.set(0, 0, 999.0)
@@ -292,6 +318,11 @@ namespace_pinv.set(0, 0, 111.0)
 plot(namespace_pinv.get(0, 0), "matrix_pinv_mutation")
 plot(pinv_values.get(0, 0), "matrix_pinv_source_unchanged")
 
+namespace_eigenvectors = matrix.eigenvectors(eigenvectors_values).copy()
+namespace_eigenvectors.set(0, 0, 101.0)
+plot(namespace_eigenvectors.get(0, 0), "matrix_eigenvectors_mutation")
+plot(eigenvectors_values.get(0, 0), "matrix_eigenvectors_source_unchanged")
+
 bound_matrix_result = left.mult(right)
 bound_scalar_result = right.mult(2.0)
 plot(bound_matrix_result.rows() * 100 + bound_matrix_result.columns() * 10 + bound_matrix_result.elements_count() + bound_matrix_result.get(0, 0), "bound_matrix_result")
@@ -314,3 +345,5 @@ plot(matrixInvExpressionRead(inv_values), "matrix_inv_expression_udf")
 plot(matrixInvBlockRead(inv_values), "matrix_inv_block_udf")
 plot(matrixPinvExpressionRead(pinv_values), "matrix_pinv_expression_udf")
 plot(matrixPinvBlockRead(pinv_values), "matrix_pinv_block_udf")
+plot(matrixEigenvectorsExpressionRead(eigenvectors_values), "matrix_eigenvectors_expression_udf")
+plot(matrixEigenvectorsBlockRead(eigenvectors_values), "matrix_eigenvectors_block_udf")

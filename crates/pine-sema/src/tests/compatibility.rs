@@ -151,6 +151,7 @@ fn builtin_collection_result_producer_parser_allowlists_match_registry() {
     let expected_matrix_call_result_producers = BTreeSet::from([
         "matrix.copy",
         "matrix.diff",
+        "matrix.eigenvectors",
         "matrix.inv",
         "matrix.kron",
         "matrix.mult",
