@@ -1252,3 +1252,10 @@ return/parameter flow remains deferred.
     provenance/dual aliases, invalid arity, and terminal continuation are
     fixture-backed. No imported UDT identity or public schema field is added.
     Done.
+58. The same concrete numeric matrix call-result producer set exposes terminal
+    `.max()` with its fixed `series float` result. It scans only non-`na`
+    cells, returns `na` for empty, all-`na`, non-finite, or upstream-`na`
+    results, and creates no result prefix. Numeric rejection, copy continuation,
+    provenance/dual aliases, invalid arity, and terminal continuation are
+    fixture-backed. No imported UDT identity or public schema field is added.
+    Done.

@@ -86,5 +86,7 @@ bool_avg = matrix.copy(bool_values).avg()
 avg_extra_arg = matrix.copy(left).avg(0)
 bool_min = matrix.copy(bool_values).min()
 min_extra_arg = matrix.copy(left).min(0)
+bool_max = matrix.copy(bool_values).max()
+max_extra_arg = matrix.copy(left).max(0)
 
 plot(close)

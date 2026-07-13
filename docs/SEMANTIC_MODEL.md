@@ -628,8 +628,9 @@ matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
 `.copy()`, plus `.row(index)`, `.col(index)`, and numeric-only
 `.eigenvalues()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`,
 `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, and
-`.is_stochastic()`, plus numeric-only terminal `.sum()`/`.avg()`/`.min()` and
-all-kind terminal `.is_square()`. Int inputs still resolve to float collection results. Matrix
+`.is_stochastic()`, plus numeric-only terminal
+`.sum()`/`.avg()`/`.min()`/`.max()` and all-kind terminal `.is_square()`. Int
+inputs still resolve to float collection results. Matrix
 `.copy()` continues on the matrix-result prefix;
 `.row(index)` and `.col(index)` use `ReturnSpec::MatrixArray(0)` and switch the
 parser marker to `$builtin_array_result`, producing fresh element-kind-preserving arrays
@@ -667,11 +668,12 @@ result is non-finite.
 `.min()` shares the numeric/`series float` terminal signature, scans only non-
 `na` numeric cells, and returns `na` when none exist or the selected minimum is
 non-finite.
+`.max()` shares that contract with the selected maximum.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
 broader helpers, and mutation fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the nineteen matrix
+exact bound matrix-valued `matrix_id.mult(other)` results share the twenty matrix
 helpers for matrix or scalar operands with the
 copy/row/column/eigenvalue/predicate/aggregate-reader continuation rules.
 Unqualified local-UDF results with an inferred concrete supported matrix kind
@@ -680,7 +682,7 @@ string/color kinds, and use the same continuation rules. Concrete local or
 imported user methods and registered imported functions share the row/column/
 numeric-eigenvalue-array
 transition plus terminal all-kind square and numeric zero/binary/diagonal/
-identity/symmetric/antisymmetric/stochastic/sum/avg/min reads; unknown/`na` and non-matrix
+identity/symmetric/antisymmetric/stochastic/sum/avg/min/max reads; unknown/`na` and non-matrix
 returns retain generic or result-family
 rejection. Producer-specific “copy-only” wording below refers only to
 continuing as a matrix result. Exact namespace

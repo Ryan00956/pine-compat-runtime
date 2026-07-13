@@ -1309,6 +1309,12 @@ Recommended future slices:
     `na` results, and is terminal without a result-prefix transition. Numeric
     rejection, copy continuation, provenance/dual aliases, invalid arity, and
     terminal continuation are fixture-backed.
+72. Numeric matrix call-result maximums: done for the same concrete float/int
+    producer set. `.max()` retains the fixed `series float` result, scans only
+    non-`na` cells, returns `na` for empty, all-`na`, non-finite, or upstream-
+    `na` results, and is terminal without a result-prefix transition. Numeric
+    rejection, copy continuation, provenance/dual aliases, invalid arity, and
+    terminal continuation are fixture-backed.
 
 ## Completion Gate For Future Positive Support
 

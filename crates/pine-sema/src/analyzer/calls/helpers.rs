@@ -146,6 +146,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "sum" => Some("matrix.sum"),
         "avg" => Some("matrix.avg"),
         "min" => Some("matrix.min"),
+        "max" => Some("matrix.max"),
         _ => None,
     }
 }
@@ -620,6 +621,7 @@ mod tests {
             ("sum", "matrix.sum"),
             ("avg", "matrix.avg"),
             ("min", "matrix.min"),
+            ("max", "matrix.max"),
         ] {
             assert_eq!(
                 matrix_call_result_builtin_name(method_name),
