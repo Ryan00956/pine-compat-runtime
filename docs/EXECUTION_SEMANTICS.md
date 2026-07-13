@@ -878,7 +878,15 @@ and mutation fail closed. The existing bound-receiver
 bound numeric-matrix-receiver matrix-valued `matrix_id.mult(other)` results now
 share the five matrix helpers and copy-only continuation for matrix or scalar
 operands while preserving the existing overload, shape, `na`, empty inner
-dimension, and cell-budget boundaries. Exact namespace `matrix.copy(values)`
+dimension, and cell-budget boundaries. Unqualified local-UDF results that infer
+a concrete supported matrix kind now share the five matrix helpers through
+`$call_result`. Parameter passthrough, block aliases, nested calls, same-kind
+control flow, constructed and matrix-operation returns, named/reordered
+arguments, and zero dimensions keep their normal call-specific float/int/bool/
+string/color kind and storage behavior. Only copy may continue; unknown/`na`,
+scalar, array, map, qualified user-method/imported-function, broader-helper,
+mutation, and terminal-read continuation cases remain fail closed. Exact
+namespace `matrix.copy(values)`
 also enters this
 prefix, always resolves through the matrix helper family, and preserves the
 source float/int/bool/string/color matrix kind through `SameAsArg`; its returned
@@ -1021,11 +1029,13 @@ instead retain their float/int/bool/string/color matrix kind, rectangular
 shape, initial/default-`na` cells, and fresh allocation. None of these paths carries
 UDT/import identity. The scalar `map.new<K,V>` and namespace
 `map.copy(existing)` result paths likewise carry only scalar map template
-metadata and no UDT/import identity. Bound or UDF
-matrix-result receivers other than exact matrix-receiver
+metadata and no UDT/import identity. Bound matrix-result receivers other than
+exact matrix-receiver
 `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
 `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
 `values.inv()`/`values.pinv()`/`values.eigenvectors()`/`values.mult(other)`,
+unqualified local-UDF results without a concrete supported matrix kind,
+qualified user-method/imported-function matrix results,
 built-in-qualified
 or template call results outside
 the exact static and dynamic paths, and other

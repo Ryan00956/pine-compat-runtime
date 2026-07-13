@@ -187,10 +187,14 @@ Item 34 adds exact bound numeric-matrix-receiver matrix-valued
 helpers, multiplied or scalar-selected shape, fixed float-matrix result kind,
 `na`/zero-inner-dimension behavior, independent backing storage, copy-only
 continuation, and retained array-result/UDF/non-matrix/mutation gates.
-Outside the exact static producer sets and those namespace-only exceptions,
+Item 35 adds unqualified local-UDF results with a concrete inferred matrix kind
+through the same five helpers and copy-only continuation, retaining per-call
+float/int/bool/string/color kind without adding imported identity.
+Outside the exact closed producer/result paths,
 unsupported `array.new<T>` types, non-producer calls, unsupported matrix
 templates and map templates,
-other matrix-returning calls, mixed or non-scalar return identities,
+qualified user-method/imported-function and other matrix-returning calls, mixed
+or non-scalar return identities,
 non-array/non-UDT or unresolved results, nested field mutation, and
 method receiver/parameter/global field side effects remain fail-closed.
 `array.slice` retains its live parent view and postfix `.copy()` captures its
@@ -1032,3 +1036,13 @@ return/parameter flow remains deferred.
     non-numeric/non-matrix receivers, and the retained UDF matrix-result gate
     are fixture-backed. No imported UDT identity or public schema field is
     added. Done.
+35. Unqualified local-UDF results whose inferred call-specific result is a
+    concrete supported matrix kind normalize through `$call_result` and expose
+    only rows/columns/elements_count/get/copy with copy-only continuation.
+    Parameter passthrough, block aliases, nested calls, same-kind control flow,
+    matrix-operation and constructor returns, named/reordered arguments, zero
+    dimensions, float/int/bool/string/color interleaving, and independent
+    copies are fixture-backed. Unknown/`na`, scalar, array, map, qualified
+    user-method/imported-function results, broader helpers, mutation, and
+    terminal-read continuation remain fail closed. No imported UDT identity or
+    public schema field is added. Done.

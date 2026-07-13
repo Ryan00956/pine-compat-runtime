@@ -631,8 +631,12 @@ checked, so wrong-result helpers, invalid arity or argument types, broader
 helpers, and mutation fail closed. The existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
 exact bound matrix-valued `matrix_id.mult(other)` results share the five matrix
-helpers for matrix or scalar operands with copy-only continuation. UDF
-matrix-result call-result helpers retain the generic rejection. Exact namespace
+helpers for matrix or scalar operands with copy-only continuation. Unqualified
+local-UDF results with an inferred concrete supported matrix kind share the
+same helpers through `$call_result`, preserve per-call float/int/bool/string/
+color kinds, and allow only copy continuation; qualified user methods,
+imported functions, unknown/`na`, and non-matrix returns retain generic or
+result-family rejection. Exact namespace
 `matrix.copy` always takes the matrix branch, preserves the source
 float/int/bool/string/color matrix kind through `SameAsArg`, and retains
 independent-copy storage semantics. Exact bound matrix-receiver
@@ -897,7 +901,9 @@ bound matrix-result call-result receivers other than exact matrix-receiver
 `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
 `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
 `values.inv()`/`values.pinv()`/`values.eigenvectors()`/matrix-valued
-`values.mult(other)`, UDF matrix-result call-result receivers,
+`values.mult(other)`, unqualified local-UDF matrix-result receivers without a
+concrete supported matrix kind, qualified user-method/imported-function
+matrix-result receivers,
 built-in-qualified/template
 call-result receivers outside the exact static `array.*` allowlist and
 cross-namespace dynamic paths, nested field mutation, UDF
@@ -1014,7 +1020,9 @@ retaining their scalar matrix element kind. None widens UDT identity. Bound
 matrix-result receivers other than exact `values.copy()`/`values.transpose()`/
 `values.submatrix(...)`/`values.kron(other)`/`values.diff(other)`/
 `values.pow(power)`/`values.inv()`/`values.pinv()`/`values.eigenvectors()`/
-matrix-valued `values.mult(other)`, UDF matrix-result receivers,
+matrix-valued `values.mult(other)`, qualified user-method/imported-function
+matrix-result receivers, unqualified local-UDF results without a concrete
+supported matrix kind,
 built-in-qualified/template
 call results outside the exact static and dynamic paths, and other array or
 matrix helpers remain gated. The scalar `map.new<K,V>` and namespace

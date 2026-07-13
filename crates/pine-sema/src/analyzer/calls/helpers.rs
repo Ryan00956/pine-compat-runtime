@@ -32,6 +32,32 @@ pub(crate) fn postfix_call_result_method_parts<'a>(
     Some(parts)
 }
 
+pub(crate) fn local_udf_call_result_method_parts<'a>(
+    callee: &'a Expr,
+    args: &'a [CallArg],
+) -> Option<(&'a str, &'a str)> {
+    let (prefix, method_name) = postfix_call_result_method_parts(callee, args)?;
+    if prefix != "$call_result" {
+        return None;
+    }
+    let ExprKind::Call {
+        callee: producer,
+        args: producer_args,
+    } = &args.first()?.value.kind
+    else {
+        return None;
+    };
+    match &producer.kind {
+        ExprKind::Identifier(function_name) => Some((function_name, method_name)),
+        ExprKind::QualifiedName(_) => {
+            let (function_name, producer_method) =
+                local_udf_call_result_method_parts(producer, producer_args)?;
+            (producer_method == "copy").then_some((function_name, method_name))
+        }
+        _ => None,
+    }
+}
+
 const BUILTIN_MATRIX_CALL_RESULT_PREFIX: &str = "$builtin_matrix_result";
 const BUILTIN_MAP_CALL_RESULT_PREFIX: &str = "$builtin_map_result";
 

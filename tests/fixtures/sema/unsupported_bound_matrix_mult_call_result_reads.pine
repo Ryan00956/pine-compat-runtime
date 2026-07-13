@@ -1,8 +1,6 @@
 //@version=6
 indicator("Unsupported bound matrix.mult call-result reads")
 
-matrixFactory(id1, id2) => id1.mult(id2)
-
 values = matrix.new<float>(2, 2, 1.0)
 bools = matrix.new<bool>(2, 2, true)
 array_values = array.from(1.0, 2.0)
@@ -14,6 +12,4 @@ size_result = values.mult(2.0).size()
 array_result_rows = values.mult(array_values).rows()
 bad_receiver_kind = bools.mult(values).rows()
 wrong_receiver = array_values.mult(values).rows()
-udf_result = matrixFactory(values, values).rows()
-
 plot(close)

@@ -102,22 +102,31 @@ impl Analyzer {
         param_exprs: &HashMap<String, HirExpr>,
         param_types: &HashMap<String, PineType>,
     ) -> Option<Option<HirExpr>> {
-        let method_name = builtin_matrix_call_result_method_name(callee, args).or_else(|| {
-            let (receiver_name, method_name) = bound_matrix_call_result_method_parts(callee, args)?;
-            let receiver_type = param_types
-                .get(receiver_name)
-                .copied()
-                .or_else(|| {
-                    self.bound_symbol(receiver_name, args.first()?.value.span)
-                        .map(|symbol| symbol.pine_type)
-                })
-                .or_else(|| {
-                    self.scope
-                        .resolve(receiver_name)
-                        .map(|symbol| symbol.pine_type)
-                })?;
-            is_matrix_kind(receiver_type.kind).then_some(method_name)
-        })?;
+        let method_name = builtin_matrix_call_result_method_name(callee, args)
+            .or_else(|| {
+                let (receiver_name, method_name) =
+                    bound_matrix_call_result_method_parts(callee, args)?;
+                let receiver_type = param_types
+                    .get(receiver_name)
+                    .copied()
+                    .or_else(|| {
+                        self.bound_symbol(receiver_name, args.first()?.value.span)
+                            .map(|symbol| symbol.pine_type)
+                    })
+                    .or_else(|| {
+                        self.scope
+                            .resolve(receiver_name)
+                            .map(|symbol| symbol.pine_type)
+                    })?;
+                is_matrix_kind(receiver_type.kind).then_some(method_name)
+            })
+            .or_else(|| {
+                let (function_name, method_name) =
+                    local_udf_call_result_method_parts(callee, args)?;
+                self.functions
+                    .contains_key(function_name)
+                    .then_some(method_name)
+            })?;
         let receiver = args.first()?;
         if !self
             .type_of_expr_with_params(&receiver.value, param_types)

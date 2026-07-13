@@ -130,7 +130,16 @@ Current evidence:
   fixed float-matrix results, `na` and zero-inner-dimension behavior,
   independent storage, nested copies, UDF-contained reads, and wrong result
   helper/index/non-numeric/non-matrix diagnostics. Matrix-array overloads keep
-  array-helper dispatch, and UDF matrix-result receivers remain gated.
+  array-helper dispatch; the following local-UDF slice is covered separately.
+- `tests/fixtures/runtime/local_udf_matrix_call_result_reads.pine` plus the
+  matching supported/unsupported semantic fixtures cover unqualified local-UDF
+  matrix results through rows/columns/elements_count/get/copy for parameter
+  passthrough, block aliases, nested calls, same-kind control flow,
+  matrix-operation and constructor returns, named/reordered arguments,
+  float/int/bool/string/color call-specific kinds, zero dimensions, independent
+  copies, and copy-only continuation. Unknown/`na`, scalar, array, map,
+  qualified user-method/imported-function results, broader helpers, mutation,
+  and terminal-read continuation remain gated.
 - `tests/fixtures/runtime/matrix_float.pine` covers `matrix.new<float>`,
   `matrix.get`, `matrix.set`, `matrix.fill`, `values.fill(value)`,
   `values.get(row, column)`, `values.set(row, column, value)`, `matrix.rows`,
@@ -1135,6 +1144,15 @@ Recommended future slices:
     continuation. Array-result overloads retain array-helper dispatch; UDF
     matrix results, broader helpers, mutation, and non-matrix receivers stay
     gated.
+53. Local-UDF matrix call results: done for unqualified local functions whose
+    inferred per-call result is one concrete supported matrix kind. Parameter
+    passthrough, block aliases, nested calls, same-kind control flow,
+    matrix-operation and constructor returns, named/reordered arguments, zero
+    dimensions, float/int/bool/string/color interleaving, independent copies,
+    and rows/columns/elements_count/get/copy with copy-only continuation are
+    fixture-backed. Unknown/`na`, scalar, array, map, qualified user-method/
+    imported-function results, broader helpers, mutation, and terminal-read
+    continuation remain fail closed.
 
 ## Completion Gate For Future Positive Support
 

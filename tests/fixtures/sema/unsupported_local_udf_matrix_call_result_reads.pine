@@ -1,0 +1,34 @@
+//@version=6
+indicator("Unsupported local UDF matrix call-result reads")
+
+type Anchor
+    int tag
+
+identity(values) => values
+
+noneResult() => na
+
+numberResult() => 1
+
+arrayResult() => array.from(1.0, 2.0)
+
+mapResult() => map.new<int, int>()
+
+method make(Anchor self) => matrix.new<float>(1, 1, 1.0)
+
+values = matrix.new<float>(2, 2, 1.0)
+anchor = Anchor.new(1)
+
+bad_row = identity(values).get("bad", 0)
+set_result = identity(values).set(0, 0, 2.0)
+sum_result = identity(values).sum()
+size_result = identity(values).size()
+copy_sum_result = identity(values).copy().sum()
+terminal_chain = identity(values).rows().copy()
+none_rows = noneResult().rows()
+number_rows = numberResult().rows()
+array_rows = arrayResult().rows()
+map_rows = mapResult().rows()
+method_rows = anchor.make().rows()
+
+plot(close)

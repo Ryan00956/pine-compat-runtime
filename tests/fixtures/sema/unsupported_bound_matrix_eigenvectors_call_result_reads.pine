@@ -1,8 +1,6 @@
 //@version=6
 indicator("Unsupported bound matrix.eigenvectors call-result reads")
 
-matrixFactory(id1, id2) => id1.mult(id2)
-
 values = matrix.new<float>(2, 2, 1.0)
 bools = matrix.new<bool>(2, 2, true)
 array_values = array.from(1.0, 2.0)
@@ -13,6 +11,4 @@ sum_result = values.eigenvectors().sum()
 size_result = values.eigenvectors().size()
 bad_receiver_kind = bools.eigenvectors().rows()
 wrong_receiver = array_values.eigenvectors().rows()
-udf_result = matrixFactory(values, values).rows()
-
 plot(close)

@@ -21,9 +21,9 @@ pub(crate) use helpers::{
     is_array_mutation_builtin, is_array_mutation_method_call_name, is_map_mutation_builtin,
     is_map_mutation_method_call_name, is_output_or_declaration_builtin,
     is_ta_extreme_length_overload, is_ta_pivot_default_source_overload, is_ta_vwap_bands_call,
-    is_time_function_overload, is_timestamp_overload, map_call_result_builtin_name,
-    map_method_builtin_name, matrix_call_result_builtin_name, method_call_parts,
-    postfix_call_result_method_parts, receiver_call_arg,
+    is_time_function_overload, is_timestamp_overload, local_udf_call_result_method_parts,
+    map_call_result_builtin_name, map_method_builtin_name, matrix_call_result_builtin_name,
+    method_call_parts, postfix_call_result_method_parts, receiver_call_arg,
 };
 
 impl Analyzer {
@@ -251,22 +251,24 @@ impl Analyzer {
         args: &[CallArg],
         arg_types: &[Option<PineType>],
     ) -> Option<Option<PineType>> {
-        let method_name = if let Some(method_name) =
-            builtin_matrix_call_result_method_name(callee, args)
-        {
-            method_name
-        } else {
-            let (receiver_name, method_name) = bound_matrix_call_result_method_parts(callee, args)?;
-            let receiver_kind = self
-                .bound_symbol(receiver_name, args.first()?.value.span)
-                .or_else(|| self.scope.resolve(receiver_name))?
-                .pine_type
-                .kind;
-            if !is_matrix_kind(receiver_kind) {
-                return None;
-            }
-            method_name
-        };
+        let method_name = builtin_matrix_call_result_method_name(callee, args)
+            .or_else(|| {
+                let (receiver_name, method_name) =
+                    bound_matrix_call_result_method_parts(callee, args)?;
+                let receiver_kind = self
+                    .bound_symbol(receiver_name, args.first()?.value.span)
+                    .or_else(|| self.scope.resolve(receiver_name))?
+                    .pine_type
+                    .kind;
+                is_matrix_kind(receiver_kind).then_some(method_name)
+            })
+            .or_else(|| {
+                let (function_name, method_name) =
+                    local_udf_call_result_method_parts(callee, args)?;
+                self.functions
+                    .contains_key(function_name)
+                    .then_some(method_name)
+            })?;
         let Some(receiver_type) = arg_types.first().copied().flatten() else {
             return Some(None);
         };

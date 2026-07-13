@@ -394,6 +394,14 @@ Current baseline:
   behavior, uses independent fixed `matrix<float>` storage, and exposes the
   same five helpers with copy-only continuation. Array-result overloads retain
   array-helper dispatch, while UDF matrix results remain gated.
+  The next closed call-boundary slice admits unqualified local-UDF results that
+  infer a concrete supported matrix kind through `$call_result`. Parameter
+  passthrough, block aliases, nested calls, same-kind control flow,
+  matrix-operation and constructor returns, named/reordered arguments, zero
+  dimensions, call-specific float/int/bool/string/color kinds, and independent
+  copies share the five matrix helpers with copy-only continuation. Unknown/
+  `na`, scalar, array, map, qualified user-method/imported-function, broader
+  helper, mutation, and terminal-read continuation cases remain gated.
   The following closed slice admits exact namespace
   `matrix.transpose(values)` on that path. It preserves the same five element
   kinds through `SameAsArg`, swaps row/column shape, returns independent
@@ -485,7 +493,9 @@ Remaining internal work:
   `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
   `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
   `values.inv()`/`values.pinv()`/`values.eigenvectors()`/
-  matrix-valued `values.mult(other)`, UDF matrix-result receivers,
+  matrix-valued `values.mult(other)`, qualified user-method/imported-function
+  matrix-result receivers, unqualified local-UDF results without a concrete
+  supported matrix kind,
   other matrix-returning calls, map templates and
   unsupported matrix/map templates and other map call-result receivers,
   other built-in namespaces or non-producer members, non-producer `array.*`

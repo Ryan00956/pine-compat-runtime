@@ -171,6 +171,13 @@ impl Analyzer {
                                     .map(|symbol| symbol.pine_type)
                             })?;
                         is_matrix_kind(receiver_type.kind).then_some(method_name)
+                    })
+                    .or_else(|| {
+                        let (function_name, method_name) =
+                            local_udf_call_result_method_parts(callee, args)?;
+                        self.functions
+                            .contains_key(function_name)
+                            .then_some(method_name)
                     });
                 if let Some(method_name) = matrix_method_name
                     && arg_types

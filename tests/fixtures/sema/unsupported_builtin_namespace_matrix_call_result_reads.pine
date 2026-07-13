@@ -1,8 +1,6 @@
 //@version=6
 indicator("Unsupported builtin namespace matrix call-result reads")
 
-matrixFactory(id1, id2) => matrix.mult(id1, id2)
-
 left = matrix.new<float>(2, 2, 1.0)
 right = matrix.new<float>(2, 2, 2.0)
 vector = array.from(3.0, 4.0)
@@ -70,7 +68,5 @@ array_columns = matrix.mult(vector, left).columns()
 array_elements = matrix.mult(vector, vector).elements_count()
 array_matrix_get = matrix.mult(left, vector).get(0, 0)
 array_copy_rows = matrix.mult(vector, left).copy().rows()
-
-udf_matrix_rows = matrixFactory(left, right).rows()
 
 plot(close)

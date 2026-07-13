@@ -120,6 +120,9 @@ pub(super) const BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/bound_matrix_mult_call_result_reads.pine",
     "tests/fixtures/sema/supported_bound_matrix_mult_call_result_reads.pine",
     "tests/fixtures/sema/unsupported_bound_matrix_mult_call_result_reads.pine",
+    "tests/fixtures/runtime/local_udf_matrix_call_result_reads.pine",
+    "tests/fixtures/sema/supported_local_udf_matrix_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_local_udf_matrix_call_result_reads.pine",
 ];
 
 pub(super) const BUILTIN_MAP_CALL_RESULT_FIXTURES: &[&str] = &[
@@ -330,7 +333,7 @@ fn validate_builtin_namespace_matrix_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES,
-        "fixture-backed exact matrix.new<float|int|bool|string|color> templates, namespace matrix.mult/matrix.copy/matrix.transpose/matrix.submatrix/matrix.kron/matrix.diff/matrix.pow/matrix.inv/matrix.pinv/matrix.eigenvectors results, and bound matrix-receiver copy/transpose/submatrix/kron/diff/pow/inv/pinv/eigenvectors/matrix-valued-mult results with rows/columns/elements_count/get/copy dispatch and retained result-type/helper/other-bound-receiver boundaries",
+        "fixture-backed exact matrix.new<float|int|bool|string|color> templates, namespace matrix.mult/matrix.copy/matrix.transpose/matrix.submatrix/matrix.kron/matrix.diff/matrix.pow/matrix.inv/matrix.pinv/matrix.eigenvectors results, bound matrix-receiver copy/transpose/submatrix/kron/diff/pow/inv/pinv/eigenvectors/matrix-valued-mult results, and concrete unqualified local-UDF matrix results with rows/columns/elements_count/get/copy dispatch and retained result-type/helper/non-local-producer boundaries",
     )
 }
 
@@ -866,10 +869,16 @@ mod tests {
 
     #[test]
     fn rejects_bound_matrix_mult_result_row_without_negative_fixture() {
-        let fixtures = &BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES
-            [..BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES.len() - 1];
+        let fixtures: Vec<_> = BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES
+            .iter()
+            .copied()
+            .filter(|fixture| {
+                *fixture
+                    != "tests/fixtures/sema/unsupported_bound_matrix_mult_call_result_reads.pine"
+            })
+            .collect();
         let error =
-            validate_builtin_namespace_matrix_call_result_fixture_paths(1, "matrix.*", fixtures)
+            validate_builtin_namespace_matrix_call_result_fixture_paths(1, "matrix.*", &fixtures)
                 .expect_err(
                     "bound matrix.mult result rows must retain the negative boundary fixture",
                 );
@@ -895,6 +904,39 @@ mod tests {
                 .expect_err("bound matrix.mult result rows must retain runtime evidence");
 
         assert!(error.contains("tests/fixtures/runtime/bound_matrix_mult_call_result_reads.pine"));
+    }
+
+    #[test]
+    fn rejects_local_udf_matrix_result_row_without_negative_fixture() {
+        let fixtures = &BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES
+            [..BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES.len() - 1];
+        let error =
+            validate_builtin_namespace_matrix_call_result_fixture_paths(1, "matrix.*", fixtures)
+                .expect_err(
+                    "local UDF matrix-result rows must retain the negative boundary fixture",
+                );
+
+        assert!(
+            error.contains(
+                "tests/fixtures/sema/unsupported_local_udf_matrix_call_result_reads.pine"
+            )
+        );
+    }
+
+    #[test]
+    fn rejects_local_udf_matrix_result_row_without_runtime_fixture() {
+        let fixtures: Vec<_> = BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES
+            .iter()
+            .copied()
+            .filter(|fixture| {
+                *fixture != "tests/fixtures/runtime/local_udf_matrix_call_result_reads.pine"
+            })
+            .collect();
+        let error =
+            validate_builtin_namespace_matrix_call_result_fixture_paths(1, "matrix.*", &fixtures)
+                .expect_err("local UDF matrix-result rows must retain runtime evidence");
+
+        assert!(error.contains("tests/fixtures/runtime/local_udf_matrix_call_result_reads.pine"));
     }
 
     #[test]

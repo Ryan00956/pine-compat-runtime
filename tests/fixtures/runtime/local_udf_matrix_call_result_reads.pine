@@ -1,0 +1,52 @@
+//@version=6
+indicator("Local UDF matrix call-result reads")
+
+identity(values) => values
+
+blockIdentity(values) =>
+    alias = values
+    alias
+
+nestedIdentity(values) => identity(values)
+
+pick(first, second, bool choose) => choose ? first : second
+
+matrixFactory(left, right) => left.mult(right)
+
+readSecond(values) => identity(values).get(0, 1)
+
+makeInt(int value) => matrix.new<int>(1, 1, value)
+
+floats = matrix.new<float>(2, 2, 0.0)
+floats.set(0, 0, 1.0)
+floats.set(0, 1, 2.0)
+floats.set(1, 0, 3.0)
+floats.set(1, 1, 4.0)
+
+alternate = matrix.new<float>(2, 2, 8.0)
+ints = matrix.new<int>(1, 2, 7)
+bools = matrix.new<bool>(1, 1, true)
+strings = matrix.new<string>(1, 1, "pine")
+empty = matrix.new<float>(0, 3)
+
+copied = identity(floats).copy()
+copied.set(0, 0, 99.0)
+
+plot(identity(floats).rows(), "rows")
+plot(identity(floats).columns(), "columns")
+plot(identity(floats).elements_count(), "elements")
+plot(identity(floats).get(0, 1), "get")
+plot(identity(floats).copy().get(1, 1), "copy_chain")
+plot(floats.get(0, 0), "source_independent")
+plot(copied.get(0, 0), "copy_independent")
+plot(identity(ints).get(0, 1), "generic_int")
+plot(identity(floats).get(0, 0), "generic_float_again")
+plot(identity(strings).get(0, 0) == "pine" ? 1 : 0, "generic_string")
+plot(identity(bools).get(0, 0) ? 1 : 0, "generic_bool")
+plot(identity(empty).rows() * 100 + identity(empty).columns() * 10 + identity(empty).elements_count(), "empty_shape")
+plot(blockIdentity(floats).get(1, 1), "block_return")
+plot(nestedIdentity(floats).get(1, 0), "nested_return")
+plot(pick(second=alternate, first=floats, choose=false).get(0, 0), "named_control_flow")
+plot(matrixFactory(floats, alternate).get(0, 0), "matrix_result")
+plot(readSecond(floats), "nested_direct_read")
+plot(makeInt(9).copy().get(0, 0), "constructed_result")
