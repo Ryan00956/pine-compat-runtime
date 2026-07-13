@@ -791,6 +791,9 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
             [namespace, member] if is_builtin_matrix_result_qualified_callee(namespace, member) => {
                 Some(BUILTIN_MATRIX_CALL_RESULT_PREFIX.to_owned())
             }
+            [namespace, member] if is_builtin_map_result_qualified_callee(namespace, member) => {
+                Some(BUILTIN_MAP_CALL_RESULT_PREFIX.to_owned())
+            }
             [namespace, member] if is_builtin_array_result_qualified_callee(namespace, member) => {
                 Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
             }
@@ -852,6 +855,10 @@ fn is_builtin_matrix_result_qualified_callee(namespace: &str, member: &str) -> b
                 | "submatrix"
                 | "transpose"
         )
+}
+
+fn is_builtin_map_result_qualified_callee(namespace: &str, member: &str) -> bool {
+    namespace == "map" && member == "copy"
 }
 
 fn is_builtin_matrix_result_callee(name: &str) -> bool {

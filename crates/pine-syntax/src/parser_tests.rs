@@ -833,6 +833,36 @@ fn parses_map_new_template_result_method_receivers_with_map_provenance() {
 }
 
 #[test]
+fn parses_map_copy_result_method_receivers_with_map_provenance() {
+    for source in [
+        "value = map.copy(values).size()\n",
+        "value = map.copy(values).get(1)\n",
+        "value = map.copy(values).contains(key=1)\n",
+        "value = map.copy(values).copy().size()\n",
+    ] {
+        let parsed = parse(source);
+
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "{source}: {:?}",
+            parsed.diagnostics
+        );
+        let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected declaration for {source}");
+        };
+        let ExprKind::Call { callee, args } = &value.kind else {
+            panic!("expected call-result method call for {source}");
+        };
+        assert!(matches!(
+            &callee.kind,
+            ExprKind::QualifiedName(parts)
+                if parts.first().is_some_and(|part| part == "$builtin_map_result")
+        ));
+        assert!(args[0].value.span.end < callee.span.start, "{source}");
+    }
+}
+
+#[test]
 fn rejects_methods_after_terminal_builtin_collection_result_reads() {
     for source in [
         "bad = array.from(Point.new(1)).get(0).size()\n",
@@ -848,6 +878,9 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = map.new<string, float>().size().custom()\n",
         "bad = map.new<string, float>().get(\"missing\").custom()\n",
         "bad = map.new<string, float>().contains(\"missing\").custom()\n",
+        "bad = map.copy(values).size().custom()\n",
+        "bad = map.copy(values).get(1).custom()\n",
+        "bad = map.copy(values).contains(1).custom()\n",
     ] {
         let parsed = parse(source);
         assert!(
@@ -870,7 +903,7 @@ fn rejects_other_builtin_call_result_method_receivers() {
         "bad = array.min(values).size()\n",
         "bad = str.length(\"value\").size()\n",
         "bad = ta.sma(close, 14).size()\n",
-        "bad = map.copy(values).size()\n",
+        "bad = map.size(values).size()\n",
         "bad = matrix.new<chart.point>(1, 1, chart.point.now(close)).rows()\n",
         "bad = map.new<chart.point, int>().size()\n",
         "bad = input.string(\"value\").size()\n",

@@ -399,6 +399,11 @@ Current baseline:
   `.contains(key)`, and `.copy()`, with copy-only continuation. Mutation,
   direct `keys()`/`values()`, unsupported templates, and other map call-result
   receivers remain gated.
+  The following closed map-result slice admits exact namespace
+  `map.copy(existing)` through the same prefix. It retains the source scalar
+  key/value kinds and entries in an independent backing store and exposes the
+  same four helpers with copy-only continuation. Non-map inputs, mutation, and
+  direct `keys()`/`values()` remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -423,7 +428,8 @@ Remaining internal work:
   `matrix.kron(...)`/`matrix.diff(...)`/`matrix.pow(...)`/`matrix.inv(...)`/
   `matrix.pinv(...)`/`matrix.eigenvectors(...)`
   matrix paths plus exact `matrix.new<float|int|bool|string|color>` templates
-  and exact supported scalar `map.new<K,V>` templates,
+  plus exact supported scalar `map.new<K,V>` templates and namespace
+  `map.copy(existing)`,
   including bound or UDF
   matrix-result receivers, other matrix-returning calls, map templates and
   unsupported matrix/map templates and other map call-result receivers,

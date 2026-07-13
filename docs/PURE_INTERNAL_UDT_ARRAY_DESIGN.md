@@ -152,6 +152,10 @@ Item 33 adds exact supported scalar `map.new<K,V>` template results through a
 separate `$builtin_map_result` path with known key/value kinds, fresh empty
 allocation, direct size/get/contains/copy, copy-only continuation, and retained
 mutation, keys/values, unsupported-template, and other map-result gates.
+Item 34 adds exact namespace `map.copy(existing)` results through the same path,
+retaining the source scalar template and entries in independent backing storage
+while preserving the same helper, continuation, non-map-input, mutation, and
+keys/values gates.
 Outside the exact static producer sets and these namespace-only paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, and other matrix-returning
@@ -762,8 +766,9 @@ Initial policy:
   identity. The five exact `matrix.new<T>` templates add the same readers/copy
   in item 32 while retaining their scalar element kind and likewise add no
   UDT/import identity. The exact scalar `map.new<K,V>` result path in item 33
-  carries only map template metadata and adds no UDT/import identity. Mixed identities
-  within one scalar return or tuple slot, non-scalar UDT arrays,
+  and namespace `map.copy(existing)` result path in item 34 carry only map
+  template metadata and add no UDT/import identity. Mixed identities within one
+  scalar return or tuple slot, non-scalar UDT arrays,
   non-array/non-UDT results,
   unknown/`na` results without a concrete supported type or identity,
   bound or UDF matrix-result receivers, built-in-qualified/template call
@@ -1046,6 +1051,15 @@ Recommended future slices:
     fixture-backed. Wrong key/arity, mutation, direct `keys()`/`values()`,
     unsupported templates, broader helpers, and other map-result receivers
     fail closed. No UDT/import identity or public schema field is added. Done.
+34. The exact namespace-map-copy continuation routes `map.copy(existing)`
+    through `$builtin_map_result`. The result retains the source scalar
+    key/value kinds and populated entries in independent backing storage and
+    exposes only `.size()`, `.get(key)`, `.contains(key)`, and `.copy()` with
+    named arguments and copy-only continuation. Populated reads, nested copy,
+    source/copy independence, multiple scalar templates, and UDF-contained
+    reads are fixture-backed. Wrong receiver/key/arity, mutation, direct
+    `keys()`/`values()`, broader helpers, and other map-result receivers fail
+    closed. No UDT/import identity or public schema field is added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1103,6 +1117,9 @@ element kind, rectangular shape, initial/default-`na` cells, and fresh
 allocation; it likewise adds no UDT/import identity.
 Item 33 adds exact scalar `map.new<K,V>` results with map template metadata only
 and likewise adds no UDT/import identity.
+Item 34 adds exact namespace `map.copy(existing)` results with the same map
+template metadata and retained copied entries; it likewise adds no UDT/import
+identity.
 Broader UDT element families, bound or UDF
 matrix-result receivers, built-in-qualified/template call-result receivers
 outside the closed paths, unsupported `array.new<T>` templates, non-array/non-UDT results,

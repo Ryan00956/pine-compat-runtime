@@ -1,0 +1,22 @@
+//@version=6
+indicator("Supported builtin map.copy call-result reads")
+
+copySize(id) => map.copy(id).copy().size()
+
+source = map.new<string, float>()
+map.put(source, "open", 1.25)
+
+int_bool = map.new<int, bool>()
+map.put(int_bool, 7, true)
+
+color_int = map.new<color, int>()
+map.put(color_int, color.red, 4)
+
+int direct_size = map.copy(source).size()
+float direct_get = map.copy(source).get(key="open")
+bool direct_contains = map.copy(source).contains(key="open")
+map<string, float> nested_copy = map.copy(source).copy()
+bool other_key_get = map.copy(int_bool).get(7)
+int color_key_get = map.copy(color_int).get(color.red)
+
+plot(direct_size + direct_get + (direct_contains ? 1 : 0) + nested_copy.size() + (other_key_get ? 1 : 0) + color_key_get + copySize(source))

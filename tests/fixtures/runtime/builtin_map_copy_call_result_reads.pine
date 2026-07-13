@@ -1,0 +1,37 @@
+//@version=6
+indicator("Builtin map.copy call-result reads")
+
+copySize(id) => map.copy(id).size()
+
+copyBlockReads(id) =>
+    int size = map.copy(id).size()
+    bool contains = map.copy(id).contains("close")
+    float value = map.copy(id).get("open")
+    size + (contains ? 10 : 0) + value
+
+source = map.new<string, float>()
+map.put(source, "open", 1.25)
+map.put(source, "close", 3.75)
+
+copied = map.copy(source).copy()
+map.put(copied, "extra", 9.0)
+
+int_bool = map.new<int, bool>()
+map.put(int_bool, 7, true)
+
+color_int = map.new<color, int>()
+map.put(color_int, color.red, 4)
+
+plot(map.copy(source).size(), "copy_size")
+plot(map.copy(source).get("open"), "copy_get")
+plot(map.copy(source).contains("close") ? 1 : 0, "copy_contains")
+plot(na(map.copy(source).get("missing")) ? 1 : 0, "copy_missing_get")
+plot(map.copy(source).copy().get("close"), "nested_copy_get")
+plot(source.size(), "source_size")
+plot(copied.size(), "copied_size")
+plot(source.contains("extra") ? 1 : 0, "source_has_extra")
+plot(copied.get("extra"), "copied_extra")
+plot(map.copy(int_bool).get(7) ? 1 : 0, "int_bool_get")
+plot(map.copy(color_int).get(color.red), "color_int_get")
+plot(copySize(source), "expression_udf")
+plot(copyBlockReads(source), "block_udf")

@@ -685,9 +685,12 @@ Exact supported scalar `map.new<K,V>` templates use the separate
 scalar key/value kinds and admits only `.size()`, `.get(key)`,
 `.contains(key)`, and `.copy()`; only `.copy()` may continue another admitted
 map helper. The ordinary map analyzer validates key types and marks copy
-results with the same template metadata. Mutation, direct `keys()`/`values()`,
-unsupported templates, and other map call-result receivers fail closed. This
-path adds no UDT/import identity or public schema field.
+results with the same template metadata. Exact namespace `map.copy(existing)`
+results use the same prefix and retain both source template metadata and
+entries through the existing independent-copy runtime operation. Mutation,
+direct `keys()`/`values()`, unsupported templates, non-map copy inputs, and
+other map call-result receivers fail closed. This path adds no UDT/import
+identity or public schema field.
 
 For the array-helper branch, the receiver must resolve to a supported array
 kind. UDT-array producers must also carry one concrete same-local or
@@ -989,8 +992,9 @@ above. The five exact `matrix.new<T>` templates add the same read/copy set while
 retaining their scalar matrix element kind. None widens UDT identity. Bound
 or UDF matrix-result receivers, built-in-qualified/template
 call results outside the exact static and dynamic paths, and other array or
-matrix helpers remain gated. The scalar `map.new<K,V>` result path carries only
-map template metadata and likewise does not widen UDT identity.
+matrix helpers remain gated. The scalar `map.new<K,V>` and namespace
+`map.copy(existing)` result paths carry only map template metadata and likewise
+do not widen UDT identity.
 Methods with receiver/parameter/global field side effects, recursion,
 unsupported parameter families, mismatched UDT parameter identity, unknown
 receivers, and alias-qualified imported method receiver type mismatches remain

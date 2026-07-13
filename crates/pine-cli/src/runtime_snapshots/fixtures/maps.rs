@@ -22,6 +22,10 @@ pub(crate) const MAP_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/map_copy.pine",
     ),
     (
+        "runtime_builtin_map_copy_call_result_reads.json",
+        "tests/fixtures/runtime/builtin_map_copy_call_result_reads.pine",
+    ),
+    (
         "runtime_map_methods.json",
         "tests/fixtures/runtime/map_methods.pine",
     ),
