@@ -375,6 +375,9 @@ local_float_abs = localIdentity(array.from(-20.5, na, 22.5)).copy().abs().first(
 qualified_import_min = left.direct(array.from(60, 61, 62)).min(nth=1)
 local_int_min = localIdentity(array.from(10, 11, 12)).min()
 local_float_min = localIdentity(array.from(20.0, na, 22.0)).copy().min(nth=1)
+qualified_import_max = left.direct(array.from(60, 61, 62)).max(nth=1)
+local_int_max = localIdentity(array.from(10, 11, 12)).max()
+local_float_max = localIdentity(array.from(20.0, na, 22.0)).copy().max(nth=1)
 plot(qualified_import_size)
 plot(qualified_import_get)
 plot(qualified_import_last)
@@ -386,6 +389,7 @@ plot(qualified_import_binary_search_leftmost == 1 and local_int_binary_search_le
 plot(qualified_import_binary_search_rightmost == 2 and local_int_binary_search_rightmost == 2 and local_float_binary_search_rightmost == 2 ? 1 : 0)
 plot(qualified_import_abs == 60 and local_int_abs == 11 and local_float_abs == 20.5 ? 1 : 0)
 plot(qualified_import_min == 61 and local_int_min == 10 and local_float_min == 22.0 ? 1 : 0)
+plot(qualified_import_max == 61 and local_int_max == 12 and local_float_max == 20.0 ? 1 : 0)
 
 historical_return = left.direct(left_first_values)[1]
 historical_item = array.first(historical_return)

@@ -567,6 +567,9 @@ unqualified_float_abs = return_identity(array.from(-20.5, na, 22.5)).copy().abs(
 qualified_scalar_min = return_anchor.returnInts(array.from(40, 41, 42)).min(nth=1)
 unqualified_int_min = return_identity(array.from(10, 11, 12)).min()
 unqualified_float_min = return_identity(array.from(20.0, na, 22.0)).copy().min(nth=1)
+qualified_scalar_max = return_anchor.returnInts(array.from(40, 41, 42)).max(nth=1)
+unqualified_int_max = return_identity(array.from(10, 11, 12)).max()
+unqualified_float_max = return_identity(array.from(20.0, na, 22.0)).copy().max(nth=1)
 plot(qualified_scalar_size)
 plot(qualified_scalar_get)
 plot(qualified_scalar_last)
@@ -578,6 +581,7 @@ plot(qualified_scalar_binary_search_leftmost == 1 and unqualified_int_binary_sea
 plot(qualified_scalar_binary_search_rightmost == 2 and unqualified_int_binary_search_rightmost == 2 and unqualified_float_binary_search_rightmost == 2 ? 1 : 0)
 plot(qualified_scalar_abs == 40 and unqualified_int_abs == 11 and unqualified_float_abs == 20.5 ? 1 : 0)
 plot(qualified_scalar_min == 41 and unqualified_int_min == 10 and unqualified_float_min == 22.0 ? 1 : 0)
+plot(qualified_scalar_max == 41 and unqualified_int_max == 12 and unqualified_float_max == 20.0 ? 1 : 0)
 
 unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
 unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))

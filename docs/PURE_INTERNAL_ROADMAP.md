@@ -815,6 +815,11 @@ Current baseline:
   ranks return `na`. Static/cross-namespace, matrix/map-derived, local/imported
   function/method, int/float, rank binding, invalid type/arity, and terminal-
   continuation paths are fixture-backed.
+  The symmetric terminal aggregate slice adds `.max(nth?)` to the same numeric
+  result set. It uses descending zero-based rank order (`nth=0` is the maximum)
+  while retaining receiver-derived series int/float results, filtered `na`,
+  duplicate ranks, dynamic integer ranks, empty/all-`na`/upstream-`na`, invalid
+  rank, nonnumeric/UDT, arity, and terminal-continuation boundaries.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -833,7 +838,7 @@ Remaining internal work:
   the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
   `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus numeric-only
   `.binary_search(value)`/`.binary_search_leftmost(value)`/
-  `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)` set, and
+  `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked

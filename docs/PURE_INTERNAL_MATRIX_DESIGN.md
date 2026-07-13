@@ -1511,6 +1511,11 @@ Recommended future slices:
     zero-based ranks, dynamic integer ranks, empty/upstream-`na`, invalid rank/
     type/arity, and terminal continuation. Matrix-valued continuation is
     unchanged.
+94. Numeric array-valued call results additionally expose terminal `.max(nth?)`
+    with descending zero-based ranks. Matrix row/column/eigenvalue arrays and
+    array-returning `matrix.mult` overloads retain receiver-derived series
+    numeric kind, dynamic ranks, empty/upstream-`na`, invalid rank/type/arity,
+    and terminal continuation. Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

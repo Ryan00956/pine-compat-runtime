@@ -65,6 +65,7 @@ const BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.binary_search_rightmost",
     "array.abs",
     "array.min",
+    "array.max",
     "array.standardize",
     "array.sort_indices",
     "array.slice",
@@ -228,6 +229,7 @@ const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.binary_search_rightmost",
     "array.abs",
     "array.min",
+    "array.max",
     "array method calls",
     "expression-body functions",
     "multi-statement functions",
@@ -356,6 +358,7 @@ fn validate_udt_array_call_result_helper_fixture_paths(
             | "array.binary_search_rightmost"
             | "array.abs"
             | "array.min"
+            | "array.max"
     ) {
         return Ok(());
     }
@@ -383,7 +386,7 @@ fn validate_builtin_array_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_ARRAY_CALL_RESULT_FIXTURES,
-        "fixture-backed static-array builtin/template call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search/binary_search_leftmost/binary_search_rightmost/abs/min dispatch and retained producer/helper boundaries",
+        "fixture-backed static-array builtin/template call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max dispatch and retained producer/helper boundaries",
     )
 }
 
@@ -419,7 +422,7 @@ fn validate_builtin_namespace_array_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES,
-        "fixture-backed non-array-namespace array-capable producer call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search/binary_search_leftmost/binary_search_rightmost/abs/min dispatch and retained result-type/helper boundaries",
+        "fixture-backed non-array-namespace array-capable producer call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max dispatch and retained result-type/helper boundaries",
     )
 }
 
@@ -767,6 +770,7 @@ mod tests {
             "array.binary_search_rightmost",
             "array.abs",
             "array.min",
+            "array.max",
         ] {
             let error =
                 validate_builtin_namespace_array_call_result_fixture_paths(1, feature, fixtures)

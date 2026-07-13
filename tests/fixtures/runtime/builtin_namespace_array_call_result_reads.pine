@@ -64,6 +64,9 @@ plot(na(pivot_first) ? (na(pivot_abs_first) ? 1 : 0) : (pivot_abs_first == math.
 pivot_min = ta.pivot_point_levels("Traditional", true, true).min()
 pivot_namespace_min = array.min(ta.pivot_point_levels("Traditional", true, true))
 plot(na(pivot_namespace_min) ? (na(pivot_min) ? 1 : 0) : (pivot_min == pivot_namespace_min ? 1 : 0), "pivot_call_result_min")
+pivot_max = ta.pivot_point_levels("Traditional", true, true).max()
+pivot_namespace_max = array.max(ta.pivot_point_levels("Traditional", true, true))
+plot(na(pivot_namespace_max) ? (na(pivot_max) ? 1 : 0) : (pivot_max == pivot_namespace_max ? 1 : 0), "pivot_call_result_max")
 
 pivot_state_size = ta.pivot_point_levels("Traditional", bar_index == 2).size()
 pivot_state_first = ta.pivot_point_levels("Traditional", bar_index == 2).first()
@@ -121,6 +124,7 @@ plot(matrix.row(float_matrix, 0).copy().binary_search_leftmost(2.0) == 0 and mat
 plot(matrix.row(float_matrix, 0).copy().binary_search_rightmost(2.0) == 1 and matrix.row(int_matrix, 0).binary_search_rightmost(15) == 1 ? 1 : 0, "matrix_row_binary_search_rightmost")
 plot(matrix.row(float_matrix, 0).abs().copy().last() == 2.5 and matrix.col(int_matrix, 0).abs().first() == 10 ? 1 : 0, "matrix_row_col_call_result_abs")
 plot(matrix.row(float_matrix, 0).min(nth=1) == 2.5 and matrix.row(int_matrix, 0).min() == 10 ? 1 : 0, "matrix_row_col_call_result_min")
+plot(matrix.row(float_matrix, 0).max(nth=1) == 1.5 and matrix.row(int_matrix, 0).max() == 20 ? 1 : 0, "matrix_row_col_call_result_max")
 
 matrix<float> na_float_matrix = na
 na_cell_matrix = matrix.new<float>(1, 1)
@@ -135,6 +139,7 @@ plot(matrix.row(na_float_matrix, 0).binary_search_leftmost(0.0) == -1 ? 1 : 0, "
 plot(matrix.row(na_float_matrix, 0).binary_search_rightmost(0.0) == -1 ? 1 : 0, "matrix_na_row_binary_search_rightmost")
 plot(na(matrix.row(na_float_matrix, 0).abs().size()) ? 1 : 0, "matrix_na_row_call_result_abs")
 plot(na(matrix.row(na_float_matrix, 0).min()) ? 1 : 0, "matrix_na_row_call_result_min")
+plot(na(matrix.row(na_float_matrix, 0).max()) ? 1 : 0, "matrix_na_row_call_result_max")
 
 float_diagonal = matrix.new<float>(2, 2, 0.0)
 float_diagonal.set(0, 0, 2.0)
@@ -159,6 +164,7 @@ plot(matrix.eigenvalues(float_diagonal).copy().binary_search_leftmost(2.5) == 0 
 plot(matrix.eigenvalues(float_diagonal).copy().binary_search_rightmost(2.5) == 1 ? 1 : 0, "eigen_binary_search_rightmost")
 plot(matrix.eigenvalues(float_diagonal).abs().first() == 2.0 ? 1 : 0, "eigen_call_result_abs")
 plot(matrix.eigenvalues(float_diagonal).min() == 2.0 ? 1 : 0, "eigen_call_result_min")
+plot(matrix.eigenvalues(float_diagonal).max() == 3.0 ? 1 : 0, "eigen_call_result_max")
 plot(matrix.eigenvalues(matrix.new<float>(0, 0)).size(), "eigen_empty_size")
 plot(na(matrix.eigenvalues(matrix.new<float>(0, 0)).first()) ? 1 : 0, "eigen_empty_first")
 matrix<float> na_eigen_matrix = na
@@ -220,6 +226,7 @@ plot(map.keys(int_float).binary_search_leftmost(15) == 0 and map.keys(float_bool
 plot(map.keys(int_float).binary_search_rightmost(15) == 1 and map.keys(float_bool).copy().binary_search_rightmost(2.0) == 1 and map.values(color_int).binary_search_rightmost(8) == 1 ? 1 : 0, "map_binary_search_rightmost")
 plot(map.keys(int_float).abs().first() == 10 and map.values(int_float).copy().abs().last() == 2.5 ? 1 : 0, "map_call_result_abs")
 plot(map.keys(int_float).min(nth=1) == 20 and map.values(int_float).copy().min() == 2.5 ? 1 : 0, "map_call_result_min")
+plot(map.keys(int_float).max(nth=1) == 10 and map.values(int_float).copy().max() == 3.5 ? 1 : 0, "map_call_result_max")
 
 empty_map = map.new<string, float>()
 map<string, float> na_map = na
@@ -242,6 +249,7 @@ plot(map.values(na_map).binary_search_rightmost(0.0) == -1 ? 1 : 0, "map_na_bina
 plot(map.values(empty_map).abs().size(), "map_empty_call_result_abs")
 plot(na(map.values(na_map).abs().size()) ? 1 : 0, "map_na_call_result_abs")
 plot(na(map.values(empty_map).min()) and na(map.values(na_map).min()) ? 1 : 0, "map_empty_na_call_result_min")
+plot(na(map.values(empty_map).max()) and na(map.values(na_map).max()) ? 1 : 0, "map_empty_na_call_result_max")
 plot(readMatrixAndMap(float_matrix, int_float), "block_udf")
 
 mult_matrix = matrix.new<float>(2, 2, 0.0)
@@ -285,6 +293,7 @@ plot(matrix.mult(mult_matrix, mult_vector).copy().binary_search_leftmost(30.0) =
 plot(matrix.mult(mult_matrix, mult_vector).copy().binary_search_rightmost(30.0) == 1 and matrix.mult(mult_vector, mult_matrix).binary_search_rightmost(30.0) == 1 and mult_matrix.mult(mult_vector).binary_search_rightmost(40.0) == 1 ? 1 : 0, "mult_binary_search_rightmost")
 plot(matrix.mult(mult_matrix, mult_vector).abs().copy().first() == 17.0 and mult_matrix.mult(mult_vector).abs().last() == 39.0 ? 1 : 0, "mult_call_result_abs")
 plot(matrix.mult(mult_matrix, mult_vector).min() == 17.0 and mult_matrix.mult(mult_vector).min(nth=1) == 39.0 ? 1 : 0, "mult_call_result_min")
+plot(matrix.mult(mult_matrix, mult_vector).max() == 39.0 and mult_matrix.mult(mult_vector).max(nth=1) == 17.0 ? 1 : 0, "mult_call_result_max")
 
 int_mult_matrix = matrix.new<int>(2, 2, 0)
 int_mult_matrix.set(0, 0, 1)
@@ -311,6 +320,7 @@ plot(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).binary_search_righ
 plot(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).abs().size(), "mult_empty_call_result_abs")
 plot(na(matrix.mult(mult_na_matrix, mult_vector).abs().size()) ? 1 : 0, "mult_na_call_result_abs")
 plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).min()) and na(matrix.mult(mult_na_matrix, mult_vector).min()) ? 1 : 0, "mult_empty_na_call_result_min")
+plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).max()) and na(matrix.mult(mult_na_matrix, mult_vector).max()) ? 1 : 0, "mult_empty_na_call_result_max")
 plot(matrix.mult(array.new_float(0), matrix.new<float>(0, 0)).size(), "mult_left_empty_size")
 plot(na(matrix.mult(array.new_float(0), matrix.new<float>(0, 0)).first()) ? 1 : 0, "mult_left_empty_first")
 plot(matrix.mult(array.new_float(0), array.new_float(0)).size(), "mult_pair_empty_size")

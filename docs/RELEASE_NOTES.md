@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added terminal `.max(nth?)` to every existing concrete numeric array call
+  result. It mirrors `.min(nth?)` with descending zero-based rank order while
+  preserving receiver-derived `series int`/`series float`, filtered `na`,
+  duplicate ranks, dynamic integer ranks, and `nth=0` as the maximum. Empty/
+  all-`na`/upstream-`na` arrays and `na`, negative, or out-of-range ranks return
+  `na`. Static/cross-namespace, matrix/map-derived, local/imported function/
+  method, invalid type/arity, and terminal-continuation paths are fixture-backed.
 - Added terminal `.min(nth?)` to every existing concrete numeric array call
   result. It returns the receiver element's `series int` or `series float`,
   filters `na`, ranks remaining values in ascending zero-based order, accepts

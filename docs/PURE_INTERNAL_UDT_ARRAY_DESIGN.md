@@ -265,6 +265,8 @@ widening UDT support.
 Item 89 adds terminal `.min(nth?)` only to concrete numeric array results. It
 retains series int/float kind, filtered zero-based ascending rank semantics,
 dynamic integer ranks, and `na` boundaries without widening UDT support.
+Item 90 adds symmetric terminal `.max(nth?)` with descending zero-based rank
+semantics and the same numeric, dynamic-rank, `na`, and UDT boundaries.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1777,6 +1779,8 @@ Item 89 adds terminal `.min(nth?)` only to concrete numeric array results. It
 retains filtered ascending zero-based rank semantics, dynamic integer ranks,
 series int/float results, and empty/all-`na`/upstream-`na` boundaries without
 widening UDT identity.
+Item 90 adds symmetric terminal `.max(nth?)` over the same numeric result set,
+using descending zero-based ranks without widening UDT identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

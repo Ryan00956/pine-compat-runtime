@@ -1462,3 +1462,8 @@ return/parameter flow remains deferred.
     upstream-`na` plus invalid-rank `na` boundaries. Imported UDT and nonnumeric
     arrays remain rejected; no imported identity or public schema field is
     widened. Done.
+80. The same numeric producer set exposes terminal `.max(nth?)` with descending
+    zero-based rank semantics. It retains receiver-derived series int/float,
+    dynamic integer ranks, duplicates, empty/all-`na`/upstream-`na`, invalid-
+    rank `na`, and nonnumeric/imported-UDT rejection without widening imported
+    identity or public schemas. Done.

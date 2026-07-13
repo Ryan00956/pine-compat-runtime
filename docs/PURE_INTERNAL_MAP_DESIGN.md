@@ -435,6 +435,11 @@ Recommended future slices:
     ranks, dynamic integer ranks, empty/upstream-`na`, invalid type/rank/arity,
     local/imported provenance, and terminal continuation are fixture-backed.
     Map storage and template rules are unchanged. Done.
+24. Numeric key/value snapshots additionally expose terminal `.max(nth?)` with
+    descending zero-based ranks. Receiver-derived series int/float, dynamic
+    ranks, empty/upstream-`na`, invalid type/rank/arity, local/imported
+    provenance, and terminal continuation are fixture-backed. Map storage and
+    template rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
 
