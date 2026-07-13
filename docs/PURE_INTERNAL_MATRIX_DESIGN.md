@@ -1589,6 +1589,13 @@ Recommended future slices:
     insufficient-sample and non-finite behavior, invalid type/arity, non-
     mutation, and terminal continuation. Matrix-valued continuation is
     unchanged.
+106. Numeric array-valued call results additionally expose terminal
+    `.stdev(biased?)`. Matrix row/column/eigenvalue arrays and array-returning
+    `matrix.mult` overloads take the square root of the same selected filtered
+    population or sample variance and retain bias, single-value population
+    zero, fixed series-float, empty/all-`na`/upstream-`na`, insufficient-
+    sample, non-finite, invalid type/arity, non-mutation, and terminal-
+    continuation boundaries. Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

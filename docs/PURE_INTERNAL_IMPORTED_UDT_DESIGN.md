@@ -1536,3 +1536,9 @@ return/parameter flow remains deferred.
     non-finite results retain `na`. Nonnumeric/imported-UDT, invalid bias/
     arity, provenance, non-mutation, and terminal-continuation boundaries are
     fixture-backed. Done.
+92. The same numeric producer set exposes terminal `.stdev(biased?)`. It takes
+    the square root of the same selected filtered population or sample
+    variance and retains bias, single-value population zero, fixed series-
+    float, empty/all-`na`/upstream-`na`, insufficient-sample, non-finite,
+    nonnumeric/imported-UDT, invalid type/arity, provenance, non-mutation, and
+    terminal-continuation boundaries. Done.

@@ -328,6 +328,11 @@ for `true`, and sample bias for `false` or `na`. Single-value population
 variance is zero; empty/all-`na`/upstream-`na`, insufficient-sample, and non-
 finite results retain `na`. UDT, invalid bias/arity, provenance, non-mutation,
 and terminal-continuation boundaries remain closed.
+Item 102 adds terminal `.stdev(biased?)` over the same result set. It takes the
+square root of the selected filtered population or sample variance and retains
+bias, single-value population zero, fixed series-float, empty/all-`na`/
+upstream-`na`, insufficient-sample, non-finite, UDT, invalid type/arity,
+provenance, non-mutation, and terminal-continuation boundaries.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1895,6 +1900,12 @@ single-value population zero, fixed series-float results, empty/all-`na`/
 upstream-`na`, insufficient-sample, and non-finite behavior. Invalid bias/
 arity, provenance, non-mutation, terminal continuation, and UDT-identity
 boundaries remain closed.
+Item 102 adds terminal `.stdev(biased?)` over that result set, preserving the
+square root of selected filtered population/sample variance, bias, single-
+value population zero, fixed series-float, empty/all-`na`/upstream-`na`,
+insufficient-sample, and non-finite behavior. Invalid type/arity, provenance,
+non-mutation, terminal continuation, and UDT-identity boundaries remain
+closed.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

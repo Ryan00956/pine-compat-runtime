@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added terminal `.stdev(biased?)` to every existing concrete numeric array
+  call result. It returns the square root of the same filtered population or
+  sample variance selected by default/`true` versus `false`/`na` bias.
+  Single-value population standard deviation is zero; empty/all-`na`/upstream-
+  `na`, insufficient-sample, and non-finite results return `na`. Static/cross-
+  namespace, matrix/map-derived, local/imported function/method, invalid type/
+  arity, non-mutation, provenance, and terminal-continuation paths are fixture-
+  backed.
 - Added terminal `.variance(biased?)` to every existing concrete numeric array
   call result. It filters `na`, returns fixed `series float`, uses population
   bias by default or for `true`, and sample bias for `false` or `na`.

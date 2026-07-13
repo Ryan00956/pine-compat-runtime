@@ -154,6 +154,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "covariance" => Some("array.covariance"),
         "standardize" => Some("array.standardize"),
         "variance" => Some("array.variance"),
+        "stdev" => Some("array.stdev"),
         _ => None,
     }
 }

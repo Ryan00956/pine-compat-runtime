@@ -511,6 +511,13 @@ Recommended future slices:
     finite behavior, invalid type/arity, local/imported provenance, non-
     mutation, and terminal continuation are fixture-backed. Map storage and
     template rules are unchanged. Done.
+36. Numeric key/value snapshots additionally expose terminal
+    `.stdev(biased?)`. It takes the square root of the same filtered population
+    or sample variance and retains default/`true` population and `false`/`na`
+    sample bias, single-value population zero, fixed series-float results,
+    empty/all-`na`/upstream-`na`, insufficient-sample and non-finite behavior,
+    invalid type/arity, provenance, non-mutation, and terminal continuation.
+    Map storage and template rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

@@ -411,6 +411,9 @@ local_float_standardize = localIdentity(array.from(20.0, na, 22.0)).copy().stand
 qualified_import_variance = left.direct(array.from(60, 61, 62)).variance()
 local_int_variance = localIdentity(array.from(10, 11, 12)).variance(biased=false)
 local_float_variance = localIdentity(array.from(20.0, na, 22.0)).copy().variance()
+qualified_import_stdev = left.direct(array.from(60, 61, 62)).stdev()
+local_int_stdev = localIdentity(array.from(10, 11, 12)).stdev(biased=false)
+local_float_stdev = localIdentity(array.from(20.0, na, 22.0)).copy().stdev()
 plot(qualified_import_size)
 plot(qualified_import_get)
 plot(qualified_import_last)
@@ -434,6 +437,7 @@ plot(qualified_import_percentrank == 2.0 / 3.0 * 100.0 and local_int_percentrank
 plot(qualified_import_covariance == 2.0 and local_int_covariance == 1.0 and local_float_covariance == 1.0 ? 1 : 0)
 plot(qualified_import_standardize.size() == 3 and qualified_import_standardize.get(1) == 0.0 and local_int_standardize.first() + local_int_standardize.last() == 0.0 and local_float_standardize.size() == 3 and na(local_float_standardize.get(1)) ? 1 : 0)
 plot(qualified_import_variance == 2.0 / 3.0 and local_int_variance == 1.0 and local_float_variance == 1.0 ? 1 : 0)
+plot(qualified_import_stdev == array.stdev(array.from(60, 61, 62)) and local_int_stdev == 1.0 and local_float_stdev == 1.0 ? 1 : 0)
 
 historical_return = left.direct(left_first_values)[1]
 historical_item = array.first(historical_return)
