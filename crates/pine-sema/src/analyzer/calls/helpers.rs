@@ -59,6 +59,7 @@ pub(crate) fn local_udf_call_result_method_parts<'a>(
                     | "eigenvectors"
                     | "inv"
                     | "kron"
+                    | "mult"
                     | "pinv"
                     | "pow"
                     | "submatrix"
@@ -148,6 +149,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "eigenvectors" => Some("matrix.eigenvectors"),
         "inv" => Some("matrix.inv"),
         "kron" => Some("matrix.kron"),
+        "mult" => Some("matrix.mult"),
         "pinv" => Some("matrix.pinv"),
         "pow" => Some("matrix.pow"),
         "submatrix" => Some("matrix.submatrix"),
@@ -635,6 +637,7 @@ mod tests {
             ("eigenvectors", "matrix.eigenvectors"),
             ("inv", "matrix.inv"),
             ("kron", "matrix.kron"),
+            ("mult", "matrix.mult"),
             ("pinv", "matrix.pinv"),
             ("pow", "matrix.pow"),
             ("submatrix", "matrix.submatrix"),

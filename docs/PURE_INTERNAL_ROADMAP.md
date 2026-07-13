@@ -709,6 +709,19 @@ Current baseline:
   lowering, nested powers, source independence, provenance/dual aliases,
   invalid types/arity, and runtime failure boundaries are fixture-backed;
   mutation and other matrix-valued transforms remain gated.
+  The following numeric matrix-valued continuation slice adds `.mult(other)`
+  across the same concrete producer set. It retains the numeric receiver and
+  numeric matrix/scalar/array operand checks. Matrix operands return an
+  independent fixed `matrix<float>` with receiver rows and operand columns,
+  scalar operands preserve receiver shape, and numeric-array operands return
+  an independent `array<float>` with one value per receiver row. Semantic
+  result typing selects the closed matrix or array continuation set while
+  retaining `na`, zero-inner-dimension, multiplication-order, matrix cell-
+  budget, matrix-dimension, and vector-length behavior. Namespace and bound
+  operations, local/imported functions and methods, int-to-float lowering,
+  nested multiplication, source independence, provenance/dual aliases,
+  invalid types/arity, and runtime failure boundaries are fixture-backed;
+  mutation and other matrix-valued transforms remain gated.
   The following numeric matrix-valued continuation slice adds `.kron(other)`
   across the same concrete producer set. It retains the numeric receiver and
   numeric-matrix operand checks, always returns an independent fixed

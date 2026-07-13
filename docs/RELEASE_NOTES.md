@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Added result-type-directed `.mult(other)` continuation to every existing
+  concrete numeric matrix call result. Matrix and scalar operands return
+  independent `matrix<float>` results with multiplied or receiver-preserved
+  shape; numeric-array operands return independent `array<float>` results with
+  one value per receiver row. The resolved result selects the closed matrix or
+  array helper set while retaining numeric operand checks, `na`, zero-inner-
+  dimension, multiplication order, matrix cell-budget, matrix-dimension, and
+  vector-length behavior. Namespace and bound operations, local/imported
+  functions and methods, int-to-float lowering, nested multiplication, source
+  independence, provenance, dual aliases, invalid types/arity, and runtime
+  failure boundaries are fixture-backed; mutation and the remaining matrix-
+  valued helpers stay gated.
 - Added matrix-valued `.diff(other)` continuation to every existing concrete
   numeric matrix call result. It retains the numeric receiver and numeric-
   matrix-or-scalar operand checks, always returns an independent

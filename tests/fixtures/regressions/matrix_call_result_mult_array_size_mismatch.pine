@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix call-result mult array size mismatch")
+
+left = matrix.new<float>(1, 2, 1.0)
+right = array.from(1.0)
+plot(matrix.copy(left).mult(right).size())

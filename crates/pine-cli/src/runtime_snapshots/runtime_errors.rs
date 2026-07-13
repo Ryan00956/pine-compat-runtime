@@ -400,8 +400,20 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "matrix cell count cannot exceed 100000",
     ),
     (
+        "tests/fixtures/regressions/matrix_call_result_mult_cell_limit.pine",
+        "matrix cell count cannot exceed 100000",
+    ),
+    (
         "tests/fixtures/regressions/matrix_mult_shape_mismatch.pine",
         "matrix multiplication requires left column count to match right row count",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_call_result_mult_shape_mismatch.pine",
+        "matrix multiplication requires left column count to match right row count",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_call_result_mult_array_size_mismatch.pine",
+        "matrix multiplication requires matrix column count to match array size",
     ),
     (
         "tests/fixtures/regressions/matrix_diff_shape_mismatch.pine",

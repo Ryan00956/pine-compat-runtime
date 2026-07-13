@@ -1366,3 +1366,16 @@ return/parameter flow remains deferred.
     methods, int-to-float lowering, nested differences, scalar and matrix
     operands, source independence, provenance/dual aliases, invalid types/
     arity, and runtime failure boundaries are fixture-backed. Done.
+71. The same concrete numeric matrix call-result producer set additionally
+    exposes `.mult(other)` with result-type-directed continuation. Matrix and
+    scalar operands return independent fixed `matrix<float>` results with
+    multiplied or receiver-preserved shape; numeric-array operands return an
+    independent `array<float>` with one value per receiver row. The existing
+    numeric operand checks, `na`, zero-inner-dimension, multiplication order,
+    cell-budget, dimension, and vector-length boundaries remain unchanged, and
+    the resolved result selects the closed matrix or array helper set without
+    adding imported UDT identity or a public schema field. Namespace/bound
+    operations, local/imported functions and methods, int-to-float lowering,
+    nested multiplication, source independence, provenance/dual aliases,
+    invalid types/arity, and runtime failure boundaries are fixture-backed.
+    Done.

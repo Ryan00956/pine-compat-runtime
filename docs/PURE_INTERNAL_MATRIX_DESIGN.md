@@ -1427,6 +1427,19 @@ Recommended future slices:
     scalar and matrix operands, source independence, provenance/dual aliases,
     invalid types/arity, and runtime failure boundaries are fixture-backed.
     Mutation and the remaining matrix-valued helpers stay gated.
+85. Numeric matrix call-result multiplication: done for the same concrete
+    float/int producer set. `.mult(other)` retains the numeric receiver and
+    numeric matrix/scalar/array operand checks. Matrix operands return an
+    independent fixed `matrix<float>` with receiver rows and operand columns,
+    scalar operands preserve receiver shape, and numeric-array operands return
+    an independent `array<float>` with one value per receiver row. Semantic
+    result typing selects the closed matrix or array continuation set. `na`,
+    zero-inner-dimension, multiplication-order, matrix cell-budget, matrix-
+    dimension, and vector-length behavior remains fixture-backed. Namespace
+    and bound operations, local/imported functions and methods, int-to-float
+    lowering, nested multiplication, source independence, provenance/dual
+    aliases, invalid types/arity, and runtime failure boundaries are fixture-
+    backed. Mutation and the remaining matrix-valued helpers stay gated.
 
 ## Completion Gate For Future Positive Support
 
