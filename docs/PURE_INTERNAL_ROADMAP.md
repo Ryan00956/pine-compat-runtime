@@ -771,6 +771,18 @@ Current baseline:
   every existing static/cross-namespace/matrix-derived/map-derived producer,
   wrong type/identity, invalid arity, copy continuation, and terminal-
   continuation boundaries are fixture-backed.
+  The following numeric-only array-result slice adds
+  `.binary_search(value)` to concrete `array<int>` and `array<float>` results
+  across the registered static and cross-namespace producers plus qualified/
+  unqualified local and imported UDF/method results. It preserves the ordinary
+  numeric receiver/value checks, expects ascending contents, performs an exact
+  lower-bound search so duplicates select the leftmost index, returns `simple
+  int`, returns `-1` for missing, empty, and upstream-`na` arrays, performs no
+  mutation, and creates no continuation prefix. Numeric constructor/copy/from/
+  slice/concat/abs/standardize/sort-indices, numeric matrix row/column/
+  eigenvalue/mult, numeric map key/value, local/imported scalar array results,
+  wrong type/arity, nonnumeric/object/UDT rejection, copy continuation, and
+  terminal-continuation paths are fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -787,7 +799,8 @@ Remaining internal work:
   subsets, including mixed imported return identities, non-scalar imported
   returns, conflicting identities within one tuple slot, direct helpers beyond
   the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
-  `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` set, and
+  `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus numeric-only
+  `.binary_search(value)` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked

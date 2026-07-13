@@ -1468,6 +1468,17 @@ Recommended future slices:
     scalar kinds, copy continuation, invalid types/arity, and terminal-
     continuation paths are fixture-backed. Matrix-valued continuation is
     unchanged.
+89. Terminal binary searches on numeric array-valued call results: done for
+    numeric matrix row/column/eigenvalue arrays and array-returning
+    `matrix.mult` overloads, alongside all other concrete numeric array-result
+    producers. `.binary_search(value)` retains the ordinary numeric receiver/
+    value checks and caller-owned ascending-input contract. Exact lower-bound
+    search returns the leftmost duplicate match as `simple int` or `-1` for
+    missing, empty, and upstream-`na` arrays, performs no mutation, and creates
+    no array-result prefix. Float/int namespace and bound operations, local/
+    imported functions and methods, nonnumeric matrix-array rejection, copy
+    continuation, invalid types/arity, and terminal-continuation paths are
+    fixture-backed. Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

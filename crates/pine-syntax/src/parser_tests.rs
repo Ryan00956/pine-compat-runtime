@@ -1038,6 +1038,8 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = array.from(1, 2).copy().indexof(2).custom()\n",
         "bad = array.from(1, 2, 1).lastindexof(1).custom()\n",
         "bad = array.from(1, 2, 1).copy().lastindexof(1).custom()\n",
+        "bad = array.from(1, 2, 3).binary_search(2).custom()\n",
+        "bad = array.from(1, 2, 3).copy().binary_search(2).custom()\n",
         "bad = matrix.mult(values, other).rows().custom()\n",
         "bad = matrix.new<float>(2, 2, 1.0).row(0).size().custom()\n",
         "bad = matrix.copy(values).row(0).first().custom()\n",

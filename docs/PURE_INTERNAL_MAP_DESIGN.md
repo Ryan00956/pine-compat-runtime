@@ -400,6 +400,15 @@ Recommended future slices:
     creates no array-result prefix. Built-in, local/imported function and
     method, dual-alias isolation, copy continuation, invalid types/arity, and
     terminal-continuation paths are fixture-backed. Done.
+19. Fresh numeric key/value arrays from the same concrete scalar-map call-
+    result producers additionally expose terminal `.binary_search(value)`.
+    Only int/float map sides pass the ordinary numeric receiver/value gate;
+    callers remain responsible for ascending insertion-order snapshots. Exact
+    lower-bound search returns the leftmost duplicate match as `simple int` or
+    `-1` for missing, empty, and upstream-`na` arrays, performs no mutation,
+    and creates no continuation prefix. Bool/string/color map sides, invalid
+    types/arity, local/imported function and method provenance, dual aliases,
+    copy continuation, and terminal continuation are fixture-backed. Done.
 
 ## Completion Gate For Future Widening
 

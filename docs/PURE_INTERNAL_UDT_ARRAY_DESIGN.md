@@ -244,6 +244,13 @@ missing, empty, and upstream-`na` arrays.
 Item 84 extends it again with terminal `.lastindexof(value)`, returning the last
 zero-based match under the same validation, equality, `-1`, identity, and non-
 mutation boundary.
+Item 85 adds terminal `.binary_search(value)` only to concrete numeric array
+call results. It preserves the ordinary numeric receiver/value gate, ascending-
+input contract, exact lower-bound/leftmost-duplicate behavior, `simple int`
+return, `-1` missing/empty/upstream-`na` behavior, and non-mutation. Local and
+imported scalar-tree UDT array results remain deliberately rejected by the
+numeric gate, while local/imported UDF and method results returning concrete
+int/float arrays use the same closed helper.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1599,6 +1606,18 @@ Recommended future slices:
     `matrix.mult`, A-to-B-to-A, dual-alias isolation, copy continuation,
     invalid type/identity/arity, and terminal-continuation paths are fixture-
     backed. Done.
+85. Concrete numeric array call results additionally expose terminal
+    `.binary_search(value)`. Qualified and unqualified local/imported UDF and
+    method results returning `array<int>` or `array<float>`, registered static
+    producers, numeric cross-namespace producers, matrix-derived numeric
+    arrays, numeric map key/value arrays, and array-returning `matrix.mult`
+    overloads share the ordinary numeric receiver/value checks. Ascending
+    contents are caller-owned; exact lower-bound search returns the leftmost
+    duplicate match as `simple int` or `-1` for missing, empty, and upstream-
+    `na` arrays. The helper is non-mutating and terminal. Nonnumeric, drawing/
+    chart-point, local/imported UDT, invalid type/arity, copy-continuation, and
+    terminal-continuation boundaries are fixture-backed. No UDT/import identity
+    or public schema field is widened. Done.
 
 ## Completion Gate For Future Positive Support
 

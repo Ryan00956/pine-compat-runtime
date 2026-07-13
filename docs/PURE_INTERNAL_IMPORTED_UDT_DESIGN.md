@@ -1417,3 +1417,15 @@ return/parameter flow remains deferred.
     `matrix.mult`, A-to-B-to-A, dual-alias isolation, copy continuation,
     invalid type/identity/arity, and terminal-continuation paths are fixture-
     backed. It adds no imported UDT identity or public schema field. Done.
+75. Concrete numeric array call results additionally expose terminal
+    `.binary_search(value)`. Qualified and unqualified local/imported UDF and
+    method results returning `array<int>` or `array<float>`, registered static
+    producers, numeric cross-namespace producers, matrix-derived numeric
+    arrays, numeric map key/value arrays, and array-returning `matrix.mult`
+    overloads share the ordinary numeric receiver/value checks. Ascending
+    contents are caller-owned; exact lower-bound search returns the leftmost
+    duplicate match as `simple int` or `-1` for missing, empty, and upstream-
+    `na` arrays. It is non-mutating and terminal. Imported UDT arrays and every
+    nonnumeric/object array remain rejected; invalid type/arity, copy-
+    continuation, terminal-continuation, and dual-alias paths are fixture-
+    backed. It adds no imported UDT identity or public schema field. Done.

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Added terminal `.binary_search(value)` to every existing concrete numeric
+  array call result. Registered static/cross-namespace producers, qualified and
+  unqualified local/imported UDF and method results, numeric matrix row/column/
+  eigenvalue/mult arrays, and numeric map key/value arrays retain the ordinary
+  numeric receiver/value checks. Callers provide ascending contents; exact
+  lower-bound search returns the leftmost duplicate match as `simple int` or
+  `-1` for missing, empty, and upstream-`na` arrays. The helper is non-mutating
+  and terminal, while bool/string/color, drawing/chart-point, and UDT result
+  arrays remain rejected. Invalid type/arity, copy continuation, provenance/
+  dual-alias, and terminal-continuation boundaries are fixture-backed.
 - Added terminal `.lastindexof(value)` last-index searches to every existing
   concrete array call result. It covers qualified and unqualified local/
   imported UDF and method results, registered static `array.*` producers, the

@@ -24,3 +24,7 @@ udf_lastindexof_wrong_identity = lib.direct(values).lastindexof(lib.Second.new(2
 method_lastindexof_wrong_identity = anchor.retainFirst(values).copy().lastindexof(lib.Second.new(200.0, 20.0))
 scalar_lastindexof_wrong_type = lib.direct(array.from(1, 2)).lastindexof("bad")
 lastindexof_extra_arg = lib.direct(values).lastindexof(lib.First.new(10.0, 100.0), lib.First.new(10.0, 100.0))
+udf_binary_search_udt = lib.direct(values).binary_search(lib.First.new(10.0, 100.0))
+method_binary_search_udt = anchor.retainFirst(values).copy().binary_search(lib.First.new(10.0, 100.0))
+scalar_binary_search_string = lib.direct(array.from("a", "b")).binary_search("a")
+binary_search_extra_arg = lib.direct(array.from(1, 2)).binary_search(1, 2)
