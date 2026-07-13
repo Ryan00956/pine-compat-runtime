@@ -387,6 +387,12 @@ Current baseline:
   It shares the five matrix helpers plus copy-only continuation; bound
   `values.eigenvectors()` results stay gated and non-square runtime errors are
   unchanged.
+  The following closed slice admits exact
+  `matrix.new<float|int|bool|string|color>` template results. They preserve the
+  registered element kind, requested rectangular shape, type-compatible
+  initial or default `na` cells, fresh allocation, and copy independence, and
+  share the five matrix helpers plus copy-only continuation. Unsupported or
+  deferred matrix templates and postfix mutation stay gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -410,9 +416,10 @@ Remaining internal work:
   namespace `matrix.copy(...)`/`matrix.transpose(...)`/`matrix.submatrix(...)`/
   `matrix.kron(...)`/`matrix.diff(...)`/`matrix.pow(...)`/`matrix.inv(...)`/
   `matrix.pinv(...)`/`matrix.eigenvectors(...)`
-  matrix paths,
+  matrix paths plus exact `matrix.new<float|int|bool|string|color>` templates,
   including bound or UDF
-  matrix-result receivers, other matrix-returning calls, map/matrix templates,
+  matrix-result receivers, other matrix-returning calls, map templates and
+  unsupported matrix templates,
   other built-in namespaces or non-producer members, non-producer `array.*`
   calls, unsupported `array.new<T>` templates, non-array/non-UDT results,
   unknown/`na` results

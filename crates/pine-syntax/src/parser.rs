@@ -769,6 +769,9 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
         ExprKind::Identifier(name) if is_builtin_array_result_callee(name) => {
             Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
         }
+        ExprKind::Identifier(name) if is_builtin_matrix_result_callee(name) => {
+            Some(BUILTIN_MATRIX_CALL_RESULT_PREFIX.to_owned())
+        }
         ExprKind::QualifiedName(parts) => match parts.as_slice() {
             [prefix, method] if prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX && method == "copy" => {
                 Some(BUILTIN_MATRIX_CALL_RESULT_PREFIX.to_owned())
@@ -841,6 +844,17 @@ fn is_builtin_matrix_result_qualified_callee(namespace: &str, member: &str) -> b
                 | "submatrix"
                 | "transpose"
         )
+}
+
+fn is_builtin_matrix_result_callee(name: &str) -> bool {
+    matches!(
+        name,
+        "matrix.new<float>"
+            | "matrix.new<int>"
+            | "matrix.new<bool>"
+            | "matrix.new<string>"
+            | "matrix.new<color>"
+    )
 }
 
 fn is_builtin_array_result_member(member: &str) -> bool {

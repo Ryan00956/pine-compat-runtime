@@ -771,6 +771,37 @@ fn parses_matrix_eigenvectors_result_method_receivers_with_matrix_provenance() {
 }
 
 #[test]
+fn parses_matrix_new_template_result_method_receivers_with_matrix_provenance() {
+    for source in [
+        "value = matrix.new<float>(2, 3, 1.5).rows()\n",
+        "value = matrix.new<int>(2, 3, 1).columns()\n",
+        "value = matrix.new<bool>(2, 3, true).elements_count()\n",
+        "value = matrix.new<string>(1, 1, \"value\").get(0, 0)\n",
+        "value = matrix.new<color>(1, 1, color.red).copy().get(0, 0)\n",
+    ] {
+        let parsed = parse(source);
+
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "{source}: {:?}",
+            parsed.diagnostics
+        );
+        let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected declaration for {source}");
+        };
+        let ExprKind::Call { callee, args } = &value.kind else {
+            panic!("expected call-result method call for {source}");
+        };
+        assert!(matches!(
+            &callee.kind,
+            ExprKind::QualifiedName(parts)
+                if parts.first().is_some_and(|part| part == "$builtin_matrix_result")
+        ));
+        assert!(args[0].value.span.end < callee.span.start, "{source}");
+    }
+}
+
+#[test]
 fn rejects_methods_after_terminal_builtin_collection_result_reads() {
     for source in [
         "bad = array.from(Point.new(1)).get(0).size()\n",
@@ -806,7 +837,7 @@ fn rejects_other_builtin_call_result_method_receivers() {
         "bad = str.length(\"value\").size()\n",
         "bad = ta.sma(close, 14).size()\n",
         "bad = map.copy(values).size()\n",
-        "bad = matrix.new<float>(1, 1, 0).size()\n",
+        "bad = matrix.new<chart.point>(1, 1, chart.point.now(close)).rows()\n",
         "bad = map.new<int, int>().size()\n",
         "bad = input.string(\"value\").size()\n",
         "bad = log.info(\"value\").size()\n",

@@ -912,9 +912,12 @@ zero-row or zero-column inputs, and yields `na` for invalid-cell inputs; bound
 whose columns are real eigenvectors for numeric square inputs, returns empty
 `0 x 0` for empty input, and yields `na` for invalid-cell, non-real, or
 incomplete results; bound `values.eigenvectors()` results remain generic
-rejections. Every other
-matrix-returning call, `map.new`
-and `matrix.new` template, and other namespace/non-producer call
+rejections. Exact `matrix.new<float>`, `matrix.new<int>`, `matrix.new<bool>`,
+`matrix.new<string>`, and `matrix.new<color>` template results also enter this
+path, preserve their element kind, requested shape, type-compatible initial or
+default `na` cells, fresh allocation, and copy independence, and expose only
+the same five helpers. Every other matrix-returning call, `map.new`,
+unsupported `matrix.new` template, and other namespace/non-producer call
 remains outside this path. Built-in namespace prefixes remain reserved, so
 same-named user or import qualifiers do not enter it. The extension carries no
 UDT/import identity and changes no public output schema.
@@ -983,8 +986,10 @@ shape and left-to-right subtraction order, pow preserves square shape across
 identity/copy/positive powers, inv preserves square shape for invertible inputs
 or yields `na` for singular/invalid-cell inputs, pinv swaps rectangular shape
 while preserving singular matrix results, and eigenvectors preserves square
-shape or yields `na` for invalid-cell/non-real/incomplete results. All fixed producers
-return float matrices, and none of these paths carries
+shape or yields `na` for invalid-cell/non-real/incomplete results. All fixed
+producers return float matrices. The five exact `matrix.new<T>` templates
+instead retain their float/int/bool/string/color matrix kind, rectangular
+shape, initial/default-`na` cells, and fresh allocation. None of these paths carries
 UDT/import identity. Bound or UDF matrix-result receivers, built-in-qualified
 or template call results outside
 the exact static and dynamic paths, and other

@@ -129,8 +129,13 @@ float-matrix result that preserves square shape for real complete eigenvector
 columns, returns empty `0 x 0`, yields `na` for invalid-cell/non-real/incomplete
 results, exposes the same helpers, and retains the bound
 `values.eigenvectors()` gate plus non-square runtime error.
+Item 22 adds exact `matrix.new<float|int|bool|string|color>` template results
+with preserved element kind, requested rectangular shape, type-compatible
+initial or default `na` cells, fresh allocation, the same helpers, and retained
+unsupported-template and mutation gates.
 Outside the exact static producer sets and those namespace-only exceptions,
-unsupported `array.new<T>` types, non-producer calls, map/matrix templates,
+unsupported `array.new<T>` types, non-producer calls, unsupported matrix
+templates and map templates,
 other matrix-returning calls, mixed or non-scalar return identities,
 non-array/non-UDT or unresolved results, nested field mutation, and
 method receiver/parameter/global field side effects remain fail-closed.
@@ -726,7 +731,7 @@ return/parameter flow remains deferred.
     int/float/bool/string/color template side. Empty/`na`, negative-index,
     bounds, typed destinations, UDF reads, and copy independence are
     fixture-backed. Namespace-qualified `matrix.mult(...)` direct-result
-    chains, matrix-returning calls, map/matrix templates, all other
+    chains, matrix-returning calls, unsupported matrix templates and map templates, all other
     namespaces/non-producers, and mutation remain gated; the existing
     bound-receiver `matrix_id.mult(array).size()` path is unchanged. Built-in
     prefixes stay reserved. This slice deliberately adds no imported
@@ -848,3 +853,14 @@ return/parameter flow remains deferred.
     `values.eigenvectors()` call-result reads fail closed; non-square runtime
     errors are unchanged. No imported UDT identity or public schema field is
     added. Done.
+22. The exact matrix-constructor-template continuation routes
+    `matrix.new<float>`, `matrix.new<int>`, `matrix.new<bool>`,
+    `matrix.new<string>`, and `matrix.new<color>` results through
+    `$builtin_matrix_result`. Each preserves its element kind, requested
+    rectangular shape, type-compatible initial or default `na` cells, fresh
+    allocation, and copy independence, and exposes only the five matrix
+    read/copy helpers with named arguments and copy-only continuation. Zero
+    dimensions, nested copies, UDF-contained template reads, and fresh-source
+    behavior are fixture-backed. Invalid constructor/helper arguments,
+    mutation, broader helpers, and unsupported/deferred templates fail closed.
+    No imported UDT identity or public schema field is added. Done.

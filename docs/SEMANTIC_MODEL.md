@@ -668,8 +668,12 @@ zero-cell swapped shapes, and yields `na` for invalid-cell inputs. Bound
 `simple matrix<float>` for numeric inputs, preserves square shape for real
 complete eigenvectors, returns empty `0 x 0`, and yields `na` for invalid-cell,
 non-real, or incomplete results. Bound `matrix_id.eigenvectors()` results
-remain generic rejections. Map/matrix templates such
-as `map.new` and `matrix.new`,
+remain generic rejections. Exact `matrix.new<float>`, `matrix.new<int>`,
+`matrix.new<bool>`, `matrix.new<string>`, and `matrix.new<color>` template
+results also enter this path, preserve their element kind, requested shape,
+type-compatible initial or default `na` cells, fresh allocation, and copy
+independence, and expose only the same five helpers. Map templates such as
+`map.new`, unsupported matrix templates,
 every other namespace or non-producer member, and other matrix-returning calls
 stay excluded. Built-in
 namespace prefixes remain reserved and cannot be treated as same-named
@@ -886,8 +890,11 @@ shape and left-to-right subtraction order, pow preserves square shape across
 identity/copy/positive powers, inv preserves square shape or yields `na` for
 singular/invalid-cell inputs, and pinv swaps rectangular shape while preserving
 singular matrix results, and eigenvectors preserves square shape or yields
-`na` for invalid-cell/non-real/incomplete results. All fixed producers return float matrices,
-and none of these paths carries UDT/import identity.
+`na` for invalid-cell/non-real/incomplete results. All fixed producers return
+float matrices, while the five exact `matrix.new<T>` templates retain their
+float/int/bool/string/color matrix kind, rectangular shape,
+initial/default-`na` cells, and fresh allocation. None of these paths carries
+UDT/import identity.
 Tuple-contained
 same-imported scalar-tree UDT arrays are supported when destructured, with
 identity tracked independently per slot. Non-scalar UDT value history outside the local/imported
@@ -969,7 +976,8 @@ not widen UDT identity. Namespace matrix-returning `matrix.mult` overloads and
 exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix` plus
 fixed-float namespace `matrix.kron`/`matrix.diff`/`matrix.pow`/`matrix.inv`/
 `matrix.pinv`/`matrix.eigenvectors` add only the exact matrix read/copy set
-above and likewise do not widen UDT identity. Bound
+above. The five exact `matrix.new<T>` templates add the same read/copy set while
+retaining their scalar matrix element kind. None widens UDT identity. Bound
 or UDF matrix-result receivers, built-in-qualified/template
 call results outside the exact static and dynamic paths, and other array or
 matrix helpers remain gated.
