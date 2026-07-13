@@ -119,6 +119,11 @@ Item 19 adds exact namespace `matrix.inv(values)` with a fixed float-matrix
 result that preserves invertible square shape, returns empty `0 x 0` or `na`
 for the established boundaries, exposes the same helpers, and retains the
 bound `values.inv()` gate.
+Item 20 adds exact namespace `matrix.pinv(values)` with a fixed float-matrix
+result that swaps rectangular row/column counts, preserves singular
+matrix-valued results, returns swapped zero-cell shapes, exposes the same
+helpers, yields `na` for invalid-cell inputs, and retains the bound
+`values.pinv()` gate.
 Outside the exact static producer sets and those namespace-only exceptions,
 unsupported `array.new<T>` types, non-producer calls, map/matrix templates,
 other matrix-returning calls, mixed or non-scalar return identities,
@@ -815,3 +820,14 @@ return/parameter flow remains deferred.
     producer/helper arguments, mutation, broader helpers, and bound
     `values.inv()` call-result reads fail closed. No imported UDT identity or
     public schema field is added. Done.
+20. The exact namespace matrix-pseudo-inverse continuation routes
+    `matrix.pinv(values)` through `$builtin_matrix_result`. Its fixed
+    `simple matrix<float>` result swaps rectangular row/column counts,
+    preserves singular matrix-valued results, returns swapped zero-cell shapes
+    for zero-row or zero-column inputs, and yields `na` for invalid-cell
+    inputs. It exposes only the five matrix read/copy helpers with named
+    arguments and copy-only continuation. Int-input float results, nested
+    copies, UDF-contained namespace reads, and source independence are
+    fixture-backed. Wrong producer/helper arguments, mutation, broader
+    helpers, and bound `values.pinv()` call-result reads fail closed. No
+    imported UDT identity or public schema field is added. Done.

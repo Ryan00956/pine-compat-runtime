@@ -154,6 +154,7 @@ fn builtin_collection_result_producer_parser_allowlists_match_registry() {
         "matrix.inv",
         "matrix.kron",
         "matrix.mult",
+        "matrix.pinv",
         "matrix.pow",
         "matrix.submatrix",
         "matrix.transpose",

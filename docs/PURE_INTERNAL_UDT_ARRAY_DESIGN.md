@@ -134,6 +134,11 @@ Item 29 adds exact namespace `matrix.inv(values)` with a fixed float-matrix
 result that preserves invertible square shape, returns empty `0 x 0` or `na`
 for the established boundaries, exposes the same helpers, and retains the
 bound `values.inv()` gate.
+Item 30 adds exact namespace `matrix.pinv(values)` with a fixed float-matrix
+result that swaps rectangular row/column counts, preserves singular
+matrix-valued results, returns swapped zero-cell shapes, exposes the same
+helpers, yields `na` for invalid-cell inputs, and retains the bound
+`values.pinv()` gate.
 Outside the exact static producer sets and these namespace-only paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 templates, and other matrix-returning calls remain fail-closed. `array.slice`
@@ -737,8 +742,9 @@ Initial policy:
   `matrix.mult` overloads return scalar arrays only and add no UDT/import
   identity. Namespace matrix-returning `matrix.mult` overloads and exact
   namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix` plus fixed-float
-  namespace `matrix.kron`/`matrix.diff`/`matrix.pow`/`matrix.inv` add only the
-  exact five matrix readers/copy from items 22 through 29 and likewise carry no UDT/import
+  namespace `matrix.kron`/`matrix.diff`/`matrix.pow`/`matrix.inv`/
+  `matrix.pinv` add only the exact five matrix readers/copy from items 22
+  through 30 and likewise carry no UDT/import
   identity. Mixed
   identities within one scalar return or tuple slot, non-scalar UDT arrays,
   non-array/non-UDT results,
@@ -979,6 +985,17 @@ Recommended future slices:
     producer/helper arguments, mutation, broader helpers, and bound
     `values.inv()` call-result reads fail closed. No UDT/import identity or
     public schema field is added. Done.
+30. The exact namespace matrix-pseudo-inverse continuation routes
+    `matrix.pinv(values)` through `$builtin_matrix_result`. Its fixed
+    `simple matrix<float>` result swaps rectangular row/column counts,
+    preserves singular matrix-valued results, returns swapped zero-cell shapes
+    for zero-row or zero-column inputs, and yields `na` for invalid-cell
+    inputs. It exposes only the five matrix read/copy helpers with named
+    arguments and copy-only continuation. Int-input float results, nested
+    copies, UDF-contained namespace reads, and source independence are
+    fixture-backed. Wrong producer/helper arguments, mutation, broader
+    helpers, and bound `values.pinv()` call-result reads fail closed. No
+    UDT/import identity or public schema field is added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1025,7 +1042,10 @@ shape. Item 27 adds fixed-float namespace `matrix.diff` with selected-matrix
 shape and operand direction, and item 28 adds fixed-float namespace `matrix.pow`
 with identity/copy/positive powers. Item 29 adds fixed-float namespace
 `matrix.inv` with invertible-square, empty, and `na` result boundaries; none
-adds UDT/import identity. Broader UDT element families, bound or UDF
+adds UDT/import identity. Item 30 adds fixed-float namespace `matrix.pinv` with
+rectangular shape swapping, singular matrix-valued results, zero-cell shape
+swapping, and invalid-cell `na`; it likewise adds no UDT/import identity.
+Broader UDT element families, bound or UDF
 matrix-result receivers, built-in-qualified/template call-result receivers
 outside the closed paths, unsupported `array.new<T>` templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, unsupported

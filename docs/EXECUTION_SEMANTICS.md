@@ -902,7 +902,13 @@ behavior; bound `values.pow(power)` results remain generic rejections. Exact
 namespace `matrix.inv(values)` returns an independent square
 `matrix<float>` for invertible numeric inputs, an empty `0 x 0` matrix for
 empty input, and `na` for singular or invalid-cell inputs; bound `values.inv()`
-results remain generic rejections. Every other matrix-returning call, `map.new`
+results remain generic rejections. Exact namespace `matrix.pinv(values)`
+returns an independent fixed `matrix<float>` pseudo-inverse for numeric inputs,
+swaps row and column counts for rectangular matrices, preserves singular
+matrix-valued results, returns the corresponding zero-cell swapped shape for
+zero-row or zero-column inputs, and yields `na` for invalid-cell inputs; bound
+`values.pinv()` results remain generic rejections. Every other
+matrix-returning call, `map.new`
 and `matrix.new` template, and other namespace/non-producer call
 remains outside this path. Built-in namespace prefixes remain reserved, so
 same-named user or import qualifiers do not enter it. The extension carries no
@@ -963,13 +969,15 @@ with another allowed array read/copy. The seven fixed cross-namespace producers
 and array-returning `matrix.mult` overloads are scalar-array-only and add no
 UDT/import identity path. Namespace matrix-returning `matrix.mult` overloads,
 exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix`, and
-fixed-float namespace `matrix.kron`/`matrix.diff`/`matrix.pow`/`matrix.inv` add
+fixed-float namespace `matrix.kron`/`matrix.diff`/`matrix.pow`/`matrix.inv`/
+`matrix.pinv` add
 only the five matrix readers/copy above. Copy/transpose/submatrix preserve the
 source scalar element kind; transpose swaps shape, submatrix selects a range,
 kron expands both dimensions, diff preserves its selected matrix operand's
 shape and left-to-right subtraction order, pow preserves square shape across
-identity/copy/positive powers, and inv preserves square shape for invertible
-inputs or yields `na` for singular/invalid-cell inputs. All fixed producers
+identity/copy/positive powers, inv preserves square shape for invertible inputs
+or yields `na` for singular/invalid-cell inputs, and pinv swaps rectangular
+shape while preserving singular matrix results. All fixed producers
 return float matrices, and none of these paths carries
 UDT/import identity. Bound or UDF matrix-result receivers, built-in-qualified
 or template call results outside

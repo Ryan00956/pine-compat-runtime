@@ -616,7 +616,8 @@ analysis/runtime rules.
 
 Namespace-qualified `matrix.mult(...)`, `matrix.copy(...)`,
 `matrix.transpose(...)`, `matrix.submatrix(...)`, `matrix.kron(...)`,
-`matrix.diff(...)`, `matrix.pow(...)`, and `matrix.inv(...)` instead use the
+`matrix.diff(...)`, `matrix.pow(...)`, `matrix.inv(...)`, and
+`matrix.pinv(...)` instead use the
 separate `$builtin_matrix_result` synthetic prefix. `matrix.mult` semantic
 dispatch is selected by the resolved `ReturnSpec::MatrixMult` result.
 Matrix-by-array, array-by-matrix,
@@ -658,7 +659,12 @@ Exact namespace `matrix.inv` also takes the matrix branch, resolves to fixed
 `simple matrix<float>` for numeric inputs, preserves square shape for
 invertible matrices, returns an empty `0 x 0` matrix for empty input, and yields
 `na` for singular or invalid-cell inputs. Bound `matrix_id.inv()` results remain
-generic rejections. Map/matrix templates such as `map.new` and `matrix.new`,
+generic rejections. Exact namespace `matrix.pinv` also takes the matrix branch,
+resolves to fixed `simple matrix<float>` for numeric inputs, swaps row/column
+shape for rectangular matrices, retains singular matrix-valued results and
+zero-cell swapped shapes, and yields `na` for invalid-cell inputs. Bound
+`matrix_id.pinv()` results remain generic rejections. Map/matrix templates such
+as `map.new` and `matrix.new`,
 every other namespace or non-producer member, and other matrix-returning calls
 stay excluded. Built-in
 namespace prefixes remain reserved and cannot be treated as same-named
@@ -866,13 +872,15 @@ UDT method composition path. The seven fixed cross-namespace producers and
 array-returning `matrix.mult` overloads return only scalar arrays and add no
 UDT/import identity flow. Namespace matrix-returning `matrix.mult` overloads,
 exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix`, and
-fixed-float namespace `matrix.kron`/`matrix.diff`/`matrix.pow`/`matrix.inv` add
+fixed-float namespace `matrix.kron`/`matrix.diff`/`matrix.pow`/`matrix.inv`/
+`matrix.pinv` add
 only the exact matrix read/copy set above. Copy/transpose/submatrix preserve the
 scalar matrix element kind; transpose swaps shape, submatrix selects a range,
 kron expands both dimensions, diff preserves its selected matrix operand's
 shape and left-to-right subtraction order, pow preserves square shape across
-identity/copy/positive powers, and inv preserves square shape or yields `na`
-for singular/invalid-cell inputs. All fixed producers return float matrices,
+identity/copy/positive powers, inv preserves square shape or yields `na` for
+singular/invalid-cell inputs, and pinv swaps rectangular shape while preserving
+singular matrix results. All fixed producers return float matrices,
 and none of these paths carries UDT/import identity.
 Tuple-contained
 same-imported scalar-tree UDT arrays are supported when destructured, with
@@ -953,7 +961,8 @@ method exception does not apply to a built-in producer's terminal
 and the array-returning `matrix.mult` overloads are scalar-array-only and do
 not widen UDT identity. Namespace matrix-returning `matrix.mult` overloads and
 exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix` plus
-fixed-float namespace `matrix.kron`/`matrix.diff`/`matrix.pow`/`matrix.inv` add only the exact matrix read/copy set
+fixed-float namespace `matrix.kron`/`matrix.diff`/`matrix.pow`/`matrix.inv`/
+`matrix.pinv` add only the exact matrix read/copy set
 above and likewise do not widen UDT identity. Bound
 or UDF matrix-result receivers, built-in-qualified/template
 call results outside the exact static and dynamic paths, and other array or

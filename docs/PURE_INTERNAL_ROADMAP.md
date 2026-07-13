@@ -374,6 +374,12 @@ Current baseline:
   matrices, yields an empty `0 x 0` matrix for empty input and `na` for singular
   or invalid-cell inputs, and shares the five matrix helpers plus copy-only
   continuation; bound `values.inv()` results stay gated.
+  The following closed slice admits exact namespace `matrix.pinv(values)`. Its
+  fixed `simple matrix<float>` result accepts numeric matrices, swaps
+  rectangular row/column counts, preserves singular matrix-valued results,
+  returns swapped zero-cell shapes for zero-row or zero-column inputs, and
+  shares the five matrix helpers plus copy-only continuation; invalid-cell
+  inputs yield `na`, and bound `values.pinv()` results stay gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -395,7 +401,8 @@ Remaining internal work:
   local-UDF, exact built-in array-producing subsets, and the result-type-checked
   namespace-qualified `matrix.mult(...)` array/matrix paths plus the exact
   namespace `matrix.copy(...)`/`matrix.transpose(...)`/`matrix.submatrix(...)`/
-  `matrix.kron(...)`/`matrix.diff(...)`/`matrix.pow(...)`/`matrix.inv(...)`
+  `matrix.kron(...)`/`matrix.diff(...)`/`matrix.pow(...)`/`matrix.inv(...)`/
+  `matrix.pinv(...)`
   matrix paths,
   including bound or UDF
   matrix-result receivers, other matrix-returning calls, map/matrix templates,
