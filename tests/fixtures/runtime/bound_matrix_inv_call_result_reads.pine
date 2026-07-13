@@ -1,0 +1,41 @@
+//@version=6
+indicator("Bound matrix.inv call-result reads")
+
+invRows(values) => values.inv().rows()
+
+invBlockReads(values) =>
+    int rows = values.inv().rows()
+    int columns = values.inv().columns()
+    float value = values.inv().get(0, 0)
+    rows * 100 + columns * 10 + value
+
+values = matrix.new<float>(2, 2, 0.0)
+values.set(0, 0, 4.0)
+values.set(0, 1, 7.0)
+values.set(1, 0, 2.0)
+values.set(1, 1, 6.0)
+
+inverted = values.inv().copy()
+inverted.set(0, 0, 99.0)
+
+ints = matrix.new<int>(2, 2, 0)
+ints.set(0, 0, 2)
+ints.set(1, 1, 4)
+
+singular = matrix.new<float>(2, 2, 1.0)
+invalid = matrix.new<float>(1, 1)
+empty = matrix.new<float>(0, 0)
+
+plot(values.inv().rows(), "inv_rows")
+plot(values.inv().columns(), "inv_columns")
+plot(values.inv().elements_count(), "inv_elements")
+plot(values.inv().get(0, 0), "inv_get")
+plot(values.inv().copy().get(0, 1), "inv_copy_get")
+plot(ints.inv().get(1, 1), "int_inv_get")
+plot(na(singular.inv().rows()) ? 1 : 0, "singular_rows_na")
+plot(na(invalid.inv().rows()) ? 1 : 0, "invalid_rows_na")
+plot(empty.inv().rows() * 100 + empty.inv().columns() * 10 + empty.inv().elements_count(), "empty_shape")
+plot(values.get(0, 0), "source_value")
+plot(inverted.get(0, 0), "inverted_value")
+plot(invRows(values), "expression_udf")
+plot(invBlockReads(values), "block_udf")

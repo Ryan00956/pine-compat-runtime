@@ -100,6 +100,13 @@ Current evidence:
   float-matrix results, independent storage, nested copies, UDF-contained
   reads, wrong power/index/helper and non-numeric/non-matrix receiver
   diagnostics, and the retained bound-inverse gate.
+- `tests/fixtures/runtime/bound_matrix_inv_call_result_reads.pine` plus the
+  matching supported/unsupported semantic fixtures cover direct
+  `values.inv().rows()`/`columns()`/`elements_count()`/`get()`/`copy()` for
+  numeric square float/int matrices, invertible, singular, invalid-cell, and
+  empty inputs, fixed float-matrix results, independent storage, nested copies,
+  UDF-contained reads, wrong index/helper and non-numeric/non-matrix receiver
+  diagnostics, and the retained bound-pseudo-inverse gate.
 - `tests/fixtures/runtime/matrix_float.pine` covers `matrix.new<float>`,
   `matrix.get`, `matrix.set`, `matrix.fill`, `values.fill(value)`,
   `values.get(row, column)`, `values.set(row, column, value)`, `matrix.rows`,
@@ -1075,6 +1082,13 @@ Recommended future slices:
     independent backing storage, copy-only continuation, and retained gates
     for other bound producers, broader helpers, mutation, and non-matrix
     receivers.
+49. Bound matrix-inverse call results: done for exact numeric square matrix
+    receivers using `values.inv()` followed by
+    rows/columns/elements_count/get/copy, preserving invertible square shape,
+    empty `0 x 0` results, and `na` singular/invalid-cell results with fixed
+    float-matrix metadata, independent backing storage, copy-only continuation,
+    and retained gates for other bound producers, broader helpers, mutation,
+    and non-matrix receivers.
 
 ## Completion Gate For Future Positive Support
 

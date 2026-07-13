@@ -1,0 +1,20 @@
+//@version=6
+indicator("Supported bound matrix.inv call-result reads")
+
+invRows(values) => values.inv().copy().rows()
+
+values = matrix.new<float>(2, 2, 0.0)
+values.set(0, 0, 4.0)
+values.set(0, 1, 7.0)
+values.set(1, 0, 2.0)
+values.set(1, 1, 6.0)
+ints = matrix.new<int>(1, 1, 2)
+
+int direct_rows = values.inv().rows()
+int direct_columns = values.inv().columns()
+int direct_elements = values.inv().elements_count()
+float direct_get = values.inv().get(row=0, column=0)
+matrix<float> nested_copy = values.inv().copy()
+float int_get = ints.inv().get(0, 0)
+
+plot(direct_rows + direct_columns + direct_elements + direct_get + nested_copy.get(0, 1) + int_get + invRows(values))

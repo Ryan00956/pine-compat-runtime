@@ -889,8 +889,8 @@ identities within one tuple UDT-array slot, direct call-result array methods
 outside the read-only `size`/`get`/`first`/`last`/`copy` set,
 bound matrix-result call-result receivers other than exact matrix-receiver
 `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
-`values.kron(other)`/`values.diff(other)`/`values.pow(power)`, UDF
-matrix-result call-result receivers,
+`values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
+`values.inv()`, UDF matrix-result call-result receivers,
 built-in-qualified/template
 call-result receivers outside the exact static `array.*` allowlist and
 cross-namespace dynamic paths, nested field mutation, UDF

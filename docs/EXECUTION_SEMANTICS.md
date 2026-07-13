@@ -911,8 +911,11 @@ results now share the five direct helpers and copy-only continuation while
 preserving the existing receiver and power checks. Exact
 namespace `matrix.inv(values)` returns an independent square
 `matrix<float>` for invertible numeric inputs, an empty `0 x 0` matrix for
-empty input, and `na` for singular or invalid-cell inputs; bound `values.inv()`
-results remain generic rejections. Exact namespace `matrix.pinv(values)`
+empty input, and `na` for singular or invalid-cell inputs. Exact bound
+numeric-square-matrix-receiver `values.inv()` results now share the five direct
+helpers and copy-only continuation while preserving the existing receiver,
+shape, singular, and invalid-cell boundaries. Exact namespace
+`matrix.pinv(values)`
 returns an independent fixed `matrix<float>` pseudo-inverse for numeric inputs,
 swaps row and column counts for rectangular matrices, preserves singular
 matrix-valued results, returns the corresponding zero-cell swapped shape for
@@ -1013,7 +1016,8 @@ UDT/import identity. The scalar `map.new<K,V>` and namespace
 metadata and no UDT/import identity. Bound or UDF
 matrix-result receivers other than exact matrix-receiver
 `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
-`values.kron(other)`/`values.diff(other)`/`values.pow(power)`,
+`values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
+`values.inv()`,
 built-in-qualified
 or template call results outside
 the exact static and dynamic paths, and other
