@@ -136,6 +136,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "copy" => Some("array.copy"),
         "includes" => Some("array.includes"),
         "indexof" => Some("array.indexof"),
+        "lastindexof" => Some("array.lastindexof"),
         _ => None,
     }
 }
@@ -689,6 +690,7 @@ mod tests {
             ("copy", "array.copy"),
             ("includes", "array.includes"),
             ("indexof", "array.indexof"),
+            ("lastindexof", "array.lastindexof"),
         ] {
             assert_eq!(
                 array_call_result_builtin_name(method_name),
@@ -696,7 +698,7 @@ mod tests {
             );
             assert!(pine_builtins::get_phase_1_builtin(builtin_name).is_some());
         }
-        assert_eq!(array_call_result_builtin_name("lastindexof"), None);
+        assert_eq!(array_call_result_builtin_name("binary_search"), None);
         assert_eq!(array_call_result_builtin_name("push"), None);
     }
 

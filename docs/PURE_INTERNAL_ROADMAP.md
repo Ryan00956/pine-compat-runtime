@@ -763,6 +763,14 @@ Current baseline:
   prefix. Scalar, drawing/chart-point, local/imported UDT, A-to-B-to-A, dual-
   alias isolation, wrong type/identity, invalid arity, copy continuation, and
   terminal-continuation boundaries are fixture-backed.
+  The next terminal array-result slice adds `.lastindexof(value)` across the
+  same producer set. It reuses the same validation and equality path, returns
+  the last zero-based match as `simple int`, returns `-1` for missing or empty
+  concrete arrays and for an upstream `na` array, performs no mutation, and
+  creates no continuation prefix. Repeated scalar and structural-UDT values,
+  every existing static/cross-namespace/matrix-derived/map-derived producer,
+  wrong type/identity, invalid arity, copy continuation, and terminal-
+  continuation boundaries are fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -779,7 +787,7 @@ Remaining internal work:
   subsets, including mixed imported return identities, non-scalar imported
   returns, conflicting identities within one tuple slot, direct helpers beyond
   the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
-  `.includes(value)`/`.indexof(value)` set, and
+  `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked

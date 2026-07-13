@@ -1458,6 +1458,16 @@ Recommended future slices:
     Namespace/bound operations, local/imported functions and methods, scalar
     kinds, copy continuation, invalid types/arity, and terminal-continuation
     paths are fixture-backed. Matrix-valued continuation is unchanged.
+88. Terminal last-index searches on array-valued call results: done for every
+    existing concrete array result, including matrix row/column/eigenvalue
+    arrays and array-returning `matrix.mult` overloads. `.lastindexof(value)`
+    reuses ordinary element-kind validation and equality, returns the last
+    zero-based match as `simple int`, returns `-1` for missing, empty, and
+    upstream-`na` arrays, performs no mutation, and creates no array-result
+    prefix. Namespace/bound operations, local/imported functions and methods,
+    scalar kinds, copy continuation, invalid types/arity, and terminal-
+    continuation paths are fixture-backed. Matrix-valued continuation is
+    unchanged.
 
 ## Completion Gate For Future Positive Support
 

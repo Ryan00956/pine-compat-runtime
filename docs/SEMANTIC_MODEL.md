@@ -573,8 +573,8 @@ reassignment to a different identity and unresolved nested tuple consumers
 emit root-spanned `E_TUPLE_UDT_ARRAY_IDENTITY` diagnostics. Qualified
 user-defined UDF/method results and unqualified plain local UDF results support
 direct `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
-`.includes(value)`, and `.indexof(value)` dispatch for every currently
-supported array kind, including nested copy/read chains.
+`.includes(value)`, `.indexof(value)`, and `.lastindexof(value)` dispatch for
+every currently supported array kind, including nested copy/read chains.
 The parser assigns the unqualified form the impossible internal prefix
 `$call_result`; the normalization requires a plain lexical callee, while
 qualified user-defined forms keep their source prefix.
@@ -591,12 +591,12 @@ same-imported scalar-tree UDT `array.new<T>` source templates use the matching
 canonical constructor or checked UDT-template path. The parser marks only
 those receivers with `$builtin_array_result`, and semantic analysis admits only
 `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
-`.includes(value)`, and `.indexof(value)` after them.
+`.includes(value)`, `.indexof(value)`, and `.lastindexof(value)` after them.
 Only `.copy()` produces another array receiver that may continue with a nested
 allowed read/copy; `.size()`, `.get()`, `.first()`, `.last()`, `.includes()`,
-and `.indexof()` are terminal on this synthetic path and cannot
-continue into a user method or any other
-call-result method, including a method on a returned scalar UDT element.
+`.indexof()`, and `.lastindexof()` are terminal on this synthetic path and
+cannot continue into a user method or any other call-result method, including a
+method on a returned scalar UDT element.
 `array` is reserved as the built-in lexical prefix for this path; a qualified
 user or import alias with that spelling cannot use call-result dispatch.
 
@@ -604,9 +604,9 @@ The same `$builtin_array_result` path has a second set of seven fixed producers
 outside the `array` namespace: `str.split`, `ta.pivot_point_levels`, `matrix.row`,
 `matrix.col`, `matrix.eigenvalues`, `map.keys`, and `map.values`. Each result
 admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
-`.includes(value)`, and `.indexof(value)`;
+`.includes(value)`, `.indexof(value)`, and `.lastindexof(value)`;
 only `.copy()` returns an array receiver eligible for another allowed
-read/copy. The six scalar/element/search readers are terminal. Return
+read/copy. The seven scalar/element/search readers are terminal. Return
 kinds stay
 producer-specific: `array<string>` for `str.split`, `array<float>` for
 `ta.pivot_point_levels`, the matching scalar element array for `matrix.row`
@@ -627,8 +627,8 @@ separate `$builtin_matrix_result` synthetic prefix. `matrix.mult` semantic
 dispatch is selected by the resolved `ReturnSpec::MatrixMult` result.
 Matrix-by-array, array-by-matrix,
 and array-by-array overloads resolve to `array<float>` and admit `.size()`,
-`.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`, and
-`.indexof(value)`.
+`.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`,
+`.indexof(value)`, and `.lastindexof(value)`.
 Matrix-by-matrix,
 matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
 `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
@@ -644,8 +644,8 @@ parser marker to `$builtin_array_result`, producing fresh element-kind-preservin
 while `.eigenvalues()` retains its fixed `simple array<float>` result and
 numeric-matrix parameter check. All three switch to the array-result prefix and
 admit `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
-`.indexof(value)` with copy-only array continuation and terminal membership/
-first-index checks.
+`.indexof(value)`/`.lastindexof(value)` with copy-only array continuation and
+terminal membership/first-and-last-index checks.
 `.is_square()` retains the ordinary `MATRIX_ANY_ID_PARAMS`
 signature and `simple bool` return, accepts every supported concrete matrix
 kind, and is terminal without changing the parser marker. `.is_zero()` retains
@@ -832,8 +832,8 @@ scalar key/value kinds and admits `.size()`, `.get(key)`, `.contains(key)`,
 admitted map helper. `.keys()` and `.values()` switch to the array-result prefix
 and return fresh key/value-kind-preserving arrays, which admit direct binding
 plus `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
-`.indexof(value)`, with copy-only array continuation and terminal search
-checks. The ordinary map analyzer validates key types and marks copy
+`.indexof(value)`/`.lastindexof(value)`, with copy-only array continuation and
+terminal search checks. The ordinary map analyzer validates key types and marks copy
 results with the same template metadata. Exact namespace `map.copy(existing)`
 results use the same prefix and retain both source template metadata and
 entries through the existing independent-copy runtime operation. Mutation,
@@ -868,7 +868,7 @@ use the existing pure user-method dispatch, and explicit same-named local
 methods and imported functions remain distinct. Other `array.*` calls,
 built-in namespaces and templates outside the seven fixed producers plus the
 result-type-checked namespace `matrix.mult` paths, helpers beyond the applicable
-seven-item postfix read/copy/search set, non-array/non-matrix/non-UDT results,
+eight-item postfix read/copy/search set, non-array/non-matrix/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, and postfix
 mutation remain outside this subset. A postfix read does not make a mutating
 producer pure:
@@ -878,6 +878,9 @@ identity argument checks plus structural/object equality, returns `series bool`,
 returns false for an empty concrete array, propagates an upstream `na` array,
 does not mutate the result, and is terminal without another parser prefix.
 `.indexof(value)` uses the same checks and equality, returns the first zero-
+based match as `simple int`, returns `-1` for missing or empty concrete arrays
+and for an upstream `na` array, does not mutate the result, and is terminal.
+`.lastindexof(value)` uses the same checks and equality, returns the last zero-
 based match as `simple int`, returns `-1` for missing or empty concrete arrays
 and for an upstream `na` array, does not mutate the result, and is terminal.
 Generic UDT-array parameters are therefore iterable inside local UDFs and typed
@@ -1069,11 +1072,12 @@ copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose continuation; 
 identity.
 Qualified user-defined and unqualified plain local UDF results plus the
 exact static `array.*` allowlist and cross-namespace array-capable path support
-those seven array helpers for
+those eight array helpers for
 currently supported array kinds; UDT arrays retain the concrete
 same-local/same-imported scalar-tree identity gate, and scalar UDT results from
 unqualified local UDFs may invoke existing pure methods. Built-in producer
-`get`/`first`/`last` element results and `includes`/`indexof` search results
+`get`/`first`/`last` element results and
+`includes`/`indexof`/`lastindexof` search results
 remain terminal and do not open that scalar UDT method composition path. The seven
 fixed cross-namespace producers and
 array-returning `matrix.mult` overloads return only scalar arrays and add no
@@ -1163,12 +1167,14 @@ returns preserve the identity selected for the current call. Qualified
 user-defined results returning any currently supported array kind, unqualified
 plain local UDF array results, the exact built-in `array.*` producer allowlist,
 and the cross-namespace array-capable path support direct
-`.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`
+`.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
+`.indexof(value)`/`.lastindexof(value)`
 without widening arbitrary call-result receivers. UDT arrays retain the concrete
 same-local/same-imported scalar-tree identity gate; scalar UDT results from an
 unqualified local UDF may invoke the existing pure method subset. That scalar
 method exception does not apply to a built-in producer's terminal
-`.get()`/`.first()`/`.last()` result. The seven fixed cross-namespace producers
+`.get()`/`.first()`/`.last()`/`.includes()`/`.indexof()`/`.lastindexof()`
+result. The seven fixed cross-namespace producers
 and the array-returning `matrix.mult` overloads are scalar-array-only and do
 not widen UDT identity. Namespace matrix-returning `matrix.mult` overloads and
 exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix` plus

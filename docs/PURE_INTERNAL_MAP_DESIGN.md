@@ -393,6 +393,13 @@ Recommended future slices:
     array-result prefix. Built-in, local/imported function and method, dual-
     alias isolation, copy continuation, invalid types/arity, and terminal-
     continuation paths are fixture-backed. Done.
+18. The same fresh key/value arrays additionally expose terminal
+    `.lastindexof(value)`. It preserves key/value kind checks and insertion-
+    order snapshots, returns the last zero-based match as `simple int`, returns
+    `-1` for missing, empty, and upstream-`na` arrays, performs no mutation, and
+    creates no array-result prefix. Built-in, local/imported function and
+    method, dual-alias isolation, copy continuation, invalid types/arity, and
+    terminal-continuation paths are fixture-backed. Done.
 
 ## Completion Gate For Future Widening
 

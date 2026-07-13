@@ -39,5 +39,8 @@ includes_extra_arg = array.copy(first_values).includes(First.new(10.0, 100.0), F
 copy_indexof_wrong_identity = array.copy(first_values).indexof(Second.new(200.0, 20.0))
 from_indexof_wrong_type = array.from(1, 2).indexof("bad")
 indexof_extra_arg = array.copy(first_values).indexof(First.new(10.0, 100.0), First.new(10.0, 100.0))
+copy_lastindexof_wrong_identity = array.copy(first_values).lastindexof(Second.new(200.0, 20.0))
+from_lastindexof_wrong_type = array.from(1, 2).lastindexof("bad")
+lastindexof_extra_arg = array.copy(first_values).lastindexof(First.new(10.0, 100.0), First.new(10.0, 100.0))
 
 concat_inside_udf = badConcat(array.from(1), array.from(2))

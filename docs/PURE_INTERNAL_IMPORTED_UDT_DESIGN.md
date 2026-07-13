@@ -61,17 +61,18 @@ source-aware metadata isolates two aliases of the same physical library.
 Qualified user-defined UDF/method results and unqualified plain root-local UDF
 results returning any currently supported array kind support direct
 `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
-`.indexof(value)` and nested copy/read dispatch. The unqualified form uses the impossible parser-only
-`$call_result`
+`.indexof(value)`/`.lastindexof(value)` and nested copy/read dispatch. The
+unqualified form uses the impossible parser-only `$call_result`
 prefix and is limited to plain lexical callees; library-private local UDF
 bodies use the same normalization after module rewriting. The completed
 built-in producer slice in item 9 adds `$builtin_array_result` for its exact
 `array.*` producer allowlist and initially exposed only those same five helpers.
 Only `.copy()` may return another array receiver for a nested allowed read/copy;
-`.size()`, `.get()`, `.first()`, `.last()`, `.includes()`, and `.indexof()` are
-terminal and cannot continue into an imported/user method or another call-
-result method, including a method on a returned imported UDT element. Imported UDT-array
-results must carry one concrete same-imported scalar-tree identity. Named/`na`/
+`.size()`, `.get()`, `.first()`, `.last()`, `.includes()`, `.indexof()`, and
+`.lastindexof()` are terminal and cannot continue into an imported/user method
+or another call-result method, including a method on a returned imported UDT
+element. Imported UDT-array results must carry one concrete same-imported
+scalar-tree identity. Named/`na`/
 negative indexes,
 bounds errors, empty and typed-`na` reads, A-to-B-to-A calls, and dual aliases
 are fixture-backed. An unqualified root-local UDF result carrying a concrete
@@ -1405,3 +1406,14 @@ return/parameter flow remains deferred.
     imported UDT, A-to-B-to-A, dual-alias isolation, copy continuation, invalid
     type/identity/arity, and terminal-continuation paths are fixture-backed. It
     adds no imported UDT identity or public schema field. Done.
+74. Every existing concrete array call-result producer additionally exposes
+    terminal `.lastindexof(value)`. It reuses ordinary element-kind and
+    concrete imported-UDT identity argument checks plus structural/object
+    equality, returns the last zero-based match as `simple int`, returns `-1`
+    for missing or empty concrete arrays and for an upstream `na` array,
+    performs no mutation, and creates no result prefix. Repeated scalar and
+    structural-UDT values, static/cross-namespace producers, local/imported UDF
+    and method results, matrix-derived and map-derived arrays, array-returning
+    `matrix.mult`, A-to-B-to-A, dual-alias isolation, copy continuation,
+    invalid type/identity/arity, and terminal-continuation paths are fixture-
+    backed. It adds no imported UDT identity or public schema field. Done.
