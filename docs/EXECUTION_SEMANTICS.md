@@ -874,7 +874,7 @@ may use `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
 `.eigenvalues()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`,
 `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, and
 `.is_stochastic()`, plus numeric-only terminal
-`.sum()`/`.avg()`/`.min()`/`.max()`/`.mode()` and all-kind terminal
+`.sum()`/`.avg()`/`.min()`/`.max()`/`.mode()`/`.trace()` and all-kind terminal
 `.is_square()`. Int inputs still produce float collections.
 Matrix `.copy()` may continue with another admitted matrix helper;
 `.row(index)` and `.col(index)` return fresh element-kind-preserving arrays;
@@ -913,15 +913,18 @@ Numeric-only `.mode()` returns a fixed `series float`, ignores `na` cells,
 selects the smallest value among equally frequent repeats, and returns `na`
 for empty, all-`na`, no-repeat, selected non-finite, or upstream-`na` results;
 it is terminal.
+Numeric-only `.trace()` returns a fixed `series float`, sums non-`na` main-
+diagonal cells over `min(rows, columns)`, and returns `na` for an empty/all-
+`na` diagonal, non-finite sum, or upstream-`na` result; it is terminal.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
 broader helpers, and mutation fail closed. The existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch. Exact
 bound numeric-matrix-receiver matrix-valued `matrix_id.mult(other)` results now
-share the twenty-one matrix helpers and the copy/row/column/eigenvalue/
+share the twenty-two matrix helpers and the copy/row/column/eigenvalue/
 predicate/aggregate-reader continuation rules for matrix or
 scalar operands while preserving the existing overload, shape, `na`, empty
 inner dimension, and cell-budget boundaries. Unqualified local-UDF results that infer
-a concrete supported matrix kind now share the twenty-one matrix helpers through
+a concrete supported matrix kind now share the twenty-two matrix helpers through
 `$call_result`. Parameter passthrough, block aliases, nested calls, same-kind
 control flow, constructed and matrix-operation returns, named/reordered
 arguments, and zero dimensions keep their normal call-specific float/int/bool/
@@ -945,6 +948,7 @@ terminal, as are numeric `.is_binary()`, `.is_diagonal()`, `.is_identity()`,
 `.min()` is terminal under that rule as well.
 `.max()` is terminal under that rule as well.
 `.mode()` is terminal under that rule as well.
+`.trace()` is terminal under that rule as well.
 Exact namespace
 `matrix.copy(values)`
 also enters this

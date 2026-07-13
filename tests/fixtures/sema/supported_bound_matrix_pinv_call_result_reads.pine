@@ -30,5 +30,6 @@ float direct_avg = values.pinv().avg()
 float direct_min = values.pinv().min()
 float direct_max = values.pinv().max()
 float direct_mode = values.pinv().mode()
+float direct_trace = values.pinv().trace()
 
-plot(direct_rows + direct_columns + direct_elements + direct_get + nested_copy.get(0, 0) + int_get + direct_row.size() + direct_col.size() + direct_eigenvalues.size() + (direct_is_square ? 1 : 0) + (direct_is_zero ? 1 : 0) + (direct_is_binary ? 1 : 0) + (direct_is_diagonal ? 1 : 0) + (direct_is_identity ? 1 : 0) + (direct_is_symmetric ? 1 : 0) + (direct_is_antisymmetric ? 1 : 0) + (direct_is_stochastic ? 1 : 0) + direct_sum + direct_avg + direct_min + direct_max + direct_mode + pinvRows(values))
+plot(direct_rows + direct_columns + direct_elements + direct_get + nested_copy.get(0, 0) + int_get + direct_row.size() + direct_col.size() + direct_eigenvalues.size() + (direct_is_square ? 1 : 0) + (direct_is_zero ? 1 : 0) + (direct_is_binary ? 1 : 0) + (direct_is_diagonal ? 1 : 0) + (direct_is_identity ? 1 : 0) + (direct_is_symmetric ? 1 : 0) + (direct_is_antisymmetric ? 1 : 0) + (direct_is_stochastic ? 1 : 0) + direct_sum + direct_avg + direct_min + direct_max + direct_mode + direct_trace + pinvRows(values))

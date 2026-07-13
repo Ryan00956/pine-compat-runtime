@@ -90,5 +90,7 @@ bool_max = matrix.copy(bool_values).max()
 max_extra_arg = matrix.copy(left).max(0)
 bool_mode = matrix.copy(bool_values).mode()
 mode_extra_arg = matrix.copy(left).mode(0)
+bool_trace = matrix.copy(bool_values).trace()
+trace_extra_arg = matrix.copy(left).trace(0)
 
 plot(close)

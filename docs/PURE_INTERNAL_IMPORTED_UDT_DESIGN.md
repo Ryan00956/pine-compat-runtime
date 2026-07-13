@@ -1267,3 +1267,10 @@ return/parameter flow remains deferred.
     provenance/dual aliases, invalid arity, and terminal continuation are
     fixture-backed. No imported UDT identity or public schema field is added.
     Done.
+60. The same concrete numeric matrix call-result producer set exposes terminal
+    `.trace()` with its fixed `series float` result. It sums non-`na` main-
+    diagonal cells over `min(rows, columns)`, returns `na` for an empty/all-
+    `na` diagonal, non-finite sum, or upstream-`na` result, and creates no
+    result prefix. Numeric rejection, copy continuation, provenance/dual
+    aliases, invalid arity, and terminal continuation are fixture-backed. No
+    imported UDT identity or public schema field is added. Done.

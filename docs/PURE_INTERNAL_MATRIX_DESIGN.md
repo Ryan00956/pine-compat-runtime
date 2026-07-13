@@ -1322,6 +1322,13 @@ Recommended future slices:
     upstream-`na` results, and is terminal without a result-prefix transition.
     Numeric rejection, copy continuation, provenance/dual aliases, invalid
     arity, and terminal continuation are fixture-backed.
+74. Numeric matrix call-result traces: done for the same concrete float/int
+    producer set. `.trace()` retains the fixed `series float` result, sums non-
+    `na` main-diagonal cells over `min(rows, columns)`, returns `na` for an
+    empty/all-`na` diagonal, non-finite sum, or upstream-`na` result, and is
+    terminal without a result-prefix transition. Numeric rejection, copy
+    continuation, provenance/dual aliases, invalid arity, and terminal
+    continuation are fixture-backed.
 
 ## Completion Gate For Future Positive Support
 
