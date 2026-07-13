@@ -591,6 +591,9 @@ unqualified_float_percentile_nearest = return_identity(array.from(20.0, na, 22.0
 qualified_scalar_percentile_linear = return_anchor.returnInts(array.from(40, 41, 42)).percentile_linear_interpolation(50)
 unqualified_int_percentile_linear = return_identity(array.from(10, 11, 12)).percentile_linear_interpolation(percentage=50)
 unqualified_float_percentile_linear = return_identity(array.from(20.0, na, 22.0)).copy().percentile_linear_interpolation(50)
+qualified_scalar_percentrank = return_anchor.returnInts(array.from(40, 41, 42)).percentrank(1)
+unqualified_int_percentrank = return_identity(array.from(10, 11, 12)).percentrank(index=1)
+unqualified_float_percentrank = return_identity(array.from(20.0, na, 22.0)).copy().percentrank(2)
 plot(qualified_scalar_size)
 plot(qualified_scalar_get)
 plot(qualified_scalar_last)
@@ -610,6 +613,7 @@ plot(qualified_scalar_median == 41 and unqualified_int_median == 11 and unqualif
 plot(qualified_scalar_mode == 41 and unqualified_int_mode == 11 and unqualified_float_mode == 22.0 ? 1 : 0)
 plot(qualified_scalar_percentile_nearest == 41 and unqualified_int_percentile_nearest == 11 and unqualified_float_percentile_nearest == 22.0 ? 1 : 0)
 plot(qualified_scalar_percentile_linear == 41.0 and unqualified_int_percentile_linear == 11.0 and unqualified_float_percentile_linear == 21.0 ? 1 : 0)
+plot(qualified_scalar_percentrank == 2.0 / 3.0 * 100.0 and unqualified_int_percentrank == 2.0 / 3.0 * 100.0 and unqualified_float_percentrank == 100.0 ? 1 : 0)
 
 unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
 unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))

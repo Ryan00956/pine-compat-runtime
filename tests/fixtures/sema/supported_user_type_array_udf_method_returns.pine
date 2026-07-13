@@ -319,6 +319,9 @@ unqualified_float_percentile_nearest = identity(array.from(20.0, na, 22.0)).copy
 qualified_scalar_percentile_linear = anchor.exposeInts(array.from(40, 41, 42)).percentile_linear_interpolation(50)
 unqualified_int_percentile_linear = identity(array.from(10, 11, 12)).percentile_linear_interpolation(percentage=50)
 unqualified_float_percentile_linear = identity(array.from(20.0, na, 22.0)).copy().percentile_linear_interpolation(50)
+qualified_scalar_percentrank = anchor.exposeInts(array.from(40, 41, 42)).percentrank(1)
+unqualified_int_percentrank = identity(array.from(10, 11, 12)).percentrank(index=1)
+unqualified_float_percentrank = identity(array.from(20.0, na, 22.0)).copy().percentrank(2)
 
 unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
 unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))

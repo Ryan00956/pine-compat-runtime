@@ -482,6 +482,13 @@ Recommended future slices:
     behavior, invalid type/arity, local/imported provenance, and terminal
     continuation are fixture-backed. Map storage and template rules are
     unchanged. Done.
+32. Numeric key/value snapshots additionally expose terminal
+    `.percentrank(index)`. Original-index target selection, filtered comparison
+    population, duplicate counting, fixed series-float results, positional or
+    named simple-int-compatible indexes, empty/all-`na`/upstream-`na`, target-
+    `na`, runtime typed-`na`, negative and out-of-range behavior, invalid type/
+    arity, local/imported provenance, and terminal continuation are fixture-
+    backed. Map storage and template rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

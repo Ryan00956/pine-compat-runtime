@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal `.percentrank(index)` to every existing concrete numeric
+  array call result. It selects the target from the original array index,
+  filters `na` only from the comparison population, counts duplicates
+  independently, and returns fixed `series float`. Positional or named simple-
+  int-compatible indexes are accepted. Empty/all-`na`/upstream-`na`, target-
+  `na`, runtime typed-`na`, negative, and out-of-range indexes return `na`; the
+  read remains non-mutating and terminal. Static/cross-namespace, matrix/map-
+  derived, local/imported function/method, invalid type/arity, provenance, and
+  continuation paths are fixture-backed.
 - Added terminal `.percentile_linear_interpolation(percentage)` to every
   existing concrete numeric array call result. It filters and sorts values,
   interpolates at `percentage / 100 * (count - 1)`, and always returns

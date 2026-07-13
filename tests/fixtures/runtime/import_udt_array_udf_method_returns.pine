@@ -399,6 +399,9 @@ local_float_percentile_nearest = localIdentity(array.from(20.0, na, 22.0)).copy(
 qualified_import_percentile_linear = left.direct(array.from(60, 61, 62)).percentile_linear_interpolation(50)
 local_int_percentile_linear = localIdentity(array.from(10, 11, 12)).percentile_linear_interpolation(percentage=50)
 local_float_percentile_linear = localIdentity(array.from(20.0, na, 22.0)).copy().percentile_linear_interpolation(50)
+qualified_import_percentrank = left.direct(array.from(60, 61, 62)).percentrank(1)
+local_int_percentrank = localIdentity(array.from(10, 11, 12)).percentrank(index=1)
+local_float_percentrank = localIdentity(array.from(20.0, na, 22.0)).copy().percentrank(2)
 plot(qualified_import_size)
 plot(qualified_import_get)
 plot(qualified_import_last)
@@ -418,6 +421,7 @@ plot(qualified_import_median == 61 and local_int_median == 11 and local_float_me
 plot(qualified_import_mode == 61 and local_int_mode == 11 and local_float_mode == 22.0 ? 1 : 0)
 plot(qualified_import_percentile_nearest == 61 and local_int_percentile_nearest == 11 and local_float_percentile_nearest == 22.0 ? 1 : 0)
 plot(qualified_import_percentile_linear == 61.0 and local_int_percentile_linear == 11.0 and local_float_percentile_linear == 21.0 ? 1 : 0)
+plot(qualified_import_percentrank == 2.0 / 3.0 * 100.0 and local_int_percentrank == 2.0 / 3.0 * 100.0 and local_float_percentrank == 100.0 ? 1 : 0)
 
 historical_return = left.direct(left_first_values)[1]
 historical_item = array.first(historical_return)

@@ -89,6 +89,7 @@ mod tests {
                 "percentile_linear_interpolation",
                 "array.percentile_linear_interpolation",
             ),
+            ("percentrank", "array.percentrank"),
         ] {
             assert_eq!(
                 array_call_result_builtin_name(method_name),
@@ -96,7 +97,7 @@ mod tests {
             );
             assert!(pine_builtins::get_phase_1_builtin(builtin_name).is_some());
         }
-        assert_eq!(array_call_result_builtin_name("percentrank"), None);
+        assert_eq!(array_call_result_builtin_name("covariance"), None);
         assert_eq!(array_call_result_builtin_name("push"), None);
     }
 

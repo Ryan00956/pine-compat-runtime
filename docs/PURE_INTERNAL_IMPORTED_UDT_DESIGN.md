@@ -1507,3 +1507,10 @@ return/parameter flow remains deferred.
     or named series/simple numeric percentages. Empty/all-`na`/upstream-`na`,
     runtime typed-`na`, out-of-range, non-finite-result, nonnumeric/imported-UDT,
     arity, provenance, and terminal-continuation boundaries remain closed. Done.
+88. The same numeric producer set exposes terminal `.percentrank(index)`. It
+    selects the target from the original array index, filters `na` only from
+    the comparison population, counts duplicates independently, and returns
+    fixed series float. Positional or named simple-int-compatible indexes are
+    accepted. Empty/all-`na`/upstream-`na`, target-`na`, runtime typed-`na`,
+    negative, out-of-range, nonnumeric/imported-UDT, arity, provenance, and
+    terminal-continuation boundaries remain closed. Done.

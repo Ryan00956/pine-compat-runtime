@@ -858,6 +858,13 @@ Current baseline:
   named series/simple numeric percentages, and retains empty/all-`na`/upstream-
   `na`, runtime typed-`na`, out-of-range, non-finite-result, provenance,
   invalid-type/arity, non-mutation, and terminal boundaries.
+  The next indexed-statistics slice adds `.percentrank(index)`. It selects the
+  target from the original array index, filters `na` only from the comparison
+  population, counts duplicate values independently, and returns fixed series
+  float. Positional or named simple-int-compatible indexes are accepted while
+  empty/all-`na`/upstream-`na`, target-`na`, runtime typed-`na`, negative, and
+  out-of-range indexes retain `na`; provenance, invalid-type/arity, non-
+  mutation, and terminal boundaries remain closed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -877,7 +884,7 @@ Remaining internal work:
   `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus numeric-only
   `.binary_search(value)`/`.binary_search_leftmost(value)`/
   `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/
-  `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)` set, and
+  `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked

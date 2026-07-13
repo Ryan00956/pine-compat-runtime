@@ -284,7 +284,7 @@ impl Analyzer {
         let Some(builtin_name) = array_call_result_builtin_name(method_name) else {
             self.unsupported(
                 &format!("array.{method_name}"),
-                "direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.includes()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, and `.percentile_linear_interpolation()`; bind the result or use the namespace helper",
+                "direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.includes()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, and `.percentrank()`; bind the result or use the namespace helper",
                 callee.span,
             );
             return Some(None);

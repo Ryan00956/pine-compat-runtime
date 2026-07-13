@@ -1558,6 +1558,14 @@ Recommended future slices:
     percentages, empty/all-`na`/upstream-`na`, runtime typed-`na`, out-of-range
     and non-finite-result behavior, invalid type/arity, and terminal
     continuation. Matrix-valued continuation is unchanged.
+102. Numeric array-valued call results additionally expose terminal
+    `.percentrank(index)`. Matrix row/column/eigenvalue arrays and array-
+    returning `matrix.mult` overloads retain original-index target selection,
+    filtered comparison population, duplicate counting, fixed series-float
+    results, positional or named simple-int-compatible indexes, empty/all-`na`/
+    upstream-`na`, target-`na`, runtime typed-`na`, negative and out-of-range
+    behavior, invalid type/arity, and terminal continuation. Matrix-valued
+    continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 
