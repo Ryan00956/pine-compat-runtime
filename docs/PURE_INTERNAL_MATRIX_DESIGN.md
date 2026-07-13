@@ -1373,6 +1373,17 @@ Recommended future slices:
     nested continuations, source independence, provenance/dual aliases,
     invalid types/arity, and the runtime non-square boundary are fixture-
     backed. Mutation and the remaining matrix-valued helpers stay gated.
+80. Numeric matrix call-result pseudo-inverses: done for the same concrete
+    float/int producer set. `.pinv()` retains the numeric receiver check,
+    always returns an independent fixed `matrix<float>`, swaps rectangular
+    row/column counts, preserves singular matrix-valued results and swapped
+    zero-cell shapes, yields `na` for invalid-cell, non-finite, or upstream-
+    `na` inputs, and retains the matrix-result prefix. Namespace and bound
+    operations, local/imported functions and methods, int-to-float lowering,
+    nested/double continuations, source independence, provenance/dual aliases,
+    invalid types/arity, and rectangular/singular/zero-cell boundaries are
+    fixture-backed. Mutation and the remaining matrix-valued helpers stay
+    gated.
 
 ## Completion Gate For Future Positive Support
 

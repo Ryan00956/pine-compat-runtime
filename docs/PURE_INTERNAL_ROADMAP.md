@@ -679,6 +679,16 @@ Current baseline:
   nested chains, source independence, provenance/dual aliases, invalid types/
   arity, and the runtime non-square boundary are fixture-backed; mutation and
   other matrix-valued transforms remain gated.
+  The following numeric matrix-valued continuation slice adds `.pinv()` across
+  the same concrete producer set. It retains the numeric receiver check,
+  always returns an independent fixed `matrix<float>`, swaps rectangular row/
+  column counts, preserves singular matrix-valued results and swapped zero-cell
+  shapes, yields `na` for invalid-cell, non-finite, or upstream-`na` inputs,
+  and retains the matrix-result prefix. Namespace and bound operations,
+  local/imported functions and methods, int-to-float lowering, nested/double
+  chains, source independence, provenance/dual aliases, invalid types/arity,
+  and rectangular/singular/zero-cell boundaries are fixture-backed; mutation
+  and other matrix-valued transforms remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

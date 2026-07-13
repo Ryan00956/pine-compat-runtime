@@ -1490,6 +1490,16 @@ Recommended future slices:
     local/imported functions and methods, int-to-float lowering, nested chains,
     source independence, provenance/dual aliases, invalid types/arity, and the
     runtime non-square boundary are fixture-backed. Done.
+76. The same concrete numeric matrix call-result producer set additionally
+    exposes `.pinv()` as an independent fixed-`matrix<float>` continuation. It
+    swaps rectangular row/column counts, preserves singular matrix-valued
+    results and swapped zero-cell shapes, yields `na` for invalid-cell, non-
+    finite, or upstream-`na` inputs, and retains the matrix-result prefix
+    without adding UDT/import identity or a public schema field. Namespace/
+    bound operations, local/imported functions and methods, int-to-float
+    lowering, nested/double chains, source independence, provenance/dual
+    aliases, invalid types/arity, and rectangular/singular/zero-cell boundaries
+    are fixture-backed. Done.
 
 ## Completion Gate For Future Positive Support
 

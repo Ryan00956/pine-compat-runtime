@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Added matrix-valued `.pinv()` continuation to every existing concrete
+  numeric matrix call result. It retains the numeric receiver check, always
+  returns an independent `matrix<float>`, swaps rectangular row/column counts,
+  preserves singular matrix-valued results and swapped zero-cell shapes,
+  yields `na` for invalid-cell, non-finite, or upstream-`na` inputs, and
+  retains the matrix-result prefix. Namespace and bound operations,
+  local/imported functions and methods, int-to-float lowering, nested and
+  double-pseudo-inverse chains, source independence, provenance, dual aliases,
+  invalid types/arity, and rectangular/singular/zero-cell boundaries are
+  fixture-backed; mutation and the remaining matrix-valued helpers stay gated.
 - Added matrix-valued `.inv()` continuation to every existing concrete numeric
   matrix call result. It retains the numeric receiver check, always returns an
   independent `matrix<float>`, preserves square shape for invertible inputs,

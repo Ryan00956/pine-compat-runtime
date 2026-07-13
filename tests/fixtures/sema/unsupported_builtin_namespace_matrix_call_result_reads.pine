@@ -101,5 +101,7 @@ submatrix_bad_from = matrix.copy(left).submatrix("bad").rows()
 submatrix_extra_arg = matrix.copy(left).submatrix(0, 2, 0, 2, 0).rows()
 bool_inv = matrix.copy(bool_values).inv()
 inv_extra_arg = matrix.copy(left).inv(0)
+bool_pinv = matrix.copy(bool_values).pinv()
+pinv_extra_arg = matrix.copy(left).pinv(0)
 
 plot(close)
