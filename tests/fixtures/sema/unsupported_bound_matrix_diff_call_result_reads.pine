@@ -1,0 +1,17 @@
+//@version=6
+indicator("Unsupported bound matrix.diff call-result reads")
+
+values = matrix.new<float>(2, 2, 1.0)
+bools = matrix.new<bool>(2, 2, true)
+array_values = array.from(1.0, 2.0)
+
+bad_other = values.diff(array_values).rows()
+bad_row = values.diff(values).get("bad", 0)
+set_result = values.diff(values).set(0, 0, 2.0)
+sum_result = values.diff(values).sum()
+size_result = values.diff(values).size()
+bad_receiver_kind = bools.diff(values).rows()
+wrong_receiver = array_values.diff(values).rows()
+pow_result = values.pow(2).rows()
+
+plot(close)

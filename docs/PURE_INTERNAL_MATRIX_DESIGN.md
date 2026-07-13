@@ -86,6 +86,13 @@ Current evidence:
   independent storage, nested copies, UDF-contained reads, wrong operand/
   index/helper and non-numeric/non-matrix receiver diagnostics, and the retained
   bound-diff gate.
+- `tests/fixtures/runtime/bound_matrix_diff_call_result_reads.pine` plus the
+  matching supported/unsupported semantic fixtures cover direct
+  `values.diff(other).rows()`/`columns()`/`elements_count()`/`get()`/`copy()`
+  for numeric matrix and scalar operands, operand direction, selected matrix
+  shape, fixed float-matrix results, independent storage, nested copies,
+  UDF-contained reads, wrong operand/index/helper and non-numeric/non-matrix
+  receiver diagnostics, and the retained bound-pow gate.
 - `tests/fixtures/runtime/matrix_float.pine` covers `matrix.new<float>`,
   `matrix.get`, `matrix.set`, `matrix.fill`, `values.fill(value)`,
   `values.get(row, column)`, `values.set(row, column, value)`, `matrix.rows`,
@@ -1048,6 +1055,12 @@ Recommended future slices:
     shape, fixed float-matrix results, independent backing storage, copy-only
     continuation, and retained gates for other bound producers, broader
     helpers, mutation, and non-matrix receivers.
+47. Bound matrix-difference call results: done for exact numeric matrix
+    receivers using `values.diff(other)` with matrix or scalar operands followed
+    by rows/columns/elements_count/get/copy, preserving operand direction and
+    selected matrix shape with fixed float-matrix results, independent backing
+    storage, copy-only continuation, and retained gates for other bound
+    producers, broader helpers, mutation, and non-matrix receivers.
 
 ## Completion Gate For Future Positive Support
 

@@ -73,7 +73,6 @@ array_copy_rows = matrix.mult(vector, left).copy().rows()
 
 bound_matrix_rows = left.mult(right).rows()
 bound_scalar_get = left.mult(2.0).get(0, 0)
-bound_diff_rows = left.diff(right).rows()
 bound_pow_rows = left.pow(2).rows()
 bound_inv_rows = left.inv().rows()
 bound_pinv_rows = left.pinv().rows()

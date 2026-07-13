@@ -1,0 +1,38 @@
+//@version=6
+indicator("Bound matrix.diff call-result reads")
+
+diffRows(left, right) => left.diff(right).rows()
+
+diffBlockReads(left, right) =>
+    int rows = left.diff(right).rows()
+    int columns = left.diff(right).columns()
+    float value = left.diff(right).get(1, 1)
+    rows * 100 + columns * 10 + value
+
+left = matrix.new<float>(2, 2, 0.0)
+left.set(0, 0, 5.0)
+left.set(0, 1, 6.0)
+left.set(1, 0, 7.0)
+left.set(1, 1, 8.0)
+right = matrix.new<float>(2, 2, 0.0)
+right.set(0, 0, 1.0)
+right.set(0, 1, 2.0)
+right.set(1, 0, 3.0)
+right.set(1, 1, 4.0)
+
+difference = left.diff(right).copy()
+difference.set(0, 0, 99.0)
+
+int_left = matrix.new<int>(1, 1, 7)
+int_right = matrix.new<int>(1, 1, 2)
+
+plot(left.diff(right).rows(), "diff_rows")
+plot(left.diff(right).columns(), "diff_columns")
+plot(left.diff(right).elements_count(), "diff_elements")
+plot(left.diff(right).get(1, 1), "diff_get")
+plot(left.diff(1.5).copy().get(1, 1), "scalar_diff_get")
+plot(left.get(0, 0), "source_value")
+plot(difference.get(0, 0), "difference_value")
+plot(int_left.diff(int_right).get(0, 0), "int_diff_get")
+plot(diffRows(left, right), "expression_udf")
+plot(diffBlockReads(left, right), "block_udf")

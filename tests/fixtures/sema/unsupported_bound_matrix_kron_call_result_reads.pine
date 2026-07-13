@@ -12,6 +12,5 @@ sum_result = values.kron(values).sum()
 size_result = values.kron(values).size()
 bad_receiver_kind = bools.kron(values).rows()
 wrong_receiver = array_values.kron(values).rows()
-diff_result = values.diff(values).rows()
 
 plot(close)

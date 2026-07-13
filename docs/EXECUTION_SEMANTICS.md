@@ -900,8 +900,10 @@ Exact namespace
 `matrix.diff(left, right)` returns fixed `matrix<float>` results for
 matrix-matrix, matrix-scalar, and scalar-matrix numeric operands, preserving
 the selected matrix shape, left-to-right operand order, independent storage,
-`na`, and zero-dimension behavior; bound `values.diff(other)` results remain
-generic rejections. Exact namespace `matrix.pow(values, power)` returns a fixed
+`na`, and zero-dimension behavior. Exact bound numeric-matrix-receiver
+`values.diff(other)` results now share the five direct helpers and copy-only
+continuation while preserving the existing operand checks and direction. Exact
+namespace `matrix.pow(values, power)` returns a fixed
 square `matrix<float>` for numeric matrices and simple-int powers, preserving
 independent identity/copy/positive-power results plus `na` and empty `0 x 0`
 behavior; bound `values.pow(power)` results remain generic rejections. Exact
@@ -1009,7 +1011,7 @@ UDT/import identity. The scalar `map.new<K,V>` and namespace
 metadata and no UDT/import identity. Bound or UDF
 matrix-result receivers other than exact matrix-receiver
 `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
-`values.kron(other)`,
+`values.kron(other)`/`values.diff(other)`,
 built-in-qualified
 or template call results outside
 the exact static and dynamic paths, and other

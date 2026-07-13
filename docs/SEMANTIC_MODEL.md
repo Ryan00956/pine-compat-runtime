@@ -657,8 +657,10 @@ check. Exact namespace
 `matrix.diff` also takes the matrix branch, resolves to fixed
 `simple matrix<float>` for numeric operand pairs containing a matrix, preserves
 the selected matrix shape and left-to-right subtraction order, and retains
-independent storage, `na`, and zero-dimension semantics. Bound
-`matrix_id.diff(other)` results remain generic rejections. Exact namespace
+independent storage, `na`, and zero-dimension semantics. Exact bound
+numeric-matrix-receiver `matrix_id.diff(other)` results share the five
+read/copy helpers and copy-only continuation after the receiver/operand checks.
+Exact namespace
 `matrix.pow` also takes the matrix branch, resolves to fixed
 `simple matrix<float>` for numeric square matrices and simple-int powers, and
 retains independent identity/copy/positive-power, `na`, and empty `0 x 0`
@@ -887,7 +889,7 @@ identities within one tuple UDT-array slot, direct call-result array methods
 outside the read-only `size`/`get`/`first`/`last`/`copy` set,
 bound matrix-result call-result receivers other than exact matrix-receiver
 `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
-`values.kron(other)`, UDF matrix-result call-result receivers,
+`values.kron(other)`/`values.diff(other)`, UDF matrix-result call-result receivers,
 built-in-qualified/template
 call-result receivers outside the exact static `array.*` allowlist and
 cross-namespace dynamic paths, nested field mutation, UDF

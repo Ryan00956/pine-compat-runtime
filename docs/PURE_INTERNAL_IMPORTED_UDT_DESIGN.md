@@ -157,6 +157,11 @@ Item 28 adds exact bound numeric-matrix-receiver `values.kron(other)` results
 with the same five helpers, expanded shape, fixed float-matrix result kind,
 independent backing storage, copy-only continuation, and retained operand/
 other-bound-producer/non-matrix/mutation gates.
+Item 29 adds exact bound numeric-matrix-receiver `values.diff(other)` results
+for matrix or scalar operands with the same five helpers, selected matrix
+shape, operand direction, fixed float-matrix result kind, independent backing
+storage, copy-only continuation, and retained operand/other-bound-producer/
+non-matrix/mutation gates.
 Outside the exact static producer sets and those namespace-only exceptions,
 unsupported `array.new<T>` types, non-producer calls, unsupported matrix
 templates and map templates,
@@ -943,3 +948,13 @@ return/parameter flow remains deferred.
     helpers, non-numeric/non-matrix receivers, and the retained bound-diff gate
     are fixture-backed. No imported UDT identity or public schema field is
     added. Done.
+29. The exact bound-matrix-difference continuation recognizes
+    `values.diff(other)` only when `values` resolves to a supported numeric
+    matrix kind and `other` is a numeric matrix or scalar. The result preserves
+    left-to-right direction and selected matrix shape, uses independent fixed
+    float-matrix storage, and exposes only rows/columns/elements_count/get/copy
+    with copy-only continuation. Matrix/scalar operands, nested copy,
+    UDF-contained reads, wrong operands/indexes, broader helpers,
+    non-numeric/non-matrix receivers, and the retained bound-pow gate are
+    fixture-backed. No imported UDT identity or public schema field is added.
+    Done.
