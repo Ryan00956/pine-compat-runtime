@@ -1434,6 +1434,14 @@ Recommended future slices:
     provenance/dual aliases, invalid arity, and terminal continuation are
     fixture-backed. No UDT/import identity or public schema field is added.
     Done.
+69. The same concrete numeric matrix call-result producer set exposes terminal
+    `.mode()` with its fixed `series float` result. It ignores `na` cells,
+    selects the smallest value among equally frequent repeats, returns `na` for
+    empty, all-`na`, no-repeat, selected non-finite, or upstream-`na` results,
+    and creates no result prefix. Numeric rejection, copy continuation,
+    provenance/dual aliases, invalid arity, and terminal continuation are
+    fixture-backed. No UDT/import identity or public schema field is added.
+    Done.
 
 ## Completion Gate For Future Positive Support
 

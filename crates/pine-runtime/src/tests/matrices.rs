@@ -699,6 +699,15 @@ fn summarizes_numeric_matrix_cells_and_ignores_na() {
         .expect("matrix set should succeed");
     assert_eq!(runtime.matrix_mode(id), Some(PineValue::Float(2.0)));
 
+    runtime
+        .matrix_set_value(id, 1, 0, PineValue::Float(1.5))
+        .expect("matrix set should succeed");
+    assert_eq!(
+        runtime.matrix_mode(id),
+        Some(PineValue::Float(1.5)),
+        "equal-frequency mode ties should select the smaller value"
+    );
+
     let PineValue::Matrix(empty_id) = runtime
         .new_matrix(MatrixElementKind::Float, 0, 2, PineValue::Na)
         .expect("empty matrix allocation")

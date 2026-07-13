@@ -874,8 +874,8 @@ may use `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
 `.eigenvalues()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`,
 `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, and
 `.is_stochastic()`, plus numeric-only terminal
-`.sum()`/`.avg()`/`.min()`/`.max()` and all-kind terminal `.is_square()`. Int
-inputs still produce float collections.
+`.sum()`/`.avg()`/`.min()`/`.max()`/`.mode()` and all-kind terminal
+`.is_square()`. Int inputs still produce float collections.
 Matrix `.copy()` may continue with another admitted matrix helper;
 `.row(index)` and `.col(index)` return fresh element-kind-preserving arrays;
 `.eigenvalues()` retains the existing numeric check and returns a fresh
@@ -909,15 +909,19 @@ finite, propagates upstream `na`, and is terminal.
 Numeric-only `.max()` mirrors `.min()` with the selected maximum and otherwise
 retains the same fixed `series float`, `na`, non-finite, upstream-`na`, and
 terminal rules.
+Numeric-only `.mode()` returns a fixed `series float`, ignores `na` cells,
+selects the smallest value among equally frequent repeats, and returns `na`
+for empty, all-`na`, no-repeat, selected non-finite, or upstream-`na` results;
+it is terminal.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
 broader helpers, and mutation fail closed. The existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch. Exact
 bound numeric-matrix-receiver matrix-valued `matrix_id.mult(other)` results now
-share the twenty matrix helpers and the copy/row/column/eigenvalue/
+share the twenty-one matrix helpers and the copy/row/column/eigenvalue/
 predicate/aggregate-reader continuation rules for matrix or
 scalar operands while preserving the existing overload, shape, `na`, empty
 inner dimension, and cell-budget boundaries. Unqualified local-UDF results that infer
-a concrete supported matrix kind now share the twenty matrix helpers through
+a concrete supported matrix kind now share the twenty-one matrix helpers through
 `$call_result`. Parameter passthrough, block aliases, nested calls, same-kind
 control flow, constructed and matrix-operation returns, named/reordered
 arguments, and zero dimensions keep their normal call-specific float/int/bool/
@@ -940,6 +944,7 @@ terminal, as are numeric `.is_binary()`, `.is_diagonal()`, `.is_identity()`,
 `.avg()` is terminal under the same aggregate continuation rule.
 `.min()` is terminal under that rule as well.
 `.max()` is terminal under that rule as well.
+`.mode()` is terminal under that rule as well.
 Exact namespace
 `matrix.copy(values)`
 also enters this

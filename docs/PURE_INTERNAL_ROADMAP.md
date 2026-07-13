@@ -626,6 +626,12 @@ Current baseline:
   results, and creates no result prefix. Numeric rejection, copy continuation,
   provenance/dual aliases, invalid arity, and terminal continuation are
   fixture-backed.
+  The next numeric aggregate slice adds terminal `.mode()` across the same
+  producer set. It retains the fixed `series float` result, ignores `na` cells,
+  selects the smaller value on an equal-frequency tie, returns `na` for empty,
+  all-`na`, no-repeat, non-finite, or upstream-`na` results, and creates no
+  result prefix. Numeric rejection, copy continuation, provenance/dual aliases,
+  invalid arity, and terminal continuation are fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

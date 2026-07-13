@@ -629,8 +629,8 @@ matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
 `.eigenvalues()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`,
 `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, and
 `.is_stochastic()`, plus numeric-only terminal
-`.sum()`/`.avg()`/`.min()`/`.max()` and all-kind terminal `.is_square()`. Int
-inputs still resolve to float collection results. Matrix
+`.sum()`/`.avg()`/`.min()`/`.max()`/`.mode()` and all-kind terminal
+`.is_square()`. Int inputs still resolve to float collection results. Matrix
 `.copy()` continues on the matrix-result prefix;
 `.row(index)` and `.col(index)` use `ReturnSpec::MatrixArray(0)` and switch the
 parser marker to `$builtin_array_result`, producing fresh element-kind-preserving arrays
@@ -669,12 +669,15 @@ result is non-finite.
 `na` numeric cells, and returns `na` when none exist or the selected minimum is
 non-finite.
 `.max()` shares that contract with the selected maximum.
+`.mode()` shares the numeric/`series float` terminal signature, ignores `na`
+cells, selects the smallest value among equally frequent repeats, and returns
+`na` when no value repeats or the selected value is non-finite.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
 broader helpers, and mutation fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the twenty matrix
-helpers for matrix or scalar operands with the
+exact bound matrix-valued `matrix_id.mult(other)` results share the twenty-one
+matrix helpers for matrix or scalar operands with the
 copy/row/column/eigenvalue/predicate/aggregate-reader continuation rules.
 Unqualified local-UDF results with an inferred concrete supported matrix kind
 share the same helpers through `$call_result`, preserve per-call float/int/bool/
@@ -682,7 +685,7 @@ string/color kinds, and use the same continuation rules. Concrete local or
 imported user methods and registered imported functions share the row/column/
 numeric-eigenvalue-array
 transition plus terminal all-kind square and numeric zero/binary/diagonal/
-identity/symmetric/antisymmetric/stochastic/sum/avg/min/max reads; unknown/`na` and non-matrix
+identity/symmetric/antisymmetric/stochastic/sum/avg/min/max/mode reads; unknown/`na` and non-matrix
 returns retain generic or result-family
 rejection. Producer-specific “copy-only” wording below refers only to
 continuing as a matrix result. Exact namespace

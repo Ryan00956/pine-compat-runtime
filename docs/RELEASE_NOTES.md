@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added terminal `.mode()` reads to every existing concrete numeric matrix call
+  result. The helper retains the float/int check and fixed `series float`
+  result, ignores `na` cells, selects the smaller value on an equal-frequency
+  tie, and returns `na` for empty, all-`na`, no-repeat, non-finite, or upstream-
+  `na` results. Copy continuation, producer provenance, dual aliases, non-
+  numeric rejection, invalid arity, and terminal continuation are fixture-
+  backed.
 - Added terminal `.max()` reads to every existing concrete numeric matrix call
   result. The helper retains the float/int check and fixed `series float`
   result, scans only non-`na` cells, and returns `na` for empty, all-`na`, non-

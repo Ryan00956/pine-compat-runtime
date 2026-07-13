@@ -511,6 +511,7 @@ fn parses_matrix_copy_result_method_receivers_with_matrix_provenance() {
         "value = matrix.copy(values).avg()\n",
         "value = matrix.copy(values).min()\n",
         "value = matrix.copy(values).max()\n",
+        "value = matrix.copy(values).mode()\n",
     ] {
         let parsed = parse(source);
 
@@ -999,6 +1000,7 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = matrix.copy(values).avg().custom()\n",
         "bad = matrix.copy(values).min().custom()\n",
         "bad = matrix.copy(values).max().custom()\n",
+        "bad = matrix.copy(values).mode().custom()\n",
         "bad = map.keys(values).first().custom()\n",
         "bad = map.new<string, float>().size().custom()\n",
         "bad = map.new<string, float>().get(\"missing\").custom()\n",

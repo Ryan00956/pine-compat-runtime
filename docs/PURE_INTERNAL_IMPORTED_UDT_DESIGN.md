@@ -1259,3 +1259,11 @@ return/parameter flow remains deferred.
     provenance/dual aliases, invalid arity, and terminal continuation are
     fixture-backed. No imported UDT identity or public schema field is added.
     Done.
+59. The same concrete numeric matrix call-result producer set exposes terminal
+    `.mode()` with its fixed `series float` result. It ignores `na` cells,
+    selects the smallest value among equally frequent repeats, returns `na` for
+    empty, all-`na`, no-repeat, selected non-finite, or upstream-`na` results,
+    and creates no result prefix. Numeric rejection, copy continuation,
+    provenance/dual aliases, invalid arity, and terminal continuation are
+    fixture-backed. No imported UDT identity or public schema field is added.
+    Done.
