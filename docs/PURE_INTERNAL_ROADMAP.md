@@ -343,6 +343,11 @@ Current baseline:
   kind, and shares only the five matrix read/copy helpers plus copy-only
   continuation. The returned store and nested copies remain independent;
   bound `values.copy()` call-result helpers stay gated.
+  A later closed slice admits exact bound matrix-receiver `values.copy()`
+  results after confirming the original receiver has a supported matrix kind.
+  These results preserve element kind, shape, and independent backing storage,
+  and expose only the same five helpers with copy-only continuation. Other
+  bound matrix producers and UDF matrix results remain gated.
   The following closed slice admits exact namespace
   `matrix.transpose(values)` on that path. It preserves the same five element
   kinds through `SameAsArg`, swaps row/column shape, returns independent
@@ -430,8 +435,8 @@ Remaining internal work:
   matrix paths plus exact `matrix.new<float|int|bool|string|color>` templates
   plus exact supported scalar `map.new<K,V>` templates and namespace
   `map.copy(existing)`,
-  including bound or UDF
-  matrix-result receivers, other matrix-returning calls, map templates and
+  including bound matrix-result receivers other than exact matrix-receiver
+  `values.copy()`, UDF matrix-result receivers, other matrix-returning calls, map templates and
   unsupported matrix/map templates and other map call-result receivers,
   other built-in namespaces or non-producer members, non-producer `array.*`
   calls, unsupported `array.new<T>` templates, non-array/non-UDT results,

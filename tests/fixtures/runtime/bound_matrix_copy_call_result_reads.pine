@@ -1,0 +1,33 @@
+//@version=6
+indicator("Bound matrix.copy call-result reads")
+
+copyRows(id) => id.copy().rows()
+
+copyBlockReads(id) =>
+    int rows = id.copy().rows()
+    int columns = id.copy().columns()
+    float value = id.copy().get(0, 1)
+    rows * 100 + columns * 10 + value
+
+values = matrix.new<float>(2, 3, 1.5)
+copied = values.copy().copy()
+copied.set(0, 0, 9.0)
+
+ints = matrix.new<int>(1, 1, 4)
+bools = matrix.new<bool>(1, 1, true)
+strings = matrix.new<string>(1, 1, "value")
+colors = matrix.new<color>(1, 1, color.red)
+
+plot(values.copy().rows(), "copy_rows")
+plot(values.copy().columns(), "copy_columns")
+plot(values.copy().elements_count(), "copy_elements")
+plot(values.copy().get(0, 1), "copy_get")
+plot(values.copy().copy().get(1, 2), "nested_copy_get")
+plot(values.get(0, 0), "source_value")
+plot(copied.get(0, 0), "copied_value")
+plot(ints.copy().get(0, 0), "int_get")
+plot(bools.copy().get(0, 0) ? 1 : 0, "bool_get")
+plot(strings.copy().get(0, 0) == "value" ? 1 : 0, "string_get")
+plot(colors.copy().get(0, 0) == color.red ? 1 : 0, "color_get")
+plot(copyRows(values), "expression_udf")
+plot(copyBlockReads(values), "block_udf")

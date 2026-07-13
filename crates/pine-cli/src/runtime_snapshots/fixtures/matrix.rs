@@ -2,6 +2,10 @@ use super::RuntimeSnapshotFixture;
 
 pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     (
+        "runtime_bound_matrix_copy_call_result_reads.json",
+        "tests/fixtures/runtime/bound_matrix_copy_call_result_reads.pine",
+    ),
+    (
         "runtime_matrix_float.json",
         "tests/fixtures/runtime/matrix_float.pine",
     ),

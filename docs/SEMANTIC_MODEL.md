@@ -633,8 +633,10 @@ helpers, and mutation fail closed. The existing bound-receiver
 matrix-result call-result helpers retain the generic rejection. Exact namespace
 `matrix.copy` always takes the matrix branch, preserves the source
 float/int/bool/string/color matrix kind through `SameAsArg`, and retains
-independent-copy storage semantics. Bound `matrix_id.copy()` results remain
-generic call-result rejections. Exact namespace `matrix.transpose` also takes
+independent-copy storage semantics. Exact bound matrix-receiver
+`matrix_id.copy()` results are recognized separately from user-defined
+call-result prefixes, retain the concrete receiver element kind, and admit only
+the same five read/copy helpers with copy-only continuation. Exact namespace `matrix.transpose` also takes
 the matrix branch, preserves the source scalar element kind through `SameAsArg`,
 swaps row/column shape, and retains independent storage. Bound
 `matrix_id.transpose()` results remain generic rejections.
@@ -877,7 +879,8 @@ subset remain outside the claim. The same applies to direct private imported UDT
 access, mixed or non-scalar imported array-return identities, conflicting
 identities within one tuple UDT-array slot, direct call-result array methods
 outside the read-only `size`/`get`/`first`/`last`/`copy` set,
-bound or UDF matrix-result call-result receivers, built-in-qualified/template
+bound matrix-result call-result receivers other than exact matrix-receiver
+`values.copy()`, UDF matrix-result call-result receivers, built-in-qualified/template
 call-result receivers outside the exact static `array.*` allowlist and
 cross-namespace dynamic paths, nested field mutation, UDF
 parameter/global field side effects, and method receiver/parameter/global field

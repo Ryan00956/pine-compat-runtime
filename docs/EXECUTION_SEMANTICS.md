@@ -879,8 +879,10 @@ matrix-returning `matrix_id.mult(...)` results retain the generic direct
 call-result rejection. Exact namespace `matrix.copy(values)` also enters this
 prefix, always resolves through the matrix helper family, and preserves the
 source float/int/bool/string/color matrix kind through `SameAsArg`; its returned
-store and every postfix copy are independent. Bound `values.copy()` results
-remain on the generic rejected path. Exact namespace `matrix.transpose(values)`
+store and every postfix copy are independent. Exact bound matrix-receiver
+`values.copy()` results now share the same five-helper contract, preserve shape
+and element kind, and keep source/nested-copy storage independent; non-matrix
+receivers fail the existing method type check. Exact namespace `matrix.transpose(values)`
 shares that five-helper and element-kind contract, swaps row/column shape, and
 returns independent storage; bound `values.transpose()` results remain generic
 rejections. Exact namespace `matrix.submatrix(values, ...)` also shares the
@@ -1001,7 +1003,8 @@ shape, initial/default-`na` cells, and fresh allocation. None of these paths car
 UDT/import identity. The scalar `map.new<K,V>` and namespace
 `map.copy(existing)` result paths likewise carry only scalar map template
 metadata and no UDT/import identity. Bound or UDF
-matrix-result receivers, built-in-qualified
+matrix-result receivers other than exact matrix-receiver `values.copy()`,
+built-in-qualified
 or template call results outside
 the exact static and dynamic paths, and other
 array or matrix methods remain parser/semantic boundaries.

@@ -51,6 +51,30 @@ pub(crate) fn builtin_map_call_result_method_name<'a>(
     (prefix == BUILTIN_MAP_CALL_RESULT_PREFIX).then_some(method_name)
 }
 
+pub(crate) fn bound_matrix_copy_call_result_method_parts<'a>(
+    callee: &'a Expr,
+    args: &'a [CallArg],
+) -> Option<(&'a str, &'a str)> {
+    let (prefix, method_name) = postfix_call_result_method_parts(callee, args)?;
+    let ExprKind::Call {
+        callee: producer, ..
+    } = &args.first()?.value.kind
+    else {
+        return None;
+    };
+    let ExprKind::QualifiedName(parts) = &producer.kind else {
+        return None;
+    };
+    match parts.as_slice() {
+        [receiver_name, producer_method]
+            if receiver_name == prefix && producer_method == "copy" =>
+        {
+            Some((receiver_name, method_name))
+        }
+        _ => None,
+    }
+}
+
 pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'static str> {
     match method_name {
         "size" => Some("array.size"),

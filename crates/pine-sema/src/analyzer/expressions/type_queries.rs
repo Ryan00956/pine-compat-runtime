@@ -154,7 +154,25 @@ impl Analyzer {
                 {
                     return self.return_type_for_call(signature, args, &arg_types);
                 }
-                if let Some(method_name) = builtin_matrix_call_result_method_name(callee, args)
+                let matrix_method_name = builtin_matrix_call_result_method_name(callee, args)
+                    .or_else(|| {
+                        let (receiver_name, method_name) =
+                            bound_matrix_copy_call_result_method_parts(callee, args)?;
+                        let receiver_type = param_types
+                            .get(receiver_name)
+                            .copied()
+                            .or_else(|| {
+                                self.bound_symbol(receiver_name, args.first()?.value.span)
+                                    .map(|symbol| symbol.pine_type)
+                            })
+                            .or_else(|| {
+                                self.scope
+                                    .resolve(receiver_name)
+                                    .map(|symbol| symbol.pine_type)
+                            })?;
+                        is_matrix_kind(receiver_type.kind).then_some(method_name)
+                    });
+                if let Some(method_name) = matrix_method_name
                     && arg_types
                         .first()
                         .copied()

@@ -156,6 +156,10 @@ Item 34 adds exact namespace `map.copy(existing)` results through the same path,
 retaining the source scalar template and entries in independent backing storage
 while preserving the same helper, continuation, non-map-input, mutation, and
 keys/values gates.
+Item 35 adds exact bound matrix-receiver `values.copy()` results with preserved
+float/int/bool/string/color element kind, shape, independent backing storage,
+the five direct matrix read/copy helpers, copy-only continuation, and retained
+other-bound-producer/non-matrix/mutation gates.
 Outside the exact static producer sets and these namespace-only paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, and other matrix-returning
@@ -771,7 +775,8 @@ Initial policy:
   scalar return or tuple slot, non-scalar UDT arrays,
   non-array/non-UDT results,
   unknown/`na` results without a concrete supported type or identity,
-  bound or UDF matrix-result receivers, built-in-qualified/template call
+  bound matrix-result receivers other than exact matrix-receiver
+  `values.copy()`, UDF matrix-result receivers, built-in-qualified/template call
   receivers outside the exact static and dynamic paths, mutation side effects,
   and other direct array or matrix methods on call results remain
   semantic/parser/lowering boundaries. In particular, concat remains rejected
@@ -1060,6 +1065,14 @@ Recommended future slices:
     reads are fixture-backed. Wrong receiver/key/arity, mutation, direct
     `keys()`/`values()`, broader helpers, and other map-result receivers fail
     closed. No UDT/import identity or public schema field is added. Done.
+35. The exact bound-matrix-copy continuation recognizes `values.copy()` only
+    when `values` resolves to a supported concrete matrix kind. The result
+    retains element kind, shape, and independent backing storage and exposes
+    only rows/columns/elements_count/get/copy with copy-only continuation.
+    Float/int/bool/string/color receivers, nested copy, UDF-contained reads,
+    wrong indexes, broader helpers, non-matrix receivers, and the retained
+    bound-transpose gate are fixture-backed. No UDT/import identity or public
+    schema field is added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1120,6 +1133,8 @@ and likewise adds no UDT/import identity.
 Item 34 adds exact namespace `map.copy(existing)` results with the same map
 template metadata and retained copied entries; it likewise adds no UDT/import
 identity.
+Item 35 adds exact bound matrix-receiver `values.copy()` result reads while
+carrying only the concrete matrix element kind and no UDT/import identity.
 Broader UDT element families, bound or UDF
 matrix-result receivers, built-in-qualified/template call-result receivers
 outside the closed paths, unsupported `array.new<T>` templates, non-array/non-UDT results,
