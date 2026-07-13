@@ -568,6 +568,13 @@ Recommended future slices:
     unchanged. Direct call-result mutation inside UDFs and all remaining
     postfix mutations stay rejected. Map storage, templates, and public
     schemas are unchanged. Done.
+44. Every concrete scalar key/value snapshot additionally exposes terminal
+    top-level `.pop()`. It removes and returns only the fresh snapshot's final
+    insertion-order key or value with the resolved scalar kind, returns `na`
+    for empty or typed-`na` maps, and cannot continue; source map entries and
+    insertion order remain unchanged. Direct call-result mutation inside UDFs
+    and all remaining postfix mutations stay rejected. Map storage, templates,
+    and public schemas are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

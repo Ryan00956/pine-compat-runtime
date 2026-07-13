@@ -462,6 +462,14 @@ Current baseline:
   It shares the five matrix helpers plus copy-only continuation; bound
   `values.eigenvectors()` results stay gated and non-square runtime errors are
   unchanged.
+  The next terminal element-mutation slice adds top-level `.pop()` across the
+  same producer set. It removes and returns the final resolved scalar/object/
+  `chart.point` or concrete local/imported UDT element, returns `na` for empty
+  or upstream-`na`, and cannot continue. Alias results and nested live slices
+  shrink their backing parent, while fresh matrix/map/mult snapshots leave
+  sources unchanged. Invalid arity, UDF-side-effect, and element-identity
+  boundaries are fixture-backed; remaining direct mutations stay gated and
+  public schemas are unchanged.
   The following closed slice admits exact
   `matrix.new<float|int|bool|string|color>` template results. They preserve the
   registered element kind, requested rectangular shape, type-compatible

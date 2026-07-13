@@ -753,3 +753,7 @@ return_identity(local_call_result_reverse_source).reverse()
 local_call_result_reverse_first = local_call_result_reverse_source.first()
 local_call_result_reverse_last = local_call_result_reverse_source.last()
 plot(local_call_result_reverse_first.shared == 182.0 and local_call_result_reverse_last.other == 1810.0 ? 1 : 0, "local_call_result_reverse_alias")
+
+local_call_result_pop_source = array.from(First.new(183.0, 1830.0), First.new(184.0, 1840.0))
+local_call_result_pop_value = return_identity(local_call_result_pop_source).pop()
+plot(local_call_result_pop_value.shared == 184.0 and local_call_result_pop_value.other == 1840.0 and local_call_result_pop_source.size() == 1 ? 1 : 0, "local_call_result_pop_alias")

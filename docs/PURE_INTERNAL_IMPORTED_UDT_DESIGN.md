@@ -1598,3 +1598,11 @@ return/parameter flow remains deferred.
     remain source-independent. Empty/upstream-`na` results are no-ops; UDF-body
     and all remaining direct mutations stay rejected. No imported identity or
     public schema field is widened. Done.
+100. The same producer set additionally exposes terminal top-level `.pop()`.
+    It accepts no explicit arguments, removes and returns the final resolved
+    scalar/object/`chart.point` or concrete imported UDT element, returns `na`
+    for empty or upstream-`na`, and cannot continue. Imported/local alias
+    results shrink shared backing, nested slices delete from their live parent
+    window, and fresh matrix/map/`matrix.mult` snapshots remain source-
+    independent. UDF-body and all remaining direct mutations stay rejected.
+    No imported identity or public schema field is widened. Done.

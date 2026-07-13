@@ -532,3 +532,28 @@ map.values(empty_map).reverse()
 map.values(na_map).reverse()
 matrix.mult(mult_na_matrix, mult_vector).reverse()
 plot(1, "namespace_call_result_reverse_empty_na")
+
+namespace_call_result_pop_split = str.split("alpha,beta", ",").pop()
+namespace_call_result_pop_pivot = ta.pivot_point_levels("Traditional", true, true).pop()
+namespace_call_result_pop_pivot_reference = array.pop(ta.pivot_point_levels("Traditional", true, true))
+plot(namespace_call_result_pop_split == "beta" and (na(namespace_call_result_pop_pivot_reference) ? na(namespace_call_result_pop_pivot) : namespace_call_result_pop_pivot == namespace_call_result_pop_pivot_reference) ? 1 : 0, "namespace_call_result_pop_split_pivot")
+
+namespace_call_result_pop_row = matrix.row(float_matrix, 0).pop()
+namespace_call_result_pop_col = matrix.col(float_matrix, 0).pop()
+namespace_call_result_pop_eigen = matrix.eigenvalues(float_diagonal).pop()
+plot(namespace_call_result_pop_row == 2.5 and namespace_call_result_pop_col == 1.5 and namespace_call_result_pop_eigen == 3.0 and matrix.get(float_matrix, 0, 0) == 1.5 and matrix.get(float_diagonal, 0, 0) == 2.0 ? 1 : 0, "namespace_call_result_pop_matrix_snapshot")
+
+namespace_call_result_pop_key = map.keys(int_float).pop()
+namespace_call_result_pop_value = map.values(int_float).pop()
+plot(namespace_call_result_pop_key == 20 and namespace_call_result_pop_value == 2.5 and map.size(int_float) == 2 and map.get(int_float, 10) == 3.5 ? 1 : 0, "namespace_call_result_pop_map_snapshot")
+
+namespace_call_result_pop_mult = matrix.mult(mult_matrix, mult_vector).pop()
+namespace_call_result_pop_bound_mult = mult_matrix.mult(mult_vector).pop()
+plot(namespace_call_result_pop_mult == 39.0 and namespace_call_result_pop_bound_mult == 39.0 and matrix.get(mult_matrix, 0, 0) == 1.0 and matrix.get(mult_matrix, 1, 1) == 4.0 ? 1 : 0, "namespace_call_result_pop_mult_snapshot")
+
+namespace_call_result_pop_split_na = str.split(na, ",").pop()
+namespace_call_result_pop_matrix_na = matrix.row(na_float_matrix, 0).pop()
+namespace_call_result_pop_map_empty = map.values(empty_map).pop()
+namespace_call_result_pop_map_na = map.values(na_map).pop()
+namespace_call_result_pop_mult_na = matrix.mult(mult_na_matrix, mult_vector).pop()
+plot(na(namespace_call_result_pop_split_na) and na(namespace_call_result_pop_matrix_na) and na(namespace_call_result_pop_map_empty) and na(namespace_call_result_pop_map_na) and na(namespace_call_result_pop_mult_na) ? 1 : 0, "namespace_call_result_pop_empty_na")
