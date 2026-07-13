@@ -1,0 +1,16 @@
+//@version=6
+indicator("Unsupported bound matrix.pinv call-result reads")
+
+values = matrix.new<float>(2, 3, 1.0)
+bools = matrix.new<bool>(2, 2, true)
+array_values = array.from(1.0, 2.0)
+
+bad_row = values.pinv().get("bad", 0)
+set_result = values.pinv().set(0, 0, 2.0)
+sum_result = values.pinv().sum()
+size_result = values.pinv().size()
+bad_receiver_kind = bools.pinv().rows()
+wrong_receiver = array_values.pinv().rows()
+eigenvectors_result = values.eigenvectors().rows()
+
+plot(close)

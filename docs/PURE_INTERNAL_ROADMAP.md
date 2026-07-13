@@ -376,6 +376,12 @@ Current baseline:
   returns empty `0 x 0` or `na` at the established boundaries, uses independent
   fixed `matrix<float>` storage, and exposes the same five helpers with
   copy-only continuation. Bound `pinv` and other producers remain gated.
+  The next closed bound-result slice admits exact numeric matrix-receiver
+  `values.pinv()` results. It swaps rectangular shape, preserves singular
+  matrix results and swapped zero-cell shapes, yields `na` for invalid cells,
+  uses independent fixed `matrix<float>` storage, and exposes the same five
+  helpers with copy-only continuation. Bound `eigenvectors` and other producers
+  remain gated.
   The following closed slice admits exact namespace
   `matrix.transpose(values)` on that path. It preserves the same five element
   kinds through `SameAsArg`, swaps row/column shape, returns independent
@@ -466,7 +472,7 @@ Remaining internal work:
   including bound matrix-result receivers other than exact matrix-receiver
   `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
   `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
-  `values.inv()`, UDF matrix-result receivers,
+  `values.inv()`/`values.pinv()`, UDF matrix-result receivers,
   other matrix-returning calls, map templates and
   unsupported matrix/map templates and other map call-result receivers,
   other built-in namespaces or non-producer members, non-producer `array.*`

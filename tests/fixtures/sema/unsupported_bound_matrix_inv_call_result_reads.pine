@@ -11,6 +11,5 @@ sum_result = values.inv().sum()
 size_result = values.inv().size()
 bad_receiver_kind = bools.inv().rows()
 wrong_receiver = array_values.inv().rows()
-pinv_result = values.pinv().rows()
 
 plot(close)

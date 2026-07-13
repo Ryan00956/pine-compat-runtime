@@ -1,0 +1,18 @@
+//@version=6
+indicator("Supported bound matrix.pinv call-result reads")
+
+pinvRows(values) => values.pinv().copy().rows()
+
+values = matrix.new<float>(3, 2, 0.0)
+values.set(0, 0, 1.0)
+values.set(1, 1, 1.0)
+ints = matrix.new<int>(1, 1, 2)
+
+int direct_rows = values.pinv().rows()
+int direct_columns = values.pinv().columns()
+int direct_elements = values.pinv().elements_count()
+float direct_get = values.pinv().get(row=1, column=1)
+matrix<float> nested_copy = values.pinv().copy()
+float int_get = ints.pinv().get(0, 0)
+
+plot(direct_rows + direct_columns + direct_elements + direct_get + nested_copy.get(0, 0) + int_get + pinvRows(values))

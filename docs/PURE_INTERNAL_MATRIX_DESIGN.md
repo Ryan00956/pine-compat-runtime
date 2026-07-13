@@ -107,6 +107,14 @@ Current evidence:
   empty inputs, fixed float-matrix results, independent storage, nested copies,
   UDF-contained reads, wrong index/helper and non-numeric/non-matrix receiver
   diagnostics, and the retained bound-pseudo-inverse gate.
+- `tests/fixtures/runtime/bound_matrix_pinv_call_result_reads.pine` plus the
+  matching supported/unsupported semantic fixtures cover direct
+  `values.pinv().rows()`/`columns()`/`elements_count()`/`get()`/`copy()` for
+  numeric rectangular float/int matrices, swapped shape, singular results,
+  swapped zero-cell shapes, invalid-cell `na`, fixed float-matrix results,
+  independent storage, nested copies, UDF-contained reads, wrong index/helper
+  and non-numeric/non-matrix receiver diagnostics, and the retained bound
+  `values.eigenvectors()` gate.
 - `tests/fixtures/runtime/matrix_float.pine` covers `matrix.new<float>`,
   `matrix.get`, `matrix.set`, `matrix.fill`, `values.fill(value)`,
   `values.get(row, column)`, `values.set(row, column, value)`, `matrix.rows`,
@@ -1089,6 +1097,13 @@ Recommended future slices:
     float-matrix metadata, independent backing storage, copy-only continuation,
     and retained gates for other bound producers, broader helpers, mutation,
     and non-matrix receivers.
+50. Bound matrix-pseudo-inverse call results: done for exact numeric matrix
+    receivers using `values.pinv()` followed by
+    rows/columns/elements_count/get/copy, swapping rectangular shape,
+    preserving singular matrix results and swapped zero-cell shapes, yielding
+    `na` for invalid cells, and using fixed float-matrix metadata, independent
+    backing storage, copy-only continuation, and retained gates for other bound
+    producers, broader helpers, mutation, and non-matrix receivers.
 
 ## Completion Gate For Future Positive Support
 

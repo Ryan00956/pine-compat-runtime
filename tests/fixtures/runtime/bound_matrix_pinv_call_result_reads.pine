@@ -1,0 +1,48 @@
+//@version=6
+indicator("Bound matrix.pinv call-result reads")
+
+pinvRows(values) => values.pinv().rows()
+
+pinvBlockReads(values) =>
+    int rows = values.pinv().rows()
+    int columns = values.pinv().columns()
+    float value = values.pinv().get(0, 0)
+    rows * 100 + columns * 10 + value
+
+tall = matrix.new<float>(3, 2, 0.0)
+tall.set(0, 0, 1.0)
+tall.set(1, 1, 1.0)
+
+copied = tall.pinv().copy()
+copied.set(0, 0, 99.0)
+
+wide = matrix.new<float>(2, 3, 0.0)
+wide.set(0, 0, 1.0)
+wide.set(1, 1, 1.0)
+
+singular = matrix.new<float>(2, 2, 1.0)
+invalid = matrix.new<float>(1, 1)
+empty_rows = matrix.new<float>(0, 3)
+empty_columns = matrix.new<float>(2, 0)
+
+ints = matrix.new<int>(2, 2, 0)
+ints.set(0, 0, 2)
+ints.set(1, 1, 4)
+
+plot(tall.pinv().rows(), "tall_rows")
+plot(tall.pinv().columns(), "tall_columns")
+plot(tall.pinv().elements_count(), "tall_elements")
+plot(tall.pinv().get(1, 1), "tall_get")
+plot(tall.pinv().copy().get(0, 0), "tall_copy_get")
+plot(wide.pinv().rows(), "wide_rows")
+plot(wide.pinv().columns(), "wide_columns")
+plot(wide.pinv().get(2, 0), "wide_get")
+plot(singular.pinv().get(0, 0), "singular_get")
+plot(na(invalid.pinv().rows()) ? 1 : 0, "invalid_rows_na")
+plot(empty_rows.pinv().rows() * 100 + empty_rows.pinv().columns() * 10 + empty_rows.pinv().elements_count(), "empty_rows_shape")
+plot(empty_columns.pinv().rows() * 100 + empty_columns.pinv().columns() * 10 + empty_columns.pinv().elements_count(), "empty_columns_shape")
+plot(ints.pinv().get(1, 1), "int_pinv_get")
+plot(tall.get(0, 0), "source_value")
+plot(copied.get(0, 0), "copied_value")
+plot(pinvRows(tall), "expression_udf")
+plot(pinvBlockReads(tall), "block_udf")

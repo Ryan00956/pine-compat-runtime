@@ -187,6 +187,11 @@ with the same five helpers, preserved invertible square shape, empty `0 x 0`
 and `na` singular/invalid-cell boundaries, fixed float-matrix result kind,
 independent backing storage, copy-only continuation, and retained
 other-bound-producer/non-matrix/mutation gates.
+Item 42 adds exact bound numeric-matrix-receiver `values.pinv()` results with
+the same five helpers, swapped rectangular shape, singular matrix results,
+swapped zero-cell shapes, `na` invalid-cell boundaries, fixed float-matrix
+result kind, independent backing storage, copy-only continuation, and retained
+other-bound-producer/non-matrix/mutation gates.
 Outside the exact static producer sets and these namespace-only paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, and other matrix-returning
@@ -805,7 +810,7 @@ Initial policy:
   bound matrix-result receivers other than exact matrix-receiver
   `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
   `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
-  `values.inv()`, UDF matrix-result receivers,
+  `values.inv()`/`values.pinv()`, UDF matrix-result receivers,
   built-in-qualified/template call
   receivers outside the exact static and dynamic paths, mutation side effects,
   and other direct array or matrix methods on call results remain
@@ -1158,6 +1163,16 @@ Recommended future slices:
     wrong indexes, broader helpers, non-numeric/non-matrix receivers, and the
     retained bound-pseudo-inverse gate are fixture-backed. No UDT/import
     identity or public schema field is added. Done.
+42. The exact bound-matrix-pseudo-inverse continuation recognizes
+    `values.pinv()` only when `values` resolves to a supported numeric matrix
+    kind. The result swaps rectangular shape, preserves singular matrix results
+    and swapped zero-cell shapes, returns `na` for invalid-cell inputs, uses
+    independent fixed float-matrix storage, and exposes only
+    rows/columns/elements_count/get/copy with copy-only continuation. Float/int
+    receivers, nested copy, UDF-contained reads, wrong indexes, broader
+    helpers, non-numeric/non-matrix receivers, and the retained bound
+    `values.eigenvectors()` gate are fixture-backed. No UDT/import identity or
+    public schema field is added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1232,6 +1247,8 @@ Item 40 adds exact bound numeric-square-matrix-receiver `values.pow(power)`
 result reads with fixed float-matrix metadata and no UDT/import identity.
 Item 41 adds exact bound numeric-square-matrix-receiver `values.inv()` result
 reads with fixed float-matrix metadata and no UDT/import identity.
+Item 42 adds exact bound numeric-matrix-receiver `values.pinv()` result reads
+with fixed float-matrix metadata and no UDT/import identity.
 Broader UDT element families, bound or UDF
 matrix-result receivers, built-in-qualified/template call-result receivers
 outside the closed paths, unsupported `array.new<T>` templates, non-array/non-UDT results,

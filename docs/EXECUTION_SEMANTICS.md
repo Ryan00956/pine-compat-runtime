@@ -919,8 +919,10 @@ shape, singular, and invalid-cell boundaries. Exact namespace
 returns an independent fixed `matrix<float>` pseudo-inverse for numeric inputs,
 swaps row and column counts for rectangular matrices, preserves singular
 matrix-valued results, returns the corresponding zero-cell swapped shape for
-zero-row or zero-column inputs, and yields `na` for invalid-cell inputs; bound
-`values.pinv()` results remain generic rejections. Exact namespace
+zero-row or zero-column inputs, and yields `na` for invalid-cell inputs. Exact
+bound numeric-matrix-receiver `values.pinv()` results now share the five direct
+helpers and copy-only continuation while preserving the existing receiver,
+shape, singular, zero-cell, and invalid-cell boundaries. Exact namespace
 `matrix.eigenvectors(values)` returns an independent fixed `matrix<float>`
 whose columns are real eigenvectors for numeric square inputs, returns empty
 `0 x 0` for empty input, and yields `na` for invalid-cell, non-real, or
@@ -1017,7 +1019,7 @@ metadata and no UDT/import identity. Bound or UDF
 matrix-result receivers other than exact matrix-receiver
 `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
 `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
-`values.inv()`,
+`values.inv()`/`values.pinv()`,
 built-in-qualified
 or template call results outside
 the exact static and dynamic paths, and other

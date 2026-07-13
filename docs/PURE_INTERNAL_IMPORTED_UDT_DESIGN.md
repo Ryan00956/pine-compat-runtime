@@ -172,6 +172,11 @@ with the same five helpers, preserved invertible square shape, empty `0 x 0`
 and `na` singular/invalid-cell boundaries, fixed float-matrix result kind,
 independent backing storage, copy-only continuation, and retained
 other-bound-producer/non-matrix/mutation gates.
+Item 32 adds exact bound numeric-matrix-receiver `values.pinv()` results with
+the same five helpers, swapped rectangular shape, singular matrix results,
+swapped zero-cell shapes, `na` invalid-cell boundaries, fixed float-matrix
+result kind, independent backing storage, copy-only continuation, and retained
+other-bound-producer/non-matrix/mutation gates.
 Outside the exact static producer sets and those namespace-only exceptions,
 unsupported `array.new<T>` types, non-producer calls, unsupported matrix
 templates and map templates,
@@ -986,3 +991,13 @@ return/parameter flow remains deferred.
     wrong indexes, broader helpers, non-numeric/non-matrix receivers, and the
     retained bound-pseudo-inverse gate are fixture-backed. No imported UDT
     identity or public schema field is added. Done.
+32. The exact bound-matrix-pseudo-inverse continuation recognizes
+    `values.pinv()` only when `values` resolves to a supported numeric matrix
+    kind. The result swaps rectangular shape, preserves singular matrix results
+    and swapped zero-cell shapes, returns `na` for invalid-cell inputs, uses
+    independent fixed float-matrix storage, and exposes only
+    rows/columns/elements_count/get/copy with copy-only continuation. Float/int
+    receivers, nested copy, UDF-contained reads, wrong indexes, broader
+    helpers, non-numeric/non-matrix receivers, and the retained bound
+    `values.eigenvectors()` gate are fixture-backed. No imported UDT identity
+    or public schema field is added. Done.
