@@ -669,6 +669,16 @@ Current baseline:
   kind reads, source independence, provenance/dual aliases, invalid types/
   arity, and runtime bounds are fixture-backed; mutation and other matrix-
   valued transforms remain gated.
+  The next numeric matrix-valued continuation slice adds `.inv()` across every
+  existing concrete numeric matrix-result producer. It retains the numeric
+  receiver check, always returns an independent fixed `matrix<float>`,
+  preserves square shape for invertible inputs, returns empty `0 x 0` for
+  empty input, yields `na` for singular, invalid-cell, non-finite, or upstream-
+  `na` inputs, and retains the matrix-result prefix. Namespace and bound
+  operations, local/imported functions and methods, int-to-float lowering,
+  nested chains, source independence, provenance/dual aliases, invalid types/
+  arity, and the runtime non-square boundary are fixture-backed; mutation and
+  other matrix-valued transforms remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

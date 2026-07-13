@@ -1481,6 +1481,15 @@ Recommended future slices:
     methods, named arguments, nested ranges, five-kind reads, source
     independence, provenance/dual aliases, invalid types/arity, and runtime
     bounds are fixture-backed. Done.
+75. Every existing concrete numeric matrix call-result producer additionally
+    exposes `.inv()` as an independent fixed-`matrix<float>` continuation. It
+    preserves square shape for invertible inputs, returns empty `0 x 0` for
+    empty input, yields `na` for singular, invalid-cell, non-finite, or
+    upstream-`na` inputs, and retains the matrix-result prefix without adding
+    UDT/import identity or a public schema field. Namespace/bound operations,
+    local/imported functions and methods, int-to-float lowering, nested chains,
+    source independence, provenance/dual aliases, invalid types/arity, and the
+    runtime non-square boundary are fixture-backed. Done.
 
 ## Completion Gate For Future Positive Support
 

@@ -100,7 +100,7 @@ impl Analyzer {
             .is_some_and(|pine_type| is_matrix_kind(pine_type.kind));
         match method_name {
             "copy" => self.map_type_of_expr(receiver).is_some() || receiver_is_matrix,
-            "submatrix" | "transpose" => receiver_is_matrix,
+            "inv" | "submatrix" | "transpose" => receiver_is_matrix,
             _ => false,
         }
     }
@@ -352,7 +352,7 @@ impl Analyzer {
         let Some(builtin_name) = matrix_call_result_builtin_name(method_name) else {
             self.unsupported(
                 &format!("matrix.{method_name}"),
-                "direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, `.copy()`, `.submatrix()`, `.transpose()`, `.row()`, `.col()`, `.eigenvalues()`, `.is_square()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`, `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, `.is_stochastic()`, `.sum()`, `.avg()`, `.min()`, `.max()`, `.mode()`, `.trace()`, `.det()`, and `.rank()`; bind the result or use the namespace helper",
+                "direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, `.copy()`, `.inv()`, `.submatrix()`, `.transpose()`, `.row()`, `.col()`, `.eigenvalues()`, `.is_square()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`, `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, `.is_stochastic()`, `.sum()`, `.avg()`, `.min()`, `.max()`, `.mode()`, `.trace()`, `.det()`, and `.rank()`; bind the result or use the namespace helper",
                 callee.span,
             );
             return Some(None);

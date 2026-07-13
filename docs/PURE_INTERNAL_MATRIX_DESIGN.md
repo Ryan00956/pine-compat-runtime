@@ -1363,6 +1363,16 @@ Recommended future slices:
     provenance/dual aliases, invalid types/arity, and runtime bounds are
     fixture-backed. Mutation and the remaining matrix-valued helpers stay
     gated.
+79. Numeric matrix call-result inverses: done for every existing concrete
+    float/int matrix producer. `.inv()` retains the numeric receiver check,
+    always returns an independent fixed `matrix<float>`, preserves square shape
+    for invertible inputs, returns an empty `0 x 0` matrix for empty input, and
+    yields `na` for singular, invalid-cell, non-finite, or upstream-`na`
+    inputs while retaining the matrix-result prefix. Namespace and bound
+    operations, local/imported functions and methods, int-to-float lowering,
+    nested continuations, source independence, provenance/dual aliases,
+    invalid types/arity, and the runtime non-square boundary are fixture-
+    backed. Mutation and the remaining matrix-valued helpers stay gated.
 
 ## Completion Gate For Future Positive Support
 

@@ -512,6 +512,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "matrix inverse requires a square matrix",
     ),
     (
+        "tests/fixtures/regressions/matrix_call_result_inv_non_square.pine",
+        "matrix inverse requires a square matrix",
+    ),
+    (
         "tests/fixtures/regressions/matrix_reshape_method_mismatch.pine",
         "matrix reshape dimensions must preserve element count",
     ),

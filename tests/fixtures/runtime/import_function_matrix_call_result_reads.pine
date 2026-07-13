@@ -94,3 +94,6 @@ plot(left.exposeMatrixFunction().transpose().submatrix().copy().get(1, 0), "subm
 plot(right.exposeIntMatrixFunction().submatrix().get(0, 1), "submatrix_int")
 plot(right.exposeColorMatrixFunction().submatrix().get(0, 0) == color.red ? 1 : 0, "submatrix_color")
 plot(left.exposeEmptyMatrixFunction().submatrix().rows() * 100 + left.exposeEmptyMatrixFunction().submatrix().columns() * 10 + left.exposeEmptyMatrixFunction().submatrix().elements_count(), "submatrix_empty_shape")
+plot(na(left.exposeMatrixFunction().inv().rows()) ? 1 : 0, "inv_singular_na")
+plot(na(left.exposeMatrixFunction().inv().inv().rows()) ? 1 : 0, "inv_chain_na")
+plot(na(right.exposeMatrixFunctionBlock().copy().inv().submatrix().rows()) ? 1 : 0, "inv_nested_na")

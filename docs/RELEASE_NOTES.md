@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Added matrix-valued `.inv()` continuation to every existing concrete numeric
+  matrix call result. It retains the numeric receiver check, always returns an
+  independent `matrix<float>`, preserves square shape for invertible inputs,
+  returns an empty `0 x 0` matrix for empty input, yields `na` for singular,
+  invalid-cell, non-finite, or upstream-`na` inputs, and retains the matrix-
+  result prefix for further supported continuations and readers. Namespace and
+  bound operations, local/imported functions and methods, int-to-float
+  lowering, nested chains, source independence, provenance, dual aliases,
+  invalid types/arity, and the runtime non-square boundary are fixture-backed;
+  mutation and the remaining matrix-valued helpers stay gated.
 - Added matrix-valued `.submatrix(...)` continuation to every existing
   concrete matrix call result. It preserves float/int/bool/string/color
   element kinds, returns an independent half-open range with optional/default

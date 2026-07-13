@@ -688,13 +688,17 @@ non-terminal: the matrix-result prefix remains available to `.copy()`, another
 `.submatrix(...)` retains `MATRIX_SUBMATRIX_PARAMS` and `SameAsArg(0)`, returns
 a fresh element-kind-preserving optional/default half-open range, preserves
 empty row/column shapes, and is non-terminal on the same matrix-result prefix.
+`.inv()` retains `MATRIX_NUMERIC_ID_PARAMS`, always returns a fixed
+`simple matrix<float>`, and is non-terminal on that prefix. It keeps the
+ordinary runtime square-shape boundary, empty `0 x 0` result, and singular or
+invalid-cell `na` behavior without adding static shape inference.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
 broader helpers, and mutation fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the twenty-six
+exact bound matrix-valued `matrix_id.mult(other)` results share the twenty-seven
 matrix helpers for matrix or scalar operands with the
-copy/submatrix/transpose/row/column/eigenvalue/predicate/aggregate-reader continuation
+copy/inv/submatrix/transpose/row/column/eigenvalue/predicate/aggregate-reader continuation
 rules.
 Unqualified local-UDF results with an inferred concrete supported matrix kind
 share the same helpers through `$call_result`, preserve per-call float/int/bool/
@@ -704,66 +708,71 @@ numeric-eigenvalue-array
 transition plus terminal all-kind square and numeric zero/binary/diagonal/
 identity/symmetric/antisymmetric/stochastic/sum/avg/min/max/mode/trace/det/rank reads; unknown/`na` and non-matrix
 returns retain generic or result-family
-rejection. Producer-specific “copy/submatrix/transpose-only” wording below refers only
+rejection. Producer-specific “copy/inv/submatrix/transpose-only” wording below refers only
 to continuing as a matrix result. Exact namespace
 `matrix.copy` always takes the matrix branch, preserves the source
 float/int/bool/string/color matrix kind through `SameAsArg`, and retains
 independent-copy storage semantics. Exact bound matrix-receiver
 `matrix_id.copy()` results are recognized separately from user-defined
-call-result prefixes, retain the concrete receiver element kind, and admit only
-the same seven read/copy/submatrix/transpose helpers with
-copy/submatrix/transpose continuation.
+call-result prefixes, retain the concrete receiver element kind, and admit the
+same seven all-kind read/copy/submatrix/transpose helpers; numeric results also
+admit `.inv()` with copy/inv/submatrix/transpose continuation.
 Exact namespace `matrix.transpose` also takes
 the matrix branch, preserves the source scalar element kind through `SameAsArg`,
 swaps row/column shape, and retains independent storage. Exact bound
-matrix-receiver `matrix_id.transpose()` results share the same seven-helper
-contract and copy/submatrix/transpose continuation after the original receiver resolves to a
-supported matrix kind.
+matrix-receiver `matrix_id.transpose()` results share the same seven all-kind
+helpers, add `.inv()` for numeric results, and retain
+copy/inv/submatrix/transpose continuation after the original receiver resolves
+to a supported matrix kind.
 Exact namespace `matrix.submatrix` also takes the matrix branch, preserves the
 source element kind through `SameAsArg`, and returns an independent half-open
 range with default full bounds and empty row/column slices. Exact bound
-matrix-receiver `matrix_id.submatrix(...)` results share the same seven-helper
-contract and copy/submatrix/transpose continuation after the original receiver resolves to a
-supported matrix kind. Exact namespace
+matrix-receiver `matrix_id.submatrix(...)` results share the same seven all-
+kind helpers, add `.inv()` for numeric results, and retain
+copy/inv/submatrix/transpose continuation after the original receiver resolves
+to a supported matrix kind. Exact namespace
 `matrix.kron` also takes the matrix branch, resolves to fixed
 `simple matrix<float>` for numeric matrix inputs, expands both dimensions, and
 retains independent storage, `na`, and zero-dimension semantics. Exact bound
-numeric-matrix-receiver `matrix_id.kron(other)` results share the same seven
-read/copy/submatrix/transpose helpers and copy/submatrix/transpose continuation after the original receiver type
-check. Exact namespace
+numeric-matrix-receiver `matrix_id.kron(other)` results share the same eight
+read/copy/inv/submatrix/transpose helpers and copy/inv/submatrix/transpose
+continuation after the original receiver type check. Exact namespace
 `matrix.diff` also takes the matrix branch, resolves to fixed
 `simple matrix<float>` for numeric operand pairs containing a matrix, preserves
 the selected matrix shape and left-to-right subtraction order, and retains
 independent storage, `na`, and zero-dimension semantics. Exact bound
-numeric-matrix-receiver `matrix_id.diff(other)` results share the seven
-read/copy/submatrix/transpose helpers and copy/submatrix/transpose continuation after the receiver/operand checks.
+numeric-matrix-receiver `matrix_id.diff(other)` results share the eight
+read/copy/inv/submatrix/transpose helpers and copy/inv/submatrix/transpose
+continuation after the receiver/operand checks.
 Exact namespace
 `matrix.pow` also takes the matrix branch, resolves to fixed
 `simple matrix<float>` for numeric square matrices and simple-int powers, and
 retains independent identity/copy/positive-power, `na`, and empty `0 x 0`
-semantics. Exact bound `matrix_id.pow(power)` results share the seven matrix
-helpers and copy/submatrix/transpose continuation.
+semantics. Exact bound `matrix_id.pow(power)` results share the eight matrix
+helpers and copy/inv/submatrix/transpose continuation.
 Exact namespace `matrix.inv` also takes the matrix branch, resolves to fixed
 `simple matrix<float>` for numeric inputs, preserves square shape for
 invertible matrices, returns an empty `0 x 0` matrix for empty input, and yields
 `na` for singular or invalid-cell inputs. Exact bound `matrix_id.inv()` results
-share the seven matrix helpers and copy/submatrix/transpose continuation. Exact namespace
+share the eight matrix helpers and copy/inv/submatrix/transpose continuation.
+Exact namespace
 `matrix.pinv` also takes the matrix branch,
 resolves to fixed `simple matrix<float>` for numeric inputs, swaps row/column
 shape for rectangular matrices, retains singular matrix-valued results and
 zero-cell swapped shapes, and yields `na` for invalid-cell inputs. Exact bound
-`matrix_id.pinv()` results share the seven matrix helpers and copy/submatrix/transpose
+`matrix_id.pinv()` results share the eight matrix helpers and copy/inv/submatrix/transpose
 continuation. Exact namespace
 `matrix.eigenvectors` also takes the matrix branch, resolves to fixed
 `simple matrix<float>` for numeric inputs, preserves square shape for real
 complete eigenvectors, returns empty `0 x 0`, and yields `na` for invalid-cell,
 non-real, or incomplete results. Exact bound `matrix_id.eigenvectors()` results
-share the seven matrix helpers and copy/submatrix/transpose continuation. Exact
+share the eight matrix helpers and copy/inv/submatrix/transpose continuation. Exact
 `matrix.new<float>`, `matrix.new<int>`,
 `matrix.new<bool>`, `matrix.new<string>`, and `matrix.new<color>` template
 results also enter this path, preserve their element kind, requested shape,
 type-compatible initial or default `na` cells, fresh allocation, and copy
-independence, and expose only the same seven helpers. Map templates such as
+independence. All five kinds expose the same seven helpers, while numeric
+template results additionally expose `.inv()`. Map templates such as
 unsupported `map.new` forms, unsupported matrix templates,
 every other namespace or non-producer member, and other matrix-returning calls
 stay excluded. Built-in
@@ -1002,8 +1011,9 @@ side effects.
 Registered imported pure-function results with one concrete supported matrix
 kind carry only call-specific matrix-kind metadata and expose the same closed
 rows/columns/elements_count/get/copy/submatrix/transpose set with
-copy/submatrix/transpose
-continuation; they do not widen imported UDT identity.
+numeric `.inv()` added after the receiver-kind check and
+copy/inv/submatrix/transpose continuation; they do not widen imported UDT
+identity.
 Qualified user-defined and unqualified plain local UDF results plus the
 exact static `array.*` allowlist and cross-namespace array-capable path support
 those five array helpers for

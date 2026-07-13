@@ -52,7 +52,7 @@ pub(crate) fn local_udf_call_result_method_parts<'a>(
         ExprKind::QualifiedName(_) => {
             let (function_name, producer_method) =
                 local_udf_call_result_method_parts(producer, producer_args)?;
-            matches!(producer_method, "copy" | "submatrix" | "transpose")
+            matches!(producer_method, "copy" | "inv" | "submatrix" | "transpose")
                 .then_some((function_name, method_name))
         }
         _ => None,
@@ -133,6 +133,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "elements_count" => Some("matrix.elements_count"),
         "get" => Some("matrix.get"),
         "copy" => Some("matrix.copy"),
+        "inv" => Some("matrix.inv"),
         "submatrix" => Some("matrix.submatrix"),
         "transpose" => Some("matrix.transpose"),
         "row" => Some("matrix.row"),
@@ -614,6 +615,7 @@ mod tests {
             ("elements_count", "matrix.elements_count"),
             ("get", "matrix.get"),
             ("copy", "matrix.copy"),
+            ("inv", "matrix.inv"),
             ("submatrix", "matrix.submatrix"),
             ("transpose", "matrix.transpose"),
             ("row", "matrix.row"),
