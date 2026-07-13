@@ -876,11 +876,15 @@ readers, wrong-result helpers, invalid arity or argument types, broader helpers,
 and mutation fail closed. The existing bound-receiver
 `matrix_id.mult(array).size()` path is unchanged, while helpers on bound
 matrix-returning `matrix_id.mult(...)` results retain the generic direct
-call-result rejection. Every other matrix-returning call, `map.new` and
-`matrix.new` template, and other namespace/non-producer call remains outside
-this path. Built-in namespace prefixes remain reserved, so same-named user or
-import qualifiers do not enter it. The extension carries no UDT/import identity
-and changes no public output schema.
+call-result rejection. Exact namespace `matrix.copy(values)` also enters this
+prefix, always resolves through the matrix helper family, and preserves the
+source float/int/bool/string/color matrix kind through `SameAsArg`; its returned
+store and every postfix copy are independent. Bound `values.copy()` results
+remain on the generic rejected path. Every other matrix-returning call,
+`map.new` and `matrix.new` template, and other namespace/non-producer call
+remains outside this path. Built-in namespace prefixes remain reserved, so
+same-named user or import qualifiers do not enter it. The extension carries no
+UDT/import identity and changes no public output schema.
 
 Both caller-side `for...in` over returned arrays and in-callee `for...in` over
 generic same-local scalar-tree UDT-array parameters preserve concrete identity,
@@ -936,10 +940,11 @@ terminal and do not open that method path; only producer `.copy()` may continue
 with another allowed array read/copy. The seven fixed cross-namespace producers
 and array-returning `matrix.mult` overloads are scalar-array-only and add no
 UDT/import identity path. Namespace matrix-returning `matrix.mult` overloads
-add only the five matrix readers/copy above and likewise carry no UDT/import
-identity. Bound or UDF matrix-result receivers, built-in-qualified or template
-call results outside the exact static and dynamic paths, and other array or
-matrix methods remain parser/semantic boundaries.
+and exact namespace `matrix.copy` add only the five matrix readers/copy above;
+`matrix.copy` preserves the source scalar element kind, and neither path carries
+UDT/import identity. Bound or UDF matrix-result receivers, built-in-qualified
+or template call results outside the exact static and dynamic paths, and other
+array or matrix methods remain parser/semantic boundaries.
 Method side effects, recursive methods, unsupported parameter families,
 mismatched UDT parameter identity, unknown receivers, and alias-qualified
 imported method receiver type mismatches are rejected during semantic analysis.

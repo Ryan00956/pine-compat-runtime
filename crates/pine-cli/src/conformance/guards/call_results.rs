@@ -276,7 +276,7 @@ fn validate_builtin_namespace_matrix_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES,
-        "fixture-backed namespace matrix.mult matrix-result rows/columns/elements_count/get/copy dispatch and retained result-type/helper/bound-receiver boundaries",
+        "fixture-backed exact namespace matrix.mult/matrix.copy result rows/columns/elements_count/get/copy dispatch and retained result-type/helper/bound-receiver boundaries",
     )
 }
 

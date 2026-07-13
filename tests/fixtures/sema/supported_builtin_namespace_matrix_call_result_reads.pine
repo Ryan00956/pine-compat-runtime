@@ -3,10 +3,18 @@ indicator("Supported builtin namespace matrix call-result reads")
 
 matrixMultMatrixExpressionRead(left, right) => matrix.mult(left, right).copy().get(1, 1)
 
+matrixCopyExpressionRead(values) => matrix.copy(values).copy().get(1, 0)
+
 matrixMultMatrixBlockRead(values, scalar) =>
     int rows = matrix.mult(values, scalar).rows()
     int columns = matrix.mult(scalar, values).columns()
     float first = matrix.mult(values, scalar).copy().get(0, 0)
+    rows * 100 + columns * 10 + first
+
+matrixCopyBlockRead(values) =>
+    int rows = matrix.copy(values).rows()
+    int columns = matrix.copy(values).columns()
+    float first = matrix.copy(values).get(0, 0)
     rows * 100 + columns * 10 + first
 
 left = matrix.new<float>(2, 3, 1.0)
@@ -33,6 +41,12 @@ float scalar_matrix_get = matrix.mult(0.5, right).get(1, 0)
 matrix<float> scalar_matrix_copy = matrix.mult(0.5, right).copy()
 float scalar_matrix_copy_get = matrix.mult(0.5, right).copy().get(2, 1)
 
+int matrix_copy_rows = matrix.copy(left).rows()
+int matrix_copy_columns = matrix.copy(left).columns()
+int matrix_copy_elements = matrix.copy(left).elements_count()
+float matrix_copy_named_get = matrix.copy(id=left).get(row=1, column=2)
+matrix<float> matrix_copy_nested = matrix.copy(left).copy().copy()
+
 int_left = matrix.new<int>(2, 2, 1)
 int_right = matrix.new<int>(2, 2, 2)
 float int_matrix_matrix_get = matrix.mult(int_left, int_right).get(0, 0)
@@ -41,6 +55,14 @@ float int_matrix_scalar_get = matrix.mult(int_left, 3).get(0, 0)
 matrix<float> int_matrix_scalar_copy = matrix.mult(int_left, 3).copy()
 float int_scalar_matrix_get = matrix.mult(3, int_left).get(0, 0)
 matrix<float> int_scalar_matrix_copy = matrix.mult(3, int_left).copy()
+
+bool_matrix = matrix.new<bool>(1, 1, true)
+string_matrix = matrix.new<string>(1, 1, "copy")
+color_matrix = matrix.new<color>(1, 1, color.red)
+int matrix_copy_int_get = matrix.copy(int_left).get(0, 0)
+bool matrix_copy_bool_get = matrix.copy(bool_matrix).copy().get(0, 0)
+string matrix_copy_string_get = matrix.copy(string_matrix).get(0, 0)
+color matrix_copy_color_get = matrix.copy(color_matrix).get(0, 0)
 
 bound_matrix_result = left.mult(right)
 bound_scalar_result = right.mult(2.0)
@@ -51,5 +73,7 @@ float bound_scalar_get = bound_scalar_result.get(0, 0)
 
 float matrix_expression_udf = matrixMultMatrixExpressionRead(left, right)
 float matrix_block_udf = matrixMultMatrixBlockRead(right, 2.0)
+float matrix_copy_expression_udf = matrixCopyExpressionRead(left)
+float matrix_copy_block_udf = matrixCopyBlockRead(left)
 
-plot(matrix_matrix_rows + matrix_matrix_columns + matrix_matrix_elements + matrix_matrix_get + matrix_matrix_copy.get(0, 0) + matrix_matrix_copy_get + matrix_scalar_rows + matrix_scalar_columns + matrix_scalar_elements + matrix_scalar_get + matrix_scalar_copy.get(0, 0) + matrix_scalar_copy_get + scalar_matrix_rows + scalar_matrix_columns + scalar_matrix_elements + scalar_matrix_get + scalar_matrix_copy.get(0, 0) + scalar_matrix_copy_get + int_matrix_matrix_get + int_matrix_matrix_copy.get(0, 0) + int_matrix_scalar_get + int_matrix_scalar_copy.get(0, 0) + int_scalar_matrix_get + int_scalar_matrix_copy.get(0, 0) + bound_matrix_rows + bound_matrix_get + bound_scalar_columns + bound_scalar_get + matrix_expression_udf + matrix_block_udf)
+plot(matrix_matrix_rows + matrix_matrix_columns + matrix_matrix_elements + matrix_matrix_get + matrix_matrix_copy.get(0, 0) + matrix_matrix_copy_get + matrix_scalar_rows + matrix_scalar_columns + matrix_scalar_elements + matrix_scalar_get + matrix_scalar_copy.get(0, 0) + matrix_scalar_copy_get + scalar_matrix_rows + scalar_matrix_columns + scalar_matrix_elements + scalar_matrix_get + scalar_matrix_copy.get(0, 0) + scalar_matrix_copy_get + matrix_copy_rows + matrix_copy_columns + matrix_copy_elements + matrix_copy_named_get + matrix_copy_nested.get(0, 0) + int_matrix_matrix_get + int_matrix_matrix_copy.get(0, 0) + int_matrix_scalar_get + int_matrix_scalar_copy.get(0, 0) + int_scalar_matrix_get + int_scalar_matrix_copy.get(0, 0) + matrix_copy_int_get + (matrix_copy_bool_get ? 1 : 0) + (matrix_copy_string_get == "copy" ? 1 : 0) + (matrix_copy_color_get == color.red ? 1 : 0) + bound_matrix_rows + bound_matrix_get + bound_scalar_columns + bound_scalar_get + matrix_expression_udf + matrix_block_udf + matrix_copy_expression_udf + matrix_copy_block_udf)

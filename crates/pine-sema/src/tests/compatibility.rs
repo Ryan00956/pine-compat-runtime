@@ -30,7 +30,7 @@ fn reports_supported_phase_1_calls() {
 }
 
 #[test]
-fn builtin_array_result_producer_parser_allowlist_matches_registry() {
+fn builtin_collection_result_producer_parser_allowlists_match_registry() {
     let registered = PHASE_1_BUILTINS
         .iter()
         .filter(|signature| signature.name.starts_with("array."))
@@ -132,6 +132,51 @@ fn builtin_array_result_producer_parser_allowlist_matches_registry() {
         );
     }
 
+    let registered_cross_namespace_matrix_capable = PHASE_1_BUILTINS
+        .iter()
+        .filter(|signature| !signature.name.starts_with("array."))
+        .filter(|signature| match signature.returns {
+            ReturnSpec::Fixed(pine_type) => crate::types::is_matrix_kind(pine_type.kind),
+            ReturnSpec::SameAsArg(index) => signature.params.get(index).is_some_and(|param| {
+                matches!(
+                    param.accepts,
+                    Accepts::FloatMatrix | Accepts::NumericMatrix | Accepts::Matrix
+                )
+            }),
+            ReturnSpec::MatrixMult => true,
+            _ => false,
+        })
+        .map(|signature| signature.name)
+        .collect::<BTreeSet<_>>();
+    let expected_matrix_call_result_producers = BTreeSet::from(["matrix.copy", "matrix.mult"]);
+    assert!(
+        expected_matrix_call_result_producers
+            .iter()
+            .all(|name| registered_cross_namespace_matrix_capable.contains(name)),
+        "matrix call-result parser allowlist must stay within registered matrix-capable producers"
+    );
+
+    for name in &registered_cross_namespace_matrix_capable {
+        let source = SourceFile::new("test.pine", format!("value = {name}().rows()\n"));
+        let parsed = pine_syntax::parse_source(&source);
+        if expected_matrix_call_result_producers.contains(name) {
+            assert!(
+                parsed.diagnostics.is_empty(),
+                "registered matrix call-result producer `{name}` was parser-gated: {:?}",
+                parsed.diagnostics
+            );
+        } else {
+            assert!(
+                parsed
+                    .diagnostics
+                    .iter()
+                    .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR"),
+                "non-allowlisted matrix producer `{name}` unexpectedly admitted a call-result method: {:?}",
+                parsed.diagnostics
+            );
+        }
+    }
+
     for signature in PHASE_1_BUILTINS.iter().filter(|signature| {
         matches!(
             signature
@@ -140,6 +185,7 @@ fn builtin_array_result_producer_parser_allowlist_matches_registry() {
                 .map(|(namespace, _)| namespace),
             Some("str" | "ta" | "matrix")
         ) && !registered_cross_namespace_array_capable.contains(signature.name)
+            && !expected_matrix_call_result_producers.contains(signature.name)
     }) {
         let source = SourceFile::new(
             "test.pine",

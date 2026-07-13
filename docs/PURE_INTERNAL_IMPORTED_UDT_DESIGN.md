@@ -94,8 +94,12 @@ and admits matrix-by-matrix, matrix-by-scalar, and scalar-by-matrix
 `.elements_count()`, `.get(row, column)`, and `.copy()`. Int inputs still
 produce float collections, and only `.copy()` may continue another allowed
 read/copy chain. Bound or UDF matrix-result helpers, wrong-result or broader
-helpers, invalid helper arguments, and mutation remain fail-closed. Outside the
-exact static producer sets and that namespace-only dynamic exception,
+helpers, invalid helper arguments, and mutation remain fail-closed. Item 13
+adds exact namespace `matrix.copy(values)` to the same matrix-result path. Its
+`SameAsArg` result preserves the source float/int/bool/string/color matrix kind
+and admits the same five matrix helpers with copy-only continuation; bound
+`values.copy()` results remain gated. Outside the exact static producer sets
+and those namespace-only exceptions,
 unsupported `array.new<T>` types, non-producer calls, map/matrix templates,
 other matrix-returning calls, mixed or non-scalar return identities,
 non-array/non-UDT or unresolved results, nested field mutation, and
@@ -722,3 +726,12 @@ return/parameter flow remains deferred.
     destinations, UDF-contained namespace calls, copy independence, and the
     retained boundaries are fixture-backed. No imported UDT identity or public
     schema field is added. Done.
+13. The exact namespace matrix-copy continuation routes `matrix.copy(values)`
+    through `$builtin_matrix_result`. Its `SameAsArg` result preserves all five
+    supported scalar matrix element kinds and exposes only `.rows()`,
+    `.columns()`, `.elements_count()`, `.get(row, column)`, and `.copy()`, with
+    named helper arguments and copy-only continuation. Empty/`na`, nested-copy,
+    UDF-contained namespace reads, and source/copy independence are
+    fixture-backed. Wrong receivers, invalid helper arguments, mutation,
+    broader helpers, and bound `values.copy()` call-result reads fail closed.
+    No imported UDT identity or public schema field is added. Done.

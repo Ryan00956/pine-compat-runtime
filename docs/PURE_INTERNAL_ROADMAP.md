@@ -337,6 +337,12 @@ Current baseline:
   invalid arity or argument types, broader helpers, and mutation fail closed.
   The existing bound-receiver `matrix_id.mult(array).size()` path is unchanged,
   while bound or UDF matrix-result call-result helpers remain gated.
+  A subsequent closed slice admits exact namespace `matrix.copy(values)` on the
+  same `$builtin_matrix_result` path. It always resolves to a matrix through
+  `SameAsArg`, preserves the source float/int/bool/string/color matrix element
+  kind, and shares only the five matrix read/copy helpers plus copy-only
+  continuation. The returned store and nested copies remain independent;
+  bound `values.copy()` call-result helpers stay gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -356,8 +362,9 @@ Remaining internal work:
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked
-  namespace-qualified `matrix.mult(...)` array/matrix paths, including bound or
-  UDF matrix-result receivers, other matrix-returning calls, map/matrix templates,
+  namespace-qualified `matrix.mult(...)` array/matrix paths plus the exact
+  namespace `matrix.copy(...)` matrix path, including bound or UDF
+  matrix-result receivers, other matrix-returning calls, map/matrix templates,
   other built-in namespaces or non-producer members, non-producer `array.*`
   calls, unsupported `array.new<T>` templates, non-array/non-UDT results,
   unknown/`na` results
