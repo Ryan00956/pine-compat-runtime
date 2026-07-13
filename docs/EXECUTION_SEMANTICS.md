@@ -873,8 +873,8 @@ may use `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
 `.copy()`, plus `.row(index)`, `.col(index)`, and numeric-only
 `.eigenvalues()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`,
 `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, and
-`.is_stochastic()`, plus numeric-only terminal `.sum()` and all-kind terminal
-`.is_square()`. Int inputs still produce float collections.
+`.is_stochastic()`, plus numeric-only terminal `.sum()`/`.avg()` and all-kind
+terminal `.is_square()`. Int inputs still produce float collections.
 Matrix `.copy()` may continue with another admitted matrix helper;
 `.row(index)` and `.col(index)` return fresh element-kind-preserving arrays;
 `.eigenvalues()` retains the existing numeric check and returns a fresh
@@ -899,15 +899,18 @@ empty matrix of finite non-negative values and accepts either exact unit row
 sums or exact unit column sums; it is terminal. Numeric-only `.sum()` returns a
 fixed `series float`, ignores `na` cells, returns `na` when no numeric cell is
 present or the sum is non-finite, propagates upstream `na`, and is terminal.
+Numeric-only `.avg()` likewise returns a fixed `series float`, but divides by
+the count of non-`na` numeric cells; no numeric cells or a non-finite result
+yield `na`, upstream `na` propagates, and the reader is terminal.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
 broader helpers, and mutation fail closed. The existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch. Exact
 bound numeric-matrix-receiver matrix-valued `matrix_id.mult(other)` results now
-share the seventeen matrix helpers and the copy/row/column/eigenvalue/
+share the eighteen matrix helpers and the copy/row/column/eigenvalue/
 predicate/aggregate-reader continuation rules for matrix or
 scalar operands while preserving the existing overload, shape, `na`, empty
 inner dimension, and cell-budget boundaries. Unqualified local-UDF results that infer
-a concrete supported matrix kind now share the seventeen matrix helpers through
+a concrete supported matrix kind now share the eighteen matrix helpers through
 `$call_result`. Parameter passthrough, block aliases, nested calls, same-kind
 control flow, constructed and matrix-operation returns, named/reordered
 arguments, and zero dimensions keep their normal call-specific float/int/bool/
@@ -927,6 +930,7 @@ matrix result, while `.row(index)`, `.col(index)`, or numeric `.eigenvalues()`
 continues as an array result and `.is_square()` plus numeric `.is_zero()` are
 terminal, as are numeric `.is_binary()`, `.is_diagonal()`, `.is_identity()`,
 `.is_symmetric()`, `.is_antisymmetric()`, `.is_stochastic()`, and `.sum()`.
+`.avg()` is terminal under the same aggregate continuation rule.
 Exact namespace
 `matrix.copy(values)`
 also enters this

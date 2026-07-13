@@ -508,6 +508,7 @@ fn parses_matrix_copy_result_method_receivers_with_matrix_provenance() {
         "value = matrix.copy(values).is_antisymmetric()\n",
         "value = matrix.copy(values).is_stochastic()\n",
         "value = matrix.copy(values).sum()\n",
+        "value = matrix.copy(values).avg()\n",
     ] {
         let parsed = parse(source);
 
@@ -993,6 +994,7 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = matrix.copy(values).is_antisymmetric().custom()\n",
         "bad = matrix.copy(values).is_stochastic().custom()\n",
         "bad = matrix.copy(values).sum().custom()\n",
+        "bad = matrix.copy(values).avg().custom()\n",
         "bad = map.keys(values).first().custom()\n",
         "bad = map.new<string, float>().size().custom()\n",
         "bad = map.new<string, float>().get(\"missing\").custom()\n",

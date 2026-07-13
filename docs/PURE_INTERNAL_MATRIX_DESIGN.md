@@ -1297,6 +1297,12 @@ Recommended future slices:
     results, and is terminal without a result-prefix transition. Numeric
     rejection, copy continuation, provenance/dual aliases, invalid arity, and
     terminal continuation are fixture-backed.
+70. Numeric matrix call-result averages: done for the same concrete float/int
+    producer set. `.avg()` retains the fixed `series float` result, averages
+    only non-`na` cells, returns `na` for empty, all-`na`, non-finite, or
+    upstream-`na` results, and is terminal without a result-prefix transition.
+    Numeric rejection, copy continuation, provenance/dual aliases, invalid
+    arity, and terminal continuation are fixture-backed.
 
 ## Completion Gate For Future Positive Support
 

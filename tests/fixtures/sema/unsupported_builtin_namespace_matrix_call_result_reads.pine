@@ -82,5 +82,7 @@ bool_is_stochastic = matrix.copy(bool_values).is_stochastic()
 is_stochastic_extra_arg = matrix.copy(left).is_stochastic(0)
 bool_sum = matrix.copy(bool_values).sum()
 sum_extra_arg = matrix.copy(left).sum(0)
+bool_avg = matrix.copy(bool_values).avg()
+avg_extra_arg = matrix.copy(left).avg(0)
 
 plot(close)
