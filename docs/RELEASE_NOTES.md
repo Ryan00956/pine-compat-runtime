@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added transforming `.sort_indices(order?)` to every existing concrete int,
+  float, or string array call result. It returns an independent fixed
+  `simple array<int>` of stable original indexes, preserves the established
+  float-`na` and string-empty ordering, supports default ascending or explicit
+  descending order, propagates upstream `na`, leaves its source unchanged, and
+  can continue through the closed array-result helper set. Static/cross-
+  namespace, matrix/map-derived, local/imported function/method, empty/`na`,
+  nested continuation, invalid type/order/arity, source-independence, and UDT
+  `sort_field` binding boundaries are fixture-backed.
 - Added terminal `.stdev(biased?)` to every existing concrete numeric array
   call result. It returns the square root of the same filtered population or
   sample variance selected by default/`true` versus `false`/`na` bias.

@@ -321,7 +321,7 @@ It returns an independent fixed float array, computes mean and population
 standard deviation over non-`na` values, preserves `na` positions, maps
 numeric positions to `na` for zero or non-finite deviation, returns empty for
 empty/all-`na`, and propagates upstream `na`. UDT, arity, provenance, source-
-independence, and copy/abs/standardize continuation boundaries remain closed.
+independence, and copy/abs/standardize/sort_indices continuation boundaries remain closed.
 Item 101 adds terminal `.variance(biased?)` over the same result set. It
 filters `na`, returns fixed series float, uses population bias by default or
 for `true`, and sample bias for `false` or `na`. Single-value population
@@ -333,6 +333,13 @@ square root of the selected filtered population or sample variance and retains
 bias, single-value population zero, fixed series-float, empty/all-`na`/
 upstream-`na`, insufficient-sample, non-finite, UDT, invalid type/arity,
 provenance, non-mutation, and terminal-continuation boundaries.
+Item 103 adds transforming `.sort_indices(order?)` to concrete int, float, or
+string call results across the closed producer families. It returns an
+independent fixed int-index array with stable original indexes, established
+ordering/empty/upstream-`na` behavior, source non-mutation, and nested closed-
+array continuation. Bool/color/object/chart-point, invalid order/arity, direct
+mutation, and UDT call-result `sort_field` ordering before binding remain
+closed.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1892,7 +1899,7 @@ Item 100 adds transforming `.standardize()` over that result set, preserving
 independent fixed-float results, non-`na` mean and population-deviation
 calculation, `na` positions, zero/non-finite-deviation all-`na` numeric output,
 empty/all-`na` empty results, and upstream-`na` propagation. Arity, provenance,
-source-independence, copy/abs/standardize continuation, and UDT-identity
+source-independence, copy/abs/standardize/sort_indices continuation, and UDT-identity
 boundaries remain closed.
 Item 101 adds terminal `.variance(biased?)` over that result set, preserving
 filtered values, population default/`true` bias, sample `false`/`na` bias,
@@ -1906,6 +1913,15 @@ value population zero, fixed series-float, empty/all-`na`/upstream-`na`,
 insufficient-sample, and non-finite behavior. Invalid type/arity, provenance,
 non-mutation, terminal continuation, and UDT-identity boundaries remain
 closed.
+Item 103 adds transforming `.sort_indices(order?)` to concrete int, float, or
+string array call results across static, cross-namespace, matrix/map-derived,
+and local/imported result producers. It returns an independent fixed int-index
+array with stable original indexes, default ascending or explicit descending
+order, float-`na` and string-empty placement, empty results, upstream-`na`
+propagation, source non-mutation, and nested sort/copy/read/search/
+transformation/statistic continuation. Bool/color/object/chart-point, invalid
+order/arity, direct mutation, and UDT call-result `sort_field` ordering before
+an identity-preserving binding remain closed.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

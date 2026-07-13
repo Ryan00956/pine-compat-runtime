@@ -334,6 +334,10 @@ unqualified_float_variance = identity(array.from(20.0, na, 22.0)).copy().varianc
 qualified_scalar_stdev = anchor.exposeInts(array.from(40, 41, 42)).stdev()
 unqualified_int_stdev = identity(array.from(10, 11, 12)).stdev(biased=false)
 unqualified_float_stdev = identity(array.from(20.0, na, 22.0)).copy().stdev()
+qualified_scalar_sort_indices = anchor.exposeInts(array.from(42, 40, 41)).sort_indices(order.descending)
+unqualified_int_sort_indices = identity(array.from(12, 10, 11)).sort_indices().copy()
+unqualified_float_sort_indices = identity(array.from(22.0, na, 20.0)).copy().sort_indices()
+unqualified_string_sort_indices = identity(array.from("gamma", "alpha", "beta")).sort_indices().sort_indices()
 
 unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
 unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))

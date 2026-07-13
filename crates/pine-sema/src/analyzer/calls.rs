@@ -284,11 +284,19 @@ impl Analyzer {
         let Some(builtin_name) = array_call_result_builtin_name(method_name) else {
             self.unsupported(
                 &format!("array.{method_name}"),
-                "direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.includes()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, and `.stdev()`; bind the result or use the namespace helper",
+                "direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.includes()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, and `.sort_indices()`; bind the result or use the namespace helper",
                 callee.span,
             );
             return Some(None);
         };
+        if receiver_type.kind == ValueKind::UserTypeArray && builtin_name == "array.sort_indices" {
+            self.unsupported(
+                builtin_name,
+                "direct UDT-array call-result sort_indices requires binding the result so sort_field identity can be resolved",
+                callee.span,
+            );
+            return Some(None);
+        }
         if receiver_type.kind != ValueKind::UserTypeArray {
             let signature = pine_builtins::get_phase_1_builtin(builtin_name)
                 .expect("supported call-result array helper must be registered");

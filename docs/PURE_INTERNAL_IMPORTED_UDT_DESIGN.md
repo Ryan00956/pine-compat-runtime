@@ -1527,7 +1527,7 @@ return/parameter flow remains deferred.
     standard deviation over non-`na` values, preserves `na` positions, maps
     numeric positions to `na` for zero or non-finite deviation, returns empty
     for empty/all-`na`, and propagates upstream `na`. Nonnumeric/imported-UDT,
-    arity, provenance, source-independence, and copy/abs/standardize
+    arity, provenance, source-independence, and copy/abs/standardize/sort_indices
     continuation boundaries are fixture-backed. Done.
 91. The same numeric producer set exposes terminal `.variance(biased?)`. It
     filters `na`, returns fixed series float, uses population bias by default
@@ -1542,3 +1542,13 @@ return/parameter flow remains deferred.
     float, empty/all-`na`/upstream-`na`, insufficient-sample, non-finite,
     nonnumeric/imported-UDT, invalid type/arity, provenance, non-mutation, and
     terminal-continuation boundaries. Done.
+93. Concrete int, float, or string array call results expose transforming
+    `.sort_indices(order?)` across local/imported functions and methods plus
+    the existing static, cross-namespace, matrix/map-derived producer sets. It
+    returns an independent fixed int-index array with stable original indexes,
+    default ascending or explicit descending order, established float-`na` and
+    string-empty placement, empty results, upstream-`na` propagation, source
+    non-mutation, and nested sort/copy/read/search/transformation/statistic
+    continuation. Bool/color/object/chart-point, invalid order/arity, direct
+    mutation, and imported-UDT result `sort_field` ordering before binding
+    remain closed. Done.

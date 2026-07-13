@@ -878,7 +878,7 @@ Current baseline:
   positions to `na` when the deviation is zero or non-finite. Empty/all-`na`
   inputs return an empty array and upstream-`na` propagates. Static, cross-
   namespace, matrix/map-derived, local/imported result provenance, invalid
-  type/arity, source independence, and copy/abs/standardize continuation are
+  type/arity, source independence, and copy/abs/standardize/sort_indices continuation are
   fixture-backed.
   The following dispersion slice adds terminal `.variance(biased?)`. It
   filters `na`, returns fixed series float, uses the population denominator by
@@ -893,6 +893,16 @@ Current baseline:
   single-value population zero, empty/all-`na`/upstream-`na`, insufficient-
   sample, non-finite, provenance, invalid type/arity, non-mutation, and
   terminal-continuation coverage across the same four result-source families.
+  The following ordering transformation slice adds `.sort_indices(order?)` to
+  every concrete int, float, or string array call result across the same
+  static, cross-namespace, matrix/map-derived, and local/imported result-source
+  families. It returns an independent fixed int-index array with stable
+  original-index ordering, default ascending or explicit descending order,
+  established float-`na` and string-empty placement, empty results, upstream-
+  `na` propagation, source non-mutation, and nested sort/copy/read/search/
+  transformation/statistic continuation. Bool/color/object/chart-point results,
+  invalid order/arity, direct mutation, and UDT result ordering before an
+  identity-preserving binding remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -912,7 +922,7 @@ Remaining internal work:
   `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus numeric-only
   `.binary_search(value)`/`.binary_search_leftmost(value)`/
   `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/
-  `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)` set, and
+  `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)` set, the int/float/string-only `.sort_indices(order?)` call-result transformation with its retained UDT-binding boundary, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked

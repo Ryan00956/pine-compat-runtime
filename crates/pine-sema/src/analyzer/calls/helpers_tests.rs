@@ -94,6 +94,7 @@ mod tests {
             ("standardize", "array.standardize"),
             ("variance", "array.variance"),
             ("stdev", "array.stdev"),
+            ("sort_indices", "array.sort_indices"),
         ] {
             assert_eq!(
                 array_call_result_builtin_name(method_name),

@@ -316,6 +316,8 @@ fn parses_builtin_array_result_method_receivers() {
         "value = array.from(-1, 2).abs()\n",
         "value = array.from(1, 2, 3).standardize().get(1)\n",
         "value = array.copy(values).standardize().standardize().size()\n",
+        "value = array.from(3, 1, 2).sort_indices().get(0)\n",
+        "value = array.from(\"b\", \"a\").sort_indices(order.descending).copy().last()\n",
         "value = array.standardize(values).first()\n",
         "value = array.sort_indices(values).last()\n",
     ] {

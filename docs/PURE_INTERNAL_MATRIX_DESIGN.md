@@ -1579,7 +1579,7 @@ Recommended future slices:
     mean and population-deviation calculation, `na`-position preservation,
     zero/non-finite-deviation all-`na` numeric output, empty/all-`na` empty
     results, and upstream-`na` propagation. Invalid type/arity, source
-    independence, and copy/abs/standardize continuation are fixture-backed.
+    independence, and copy/abs/standardize/sort_indices continuation are fixture-backed.
     Matrix-valued continuation is unchanged.
 105. Numeric array-valued call results additionally expose terminal
     `.variance(biased?)`. Matrix row/column/eigenvalue arrays and array-
@@ -1596,6 +1596,14 @@ Recommended future slices:
     zero, fixed series-float, empty/all-`na`/upstream-`na`, insufficient-
     sample, non-finite, invalid type/arity, non-mutation, and terminal-
     continuation boundaries. Matrix-valued continuation is unchanged.
+107. Int, float, or string matrix row/column arrays and numeric eigenvalue or
+    array-returning `matrix.mult` results additionally expose transforming
+    `.sort_indices(order?)`. The independent fixed int-index result preserves
+    stable original positions, default ascending or explicit descending order,
+    established float-`na` and string-empty placement, empty/upstream-`na`
+    behavior, source independence, and nested array-result continuation.
+    Bool/color results, invalid order/arity, and direct mutation remain closed;
+    matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

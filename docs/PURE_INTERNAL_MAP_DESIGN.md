@@ -502,7 +502,7 @@ Recommended future slices:
     `na` positions, maps numeric positions to `na` for zero or non-finite
     deviation, returns empty for empty/all-`na`, and propagates upstream `na`.
     Invalid type/arity, local/imported provenance, source independence, and
-    copy/abs/standardize continuation are fixture-backed. Map storage and
+    copy/abs/standardize/sort_indices continuation are fixture-backed. Map storage and
     template rules are unchanged. Done.
 35. Numeric key/value snapshots additionally expose terminal
     `.variance(biased?)`. Filtered non-`na` values, population default/`true`
@@ -517,6 +517,13 @@ Recommended future slices:
     sample bias, single-value population zero, fixed series-float results,
     empty/all-`na`/upstream-`na`, insufficient-sample and non-finite behavior,
     invalid type/arity, provenance, non-mutation, and terminal continuation.
+    Map storage and template rules are unchanged. Done.
+37. Int, float, or string key/value snapshots additionally expose transforming
+    `.sort_indices(order?)`. The fresh index array preserves stable source
+    positions, default ascending or explicit descending order, float-`na` and
+    string-empty placement, empty and upstream-`na` behavior, source-map and
+    snapshot independence, and nested array-result continuation. Bool/color
+    snapshots, invalid order/arity, and direct result mutation remain closed.
     Map storage and template rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
