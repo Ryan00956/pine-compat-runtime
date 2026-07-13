@@ -472,3 +472,28 @@ call_result_pop_empty = array.new_int().pop()
 call_result_pop_none = array.copy(noneInts()).pop()
 call_result_pop_udt_remaining = call_result_pop_udt_source.first()
 plot(call_result_pop_udt_value.shared == 94.0 and call_result_pop_udt_source.size() == 1 and call_result_pop_udt_remaining.other == 930.0 and na(call_result_pop_empty) and na(call_result_pop_none) ? 1 : 0, "call_result_pop_udt_empty_na")
+
+call_result_shift_concat_source = array.from(1, 2)
+call_result_shift_concat_value = array.concat(call_result_shift_concat_source, array.from(3)).shift()
+plot(call_result_shift_concat_value == 1 and call_result_shift_concat_source.size() == 2 and call_result_shift_concat_source.first() == 2 and call_result_shift_concat_source.last() == 3 ? 1 : 0, "call_result_shift_concat_alias")
+
+call_result_shift_slice_source = array.from(10, 20, 30, 40)
+call_result_shift_slice_value = array.slice(call_result_shift_slice_source, 0, 4).slice(1, 3).shift()
+plot(call_result_shift_slice_value == 20 and call_result_shift_slice_source.size() == 3 and call_result_shift_slice_source.get(0) == 10 and call_result_shift_slice_source.get(1) == 30 and call_result_shift_slice_source.get(2) == 40 ? 1 : 0, "call_result_shift_live_slice")
+
+call_result_shift_float = array.new_float(1, 1.5).shift()
+call_result_shift_bool = array.new_bool(1, true).shift()
+call_result_shift_string = array.new_string(1, "value").shift()
+call_result_shift_color = array.new_color(1, color.red).shift()
+plot(call_result_shift_float == 1.5 and call_result_shift_bool and call_result_shift_string == "value" and call_result_shift_color == color.red ? 1 : 0, "call_result_shift_scalar_kinds")
+
+call_result_shift_line = array.new_line(1).shift()
+call_result_shift_point = array.new<chart.point>(1, chart.point.now(close + 3.0)).shift()
+plot(na(call_result_shift_line) and call_result_shift_point.price == close + 3.0 ? 1 : 0, "call_result_shift_object_point")
+
+call_result_shift_udt_source = array.from(First.new(95.0, 950.0), First.new(96.0, 960.0))
+call_result_shift_udt_value = array.concat(call_result_shift_udt_source, array.new<First>()).shift()
+call_result_shift_empty = array.new_int().shift()
+call_result_shift_none = array.copy(noneInts()).shift()
+call_result_shift_udt_remaining = call_result_shift_udt_source.first()
+plot(call_result_shift_udt_value.shared == 95.0 and call_result_shift_udt_source.size() == 1 and call_result_shift_udt_remaining.other == 960.0 and na(call_result_shift_empty) and na(call_result_shift_none) ? 1 : 0, "call_result_shift_udt_empty_na")

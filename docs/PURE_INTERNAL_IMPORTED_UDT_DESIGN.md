@@ -1606,3 +1606,12 @@ return/parameter flow remains deferred.
     window, and fresh matrix/map/`matrix.mult` snapshots remain source-
     independent. UDF-body and all remaining direct mutations stay rejected.
     No imported identity or public schema field is widened. Done.
+101. The same producer set additionally exposes terminal top-level `.shift()`.
+    It accepts no explicit arguments, removes and returns the first resolved
+    scalar/object/`chart.point` or concrete imported UDT element, preserves
+    remaining-element order, returns `na` for empty or upstream-`na`, and cannot
+    continue. Imported/local alias results shrink shared backing, nested slices
+    delete the first element from their live parent window, and fresh matrix/
+    map/`matrix.mult` snapshots remain source-independent. UDF-body and all
+    remaining direct mutations stay rejected. No imported identity or public
+    schema field is widened. Done.

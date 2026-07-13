@@ -575,6 +575,14 @@ Recommended future slices:
     insertion order remain unchanged. Direct call-result mutation inside UDFs
     and all remaining postfix mutations stay rejected. Map storage, templates,
     and public schemas are unchanged. Done.
+45. Every concrete scalar key/value snapshot additionally exposes terminal
+    top-level `.shift()`. It removes and returns only the fresh snapshot's first
+    insertion-order key or value with the resolved scalar kind, preserves the
+    remaining snapshot order, returns `na` for empty or typed-`na` maps, and
+    cannot continue; source map entries and insertion order remain unchanged.
+    Direct call-result mutation inside UDFs and all remaining postfix mutations
+    stay rejected. Map storage, templates, and public schemas are unchanged.
+    Done.
 
 ## Completion Gate For Future Widening
 

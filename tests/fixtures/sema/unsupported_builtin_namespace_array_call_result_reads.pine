@@ -213,3 +213,4 @@ namespace_slice_extra_arg = matrix.mult(float_matrix, mult_vector).slice(0, 1, 2
 ta.pivot_point_levels("Traditional", true, true).clear(1)
 matrix.eigenvalues(float_matrix).reverse(1)
 namespace_pop_extra_arg = matrix.mult(float_matrix, mult_vector).pop(1)
+namespace_shift_extra_arg = matrix.mult(float_matrix, mult_vector).shift(1)

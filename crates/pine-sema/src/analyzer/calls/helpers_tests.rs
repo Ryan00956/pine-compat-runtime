@@ -102,6 +102,7 @@ mod tests {
             ("clear", "array.clear"),
             ("reverse", "array.reverse"),
             ("pop", "array.pop"),
+            ("shift", "array.shift"),
         ] {
             assert_eq!(
                 array_call_result_builtin_name(method_name),

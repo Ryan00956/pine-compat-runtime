@@ -1995,6 +1995,14 @@ upstream-`na`, and cannot continue. Alias-returning concat/UDF/method results
 shrink shared backing, nested slices delete the final live-window element from
 their parent, and fresh matrix/map/`matrix.mult` snapshots leave sources
 unchanged. UDF-body and all remaining postfix mutations stay rejected.
+Item 111 adds terminal top-level `.shift()` across that producer set. It
+accepts no explicit arguments, removes and returns the first resolved scalar,
+drawing-id, `chart.point`, same-local UDT, or same-imported UDT element,
+preserves remaining-element order, returns `na` for empty or upstream-`na`, and
+cannot continue. Alias-returning concat/UDF/method results shrink shared
+backing, nested slices delete the first live-window element from their parent,
+and fresh matrix/map/`matrix.mult` snapshots leave sources unchanged. UDF-body
+and all remaining postfix mutations stay rejected.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

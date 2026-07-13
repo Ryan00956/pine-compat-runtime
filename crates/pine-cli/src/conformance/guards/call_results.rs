@@ -86,6 +86,7 @@ const BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.clear",
     "array.reverse",
     "array.pop",
+    "array.shift",
     "array.concat",
     "array method calls",
     "expression-body functions",
@@ -109,6 +110,7 @@ const UDT_IDENTITY_BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.clear",
     "array.reverse",
     "array.pop",
+    "array.shift",
     "array.concat",
 ];
 
@@ -271,6 +273,7 @@ const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.clear",
     "array.reverse",
     "array.pop",
+    "array.shift",
     "array method calls",
     "expression-body functions",
     "multi-statement functions",
@@ -420,6 +423,7 @@ fn validate_udt_array_call_result_helper_fixture_paths(
             | "array.clear"
             | "array.reverse"
             | "array.pop"
+            | "array.shift"
     ) {
         return Ok(());
     }

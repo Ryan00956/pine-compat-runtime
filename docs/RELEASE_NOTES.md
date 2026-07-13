@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal top-level `.shift()` to every concrete array call result. It
+  removes and returns the first resolved scalar/object/`chart.point` or same-
+  local/same-imported scalar-tree UDT element, preserves concrete UDT identity
+  and remaining-element order, returns `na` for empty/upstream-`na`, and cannot
+  continue. Alias-returning concat/local/imported function or method results
+  and nested live slices shrink their backing parent; fresh matrix row/column/
+  eigenvalue, map key/value, and array-returning `matrix.mult` snapshots remain
+  independent. Invalid arity and UDF-side-effect boundaries are fixture-backed;
+  public schemas are unchanged.
 - Added terminal top-level `.pop()` to every concrete array call result. It
   removes and returns the final resolved scalar/object/`chart.point` or
   same-local/same-imported scalar-tree UDT element, preserves concrete UDT

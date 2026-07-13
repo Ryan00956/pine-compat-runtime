@@ -557,3 +557,28 @@ namespace_call_result_pop_map_empty = map.values(empty_map).pop()
 namespace_call_result_pop_map_na = map.values(na_map).pop()
 namespace_call_result_pop_mult_na = matrix.mult(mult_na_matrix, mult_vector).pop()
 plot(na(namespace_call_result_pop_split_na) and na(namespace_call_result_pop_matrix_na) and na(namespace_call_result_pop_map_empty) and na(namespace_call_result_pop_map_na) and na(namespace_call_result_pop_mult_na) ? 1 : 0, "namespace_call_result_pop_empty_na")
+
+namespace_call_result_shift_split = str.split("alpha,beta", ",").shift()
+namespace_call_result_shift_pivot = ta.pivot_point_levels("Traditional", true, true).shift()
+namespace_call_result_shift_pivot_reference = array.shift(ta.pivot_point_levels("Traditional", true, true))
+plot(namespace_call_result_shift_split == "alpha" and (na(namespace_call_result_shift_pivot_reference) ? na(namespace_call_result_shift_pivot) : namespace_call_result_shift_pivot == namespace_call_result_shift_pivot_reference) ? 1 : 0, "namespace_call_result_shift_split_pivot")
+
+namespace_call_result_shift_row = matrix.row(float_matrix, 0).shift()
+namespace_call_result_shift_col = matrix.col(float_matrix, 0).shift()
+namespace_call_result_shift_eigen = matrix.eigenvalues(float_diagonal).shift()
+plot(namespace_call_result_shift_row == 1.5 and namespace_call_result_shift_col == 1.5 and namespace_call_result_shift_eigen == 2.0 and matrix.get(float_matrix, 0, 0) == 1.5 and matrix.get(float_diagonal, 0, 0) == 2.0 ? 1 : 0, "namespace_call_result_shift_matrix_snapshot")
+
+namespace_call_result_shift_key = map.keys(int_float).shift()
+namespace_call_result_shift_value = map.values(int_float).shift()
+plot(namespace_call_result_shift_key == 10 and namespace_call_result_shift_value == 3.5 and map.size(int_float) == 2 and map.get(int_float, 20) == 2.5 ? 1 : 0, "namespace_call_result_shift_map_snapshot")
+
+namespace_call_result_shift_mult = matrix.mult(mult_matrix, mult_vector).shift()
+namespace_call_result_shift_bound_mult = mult_matrix.mult(mult_vector).shift()
+plot(namespace_call_result_shift_mult == 17.0 and namespace_call_result_shift_bound_mult == 17.0 and matrix.get(mult_matrix, 0, 0) == 1.0 and matrix.get(mult_matrix, 1, 1) == 4.0 ? 1 : 0, "namespace_call_result_shift_mult_snapshot")
+
+namespace_call_result_shift_split_na = str.split(na, ",").shift()
+namespace_call_result_shift_matrix_na = matrix.row(na_float_matrix, 0).shift()
+namespace_call_result_shift_map_empty = map.values(empty_map).shift()
+namespace_call_result_shift_map_na = map.values(na_map).shift()
+namespace_call_result_shift_mult_na = matrix.mult(mult_na_matrix, mult_vector).shift()
+plot(na(namespace_call_result_shift_split_na) and na(namespace_call_result_shift_matrix_na) and na(namespace_call_result_shift_map_empty) and na(namespace_call_result_shift_map_na) and na(namespace_call_result_shift_mult_na) ? 1 : 0, "namespace_call_result_shift_empty_na")

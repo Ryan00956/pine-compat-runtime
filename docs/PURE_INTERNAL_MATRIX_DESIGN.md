@@ -1659,6 +1659,15 @@ Recommended future slices:
     vector-multiplication paths retain result-type-directed array dispatch.
     UDF-body and all remaining postfix mutations stay rejected, while matrix-
     valued continuation and public schemas are unchanged.
+115. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.shift()`. It removes and returns only the fresh array snapshot's first
+    resolved scalar element, preserves the remaining snapshot order, returns
+    `na` for empty or upstream-`na` results, and cannot continue; the source
+    matrix is unchanged. Namespace and bound vector-multiplication paths retain
+    result-type-directed array dispatch. UDF-body and all remaining postfix
+    mutations stay rejected, while matrix-valued continuation and public
+    schemas are unchanged.
 
 ## Completion Gate For Future Positive Support
 

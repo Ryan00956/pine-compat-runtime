@@ -548,3 +548,8 @@ plot(imported_call_result_reverse_first.shared == 92.0 and imported_call_result_
 imported_call_result_pop_source = array.from(left.First.new(93.0, 930.0), left.First.new(94.0, 940.0))
 imported_call_result_pop_value = left.direct(imported_call_result_pop_source).pop()
 plot(imported_call_result_pop_value.shared == 94.0 and imported_call_result_pop_value.other == 940.0 and imported_call_result_pop_source.size() == 1 ? 1 : 0, "imported_call_result_pop_alias")
+
+imported_call_result_shift_source = array.from(left.First.new(95.0, 950.0), left.First.new(96.0, 960.0))
+imported_call_result_shift_value = left.direct(imported_call_result_shift_source).shift()
+imported_call_result_shift_remaining = imported_call_result_shift_source.first()
+plot(imported_call_result_shift_value.shared == 95.0 and imported_call_result_shift_value.other == 950.0 and imported_call_result_shift_source.size() == 1 and imported_call_result_shift_remaining.shared == 96.0 ? 1 : 0, "imported_call_result_shift_alias")
