@@ -12,6 +12,5 @@ sum_result = values.diff(values).sum()
 size_result = values.diff(values).size()
 bad_receiver_kind = bools.diff(values).rows()
 wrong_receiver = array_values.diff(values).rows()
-pow_result = values.pow(2).rows()
 
 plot(close)

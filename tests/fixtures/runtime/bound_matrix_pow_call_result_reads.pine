@@ -1,0 +1,31 @@
+//@version=6
+indicator("Bound matrix.pow call-result reads")
+
+powRows(values, power) => values.pow(power).rows()
+
+powBlockReads(values, power) =>
+    int rows = values.pow(power).rows()
+    int columns = values.pow(power).columns()
+    float value = values.pow(power).get(1, 1)
+    rows * 100 + columns * 10 + value
+
+values = matrix.new<float>(2, 2, 0.0)
+values.set(0, 0, 2.0)
+values.set(1, 1, 3.0)
+
+powered = values.pow(2).copy()
+powered.set(0, 0, 99.0)
+
+ints = matrix.new<int>(1, 1, 2)
+
+plot(values.pow(2).rows(), "pow_rows")
+plot(values.pow(2).columns(), "pow_columns")
+plot(values.pow(2).elements_count(), "pow_elements")
+plot(values.pow(2).get(1, 1), "pow_get")
+plot(values.pow(0).copy().get(0, 0), "identity_get")
+plot(values.pow(1).get(0, 0), "copy_get")
+plot(values.get(0, 0), "source_value")
+plot(powered.get(0, 0), "powered_value")
+plot(ints.pow(3).get(0, 0), "int_pow_get")
+plot(powRows(values, 2), "expression_udf")
+plot(powBlockReads(values, 2), "block_udf")

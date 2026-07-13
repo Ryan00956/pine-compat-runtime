@@ -177,6 +177,11 @@ for matrix or scalar operands with the same five helpers, selected matrix
 shape, operand direction, fixed float-matrix result kind, independent backing
 storage, copy-only continuation, and retained operand/other-bound-producer/
 non-matrix/mutation gates.
+Item 40 adds exact bound numeric-square-matrix-receiver `values.pow(power)`
+results with the same five helpers, identity/copy/positive-power behavior,
+fixed float-matrix result kind, independent backing storage, copy-only
+continuation, and retained power/other-bound-producer/non-matrix/mutation
+gates.
 Outside the exact static producer sets and these namespace-only paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, and other matrix-returning
@@ -794,7 +799,8 @@ Initial policy:
   unknown/`na` results without a concrete supported type or identity,
   bound matrix-result receivers other than exact matrix-receiver
   `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
-  `values.kron(other)`/`values.diff(other)`, UDF matrix-result receivers,
+  `values.kron(other)`/`values.diff(other)`/`values.pow(power)`, UDF
+  matrix-result receivers,
   built-in-qualified/template call
   receivers outside the exact static and dynamic paths, mutation side effects,
   and other direct array or matrix methods on call results remain
@@ -1129,6 +1135,15 @@ Recommended future slices:
     non-numeric/non-matrix receivers, and the retained bound-pow gate are
     fixture-backed. No UDT/import identity or public schema field is added.
     Done.
+40. The exact bound-matrix-power continuation recognizes `values.pow(power)`
+    only when `values` resolves to a supported numeric square matrix kind and
+    `power` is simple int. The result preserves square shape across identity,
+    copy, and positive powers, uses independent fixed float-matrix storage, and
+    exposes only rows/columns/elements_count/get/copy with copy-only
+    continuation. Float/int receivers, nested copy, UDF-contained reads, wrong
+    powers/indexes, broader helpers, non-numeric/non-matrix receivers, and the
+    retained bound-inverse gate are fixture-backed. No UDT/import identity or
+    public schema field is added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1199,6 +1214,8 @@ Item 38 adds exact bound numeric-matrix-receiver `values.kron(other)` result
 reads with fixed float-matrix metadata and no UDT/import identity.
 Item 39 adds exact bound numeric-matrix-receiver `values.diff(other)` result
 reads with fixed float-matrix metadata and no UDT/import identity.
+Item 40 adds exact bound numeric-square-matrix-receiver `values.pow(power)`
+result reads with fixed float-matrix metadata and no UDT/import identity.
 Broader UDT element families, bound or UDF
 matrix-result receivers, built-in-qualified/template call-result receivers
 outside the closed paths, unsupported `array.new<T>` templates, non-array/non-UDT results,

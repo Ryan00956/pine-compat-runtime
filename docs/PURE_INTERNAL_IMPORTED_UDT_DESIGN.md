@@ -162,6 +162,11 @@ for matrix or scalar operands with the same five helpers, selected matrix
 shape, operand direction, fixed float-matrix result kind, independent backing
 storage, copy-only continuation, and retained operand/other-bound-producer/
 non-matrix/mutation gates.
+Item 30 adds exact bound numeric-square-matrix-receiver `values.pow(power)`
+results with the same five helpers, identity/copy/positive-power behavior,
+fixed float-matrix result kind, independent backing storage, copy-only
+continuation, and retained power/other-bound-producer/non-matrix/mutation
+gates.
 Outside the exact static producer sets and those namespace-only exceptions,
 unsupported `array.new<T>` types, non-producer calls, unsupported matrix
 templates and map templates,
@@ -958,3 +963,12 @@ return/parameter flow remains deferred.
     non-numeric/non-matrix receivers, and the retained bound-pow gate are
     fixture-backed. No imported UDT identity or public schema field is added.
     Done.
+30. The exact bound-matrix-power continuation recognizes `values.pow(power)`
+    only when `values` resolves to a supported numeric square matrix kind and
+    `power` is simple int. The result preserves square shape across identity,
+    copy, and positive powers, uses independent fixed float-matrix storage, and
+    exposes only rows/columns/elements_count/get/copy with copy-only
+    continuation. Float/int receivers, nested copy, UDF-contained reads, wrong
+    powers/indexes, broader helpers, non-numeric/non-matrix receivers, and the
+    retained bound-inverse gate are fixture-backed. No imported UDT identity
+    or public schema field is added. Done.

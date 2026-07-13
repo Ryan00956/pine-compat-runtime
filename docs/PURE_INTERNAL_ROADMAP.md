@@ -366,6 +366,11 @@ Current baseline:
   left-to-right direction and selected matrix shape, returns independent fixed
   `matrix<float>` storage, and exposes the same five helpers with copy-only
   continuation. Bound `pow` and other producers remain gated.
+  The next closed bound-result slice admits exact numeric square matrix-receiver
+  `values.pow(power)` results. It preserves square shape across identity, copy,
+  and positive powers, returns independent fixed `matrix<float>` storage, and
+  exposes the same five helpers with copy-only continuation. Bound `inv` and
+  other producers remain gated.
   The following closed slice admits exact namespace
   `matrix.transpose(values)` on that path. It preserves the same five element
   kinds through `SameAsArg`, swaps row/column shape, returns independent
@@ -455,7 +460,8 @@ Remaining internal work:
   `map.copy(existing)`,
   including bound matrix-result receivers other than exact matrix-receiver
   `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
-  `values.kron(other)`/`values.diff(other)`, UDF matrix-result receivers,
+  `values.kron(other)`/`values.diff(other)`/`values.pow(power)`, UDF
+  matrix-result receivers,
   other matrix-returning calls, map templates and
   unsupported matrix/map templates and other map call-result receivers,
   other built-in namespaces or non-producer members, non-producer `array.*`

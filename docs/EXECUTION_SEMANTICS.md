@@ -906,7 +906,9 @@ continuation while preserving the existing operand checks and direction. Exact
 namespace `matrix.pow(values, power)` returns a fixed
 square `matrix<float>` for numeric matrices and simple-int powers, preserving
 independent identity/copy/positive-power results plus `na` and empty `0 x 0`
-behavior; bound `values.pow(power)` results remain generic rejections. Exact
+behavior. Exact bound numeric-square-matrix-receiver `values.pow(power)`
+results now share the five direct helpers and copy-only continuation while
+preserving the existing receiver and power checks. Exact
 namespace `matrix.inv(values)` returns an independent square
 `matrix<float>` for invertible numeric inputs, an empty `0 x 0` matrix for
 empty input, and `na` for singular or invalid-cell inputs; bound `values.inv()`
@@ -1011,7 +1013,7 @@ UDT/import identity. The scalar `map.new<K,V>` and namespace
 metadata and no UDT/import identity. Bound or UDF
 matrix-result receivers other than exact matrix-receiver
 `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
-`values.kron(other)`/`values.diff(other)`,
+`values.kron(other)`/`values.diff(other)`/`values.pow(power)`,
 built-in-qualified
 or template call results outside
 the exact static and dynamic paths, and other

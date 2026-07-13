@@ -6790,6 +6790,30 @@ fn accepts_supported_bound_matrix_diff_call_result_reads_fixture() {
 }
 
 #[test]
+fn accepts_supported_bound_matrix_pow_call_result_reads_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_bound_matrix_pow_call_result_reads.pine");
+}
+
+#[test]
+fn reports_unsupported_bound_matrix_pow_call_result_reads_fixture() {
+    let path = "tests/fixtures/sema/unsupported_bound_matrix_pow_call_result_reads.pine";
+    assert_exact_diagnostic_messages(
+        path,
+        &[
+            "`matrix.pow` argument `power` expects simple int, got const string",
+            "`matrix.get` argument `row` expects simple int, got const string",
+            "`matrix.set` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, and `.copy()`; bind the result or use the namespace helper",
+            "`matrix.sum` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, and `.copy()`; bind the result or use the namespace helper",
+            "`matrix.size` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, and `.copy()`; bind the result or use the namespace helper",
+            "method `pow` is not supported for simple matrix<bool>",
+            "unknown array method `pow`",
+            "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
+        ],
+    );
+    assert_diagnostic_count(path, 8);
+}
+
+#[test]
 fn reports_unsupported_bound_matrix_diff_call_result_reads_fixture() {
     let path = "tests/fixtures/sema/unsupported_bound_matrix_diff_call_result_reads.pine";
     assert_exact_diagnostic_messages(
@@ -6802,10 +6826,9 @@ fn reports_unsupported_bound_matrix_diff_call_result_reads_fixture() {
             "`matrix.size` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, and `.copy()`; bind the result or use the namespace helper",
             "method `diff` is not supported for simple matrix<bool>",
             "unknown array method `diff`",
-            "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
         ],
     );
-    assert_diagnostic_count(path, 8);
+    assert_diagnostic_count(path, 7);
 }
 
 #[test]
@@ -7008,10 +7031,9 @@ fn reports_unsupported_builtin_namespace_matrix_call_result_reads_fixture() {
             "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
-            "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
         ],
     );
-    assert_diagnostic_count(path, 72);
+    assert_diagnostic_count(path, 71);
 }
 
 #[test]
