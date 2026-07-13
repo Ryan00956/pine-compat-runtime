@@ -82,5 +82,7 @@ bool_is_binary = matrix.copy(bool_values).is_binary()
 is_binary_extra_arg = matrix.copy(left).is_binary(0)
 bool_is_diagonal = matrix.copy(bool_values).is_diagonal()
 is_diagonal_extra_arg = matrix.copy(left).is_diagonal(0)
+bool_is_identity = matrix.copy(bool_values).is_identity()
+is_identity_extra_arg = matrix.copy(left).is_identity(0)
 
 plot(close)

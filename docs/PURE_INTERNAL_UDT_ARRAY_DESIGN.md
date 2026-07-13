@@ -1378,6 +1378,13 @@ Recommended future slices:
     and creates no result prefix. Numeric rejection, provenance/dual aliases,
     invalid arity, and terminal continuation are fixture-backed. No UDT/import
     identity or public schema field is added. Done.
+61. The same concrete numeric matrix call-result producer set exposes terminal
+    `.is_identity()`. It requires square shape, exact-one diagonal and exact-
+    zero off-diagonal cells, returns false for every `na`, true for empty 0×0,
+    propagates upstream `na`, and creates no result prefix. Numeric rejection,
+    provenance/dual aliases, invalid arity, and terminal continuation are
+    fixture-backed. No UDT/import identity or public schema field is added.
+    Done.
 
 ## Completion Gate For Future Positive Support
 

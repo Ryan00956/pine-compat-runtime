@@ -577,6 +577,12 @@ Current baseline:
   cells, returns true for empty matrices, propagates upstream `na`, and creates
   no result prefix. Numeric type rejection, provenance/dual aliases, invalid
   arity, and terminal continuation are fixture-backed.
+  The next numeric predicate slice adds terminal `.is_identity()` across the
+  same producer set. It requires square shape, exact-one main-diagonal cells,
+  exact-zero off-diagonal cells, returns false for any `na`, true for empty
+  0×0 matrices, propagates upstream `na`, and creates no result prefix. Numeric
+  rejection, provenance/dual aliases, invalid arity, and terminal continuation
+  are fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

@@ -1262,6 +1262,13 @@ Recommended future slices:
     terminal without a result-prefix transition. Provenance/dual aliases,
     numeric rejection, invalid arity, and terminal continuation are fixture-
     backed.
+65. Numeric matrix call-result identity checks: done for the same concrete
+    float/int producer set. `.is_identity()` requires square shape, exact-one
+    main-diagonal cells, and exact-zero off-diagonal cells; every `na` cell is
+    false, empty 0×0 matrices are true, and upstream `na` matrix results
+    propagate `na`. It returns a simple bool and is terminal without a result-
+    prefix transition. Numeric rejection, provenance/dual aliases, invalid
+    arity, and terminal continuation are fixture-backed.
 
 ## Completion Gate For Future Positive Support
 
