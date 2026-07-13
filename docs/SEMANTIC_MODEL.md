@@ -644,8 +644,10 @@ contract and copy-only continuation after the original receiver resolves to a
 supported matrix kind.
 Exact namespace `matrix.submatrix` also takes the matrix branch, preserves the
 source element kind through `SameAsArg`, and returns an independent half-open
-range with default full bounds and empty row/column slices. Bound
-`matrix_id.submatrix()` results remain generic rejections. Exact namespace
+range with default full bounds and empty row/column slices. Exact bound
+matrix-receiver `matrix_id.submatrix(...)` results share the same five-helper
+contract and copy-only continuation after the original receiver resolves to a
+supported matrix kind. Exact namespace
 `matrix.kron` also takes the matrix branch, resolves to fixed
 `simple matrix<float>` for numeric matrix inputs, expands both dimensions, and
 retains independent storage, `na`, and zero-dimension semantics. Bound
@@ -882,7 +884,7 @@ access, mixed or non-scalar imported array-return identities, conflicting
 identities within one tuple UDT-array slot, direct call-result array methods
 outside the read-only `size`/`get`/`first`/`last`/`copy` set,
 bound matrix-result call-result receivers other than exact matrix-receiver
-`values.copy()`/`values.transpose()`, UDF matrix-result call-result receivers,
+`values.copy()`/`values.transpose()`/`values.submatrix(...)`, UDF matrix-result call-result receivers,
 built-in-qualified/template
 call-result receivers outside the exact static `array.*` allowlist and
 cross-namespace dynamic paths, nested field mutation, UDF

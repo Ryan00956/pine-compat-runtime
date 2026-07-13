@@ -888,8 +888,9 @@ returns independent storage. Exact bound matrix-receiver `values.transpose()`
 results now share those direct helpers and copy-only continuation while other
 bound producers remain gated. Exact namespace `matrix.submatrix(values, ...)` also shares the
 five-helper and element-kind contract, returning an independent half-open range
-with default full bounds and empty row/column slices; bound
-`values.submatrix()` results remain generic rejections. Exact namespace
+with default full bounds and empty row/column slices. Exact bound matrix-receiver
+`values.submatrix(...)` results now share those helpers and copy-only
+continuation after the original receiver type check. Exact namespace
 `matrix.kron(left, right)` returns a fixed `matrix<float>` for numeric matrix
 operands, expands both source dimensions, preserves independent storage, `na`,
 and zero-dimension behavior, and shares only the same five helpers; bound
@@ -1005,7 +1006,7 @@ UDT/import identity. The scalar `map.new<K,V>` and namespace
 `map.copy(existing)` result paths likewise carry only scalar map template
 metadata and no UDT/import identity. Bound or UDF
 matrix-result receivers other than exact matrix-receiver
-`values.copy()`/`values.transpose()`,
+`values.copy()`/`values.transpose()`/`values.submatrix(...)`,
 built-in-qualified
 or template call results outside
 the exact static and dynamic paths, and other

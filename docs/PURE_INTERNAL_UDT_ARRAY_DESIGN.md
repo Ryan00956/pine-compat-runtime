@@ -164,6 +164,10 @@ Item 36 adds exact bound matrix-receiver `values.transpose()` results with the
 same five helpers, preserved element kind, swapped shape, independent backing
 storage, copy-only continuation, and retained other-bound-producer/non-matrix/
 mutation gates.
+Item 37 adds exact bound matrix-receiver `values.submatrix(...)` results with
+the same five helpers, preserved element kind, selected/default/empty half-open
+ranges, independent backing storage, copy-only continuation, and retained
+other-bound-producer/non-matrix/mutation gates.
 Outside the exact static producer sets and these namespace-only paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, and other matrix-returning
@@ -780,7 +784,7 @@ Initial policy:
   non-array/non-UDT results,
   unknown/`na` results without a concrete supported type or identity,
   bound matrix-result receivers other than exact matrix-receiver
-  `values.copy()`/`values.transpose()`, UDF matrix-result receivers,
+  `values.copy()`/`values.transpose()`/`values.submatrix(...)`, UDF matrix-result receivers,
   built-in-qualified/template call
   receivers outside the exact static and dynamic paths, mutation side effects,
   and other direct array or matrix methods on call results remain
@@ -1087,6 +1091,15 @@ Recommended future slices:
     helpers, non-matrix receivers, and the retained bound-submatrix gate are
     fixture-backed. No UDT/import identity or public schema field is added.
     Done.
+37. The exact bound-matrix-submatrix continuation recognizes
+    `values.submatrix(...)` only when `values` resolves to a supported concrete
+    matrix kind. The result retains element kind, selects an independent
+    half-open range including default full and valid empty ranges, and exposes
+    only rows/columns/elements_count/get/copy with copy-only continuation. Five
+    element kinds, nested copy, UDF-contained reads, wrong ranges/indexes,
+    broader helpers, non-matrix receivers, and the retained bound-kron gate are
+    fixture-backed. No UDT/import identity or public schema field is added.
+    Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1151,6 +1164,8 @@ Item 35 adds exact bound matrix-receiver `values.copy()` result reads while
 carrying only the concrete matrix element kind and no UDT/import identity.
 Item 36 adds exact bound matrix-receiver `values.transpose()` result reads with
 the same element-kind-only metadata and no UDT/import identity.
+Item 37 adds exact bound matrix-receiver `values.submatrix(...)` result reads
+with the same element-kind-only metadata and no UDT/import identity.
 Broader UDT element families, bound or UDF
 matrix-result receivers, built-in-qualified/template call-result receivers
 outside the closed paths, unsupported `array.new<T>` templates, non-array/non-UDT results,

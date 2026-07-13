@@ -11,6 +11,5 @@ reverse_result = values.transpose().reverse()
 sum_result = values.transpose().sum()
 size_result = values.transpose().size()
 wrong_receiver = array_values.transpose().rows()
-submatrix_result = values.submatrix().rows()
 
 plot(close)

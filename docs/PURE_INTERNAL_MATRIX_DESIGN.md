@@ -72,6 +72,13 @@ Current evidence:
   for float/int/bool/string/color matrices, row/column swapping, independent
   storage, nested copies, UDF-contained reads, wrong index/helper and non-matrix
   receiver diagnostics, and the retained bound-submatrix gate.
+- `tests/fixtures/runtime/bound_matrix_submatrix_call_result_reads.pine` plus
+  the matching supported/unsupported semantic fixtures cover direct
+  `values.submatrix(...).rows()`/`columns()`/`elements_count()`/`get()`/`copy()`
+  for float/int/bool/string/color matrices, half-open selected/default/empty
+  ranges, independent storage, nested copies, UDF-contained reads, wrong
+  range/index/helper and non-matrix receiver diagnostics, and the retained
+  bound-kron gate.
 - `tests/fixtures/runtime/matrix_float.pine` covers `matrix.new<float>`,
   `matrix.get`, `matrix.set`, `matrix.fill`, `values.fill(value)`,
   `values.get(row, column)`, `values.set(row, column, value)`, `matrix.rows`,
@@ -1022,6 +1029,12 @@ Recommended future slices:
     swapped shape, independent backing storage, copy-only continuation, and
     retained gates for other bound producers, broader helpers, mutation, and
     non-matrix receivers.
+45. Bound matrix-submatrix call results: done for exact supported matrix
+    receivers using `values.submatrix(...)` followed by
+    rows/columns/elements_count/get/copy, with concrete element-kind checks,
+    selected/default/empty half-open ranges, independent backing storage,
+    copy-only continuation, and retained gates for other bound producers,
+    broader helpers, mutation, and non-matrix receivers.
 
 ## Completion Gate For Future Positive Support
 

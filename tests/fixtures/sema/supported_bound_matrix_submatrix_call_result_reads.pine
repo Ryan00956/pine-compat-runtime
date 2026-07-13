@@ -1,0 +1,22 @@
+//@version=6
+indicator("Supported bound matrix.submatrix call-result reads")
+
+submatrixRows(id) => id.submatrix(1, 3, 1, 4).copy().rows()
+
+floats = matrix.new<float>(3, 4, 1.5)
+ints = matrix.new<int>(1, 1, 4)
+bools = matrix.new<bool>(1, 1, true)
+strings = matrix.new<string>(1, 1, "value")
+colors = matrix.new<color>(1, 1, color.red)
+
+int direct_rows = floats.submatrix(1, 3, 1, 4).rows()
+int direct_columns = floats.submatrix(1, 3, 1, 4).columns()
+int direct_elements = floats.submatrix(1, 3, 1, 4).elements_count()
+float direct_get = floats.submatrix(1, 3, 1, 4).get(row=1, column=2)
+matrix<float> nested_copy = floats.submatrix().copy()
+int int_get = ints.submatrix().get(0, 0)
+bool bool_get = bools.submatrix().get(0, 0)
+string string_get = strings.submatrix().get(0, 0)
+color color_get = colors.submatrix().get(0, 0)
+
+plot(direct_rows + direct_columns + direct_elements + direct_get + nested_copy.get(0, 0) + int_get + (bool_get ? 1 : 0) + (string_get == "value" ? 1 : 0) + (color_get == color.red ? 1 : 0) + submatrixRows(floats))
