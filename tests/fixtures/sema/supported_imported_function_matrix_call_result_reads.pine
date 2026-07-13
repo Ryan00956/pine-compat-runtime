@@ -36,5 +36,7 @@ float_is_diagonal = left.exposeMatrixFunction().is_diagonal()
 int_is_diagonal = right.exposeIntMatrixFunction().is_diagonal()
 float_is_identity = left.exposeMatrixFunction().is_identity()
 int_is_identity = right.exposeIntMatrixFunction().is_identity()
+float_is_symmetric = left.exposeMatrixFunction().is_symmetric()
+int_is_symmetric = right.exposeIntMatrixFunction().is_symmetric()
 
-plot(rows + columns + elements + get + copy_chain + int_get + empty + block_return + nested_return + control_flow + dual_alias + nested_copy + float_row.size() + int_row.size() + dual_alias_row + float_col.size() + int_col.size() + dual_alias_col + float_eigenvalues.size() + dual_alias_eigenvalues + (float_is_square ? 1 : 0) + (color_is_square ? 1 : 0) + (float_is_zero ? 1 : 0) + (int_is_zero ? 1 : 0) + (float_is_binary ? 1 : 0) + (int_is_binary ? 1 : 0) + (float_is_diagonal ? 1 : 0) + (int_is_diagonal ? 1 : 0) + (float_is_identity ? 1 : 0) + (int_is_identity ? 1 : 0))
+plot(rows + columns + elements + get + copy_chain + int_get + empty + block_return + nested_return + control_flow + dual_alias + nested_copy + float_row.size() + int_row.size() + dual_alias_row + float_col.size() + int_col.size() + dual_alias_col + float_eigenvalues.size() + dual_alias_eigenvalues + (float_is_square ? 1 : 0) + (color_is_square ? 1 : 0) + (float_is_zero ? 1 : 0) + (int_is_zero ? 1 : 0) + (float_is_binary ? 1 : 0) + (int_is_binary ? 1 : 0) + (float_is_diagonal ? 1 : 0) + (int_is_diagonal ? 1 : 0) + (float_is_identity ? 1 : 0) + (int_is_identity ? 1 : 0) + (float_is_symmetric ? 1 : 0) + (int_is_symmetric ? 1 : 0))

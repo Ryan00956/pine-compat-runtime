@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added terminal `.is_symmetric()` reads to every existing concrete numeric
+  matrix call result. The helper retains the float/int check and ordinary
+  symmetric rule: square shape, exact transposed-pair equality, false for any
+  `na`, and true for empty 0×0 results; upstream `na` matrices propagate `na`.
+  Producer provenance, dual aliases, non-numeric rejection, invalid arity, and
+  terminal continuation are fixture-backed.
 - Added terminal `.is_identity()` reads to every existing concrete numeric
   matrix call result. The helper retains the float/int check and ordinary
   identity rule: square shape, exact-one main diagonal, exact-zero off-

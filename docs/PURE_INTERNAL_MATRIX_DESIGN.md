@@ -1269,6 +1269,13 @@ Recommended future slices:
     propagate `na`. It returns a simple bool and is terminal without a result-
     prefix transition. Numeric rejection, provenance/dual aliases, invalid
     arity, and terminal continuation are fixture-backed.
+66. Numeric matrix call-result symmetric checks: done for the same concrete
+    float/int producer set. `.is_symmetric()` requires square shape and exact
+    equality of transposed pairs; every `na` cell is false, empty 0×0 matrices
+    are true, and upstream `na` matrix results propagate `na`. It returns a
+    simple bool and is terminal without a result-prefix transition. Numeric
+    rejection, provenance/dual aliases, invalid arity, and terminal
+    continuation are fixture-backed.
 
 ## Completion Gate For Future Positive Support
 

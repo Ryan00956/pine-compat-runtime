@@ -504,6 +504,7 @@ fn parses_matrix_copy_result_method_receivers_with_matrix_provenance() {
         "value = matrix.copy(values).is_binary()\n",
         "value = matrix.copy(values).is_diagonal()\n",
         "value = matrix.copy(values).is_identity()\n",
+        "value = matrix.copy(values).is_symmetric()\n",
     ] {
         let parsed = parse(source);
 
@@ -985,6 +986,7 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = matrix.copy(values).is_binary().custom()\n",
         "bad = matrix.copy(values).is_diagonal().custom()\n",
         "bad = matrix.copy(values).is_identity().custom()\n",
+        "bad = matrix.copy(values).is_symmetric().custom()\n",
         "bad = map.keys(values).first().custom()\n",
         "bad = map.new<string, float>().size().custom()\n",
         "bad = map.new<string, float>().get(\"missing\").custom()\n",

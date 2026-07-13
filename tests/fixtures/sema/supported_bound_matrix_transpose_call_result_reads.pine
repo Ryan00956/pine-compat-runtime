@@ -27,5 +27,6 @@ bool direct_is_zero = floats.transpose().is_zero()
 bool direct_is_binary = floats.transpose().is_binary()
 bool direct_is_diagonal = floats.transpose().is_diagonal()
 bool direct_is_identity = floats.transpose().is_identity()
+bool direct_is_symmetric = floats.transpose().is_symmetric()
 
-plot(direct_rows + direct_columns + direct_elements + direct_get + nested_copy.get(0, 0) + int_get + (bool_get ? 1 : 0) + (string_get == "value" ? 1 : 0) + (color_get == color.red ? 1 : 0) + direct_row.size() + direct_col.size() + direct_eigenvalues.size() + (direct_is_square ? 1 : 0) + (direct_is_zero ? 1 : 0) + (direct_is_binary ? 1 : 0) + (direct_is_diagonal ? 1 : 0) + (direct_is_identity ? 1 : 0) + transposeRows(floats))
+plot(direct_rows + direct_columns + direct_elements + direct_get + nested_copy.get(0, 0) + int_get + (bool_get ? 1 : 0) + (string_get == "value" ? 1 : 0) + (color_get == color.red ? 1 : 0) + direct_row.size() + direct_col.size() + direct_eigenvalues.size() + (direct_is_square ? 1 : 0) + (direct_is_zero ? 1 : 0) + (direct_is_binary ? 1 : 0) + (direct_is_diagonal ? 1 : 0) + (direct_is_identity ? 1 : 0) + (direct_is_symmetric ? 1 : 0) + transposeRows(floats))
