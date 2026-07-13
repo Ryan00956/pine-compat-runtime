@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal top-level `.remove(index)` to every concrete array call result.
+  It removes and returns the selected positive or in-range negative element
+  with preserved scalar/object/`chart.point` kind or same-local/same-imported
+  scalar-tree UDT identity. Explicit `na` indexes and upstream-`na` receivers
+  return `na` without mutation; out-of-range indexes retain runtime errors.
+  Alias-returning concat/local/imported function or method results and nested
+  live slices delete from their backing parent; fresh matrix/map/`matrix.mult`
+  snapshots remain independent. Index type/arity, terminal continuation, and
+  UDF-side-effect boundaries are fixture-backed; public schemas are unchanged.
 - Added terminal top-level `.shift()` to every concrete array call result. It
   removes and returns the first resolved scalar/object/`chart.point` or same-
   local/same-imported scalar-tree UDT element, preserves concrete UDT identity

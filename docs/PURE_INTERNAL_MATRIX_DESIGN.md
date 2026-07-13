@@ -1668,6 +1668,16 @@ Recommended future slices:
     result-type-directed array dispatch. UDF-body and all remaining postfix
     mutations stay rejected, while matrix-valued continuation and public
     schemas are unchanged.
+116. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.remove(index)`. It removes and returns the selected positive or in-range
+    negative scalar from only the fresh array snapshot and preserves remaining
+    order. Explicit `na` indexes and upstream-`na` results return `na` without
+    mutation; out-of-range indexes retain runtime errors. The source matrix is
+    unchanged, and namespace/bound vector-multiplication paths retain result-
+    type-directed array dispatch. UDF-body and all remaining postfix mutations
+    stay rejected, while matrix-valued continuation and public schemas remain
+    unchanged.
 
 ## Completion Gate For Future Positive Support
 

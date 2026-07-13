@@ -1915,6 +1915,12 @@ plot(array.remove(values, 0))
 "#,
         "array index 0 is out of bounds for array of size 0",
     );
+    assert_array_bounds_error(
+        r#"indicator("array call-result remove bounds")
+plot(array.from(10, 20, 30).remove(3))
+"#,
+        "array index 3 is out of bounds for array of size 3",
+    );
 }
 
 #[test]

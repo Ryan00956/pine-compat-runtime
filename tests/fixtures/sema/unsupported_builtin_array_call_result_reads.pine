@@ -25,6 +25,9 @@ badPop(values) =>
 badShift(values) =>
     array.copy(values).shift()
     array.size(values)
+badRemove(values) =>
+    array.copy(values).remove(0)
+    array.size(values)
 
 first_values = array.from(First.new(10.0, 100.0))
 second_values = array.from(Second.new(200.0, 20.0))
@@ -40,6 +43,9 @@ array.concat(first_values, array.from(First.new(13.0, 130.0))).clear(1)
 array.concat(first_values, array.from(First.new(13.0, 130.0))).reverse(1)
 pop_extra_arg = array.concat(first_values, array.from(First.new(13.0, 130.0))).pop(1)
 shift_extra_arg = array.concat(first_values, array.from(First.new(13.0, 130.0))).shift(1)
+remove_bad_index = array.concat(first_values, array.from(First.new(13.0, 130.0))).remove("bad")
+remove_missing_index = array.concat(first_values, array.from(First.new(13.0, 130.0))).remove()
+remove_extra_arg = array.concat(first_values, array.from(First.new(13.0, 130.0))).remove(0, 1)
 
 mixed_from = array.from(First.new(14.0, 140.0), Second.new(150.0, 15.0)).copy()
 mixed_concat = array.concat(first_values, second_values).copy()
@@ -215,3 +221,4 @@ clear_inside_udf = badClear(array.from(1, 2))
 reverse_inside_udf = badReverse(array.from(1, 2))
 pop_inside_udf = badPop(array.from(1, 2))
 shift_inside_udf = badShift(array.from(1, 2))
+remove_inside_udf = badRemove(array.from(1, 2))

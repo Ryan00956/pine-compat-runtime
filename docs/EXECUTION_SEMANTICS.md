@@ -830,7 +830,7 @@ marks the receiver with `$builtin_array_result`; only `.size()`, `.get(index)`,
 `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.includes(value)`, `.indexof(value)`, and
 `.lastindexof(value)`, plus bool/int/float-only `.every()`/`.some()` and numeric-only `.binary_search(value)` and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)` and
-`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`, are admitted after it. The lexical prefix
+`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`, are admitted after it. The lexical prefix
 `array` is reserved for built-in producer recognition, so a user or import
 qualifier named `array` cannot use this qualified call-result path.
 Only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()`, numeric `.standardize()`, and numeric-or-string `.sort_indices(order?)` return arrays
@@ -847,6 +847,10 @@ Terminal `.pop()` also accepts no explicit arguments and is UDF-rejected, but
 returns the removed receiver-typed final element (or `na`) before terminating.
 Terminal `.shift()` has the same return typing and gates while removing the
 first element and retaining the relative order of the remaining elements.
+Terminal `.remove(index)` accepts one simple-int-compatible index and returns
+the selected removed element. Explicit `na` indexes return `na` without
+mutation, negative indexes and out-of-range errors retain ordinary semantics,
+and the result cannot continue.
 
 Analysis then fails closed unless the producer arguments resolve to the exact
 supported array kind and, for UDT arrays, one concrete same-local or
@@ -869,8 +873,8 @@ UDT-array returns, unsupported or unknown templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, other
 `array.*` producer/member calls, built-in namespaces and templates outside the
 exact cross-namespace producer set below,
-postfix helpers outside the thirty-five-item read/copy/search/transform/aggregate/mutation set, and postfix
-mutation other than `.clear()`/`.reverse()`/`.pop()`/`.shift()` remain unsupported boundaries.
+postfix helpers outside the thirty-six-item read/copy/search/transform/aggregate/mutation set, and postfix
+mutation other than `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)` remain unsupported boundaries.
 The first/last index readers reuse ordinary element-kind, concrete UDT-identity, and
 structural/object equality rules. `.indexof(value)` returns the first
 zero-based match and `.lastindexof(value)` returns the last, both as
@@ -1026,6 +1030,10 @@ and UDF boundaries, removes the final value, and returns it with the resolved
 element kind and UDT identity. Empty and upstream-`na` results return `na`.
 Terminal top-level `.shift()` follows those boundaries, removes and returns the
 first resolved value, and preserves the order of the remaining values.
+Terminal top-level `.remove(index)` follows those identity and storage
+boundaries for the selected positive or in-range negative index. An explicit
+`na` index or upstream-`na` receiver returns `na` without mutation; out-of-range
+indexes retain the ordinary runtime error.
 
 The same `$builtin_array_result` lowering now has one additional exact set of
 seven fixed cross-namespace producers: `str.split`, `ta.pivot_point_levels`,
@@ -1035,8 +1043,8 @@ Each admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`, `.s
 `.every()`/`.some()`, and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
-`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, all-scalar terminal `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`; only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()`, numeric `.standardize()`, and numeric-or-string `.sort_indices(order?)` can continue with another allowed array chain. The other
-twenty-eight value results and the two `void` mutations are terminal. `str.split` and
+`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, all-scalar terminal `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`; only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()`, numeric `.standardize()`, and numeric-or-string `.sort_indices(order?)` can continue with another allowed array chain. The other
+twenty-nine value results and the two `void` mutations are terminal. `str.split` and
 `ta.pivot_point_levels` retain their
 existing `array<string>` and `array<float>` results. `matrix.row` and
 `matrix.col` return independent element-array snapshots for runtime-owned
@@ -1073,9 +1081,9 @@ switch to the closed `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
 `.includes(value)`/`.indexof(value)`/`.lastindexof(value)`/
 `.every()`/`.some()`/`.binary_search(value)`/`.binary_search_leftmost(value)` array-result path,
 plus `.binary_search_rightmost(value)`, `.abs()`, and
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`/`.sort_indices(order?)`/`.join(separator?)`/`.pop()`/`.shift()`, where array
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`/`.sort_indices(order?)`/`.join(separator?)`/`.pop()`/`.shift()`/`.remove(index)`, where array
 `.copy()`, numeric `.abs()` and `.standardize()`, and numeric-or-string
-`.sort_indices(order?)` continue and the other twenty-eight value results
+`.sort_indices(order?)` continue and the other twenty-nine value results
 are terminal.
 `.is_square()`
 instead

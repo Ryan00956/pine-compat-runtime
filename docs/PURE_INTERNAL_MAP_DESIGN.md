@@ -583,6 +583,15 @@ Recommended future slices:
     Direct call-result mutation inside UDFs and all remaining postfix mutations
     stay rejected. Map storage, templates, and public schemas are unchanged.
     Done.
+46. Every concrete scalar key/value snapshot additionally exposes terminal
+    top-level `.remove(index)`. It removes and returns the selected positive or
+    in-range negative insertion-order key/value from only the fresh snapshot,
+    preserving its scalar kind and remaining order. Explicit `na` indexes and
+    typed-`na` map results return `na` without mutation; out-of-range indexes
+    retain runtime errors. The source map and insertion order remain unchanged.
+    Direct call-result mutation inside UDFs and all remaining postfix mutations
+    stay rejected. Map storage, templates, and public schemas are unchanged.
+    Done.
 
 ## Completion Gate For Future Widening
 

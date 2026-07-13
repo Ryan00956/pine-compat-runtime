@@ -594,6 +594,10 @@ with the receiver-derived scalar/object/`chart.point` kind or concrete local/
 imported UDT identity. It is also a UDF-rejected mutation and cannot continue.
 Terminal top-level `.shift()` has the same typing and rejection boundaries,
 but removes the first element and preserves the order of the remainder.
+Terminal top-level `.remove(index)` preserves that element typing for the
+selected positive or in-range negative index. It requires a simple-int-
+compatible index, returns `na` without mutation for explicit `na`, preserves
+ordinary out-of-range runtime errors, and cannot continue.
 The transforming `.slice(index_from, index_to)` preserves the receiver's
 element kind and concrete UDT identity and returns the ordinary shallow live
 parent window, so the result may continue through the same closed helper set.
@@ -617,14 +621,14 @@ those receivers with `$builtin_array_result`, and semantic analysis admits only
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)`, plus
 bool/int/float-only `.every()`/`.some()` and numeric-only `.binary_search(value)`, `.binary_search_leftmost(value)`,
 `.binary_search_rightmost(value)`, `.abs()`, and
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`, after them. Only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()` and
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`, after them. Only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()` and
 `.standardize()`, and numeric-or-string `.sort_indices(order?)` produce array
 receivers that may continue; the reads/searches
 are terminal and cannot continue into a user method or any other call-result
 method, including a method on a returned scalar UDT element. `.clear()`,
-`.reverse()`, `.pop()`, and `.shift()` are the four admitted mutations; the
-first two return `void`, the latter two return the removed element, and none
-can continue.
+`.reverse()`, `.pop()`, `.shift()`, and `.remove(index)` are the five admitted
+mutations; the first two return `void`, the latter three return the removed
+element, and none can continue.
 `array` is reserved as the built-in lexical prefix for this path; a qualified
 user or import alias with that spelling cannot use call-result dispatch.
 
@@ -636,10 +640,10 @@ admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)`, plus
 bool/int/float-only `.every()`/`.some()` and numeric-only `.binary_search(value)`, `.binary_search_leftmost(value)`,
 `.binary_search_rightmost(value)`, `.abs()`, and
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, all-scalar terminal `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`; only
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, all-scalar terminal `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`; only
 `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()` and `.standardize()`, and numeric-or-string
 `.sort_indices(order?)` return array receivers eligible for another allowed
-chain. The twenty-eight value results and the two `void` mutations are
+chain. The twenty-nine value results and the two `void` mutations are
 terminal. Return
 kinds stay
 producer-specific: `array<string>` for `str.split`, `array<float>` for
@@ -664,7 +668,7 @@ and array-by-array overloads resolve to `array<float>` and admit `.size()`,
 `.get(index)`, `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.includes(value)`,
 `.indexof(value)`, `.lastindexof(value)`, `.every()`, `.some()`, `.binary_search(value)`,
 `.binary_search_leftmost(value)`, `.binary_search_rightmost(value)`, and
-`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`/`.sort_indices(order?)` plus terminal `.join(separator?)`, `.clear()`, `.reverse()`, `.pop()`, and `.shift()`; `.slice(...)` preserves the array-valued overload and switches to the array-result prefix.
+`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`/`.sort_indices(order?)` plus terminal `.join(separator?)`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, and `.remove(index)`; `.slice(...)` preserves the array-valued overload and switches to the array-result prefix.
 Matrix-by-matrix,
 matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
 `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
@@ -682,7 +686,7 @@ numeric-matrix parameter check. All three switch to the array-result prefix and
 admit `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.slice(index_from, index_to)`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)`/`.every()`/`.some()`/`.binary_search(value)`/
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`/`.join(separator?)` terminal reads plus transforming `.standardize()` and `.sort_indices(order?)` and terminal `.clear()`/`.reverse()`/`.pop()`/`.shift()`, with copy/slice/abs/standardize/sort_indices array continuation and terminal read/search/aggregate/mutation checks.
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`/`.join(separator?)` terminal reads plus transforming `.standardize()` and `.sort_indices(order?)` and terminal `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`, with copy/slice/abs/standardize/sort_indices array continuation and terminal read/search/aggregate/mutation checks.
 `.is_square()` retains the ordinary `MATRIX_ANY_ID_PARAMS`
 signature and `simple bool` return, accepts every supported concrete matrix
 kind, and is terminal without changing the parser marker. `.is_zero()` retains
@@ -909,9 +913,9 @@ use the existing pure user-method dispatch, and explicit same-named local
 methods and imported functions remain distinct. Other `array.*` calls,
 built-in namespaces and templates outside the seven fixed producers plus the
 result-type-checked namespace `matrix.mult` paths, helpers beyond the applicable
-thirty-five-item postfix read/copy/search/transform/aggregate/mutation set, non-array/non-
+thirty-six-item postfix read/copy/search/transform/aggregate/mutation set, non-array/non-
 matrix/non-UDT results, unknown/`na` results without a concrete supported type
-or identity, and postfix mutation other than `.clear()`/`.reverse()`/`.pop()`/`.shift()` remain outside this subset. A postfix read
+or identity, and postfix mutation other than `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)` remain outside this subset. A postfix read
 does not make a mutating producer pure:
 `array.concat(...).size()` still mutates the first concat input and is rejected
 inside UDFs. `.includes(value)` reuses the ordinary array element-kind and UDT-

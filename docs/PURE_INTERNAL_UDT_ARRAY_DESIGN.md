@@ -2003,6 +2003,15 @@ cannot continue. Alias-returning concat/UDF/method results shrink shared
 backing, nested slices delete the first live-window element from their parent,
 and fresh matrix/map/`matrix.mult` snapshots leave sources unchanged. UDF-body
 and all remaining postfix mutations stay rejected.
+Item 112 adds terminal top-level `.remove(index)` across that producer set. It
+accepts one simple-int-compatible index, removes and returns the selected
+positive or in-range negative scalar, drawing-id, `chart.point`, same-local
+UDT, or same-imported UDT element with preserved kind/identity, and cannot
+continue. Explicit `na` indexes and upstream-`na` receivers return `na` without
+mutation; out-of-range indexes retain runtime errors. Alias-returning concat/
+UDF/method results and nested slices delete from shared parent backing, while
+fresh matrix/map/`matrix.mult` snapshots leave sources unchanged. UDF-body and
+all remaining postfix mutations stay rejected.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

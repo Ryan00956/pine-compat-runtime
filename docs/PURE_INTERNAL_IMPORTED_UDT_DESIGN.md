@@ -1615,3 +1615,13 @@ return/parameter flow remains deferred.
     map/`matrix.mult` snapshots remain source-independent. UDF-body and all
     remaining direct mutations stay rejected. No imported identity or public
     schema field is widened. Done.
+102. The same producer set additionally exposes terminal top-level
+    `.remove(index)`. It accepts one simple-int-compatible index, removes and
+    returns the selected positive or in-range negative scalar/object/
+    `chart.point` or concrete imported UDT element, and cannot continue.
+    Explicit `na` indexes and upstream-`na` receivers return `na` without
+    mutation; out-of-range indexes retain runtime errors. Imported/local alias
+    results and nested slices delete from shared backing, while fresh matrix/
+    map/`matrix.mult` snapshots remain source-independent. UDF-body and all
+    remaining direct mutations stay rejected. No imported identity or public
+    schema field is widened. Done.

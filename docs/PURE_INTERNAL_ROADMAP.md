@@ -478,6 +478,14 @@ Current baseline:
   while fresh matrix/map/mult snapshots leave sources unchanged. Invalid arity,
   UDF-side-effect, and element-identity boundaries are fixture-backed; remaining
   direct mutations stay gated and public schemas are unchanged.
+  The indexed terminal element-mutation slice adds top-level `.remove(index)`
+  across the same producer set. It removes and returns the selected positive or
+  in-range negative scalar/object/`chart.point` or concrete local/imported UDT
+  element. Explicit `na` indexes and upstream-`na` receivers return `na` without
+  mutation; out-of-range indexes retain runtime errors. Alias results and nested
+  live slices delete from their backing parent, while fresh matrix/map/mult
+  snapshots leave sources unchanged. Index type/arity, UDF-side-effect, and
+  identity boundaries are fixture-backed; public schemas are unchanged.
   The following closed slice admits exact
   `matrix.new<float|int|bool|string|color>` template results. They preserve the
   registered element kind, requested rectangular shape, type-compatible
