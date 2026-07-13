@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added terminal `.is_binary()` reads to every existing concrete numeric
+  matrix call result. The helper retains the float/int type check and ordinary
+  strict 0-or-1 rules: binary and zero-element results are true, another value
+  or `na` cell is false, and an upstream `na` matrix result propagates `na`.
+  Namespace/bound operations, exact numeric templates, local/imported function
+  and method provenance, dual aliases, non-numeric rejection, invalid arity,
+  and terminal continuation are fixture-backed.
 - Added terminal `.is_zero()` reads to every existing concrete numeric matrix
   call result. The helper retains the float/int matrix check and ordinary
   zero-value rules: all-zero and zero-element results are true, a nonzero or

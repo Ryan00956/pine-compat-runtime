@@ -54,5 +54,7 @@ float_is_square = anchor.expose().is_square()
 string_is_square = anchor.exposeString().is_square()
 float_is_zero = anchor.expose().is_zero()
 int_is_zero = anchor.exposeInt().is_zero()
+float_is_binary = anchor.expose().is_binary()
+int_is_binary = anchor.exposeInt().is_binary()
 
-plot(rows + columns + elements + get + copy_chain + int_get + empty + block_return + nested_return + control_flow + qualified + constructor_receiver + nested_copy + float_row.size() + int_row.size() + bool_row.size() + string_row.size() + color_row.size() + float_col.size() + int_col.size() + bool_col.size() + string_col.size() + color_col.size() + float_eigenvalues.size() + int_eigenvalues.size() + (float_is_square ? 1 : 0) + (string_is_square ? 1 : 0) + (float_is_zero ? 1 : 0) + (int_is_zero ? 1 : 0))
+plot(rows + columns + elements + get + copy_chain + int_get + empty + block_return + nested_return + control_flow + qualified + constructor_receiver + nested_copy + float_row.size() + int_row.size() + bool_row.size() + string_row.size() + color_row.size() + float_col.size() + int_col.size() + bool_col.size() + string_col.size() + color_col.size() + float_eigenvalues.size() + int_eigenvalues.size() + (float_is_square ? 1 : 0) + (string_is_square ? 1 : 0) + (float_is_zero ? 1 : 0) + (int_is_zero ? 1 : 0) + (float_is_binary ? 1 : 0) + (int_is_binary ? 1 : 0))

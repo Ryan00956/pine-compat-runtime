@@ -563,6 +563,14 @@ Current baseline:
   provenance, dual aliases, non-numeric rejection, invalid arity, and terminal
   continuation are fixture-backed; remaining broader helpers and mutation stay
   gated.
+  The next numeric predicate slice adds terminal `.is_binary()` across the
+  same float/int producer set. It preserves the exact 0-or-1 test, true empty-
+  matrix result, false non-binary/`na`-cell results, upstream-`na` propagation,
+  simple-bool return, and no-prefix terminal behavior. Namespace/bound
+  operations, exact numeric templates, local/imported function and method
+  provenance, dual aliases, non-numeric rejection, invalid arity, and terminal
+  continuation are fixture-backed; other broader helpers and mutation remain
+  gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

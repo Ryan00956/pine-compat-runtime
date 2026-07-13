@@ -78,5 +78,7 @@ bool_eigenvalues = matrix.copy(bool_values).eigenvalues()
 is_square_extra_arg = matrix.copy(left).is_square(0)
 bool_is_zero = matrix.copy(bool_values).is_zero()
 is_zero_extra_arg = matrix.copy(left).is_zero(0)
+bool_is_binary = matrix.copy(bool_values).is_binary()
+is_binary_extra_arg = matrix.copy(left).is_binary(0)
 
 plot(close)

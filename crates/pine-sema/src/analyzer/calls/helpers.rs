@@ -137,6 +137,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "eigenvalues" => Some("matrix.eigenvalues"),
         "is_square" => Some("matrix.is_square"),
         "is_zero" => Some("matrix.is_zero"),
+        "is_binary" => Some("matrix.is_binary"),
         _ => None,
     }
 }
@@ -602,6 +603,7 @@ mod tests {
             ("eigenvalues", "matrix.eigenvalues"),
             ("is_square", "matrix.is_square"),
             ("is_zero", "matrix.is_zero"),
+            ("is_binary", "matrix.is_binary"),
         ] {
             assert_eq!(
                 matrix_call_result_builtin_name(method_name),

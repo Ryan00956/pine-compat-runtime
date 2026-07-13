@@ -1246,6 +1246,14 @@ Recommended future slices:
     Namespace/bound operations, exact numeric templates, local/imported
     functions and methods, dual aliases, non-numeric rejection, invalid arity,
     and terminal continuation are fixture-backed.
+63. Numeric matrix call-result binary checks: done for the same concrete
+    float/int producer set. `.is_binary()` reuses the strict 0-or-1 rule,
+    including true zero-element results, false other or `na` cells, and `na`
+    propagation from an upstream `na` matrix result. It returns a simple bool
+    and is terminal without a result-prefix transition. Namespace/bound
+    operations, exact numeric templates, local/imported functions and methods,
+    dual aliases, non-numeric rejection, invalid arity, and terminal
+    continuation are fixture-backed.
 
 ## Completion Gate For Future Positive Support
 

@@ -501,6 +501,7 @@ fn parses_matrix_copy_result_method_receivers_with_matrix_provenance() {
         "value = matrix.copy(values).copy().get(0, 0)\n",
         "value = matrix.copy(values).is_square()\n",
         "value = matrix.copy(values).is_zero()\n",
+        "value = matrix.copy(values).is_binary()\n",
     ] {
         let parsed = parse(source);
 
@@ -979,6 +980,7 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = matrix.mult(values, other).eigenvalues().size().custom()\n",
         "bad = matrix.copy(values).is_square().custom()\n",
         "bad = matrix.copy(values).is_zero().custom()\n",
+        "bad = matrix.copy(values).is_binary().custom()\n",
         "bad = map.keys(values).first().custom()\n",
         "bad = map.new<string, float>().size().custom()\n",
         "bad = map.new<string, float>().get(\"missing\").custom()\n",

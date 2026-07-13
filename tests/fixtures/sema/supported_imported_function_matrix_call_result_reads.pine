@@ -30,5 +30,7 @@ float_is_square = left.exposeMatrixFunction().is_square()
 color_is_square = left.exposeColorMatrixFunction().is_square()
 float_is_zero = left.exposeMatrixFunction().is_zero()
 int_is_zero = right.exposeIntMatrixFunction().is_zero()
+float_is_binary = left.exposeMatrixFunction().is_binary()
+int_is_binary = right.exposeIntMatrixFunction().is_binary()
 
-plot(rows + columns + elements + get + copy_chain + int_get + empty + block_return + nested_return + control_flow + dual_alias + nested_copy + float_row.size() + int_row.size() + dual_alias_row + float_col.size() + int_col.size() + dual_alias_col + float_eigenvalues.size() + dual_alias_eigenvalues + (float_is_square ? 1 : 0) + (color_is_square ? 1 : 0) + (float_is_zero ? 1 : 0) + (int_is_zero ? 1 : 0))
+plot(rows + columns + elements + get + copy_chain + int_get + empty + block_return + nested_return + control_flow + dual_alias + nested_copy + float_row.size() + int_row.size() + dual_alias_row + float_col.size() + int_col.size() + dual_alias_col + float_eigenvalues.size() + dual_alias_eigenvalues + (float_is_square ? 1 : 0) + (color_is_square ? 1 : 0) + (float_is_zero ? 1 : 0) + (int_is_zero ? 1 : 0) + (float_is_binary ? 1 : 0) + (int_is_binary ? 1 : 0))

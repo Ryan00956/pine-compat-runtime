@@ -1363,6 +1363,14 @@ Recommended future slices:
     dual aliases, non-numeric rejection, invalid arity, and terminal
     continuation are fixture-backed. No UDT/import identity or public schema
     field is added. Done.
+59. The same concrete numeric matrix call-result producer set exposes terminal
+    `.is_binary()`. It retains the float/int type check and ordinary strict
+    0-or-1, zero-element, `na`-cell, and upstream-`na` rules, returns a simple
+    bool, and creates no result prefix. Namespace/bound operations, exact
+    numeric templates, local/imported function and method provenance, dual
+    aliases, non-numeric rejection, invalid arity, and terminal continuation
+    are fixture-backed. No UDT/import identity or public schema field is added.
+    Done.
 
 ## Completion Gate For Future Positive Support
 
