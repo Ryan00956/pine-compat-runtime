@@ -911,6 +911,12 @@ Current baseline:
   propagates an upstream `na` array, and leaves the source unchanged. String,
   color, object, chart-point, UDT, extra-arity, and terminal-continuation
   boundaries are fixture-backed.
+  The paired predicate slice adds terminal `.some()` across the same concrete
+  bool/int/float result-source families. It shares the truthiness rules but
+  returns true when any nonzero numeric or `true` element exists, treats zero,
+  `false`, and element `na` as nonsatisfying, returns false for empty arrays,
+  propagates upstream `na`, leaves the source unchanged, and retains the same
+  invalid-type/arity, UDT, and terminal-continuation boundaries.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -928,7 +934,7 @@ Remaining internal work:
   returns, conflicting identities within one tuple slot, direct helpers beyond
   the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
   `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus bool/int/float-
-  only `.every()` and numeric-only
+  only `.every()`/`.some()` and numeric-only
   `.binary_search(value)`/`.binary_search_leftmost(value)`/
   `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/
   `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)` set, the int/float/string-only `.sort_indices(order?)` call-result transformation with its retained UDT-binding boundary, and

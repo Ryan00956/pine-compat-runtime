@@ -422,6 +422,10 @@ qualified_import_every = left.direct(array.from(60, 61, 62)).every()
 local_bool_every = localIdentity(array.from(true, false)).every()
 local_int_every = localIdentity(array.from(10, 11, 12)).copy().every()
 local_float_every = localIdentity(array.from(20.0, na, 22.0)).every()
+qualified_import_some = left.direct(array.from(0, 61, 0)).some()
+local_bool_some = localIdentity(array.from(false, true)).some()
+local_int_some = localIdentity(array.from(0, 11, 0)).copy().some()
+local_float_some = localIdentity(array.from(0.0, na, 0.0)).some()
 plot(qualified_import_size)
 plot(qualified_import_get)
 plot(qualified_import_last)
@@ -448,6 +452,7 @@ plot(qualified_import_variance == 2.0 / 3.0 and local_int_variance == 1.0 and lo
 plot(qualified_import_stdev == array.stdev(array.from(60, 61, 62)) and local_int_stdev == 1.0 and local_float_stdev == 1.0 ? 1 : 0)
 plot(qualified_import_sort_indices.get(0) == 0 and qualified_import_sort_indices.get(1) == 2 and qualified_import_sort_indices.get(2) == 1 and local_int_sort_indices.get(0) == 1 and local_int_sort_indices.get(1) == 2 and local_int_sort_indices.get(2) == 0 and local_float_sort_indices.get(0) == 2 and local_float_sort_indices.get(1) == 0 and local_float_sort_indices.get(2) == 1 and local_string_sort_indices.get(0) == 2 and local_string_sort_indices.get(1) == 0 and local_string_sort_indices.get(2) == 1 ? 1 : 0)
 plot(qualified_import_every and not local_bool_every and local_int_every and not local_float_every ? 1 : 0)
+plot(qualified_import_some and local_bool_some and local_int_some and not local_float_some ? 1 : 0)
 
 historical_return = left.direct(left_first_values)[1]
 historical_item = array.first(historical_return)

@@ -165,6 +165,7 @@ fn rejects_extended_array_helper_rows_without_namespace_result_fixture_set() {
         [..BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES.len() - 1];
     for feature in [
         "array.every",
+        "array.some",
         "array.binary_search_leftmost",
         "array.binary_search_rightmost",
         "array.abs",

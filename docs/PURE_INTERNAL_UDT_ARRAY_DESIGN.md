@@ -345,6 +345,11 @@ across the closed producer families. Nonzero numerics and `true` are truthy;
 zero, `false`, and element `na` are false. Empty results return true, upstream
 `na` propagates, the source remains unchanged, and the result cannot continue.
 String/color/object/chart-point/UDT and extra-arity boundaries remain closed.
+Item 105 adds terminal `.some()` across the same concrete bool/int/float
+result families. It returns true for any nonzero numeric or `true` element,
+treats zero, `false`, and element `na` as nonsatisfying, returns false for an
+empty array, propagates upstream `na`, leaves the source unchanged, and retains
+the same unsupported-kind, extra-arity, and terminal-continuation boundaries.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1934,6 +1939,12 @@ truthy and zero, `false`, or element `na` as false, returns true for empty
 arrays, propagates upstream `na`, leaves the source unchanged, and cannot
 continue. String/color/object/chart-point/UDT and extra-arity boundaries remain
 closed.
+Item 105 adds terminal `.some()` across the same concrete bool/int/float static,
+cross-namespace, matrix/map-derived, and local/imported result producers. It
+returns true when any nonzero numeric or `true` element exists, treats zero,
+`false`, and element `na` as nonsatisfying, returns false for empty arrays,
+propagates upstream `na`, leaves sources unchanged, and retains the same
+unsupported-kind, extra-arity, UDT, and terminal-continuation boundaries.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

@@ -1559,3 +1559,9 @@ return/parameter flow remains deferred.
     return true, upstream `na` propagates, and the source remains unchanged.
     String/color/object/chart-point/imported-UDT, extra-arity, and terminal-
     continuation boundaries remain closed. Done.
+95. The same concrete bool/int/float result families expose terminal `.some()`.
+    It returns true when any nonzero numeric or `true` element exists, treats
+    zero, `false`, and element `na` as nonsatisfying, returns false for empty
+    arrays, propagates upstream `na`, leaves sources unchanged, and retains the
+    same unsupported-kind, extra-arity, imported-UDT, and terminal-continuation
+    boundaries. Done.

@@ -531,6 +531,13 @@ Recommended future slices:
     propagate `na`, and both the source map and snapshot remain unchanged.
     String/color, extra-arity, and terminal-continuation boundaries remain
     closed. Map storage and template rules are unchanged. Done.
+39. The same bool/int/float key/value snapshots additionally expose terminal
+    `.some()`. It returns true when any nonzero numeric or `true` element
+    exists, treats zero, `false`, and element `na` as nonsatisfying, returns
+    false for empty snapshots, propagates typed-`na` maps, leaves the map and
+    snapshot unchanged, and retains string/color, extra-arity, and terminal-
+    continuation boundaries. Map storage and template rules are unchanged.
+    Done.
 
 ## Completion Gate For Future Widening
 

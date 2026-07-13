@@ -1611,6 +1611,13 @@ Recommended future slices:
     and sources remain unchanged. String/color, extra-arity, and terminal-
     continuation boundaries remain closed; matrix-valued continuation is
     unchanged.
+109. The same bool/int/float row/column, eigenvalue, and array-returning
+    `matrix.mult` result families additionally expose terminal `.some()`. It
+    returns true when any nonzero numeric or `true` element exists, treats
+    zero, `false`, and element `na` as nonsatisfying, returns false for empty
+    arrays, propagates upstream `na`, leaves sources unchanged, and retains
+    string/color, extra-arity, and terminal-continuation boundaries. Matrix-
+    valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

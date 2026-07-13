@@ -69,6 +69,7 @@ mod tests {
             ("copy", "array.copy"),
             ("includes", "array.includes"),
             ("every", "array.every"),
+            ("some", "array.some"),
             ("indexof", "array.indexof"),
             ("lastindexof", "array.lastindexof"),
             ("binary_search", "array.binary_search"),

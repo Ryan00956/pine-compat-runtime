@@ -801,7 +801,7 @@ results and unqualified plain local UDF results support direct `.size()`,
 `.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`,
 `.indexof(value)`, and `.lastindexof(value)` calls when the result is any
 currently supported array kind. Bool/int/float results additionally support
-terminal `.every()`. Numeric `array<int>` and `array<float>` results
+terminal `.every()` and `.some()`. Numeric `array<int>` and `array<float>` results
 additionally support terminal `.binary_search(value)` and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`,
 terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`, plus non-mutating `.abs()` and `.standardize()` transformation chains that
@@ -824,14 +824,14 @@ same-local/same-imported scalar-tree UDT source templates reach that path
 through their canonical constructor or checked UDT-template form. The parser
 marks the receiver with `$builtin_array_result`; only `.size()`, `.get(index)`,
 `.first()`, `.last()`, `.copy()`, `.includes(value)`, `.indexof(value)`, and
-`.lastindexof(value)`, plus bool/int/float-only `.every()` and numeric-only `.binary_search(value)` and
+`.lastindexof(value)`, plus bool/int/float-only `.every()`/`.some()` and numeric-only `.binary_search(value)` and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)` and
 `.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, are admitted after it. The lexical prefix
 `array` is reserved for built-in producer recognition, so a user or import
 qualifier named `array` cannot use this qualified call-result path.
 Only `.copy()`, numeric `.abs()`, numeric `.standardize()`, and numeric-or-string `.sort_indices(order?)` return arrays
 that may continue through another allowed step. The terminal `.size()`, `.get()`, `.first()`, `.last()`,
-`.includes()`, `.every()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, and
+`.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, and
 `.binary_search_leftmost()`/`.binary_search_rightmost()`/`.min()`/`.max()`/
 `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)` results cannot continue
 into a user method or any other call-result method,
@@ -858,7 +858,7 @@ UDT-array returns, unsupported or unknown templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, other
 `array.*` producer/member calls, built-in namespaces and templates outside the
 exact cross-namespace producer set below,
-postfix helpers outside the twenty-eight-item read/copy/search/transform/aggregate set, and postfix
+postfix helpers outside the twenty-nine-item read/copy/search/transform/aggregate set, and postfix
 mutation remain unsupported boundaries.
 The first/last index readers reuse ordinary element-kind, concrete UDT-identity, and
 structural/object equality rules. `.indexof(value)` returns the first
@@ -871,6 +871,11 @@ treated as false. Empty arrays return true, upstream `na` arrays propagate,
 the source is not mutated, and the scalar result is terminal. String, color,
 drawing/object, chart-point, and UDT results plus extra arguments remain
 rejected.
+Bool/int/float-only `.some()` shares the same truthiness and fixed `series bool`
+contract, but succeeds when any nonzero numeric or `true` element exists.
+Zero, `false`, and element `na` do not satisfy it; empty arrays return false,
+upstream `na` arrays propagate, the source remains unchanged, and the result is
+terminal. The same unsupported receiver kinds and extra-arity boundary apply.
 Numeric-only `.binary_search(value)` retains the ordinary numeric-array
 receiver and numeric-value checks. The caller supplies ascending contents; the
 runtime performs an exact lower-bound search, so duplicate matches return the
@@ -999,11 +1004,11 @@ seven fixed cross-namespace producers: `str.split`, `ta.pivot_point_levels`,
 `matrix.row`, `matrix.col`, `matrix.eigenvalues`, `map.keys`, and `map.values`.
 Each admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 `.includes(value)`, `.indexof(value)`, `.lastindexof(value)`, bool/int/float-only
-`.every()`, and numeric-only
+`.every()`/`.some()`, and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
 `.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`; only `.copy()`, numeric `.abs()`, numeric `.standardize()`, and numeric-or-string `.sort_indices(order?)` can continue with another allowed array chain. The other
-twenty-four results are
+twenty-five results are
 terminal. `str.split` and
 `ta.pivot_point_levels` retain their
 existing `array<string>` and `array<float>` results. `matrix.row` and
@@ -1021,7 +1026,7 @@ Namespace-qualified `matrix.mult(...)` uses a separate, closed
 the resolved `MatrixMult` result type. Matrix-by-array, array-by-matrix, and
 array-by-array overloads resolve to `array<float>` and may use `.size()`,
 `.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`,
-`.indexof(value)`, `.lastindexof(value)`, `.every()`, `.binary_search(value)`, and
+`.indexof(value)`, `.lastindexof(value)`, `.every()`, `.some()`, `.binary_search(value)`, and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
 `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`/`.sort_indices(order?)`.
 Matrix-by-matrix,
@@ -1039,11 +1044,11 @@ Matrix `.copy()` may continue with another admitted matrix helper;
 `array<float>`. These three helpers
 switch to the closed `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
 `.includes(value)`/`.indexof(value)`/`.lastindexof(value)`/
-`.every()`/`.binary_search(value)`/`.binary_search_leftmost(value)` array-result path,
+`.every()`/`.some()`/`.binary_search(value)`/`.binary_search_leftmost(value)` array-result path,
 plus `.binary_search_rightmost(value)`, `.abs()`, and
 `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`/`.sort_indices(order?)`, where array
 `.copy()`, numeric `.abs()` and `.standardize()`, and numeric-or-string
-`.sort_indices(order?)` continue and the other twenty-four read, search, and aggregate results
+`.sort_indices(order?)` continue and the other twenty-five read, search, and aggregate results
 are terminal.
 `.is_square()`
 instead
@@ -1242,7 +1247,7 @@ fresh empty map, and expose `.size()`, `.get(key)`, `.contains(key)`, `.copy()`,
 `.keys()`, and `.values()`. Only `.copy()` may continue another map helper;
 `.keys()` and `.values()` return fresh key/value-kind-preserving arrays that
 admit direct binding and the closed array read/search set plus bool/int/float
-`.every()` and numeric `.abs()`
+`.every()`/`.some()` and numeric `.abs()`
 and terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`, plus transforming `.standardize()` and `.sort_indices(order?)` with copy/abs/standardize/sort_indices array continuation. Mutation and
 unsupported map templates remain gated. Exact namespace
 `map.copy(existing)` results enter the same path, retain the source key/value
@@ -1505,7 +1510,7 @@ order. For maps whose key and value templates are each `int`, `float`, `bool`,
 `string`, or `color`, those two namespace-call results may be consumed directly
 through `.size()`, `.get(index)`, `.first()`, `.last()`, or `.copy()`. The
 returned key/value array kind follows the corresponding map template side;
-bool/int/float sides additionally admit `.every()`; numeric sides additionally
+bool/int/float sides additionally admit `.every()`/`.some()`; numeric sides additionally
 admit the three binary searches, `.abs()`, and
 terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`, plus transforming `.standardize()` and `.sort_indices(order?)` with ordinary array rules. Only
 `.copy()`, numeric `.abs()` and `.standardize()`, and numeric-or-string
@@ -1759,7 +1764,7 @@ eigenvalues for square runtime-owned float or int matrices, returns an empty
 array for empty `0 x 0` matrices, returns `na` for any `na` or non-finite cell
 and for non-real eigenvalue results, and raises a runtime error for non-square
 matrices. Its namespace-call result may immediately use the same closed
-read/copy/search helpers plus terminal `.every()`, numeric `.abs()`, and terminal
+read/copy/search helpers plus terminal `.every()`/`.some()`, numeric `.abs()`, and terminal
 `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`, plus transforming `.standardize()` and `.sort_indices(order?)`, with
 `.copy()`, `.abs()`, `.standardize()`, and `.sort_indices()` nestable and with ordinary empty/
 `na` and bounds behavior retained.

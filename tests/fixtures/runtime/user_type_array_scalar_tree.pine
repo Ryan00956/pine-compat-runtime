@@ -614,6 +614,10 @@ qualified_scalar_every = return_anchor.returnInts(array.from(40, 41, 42)).every(
 unqualified_bool_every = return_identity(array.from(true, false)).every()
 unqualified_int_every = return_identity(array.from(10, 11, 12)).copy().every()
 unqualified_float_every = return_identity(array.from(20.0, na, 22.0)).every()
+qualified_scalar_some = return_anchor.returnInts(array.from(0, 41, 0)).some()
+unqualified_bool_some = return_identity(array.from(false, true)).some()
+unqualified_int_some = return_identity(array.from(0, 11, 0)).copy().some()
+unqualified_float_some = return_identity(array.from(0.0, na, 0.0)).some()
 plot(qualified_scalar_size)
 plot(qualified_scalar_get)
 plot(qualified_scalar_last)
@@ -640,6 +644,7 @@ plot(qualified_scalar_variance == 2.0 / 3.0 and unqualified_int_variance == 1.0 
 plot(qualified_scalar_stdev == array.stdev(array.from(40, 41, 42)) and unqualified_int_stdev == 1.0 and unqualified_float_stdev == 1.0 ? 1 : 0)
 plot(qualified_scalar_sort_indices.get(0) == 0 and qualified_scalar_sort_indices.get(1) == 2 and qualified_scalar_sort_indices.get(2) == 1 and unqualified_int_sort_indices.get(0) == 1 and unqualified_int_sort_indices.get(1) == 2 and unqualified_int_sort_indices.get(2) == 0 and unqualified_float_sort_indices.get(0) == 2 and unqualified_float_sort_indices.get(1) == 0 and unqualified_float_sort_indices.get(2) == 1 and unqualified_string_sort_indices.get(0) == 2 and unqualified_string_sort_indices.get(1) == 0 and unqualified_string_sort_indices.get(2) == 1 ? 1 : 0)
 plot(qualified_scalar_every and not unqualified_bool_every and unqualified_int_every and not unqualified_float_every ? 1 : 0)
+plot(qualified_scalar_some and unqualified_bool_some and unqualified_int_some and not unqualified_float_some ? 1 : 0)
 
 unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
 unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))
