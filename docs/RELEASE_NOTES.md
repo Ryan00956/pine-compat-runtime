@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal top-level `.insert(index, value)` to every concrete array call
+  result. It preserves simple-int-compatible positive, in-range negative, end,
+  and `na` index behavior; validates scalar/object/`chart.point` kind or same-
+  local/same-imported scalar-tree UDT identity; returns `void`; and cannot
+  continue. Alias-returning results and nested live slices update backing
+  parents, while fresh matrix/map/`matrix.mult` snapshots stay independent.
+  Bounds, arity, value/identity, upstream-`na`, 100000-element capacity, and
+  UDF-side-effect boundaries retain ordinary behavior; public schemas are
+  unchanged.
 - Added terminal top-level `.unshift(value)` to every concrete array call
   result. It validates scalar/object/`chart.point` kind or same-local/same-
   imported scalar-tree UDT identity, prepends one compatible value at the

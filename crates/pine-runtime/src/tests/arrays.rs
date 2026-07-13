@@ -1921,6 +1921,12 @@ plot(array.from(10, 20, 30).remove(3))
 "#,
         "array index 3 is out of bounds for array of size 3",
     );
+    assert_array_bounds_error(
+        r#"indicator("array call-result insert bounds")
+array.from(10, 20, 30).insert(4, 40)
+"#,
+        "array index 4 is out of bounds for array of size 3",
+    );
 }
 
 #[test]
@@ -2086,6 +2092,33 @@ array.new_float(100000).unshift(close)
         error
             .message
             .contains("array.unshift cannot exceed 100000 elements"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn rejects_float_array_call_result_insert_past_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("array call-result insert limit")
+array.new_float(100000).insert(0, close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected array call-result insert limit error");
+
+    assert!(
+        error
+            .message
+            .contains("array.insert cannot exceed 100000 elements"),
         "{}",
         error.message
     );

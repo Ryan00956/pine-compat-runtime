@@ -500,6 +500,13 @@ Current baseline:
   cannot continue; fresh derived snapshots remain source-independent. Invalid
   value/arity, upstream-`na`, 100000-element capacity, and UDF-side-effect
   boundaries retain ordinary behavior; public schemas remain unchanged.
+  The indexed insertion slice adds top-level `.insert(index, value)` across the
+  same producer set. It preserves simple-int-compatible positive, in-range
+  negative, end, and `na` index behavior, validates element kind or concrete
+  UDT identity, inserts into alias/live-slice parent backing, returns `void`,
+  and cannot continue; fresh derived snapshots stay source-independent.
+  Bounds, value/arity, upstream-`na`, capacity, and UDF-side-effect boundaries
+  retain ordinary behavior; public schemas remain unchanged.
   The following closed slice admits exact
   `matrix.new<float|int|bool|string|color>` template results. They preserve the
   registered element kind, requested rectangular shape, type-compatible

@@ -34,6 +34,9 @@ badPush(values) =>
 badUnshift(values) =>
     array.copy(values).unshift(0)
     array.size(values)
+badInsert(values) =>
+    array.copy(values).insert(0, 3)
+    array.size(values)
 
 first_values = array.from(First.new(10.0, 100.0))
 second_values = array.from(Second.new(200.0, 20.0))
@@ -59,6 +62,11 @@ array.from(1, 2).unshift("bad")
 array.copy(first_values).unshift(Second.new(13.0, 130.0))
 array.from(1, 2).unshift()
 array.from(1, 2).unshift(0, 1)
+array.from(1, 2).insert("bad", 0)
+array.from(1, 2).insert(0, "bad")
+array.copy(first_values).insert(0, Second.new(13.0, 130.0))
+array.from(1, 2).insert(0)
+array.from(1, 2).insert(0, 3, 4)
 
 mixed_from = array.from(First.new(14.0, 140.0), Second.new(150.0, 15.0)).copy()
 mixed_concat = array.concat(first_values, second_values).copy()
@@ -237,3 +245,4 @@ shift_inside_udf = badShift(array.from(1, 2))
 remove_inside_udf = badRemove(array.from(1, 2))
 push_inside_udf = badPush(array.from(1, 2))
 unshift_inside_udf = badUnshift(array.from(1, 2))
+insert_inside_udf = badInsert(array.from(1, 2))

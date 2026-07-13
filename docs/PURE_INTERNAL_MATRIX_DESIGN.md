@@ -1694,6 +1694,15 @@ Recommended future slices:
     continue; source matrices remain unchanged. Invalid kind/arity, upstream-
     `na`, capacity, and UDF-side-effect boundaries retain ordinary behavior,
     while matrix-valued continuation and public schemas remain unchanged.
+119. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.insert(index, value)`, including row/column/eigenvalue arrays reached
+    after a concrete matrix call result. It validates the simple-int-compatible
+    index and resolved scalar kind, inserts only into the fresh array snapshot,
+    returns `void`, and cannot continue; source matrices remain unchanged.
+    Negative/end/`na` index, bounds, kind/arity, upstream-`na`, capacity, and
+    UDF-side-effect boundaries retain ordinary behavior, while matrix-valued
+    continuation and public schemas remain unchanged.
 
 ## Completion Gate For Future Positive Support
 

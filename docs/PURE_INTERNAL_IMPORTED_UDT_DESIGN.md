@@ -1639,7 +1639,17 @@ return/parameter flow remains deferred.
     `chart.point` or concrete imported UDT value, prepends at the resolved
     result's start, returns `void`, and cannot continue. Imported/local alias
     results and nested slices update shared parent backing, while fresh matrix/
-    map/`matrix.mult` snapshots remain source-independent. Mismatched kind or
-    imported identity, arity, upstream-`na`, capacity, and UDF-body boundaries
-    remain rejected. No imported identity or public schema field is widened.
-    Done.
+    map/`matrix.mult` snapshots remain source-independent. Upstream-`na`
+    results remain no-ops after value evaluation; mismatched kind or imported
+    identity, arity, capacity, and UDF-body boundaries remain rejected. No
+    imported identity or public schema field is widened. Done.
+105. The same producer set additionally exposes terminal top-level
+    `.insert(index, value)`. It accepts a simple-int-compatible index plus one
+    element-compatible scalar/object/`chart.point` or concrete imported UDT
+    value, inserts at the positive, in-range negative, or end position, returns
+    `void`, and cannot continue. Imported/local alias results and nested slices
+    update shared parent backing; fresh matrix/map/`matrix.mult` snapshots stay
+    source-independent. Explicit `na` indexes and upstream-`na` results remain
+    no-ops after value evaluation; bounds, kind/identity, arity, capacity, and
+    UDF-body boundaries remain fixture-backed. No imported identity or public
+    schema field is widened. Done.

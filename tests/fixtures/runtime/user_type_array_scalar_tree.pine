@@ -777,3 +777,8 @@ local_call_result_unshift_source = array.from(First.new(191.0, 1910.0))
 return_identity(local_call_result_unshift_source).unshift(First.new(192.0, 1920.0))
 local_call_result_unshift_first = local_call_result_unshift_source.first()
 plot(local_call_result_unshift_source.size() == 2 and local_call_result_unshift_first.shared == 192.0 and local_call_result_unshift_first.other == 1920.0 ? 1 : 0, "local_call_result_unshift_alias")
+
+local_call_result_insert_source = array.from(First.new(193.0, 1930.0))
+return_identity(local_call_result_insert_source).insert(0, First.new(194.0, 1940.0))
+local_call_result_insert_first = local_call_result_insert_source.first()
+plot(local_call_result_insert_source.size() == 2 and local_call_result_insert_first.shared == 194.0 and local_call_result_insert_first.other == 1940.0 ? 1 : 0, "local_call_result_insert_alias")

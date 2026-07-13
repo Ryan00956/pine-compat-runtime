@@ -106,6 +106,7 @@ mod tests {
             ("remove", "array.remove"),
             ("push", "array.push"),
             ("unshift", "array.unshift"),
+            ("insert", "array.insert"),
         ] {
             assert_eq!(
                 array_call_result_builtin_name(method_name),

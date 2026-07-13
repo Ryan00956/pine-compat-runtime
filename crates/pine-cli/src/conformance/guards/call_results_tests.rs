@@ -193,6 +193,7 @@ fn rejects_extended_array_helper_rows_without_namespace_result_fixture_set() {
         "array.remove",
         "array.push",
         "array.unshift",
+        "array.insert",
     ] {
         let error =
             validate_builtin_namespace_array_call_result_fixture_paths(1, feature, fixtures)
