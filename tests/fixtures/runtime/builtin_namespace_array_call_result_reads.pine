@@ -508,3 +508,27 @@ map.values(empty_map).clear()
 map.values(na_map).clear()
 matrix.mult(mult_na_matrix, mult_vector).clear()
 plot(1, "namespace_call_result_clear_empty_na")
+
+str.split("alpha,beta", ",").reverse()
+ta.pivot_point_levels("Traditional", true, true).reverse()
+plot(1, "namespace_call_result_reverse_split_pivot")
+
+matrix.row(float_matrix, 0).reverse()
+matrix.col(float_matrix, 0).reverse()
+matrix.eigenvalues(float_diagonal).reverse()
+plot(matrix.get(float_matrix, 0, 0) == 1.5 and matrix.get(float_matrix, 0, 1) == 2.5 and matrix.get(float_diagonal, 0, 0) == 2.0 ? 1 : 0, "namespace_call_result_reverse_matrix_snapshot")
+
+map.keys(int_float).reverse()
+map.values(int_float).reverse()
+plot(map.size(int_float) == 2 and map.get(int_float, 10) == 3.5 and map.get(int_float, 20) == 2.5 ? 1 : 0, "namespace_call_result_reverse_map_snapshot")
+
+matrix.mult(mult_matrix, mult_vector).reverse()
+mult_matrix.mult(mult_vector).reverse()
+plot(matrix.get(mult_matrix, 0, 0) == 1.0 and matrix.get(mult_matrix, 1, 1) == 4.0 ? 1 : 0, "namespace_call_result_reverse_mult_snapshot")
+
+str.split(na, ",").reverse()
+matrix.row(na_float_matrix, 0).reverse()
+map.values(empty_map).reverse()
+map.values(na_map).reverse()
+matrix.mult(mult_na_matrix, mult_vector).reverse()
+plot(1, "namespace_call_result_reverse_empty_na")

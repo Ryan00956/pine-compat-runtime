@@ -320,6 +320,7 @@ fn parses_builtin_array_result_method_receivers() {
         "value = array.new<Point>(1, Point.new(1)).slice(0, 1).first()\n",
         "value = array.new<lib.Point>(1, lib.Point.new(1)).slice(0, 1).last()\n",
         "value = array.from(1, 2).clear()\n",
+        "value = array.from(1, 2).reverse()\n",
         "value = array.abs(values).get(0)\n",
         "value = array.from(-1, 2).abs()\n",
         "value = array.from(1, 2, 3).standardize().get(1)\n",
@@ -423,6 +424,7 @@ fn parses_cross_namespace_builtin_array_result_method_receivers() {
         "value = map.values(values).slice(0, 1).first()\n",
         "value = matrix.mult(values, vector).slice(0, 1).copy().last()\n",
         "value = map.keys(values).clear()\n",
+        "value = matrix.row(values, 0).reverse()\n",
     ] {
         let parsed = parse(source);
 
@@ -1126,6 +1128,7 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = array.from(1, 2).join().custom()\n",
         "bad = array.from(1, 2).copy().join(\"|\").custom()\n",
         "bad = array.from(1, 2).clear().custom()\n",
+        "bad = array.from(1, 2).reverse().custom()\n",
         "bad = array.from(1, 2).indexof(2).custom()\n",
         "bad = array.from(1, 2).copy().indexof(2).custom()\n",
         "bad = array.from(1, 2, 1).lastindexof(1).custom()\n",

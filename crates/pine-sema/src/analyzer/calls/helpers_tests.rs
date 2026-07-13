@@ -100,6 +100,7 @@ mod tests {
             ("join", "array.join"),
             ("slice", "array.slice"),
             ("clear", "array.clear"),
+            ("reverse", "array.reverse"),
         ] {
             assert_eq!(
                 array_call_result_builtin_name(method_name),

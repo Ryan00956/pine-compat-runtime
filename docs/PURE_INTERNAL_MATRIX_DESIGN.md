@@ -1641,8 +1641,16 @@ Recommended future slices:
     accepts no explicit arguments, tolerates empty or upstream-`na` results,
     and cannot continue; the source matrix is unchanged. Namespace and bound
     vector-multiplication paths retain result-type-directed array dispatch.
-    UDF-body mutation and all other postfix mutation remain rejected, while
-    matrix-valued continuation and public schemas are unchanged.
+    UDF-body mutation and all other postfix mutation remain rejected at this
+    slice, while matrix-valued continuation and public schemas are unchanged.
+113. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.reverse()`. It reverses only the fresh array snapshot, returns `void`,
+    accepts no explicit arguments, tolerates empty or upstream-`na` results,
+    and cannot continue; the source matrix is unchanged. Namespace and bound
+    vector-multiplication paths retain result-type-directed array dispatch.
+    UDF-body and all remaining postfix mutations stay rejected, while matrix-
+    valued continuation and public schemas are unchanged.
 
 ## Completion Gate For Future Positive Support
 

@@ -944,6 +944,14 @@ Current baseline:
   snapshots rather than their source collections. Empty/upstream-`na`, invalid
   arity, and UDF-side-effect rejection paths are fixture-backed; all other
   direct call-result mutation remains gated and public schemas are unchanged.
+  The following terminal mutation slice adds top-level `.reverse()` across the
+  same producer set. It returns `void`, cannot continue, reverses alias-
+  returning concat/local/imported UDF or method results in place, reorders only
+  a nested live slice's parent window, and mutates fresh matrix/map/mult
+  snapshots without changing their sources. All supported array kinds, empty/
+  upstream-`na`, invalid arity, and UDF-side-effect boundaries are fixture-
+  backed; remaining direct mutations stay gated and public schemas are
+  unchanged.
 
 Remaining internal work:
 

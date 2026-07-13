@@ -830,7 +830,7 @@ marks the receiver with `$builtin_array_result`; only `.size()`, `.get(index)`,
 `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.includes(value)`, `.indexof(value)`, and
 `.lastindexof(value)`, plus bool/int/float-only `.every()`/`.some()` and numeric-only `.binary_search(value)` and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)` and
-`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`, are admitted after it. The lexical prefix
+`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`, are admitted after it. The lexical prefix
 `array` is reserved for built-in producer recognition, so a user or import
 qualifier named `array` cannot use this qualified call-result path.
 Only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()`, numeric `.standardize()`, and numeric-or-string `.sort_indices(order?)` return arrays
@@ -840,8 +840,9 @@ that may continue through another allowed step. The terminal `.size()`, `.get()`
 `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`/`.join(separator?)` results cannot continue
 into a user method or any other call-result method,
 including a method on a returned scalar UDT element.
-The terminal `.clear()` mutation likewise cannot continue: it returns `void`,
-accepts no explicit arguments, and is allowed only outside UDF bodies.
+The terminal `.clear()` and `.reverse()` mutations likewise cannot continue:
+both return `void`, accept no explicit arguments, and are allowed only outside
+UDF bodies.
 
 Analysis then fails closed unless the producer arguments resolve to the exact
 supported array kind and, for UDT arrays, one concrete same-local or
@@ -864,8 +865,8 @@ UDT-array returns, unsupported or unknown templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, other
 `array.*` producer/member calls, built-in namespaces and templates outside the
 exact cross-namespace producer set below,
-postfix helpers outside the thirty-two-item read/copy/search/transform/aggregate/mutation set, and postfix
-mutation other than `.clear()` remain unsupported boundaries.
+postfix helpers outside the thirty-three-item read/copy/search/transform/aggregate/mutation set, and postfix
+mutation other than `.clear()`/`.reverse()` remain unsupported boundaries.
 The first/last index readers reuse ordinary element-kind, concrete UDT-identity, and
 structural/object equality rules. `.indexof(value)` returns the first
 zero-based match and `.lastindexof(value)` returns the last, both as
@@ -1013,6 +1014,9 @@ array-returning `matrix.mult` producers allocate fresh snapshots, so clearing
 their result does not mutate the source matrix or map. Empty and upstream-`na`
 results are no-ops. The call returns `void`, cannot continue, and semantic
 analysis rejects it inside UDF bodies as a collection side effect.
+Terminal top-level `.reverse()` follows the same alias, live-window, fresh-
+snapshot, empty/upstream-`na`, `void`, no-continuation, and UDF-side-effect
+boundaries, but reverses the current array values instead of removing them.
 
 The same `$builtin_array_result` lowering now has one additional exact set of
 seven fixed cross-namespace producers: `str.split`, `ta.pivot_point_levels`,
@@ -1022,8 +1026,8 @@ Each admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`, `.s
 `.every()`/`.some()`, and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
-`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, all-scalar terminal `.join(separator?)`, and terminal top-level `.clear()`; only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()`, numeric `.standardize()`, and numeric-or-string `.sort_indices(order?)` can continue with another allowed array chain. The other
-twenty-six read results and the `void` clear mutation are terminal. `str.split` and
+`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, all-scalar terminal `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`; only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()`, numeric `.standardize()`, and numeric-or-string `.sort_indices(order?)` can continue with another allowed array chain. The other
+twenty-six read results and the two `void` mutations are terminal. `str.split` and
 `ta.pivot_point_levels` retain their
 existing `array<string>` and `array<float>` results. `matrix.row` and
 `matrix.col` return independent element-array snapshots for runtime-owned

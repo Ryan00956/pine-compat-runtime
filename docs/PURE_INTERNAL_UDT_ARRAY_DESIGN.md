@@ -1978,7 +1978,15 @@ results clear their shared backing array; nested `array.slice` results delete
 their live parent window; fresh matrix/map/`matrix.mult` snapshots remain
 independent of their source collection. Direct call-result mutation inside a
 UDF remains rejected by the existing collection-side-effect rule, and every
-other postfix mutation remains closed.
+other postfix mutation remains closed at this slice.
+Item 109 adds terminal top-level `.reverse()` across the same concrete array
+call-result producer set. It returns `void`, accepts no explicit arguments,
+cannot continue, and preserves every supported scalar, drawing-id,
+`chart.point`, same-local UDT, and same-imported UDT array kind. Alias-returning
+concat/UDF/method results reverse shared backing, nested live slices reorder
+only their parent window, and fresh matrix/map/`matrix.mult` snapshots leave
+their sources unchanged. Empty/upstream-`na` results are no-ops; UDF-body and
+all remaining postfix mutations stay rejected.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

@@ -1588,5 +1588,13 @@ return/parameter flow remains deferred.
     and method alias results plus `array.concat` results clear shared backing;
     nested slices delete their live parent window; fresh matrix/map/
     `matrix.mult` snapshots remain independent. Mutation inside UDF bodies and
-    every other direct postfix mutation remain rejected. No imported identity
-    or public schema field is widened. Done.
+    every other direct postfix mutation remain rejected at this slice. No
+    imported identity or public schema field is widened. Done.
+99. The same producer set additionally exposes terminal top-level `.reverse()`.
+    It returns `void`, accepts no explicit arguments, cannot continue, and
+    preserves scalar, object, `chart.point`, and concrete imported UDT array
+    identity. Alias results reverse shared backing, nested slices reorder only
+    their live parent window, and fresh matrix/map/`matrix.mult` snapshots
+    remain source-independent. Empty/upstream-`na` results are no-ops; UDF-body
+    and all remaining direct mutations stay rejected. No imported identity or
+    public schema field is widened. Done.

@@ -16,6 +16,9 @@ badConcat(left, right) => array.concat(left, right).size()
 badClear(values) =>
     array.copy(values).clear()
     array.size(values)
+badReverse(values) =>
+    array.copy(values).reverse()
+    array.size(values)
 
 first_values = array.from(First.new(10.0, 100.0))
 second_values = array.from(Second.new(200.0, 20.0))
@@ -29,6 +32,7 @@ postfix_slice_bad_to = array.from(1, 2).slice(0, "bad")
 postfix_slice_missing_to = array.new_int(2, 1).slice(0)
 postfix_slice_extra_arg = array.slice(first_values, 0, 1).slice(0, 1, 2)
 array.concat(first_values, array.from(First.new(13.0, 130.0))).clear(1)
+array.concat(first_values, array.from(First.new(13.0, 130.0))).reverse(1)
 
 mixed_from = array.from(First.new(14.0, 140.0), Second.new(150.0, 15.0)).copy()
 mixed_concat = array.concat(first_values, second_values).copy()
@@ -201,3 +205,4 @@ call_result_join_extra_arg = array.from(1, 2).join("|", "/")
 
 concat_inside_udf = badConcat(array.from(1), array.from(2))
 clear_inside_udf = badClear(array.from(1, 2))
+reverse_inside_udf = badReverse(array.from(1, 2))

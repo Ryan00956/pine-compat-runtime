@@ -161,6 +161,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "sort_indices" => Some("array.sort_indices"),
         "join" => Some("array.join"),
         "clear" => Some("array.clear"),
+        "reverse" => Some("array.reverse"),
         _ => None,
     }
 }

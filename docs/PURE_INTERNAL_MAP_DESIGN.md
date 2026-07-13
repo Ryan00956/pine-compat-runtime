@@ -561,6 +561,13 @@ Recommended future slices:
     remain unchanged. Direct call-result mutation inside UDFs and all other
     postfix mutations stay rejected. Map storage, templates, and public
     schemas are unchanged. Done.
+43. Every concrete scalar key/value snapshot additionally exposes terminal
+    top-level `.reverse()`. It reverses only the fresh snapshot, returns
+    `void`, accepts no explicit arguments, tolerates empty or typed-`na` map
+    results, and cannot continue; source map entries and insertion order remain
+    unchanged. Direct call-result mutation inside UDFs and all remaining
+    postfix mutations stay rejected. Map storage, templates, and public
+    schemas are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

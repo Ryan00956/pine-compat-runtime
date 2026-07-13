@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal top-level `.reverse()` to every concrete array call result.
+  It returns `void`, cannot continue, reverses alias-returning `array.concat`
+  and local/imported function or method results in place, and reorders only a
+  nested live slice window in its parent. Fresh matrix row/column/eigenvalue,
+  map key/value, and array-returning `matrix.mult` snapshots remain independent
+  of their source collections. Static/cross-namespace/local/imported, scalar,
+  object, `chart.point`, UDT, empty/upstream-`na`, invalid arity, terminal-
+  continuation, and UDF-side-effect rejection boundaries are fixture-backed;
+  public schemas are unchanged.
 - Added terminal top-level `.clear()` to every concrete array call result. It
   returns `void`, cannot continue, clears alias-returning `array.concat` and
   local/imported function or method results in place, and deletes a nested live
