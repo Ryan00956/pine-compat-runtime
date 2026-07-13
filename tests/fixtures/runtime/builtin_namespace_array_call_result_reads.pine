@@ -85,6 +85,9 @@ plot(na(pivot_namespace_mode) ? (na(pivot_mode) ? 1 : 0) : (pivot_mode == pivot_
 pivot_percentile_nearest = ta.pivot_point_levels("Traditional", true, true).percentile_nearest_rank(50)
 pivot_namespace_percentile_nearest = array.percentile_nearest_rank(ta.pivot_point_levels("Traditional", true, true), 50)
 plot(na(pivot_namespace_percentile_nearest) ? (na(pivot_percentile_nearest) ? 1 : 0) : (pivot_percentile_nearest == pivot_namespace_percentile_nearest ? 1 : 0), "pivot_call_result_percentile_nearest")
+pivot_percentile_linear = ta.pivot_point_levels("Traditional", true, true).percentile_linear_interpolation(50)
+pivot_namespace_percentile_linear = array.percentile_linear_interpolation(ta.pivot_point_levels("Traditional", true, true), 50)
+plot(na(pivot_namespace_percentile_linear) ? (na(pivot_percentile_linear) ? 1 : 0) : (pivot_percentile_linear == pivot_namespace_percentile_linear ? 1 : 0), "pivot_call_result_percentile_linear")
 
 pivot_state_size = ta.pivot_point_levels("Traditional", bar_index == 2).size()
 pivot_state_first = ta.pivot_point_levels("Traditional", bar_index == 2).first()
@@ -149,6 +152,7 @@ plot(matrix.row(float_matrix, 0).range() == 1.0 and matrix.row(int_matrix, 0).ra
 plot(matrix.row(float_matrix, 0).median() == 2.0 and matrix.row(int_matrix, 0).median() == 15 ? 1 : 0, "matrix_row_col_call_result_median")
 plot(na(matrix.row(float_matrix, 0).mode()) and na(matrix.row(int_matrix, 0).mode()) ? 1 : 0, "matrix_row_col_call_result_mode")
 plot(matrix.row(float_matrix, 0).percentile_nearest_rank(50) == 1.5 and matrix.row(int_matrix, 0).percentile_nearest_rank(50) == 10 ? 1 : 0, "matrix_row_col_call_result_percentile_nearest")
+plot(matrix.row(float_matrix, 0).percentile_linear_interpolation(50) == 2.0 and matrix.row(int_matrix, 0).percentile_linear_interpolation(50) == 15.0 ? 1 : 0, "matrix_row_col_call_result_percentile_linear")
 
 matrix<float> na_float_matrix = na
 na_cell_matrix = matrix.new<float>(1, 1)
@@ -170,6 +174,7 @@ plot(na(matrix.row(na_float_matrix, 0).range()) ? 1 : 0, "matrix_na_row_call_res
 plot(na(matrix.row(na_float_matrix, 0).median()) ? 1 : 0, "matrix_na_row_call_result_median")
 plot(na(matrix.row(na_float_matrix, 0).mode()) ? 1 : 0, "matrix_na_row_call_result_mode")
 plot(na(matrix.row(na_float_matrix, 0).percentile_nearest_rank(50)) ? 1 : 0, "matrix_na_row_call_result_percentile_nearest")
+plot(na(matrix.row(na_float_matrix, 0).percentile_linear_interpolation(50)) ? 1 : 0, "matrix_na_row_call_result_percentile_linear")
 
 float_diagonal = matrix.new<float>(2, 2, 0.0)
 float_diagonal.set(0, 0, 2.0)
@@ -201,6 +206,7 @@ plot(matrix.eigenvalues(float_diagonal).range() == 1.0 ? 1 : 0, "eigen_call_resu
 plot(matrix.eigenvalues(float_diagonal).median() == 2.5 ? 1 : 0, "eigen_call_result_median")
 plot(na(matrix.eigenvalues(float_diagonal).mode()) ? 1 : 0, "eigen_call_result_mode")
 plot(matrix.eigenvalues(float_diagonal).percentile_nearest_rank(50) == 2.0 ? 1 : 0, "eigen_call_result_percentile_nearest")
+plot(matrix.eigenvalues(float_diagonal).percentile_linear_interpolation(50) == 2.5 ? 1 : 0, "eigen_call_result_percentile_linear")
 plot(matrix.eigenvalues(matrix.new<float>(0, 0)).size(), "eigen_empty_size")
 plot(na(matrix.eigenvalues(matrix.new<float>(0, 0)).first()) ? 1 : 0, "eigen_empty_first")
 matrix<float> na_eigen_matrix = na
@@ -269,6 +275,7 @@ plot(map.keys(int_float).range() == 10 and map.values(int_float).copy().range() 
 plot(map.keys(int_float).median() == 15 and map.values(int_float).copy().median() == 3.0 ? 1 : 0, "map_call_result_median")
 plot(na(map.keys(int_float).mode()) and na(map.values(int_float).copy().mode()) ? 1 : 0, "map_call_result_mode")
 plot(map.keys(int_float).percentile_nearest_rank(50) == array.percentile_nearest_rank(map.keys(int_float), 50) and map.values(int_float).copy().percentile_nearest_rank(50) == array.percentile_nearest_rank(map.values(int_float), 50) ? 1 : 0, "map_call_result_percentile_nearest")
+plot(map.keys(int_float).percentile_linear_interpolation(50) == array.percentile_linear_interpolation(map.keys(int_float), 50) and map.values(int_float).copy().percentile_linear_interpolation(50) == array.percentile_linear_interpolation(map.values(int_float), 50) ? 1 : 0, "map_call_result_percentile_linear")
 
 empty_map = map.new<string, float>()
 map<string, float> na_map = na
@@ -298,6 +305,7 @@ plot(na(map.values(empty_map).range()) and na(map.values(na_map).range()) ? 1 : 
 plot(na(map.values(empty_map).median()) and na(map.values(na_map).median()) ? 1 : 0, "map_empty_na_call_result_median")
 plot(na(map.values(empty_map).mode()) and na(map.values(na_map).mode()) ? 1 : 0, "map_empty_na_call_result_mode")
 plot(na(map.values(empty_map).percentile_nearest_rank(50)) and na(map.values(na_map).percentile_nearest_rank(50)) ? 1 : 0, "map_empty_na_call_result_percentile_nearest")
+plot(na(map.values(empty_map).percentile_linear_interpolation(50)) and na(map.values(na_map).percentile_linear_interpolation(50)) ? 1 : 0, "map_empty_na_call_result_percentile_linear")
 plot(readMatrixAndMap(float_matrix, int_float), "block_udf")
 
 mult_matrix = matrix.new<float>(2, 2, 0.0)
@@ -348,6 +356,7 @@ plot(matrix.mult(mult_matrix, mult_vector).range() == 22.0 and mult_matrix.mult(
 plot(matrix.mult(mult_matrix, mult_vector).median() == 28.0 and mult_matrix.mult(mult_vector).median() == 28.0 ? 1 : 0, "mult_call_result_median")
 plot(matrix.mult(matrix.new<float>(2, 2, 1.0), array.from(1.0, 1.0)).mode() == 2.0 and matrix.new<float>(2, 2, 1.0).mult(array.from(1.0, 1.0)).mode() == 2.0 ? 1 : 0, "mult_call_result_mode")
 plot(matrix.mult(mult_matrix, mult_vector).percentile_nearest_rank(50) == 17.0 and mult_matrix.mult(mult_vector).percentile_nearest_rank(50) == 17.0 ? 1 : 0, "mult_call_result_percentile_nearest")
+plot(matrix.mult(mult_matrix, mult_vector).percentile_linear_interpolation(50) == 28.0 and mult_matrix.mult(mult_vector).percentile_linear_interpolation(50) == 28.0 ? 1 : 0, "mult_call_result_percentile_linear")
 
 int_mult_matrix = matrix.new<int>(2, 2, 0)
 int_mult_matrix.set(0, 0, 1)
@@ -381,6 +390,7 @@ plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).range()) and na
 plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).median()) and na(matrix.mult(mult_na_matrix, mult_vector).median()) ? 1 : 0, "mult_empty_na_call_result_median")
 plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).mode()) and na(matrix.mult(mult_na_matrix, mult_vector).mode()) ? 1 : 0, "mult_empty_na_call_result_mode")
 plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).percentile_nearest_rank(50)) and na(matrix.mult(mult_na_matrix, mult_vector).percentile_nearest_rank(50)) ? 1 : 0, "mult_empty_na_call_result_percentile_nearest")
+plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).percentile_linear_interpolation(50)) and na(matrix.mult(mult_na_matrix, mult_vector).percentile_linear_interpolation(50)) ? 1 : 0, "mult_empty_na_call_result_percentile_linear")
 plot(matrix.mult(array.new_float(0), matrix.new<float>(0, 0)).size(), "mult_left_empty_size")
 plot(na(matrix.mult(array.new_float(0), matrix.new<float>(0, 0)).first()) ? 1 : 0, "mult_left_empty_first")
 plot(matrix.mult(array.new_float(0), array.new_float(0)).size(), "mult_pair_empty_size")

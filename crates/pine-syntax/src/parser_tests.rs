@@ -1096,6 +1096,8 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = array.from(1, 2, 2).copy().mode().custom()\n",
         "bad = array.from(1, 2, 3).percentile_nearest_rank(50).custom()\n",
         "bad = array.from(1, 2, 3).copy().percentile_nearest_rank(50).custom()\n",
+        "bad = array.from(1, 2, 3).percentile_linear_interpolation(50).custom()\n",
+        "bad = array.from(1, 2, 3).copy().percentile_linear_interpolation(50).custom()\n",
         "bad = matrix.mult(values, other).rows().custom()\n",
         "bad = matrix.new<float>(2, 2, 1.0).row(0).size().custom()\n",
         "bad = matrix.copy(values).row(0).first().custom()\n",

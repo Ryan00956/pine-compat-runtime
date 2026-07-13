@@ -72,6 +72,7 @@ const BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.median",
     "array.mode",
     "array.percentile_nearest_rank",
+    "array.percentile_linear_interpolation",
     "array.standardize",
     "array.sort_indices",
     "array.slice",
@@ -242,6 +243,7 @@ const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.median",
     "array.mode",
     "array.percentile_nearest_rank",
+    "array.percentile_linear_interpolation",
     "array method calls",
     "expression-body functions",
     "multi-statement functions",
@@ -377,6 +379,7 @@ fn validate_udt_array_call_result_helper_fixture_paths(
             | "array.median"
             | "array.mode"
             | "array.percentile_nearest_rank"
+            | "array.percentile_linear_interpolation"
     ) {
         return Ok(());
     }
@@ -404,7 +407,7 @@ fn validate_builtin_array_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_ARRAY_CALL_RESULT_FIXTURES,
-        "fixture-backed static-array builtin/template call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank dispatch and retained producer/helper boundaries",
+        "fixture-backed static-array builtin/template call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation dispatch and retained producer/helper boundaries",
     )
 }
 
@@ -440,7 +443,7 @@ fn validate_builtin_namespace_array_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES,
-        "fixture-backed non-array-namespace array-capable producer call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank dispatch and retained result-type/helper boundaries",
+        "fixture-backed non-array-namespace array-capable producer call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation dispatch and retained result-type/helper boundaries",
     )
 }
 

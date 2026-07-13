@@ -851,6 +851,13 @@ Current baseline:
   accepts positional or named series/simple numeric percentages, and retains
   empty/all-`na`/upstream-`na`, runtime typed-`na`, out-of-range, provenance,
   invalid-type/arity, non-mutation, and terminal boundaries.
+  The following percentile slice adds
+  `.percentile_linear_interpolation(percentage)`. It interpolates sorted
+  floor/ceiling members at `percentage / 100 * (count - 1)`, always returns
+  series float for int/float and single-element inputs, accepts positional or
+  named series/simple numeric percentages, and retains empty/all-`na`/upstream-
+  `na`, runtime typed-`na`, out-of-range, non-finite-result, provenance,
+  invalid-type/arity, non-mutation, and terminal boundaries.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -870,7 +877,7 @@ Remaining internal work:
   `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus numeric-only
   `.binary_search(value)`/`.binary_search_leftmost(value)`/
   `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/
-  `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)` set, and
+  `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked

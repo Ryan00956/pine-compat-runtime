@@ -1550,6 +1550,14 @@ Recommended future slices:
     numeric percentages, receiver-derived series int/float, empty/all-`na`/
     upstream-`na`, runtime typed-`na` and out-of-range behavior, invalid type/
     arity, and terminal continuation. Matrix-valued continuation is unchanged.
+101. Numeric array-valued call results additionally expose terminal
+    `.percentile_linear_interpolation(percentage)`. Matrix row/column/
+    eigenvalue arrays and array-returning `matrix.mult` overloads retain sorted
+    floor/ceiling interpolation, fixed series-float results for int/float and
+    single-element inputs, positional or named series/simple numeric
+    percentages, empty/all-`na`/upstream-`na`, runtime typed-`na`, out-of-range
+    and non-finite-result behavior, invalid type/arity, and terminal
+    continuation. Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

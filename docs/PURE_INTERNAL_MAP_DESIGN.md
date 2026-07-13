@@ -474,6 +474,14 @@ Recommended future slices:
     `na`, runtime typed-`na` and out-of-range behavior, invalid type/arity,
     local/imported provenance, and terminal continuation are fixture-backed.
     Map storage and template rules are unchanged. Done.
+31. Numeric key/value snapshots additionally expose terminal
+    `.percentile_linear_interpolation(percentage)`. Sorted floor/ceiling
+    interpolation, fixed series-float results for int/float and single-element
+    inputs, positional or named series/simple numeric percentages, empty/all-
+    `na`/upstream-`na`, runtime typed-`na`, out-of-range and non-finite-result
+    behavior, invalid type/arity, local/imported provenance, and terminal
+    continuation are fixture-backed. Map storage and template rules are
+    unchanged. Done.
 
 ## Completion Gate For Future Widening
 

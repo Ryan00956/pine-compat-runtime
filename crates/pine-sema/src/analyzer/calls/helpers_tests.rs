@@ -85,6 +85,10 @@ mod tests {
                 "percentile_nearest_rank",
                 "array.percentile_nearest_rank",
             ),
+            (
+                "percentile_linear_interpolation",
+                "array.percentile_linear_interpolation",
+            ),
         ] {
             assert_eq!(
                 array_call_result_builtin_name(method_name),
@@ -92,7 +96,7 @@ mod tests {
             );
             assert!(pine_builtins::get_phase_1_builtin(builtin_name).is_some());
         }
-        assert_eq!(array_call_result_builtin_name("percentile_linear_interpolation"), None);
+        assert_eq!(array_call_result_builtin_name("percentrank"), None);
         assert_eq!(array_call_result_builtin_name("push"), None);
     }
 

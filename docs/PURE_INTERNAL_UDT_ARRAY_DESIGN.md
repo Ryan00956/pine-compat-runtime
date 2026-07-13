@@ -296,6 +296,13 @@ selection with 0/100 endpoints, preserves receiver-derived series int/float,
 and accepts positional or named series/simple numeric percentages. Empty/all-
 `na`/upstream-`na`, runtime typed-`na`, out-of-range, UDT, arity, provenance,
 and terminal-continuation boundaries remain closed.
+Item 97 adds terminal `.percentile_linear_interpolation(percentage)` over the
+same result set. It interpolates sorted floor/ceiling members at
+`percentage / 100 * (count - 1)`, always returns series float for int/float and
+single-element inputs, and accepts positional or named series/simple numeric
+percentages. Empty/all-`na`/upstream-`na`, runtime typed-`na`, out-of-range,
+non-finite-result, UDT, arity, provenance, and terminal-continuation boundaries
+remain closed.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1834,6 +1841,12 @@ filtered ceiling-based nearest-rank selection, 0/100 endpoints, positional or
 named series/simple numeric percentages, empty/all-`na`/upstream-`na`, runtime
 typed-`na`, out-of-range, arity, provenance, terminal-continuation, and UDT-
 identity boundaries.
+Item 97 adds terminal fixed-float
+`.percentile_linear_interpolation(percentage)` over that result set,
+preserving floor/ceiling interpolation, int/float and single-element behavior,
+positional or named series/simple numeric percentages, empty/all-`na`/upstream-
+`na`, runtime typed-`na`, out-of-range, non-finite-result, arity, provenance,
+terminal-continuation, and UDT-identity boundaries.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

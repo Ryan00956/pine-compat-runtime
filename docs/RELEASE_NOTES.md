@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal `.percentile_linear_interpolation(percentage)` to every
+  existing concrete numeric array call result. It filters and sorts values,
+  interpolates at `percentage / 100 * (count - 1)`, and always returns
+  `series float` for integer, float, and single-element inputs. Positional or
+  named series/simple numeric percentages are accepted. Empty/all-`na`/
+  upstream-`na`, runtime typed-`na`, out-of-range, and non-finite results return
+  `na`; the read remains non-mutating and terminal. Static/cross-namespace,
+  matrix/map-derived, local/imported function/method, invalid type/arity,
+  provenance, and continuation paths are fixture-backed.
 - Added terminal `.percentile_nearest_rank(percentage)` to every existing
   concrete numeric array call result. It filters and sorts values, uses
   ceiling-based nearest-rank selection with 0/100 endpoints, preserves the

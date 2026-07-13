@@ -1500,3 +1500,10 @@ return/parameter flow remains deferred.
     simple numeric percentages. Empty/all-`na`/upstream-`na`, runtime typed-
     `na`, out-of-range, nonnumeric/imported-UDT, arity, provenance, and terminal-
     continuation boundaries remain closed. Done.
+87. The same numeric producer set exposes terminal
+    `.percentile_linear_interpolation(percentage)`. It interpolates sorted
+    floor/ceiling members at `percentage / 100 * (count - 1)`, always returns
+    series float for int/float and single-element inputs, and accepts positional
+    or named series/simple numeric percentages. Empty/all-`na`/upstream-`na`,
+    runtime typed-`na`, out-of-range, non-finite-result, nonnumeric/imported-UDT,
+    arity, provenance, and terminal-continuation boundaries remain closed. Done.
