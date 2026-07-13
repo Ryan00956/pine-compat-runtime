@@ -1429,3 +1429,14 @@ return/parameter flow remains deferred.
     nonnumeric/object array remain rejected; invalid type/arity, copy-
     continuation, terminal-continuation, and dual-alias paths are fixture-
     backed. It adds no imported UDT identity or public schema field. Done.
+76. The same concrete numeric array call-result producer set additionally
+    exposes terminal `.binary_search_leftmost(value)`. It preserves the numeric
+    receiver/value and caller-owned ascending-input gates. Exact duplicates
+    return their first index; misses return the nearest-left element index,
+    clamped to `0` below the minimum and the last index above the maximum.
+    Empty and upstream-`na` arrays return `-1`; the `simple int` result is non-
+    mutating and terminal. Static/cross-namespace, matrix/map-derived, local/
+    imported function/method, duplicate, between-value, clamp, invalid type/
+    arity, dual-alias, copy-continuation, and terminal-continuation paths are
+    fixture-backed. Imported UDT and nonnumeric result arrays remain rejected;
+    no imported identity or public schema field is widened. Done.

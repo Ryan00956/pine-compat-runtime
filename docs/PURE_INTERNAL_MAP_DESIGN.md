@@ -409,6 +409,15 @@ Recommended future slices:
     and creates no continuation prefix. Bool/string/color map sides, invalid
     types/arity, local/imported function and method provenance, dual aliases,
     copy continuation, and terminal continuation are fixture-backed. Done.
+20. The same fresh numeric key/value arrays additionally expose terminal
+    `.binary_search_leftmost(value)`. It retains the numeric receiver/value gate
+    and caller-owned ascending insertion-order contract. Exact duplicates return
+    their first index; misses return the nearest-left index, clamped to `0`
+    below the minimum and the last index above the maximum. Empty/upstream-`na`
+    arrays return `-1`; the `simple int` result is non-mutating and terminal.
+    Bool/string/color sides, local/imported provenance, dual aliases, invalid
+    types/arity, copy continuation, and terminal continuation are fixture-
+    backed. Done.
 
 ## Completion Gate For Future Widening
 

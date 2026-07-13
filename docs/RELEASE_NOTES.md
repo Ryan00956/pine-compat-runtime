@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal `.binary_search_leftmost(value)` to every existing concrete
+  numeric array call result. It preserves the numeric receiver/value and caller-
+  owned ascending-input gates. Exact duplicates return their first index;
+  misses return the nearest-left element index, clamped to `0` below the minimum
+  and the last index above the maximum. Empty and upstream-`na` arrays return
+  `-1`; the `simple int` result is non-mutating and terminal. Registered static/
+  cross-namespace, numeric matrix/map-derived, local/imported function/method,
+  clamp, nonnumeric/UDT rejection, invalid type/arity, copy-continuation, and
+  terminal-continuation paths are fixture-backed.
 - Added terminal `.binary_search(value)` to every existing concrete numeric
   array call result. Registered static/cross-namespace producers, qualified and
   unqualified local/imported UDF and method results, numeric matrix row/column/

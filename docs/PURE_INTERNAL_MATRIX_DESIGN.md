@@ -1479,6 +1479,17 @@ Recommended future slices:
     imported functions and methods, nonnumeric matrix-array rejection, copy
     continuation, invalid types/arity, and terminal-continuation paths are
     fixture-backed. Matrix-valued continuation is unchanged.
+90. Terminal leftmost binary searches on numeric array-valued call results:
+    done for numeric matrix row/column/eigenvalue arrays and array-returning
+    `matrix.mult` overloads, alongside all other concrete numeric array-result
+    producers. `.binary_search_leftmost(value)` retains numeric and ascending-
+    input gates. Exact duplicates return their first index; misses return the
+    nearest-left index, clamped to `0` below the minimum and the last index above
+    the maximum. Empty/upstream-`na` arrays return `-1`; the `simple int` result
+    is non-mutating and terminal. Namespace/bound, local/imported function/
+    method, float/int, clamp, nonnumeric rejection, invalid types/arity, copy-
+    continuation, and terminal-continuation paths are fixture-backed. Matrix-
+    valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

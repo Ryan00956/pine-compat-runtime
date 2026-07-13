@@ -833,8 +833,9 @@ admitted map helper. `.keys()` and `.values()` switch to the array-result prefix
 and return fresh key/value-kind-preserving arrays, which admit direct binding
 plus `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)` and numeric-only
-`.binary_search(value)`, with copy-only array continuation and terminal search
-checks. The ordinary map analyzer validates key types and marks copy
+`.binary_search(value)`/`.binary_search_leftmost(value)`, with copy-only array
+continuation and terminal search checks. The ordinary map analyzer validates
+key types and marks copy
 results with the same template metadata. Exact namespace `map.copy(existing)`
 results use the same prefix and retain both source template metadata and
 entries through the existing independent-copy runtime operation. Mutation,
@@ -869,7 +870,7 @@ use the existing pure user-method dispatch, and explicit same-named local
 methods and imported functions remain distinct. Other `array.*` calls,
 built-in namespaces and templates outside the seven fixed producers plus the
 result-type-checked namespace `matrix.mult` paths, helpers beyond the applicable
-nine-item postfix read/copy/search set, non-array/non-matrix/non-UDT results,
+ten-item postfix read/copy/search set, non-array/non-matrix/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, and postfix
 mutation remain outside this subset. A postfix read does not make a mutating
 producer pure:
@@ -890,6 +891,11 @@ bound search, returning the leftmost duplicate match or `-1` for missing,
 empty, and upstream-`na` arrays as `simple int`; it is non-mutating and terminal.
 Nonnumeric, object/chart-point, and UDT result arrays fail the numeric receiver
 gate.
+`.binary_search_leftmost(value)` shares that gate and ascending-input contract.
+It returns the first exact duplicate index; a miss returns the nearest-left
+element index, clamped to `0` below the minimum and the last index above the
+maximum. Empty and upstream-`na` arrays return `-1`. The `simple int` result is
+non-mutating and terminal.
 Generic UDT-array parameters are therefore iterable inside local UDFs and typed
 local methods for the fixture-backed statement and final-expression forms,
 including final results that return the UDT element itself or rebuild a
@@ -1176,13 +1182,14 @@ plain local UDF array results, the exact built-in `array.*` producer allowlist,
 and the cross-namespace array-capable path support direct
 `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)`, plus numeric-only
-`.binary_search(value)`, without widening arbitrary call-result receivers. UDT
-arrays retain the concrete
+`.binary_search(value)`/`.binary_search_leftmost(value)`, without widening
+arbitrary call-result receivers. UDT arrays retain the concrete
 same-local/same-imported scalar-tree identity gate; scalar UDT results from an
 unqualified local UDF may invoke the existing pure method subset. That scalar
 method exception does not apply to a built-in producer's terminal
 `.get()`/`.first()`/`.last()`/`.includes()`/`.indexof()`/`.lastindexof()`/
-`.binary_search()` result. The seven fixed cross-namespace producers
+`.binary_search()`/`.binary_search_leftmost()` result. The seven fixed cross-
+namespace producers
 and the array-returning `matrix.mult` overloads are scalar-array-only and do
 not widen UDT identity. Namespace matrix-returning `matrix.mult` overloads and
 exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix` plus

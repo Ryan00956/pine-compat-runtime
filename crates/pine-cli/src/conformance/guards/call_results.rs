@@ -61,6 +61,7 @@ const BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.indexof",
     "array.lastindexof",
     "array.binary_search",
+    "array.binary_search_leftmost",
     "array.abs",
     "array.standardize",
     "array.sort_indices",
@@ -221,6 +222,7 @@ const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.indexof",
     "array.lastindexof",
     "array.binary_search",
+    "array.binary_search_leftmost",
     "array method calls",
     "expression-body functions",
     "multi-statement functions",
@@ -345,6 +347,7 @@ fn validate_udt_array_call_result_helper_fixture_paths(
             | "array.indexof"
             | "array.lastindexof"
             | "array.binary_search"
+            | "array.binary_search_leftmost"
     ) {
         return Ok(());
     }
@@ -372,7 +375,7 @@ fn validate_builtin_array_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_ARRAY_CALL_RESULT_FIXTURES,
-        "fixture-backed static-array builtin/template call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search dispatch and retained producer/helper boundaries",
+        "fixture-backed static-array builtin/template call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search/binary_search_leftmost dispatch and retained producer/helper boundaries",
     )
 }
 
@@ -408,7 +411,7 @@ fn validate_builtin_namespace_array_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES,
-        "fixture-backed non-array-namespace array-capable producer call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search dispatch and retained result-type/helper boundaries",
+        "fixture-backed non-array-namespace array-capable producer call-result size/get/first/last/copy/includes/indexof/lastindexof/binary_search/binary_search_leftmost dispatch and retained result-type/helper boundaries",
     )
 }
 
@@ -616,9 +619,12 @@ mod tests {
     fn rejects_udt_array_helper_rows_without_call_result_fixture_set() {
         let fixtures = &UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES
             [..UDT_ARRAY_CALL_RESULT_HELPER_FIXTURES.len() - 1];
-        let error =
-            validate_udt_array_call_result_helper_fixture_paths(1, "array.binary_search", fixtures)
-                .expect_err("UDT-array helper rows must retain the call-result fixture set");
+        let error = validate_udt_array_call_result_helper_fixture_paths(
+            1,
+            "array.binary_search_leftmost",
+            fixtures,
+        )
+        .expect_err("UDT-array helper rows must retain the call-result fixture set");
 
         assert!(error.contains("tests/fixtures/libraries/import_udt_array_return_lib.pine"));
     }
@@ -627,9 +633,12 @@ mod tests {
     fn rejects_builtin_array_result_rows_without_comprehensive_fixture_set() {
         let fixtures =
             &BUILTIN_ARRAY_CALL_RESULT_FIXTURES[..BUILTIN_ARRAY_CALL_RESULT_FIXTURES.len() - 1];
-        let error =
-            validate_builtin_array_call_result_fixture_paths(1, "array.binary_search", fixtures)
-                .expect_err("builtin array-result rows must retain the comprehensive fixture set");
+        let error = validate_builtin_array_call_result_fixture_paths(
+            1,
+            "array.binary_search_leftmost",
+            fixtures,
+        )
+        .expect_err("builtin array-result rows must retain the comprehensive fixture set");
 
         assert!(
             error.contains("tests/fixtures/sema/unsupported_builtin_array_call_result_reads.pine")
@@ -739,6 +748,24 @@ mod tests {
             fixtures,
         )
         .expect_err("array.binary_search must retain cross-namespace call-result evidence");
+
+        assert!(error.contains(
+            "tests/fixtures/sema/unsupported_builtin_namespace_array_call_result_reads.pine"
+        ));
+    }
+
+    #[test]
+    fn rejects_array_binary_search_leftmost_row_without_namespace_result_fixture_set() {
+        let fixtures = &BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES
+            [..BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES.len() - 1];
+        let error = validate_builtin_namespace_array_call_result_fixture_paths(
+            1,
+            "array.binary_search_leftmost",
+            fixtures,
+        )
+        .expect_err(
+            "array.binary_search_leftmost must retain cross-namespace call-result evidence",
+        );
 
         assert!(error.contains(
             "tests/fixtures/sema/unsupported_builtin_namespace_array_call_result_reads.pine"

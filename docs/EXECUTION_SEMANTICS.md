@@ -801,7 +801,8 @@ results and unqualified plain local UDF results support direct `.size()`,
 `.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`,
 `.indexof(value)`, and `.lastindexof(value)` calls when the result is any
 currently supported array kind. Numeric `array<int>` and `array<float>`
-results additionally support terminal `.binary_search(value)`,
+results additionally support terminal `.binary_search(value)` and
+`.binary_search_leftmost(value)`,
 including nested copy/read chains. The parser
 rewrites the unqualified form to the impossible internal prefix `$call_result`
 only for a plain lexical callee; qualified user-defined forms retain their
@@ -819,14 +820,15 @@ same-local/same-imported scalar-tree UDT source templates reach that path
 through their canonical constructor or checked UDT-template form. The parser
 marks the receiver with `$builtin_array_result`; only `.size()`, `.get(index)`,
 `.first()`, `.last()`, `.copy()`, `.includes(value)`, `.indexof(value)`, and
-`.lastindexof(value)`, plus numeric-only `.binary_search(value)`, are admitted
-after it. The lexical prefix
+`.lastindexof(value)`, plus numeric-only `.binary_search(value)` and
+`.binary_search_leftmost(value)`, are admitted after it. The lexical prefix
 `array` is reserved for built-in producer recognition, so a user or import
 qualifier named `array` cannot use this qualified call-result path.
 Only `.copy()` returns an array that may continue through another allowed
 read/copy step. The terminal `.size()`, `.get()`, `.first()`, `.last()`,
-`.includes()`, `.indexof()`, `.lastindexof()`, and `.binary_search()` results
-cannot continue into a user method or any other call-result method,
+`.includes()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, and
+`.binary_search_leftmost()` results cannot continue into a user method or any
+other call-result method,
 including a method on a returned scalar UDT element.
 
 Analysis then fails closed unless the producer arguments resolve to the exact
@@ -850,7 +852,7 @@ UDT-array returns, unsupported or unknown templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, other
 `array.*` producer/member calls, built-in namespaces and templates outside the
 exact cross-namespace producer set below,
-postfix helpers outside the nine-item read/copy/search set, and postfix
+postfix helpers outside the ten-item read/copy/search set, and postfix
 mutation remain unsupported boundaries.
 The first/last index readers reuse ordinary element-kind, concrete UDT-identity, and
 structural/object equality rules. `.indexof(value)` returns the first
@@ -863,14 +865,20 @@ runtime performs an exact lower-bound search, so duplicate matches return the
 leftmost index. It returns `simple int`, uses `-1` for missing, empty, and
 upstream-`na` arrays, performs no mutation, and is terminal. Bool, string,
 color, drawing/object, chart-point, and UDT array results remain rejected.
+Numeric-only `.binary_search_leftmost(value)` shares those checks and the
+ascending-input contract. An exact duplicate returns its first index; a miss
+returns the nearest element on the left, clamped to index `0` below the minimum
+and the last index above the maximum. Empty and upstream-`na` arrays return
+`-1`. The fixed result is `simple int`, non-mutating, and terminal.
 
 The same `$builtin_array_result` lowering now has one additional exact set of
 seven fixed cross-namespace producers: `str.split`, `ta.pivot_point_levels`,
 `matrix.row`, `matrix.col`, `matrix.eigenvalues`, `map.keys`, and `map.values`.
 Each admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 `.includes(value)`, `.indexof(value)`, `.lastindexof(value)`, and numeric-only
-`.binary_search(value)`; only `.copy()` can continue with another allowed
-array read/copy. The other eight results are terminal. `str.split` and
+`.binary_search(value)`/`.binary_search_leftmost(value)`; only `.copy()` can
+continue with another allowed array read/copy. The other nine results are
+terminal. `str.split` and
 `ta.pivot_point_levels` retain their
 existing `array<string>` and `array<float>` results. `matrix.row` and
 `matrix.col` return independent element-array snapshots for runtime-owned
@@ -887,7 +895,8 @@ Namespace-qualified `matrix.mult(...)` uses a separate, closed
 the resolved `MatrixMult` result type. Matrix-by-array, array-by-matrix, and
 array-by-array overloads resolve to `array<float>` and may use `.size()`,
 `.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`,
-`.indexof(value)`, `.lastindexof(value)`, and `.binary_search(value)`.
+`.indexof(value)`, `.lastindexof(value)`, `.binary_search(value)`, and
+`.binary_search_leftmost(value)`.
 Matrix-by-matrix,
 matrix-by-scalar, and scalar-by-matrix overloads resolve to `matrix<float>` and
 may use `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
@@ -903,8 +912,8 @@ Matrix `.copy()` may continue with another admitted matrix helper;
 `array<float>`. These three helpers
 switch to the closed `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
 `.includes(value)`/`.indexof(value)`/`.lastindexof(value)`/
-`.binary_search(value)` array-result path, where only array `.copy()` continues
-and the four search results are terminal.
+`.binary_search(value)`/`.binary_search_leftmost(value)` array-result path,
+where only array `.copy()` continues and the five search results are terminal.
 `.is_square()`
 instead
 returns the ordinary simple bool for every supported matrix element kind and

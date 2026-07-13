@@ -283,6 +283,9 @@ qualified_scalar_lastindexof = anchor.exposeInts(qualified_scalar_values).lastin
 qualified_scalar_binary_search = anchor.exposeInts(array.from(40, 41, 42)).binary_search(41)
 unqualified_int_binary_search = identity(array.from(10, 11, 12)).binary_search(11)
 unqualified_float_binary_search = identity(array.from(20.0, 21.0, 22.0)).copy().binary_search(21.0)
+qualified_scalar_binary_search_leftmost = anchor.exposeInts(array.from(40, 42, 42, 50)).binary_search_leftmost(42)
+unqualified_int_binary_search_leftmost = identity(array.from(10, 12, 14)).binary_search_leftmost(13)
+unqualified_float_binary_search_leftmost = identity(array.from(20.0, 22.0, 24.0)).copy().binary_search_leftmost(99.0)
 
 unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
 unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))

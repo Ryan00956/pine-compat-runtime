@@ -251,6 +251,10 @@ return, `-1` missing/empty/upstream-`na` behavior, and non-mutation. Local and
 imported scalar-tree UDT array results remain deliberately rejected by the
 numeric gate, while local/imported UDF and method results returning concrete
 int/float arrays use the same closed helper.
+Item 86 extends concrete numeric array call results with terminal
+`.binary_search_leftmost(value)`. It keeps the numeric and ascending-input
+gates, returns the first exact duplicate or the clamped nearest-left index for
+a miss, returns `-1` for empty/upstream-`na`, and does not widen UDT support.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1618,6 +1622,16 @@ Recommended future slices:
     chart-point, local/imported UDT, invalid type/arity, copy-continuation, and
     terminal-continuation boundaries are fixture-backed. No UDT/import identity
     or public schema field is widened. Done.
+86. The same concrete numeric array call-result producer set additionally
+    exposes terminal `.binary_search_leftmost(value)`. It preserves the numeric
+    receiver/value and caller-owned ascending-input gates. Exact duplicates
+    return their first index; misses return the nearest-left element index,
+    clamped to `0` below the minimum and the last index above the maximum.
+    Empty and upstream-`na` arrays return `-1`; the `simple int` result is non-
+    mutating and terminal. Static/cross-namespace, matrix/map-derived, local/
+    imported function/method, duplicate, between-value, clamp, invalid type/
+    arity, copy-continuation, and terminal-continuation paths are fixture-backed.
+    Nonnumeric and UDT result arrays remain rejected. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1731,6 +1745,10 @@ Item 83 adds symmetric terminal first-index searches with `-1` missing/empty/
 upstream-`na` behavior and the same identity boundary.
 Item 84 adds terminal last-index searches over the same producer and identity
 boundary, including repeated structural-UDT matches.
+Item 85 adds terminal exact binary search only to concrete numeric array call
+results, retaining the numeric gate and excluding UDT arrays.
+Item 86 adds terminal leftmost binary search over that numeric producer set,
+including nearest-left clamping for misses, without widening UDT identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result
