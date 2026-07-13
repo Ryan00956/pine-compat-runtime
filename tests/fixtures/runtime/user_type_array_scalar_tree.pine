@@ -767,3 +767,8 @@ local_call_result_remove_source = array.from(First.new(187.0, 1870.0), First.new
 local_call_result_remove_value = return_identity(local_call_result_remove_source).remove(0)
 local_call_result_remove_remaining = local_call_result_remove_source.first()
 plot(local_call_result_remove_value.shared == 187.0 and local_call_result_remove_value.other == 1870.0 and local_call_result_remove_source.size() == 1 and local_call_result_remove_remaining.shared == 188.0 ? 1 : 0, "local_call_result_remove_alias")
+
+local_call_result_push_source = array.from(First.new(189.0, 1890.0))
+return_identity(local_call_result_push_source).push(First.new(190.0, 1900.0))
+local_call_result_push_last = local_call_result_push_source.last()
+plot(local_call_result_push_source.size() == 2 and local_call_result_push_last.shared == 190.0 and local_call_result_push_last.other == 1900.0 ? 1 : 0, "local_call_result_push_alias")

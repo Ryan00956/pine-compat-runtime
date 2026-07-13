@@ -2012,6 +2012,15 @@ mutation; out-of-range indexes retain runtime errors. Alias-returning concat/
 UDF/method results and nested slices delete from shared parent backing, while
 fresh matrix/map/`matrix.mult` snapshots leave sources unchanged. UDF-body and
 all remaining postfix mutations stay rejected.
+Item 113 adds terminal top-level `.push(value)` across that producer set and
+array-valued keys/values or row/column/eigenvalue continuations from concrete
+map/matrix results. It accepts one element-compatible scalar, drawing-id,
+`chart.point`, same-local UDT, or same-imported UDT value, appends at the
+resolved result's end, returns `void`, and cannot continue. Alias-returning
+concat/UDF/method results and nested slices update shared parent backing, while
+fresh matrix/map/`matrix.mult` snapshots leave sources unchanged. Mismatched
+kind/identity, arity, upstream-`na`, capacity, and UDF-body boundaries remain
+closed and fixture-backed.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

@@ -558,3 +558,8 @@ imported_call_result_remove_source = array.from(left.First.new(97.0, 970.0), lef
 imported_call_result_remove_value = left.direct(imported_call_result_remove_source).remove(0)
 imported_call_result_remove_remaining = imported_call_result_remove_source.first()
 plot(imported_call_result_remove_value.shared == 97.0 and imported_call_result_remove_value.other == 970.0 and imported_call_result_remove_source.size() == 1 and imported_call_result_remove_remaining.shared == 98.0 ? 1 : 0, "imported_call_result_remove_alias")
+
+imported_call_result_push_source = array.from(left.First.new(99.0, 990.0))
+left.direct(imported_call_result_push_source).push(left.First.new(100.0, 1000.0))
+imported_call_result_push_last = imported_call_result_push_source.last()
+plot(imported_call_result_push_source.size() == 2 and imported_call_result_push_last.shared == 100.0 and imported_call_result_push_last.other == 1000.0 ? 1 : 0, "imported_call_result_push_alias")

@@ -486,6 +486,14 @@ Current baseline:
   live slices delete from their backing parent, while fresh matrix/map/mult
   snapshots leave sources unchanged. Index type/arity, UDF-side-effect, and
   identity boundaries are fixture-backed; public schemas are unchanged.
+  The single-value append slice adds top-level `.push(value)` across the same
+  producer set plus concrete map-result keys/values and matrix-result row/col/
+  eigenvalue continuations. It validates scalar/object/`chart.point` kind or
+  local/imported UDT identity, appends to alias/live-slice parent backing,
+  returns `void`, and cannot continue; fresh derived snapshots leave source
+  collections unchanged. Invalid value/arity, upstream-`na`, 100000-element
+  capacity, and UDF-side-effect boundaries are fixture-backed; public schemas
+  remain unchanged.
   The following closed slice admits exact
   `matrix.new<float|int|bool|string|color>` template results. They preserve the
   registered element kind, requested rectangular shape, type-compatible

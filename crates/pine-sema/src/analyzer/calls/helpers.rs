@@ -165,6 +165,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "pop" => Some("array.pop"),
         "shift" => Some("array.shift"),
         "remove" => Some("array.remove"),
+        "push" => Some("array.push"),
         _ => None,
     }
 }

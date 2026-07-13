@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal top-level `.push(value)` to every concrete array call result.
+  It validates scalar/object/`chart.point` kind or same-local/same-imported
+  scalar-tree UDT identity, appends one compatible value, returns `void`, and
+  cannot continue. Alias-returning concat/local/imported array results and
+  nested live slices update backing parents; fresh matrix/map/`matrix.mult`
+  snapshots remain independent. Map-result keys/values and matrix-result row/
+  column/eigenvalue continuations are also fixture-backed. Invalid value/arity,
+  upstream-`na`, 100000-element capacity, and UDF-side-effect boundaries retain
+  ordinary behavior; public schemas are unchanged.
 - Added terminal top-level `.remove(index)` to every concrete array call result.
   It removes and returns the selected positive or in-range negative element
   with preserved scalar/object/`chart.point` kind or same-local/same-imported

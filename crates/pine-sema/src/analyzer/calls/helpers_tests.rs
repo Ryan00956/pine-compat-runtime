@@ -104,6 +104,7 @@ mod tests {
             ("pop", "array.pop"),
             ("shift", "array.shift"),
             ("remove", "array.remove"),
+            ("push", "array.push"),
         ] {
             assert_eq!(
                 array_call_result_builtin_name(method_name),
@@ -112,7 +113,7 @@ mod tests {
             assert!(pine_builtins::get_phase_1_builtin(builtin_name).is_some());
         }
         assert_eq!(array_call_result_builtin_name("sort"), None);
-        assert_eq!(array_call_result_builtin_name("push"), None);
+        assert_eq!(array_call_result_builtin_name("set"), None);
     }
 
     #[test]

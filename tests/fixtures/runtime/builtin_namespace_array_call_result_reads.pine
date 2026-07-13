@@ -607,3 +607,27 @@ namespace_call_result_remove_map_na_index = map.values(empty_map).remove(na)
 namespace_call_result_remove_map_na = map.values(na_map).remove(0)
 namespace_call_result_remove_mult_na = matrix.mult(mult_na_matrix, mult_vector).remove(0)
 plot(na(namespace_call_result_remove_split_na) and na(namespace_call_result_remove_matrix_na) and na(namespace_call_result_remove_map_na_index) and na(namespace_call_result_remove_map_na) and na(namespace_call_result_remove_mult_na) ? 1 : 0, "namespace_call_result_remove_na_index_upstream_na")
+
+str.split("alpha,beta", ",").push("gamma")
+ta.pivot_point_levels("Traditional", true, true).push(1.0)
+plot(1, "namespace_call_result_push_split_pivot")
+
+matrix.row(float_matrix, 0).push(3.5)
+matrix.col(float_matrix, 0).push(4.5)
+matrix.eigenvalues(float_diagonal).push(4.0)
+plot(matrix.get(float_matrix, 0, 0) == 1.5 and matrix.get(float_matrix, 0, 1) == 2.5 and matrix.get(float_diagonal, 0, 0) == 2.0 ? 1 : 0, "namespace_call_result_push_matrix_snapshot")
+
+map.keys(int_float).push(30)
+map.values(int_float).push(4.5)
+plot(map.size(int_float) == 2 and map.get(int_float, 10) == 3.5 and map.get(int_float, 20) == 2.5 ? 1 : 0, "namespace_call_result_push_map_snapshot")
+
+matrix.mult(mult_matrix, mult_vector).push(50.0)
+mult_matrix.mult(mult_vector).push(50.0)
+plot(matrix.get(mult_matrix, 0, 0) == 1.0 and matrix.get(mult_matrix, 1, 1) == 4.0 ? 1 : 0, "namespace_call_result_push_mult_snapshot")
+
+str.split(na, ",").push("value")
+matrix.row(na_float_matrix, 0).push(1.0)
+map.values(empty_map).push(1.0)
+map.values(na_map).push(1.0)
+matrix.mult(mult_na_matrix, mult_vector).push(1.0)
+plot(map.size(empty_map) == 0 ? 1 : 0, "namespace_call_result_push_empty_upstream_na")

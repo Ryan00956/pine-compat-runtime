@@ -1625,3 +1625,12 @@ return/parameter flow remains deferred.
     map/`matrix.mult` snapshots remain source-independent. UDF-body and all
     remaining direct mutations stay rejected. No imported identity or public
     schema field is widened. Done.
+103. The same producer set additionally exposes terminal top-level
+    `.push(value)`. It accepts one element-compatible scalar/object/
+    `chart.point` or concrete imported UDT value, appends at the resolved
+    result's end, returns `void`, and cannot continue. Imported/local alias
+    results and nested slices update shared parent backing, while fresh matrix/
+    map/`matrix.mult` snapshots remain source-independent. Mismatched kind or
+    imported identity, arity, upstream-`na`, capacity, and UDF-body boundaries
+    remain rejected. No imported identity or public schema field is widened.
+    Done.

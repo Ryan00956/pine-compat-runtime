@@ -2009,6 +2009,33 @@ plot(array.size(values))
 }
 
 #[test]
+fn rejects_float_array_call_result_push_past_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("array call-result push limit")
+array.new_float(100000).push(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected array call-result push limit error");
+
+    assert!(
+        error
+            .message
+            .contains("array.push cannot exceed 100000 elements"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
 fn rejects_float_array_unshift_past_limit() {
     let source = SourceFile::new(
         "test.pine",

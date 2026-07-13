@@ -592,6 +592,14 @@ Recommended future slices:
     Direct call-result mutation inside UDFs and all remaining postfix mutations
     stay rejected. Map storage, templates, and public schemas are unchanged.
     Done.
+47. Every concrete scalar key/value snapshot additionally exposes terminal
+    top-level `.push(value)`, including keys/values reached through supported
+    built-in, copied, local/imported function, and local/imported method map
+    results. It validates the resolved key/value scalar kind, appends only to
+    the fresh snapshot, returns `void`, and cannot continue; source map entries
+    and insertion order remain unchanged. Invalid kind/arity, typed-`na` map,
+    capacity, and UDF-side-effect boundaries retain ordinary behavior. Map
+    storage, templates, and public schemas are unchanged. Done.
 
 ## Completion Gate For Future Widening
 
