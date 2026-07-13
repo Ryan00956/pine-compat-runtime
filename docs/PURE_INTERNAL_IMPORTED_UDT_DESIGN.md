@@ -1552,3 +1552,10 @@ return/parameter flow remains deferred.
     continuation. Bool/color/object/chart-point, invalid order/arity, direct
     mutation, and imported-UDT result `sort_field` ordering before binding
     remain closed. Done.
+94. Concrete bool, int, or float array call results expose terminal `.every()`
+    across local/imported functions and methods plus the existing static,
+    cross-namespace, and matrix/map-derived producer sets. Nonzero numerics and
+    `true` are truthy; zero, `false`, and element `na` are false. Empty results
+    return true, upstream `na` propagates, and the source remains unchanged.
+    String/color/object/chart-point/imported-UDT, extra-arity, and terminal-
+    continuation boundaries remain closed. Done.

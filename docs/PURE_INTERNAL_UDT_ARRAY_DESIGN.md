@@ -340,6 +340,11 @@ ordering/empty/upstream-`na` behavior, source non-mutation, and nested closed-
 array continuation. Bool/color/object/chart-point, invalid order/arity, direct
 mutation, and UDT call-result `sort_field` ordering before binding remain
 closed.
+Item 104 adds terminal `.every()` to concrete bool, int, or float call results
+across the closed producer families. Nonzero numerics and `true` are truthy;
+zero, `false`, and element `na` are false. Empty results return true, upstream
+`na` propagates, the source remains unchanged, and the result cannot continue.
+String/color/object/chart-point/UDT and extra-arity boundaries remain closed.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1922,6 +1927,13 @@ propagation, source non-mutation, and nested sort/copy/read/search/
 transformation/statistic continuation. Bool/color/object/chart-point, invalid
 order/arity, direct mutation, and UDT call-result `sort_field` ordering before
 an identity-preserving binding remain closed.
+Item 104 adds terminal `.every()` to concrete bool, int, or float array call
+results across static, cross-namespace, matrix/map-derived, and local/imported
+producers. It returns fixed series bool, treats nonzero numerics and `true` as
+truthy and zero, `false`, or element `na` as false, returns true for empty
+arrays, propagates upstream `na`, leaves the source unchanged, and cannot
+continue. String/color/object/chart-point/UDT and extra-arity boundaries remain
+closed.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

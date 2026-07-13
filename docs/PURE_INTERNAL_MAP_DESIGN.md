@@ -525,6 +525,12 @@ Recommended future slices:
     snapshot independence, and nested array-result continuation. Bool/color
     snapshots, invalid order/arity, and direct result mutation remain closed.
     Map storage and template rules are unchanged. Done.
+38. Bool, int, or float key/value snapshots additionally expose terminal
+    `.every()`. Nonzero numerics and `true` are truthy; zero, `false`, and
+    element `na` are false. Empty snapshots return true, typed-`na` maps
+    propagate `na`, and both the source map and snapshot remain unchanged.
+    String/color, extra-arity, and terminal-continuation boundaries remain
+    closed. Map storage and template rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

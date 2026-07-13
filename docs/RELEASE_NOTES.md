@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added terminal `.every()` to every existing concrete bool, int, or float
+  array call result. It returns fixed `series bool`, treats nonzero numerics
+  and `true` as truthy, treats zero, `false`, and element `na` as false,
+  returns true for empty arrays, propagates an upstream `na` array, leaves its
+  source unchanged, and cannot continue through another postfix call. Static/
+  cross-namespace, matrix/map-derived, local/imported function/method, invalid
+  type/arity, terminal-continuation, empty/`na`, and UDT boundaries are
+  fixture-backed.
 - Added transforming `.sort_indices(order?)` to every existing concrete int,
   float, or string array call result. It returns an independent fixed
   `simple array<int>` of stable original indexes, preserves the established

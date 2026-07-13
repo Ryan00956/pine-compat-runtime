@@ -574,7 +574,8 @@ emit root-spanned `E_TUPLE_UDT_ARRAY_IDENTITY` diagnostics. Qualified
 user-defined UDF/method results and unqualified plain local UDF results support
 direct `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)` dispatch for
-every currently supported array kind. Concrete numeric results additionally
+every currently supported array kind. Concrete bool, int, or float results
+additionally admit terminal `.every()`. Concrete numeric results additionally
 admit `.binary_search(value)`, `.binary_search_leftmost(value)`,
 `.binary_search_rightmost(value)`, terminal
 `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`, fresh same-kind
@@ -597,7 +598,7 @@ canonical constructor or checked UDT-template path. The parser marks only
 those receivers with `$builtin_array_result`, and semantic analysis admits only
 `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)`, plus
-numeric-only `.binary_search(value)`, `.binary_search_leftmost(value)`,
+bool/int/float-only `.every()` and numeric-only `.binary_search(value)`, `.binary_search_leftmost(value)`,
 `.binary_search_rightmost(value)`, `.abs()`, and
 `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, after them. Only `.copy()`, numeric `.abs()` and
 `.standardize()`, and numeric-or-string `.sort_indices(order?)` produce array
@@ -612,12 +613,12 @@ outside the `array` namespace: `str.split`, `ta.pivot_point_levels`, `matrix.row
 `matrix.col`, `matrix.eigenvalues`, `map.keys`, and `map.values`. Each result
 admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)`, plus
-numeric-only `.binary_search(value)`, `.binary_search_leftmost(value)`,
+bool/int/float-only `.every()` and numeric-only `.binary_search(value)`, `.binary_search_leftmost(value)`,
 `.binary_search_rightmost(value)`, `.abs()`, and
 `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`; only
 `.copy()`, numeric `.abs()` and `.standardize()`, and numeric-or-string
 `.sort_indices(order?)` return array receivers eligible for another allowed
-chain. The twenty-three
+chain. The twenty-four
 read/search results are terminal. Return
 kinds stay
 producer-specific: `array<string>` for `str.split`, `array<float>` for
@@ -640,7 +641,7 @@ dispatch is selected by the resolved `ReturnSpec::MatrixMult` result.
 Matrix-by-array, array-by-matrix,
 and array-by-array overloads resolve to `array<float>` and admit `.size()`,
 `.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`,
-`.indexof(value)`, `.lastindexof(value)`, `.binary_search(value)`,
+`.indexof(value)`, `.lastindexof(value)`, `.every()`, `.binary_search(value)`,
 `.binary_search_leftmost(value)`, `.binary_search_rightmost(value)`, and
 `.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`/`.sort_indices(order?)`.
 Matrix-by-matrix,
@@ -658,7 +659,7 @@ parser marker to `$builtin_array_result`, producing fresh element-kind-preservin
 while `.eigenvalues()` retains its fixed `simple array<float>` result and
 numeric-matrix parameter check. All three switch to the array-result prefix and
 admit `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
-`.indexof(value)`/`.lastindexof(value)`/`.binary_search(value)`/
+`.indexof(value)`/`.lastindexof(value)`/`.every()`/`.binary_search(value)`/
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
 `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)` terminal reads plus transforming `.standardize()` and `.sort_indices(order?)`, with copy/abs/standardize/sort_indices array continuation and terminal read/search/aggregate checks.
 `.is_square()` retains the ordinary `MATRIX_ANY_ID_PARAMS`
@@ -847,7 +848,7 @@ scalar key/value kinds and admits `.size()`, `.get(key)`, `.contains(key)`,
 admitted map helper. `.keys()` and `.values()` switch to the array-result prefix
 and return fresh key/value-kind-preserving arrays, which admit direct binding
 plus `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
-`.indexof(value)`/`.lastindexof(value)` and numeric-only
+`.indexof(value)`/`.lastindexof(value)`, bool/int/float-only `.every()`, and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
 `.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, with copy/abs/standardize/sort_indices array
@@ -887,7 +888,7 @@ use the existing pure user-method dispatch, and explicit same-named local
 methods and imported functions remain distinct. Other `array.*` calls,
 built-in namespaces and templates outside the seven fixed producers plus the
 result-type-checked namespace `matrix.mult` paths, helpers beyond the applicable
-twenty-seven-item postfix read/copy/search/transform/aggregate set, non-array/non-
+twenty-eight-item postfix read/copy/search/transform/aggregate set, non-array/non-
 matrix/non-UDT results, unknown/`na` results without a concrete supported type
 or identity, and postfix mutation remain outside this subset. A postfix read
 does not make a mutating producer pure:
@@ -896,6 +897,11 @@ inside UDFs. `.includes(value)` reuses the ordinary array element-kind and UDT-
 identity argument checks plus structural/object equality, returns `series bool`,
 returns false for an empty concrete array, propagates an upstream `na` array,
 does not mutate the result, and is terminal without another parser prefix.
+`.every()` accepts only concrete bool/int/float results, returns fixed `series
+bool`, treats nonzero numerics and `true` as truthy, treats zero, `false`, and
+element `na` as false, returns true for an empty array, propagates an upstream
+`na` array, leaves the source unchanged, and is terminal. String/color/object/
+chart-point/UDT results and extra arguments remain rejected.
 `.indexof(value)` uses the same checks and equality, returns the first zero-
 based match as `simple int`, returns `-1` for missing or empty concrete arrays
 and for an upstream `na` array, does not mutate the result, and is terminal.
@@ -1277,7 +1283,7 @@ user-defined results returning any currently supported array kind, unqualified
 plain local UDF array results, the exact built-in `array.*` producer allowlist,
 and the cross-namespace array-capable path support direct
 `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
-`.indexof(value)`/`.lastindexof(value)`, plus numeric-only
+`.indexof(value)`/`.lastindexof(value)`, plus bool/int/float-only `.every()` and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
 `.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, without widening arbitrary call-

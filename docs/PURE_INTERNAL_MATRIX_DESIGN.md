@@ -1604,6 +1604,13 @@ Recommended future slices:
     behavior, source independence, and nested array-result continuation.
     Bool/color results, invalid order/arity, and direct mutation remain closed;
     matrix-valued continuation is unchanged.
+108. Bool, int, or float matrix row/column arrays plus numeric eigenvalue and
+    array-returning `matrix.mult` results additionally expose terminal
+    `.every()`. Nonzero numerics and `true` are truthy; zero, `false`, and
+    element `na` are false. Empty arrays return true, upstream `na` propagates,
+    and sources remain unchanged. String/color, extra-arity, and terminal-
+    continuation boundaries remain closed; matrix-valued continuation is
+    unchanged.
 
 ## Completion Gate For Future Positive Support
 

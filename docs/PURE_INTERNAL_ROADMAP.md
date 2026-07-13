@@ -903,6 +903,14 @@ Current baseline:
   transformation/statistic continuation. Bool/color/object/chart-point results,
   invalid order/arity, direct mutation, and UDT result ordering before an
   identity-preserving binding remain gated.
+  The next predicate slice adds terminal `.every()` to every concrete bool,
+  int, or float array call result across the same static, cross-namespace,
+  matrix/map-derived, and local/imported result-source families. It returns
+  fixed series bool, accepts only nonzero numerics or `true` as truthy, treats
+  zero, `false`, and element `na` as false, returns true for empty arrays,
+  propagates an upstream `na` array, and leaves the source unchanged. String,
+  color, object, chart-point, UDT, extra-arity, and terminal-continuation
+  boundaries are fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -919,7 +927,8 @@ Remaining internal work:
   subsets, including mixed imported return identities, non-scalar imported
   returns, conflicting identities within one tuple slot, direct helpers beyond
   the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
-  `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus numeric-only
+  `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus bool/int/float-
+  only `.every()` and numeric-only
   `.binary_search(value)`/`.binary_search_leftmost(value)`/
   `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/
   `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)` set, the int/float/string-only `.sort_indices(order?)` call-result transformation with its retained UDT-binding boundary, and

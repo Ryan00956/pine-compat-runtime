@@ -338,6 +338,10 @@ qualified_scalar_sort_indices = anchor.exposeInts(array.from(42, 40, 41)).sort_i
 unqualified_int_sort_indices = identity(array.from(12, 10, 11)).sort_indices().copy()
 unqualified_float_sort_indices = identity(array.from(22.0, na, 20.0)).copy().sort_indices()
 unqualified_string_sort_indices = identity(array.from("gamma", "alpha", "beta")).sort_indices().sort_indices()
+qualified_scalar_every = anchor.exposeInts(array.from(40, 41, 42)).every()
+unqualified_bool_every = identity(array.from(true, true)).every()
+unqualified_int_every = identity(array.from(10, 11, 12)).copy().every()
+unqualified_float_every = identity(array.from(20.0, 21.0, 22.0)).every()
 
 unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
 unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))
