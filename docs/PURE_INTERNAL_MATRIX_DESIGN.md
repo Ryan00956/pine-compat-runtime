@@ -1197,6 +1197,14 @@ Recommended future slices:
     are fixture-backed. Direct `.values()`, map or call-result-array mutation,
     unsupported templates, broader helpers, and terminal key-reader
     continuation remain fail closed.
+57. Scalar-map call-result value arrays: done for the same producer set.
+    `.values()` returns a fresh value-kind-preserving array and switches to
+    size/get/first/last/copy with copy-only array continuation. Built-in
+    constructor/copy, local/imported pure-function, local/imported user-method,
+    five scalar value kinds, dual-alias, and source-independence paths are
+    fixture-backed. Map or call-result-array mutation, unsupported templates,
+    broader helpers, and terminal key/value-reader continuation remain fail
+    closed.
 
 ## Completion Gate For Future Positive Support
 

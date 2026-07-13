@@ -9,6 +9,6 @@ clear_result = map.new<string, float>().clear()
 remove_result = map.new<string, float>().remove("key")
 put_all_result = map.new<string, float>().put_all(map.new<string, float>())
 keys_mutation = map.new<string, float>().keys().push("extra")
-values_result = map.new<string, float>().values()
+values_mutation = map.new<string, float>().values().push(1.0)
 
 plot(close)

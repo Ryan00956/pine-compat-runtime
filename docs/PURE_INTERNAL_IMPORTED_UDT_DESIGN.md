@@ -213,6 +213,9 @@ Item 42 adds `.keys()` to every existing concrete scalar-map call-result
 producer. The read returns a fresh key-kind-preserving array and switches to
 the closed array-result size/get/first/last/copy path, including copy-only
 array continuation, without adding imported identity to map or array metadata.
+Item 43 adds `.values()` across the same producer set. The read returns a fresh
+value-kind-preserving array and uses the same closed array-result continuation,
+without adding imported identity to map or array metadata.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` types, non-producer calls, unsupported matrix
 templates and map templates,
@@ -1139,3 +1142,10 @@ return/parameter flow remains deferred.
     unsupported templates, broader helpers, and terminal key-reader
     continuation remain fail closed. No imported UDT identity or public schema
     field is added. Done.
+43. The same concrete scalar-map call-result producers expose `.values()` as a
+    fresh value-kind-preserving array. Direct binding, int/float/bool/string/
+    color value kinds, size/get/first/last/copy, copy-only array continuation,
+    dual-alias paths, and source-map independence are fixture-backed. Map or
+    call-result-array mutation, unsupported templates, broader helpers, and
+    terminal key/value-reader continuation remain fail closed. No imported UDT
+    identity or public schema field is added. Done.

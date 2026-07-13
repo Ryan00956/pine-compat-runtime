@@ -11,7 +11,7 @@ clear_result = map.copy(source).clear()
 remove_result = map.copy(source).remove("key")
 put_all_result = map.copy(source).put_all(source)
 keys_mutation = map.copy(source).keys().push("extra")
-values_result = map.copy(source).values()
+values_mutation = map.copy(source).values().push(1.0)
 wrong_receiver = map.copy(close).size()
 
 plot(close)

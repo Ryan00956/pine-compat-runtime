@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added direct `.values()` reads for every existing concrete scalar-map call
+  result. The result is a fresh value-kind-preserving scalar array with the
+  same direct binding, `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`, copy-
+  only continuation, dual-alias, and source-map-independence guarantees as
+  call-result `.keys()`. Map or call-result-array mutation, unsupported
+  templates, broader helpers, and terminal key/value-reader continuation
+  remain gated.
 - Added direct `.keys()` reads for every existing concrete scalar-map call
   result, including supported `map.new<K,V>`, `map.copy(existing)`, local and
   imported pure functions, and local and imported user methods. The result is

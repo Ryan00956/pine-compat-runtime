@@ -703,17 +703,17 @@ public schemas remain unchanged.
 Exact supported scalar `map.new<K,V>` templates use the separate
 `$builtin_map_result` synthetic prefix. The receiver retains its concrete
 scalar key/value kinds and admits `.size()`, `.get(key)`, `.contains(key)`,
-`.copy()`, and `.keys()`; only `.copy()` may continue another admitted map
-helper. `.keys()` switches to the array-result prefix and returns a fresh key-
-kind-preserving array, which admits direct binding plus
-`.size()`/`.get()`/`.first()`/`.last()`/`.copy()` with copy-only array
+`.copy()`, `.keys()`, and `.values()`; only `.copy()` may continue another
+admitted map helper. `.keys()` and `.values()` switch to the array-result prefix
+and return fresh key/value-kind-preserving arrays, which admit direct binding
+plus `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` with copy-only array
 continuation. The ordinary map analyzer validates key types and marks copy
 results with the same template metadata. Exact namespace `map.copy(existing)`
 results use the same prefix and retain both source template metadata and
 entries through the existing independent-copy runtime operation. Mutation,
-direct `.values()`, unsupported templates, non-map copy inputs, and
+unsupported templates, non-map copy inputs, and
 other map call-result receivers fail closed. Unqualified local-UDF results with
-one concrete supported scalar map template share the same five helpers through
+one concrete supported scalar map template share the same six helpers through
 `$call_result`; parameter passthrough, block aliases, nested calls,
 same-template control flow, constructed/copied results, named/reordered
 arguments, empty maps, and per-call scalar key/value templates retain their
@@ -723,10 +723,10 @@ unqualified or alias-qualified, block-return, nested-function, same-template
 control-flow, constructed-result, scalar-template-interleaving, same-library
 dual-alias, and independent-copy paths are preserved. Analysis-marked local
 and imported user-method results retain their receiver-style and qualified/
-direct-constructor paths. Only copy may continue as a map, while keys continue
-through the closed array-reader set. Unknown/`na`, scalar, array, matrix,
-wrong-template/key, direct `.values()`, broader helpers, map or call-result-
-array mutation, and continuation after a terminal key-array reader remain
+direct-constructor paths. Only copy may continue as a map, while keys and
+values continue through the closed array-reader set. Unknown/`na`, scalar,
+array, matrix, wrong-template/key, broader helpers, map or call-result-array
+mutation, and continuation after a terminal key/value-array reader remain
 gated. This path adds no UDT/import identity or public
 schema field.
 

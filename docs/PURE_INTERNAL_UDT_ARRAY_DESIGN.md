@@ -229,6 +229,9 @@ producer. The read returns a fresh key-kind-preserving array and switches to
 the closed array-result size/get/first/last/copy path, including copy-only
 array continuation, without adding UDT/import identity to map or array
 metadata.
+Item 53 adds `.values()` across the same producer set. The read returns a fresh
+value-kind-preserving array and uses the same closed array-result continuation,
+without adding UDT/import identity to map or array metadata.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1314,6 +1317,13 @@ Recommended future slices:
     unsupported templates, broader helpers, and terminal key-reader
     continuation remain fail closed. No UDT/import identity or public schema
     field is added. Done.
+53. The same concrete scalar-map call-result producers expose `.values()` as a
+    fresh value-kind-preserving array. Direct binding, int/float/bool/string/
+    color value kinds, size/get/first/last/copy, copy-only array continuation,
+    dual-alias paths, and source-map independence are fixture-backed. Map or
+    call-result-array mutation, unsupported templates, broader helpers, and
+    terminal key/value-reader continuation remain fail closed. No UDT/import
+    identity or public schema field is added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1418,6 +1428,8 @@ matrix-kind metadata but no UDT/import identity.
 Item 52 adds concrete scalar-map call-result `.keys()` reads with fresh,
 key-kind-preserving scalar-array metadata and the existing closed array-reader
 continuation, but no UDT/import identity.
+Item 53 adds symmetric `.values()` reads with fresh, value-kind-preserving
+scalar-array metadata and the same continuation, but no UDT/import identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result
