@@ -1476,3 +1476,8 @@ return/parameter flow remains deferred.
     series float, shares filtered `na` and empty/all-`na`/upstream-`na`
     behavior, converts non-finite results to `na`, and keeps nonnumeric/
     imported-UDT, arity, and terminal-continuation boundaries closed. Done.
+83. The same numeric producer set exposes terminal `.range()`. It preserves
+    receiver-derived series int/float, computes filtered maximum minus minimum,
+    returns `na` for empty/all-`na`/upstream-`na` or non-finite float
+    differences, and keeps nonnumeric/imported-UDT, arity, and terminal-
+    continuation boundaries closed. Done.

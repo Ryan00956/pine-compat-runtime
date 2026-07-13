@@ -1526,6 +1526,11 @@ Recommended future slices:
     overloads return fixed series float, retain filtered `na`, empty/all-`na`/
     upstream-`na` and non-finite behavior, invalid type/arity, and terminal
     continuation. Matrix-valued continuation is unchanged.
+97. Numeric array-valued call results additionally expose terminal `.range()`.
+    Matrix row/column/eigenvalue arrays and array-returning `matrix.mult`
+    overloads retain receiver-derived series int/float, filtered maximum-minus-
+    minimum, empty/all-`na`/upstream-`na` and non-finite behavior, invalid type/
+    arity, and terminal continuation. Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

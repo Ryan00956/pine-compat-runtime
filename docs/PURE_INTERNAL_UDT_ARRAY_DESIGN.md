@@ -275,6 +275,10 @@ Item 92 adds terminal `.avg()` over the same result set. It always returns
 series float, shares filtered `na` and empty/all-`na`/upstream-`na` behavior,
 converts non-finite results to `na`, and keeps UDT, arity, and continuation
 boundaries closed.
+Item 93 adds terminal `.range()` over the same result set. It preserves
+receiver-derived series int/float, computes filtered maximum minus minimum,
+returns `na` for empty/all-`na`/upstream-`na` or non-finite float differences,
+and keeps UDT, arity, and continuation boundaries closed.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1795,6 +1799,9 @@ arity, terminal-continuation, and UDT-identity boundaries.
 Item 92 adds terminal fixed-float `.avg()` over that result set, preserving the
 same filtered `na`, empty/all-`na`/upstream-`na`, non-finite-result, arity,
 terminal-continuation, and UDT-identity boundaries.
+Item 93 adds terminal receiver-typed `.range()` over that result set,
+preserving filtered `na`, empty/all-`na`/upstream-`na`, non-finite-difference,
+arity, terminal-continuation, and UDT-identity boundaries.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

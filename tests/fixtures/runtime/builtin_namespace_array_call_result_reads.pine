@@ -73,6 +73,9 @@ plot(na(pivot_namespace_sum) ? (na(pivot_sum) ? 1 : 0) : (pivot_sum == pivot_nam
 pivot_avg = ta.pivot_point_levels("Traditional", true, true).avg()
 pivot_namespace_avg = array.avg(ta.pivot_point_levels("Traditional", true, true))
 plot(na(pivot_namespace_avg) ? (na(pivot_avg) ? 1 : 0) : (pivot_avg == pivot_namespace_avg ? 1 : 0), "pivot_call_result_avg")
+pivot_range = ta.pivot_point_levels("Traditional", true, true).range()
+pivot_namespace_range = array.range(ta.pivot_point_levels("Traditional", true, true))
+plot(na(pivot_namespace_range) ? (na(pivot_range) ? 1 : 0) : (pivot_range == pivot_namespace_range ? 1 : 0), "pivot_call_result_range")
 
 pivot_state_size = ta.pivot_point_levels("Traditional", bar_index == 2).size()
 pivot_state_first = ta.pivot_point_levels("Traditional", bar_index == 2).first()
@@ -133,6 +136,7 @@ plot(matrix.row(float_matrix, 0).min(nth=1) == 2.5 and matrix.row(int_matrix, 0)
 plot(matrix.row(float_matrix, 0).max(nth=1) == 1.5 and matrix.row(int_matrix, 0).max() == 20 ? 1 : 0, "matrix_row_col_call_result_max")
 plot(matrix.row(float_matrix, 0).sum() == 4.0 and matrix.row(int_matrix, 0).sum() == 30 ? 1 : 0, "matrix_row_col_call_result_sum")
 plot(matrix.row(float_matrix, 0).avg() == 2.0 and matrix.row(int_matrix, 0).avg() == 15.0 ? 1 : 0, "matrix_row_col_call_result_avg")
+plot(matrix.row(float_matrix, 0).range() == 1.0 and matrix.row(int_matrix, 0).range() == 10 ? 1 : 0, "matrix_row_col_call_result_range")
 
 matrix<float> na_float_matrix = na
 na_cell_matrix = matrix.new<float>(1, 1)
@@ -150,6 +154,7 @@ plot(na(matrix.row(na_float_matrix, 0).min()) ? 1 : 0, "matrix_na_row_call_resul
 plot(na(matrix.row(na_float_matrix, 0).max()) ? 1 : 0, "matrix_na_row_call_result_max")
 plot(na(matrix.row(na_float_matrix, 0).sum()) ? 1 : 0, "matrix_na_row_call_result_sum")
 plot(na(matrix.row(na_float_matrix, 0).avg()) ? 1 : 0, "matrix_na_row_call_result_avg")
+plot(na(matrix.row(na_float_matrix, 0).range()) ? 1 : 0, "matrix_na_row_call_result_range")
 
 float_diagonal = matrix.new<float>(2, 2, 0.0)
 float_diagonal.set(0, 0, 2.0)
@@ -177,6 +182,7 @@ plot(matrix.eigenvalues(float_diagonal).min() == 2.0 ? 1 : 0, "eigen_call_result
 plot(matrix.eigenvalues(float_diagonal).max() == 3.0 ? 1 : 0, "eigen_call_result_max")
 plot(matrix.eigenvalues(float_diagonal).sum() == 5.0 ? 1 : 0, "eigen_call_result_sum")
 plot(matrix.eigenvalues(float_diagonal).avg() == 2.5 ? 1 : 0, "eigen_call_result_avg")
+plot(matrix.eigenvalues(float_diagonal).range() == 1.0 ? 1 : 0, "eigen_call_result_range")
 plot(matrix.eigenvalues(matrix.new<float>(0, 0)).size(), "eigen_empty_size")
 plot(na(matrix.eigenvalues(matrix.new<float>(0, 0)).first()) ? 1 : 0, "eigen_empty_first")
 matrix<float> na_eigen_matrix = na
@@ -241,6 +247,7 @@ plot(map.keys(int_float).min(nth=1) == 20 and map.values(int_float).copy().min()
 plot(map.keys(int_float).max(nth=1) == 10 and map.values(int_float).copy().max() == 3.5 ? 1 : 0, "map_call_result_max")
 plot(map.keys(int_float).sum() == 30 and map.values(int_float).copy().sum() == 6.0 ? 1 : 0, "map_call_result_sum")
 plot(map.keys(int_float).avg() == 15.0 and map.values(int_float).copy().avg() == 3.0 ? 1 : 0, "map_call_result_avg")
+plot(map.keys(int_float).range() == 10 and map.values(int_float).copy().range() == 1.0 ? 1 : 0, "map_call_result_range")
 
 empty_map = map.new<string, float>()
 map<string, float> na_map = na
@@ -266,6 +273,7 @@ plot(na(map.values(empty_map).min()) and na(map.values(na_map).min()) ? 1 : 0, "
 plot(na(map.values(empty_map).max()) and na(map.values(na_map).max()) ? 1 : 0, "map_empty_na_call_result_max")
 plot(na(map.values(empty_map).sum()) and na(map.values(na_map).sum()) ? 1 : 0, "map_empty_na_call_result_sum")
 plot(na(map.values(empty_map).avg()) and na(map.values(na_map).avg()) ? 1 : 0, "map_empty_na_call_result_avg")
+plot(na(map.values(empty_map).range()) and na(map.values(na_map).range()) ? 1 : 0, "map_empty_na_call_result_range")
 plot(readMatrixAndMap(float_matrix, int_float), "block_udf")
 
 mult_matrix = matrix.new<float>(2, 2, 0.0)
@@ -312,6 +320,7 @@ plot(matrix.mult(mult_matrix, mult_vector).min() == 17.0 and mult_matrix.mult(mu
 plot(matrix.mult(mult_matrix, mult_vector).max() == 39.0 and mult_matrix.mult(mult_vector).max(nth=1) == 17.0 ? 1 : 0, "mult_call_result_max")
 plot(matrix.mult(mult_matrix, mult_vector).sum() == 56.0 and mult_matrix.mult(mult_vector).sum() == 56.0 ? 1 : 0, "mult_call_result_sum")
 plot(matrix.mult(mult_matrix, mult_vector).avg() == 28.0 and mult_matrix.mult(mult_vector).avg() == 28.0 ? 1 : 0, "mult_call_result_avg")
+plot(matrix.mult(mult_matrix, mult_vector).range() == 22.0 and mult_matrix.mult(mult_vector).range() == 22.0 ? 1 : 0, "mult_call_result_range")
 
 int_mult_matrix = matrix.new<int>(2, 2, 0)
 int_mult_matrix.set(0, 0, 1)
@@ -341,6 +350,7 @@ plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).min()) and na(m
 plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).max()) and na(matrix.mult(mult_na_matrix, mult_vector).max()) ? 1 : 0, "mult_empty_na_call_result_max")
 plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).sum()) and na(matrix.mult(mult_na_matrix, mult_vector).sum()) ? 1 : 0, "mult_empty_na_call_result_sum")
 plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).avg()) and na(matrix.mult(mult_na_matrix, mult_vector).avg()) ? 1 : 0, "mult_empty_na_call_result_avg")
+plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).range()) and na(matrix.mult(mult_na_matrix, mult_vector).range()) ? 1 : 0, "mult_empty_na_call_result_range")
 plot(matrix.mult(array.new_float(0), matrix.new<float>(0, 0)).size(), "mult_left_empty_size")
 plot(na(matrix.mult(array.new_float(0), matrix.new<float>(0, 0)).first()) ? 1 : 0, "mult_left_empty_first")
 plot(matrix.mult(array.new_float(0), array.new_float(0)).size(), "mult_pair_empty_size")

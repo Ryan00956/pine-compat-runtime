@@ -450,6 +450,11 @@ Recommended future slices:
     non-finite behavior, invalid type/arity, local/imported provenance, and
     terminal continuation are fixture-backed. Map storage and template rules
     are unchanged. Done.
+27. Numeric key/value snapshots additionally expose terminal `.range()`.
+    Receiver-derived series int/float, filtered maximum-minus-minimum, empty/
+    all-`na`/upstream-`na` and non-finite behavior, invalid type/arity, local/
+    imported provenance, and terminal continuation are fixture-backed. Map
+    storage and template rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

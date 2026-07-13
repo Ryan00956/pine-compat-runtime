@@ -830,6 +830,11 @@ Current baseline:
   numeric results. It always returns series float, filters `na`, returns `na`
   for empty/all-`na`/upstream-`na` or non-finite results, and retains the sum
   slice's provenance, type, arity, non-mutation, and terminal boundaries.
+  The next terminal aggregate slice adds `.range()`. It computes filtered
+  maximum minus minimum, preserves receiver-derived series int/float, returns
+  `na` for empty/all-`na`/upstream-`na` or non-finite float differences, and
+  retains the same producer, invalid-type/arity, non-mutation, and terminal
+  boundaries.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -849,7 +854,7 @@ Remaining internal work:
   `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus numeric-only
   `.binary_search(value)`/`.binary_search_leftmost(value)`/
   `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/
-  `.sum()`/`.avg()` set, and
+  `.sum()`/`.avg()`/`.range()` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked
