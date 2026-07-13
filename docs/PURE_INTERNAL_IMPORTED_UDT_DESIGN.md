@@ -190,11 +190,14 @@ continuation, and retained array-result/UDF/non-matrix/mutation gates.
 Item 35 adds unqualified local-UDF results with a concrete inferred matrix kind
 through the same five helpers and copy-only continuation, retaining per-call
 float/int/bool/string/color kind without adding imported identity.
+Item 36 adds unqualified local-UDF results with one concrete supported scalar
+map template through size/get/contains/copy and copy-only continuation,
+retaining per-call key/value metadata without adding imported identity.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` types, non-producer calls, unsupported matrix
 templates and map templates,
-qualified user-method/imported-function and other matrix-returning calls, mixed
-or non-scalar return identities,
+qualified user-method/imported-function matrix/map results and other
+matrix/map-returning calls, mixed or non-scalar return identities,
 non-array/non-UDT or unresolved results, nested field mutation, and
 method receiver/parameter/global field side effects remain fail-closed.
 `array.slice` retains its live parent view and postfix `.copy()` captures its
@@ -1046,3 +1049,13 @@ return/parameter flow remains deferred.
     user-method/imported-function results, broader helpers, mutation, and
     terminal-read continuation remain fail closed. No imported UDT identity or
     public schema field is added. Done.
+36. Unqualified local-UDF results whose call-specific result retains one
+    concrete supported scalar map template expose only
+    size/get/contains/copy through `$call_result`, with copy-only continuation.
+    Parameter passthrough, block aliases, nested calls, same-template control
+    flow, constructed/copied returns, named/reordered arguments, empty maps,
+    scalar template interleaving, and independent copies are fixture-backed.
+    Unknown/`na`, scalar, array, matrix, qualified user-method/imported-function
+    results, wrong templates/keys, broader helpers, mutation, and terminal-read
+    continuation remain fail closed. No imported UDT identity or public schema
+    field is added. Done.

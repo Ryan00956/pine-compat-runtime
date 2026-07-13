@@ -952,7 +952,13 @@ fresh empty map, and expose only `.size()`, `.get(key)`, `.contains(key)`, and
 and unsupported map templates remain gated. Exact namespace
 `map.copy(existing)` results enter the same path, retain the source key/value
 kinds and entries in independent backing storage, and expose the same helpers
-with copy-only continuation; non-map inputs remain errors. Every other
+with copy-only continuation; non-map inputs remain errors. Unqualified
+local-UDF results with one concrete supported scalar map template share the
+four helpers through `$call_result`, preserving call-specific template/content
+metadata, empty maps, named/reordered arguments, and independent copies; only
+copy may continue. Unknown/`na`, scalar, array, matrix, qualified user-method/
+imported-function, wrong-template/key, broader-helper, mutation, and
+terminal-read continuation cases remain fail closed. Every other
 matrix-returning call,
 unsupported `matrix.new` template, and other namespace/non-producer call
 remains outside this path. Built-in namespace prefixes remain reserved, so

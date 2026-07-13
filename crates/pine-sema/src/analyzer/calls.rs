@@ -27,6 +27,17 @@ pub(crate) use helpers::{
 };
 
 impl Analyzer {
+    pub(crate) fn local_udf_call_result_method_name<'a>(
+        &self,
+        callee: &'a Expr,
+        args: &'a [CallArg],
+    ) -> Option<&'a str> {
+        let (function_name, method_name) = local_udf_call_result_method_parts(callee, args)?;
+        self.functions
+            .contains_key(function_name)
+            .then_some(method_name)
+    }
+
     pub(crate) fn analyze_call(
         &mut self,
         callee: &Expr,
@@ -262,13 +273,7 @@ impl Analyzer {
                     .kind;
                 is_matrix_kind(receiver_kind).then_some(method_name)
             })
-            .or_else(|| {
-                let (function_name, method_name) =
-                    local_udf_call_result_method_parts(callee, args)?;
-                self.functions
-                    .contains_key(function_name)
-                    .then_some(method_name)
-            })?;
+            .or_else(|| self.local_udf_call_result_method_name(callee, args))?;
         let Some(receiver_type) = arg_types.first().copied().flatten() else {
             return Some(None);
         };
@@ -297,7 +302,8 @@ impl Analyzer {
         span: Span,
         arg_types: &[Option<PineType>],
     ) -> Option<Option<PineType>> {
-        let method_name = builtin_map_call_result_method_name(callee, args)?;
+        let method_name = builtin_map_call_result_method_name(callee, args)
+            .or_else(|| self.local_udf_call_result_method_name(callee, args))?;
         let Some(receiver_type) = arg_types.first().copied().flatten() else {
             return Some(None);
         };

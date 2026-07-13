@@ -19,6 +19,13 @@ gated. Exact namespace `map.copy(existing)` results use the same path, retain
 the source scalar template and entries in independent backing storage, and
 admit the same read/copy subset. Non-map inputs, mutation, and direct
 `keys()`/`values()` stay gated.
+Unqualified local-UDF results with one concrete supported scalar map template
+share the same four helpers through `$call_result`, preserve call-specific
+template/content metadata across parameter passthrough, block aliases, nested
+calls, same-template control flow, constructed/copied returns, and named/
+reordered arguments, and allow only copy continuation. Unknown/`na`, scalar,
+array, matrix, qualified user-method/imported-function, wrong-template/key,
+broader-helper, mutation, and terminal-read continuation cases remain gated.
 Equivalent method aliases for the supported namespace subset lower to the same
 runtime calls. Scalar `map name = map.new<K, V>()` declarations infer their
 template from the initializer; bare `map` declarations without a known scalar
@@ -51,6 +58,15 @@ Current evidence:
   entries and scalar template kinds, independent backing storage, UDF-contained
   reads, wrong receiver/key/arity diagnostics, and the retained mutation and
   keys/values boundaries.
+- `tests/fixtures/runtime/local_udf_map_call_result_reads.pine` plus the
+  matching supported/unsupported semantic fixtures cover unqualified local-UDF
+  map results through size/get/contains/copy for parameter passthrough, block
+  aliases, nested calls, same-template control flow, constructed/copied
+  returns, named/reordered arguments, per-call scalar template interleaving,
+  empty maps, independent copies, and copy-only continuation. Unknown/`na`,
+  scalar, array, matrix, qualified user-method/imported-function results,
+  wrong templates/keys, broader helpers, mutation, and terminal-read
+  continuation remain gated.
 - `tests/fixtures/runtime/map_put_get_contains.pine` and
   `tests/fixtures/sema/supported_map_put_get_contains.pine` cover scalar
   `map.put`, `map.get`, and `map.contains` namespace calls, including
@@ -311,6 +327,10 @@ Recommended future slices:
     inference from known scalar map expressions, and `varip` intrabar handoff.
     Done.
 11. Same-template `map.put_all` merge behavior. Done.
+12. Unqualified local-UDF call results with one concrete supported scalar map
+    template share direct size/get/contains/copy with copy-only continuation,
+    per-call template isolation, and retained non-local/unresolved/broader/
+    mutation boundaries. Done.
 
 ## Completion Gate For Future Widening
 
@@ -355,4 +375,7 @@ iteration where a single loop variable receives the key and `[key, value]`
 receives both entries. Template-less bare map declarations, non-scalar key/value
 templates, nested collection values, and map mutation inside user-defined
 functions remain unsupported until a later slice designs and fixtures those
-semantics.
+semantics. Unqualified local-UDF results with a concrete supported scalar map
+template now share size/get/contains/copy with copy-only continuation and
+per-call template isolation; qualified user-method/imported-function and
+unresolved/mixed-template direct result receivers remain gated.

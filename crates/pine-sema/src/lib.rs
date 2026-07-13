@@ -35,9 +35,8 @@ mod prelude {
         call_arg_expected_type_diagnostic, drawing_method_builtin_name, expr_name,
         is_array_mutation_builtin, is_array_mutation_method_call_name, is_map_mutation_builtin,
         is_map_mutation_method_call_name, is_output_or_declaration_builtin, is_ta_vwap_bands_call,
-        local_udf_call_result_method_parts, map_call_result_builtin_name, map_method_builtin_name,
-        matrix_call_result_builtin_name, method_call_parts, postfix_call_result_method_parts,
-        receiver_call_arg,
+        map_call_result_builtin_name, map_method_builtin_name, matrix_call_result_builtin_name,
+        method_call_parts, postfix_call_result_method_parts, receiver_call_arg,
     };
     pub(crate) use crate::analyzer::context::{
         Analyzer, FunctionInfo, FunctionParamInfo, MAX_FUNCTION_CALL_DEPTH, MAX_SEMA_EXPR_DEPTH,

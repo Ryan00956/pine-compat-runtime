@@ -1,0 +1,52 @@
+//@version=6
+indicator("Local UDF map call-result reads")
+
+identity(id) => id
+
+blockCopy(id) =>
+    made = id.copy()
+    made
+
+nested(id) => identity(id)
+
+choose(first, second, bool use_first) => use_first ? first : second
+
+fresh() => map.new<string, float>()
+
+readValue(id, key) => identity(id).get(key)
+
+string_float = map.new<string, float>()
+string_float.put("open", 1.5)
+string_float.put("close", 2.5)
+
+string_float_other = map.new<string, float>()
+string_float_other.put("open", 8.0)
+
+int_string = map.new<int, string>()
+int_string.put(1, "one")
+
+bool_color = map.new<bool, color>()
+bool_color.put(true, color.red)
+
+color_bool = map.new<color, bool>()
+color_bool.put(color.blue, true)
+
+copied = identity(string_float).copy()
+copied.put("copy", 9.0)
+
+plot(identity(string_float).size(), "size")
+plot(identity(string_float).get("open"), "get")
+plot(identity(string_float).contains("close") ? 1 : 0, "contains")
+plot(identity(string_float).copy().get("close"), "copy_chain")
+plot(na(string_float.get("copy")) ? 1 : 0, "source_independent")
+plot(copied.get("copy"), "copy_independent")
+plot(identity(int_string).get(1) == "one" ? 1 : 0, "generic_int_string")
+plot(identity(string_float).get("open"), "generic_string_float_again")
+plot(identity(bool_color).get(true) == color.red ? 1 : 0, "generic_bool_color")
+plot(identity(color_bool).get(color.blue) ? 1 : 0, "generic_color_bool")
+plot(blockCopy(string_float).get("close"), "block_return")
+plot(nested(string_float).get("open"), "nested_return")
+plot(choose(second=string_float_other, first=string_float, use_first=false).get("open"), "named_control_flow")
+plot(fresh().size(), "constructed_result")
+plot(readValue(string_float, "close"), "nested_direct_read")
+plot(identity(string_float).copy().copy().get("open"), "nested_copy")

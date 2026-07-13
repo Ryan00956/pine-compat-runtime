@@ -463,6 +463,14 @@ Current baseline:
   key/value kinds and entries in an independent backing store and exposes the
   same four helpers with copy-only continuation. Non-map inputs, mutation, and
   direct `keys()`/`values()` remain gated.
+  The next closed map call-boundary slice admits unqualified local-UDF results
+  with one concrete supported scalar map template through `$call_result`.
+  Parameter passthrough, block aliases, nested calls, same-template control
+  flow, constructed/copied results, named/reordered arguments, empty maps,
+  per-call scalar key/value kinds, and independent copies share the four map
+  helpers with copy-only continuation. Unknown/`na`, scalar, array, matrix,
+  qualified user-method/imported-function, wrong-template/key, broader-helper,
+  mutation, and terminal-read continuation remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -496,8 +504,10 @@ Remaining internal work:
   matrix-valued `values.mult(other)`, qualified user-method/imported-function
   matrix-result receivers, unqualified local-UDF results without a concrete
   supported matrix kind,
-  other matrix-returning calls, map templates and
-  unsupported matrix/map templates and other map call-result receivers,
+  other matrix-returning calls, unsupported matrix/map templates, qualified
+  user-method/imported-function map-result receivers, unqualified local-UDF
+  map results without one concrete supported scalar template, and other map
+  call-result receivers,
   other built-in namespaces or non-producer members, non-producer `array.*`
   calls, unsupported `array.new<T>` templates, non-array/non-UDT results,
   unknown/`na` results

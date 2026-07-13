@@ -20,8 +20,6 @@ noneUdf() => na
 
 number() => 1
 
-mapResult() => map.new<int, int>()
-
 method retain(Anchor self, array<First> values) => values
 
 method copy(Anchor self, array<First> values) => array.from(First.new(999.0, 9990.0))
@@ -80,4 +78,3 @@ udf_none_size = noneUdf().size()
 udf_none_get = noneUdf().get(0)
 udf_none_last = noneUdf().last()
 number_size = number().size()
-map_copy = mapResult().copy()

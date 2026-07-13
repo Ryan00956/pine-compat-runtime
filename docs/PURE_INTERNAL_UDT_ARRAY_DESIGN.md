@@ -205,10 +205,13 @@ continuation, and retained array-result/UDF/non-matrix/mutation gates.
 Item 45 adds unqualified local-UDF results with a concrete inferred matrix kind
 through the same five helpers and copy-only continuation, retaining per-call
 float/int/bool/string/color kind without adding UDT/import identity.
+Item 46 adds unqualified local-UDF results with one concrete supported scalar
+map template through size/get/contains/copy and copy-only continuation,
+retaining per-call key/value metadata without adding UDT/import identity.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, qualified user-method/imported-
-function matrix-result receivers, and other matrix-returning calls remain
+function matrix/map-result receivers, and other matrix/map-returning calls remain
 fail-closed. `array.slice`
 remains a live parent view, while a
 postfix `.copy()` independently captures its current values. `array.concat`
@@ -1221,6 +1224,16 @@ Recommended future slices:
     user-method/imported-function results, broader helpers, mutation, and
     terminal-read continuation remain fail closed. No UDT/import identity or
     public schema field is added. Done.
+46. Unqualified local-UDF results whose call-specific result retains one
+    concrete supported scalar map template expose only
+    size/get/contains/copy through `$call_result`, with copy-only continuation.
+    Parameter passthrough, block aliases, nested calls, same-template control
+    flow, constructed/copied returns, named/reordered arguments, empty maps,
+    scalar template interleaving, and independent copies are fixture-backed.
+    Unknown/`na`, scalar, array, matrix, qualified user-method/imported-function
+    results, wrong templates/keys, broader helpers, mutation, and terminal-read
+    continuation remain fail closed. No UDT/import identity or public schema
+    field is added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1305,8 +1318,10 @@ Item 44 adds exact bound numeric-matrix-receiver matrix-valued
 UDT/import identity.
 Item 45 adds unqualified local-UDF concrete matrix-result reads with only
 call-specific matrix-kind metadata and no UDT/import identity.
+Item 46 adds unqualified local-UDF concrete scalar-map-result reads with only
+call-specific key/value template metadata and no UDT/import identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
-closed set, qualified user-method/imported-function matrix-result receivers,
+closed set, qualified user-method/imported-function matrix/map-result receivers,
 built-in-qualified/template call-result receivers
 outside the closed paths, unsupported `array.new<T>` templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, unsupported

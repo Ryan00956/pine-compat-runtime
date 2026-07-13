@@ -120,13 +120,7 @@ impl Analyzer {
                     })?;
                 is_matrix_kind(receiver_type.kind).then_some(method_name)
             })
-            .or_else(|| {
-                let (function_name, method_name) =
-                    local_udf_call_result_method_parts(callee, args)?;
-                self.functions
-                    .contains_key(function_name)
-                    .then_some(method_name)
-            })?;
+            .or_else(|| self.local_udf_call_result_method_name(callee, args))?;
         let receiver = args.first()?;
         if !self
             .type_of_expr_with_params(&receiver.value, param_types)
@@ -159,7 +153,8 @@ impl Analyzer {
         param_exprs: &HashMap<String, HirExpr>,
         param_types: &HashMap<String, PineType>,
     ) -> Option<Option<HirExpr>> {
-        let method_name = builtin_map_call_result_method_name(callee, args)?;
+        let method_name = builtin_map_call_result_method_name(callee, args)
+            .or_else(|| self.local_udf_call_result_method_name(callee, args))?;
         let receiver = args.first()?;
         if !self
             .type_of_expr_with_params(&receiver.value, param_types)

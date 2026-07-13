@@ -1,0 +1,45 @@
+//@version=6
+indicator("Supported local UDF map call-result reads")
+
+identity(id) => id
+
+blockCopy(id) =>
+    made = id.copy()
+    made
+
+nested(id) => identity(id)
+
+choose(first, second, bool use_first) => use_first ? first : second
+
+fresh() => map.new<string, float>()
+
+readValue(id, key) => identity(id).get(key)
+
+string_float = map.new<string, float>()
+string_float.put("v", 1.5)
+string_float_other = map.new<string, float>()
+string_float_other.put("v", 2.5)
+int_string = map.new<int, string>()
+int_string.put(1, "one")
+bool_color = map.new<bool, color>()
+bool_color.put(true, color.red)
+color_bool = map.new<color, bool>()
+color_bool.put(color.blue, true)
+float_int = map.new<float, int>()
+float_int.put(1.5, 3)
+
+int direct_size = identity(string_float).size()
+float direct_get = identity(string_float).get("v")
+bool direct_contains = identity(string_float).contains("v")
+map<string, float> direct_copy = identity(string_float).copy().copy()
+string int_string_get = identity(int_string).get(1)
+color bool_color_get = identity(bool_color).get(true)
+bool color_bool_get = identity(color_bool).get(color.blue)
+int float_int_get = identity(float_int).get(1.5)
+float block_get = blockCopy(string_float).get("v")
+float nested_get = nested(string_float).copy().get("v")
+float selected_get = choose(second=string_float_other, first=string_float, use_first=true).get("v")
+int fresh_size = fresh().copy().size()
+float nested_direct_get = readValue(string_float, "v")
+
+plot(direct_size + direct_get + (direct_contains ? 1 : 0) + direct_copy.get("v") + (int_string_get == "one" ? 1 : 0) + (bool_color_get == color.red ? 1 : 0) + (color_bool_get ? 1 : 0) + float_int_get + block_get + nested_get + selected_get + fresh_size + nested_direct_get)

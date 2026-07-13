@@ -132,6 +132,9 @@ pub(super) const BUILTIN_MAP_CALL_RESULT_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/builtin_map_copy_call_result_reads.pine",
     "tests/fixtures/sema/supported_builtin_map_copy_call_result_reads.pine",
     "tests/fixtures/sema/unsupported_builtin_map_copy_call_result_reads.pine",
+    "tests/fixtures/runtime/local_udf_map_call_result_reads.pine",
+    "tests/fixtures/sema/supported_local_udf_map_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_local_udf_map_call_result_reads.pine",
 ];
 
 const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
@@ -351,7 +354,7 @@ fn validate_builtin_map_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_MAP_CALL_RESULT_FIXTURES,
-        "fixture-backed exact scalar map.new template and namespace map.copy result size/get/contains/copy dispatch with retained template/content metadata and helper/template/mutation boundaries",
+        "fixture-backed exact scalar map.new template, namespace map.copy result, and concrete unqualified local-UDF map-result size/get/contains/copy dispatch with retained per-call template/content metadata and helper/template/non-local-producer/mutation boundaries",
     )
 }
 
@@ -967,9 +970,15 @@ mod tests {
 
     #[test]
     fn rejects_map_copy_result_row_without_negative_fixture() {
-        let fixtures =
-            &BUILTIN_MAP_CALL_RESULT_FIXTURES[..BUILTIN_MAP_CALL_RESULT_FIXTURES.len() - 1];
-        let error = validate_builtin_map_call_result_fixture_paths(1, "map.*", fixtures)
+        let fixtures: Vec<_> = BUILTIN_MAP_CALL_RESULT_FIXTURES
+            .iter()
+            .copied()
+            .filter(|fixture| {
+                *fixture
+                    != "tests/fixtures/sema/unsupported_builtin_map_copy_call_result_reads.pine"
+            })
+            .collect();
+        let error = validate_builtin_map_call_result_fixture_paths(1, "map.*", &fixtures)
             .expect_err("map.copy result rows must retain the negative boundary fixture");
 
         assert!(
@@ -992,5 +1001,32 @@ mod tests {
             .expect_err("map.copy result rows must retain runtime evidence");
 
         assert!(error.contains("tests/fixtures/runtime/builtin_map_copy_call_result_reads.pine"));
+    }
+
+    #[test]
+    fn rejects_local_udf_map_result_row_without_negative_fixture() {
+        let fixtures =
+            &BUILTIN_MAP_CALL_RESULT_FIXTURES[..BUILTIN_MAP_CALL_RESULT_FIXTURES.len() - 1];
+        let error = validate_builtin_map_call_result_fixture_paths(1, "map.*", fixtures)
+            .expect_err("local UDF map-result rows must retain the negative boundary fixture");
+
+        assert!(
+            error.contains("tests/fixtures/sema/unsupported_local_udf_map_call_result_reads.pine")
+        );
+    }
+
+    #[test]
+    fn rejects_local_udf_map_result_row_without_runtime_fixture() {
+        let fixtures: Vec<_> = BUILTIN_MAP_CALL_RESULT_FIXTURES
+            .iter()
+            .copied()
+            .filter(|fixture| {
+                *fixture != "tests/fixtures/runtime/local_udf_map_call_result_reads.pine"
+            })
+            .collect();
+        let error = validate_builtin_map_call_result_fixture_paths(1, "map.*", &fixtures)
+            .expect_err("local UDF map-result rows must retain runtime evidence");
+
+        assert!(error.contains("tests/fixtures/runtime/local_udf_map_call_result_reads.pine"));
     }
 }

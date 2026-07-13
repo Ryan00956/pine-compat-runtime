@@ -172,13 +172,7 @@ impl Analyzer {
                             })?;
                         is_matrix_kind(receiver_type.kind).then_some(method_name)
                     })
-                    .or_else(|| {
-                        let (function_name, method_name) =
-                            local_udf_call_result_method_parts(callee, args)?;
-                        self.functions
-                            .contains_key(function_name)
-                            .then_some(method_name)
-                    });
+                    .or_else(|| self.local_udf_call_result_method_name(callee, args));
                 if let Some(method_name) = matrix_method_name
                     && arg_types
                         .first()
@@ -191,6 +185,7 @@ impl Analyzer {
                     return self.return_type_for_call(signature, args, &arg_types);
                 }
                 if let Some(method_name) = builtin_map_call_result_method_name(callee, args)
+                    .or_else(|| self.local_udf_call_result_method_name(callee, args))
                     && arg_types
                         .first()
                         .copied()
