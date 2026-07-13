@@ -638,6 +638,12 @@ Current baseline:
   `na` diagonal, non-finite sum, or upstream-`na` result, and creates no result
   prefix. Numeric rejection, copy continuation, provenance/dual aliases,
   invalid arity, and terminal continuation are fixture-backed.
+  The next linear-algebra reader slice adds terminal `.det()` across the same
+  producer set. It retains the fixed `series float` result, runtime square-
+  matrix error, `0 x 0 = 1.0`, singular zero, invalid-cell/non-finite `na`, and
+  upstream-`na` propagation without adding static shape inference. Numeric
+  rejection, copy continuation, provenance/dual aliases, invalid arity, and
+  terminal continuation are fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

@@ -1274,3 +1274,10 @@ return/parameter flow remains deferred.
     result prefix. Numeric rejection, copy continuation, provenance/dual
     aliases, invalid arity, and terminal continuation are fixture-backed. No
     imported UDT identity or public schema field is added. Done.
+61. The same concrete numeric matrix call-result producer set exposes terminal
+    `.det()` with its fixed `series float` result. It retains the runtime
+    square-matrix error, `0 x 0 = 1.0`, singular zero, and invalid-cell/non-
+    finite/upstream-`na` results without adding static shape inference or a
+    result prefix. Numeric rejection, copy continuation, provenance/dual
+    aliases, invalid arity, and terminal continuation are fixture-backed. No
+    imported UDT identity or public schema field is added. Done.

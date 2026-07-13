@@ -1329,6 +1329,13 @@ Recommended future slices:
     terminal without a result-prefix transition. Numeric rejection, copy
     continuation, provenance/dual aliases, invalid arity, and terminal
     continuation are fixture-backed.
+75. Numeric matrix call-result determinants: done for the same concrete
+    float/int producer set. `.det()` retains the fixed `series float` result,
+    runtime square-matrix error, `0 x 0 = 1.0`, singular zero, and invalid-cell/
+    non-finite/upstream-`na` results without adding static shape inference. It
+    is terminal without a result-prefix transition. Numeric rejection, copy
+    continuation, provenance/dual aliases, invalid arity, and terminal
+    continuation are fixture-backed.
 
 ## Completion Gate For Future Positive Support
 
