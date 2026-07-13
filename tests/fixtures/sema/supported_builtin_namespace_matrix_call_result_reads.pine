@@ -11,6 +11,8 @@ matrixSubmatrixExpressionRead(values) => matrix.submatrix(values, 0, 2, 1, 3).co
 
 matrixKronExpressionRead(left, right) => matrix.kron(left, right).copy().get(5, 5)
 
+matrixDiffExpressionRead(left, right) => matrix.diff(left, right).copy().get(1, 2)
+
 matrixMultMatrixBlockRead(values, scalar) =>
     int rows = matrix.mult(values, scalar).rows()
     int columns = matrix.mult(scalar, values).columns()
@@ -41,8 +43,15 @@ matrixKronBlockRead(left, right) =>
     float first = matrix.kron(left, right).get(0, 0)
     rows * 100 + columns * 10 + first
 
+matrixDiffBlockRead(values, scalar) =>
+    int rows = matrix.diff(values, scalar).rows()
+    int columns = matrix.diff(scalar, values).columns()
+    float first = matrix.diff(scalar, values).get(0, 0)
+    rows * 100 + columns * 10 + first
+
 left = matrix.new<float>(2, 3, 1.0)
 right = matrix.new<float>(3, 2, 2.0)
+diff_right = matrix.new<float>(2, 3, 0.5)
 
 int matrix_matrix_rows = matrix.mult(left, right).rows()
 int matrix_matrix_columns = matrix.mult(left, right).columns()
@@ -85,6 +94,13 @@ int matrix_kron_columns = matrix.kron(left, right).columns()
 int matrix_kron_elements = matrix.kron(left, right).elements_count()
 float matrix_kron_named_get = matrix.kron(id1=left, id2=right).get(row=0, column=0)
 matrix<float> matrix_kron_nested = matrix.kron(left, right).copy().copy()
+int matrix_diff_rows = matrix.diff(left, diff_right).rows()
+int matrix_diff_columns = matrix.diff(left, 0.5).columns()
+int matrix_diff_elements = matrix.diff(0.5, left).elements_count()
+float matrix_diff_named_get = matrix.diff(id1=left, id2=diff_right).get(row=1, column=2)
+matrix<float> matrix_diff_nested = matrix.diff(left, diff_right).copy().copy()
+float matrix_diff_matrix_scalar_get = matrix.diff(left, 0.5).get(0, 0)
+float matrix_diff_scalar_matrix_get = matrix.diff(0.5, left).get(0, 0)
 
 int_left = matrix.new<int>(2, 2, 1)
 int_right = matrix.new<int>(2, 2, 2)
@@ -96,6 +112,8 @@ float int_scalar_matrix_get = matrix.mult(3, int_left).get(0, 0)
 matrix<float> int_scalar_matrix_copy = matrix.mult(3, int_left).copy()
 float matrix_kron_int_get = matrix.kron(int_left, int_right).get(0, 0)
 matrix<float> matrix_kron_int_copy = matrix.kron(int_left, int_right).copy()
+float matrix_diff_int_get = matrix.diff(int_left, int_right).get(0, 0)
+matrix<float> matrix_diff_int_copy = matrix.diff(int_left, int_right).copy()
 
 bool_matrix = matrix.new<bool>(1, 1, true)
 string_matrix = matrix.new<string>(1, 1, "copy")
@@ -130,5 +148,7 @@ float matrix_submatrix_expression_udf = matrixSubmatrixExpressionRead(left)
 float matrix_submatrix_block_udf = matrixSubmatrixBlockRead(left)
 float matrix_kron_expression_udf = matrixKronExpressionRead(left, right)
 float matrix_kron_block_udf = matrixKronBlockRead(left, right)
+float matrix_diff_expression_udf = matrixDiffExpressionRead(left, diff_right)
+float matrix_diff_block_udf = matrixDiffBlockRead(left, 10.0)
 
-plot(matrix_matrix_rows + matrix_matrix_columns + matrix_matrix_elements + matrix_matrix_get + matrix_matrix_copy.get(0, 0) + matrix_matrix_copy_get + matrix_scalar_rows + matrix_scalar_columns + matrix_scalar_elements + matrix_scalar_get + matrix_scalar_copy.get(0, 0) + matrix_scalar_copy_get + scalar_matrix_rows + scalar_matrix_columns + scalar_matrix_elements + scalar_matrix_get + scalar_matrix_copy.get(0, 0) + scalar_matrix_copy_get + matrix_copy_rows + matrix_copy_columns + matrix_copy_elements + matrix_copy_named_get + matrix_copy_nested.get(0, 0) + matrix_transpose_rows + matrix_transpose_columns + matrix_transpose_elements + matrix_transpose_named_get + matrix_transpose_nested.get(0, 0) + matrix_submatrix_rows + matrix_submatrix_columns + matrix_submatrix_elements + matrix_submatrix_named_get + matrix_submatrix_nested.get(0, 0) + matrix_kron_rows + matrix_kron_columns + matrix_kron_elements + matrix_kron_named_get + matrix_kron_nested.get(0, 0) + int_matrix_matrix_get + int_matrix_matrix_copy.get(0, 0) + int_matrix_scalar_get + int_matrix_scalar_copy.get(0, 0) + int_scalar_matrix_get + int_scalar_matrix_copy.get(0, 0) + matrix_kron_int_get + matrix_kron_int_copy.get(0, 0) + matrix_copy_int_get + (matrix_copy_bool_get ? 1 : 0) + (matrix_copy_string_get == "copy" ? 1 : 0) + (matrix_copy_color_get == color.red ? 1 : 0) + matrix_transpose_int_get + (matrix_transpose_bool_get ? 1 : 0) + (matrix_transpose_string_get == "copy" ? 1 : 0) + (matrix_transpose_color_get == color.red ? 1 : 0) + matrix_submatrix_int_get + (matrix_submatrix_bool_get ? 1 : 0) + (matrix_submatrix_string_get == "copy" ? 1 : 0) + (matrix_submatrix_color_get == color.red ? 1 : 0) + bound_matrix_rows + bound_matrix_get + bound_scalar_columns + bound_scalar_get + matrix_expression_udf + matrix_block_udf + matrix_copy_expression_udf + matrix_copy_block_udf + matrix_transpose_expression_udf + matrix_transpose_block_udf + matrix_submatrix_expression_udf + matrix_submatrix_block_udf + matrix_kron_expression_udf + matrix_kron_block_udf)
+plot(matrix_matrix_rows + matrix_matrix_columns + matrix_matrix_elements + matrix_matrix_get + matrix_matrix_copy.get(0, 0) + matrix_matrix_copy_get + matrix_scalar_rows + matrix_scalar_columns + matrix_scalar_elements + matrix_scalar_get + matrix_scalar_copy.get(0, 0) + matrix_scalar_copy_get + scalar_matrix_rows + scalar_matrix_columns + scalar_matrix_elements + scalar_matrix_get + scalar_matrix_copy.get(0, 0) + scalar_matrix_copy_get + matrix_copy_rows + matrix_copy_columns + matrix_copy_elements + matrix_copy_named_get + matrix_copy_nested.get(0, 0) + matrix_transpose_rows + matrix_transpose_columns + matrix_transpose_elements + matrix_transpose_named_get + matrix_transpose_nested.get(0, 0) + matrix_submatrix_rows + matrix_submatrix_columns + matrix_submatrix_elements + matrix_submatrix_named_get + matrix_submatrix_nested.get(0, 0) + matrix_kron_rows + matrix_kron_columns + matrix_kron_elements + matrix_kron_named_get + matrix_kron_nested.get(0, 0) + matrix_diff_rows + matrix_diff_columns + matrix_diff_elements + matrix_diff_named_get + matrix_diff_nested.get(0, 0) + matrix_diff_matrix_scalar_get + matrix_diff_scalar_matrix_get + int_matrix_matrix_get + int_matrix_matrix_copy.get(0, 0) + int_matrix_scalar_get + int_matrix_scalar_copy.get(0, 0) + int_scalar_matrix_get + int_scalar_matrix_copy.get(0, 0) + matrix_kron_int_get + matrix_kron_int_copy.get(0, 0) + matrix_diff_int_get + matrix_diff_int_copy.get(0, 0) + matrix_copy_int_get + (matrix_copy_bool_get ? 1 : 0) + (matrix_copy_string_get == "copy" ? 1 : 0) + (matrix_copy_color_get == color.red ? 1 : 0) + matrix_transpose_int_get + (matrix_transpose_bool_get ? 1 : 0) + (matrix_transpose_string_get == "copy" ? 1 : 0) + (matrix_transpose_color_get == color.red ? 1 : 0) + matrix_submatrix_int_get + (matrix_submatrix_bool_get ? 1 : 0) + (matrix_submatrix_string_get == "copy" ? 1 : 0) + (matrix_submatrix_color_get == color.red ? 1 : 0) + bound_matrix_rows + bound_matrix_get + bound_scalar_columns + bound_scalar_get + matrix_expression_udf + matrix_block_udf + matrix_copy_expression_udf + matrix_copy_block_udf + matrix_transpose_expression_udf + matrix_transpose_block_udf + matrix_submatrix_expression_udf + matrix_submatrix_block_udf + matrix_kron_expression_udf + matrix_kron_block_udf + matrix_diff_expression_udf + matrix_diff_block_udf)

@@ -121,12 +121,14 @@ row/column shape swapping, independent storage, and a retained bound
 half-open/default-full/empty range copies, the same helpers, and a retained
 bound `values.submatrix()` gate. Item 26 adds exact namespace
 `matrix.kron(left, right)` with a fixed float-matrix result, expanded shape,
-independent storage, `na`/zero-dimension
-behavior, the same helpers, and a retained bound `values.kron(other)` gate.
+independent storage, `na`/zero-dimension behavior, the same helpers, and a
+retained bound `values.kron(other)` gate. Item 27 adds exact namespace
+`matrix.diff(left, right)` with a fixed float-matrix result for matrix-matrix
+and scalar/matrix operand pairs, selected-matrix shape and left-to-right
+direction, the same helpers, and a retained bound `values.diff(other)` gate.
 Outside the exact static producer sets and these namespace-only paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
-templates, and
-other matrix-returning calls remain fail-closed. `array.slice`
+templates, and other matrix-returning calls remain fail-closed. `array.slice`
 remains a live parent view, while a
 postfix `.copy()` independently captures its current values. `array.concat`
 still mutates and returns its first array id; a following reader is itself
@@ -727,8 +729,9 @@ Initial policy:
   `matrix.mult` overloads return scalar arrays only and add no UDT/import
   identity. Namespace matrix-returning `matrix.mult` overloads and exact
   namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix` plus fixed-float
-  namespace `matrix.kron` add only the exact five matrix readers/copy from
-  items 22 through 26 and likewise carry no UDT/import identity. Mixed
+  namespace `matrix.kron`/`matrix.diff` add only the exact five matrix
+  readers/copy from items 22 through 27 and likewise carry no UDT/import
+  identity. Mixed
   identities within one scalar return or tuple slot, non-scalar UDT arrays,
   non-array/non-UDT results,
   unknown/`na` results without a concrete supported type or identity,
@@ -937,6 +940,17 @@ Recommended future slices:
     independence are fixture-backed. Wrong producer/helper arguments,
     mutation, broader helpers, and bound `values.kron(other)` call-result reads
     fail closed. No UDT/import identity or public schema field is added. Done.
+27. The exact namespace matrix-diff continuation routes
+    `matrix.diff(left, right)` through `$builtin_matrix_result`. Its fixed
+    `simple matrix<float>` result accepts matrix-matrix, matrix-scalar, and
+    scalar-matrix numeric operands, preserves the selected matrix shape and
+    left-to-right subtraction order, and exposes only the five matrix read/copy
+    helpers with named arguments and copy-only continuation. Int-input float
+    results, `na`, zero rows/columns, nested copies, UDF-contained namespace
+    reads, and source independence are fixture-backed. Wrong producer/helper
+    arguments, mutation, broader helpers, and bound `values.diff(other)`
+    call-result reads fail closed. No UDT/import identity or public schema field
+    is added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -979,7 +993,8 @@ namespace `matrix.copy` through `$builtin_matrix_result`; none adds UDT/import
 identity. Item 24 adds exact namespace `matrix.transpose` on the same path with
 shape swapping, item 25 adds exact namespace `matrix.submatrix` with range
 copies, and item 26 adds fixed-float namespace `matrix.kron` with expanded
-shape; none adds UDT/import identity. Broader UDT element families, bound or UDF
+shape. Item 27 adds fixed-float namespace `matrix.diff` with selected-matrix
+shape and operand direction; none adds UDT/import identity. Broader UDT element families, bound or UDF
 matrix-result receivers, built-in-qualified/template call-result receivers
 outside the closed paths, unsupported `array.new<T>` templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, unsupported
