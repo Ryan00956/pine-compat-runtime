@@ -827,7 +827,7 @@ fn is_builtin_array_result_qualified_callee(namespace: &str, member: &str) -> bo
 }
 
 fn is_builtin_matrix_result_qualified_callee(namespace: &str, member: &str) -> bool {
-    namespace == "matrix" && matches!(member, "copy" | "mult" | "submatrix" | "transpose")
+    namespace == "matrix" && matches!(member, "copy" | "kron" | "mult" | "submatrix" | "transpose")
 }
 
 fn is_builtin_array_result_member(member: &str) -> bool {

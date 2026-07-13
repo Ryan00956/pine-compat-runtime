@@ -104,8 +104,11 @@ row/column shape swapping, independent storage, and a retained bound
 `values.transpose()` gate. Item 15 adds exact namespace
 `matrix.submatrix(values, ...)` with preserved element kind, independent
 half-open/default-full/empty range copies, the same helpers, and a retained
-bound `values.submatrix()` gate. Outside the exact static producer sets
-and those namespace-only exceptions,
+bound `values.submatrix()` gate. Item 16 adds exact namespace
+`matrix.kron(left, right)` with a fixed float-matrix result, expanded shape,
+independent storage, `na`/zero-dimension
+behavior, the same helpers, and a retained bound `values.kron(other)` gate.
+Outside the exact static producer sets and those namespace-only exceptions,
 unsupported `array.new<T>` types, non-producer calls, map/matrix templates,
 other matrix-returning calls, mixed or non-scalar return identities,
 non-array/non-UDT or unresolved results, nested field mutation, and
@@ -761,3 +764,12 @@ return/parameter flow remains deferred.
     fixture-backed. Wrong producer/helper arguments, wrong receivers, mutation,
     broader helpers, and bound `values.submatrix()` call-result reads fail
     closed. No imported UDT identity or public schema field is added. Done.
+16. The exact namespace matrix-kron continuation routes
+    `matrix.kron(left, right)` through `$builtin_matrix_result`. Its fixed
+    `simple matrix<float>` result accepts numeric matrix operands, expands both
+    source dimensions, and exposes only the five matrix read/copy helpers with
+    named arguments and copy-only continuation. Int-input float results, `na`,
+    zero rows/columns, nested copies, UDF-contained namespace reads, and source
+    independence are fixture-backed. Wrong producer/helper arguments,
+    mutation, broader helpers, and bound `values.kron(other)` call-result reads
+    fail closed. No imported UDT identity or public schema field is added. Done.

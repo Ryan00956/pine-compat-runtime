@@ -150,6 +150,7 @@ fn builtin_collection_result_producer_parser_allowlists_match_registry() {
         .collect::<BTreeSet<_>>();
     let expected_matrix_call_result_producers = BTreeSet::from([
         "matrix.copy",
+        "matrix.kron",
         "matrix.mult",
         "matrix.submatrix",
         "matrix.transpose",

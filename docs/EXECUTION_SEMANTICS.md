@@ -886,8 +886,13 @@ returns independent storage; bound `values.transpose()` results remain generic
 rejections. Exact namespace `matrix.submatrix(values, ...)` also shares the
 five-helper and element-kind contract, returning an independent half-open range
 with default full bounds and empty row/column slices; bound
-`values.submatrix()` results remain generic rejections. Every other
-matrix-returning call, `map.new` and `matrix.new` template, and other namespace/non-producer call
+`values.submatrix()` results remain generic rejections. Exact namespace
+`matrix.kron(left, right)` returns a fixed `matrix<float>` for numeric matrix
+operands, expands both source dimensions, preserves independent storage, `na`,
+and zero-dimension behavior, and shares only the same five helpers; bound
+`values.kron(other)` results remain generic rejections. Every other
+matrix-returning call, `map.new` and `matrix.new` template, and other
+namespace/non-producer call
 remains outside this path. Built-in namespace prefixes remain reserved, so
 same-named user or import qualifiers do not enter it. The extension carries no
 UDT/import identity and changes no public output schema.
@@ -945,11 +950,13 @@ the existing pure method subset. Built-in producer element readers are
 terminal and do not open that method path; only producer `.copy()` may continue
 with another allowed array read/copy. The seven fixed cross-namespace producers
 and array-returning `matrix.mult` overloads are scalar-array-only and add no
-UDT/import identity path. Namespace matrix-returning `matrix.mult` overloads
-and exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix` add only
-the five matrix readers/copy above. All preserve the source scalar element kind;
-transpose swaps shape, submatrix selects a range, and none of these paths
-carries UDT/import identity. Bound or UDF
+UDT/import identity path. Namespace matrix-returning `matrix.mult` overloads,
+exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix`, and
+fixed-float namespace `matrix.kron` add only the five matrix readers/copy
+above. Copy/transpose/submatrix preserve the source scalar element kind;
+transpose swaps shape, submatrix selects a range, and kron expands both
+dimensions into a float matrix. None of these paths carries UDT/import
+identity. Bound or UDF
 matrix-result receivers, built-in-qualified or template call results outside
 the exact static and dynamic paths, and other
 array or matrix methods remain parser/semantic boundaries.
