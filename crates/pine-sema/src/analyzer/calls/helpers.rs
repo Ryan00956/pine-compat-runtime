@@ -52,7 +52,7 @@ pub(crate) fn local_udf_call_result_method_parts<'a>(
         ExprKind::QualifiedName(_) => {
             let (function_name, producer_method) =
                 local_udf_call_result_method_parts(producer, producer_args)?;
-            (producer_method == "copy").then_some((function_name, method_name))
+            matches!(producer_method, "copy" | "transpose").then_some((function_name, method_name))
         }
         _ => None,
     }
@@ -132,6 +132,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "elements_count" => Some("matrix.elements_count"),
         "get" => Some("matrix.get"),
         "copy" => Some("matrix.copy"),
+        "transpose" => Some("matrix.transpose"),
         "row" => Some("matrix.row"),
         "col" => Some("matrix.col"),
         "eigenvalues" => Some("matrix.eigenvalues"),
@@ -604,13 +605,14 @@ mod tests {
     }
 
     #[test]
-    fn matrix_call_result_helpers_are_a_closed_registered_read_set() {
+    fn matrix_call_result_helpers_are_a_closed_registered_set() {
         for (method_name, builtin_name) in [
             ("rows", "matrix.rows"),
             ("columns", "matrix.columns"),
             ("elements_count", "matrix.elements_count"),
             ("get", "matrix.get"),
             ("copy", "matrix.copy"),
+            ("transpose", "matrix.transpose"),
             ("row", "matrix.row"),
             ("col", "matrix.col"),
             ("eigenvalues", "matrix.eigenvalues"),
@@ -641,7 +643,7 @@ mod tests {
             );
         }
 
-        for method_name in ["size", "set", "fill", "reverse", "transpose"] {
+        for method_name in ["size", "set", "fill", "reverse"] {
             assert_eq!(matrix_call_result_builtin_name(method_name), None);
         }
     }

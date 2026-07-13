@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added matrix-valued `.transpose()` continuation to every existing concrete
+  matrix call result. It preserves float/int/bool/string/color element kinds,
+  returns an independent matrix with swapped row/column counts, propagates
+  upstream `na`, and may continue through `.copy()`, another `.transpose()`, or
+  any supported terminal/array-producing matrix reader. Namespace and bound
+  operations, exact templates, local/imported functions and methods, empty
+  shapes, five-kind reads, source independence, invalid arity, provenance, and
+  dual aliases are fixture-backed; mutation and the remaining broader matrix-
+  valued helpers stay gated.
 - Added terminal `.rank()` reads to every existing concrete numeric matrix call
   result. The helper retains the float/int check and fixed `series int` result,
   supports rectangular and singular matrices, returns `0` for zero-element

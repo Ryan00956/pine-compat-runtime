@@ -650,6 +650,16 @@ Current baseline:
   returns `na` for invalid/non-finite cells or upstream `na`, and creates no
   result prefix. Numeric rejection, copy continuation, provenance/dual aliases,
   invalid arity, and terminal continuation are fixture-backed.
+  The next matrix-valued continuation slice adds `.transpose()` across every
+  existing concrete matrix-result producer. It preserves the receiver's
+  float/int/bool/string/color element kind, returns an independent matrix with
+  swapped row/column counts, propagates upstream `na`, preserves zero-cell
+  shapes, and retains the matrix-result prefix across `.copy()`, repeated
+  `.transpose()`, and supported readers. Namespace/bound operations, exact
+  templates, local/imported functions and methods, five-kind reads, source
+  independence, provenance/dual aliases, repeated continuation, and invalid
+  arity are fixture-backed; mutation and other matrix-valued transforms remain
+  gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

@@ -782,7 +782,10 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
             {
                 Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
             }
-            [prefix, method] if prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX && method == "copy" => {
+            [prefix, method]
+                if prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX
+                    && matches!(method.as_str(), "copy" | "transpose") =>
+            {
                 Some(BUILTIN_MATRIX_CALL_RESULT_PREFIX.to_owned())
             }
             [prefix, _method] if prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX => None,

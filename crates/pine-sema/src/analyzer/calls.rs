@@ -65,15 +65,13 @@ impl Analyzer {
         if expr_name(callee).is_some_and(|name| self.functions.contains_key(&name)) {
             return true;
         }
-        matches!(method_call_parts(callee), Some((_, "copy")))
-            && args.first().is_some_and(|arg| {
-                (self.map_type_of_expr(&arg.value).is_some()
-                    || self
-                        .expr_types
-                        .get(&self.expr_key(arg.value.span))
-                        .is_some_and(|pine_type| is_matrix_kind(pine_type.kind)))
-                    && self.is_user_function_call_result(&arg.value)
-            })
+        let Some((_, producer_method)) = method_call_parts(callee) else {
+            return false;
+        };
+        args.first().is_some_and(|arg| {
+            self.is_user_call_result_continuation(&arg.value, producer_method)
+                && self.is_user_function_call_result(&arg.value)
+        })
     }
 
     fn is_user_method_call_result(&self, expr: &Expr) -> bool {
@@ -86,15 +84,25 @@ impl Analyzer {
         let ExprKind::Call { callee, args } = &expr.kind else {
             return false;
         };
-        matches!(method_call_parts(callee), Some((_, "copy")))
-            && args.first().is_some_and(|arg| {
-                (self.map_type_of_expr(&arg.value).is_some()
-                    || self
-                        .expr_types
-                        .get(&self.expr_key(arg.value.span))
-                        .is_some_and(|pine_type| is_matrix_kind(pine_type.kind)))
-                    && self.is_user_method_call_result(&arg.value)
-            })
+        let Some((_, producer_method)) = method_call_parts(callee) else {
+            return false;
+        };
+        args.first().is_some_and(|arg| {
+            self.is_user_call_result_continuation(&arg.value, producer_method)
+                && self.is_user_method_call_result(&arg.value)
+        })
+    }
+
+    fn is_user_call_result_continuation(&self, receiver: &Expr, method_name: &str) -> bool {
+        let receiver_is_matrix = self
+            .expr_types
+            .get(&self.expr_key(receiver.span))
+            .is_some_and(|pine_type| is_matrix_kind(pine_type.kind));
+        match method_name {
+            "copy" => self.map_type_of_expr(receiver).is_some() || receiver_is_matrix,
+            "transpose" => receiver_is_matrix,
+            _ => false,
+        }
     }
 
     pub(crate) fn analyze_call(
@@ -344,7 +352,7 @@ impl Analyzer {
         let Some(builtin_name) = matrix_call_result_builtin_name(method_name) else {
             self.unsupported(
                 &format!("matrix.{method_name}"),
-                "direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, `.copy()`, `.row()`, `.col()`, `.eigenvalues()`, `.is_square()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`, `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, `.is_stochastic()`, `.sum()`, `.avg()`, `.min()`, `.max()`, `.mode()`, `.trace()`, `.det()`, and `.rank()`; bind the result or use the namespace helper",
+                "direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, `.copy()`, `.transpose()`, `.row()`, `.col()`, `.eigenvalues()`, `.is_square()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`, `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, `.is_stochastic()`, `.sum()`, `.avg()`, `.min()`, `.max()`, `.mode()`, `.trace()`, `.det()`, and `.rank()`; bind the result or use the namespace helper",
                 callee.span,
             );
             return Some(None);

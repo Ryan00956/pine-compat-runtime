@@ -1288,3 +1288,12 @@ return/parameter flow remains deferred.
     Numeric rejection, copy continuation, provenance/dual aliases, invalid
     arity, and terminal continuation are fixture-backed. No imported UDT
     identity or public schema field is added. Done.
+63. Every existing concrete matrix call-result producer also exposes
+    `.transpose()` as an independent, element-kind-preserving matrix
+    continuation with swapped row/column counts. It retains the matrix-result
+    prefix across `.copy()` and repeated `.transpose()` chains, propagates
+    upstream `na`, and adds no imported UDT identity or public schema field.
+    Namespace/bound operations, exact templates, local/imported functions and
+    methods, five-kind reads, zero-cell shapes, source independence,
+    provenance/dual aliases, repeated continuation, and invalid arity are
+    fixture-backed. Done.

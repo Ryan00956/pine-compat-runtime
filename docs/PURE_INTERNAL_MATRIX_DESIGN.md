@@ -1343,6 +1343,16 @@ Recommended future slices:
     without a result-prefix transition. Numeric rejection, copy continuation,
     provenance/dual aliases, invalid arity, and terminal continuation are
     fixture-backed.
+77. Matrix call-result transposes: done for every existing concrete matrix
+    producer. `.transpose()` retains the receiver's float/int/bool/string/color
+    element kind through `SameAsArg`, allocates an independent matrix with
+    swapped row/column counts, propagates upstream `na`, preserves zero-cell
+    shapes, and keeps the matrix-result prefix so `.copy()`, another
+    `.transpose()`, or any supported matrix reader may follow. Namespace and
+    bound operations, exact templates, local/imported functions and methods,
+    five-kind reads, source independence, provenance/dual aliases, repeated
+    continuation, and invalid arity are fixture-backed. Mutation and the
+    remaining matrix-valued helpers stay gated.
 
 ## Completion Gate For Future Positive Support
 

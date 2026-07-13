@@ -96,5 +96,6 @@ bool_det = matrix.copy(bool_values).det()
 det_extra_arg = matrix.copy(left).det(0)
 bool_rank = matrix.copy(bool_values).rank()
 rank_extra_arg = matrix.copy(left).rank(0)
+transpose_extra_arg = matrix.copy(left).transpose(0)
 
 plot(close)

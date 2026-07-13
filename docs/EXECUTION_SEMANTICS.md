@@ -923,15 +923,19 @@ and adds no static shape inference.
 Numeric-only `.rank()` returns a fixed `series int`, supports rectangular and
 singular matrices, returns `0` for zero-element matrices, and returns `na` for
 invalid/non-finite cells or upstream `na`; it is terminal.
+Matrix-valued `.transpose()` accepts every supported matrix element kind,
+allocates an independent matrix with swapped row/column counts, propagates
+upstream `na`, and retains the matrix-result prefix for `.copy()`, repeated
+`.transpose()`, or any supported matrix reader.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
 broader helpers, and mutation fail closed. The existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch. Exact
 bound numeric-matrix-receiver matrix-valued `matrix_id.mult(other)` results now
-share the twenty-four matrix helpers and the copy/row/column/eigenvalue/
+share the twenty-five matrix helpers and the copy/transpose/row/column/eigenvalue/
 predicate/aggregate-reader continuation rules for matrix or
 scalar operands while preserving the existing overload, shape, `na`, empty
 inner dimension, and cell-budget boundaries. Unqualified local-UDF results that infer
-a concrete supported matrix kind now share the twenty-four matrix helpers through
+a concrete supported matrix kind now share the twenty-five matrix helpers through
 `$call_result`. Parameter passthrough, block aliases, nested calls, same-kind
 control flow, constructed and matrix-operation returns, named/reordered
 arguments, and zero dimensions keep their normal call-specific float/int/bool/
@@ -939,14 +943,14 @@ string/color kind and storage behavior. Local and imported user-method results
 with a concrete supported matrix kind share the same helpers through receiver-
 style, local-type-qualified or alias-qualified, direct-constructor-receiver,
 block/nested/control-flow, five-kind, zero-dimension, dual-alias, independent-
-copy, and copy-only-continuation paths. Registered imported pure-function
+copy, and copy/transpose-continuation paths. Registered imported pure-function
 results with a concrete supported matrix kind share those helpers across alias-
 qualified, block/nested/control-flow, five-kind, zero-dimension, dual-alias,
-independent-copy, and copy-only-continuation paths. Unknown/`na`, scalar, array,
+independent-copy, and copy/transpose-continuation paths. Unknown/`na`, scalar, array,
 map, unregistered or unresolved user-function matrix results, broader-helper,
 mutation, and terminal-read continuation cases remain fail closed. The row/
 column-array transition applies uniformly to every concrete matrix producer described
-below; producer-specific “copy-only” wording refers only to continuing as a
+below; producer-specific “copy/transpose-only” wording refers only to continuing as a
 matrix result, while `.row(index)`, `.col(index)`, or numeric `.eigenvalues()`
 continues as an array result and `.is_square()` plus numeric `.is_zero()` are
 terminal, as are numeric `.is_binary()`, `.is_diagonal()`, `.is_identity()`,
@@ -964,61 +968,62 @@ also enters this
 prefix, always resolves through the matrix helper family, and preserves the
 source float/int/bool/string/color matrix kind through `SameAsArg`; its returned
 store and every postfix copy are independent. Exact bound matrix-receiver
-`values.copy()` results now share the same five-helper contract, preserve shape
+`values.copy()` results now share the same six-helper contract, preserve shape
 and element kind, and keep source/nested-copy storage independent; non-matrix
 receivers fail the existing method type check. Exact namespace `matrix.transpose(values)`
-shares that five-helper and element-kind contract, swaps row/column shape, and
+shares that six-helper and element-kind contract, swaps row/column shape, and
 returns independent storage. Exact bound matrix-receiver `values.transpose()`
-results now share those direct helpers and copy-only continuation while other
-bound producers remain gated. Exact namespace `matrix.submatrix(values, ...)` also shares the
-five-helper and element-kind contract, returning an independent half-open range
+results now share those direct helpers and copy/transpose continuation while other
+matrix-valued helpers and mutation remain gated. Exact namespace
+`matrix.submatrix(values, ...)` also shares the
+six-helper and element-kind contract, returning an independent half-open range
 with default full bounds and empty row/column slices. Exact bound matrix-receiver
-`values.submatrix(...)` results now share those helpers and copy-only
+`values.submatrix(...)` results now share those helpers and copy/transpose
 continuation after the original receiver type check. Exact namespace
 `matrix.kron(left, right)` returns a fixed `matrix<float>` for numeric matrix
 operands, expands both source dimensions, preserves independent storage, `na`,
-and zero-dimension behavior, and shares only the same five helpers. Exact bound
+and zero-dimension behavior, and shares only the same six helpers. Exact bound
 numeric-matrix-receiver `values.kron(other)` results now share those helpers
-and copy-only continuation while preserving the existing numeric input checks.
+and copy/transpose continuation while preserving the existing numeric input checks.
 Exact namespace
 `matrix.diff(left, right)` returns fixed `matrix<float>` results for
 matrix-matrix, matrix-scalar, and scalar-matrix numeric operands, preserving
 the selected matrix shape, left-to-right operand order, independent storage,
 `na`, and zero-dimension behavior. Exact bound numeric-matrix-receiver
-`values.diff(other)` results now share the five direct helpers and copy-only
+`values.diff(other)` results now share the six direct helpers and copy/transpose
 continuation while preserving the existing operand checks and direction. Exact
 namespace `matrix.pow(values, power)` returns a fixed
 square `matrix<float>` for numeric matrices and simple-int powers, preserving
 independent identity/copy/positive-power results plus `na` and empty `0 x 0`
 behavior. Exact bound numeric-square-matrix-receiver `values.pow(power)`
-results now share the five direct helpers and copy-only continuation while
+results now share the six direct helpers and copy/transpose continuation while
 preserving the existing receiver and power checks. Exact
 namespace `matrix.inv(values)` returns an independent square
 `matrix<float>` for invertible numeric inputs, an empty `0 x 0` matrix for
 empty input, and `na` for singular or invalid-cell inputs. Exact bound
-numeric-square-matrix-receiver `values.inv()` results now share the five direct
-helpers and copy-only continuation while preserving the existing receiver,
+numeric-square-matrix-receiver `values.inv()` results now share the six direct
+helpers and copy/transpose continuation while preserving the existing receiver,
 shape, singular, and invalid-cell boundaries. Exact namespace
 `matrix.pinv(values)`
 returns an independent fixed `matrix<float>` pseudo-inverse for numeric inputs,
 swaps row and column counts for rectangular matrices, preserves singular
 matrix-valued results, returns the corresponding zero-cell swapped shape for
 zero-row or zero-column inputs, and yields `na` for invalid-cell inputs. Exact
-bound numeric-matrix-receiver `values.pinv()` results now share the five direct
-helpers and copy-only continuation while preserving the existing receiver,
+bound numeric-matrix-receiver `values.pinv()` results now share the six direct
+helpers and copy/transpose continuation while preserving the existing receiver,
 shape, singular, zero-cell, and invalid-cell boundaries. Exact namespace
 `matrix.eigenvectors(values)` returns an independent fixed `matrix<float>`
 whose columns are real eigenvectors for numeric square inputs, returns empty
 `0 x 0` for empty input, and yields `na` for invalid-cell, non-real, or
 incomplete results. Exact bound numeric-square-matrix-receiver
-`values.eigenvectors()` results now share the five direct helpers and copy-only
+`values.eigenvectors()` results now share the six direct helpers and copy/transpose
 continuation while preserving the existing receiver, shape, empty,
 invalid-cell, non-real, and incomplete-result boundaries. Exact `matrix.new<float>`,
 `matrix.new<int>`, `matrix.new<bool>`,
 `matrix.new<string>`, and `matrix.new<color>` template results also enter this
 path, preserve their element kind, requested shape, type-compatible initial or
 default `na` cells, fresh allocation, and copy independence, and expose only
-the same five helpers. Exact supported scalar `map.new<K,V>` templates use the
+the same six helpers. Exact supported scalar `map.new<K,V>` templates use the
 separate `$builtin_map_result` path, preserve known key/value kinds, allocate a
 fresh empty map, and expose `.size()`, `.get(key)`, `.contains(key)`, `.copy()`,
 `.keys()`, and `.values()`. Only `.copy()` may continue another map helper;
