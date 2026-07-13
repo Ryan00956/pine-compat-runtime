@@ -496,6 +496,14 @@ Recommended future slices:
     insufficient-sample and non-finite-result behavior, invalid type/arity,
     local/imported provenance, and terminal continuation are fixture-backed.
     Map storage and template rules are unchanged. Done.
+34. Numeric key/value snapshots additionally expose transforming
+    `.standardize()`. It returns an independent fixed float array, computes
+    mean and population standard deviation over non-`na` values, preserves
+    `na` positions, maps numeric positions to `na` for zero or non-finite
+    deviation, returns empty for empty/all-`na`, and propagates upstream `na`.
+    Invalid type/arity, local/imported provenance, source independence, and
+    copy/abs/standardize continuation are fixture-backed. Map storage and
+    template rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

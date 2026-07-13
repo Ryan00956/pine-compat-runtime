@@ -1522,3 +1522,10 @@ return/parameter flow remains deferred.
     insufficient-sample, non-finite-result, nonnumeric/imported-UDT second-
     array, arity, provenance, and terminal-continuation boundaries remain
     closed. Done.
+90. The same numeric producer set exposes transforming `.standardize()`. It
+    returns an independent fixed float array, computes mean and population
+    standard deviation over non-`na` values, preserves `na` positions, maps
+    numeric positions to `na` for zero or non-finite deviation, returns empty
+    for empty/all-`na`, and propagates upstream `na`. Nonnumeric/imported-UDT,
+    arity, provenance, source-independence, and copy/abs/standardize
+    continuation boundaries are fixture-backed. Done.

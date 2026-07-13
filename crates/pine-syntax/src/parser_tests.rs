@@ -314,6 +314,8 @@ fn parses_builtin_array_result_method_receivers() {
         "value = array.concat(values, more).copy()\n",
         "value = array.abs(values).get(0)\n",
         "value = array.from(-1, 2).abs()\n",
+        "value = array.from(1, 2, 3).standardize().get(1)\n",
+        "value = array.copy(values).standardize().standardize().size()\n",
         "value = array.standardize(values).first()\n",
         "value = array.sort_indices(values).last()\n",
     ] {
@@ -524,6 +526,38 @@ fn parses_matrix_mult_result_method_receivers_with_separate_provenance() {
             ExprKind::QualifiedName(vec!["$builtin_matrix_result".to_owned(), "copy".to_owned(),])
         );
     }
+
+    let source = "value = matrix.mult(left, array.from(1.0, 2.0)).standardize().first()\n";
+    let parsed = parse(source);
+    assert!(
+        parsed.diagnostics.is_empty(),
+        "{source}: {:?}",
+        parsed.diagnostics
+    );
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration for {source}");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected outer array-result call for {source}");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::QualifiedName(vec!["$builtin_array_result".to_owned(), "first".to_owned()])
+    );
+    let ExprKind::Call {
+        callee: inner_callee,
+        ..
+    } = &args[0].value.kind
+    else {
+        panic!("expected inner matrix-result call for {source}");
+    };
+    assert_eq!(
+        inner_callee.kind,
+        ExprKind::QualifiedName(vec![
+            "$builtin_matrix_result".to_owned(),
+            "standardize".to_owned(),
+        ])
+    );
 }
 
 #[test]

@@ -872,6 +872,14 @@ Current baseline:
   float while retaining empty/all-`na`/upstream-`na`, mismatched-length,
   insufficient-sample, non-finite-result, provenance, invalid-type/arity, non-
   mutation, and terminal boundaries.
+  The next numeric transformation slice adds `.standardize()`. It returns an
+  independent fixed float array, computes mean and population standard
+  deviation over non-`na` values, preserves `na` positions, and maps numeric
+  positions to `na` when the deviation is zero or non-finite. Empty/all-`na`
+  inputs return an empty array and upstream-`na` propagates. Static, cross-
+  namespace, matrix/map-derived, local/imported result provenance, invalid
+  type/arity, source independence, and copy/abs/standardize continuation are
+  fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -891,7 +899,7 @@ Remaining internal work:
   `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus numeric-only
   `.binary_search(value)`/`.binary_search_leftmost(value)`/
   `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/
-  `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)` set, and
+  `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked

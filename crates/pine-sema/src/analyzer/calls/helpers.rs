@@ -152,6 +152,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "percentile_linear_interpolation" => Some("array.percentile_linear_interpolation"),
         "percentrank" => Some("array.percentrank"),
         "covariance" => Some("array.covariance"),
+        "standardize" => Some("array.standardize"),
         _ => None,
     }
 }

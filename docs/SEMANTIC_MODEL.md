@@ -577,8 +577,8 @@ direct `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 every currently supported array kind. Concrete numeric results additionally
 admit `.binary_search(value)`, `.binary_search_leftmost(value)`,
 `.binary_search_rightmost(value)`, terminal
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`, and fresh same-kind
-`.abs()` chains.
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`, fresh same-kind
+`.abs()` chains, and fixed-float `.standardize()` chains.
 The parser assigns the unqualified form the impossible internal prefix
 `$call_result`; the normalization requires a plain lexical callee, while
 qualified user-defined forms keep their source prefix.
@@ -598,8 +598,8 @@ those receivers with `$builtin_array_result`, and semantic analysis admits only
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)`, plus
 numeric-only `.binary_search(value)`, `.binary_search_leftmost(value)`,
 `.binary_search_rightmost(value)`, `.abs()`, and
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)` after them. Only `.copy()` and
-numeric `.abs()` produce array receivers that may continue; the reads/searches
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()` after them. Only `.copy()`, numeric `.abs()`, and
+numeric `.standardize()` produce array receivers that may continue; the reads/searches
 are terminal and cannot continue into a user method or any other call-result
 method, including a method on a returned scalar UDT element.
 `array` is reserved as the built-in lexical prefix for this path; a qualified
@@ -612,8 +612,8 @@ admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)`, plus
 numeric-only `.binary_search(value)`, `.binary_search_leftmost(value)`,
 `.binary_search_rightmost(value)`, `.abs()`, and
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`; only
-`.copy()` and numeric `.abs()` return array receivers eligible for another allowed chain. The twenty-one
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`; only
+`.copy()`, numeric `.abs()`, and numeric `.standardize()` return array receivers eligible for another allowed chain. The twenty-one
 read/search results are terminal. Return
 kinds stay
 producer-specific: `array<string>` for `str.split`, `array<float>` for
@@ -638,7 +638,7 @@ and array-by-array overloads resolve to `array<float>` and admit `.size()`,
 `.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`,
 `.indexof(value)`, `.lastindexof(value)`, `.binary_search(value)`,
 `.binary_search_leftmost(value)`, `.binary_search_rightmost(value)`, and
-`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`.
+`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`.
 Matrix-by-matrix,
 matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
 `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
@@ -656,8 +656,7 @@ numeric-matrix parameter check. All three switch to the array-result prefix and
 admit `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)`/`.binary_search(value)`/
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)` with copy/abs array continuation and terminal read/search/
-aggregate checks.
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)` terminal reads plus `.standardize()`, with copy/abs/standardize array continuation and terminal read/search/aggregate checks.
 `.is_square()` retains the ordinary `MATRIX_ANY_ID_PARAMS`
 signature and `simple bool` return, accepts every supported concrete matrix
 kind, and is terminal without changing the parser marker. `.is_zero()` retains
@@ -847,7 +846,7 @@ plus `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)` and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
-`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`, with copy/abs array
+`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`, with copy/abs/standardize array
 continuation and terminal read/search/aggregate checks. The ordinary map analyzer validates
 key types and marks copy
 results with the same template metadata. Exact namespace `map.copy(existing)`
@@ -884,7 +883,7 @@ use the existing pure user-method dispatch, and explicit same-named local
 methods and imported functions remain distinct. Other `array.*` calls,
 built-in namespaces and templates outside the seven fixed producers plus the
 result-type-checked namespace `matrix.mult` paths, helpers beyond the applicable
-twenty-three-item postfix read/copy/search/transform/aggregate set, non-array/non-
+twenty-four-item postfix read/copy/search/transform/aggregate set, non-array/non-
 matrix/non-UDT results, unknown/`na` results without a concrete supported type
 or identity, and postfix mutation remain outside this subset. A postfix read
 does not make a mutating producer pure:
@@ -961,6 +960,13 @@ array, pairs cells by original index, and filters pairs where either side is
 default and the sample denominator when the positional or named `biased` value
 is `false` or `na`. Empty/all-`na`/upstream-`na` pairs, mismatched lengths,
 sample populations below two pairs, and non-finite results return `na`.
+`.standardize()` returns a fresh fixed `simple array<float>` from a concrete
+numeric result and leaves the source unchanged. It computes the mean and
+population standard deviation over non-`na` values, preserves `na` positions
+when numeric values remain, and replaces every numeric position with `na` when
+the standard deviation is zero or non-finite. Empty and all-`na` sources return
+an empty array; an upstream-`na` source returns `na`. The result retains the
+closed `.copy()`/`.abs()`/`.standardize()` continuation path.
 Generic UDT-array parameters are therefore iterable inside local UDFs and typed
 local methods for the fixture-backed statement and final-expression forms,
 including final results that return the UDT element itself or rebuild a
@@ -1249,7 +1255,7 @@ and the cross-namespace array-capable path support direct
 `.indexof(value)`/`.lastindexof(value)`, plus numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
-`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`, without widening arbitrary call-
+`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`, without widening arbitrary call-
 result receivers. UDT arrays retain the concrete
 same-local/same-imported scalar-tree identity gate; scalar UDT results from an
 unqualified local UDF may invoke the existing pure method subset. That scalar
@@ -1388,11 +1394,11 @@ no-op for missing keys. Assignment passes the runtime map id by reference, and
 key/value template. `map.keys` and `map.values` return independent array
 snapshots in insertion order using the map's scalar key or value kind. For the
 five-scalar-template subset on each side, those namespace-call results may use
-`.size()`, `.get(index)`, `.first()`, `.last()`, or `.copy()` directly. The
-key/value return kind follows the corresponding template side; only `.copy()`
-may continue into another allowed read/copy and remains independent of both the
-map and the first snapshot. Empty and typed-`na` maps plus negative and
-out-of-bounds indexes keep ordinary array-result semantics.
+the closed array-result helper set described above. The key/value return kind
+follows the corresponding template side; `.copy()` plus numeric `.abs()` and
+`.standardize()` may continue another allowed array chain and remain
+independent of both the map and the first snapshot. Empty and typed-`na` maps
+plus negative and out-of-bounds indexes keep ordinary array-result semantics.
 `map.put_all` requires source and target maps to have the same scalar key/value
 template and mutates the target by replacing existing values without moving
 their keys and appending new keys in source insertion order. Ordinary realtime
@@ -1493,9 +1499,10 @@ column extent and allowing empty row or column slices.
 `array<float>` for float matrices, `array<int>` for int matrices, and
 `array<bool>` for bool matrices, `array<string>` for string matrices, and
 `array<color>` for color matrices. Namespace-call results may immediately use
-`.size()`, `.get(index)`, `.first()`, `.last()`, or `.copy()`; only `.copy()`
-may continue into another allowed read/copy, and the copy remains independent
-of the source matrix and the first row/column snapshot. Ordinary
+the closed array-result helper set described above; `.copy()` plus numeric
+`.abs()` and `.standardize()` may continue another allowed array chain, and
+each transformed array remains independent of the source matrix and the first
+row/column snapshot. Ordinary
 `var` matrix ids persist across bars, and
 realtime forming-bar rollback restores the confirmed matrix store for
 non-`varip` updates. Matrix construction rejects negative row or column counts
@@ -1624,9 +1631,9 @@ or non-finite cell, and raises a runtime error for non-square matrices.
 for square runtime-owned float or int matrices, returns an empty array for
 empty `0 x 0` matrices, returns `na` for any `na` or non-finite cell and for
 non-real eigenvalue results, and raises a runtime error for non-square
-matrices. Its namespace-call result may immediately use the same seven
-read/copy/search helpers, with only `.copy()` nestable and with existing empty/
-`na`, index, and bounds semantics retained.
+matrices. Its namespace-call result may immediately use the closed numeric
+array-result helper set, with `.copy()`, `.abs()`, and `.standardize()`
+nestable and with existing empty/`na`, index, and bounds semantics retained.
 `matrix.eigenvectors` returns an independent `matrix<float>` whose columns are
 real eigenvectors for square runtime-owned float or int matrices, returns an
 independent empty `0 x 0` matrix for empty `0 x 0` input, returns `na` for any

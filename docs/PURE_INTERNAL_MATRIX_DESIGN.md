@@ -1573,6 +1573,14 @@ Recommended future slices:
     bias, fixed series-float results, empty/all-`na`/upstream-`na`, mismatched-
     length, insufficient-sample and non-finite-result behavior, invalid type/
     arity, and terminal continuation. Matrix-valued continuation is unchanged.
+104. Numeric array-valued call results additionally expose transforming
+    `.standardize()`. Matrix row/column/eigenvalue arrays and array-returning
+    `matrix.mult` overloads retain independent fixed-float results, non-`na`
+    mean and population-deviation calculation, `na`-position preservation,
+    zero/non-finite-deviation all-`na` numeric output, empty/all-`na` empty
+    results, and upstream-`na` propagation. Invalid type/arity, source
+    independence, and copy/abs/standardize continuation are fixture-backed.
+    Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

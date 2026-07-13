@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added transforming `.standardize()` to every existing concrete numeric
+  array call result. It returns an independent fixed `simple array<float>`,
+  computes mean and population standard deviation over non-`na` values,
+  preserves `na` positions, and maps numeric positions to `na` when deviation
+  is zero or non-finite. Empty/all-`na` inputs return an empty array and
+  upstream `na` propagates. Static/cross-namespace, matrix/map-derived,
+  local/imported function/method, invalid type/arity, source independence, and
+  copy/abs/standardize continuation paths are fixture-backed.
 - Added terminal `.covariance(id2, biased?)` to every existing concrete
   numeric array call result. It requires a same-length numeric second array,
   pairs original indexes, filters pairs containing `na`, defaults to the

@@ -597,6 +597,9 @@ unqualified_float_percentrank = return_identity(array.from(20.0, na, 22.0)).copy
 qualified_scalar_covariance = return_anchor.returnInts(array.from(40, 41, 42)).covariance(array.from(2, 4, 8))
 unqualified_int_covariance = return_identity(array.from(10, 11, 12)).covariance(id2=array.from(1, 2, 3), biased=false)
 unqualified_float_covariance = return_identity(array.from(20.0, na, 22.0)).copy().covariance(array.from(1.0, 2.0, 3.0))
+qualified_scalar_standardize = return_anchor.returnInts(array.from(40, 41, 42)).standardize()
+unqualified_int_standardize = return_identity(array.from(10, 11, 12)).standardize().copy()
+unqualified_float_standardize = return_identity(array.from(20.0, na, 22.0)).copy().standardize()
 plot(qualified_scalar_size)
 plot(qualified_scalar_get)
 plot(qualified_scalar_last)
@@ -618,6 +621,7 @@ plot(qualified_scalar_percentile_nearest == 41 and unqualified_int_percentile_ne
 plot(qualified_scalar_percentile_linear == 41.0 and unqualified_int_percentile_linear == 11.0 and unqualified_float_percentile_linear == 21.0 ? 1 : 0)
 plot(qualified_scalar_percentrank == 2.0 / 3.0 * 100.0 and unqualified_int_percentrank == 2.0 / 3.0 * 100.0 and unqualified_float_percentrank == 100.0 ? 1 : 0)
 plot(qualified_scalar_covariance == 2.0 and unqualified_int_covariance == 1.0 and unqualified_float_covariance == 1.0 ? 1 : 0)
+plot(qualified_scalar_standardize.size() == 3 and qualified_scalar_standardize.get(1) == 0.0 and unqualified_int_standardize.first() + unqualified_int_standardize.last() == 0.0 and unqualified_float_standardize.size() == 3 and na(unqualified_float_standardize.get(1)) ? 1 : 0)
 
 unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
 unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))

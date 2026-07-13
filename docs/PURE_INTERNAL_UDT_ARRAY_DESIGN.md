@@ -316,6 +316,12 @@ and uses the sample denominator for `false` or `na`. Empty/all-`na`/upstream-
 `na`, mismatched-length, insufficient-sample, non-finite-result, nonnumeric/
 UDT second-array, arity, provenance, and terminal-continuation boundaries
 remain closed.
+Item 100 adds transforming `.standardize()` over the same numeric result set.
+It returns an independent fixed float array, computes mean and population
+standard deviation over non-`na` values, preserves `na` positions, maps
+numeric positions to `na` for zero or non-finite deviation, returns empty for
+empty/all-`na`, and propagates upstream `na`. UDT, arity, provenance, source-
+independence, and copy/abs/standardize continuation boundaries remain closed.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1871,6 +1877,12 @@ paired-`na` filtering, population/sample bias behavior, empty/all-`na`/
 upstream-`na`, mismatched-length, insufficient-sample, non-finite-result,
 nonnumeric/UDT second-array, arity, provenance, terminal-continuation, and UDT-
 identity boundaries.
+Item 100 adds transforming `.standardize()` over that result set, preserving
+independent fixed-float results, non-`na` mean and population-deviation
+calculation, `na` positions, zero/non-finite-deviation all-`na` numeric output,
+empty/all-`na` empty results, and upstream-`na` propagation. Arity, provenance,
+source-independence, copy/abs/standardize continuation, and UDT-identity
+boundaries remain closed.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result
