@@ -177,6 +177,11 @@ the same five helpers, swapped rectangular shape, singular matrix results,
 swapped zero-cell shapes, `na` invalid-cell boundaries, fixed float-matrix
 result kind, independent backing storage, copy-only continuation, and retained
 other-bound-producer/non-matrix/mutation gates.
+Item 33 adds exact bound numeric-square-matrix-receiver
+`values.eigenvectors()` results with the same five helpers, preserved real
+square shape, empty `0 x 0` and `na` invalid/non-real/incomplete boundaries,
+fixed float-matrix result kind, independent backing storage, copy-only
+continuation, and retained other-bound-producer/non-matrix/mutation gates.
 Outside the exact static producer sets and those namespace-only exceptions,
 unsupported `array.new<T>` types, non-producer calls, unsupported matrix
 templates and map templates,
@@ -1001,3 +1006,13 @@ return/parameter flow remains deferred.
     helpers, non-numeric/non-matrix receivers, and the retained bound
     `values.eigenvectors()` gate are fixture-backed. No imported UDT identity
     or public schema field is added. Done.
+33. The exact bound-matrix-eigenvector continuation recognizes
+    `values.eigenvectors()` only when `values` resolves to a supported numeric
+    square matrix kind. The result preserves real square shape, returns empty
+    `0 x 0` or `na` at the established boundaries, uses independent fixed
+    float-matrix storage, and exposes only rows/columns/elements_count/get/copy
+    with copy-only continuation. Float/int receivers, nested copy,
+    UDF-contained reads, wrong indexes, broader helpers, non-numeric/non-matrix
+    receivers, and the retained matrix-valued bound `values.mult(other)` gate
+    are fixture-backed. No imported UDT identity or public schema field is
+    added. Done.

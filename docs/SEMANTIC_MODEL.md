@@ -890,7 +890,8 @@ outside the read-only `size`/`get`/`first`/`last`/`copy` set,
 bound matrix-result call-result receivers other than exact matrix-receiver
 `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
 `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
-`values.inv()`/`values.pinv()`, UDF matrix-result call-result receivers,
+`values.inv()`/`values.pinv()`/`values.eigenvectors()`, UDF matrix-result
+call-result receivers,
 built-in-qualified/template
 call-result receivers outside the exact static `array.*` allowlist and
 cross-namespace dynamic paths, nested field mutation, UDF

@@ -926,8 +926,11 @@ shape, singular, zero-cell, and invalid-cell boundaries. Exact namespace
 `matrix.eigenvectors(values)` returns an independent fixed `matrix<float>`
 whose columns are real eigenvectors for numeric square inputs, returns empty
 `0 x 0` for empty input, and yields `na` for invalid-cell, non-real, or
-incomplete results; bound `values.eigenvectors()` results remain generic
-rejections. Exact `matrix.new<float>`, `matrix.new<int>`, `matrix.new<bool>`,
+incomplete results. Exact bound numeric-square-matrix-receiver
+`values.eigenvectors()` results now share the five direct helpers and copy-only
+continuation while preserving the existing receiver, shape, empty,
+invalid-cell, non-real, and incomplete-result boundaries. Exact `matrix.new<float>`,
+`matrix.new<int>`, `matrix.new<bool>`,
 `matrix.new<string>`, and `matrix.new<color>` template results also enter this
 path, preserve their element kind, requested shape, type-compatible initial or
 default `na` cells, fresh allocation, and copy independence, and expose only
@@ -1019,7 +1022,7 @@ metadata and no UDT/import identity. Bound or UDF
 matrix-result receivers other than exact matrix-receiver
 `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
 `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
-`values.inv()`/`values.pinv()`,
+`values.inv()`/`values.pinv()`/`values.eigenvectors()`,
 built-in-qualified
 or template call results outside
 the exact static and dynamic paths, and other

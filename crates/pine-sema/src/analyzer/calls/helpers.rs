@@ -70,7 +70,15 @@ pub(crate) fn bound_matrix_call_result_method_parts<'a>(
             if receiver_name == prefix
                 && matches!(
                     producer_method.as_str(),
-                    "copy" | "diff" | "inv" | "kron" | "pinv" | "pow" | "submatrix" | "transpose"
+                    "copy"
+                        | "diff"
+                        | "eigenvectors"
+                        | "inv"
+                        | "kron"
+                        | "pinv"
+                        | "pow"
+                        | "submatrix"
+                        | "transpose"
                 ) =>
         {
             Some((receiver_name, method_name))

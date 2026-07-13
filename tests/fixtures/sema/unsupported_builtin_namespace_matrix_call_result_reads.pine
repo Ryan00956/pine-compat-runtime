@@ -73,7 +73,6 @@ array_copy_rows = matrix.mult(vector, left).copy().rows()
 
 bound_matrix_rows = left.mult(right).rows()
 bound_scalar_get = left.mult(2.0).get(0, 0)
-bound_eigenvectors_rows = left.eigenvectors().rows()
 udf_matrix_rows = matrixFactory(left, right).rows()
 
 plot(close)

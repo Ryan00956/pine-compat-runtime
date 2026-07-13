@@ -1,0 +1,42 @@
+//@version=6
+indicator("Bound matrix.eigenvectors call-result reads")
+
+eigenvectorRows(values) => values.eigenvectors().rows()
+
+eigenvectorBlockReads(values) =>
+    int rows = values.eigenvectors().rows()
+    int columns = values.eigenvectors().columns()
+    float value = values.eigenvectors().get(0, 0)
+    rows * 100 + columns * 10 + value
+
+values = matrix.new<float>(2, 2, 0.0)
+values.set(0, 0, 2.0)
+values.set(1, 1, 3.0)
+
+copied = values.eigenvectors().copy()
+copied.set(0, 0, 99.0)
+
+ints = matrix.new<int>(2, 2, 0)
+ints.set(0, 0, 2)
+ints.set(1, 1, 3)
+
+complex_values = matrix.new<float>(2, 2, 0.0)
+complex_values.set(0, 1, -1.0)
+complex_values.set(1, 0, 1.0)
+invalid = matrix.new<float>(1, 1)
+empty = matrix.new<float>(0, 0)
+
+plot(values.eigenvectors().rows(), "eigenvectors_rows")
+plot(values.eigenvectors().columns(), "eigenvectors_columns")
+plot(values.eigenvectors().elements_count(), "eigenvectors_elements")
+plot(values.eigenvectors().get(0, 0), "eigenvectors_get")
+plot(values.eigenvectors().copy().get(1, 1), "eigenvectors_copy_get")
+plot(values.eigenvectors().get(0, 1), "eigenvectors_off_diagonal")
+plot(ints.eigenvectors().get(1, 1), "int_eigenvectors_get")
+plot(na(complex_values.eigenvectors().rows()) ? 1 : 0, "complex_rows_na")
+plot(na(invalid.eigenvectors().rows()) ? 1 : 0, "invalid_rows_na")
+plot(empty.eigenvectors().rows() * 100 + empty.eigenvectors().columns() * 10 + empty.eigenvectors().elements_count(), "empty_shape")
+plot(values.get(0, 0), "source_value")
+plot(copied.get(0, 0), "copied_value")
+plot(eigenvectorRows(values), "expression_udf")
+plot(eigenvectorBlockReads(values), "block_udf")
