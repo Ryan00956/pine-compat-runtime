@@ -508,6 +508,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "matrix eigenvectors require a square matrix",
     ),
     (
+        "tests/fixtures/regressions/matrix_call_result_eigenvectors_non_square.pine",
+        "matrix eigenvectors require a square matrix",
+    ),
+    (
         "tests/fixtures/regressions/matrix_inv_non_square.pine",
         "matrix inverse requires a square matrix",
     ),

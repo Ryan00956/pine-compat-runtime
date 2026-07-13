@@ -786,7 +786,7 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
                 if prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX
                     && matches!(
                         method.as_str(),
-                        "copy" | "inv" | "pinv" | "submatrix" | "transpose"
+                        "copy" | "eigenvectors" | "inv" | "pinv" | "submatrix" | "transpose"
                     ) =>
             {
                 Some(BUILTIN_MATRIX_CALL_RESULT_PREFIX.to_owned())

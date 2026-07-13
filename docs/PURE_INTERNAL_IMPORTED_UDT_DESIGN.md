@@ -1325,3 +1325,13 @@ return/parameter flow remains deferred.
     lowering, nested/double chains, source independence, provenance/dual
     aliases, invalid types/arity, and rectangular/singular/zero-cell boundaries
     are fixture-backed. Done.
+67. The same concrete numeric matrix call-result producer set additionally
+    exposes `.eigenvectors()` as an independent fixed-`matrix<float>`
+    continuation. It preserves square shape for a complete real eigenvector
+    basis, returns empty `0 x 0`, retains the runtime non-square error, yields
+    `na` for invalid-cell, non-finite, non-real, incomplete, or upstream-`na`
+    results, and retains the matrix-result prefix without adding imported UDT
+    identity or a public schema field. Namespace/bound operations,
+    local/imported functions and methods, int-to-float lowering, nested/double
+    chains, source independence, provenance/dual aliases, invalid types/arity,
+    and runtime failure boundaries are fixture-backed. Done.

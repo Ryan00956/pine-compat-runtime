@@ -689,6 +689,16 @@ Current baseline:
   chains, source independence, provenance/dual aliases, invalid types/arity,
   and rectangular/singular/zero-cell boundaries are fixture-backed; mutation
   and other matrix-valued transforms remain gated.
+  The next numeric matrix-valued continuation slice adds `.eigenvectors()`
+  across the same concrete producer set. It retains the numeric receiver check,
+  always returns an independent fixed `matrix<float>`, preserves square shape
+  for a complete real eigenvector basis, returns empty `0 x 0`, retains the
+  runtime non-square error, yields `na` for invalid-cell, non-finite, non-real,
+  incomplete, or upstream-`na` results, and retains the matrix-result prefix.
+  Namespace and bound operations, local/imported functions and methods, int-
+  to-float lowering, nested/double chains, source independence, provenance/
+  dual aliases, invalid types/arity, and runtime failure boundaries are
+  fixture-backed; mutation and other matrix-valued transforms remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

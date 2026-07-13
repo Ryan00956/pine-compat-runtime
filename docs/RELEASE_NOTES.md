@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Added matrix-valued `.eigenvectors()` continuation to every existing
+  concrete numeric matrix call result. It retains the numeric receiver check,
+  always returns an independent `matrix<float>`, preserves square shape for a
+  complete real eigenvector basis, returns empty `0 x 0`, retains the runtime
+  non-square error, yields `na` for invalid-cell, non-finite, non-real,
+  incomplete, or upstream-`na` results, and retains the matrix-result prefix.
+  Namespace and bound operations, local/imported functions and methods, int-
+  to-float lowering, nested/double chains, source independence, provenance,
+  dual aliases, invalid types/arity, and runtime failure boundaries are
+  fixture-backed; mutation and the remaining matrix-valued helpers stay gated.
 - Added matrix-valued `.pinv()` continuation to every existing concrete
   numeric matrix call result. It retains the numeric receiver check, always
   returns an independent `matrix<float>`, swaps rectangular row/column counts,
