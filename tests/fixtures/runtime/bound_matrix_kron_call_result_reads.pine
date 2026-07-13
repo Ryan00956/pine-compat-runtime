@@ -1,0 +1,36 @@
+//@version=6
+indicator("Bound matrix.kron call-result reads")
+
+kronRows(left, right) => left.kron(right).rows()
+
+kronBlockReads(left, right) =>
+    int rows = left.kron(right).rows()
+    int columns = left.kron(right).columns()
+    float value = left.kron(right).get(1, 3)
+    rows * 100 + columns * 10 + value
+
+left = matrix.new<float>(2, 2, 0.0)
+left.set(0, 0, 1.0)
+left.set(0, 1, 2.0)
+left.set(1, 0, 3.0)
+left.set(1, 1, 4.0)
+right = matrix.new<float>(1, 2, 0.0)
+right.set(0, 0, 5.0)
+right.set(0, 1, 6.0)
+
+expanded = left.kron(right).copy()
+expanded.set(0, 0, 99.0)
+
+int_left = matrix.new<int>(1, 1, 2)
+int_right = matrix.new<int>(1, 1, 3)
+
+plot(left.kron(right).rows(), "kron_rows")
+plot(left.kron(right).columns(), "kron_columns")
+plot(left.kron(right).elements_count(), "kron_elements")
+plot(left.kron(right).get(1, 3), "kron_get")
+plot(left.kron(right).copy().get(0, 2), "kron_copy_get")
+plot(left.get(0, 0), "source_value")
+plot(expanded.get(0, 0), "expanded_value")
+plot(int_left.kron(int_right).get(0, 0), "int_kron_get")
+plot(kronRows(left, right), "expression_udf")
+plot(kronBlockReads(left, right), "block_udf")

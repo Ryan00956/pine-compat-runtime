@@ -357,6 +357,10 @@ Current baseline:
   independent selected half-open range including default full and valid empty
   ranges, and exposes the same five helpers with copy-only continuation. Bound
   `kron` and other producers remain gated.
+  The next closed bound-result slice admits exact numeric matrix-receiver
+  `values.kron(other)` results. It expands both dimensions, returns independent
+  fixed `matrix<float>` storage, and exposes the same five helpers with
+  copy-only continuation. Bound `diff` and other producers remain gated.
   The following closed slice admits exact namespace
   `matrix.transpose(values)` on that path. It preserves the same five element
   kinds through `SameAsArg`, swaps row/column shape, returns independent
@@ -445,7 +449,7 @@ Remaining internal work:
   plus exact supported scalar `map.new<K,V>` templates and namespace
   `map.copy(existing)`,
   including bound matrix-result receivers other than exact matrix-receiver
-  `values.copy()`/`values.transpose()`/`values.submatrix(...)`, UDF matrix-result receivers, other matrix-returning calls, map templates and
+  `values.copy()`/`values.transpose()`/`values.submatrix(...)`/`values.kron(other)`, UDF matrix-result receivers, other matrix-returning calls, map templates and
   unsupported matrix/map templates and other map call-result receivers,
   other built-in namespaces or non-producer members, non-producer `array.*`
   calls, unsupported `array.new<T>` templates, non-array/non-UDT results,

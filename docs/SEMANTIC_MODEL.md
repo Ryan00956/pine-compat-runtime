@@ -650,8 +650,10 @@ contract and copy-only continuation after the original receiver resolves to a
 supported matrix kind. Exact namespace
 `matrix.kron` also takes the matrix branch, resolves to fixed
 `simple matrix<float>` for numeric matrix inputs, expands both dimensions, and
-retains independent storage, `na`, and zero-dimension semantics. Bound
-`matrix_id.kron(other)` results remain generic rejections. Exact namespace
+retains independent storage, `na`, and zero-dimension semantics. Exact bound
+numeric-matrix-receiver `matrix_id.kron(other)` results share the same five
+read/copy helpers and copy-only continuation after the original receiver type
+check. Exact namespace
 `matrix.diff` also takes the matrix branch, resolves to fixed
 `simple matrix<float>` for numeric operand pairs containing a matrix, preserves
 the selected matrix shape and left-to-right subtraction order, and retains
@@ -884,7 +886,8 @@ access, mixed or non-scalar imported array-return identities, conflicting
 identities within one tuple UDT-array slot, direct call-result array methods
 outside the read-only `size`/`get`/`first`/`last`/`copy` set,
 bound matrix-result call-result receivers other than exact matrix-receiver
-`values.copy()`/`values.transpose()`/`values.submatrix(...)`, UDF matrix-result call-result receivers,
+`values.copy()`/`values.transpose()`/`values.submatrix(...)`/
+`values.kron(other)`, UDF matrix-result call-result receivers,
 built-in-qualified/template
 call-result receivers outside the exact static `array.*` allowlist and
 cross-namespace dynamic paths, nested field mutation, UDF

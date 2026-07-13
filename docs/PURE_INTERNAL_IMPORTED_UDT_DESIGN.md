@@ -153,6 +153,10 @@ Item 27 adds exact bound matrix-receiver `values.submatrix(...)` results with
 the same five helpers, preserved element kind, selected/default/empty half-open
 ranges, independent backing storage, copy-only continuation, and retained
 other-bound-producer/non-matrix/mutation gates.
+Item 28 adds exact bound numeric-matrix-receiver `values.kron(other)` results
+with the same five helpers, expanded shape, fixed float-matrix result kind,
+independent backing storage, copy-only continuation, and retained operand/
+other-bound-producer/non-matrix/mutation gates.
 Outside the exact static producer sets and those namespace-only exceptions,
 unsupported `array.new<T>` types, non-producer calls, unsupported matrix
 templates and map templates,
@@ -930,3 +934,12 @@ return/parameter flow remains deferred.
     broader helpers, non-matrix receivers, and the retained bound-kron gate are
     fixture-backed. No imported UDT identity or public schema field is added.
     Done.
+28. The exact bound-matrix-Kronecker continuation recognizes
+    `values.kron(other)` only when `values` resolves to a supported numeric
+    matrix kind. The result expands both dimensions, uses independent fixed
+    float-matrix storage, and exposes only
+    rows/columns/elements_count/get/copy with copy-only continuation. Float/int
+    operands, nested copy, UDF-contained reads, wrong operands/indexes, broader
+    helpers, non-numeric/non-matrix receivers, and the retained bound-diff gate
+    are fixture-backed. No imported UDT identity or public schema field is
+    added. Done.

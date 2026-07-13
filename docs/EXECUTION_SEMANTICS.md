@@ -893,8 +893,10 @@ with default full bounds and empty row/column slices. Exact bound matrix-receive
 continuation after the original receiver type check. Exact namespace
 `matrix.kron(left, right)` returns a fixed `matrix<float>` for numeric matrix
 operands, expands both source dimensions, preserves independent storage, `na`,
-and zero-dimension behavior, and shares only the same five helpers; bound
-`values.kron(other)` results remain generic rejections. Exact namespace
+and zero-dimension behavior, and shares only the same five helpers. Exact bound
+numeric-matrix-receiver `values.kron(other)` results now share those helpers
+and copy-only continuation while preserving the existing numeric input checks.
+Exact namespace
 `matrix.diff(left, right)` returns fixed `matrix<float>` results for
 matrix-matrix, matrix-scalar, and scalar-matrix numeric operands, preserving
 the selected matrix shape, left-to-right operand order, independent storage,
@@ -1006,7 +1008,8 @@ UDT/import identity. The scalar `map.new<K,V>` and namespace
 `map.copy(existing)` result paths likewise carry only scalar map template
 metadata and no UDT/import identity. Bound or UDF
 matrix-result receivers other than exact matrix-receiver
-`values.copy()`/`values.transpose()`/`values.submatrix(...)`,
+`values.copy()`/`values.transpose()`/`values.submatrix(...)`/
+`values.kron(other)`,
 built-in-qualified
 or template call results outside
 the exact static and dynamic paths, and other

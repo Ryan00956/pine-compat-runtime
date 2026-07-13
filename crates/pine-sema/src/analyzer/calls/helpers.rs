@@ -68,7 +68,10 @@ pub(crate) fn bound_matrix_call_result_method_parts<'a>(
     match parts.as_slice() {
         [receiver_name, producer_method]
             if receiver_name == prefix
-                && matches!(producer_method.as_str(), "copy" | "submatrix" | "transpose") =>
+                && matches!(
+                    producer_method.as_str(),
+                    "copy" | "kron" | "submatrix" | "transpose"
+                ) =>
         {
             Some((receiver_name, method_name))
         }
