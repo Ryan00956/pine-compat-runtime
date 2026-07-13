@@ -540,6 +540,13 @@ Current baseline:
   independence, and dual-alias isolation. Bad indexes retain the ordinary
   `matrix.col` checks. Matrix or call-result-array mutation, broader matrix
   helpers, and continuation after a terminal column-array reader remain gated.
+  The following numeric matrix-result slice adds `.eigenvalues()` wherever the
+  concrete call result satisfies the existing numeric-matrix signature. It
+  returns a fresh `array<float>` with the five array readers and copy-only
+  continuation; the existing square-matrix runtime boundary, `na`/non-real
+  result behavior, and source independence remain unchanged. Non-numeric
+  matrix results, array mutation, broader matrix helpers, and continuation
+  after a terminal eigenvalue-array reader remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

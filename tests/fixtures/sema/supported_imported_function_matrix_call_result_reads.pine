@@ -24,5 +24,7 @@ dual_alias_row = right.exposeMatrixFunction().row(0).size()
 float_col = left.exposeMatrixFunction().col(1).copy()
 int_col = left.exposeIntMatrixFunction().col(1)
 dual_alias_col = right.exposeMatrixFunction().col(0).size()
+float_eigenvalues = left.exposeMatrixFunction().eigenvalues().copy()
+dual_alias_eigenvalues = right.exposeMatrixFunction().eigenvalues().size()
 
-plot(rows + columns + elements + get + copy_chain + int_get + empty + block_return + nested_return + control_flow + dual_alias + nested_copy + float_row.size() + int_row.size() + dual_alias_row + float_col.size() + int_col.size() + dual_alias_col)
+plot(rows + columns + elements + get + copy_chain + int_get + empty + block_return + nested_return + control_flow + dual_alias + nested_copy + float_row.size() + int_row.size() + dual_alias_row + float_col.size() + int_col.size() + dual_alias_col + float_eigenvalues.size() + dual_alias_eigenvalues)

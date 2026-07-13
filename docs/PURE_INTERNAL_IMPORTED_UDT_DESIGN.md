@@ -1166,3 +1166,10 @@ return/parameter flow remains deferred.
     fixture-backed. Mutation, broader matrix helpers, and terminal column-
     reader continuation remain fail closed. No imported UDT identity or public
     schema field is added. Done.
+46. Concrete numeric matrix call-result producers expose `.eigenvalues()` as a
+    fresh `array<float>` with size/get/first/last/copy and copy-only array
+    continuation. Existing numeric type checks and square-matrix runtime
+    boundaries remain authoritative. Namespace/bound operations, local and
+    imported function/method provenance, dual aliases, copy independence, non-
+    numeric rejection, and array-mutation rejection are fixture-backed. No
+    imported UDT identity or public schema field is added. Done.

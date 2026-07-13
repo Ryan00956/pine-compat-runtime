@@ -870,19 +870,22 @@ array-by-array overloads resolve to `array<float>` and may use `.size()`,
 `.get(index)`, `.first()`, `.last()`, and `.copy()`. Matrix-by-matrix,
 matrix-by-scalar, and scalar-by-matrix overloads resolve to `matrix<float>` and
 may use `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
-`.copy()`, plus `.row(index)` and `.col(index)`. Int inputs still produce float collections.
+`.copy()`, plus `.row(index)`, `.col(index)`, and numeric-only
+`.eigenvalues()`. Int inputs still produce float collections.
 Matrix `.copy()` may continue with another admitted matrix helper;
-`.row(index)` and `.col(index)` return fresh element-kind-preserving arrays and
+`.row(index)` and `.col(index)` return fresh element-kind-preserving arrays;
+`.eigenvalues()` retains the existing numeric check and returns a fresh
+`array<float>`. These helpers
 switch to the closed `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` array-
 result path, where only array `.copy()` continues. Other terminal readers,
 wrong-result helpers, invalid arity or argument types, broader helpers, and
 mutation fail closed. The existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch. Exact
 bound numeric-matrix-receiver matrix-valued `matrix_id.mult(other)` results now
-share the seven matrix helpers and the copy/row/column continuation rules for matrix or
+share the eight matrix helpers and the copy/row/column/eigenvalue continuation rules for matrix or
 scalar operands while preserving the existing overload, shape, `na`, empty
 inner dimension, and cell-budget boundaries. Unqualified local-UDF results that infer
-a concrete supported matrix kind now share the seven matrix helpers through
+a concrete supported matrix kind now share the eight matrix helpers through
 `$call_result`. Parameter passthrough, block aliases, nested calls, same-kind
 control flow, constructed and matrix-operation returns, named/reordered
 arguments, and zero dimensions keep their normal call-specific float/int/bool/
@@ -898,7 +901,8 @@ map, unregistered or unresolved user-function matrix results, broader-helper,
 mutation, and terminal-read continuation cases remain fail closed. The row/
 column-array transition applies uniformly to every concrete matrix producer described
 below; producer-specific “copy-only” wording refers only to continuing as a
-matrix result, while `.row(index)` or `.col(index)` continues as an array result. Exact namespace
+matrix result, while `.row(index)`, `.col(index)`, or numeric `.eigenvalues()`
+continues as an array result. Exact namespace
 `matrix.copy(values)`
 also enters this
 prefix, always resolves through the matrix helper family, and preserves the

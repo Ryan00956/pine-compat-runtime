@@ -523,7 +523,7 @@ fn parses_matrix_copy_result_method_receivers_with_matrix_provenance() {
 }
 
 #[test]
-fn parses_matrix_call_result_rows_and_columns_as_array_result_receivers() {
+fn parses_matrix_call_result_array_producers_as_array_result_receivers() {
     for source in [
         "value = matrix.new<float>(2, 2, 1.0).row(0).size()\n",
         "value = matrix.new<int>(2, 2, 1).col(0).size()\n",
@@ -533,6 +533,8 @@ fn parses_matrix_call_result_rows_and_columns_as_array_result_receivers() {
         "value = matrix.transpose(values).col(1).get(0)\n",
         "value = matrix.mult(values, other).copy().row(0).copy().last()\n",
         "value = matrix.mult(values, other).copy().col(0).copy().first()\n",
+        "value = matrix.mult(values, other).eigenvalues().size()\n",
+        "value = matrix.copy(values).eigenvalues().copy().first()\n",
     ] {
         let parsed = parse(source);
 
@@ -972,6 +974,7 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = matrix.copy(values).row(0).first().custom()\n",
         "bad = matrix.new<float>(2, 2, 1.0).col(0).size().custom()\n",
         "bad = matrix.copy(values).col(0).first().custom()\n",
+        "bad = matrix.mult(values, other).eigenvalues().size().custom()\n",
         "bad = map.keys(values).first().custom()\n",
         "bad = map.new<string, float>().size().custom()\n",
         "bad = map.new<string, float>().get(\"missing\").custom()\n",

@@ -778,7 +778,7 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
         ExprKind::QualifiedName(parts) => match parts.as_slice() {
             [prefix, method]
                 if prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX
-                    && matches!(method.as_str(), "row" | "col") =>
+                    && matches!(method.as_str(), "row" | "col" | "eigenvalues") =>
             {
                 Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
             }

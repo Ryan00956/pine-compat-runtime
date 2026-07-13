@@ -1223,6 +1223,14 @@ Recommended future slices:
     Bad indexes use the ordinary `matrix.col` checks; matrix or call-result-
     array mutation, broader matrix helpers, and terminal column-reader
     continuation remain fail closed.
+60. Numeric matrix call-result eigenvalue arrays: done for concrete numeric
+    matrix results. `.eigenvalues()` reuses the existing numeric-matrix
+    signature and square-matrix runtime boundary, returns a fresh
+    `array<float>`, and switches to size/get/first/last/copy with copy-only array
+    continuation. Namespace/bound operations, local/imported functions and
+    methods, dual aliases, copy independence, non-numeric rejection, and array-
+    mutation rejection are fixture-backed. Broader matrix helpers and terminal
+    eigenvalue-reader continuation remain fail closed.
 
 ## Completion Gate For Future Positive Support
 

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added direct `.eigenvalues()` reads to concrete numeric matrix call results.
+  The method preserves the existing numeric-matrix type check and square-
+  matrix runtime boundary, returns a fresh `array<float>`, and supports direct
+  binding plus `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` with copy-only
+  array continuation. Namespace/bound operations, local and imported function
+  or method provenance, dual aliases, source independence, non-numeric
+  rejection, and call-result-array mutation rejection are fixture-backed.
 - Added direct `.col(index)` reads to every existing concrete matrix call-
   result producer. Each read returns a fresh element-kind-preserving scalar
   array with the same direct binding, array-reader, copy-only continuation,

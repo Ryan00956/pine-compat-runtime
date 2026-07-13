@@ -48,5 +48,7 @@ int_col = anchor.exposeInt().col(1)
 bool_col = anchor.exposeBool().col(0)
 string_col = anchor.exposeString().col(0)
 color_col = anchor.exposeColor().col(0)
+float_eigenvalues = anchor.expose().eigenvalues().copy()
+int_eigenvalues = anchor.exposeInt().eigenvalues()
 
-plot(rows + columns + elements + get + copy_chain + int_get + empty + block_return + nested_return + control_flow + qualified + constructor_receiver + nested_copy + float_row.size() + int_row.size() + bool_row.size() + string_row.size() + color_row.size() + float_col.size() + int_col.size() + bool_col.size() + string_col.size() + color_col.size())
+plot(rows + columns + elements + get + copy_chain + int_get + empty + block_return + nested_return + control_flow + qualified + constructor_receiver + nested_copy + float_row.size() + int_row.size() + bool_row.size() + string_row.size() + color_row.size() + float_col.size() + int_col.size() + bool_col.size() + string_col.size() + color_col.size() + float_eigenvalues.size() + int_eigenvalues.size())

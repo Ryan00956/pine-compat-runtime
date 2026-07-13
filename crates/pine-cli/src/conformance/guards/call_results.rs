@@ -407,7 +407,7 @@ fn validate_builtin_namespace_matrix_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES,
-        "fixture-backed exact matrix.new<float|int|bool|string|color> templates, namespace matrix.mult/matrix.copy/matrix.transpose/matrix.submatrix/matrix.kron/matrix.diff/matrix.pow/matrix.inv/matrix.pinv/matrix.eigenvectors results, bound matrix-receiver copy/transpose/submatrix/kron/diff/pow/inv/pinv/eigenvectors/matrix-valued-mult results, and concrete unqualified local-UDF, local/imported user-method, plus registered imported pure-function matrix results with rows/columns/elements_count/get/copy/row/col dispatch, fresh element-kind-preserving row/column arrays, and retained result-type/helper/unregistered-function boundaries",
+        "fixture-backed exact matrix.new<float|int|bool|string|color> templates, namespace matrix.mult/matrix.copy/matrix.transpose/matrix.submatrix/matrix.kron/matrix.diff/matrix.pow/matrix.inv/matrix.pinv/matrix.eigenvectors results, bound matrix-receiver copy/transpose/submatrix/kron/diff/pow/inv/pinv/eigenvectors/matrix-valued-mult results, and concrete unqualified local-UDF, local/imported user-method, plus registered imported pure-function matrix results with rows/columns/elements_count/get/copy/row/col dispatch, numeric-only eigenvalues dispatch, fresh element-kind-preserving row/column arrays and float eigenvalue arrays, plus retained result-type/helper/unregistered-function boundaries",
     )
 }
 
@@ -425,7 +425,7 @@ fn validate_user_method_matrix_call_result_fixture_paths(
         feature,
         fixtures,
         USER_METHOD_MATRIX_CALL_RESULT_FIXTURES,
-        "fixture-backed concrete local/imported user-method matrix-result rows/columns/elements_count/get/copy/row/col dispatch, fresh element-kind-preserving row/column arrays, and retained helper/result-type/mutation boundaries",
+        "fixture-backed concrete local/imported user-method matrix-result rows/columns/elements_count/get/copy/row/col plus numeric-only eigenvalues dispatch, fresh row/column and float eigenvalue arrays, and retained helper/result-type/mutation boundaries",
     )
 }
 
@@ -443,7 +443,7 @@ fn validate_imported_user_method_matrix_call_result_fixture_paths(
         feature,
         fixtures,
         IMPORTED_USER_METHOD_MATRIX_CALL_RESULT_FIXTURES,
-        "fixture-backed imported user-method matrix-result rows/columns/elements_count/get/copy/row/col dispatch with fresh element-kind-preserving row/column arrays, dual-alias isolation, and retained helper/result-type/mutation boundaries",
+        "fixture-backed imported user-method matrix-result rows/columns/elements_count/get/copy/row/col plus numeric-only eigenvalues dispatch with fresh row/column and float eigenvalue arrays, dual-alias isolation, and retained helper/result-type/mutation boundaries",
     )
 }
 
@@ -461,7 +461,7 @@ fn validate_imported_function_matrix_call_result_fixture_paths(
         feature,
         fixtures,
         IMPORTED_FUNCTION_MATRIX_CALL_RESULT_FIXTURES,
-        "fixture-backed imported pure-function matrix-result rows/columns/elements_count/get/copy/row/col dispatch with fresh element-kind-preserving row/column arrays, dual-alias isolation, and retained helper/result-type/mutation boundaries",
+        "fixture-backed imported pure-function matrix-result rows/columns/elements_count/get/copy/row/col plus numeric-only eigenvalues dispatch with fresh row/column and float eigenvalue arrays, dual-alias isolation, and retained helper/result-type/mutation boundaries",
     )
 }
 

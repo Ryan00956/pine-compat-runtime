@@ -20,5 +20,6 @@ string string_get = strings.copy().get(0, 0)
 color color_get = colors.copy().get(0, 0)
 array<float> direct_row = floats.copy().row(1).copy()
 array<float> direct_col = floats.copy().col(1).copy()
+array<float> direct_eigenvalues = floats.copy().eigenvalues().copy()
 
-plot(direct_rows + direct_columns + direct_elements + direct_get + nested_copy.get(0, 0) + int_get + (bool_get ? 1 : 0) + (string_get == "value" ? 1 : 0) + (color_get == color.red ? 1 : 0) + direct_row.size() + direct_col.size() + copyRows(floats))
+plot(direct_rows + direct_columns + direct_elements + direct_get + nested_copy.get(0, 0) + int_get + (bool_get ? 1 : 0) + (string_get == "value" ? 1 : 0) + (color_get == color.red ? 1 : 0) + direct_row.size() + direct_col.size() + direct_eigenvalues.size() + copyRows(floats))

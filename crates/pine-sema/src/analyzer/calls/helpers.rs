@@ -134,6 +134,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "copy" => Some("matrix.copy"),
         "row" => Some("matrix.row"),
         "col" => Some("matrix.col"),
+        "eigenvalues" => Some("matrix.eigenvalues"),
         _ => None,
     }
 }
@@ -596,6 +597,7 @@ mod tests {
             ("copy", "matrix.copy"),
             ("row", "matrix.row"),
             ("col", "matrix.col"),
+            ("eigenvalues", "matrix.eigenvalues"),
         ] {
             assert_eq!(
                 matrix_call_result_builtin_name(method_name),
