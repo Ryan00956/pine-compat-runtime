@@ -1449,6 +1449,15 @@ Recommended future slices:
     bound operations, local/imported functions and methods, scalar kinds, copy
     continuation, invalid types/arity, and terminal-continuation paths are
     fixture-backed. Matrix-valued continuation is unchanged.
+87. Terminal first-index searches on array-valued call results: done for every
+    existing concrete array result, including matrix row/column/eigenvalue
+    arrays and array-returning `matrix.mult` overloads. `.indexof(value)`
+    reuses ordinary element-kind validation and equality, returns the first
+    zero-based match as `simple int`, returns `-1` for missing/empty/upstream-
+    `na` arrays, performs no mutation, and creates no array-result prefix.
+    Namespace/bound operations, local/imported functions and methods, scalar
+    kinds, copy continuation, invalid types/arity, and terminal-continuation
+    paths are fixture-backed. Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

@@ -16,3 +16,7 @@ udf_includes_wrong_identity = lib.direct(values).includes(lib.Second.new(200.0, 
 method_includes_wrong_identity = anchor.retainFirst(values).copy().includes(lib.Second.new(200.0, 20.0))
 scalar_includes_wrong_type = lib.direct(array.from(1, 2)).includes("bad")
 includes_extra_arg = lib.direct(values).includes(lib.First.new(10.0, 100.0), lib.First.new(10.0, 100.0))
+udf_indexof_wrong_identity = lib.direct(values).indexof(lib.Second.new(200.0, 20.0))
+method_indexof_wrong_identity = anchor.retainFirst(values).copy().indexof(lib.Second.new(200.0, 20.0))
+scalar_indexof_wrong_type = lib.direct(array.from(1, 2)).indexof("bad")
+indexof_extra_arg = lib.direct(values).indexof(lib.First.new(10.0, 100.0), lib.First.new(10.0, 100.0))

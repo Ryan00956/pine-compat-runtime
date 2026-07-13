@@ -798,9 +798,9 @@ fixes each UDT-array slot identity; same-identity or `na` reassignment keeps the
 existing layout, while direct or control-flow reassignment to a different
 identity is rejected before HIR emission. Qualified user-defined UDF/method
 results and unqualified plain local UDF results support direct `.size()`,
-`.get(index)`, `.first()`, `.last()`, `.copy()`, and `.includes(value)` calls
-when the result is any currently supported array kind, including nested copy/
-read chains. The parser
+`.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`, and
+`.indexof(value)` calls when the result is any currently supported array kind,
+including nested copy/read chains. The parser
 rewrites the unqualified form to the impossible internal prefix `$call_result`
 only for a plain lexical callee; qualified user-defined forms retain their
 source alias/type prefix.
@@ -816,13 +816,14 @@ Existing supported `array.new<T>` scalar, drawing-id, `chart.point`, and
 same-local/same-imported scalar-tree UDT source templates reach that path
 through their canonical constructor or checked UDT-template form. The parser
 marks the receiver with `$builtin_array_result`; only `.size()`, `.get(index)`,
-`.first()`, `.last()`, `.copy()`, and `.includes(value)` are admitted after it.
-The lexical prefix
+`.first()`, `.last()`, `.copy()`, `.includes(value)`, and `.indexof(value)` are
+admitted after it. The lexical prefix
 `array` is reserved for built-in producer recognition, so a user or import
 qualifier named `array` cannot use this qualified call-result path.
 Only `.copy()` returns an array that may continue through another allowed
-read/copy step. The terminal `.size()`, `.get()`, `.first()`, `.last()`, and
-`.includes()` results cannot continue into a user method or any other call-result method,
+read/copy step. The terminal `.size()`, `.get()`, `.first()`, `.last()`,
+`.includes()`, and `.indexof()` results cannot continue into a user method or
+any other call-result method,
 including a method on a returned scalar UDT element.
 
 Analysis then fails closed unless the producer arguments resolve to the exact
@@ -846,15 +847,15 @@ UDT-array returns, unsupported or unknown templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, other
 `array.*` producer/member calls, built-in namespaces and templates outside the
 exact cross-namespace producer set below,
-postfix helpers outside the six-item read/copy/membership set, and postfix
+postfix helpers outside the seven-item read/copy/search set, and postfix
 mutation remain unsupported boundaries.
 
 The same `$builtin_array_result` lowering now has one additional exact set of
 seven fixed cross-namespace producers: `str.split`, `ta.pivot_point_levels`,
 `matrix.row`, `matrix.col`, `matrix.eigenvalues`, `map.keys`, and `map.values`.
 Each admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
-and `.includes(value)`; only `.copy()` can continue with another allowed array
-read/copy. The other five results are terminal. `str.split` and
+`.includes(value)`, and `.indexof(value)`; only `.copy()` can continue with
+another allowed array read/copy. The other six results are terminal. `str.split` and
 `ta.pivot_point_levels` retain their
 existing `array<string>` and `array<float>` results. `matrix.row` and
 `matrix.col` return independent element-array snapshots for runtime-owned
@@ -870,7 +871,8 @@ Namespace-qualified `matrix.mult(...)` uses a separate, closed
 `$builtin_matrix_result` candidate path whose helper family is selected from
 the resolved `MatrixMult` result type. Matrix-by-array, array-by-matrix, and
 array-by-array overloads resolve to `array<float>` and may use `.size()`,
-`.get(index)`, `.first()`, `.last()`, `.copy()`, and `.includes(value)`.
+`.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`, and
+`.indexof(value)`.
 Matrix-by-matrix,
 matrix-by-scalar, and scalar-by-matrix overloads resolve to `matrix<float>` and
 may use `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
@@ -885,8 +887,9 @@ Matrix `.copy()` may continue with another admitted matrix helper;
 `.eigenvalues()` retains the existing numeric check and returns a fresh
 `array<float>`. These three helpers
 switch to the closed `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
-`.includes(value)` array-result path, where only array `.copy()` continues and
-`.includes(value)` is terminal. `.is_square()` instead
+`.includes(value)`/`.indexof(value)` array-result path, where only array
+`.copy()` continues and the two search results are terminal. `.is_square()`
+instead
 returns the ordinary simple bool for every supported matrix element kind and
 is terminal, so no parser result-prefix transition occurs. Numeric-only
 `.is_zero()` likewise returns the ordinary simple bool using the existing
@@ -1592,9 +1595,9 @@ raises a runtime error for non-square matrices.
 eigenvalues for square runtime-owned float or int matrices, returns an empty
 array for empty `0 x 0` matrices, returns `na` for any `na` or non-finite cell
 and for non-real eigenvalue results, and raises a runtime error for non-square
-matrices. Its namespace-call result may immediately use the same six
-read/copy/membership helpers, with only `.copy()` nestable and with ordinary
-empty/`na` and bounds behavior retained.
+matrices. Its namespace-call result may immediately use the same seven
+read/copy/search helpers, with only `.copy()` nestable and with ordinary empty/
+`na` and bounds behavior retained.
 `matrix.eigenvectors(values)` returns an independent `matrix<float>` whose
 columns are real eigenvectors for square runtime-owned float or int matrices,
 returns an independent empty `0 x 0` matrix for empty `0 x 0` input, returns

@@ -74,17 +74,17 @@ cross-identity direct/control-flow reassignment and unresolved nested consumers
 are rejected at the root span.
 Qualified user-defined UDF/method results and unqualified plain local UDF
 results returning any currently supported array kind support direct `.size()`,
-`.get(index)`, `.first()`, `.last()`, `.copy()`, and `.includes(value)`,
-including nested copy/read chains. The unqualified form uses the impossible
+`.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`, and
+`.indexof(value)`, including nested copy/read chains. The unqualified form uses the impossible
 parser-only `$call_result`
 prefix and is admitted only for a plain lexical callee; qualified user-defined
 forms retain their alias/type prefix. The completed built-in producer slice in
 historical item 19 adds `$builtin_array_result` for its exact `array.*`
 producer allowlist and initially exposed only the same five postfix helpers.
 Only `.copy()` may return another array receiver for a nested allowed read/copy;
-`.size()`, `.get()`, `.first()`, `.last()`, and `.includes()` are terminal and
-cannot continue into a user method or other call-result method, including a
-method on a UDT element. UDT-array results require one concrete same-local or
+`.size()`, `.get()`, `.first()`, `.last()`, `.includes()`, and `.indexof()` are
+terminal and cannot continue into a user method or other call-result method,
+including a method on a UDT element. UDT-array results require one concrete same-local or
 same-imported scalar-tree identity. Named/`na`/negative `get` indexes, precise
 bounds errors,
 empty and typed-`na` results, A-to-B-to-A calls, and imported dual aliases are
@@ -237,6 +237,9 @@ without adding UDT/import identity to map or array metadata.
 Item 82 extends every existing concrete array call result with terminal
 `.includes(value)` while retaining ordinary element-kind/UDT-identity checks,
 equality, empty/`na`, and non-mutation behavior.
+Item 83 extends the same producer set with terminal `.indexof(value)`, using
+the same checks/equality and returning the first zero-based match or `-1` for
+missing, empty, and upstream-`na` arrays.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1571,6 +1574,16 @@ Recommended future slices:
     chart-point, local/imported UDT, A-to-B-to-A, dual-alias isolation, copy
     continuation, invalid type/identity/arity, and terminal-continuation paths
     are fixture-backed. Done.
+83. Every existing concrete array call-result producer additionally exposes
+    terminal `.indexof(value)`. It reuses ordinary element-kind and concrete
+    UDT-identity argument checks plus structural/object equality, returns the
+    first zero-based match as `simple int`, returns `-1` for missing or empty
+    concrete arrays and for an upstream `na` array, performs no mutation, and
+    creates no result prefix. Static/cross-namespace producers, local/imported
+    UDF and method results, matrix-derived and map-derived arrays, array-
+    returning `matrix.mult`, scalar/drawing/chart-point/local/imported UDT,
+    A-to-B-to-A, dual-alias isolation, copy continuation, invalid type/identity/
+    arity, and terminal-continuation paths are fixture-backed. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1600,7 +1613,7 @@ typed `array<T>`/`T[]` declarations, and local or imported UDF/user-method array
 returns within the call-boundary subset above. Qualified user-defined and
 unqualified plain local UDF results returning any supported array kind share
 the direct `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`/
-`.includes(value)` path;
+`.includes(value)`/`.indexof(value)` path;
 UDT-array results still require a concrete same-local/same-imported scalar-tree
 identity, and scalar UDT local-UDF results may invoke existing pure methods.
 The exact built-in array producer allowlist in item 19 also shares those five
@@ -1680,6 +1693,8 @@ Item 53 adds symmetric `.values()` reads with fresh, value-kind-preserving
 scalar-array metadata and the same continuation, but no UDT/import identity.
 Item 82 adds terminal membership checks to every existing concrete array call-
 result producer without widening UDT/import identity or public schemas.
+Item 83 adds symmetric terminal first-index searches with `-1` missing/empty/
+upstream-`na` behavior and the same identity boundary.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

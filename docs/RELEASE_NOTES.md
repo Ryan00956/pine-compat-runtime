@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Added terminal `.indexof(value)` first-index searches to every existing
+  concrete array call result. It covers qualified and unqualified local/
+  imported UDF and method results, registered static `array.*` producers, the
+  seven cross-namespace scalar-array producers, matrix row/column/eigenvalue
+  arrays, map key/value arrays, and array-returning `matrix.mult` overloads.
+  The helper reuses ordinary element-kind and same-identity UDT validation plus
+  structural/object equality, returns the first zero-based match as `simple
+  int`, returns `-1` for missing or empty concrete arrays and for upstream
+  `na`, performs no mutation, and creates no continuation prefix. Scalar,
+  drawing/chart-point, local/imported UDT, A-to-B-to-A, dual-alias isolation,
+  copy continuation, wrong type/identity, invalid arity, and terminal-
+  continuation boundaries are fixture-backed.
 - Added terminal `.includes(value)` membership checks to every existing
   concrete array call result: qualified and unqualified local/imported UDF and
   method results, registered static `array.*` producers, the seven
