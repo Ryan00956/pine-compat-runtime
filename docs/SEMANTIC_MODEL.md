@@ -628,9 +628,9 @@ matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
 `.copy()`, plus `.row(index)`, `.col(index)`, and numeric-only
 `.eigenvalues()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`,
 `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, and
-`.is_stochastic()`, plus all-kind terminal `.is_square()`. Int inputs still
-resolve to float collection results. Matrix `.copy()` continues on the matrix-
-result prefix;
+`.is_stochastic()`, plus numeric-only terminal `.sum()` and all-kind terminal
+`.is_square()`. Int inputs still resolve to float collection results. Matrix
+`.copy()` continues on the matrix-result prefix;
 `.row(index)` and `.col(index)` use `ReturnSpec::MatrixArray(0)` and switch the
 parser marker to `$builtin_array_result`, producing fresh element-kind-preserving arrays
 while `.eigenvalues()` retains its fixed `simple array<float>` result and
@@ -658,20 +658,23 @@ transposed-pair rules.
 `.is_stochastic()` shares that numeric/simple-bool terminal signature and
 retains the ordinary non-empty, finite, non-negative, exact-unit-row-or-column-
 sum rules.
+`.sum()` retains `MATRIX_NUMERIC_ID_PARAMS`, returns a fixed `series float`,
+and is terminal; its ordinary runtime rules ignore `na` cells and return `na`
+when no numeric cell is present or the accumulated result is non-finite.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
 broader helpers, and mutation fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the sixteen matrix
+exact bound matrix-valued `matrix_id.mult(other)` results share the seventeen matrix
 helpers for matrix or scalar operands with the
-copy/row/column/eigenvalue/predicate-reader continuation rules.
+copy/row/column/eigenvalue/predicate/aggregate-reader continuation rules.
 Unqualified local-UDF results with an inferred concrete supported matrix kind
 share the same helpers through `$call_result`, preserve per-call float/int/bool/
 string/color kinds, and use the same continuation rules. Concrete local or
 imported user methods and registered imported functions share the row/column/
 numeric-eigenvalue-array
 transition plus terminal all-kind square and numeric zero/binary/diagonal/
-identity/symmetric/antisymmetric/stochastic checks; unknown/`na` and non-matrix
+identity/symmetric/antisymmetric/stochastic/sum reads; unknown/`na` and non-matrix
 returns retain generic or result-family
 rejection. Producer-specific “copy-only” wording below refers only to
 continuing as a matrix result. Exact namespace

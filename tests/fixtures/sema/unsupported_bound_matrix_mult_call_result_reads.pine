@@ -7,7 +7,6 @@ array_values = array.from(1.0, 2.0)
 
 bad_row = values.mult(values).get("bad", 0)
 set_result = values.mult(values).set(0, 0, 2.0)
-sum_result = values.mult(2.0).sum()
 size_result = values.mult(2.0).size()
 array_result_rows = values.mult(array_values).rows()
 bad_receiver_kind = bools.mult(values).rows()

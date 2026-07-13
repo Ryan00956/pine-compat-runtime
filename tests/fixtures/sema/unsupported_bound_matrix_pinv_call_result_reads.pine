@@ -7,7 +7,6 @@ array_values = array.from(1.0, 2.0)
 
 bad_row = values.pinv().get("bad", 0)
 set_result = values.pinv().set(0, 0, 2.0)
-sum_result = values.pinv().sum()
 size_result = values.pinv().size()
 bad_receiver_kind = bools.pinv().rows()
 wrong_receiver = array_values.pinv().rows()

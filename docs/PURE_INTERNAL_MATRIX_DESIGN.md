@@ -1291,6 +1291,12 @@ Recommended future slices:
     simple bool and is terminal without a result-prefix transition. Numeric
     rejection, provenance/dual aliases, invalid arity, and terminal
     continuation are fixture-backed.
+69. Numeric matrix call-result sums: done for the same concrete float/int
+    producer set. `.sum()` retains the fixed `series float` result, ignores
+    `na` cells, returns `na` for empty, all-`na`, non-finite, or upstream-`na`
+    results, and is terminal without a result-prefix transition. Numeric
+    rejection, copy continuation, provenance/dual aliases, invalid arity, and
+    terminal continuation are fixture-backed.
 
 ## Completion Gate For Future Positive Support
 

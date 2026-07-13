@@ -143,6 +143,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "is_symmetric" => Some("matrix.is_symmetric"),
         "is_antisymmetric" => Some("matrix.is_antisymmetric"),
         "is_stochastic" => Some("matrix.is_stochastic"),
+        "sum" => Some("matrix.sum"),
         _ => None,
     }
 }
@@ -614,6 +615,7 @@ mod tests {
             ("is_symmetric", "matrix.is_symmetric"),
             ("is_antisymmetric", "matrix.is_antisymmetric"),
             ("is_stochastic", "matrix.is_stochastic"),
+            ("sum", "matrix.sum"),
         ] {
             assert_eq!(
                 matrix_call_result_builtin_name(method_name),
@@ -625,7 +627,7 @@ mod tests {
             );
         }
 
-        for method_name in ["size", "set", "fill", "reverse", "transpose", "sum"] {
+        for method_name in ["size", "set", "fill", "reverse", "transpose"] {
             assert_eq!(matrix_call_result_builtin_name(method_name), None);
         }
     }

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added terminal `.sum()` reads to every existing concrete numeric matrix call
+  result. The helper retains the float/int check and fixed `series float`
+  result, ignores `na` cells, and returns `na` for empty, all-`na`, non-finite,
+  or upstream-`na` results. Copy continuation, producer provenance, dual
+  aliases, non-numeric rejection, invalid arity, and terminal continuation are
+  fixture-backed.
 - Added terminal `.is_stochastic()` reads to every existing concrete numeric
   matrix call result. The helper retains the float/int check and ordinary
   stochastic rule: a non-empty matrix of finite non-negative values is true

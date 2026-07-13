@@ -602,6 +602,12 @@ Current baseline:
   upstream `na` propagates. It creates no result prefix, and numeric rejection,
   provenance/dual aliases, invalid arity, and terminal continuation are
   fixture-backed.
+  The next numeric aggregate slice adds terminal `.sum()` across the same
+  producer set. It retains the fixed `series float` result, ignores `na`
+  cells, returns `na` for empty, all-`na`, non-finite, or upstream-`na`
+  results, and creates no result prefix. Numeric rejection, copy continuation,
+  provenance/dual aliases, invalid arity, and terminal continuation are
+  fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

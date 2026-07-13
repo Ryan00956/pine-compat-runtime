@@ -8,7 +8,6 @@ bad_row = values.copy().get("bad", 0)
 bad_column = values.copy().get(0, "bad")
 set_result = values.copy().set(0, 0, 2.0)
 reverse_result = values.copy().reverse()
-sum_result = values.copy().sum()
 size_result = values.copy().size()
 wrong_receiver = array_values.copy().rows()
 

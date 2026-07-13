@@ -8,7 +8,6 @@ bad_from_row = values.submatrix("bad").rows()
 bad_row = values.submatrix().get("bad", 0)
 bad_column = values.submatrix().get(0, "bad")
 set_result = values.submatrix().set(0, 0, 2.0)
-sum_result = values.submatrix().sum()
 size_result = values.submatrix().size()
 wrong_receiver = array_values.submatrix().rows()
 
