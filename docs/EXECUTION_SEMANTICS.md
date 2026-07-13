@@ -872,8 +872,8 @@ matrix-by-scalar, and scalar-by-matrix overloads resolve to `matrix<float>` and
 may use `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
 `.copy()`, plus `.row(index)`, `.col(index)`, and numeric-only
 `.eigenvalues()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`,
-`.is_identity()`, and `.is_symmetric()`, plus all-kind terminal `.is_square()`. Int
-inputs still produce float collections.
+`.is_identity()`, `.is_symmetric()`, and `.is_antisymmetric()`, plus all-kind
+terminal `.is_square()`. Int inputs still produce float collections.
 Matrix `.copy()` may continue with another admitted matrix helper;
 `.row(index)` and `.col(index)` return fresh element-kind-preserving arrays;
 `.eigenvalues()` retains the existing numeric check and returns a fresh
@@ -891,16 +891,19 @@ cells; it is terminal as well. Numeric-only `.is_identity()` adds square shape
 plus exact-one diagonal and exact-zero off-diagonal requirements, rejects every
 `na` cell, and remains terminal. Numeric-only `.is_symmetric()` requires square
 shape and exact transposed-pair equality, rejects every `na` cell, and is
-terminal. Other terminal readers, wrong-result helpers, invalid arity or
-argument types, broader helpers, and mutation fail closed. The existing bound-
+terminal. Numeric-only `.is_antisymmetric()` requires square shape, an exact-
+zero main diagonal, and exact negation across transposed pairs, rejects every
+`na` cell, and is terminal. Other terminal readers, wrong-result helpers,
+invalid arity or argument types, broader helpers, and mutation fail closed. The
+existing bound-
 receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch. Exact
 bound numeric-matrix-receiver matrix-valued `matrix_id.mult(other)` results now
-share the fourteen matrix helpers and the copy/row/column/eigenvalue/predicate-
+share the fifteen matrix helpers and the copy/row/column/eigenvalue/predicate-
 reader continuation rules for matrix or
 scalar operands while preserving the existing overload, shape, `na`, empty
 inner dimension, and cell-budget boundaries. Unqualified local-UDF results that infer
-a concrete supported matrix kind now share the fourteen matrix helpers through
+a concrete supported matrix kind now share the fifteen matrix helpers through
 `$call_result`. Parameter passthrough, block aliases, nested calls, same-kind
 control flow, constructed and matrix-operation returns, named/reordered
 arguments, and zero dimensions keep their normal call-specific float/int/bool/
@@ -919,7 +922,7 @@ below; producer-specific “copy-only” wording refers only to continuing as a
 matrix result, while `.row(index)`, `.col(index)`, or numeric `.eigenvalues()`
 continues as an array result and `.is_square()` plus numeric `.is_zero()` are
 terminal, as are numeric `.is_binary()`, `.is_diagonal()`, `.is_identity()`,
-and `.is_symmetric()`. Exact namespace
+`.is_symmetric()`, and `.is_antisymmetric()`. Exact namespace
 `matrix.copy(values)`
 also enters this
 prefix, always resolves through the matrix helper family, and preserves the

@@ -627,8 +627,8 @@ matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
 `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
 `.copy()`, plus `.row(index)`, `.col(index)`, and numeric-only
 `.eigenvalues()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`,
-`.is_identity()`, and `.is_symmetric()`, plus all-kind terminal `.is_square()`. Int
-inputs still resolve to float collection
+`.is_identity()`, `.is_symmetric()`, and `.is_antisymmetric()`, plus all-kind
+terminal `.is_square()`. Int inputs still resolve to float collection
 results. Matrix `.copy()` continues on the matrix-result prefix;
 `.row(index)` and `.col(index)` use `ReturnSpec::MatrixArray(0)` and switch the
 parser marker to `$builtin_array_result`, producing fresh element-kind-preserving arrays
@@ -651,11 +651,14 @@ retaining its ordinary square-shape, exact-one diagonal, and exact-zero off-
 diagonal rules. `.is_symmetric()` shares the numeric/simple-bool terminal
 signature and retains the ordinary square-shape and exact transposed-pair-
 equality rules.
+`.is_antisymmetric()` shares that numeric/simple-bool terminal signature and
+retains the ordinary square-shape, exact-zero main-diagonal, and exact negated-
+transposed-pair rules.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
 broader helpers, and mutation fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the fourteen matrix
+exact bound matrix-valued `matrix_id.mult(other)` results share the fifteen matrix
 helpers for matrix or scalar operands with the
 copy/row/column/eigenvalue/predicate-reader continuation rules.
 Unqualified local-UDF results with an inferred concrete supported matrix kind
@@ -664,8 +667,8 @@ string/color kinds, and use the same continuation rules. Concrete local or
 imported user methods and registered imported functions share the row/column/
 numeric-eigenvalue-array
 transition plus terminal all-kind square and numeric zero/binary/diagonal/
-identity/symmetric checks; unknown/`na` and non-matrix returns retain generic or
-result-family
+identity/symmetric/antisymmetric checks; unknown/`na` and non-matrix returns
+retain generic or result-family
 rejection. Producer-specific “copy-only” wording below refers only to
 continuing as a matrix result. Exact namespace
 `matrix.copy` always takes the matrix branch, preserves the source

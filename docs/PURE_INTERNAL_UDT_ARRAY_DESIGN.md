@@ -1392,6 +1392,13 @@ Recommended future slices:
     provenance/dual aliases, invalid arity, and terminal continuation are
     fixture-backed. No UDT/import identity or public schema field is added.
     Done.
+63. The same concrete numeric matrix call-result producer set exposes terminal
+    `.is_antisymmetric()`. It requires square shape, an exact-zero main
+    diagonal, and exact negation across transposed pairs, returns false for
+    every `na`, true for empty 0×0, propagates upstream `na`, and creates no
+    result prefix. Numeric rejection, provenance/dual aliases, invalid arity,
+    and terminal continuation are fixture-backed. No UDT/import identity or
+    public schema field is added. Done.
 
 ## Completion Gate For Future Positive Support
 

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added terminal `.is_antisymmetric()` reads to every existing concrete numeric
+  matrix call result. The helper retains the float/int check and ordinary
+  antisymmetric rule: square shape, exact-zero main diagonal, exact negated
+  transposed pairs, false for any `na`, and true for empty 0×0 results;
+  upstream `na` matrices propagate `na`. Producer provenance, dual aliases,
+  non-numeric rejection, invalid arity, and terminal continuation are fixture-
+  backed.
 - Added terminal `.is_symmetric()` reads to every existing concrete numeric
   matrix call result. The helper retains the float/int check and ordinary
   symmetric rule: square shape, exact transposed-pair equality, false for any

@@ -141,6 +141,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "is_diagonal" => Some("matrix.is_diagonal"),
         "is_identity" => Some("matrix.is_identity"),
         "is_symmetric" => Some("matrix.is_symmetric"),
+        "is_antisymmetric" => Some("matrix.is_antisymmetric"),
         _ => None,
     }
 }
@@ -610,6 +611,7 @@ mod tests {
             ("is_diagonal", "matrix.is_diagonal"),
             ("is_identity", "matrix.is_identity"),
             ("is_symmetric", "matrix.is_symmetric"),
+            ("is_antisymmetric", "matrix.is_antisymmetric"),
         ] {
             assert_eq!(
                 matrix_call_result_builtin_name(method_name),
