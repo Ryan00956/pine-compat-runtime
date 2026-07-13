@@ -660,6 +660,15 @@ Current baseline:
   independence, provenance/dual aliases, repeated continuation, and invalid
   arity are fixture-backed; mutation and other matrix-valued transforms remain
   gated.
+  The following matrix-valued continuation slice adds `.submatrix(...)`
+  across the same producer set. It preserves float/int/bool/string/color
+  element kind, returns an independent optional/default half-open range,
+  preserves empty row/column shapes, propagates upstream `na`, and retains the
+  matrix-result prefix. Namespace/bound operations, exact templates,
+  local/imported functions and methods, named arguments, nested ranges, five-
+  kind reads, source independence, provenance/dual aliases, invalid types/
+  arity, and runtime bounds are fixture-backed; mutation and other matrix-
+  valued transforms remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

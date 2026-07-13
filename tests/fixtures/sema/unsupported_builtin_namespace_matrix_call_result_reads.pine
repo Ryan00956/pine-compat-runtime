@@ -97,5 +97,7 @@ det_extra_arg = matrix.copy(left).det(0)
 bool_rank = matrix.copy(bool_values).rank()
 rank_extra_arg = matrix.copy(left).rank(0)
 transpose_extra_arg = matrix.copy(left).transpose(0)
+submatrix_bad_from = matrix.copy(left).submatrix("bad").rows()
+submatrix_extra_arg = matrix.copy(left).submatrix(0, 2, 0, 2, 0).rows()
 
 plot(close)

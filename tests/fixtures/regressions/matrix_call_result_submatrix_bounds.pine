@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix call-result submatrix bounds")
+
+values = matrix.new<float>(3, 4, close)
+rows = matrix.copy(values).submatrix(0, 4).rows()
+plot(rows)

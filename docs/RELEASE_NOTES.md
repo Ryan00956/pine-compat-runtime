@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Added matrix-valued `.submatrix(...)` continuation to every existing
+  concrete matrix call result. It preserves float/int/bool/string/color
+  element kinds, returns an independent half-open range with optional/default
+  bounds, preserves empty row/column shapes, propagates upstream `na`, and may
+  continue through `.copy()`, `.submatrix(...)`, `.transpose()`, or any
+  supported matrix reader. Namespace and bound operations, exact templates,
+  local/imported functions and methods, named arguments, nested ranges, five-
+  kind reads, source independence, invalid types/arity, runtime bounds,
+  provenance, and dual aliases are fixture-backed; mutation and the remaining
+  matrix-valued helpers stay gated.
 - Added matrix-valued `.transpose()` continuation to every existing concrete
   matrix call result. It preserves float/int/bool/string/color element kinds,
   returns an independent matrix with swapped row/column counts, propagates

@@ -476,6 +476,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "matrix row index 4 is out of bounds for size 4",
     ),
     (
+        "tests/fixtures/regressions/matrix_call_result_submatrix_bounds.pine",
+        "matrix row index 4 is out of bounds for size 4",
+    ),
+    (
         "tests/fixtures/regressions/matrix_submatrix_na_index.pine",
         "matrix row index cannot be na",
     ),

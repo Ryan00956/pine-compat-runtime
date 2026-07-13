@@ -1472,6 +1472,15 @@ Recommended future slices:
     methods, five-kind reads, zero-cell shapes, source independence,
     provenance/dual aliases, repeated continuation, and invalid arity are
     fixture-backed. Done.
+74. Every existing concrete matrix call-result producer also exposes
+    `.submatrix(...)` as an independent, element-kind-preserving matrix
+    continuation over an optional/default half-open range. It preserves empty
+    row/column shapes, propagates upstream `na`, retains the matrix-result
+    prefix, and adds no UDT/import identity or public schema field.
+    Namespace/bound operations, exact templates, local/imported functions and
+    methods, named arguments, nested ranges, five-kind reads, source
+    independence, provenance/dual aliases, invalid types/arity, and runtime
+    bounds are fixture-backed. Done.
 
 ## Completion Gate For Future Positive Support
 

@@ -1353,6 +1353,16 @@ Recommended future slices:
     five-kind reads, source independence, provenance/dual aliases, repeated
     continuation, and invalid arity are fixture-backed. Mutation and the
     remaining matrix-valued helpers stay gated.
+78. Matrix call-result submatrices: done for every existing concrete matrix
+    producer. `.submatrix(...)` retains the receiver's float/int/bool/string/
+    color element kind through `SameAsArg`, allocates an independent half-open
+    range with optional/default bounds, preserves empty row/column shapes,
+    propagates upstream `na`, and keeps the matrix-result prefix. Namespace and
+    bound operations, exact templates, local/imported functions and methods,
+    named arguments, nested ranges, five-kind reads, source independence,
+    provenance/dual aliases, invalid types/arity, and runtime bounds are
+    fixture-backed. Mutation and the remaining matrix-valued helpers stay
+    gated.
 
 ## Completion Gate For Future Positive Support
 
