@@ -6800,6 +6800,12 @@ fn reports_unsupported_builtin_namespace_matrix_call_result_reads_fixture() {
             "`matrix.set` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, and `.copy()`; bind the result or use the namespace helper",
             "`matrix.sum` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, and `.copy()`; bind the result or use the namespace helper",
             "`matrix.size` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, and `.copy()`; bind the result or use the namespace helper",
+            "`matrix.pow` argument `id` expects numeric matrix, got simple array<float>",
+            "`matrix.pow` argument `power` expects simple int, got const string",
+            "`matrix.get` argument `row` expects simple int, got const string",
+            "`matrix.set` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, and `.copy()`; bind the result or use the namespace helper",
+            "`matrix.sum` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, and `.copy()`; bind the result or use the namespace helper",
+            "`matrix.size` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, and `.copy()`; bind the result or use the namespace helper",
             "`array.rows` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
             "`array.columns` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
             "`array.elements_count` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
@@ -6813,9 +6819,10 @@ fn reports_unsupported_builtin_namespace_matrix_call_result_reads_fixture() {
             "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
+            "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
         ],
     );
-    assert_diagnostic_count(path, 47);
+    assert_diagnostic_count(path, 54);
 }
 
 #[test]

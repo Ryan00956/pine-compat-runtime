@@ -615,9 +615,9 @@ element-type checks still come from the ordinary producer and array-helper
 analysis/runtime rules.
 
 Namespace-qualified `matrix.mult(...)`, `matrix.copy(...)`,
-`matrix.transpose(...)`, `matrix.submatrix(...)`, `matrix.kron(...)`, and
-`matrix.diff(...)` instead use the separate `$builtin_matrix_result` synthetic
-prefix. `matrix.mult` semantic
+`matrix.transpose(...)`, `matrix.submatrix(...)`, `matrix.kron(...)`,
+`matrix.diff(...)`, and `matrix.pow(...)` instead use the separate
+`$builtin_matrix_result` synthetic prefix. `matrix.mult` semantic
 dispatch is selected by the resolved `ReturnSpec::MatrixMult` result.
 Matrix-by-array, array-by-matrix,
 and array-by-array overloads resolve to `array<float>` and admit `.size()`,
@@ -649,9 +649,14 @@ retains independent storage, `na`, and zero-dimension semantics. Bound
 `simple matrix<float>` for numeric operand pairs containing a matrix, preserves
 the selected matrix shape and left-to-right subtraction order, and retains
 independent storage, `na`, and zero-dimension semantics. Bound
-`matrix_id.diff(other)` results remain generic rejections. Map/matrix templates
-such as `map.new` and `matrix.new`, every other namespace or non-producer member,
-and other matrix-returning calls stay excluded. Built-in
+`matrix_id.diff(other)` results remain generic rejections. Exact namespace
+`matrix.pow` also takes the matrix branch, resolves to fixed
+`simple matrix<float>` for numeric square matrices and simple-int powers, and
+retains independent identity/copy/positive-power, `na`, and empty `0 x 0`
+semantics. Bound `matrix_id.pow(power)` results remain generic rejections.
+Map/matrix templates such as `map.new` and `matrix.new`, every other namespace
+or non-producer member, and other matrix-returning calls stay excluded.
+Built-in
 namespace prefixes remain reserved and cannot be treated as same-named
 user/import qualifiers. No UDT or imported-type identity is inferred, and
 public schemas remain unchanged.
@@ -857,12 +862,13 @@ UDT method composition path. The seven fixed cross-namespace producers and
 array-returning `matrix.mult` overloads return only scalar arrays and add no
 UDT/import identity flow. Namespace matrix-returning `matrix.mult` overloads,
 exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix`, and
-fixed-float namespace `matrix.kron`/`matrix.diff` add only the exact matrix
-read/copy set above. Copy/transpose/submatrix preserve the scalar matrix element
-kind; transpose swaps shape, submatrix selects a range, kron expands both
-dimensions, and diff preserves its selected matrix operand's shape and
-left-to-right subtraction order in a float matrix. None of these paths carries UDT/import
-identity.
+fixed-float namespace `matrix.kron`/`matrix.diff`/`matrix.pow` add only the exact
+matrix read/copy set above. Copy/transpose/submatrix preserve the scalar matrix
+element kind; transpose swaps shape, submatrix selects a range, kron expands
+both dimensions, diff preserves its selected matrix operand's shape and
+left-to-right subtraction order, and pow preserves square shape across
+identity/copy/positive powers in a float matrix. None of these paths carries
+UDT/import identity.
 Tuple-contained
 same-imported scalar-tree UDT arrays are supported when destructured, with
 identity tracked independently per slot. Non-scalar UDT value history outside the local/imported
@@ -942,7 +948,7 @@ method exception does not apply to a built-in producer's terminal
 and the array-returning `matrix.mult` overloads are scalar-array-only and do
 not widen UDT identity. Namespace matrix-returning `matrix.mult` overloads and
 exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix` plus
-fixed-float namespace `matrix.kron`/`matrix.diff` add only the exact matrix read/copy set
+fixed-float namespace `matrix.kron`/`matrix.diff`/`matrix.pow` add only the exact matrix read/copy set
 above and likewise do not widen UDT identity. Bound
 or UDF matrix-result receivers, built-in-qualified/template
 call results outside the exact static and dynamic paths, and other array or

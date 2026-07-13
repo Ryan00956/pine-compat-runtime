@@ -153,6 +153,7 @@ fn builtin_collection_result_producer_parser_allowlists_match_registry() {
         "matrix.diff",
         "matrix.kron",
         "matrix.mult",
+        "matrix.pow",
         "matrix.submatrix",
         "matrix.transpose",
     ]);

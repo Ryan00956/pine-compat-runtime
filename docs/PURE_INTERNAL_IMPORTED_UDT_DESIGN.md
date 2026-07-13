@@ -111,6 +111,10 @@ retained bound `values.kron(other)` gate. Item 17 adds exact namespace
 `matrix.diff(left, right)` with a fixed float-matrix result for matrix-matrix
 and scalar/matrix operand pairs, selected-matrix shape and left-to-right
 direction, the same helpers, and a retained bound `values.diff(other)` gate.
+Item 18 adds exact namespace `matrix.pow(values, power)` with a fixed
+float-matrix result for numeric square matrices and simple-int powers,
+identity/copy/positive-power behavior, the same helpers, and a retained bound
+`values.pow(power)` gate.
 Outside the exact static producer sets and those namespace-only exceptions,
 unsupported `array.new<T>` types, non-producer calls, map/matrix templates,
 other matrix-returning calls, mixed or non-scalar return identities,
@@ -787,3 +791,13 @@ return/parameter flow remains deferred.
     arguments, mutation, broader helpers, and bound `values.diff(other)`
     call-result reads fail closed. No imported UDT identity or public schema
     field is added. Done.
+18. The exact namespace matrix-power continuation routes
+    `matrix.pow(values, power)` through `$builtin_matrix_result`. Its fixed
+    `simple matrix<float>` result accepts numeric square matrices and simple-int
+    powers, preserves independent identity/copy/positive-power results, and
+    exposes only the five matrix read/copy helpers with named arguments and
+    copy-only continuation. Int-input float results, `na`, empty `0 x 0`,
+    nested copies, UDF-contained namespace reads, and source independence are
+    fixture-backed. Wrong producer/helper arguments, mutation, broader helpers,
+    and bound `values.pow(power)` call-result reads fail closed. No imported UDT
+    identity or public schema field is added. Done.

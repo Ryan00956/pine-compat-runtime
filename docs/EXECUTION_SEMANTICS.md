@@ -895,8 +895,11 @@ and zero-dimension behavior, and shares only the same five helpers; bound
 matrix-matrix, matrix-scalar, and scalar-matrix numeric operands, preserving
 the selected matrix shape, left-to-right operand order, independent storage,
 `na`, and zero-dimension behavior; bound `values.diff(other)` results remain
-generic rejections. Every other
-matrix-returning call, `map.new` and `matrix.new` template, and other
+generic rejections. Exact namespace `matrix.pow(values, power)` returns a fixed
+square `matrix<float>` for numeric matrices and simple-int powers, preserving
+independent identity/copy/positive-power results plus `na` and empty `0 x 0`
+behavior; bound `values.pow(power)` results remain generic rejections. Every
+other matrix-returning call, `map.new` and `matrix.new` template, and other
 namespace/non-producer call
 remains outside this path. Built-in namespace prefixes remain reserved, so
 same-named user or import qualifiers do not enter it. The extension carries no
@@ -957,11 +960,12 @@ with another allowed array read/copy. The seven fixed cross-namespace producers
 and array-returning `matrix.mult` overloads are scalar-array-only and add no
 UDT/import identity path. Namespace matrix-returning `matrix.mult` overloads,
 exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix`, and
-fixed-float namespace `matrix.kron`/`matrix.diff` add only the five matrix
-readers/copy above. Copy/transpose/submatrix preserve the source scalar element
-kind; transpose swaps shape, submatrix selects a range, kron expands both
-dimensions, and diff preserves its selected matrix operand's shape and
-left-to-right subtraction order in a float matrix. None of these paths carries
+fixed-float namespace `matrix.kron`/`matrix.diff`/`matrix.pow` add only the five
+matrix readers/copy above. Copy/transpose/submatrix preserve the source scalar
+element kind; transpose swaps shape, submatrix selects a range, kron expands
+both dimensions, diff preserves its selected matrix operand's shape and
+left-to-right subtraction order, and pow preserves square shape across
+identity/copy/positive powers in a float matrix. None of these paths carries
 UDT/import identity. Bound or UDF
 matrix-result receivers, built-in-qualified or template call results outside
 the exact static and dynamic paths, and other
