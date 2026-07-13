@@ -1,0 +1,22 @@
+//@version=6
+indicator("Supported bound matrix.transpose call-result reads")
+
+transposeRows(id) => id.transpose().copy().rows()
+
+floats = matrix.new<float>(2, 3, 1.5)
+ints = matrix.new<int>(1, 1, 4)
+bools = matrix.new<bool>(1, 1, true)
+strings = matrix.new<string>(1, 1, "value")
+colors = matrix.new<color>(1, 1, color.red)
+
+int direct_rows = floats.transpose().rows()
+int direct_columns = floats.transpose().columns()
+int direct_elements = floats.transpose().elements_count()
+float direct_get = floats.transpose().get(row=1, column=0)
+matrix<float> nested_copy = floats.transpose().copy()
+int int_get = ints.transpose().get(0, 0)
+bool bool_get = bools.transpose().get(0, 0)
+string string_get = strings.transpose().get(0, 0)
+color color_get = colors.transpose().get(0, 0)
+
+plot(direct_rows + direct_columns + direct_elements + direct_get + nested_copy.get(0, 0) + int_get + (bool_get ? 1 : 0) + (string_get == "value" ? 1 : 0) + (color_get == color.red ? 1 : 0) + transposeRows(floats))

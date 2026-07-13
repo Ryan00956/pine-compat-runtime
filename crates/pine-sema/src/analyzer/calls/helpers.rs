@@ -51,7 +51,7 @@ pub(crate) fn builtin_map_call_result_method_name<'a>(
     (prefix == BUILTIN_MAP_CALL_RESULT_PREFIX).then_some(method_name)
 }
 
-pub(crate) fn bound_matrix_copy_call_result_method_parts<'a>(
+pub(crate) fn bound_matrix_call_result_method_parts<'a>(
     callee: &'a Expr,
     args: &'a [CallArg],
 ) -> Option<(&'a str, &'a str)> {
@@ -67,7 +67,8 @@ pub(crate) fn bound_matrix_copy_call_result_method_parts<'a>(
     };
     match parts.as_slice() {
         [receiver_name, producer_method]
-            if receiver_name == prefix && producer_method == "copy" =>
+            if receiver_name == prefix
+                && matches!(producer_method.as_str(), "copy" | "transpose") =>
         {
             Some((receiver_name, method_name))
         }

@@ -30,7 +30,7 @@ mod prelude {
 
     pub(crate) use crate::analyzer::calls::{
         alias_qualified_method_name, array_call_result_builtin_name, array_method_builtin_name,
-        bound_matrix_copy_call_result_method_parts, builtin_map_call_result_method_name,
+        bound_matrix_call_result_method_parts, builtin_map_call_result_method_name,
         builtin_matrix_call_result_method_name, call_arg_accepts_type_expected_diagnostic,
         call_arg_expected_type_diagnostic, drawing_method_builtin_name, expr_name,
         is_array_mutation_builtin, is_array_mutation_method_call_name, is_map_mutation_builtin,

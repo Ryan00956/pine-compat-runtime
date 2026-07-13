@@ -11,6 +11,5 @@ reverse_result = values.copy().reverse()
 sum_result = values.copy().sum()
 size_result = values.copy().size()
 wrong_receiver = array_values.copy().rows()
-transpose_result = values.transpose().rows()
 
 plot(close)

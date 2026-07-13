@@ -66,6 +66,12 @@ Current evidence:
   preservation, nested copies, UDF-contained reads, wrong index/helper and
   non-matrix receiver diagnostics, and retained gates for other bound matrix
   producers.
+- `tests/fixtures/runtime/bound_matrix_transpose_call_result_reads.pine` plus
+  the matching supported/unsupported semantic fixtures cover direct
+  `values.transpose().rows()`/`columns()`/`elements_count()`/`get()`/`copy()`
+  for float/int/bool/string/color matrices, row/column swapping, independent
+  storage, nested copies, UDF-contained reads, wrong index/helper and non-matrix
+  receiver diagnostics, and the retained bound-submatrix gate.
 - `tests/fixtures/runtime/matrix_float.pine` covers `matrix.new<float>`,
   `matrix.get`, `matrix.set`, `matrix.fill`, `values.fill(value)`,
   `values.get(row, column)`, `values.set(row, column, value)`, `matrix.rows`,
@@ -1010,6 +1016,12 @@ Recommended future slices:
     with concrete element-kind checks, shape preservation, independent backing
     storage, copy-only continuation, and retained gates for other bound
     producers, broader helpers, mutation, and non-matrix receivers.
+44. Bound matrix-transpose call results: done for exact supported matrix
+    receivers using `values.transpose()` followed by
+    rows/columns/elements_count/get/copy, with concrete element-kind checks,
+    swapped shape, independent backing storage, copy-only continuation, and
+    retained gates for other bound producers, broader helpers, mutation, and
+    non-matrix receivers.
 
 ## Completion Gate For Future Positive Support
 

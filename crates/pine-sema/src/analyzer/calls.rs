@@ -14,7 +14,7 @@ mod return_types;
 
 pub(crate) use helpers::{
     alias_qualified_method_name, array_call_result_builtin_name, array_method_builtin_name,
-    bound_matrix_copy_call_result_method_parts, builtin_map_call_result_method_name,
+    bound_matrix_call_result_method_parts, builtin_map_call_result_method_name,
     builtin_matrix_call_result_method_name, call_arg_accepts_type_expected_diagnostic,
     call_arg_expected_label_diagnostic, call_arg_expected_type_diagnostic,
     call_arg_type_diagnostic, call_requirement_diagnostic, drawing_method_builtin_name, expr_name,
@@ -251,22 +251,22 @@ impl Analyzer {
         args: &[CallArg],
         arg_types: &[Option<PineType>],
     ) -> Option<Option<PineType>> {
-        let method_name =
-            if let Some(method_name) = builtin_matrix_call_result_method_name(callee, args) {
-                method_name
-            } else {
-                let (receiver_name, method_name) =
-                    bound_matrix_copy_call_result_method_parts(callee, args)?;
-                let receiver_kind = self
-                    .bound_symbol(receiver_name, args.first()?.value.span)
-                    .or_else(|| self.scope.resolve(receiver_name))?
-                    .pine_type
-                    .kind;
-                if !is_matrix_kind(receiver_kind) {
-                    return None;
-                }
-                method_name
-            };
+        let method_name = if let Some(method_name) =
+            builtin_matrix_call_result_method_name(callee, args)
+        {
+            method_name
+        } else {
+            let (receiver_name, method_name) = bound_matrix_call_result_method_parts(callee, args)?;
+            let receiver_kind = self
+                .bound_symbol(receiver_name, args.first()?.value.span)
+                .or_else(|| self.scope.resolve(receiver_name))?
+                .pine_type
+                .kind;
+            if !is_matrix_kind(receiver_kind) {
+                return None;
+            }
+            method_name
+        };
         let Some(receiver_type) = arg_types.first().copied().flatten() else {
             return Some(None);
         };

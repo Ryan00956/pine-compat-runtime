@@ -145,6 +145,10 @@ Item 25 adds exact bound matrix-receiver `values.copy()` results with preserved
 float/int/bool/string/color element kind, shape, independent backing storage,
 the five direct matrix read/copy helpers, copy-only continuation, and retained
 other-bound-producer/non-matrix/mutation gates.
+Item 26 adds exact bound matrix-receiver `values.transpose()` results with the
+same five helpers, preserved element kind, swapped shape, independent backing
+storage, copy-only continuation, and retained other-bound-producer/non-matrix/
+mutation gates.
 Outside the exact static producer sets and those namespace-only exceptions,
 unsupported `array.new<T>` types, non-producer calls, unsupported matrix
 templates and map templates,
@@ -904,3 +908,12 @@ return/parameter flow remains deferred.
     wrong indexes, broader helpers, non-matrix receivers, and the retained
     bound-transpose gate are fixture-backed. No imported UDT identity or public
     schema field is added. Done.
+26. The exact bound-matrix-transpose continuation recognizes
+    `values.transpose()` only when `values` resolves to a supported concrete
+    matrix kind. The result retains element kind, swaps row/column shape, uses
+    independent backing storage, and exposes only
+    rows/columns/elements_count/get/copy with copy-only continuation. Five
+    element kinds, nested copy, UDF-contained reads, wrong indexes, broader
+    helpers, non-matrix receivers, and the retained bound-submatrix gate are
+    fixture-backed. No imported UDT identity or public schema field is added.
+    Done.

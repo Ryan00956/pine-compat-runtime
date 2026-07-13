@@ -638,8 +638,10 @@ independent-copy storage semantics. Exact bound matrix-receiver
 call-result prefixes, retain the concrete receiver element kind, and admit only
 the same five read/copy helpers with copy-only continuation. Exact namespace `matrix.transpose` also takes
 the matrix branch, preserves the source scalar element kind through `SameAsArg`,
-swaps row/column shape, and retains independent storage. Bound
-`matrix_id.transpose()` results remain generic rejections.
+swaps row/column shape, and retains independent storage. Exact bound
+matrix-receiver `matrix_id.transpose()` results share the same five-helper
+contract and copy-only continuation after the original receiver resolves to a
+supported matrix kind.
 Exact namespace `matrix.submatrix` also takes the matrix branch, preserves the
 source element kind through `SameAsArg`, and returns an independent half-open
 range with default full bounds and empty row/column slices. Bound
@@ -880,7 +882,8 @@ access, mixed or non-scalar imported array-return identities, conflicting
 identities within one tuple UDT-array slot, direct call-result array methods
 outside the read-only `size`/`get`/`first`/`last`/`copy` set,
 bound matrix-result call-result receivers other than exact matrix-receiver
-`values.copy()`, UDF matrix-result call-result receivers, built-in-qualified/template
+`values.copy()`/`values.transpose()`, UDF matrix-result call-result receivers,
+built-in-qualified/template
 call-result receivers outside the exact static `array.*` allowlist and
 cross-namespace dynamic paths, nested field mutation, UDF
 parameter/global field side effects, and method receiver/parameter/global field

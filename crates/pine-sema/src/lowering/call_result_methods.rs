@@ -103,8 +103,7 @@ impl Analyzer {
         param_types: &HashMap<String, PineType>,
     ) -> Option<Option<HirExpr>> {
         let method_name = builtin_matrix_call_result_method_name(callee, args).or_else(|| {
-            let (receiver_name, method_name) =
-                bound_matrix_copy_call_result_method_parts(callee, args)?;
+            let (receiver_name, method_name) = bound_matrix_call_result_method_parts(callee, args)?;
             let receiver_type = param_types
                 .get(receiver_name)
                 .copied()

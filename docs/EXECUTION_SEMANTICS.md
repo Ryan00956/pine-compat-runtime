@@ -884,8 +884,9 @@ store and every postfix copy are independent. Exact bound matrix-receiver
 and element kind, and keep source/nested-copy storage independent; non-matrix
 receivers fail the existing method type check. Exact namespace `matrix.transpose(values)`
 shares that five-helper and element-kind contract, swaps row/column shape, and
-returns independent storage; bound `values.transpose()` results remain generic
-rejections. Exact namespace `matrix.submatrix(values, ...)` also shares the
+returns independent storage. Exact bound matrix-receiver `values.transpose()`
+results now share those direct helpers and copy-only continuation while other
+bound producers remain gated. Exact namespace `matrix.submatrix(values, ...)` also shares the
 five-helper and element-kind contract, returning an independent half-open range
 with default full bounds and empty row/column slices; bound
 `values.submatrix()` results remain generic rejections. Exact namespace
@@ -1003,7 +1004,8 @@ shape, initial/default-`na` cells, and fresh allocation. None of these paths car
 UDT/import identity. The scalar `map.new<K,V>` and namespace
 `map.copy(existing)` result paths likewise carry only scalar map template
 metadata and no UDT/import identity. Bound or UDF
-matrix-result receivers other than exact matrix-receiver `values.copy()`,
+matrix-result receivers other than exact matrix-receiver
+`values.copy()`/`values.transpose()`,
 built-in-qualified
 or template call results outside
 the exact static and dynamic paths, and other
