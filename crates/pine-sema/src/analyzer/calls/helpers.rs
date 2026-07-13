@@ -33,6 +33,7 @@ pub(crate) fn postfix_call_result_method_parts<'a>(
 }
 
 const BUILTIN_MATRIX_CALL_RESULT_PREFIX: &str = "$builtin_matrix_result";
+const BUILTIN_MAP_CALL_RESULT_PREFIX: &str = "$builtin_map_result";
 
 pub(crate) fn builtin_matrix_call_result_method_name<'a>(
     callee: &'a Expr,
@@ -40,6 +41,14 @@ pub(crate) fn builtin_matrix_call_result_method_name<'a>(
 ) -> Option<&'a str> {
     let (prefix, method_name) = postfix_call_result_method_parts(callee, args)?;
     (prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX).then_some(method_name)
+}
+
+pub(crate) fn builtin_map_call_result_method_name<'a>(
+    callee: &'a Expr,
+    args: &[CallArg],
+) -> Option<&'a str> {
+    let (prefix, method_name) = postfix_call_result_method_parts(callee, args)?;
+    (prefix == BUILTIN_MAP_CALL_RESULT_PREFIX).then_some(method_name)
 }
 
 pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'static str> {
@@ -60,6 +69,16 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "elements_count" => Some("matrix.elements_count"),
         "get" => Some("matrix.get"),
         "copy" => Some("matrix.copy"),
+        _ => None,
+    }
+}
+
+pub(crate) fn map_call_result_builtin_name(method_name: &str) -> Option<&'static str> {
+    match method_name {
+        "size" => Some("map.size"),
+        "get" => Some("map.get"),
+        "contains" => Some("map.contains"),
+        "copy" => Some("map.copy"),
         _ => None,
     }
 }

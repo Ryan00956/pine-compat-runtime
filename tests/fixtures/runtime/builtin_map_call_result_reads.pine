@@ -1,0 +1,32 @@
+//@version=6
+indicator("Builtin map call-result reads")
+
+mapNewExpressionSize() => map.new<string, float>().copy().size()
+
+mapNewBlockReads() =>
+    int size = map.new<string, float>().size()
+    bool contains = map.new<string, float>().contains("missing")
+    float missing = map.new<string, float>().get("missing")
+    size + (contains ? 10 : 0) + (na(missing) ? 100 : 0)
+
+plot(map.new<string, float>().size(), "map_new_size")
+plot(na(map.new<string, float>().get(key="missing")) ? 1 : 0, "map_new_missing_get")
+plot(map.new<string, float>().contains(key="missing") ? 1 : 0, "map_new_missing_contains")
+plot(map.new<string, float>().copy().size(), "map_new_copy_size")
+plot(map.new<string, float>().copy().copy().size(), "map_new_nested_copy_size")
+
+plot(map.new<int, float>().contains(1) ? 1 : 0, "map_new_int_key")
+plot(map.new<float, bool>().contains(1.5) ? 1 : 0, "map_new_float_key")
+plot(map.new<bool, string>().contains(true) ? 1 : 0, "map_new_bool_key")
+plot(map.new<string, color>().contains("key") ? 1 : 0, "map_new_string_key")
+plot(map.new<color, int>().contains(color.red) ? 1 : 0, "map_new_color_key")
+
+copied = map.new<string, float>().copy()
+copied.put("value", 2.5)
+plot(copied.size(), "map_new_copy_mutation_size")
+plot(copied.get("value"), "map_new_copy_mutation_get")
+plot(copied.contains("value") ? 1 : 0, "map_new_copy_mutation_contains")
+plot(map.new<string, float>().size(), "map_new_fresh_size")
+
+plot(mapNewExpressionSize(), "map_new_expression_udf")
+plot(mapNewBlockReads(), "map_new_block_udf")

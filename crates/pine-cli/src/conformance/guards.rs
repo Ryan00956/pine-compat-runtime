@@ -324,6 +324,7 @@ pub(super) fn validate_entry(
     validate_map_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_matrix_unsupported_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_typed_declaration_collection_fixture_paths(line_number, feature, fixtures)?;
+    call_results::validate_map_fixture_paths(line_number, feature, fixtures)?;
     strategy::validate_entry(line_number, feature, fixtures)?;
 
     Ok(())

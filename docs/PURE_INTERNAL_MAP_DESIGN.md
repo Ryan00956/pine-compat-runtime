@@ -11,6 +11,11 @@ realtime rollback for map-store mutations are fixture-backed. Scalar map
 `varip` handoff keeps map ids and backing stores across repeated realtime
 forming updates. Direct scalar-map `for...in` iteration supports key-only and
 key/value loop variables in insertion order for statement and expression forms.
+Exact supported scalar `map.new<K,V>` call results can be consumed directly by
+`.size()`, `.get(key)`, `.contains(key)`, and `.copy()` through the internal
+`$builtin_map_result` path; only `.copy()` may continue another admitted map
+helper. Direct mutation and `keys()`/`values()` on constructor results stay
+gated.
 Equivalent method aliases for the supported namespace subset lower to the same
 runtime calls. Scalar `map name = map.new<K, V>()` declarations infer their
 template from the initializer; bare `map` declarations without a known scalar
@@ -32,6 +37,11 @@ Current evidence:
   `tests/fixtures/sema/supported_map_new_size.pine` cover
   `map.new<int|float|bool|string|color, int|float|bool|string|color>()` empty
   map ids and `map.size(id)` returning `0`.
+- `tests/fixtures/runtime/builtin_map_call_result_reads.pine` plus the matching
+  supported/unsupported semantic fixtures cover all 25 scalar constructor
+  template pairs, direct size/get/contains/copy, nested copies, copy mutation,
+  fresh allocation, UDF-contained reads, wrong key/arity diagnostics, and the
+  retained mutation, keys/values, and unsupported-template boundaries.
 - `tests/fixtures/runtime/map_put_get_contains.pine` and
   `tests/fixtures/sema/supported_map_put_get_contains.pine` cover scalar
   `map.put`, `map.get`, and `map.contains` namespace calls, including

@@ -92,6 +92,12 @@ pub(super) const BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/unsupported_builtin_namespace_matrix_call_result_reads.pine",
 ];
 
+pub(super) const BUILTIN_MAP_CALL_RESULT_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/builtin_map_call_result_reads.pine",
+    "tests/fixtures/sema/supported_builtin_map_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_builtin_map_call_result_reads.pine",
+];
+
 const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "str.split",
     "ta.pivot_point_levels",
@@ -116,6 +122,13 @@ const BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FEATURES: &[&str] = &[
     "matrix.*",
 ];
 
+const BUILTIN_MAP_CALL_RESULT_FEATURES: &[&str] = &[
+    "expression-body functions",
+    "multi-statement functions",
+    "typed declarations",
+    "map.*",
+];
+
 pub(super) fn validate_fixture_paths(
     line_number: usize,
     feature: &str,
@@ -128,6 +141,14 @@ pub(super) fn validate_fixture_paths(
     validate_udt_array_call_result_helper_fixture_paths(line_number, feature, fixtures)?;
     validate_builtin_namespace_array_call_result_fixture_paths(line_number, feature, fixtures)?;
     validate_builtin_namespace_matrix_call_result_fixture_paths(line_number, feature, fixtures)
+}
+
+pub(super) fn validate_map_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    validate_builtin_map_call_result_fixture_paths(line_number, feature, fixtures)
 }
 
 fn validate_local_udt_array_call_return_fixture_paths(
@@ -280,6 +301,24 @@ fn validate_builtin_namespace_matrix_call_result_fixture_paths(
     )
 }
 
+fn validate_builtin_map_call_result_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if !BUILTIN_MAP_CALL_RESULT_FEATURES.contains(&feature) {
+        return Ok(());
+    }
+
+    require_fixtures(
+        line_number,
+        feature,
+        fixtures,
+        BUILTIN_MAP_CALL_RESULT_FIXTURES,
+        "fixture-backed exact scalar map.new template result size/get/contains/copy dispatch and retained helper/template/mutation boundaries",
+    )
+}
+
 fn require_fixtures(
     line_number: usize,
     feature: &str,
@@ -429,5 +468,26 @@ mod tests {
             error
                 .contains("tests/fixtures/runtime/builtin_namespace_matrix_call_result_reads.pine")
         );
+    }
+
+    #[test]
+    fn rejects_map_result_row_without_negative_fixture() {
+        let fixtures =
+            &BUILTIN_MAP_CALL_RESULT_FIXTURES[..BUILTIN_MAP_CALL_RESULT_FIXTURES.len() - 1];
+        let error = validate_builtin_map_call_result_fixture_paths(1, "map.*", fixtures)
+            .expect_err("map-result rows must retain the negative boundary fixture");
+
+        assert!(
+            error.contains("tests/fixtures/sema/unsupported_builtin_map_call_result_reads.pine")
+        );
+    }
+
+    #[test]
+    fn rejects_map_result_row_without_runtime_fixture() {
+        let fixtures = &BUILTIN_MAP_CALL_RESULT_FIXTURES[1..];
+        let error = validate_builtin_map_call_result_fixture_paths(1, "map.*", fixtures)
+            .expect_err("map-result rows must retain runtime evidence");
+
+        assert!(error.contains("tests/fixtures/runtime/builtin_map_call_result_reads.pine"));
     }
 }

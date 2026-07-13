@@ -165,6 +165,16 @@ impl Analyzer {
                 {
                     return self.return_type_for_call(signature, args, &arg_types);
                 }
+                if let Some(method_name) = builtin_map_call_result_method_name(callee, args)
+                    && arg_types
+                        .first()
+                        .copied()
+                        .flatten()
+                        .is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
+                    && let Some(builtin_name) = map_call_result_builtin_name(method_name)
+                {
+                    return self.type_of_map_operation(builtin_name, args, param_types);
+                }
                 if let Some(pine_type) =
                     self.type_of_user_type_constructor_with_params(&name, args, param_types)
                 {

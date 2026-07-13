@@ -232,6 +232,42 @@ fn builtin_collection_result_producer_parser_allowlists_match_registry() {
 }
 
 #[test]
+fn builtin_map_result_parser_template_allowlist_matches_supported_scalar_templates() {
+    const SCALAR_TEMPLATES: &[&str] = &["int", "float", "bool", "string", "color"];
+
+    for key_type in SCALAR_TEMPLATES {
+        for value_type in SCALAR_TEMPLATES {
+            let source = SourceFile::new(
+                "test.pine",
+                format!("value = map.new<{key_type},{value_type}>().size()\n"),
+            );
+            let parsed = pine_syntax::parse_source(&source);
+            assert!(
+                parsed.diagnostics.is_empty(),
+                "supported map.new<{key_type},{value_type}> call-result was parser-gated: {:?}",
+                parsed.diagnostics
+            );
+        }
+    }
+
+    for unsupported in ["line", "label", "chart.point"] {
+        let source = SourceFile::new(
+            "test.pine",
+            format!("value = map.new<{unsupported},int>().size()\n"),
+        );
+        let parsed = pine_syntax::parse_source(&source);
+        assert!(
+            parsed
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR"),
+            "unsupported map.new<{unsupported},int> call-result escaped parser gate: {:?}",
+            parsed.diagnostics
+        );
+    }
+}
+
+#[test]
 fn reports_unsupported_drawing_namespace_without_unknown_function_noise() {
     let analysis = analyze("label.set_text_wrap(na, na)\nplot(close)\n");
     let codes: Vec<_> = analysis

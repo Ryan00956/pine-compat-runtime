@@ -673,12 +673,21 @@ remain generic rejections. Exact `matrix.new<float>`, `matrix.new<int>`,
 results also enter this path, preserve their element kind, requested shape,
 type-compatible initial or default `na` cells, fresh allocation, and copy
 independence, and expose only the same five helpers. Map templates such as
-`map.new`, unsupported matrix templates,
+unsupported `map.new` forms, unsupported matrix templates,
 every other namespace or non-producer member, and other matrix-returning calls
 stay excluded. Built-in
 namespace prefixes remain reserved and cannot be treated as same-named
 user/import qualifiers. No UDT or imported-type identity is inferred, and
 public schemas remain unchanged.
+
+Exact supported scalar `map.new<K,V>` templates use the separate
+`$builtin_map_result` synthetic prefix. The receiver retains its concrete
+scalar key/value kinds and admits only `.size()`, `.get(key)`,
+`.contains(key)`, and `.copy()`; only `.copy()` may continue another admitted
+map helper. The ordinary map analyzer validates key types and marks copy
+results with the same template metadata. Mutation, direct `keys()`/`values()`,
+unsupported templates, and other map call-result receivers fail closed. This
+path adds no UDT/import identity or public schema field.
 
 For the array-helper branch, the receiver must resolve to a supported array
 kind. UDT-array producers must also carry one concrete same-local or
@@ -980,7 +989,8 @@ above. The five exact `matrix.new<T>` templates add the same read/copy set while
 retaining their scalar matrix element kind. None widens UDT identity. Bound
 or UDF matrix-result receivers, built-in-qualified/template
 call results outside the exact static and dynamic paths, and other array or
-matrix helpers remain gated.
+matrix helpers remain gated. The scalar `map.new<K,V>` result path carries only
+map template metadata and likewise does not widen UDT identity.
 Methods with receiver/parameter/global field side effects, recursion,
 unsupported parameter families, mismatched UDT parameter identity, unknown
 receivers, and alias-qualified imported method receiver type mismatches remain

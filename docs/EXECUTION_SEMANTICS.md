@@ -916,7 +916,11 @@ rejections. Exact `matrix.new<float>`, `matrix.new<int>`, `matrix.new<bool>`,
 `matrix.new<string>`, and `matrix.new<color>` template results also enter this
 path, preserve their element kind, requested shape, type-compatible initial or
 default `na` cells, fresh allocation, and copy independence, and expose only
-the same five helpers. Every other matrix-returning call, `map.new`,
+the same five helpers. Exact supported scalar `map.new<K,V>` templates use the
+separate `$builtin_map_result` path, preserve known key/value kinds, allocate a
+fresh empty map, and expose only `.size()`, `.get(key)`, `.contains(key)`, and
+`.copy()` with copy-only continuation. Mutation, direct `keys()`/`values()`,
+and unsupported map templates remain gated. Every other matrix-returning call,
 unsupported `matrix.new` template, and other namespace/non-producer call
 remains outside this path. Built-in namespace prefixes remain reserved, so
 same-named user or import qualifiers do not enter it. The extension carries no
@@ -990,7 +994,9 @@ shape or yields `na` for invalid-cell/non-real/incomplete results. All fixed
 producers return float matrices. The five exact `matrix.new<T>` templates
 instead retain their float/int/bool/string/color matrix kind, rectangular
 shape, initial/default-`na` cells, and fresh allocation. None of these paths carries
-UDT/import identity. Bound or UDF matrix-result receivers, built-in-qualified
+UDT/import identity. The scalar `map.new<K,V>` result path likewise carries
+only scalar map template metadata and no UDT/import identity. Bound or UDF
+matrix-result receivers, built-in-qualified
 or template call results outside
 the exact static and dynamic paths, and other
 array or matrix methods remain parser/semantic boundaries.

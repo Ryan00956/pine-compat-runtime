@@ -772,11 +772,18 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
         ExprKind::Identifier(name) if is_builtin_matrix_result_callee(name) => {
             Some(BUILTIN_MATRIX_CALL_RESULT_PREFIX.to_owned())
         }
+        ExprKind::Identifier(name) if is_builtin_map_result_callee(name) => {
+            Some(BUILTIN_MAP_CALL_RESULT_PREFIX.to_owned())
+        }
         ExprKind::QualifiedName(parts) => match parts.as_slice() {
             [prefix, method] if prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX && method == "copy" => {
                 Some(BUILTIN_MATRIX_CALL_RESULT_PREFIX.to_owned())
             }
             [prefix, _method] if prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX => None,
+            [prefix, method] if prefix == BUILTIN_MAP_CALL_RESULT_PREFIX && method == "copy" => {
+                Some(BUILTIN_MAP_CALL_RESULT_PREFIX.to_owned())
+            }
+            [prefix, _method] if prefix == BUILTIN_MAP_CALL_RESULT_PREFIX => None,
             [prefix, method] if prefix == BUILTIN_ARRAY_CALL_RESULT_PREFIX && method == "copy" => {
                 Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
             }
@@ -802,6 +809,7 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
 const UNQUALIFIED_CALL_RESULT_PREFIX: &str = "$call_result";
 const BUILTIN_ARRAY_CALL_RESULT_PREFIX: &str = "$builtin_array_result";
 const BUILTIN_MATRIX_CALL_RESULT_PREFIX: &str = "$builtin_matrix_result";
+const BUILTIN_MAP_CALL_RESULT_PREFIX: &str = "$builtin_map_result";
 
 fn is_plain_identifier(name: &str) -> bool {
     let mut chars = name.chars();
@@ -855,6 +863,23 @@ fn is_builtin_matrix_result_callee(name: &str) -> bool {
             | "matrix.new<string>"
             | "matrix.new<color>"
     )
+}
+
+fn is_builtin_map_result_callee(name: &str) -> bool {
+    let Some(inner) = name
+        .strip_prefix("map.new<")
+        .and_then(|name| name.strip_suffix('>'))
+    else {
+        return false;
+    };
+    let Some((key_type, value_type)) = inner.split_once(',') else {
+        return false;
+    };
+    is_builtin_map_scalar_template(key_type) && is_builtin_map_scalar_template(value_type)
+}
+
+fn is_builtin_map_scalar_template(name: &str) -> bool {
+    matches!(name, "int" | "float" | "bool" | "string" | "color")
 }
 
 fn is_builtin_array_result_member(member: &str) -> bool {

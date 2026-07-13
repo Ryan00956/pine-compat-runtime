@@ -133,6 +133,10 @@ Item 22 adds exact `matrix.new<float|int|bool|string|color>` template results
 with preserved element kind, requested rectangular shape, type-compatible
 initial or default `na` cells, fresh allocation, the same helpers, and retained
 unsupported-template and mutation gates.
+Item 23 adds exact supported scalar `map.new<K,V>` template results through a
+separate `$builtin_map_result` path with known key/value kinds, fresh empty
+allocation, direct size/get/contains/copy, copy-only continuation, and retained
+mutation, keys/values, unsupported-template, and other map-result gates.
 Outside the exact static producer sets and those namespace-only exceptions,
 unsupported `array.new<T>` types, non-producer calls, unsupported matrix
 templates and map templates,
@@ -864,3 +868,14 @@ return/parameter flow remains deferred.
     behavior are fixture-backed. Invalid constructor/helper arguments,
     mutation, broader helpers, and unsupported/deferred templates fail closed.
     No imported UDT identity or public schema field is added. Done.
+23. The exact scalar-map-constructor continuation routes supported
+    `map.new<K,V>` templates through `$builtin_map_result`, where both `K` and
+    `V` are int, float, bool, string, or color. Fresh empty maps retain their
+    concrete key/value kinds and expose only `.size()`, `.get(key)`,
+    `.contains(key)`, and `.copy()` with named arguments and copy-only
+    continuation. All 25 template pairs, missing reads, nested copies,
+    copy-then-mutate behavior, fresh allocation, and UDF-contained reads are
+    fixture-backed. Wrong key/arity, mutation, direct `keys()`/`values()`,
+    unsupported templates, broader helpers, and other map-result receivers
+    fail closed. No imported UDT identity or public schema field is added.
+    Done.

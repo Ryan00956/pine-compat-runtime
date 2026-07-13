@@ -6761,6 +6761,31 @@ fn accepts_supported_builtin_namespace_matrix_call_result_reads_fixture() {
 }
 
 #[test]
+fn accepts_supported_builtin_map_call_result_reads_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_builtin_map_call_result_reads.pine");
+}
+
+#[test]
+fn reports_unsupported_builtin_map_call_result_reads_fixture() {
+    let path = "tests/fixtures/sema/unsupported_builtin_map_call_result_reads.pine";
+    assert_exact_diagnostic_messages(
+        path,
+        &[
+            "`map.get` argument `key` expects string-compatible, got const int",
+            "`map.contains` argument `key` expects integer-compatible, got const string",
+            "`map.size` expects 1 argument(s), got 2",
+            "`map.put` is not supported: direct map call-result methods currently support only `.size()`, `.get()`, `.contains()`, and `.copy()`; bind the result or use the namespace helper",
+            "`map.clear` is not supported: direct map call-result methods currently support only `.size()`, `.get()`, `.contains()`, and `.copy()`; bind the result or use the namespace helper",
+            "`map.remove` is not supported: direct map call-result methods currently support only `.size()`, `.get()`, `.contains()`, and `.copy()`; bind the result or use the namespace helper",
+            "`map.put_all` is not supported: direct map call-result methods currently support only `.size()`, `.get()`, `.contains()`, and `.copy()`; bind the result or use the namespace helper",
+            "`map.keys` is not supported: direct map call-result methods currently support only `.size()`, `.get()`, `.contains()`, and `.copy()`; bind the result or use the namespace helper",
+            "`map.values` is not supported: direct map call-result methods currently support only `.size()`, `.get()`, `.contains()`, and `.copy()`; bind the result or use the namespace helper",
+        ],
+    );
+    assert_diagnostic_count(path, 9);
+}
+
+#[test]
 fn reports_unsupported_builtin_namespace_matrix_call_result_reads_fixture() {
     let path = "tests/fixtures/sema/unsupported_builtin_namespace_matrix_call_result_reads.pine";
     assert_exact_diagnostic_messages(

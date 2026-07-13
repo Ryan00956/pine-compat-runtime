@@ -14,13 +14,14 @@ mod return_types;
 
 pub(crate) use helpers::{
     alias_qualified_method_name, array_call_result_builtin_name, array_method_builtin_name,
-    builtin_matrix_call_result_method_name, call_arg_accepts_type_expected_diagnostic,
-    call_arg_expected_label_diagnostic, call_arg_expected_type_diagnostic,
-    call_arg_type_diagnostic, call_requirement_diagnostic, drawing_method_builtin_name, expr_name,
-    is_array_mutation_builtin, is_array_mutation_method_call_name, is_map_mutation_builtin,
-    is_map_mutation_method_call_name, is_output_or_declaration_builtin,
-    is_ta_extreme_length_overload, is_ta_pivot_default_source_overload, is_ta_vwap_bands_call,
-    is_time_function_overload, is_timestamp_overload, map_method_builtin_name,
+    builtin_map_call_result_method_name, builtin_matrix_call_result_method_name,
+    call_arg_accepts_type_expected_diagnostic, call_arg_expected_label_diagnostic,
+    call_arg_expected_type_diagnostic, call_arg_type_diagnostic, call_requirement_diagnostic,
+    drawing_method_builtin_name, expr_name, is_array_mutation_builtin,
+    is_array_mutation_method_call_name, is_map_mutation_builtin, is_map_mutation_method_call_name,
+    is_output_or_declaration_builtin, is_ta_extreme_length_overload,
+    is_ta_pivot_default_source_overload, is_ta_vwap_bands_call, is_time_function_overload,
+    is_timestamp_overload, map_call_result_builtin_name, map_method_builtin_name,
     matrix_call_result_builtin_name, method_call_parts, postfix_call_result_method_parts,
     receiver_call_arg,
 };
@@ -60,6 +61,9 @@ impl Analyzer {
             return result;
         }
         if let Some(result) = self.analyze_matrix_call_result_method(callee, args, &arg_types) {
+            return result;
+        }
+        if let Some(result) = self.analyze_map_call_result_method(callee, args, span, &arg_types) {
             return result;
         }
         if let Some(result) =
@@ -267,6 +271,31 @@ impl Analyzer {
         self.check_feature_name(builtin_name, callee.span);
         self.validate_call_args(signature, args, arg_types);
         Some(self.return_type_for_call(signature, args, arg_types))
+    }
+
+    fn analyze_map_call_result_method(
+        &mut self,
+        callee: &Expr,
+        args: &[CallArg],
+        span: Span,
+        arg_types: &[Option<PineType>],
+    ) -> Option<Option<PineType>> {
+        let method_name = builtin_map_call_result_method_name(callee, args)?;
+        let Some(receiver_type) = arg_types.first().copied().flatten() else {
+            return Some(None);
+        };
+        if receiver_type.kind != ValueKind::Map {
+            return None;
+        }
+        let Some(builtin_name) = map_call_result_builtin_name(method_name) else {
+            self.unsupported(
+                &format!("map.{method_name}"),
+                "direct map call-result methods currently support only `.size()`, `.get()`, `.contains()`, and `.copy()`; bind the result or use the namespace helper",
+                callee.span,
+            );
+            return Some(None);
+        };
+        self.analyze_map_operation_call(builtin_name, span, args, arg_types)
     }
 
     fn analyze_map_new_call(

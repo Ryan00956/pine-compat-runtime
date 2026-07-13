@@ -1,0 +1,32 @@
+//@version=6
+indicator("Supported builtin map call-result reads")
+
+mapNewExpressionSize() => map.new<string, float>().copy().size()
+
+mapNewBlockReads() =>
+    int size = map.new<string, float>().size()
+    bool contains = map.new<string, float>().contains("missing")
+    float missing = map.new<string, float>().get("missing")
+    size + (contains ? 10 : 0) + (na(missing) ? 100 : 0)
+
+int direct_size = map.new<string, float>().size()
+float direct_missing = map.new<string, float>().get(key="missing")
+bool direct_contains = map.new<string, float>().contains(key="missing")
+map<string, float> direct_copy = map.new<string, float>().copy().copy()
+
+bool int_key = map.new<int, float>().contains(1)
+bool float_key = map.new<float, bool>().contains(1.5)
+bool bool_key = map.new<bool, string>().contains(true)
+bool string_key = map.new<string, color>().contains("key")
+bool color_key = map.new<color, int>().contains(color.red)
+
+map<int, float> int_float_copy = map.new<int, float>().copy()
+map<float, bool> float_bool_copy = map.new<float, bool>().copy()
+map<bool, string> bool_string_copy = map.new<bool, string>().copy()
+map<string, color> string_color_copy = map.new<string, color>().copy()
+map<color, int> color_int_copy = map.new<color, int>().copy()
+
+int expression_udf = mapNewExpressionSize()
+float block_udf = mapNewBlockReads()
+
+plot(direct_size + (na(direct_missing) ? 1 : 0) + (direct_contains ? 1 : 0) + direct_copy.size() + (int_key ? 1 : 0) + (float_key ? 1 : 0) + (bool_key ? 1 : 0) + (string_key ? 1 : 0) + (color_key ? 1 : 0) + int_float_copy.size() + float_bool_copy.size() + bool_string_copy.size() + string_color_copy.size() + color_int_copy.size() + expression_udf + block_udf)

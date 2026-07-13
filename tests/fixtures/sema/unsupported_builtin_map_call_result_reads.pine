@@ -1,0 +1,14 @@
+//@version=6
+indicator("Unsupported builtin map call-result reads")
+
+wrong_get_key = map.new<string, float>().get(1)
+wrong_contains_key = map.new<int, float>().contains("bad")
+bad_size_arity = map.new<string, float>().size(1)
+put_result = map.new<string, float>().put("key", 1.0)
+clear_result = map.new<string, float>().clear()
+remove_result = map.new<string, float>().remove("key")
+put_all_result = map.new<string, float>().put_all(map.new<string, float>())
+keys_result = map.new<string, float>().keys()
+values_result = map.new<string, float>().values()
+
+plot(close)

@@ -393,6 +393,12 @@ Current baseline:
   initial or default `na` cells, fresh allocation, and copy independence, and
   share the five matrix helpers plus copy-only continuation. Unsupported or
   deferred matrix templates and postfix mutation stay gated.
+  The next closed collection-result slice admits exact supported scalar
+  `map.new<K,V>` templates through `$builtin_map_result`. Fresh empty maps
+  retain concrete key/value kinds and expose only `.size()`, `.get(key)`,
+  `.contains(key)`, and `.copy()`, with copy-only continuation. Mutation,
+  direct `keys()`/`values()`, unsupported templates, and other map call-result
+  receivers remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -416,10 +422,11 @@ Remaining internal work:
   namespace `matrix.copy(...)`/`matrix.transpose(...)`/`matrix.submatrix(...)`/
   `matrix.kron(...)`/`matrix.diff(...)`/`matrix.pow(...)`/`matrix.inv(...)`/
   `matrix.pinv(...)`/`matrix.eigenvectors(...)`
-  matrix paths plus exact `matrix.new<float|int|bool|string|color>` templates,
+  matrix paths plus exact `matrix.new<float|int|bool|string|color>` templates
+  and exact supported scalar `map.new<K,V>` templates,
   including bound or UDF
   matrix-result receivers, other matrix-returning calls, map templates and
-  unsupported matrix templates,
+  unsupported matrix/map templates and other map call-result receivers,
   other built-in namespaces or non-producer members, non-producer `array.*`
   calls, unsupported `array.new<T>` templates, non-array/non-UDT results,
   unknown/`na` results

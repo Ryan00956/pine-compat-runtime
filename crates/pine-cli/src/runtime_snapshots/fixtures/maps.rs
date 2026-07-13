@@ -57,4 +57,8 @@ pub(crate) const MAP_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "runtime_map_control_flow.json",
         "tests/fixtures/runtime/map_control_flow.pine",
     ),
+    (
+        "runtime_builtin_map_call_result_reads.json",
+        "tests/fixtures/runtime/builtin_map_call_result_reads.pine",
+    ),
 ];
