@@ -1450,3 +1450,9 @@ return/parameter flow remains deferred.
     alias, copy-continuation, and terminal-continuation paths are fixture-backed.
     Imported UDT and nonnumeric result arrays remain rejected; no imported
     identity or public schema field is widened. Done.
+78. The same concrete numeric array-result producer set exposes `.abs()` as a
+    fresh same-kind array transformation. Int/float kind, `na` elements, empty
+    arrays, upstream `na`, source independence, and subsequent admitted array
+    reads/copy/abs chains are preserved. Imported UDT and every nonnumeric
+    result remain rejected; no imported identity or public schema field is
+    widened. Done.

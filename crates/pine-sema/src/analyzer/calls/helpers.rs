@@ -140,6 +140,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "binary_search" => Some("array.binary_search"),
         "binary_search_leftmost" => Some("array.binary_search_leftmost"),
         "binary_search_rightmost" => Some("array.binary_search_rightmost"),
+        "abs" => Some("array.abs"),
         _ => None,
     }
 }
@@ -697,6 +698,7 @@ mod tests {
             ("binary_search", "array.binary_search"),
             ("binary_search_leftmost", "array.binary_search_leftmost"),
             ("binary_search_rightmost", "array.binary_search_rightmost"),
+            ("abs", "array.abs"),
         ] {
             assert_eq!(
                 array_call_result_builtin_name(method_name),

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added `.abs()` to every existing concrete numeric array call result. It
+  allocates a fresh same-kind int/float array, preserves `na` elements, leaves
+  the source unchanged, returns an empty array for an empty receiver, and
+  propagates an upstream `na` array. The result can continue through current
+  array readers, `.copy()`, or another `.abs()`. Static/cross-namespace,
+  numeric matrix/map-derived, local/imported function/method, invalid type/
+  arity, nonnumeric/UDT, empty/`na`, independence, and continuation paths are
+  fixture-backed.
 - Added terminal `.binary_search_rightmost(value)` to every existing concrete
   numeric array call result. Exact duplicates return their last index; misses
   return the nearest-right element index, clamped to `0` below the minimum and

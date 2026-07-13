@@ -258,6 +258,10 @@ a miss, returns `-1` for empty/upstream-`na`, and does not widen UDT support.
 Item 87 adds the symmetric terminal `.binary_search_rightmost(value)`, returning
 the last exact duplicate or clamped nearest-right index without widening UDT
 support.
+Item 88 adds `.abs()` as a fresh same-kind transformation only for concrete
+numeric array results. It preserves `na`, empty, upstream-`na`, and source
+independence semantics and permits subsequent admitted array chains without
+widening UDT support.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1763,6 +1767,9 @@ Item 86 adds terminal leftmost binary search over that numeric producer set,
 including nearest-left clamping for misses, without widening UDT identity.
 Item 87 adds terminal rightmost binary search over the same set, including
 nearest-right clamping for misses, without widening UDT identity.
+Item 88 adds non-mutating `.abs()` transformation chains only to concrete
+numeric array results. They retain int/float kind, allocate independently,
+preserve `na`, empty, and upstream-`na` behavior, and do not widen UDT identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

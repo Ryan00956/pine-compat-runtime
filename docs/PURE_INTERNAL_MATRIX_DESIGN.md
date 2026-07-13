@@ -1499,6 +1499,12 @@ Recommended future slices:
     Namespace/bound, local/imported function/method, float/int, nonnumeric
     rejection, invalid types/arity, copy-continuation, and terminal-continuation
     paths are fixture-backed. Matrix-valued continuation is unchanged.
+92. Numeric array-valued call results additionally expose `.abs()` as a fresh
+    same-kind array transformation. Matrix row/column/eigenvalue arrays and
+    array-returning `matrix.mult` overloads preserve int/float kind, `na`, empty,
+    upstream-`na`, source independence, and copy/abs/read continuation.
+    Nonnumeric results and invalid arity remain rejected; matrix-valued
+    continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

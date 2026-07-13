@@ -59,6 +59,8 @@ plot(pivot_nested_copy, "pivot_nested_copy")
 plot(ta.pivot_point_levels("Traditional", true, true).includes(pivot_first) ? 1 : 0, "pivot_includes")
 plot(ta.pivot_point_levels("Traditional", true, true).indexof(pivot_first) == 0 ? 1 : 0, "pivot_indexof")
 plot(ta.pivot_point_levels("Traditional", true, true).lastindexof(pivot_first) >= 0 ? 1 : 0, "pivot_lastindexof")
+pivot_abs_first = ta.pivot_point_levels("Traditional", true, true).abs().first()
+plot(na(pivot_first) ? (na(pivot_abs_first) ? 1 : 0) : (pivot_abs_first == math.abs(pivot_first) ? 1 : 0), "pivot_call_result_abs")
 
 pivot_state_size = ta.pivot_point_levels("Traditional", bar_index == 2).size()
 pivot_state_first = ta.pivot_point_levels("Traditional", bar_index == 2).first()
@@ -114,6 +116,7 @@ plot(matrix.row(float_matrix, 0).lastindexof(1.5) == 0 and matrix.col(int_matrix
 plot(matrix.row(float_matrix, 0).copy().binary_search(2.5) == 1 and matrix.row(int_matrix, 0).binary_search(10) == 0 ? 1 : 0, "matrix_row_binary_search")
 plot(matrix.row(float_matrix, 0).copy().binary_search_leftmost(2.0) == 0 and matrix.row(int_matrix, 0).binary_search_leftmost(15) == 0 ? 1 : 0, "matrix_row_binary_search_leftmost")
 plot(matrix.row(float_matrix, 0).copy().binary_search_rightmost(2.0) == 1 and matrix.row(int_matrix, 0).binary_search_rightmost(15) == 1 ? 1 : 0, "matrix_row_binary_search_rightmost")
+plot(matrix.row(float_matrix, 0).abs().copy().last() == 2.5 and matrix.col(int_matrix, 0).abs().first() == 10 ? 1 : 0, "matrix_row_col_call_result_abs")
 
 matrix<float> na_float_matrix = na
 na_cell_matrix = matrix.new<float>(1, 1)
@@ -126,6 +129,7 @@ plot(matrix.row(na_float_matrix, 0).lastindexof(0.0) == -1 ? 1 : 0, "matrix_na_r
 plot(matrix.row(na_float_matrix, 0).binary_search(0.0) == -1 ? 1 : 0, "matrix_na_row_binary_search")
 plot(matrix.row(na_float_matrix, 0).binary_search_leftmost(0.0) == -1 ? 1 : 0, "matrix_na_row_binary_search_leftmost")
 plot(matrix.row(na_float_matrix, 0).binary_search_rightmost(0.0) == -1 ? 1 : 0, "matrix_na_row_binary_search_rightmost")
+plot(na(matrix.row(na_float_matrix, 0).abs().size()) ? 1 : 0, "matrix_na_row_call_result_abs")
 
 float_diagonal = matrix.new<float>(2, 2, 0.0)
 float_diagonal.set(0, 0, 2.0)
@@ -148,6 +152,7 @@ plot(matrix.eigenvalues(float_diagonal).copy().lastindexof(3.0) == 1 ? 1 : 0, "e
 plot(matrix.eigenvalues(float_diagonal).copy().binary_search(3.0) == 1 ? 1 : 0, "eigen_binary_search")
 plot(matrix.eigenvalues(float_diagonal).copy().binary_search_leftmost(2.5) == 0 ? 1 : 0, "eigen_binary_search_leftmost")
 plot(matrix.eigenvalues(float_diagonal).copy().binary_search_rightmost(2.5) == 1 ? 1 : 0, "eigen_binary_search_rightmost")
+plot(matrix.eigenvalues(float_diagonal).abs().first() == 2.0 ? 1 : 0, "eigen_call_result_abs")
 plot(matrix.eigenvalues(matrix.new<float>(0, 0)).size(), "eigen_empty_size")
 plot(na(matrix.eigenvalues(matrix.new<float>(0, 0)).first()) ? 1 : 0, "eigen_empty_first")
 matrix<float> na_eigen_matrix = na
@@ -207,6 +212,7 @@ plot(map.keys(int_float).lastindexof(20) == 1 and map.values(int_float).copy().l
 plot(map.keys(int_float).binary_search(20) == 1 and map.keys(float_bool).copy().binary_search(1.25) == 0 and map.values(color_int).binary_search(9) == 1 ? 1 : 0, "map_binary_search")
 plot(map.keys(int_float).binary_search_leftmost(15) == 0 and map.keys(float_bool).copy().binary_search_leftmost(2.0) == 0 and map.values(color_int).binary_search_leftmost(8) == 0 ? 1 : 0, "map_binary_search_leftmost")
 plot(map.keys(int_float).binary_search_rightmost(15) == 1 and map.keys(float_bool).copy().binary_search_rightmost(2.0) == 1 and map.values(color_int).binary_search_rightmost(8) == 1 ? 1 : 0, "map_binary_search_rightmost")
+plot(map.keys(int_float).abs().first() == 10 and map.values(int_float).copy().abs().last() == 2.5 ? 1 : 0, "map_call_result_abs")
 
 empty_map = map.new<string, float>()
 map<string, float> na_map = na
@@ -226,6 +232,8 @@ plot(map.values(empty_map).binary_search_leftmost(0.0) == -1 ? 1 : 0, "map_empty
 plot(map.values(na_map).binary_search_leftmost(0.0) == -1 ? 1 : 0, "map_na_binary_search_leftmost")
 plot(map.values(empty_map).binary_search_rightmost(0.0) == -1 ? 1 : 0, "map_empty_binary_search_rightmost")
 plot(map.values(na_map).binary_search_rightmost(0.0) == -1 ? 1 : 0, "map_na_binary_search_rightmost")
+plot(map.values(empty_map).abs().size(), "map_empty_call_result_abs")
+plot(na(map.values(na_map).abs().size()) ? 1 : 0, "map_na_call_result_abs")
 plot(readMatrixAndMap(float_matrix, int_float), "block_udf")
 
 mult_matrix = matrix.new<float>(2, 2, 0.0)
@@ -267,6 +275,7 @@ plot(matrix.mult(mult_matrix, mult_vector).copy().lastindexof(17.0) == 0 and mat
 plot(matrix.mult(mult_matrix, mult_vector).copy().binary_search(39.0) == 1 and matrix.mult(mult_vector, mult_matrix).binary_search(34.0) == 1 and mult_matrix.mult(mult_vector).binary_search(17.0) == 0 ? 1 : 0, "mult_binary_search")
 plot(matrix.mult(mult_matrix, mult_vector).copy().binary_search_leftmost(30.0) == 0 and matrix.mult(mult_vector, mult_matrix).binary_search_leftmost(30.0) == 0 and mult_matrix.mult(mult_vector).binary_search_leftmost(40.0) == 1 ? 1 : 0, "mult_binary_search_leftmost")
 plot(matrix.mult(mult_matrix, mult_vector).copy().binary_search_rightmost(30.0) == 1 and matrix.mult(mult_vector, mult_matrix).binary_search_rightmost(30.0) == 1 and mult_matrix.mult(mult_vector).binary_search_rightmost(40.0) == 1 ? 1 : 0, "mult_binary_search_rightmost")
+plot(matrix.mult(mult_matrix, mult_vector).abs().copy().first() == 17.0 and mult_matrix.mult(mult_vector).abs().last() == 39.0 ? 1 : 0, "mult_call_result_abs")
 
 int_mult_matrix = matrix.new<int>(2, 2, 0)
 int_mult_matrix.set(0, 0, 1)
@@ -290,6 +299,8 @@ plot(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).lastindexof(0.0) =
 plot(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).binary_search(0.0) == -1 ? 1 : 0, "mult_empty_binary_search")
 plot(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).binary_search_leftmost(0.0) == -1 ? 1 : 0, "mult_empty_binary_search_leftmost")
 plot(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).binary_search_rightmost(0.0) == -1 ? 1 : 0, "mult_empty_binary_search_rightmost")
+plot(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).abs().size(), "mult_empty_call_result_abs")
+plot(na(matrix.mult(mult_na_matrix, mult_vector).abs().size()) ? 1 : 0, "mult_na_call_result_abs")
 plot(matrix.mult(array.new_float(0), matrix.new<float>(0, 0)).size(), "mult_left_empty_size")
 plot(na(matrix.mult(array.new_float(0), matrix.new<float>(0, 0)).first()) ? 1 : 0, "mult_left_empty_first")
 plot(matrix.mult(array.new_float(0), array.new_float(0)).size(), "mult_pair_empty_size")

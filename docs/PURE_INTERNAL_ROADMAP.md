@@ -800,6 +800,13 @@ Current baseline:
   map-derived, local/imported function/method, duplicate, between-value, clamp,
   invalid type/arity, copy-continuation, and terminal-continuation paths are
   fixture-backed.
+  The next transformation slice adds `.abs()` to every concrete numeric array
+  call result. It returns a fresh same-kind int/float array, preserves `na`
+  elements, leaves the source unchanged, returns empty for an empty receiver,
+  propagates upstream `na`, and may continue through another admitted reader,
+  `.copy()`, or `.abs()`. Static/cross-namespace, matrix/map-derived, local/
+  imported function/method, nonnumeric/UDT rejection, invalid arity, empty/
+  `na`, and continuation paths are fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -818,7 +825,7 @@ Remaining internal work:
   the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
   `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus numeric-only
   `.binary_search(value)`/`.binary_search_leftmost(value)`/
-  `.binary_search_rightmost(value)` set, and
+  `.binary_search_rightmost(value)`/`.abs()` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked

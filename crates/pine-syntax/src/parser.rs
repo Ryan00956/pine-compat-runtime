@@ -778,7 +778,7 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
         ExprKind::QualifiedName(parts) => match parts.as_slice() {
             [prefix, method]
                 if prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX
-                    && matches!(method.as_str(), "row" | "col" | "eigenvalues") =>
+                    && matches!(method.as_str(), "row" | "col" | "eigenvalues" | "abs") =>
             {
                 Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
             }
@@ -811,7 +811,10 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
                 Some(BUILTIN_MAP_CALL_RESULT_PREFIX.to_owned())
             }
             [prefix, _method] if prefix == BUILTIN_MAP_CALL_RESULT_PREFIX => None,
-            [prefix, method] if prefix == BUILTIN_ARRAY_CALL_RESULT_PREFIX && method == "copy" => {
+            [prefix, method]
+                if prefix == BUILTIN_ARRAY_CALL_RESULT_PREFIX
+                    && matches!(method.as_str(), "copy" | "abs") =>
+            {
                 Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
             }
             [prefix, _method] if prefix == BUILTIN_ARRAY_CALL_RESULT_PREFIX => None,

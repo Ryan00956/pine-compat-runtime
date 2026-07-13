@@ -16,6 +16,10 @@ noneFirst() =>
     array<First> values = na
     values
 
+noneInts() =>
+    array<int> values = na
+    values
+
 readArray(values) =>
     array.copy(values).size() + array.slice(values, 0, 1).size()
 
@@ -128,6 +132,13 @@ abs_binary_search_rightmost = array.abs(array.from(-1, -2, -3)).binary_search_ri
 standardized_binary_search_rightmost = array.standardize(array.from(1, 2, 3)).binary_search_rightmost(0.5)
 sort_indices_binary_search_rightmost = array.sort_indices(array.from(1, 2, 3)).binary_search_rightmost(1)
 empty_binary_search_rightmost = array.new_float().binary_search_rightmost(1.0)
+from_abs_first = array.from(-5, 2, -3).abs().first()
+copy_abs_last = array.copy(array.from(-5.0, 2.0, -3.0)).abs().copy().last()
+slice_abs_get = array.slice(array.from(-9, -8, -7), 1, 3).abs().get(0)
+concat_abs_includes = array.concat(array.from(-6), array.from(-4)).abs().includes(4)
+double_abs_last = array.abs(array.from(-3, 2)).abs().last()
+empty_call_result_abs_size = array.new_int().abs().size()
+none_call_result_abs_size = array.copy(noneInts()).abs().size()
 empty_last = array.new<First>().last()
 none_size = array.copy(noneFirst()).size()
 empty_standardized_size = array.standardize(array.new<int>()).size()

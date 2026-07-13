@@ -313,6 +313,7 @@ fn parses_builtin_array_result_method_receivers() {
         "value = array.slice(values, 0, 1).last()\n",
         "value = array.concat(values, more).copy()\n",
         "value = array.abs(values).get(0)\n",
+        "value = array.from(-1, 2).abs()\n",
         "value = array.standardize(values).first()\n",
         "value = array.sort_indices(values).last()\n",
     ] {
@@ -336,7 +337,9 @@ fn parses_builtin_array_result_method_receivers() {
         assert!(args[0].value.span.end < callee.span.start, "{source}");
     }
 
-    let parsed = parse("value = array.copy(values).copy().last()\n");
+    let parsed = parse(
+        "value = array.copy(values).copy().last()\nvalue = array.from(-1, 2).abs().copy().last()\n",
+    );
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
     let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
         panic!("expected declaration");
@@ -358,6 +361,38 @@ fn parses_builtin_array_result_method_receivers() {
     assert_eq!(
         inner_callee.kind,
         ExprKind::QualifiedName(vec!["$builtin_array_result".to_owned(), "copy".to_owned()])
+    );
+
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[1].kind else {
+        panic!("expected nested abs declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected nested abs outer call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::QualifiedName(vec!["$builtin_array_result".to_owned(), "last".to_owned()])
+    );
+    let ExprKind::Call {
+        callee: copy_callee,
+        args: copy_args,
+    } = &args[0].value.kind
+    else {
+        panic!("expected nested abs copy call");
+    };
+    assert_eq!(
+        copy_callee.kind,
+        ExprKind::QualifiedName(vec!["$builtin_array_result".to_owned(), "copy".to_owned()])
+    );
+    let ExprKind::Call {
+        callee: abs_callee, ..
+    } = &copy_args[0].value.kind
+    else {
+        panic!("expected nested abs call");
+    };
+    assert_eq!(
+        abs_callee.kind,
+        ExprKind::QualifiedName(vec!["$builtin_array_result".to_owned(), "abs".to_owned()])
     );
 }
 
@@ -598,6 +633,7 @@ fn parses_matrix_call_result_array_producers_as_array_result_receivers() {
         "value = matrix.mult(values, other).copy().col(0).copy().first()\n",
         "value = matrix.mult(values, other).eigenvalues().size()\n",
         "value = matrix.copy(values).eigenvalues().copy().first()\n",
+        "value = matrix.mult(values, array.from(1.0, -2.0)).abs().copy().first()\n",
     ] {
         let parsed = parse(source);
 

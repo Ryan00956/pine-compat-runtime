@@ -425,6 +425,11 @@ Recommended future slices:
     non-mutation, and terminal boundaries. Bool/string/color sides, local/
     imported provenance, dual aliases, invalid types/arity, copy continuation,
     and terminal continuation are fixture-backed. Done.
+22. Numeric key/value snapshots additionally expose `.abs()` as a fresh
+    key/value-kind-preserving array transformation. Int/float values, empty and
+    upstream-`na` results, source independence, invalid nonnumeric/arity cases,
+    and copy/abs/read continuation are fixture-backed. Map storage and template
+    rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
 
