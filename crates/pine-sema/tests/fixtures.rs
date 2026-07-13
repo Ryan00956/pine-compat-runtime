@@ -6882,6 +6882,30 @@ fn reports_unsupported_bound_matrix_eigenvectors_call_result_reads_fixture() {
 }
 
 #[test]
+fn accepts_supported_bound_matrix_mult_call_result_reads_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_bound_matrix_mult_call_result_reads.pine");
+}
+
+#[test]
+fn reports_unsupported_bound_matrix_mult_call_result_reads_fixture() {
+    let path = "tests/fixtures/sema/unsupported_bound_matrix_mult_call_result_reads.pine";
+    assert_exact_diagnostic_messages(
+        path,
+        &[
+            "`matrix.get` argument `row` expects simple int, got const string",
+            "`matrix.set` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, and `.copy()`; bind the result or use the namespace helper",
+            "`matrix.sum` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, and `.copy()`; bind the result or use the namespace helper",
+            "`matrix.size` is not supported: direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, and `.copy()`; bind the result or use the namespace helper",
+            "`array.rows` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+            "method `mult` is not supported for simple matrix<bool>",
+            "unknown array method `mult`",
+            "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
+        ],
+    );
+    assert_diagnostic_count(path, 8);
+}
+
+#[test]
 fn reports_unsupported_bound_matrix_diff_call_result_reads_fixture() {
     let path = "tests/fixtures/sema/unsupported_bound_matrix_diff_call_result_reads.pine";
     assert_exact_diagnostic_messages(
@@ -7094,11 +7118,9 @@ fn reports_unsupported_builtin_namespace_matrix_call_result_reads_fixture() {
             "`array.get` expects at most 2 argument(s), got 3",
             "`array.rows` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
             "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
-            "`call_result.get` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
-            "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
         ],
     );
-    assert_diagnostic_count(path, 68);
+    assert_diagnostic_count(path, 66);
 }
 
 #[test]

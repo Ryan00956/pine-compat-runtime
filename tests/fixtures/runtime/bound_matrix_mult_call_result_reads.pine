@@ -1,0 +1,56 @@
+//@version=6
+indicator("Bound matrix.mult call-result reads")
+
+multGet(left, right) => left.mult(right).get(1, 1)
+
+multBlockReads(left, right) =>
+    int rows = left.mult(right).rows()
+    int columns = left.mult(right).columns()
+    float value = left.mult(right).get(0, 0)
+    rows * 100 + columns * 10 + value
+
+left = matrix.new<float>(2, 3, 0.0)
+left.set(0, 0, 1.0)
+left.set(0, 1, 2.0)
+left.set(0, 2, 3.0)
+left.set(1, 0, 4.0)
+left.set(1, 1, 5.0)
+left.set(1, 2, 6.0)
+
+right = matrix.new<float>(3, 2, 0.0)
+right.set(0, 0, 7.0)
+right.set(0, 1, 8.0)
+right.set(1, 0, 9.0)
+right.set(1, 1, 10.0)
+right.set(2, 0, 11.0)
+right.set(2, 1, 12.0)
+
+copied = left.mult(right).copy()
+copied.set(0, 0, 99.0)
+
+int_left = matrix.new<int>(1, 1, 2)
+int_right = matrix.new<int>(1, 1, 3)
+vector = array.from(1.0, 1.0, 1.0)
+na_left = matrix.new<float>(1, 1)
+na_right = matrix.new<float>(1, 1, 2.0)
+empty_left = matrix.new<float>(2, 0)
+empty_right = matrix.new<float>(0, 3)
+
+plot(left.mult(right).rows(), "matrix_rows")
+plot(left.mult(right).columns(), "matrix_columns")
+plot(left.mult(right).elements_count(), "matrix_elements")
+plot(left.mult(right).get(0, 0), "matrix_get")
+plot(left.mult(right).copy().get(1, 1), "matrix_copy_get")
+plot(left.mult(0.5).rows(), "scalar_rows")
+plot(left.mult(0.5).columns(), "scalar_columns")
+plot(left.mult(0.5).get(1, 2), "scalar_get")
+plot(int_left.mult(int_right).get(0, 0), "int_matrix_get")
+plot(na(na_left.mult(na_right).get(0, 0)) ? 1 : 0, "na_get")
+plot(empty_left.mult(empty_right).rows() * 100 + empty_left.mult(empty_right).columns() * 10 + empty_left.mult(empty_right).elements_count(), "empty_shape")
+plot(empty_left.mult(empty_right).get(0, 0), "empty_get")
+plot(left.mult(vector).size(), "array_size")
+plot(left.mult(vector).get(1), "array_get")
+plot(left.get(0, 0), "source_value")
+plot(copied.get(0, 0), "copied_value")
+plot(multGet(left, right), "expression_udf")
+plot(multBlockReads(left, right), "block_udf")

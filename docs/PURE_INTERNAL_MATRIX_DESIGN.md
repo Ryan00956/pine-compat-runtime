@@ -123,6 +123,14 @@ Current evidence:
   independent storage, nested copies, UDF-contained reads, wrong index/helper
   and non-numeric/non-matrix receiver diagnostics, and the retained
   matrix-valued bound `values.mult(other)` gate.
+- `tests/fixtures/runtime/bound_matrix_mult_call_result_reads.pine` plus the
+  matching supported/unsupported semantic fixtures cover direct matrix-result
+  `values.mult(other).rows()`/`columns()`/`elements_count()`/`get()`/`copy()`
+  for numeric matrix or scalar operands, multiplied and scalar-selected shape,
+  fixed float-matrix results, `na` and zero-inner-dimension behavior,
+  independent storage, nested copies, UDF-contained reads, and wrong result
+  helper/index/non-numeric/non-matrix diagnostics. Matrix-array overloads keep
+  array-helper dispatch, and UDF matrix-result receivers remain gated.
 - `tests/fixtures/runtime/matrix_float.pine` covers `matrix.new<float>`,
   `matrix.get`, `matrix.set`, `matrix.fill`, `values.fill(value)`,
   `values.get(row, column)`, `values.set(row, column, value)`, `matrix.rows`,
@@ -1119,6 +1127,14 @@ Recommended future slices:
     fixed float-matrix metadata, independent backing storage, copy-only
     continuation, and retained gates for other bound producers, broader
     helpers, mutation, and non-matrix receivers.
+52. Bound matrix-multiplication call results: done for exact numeric matrix
+    receivers using matrix-valued `values.mult(other)` with matrix or scalar
+    operands followed by rows/columns/elements_count/get/copy, preserving
+    multiplied or scalar-selected shape, fixed float-matrix results, `na` and
+    zero-inner-dimension behavior, independent backing storage, and copy-only
+    continuation. Array-result overloads retain array-helper dispatch; UDF
+    matrix results, broader helpers, mutation, and non-matrix receivers stay
+    gated.
 
 ## Completion Gate For Future Positive Support
 

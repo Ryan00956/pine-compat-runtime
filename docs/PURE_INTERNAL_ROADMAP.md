@@ -388,6 +388,12 @@ Current baseline:
   independent fixed `matrix<float>` storage, and exposes the same five helpers
   with copy-only continuation. Matrix-valued bound `mult`, UDF matrix results,
   and other producers remain gated.
+  The next closed bound-result slice admits exact numeric matrix-receiver
+  matrix-valued `values.mult(other)` results for matrix or scalar operands. It
+  preserves multiplied or scalar-selected shape, `na` and zero-inner-dimension
+  behavior, uses independent fixed `matrix<float>` storage, and exposes the
+  same five helpers with copy-only continuation. Array-result overloads retain
+  array-helper dispatch, while UDF matrix results remain gated.
   The following closed slice admits exact namespace
   `matrix.transpose(values)` on that path. It preserves the same five element
   kinds through `SameAsArg`, swaps row/column shape, returns independent
@@ -478,8 +484,8 @@ Remaining internal work:
   including bound matrix-result receivers other than exact matrix-receiver
   `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
   `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
-  `values.inv()`/`values.pinv()`/`values.eigenvectors()`, UDF matrix-result
-  receivers,
+  `values.inv()`/`values.pinv()`/`values.eigenvectors()`/
+  matrix-valued `values.mult(other)`, UDF matrix-result receivers,
   other matrix-returning calls, map templates and
   unsupported matrix/map templates and other map call-result receivers,
   other built-in namespaces or non-producer members, non-producer `array.*`

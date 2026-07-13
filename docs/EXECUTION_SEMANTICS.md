@@ -874,9 +874,12 @@ may use `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
 continue another allowed read/copy chain for either result kind; terminal
 readers, wrong-result helpers, invalid arity or argument types, broader helpers,
 and mutation fail closed. The existing bound-receiver
-`matrix_id.mult(array).size()` path is unchanged, while helpers on bound
-matrix-returning `matrix_id.mult(...)` results retain the generic direct
-call-result rejection. Exact namespace `matrix.copy(values)` also enters this
+`matrix_id.mult(array).size()` path remains on array-helper dispatch. Exact
+bound numeric-matrix-receiver matrix-valued `matrix_id.mult(other)` results now
+share the five matrix helpers and copy-only continuation for matrix or scalar
+operands while preserving the existing overload, shape, `na`, empty inner
+dimension, and cell-budget boundaries. Exact namespace `matrix.copy(values)`
+also enters this
 prefix, always resolves through the matrix helper family, and preserves the
 source float/int/bool/string/color matrix kind through `SameAsArg`; its returned
 store and every postfix copy are independent. Exact bound matrix-receiver
@@ -1022,7 +1025,7 @@ metadata and no UDT/import identity. Bound or UDF
 matrix-result receivers other than exact matrix-receiver
 `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
 `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
-`values.inv()`/`values.pinv()`/`values.eigenvectors()`,
+`values.inv()`/`values.pinv()`/`values.eigenvectors()`/`values.mult(other)`,
 built-in-qualified
 or template call results outside
 the exact static and dynamic paths, and other

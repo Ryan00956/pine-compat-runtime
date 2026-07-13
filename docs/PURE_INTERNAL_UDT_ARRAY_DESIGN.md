@@ -197,6 +197,11 @@ Item 43 adds exact bound numeric-square-matrix-receiver
 square shape, empty `0 x 0` and `na` invalid/non-real/incomplete boundaries,
 fixed float-matrix result kind, independent backing storage, copy-only
 continuation, and retained other-bound-producer/non-matrix/mutation gates.
+Item 44 adds exact bound numeric-matrix-receiver matrix-valued
+`values.mult(other)` results for matrix or scalar operands with the same five
+helpers, multiplied or scalar-selected shape, fixed float-matrix result kind,
+`na`/zero-inner-dimension behavior, independent backing storage, copy-only
+continuation, and retained array-result/UDF/non-matrix/mutation gates.
 Outside the exact static producer sets and these namespace-only paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, and other matrix-returning
@@ -815,8 +820,8 @@ Initial policy:
   bound matrix-result receivers other than exact matrix-receiver
   `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
   `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
-  `values.inv()`/`values.pinv()`/`values.eigenvectors()`, UDF matrix-result
-  receivers,
+  `values.inv()`/`values.pinv()`/`values.eigenvectors()`/
+  matrix-valued `values.mult(other)`, UDF matrix-result receivers,
   built-in-qualified/template call
   receivers outside the exact static and dynamic paths, mutation side effects,
   and other direct array or matrix methods on call results remain
@@ -1189,6 +1194,17 @@ Recommended future slices:
     receivers, and the retained matrix-valued bound `values.mult(other)` gate
     are fixture-backed. No UDT/import identity or public schema field is added.
     Done.
+44. The exact bound-matrix-multiplication continuation recognizes matrix-valued
+    `values.mult(other)` only when `values` resolves to a supported numeric
+    matrix kind and `other` is a numeric matrix or scalar. The result preserves
+    multiplied or scalar-selected shape, `na` and zero-inner-dimension
+    behavior, uses independent fixed float-matrix storage, and exposes only
+    rows/columns/elements_count/get/copy with copy-only continuation.
+    Matrix-array overloads retain array-helper dispatch. Float/int operands,
+    nested copy, UDF-contained reads, wrong result helpers/indexes,
+    non-numeric/non-matrix receivers, and the retained UDF matrix-result gate
+    are fixture-backed. No UDT/import identity or public schema field is added.
+    Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1267,6 +1283,9 @@ Item 42 adds exact bound numeric-matrix-receiver `values.pinv()` result reads
 with fixed float-matrix metadata and no UDT/import identity.
 Item 43 adds exact bound numeric-square-matrix-receiver
 `values.eigenvectors()` result reads with fixed float-matrix metadata and no
+UDT/import identity.
+Item 44 adds exact bound numeric-matrix-receiver matrix-valued
+`values.mult(other)` result reads with fixed float-matrix metadata and no
 UDT/import identity.
 Broader UDT element families, bound or UDF
 matrix-result receivers, built-in-qualified/template call-result receivers

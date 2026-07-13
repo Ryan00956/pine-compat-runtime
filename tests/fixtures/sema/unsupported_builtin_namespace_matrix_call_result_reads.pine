@@ -71,8 +71,6 @@ array_elements = matrix.mult(vector, vector).elements_count()
 array_matrix_get = matrix.mult(left, vector).get(0, 0)
 array_copy_rows = matrix.mult(vector, left).copy().rows()
 
-bound_matrix_rows = left.mult(right).rows()
-bound_scalar_get = left.mult(2.0).get(0, 0)
 udf_matrix_rows = matrixFactory(left, right).rows()
 
 plot(close)

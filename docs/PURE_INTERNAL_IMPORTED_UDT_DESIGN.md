@@ -182,6 +182,11 @@ Item 33 adds exact bound numeric-square-matrix-receiver
 square shape, empty `0 x 0` and `na` invalid/non-real/incomplete boundaries,
 fixed float-matrix result kind, independent backing storage, copy-only
 continuation, and retained other-bound-producer/non-matrix/mutation gates.
+Item 34 adds exact bound numeric-matrix-receiver matrix-valued
+`values.mult(other)` results for matrix or scalar operands with the same five
+helpers, multiplied or scalar-selected shape, fixed float-matrix result kind,
+`na`/zero-inner-dimension behavior, independent backing storage, copy-only
+continuation, and retained array-result/UDF/non-matrix/mutation gates.
 Outside the exact static producer sets and those namespace-only exceptions,
 unsupported `array.new<T>` types, non-producer calls, unsupported matrix
 templates and map templates,
@@ -1014,5 +1019,16 @@ return/parameter flow remains deferred.
     with copy-only continuation. Float/int receivers, nested copy,
     UDF-contained reads, wrong indexes, broader helpers, non-numeric/non-matrix
     receivers, and the retained matrix-valued bound `values.mult(other)` gate
+    are fixture-backed. No imported UDT identity or public schema field is
+    added. Done.
+34. The exact bound-matrix-multiplication continuation recognizes matrix-valued
+    `values.mult(other)` only when `values` resolves to a supported numeric
+    matrix kind and `other` is a numeric matrix or scalar. The result preserves
+    multiplied or scalar-selected shape, `na` and zero-inner-dimension
+    behavior, uses independent fixed float-matrix storage, and exposes only
+    rows/columns/elements_count/get/copy with copy-only continuation.
+    Matrix-array overloads retain array-helper dispatch. Float/int operands,
+    nested copy, UDF-contained reads, wrong result helpers/indexes,
+    non-numeric/non-matrix receivers, and the retained UDF matrix-result gate
     are fixture-backed. No imported UDT identity or public schema field is
     added. Done.

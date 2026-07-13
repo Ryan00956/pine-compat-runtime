@@ -629,7 +629,9 @@ matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
 may continue another allowed read/copy chain. Helper selection is result-type
 checked, so wrong-result helpers, invalid arity or argument types, broader
 helpers, and mutation fail closed. The existing bound-receiver
-`matrix_id.mult(array).size()` path is unchanged, while bound or UDF
+`matrix_id.mult(array).size()` path remains on array-helper dispatch, while
+exact bound matrix-valued `matrix_id.mult(other)` results share the five matrix
+helpers for matrix or scalar operands with copy-only continuation. UDF
 matrix-result call-result helpers retain the generic rejection. Exact namespace
 `matrix.copy` always takes the matrix branch, preserves the source
 float/int/bool/string/color matrix kind through `SameAsArg`, and retains
@@ -664,21 +666,25 @@ Exact namespace
 `matrix.pow` also takes the matrix branch, resolves to fixed
 `simple matrix<float>` for numeric square matrices and simple-int powers, and
 retains independent identity/copy/positive-power, `na`, and empty `0 x 0`
-semantics. Bound `matrix_id.pow(power)` results remain generic rejections.
+semantics. Exact bound `matrix_id.pow(power)` results share the five matrix
+helpers and copy-only continuation.
 Exact namespace `matrix.inv` also takes the matrix branch, resolves to fixed
 `simple matrix<float>` for numeric inputs, preserves square shape for
 invertible matrices, returns an empty `0 x 0` matrix for empty input, and yields
-`na` for singular or invalid-cell inputs. Bound `matrix_id.inv()` results remain
-generic rejections. Exact namespace `matrix.pinv` also takes the matrix branch,
+`na` for singular or invalid-cell inputs. Exact bound `matrix_id.inv()` results
+share the five matrix helpers and copy-only continuation. Exact namespace
+`matrix.pinv` also takes the matrix branch,
 resolves to fixed `simple matrix<float>` for numeric inputs, swaps row/column
 shape for rectangular matrices, retains singular matrix-valued results and
-zero-cell swapped shapes, and yields `na` for invalid-cell inputs. Bound
-`matrix_id.pinv()` results remain generic rejections. Exact namespace
+zero-cell swapped shapes, and yields `na` for invalid-cell inputs. Exact bound
+`matrix_id.pinv()` results share the five matrix helpers and copy-only
+continuation. Exact namespace
 `matrix.eigenvectors` also takes the matrix branch, resolves to fixed
 `simple matrix<float>` for numeric inputs, preserves square shape for real
 complete eigenvectors, returns empty `0 x 0`, and yields `na` for invalid-cell,
-non-real, or incomplete results. Bound `matrix_id.eigenvectors()` results
-remain generic rejections. Exact `matrix.new<float>`, `matrix.new<int>`,
+non-real, or incomplete results. Exact bound `matrix_id.eigenvectors()` results
+share the five matrix helpers and copy-only continuation. Exact
+`matrix.new<float>`, `matrix.new<int>`,
 `matrix.new<bool>`, `matrix.new<string>`, and `matrix.new<color>` template
 results also enter this path, preserve their element kind, requested shape,
 type-compatible initial or default `na` cells, fresh allocation, and copy
@@ -890,8 +896,8 @@ outside the read-only `size`/`get`/`first`/`last`/`copy` set,
 bound matrix-result call-result receivers other than exact matrix-receiver
 `values.copy()`/`values.transpose()`/`values.submatrix(...)`/
 `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
-`values.inv()`/`values.pinv()`/`values.eigenvectors()`, UDF matrix-result
-call-result receivers,
+`values.inv()`/`values.pinv()`/`values.eigenvectors()`/matrix-valued
+`values.mult(other)`, UDF matrix-result call-result receivers,
 built-in-qualified/template
 call-result receivers outside the exact static `array.*` allowlist and
 cross-namespace dynamic paths, nested field mutation, UDF
@@ -1005,7 +1011,11 @@ fixed-float namespace `matrix.kron`/`matrix.diff`/`matrix.pow`/`matrix.inv`/
 `matrix.pinv`/`matrix.eigenvectors` add only the exact matrix read/copy set
 above. The five exact `matrix.new<T>` templates add the same read/copy set while
 retaining their scalar matrix element kind. None widens UDT identity. Bound
-or UDF matrix-result receivers, built-in-qualified/template
+matrix-result receivers other than exact `values.copy()`/`values.transpose()`/
+`values.submatrix(...)`/`values.kron(other)`/`values.diff(other)`/
+`values.pow(power)`/`values.inv()`/`values.pinv()`/`values.eigenvectors()`/
+matrix-valued `values.mult(other)`, UDF matrix-result receivers,
+built-in-qualified/template
 call results outside the exact static and dynamic paths, and other array or
 matrix helpers remain gated. The scalar `map.new<K,V>` and namespace
 `map.copy(existing)` result paths carry only map template metadata and likewise

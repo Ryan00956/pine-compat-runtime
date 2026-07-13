@@ -38,6 +38,10 @@ pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &
         "tests/fixtures/runtime/bound_matrix_eigenvectors_call_result_reads.pine",
     ),
     (
+        "runtime_bound_matrix_mult_call_result_reads.json",
+        "tests/fixtures/runtime/bound_matrix_mult_call_result_reads.pine",
+    ),
+    (
         "runtime_matrix_float.json",
         "tests/fixtures/runtime/matrix_float.pine",
     ),

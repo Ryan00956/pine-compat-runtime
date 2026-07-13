@@ -75,6 +75,7 @@ pub(crate) fn bound_matrix_call_result_method_parts<'a>(
                         | "eigenvectors"
                         | "inv"
                         | "kron"
+                        | "mult"
                         | "pinv"
                         | "pow"
                         | "submatrix"
