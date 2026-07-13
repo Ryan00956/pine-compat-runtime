@@ -484,3 +484,27 @@ plot(na(pivot_namespace_slice_size) ? (na(pivot_slice_size) ? 1 : 0) : (pivot_sl
 plot(matrix.row(float_matrix, 0).slice(1, 2).first() == 2.5 and matrix.row(int_matrix, 0).slice(0, 2).copy().last() == 20 and matrix.row(bool_matrix, 0).slice(1, 2).first() and matrix.row(string_matrix, 0).slice(0, 1).last() == "left" and matrix.row(color_matrix, 0).slice(0, 1).first() == color.red and matrix.eigenvalues(float_diagonal).slice(0, 1).first() == 2.0 ? 1 : 0, "namespace_call_result_slice_matrix")
 plot(map.keys(int_float).slice(0, 1).first() == 10 and map.values(int_float).slice(1, 2).last() == 2.5 and not map.keys(bool_string).slice(0, 1).first() and map.values(bool_string).slice(1, 2).last() == "on" and map.keys(color_int).slice(0, 1).first() == color.red and map.values(color_int).slice(1, 2).last() == 9 ? 1 : 0, "namespace_call_result_slice_map")
 plot(matrix.mult(mult_matrix, mult_vector).slice(0, 1).copy().first() == 17.0 and mult_matrix.mult(mult_vector).slice(1, 2).last() == 39.0 and matrix.mult(matrix.new<float>(0, 0), array.new_float()).slice(0, 0).size() == 0 and na(matrix.mult(mult_na_matrix, mult_vector).slice(0, 1)) ? 1 : 0, "namespace_call_result_slice_mult_empty_na")
+
+str.split("alpha,beta", ",").clear()
+ta.pivot_point_levels("Traditional", true, true).clear()
+plot(1, "namespace_call_result_clear_split_pivot")
+
+matrix.row(float_matrix, 0).clear()
+matrix.col(float_matrix, 0).clear()
+matrix.eigenvalues(float_diagonal).clear()
+plot(matrix.get(float_matrix, 0, 0) == 1.5 and matrix.get(float_diagonal, 0, 0) == 2.0 ? 1 : 0, "namespace_call_result_clear_matrix_snapshot")
+
+map.keys(int_float).clear()
+map.values(int_float).clear()
+plot(map.size(int_float) == 2 and map.get(int_float, 10) == 3.5 and map.get(int_float, 20) == 2.5 ? 1 : 0, "namespace_call_result_clear_map_snapshot")
+
+matrix.mult(mult_matrix, mult_vector).clear()
+mult_matrix.mult(mult_vector).clear()
+plot(matrix.get(mult_matrix, 0, 0) == 1.0 and matrix.get(mult_matrix, 1, 1) == 4.0 ? 1 : 0, "namespace_call_result_clear_mult_snapshot")
+
+str.split(na, ",").clear()
+matrix.row(na_float_matrix, 0).clear()
+map.values(empty_map).clear()
+map.values(na_map).clear()
+matrix.mult(mult_na_matrix, mult_vector).clear()
+plot(1, "namespace_call_result_clear_empty_na")

@@ -743,3 +743,7 @@ plot(return_anchor.sumSecondValues(values=for_in_second_values))
 plot(return_anchor.lastFirstIndexed(for_in_first_values))
 for_in_method_last_second = return_anchor.lastSecondValue(values=for_in_second_values)
 plot(for_in_method_last_second.shared)
+
+local_call_result_clear_source = array.from(First.new(180.0, 1800.0))
+return_identity(local_call_result_clear_source).clear()
+plot(local_call_result_clear_source.size() == 0 ? 1 : 0, "local_call_result_clear_alias")

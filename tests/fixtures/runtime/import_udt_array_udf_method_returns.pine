@@ -534,3 +534,7 @@ plot(builtin_independent_copy.size())
 
 private_builtin_readers = left.localBuiltinReaders(left.First.new(50.0, 500.0), left_first_values)
 plot(private_builtin_readers)
+
+imported_call_result_clear_source = array.from(left.First.new(90.0, 900.0))
+left.direct(imported_call_result_clear_source).clear()
+plot(imported_call_result_clear_source.size() == 0 ? 1 : 0, "imported_call_result_clear_alias")

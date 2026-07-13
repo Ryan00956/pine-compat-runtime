@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal top-level `.clear()` to every concrete array call result. It
+  returns `void`, cannot continue, clears alias-returning `array.concat` and
+  local/imported function or method results in place, and deletes a nested live
+  slice window from its parent. Fresh matrix row/column/eigenvalue, map key/
+  value, and array-returning `matrix.mult` snapshots remain independent of
+  their source collections. Static/cross-namespace/local/imported, scalar,
+  object, `chart.point`, UDT, empty/upstream-`na`, invalid arity, terminal-
+  continuation, and UDF-side-effect rejection boundaries are fixture-backed;
+  public schemas are unchanged.
 - Added transforming `.slice(index_from, index_to)` to every concrete array
   call result. The direct path preserves scalar/object/`chart.point` element
   kinds and same-local/same-imported scalar-tree UDT identity, returns the

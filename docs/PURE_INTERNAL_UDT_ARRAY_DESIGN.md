@@ -1969,6 +1969,16 @@ slices, positional/named simple-int-compatible bounds, invalid type/arity,
 matrix-mult result-type switching, and independent upstream matrix/map
 snapshot boundaries are fixture-backed. Postfix mutation outside the existing
 bound-array path remains closed.
+Item 108 adds terminal top-level `.clear()` mutation to every concrete array
+call result across static, cross-namespace, matrix/map-derived, and local or
+imported function/method producers. It returns `void`, cannot continue, reuses
+ordinary zero-explicit-argument validation, and tolerates empty or upstream-
+`na` results. Alias-returning `array.concat` and local/imported UDF or method
+results clear their shared backing array; nested `array.slice` results delete
+their live parent window; fresh matrix/map/`matrix.mult` snapshots remain
+independent of their source collection. Direct call-result mutation inside a
+UDF remains rejected by the existing collection-side-effect rule, and every
+other postfix mutation remains closed.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

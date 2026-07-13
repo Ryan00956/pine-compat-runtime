@@ -1582,3 +1582,11 @@ return/parameter flow remains deferred.
     positional or named simple-int-compatible bounds, invalid type/arity,
     same-library identity isolation, and matrix/map-derived snapshot
     boundaries are fixture-backed. Done.
+98. Every concrete array call result additionally exposes terminal top-level
+    `.clear()`. It returns `void`, accepts no explicit arguments, tolerates
+    empty or upstream-`na` receivers, and cannot continue. Imported/local UDF
+    and method alias results plus `array.concat` results clear shared backing;
+    nested slices delete their live parent window; fresh matrix/map/
+    `matrix.mult` snapshots remain independent. Mutation inside UDF bodies and
+    every other direct postfix mutation remain rejected. No imported identity
+    or public schema field is widened. Done.

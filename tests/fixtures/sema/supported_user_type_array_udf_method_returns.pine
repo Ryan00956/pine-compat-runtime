@@ -357,6 +357,10 @@ unqualified_scalar_slice = identity(array.from("a", "b", "c")).slice(0, 2).copy(
 unqualified_udt_slice = identity(first_values).slice(0, 1).get(0)
 qualified_udt_slice = anchor.exposeSecondBlock(second_values).slice(1, 2).copy().last()
 unqualified_udt_nested_slice = identity(first_values).slice(0, 2).slice(1, 2).first()
+anchor.exposeInts(array.from(40, 41, 42)).clear()
+identity(array.from("a", "b")).clear()
+identity(first_values).clear()
+anchor.exposeSecondBlock(second_values).clear()
 
 unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
 unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))

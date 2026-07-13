@@ -554,6 +554,13 @@ Recommended future slices:
     negative/reversed/out-of-range bounds, scalar-template interleaving, and
     terminal or mutation boundaries remain fixture-backed. Map storage and
     template rules are unchanged. Done.
+42. Every concrete scalar key/value snapshot additionally exposes terminal
+    top-level `.clear()`. The call mutates only the fresh keys/values snapshot,
+    returns `void`, accepts no explicit arguments, tolerates empty or typed-
+    `na` map results, and cannot continue; the source map and insertion order
+    remain unchanged. Direct call-result mutation inside UDFs and all other
+    postfix mutations stay rejected. Map storage, templates, and public
+    schemas are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

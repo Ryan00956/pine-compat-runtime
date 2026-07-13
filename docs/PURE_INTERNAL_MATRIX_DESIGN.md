@@ -1635,6 +1635,14 @@ Recommended future slices:
     Scalar kinds, nested copy/read continuation, empty/upstream-`na`, invalid
     bounds/type/arity, and retained matrix-valued overload boundaries are
     fixture-backed. Matrix-valued continuation is unchanged.
+112. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.clear()`. It empties only the fresh array snapshot, returns `void`,
+    accepts no explicit arguments, tolerates empty or upstream-`na` results,
+    and cannot continue; the source matrix is unchanged. Namespace and bound
+    vector-multiplication paths retain result-type-directed array dispatch.
+    UDF-body mutation and all other postfix mutation remain rejected, while
+    matrix-valued continuation and public schemas are unchanged.
 
 ## Completion Gate For Future Positive Support
 

@@ -937,6 +937,13 @@ Current baseline:
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
   concat legal inside a UDF.
+  The next terminal mutation slice adds top-level `.clear()` to every concrete
+  array call result. It returns `void`, cannot continue, clears alias-returning
+  concat and local/imported UDF or method results in place, deletes nested live
+  slice windows from their parent, and mutates only fresh matrix/map/mult
+  snapshots rather than their source collections. Empty/upstream-`na`, invalid
+  arity, and UDF-side-effect rejection paths are fixture-backed; all other
+  direct call-result mutation remains gated and public schemas are unchanged.
 
 Remaining internal work:
 

@@ -99,6 +99,7 @@ mod tests {
             ("sort_indices", "array.sort_indices"),
             ("join", "array.join"),
             ("slice", "array.slice"),
+            ("clear", "array.clear"),
         ] {
             assert_eq!(
                 array_call_result_builtin_name(method_name),

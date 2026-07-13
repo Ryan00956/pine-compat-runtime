@@ -83,6 +83,7 @@ const BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.sort_indices",
     "array.join",
     "array.slice",
+    "array.clear",
     "array.concat",
     "array method calls",
     "expression-body functions",
@@ -103,6 +104,7 @@ const UDT_IDENTITY_BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.lastindexof",
     "array.join",
     "array.slice",
+    "array.clear",
     "array.concat",
 ];
 
@@ -262,6 +264,7 @@ const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.sort_indices",
     "array.join",
     "array.slice",
+    "array.clear",
     "array method calls",
     "expression-body functions",
     "multi-statement functions",
@@ -408,6 +411,7 @@ fn validate_udt_array_call_result_helper_fixture_paths(
             | "array.sort_indices"
             | "array.join"
             | "array.slice"
+            | "array.clear"
     ) {
         return Ok(());
     }

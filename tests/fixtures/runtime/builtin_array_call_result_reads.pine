@@ -397,3 +397,24 @@ independent_copy = array.copy(copy_source).copy()
 independent_copy.push(52)
 plot(copy_source.size())
 plot(independent_copy.size())
+
+array.from(1, 2).clear()
+array.new_int().clear()
+array.copy(noneInts()).clear()
+plot(1, "call_result_clear_scalar_empty_na")
+
+call_result_clear_concat_source = array.from(1, 2)
+array.concat(call_result_clear_concat_source, array.from(3)).clear()
+plot(call_result_clear_concat_source.size() == 0 ? 1 : 0, "call_result_clear_concat_alias")
+
+call_result_clear_slice_source = array.from(10, 20, 30, 40)
+array.slice(call_result_clear_slice_source, 0, 4).slice(1, 3).clear()
+plot(call_result_clear_slice_source.size() == 2 and call_result_clear_slice_source.first() == 10 and call_result_clear_slice_source.last() == 40 ? 1 : 0, "call_result_clear_live_slice")
+
+array.new_line(1).clear()
+array.new<chart.point>(1, chart.point.now(close)).clear()
+plot(1, "call_result_clear_object_point")
+
+call_result_clear_udt_source = array.from(First.new(90.0, 900.0))
+array.concat(call_result_clear_udt_source, array.new<First>()).clear()
+plot(call_result_clear_udt_source.size() == 0 ? 1 : 0, "call_result_clear_udt_alias")

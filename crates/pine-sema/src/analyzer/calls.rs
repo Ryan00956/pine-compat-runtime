@@ -284,11 +284,18 @@ impl Analyzer {
         let Some(builtin_name) = array_call_result_builtin_name(method_name) else {
             self.unsupported(
                 &format!("array.{method_name}"),
-                "direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, and `.join()`; bind the result or use the namespace helper",
+                "direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, and `.clear()`; bind the result or use the namespace helper",
                 callee.span,
             );
             return Some(None);
         };
+        if self.function_depth > 0 && is_array_mutation_builtin(builtin_name) {
+            self.unsupported(
+                "function_side_effect",
+                &unsupported_collection_mutation_udf_reason(builtin_name),
+                callee.span,
+            );
+        }
         if receiver_type.kind == ValueKind::UserTypeArray && builtin_name == "array.sort_indices" {
             self.unsupported(
                 builtin_name,
