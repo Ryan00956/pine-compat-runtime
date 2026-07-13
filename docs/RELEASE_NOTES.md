@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added direct `.col(index)` reads to every existing concrete matrix call-
+  result producer. Each read returns a fresh element-kind-preserving scalar
+  array with the same direct binding, array-reader, copy-only continuation,
+  source-independence, five-kind, and dual-alias guarantees as call-result
+  `.row(index)`. Column index checks, call-result-array mutation rejection, and
+  the retained broader-matrix-helper boundary are fixture-backed.
 - Added direct `.row(index)` reads to every existing concrete matrix call-result
   producer, including namespace and bound matrix operations, exact
   `matrix.new<float|int|bool|string|color>` templates, local UDFs, local and
@@ -9,8 +15,7 @@
   a fresh element-kind-preserving scalar array that supports direct binding and
   `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` with copy-only array
   continuation. Index type checks, source independence, all five scalar matrix
-  kinds, dual aliases, and the retained `.col()`/mutation boundaries are
-  fixture-backed.
+  kinds, dual aliases, and mutation boundaries are fixture-backed.
 - Added direct `.values()` reads for every existing concrete scalar-map call
   result. The result is a fresh value-kind-preserving scalar array with the
   same direct binding, `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`, copy-

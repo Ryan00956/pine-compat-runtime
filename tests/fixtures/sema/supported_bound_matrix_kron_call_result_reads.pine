@@ -15,5 +15,6 @@ float direct_get = left.kron(right).get(row=1, column=3)
 matrix<float> nested_copy = left.kron(right).copy()
 float int_get = int_left.kron(int_right).get(0, 0)
 array<float> direct_row = left.kron(right).row(1).copy()
+array<float> direct_col = left.kron(right).col(1).copy()
 
-plot(direct_rows + direct_columns + direct_elements + direct_get + nested_copy.get(0, 0) + int_get + direct_row.size() + kronRows(left, right))
+plot(direct_rows + direct_columns + direct_elements + direct_get + nested_copy.get(0, 0) + int_get + direct_row.size() + direct_col.size() + kronRows(left, right))

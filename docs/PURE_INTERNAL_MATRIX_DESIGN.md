@@ -1214,6 +1214,15 @@ Recommended future slices:
     dual aliases. Bad indexes use the ordinary `matrix.row` checks; `.col()`,
     matrix or call-result-array mutation, broader helpers, and terminal row-
     reader continuation remain fail closed.
+59. Matrix call-result column arrays: done for the same concrete matrix producer
+    set. `.col(index)` returns a fresh element-kind-preserving scalar array and
+    switches to size/get/first/last/copy with copy-only array continuation.
+    Namespace and bound matrix operations, exact five-scalar `matrix.new<T>`
+    templates, local UDFs, local/imported user methods, imported pure functions,
+    direct binding, copy independence, and dual aliases are fixture-backed.
+    Bad indexes use the ordinary `matrix.col` checks; matrix or call-result-
+    array mutation, broader matrix helpers, and terminal column-reader
+    continuation remain fail closed.
 
 ## Completion Gate For Future Positive Support
 

@@ -534,6 +534,12 @@ Current baseline:
   isolation. Bad indexes retain the ordinary `matrix.row` checks. `.col()`,
   matrix or call-result-array mutation, broader helpers, and continuation after
   a terminal row-array reader remain gated.
+  The next read-only matrix-result slice adds `.col(index)` across the same
+  producer set. It returns a fresh element-kind-preserving scalar array with
+  direct binding, the five array readers, copy-only continuation, source-matrix
+  independence, and dual-alias isolation. Bad indexes retain the ordinary
+  `matrix.col` checks. Matrix or call-result-array mutation, broader matrix
+  helpers, and continuation after a terminal column-array reader remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

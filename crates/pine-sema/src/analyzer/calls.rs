@@ -344,7 +344,7 @@ impl Analyzer {
         let Some(builtin_name) = matrix_call_result_builtin_name(method_name) else {
             self.unsupported(
                 &format!("matrix.{method_name}"),
-                "direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, `.copy()`, and `.row()`; bind the result or use the namespace helper",
+                "direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, `.copy()`, `.row()`, and `.col()`; bind the result or use the namespace helper",
                 callee.span,
             );
             return Some(None);

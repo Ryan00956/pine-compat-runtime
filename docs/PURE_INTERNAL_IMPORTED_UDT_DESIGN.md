@@ -1158,3 +1158,11 @@ return/parameter flow remains deferred.
     dual-alias paths are fixture-backed; `.col()`, mutation, broader helpers,
     and terminal row-reader continuation remain fail closed. No imported UDT
     identity or public schema field is added. Done.
+45. The same concrete matrix call-result producers expose `.col(index)` as a
+    fresh element-kind-preserving scalar array with direct binding and
+    size/get/first/last/copy plus copy-only array continuation. Namespace and
+    bound operations, five-scalar constructors, local/imported function and
+    method provenance, index checks, copy independence, and dual aliases are
+    fixture-backed. Mutation, broader matrix helpers, and terminal column-
+    reader continuation remain fail closed. No imported UDT identity or public
+    schema field is added. Done.

@@ -133,6 +133,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "get" => Some("matrix.get"),
         "copy" => Some("matrix.copy"),
         "row" => Some("matrix.row"),
+        "col" => Some("matrix.col"),
         _ => None,
     }
 }
@@ -594,6 +595,7 @@ mod tests {
             ("get", "matrix.get"),
             ("copy", "matrix.copy"),
             ("row", "matrix.row"),
+            ("col", "matrix.col"),
         ] {
             assert_eq!(
                 matrix_call_result_builtin_name(method_name),
@@ -611,7 +613,6 @@ mod tests {
             "fill",
             "reverse",
             "transpose",
-            "col",
             "sum",
             "is_square",
         ] {

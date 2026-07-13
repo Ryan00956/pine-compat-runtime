@@ -625,21 +625,21 @@ and array-by-array overloads resolve to `array<float>` and admit `.size()`,
 `.get(index)`, `.first()`, `.last()`, and `.copy()`. Matrix-by-matrix,
 matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
 `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
-`.copy()`, plus `.row(index)`. Int inputs still resolve to float collection
+`.copy()`, plus `.row(index)` and `.col(index)`. Int inputs still resolve to float collection
 results. Matrix `.copy()` continues on the matrix-result prefix;
-`.row(index)` uses `ReturnSpec::MatrixArray(0)` and switches the parser marker
-to `$builtin_array_result`, producing a fresh element-kind-preserving array
+`.row(index)` and `.col(index)` use `ReturnSpec::MatrixArray(0)` and switch the
+parser marker to `$builtin_array_result`, producing fresh element-kind-preserving arrays
 that admits `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` with copy-only
-array continuation. Other terminal readers, `.col()`, wrong-result helpers,
+array continuation. Other terminal readers, wrong-result helpers,
 invalid arity or argument types, broader helpers, and mutation fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the six matrix
-helpers for matrix or scalar operands with the copy/row continuation rules.
+exact bound matrix-valued `matrix_id.mult(other)` results share the seven matrix
+helpers for matrix or scalar operands with the copy/row/column continuation rules.
 Unqualified local-UDF results with an inferred concrete supported matrix kind
 share the same helpers through `$call_result`, preserve per-call float/int/bool/
 string/color kinds, and use the same continuation rules. Concrete local or
-imported user methods and registered imported functions share the row-array
+imported user methods and registered imported functions share the row/column-array
 transition; unknown/`na` and non-matrix returns retain generic or result-family
 rejection. Producer-specific “copy-only” wording below refers only to
 continuing as a matrix result. Exact namespace
