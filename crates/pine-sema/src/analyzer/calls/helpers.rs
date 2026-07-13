@@ -145,6 +145,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "is_stochastic" => Some("matrix.is_stochastic"),
         "sum" => Some("matrix.sum"),
         "avg" => Some("matrix.avg"),
+        "min" => Some("matrix.min"),
         _ => None,
     }
 }
@@ -618,6 +619,7 @@ mod tests {
             ("is_stochastic", "matrix.is_stochastic"),
             ("sum", "matrix.sum"),
             ("avg", "matrix.avg"),
+            ("min", "matrix.min"),
         ] {
             assert_eq!(
                 matrix_call_result_builtin_name(method_name),
