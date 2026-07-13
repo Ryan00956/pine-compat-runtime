@@ -138,8 +138,18 @@ Current evidence:
   matrix-operation and constructor returns, named/reordered arguments,
   float/int/bool/string/color call-specific kinds, zero dimensions, independent
   copies, and copy-only continuation. Unknown/`na`, scalar, array, map,
-  qualified user-method/imported-function results, broader helpers, mutation,
-  and terminal-read continuation remain gated.
+  remaining user-function results, broader helpers, mutation, and terminal-read
+  continuation remain gated.
+- `tests/fixtures/runtime/user_method_matrix_call_result_reads.pine` and
+  `tests/fixtures/runtime/import_user_method_matrix_call_result_reads.pine`
+  plus their supported/unsupported semantic fixtures cover local and imported
+  user-method matrix results through rows/columns/elements_count/get/copy.
+  Receiver-style, local-type-qualified or alias-qualified, direct-constructor-
+  receiver, block/nested/same-kind-control-flow, float/int/bool/string/color,
+  zero-dimension, same-library dual-alias, independent-copy, and copy-only-
+  continuation paths are fixture-backed. Unknown/`na`, non-matrix or
+  unresolved method results, remaining user-function matrix results, broader
+  helpers, mutation, and terminal-read continuation remain gated.
 - `tests/fixtures/runtime/matrix_float.pine` covers `matrix.new<float>`,
   `matrix.get`, `matrix.set`, `matrix.fill`, `values.fill(value)`,
   `values.get(row, column)`, `values.set(row, column, value)`, `matrix.rows`,
@@ -1150,9 +1160,18 @@ Recommended future slices:
     matrix-operation and constructor returns, named/reordered arguments, zero
     dimensions, float/int/bool/string/color interleaving, independent copies,
     and rows/columns/elements_count/get/copy with copy-only continuation are
-    fixture-backed. Unknown/`na`, scalar, array, map, qualified user-method/
-    imported-function results, broader helpers, mutation, and terminal-read
-    continuation remain fail closed.
+    fixture-backed. Unknown/`na`, scalar, array, map, remaining user-function
+    results, broader helpers, mutation, and terminal-read continuation remain
+    fail closed.
+54. User-method matrix call results: done for local and imported methods whose
+    per-call result is one concrete supported matrix kind. Receiver-style,
+    local-type-qualified or alias-qualified, direct-constructor-receiver,
+    block/nested/same-kind-control-flow, float/int/bool/string/color, zero-
+    dimension, same-library dual-alias, independent-copy, and copy-only-
+    continuation paths expose rows/columns/elements_count/get/copy. Unknown/
+    `na`, non-matrix or unresolved method results, remaining user-function
+    matrix results, broader helpers, mutation, and terminal-read continuation
+    remain fail closed.
 
 ## Completion Gate For Future Positive Support
 

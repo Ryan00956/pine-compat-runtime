@@ -84,7 +84,11 @@ impl Analyzer {
         };
         matches!(method_call_parts(callee), Some((_, "copy")))
             && args.first().is_some_and(|arg| {
-                self.map_type_of_expr(&arg.value).is_some()
+                (self.map_type_of_expr(&arg.value).is_some()
+                    || self
+                        .expr_types
+                        .get(&self.expr_key(arg.value.span))
+                        .is_some_and(|pine_type| is_matrix_kind(pine_type.kind)))
                     && self.is_user_method_call_result(&arg.value)
             })
     }
@@ -324,6 +328,7 @@ impl Analyzer {
                     .kind;
                 is_matrix_kind(receiver_kind).then_some(method_name)
             })
+            .or_else(|| self.user_method_call_result_method_name(callee, args))
             .or_else(|| self.local_udf_call_result_method_name(callee, args))?;
         let Some(receiver_type) = arg_types.first().copied().flatten() else {
             return Some(None);

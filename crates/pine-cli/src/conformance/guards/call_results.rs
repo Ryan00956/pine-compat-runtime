@@ -123,6 +123,29 @@ pub(super) const BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/local_udf_matrix_call_result_reads.pine",
     "tests/fixtures/sema/supported_local_udf_matrix_call_result_reads.pine",
     "tests/fixtures/sema/unsupported_local_udf_matrix_call_result_reads.pine",
+    "tests/fixtures/runtime/user_method_matrix_call_result_reads.pine",
+    "tests/fixtures/sema/supported_user_method_matrix_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_user_method_matrix_call_result_reads.pine",
+    "tests/fixtures/runtime/import_user_method_matrix_call_result_reads.pine",
+    "tests/fixtures/sema/supported_imported_user_method_matrix_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_imported_user_method_matrix_call_result_reads.pine",
+    "tests/fixtures/libraries/import_udt_lib.pine",
+];
+
+const USER_METHOD_MATRIX_CALL_RESULT_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/user_method_matrix_call_result_reads.pine",
+    "tests/fixtures/sema/supported_user_method_matrix_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_user_method_matrix_call_result_reads.pine",
+    "tests/fixtures/runtime/import_user_method_matrix_call_result_reads.pine",
+    "tests/fixtures/sema/supported_imported_user_method_matrix_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_imported_user_method_matrix_call_result_reads.pine",
+];
+
+const IMPORTED_USER_METHOD_MATRIX_CALL_RESULT_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/import_user_method_matrix_call_result_reads.pine",
+    "tests/fixtures/sema/supported_imported_user_method_matrix_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_imported_user_method_matrix_call_result_reads.pine",
+    "tests/fixtures/libraries/import_udt_lib.pine",
 ];
 
 pub(super) const BUILTIN_MAP_CALL_RESULT_FIXTURES: &[&str] = &[
@@ -211,7 +234,9 @@ pub(super) fn validate_fixture_paths(
     validate_udt_identity_builtin_array_call_result_fixture_paths(line_number, feature, fixtures)?;
     validate_udt_array_call_result_helper_fixture_paths(line_number, feature, fixtures)?;
     validate_builtin_namespace_array_call_result_fixture_paths(line_number, feature, fixtures)?;
-    validate_builtin_namespace_matrix_call_result_fixture_paths(line_number, feature, fixtures)
+    validate_builtin_namespace_matrix_call_result_fixture_paths(line_number, feature, fixtures)?;
+    validate_user_method_matrix_call_result_fixture_paths(line_number, feature, fixtures)?;
+    validate_imported_user_method_matrix_call_result_fixture_paths(line_number, feature, fixtures)
 }
 
 pub(super) fn validate_map_fixture_paths(
@@ -371,7 +396,43 @@ fn validate_builtin_namespace_matrix_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES,
-        "fixture-backed exact matrix.new<float|int|bool|string|color> templates, namespace matrix.mult/matrix.copy/matrix.transpose/matrix.submatrix/matrix.kron/matrix.diff/matrix.pow/matrix.inv/matrix.pinv/matrix.eigenvectors results, bound matrix-receiver copy/transpose/submatrix/kron/diff/pow/inv/pinv/eigenvectors/matrix-valued-mult results, and concrete unqualified local-UDF matrix results with rows/columns/elements_count/get/copy dispatch and retained result-type/helper/non-local-producer boundaries",
+        "fixture-backed exact matrix.new<float|int|bool|string|color> templates, namespace matrix.mult/matrix.copy/matrix.transpose/matrix.submatrix/matrix.kron/matrix.diff/matrix.pow/matrix.inv/matrix.pinv/matrix.eigenvectors results, bound matrix-receiver copy/transpose/submatrix/kron/diff/pow/inv/pinv/eigenvectors/matrix-valued-mult results, and concrete unqualified local-UDF plus local/imported user-method matrix results with rows/columns/elements_count/get/copy dispatch and retained result-type/helper/user-function boundaries",
+    )
+}
+
+fn validate_user_method_matrix_call_result_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if feature != "user-defined methods" {
+        return Ok(());
+    }
+
+    require_fixtures(
+        line_number,
+        feature,
+        fixtures,
+        USER_METHOD_MATRIX_CALL_RESULT_FIXTURES,
+        "fixture-backed concrete local/imported user-method matrix-result rows/columns/elements_count/get/copy dispatch and retained helper/result-type/mutation boundaries",
+    )
+}
+
+fn validate_imported_user_method_matrix_call_result_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if feature != "import" {
+        return Ok(());
+    }
+
+    require_fixtures(
+        line_number,
+        feature,
+        fixtures,
+        IMPORTED_USER_METHOD_MATRIX_CALL_RESULT_FIXTURES,
+        "fixture-backed imported user-method matrix-result rows/columns/elements_count/get/copy dispatch with dual-alias isolation and retained helper/result-type/mutation boundaries",
     )
 }
 
@@ -1000,10 +1061,16 @@ mod tests {
 
     #[test]
     fn rejects_local_udf_matrix_result_row_without_negative_fixture() {
-        let fixtures = &BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES
-            [..BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES.len() - 1];
+        let fixtures: Vec<_> = BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES
+            .iter()
+            .copied()
+            .filter(|fixture| {
+                *fixture
+                    != "tests/fixtures/sema/unsupported_local_udf_matrix_call_result_reads.pine"
+            })
+            .collect();
         let error =
-            validate_builtin_namespace_matrix_call_result_fixture_paths(1, "matrix.*", fixtures)
+            validate_builtin_namespace_matrix_call_result_fixture_paths(1, "matrix.*", &fixtures)
                 .expect_err(
                     "local UDF matrix-result rows must retain the negative boundary fixture",
                 );
@@ -1029,6 +1096,58 @@ mod tests {
                 .expect_err("local UDF matrix-result rows must retain runtime evidence");
 
         assert!(error.contains("tests/fixtures/runtime/local_udf_matrix_call_result_reads.pine"));
+    }
+
+    #[test]
+    fn rejects_user_method_matrix_result_row_without_local_runtime_fixture() {
+        let fixtures: Vec<_> = USER_METHOD_MATRIX_CALL_RESULT_FIXTURES
+            .iter()
+            .copied()
+            .filter(|fixture| {
+                *fixture != "tests/fixtures/runtime/user_method_matrix_call_result_reads.pine"
+            })
+            .collect();
+        let error = validate_user_method_matrix_call_result_fixture_paths(
+            1,
+            "user-defined methods",
+            &fixtures,
+        )
+        .expect_err("user-method rows must retain local matrix runtime evidence");
+
+        assert!(error.contains("tests/fixtures/runtime/user_method_matrix_call_result_reads.pine"));
+    }
+
+    #[test]
+    fn rejects_user_method_matrix_result_row_without_imported_negative_fixture() {
+        let fixtures: Vec<_> = USER_METHOD_MATRIX_CALL_RESULT_FIXTURES
+            .iter()
+            .copied()
+            .filter(|fixture| {
+                *fixture
+                    != "tests/fixtures/sema/unsupported_imported_user_method_matrix_call_result_reads.pine"
+            })
+            .collect();
+        let error = validate_user_method_matrix_call_result_fixture_paths(
+            1,
+            "user-defined methods",
+            &fixtures,
+        )
+        .expect_err("user-method rows must retain imported matrix negative evidence");
+
+        assert!(error.contains(
+            "tests/fixtures/sema/unsupported_imported_user_method_matrix_call_result_reads.pine"
+        ));
+    }
+
+    #[test]
+    fn rejects_import_row_without_imported_user_method_matrix_library_fixture() {
+        let fixtures = &IMPORTED_USER_METHOD_MATRIX_CALL_RESULT_FIXTURES
+            [..IMPORTED_USER_METHOD_MATRIX_CALL_RESULT_FIXTURES.len() - 1];
+        let error =
+            validate_imported_user_method_matrix_call_result_fixture_paths(1, "import", fixtures)
+                .expect_err("import rows must retain the imported matrix method library");
+
+        assert!(error.contains("tests/fixtures/libraries/import_udt_lib.pine"));
     }
 
     #[test]

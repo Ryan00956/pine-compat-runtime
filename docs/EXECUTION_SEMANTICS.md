@@ -883,9 +883,13 @@ a concrete supported matrix kind now share the five matrix helpers through
 `$call_result`. Parameter passthrough, block aliases, nested calls, same-kind
 control flow, constructed and matrix-operation returns, named/reordered
 arguments, and zero dimensions keep their normal call-specific float/int/bool/
-string/color kind and storage behavior. Only copy may continue; unknown/`na`,
-scalar, array, map, qualified user-method/imported-function, broader-helper,
-mutation, and terminal-read continuation cases remain fail closed. Exact
+string/color kind and storage behavior. Local and imported user-method results
+with a concrete supported matrix kind share the same helpers through receiver-
+style, local-type-qualified or alias-qualified, direct-constructor-receiver,
+block/nested/control-flow, five-kind, zero-dimension, dual-alias, independent-
+copy, and copy-only-continuation paths. Unknown/`na`, scalar, array, map,
+remaining user-function matrix results, broader-helper, mutation, and terminal-
+read continuation cases remain fail closed. Exact
 namespace `matrix.copy(values)`
 also enters this
 prefix, always resolves through the matrix helper family, and preserves the
@@ -1046,7 +1050,8 @@ exact matrix-receiver
 `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
 `values.inv()`/`values.pinv()`/`values.eigenvectors()`/`values.mult(other)`,
 unqualified local-UDF results without a concrete supported matrix kind,
-qualified user-method/imported-function matrix results,
+local/imported user-method results without a concrete supported matrix kind,
+remaining user-function matrix results,
 built-in-qualified
 or template call results outside
 the exact static and dynamic paths, and other

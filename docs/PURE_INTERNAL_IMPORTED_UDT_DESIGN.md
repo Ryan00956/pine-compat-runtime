@@ -193,11 +193,23 @@ float/int/bool/string/color kind without adding imported identity.
 Item 36 adds unqualified local-UDF results with one concrete supported scalar
 map template through size/get/contains/copy and copy-only continuation,
 retaining per-call key/value metadata without adding imported identity.
+Item 37 adds local user-method scalar-map results, item 38 adds imported user-
+method scalar-map results with same-library dual-alias isolation, and item 39
+adds registered imported pure-function scalar-map results; all retain one
+concrete scalar template and copy-only continuation without adding imported
+identity to map metadata.
+Item 40 adds local and imported user-method results with a concrete supported
+matrix kind through rows/columns/elements_count/get/copy. Receiver-style,
+local-type-qualified or alias-qualified, direct-constructor-receiver,
+block/nested/same-kind-control-flow, five-kind, zero-dimension, dual-alias,
+independent-copy, and copy-only-continuation paths carry method-call provenance
+but no imported identity in matrix metadata.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` types, non-producer calls, unsupported matrix
 templates and map templates,
-qualified user-method/imported-function matrix/map results and other
-matrix/map-returning calls, mixed or non-scalar return identities,
+local/imported user-method matrix results without a concrete supported kind,
+remaining user-function matrix results, unresolved or mixed map results, and
+other matrix/map-returning calls, mixed or non-scalar return identities,
 non-array/non-UDT or unresolved results, nested field mutation, and
 method receiver/parameter/global field side effects remain fail-closed.
 `array.slice` retains its live parent view and postfix `.copy()` captures its
@@ -1087,3 +1099,14 @@ return/parameter flow remains deferred.
     or unresolved/mixed results, broader helpers, mutation, and terminal-read
     continuation remain fail closed. No imported UDT identity is carried into
     map metadata and no public schema field is added. Done.
+40. Local and imported user-method results whose call-specific result is one
+    concrete supported matrix kind expose only
+    rows/columns/elements_count/get/copy with copy-only continuation. Recorded
+    root-source and source-context-aware method-call provenance preserves
+    receiver-style, local-type-qualified or alias-qualified, direct-
+    constructor-receiver, block-return, nested-method, same-kind-control-flow,
+    float/int/bool/string/color, zero-dimension, same-library dual-alias, and
+    independent-copy paths. Unknown/`na`, non-matrix or unresolved method
+    results, remaining user-function matrix results, broader helpers, mutation,
+    and terminal-read continuation remain fail closed. No imported UDT identity
+    is carried into matrix metadata and no public schema field is added. Done.

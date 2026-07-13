@@ -915,7 +915,8 @@ bound matrix-result call-result receivers other than exact matrix-receiver
 `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
 `values.inv()`/`values.pinv()`/`values.eigenvectors()`/matrix-valued
 `values.mult(other)`, unqualified local-UDF matrix-result receivers without a
-concrete supported matrix kind, qualified user-method/imported-function
+concrete supported matrix kind, local/imported user-method matrix-result
+receivers without a concrete supported matrix kind, remaining user-function
 matrix-result receivers,
 built-in-qualified/template
 call-result receivers outside the exact static `array.*` allowlist and
@@ -1033,7 +1034,8 @@ retaining their scalar matrix element kind. None widens UDT identity. Bound
 matrix-result receivers other than exact `values.copy()`/`values.transpose()`/
 `values.submatrix(...)`/`values.kron(other)`/`values.diff(other)`/
 `values.pow(power)`/`values.inv()`/`values.pinv()`/`values.eigenvectors()`/
-matrix-valued `values.mult(other)`, qualified user-method/imported-function
+matrix-valued `values.mult(other)`, local/imported user-method matrix-result
+receivers without a concrete supported matrix kind, remaining user-function
 matrix-result receivers, unqualified local-UDF results without a concrete
 supported matrix kind,
 built-in-qualified/template

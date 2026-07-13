@@ -218,6 +218,11 @@ pub(crate) const RUNTIME_LIBRARY_SNAPSHOT_FIXTURES: &[RuntimeLibrarySnapshotFixt
         &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
     ),
     (
+        "runtime_import_user_method_matrix_call_result_reads.json",
+        "tests/fixtures/runtime/import_user_method_matrix_call_result_reads.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
         "runtime_import_function_map_call_result_reads.json",
         "tests/fixtures/runtime/import_function_map_call_result_reads.pine",
         &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],

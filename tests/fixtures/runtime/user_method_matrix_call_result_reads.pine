@@ -1,0 +1,55 @@
+//@version=6
+indicator("User-method matrix call-result reads")
+
+type Anchor
+    int tag
+
+method expose(Anchor self) => float_values
+
+method exposeBlock(Anchor self) =>
+    made = float_values.copy()
+    made
+
+method exposeInt(Anchor self) => matrix.new<int>(1, 2, 7)
+
+method exposeBool(Anchor self) => matrix.new<bool>(1, 1, true)
+
+method exposeString(Anchor self) => matrix.new<string>(1, 1, "pine")
+
+method exposeColor(Anchor self) => matrix.new<color>(1, 1, color.red)
+
+method exposeEmpty(Anchor self) => matrix.new<float>(0, 3)
+
+method exposeIf(Anchor self, bool use_other) => use_other ? alternate : float_values.copy()
+
+method exposeNested(Anchor self) => self.exposeBlock()
+
+float_values = matrix.new<float>(2, 2, 0.0)
+float_values.set(0, 0, 1.0)
+float_values.set(0, 1, 2.0)
+float_values.set(1, 0, 3.0)
+float_values.set(1, 1, 4.0)
+alternate = matrix.new<float>(2, 2, 8.0)
+
+anchor = Anchor.new(1)
+copied = anchor.expose().copy()
+copied.set(0, 0, 99.0)
+
+plot(anchor.expose().rows(), "rows")
+plot(anchor.expose().columns(), "columns")
+plot(anchor.expose().elements_count(), "elements")
+plot(anchor.expose().get(0, 1), "get")
+plot(anchor.expose().copy().get(1, 1), "copy_chain")
+plot(float_values.get(0, 0), "source_independent")
+plot(copied.get(0, 0), "copy_independent")
+plot(anchor.exposeInt().get(0, 1), "int")
+plot(anchor.exposeString().get(0, 0) == "pine" ? 1 : 0, "string")
+plot(anchor.exposeBool().get(0, 0) ? 1 : 0, "bool")
+plot(anchor.exposeColor().get(0, 0) == color.red ? 1 : 0, "color")
+plot(anchor.exposeEmpty().rows() * 100 + anchor.exposeEmpty().columns() * 10 + anchor.exposeEmpty().elements_count(), "empty")
+plot(anchor.exposeBlock().get(1, 1), "block")
+plot(anchor.exposeNested().get(1, 0), "nested")
+plot(anchor.exposeIf(use_other=true).get(0, 0), "control_flow")
+plot(Anchor.expose(anchor).get(0, 0), "qualified")
+plot(Anchor.new(2).expose().get(1, 1), "constructor_receiver")
+plot(anchor.expose().copy().copy().get(0, 1), "nested_copy")

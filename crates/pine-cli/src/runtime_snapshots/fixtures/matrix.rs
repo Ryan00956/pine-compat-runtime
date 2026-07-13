@@ -46,6 +46,10 @@ pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &
         "tests/fixtures/runtime/local_udf_matrix_call_result_reads.pine",
     ),
     (
+        "runtime_user_method_matrix_call_result_reads.json",
+        "tests/fixtures/runtime/user_method_matrix_call_result_reads.pine",
+    ),
+    (
         "runtime_matrix_float.json",
         "tests/fixtures/runtime/matrix_float.pine",
     ),

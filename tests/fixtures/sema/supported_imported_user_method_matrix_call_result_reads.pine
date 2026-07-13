@@ -1,0 +1,27 @@
+//@version=6
+import user/udt/1 as left
+import user/udt/1 as right
+indicator("Supported imported user-method matrix call-result reads")
+
+left_point = left.Point.new(1.0)
+right_point = right.Point.new(2.0)
+
+rows = left_point.exposeMatrix().rows()
+columns = left_point.exposeMatrix().columns()
+elements = left_point.exposeMatrix().elements_count()
+get = left_point.exposeMatrix().get(0, 1)
+copy_chain = left_point.exposeMatrix().copy().get(1, 1)
+int_get = left_point.exposeIntMatrix().get(0, 1)
+bool_get = left_point.exposeBoolMatrix().get(0, 0)
+string_get = left_point.exposeStringMatrix().get(0, 0)
+color_get = left_point.exposeColorMatrix().get(0, 0)
+empty = left_point.exposeEmptyMatrix().columns()
+block_return = left_point.exposeMatrixBlock().get(1, 1)
+nested_return = left_point.exposeMatrixNested().get(1, 0)
+control_flow = left_point.exposeMatrixIf(other=true).get(0, 0)
+alias_qualified = left.exposeMatrix(left_point).get(0, 0)
+constructor_receiver = left.Point.new(3.0).exposeMatrix().get(1, 1)
+dual_alias = right_point.exposeMatrix().get(0, 0)
+nested_copy = left_point.exposeMatrix().copy().copy().get(0, 1)
+
+plot(rows + columns + elements + get + copy_chain + int_get + empty + block_return + nested_return + control_flow + alias_qualified + constructor_receiver + dual_alias + nested_copy)

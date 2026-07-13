@@ -1,0 +1,42 @@
+//@version=6
+indicator("Supported user-method matrix call-result reads")
+
+type Anchor
+    int tag
+
+method expose(Anchor self) => float_values
+
+method exposeBlock(Anchor self) =>
+    made = float_values.copy()
+    made
+
+method exposeInt(Anchor self) => matrix.new<int>(1, 2, 7)
+method exposeBool(Anchor self) => matrix.new<bool>(1, 1, true)
+method exposeString(Anchor self) => matrix.new<string>(1, 1, "pine")
+method exposeColor(Anchor self) => matrix.new<color>(1, 1, color.red)
+method exposeEmpty(Anchor self) => matrix.new<float>(0, 3)
+method exposeIf(Anchor self, bool use_other) => use_other ? alternate : float_values.copy()
+method exposeNested(Anchor self) => self.exposeBlock()
+
+float_values = matrix.new<float>(2, 2, 1.0)
+alternate = matrix.new<float>(2, 2, 8.0)
+anchor = Anchor.new(1)
+
+rows = anchor.expose().rows()
+columns = anchor.expose().columns()
+elements = anchor.expose().elements_count()
+get = anchor.expose().get(0, 1)
+copy_chain = anchor.expose().copy().get(1, 1)
+int_get = anchor.exposeInt().get(0, 1)
+bool_get = anchor.exposeBool().get(0, 0)
+string_get = anchor.exposeString().get(0, 0)
+color_get = anchor.exposeColor().get(0, 0)
+empty = anchor.exposeEmpty().columns()
+block_return = anchor.exposeBlock().get(1, 1)
+nested_return = anchor.exposeNested().get(1, 0)
+control_flow = anchor.exposeIf(use_other=true).get(0, 0)
+qualified = Anchor.expose(anchor).get(0, 0)
+constructor_receiver = Anchor.new(2).expose().get(1, 1)
+nested_copy = anchor.expose().copy().copy().get(0, 1)
+
+plot(rows + columns + elements + get + copy_chain + int_get + empty + block_return + nested_return + control_flow + qualified + constructor_receiver + nested_copy)
