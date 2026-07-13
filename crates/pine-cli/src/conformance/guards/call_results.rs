@@ -89,6 +89,7 @@ const BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.shift",
     "array.remove",
     "array.push",
+    "array.unshift",
     "array.concat",
     "array method calls",
     "expression-body functions",
@@ -115,6 +116,7 @@ const UDT_IDENTITY_BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.shift",
     "array.remove",
     "array.push",
+    "array.unshift",
     "array.concat",
 ];
 
@@ -280,6 +282,7 @@ const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.shift",
     "array.remove",
     "array.push",
+    "array.unshift",
     "array method calls",
     "expression-body functions",
     "multi-statement functions",
@@ -432,6 +435,7 @@ fn validate_udt_array_call_result_helper_fixture_paths(
             | "array.shift"
             | "array.remove"
             | "array.push"
+            | "array.unshift"
     ) {
         return Ok(());
     }

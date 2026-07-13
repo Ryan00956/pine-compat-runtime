@@ -609,3 +609,6 @@ plot(matrix_matrix_inverted_rows + matrix_copy_inverted_rows + matrix_transpose_
 matrix.mult(left, right).row(0).push(3.0)
 matrix.mult(left, right).col(0).push(3.0)
 matrix.mult(left, right).eigenvalues().push(3.0)
+matrix.mult(left, right).row(0).unshift(0.0)
+matrix.mult(left, right).col(0).unshift(0.0)
+matrix.mult(left, right).eigenvalues().unshift(0.0)

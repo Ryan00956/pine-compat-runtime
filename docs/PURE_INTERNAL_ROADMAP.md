@@ -494,6 +494,12 @@ Current baseline:
   collections unchanged. Invalid value/arity, upstream-`na`, 100000-element
   capacity, and UDF-side-effect boundaries are fixture-backed; public schemas
   remain unchanged.
+  The symmetric single-value prepend slice adds top-level `.unshift(value)`
+  across the same producer set. It validates the same element kind or concrete
+  UDT identity, inserts at the alias/live-slice start, returns `void`, and
+  cannot continue; fresh derived snapshots remain source-independent. Invalid
+  value/arity, upstream-`na`, 100000-element capacity, and UDF-side-effect
+  boundaries retain ordinary behavior; public schemas remain unchanged.
   The following closed slice admits exact
   `matrix.new<float|int|bool|string|color>` template results. They preserve the
   registered element kind, requested rectangular shape, type-compatible

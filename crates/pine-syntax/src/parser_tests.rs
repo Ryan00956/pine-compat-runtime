@@ -325,6 +325,7 @@ fn parses_builtin_array_result_method_receivers() {
         "value = array.from(1, 2).shift()\n",
         "value = array.from(1, 2).remove(0)\n",
         "value = array.from(1, 2).push(3)\n",
+        "value = array.from(1, 2).unshift(0)\n",
         "value = array.abs(values).get(0)\n",
         "value = array.from(-1, 2).abs()\n",
         "value = array.from(1, 2, 3).standardize().get(1)\n",
@@ -433,6 +434,7 @@ fn parses_cross_namespace_builtin_array_result_method_receivers() {
         "value = str.split(\"a,b\", \",\").shift()\n",
         "value = str.split(\"a,b\", \",\").remove(0)\n",
         "value = str.split(\"a,b\", \",\").push(\"c\")\n",
+        "value = str.split(\"a,b\", \",\").unshift(\"z\")\n",
     ] {
         let parsed = parse(source);
 
@@ -1141,6 +1143,7 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = array.from(1, 2).shift().custom()\n",
         "bad = array.from(1, 2).remove(0).custom()\n",
         "bad = array.from(1, 2).push(3).custom()\n",
+        "bad = array.from(1, 2).unshift(0).custom()\n",
         "bad = array.from(1, 2).indexof(2).custom()\n",
         "bad = array.from(1, 2).copy().indexof(2).custom()\n",
         "bad = array.from(1, 2, 1).lastindexof(1).custom()\n",

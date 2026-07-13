@@ -2021,6 +2021,15 @@ concat/UDF/method results and nested slices update shared parent backing, while
 fresh matrix/map/`matrix.mult` snapshots leave sources unchanged. Mismatched
 kind/identity, arity, upstream-`na`, capacity, and UDF-body boundaries remain
 closed and fixture-backed.
+Item 114 adds the symmetric terminal top-level `.unshift(value)` across the
+same producer and derived-array continuation set. It accepts one element-
+compatible scalar, drawing-id, `chart.point`, same-local UDT, or same-imported
+UDT value, prepends at the resolved result's start, returns `void`, and cannot
+continue. Alias-returning concat/UDF/method results and nested slices update
+shared parent backing, while fresh matrix/map/`matrix.mult` snapshots leave
+sources unchanged. Upstream-`na` results remain no-ops after value evaluation;
+mismatched kind/identity, arity, capacity, and UDF-body boundaries remain
+closed and fixture-backed.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

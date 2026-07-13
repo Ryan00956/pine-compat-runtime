@@ -2065,6 +2065,33 @@ plot(array.size(values))
 }
 
 #[test]
+fn rejects_float_array_call_result_unshift_past_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("array call-result unshift limit")
+array.new_float(100000).unshift(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected array call-result unshift limit error");
+
+    assert!(
+        error
+            .message
+            .contains("array.unshift cannot exceed 100000 elements"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
 fn profiles_float_array_storage() {
     let source = SourceFile::new(
         "test.pine",

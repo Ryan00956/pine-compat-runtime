@@ -563,3 +563,8 @@ imported_call_result_push_source = array.from(left.First.new(99.0, 990.0))
 left.direct(imported_call_result_push_source).push(left.First.new(100.0, 1000.0))
 imported_call_result_push_last = imported_call_result_push_source.last()
 plot(imported_call_result_push_source.size() == 2 and imported_call_result_push_last.shared == 100.0 and imported_call_result_push_last.other == 1000.0 ? 1 : 0, "imported_call_result_push_alias")
+
+imported_call_result_unshift_source = array.from(left.First.new(101.0, 1010.0))
+left.direct(imported_call_result_unshift_source).unshift(left.First.new(102.0, 1020.0))
+imported_call_result_unshift_first = imported_call_result_unshift_source.first()
+plot(imported_call_result_unshift_source.size() == 2 and imported_call_result_unshift_first.shared == 102.0 and imported_call_result_unshift_first.other == 1020.0 ? 1 : 0, "imported_call_result_unshift_alias")

@@ -600,6 +600,14 @@ Recommended future slices:
     and insertion order remain unchanged. Invalid kind/arity, typed-`na` map,
     capacity, and UDF-side-effect boundaries retain ordinary behavior. Map
     storage, templates, and public schemas are unchanged. Done.
+48. Every concrete scalar key/value snapshot additionally exposes terminal
+    top-level `.unshift(value)`, including keys/values reached through supported
+    built-in, copied, local/imported function, and local/imported method map
+    results. It validates the resolved key/value scalar kind, prepends only to
+    the fresh snapshot, returns `void`, and cannot continue; source map entries
+    and insertion order remain unchanged. Invalid kind/arity, typed-`na` map,
+    capacity, and UDF-side-effect boundaries retain ordinary behavior. Map
+    storage, templates, and public schemas are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

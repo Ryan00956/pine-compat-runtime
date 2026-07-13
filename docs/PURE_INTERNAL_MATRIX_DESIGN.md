@@ -1686,6 +1686,14 @@ Recommended future slices:
     continue; source matrices remain unchanged. Invalid kind/arity, upstream-
     `na`, capacity, and UDF-side-effect boundaries retain ordinary behavior,
     while matrix-valued continuation and public schemas remain unchanged.
+118. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.unshift(value)`, including row/column/eigenvalue arrays reached after a
+    concrete matrix call result. It validates the resolved scalar kind,
+    prepends only to the fresh array snapshot, returns `void`, and cannot
+    continue; source matrices remain unchanged. Invalid kind/arity, upstream-
+    `na`, capacity, and UDF-side-effect boundaries retain ordinary behavior,
+    while matrix-valued continuation and public schemas remain unchanged.
 
 ## Completion Gate For Future Positive Support
 
