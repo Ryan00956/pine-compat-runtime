@@ -1068,3 +1068,13 @@ return/parameter flow remains deferred.
     paths lower without admitting imported methods. Unresolved/mixed templates,
     broader helpers, mutation, and terminal-read continuation remain fail
     closed. No imported UDT identity or public schema field is added. Done.
+38. Imported user-method results whose call-specific result retains one
+    concrete supported scalar map template expose only size/get/contains/copy
+    with copy-only continuation. Source-context-aware method-call provenance
+    preserves receiver-style, alias-qualified, direct-constructor-receiver,
+    block-return, nested-method, same-template control-flow,
+    constructed-result, scalar-template-interleaving, same-library dual-alias,
+    and independent-copy paths. Imported functions, unresolved/mixed
+    templates, broader helpers, mutation, and terminal-read continuation
+    remain fail closed. No imported UDT identity is carried into map metadata
+    and no public schema field is added. Done.

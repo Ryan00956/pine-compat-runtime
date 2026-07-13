@@ -138,14 +138,25 @@ pub(super) const BUILTIN_MAP_CALL_RESULT_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/local_user_method_map_call_result_reads.pine",
     "tests/fixtures/sema/supported_local_user_method_map_call_result_reads.pine",
     "tests/fixtures/sema/unsupported_local_user_method_map_call_result_reads.pine",
+    "tests/fixtures/runtime/import_user_method_map_call_result_reads.pine",
+    "tests/fixtures/sema/supported_imported_user_method_map_call_result_reads.pine",
     "tests/fixtures/sema/unsupported_imported_user_method_map_call_result_reads.pine",
 ];
 
-const LOCAL_USER_METHOD_MAP_CALL_RESULT_FIXTURES: &[&str] = &[
+const USER_METHOD_MAP_CALL_RESULT_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/local_user_method_map_call_result_reads.pine",
     "tests/fixtures/sema/supported_local_user_method_map_call_result_reads.pine",
     "tests/fixtures/sema/unsupported_local_user_method_map_call_result_reads.pine",
+    "tests/fixtures/runtime/import_user_method_map_call_result_reads.pine",
+    "tests/fixtures/sema/supported_imported_user_method_map_call_result_reads.pine",
     "tests/fixtures/sema/unsupported_imported_user_method_map_call_result_reads.pine",
+];
+
+const IMPORTED_USER_METHOD_MAP_CALL_RESULT_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/import_user_method_map_call_result_reads.pine",
+    "tests/fixtures/sema/supported_imported_user_method_map_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_imported_user_method_map_call_result_reads.pine",
+    "tests/fixtures/libraries/import_udt_lib.pine",
 ];
 
 const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
@@ -199,7 +210,8 @@ pub(super) fn validate_map_fixture_paths(
     fixtures: &[&str],
 ) -> Result<(), String> {
     validate_builtin_map_call_result_fixture_paths(line_number, feature, fixtures)?;
-    validate_local_user_method_map_call_result_fixture_paths(line_number, feature, fixtures)
+    validate_user_method_map_call_result_fixture_paths(line_number, feature, fixtures)?;
+    validate_imported_user_method_map_call_result_fixture_paths(line_number, feature, fixtures)
 }
 
 fn validate_local_udt_array_call_return_fixture_paths(
@@ -366,11 +378,11 @@ fn validate_builtin_map_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_MAP_CALL_RESULT_FIXTURES,
-        "fixture-backed exact scalar map.new template, namespace map.copy result, concrete unqualified local-UDF map results, and concrete local user-method map results with size/get/contains/copy dispatch plus retained per-call template/content metadata and helper/template/imported-producer/mutation boundaries",
+        "fixture-backed exact scalar map.new template, namespace map.copy result, concrete unqualified local-UDF map results, and concrete local/imported user-method map results with size/get/contains/copy dispatch plus retained per-call template/content metadata and helper/template/imported-function/mutation boundaries",
     )
 }
 
-fn validate_local_user_method_map_call_result_fixture_paths(
+fn validate_user_method_map_call_result_fixture_paths(
     line_number: usize,
     feature: &str,
     fixtures: &[&str],
@@ -383,8 +395,26 @@ fn validate_local_user_method_map_call_result_fixture_paths(
         line_number,
         feature,
         fixtures,
-        LOCAL_USER_METHOD_MAP_CALL_RESULT_FIXTURES,
-        "fixture-backed concrete local user-method map-result size/get/contains/copy dispatch and retained imported-method/helper/template/mutation boundaries",
+        USER_METHOD_MAP_CALL_RESULT_FIXTURES,
+        "fixture-backed concrete local/imported user-method map-result size/get/contains/copy dispatch and retained imported-function/helper/template/mutation boundaries",
+    )
+}
+
+fn validate_imported_user_method_map_call_result_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if feature != "import" {
+        return Ok(());
+    }
+
+    require_fixtures(
+        line_number,
+        feature,
+        fixtures,
+        IMPORTED_USER_METHOD_MAP_CALL_RESULT_FIXTURES,
+        "fixture-backed imported user-method map-result size/get/contains/copy dispatch with dual-alias isolation and retained imported-function/helper/template/mutation boundaries",
     )
 }
 
@@ -1083,8 +1113,8 @@ mod tests {
     }
 
     #[test]
-    fn rejects_local_user_method_map_result_row_without_imported_boundary_fixture() {
-        let fixtures: Vec<_> = LOCAL_USER_METHOD_MAP_CALL_RESULT_FIXTURES
+    fn rejects_user_method_map_result_row_without_imported_negative_fixture() {
+        let fixtures: Vec<_> = USER_METHOD_MAP_CALL_RESULT_FIXTURES
             .iter()
             .copied()
             .filter(|fixture| {
@@ -1092,15 +1122,33 @@ mod tests {
                     != "tests/fixtures/sema/unsupported_imported_user_method_map_call_result_reads.pine"
             })
             .collect();
-        let error = validate_local_user_method_map_call_result_fixture_paths(
+        let error = validate_user_method_map_call_result_fixture_paths(
             1,
             "user-defined methods",
             &fixtures,
         )
-        .expect_err("user-method rows must retain the imported-method boundary");
+        .expect_err("user-method rows must retain imported-method negative boundaries");
 
         assert!(error.contains(
             "tests/fixtures/sema/unsupported_imported_user_method_map_call_result_reads.pine"
         ));
+    }
+
+    #[test]
+    fn rejects_import_row_without_imported_user_method_map_runtime_fixture() {
+        let fixtures: Vec<_> = IMPORTED_USER_METHOD_MAP_CALL_RESULT_FIXTURES
+            .iter()
+            .copied()
+            .filter(|fixture| {
+                *fixture != "tests/fixtures/runtime/import_user_method_map_call_result_reads.pine"
+            })
+            .collect();
+        let error =
+            validate_imported_user_method_map_call_result_fixture_paths(1, "import", &fixtures)
+                .expect_err("import rows must retain imported user-method map runtime evidence");
+
+        assert!(
+            error.contains("tests/fixtures/runtime/import_user_method_map_call_result_reads.pine")
+        );
     }
 }

@@ -74,7 +74,7 @@ pub(crate) struct Analyzer {
     pub(crate) expr_user_type_identities: HashMap<ExprKey, UserTypeIdentity>,
     pub(crate) expr_user_type_arrays: HashMap<ExprKey, String>,
     pub(crate) expr_maps: HashMap<ExprKey, MapTypeInfo>,
-    pub(crate) local_user_method_call_results: HashSet<ExprKey>,
+    pub(crate) user_method_call_results: HashSet<ExprKey>,
     pub(crate) expr_types: HashMap<ExprKey, PineType>,
     pub(crate) pure_expr_series_ids: HashMap<String, SeriesId>,
     pub(crate) script_declaration: Option<(ScriptMode, Span)>,

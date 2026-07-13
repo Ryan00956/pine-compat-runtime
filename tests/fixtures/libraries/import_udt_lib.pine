@@ -240,3 +240,12 @@ method mutateWrapperLocal(Wrapper w, float delta) =>
     local.nested := Point.new(local.nested.x + delta)
     local
 method exposeMap(Point p) => map.new<string, float>()
+method exposeMapBlock(Point p) =>
+    made = map.new<string, float>()
+    made
+method exposeIntMap(Point p) => map.new<int, string>()
+method exposeBoolColorMap(Point p) => map.new<bool, color>()
+method exposeColorBoolMap(Point p) => map.new<color, bool>()
+method exposeMapIf(Point p, bool copied) => copied ? map.copy(map.new<string, float>()) : map.new<string, float>()
+method exposeMapNested(Point p) => p.exposeMapBlock()
+export exposeMapFunction() => map.new<string, float>()

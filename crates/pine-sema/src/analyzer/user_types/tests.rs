@@ -96,7 +96,7 @@ fn analyzer() -> Analyzer {
         expr_user_type_identities: HashMap::new(),
         expr_user_type_arrays: HashMap::new(),
         expr_maps: HashMap::new(),
-        local_user_method_call_results: HashSet::new(),
+        user_method_call_results: HashSet::new(),
         expr_types: HashMap::new(),
         pure_expr_series_ids: HashMap::new(),
         script_declaration: None,

@@ -7134,13 +7134,31 @@ fn reports_unsupported_local_user_method_map_call_result_reads_fixture() {
 }
 
 #[test]
+fn accepts_supported_imported_user_method_map_call_result_reads_fixture() {
+    assert_import_valid_fixture(
+        "tests/fixtures/sema/supported_imported_user_method_map_call_result_reads.pine",
+    );
+}
+
+#[test]
 fn reports_unsupported_imported_user_method_map_call_result_reads_fixture() {
+    let path = "tests/fixtures/sema/unsupported_imported_user_method_map_call_result_reads.pine";
     assert_import_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_imported_user_method_map_call_result_reads.pine",
+        path,
         &[
+            "`map.get` argument `key` expects string-compatible, got const int",
+            "`map.contains` argument `key` expects string-compatible, got const int",
+            "`map.get` expects 2 argument(s), got 3",
+            "`map.put` is not supported: direct map call-result methods currently support only `.size()`, `.get()`, `.contains()`, and `.copy()`; bind the result or use the namespace helper",
+            "`map.clear` is not supported: direct map call-result methods currently support only `.size()`, `.get()`, `.contains()`, and `.copy()`; bind the result or use the namespace helper",
+            "`map.remove` is not supported: direct map call-result methods currently support only `.size()`, `.get()`, `.contains()`, and `.copy()`; bind the result or use the namespace helper",
+            "`map.keys` is not supported: direct map call-result methods currently support only `.size()`, `.get()`, `.contains()`, and `.copy()`; bind the result or use the namespace helper",
+            "`map.values` is not supported: direct map call-result methods currently support only `.size()`, `.get()`, `.contains()`, and `.copy()`; bind the result or use the namespace helper",
+            "`call_result.copy` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`call_result.size` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
         ],
     );
+    assert_import_diagnostic_count(path, 12);
 }
 
 #[test]

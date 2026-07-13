@@ -38,19 +38,19 @@ impl Analyzer {
             .then_some(method_name)
     }
 
-    pub(crate) fn local_user_method_call_result_method_name<'a>(
+    pub(crate) fn user_method_call_result_method_name<'a>(
         &self,
         callee: &'a Expr,
         args: &'a [CallArg],
     ) -> Option<&'a str> {
         let (_, method_name) = postfix_call_result_method_parts(callee, args)?;
-        self.is_local_user_method_call_result(&args.first()?.value)
+        self.is_user_method_call_result(&args.first()?.value)
             .then_some(method_name)
     }
 
-    fn is_local_user_method_call_result(&self, expr: &Expr) -> bool {
+    fn is_user_method_call_result(&self, expr: &Expr) -> bool {
         if self
-            .local_user_method_call_results
+            .user_method_call_results
             .contains(&self.expr_key(expr.span))
         {
             return true;
@@ -61,7 +61,7 @@ impl Analyzer {
         matches!(method_call_parts(callee), Some((_, "copy")))
             && args.first().is_some_and(|arg| {
                 self.map_type_of_expr(&arg.value).is_some()
-                    && self.is_local_user_method_call_result(&arg.value)
+                    && self.is_user_method_call_result(&arg.value)
             })
     }
 
@@ -331,7 +331,7 @@ impl Analyzer {
     ) -> Option<Option<PineType>> {
         let method_name = builtin_map_call_result_method_name(callee, args)
             .or_else(|| self.local_udf_call_result_method_name(callee, args))
-            .or_else(|| self.local_user_method_call_result_method_name(callee, args))?;
+            .or_else(|| self.user_method_call_result_method_name(callee, args))?;
         let Some(receiver_type) = arg_types.first().copied().flatten() else {
             return Some(None);
         };

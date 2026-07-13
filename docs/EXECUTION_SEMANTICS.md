@@ -956,14 +956,14 @@ with copy-only continuation; non-map inputs remain errors. Unqualified
 local-UDF results with one concrete supported scalar map template share the
 four helpers through `$call_result`, preserving call-specific template/content
 metadata, empty maps, named/reordered arguments, and independent copies; only
-copy may continue. Local user-method results with one concrete supported
-scalar map template share those helpers through an analysis-marked local-call
-path for receiver-style, local-type-qualified, direct-constructor-receiver,
-block-return, nested-method, same-template control-flow, constructed-result,
-scalar-template-interleaving, and independent-copy cases. Unknown/`na`,
-scalar, array, matrix, imported user-method/imported-function,
-wrong-template/key, broader-helper, mutation, and terminal-read continuation
-cases remain fail closed. Every other
+copy may continue. Local and imported user-method results with one concrete
+supported scalar map template share those helpers through an analysis-marked
+method-call path for receiver-style, local-type-qualified or alias-qualified,
+direct-constructor-receiver, block-return, nested-method, same-template
+control-flow, constructed-result, scalar-template-interleaving, same-library
+dual-alias, and independent-copy cases. Unknown/`na`, scalar, array, matrix,
+imported-function, wrong-template/key, broader-helper, mutation, and
+terminal-read continuation cases remain fail closed. Every other
 matrix-returning call,
 unsupported `matrix.new` template, and other namespace/non-producer call
 remains outside this path. Built-in namespace prefixes remain reserved, so

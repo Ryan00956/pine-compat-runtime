@@ -1,0 +1,27 @@
+//@version=6
+import user/udt/1 as left
+import user/udt/1 as right
+indicator("Supported imported user-method map call-result reads")
+
+left_point = left.Point.new(1.0)
+right_point = right.Point.new(2.0)
+
+copied = left_point.exposeMap().copy()
+copied.put("copy", 9.0)
+
+size = left_point.exposeMap().size()
+get = left_point.exposeMap().get("missing")
+contains = left_point.exposeMap().contains("missing")
+copy_chain = left_point.exposeMap().copy().size()
+int_string = left_point.exposeIntMap().get(1)
+bool_color = left_point.exposeBoolColorMap().get(true)
+color_bool = left_point.exposeColorBoolMap().get(color.blue)
+block_return = left_point.exposeMapBlock().size()
+nested_return = left_point.exposeMapNested().size()
+named_control_flow = left_point.exposeMapIf(copied=true).size()
+alias_qualified = left.exposeMap(left_point).size()
+constructor_receiver = left.Point.new(3.0).exposeMap().copy().size()
+dual_alias = right_point.exposeMap().size()
+nested_copy = left_point.exposeMap().copy().copy().size()
+
+plot(size + copy_chain + block_return + nested_return + named_control_flow + alias_qualified + constructor_receiver + dual_alias + nested_copy)
