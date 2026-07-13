@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix call-result diff shape mismatch")
+
+left = matrix.new<float>(1, 2, 1.0)
+right = matrix.new<float>(2, 1, 1.0)
+plot(matrix.copy(left).diff(right).rows())

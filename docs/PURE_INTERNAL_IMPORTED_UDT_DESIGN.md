@@ -1355,3 +1355,14 @@ return/parameter flow remains deferred.
     methods, int-to-float lowering, nested Kronecker products, source
     independence, provenance/dual aliases, invalid types/arity, and runtime
     failure boundaries are fixture-backed. Done.
+70. The same concrete numeric matrix call-result producer set additionally
+    exposes `.diff(other)` as an independent fixed-`matrix<float>`
+    continuation. It retains the numeric-matrix-or-scalar operand gate,
+    preserves receiver shape and left-to-right subtraction, propagates `na`
+    cells, `na` scalars, and upstream `na`, preserves zero dimensions, keeps
+    the matching-shape runtime error for matrix operands, and retains the
+    matrix-result prefix without adding imported UDT identity or a public
+    schema field. Namespace/bound operations, local/imported functions and
+    methods, int-to-float lowering, nested differences, scalar and matrix
+    operands, source independence, provenance/dual aliases, invalid types/
+    arity, and runtime failure boundaries are fixture-backed. Done.

@@ -719,6 +719,17 @@ Current baseline:
   nested Kronecker products, source independence, provenance/dual aliases,
   invalid types/arity, and runtime failure boundaries are fixture-backed;
   mutation and other matrix-valued transforms remain gated.
+  The following numeric matrix-valued continuation slice adds `.diff(other)`
+  across the same concrete producer set. It retains the numeric receiver and
+  numeric-matrix-or-scalar operand checks, always returns an independent fixed
+  `matrix<float>`, preserves receiver shape and left-to-right subtraction,
+  propagates `na` cells, `na` scalars, and upstream `na`, preserves zero
+  dimensions, keeps the matching-shape runtime error for matrix operands, and
+  retains the matrix-result prefix. Namespace and bound operations, local/
+  imported functions and methods, int-to-float lowering, nested differences,
+  scalar and matrix operands, source independence, provenance/dual aliases,
+  invalid types/arity, and runtime failure boundaries are fixture-backed;
+  mutation and other matrix-valued transforms remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

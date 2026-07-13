@@ -787,6 +787,7 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
                     && matches!(
                         method.as_str(),
                         "copy"
+                            | "diff"
                             | "eigenvectors"
                             | "inv"
                             | "kron"

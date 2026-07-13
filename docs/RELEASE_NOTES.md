@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Added matrix-valued `.diff(other)` continuation to every existing concrete
+  numeric matrix call result. It retains the numeric receiver and numeric-
+  matrix-or-scalar operand checks, always returns an independent
+  `matrix<float>`, preserves receiver shape and left-to-right subtraction,
+  propagates `na` cells, `na` scalars, and upstream `na`, preserves zero
+  dimensions, keeps the matching-shape runtime error for matrix operands, and
+  retains the matrix-result prefix. Namespace and bound operations, local/
+  imported functions and methods, int-to-float lowering, nested differences,
+  scalar and matrix operands, source independence, provenance, dual aliases,
+  invalid types/arity, and runtime failure boundaries are fixture-backed;
+  mutation and the remaining matrix-valued helpers stay gated.
 - Added matrix-valued `.kron(other)` continuation to every existing concrete
   numeric matrix call result. It retains the numeric receiver and numeric-
   matrix operand checks, always returns an independent `matrix<float>`,

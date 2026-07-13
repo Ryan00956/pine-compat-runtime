@@ -55,6 +55,7 @@ pub(crate) fn local_udf_call_result_method_parts<'a>(
             matches!(
                 producer_method,
                 "copy"
+                    | "diff"
                     | "eigenvectors"
                     | "inv"
                     | "kron"
@@ -143,6 +144,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "elements_count" => Some("matrix.elements_count"),
         "get" => Some("matrix.get"),
         "copy" => Some("matrix.copy"),
+        "diff" => Some("matrix.diff"),
         "eigenvectors" => Some("matrix.eigenvectors"),
         "inv" => Some("matrix.inv"),
         "kron" => Some("matrix.kron"),
@@ -629,6 +631,7 @@ mod tests {
             ("elements_count", "matrix.elements_count"),
             ("get", "matrix.get"),
             ("copy", "matrix.copy"),
+            ("diff", "matrix.diff"),
             ("eigenvectors", "matrix.eigenvectors"),
             ("inv", "matrix.inv"),
             ("kron", "matrix.kron"),

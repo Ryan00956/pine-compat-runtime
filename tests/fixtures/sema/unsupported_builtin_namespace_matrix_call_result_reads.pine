@@ -111,5 +111,8 @@ pow_extra_arg_continuation = matrix.copy(left).pow(2, 3)
 bool_kron_continuation = matrix.copy(bool_values).kron(left)
 kron_bad_other_continuation = matrix.copy(left).kron(vector)
 kron_extra_arg_continuation = matrix.copy(left).kron(right, left)
+bool_diff_continuation = matrix.copy(bool_values).diff(left)
+diff_bad_other_continuation = matrix.copy(left).diff(vector)
+diff_extra_arg_continuation = matrix.copy(left).diff(right, left)
 
 plot(close)

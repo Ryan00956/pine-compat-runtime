@@ -408,6 +408,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "matrix difference requires matching row and column counts",
     ),
     (
+        "tests/fixtures/regressions/matrix_call_result_diff_shape_mismatch.pine",
+        "matrix difference requires matching row and column counts",
+    ),
+    (
         "tests/fixtures/regressions/matrix_pow_non_square.pine",
         "matrix power requires a square matrix",
     ),
