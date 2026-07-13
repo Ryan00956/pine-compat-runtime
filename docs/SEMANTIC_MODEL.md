@@ -626,7 +626,7 @@ and array-by-array overloads resolve to `array<float>` and admit `.size()`,
 matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
 `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
 `.copy()`, plus `.row(index)`, `.col(index)`, and numeric-only
-`.eigenvalues()`, `.is_zero()`, and `.is_binary()`, plus all-kind terminal `.is_square()`. Int
+`.eigenvalues()`, `.is_zero()`, `.is_binary()`, and `.is_diagonal()`, plus all-kind terminal `.is_square()`. Int
 inputs still resolve to float collection
 results. Matrix `.copy()` continues on the matrix-result prefix;
 `.row(index)` and `.col(index)` use `ReturnSpec::MatrixArray(0)` and switch the
@@ -642,12 +642,14 @@ return, so float/int matrix results are accepted while bool/string/color
 matrix results keep the ordinary numeric-matrix diagnostic; it is terminal
 without changing the parser marker. `.is_binary()` shares that numeric-matrix
 signature, fixed simple-bool return, and terminal marker behavior while
-retaining its ordinary strict 0-or-1 type rules. Other terminal readers,
-wrong-result helpers, invalid arity or argument types, broader helpers, and
-mutation fail closed. The
+retaining its ordinary strict 0-or-1 type rules. `.is_diagonal()` shares the
+numeric-matrix/simple-bool terminal contract and retains the ordinary off-
+diagonal-zero type rule without a square constraint.
+Other terminal readers, wrong-result helpers, invalid arity or argument types,
+broader helpers, and mutation fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the eleven matrix
+exact bound matrix-valued `matrix_id.mult(other)` results share the twelve matrix
 helpers for matrix or scalar operands with the
 copy/row/column/eigenvalue/predicate-reader continuation rules.
 Unqualified local-UDF results with an inferred concrete supported matrix kind
@@ -655,7 +657,7 @@ share the same helpers through `$call_result`, preserve per-call float/int/bool/
 string/color kinds, and use the same continuation rules. Concrete local or
 imported user methods and registered imported functions share the row/column/
 numeric-eigenvalue-array
-transition plus terminal all-kind square and numeric zero/binary checks; unknown/`na` and non-matrix returns retain generic or result-family
+transition plus terminal all-kind square and numeric zero/binary/diagonal checks; unknown/`na` and non-matrix returns retain generic or result-family
 rejection. Producer-specific “copy-only” wording below refers only to
 continuing as a matrix result. Exact namespace
 `matrix.copy` always takes the matrix branch, preserves the source

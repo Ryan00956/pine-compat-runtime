@@ -1371,6 +1371,13 @@ Recommended future slices:
     aliases, non-numeric rejection, invalid arity, and terminal continuation
     are fixture-backed. No UDT/import identity or public schema field is added.
     Done.
+60. The same concrete numeric matrix call-result producer set exposes terminal
+    `.is_diagonal()`. It permits rectangular matrices and arbitrary main-
+    diagonal cells, requires exact-zero off-diagonal cells, returns true for
+    empty matrices and false for off-diagonal `na`, propagates upstream `na`,
+    and creates no result prefix. Numeric rejection, provenance/dual aliases,
+    invalid arity, and terminal continuation are fixture-backed. No UDT/import
+    identity or public schema field is added. Done.
 
 ## Completion Gate For Future Positive Support
 

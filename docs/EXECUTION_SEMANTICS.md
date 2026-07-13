@@ -871,7 +871,7 @@ array-by-array overloads resolve to `array<float>` and may use `.size()`,
 matrix-by-scalar, and scalar-by-matrix overloads resolve to `matrix<float>` and
 may use `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
 `.copy()`, plus `.row(index)`, `.col(index)`, and numeric-only
-`.eigenvalues()`, `.is_zero()`, and `.is_binary()`, plus all-kind terminal `.is_square()`. Int
+`.eigenvalues()`, `.is_zero()`, `.is_binary()`, and `.is_diagonal()`, plus all-kind terminal `.is_square()`. Int
 inputs still produce float collections.
 Matrix `.copy()` may continue with another admitted matrix helper;
 `.row(index)` and `.col(index)` return fresh element-kind-preserving arrays;
@@ -884,15 +884,17 @@ is terminal, so no parser result-prefix transition occurs. Numeric-only
 `.is_zero()` likewise returns the ordinary simple bool using the existing
 exact-zero, empty, and `na`-cell rules and is terminal without a prefix
 transition. Numeric-only `.is_binary()` does the same with the strict 0-or-1,
-empty, and `na`-cell rules. Other terminal
+empty, and `na`-cell rules. Numeric-only `.is_diagonal()` permits rectangular
+shape and arbitrary main-diagonal cells but requires exact-zero off-diagonal
+cells; it is terminal as well. Other terminal
 readers, wrong-result helpers, invalid arity or argument types, broader
 helpers, and mutation fail closed. The existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch. Exact
 bound numeric-matrix-receiver matrix-valued `matrix_id.mult(other)` results now
-share the eleven matrix helpers and the copy/row/column/eigenvalue/predicate-reader continuation rules for matrix or
+share the twelve matrix helpers and the copy/row/column/eigenvalue/predicate-reader continuation rules for matrix or
 scalar operands while preserving the existing overload, shape, `na`, empty
 inner dimension, and cell-budget boundaries. Unqualified local-UDF results that infer
-a concrete supported matrix kind now share the eleven matrix helpers through
+a concrete supported matrix kind now share the twelve matrix helpers through
 `$call_result`. Parameter passthrough, block aliases, nested calls, same-kind
 control flow, constructed and matrix-operation returns, named/reordered
 arguments, and zero dimensions keep their normal call-specific float/int/bool/
@@ -910,7 +912,7 @@ column-array transition applies uniformly to every concrete matrix producer desc
 below; producer-specific “copy-only” wording refers only to continuing as a
 matrix result, while `.row(index)`, `.col(index)`, or numeric `.eigenvalues()`
 continues as an array result and `.is_square()` plus numeric `.is_zero()` are
-terminal, as is numeric `.is_binary()`. Exact namespace
+terminal, as are numeric `.is_binary()` and `.is_diagonal()`. Exact namespace
 `matrix.copy(values)`
 also enters this
 prefix, always resolves through the matrix helper family, and preserves the

@@ -1254,6 +1254,14 @@ Recommended future slices:
     operations, exact numeric templates, local/imported functions and methods,
     dual aliases, non-numeric rejection, invalid arity, and terminal
     continuation are fixture-backed.
+64. Numeric matrix call-result diagonal checks: done for the same concrete
+    float/int producer set. `.is_diagonal()` permits rectangular matrices and
+    arbitrary main-diagonal cells, requires exact-zero off-diagonal cells,
+    returns true for empty matrices, returns false for off-diagonal `na`, and
+    propagates an upstream `na` matrix result. It returns a simple bool and is
+    terminal without a result-prefix transition. Provenance/dual aliases,
+    numeric rejection, invalid arity, and terminal continuation are fixture-
+    backed.
 
 ## Completion Gate For Future Positive Support
 

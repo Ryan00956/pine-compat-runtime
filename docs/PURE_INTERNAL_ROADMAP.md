@@ -571,6 +571,12 @@ Current baseline:
   provenance, dual aliases, non-numeric rejection, invalid arity, and terminal
   continuation are fixture-backed; other broader helpers and mutation remain
   gated.
+  The following numeric predicate slice adds terminal `.is_diagonal()` across
+  the same producer set. It does not require square shape, permits arbitrary
+  main-diagonal values (including `na`), requires exact-zero off-diagonal
+  cells, returns true for empty matrices, propagates upstream `na`, and creates
+  no result prefix. Numeric type rejection, provenance/dual aliases, invalid
+  arity, and terminal continuation are fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added terminal `.is_diagonal()` reads to every existing concrete numeric
+  matrix call result. The helper retains the float/int check and ordinary
+  rectangular-diagonal rule: only off-diagonal cells must be exactly zero,
+  diagonal `na` is allowed, off-diagonal `na` is false, and empty results are
+  true; upstream `na` matrices propagate `na`. Producer provenance,
+  dual aliases, non-numeric rejection, invalid arity, and terminal continuation
+  are fixture-backed.
 - Added terminal `.is_binary()` reads to every existing concrete numeric
   matrix call result. The helper retains the float/int type check and ordinary
   strict 0-or-1 rules: binary and zero-element results are true, another value
