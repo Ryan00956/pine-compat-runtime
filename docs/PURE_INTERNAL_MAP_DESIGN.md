@@ -504,6 +504,13 @@ Recommended future slices:
     Invalid type/arity, local/imported provenance, source independence, and
     copy/abs/standardize continuation are fixture-backed. Map storage and
     template rules are unchanged. Done.
+35. Numeric key/value snapshots additionally expose terminal
+    `.variance(biased?)`. Filtered non-`na` values, population default/`true`
+    bias, sample `false`/`na` bias, single-value population zero, fixed series-
+    float results, empty/all-`na`/upstream-`na`, insufficient-sample and non-
+    finite behavior, invalid type/arity, local/imported provenance, non-
+    mutation, and terminal continuation are fixture-backed. Map storage and
+    template rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

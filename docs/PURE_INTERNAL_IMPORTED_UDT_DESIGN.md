@@ -1529,3 +1529,10 @@ return/parameter flow remains deferred.
     for empty/all-`na`, and propagates upstream `na`. Nonnumeric/imported-UDT,
     arity, provenance, source-independence, and copy/abs/standardize
     continuation boundaries are fixture-backed. Done.
+91. The same numeric producer set exposes terminal `.variance(biased?)`. It
+    filters `na`, returns fixed series float, uses population bias by default
+    or for `true`, and sample bias for `false` or `na`. Single-value population
+    variance is zero; empty/all-`na`/upstream-`na`, insufficient-sample, and
+    non-finite results retain `na`. Nonnumeric/imported-UDT, invalid bias/
+    arity, provenance, non-mutation, and terminal-continuation boundaries are
+    fixture-backed. Done.

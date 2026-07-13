@@ -153,6 +153,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "percentrank" => Some("array.percentrank"),
         "covariance" => Some("array.covariance"),
         "standardize" => Some("array.standardize"),
+        "variance" => Some("array.variance"),
         _ => None,
     }
 }

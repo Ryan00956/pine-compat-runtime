@@ -92,6 +92,7 @@ mod tests {
             ("percentrank", "array.percentrank"),
             ("covariance", "array.covariance"),
             ("standardize", "array.standardize"),
+            ("variance", "array.variance"),
         ] {
             assert_eq!(
                 array_call_result_builtin_name(method_name),
@@ -99,7 +100,7 @@ mod tests {
             );
             assert!(pine_builtins::get_phase_1_builtin(builtin_name).is_some());
         }
-        assert_eq!(array_call_result_builtin_name("variance"), None);
+        assert_eq!(array_call_result_builtin_name("stdev"), None);
         assert_eq!(array_call_result_builtin_name("push"), None);
     }
 

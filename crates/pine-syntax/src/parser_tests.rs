@@ -1136,6 +1136,8 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = array.from(1, 2, 3).copy().percentrank(1).custom()\n",
         "bad = array.from(1, 2, 3).covariance(array.from(2, 4, 6)).custom()\n",
         "bad = array.from(1, 2, 3).copy().covariance(array.from(2, 4, 6), false).custom()\n",
+        "bad = array.from(1, 2, 3).variance().custom()\n",
+        "bad = array.from(1, 2, 3).copy().variance(false).custom()\n",
         "bad = matrix.mult(values, other).rows().custom()\n",
         "bad = matrix.new<float>(2, 2, 1.0).row(0).size().custom()\n",
         "bad = matrix.copy(values).row(0).first().custom()\n",

@@ -1581,6 +1581,14 @@ Recommended future slices:
     results, and upstream-`na` propagation. Invalid type/arity, source
     independence, and copy/abs/standardize continuation are fixture-backed.
     Matrix-valued continuation is unchanged.
+105. Numeric array-valued call results additionally expose terminal
+    `.variance(biased?)`. Matrix row/column/eigenvalue arrays and array-
+    returning `matrix.mult` overloads retain filtered non-`na` values,
+    population default/`true` bias, sample `false`/`na` bias, single-value
+    population zero, fixed series-float results, empty/all-`na`/upstream-`na`,
+    insufficient-sample and non-finite behavior, invalid type/arity, non-
+    mutation, and terminal continuation. Matrix-valued continuation is
+    unchanged.
 
 ## Completion Gate For Future Positive Support
 

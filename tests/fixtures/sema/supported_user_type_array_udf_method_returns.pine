@@ -328,6 +328,9 @@ unqualified_float_covariance = identity(array.from(20.0, na, 22.0)).copy().covar
 qualified_scalar_standardize = anchor.exposeInts(array.from(40, 41, 42)).standardize()
 unqualified_int_standardize = identity(array.from(10, 11, 12)).standardize().copy()
 unqualified_float_standardize = identity(array.from(20.0, na, 22.0)).copy().standardize()
+qualified_scalar_variance = anchor.exposeInts(array.from(40, 41, 42)).variance()
+unqualified_int_variance = identity(array.from(10, 11, 12)).variance(biased=false)
+unqualified_float_variance = identity(array.from(20.0, na, 22.0)).copy().variance()
 
 unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
 unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))

@@ -880,6 +880,13 @@ Current baseline:
   namespace, matrix/map-derived, local/imported result provenance, invalid
   type/arity, source independence, and copy/abs/standardize continuation are
   fixture-backed.
+  The following dispersion slice adds terminal `.variance(biased?)`. It
+  filters `na`, returns fixed series float, uses the population denominator by
+  default or for `true`, and the sample denominator for `false` or `na`.
+  Single-value population variance is zero; empty/all-`na`/upstream-`na`,
+  insufficient-sample, and non-finite results retain `na`. Static, cross-
+  namespace, matrix/map-derived, local/imported provenance, invalid type/
+  arity, non-mutation, and terminal-continuation boundaries are fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -899,7 +906,7 @@ Remaining internal work:
   `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus numeric-only
   `.binary_search(value)`/`.binary_search_leftmost(value)`/
   `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/
-  `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()` set, and
+  `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked

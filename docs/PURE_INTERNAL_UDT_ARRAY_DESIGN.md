@@ -322,6 +322,12 @@ standard deviation over non-`na` values, preserves `na` positions, maps
 numeric positions to `na` for zero or non-finite deviation, returns empty for
 empty/all-`na`, and propagates upstream `na`. UDT, arity, provenance, source-
 independence, and copy/abs/standardize continuation boundaries remain closed.
+Item 101 adds terminal `.variance(biased?)` over the same result set. It
+filters `na`, returns fixed series float, uses population bias by default or
+for `true`, and sample bias for `false` or `na`. Single-value population
+variance is zero; empty/all-`na`/upstream-`na`, insufficient-sample, and non-
+finite results retain `na`. UDT, invalid bias/arity, provenance, non-mutation,
+and terminal-continuation boundaries remain closed.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1882,6 +1888,12 @@ independent fixed-float results, non-`na` mean and population-deviation
 calculation, `na` positions, zero/non-finite-deviation all-`na` numeric output,
 empty/all-`na` empty results, and upstream-`na` propagation. Arity, provenance,
 source-independence, copy/abs/standardize continuation, and UDT-identity
+boundaries remain closed.
+Item 101 adds terminal `.variance(biased?)` over that result set, preserving
+filtered values, population default/`true` bias, sample `false`/`na` bias,
+single-value population zero, fixed series-float results, empty/all-`na`/
+upstream-`na`, insufficient-sample, and non-finite behavior. Invalid bias/
+arity, provenance, non-mutation, terminal continuation, and UDT-identity
 boundaries remain closed.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
