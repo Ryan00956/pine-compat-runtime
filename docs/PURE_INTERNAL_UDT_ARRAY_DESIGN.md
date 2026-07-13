@@ -130,6 +130,10 @@ Item 28 adds exact namespace `matrix.pow(values, power)` with a fixed
 float-matrix result for numeric square matrices and simple-int powers,
 identity/copy/positive-power behavior, the same helpers, and a retained bound
 `values.pow(power)` gate.
+Item 29 adds exact namespace `matrix.inv(values)` with a fixed float-matrix
+result that preserves invertible square shape, returns empty `0 x 0` or `na`
+for the established boundaries, exposes the same helpers, and retains the
+bound `values.inv()` gate.
 Outside the exact static producer sets and these namespace-only paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 templates, and other matrix-returning calls remain fail-closed. `array.slice`
@@ -733,8 +737,8 @@ Initial policy:
   `matrix.mult` overloads return scalar arrays only and add no UDT/import
   identity. Namespace matrix-returning `matrix.mult` overloads and exact
   namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix` plus fixed-float
-  namespace `matrix.kron`/`matrix.diff`/`matrix.pow` add only the exact five
-  matrix readers/copy from items 22 through 28 and likewise carry no UDT/import
+  namespace `matrix.kron`/`matrix.diff`/`matrix.pow`/`matrix.inv` add only the
+  exact five matrix readers/copy from items 22 through 29 and likewise carry no UDT/import
   identity. Mixed
   identities within one scalar return or tuple slot, non-scalar UDT arrays,
   non-array/non-UDT results,
@@ -965,6 +969,16 @@ Recommended future slices:
     fixture-backed. Wrong producer/helper arguments, mutation, broader helpers,
     and bound `values.pow(power)` call-result reads fail closed. No UDT/import
     identity or public schema field is added. Done.
+29. The exact namespace matrix-inverse continuation routes `matrix.inv(values)`
+    through `$builtin_matrix_result`. Its fixed `simple matrix<float>` result
+    preserves invertible square shape, returns an empty `0 x 0` matrix for
+    empty input and `na` for singular or invalid-cell inputs, and exposes only
+    the five matrix read/copy helpers with named arguments and copy-only
+    continuation. Int-input float results, nested copies, UDF-contained
+    namespace reads, and source independence are fixture-backed. Wrong
+    producer/helper arguments, mutation, broader helpers, and bound
+    `values.inv()` call-result reads fail closed. No UDT/import identity or
+    public schema field is added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1009,7 +1023,9 @@ shape swapping, item 25 adds exact namespace `matrix.submatrix` with range
 copies, and item 26 adds fixed-float namespace `matrix.kron` with expanded
 shape. Item 27 adds fixed-float namespace `matrix.diff` with selected-matrix
 shape and operand direction, and item 28 adds fixed-float namespace `matrix.pow`
-with identity/copy/positive powers; none adds UDT/import identity. Broader UDT element families, bound or UDF
+with identity/copy/positive powers. Item 29 adds fixed-float namespace
+`matrix.inv` with invertible-square, empty, and `na` result boundaries; none
+adds UDT/import identity. Broader UDT element families, bound or UDF
 matrix-result receivers, built-in-qualified/template call-result receivers
 outside the closed paths, unsupported `array.new<T>` templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, unsupported

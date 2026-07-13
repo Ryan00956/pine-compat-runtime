@@ -898,9 +898,12 @@ the selected matrix shape, left-to-right operand order, independent storage,
 generic rejections. Exact namespace `matrix.pow(values, power)` returns a fixed
 square `matrix<float>` for numeric matrices and simple-int powers, preserving
 independent identity/copy/positive-power results plus `na` and empty `0 x 0`
-behavior; bound `values.pow(power)` results remain generic rejections. Every
-other matrix-returning call, `map.new` and `matrix.new` template, and other
-namespace/non-producer call
+behavior; bound `values.pow(power)` results remain generic rejections. Exact
+namespace `matrix.inv(values)` returns an independent square
+`matrix<float>` for invertible numeric inputs, an empty `0 x 0` matrix for
+empty input, and `na` for singular or invalid-cell inputs; bound `values.inv()`
+results remain generic rejections. Every other matrix-returning call, `map.new`
+and `matrix.new` template, and other namespace/non-producer call
 remains outside this path. Built-in namespace prefixes remain reserved, so
 same-named user or import qualifiers do not enter it. The extension carries no
 UDT/import identity and changes no public output schema.
@@ -960,14 +963,16 @@ with another allowed array read/copy. The seven fixed cross-namespace producers
 and array-returning `matrix.mult` overloads are scalar-array-only and add no
 UDT/import identity path. Namespace matrix-returning `matrix.mult` overloads,
 exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix`, and
-fixed-float namespace `matrix.kron`/`matrix.diff`/`matrix.pow` add only the five
-matrix readers/copy above. Copy/transpose/submatrix preserve the source scalar
-element kind; transpose swaps shape, submatrix selects a range, kron expands
-both dimensions, diff preserves its selected matrix operand's shape and
-left-to-right subtraction order, and pow preserves square shape across
-identity/copy/positive powers in a float matrix. None of these paths carries
-UDT/import identity. Bound or UDF
-matrix-result receivers, built-in-qualified or template call results outside
+fixed-float namespace `matrix.kron`/`matrix.diff`/`matrix.pow`/`matrix.inv` add
+only the five matrix readers/copy above. Copy/transpose/submatrix preserve the
+source scalar element kind; transpose swaps shape, submatrix selects a range,
+kron expands both dimensions, diff preserves its selected matrix operand's
+shape and left-to-right subtraction order, pow preserves square shape across
+identity/copy/positive powers, and inv preserves square shape for invertible
+inputs or yields `na` for singular/invalid-cell inputs. All fixed producers
+return float matrices, and none of these paths carries
+UDT/import identity. Bound or UDF matrix-result receivers, built-in-qualified
+or template call results outside
 the exact static and dynamic paths, and other
 array or matrix methods remain parser/semantic boundaries.
 Method side effects, recursive methods, unsupported parameter families,

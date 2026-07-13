@@ -115,6 +115,10 @@ Item 18 adds exact namespace `matrix.pow(values, power)` with a fixed
 float-matrix result for numeric square matrices and simple-int powers,
 identity/copy/positive-power behavior, the same helpers, and a retained bound
 `values.pow(power)` gate.
+Item 19 adds exact namespace `matrix.inv(values)` with a fixed float-matrix
+result that preserves invertible square shape, returns empty `0 x 0` or `na`
+for the established boundaries, exposes the same helpers, and retains the
+bound `values.inv()` gate.
 Outside the exact static producer sets and those namespace-only exceptions,
 unsupported `array.new<T>` types, non-producer calls, map/matrix templates,
 other matrix-returning calls, mixed or non-scalar return identities,
@@ -801,3 +805,13 @@ return/parameter flow remains deferred.
     fixture-backed. Wrong producer/helper arguments, mutation, broader helpers,
     and bound `values.pow(power)` call-result reads fail closed. No imported UDT
     identity or public schema field is added. Done.
+19. The exact namespace matrix-inverse continuation routes `matrix.inv(values)`
+    through `$builtin_matrix_result`. Its fixed `simple matrix<float>` result
+    preserves invertible square shape, returns an empty `0 x 0` matrix for
+    empty input and `na` for singular or invalid-cell inputs, and exposes only
+    the five matrix read/copy helpers with named arguments and copy-only
+    continuation. Int-input float results, nested copies, UDF-contained
+    namespace reads, and source independence are fixture-backed. Wrong
+    producer/helper arguments, mutation, broader helpers, and bound
+    `values.inv()` call-result reads fail closed. No imported UDT identity or
+    public schema field is added. Done.

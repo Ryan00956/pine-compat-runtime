@@ -15,6 +15,8 @@ matrixDiffExpressionRead(left, right) => matrix.diff(left, right).copy().get(1, 
 
 matrixPowExpressionRead(values) => matrix.pow(values, 2).copy().get(1, 1)
 
+matrixInvExpressionRead(values) => matrix.inv(values).copy().get(0, 1)
+
 matrixMultMatrixBlockRead(values, scalar) =>
     int rows = matrix.mult(values, scalar).rows()
     int columns = matrix.mult(scalar, values).columns()
@@ -57,6 +59,12 @@ matrixPowBlockRead(values) =>
     float first = matrix.pow(values, 2).get(0, 0)
     rows * 100 + columns * 10 + first
 
+matrixInvBlockRead(values) =>
+    int rows = matrix.inv(values).rows()
+    int columns = matrix.inv(values).columns()
+    float first = matrix.inv(values).get(0, 0)
+    rows * 100 + columns * 10 + first
+
 left = matrix.new<float>(2, 3, 0.0)
 left.set(0, 0, 1.0)
 left.set(0, 1, 2.0)
@@ -80,6 +88,14 @@ pow_values.set(0, 0, 1.0)
 pow_values.set(0, 1, 2.0)
 pow_values.set(1, 0, 3.0)
 pow_values.set(1, 1, 4.0)
+
+inv_values = matrix.new<float>(2, 2, 0.0)
+inv_values.set(0, 0, 4.0)
+inv_values.set(0, 1, 7.0)
+inv_values.set(1, 0, 2.0)
+inv_values.set(1, 1, 6.0)
+inv_singular = matrix.new<float>(2, 2, 1.0)
+inv_na = matrix.new<float>(1, 1)
 
 matrix_matrix_shape = matrix.mult(left, right).rows() * 100 + matrix.mult(left, right).columns() * 10 + matrix.mult(left, right).elements_count()
 matrix_matrix_get = matrix.mult(left, right).get(0, 0)
@@ -124,6 +140,9 @@ plot(matrix.pow(id=pow_values, power=2).get(row=1, column=1), "matrix_pow_named_
 plot(matrix.pow(pow_values, 1).copy().copy().get(0, 1), "matrix_pow_nested_get")
 plot(matrix.pow(pow_values, 0).get(1, 1), "matrix_pow_identity_get")
 plot(matrix.pow(pow_values, 3).get(0, 0), "matrix_pow_cube_get")
+plot(matrix.inv(inv_values).rows() * 100 + matrix.inv(inv_values).columns() * 10 + matrix.inv(inv_values).elements_count(), "matrix_inv_shape")
+plot(matrix.inv(id=inv_values).get(row=0, column=0), "matrix_inv_named_get")
+plot(matrix.inv(inv_values).copy().copy().get(0, 1), "matrix_inv_nested_get")
 
 int_left = matrix.new<int>(2, 2, 0)
 int_left.set(0, 0, 1)
@@ -148,6 +167,7 @@ plot(matrix.submatrix(int_left, 0, 2, 0, 1).get(1, 0), "matrix_submatrix_int_get
 plot(matrix.kron(int_left, int_right).get(3, 3), "matrix_kron_int_get")
 plot(matrix.diff(int_left, int_right).get(0, 0), "matrix_diff_int_get")
 plot(matrix.pow(int_left, 2).get(1, 1), "matrix_pow_int_get")
+plot(matrix.inv(int_left).get(1, 1), "matrix_inv_int_get")
 
 bool_values = matrix.new<bool>(1, 1, true)
 string_values = matrix.new<string>(1, 1, "copy")
@@ -181,6 +201,8 @@ plot(na(matrix.submatrix(na_left, 0, 1, 0, 2).get(0, 1)) ? 1 : 0, "matrix_submat
 plot(na(matrix.kron(na_left, identity).get(0, 2)) ? 1 : 0, "matrix_kron_na_get")
 plot(na(matrix.diff(na_left, 1.0).get(0, 1)) ? 1 : 0, "matrix_diff_na_get")
 plot(na(matrix.pow(na_left, 2).get(0, 0)) ? 1 : 0, "matrix_pow_na_get")
+plot(na(matrix.inv(inv_singular).rows()) ? 1 : 0, "matrix_inv_singular_rows_na")
+plot(na(matrix.inv(inv_na).rows()) ? 1 : 0, "matrix_inv_na_rows_na")
 
 empty_zero_rows_shape = matrix.mult(matrix.new<float>(0, 2), matrix.new<float>(2, 3, 1.0)).rows() * 100 + matrix.mult(matrix.new<float>(0, 2), matrix.new<float>(2, 3, 1.0)).columns() * 10 + matrix.mult(matrix.new<float>(0, 2), matrix.new<float>(2, 3, 1.0)).elements_count()
 empty_inner_shape = matrix.mult(matrix.new<float>(2, 0), matrix.new<float>(0, 3)).rows() * 100 + matrix.mult(matrix.new<float>(2, 0), matrix.new<float>(0, 3)).columns() * 10 + matrix.mult(matrix.new<float>(2, 0), matrix.new<float>(0, 3)).elements_count()
@@ -200,6 +222,7 @@ plot(matrix.kron(left, matrix.new<float>(1, 0)).rows() * 100 + matrix.kron(left,
 plot(matrix.diff(matrix.new<float>(0, 2), 1.0).rows() * 100 + matrix.diff(matrix.new<float>(0, 2), 1.0).columns() * 10 + matrix.diff(matrix.new<float>(0, 2), 1.0).elements_count(), "matrix_diff_empty_rows_shape")
 plot(matrix.diff(1.0, matrix.new<float>(2, 0)).rows() * 100 + matrix.diff(1.0, matrix.new<float>(2, 0)).columns() * 10 + matrix.diff(1.0, matrix.new<float>(2, 0)).elements_count(), "matrix_diff_empty_columns_shape")
 plot(matrix.pow(matrix.new<float>(0, 0), 2).rows() * 100 + matrix.pow(matrix.new<float>(0, 0), 2).columns() * 10 + matrix.pow(matrix.new<float>(0, 0), 2).elements_count(), "matrix_pow_empty_shape")
+plot(matrix.inv(matrix.new<float>(0, 0)).rows() * 100 + matrix.inv(matrix.new<float>(0, 0)).columns() * 10 + matrix.inv(matrix.new<float>(0, 0)).elements_count(), "matrix_inv_empty_shape")
 
 direct_copy = matrix.mult(left, right).copy().copy()
 direct_copy.set(0, 0, 999.0)
@@ -237,6 +260,11 @@ namespace_pow.set(0, 0, 333.0)
 plot(namespace_pow.get(0, 0), "matrix_pow_mutation")
 plot(pow_values.get(0, 0), "matrix_pow_source_unchanged")
 
+namespace_inv = matrix.inv(inv_values).copy()
+namespace_inv.set(0, 0, 222.0)
+plot(namespace_inv.get(0, 0), "matrix_inv_mutation")
+plot(inv_values.get(0, 0), "matrix_inv_source_unchanged")
+
 bound_matrix_result = left.mult(right)
 bound_scalar_result = right.mult(2.0)
 plot(bound_matrix_result.rows() * 100 + bound_matrix_result.columns() * 10 + bound_matrix_result.elements_count() + bound_matrix_result.get(0, 0), "bound_matrix_result")
@@ -255,3 +283,5 @@ plot(matrixDiffExpressionRead(left, diff_right), "matrix_diff_expression_udf")
 plot(matrixDiffBlockRead(left, 10.0), "matrix_diff_block_udf")
 plot(matrixPowExpressionRead(pow_values), "matrix_pow_expression_udf")
 plot(matrixPowBlockRead(pow_values), "matrix_pow_block_udf")
+plot(matrixInvExpressionRead(inv_values), "matrix_inv_expression_udf")
+plot(matrixInvBlockRead(inv_values), "matrix_inv_block_udf")
