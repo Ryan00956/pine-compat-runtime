@@ -426,6 +426,10 @@ qualified_import_some = left.direct(array.from(0, 61, 0)).some()
 local_bool_some = localIdentity(array.from(false, true)).some()
 local_int_some = localIdentity(array.from(0, 11, 0)).copy().some()
 local_float_some = localIdentity(array.from(0.0, na, 0.0)).some()
+qualified_import_join = left.direct(array.from(60, 61, 62)).join("|")
+local_string_join = localIdentity(array.from("a", "b")).copy().join()
+imported_udt_join = left.direct(left_first_values).join("|")
+imported_method_udt_join = left_first_anchor.retainFirst(left_first_values).copy().join(na)
 plot(qualified_import_size)
 plot(qualified_import_get)
 plot(qualified_import_last)
@@ -453,6 +457,7 @@ plot(qualified_import_stdev == array.stdev(array.from(60, 61, 62)) and local_int
 plot(qualified_import_sort_indices.get(0) == 0 and qualified_import_sort_indices.get(1) == 2 and qualified_import_sort_indices.get(2) == 1 and local_int_sort_indices.get(0) == 1 and local_int_sort_indices.get(1) == 2 and local_int_sort_indices.get(2) == 0 and local_float_sort_indices.get(0) == 2 and local_float_sort_indices.get(1) == 0 and local_float_sort_indices.get(2) == 1 and local_string_sort_indices.get(0) == 2 and local_string_sort_indices.get(1) == 0 and local_string_sort_indices.get(2) == 1 ? 1 : 0)
 plot(qualified_import_every and not local_bool_every and local_int_every and not local_float_every ? 1 : 0)
 plot(qualified_import_some and local_bool_some and local_int_some and not local_float_some ? 1 : 0)
+plot(qualified_import_join == "60|61|62" and local_string_join == "a,b" and imported_udt_join == array.join(left_first_values, "|") and imported_method_udt_join == array.join(left_first_values) ? 1 : 0)
 
 historical_return = left.direct(left_first_values)[1]
 historical_item = array.first(historical_return)

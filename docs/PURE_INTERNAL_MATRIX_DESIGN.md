@@ -1618,6 +1618,13 @@ Recommended future slices:
     arrays, propagates upstream `na`, leaves sources unchanged, and retains
     string/color, extra-arity, and terminal-continuation boundaries. Matrix-
     valued continuation is unchanged.
+110. Every scalar row/column array plus numeric eigenvalue and array-returning
+    `matrix.mult` result additionally exposes terminal `.join(separator?)`.
+    It preserves ordinary default/explicit/`na` separator and scalar/color
+    stringification rules, empty-string/upstream-`na` results, source
+    independence, and the 40960-character limit. Invalid separator/arity and
+    terminal-continuation boundaries remain closed; matrix-valued continuation
+    is unchanged.
 
 ## Completion Gate For Future Positive Support
 

@@ -1565,3 +1565,11 @@ return/parameter flow remains deferred.
     arrays, propagates upstream `na`, leaves sources unchanged, and retains the
     same unsupported-kind, extra-arity, imported-UDT, and terminal-continuation
     boundaries. Done.
+96. Concrete scalar array call results and concrete same-imported scalar-tree
+    UDT-array results expose terminal `.join(separator?)` across imported/local
+    functions and methods plus the existing producer families. Ordinary
+    default/explicit/`na` separators, scalar/color/imported-UDT formatting,
+    empty-string/upstream-`na` results, source non-mutation, and the 40960-
+    character limit are preserved. Object/chart-point, invalid separator/
+    arity, unresolved identity, and terminal-continuation boundaries remain
+    closed. Done.

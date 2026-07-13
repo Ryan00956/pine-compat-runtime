@@ -350,6 +350,12 @@ result families. It returns true for any nonzero numeric or `true` element,
 treats zero, `false`, and element `na` as nonsatisfying, returns false for an
 empty array, propagates upstream `na`, leaves the source unchanged, and retains
 the same unsupported-kind, extra-arity, and terminal-continuation boundaries.
+Item 106 adds terminal `.join(separator?)` to every concrete scalar call result
+and to concrete same-local/same-imported scalar-tree UDT-array results. It
+preserves ordinary default/explicit/`na` separators, scalar/color/UDT
+stringification, empty-string and upstream-`na` behavior, source non-mutation,
+and the 40960-character limit. Object/chart-point, invalid separator/arity,
+unresolved identity, and terminal-continuation boundaries remain closed.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1945,6 +1951,13 @@ returns true when any nonzero numeric or `true` element exists, treats zero,
 `false`, and element `na` as nonsatisfying, returns false for empty arrays,
 propagates upstream `na`, leaves sources unchanged, and retains the same
 unsupported-kind, extra-arity, UDT, and terminal-continuation boundaries.
+Item 106 adds terminal `.join(separator?)` to concrete int, float, bool,
+string, color, same-local scalar-tree UDT, and same-imported scalar-tree UDT
+array call results across the same static, cross-namespace, matrix/map-derived,
+and local/imported producers. It preserves ordinary separator and
+stringification rules, empty-string/upstream-`na` results, source non-mutation,
+and the 40960-character limit. Object/chart-point, invalid separator/arity,
+unresolved identity, and terminal continuation remain closed.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

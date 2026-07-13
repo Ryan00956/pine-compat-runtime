@@ -581,6 +581,9 @@ admit `.binary_search(value)`, `.binary_search_leftmost(value)`,
 `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`, fresh same-kind
 `.abs()` chains, and fixed-float `.standardize()` chains. Concrete int, float,
 or string results additionally admit transforming `.sort_indices(order?)`.
+Every scalar result kind, plus concrete same-local or same-imported scalar-tree
+UDT array results, additionally admits terminal `.join(separator?)` with the
+ordinary array stringification and separator rules.
 The parser assigns the unqualified form the impossible internal prefix
 `$call_result`; the normalization requires a plain lexical callee, while
 qualified user-defined forms keep their source prefix.
@@ -600,7 +603,7 @@ those receivers with `$builtin_array_result`, and semantic analysis admits only
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)`, plus
 bool/int/float-only `.every()`/`.some()` and numeric-only `.binary_search(value)`, `.binary_search_leftmost(value)`,
 `.binary_search_rightmost(value)`, `.abs()`, and
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, after them. Only `.copy()`, numeric `.abs()` and
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` and scalar/same-identity scalar-tree UDT `.join(separator?)`, after them. Only `.copy()`, numeric `.abs()` and
 `.standardize()`, and numeric-or-string `.sort_indices(order?)` produce array
 receivers that may continue; the reads/searches
 are terminal and cannot continue into a user method or any other call-result
@@ -615,10 +618,10 @@ admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)`, plus
 bool/int/float-only `.every()`/`.some()` and numeric-only `.binary_search(value)`, `.binary_search_leftmost(value)`,
 `.binary_search_rightmost(value)`, `.abs()`, and
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`; only
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` and all-scalar terminal `.join(separator?)`; only
 `.copy()`, numeric `.abs()` and `.standardize()`, and numeric-or-string
 `.sort_indices(order?)` return array receivers eligible for another allowed
-chain. The twenty-five
+chain. The twenty-six
 read/search results are terminal. Return
 kinds stay
 producer-specific: `array<string>` for `str.split`, `array<float>` for
@@ -643,7 +646,7 @@ and array-by-array overloads resolve to `array<float>` and admit `.size()`,
 `.get(index)`, `.first()`, `.last()`, `.copy()`, `.includes(value)`,
 `.indexof(value)`, `.lastindexof(value)`, `.every()`, `.some()`, `.binary_search(value)`,
 `.binary_search_leftmost(value)`, `.binary_search_rightmost(value)`, and
-`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`/`.sort_indices(order?)`.
+`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`/`.sort_indices(order?)` plus terminal `.join(separator?)`.
 Matrix-by-matrix,
 matrix-by-scalar, and scalar-by-matrix resolve to `matrix<float>` and admit only
 `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
@@ -661,7 +664,7 @@ numeric-matrix parameter check. All three switch to the array-result prefix and
 admit `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)`/`.every()`/`.some()`/`.binary_search(value)`/
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)` terminal reads plus transforming `.standardize()` and `.sort_indices(order?)`, with copy/abs/standardize/sort_indices array continuation and terminal read/search/aggregate checks.
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`/`.join(separator?)` terminal reads plus transforming `.standardize()` and `.sort_indices(order?)`, with copy/abs/standardize/sort_indices array continuation and terminal read/search/aggregate checks.
 `.is_square()` retains the ordinary `MATRIX_ANY_ID_PARAMS`
 signature and `simple bool` return, accepts every supported concrete matrix
 kind, and is terminal without changing the parser marker. `.is_zero()` retains
@@ -851,7 +854,7 @@ plus `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)`, bool/int/float-only `.every()`/`.some()`, and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
-`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, with copy/abs/standardize/sort_indices array
+`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` and all-scalar terminal `.join(separator?)`, with copy/abs/standardize/sort_indices array
 continuation and terminal read/search/aggregate checks. The ordinary map analyzer validates
 key types and marks copy
 results with the same template metadata. Exact namespace `map.copy(existing)`
@@ -888,7 +891,7 @@ use the existing pure user-method dispatch, and explicit same-named local
 methods and imported functions remain distinct. Other `array.*` calls,
 built-in namespaces and templates outside the seven fixed producers plus the
 result-type-checked namespace `matrix.mult` paths, helpers beyond the applicable
-twenty-nine-item postfix read/copy/search/transform/aggregate set, non-array/non-
+thirty-item postfix read/copy/search/transform/aggregate set, non-array/non-
 matrix/non-UDT results, unknown/`na` results without a concrete supported type
 or identity, and postfix mutation remain outside this subset. A postfix read
 does not make a mutating producer pure:
@@ -908,6 +911,13 @@ Zero, `false`, and element `na` do not satisfy it; empty arrays return false,
 upstream `na` propagates, the source remains unchanged, and the scalar result
 is terminal. The same unsupported receiver kinds and extra-arity boundary
 apply.
+`.join(separator?)` accepts every scalar array result and concrete same-local or
+same-imported scalar-tree UDT array result. It returns fixed `series string`,
+defaults an omitted or `na` separator to comma, preserves ordinary scalar,
+color, and UDT formatting, returns `""` for an empty array, propagates an
+upstream `na` array, leaves the source unchanged, retains the 40960-character
+runtime limit, and is terminal. Object-id and `chart.point` arrays, invalid
+separators, and extra arguments remain rejected.
 `.indexof(value)` uses the same checks and equality, returns the first zero-
 based match as `simple int`, returns `-1` for missing or empty concrete arrays
 and for an upstream `na` array, does not mutate the result, and is terminal.
@@ -1292,14 +1302,14 @@ and the cross-namespace array-capable path support direct
 `.indexof(value)`/`.lastindexof(value)`, plus bool/int/float-only `.every()`/`.some()` and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
-`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, without widening arbitrary call-
+`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` and scalar/same-identity scalar-tree UDT `.join(separator?)`, without widening arbitrary call-
 result receivers. UDT arrays retain the concrete
 same-local/same-imported scalar-tree identity gate; scalar UDT results from an
 unqualified local UDF may invoke the existing pure method subset. That scalar
 method exception does not apply to a built-in producer's terminal
 `.get()`/`.first()`/`.last()`/`.includes()`/`.indexof()`/`.lastindexof()`/
-`.binary_search()`/`.binary_search_leftmost()`/`.binary_search_rightmost()`
-result. Numeric `.abs()` instead returns a fresh same-kind array and may
+`.binary_search()`/`.binary_search_leftmost()`/`.binary_search_rightmost()` or
+`.join()` result. Numeric `.abs()` instead returns a fresh same-kind array and may
 continue through the admitted array chain. The seven fixed cross-namespace
 producers and the array-returning
 `matrix.mult` overloads are scalar-array-only and do
@@ -1434,7 +1444,9 @@ five-scalar-template subset on each side, those namespace-call results may use
 the closed array-result helper set described above. The key/value return kind
 follows the corresponding template side; `.copy()` plus numeric `.abs()` and `.standardize()`, and numeric-or-string `.sort_indices(order?)` may continue another allowed array chain and remain
 independent of both the map and the first snapshot. Empty and typed-`na` maps
-plus negative and out-of-bounds indexes keep ordinary array-result semantics.
+retain ordinary upstream behavior, while every scalar key/value snapshot also
+admits terminal `.join(separator?)`.
+Negative and out-of-bounds indexes keep ordinary array-result semantics.
 `map.put_all` requires source and target maps to have the same scalar key/value
 template and mutates the target by replacing existing values without moving
 their keys and appending new keys in source insertion order. Ordinary realtime

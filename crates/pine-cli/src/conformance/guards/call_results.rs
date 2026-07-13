@@ -81,6 +81,7 @@ const BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.variance",
     "array.stdev",
     "array.sort_indices",
+    "array.join",
     "array.slice",
     "array.concat",
     "array method calls",
@@ -100,6 +101,7 @@ const UDT_IDENTITY_BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.includes",
     "array.indexof",
     "array.lastindexof",
+    "array.join",
     "array.slice",
     "array.concat",
 ];
@@ -258,6 +260,7 @@ const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.variance",
     "array.stdev",
     "array.sort_indices",
+    "array.join",
     "array method calls",
     "expression-body functions",
     "multi-statement functions",
@@ -402,6 +405,7 @@ fn validate_udt_array_call_result_helper_fixture_paths(
             | "array.variance"
             | "array.stdev"
             | "array.sort_indices"
+            | "array.join"
     ) {
         return Ok(());
     }

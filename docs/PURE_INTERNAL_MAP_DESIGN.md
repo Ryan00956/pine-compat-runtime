@@ -538,6 +538,13 @@ Recommended future slices:
     snapshot unchanged, and retains string/color, extra-arity, and terminal-
     continuation boundaries. Map storage and template rules are unchanged.
     Done.
+40. Every scalar key/value snapshot additionally exposes terminal
+    `.join(separator?)`. It preserves insertion-order snapshot values, ordinary
+    default/explicit/`na` separator and scalar/color stringification rules,
+    empty-string and typed-`na` map results, source-map and snapshot
+    independence, and the 40960-character limit. Invalid separator/arity and
+    terminal-continuation boundaries remain closed. Map storage and template
+    rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

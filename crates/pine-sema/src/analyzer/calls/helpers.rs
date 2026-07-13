@@ -158,6 +158,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "variance" => Some("array.variance"),
         "stdev" => Some("array.stdev"),
         "sort_indices" => Some("array.sort_indices"),
+        "join" => Some("array.join"),
         _ => None,
     }
 }

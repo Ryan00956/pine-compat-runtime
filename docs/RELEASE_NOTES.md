@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added terminal `.join(separator?)` to every concrete scalar array call
+  result and to same-local/same-imported scalar-tree UDT array results. The
+  direct path preserves omitted/`na` comma fallback, explicit separators,
+  scalar/color/UDT formatting, empty-string and upstream-`na` results, source
+  non-mutation, and the existing 40960-character result limit. Static/cross-
+  namespace, matrix/map-derived, local/imported function/method, UDT identity,
+  invalid receiver/separator/arity, and terminal-continuation boundaries are
+  fixture-backed.
 - Added terminal `.some()` to every existing concrete bool, int, or float
   array call result. It returns fixed `series bool` when any nonzero numeric or
   `true` element exists, treats zero, `false`, and element `na` as
