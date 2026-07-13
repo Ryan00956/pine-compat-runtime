@@ -30,9 +30,12 @@ receiver, block-return, nested-method, same-template control-flow,
 constructed-result, scalar-template-interleaving, and independent-copy paths.
 Imported user-method results with the same template add receiver-style,
 alias-qualified, direct-constructor-receiver, same-library dual-alias, and the
-same block/nested/control-flow/copy paths. Unknown/`na`, scalar, array, matrix,
-imported-function, wrong-template/key, broader-helper, mutation, and
-terminal-read continuation cases remain gated.
+same block/nested/control-flow/copy paths. Registered imported pure-function
+results add alias-qualified, block-return, nested-function, same-template
+control-flow, constructed-result, scalar-template-interleaving, same-library
+dual-alias, and independent-copy paths. Unknown/`na`, scalar, array, matrix,
+wrong-template/key, broader-helper, mutation, and terminal-read continuation
+cases remain gated.
 Equivalent method aliases for the supported namespace subset lower to the same
 runtime calls. Scalar `map name = map.new<K, V>()` declarations infer their
 template from the initializer; bare `map` declarations without a known scalar
@@ -71,9 +74,9 @@ Current evidence:
   aliases, nested calls, same-template control flow, constructed/copied
   returns, named/reordered arguments, per-call scalar template interleaving,
   empty maps, independent copies, and copy-only continuation. Unknown/`na`,
-  scalar, array, matrix, imported-function results, wrong templates/keys,
-  broader helpers, mutation, and terminal-read continuation remain gated; the
-  local and imported user-method paths are covered separately below.
+  scalar, array, matrix, wrong templates/keys, broader helpers, mutation, and
+  terminal-read continuation remain gated; imported-function and local/
+  imported user-method paths are covered separately below.
 - `tests/fixtures/runtime/local_user_method_map_call_result_reads.pine` plus
   the matching supported/unsupported local-method semantic fixtures cover
   direct size/get/contains/copy through receiver-style, local-type-qualified,
@@ -86,8 +89,14 @@ Current evidence:
   receiver-style, alias-qualified, direct-constructor-receiver, block-return,
   nested-method, same-template control-flow, scalar-template-interleaving,
   same-library dual-alias, independent-copy, and copy-only-continuation paths.
-  The negative fixture retains imported-function, helper, key, mutation, and
+  The negative fixture retains helper, key, mutation, scalar-return, and
   terminal-reader boundaries.
+- `tests/fixtures/runtime/import_function_map_call_result_reads.pine` plus the
+  matching supported/unsupported imported-function semantic fixtures cover
+  alias-qualified, block-return, nested-function, same-template control-flow,
+  constructed-result, scalar-template-interleaving, same-library dual-alias,
+  independent-copy, and copy-only-continuation paths. The negative fixture
+  retains helper, key, mutation, scalar-return, and terminal-reader boundaries.
 - `tests/fixtures/runtime/map_put_get_contains.pine` and
   `tests/fixtures/sema/supported_map_put_get_contains.pine` cover scalar
   `map.put`, `map.get`, and `map.contains` namespace calls, including
@@ -364,6 +373,11 @@ Recommended future slices:
     control-flow/template/dual-alias/copy coverage and retained imported-
     function, unresolved, broader-helper, mutation, and terminal-reader
     boundaries. Done.
+15. Imported pure-function call results with one concrete supported scalar map
+    template share direct size/get/contains/copy for alias-qualified calls,
+    with block/nested/control-flow/template/dual-alias/copy coverage and
+    retained scalar-result, unresolved, broader-helper, mutation, and terminal-
+    reader boundaries. Done.
 
 ## Completion Gate For Future Widening
 
@@ -410,8 +424,7 @@ templates, nested collection values, and map mutation inside user-defined
 functions remain unsupported until a later slice designs and fixtures those
 semantics. Unqualified local-UDF results with a concrete supported scalar map
 template now share size/get/contains/copy with copy-only continuation and
-per-call template isolation. Local and imported user-method results with a
-concrete supported scalar map template now share the same helpers with
-copy-only continuation and same-library dual-alias isolation; imported
-function and unresolved or mixed-template direct result receivers remain
-gated.
+per-call template isolation. Local and imported user-function and user-method
+results with a concrete supported scalar map template now share the same
+helpers with copy-only continuation and same-library dual-alias isolation;
+unresolved or mixed-template direct result receivers remain gated.

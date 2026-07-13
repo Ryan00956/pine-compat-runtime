@@ -1,0 +1,25 @@
+//@version=6
+import user/udt/1 as left
+import user/udt/1 as right
+indicator("Imported function map call-result reads")
+
+copied = left.exposeMapFunction().copy()
+copied.put("copy", 9.0)
+
+mutated = left.exposeMapFunction()
+mutated.put("value", 7.0)
+
+plot(left.exposeMapFunction().size(), "size")
+plot(na(left.exposeMapFunction().get("missing")) ? 1 : 0, "get")
+plot(left.exposeMapFunction().contains("missing") ? 0 : 1, "contains")
+plot(left.exposeMapFunction().copy().size(), "copy_chain")
+plot(copied.get("copy"), "copy_value")
+plot(na(left.exposeMapFunction().get("value")) ? 1 : 0, "fresh_independence")
+plot(left.exposeIntMapFunction().size(), "int_string")
+plot(left.exposeBoolColorMapFunction().size(), "bool_color")
+plot(left.exposeColorBoolMapFunction().size(), "color_bool")
+plot(left.exposeMapFunctionBlock().size(), "block_return")
+plot(left.exposeMapFunctionNested().size(), "nested_return")
+plot(left.exposeMapFunctionIf(copied=true).size(), "named_control_flow")
+plot(right.exposeMapFunction().size(), "dual_alias")
+plot(left.exposeMapFunction().copy().copy().size(), "nested_copy")

@@ -185,7 +185,7 @@ impl Analyzer {
                     return self.return_type_for_call(signature, args, &arg_types);
                 }
                 if let Some(method_name) = builtin_map_call_result_method_name(callee, args)
-                    .or_else(|| self.local_udf_call_result_method_name(callee, args))
+                    .or_else(|| self.user_function_call_result_method_name(callee, args))
                     .or_else(|| self.user_method_call_result_method_name(callee, args))
                     && arg_types
                         .first()

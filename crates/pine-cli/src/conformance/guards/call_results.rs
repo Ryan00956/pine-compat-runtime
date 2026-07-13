@@ -141,6 +141,9 @@ pub(super) const BUILTIN_MAP_CALL_RESULT_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/import_user_method_map_call_result_reads.pine",
     "tests/fixtures/sema/supported_imported_user_method_map_call_result_reads.pine",
     "tests/fixtures/sema/unsupported_imported_user_method_map_call_result_reads.pine",
+    "tests/fixtures/runtime/import_function_map_call_result_reads.pine",
+    "tests/fixtures/sema/supported_imported_function_map_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_imported_function_map_call_result_reads.pine",
 ];
 
 const USER_METHOD_MAP_CALL_RESULT_FIXTURES: &[&str] = &[
@@ -156,6 +159,13 @@ const IMPORTED_USER_METHOD_MAP_CALL_RESULT_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/import_user_method_map_call_result_reads.pine",
     "tests/fixtures/sema/supported_imported_user_method_map_call_result_reads.pine",
     "tests/fixtures/sema/unsupported_imported_user_method_map_call_result_reads.pine",
+    "tests/fixtures/libraries/import_udt_lib.pine",
+];
+
+const IMPORTED_FUNCTION_MAP_CALL_RESULT_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/import_function_map_call_result_reads.pine",
+    "tests/fixtures/sema/supported_imported_function_map_call_result_reads.pine",
+    "tests/fixtures/sema/unsupported_imported_function_map_call_result_reads.pine",
     "tests/fixtures/libraries/import_udt_lib.pine",
 ];
 
@@ -211,7 +221,8 @@ pub(super) fn validate_map_fixture_paths(
 ) -> Result<(), String> {
     validate_builtin_map_call_result_fixture_paths(line_number, feature, fixtures)?;
     validate_user_method_map_call_result_fixture_paths(line_number, feature, fixtures)?;
-    validate_imported_user_method_map_call_result_fixture_paths(line_number, feature, fixtures)
+    validate_imported_user_method_map_call_result_fixture_paths(line_number, feature, fixtures)?;
+    validate_imported_function_map_call_result_fixture_paths(line_number, feature, fixtures)
 }
 
 fn validate_local_udt_array_call_return_fixture_paths(
@@ -378,7 +389,7 @@ fn validate_builtin_map_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_MAP_CALL_RESULT_FIXTURES,
-        "fixture-backed exact scalar map.new template, namespace map.copy result, concrete unqualified local-UDF map results, and concrete local/imported user-method map results with size/get/contains/copy dispatch plus retained per-call template/content metadata and helper/template/imported-function/mutation boundaries",
+        "fixture-backed exact scalar map.new template, namespace map.copy result, concrete local/imported user-function and user-method map results with size/get/contains/copy dispatch plus retained per-call template/content metadata and helper/template/mutation boundaries",
     )
 }
 
@@ -396,7 +407,7 @@ fn validate_user_method_map_call_result_fixture_paths(
         feature,
         fixtures,
         USER_METHOD_MAP_CALL_RESULT_FIXTURES,
-        "fixture-backed concrete local/imported user-method map-result size/get/contains/copy dispatch and retained imported-function/helper/template/mutation boundaries",
+        "fixture-backed concrete local/imported user-method map-result size/get/contains/copy dispatch and retained helper/template/mutation boundaries",
     )
 }
 
@@ -414,7 +425,25 @@ fn validate_imported_user_method_map_call_result_fixture_paths(
         feature,
         fixtures,
         IMPORTED_USER_METHOD_MAP_CALL_RESULT_FIXTURES,
-        "fixture-backed imported user-method map-result size/get/contains/copy dispatch with dual-alias isolation and retained imported-function/helper/template/mutation boundaries",
+        "fixture-backed imported user-method map-result size/get/contains/copy dispatch with dual-alias isolation and retained helper/template/mutation boundaries",
+    )
+}
+
+fn validate_imported_function_map_call_result_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if feature != "import" {
+        return Ok(());
+    }
+
+    require_fixtures(
+        line_number,
+        feature,
+        fixtures,
+        IMPORTED_FUNCTION_MAP_CALL_RESULT_FIXTURES,
+        "fixture-backed imported pure-function map-result size/get/contains/copy dispatch with dual-alias isolation and retained helper/template/mutation boundaries",
     )
 }
 
@@ -1149,6 +1178,24 @@ mod tests {
 
         assert!(
             error.contains("tests/fixtures/runtime/import_user_method_map_call_result_reads.pine")
+        );
+    }
+
+    #[test]
+    fn rejects_import_row_without_imported_function_map_runtime_fixture() {
+        let fixtures: Vec<_> = IMPORTED_FUNCTION_MAP_CALL_RESULT_FIXTURES
+            .iter()
+            .copied()
+            .filter(|fixture| {
+                *fixture != "tests/fixtures/runtime/import_function_map_call_result_reads.pine"
+            })
+            .collect();
+        let error =
+            validate_imported_function_map_call_result_fixture_paths(1, "import", &fixtures)
+                .expect_err("import rows must retain imported function map runtime evidence");
+
+        assert!(
+            error.contains("tests/fixtures/runtime/import_function_map_call_result_reads.pine")
         );
     }
 }

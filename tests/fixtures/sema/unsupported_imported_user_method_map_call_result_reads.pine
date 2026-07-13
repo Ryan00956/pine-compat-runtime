@@ -14,7 +14,6 @@ keys_result = point.exposeMap().keys()
 values_result = point.exposeMap().values()
 copy_keys_result = point.exposeMap().copy().keys()
 terminal_chain = point.exposeMap().size().copy()
-function_size = lib.exposeMapFunction().size()
 scalar_size = point.shift(1.0).size()
 
 plot(close)

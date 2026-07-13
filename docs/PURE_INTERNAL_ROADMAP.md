@@ -486,7 +486,14 @@ Current baseline:
   direct-constructor-receiver, block-return, nested-method, same-template
   control-flow, constructed-result, scalar-template-interleaving, same-library
   dual-alias, independent-copy, and copy-only-continuation cases are
-  fixture-backed. Imported function results remain gated.
+  fixture-backed.
+  The next closed map call-boundary slice admits registered imported pure
+  functions with one concrete supported scalar map template. Alias-qualified,
+  block-return, nested-function, same-template control-flow,
+  constructed-result, scalar-template-interleaving, same-library dual-alias,
+  independent-copy, and copy-only-continuation cases share the four helpers;
+  wrong-template/key, broader-helper, mutation, scalar-return, and terminal-
+  reader boundaries remain gated.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -520,10 +527,9 @@ Remaining internal work:
   matrix-valued `values.mult(other)`, qualified user-method/imported-function
   matrix-result receivers, unqualified local-UDF results without a concrete
   supported matrix kind,
-  other matrix-returning calls, unsupported matrix/map templates, imported
-  function map-result receivers, local/imported user-method or unqualified
-  local-UDF map results without one concrete supported scalar template, and
-  other map call-result receivers,
+  other matrix-returning calls, unsupported matrix/map templates, local or
+  imported user-function/user-method map results without one concrete
+  supported scalar template, and other map call-result receivers,
   other built-in namespaces or non-producer members, non-producer `array.*`
   calls, unsupported `array.new<T>` templates, non-array/non-UDT results,
   unknown/`na` results

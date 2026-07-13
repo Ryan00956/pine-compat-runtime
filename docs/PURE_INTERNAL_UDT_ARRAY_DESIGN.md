@@ -1253,6 +1253,15 @@ Recommended future slices:
     templates, broader helpers, mutation, and terminal-read continuation
     remain fail closed. No UDT/import identity or public schema field is added.
     Done.
+49. Registered imported pure-function results whose call-specific result
+    retains one concrete supported scalar map template expose only
+    size/get/contains/copy with copy-only continuation. Qualified function
+    provenance preserves alias-qualified, block-return, nested-function,
+    same-template control-flow, constructed-result, scalar-template
+    interleaving, same-library dual-alias, and independent-copy paths. Scalar
+    or unresolved/mixed results, broader helpers, mutation, and terminal-read
+    continuation remain fail closed. No UDT/import identity or public schema
+    field is added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1345,9 +1354,11 @@ UDT/import identity.
 Item 48 adds imported user-method concrete scalar-map-result reads with
 source-context-aware call provenance, same-library dual-alias isolation, and
 key/value template metadata but no UDT/import identity.
+Item 49 adds imported pure-function concrete scalar-map-result reads with
+registered qualified-function provenance, same-library dual-alias isolation,
+and key/value template metadata but no UDT/import identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, qualified user-method/imported-function matrix-result receivers,
-imported-function map-result receivers,
 built-in-qualified/template call-result receivers
 outside the closed paths, unsupported `array.new<T>` templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, unsupported

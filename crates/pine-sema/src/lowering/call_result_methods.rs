@@ -154,7 +154,7 @@ impl Analyzer {
         param_types: &HashMap<String, PineType>,
     ) -> Option<Option<HirExpr>> {
         let method_name = builtin_map_call_result_method_name(callee, args)
-            .or_else(|| self.local_udf_call_result_method_name(callee, args))
+            .or_else(|| self.user_function_call_result_method_name(callee, args))
             .or_else(|| self.user_method_call_result_method_name(callee, args))?;
         let receiver = args.first()?;
         if !self

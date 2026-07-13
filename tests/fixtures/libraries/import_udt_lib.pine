@@ -249,3 +249,11 @@ method exposeColorBoolMap(Point p) => map.new<color, bool>()
 method exposeMapIf(Point p, bool copied) => copied ? map.copy(map.new<string, float>()) : map.new<string, float>()
 method exposeMapNested(Point p) => p.exposeMapBlock()
 export exposeMapFunction() => map.new<string, float>()
+export exposeMapFunctionBlock() =>
+    made = map.new<string, float>()
+    made
+export exposeIntMapFunction() => map.new<int, string>()
+export exposeBoolColorMapFunction() => map.new<bool, color>()
+export exposeColorBoolMapFunction() => map.new<color, bool>()
+export exposeMapFunctionIf(bool copied) => copied ? map.copy(map.new<string, float>()) : map.new<string, float>()
+export exposeMapFunctionNested() => exposeMapFunctionBlock()

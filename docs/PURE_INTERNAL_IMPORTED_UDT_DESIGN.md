@@ -1078,3 +1078,12 @@ return/parameter flow remains deferred.
     templates, broader helpers, mutation, and terminal-read continuation
     remain fail closed. No imported UDT identity is carried into map metadata
     and no public schema field is added. Done.
+39. Registered imported pure-function results whose call-specific result
+    retains one concrete supported scalar map template expose only
+    size/get/contains/copy with copy-only continuation. Qualified function
+    provenance preserves alias-qualified, block-return, nested-function,
+    same-template control-flow, constructed-result, scalar-template
+    interleaving, same-library dual-alias, and independent-copy paths. Scalar
+    or unresolved/mixed results, broader helpers, mutation, and terminal-read
+    continuation remain fail closed. No imported UDT identity is carried into
+    map metadata and no public schema field is added. Done.

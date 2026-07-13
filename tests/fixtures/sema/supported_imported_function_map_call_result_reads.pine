@@ -1,0 +1,22 @@
+//@version=6
+import user/udt/1 as left
+import user/udt/1 as right
+indicator("Supported imported function map call-result reads")
+
+copied = left.exposeMapFunction().copy()
+copied.put("copy", 9.0)
+
+size = left.exposeMapFunction().size()
+get = left.exposeMapFunction().get("missing")
+contains = left.exposeMapFunction().contains("missing")
+copy_chain = left.exposeMapFunction().copy().size()
+int_string = left.exposeIntMapFunction().get(1)
+bool_color = left.exposeBoolColorMapFunction().get(true)
+color_bool = left.exposeColorBoolMapFunction().get(color.blue)
+block_return = left.exposeMapFunctionBlock().size()
+nested_return = left.exposeMapFunctionNested().size()
+named_control_flow = left.exposeMapFunctionIf(copied=true).size()
+dual_alias = right.exposeMapFunction().size()
+nested_copy = left.exposeMapFunction().copy().copy().size()
+
+plot(size + copy_chain + block_return + nested_return + named_control_flow + dual_alias + nested_copy)
