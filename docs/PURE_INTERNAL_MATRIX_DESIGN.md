@@ -1440,6 +1440,15 @@ Recommended future slices:
     lowering, nested multiplication, source independence, provenance/dual
     aliases, invalid types/arity, and runtime failure boundaries are fixture-
     backed. Mutation and the remaining matrix-valued helpers stay gated.
+86. Terminal membership checks on array-valued call results: done for every
+    existing concrete array result, including matrix row/column/eigenvalue
+    arrays and array-returning `matrix.mult` overloads. `.includes(value)`
+    reuses ordinary element-kind validation and equality, returns `series
+    bool`, is false for an empty concrete array, propagates an upstream `na`
+    array, performs no mutation, and creates no array-result prefix. Namespace/
+    bound operations, local/imported functions and methods, scalar kinds, copy
+    continuation, invalid types/arity, and terminal-continuation paths are
+    fixture-backed. Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Added terminal `.includes(value)` membership checks to every existing
+  concrete array call result: qualified and unqualified local/imported UDF and
+  method results, registered static `array.*` producers, the seven
+  cross-namespace scalar-array producers, matrix row/column/eigenvalue arrays,
+  map key/value arrays, and array-returning `matrix.mult` overloads. The helper
+  reuses ordinary element-kind and same-identity UDT argument validation plus
+  structural/object equality, returns `series bool`, is false for an empty
+  concrete array, propagates an upstream `na` array, performs no mutation, and
+  creates no continuation prefix. Scalar, drawing/chart-point, local/imported
+  UDT, A-to-B-to-A, dual-alias isolation, copy continuation, wrong type/
+  identity, invalid arity, and terminal-continuation boundaries are fixture-
+  backed.
 - Added result-type-directed `.mult(other)` continuation to every existing
   concrete numeric matrix call result. Matrix and scalar operands return
   independent `matrix<float>` results with multiplied or receiver-preserved

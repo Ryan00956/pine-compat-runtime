@@ -1032,6 +1032,8 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = ta.pivot_point_levels(\"Traditional\", true).last().custom()\n",
         "bad = matrix.row(values, 0).get(0).custom()\n",
         "bad = matrix.mult(values, array.from(1.0, 2.0)).size().custom()\n",
+        "bad = array.from(1, 2).includes(2).custom()\n",
+        "bad = array.from(1, 2).copy().includes(2).custom()\n",
         "bad = matrix.mult(values, other).rows().custom()\n",
         "bad = matrix.new<float>(2, 2, 1.0).row(0).size().custom()\n",
         "bad = matrix.copy(values).row(0).first().custom()\n",

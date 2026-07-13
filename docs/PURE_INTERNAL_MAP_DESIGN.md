@@ -378,6 +378,14 @@ Recommended future slices:
     with block/nested/control-flow/template/dual-alias/copy coverage and
     retained scalar-result, unresolved, broader-helper, mutation, and terminal-
     reader boundaries. Done.
+16. Fresh `.keys()` and `.values()` arrays from every existing concrete scalar-
+    map call-result producer additionally expose terminal `.includes(value)`.
+    The helper preserves key/value element-kind checks and insertion-order
+    snapshots, returns `series bool`, is false for an empty concrete array,
+    propagates upstream `na`, performs no mutation, and creates no array-result
+    prefix. Built-in, local/imported function and method, dual-alias isolation,
+    copy continuation, invalid types/arity, and terminal-continuation paths are
+    fixture-backed. Done.
 
 ## Completion Gate For Future Widening
 

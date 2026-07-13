@@ -134,6 +134,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "first" => Some("array.first"),
         "last" => Some("array.last"),
         "copy" => Some("array.copy"),
+        "includes" => Some("array.includes"),
         _ => None,
     }
 }
@@ -675,6 +676,26 @@ mod tests {
         for method_name in ["size", "set", "fill", "reverse"] {
             assert_eq!(matrix_call_result_builtin_name(method_name), None);
         }
+    }
+
+    #[test]
+    fn array_call_result_helpers_are_a_closed_registered_set() {
+        for (method_name, builtin_name) in [
+            ("size", "array.size"),
+            ("get", "array.get"),
+            ("first", "array.first"),
+            ("last", "array.last"),
+            ("copy", "array.copy"),
+            ("includes", "array.includes"),
+        ] {
+            assert_eq!(
+                array_call_result_builtin_name(method_name),
+                Some(builtin_name)
+            );
+            assert!(pine_builtins::get_phase_1_builtin(builtin_name).is_some());
+        }
+        assert_eq!(array_call_result_builtin_name("indexof"), None);
+        assert_eq!(array_call_result_builtin_name("push"), None);
     }
 
     #[test]

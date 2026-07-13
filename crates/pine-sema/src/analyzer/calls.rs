@@ -284,7 +284,7 @@ impl Analyzer {
         let Some(builtin_name) = array_call_result_builtin_name(method_name) else {
             self.unsupported(
                 &format!("array.{method_name}"),
-                "direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, and `.copy()`; bind the result or use the namespace helper",
+                "direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, and `.includes()`; bind the result or use the namespace helper",
                 callee.span,
             );
             return Some(None);

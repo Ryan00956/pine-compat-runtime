@@ -743,6 +743,18 @@ Current baseline:
   scalar and matrix operands, source independence, provenance/dual aliases,
   invalid types/arity, and runtime failure boundaries are fixture-backed;
   mutation and other matrix-valued transforms remain gated.
+  The next terminal array-result slice adds `.includes(value)` to every
+  existing concrete array call-result producer: qualified and unqualified
+  local/imported UDF and method results, the static `array.*` producer
+  allowlist, the seven cross-namespace scalar-array producers, matrix-derived
+  row/column/eigenvalue arrays, map key/value arrays, and array-returning
+  `matrix.mult` overloads. It reuses the ordinary element-kind and same-
+  identity UDT argument checks plus structural/object equality, returns
+  `series bool`, is false for an empty concrete array, propagates an upstream
+  `na` array, performs no mutation, and creates no continuation prefix. Scalar,
+  drawing/chart-point, local/imported UDT, A-to-B-to-A, dual-alias isolation,
+  wrong type/identity, invalid arity, copy continuation, and terminal-
+  continuation boundaries are fixture-backed.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -758,7 +770,8 @@ Remaining internal work:
 - UDT array behavior beyond the same-local and same-imported scalar-tree
   subsets, including mixed imported return identities, non-scalar imported
   returns, conflicting identities within one tuple slot, direct helpers beyond
-  the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` set, and
+  the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
+  `.includes(value)` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked
