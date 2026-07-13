@@ -887,9 +887,12 @@ string/color kind and storage behavior. Local and imported user-method results
 with a concrete supported matrix kind share the same helpers through receiver-
 style, local-type-qualified or alias-qualified, direct-constructor-receiver,
 block/nested/control-flow, five-kind, zero-dimension, dual-alias, independent-
-copy, and copy-only-continuation paths. Unknown/`na`, scalar, array, map,
-remaining user-function matrix results, broader-helper, mutation, and terminal-
-read continuation cases remain fail closed. Exact
+copy, and copy-only-continuation paths. Registered imported pure-function
+results with a concrete supported matrix kind share those helpers across alias-
+qualified, block/nested/control-flow, five-kind, zero-dimension, dual-alias,
+independent-copy, and copy-only-continuation paths. Unknown/`na`, scalar, array,
+map, unregistered or unresolved user-function matrix results, broader-helper,
+mutation, and terminal-read continuation cases remain fail closed. Exact
 namespace `matrix.copy(values)`
 also enters this
 prefix, always resolves through the matrix helper family, and preserves the
@@ -1051,7 +1054,7 @@ exact matrix-receiver
 `values.inv()`/`values.pinv()`/`values.eigenvectors()`/`values.mult(other)`,
 unqualified local-UDF results without a concrete supported matrix kind,
 local/imported user-method results without a concrete supported matrix kind,
-remaining user-function matrix results,
+unregistered or unresolved user-function matrix results,
 built-in-qualified
 or template call results outside
 the exact static and dynamic paths, and other

@@ -1,0 +1,26 @@
+//@version=6
+import user/udt/1 as left
+import user/udt/1 as right
+indicator("Imported function matrix call-result reads")
+
+source = left.exposeMatrixFunction()
+copied = source.copy()
+copied.set(0, 0, 99.0)
+
+plot(left.exposeMatrixFunction().rows(), "rows")
+plot(left.exposeMatrixFunction().columns(), "columns")
+plot(left.exposeMatrixFunction().elements_count(), "elements")
+plot(left.exposeMatrixFunction().get(0, 1), "get")
+plot(left.exposeMatrixFunction().copy().get(1, 1), "copy_chain")
+plot(source.get(0, 0), "source_independent")
+plot(copied.get(0, 0), "copy_independent")
+plot(left.exposeIntMatrixFunction().get(0, 1), "int")
+plot(left.exposeStringMatrixFunction().get(0, 0) == "pine" ? 1 : 0, "string")
+plot(left.exposeBoolMatrixFunction().get(0, 0) ? 1 : 0, "bool")
+plot(left.exposeColorMatrixFunction().get(0, 0) == color.red ? 1 : 0, "color")
+plot(left.exposeEmptyMatrixFunction().rows() * 100 + left.exposeEmptyMatrixFunction().columns() * 10 + left.exposeEmptyMatrixFunction().elements_count(), "empty")
+plot(left.exposeMatrixFunctionBlock().get(1, 1), "block")
+plot(left.exposeMatrixFunctionNested().get(1, 0), "nested")
+plot(left.exposeMatrixFunctionIf(other=true).get(0, 0), "control_flow")
+plot(right.exposeMatrixFunction().get(0, 0), "dual_alias")
+plot(left.exposeMatrixFunction().copy().copy().get(0, 1), "nested_copy")

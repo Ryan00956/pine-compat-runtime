@@ -408,7 +408,15 @@ Current baseline:
   kind-control-flow, float/int/bool/string/color, zero-dimension, same-library
   dual-alias, independent-copy, and copy-only-continuation paths share the same
   five helpers. Unknown/`na`, non-matrix or unresolved method results,
-  remaining user-function matrix results, broader helpers, mutation, and
+  unregistered or unresolved user-function matrix results, broader helpers,
+  mutation, and
+  terminal-read continuation remain gated.
+  The following closed call-boundary slice admits registered imported pure-
+  function results with a concrete supported matrix kind. Alias-qualified,
+  block/nested/same-kind-control-flow, float/int/bool/string/color, zero-
+  dimension, same-library dual-alias, independent-copy, and copy-only-
+  continuation paths share the same five helpers. Unknown/`na`, non-matrix,
+  unregistered or unresolved function results, broader helpers, mutation, and
   terminal-read continuation remain gated.
   The following closed slice admits exact namespace
   `matrix.transpose(values)` on that path. It preserves the same five element
@@ -533,9 +541,9 @@ Remaining internal work:
   `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
   `values.inv()`/`values.pinv()`/`values.eigenvectors()`/
   matrix-valued `values.mult(other)`, local/imported user-method matrix-result
-  receivers without a concrete supported matrix kind, remaining user-function
-  matrix-result receivers, unqualified local-UDF results without a concrete
-  supported matrix kind,
+  receivers without a concrete supported matrix kind, unregistered or
+  unresolved user-function matrix-result receivers, unqualified local-UDF
+  results without a concrete supported matrix kind,
   other matrix-returning calls, unsupported matrix/map templates, local or
   imported user-function/user-method map results without one concrete
   supported scalar template, and other map call-result receivers,

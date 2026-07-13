@@ -270,3 +270,16 @@ export exposeBoolColorMapFunction() => map.new<bool, color>()
 export exposeColorBoolMapFunction() => map.new<color, bool>()
 export exposeMapFunctionIf(bool copied) => copied ? map.copy(map.new<string, float>()) : map.new<string, float>()
 export exposeMapFunctionNested() => exposeMapFunctionBlock()
+export exposeMatrixFunction() => matrix.new<float>(2, 2, 3.5)
+export exposeMatrixFunctionBlock() =>
+    made = matrix.new<float>(2, 2, 4.5)
+    made
+export exposeIntMatrixFunction() => matrix.new<int>(1, 2, 7)
+export exposeBoolMatrixFunction() => matrix.new<bool>(1, 1, true)
+export exposeStringMatrixFunction() => matrix.new<string>(1, 1, "pine")
+export exposeColorMatrixFunction() => matrix.new<color>(1, 1, color.red)
+export exposeEmptyMatrixFunction() => matrix.new<float>(0, 3)
+export exposeMatrixFunctionIf(bool other) => other ? matrix.new<float>(2, 2, 9.0) : matrix.new<float>(2, 2, 3.5)
+export exposeMatrixFunctionNested() => exposeMatrixFunctionBlock()
+export exposeNaFunction() => na
+export exposeArrayFunction() => array.from(1.0, 2.0)

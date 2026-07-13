@@ -219,12 +219,17 @@ local-type-qualified or alias-qualified, direct-constructor-receiver,
 block/nested/same-kind-control-flow, five-kind, zero-dimension, dual-alias,
 independent-copy, and copy-only-continuation paths carry method-call provenance
 but no UDT/import identity in matrix metadata.
+Item 51 adds registered imported pure-function results with a concrete supported
+matrix kind through the same five helpers. Alias-qualified, block/nested/same-
+kind-control-flow, five-kind, zero-dimension, dual-alias, independent-copy, and
+copy-only-continuation paths carry registered function provenance but no UDT/
+import identity in matrix metadata.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
-matrix results without a concrete supported kind, remaining user-function
-matrix results, unresolved or mixed map results, and other matrix/map-returning
-calls remain fail-closed. `array.slice`
+matrix results without a concrete supported kind, unregistered or unresolved
+user-function matrix results, unresolved or mixed map results, and other
+matrix/map-returning calls remain fail-closed. `array.slice`
 remains a live parent view, while a
 postfix `.copy()` independently captures its current values. `array.concat`
 still mutates and returns its first array id; a following reader is itself
@@ -841,9 +846,9 @@ Initial policy:
   `values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
   `values.inv()`/`values.pinv()`/`values.eigenvectors()`/
   matrix-valued `values.mult(other)`, local/imported user-method matrix-result
-  receivers without a concrete supported matrix kind, remaining user-function
-  matrix-result receivers, unqualified local-UDF results without a concrete
-  supported matrix kind,
+  receivers without a concrete supported matrix kind, unregistered or
+  unresolved user-function matrix-result receivers, unqualified local-UDF
+  results without a concrete supported matrix kind,
   built-in-qualified/template call
   receivers outside the exact static and dynamic paths, mutation side effects,
   and other direct array or matrix methods on call results remain
@@ -1286,6 +1291,15 @@ Recommended future slices:
     results, remaining user-function matrix results, broader helpers, mutation,
     and terminal-read continuation remain fail closed. No UDT/import identity
     or public schema field is added. Done.
+51. Registered imported pure-function results whose call-specific result is one
+    concrete supported matrix kind expose only
+    rows/columns/elements_count/get/copy with copy-only continuation. Qualified
+    function provenance preserves alias-qualified, block-return, nested-
+    function, same-kind-control-flow, float/int/bool/string/color, zero-
+    dimension, same-library dual-alias, and independent-copy paths. Unknown/
+    `na`, non-matrix, unregistered or unresolved function results, broader
+    helpers, mutation, and terminal-read continuation remain fail closed. No
+    UDT/import identity or public schema field is added. Done.
 
 ## Completion Gate For Future Positive Support
 
@@ -1384,9 +1398,13 @@ and key/value template metadata but no UDT/import identity.
 Item 50 adds local and imported user-method concrete matrix-result reads with
 root-source/source-context-aware call provenance, same-library dual-alias
 isolation, and concrete matrix-kind metadata but no UDT/import identity.
+Item 51 adds registered imported pure-function concrete matrix-result reads with
+qualified-function provenance, same-library dual-alias isolation, and concrete
+matrix-kind metadata but no UDT/import identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
-concrete supported kind, remaining user-function matrix-result receivers,
+concrete supported kind, unregistered or unresolved user-function matrix-result
+receivers,
 built-in-qualified/template call-result receivers
 outside the closed paths, unsupported `array.new<T>` templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, unsupported

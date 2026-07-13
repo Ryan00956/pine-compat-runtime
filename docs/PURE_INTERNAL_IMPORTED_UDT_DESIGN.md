@@ -204,12 +204,18 @@ local-type-qualified or alias-qualified, direct-constructor-receiver,
 block/nested/same-kind-control-flow, five-kind, zero-dimension, dual-alias,
 independent-copy, and copy-only-continuation paths carry method-call provenance
 but no imported identity in matrix metadata.
+Item 41 adds registered imported pure-function results with a concrete supported
+matrix kind through the same five helpers. Alias-qualified, block/nested/same-
+kind-control-flow, five-kind, zero-dimension, dual-alias, independent-copy, and
+copy-only-continuation paths carry registered function provenance but no
+imported identity in matrix metadata.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` types, non-producer calls, unsupported matrix
 templates and map templates,
 local/imported user-method matrix results without a concrete supported kind,
-remaining user-function matrix results, unresolved or mixed map results, and
-other matrix/map-returning calls, mixed or non-scalar return identities,
+unregistered or unresolved user-function matrix results, unresolved or mixed
+map results, and other matrix/map-returning calls, mixed or non-scalar return
+identities,
 non-array/non-UDT or unresolved results, nested field mutation, and
 method receiver/parameter/global field side effects remain fail-closed.
 `array.slice` retains its live parent view and postfix `.copy()` captures its
@@ -1110,3 +1116,13 @@ return/parameter flow remains deferred.
     results, remaining user-function matrix results, broader helpers, mutation,
     and terminal-read continuation remain fail closed. No imported UDT identity
     is carried into matrix metadata and no public schema field is added. Done.
+41. Registered imported pure-function results whose call-specific result is one
+    concrete supported matrix kind expose only
+    rows/columns/elements_count/get/copy with copy-only continuation. Qualified
+    function provenance preserves alias-qualified, block-return, nested-
+    function, same-kind-control-flow, float/int/bool/string/color, zero-
+    dimension, same-library dual-alias, and independent-copy paths. Unknown/
+    `na`, non-matrix, unregistered or unresolved function results, broader
+    helpers, mutation, and terminal-read continuation remain fail closed. No
+    imported UDT identity is carried into matrix metadata and no public schema
+    field is added. Done.

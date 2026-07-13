@@ -1,0 +1,16 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Unsupported imported function matrix call-result reads")
+
+bad_row = lib.exposeMatrixFunction().get("bad", 0)
+set_result = lib.exposeMatrixFunction().set(0, 0, 2.0)
+sum_result = lib.exposeMatrixFunction().sum()
+size_result = lib.exposeMatrixFunction().size()
+copy_sum_result = lib.exposeMatrixFunction().copy().sum()
+terminal_chain = lib.exposeMatrixFunction().rows().copy()
+none_rows = lib.exposeNaFunction().rows()
+number_rows = lib.maxBarsLength().rows()
+array_rows = lib.exposeArrayFunction().rows()
+map_rows = lib.exposeMapFunction().rows()
+
+plot(close)

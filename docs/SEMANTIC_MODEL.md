@@ -916,13 +916,17 @@ bound matrix-result call-result receivers other than exact matrix-receiver
 `values.inv()`/`values.pinv()`/`values.eigenvectors()`/matrix-valued
 `values.mult(other)`, unqualified local-UDF matrix-result receivers without a
 concrete supported matrix kind, local/imported user-method matrix-result
-receivers without a concrete supported matrix kind, remaining user-function
-matrix-result receivers,
+receivers without a concrete supported matrix kind, unregistered or unresolved
+user-function matrix-result receivers,
 built-in-qualified/template
 call-result receivers outside the exact static `array.*` allowlist and
 cross-namespace dynamic paths, nested field mutation, UDF
 parameter/global field side effects, and method receiver/parameter/global field
 side effects.
+Registered imported pure-function results with one concrete supported matrix
+kind carry only call-specific matrix-kind metadata and expose the same closed
+rows/columns/elements_count/get/copy set with copy-only continuation; they do
+not widen imported UDT identity.
 Qualified user-defined and unqualified plain local UDF results plus the
 exact static `array.*` allowlist and cross-namespace array-capable path support
 those five array helpers for
@@ -1035,14 +1039,17 @@ matrix-result receivers other than exact `values.copy()`/`values.transpose()`/
 `values.submatrix(...)`/`values.kron(other)`/`values.diff(other)`/
 `values.pow(power)`/`values.inv()`/`values.pinv()`/`values.eigenvectors()`/
 matrix-valued `values.mult(other)`, local/imported user-method matrix-result
-receivers without a concrete supported matrix kind, remaining user-function
-matrix-result receivers, unqualified local-UDF results without a concrete
+receivers without a concrete supported matrix kind, unregistered or unresolved
+user-function matrix-result receivers, unqualified local-UDF results without a concrete
 supported matrix kind,
 built-in-qualified/template
 call results outside the exact static and dynamic paths, and other array or
 matrix helpers remain gated. The scalar `map.new<K,V>` and namespace
 `map.copy(existing)` result paths carry only map template metadata and likewise
 do not widen UDT identity.
+Registered imported pure-function matrix-result dispatch likewise carries only
+the concrete matrix kind and registered function provenance, with no imported
+UDT identity.
 Methods with receiver/parameter/global field side effects, recursion,
 unsupported parameter families, mismatched UDT parameter identity, unknown
 receivers, and alias-qualified imported method receiver type mismatches remain

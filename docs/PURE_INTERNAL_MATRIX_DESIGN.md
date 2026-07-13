@@ -138,8 +138,8 @@ Current evidence:
   matrix-operation and constructor returns, named/reordered arguments,
   float/int/bool/string/color call-specific kinds, zero dimensions, independent
   copies, and copy-only continuation. Unknown/`na`, scalar, array, map,
-  remaining user-function results, broader helpers, mutation, and terminal-read
-  continuation remain gated.
+  unregistered or unresolved user-function results, broader helpers, mutation,
+  and terminal-read continuation remain gated.
 - `tests/fixtures/runtime/user_method_matrix_call_result_reads.pine` and
   `tests/fixtures/runtime/import_user_method_matrix_call_result_reads.pine`
   plus their supported/unsupported semantic fixtures cover local and imported
@@ -148,8 +148,17 @@ Current evidence:
   receiver, block/nested/same-kind-control-flow, float/int/bool/string/color,
   zero-dimension, same-library dual-alias, independent-copy, and copy-only-
   continuation paths are fixture-backed. Unknown/`na`, non-matrix or
-  unresolved method results, remaining user-function matrix results, broader
-  helpers, mutation, and terminal-read continuation remain gated.
+  unresolved method results, unregistered or unresolved user-function matrix
+  results, broader helpers, mutation, and terminal-read continuation remain
+  gated.
+- `tests/fixtures/runtime/import_function_matrix_call_result_reads.pine` plus
+  its supported/unsupported semantic fixtures covers registered imported pure-
+  function matrix results through rows/columns/elements_count/get/copy. Alias-
+  qualified, block/nested/same-kind-control-flow, float/int/bool/string/color,
+  zero-dimension, same-library dual-alias, independent-copy, and copy-only-
+  continuation paths are fixture-backed. Unknown/`na`, non-matrix,
+  unregistered or unresolved function results, broader helpers, mutation, and
+  terminal-read continuation remain gated.
 - `tests/fixtures/runtime/matrix_float.pine` covers `matrix.new<float>`,
   `matrix.get`, `matrix.set`, `matrix.fill`, `values.fill(value)`,
   `values.get(row, column)`, `values.set(row, column, value)`, `matrix.rows`,
@@ -1172,6 +1181,14 @@ Recommended future slices:
     `na`, non-matrix or unresolved method results, remaining user-function
     matrix results, broader helpers, mutation, and terminal-read continuation
     remain fail closed.
+55. Imported pure-function matrix call results: done for registered imported
+    functions whose per-call result is one concrete supported matrix kind.
+    Alias-qualified, block/nested/same-kind-control-flow, float/int/bool/string/
+    color, zero-dimension, same-library dual-alias, independent-copy, and copy-
+    only-continuation paths expose rows/columns/elements_count/get/copy.
+    Unknown/`na`, non-matrix, unregistered or unresolved function results,
+    broader helpers, mutation, and terminal-read continuation remain fail
+    closed.
 
 ## Completion Gate For Future Positive Support
 
