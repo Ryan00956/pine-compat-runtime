@@ -489,6 +489,13 @@ Recommended future slices:
     `na`, runtime typed-`na`, negative and out-of-range behavior, invalid type/
     arity, local/imported provenance, and terminal continuation are fixture-
     backed. Map storage and template rules are unchanged. Done.
+33. Numeric key/value snapshots additionally expose terminal
+    `.covariance(id2, biased?)`. Same-length numeric second-array checks,
+    original-index pairing, paired-`na` filtering, population/sample bias,
+    fixed series-float results, empty/all-`na`/upstream-`na`, mismatched-length,
+    insufficient-sample and non-finite-result behavior, invalid type/arity,
+    local/imported provenance, and terminal continuation are fixture-backed.
+    Map storage and template rules are unchanged. Done.
 
 ## Completion Gate For Future Widening
 

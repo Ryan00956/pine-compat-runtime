@@ -91,6 +91,9 @@ plot(na(pivot_namespace_percentile_linear) ? (na(pivot_percentile_linear) ? 1 : 
 pivot_percentrank = ta.pivot_point_levels("Traditional", true, true).percentrank(0)
 pivot_namespace_percentrank = array.percentrank(ta.pivot_point_levels("Traditional", true, true), 0)
 plot(na(pivot_namespace_percentrank) ? (na(pivot_percentrank) ? 1 : 0) : (pivot_percentrank == pivot_namespace_percentrank ? 1 : 0), "pivot_call_result_percentrank")
+pivot_covariance = ta.pivot_point_levels("Traditional", true, true).covariance(ta.pivot_point_levels("Traditional", true, true))
+pivot_namespace_covariance = array.covariance(ta.pivot_point_levels("Traditional", true, true), ta.pivot_point_levels("Traditional", true, true))
+plot(na(pivot_namespace_covariance) ? (na(pivot_covariance) ? 1 : 0) : (pivot_covariance == pivot_namespace_covariance ? 1 : 0), "pivot_call_result_covariance")
 
 pivot_state_size = ta.pivot_point_levels("Traditional", bar_index == 2).size()
 pivot_state_first = ta.pivot_point_levels("Traditional", bar_index == 2).first()
@@ -157,6 +160,7 @@ plot(na(matrix.row(float_matrix, 0).mode()) and na(matrix.row(int_matrix, 0).mod
 plot(matrix.row(float_matrix, 0).percentile_nearest_rank(50) == 1.5 and matrix.row(int_matrix, 0).percentile_nearest_rank(50) == 10 ? 1 : 0, "matrix_row_col_call_result_percentile_nearest")
 plot(matrix.row(float_matrix, 0).percentile_linear_interpolation(50) == 2.0 and matrix.row(int_matrix, 0).percentile_linear_interpolation(50) == 15.0 ? 1 : 0, "matrix_row_col_call_result_percentile_linear")
 plot(matrix.row(float_matrix, 0).percentrank(0) == array.percentrank(matrix.row(float_matrix, 0), 0) and matrix.row(int_matrix, 0).percentrank(index=1) == array.percentrank(matrix.row(int_matrix, 0), 1) ? 1 : 0, "matrix_row_col_call_result_percentrank")
+plot(matrix.row(float_matrix, 0).covariance(matrix.row(float_matrix, 0)) == array.covariance(matrix.row(float_matrix, 0), matrix.row(float_matrix, 0)) and matrix.row(int_matrix, 0).covariance(id2=matrix.row(int_matrix, 0), biased=false) == array.covariance(matrix.row(int_matrix, 0), matrix.row(int_matrix, 0), false) ? 1 : 0, "matrix_row_col_call_result_covariance")
 
 matrix<float> na_float_matrix = na
 na_cell_matrix = matrix.new<float>(1, 1)
@@ -180,6 +184,7 @@ plot(na(matrix.row(na_float_matrix, 0).mode()) ? 1 : 0, "matrix_na_row_call_resu
 plot(na(matrix.row(na_float_matrix, 0).percentile_nearest_rank(50)) ? 1 : 0, "matrix_na_row_call_result_percentile_nearest")
 plot(na(matrix.row(na_float_matrix, 0).percentile_linear_interpolation(50)) ? 1 : 0, "matrix_na_row_call_result_percentile_linear")
 plot(na(matrix.row(na_float_matrix, 0).percentrank(0)) ? 1 : 0, "matrix_na_row_call_result_percentrank")
+plot(na(matrix.row(na_float_matrix, 0).covariance(array.from(1.0))) and na(matrix.row(float_matrix, 0).covariance(matrix.row(na_float_matrix, 0))) ? 1 : 0, "matrix_na_row_call_result_covariance")
 
 float_diagonal = matrix.new<float>(2, 2, 0.0)
 float_diagonal.set(0, 0, 2.0)
@@ -213,6 +218,7 @@ plot(na(matrix.eigenvalues(float_diagonal).mode()) ? 1 : 0, "eigen_call_result_m
 plot(matrix.eigenvalues(float_diagonal).percentile_nearest_rank(50) == 2.0 ? 1 : 0, "eigen_call_result_percentile_nearest")
 plot(matrix.eigenvalues(float_diagonal).percentile_linear_interpolation(50) == 2.5 ? 1 : 0, "eigen_call_result_percentile_linear")
 plot(matrix.eigenvalues(float_diagonal).percentrank(0) == array.percentrank(matrix.eigenvalues(float_diagonal), 0) ? 1 : 0, "eigen_call_result_percentrank")
+plot(matrix.eigenvalues(float_diagonal).covariance(matrix.eigenvalues(float_diagonal)) == array.covariance(matrix.eigenvalues(float_diagonal), matrix.eigenvalues(float_diagonal)) ? 1 : 0, "eigen_call_result_covariance")
 plot(matrix.eigenvalues(matrix.new<float>(0, 0)).size(), "eigen_empty_size")
 plot(na(matrix.eigenvalues(matrix.new<float>(0, 0)).first()) ? 1 : 0, "eigen_empty_first")
 matrix<float> na_eigen_matrix = na
@@ -283,6 +289,7 @@ plot(na(map.keys(int_float).mode()) and na(map.values(int_float).copy().mode()) 
 plot(map.keys(int_float).percentile_nearest_rank(50) == array.percentile_nearest_rank(map.keys(int_float), 50) and map.values(int_float).copy().percentile_nearest_rank(50) == array.percentile_nearest_rank(map.values(int_float), 50) ? 1 : 0, "map_call_result_percentile_nearest")
 plot(map.keys(int_float).percentile_linear_interpolation(50) == array.percentile_linear_interpolation(map.keys(int_float), 50) and map.values(int_float).copy().percentile_linear_interpolation(50) == array.percentile_linear_interpolation(map.values(int_float), 50) ? 1 : 0, "map_call_result_percentile_linear")
 plot(map.keys(int_float).percentrank(0) == array.percentrank(map.keys(int_float), 0) and map.values(int_float).copy().percentrank(index=1) == array.percentrank(map.values(int_float), 1) ? 1 : 0, "map_call_result_percentrank")
+plot(map.keys(int_float).covariance(map.keys(int_float)) == array.covariance(map.keys(int_float), map.keys(int_float)) and map.values(int_float).copy().covariance(id2=map.values(int_float), biased=false) == array.covariance(map.values(int_float), map.values(int_float), false) ? 1 : 0, "map_call_result_covariance")
 
 empty_map = map.new<string, float>()
 map<string, float> na_map = na
@@ -314,6 +321,7 @@ plot(na(map.values(empty_map).mode()) and na(map.values(na_map).mode()) ? 1 : 0,
 plot(na(map.values(empty_map).percentile_nearest_rank(50)) and na(map.values(na_map).percentile_nearest_rank(50)) ? 1 : 0, "map_empty_na_call_result_percentile_nearest")
 plot(na(map.values(empty_map).percentile_linear_interpolation(50)) and na(map.values(na_map).percentile_linear_interpolation(50)) ? 1 : 0, "map_empty_na_call_result_percentile_linear")
 plot(na(map.values(empty_map).percentrank(0)) and na(map.values(na_map).percentrank(0)) ? 1 : 0, "map_empty_na_call_result_percentrank")
+plot(na(map.values(empty_map).covariance(array.new_float())) and na(map.values(na_map).covariance(array.from(1.0))) and na(map.values(int_float).covariance(array.from(1.0))) ? 1 : 0, "map_empty_na_call_result_covariance")
 plot(readMatrixAndMap(float_matrix, int_float), "block_udf")
 
 mult_matrix = matrix.new<float>(2, 2, 0.0)
@@ -366,6 +374,7 @@ plot(matrix.mult(matrix.new<float>(2, 2, 1.0), array.from(1.0, 1.0)).mode() == 2
 plot(matrix.mult(mult_matrix, mult_vector).percentile_nearest_rank(50) == 17.0 and mult_matrix.mult(mult_vector).percentile_nearest_rank(50) == 17.0 ? 1 : 0, "mult_call_result_percentile_nearest")
 plot(matrix.mult(mult_matrix, mult_vector).percentile_linear_interpolation(50) == 28.0 and mult_matrix.mult(mult_vector).percentile_linear_interpolation(50) == 28.0 ? 1 : 0, "mult_call_result_percentile_linear")
 plot(matrix.mult(mult_matrix, mult_vector).percentrank(0) == array.percentrank(matrix.mult(mult_matrix, mult_vector), 0) and mult_matrix.mult(mult_vector).percentrank(index=1) == array.percentrank(mult_matrix.mult(mult_vector), 1) ? 1 : 0, "mult_call_result_percentrank")
+plot(matrix.mult(mult_matrix, mult_vector).covariance(matrix.mult(mult_matrix, mult_vector)) == array.covariance(matrix.mult(mult_matrix, mult_vector), matrix.mult(mult_matrix, mult_vector)) and mult_matrix.mult(mult_vector).covariance(id2=mult_matrix.mult(mult_vector), biased=false) == array.covariance(mult_matrix.mult(mult_vector), mult_matrix.mult(mult_vector), false) ? 1 : 0, "mult_call_result_covariance")
 
 int_mult_matrix = matrix.new<int>(2, 2, 0)
 int_mult_matrix.set(0, 0, 1)
@@ -401,6 +410,7 @@ plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).mode()) and na(
 plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).percentile_nearest_rank(50)) and na(matrix.mult(mult_na_matrix, mult_vector).percentile_nearest_rank(50)) ? 1 : 0, "mult_empty_na_call_result_percentile_nearest")
 plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).percentile_linear_interpolation(50)) and na(matrix.mult(mult_na_matrix, mult_vector).percentile_linear_interpolation(50)) ? 1 : 0, "mult_empty_na_call_result_percentile_linear")
 plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).percentrank(0)) and na(matrix.mult(mult_na_matrix, mult_vector).percentrank(0)) ? 1 : 0, "mult_empty_na_call_result_percentrank")
+plot(na(matrix.mult(matrix.new<float>(0, 0), array.new_float(0)).covariance(array.new_float())) and na(matrix.mult(mult_na_matrix, mult_vector).covariance(array.from(1.0, 2.0))) and na(matrix.mult(mult_matrix, mult_vector).covariance(array.from(1.0))) ? 1 : 0, "mult_empty_na_call_result_covariance")
 plot(matrix.mult(array.new_float(0), matrix.new<float>(0, 0)).size(), "mult_left_empty_size")
 plot(na(matrix.mult(array.new_float(0), matrix.new<float>(0, 0)).first()) ? 1 : 0, "mult_left_empty_first")
 plot(matrix.mult(array.new_float(0), array.new_float(0)).size(), "mult_pair_empty_size")

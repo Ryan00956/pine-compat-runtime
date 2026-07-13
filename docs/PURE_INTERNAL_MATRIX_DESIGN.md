@@ -1566,6 +1566,13 @@ Recommended future slices:
     upstream-`na`, target-`na`, runtime typed-`na`, negative and out-of-range
     behavior, invalid type/arity, and terminal continuation. Matrix-valued
     continuation is unchanged.
+103. Numeric array-valued call results additionally expose terminal
+    `.covariance(id2, biased?)`. Matrix row/column/eigenvalue arrays and array-
+    returning `matrix.mult` overloads retain same-length numeric second-array
+    checks, original-index pairing, paired-`na` filtering, population/sample
+    bias, fixed series-float results, empty/all-`na`/upstream-`na`, mismatched-
+    length, insufficient-sample and non-finite-result behavior, invalid type/
+    arity, and terminal continuation. Matrix-valued continuation is unchanged.
 
 ## Completion Gate For Future Positive Support
 

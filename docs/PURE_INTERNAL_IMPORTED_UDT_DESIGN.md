@@ -1514,3 +1514,11 @@ return/parameter flow remains deferred.
     accepted. Empty/all-`na`/upstream-`na`, target-`na`, runtime typed-`na`,
     negative, out-of-range, nonnumeric/imported-UDT, arity, provenance, and
     terminal-continuation boundaries remain closed. Done.
+89. The same numeric producer set exposes terminal
+    `.covariance(id2, biased?)`. It requires a same-length numeric second array,
+    aligns cells by original index, filters pairs containing `na`, defaults to
+    population bias, uses the sample denominator for `false` or `na`, and
+    returns fixed series float. Empty/all-`na`/upstream-`na`, mismatched-length,
+    insufficient-sample, non-finite-result, nonnumeric/imported-UDT second-
+    array, arity, provenance, and terminal-continuation boundaries remain
+    closed. Done.

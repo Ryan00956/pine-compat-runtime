@@ -309,6 +309,13 @@ from the comparison population, counts duplicate values independently, and
 accepts positional or named simple-int-compatible indexes. Empty/all-`na`/
 upstream-`na`, target-`na`, runtime typed-`na`, negative, out-of-range, UDT,
 arity, provenance, and terminal-continuation boundaries remain closed.
+Item 99 adds terminal fixed-float `.covariance(id2, biased?)` over the same
+result set. It requires a same-length numeric second array, aligns cells by
+original index, filters pairs containing `na`, defaults to population bias,
+and uses the sample denominator for `false` or `na`. Empty/all-`na`/upstream-
+`na`, mismatched-length, insufficient-sample, non-finite-result, nonnumeric/
+UDT second-array, arity, provenance, and terminal-continuation boundaries
+remain closed.
 Outside the exact closed producer/result paths,
 unsupported `array.new<T>` element families, non-producer calls, map/matrix
 unsupported matrix templates and map templates, local/imported user-method
@@ -1858,6 +1865,12 @@ preserving original-index target selection, filtered comparison population,
 duplicate counting, positional or named simple-int-compatible indexes, empty/
 all-`na`/upstream-`na`, target-`na`, runtime typed-`na`, negative, out-of-range,
 arity, provenance, terminal-continuation, and UDT-identity boundaries.
+Item 99 adds terminal fixed-float `.covariance(id2, biased?)` over that result
+set, preserving same-length numeric second-array checks, original-index pairing,
+paired-`na` filtering, population/sample bias behavior, empty/all-`na`/
+upstream-`na`, mismatched-length, insufficient-sample, non-finite-result,
+nonnumeric/UDT second-array, arity, provenance, terminal-continuation, and UDT-
+identity boundaries.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

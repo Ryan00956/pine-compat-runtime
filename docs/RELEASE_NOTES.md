@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal `.covariance(id2, biased?)` to every existing concrete
+  numeric array call result. It requires a same-length numeric second array,
+  pairs original indexes, filters pairs containing `na`, defaults to the
+  population denominator, and uses the sample denominator for `false` or `na`
+  bias. It returns fixed `series float`; empty/all-`na`/upstream-`na`, length-
+  mismatch, insufficient-sample, and non-finite results return `na`. The read
+  remains non-mutating and terminal. Static/cross-namespace, matrix/map-derived,
+  local/imported function/method, invalid type/arity, provenance, and
+  continuation paths are fixture-backed.
 - Added terminal `.percentrank(index)` to every existing concrete numeric
   array call result. It selects the target from the original array index,
   filters `na` only from the comparison population, counts duplicates

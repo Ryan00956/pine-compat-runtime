@@ -865,6 +865,13 @@ Current baseline:
   empty/all-`na`/upstream-`na`, target-`na`, runtime typed-`na`, negative, and
   out-of-range indexes retain `na`; provenance, invalid-type/arity, non-
   mutation, and terminal boundaries remain closed.
+  The following paired-statistics slice adds `.covariance(id2, biased?)`. It
+  requires a same-length numeric second array, aligns cells by original index,
+  filters pairs containing `na`, defaults to the population denominator, and
+  uses the sample denominator for `false` or `na` bias. It returns fixed series
+  float while retaining empty/all-`na`/upstream-`na`, mismatched-length,
+  insufficient-sample, non-finite-result, provenance, invalid-type/arity, non-
+  mutation, and terminal boundaries.
   `array.slice` retains its live parent-window semantics while postfix `copy`
   snapshots the current window independently. `array.concat` still mutates and
   returns its first array; a following reader is non-mutating but does not make
@@ -884,7 +891,7 @@ Remaining internal work:
   `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus numeric-only
   `.binary_search(value)`/`.binary_search_leftmost(value)`/
   `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/
-  `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)` set, and
+  `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)` set, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked

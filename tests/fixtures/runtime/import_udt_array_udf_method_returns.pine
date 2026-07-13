@@ -402,6 +402,9 @@ local_float_percentile_linear = localIdentity(array.from(20.0, na, 22.0)).copy()
 qualified_import_percentrank = left.direct(array.from(60, 61, 62)).percentrank(1)
 local_int_percentrank = localIdentity(array.from(10, 11, 12)).percentrank(index=1)
 local_float_percentrank = localIdentity(array.from(20.0, na, 22.0)).copy().percentrank(2)
+qualified_import_covariance = left.direct(array.from(60, 61, 62)).covariance(array.from(2, 4, 8))
+local_int_covariance = localIdentity(array.from(10, 11, 12)).covariance(id2=array.from(1, 2, 3), biased=false)
+local_float_covariance = localIdentity(array.from(20.0, na, 22.0)).copy().covariance(array.from(1.0, 2.0, 3.0))
 plot(qualified_import_size)
 plot(qualified_import_get)
 plot(qualified_import_last)
@@ -422,6 +425,7 @@ plot(qualified_import_mode == 61 and local_int_mode == 11 and local_float_mode =
 plot(qualified_import_percentile_nearest == 61 and local_int_percentile_nearest == 11 and local_float_percentile_nearest == 22.0 ? 1 : 0)
 plot(qualified_import_percentile_linear == 61.0 and local_int_percentile_linear == 11.0 and local_float_percentile_linear == 21.0 ? 1 : 0)
 plot(qualified_import_percentrank == 2.0 / 3.0 * 100.0 and local_int_percentrank == 2.0 / 3.0 * 100.0 and local_float_percentrank == 100.0 ? 1 : 0)
+plot(qualified_import_covariance == 2.0 and local_int_covariance == 1.0 and local_float_covariance == 1.0 ? 1 : 0)
 
 historical_return = left.direct(left_first_values)[1]
 historical_item = array.first(historical_return)

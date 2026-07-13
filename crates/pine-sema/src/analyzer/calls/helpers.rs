@@ -151,6 +151,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "percentile_nearest_rank" => Some("array.percentile_nearest_rank"),
         "percentile_linear_interpolation" => Some("array.percentile_linear_interpolation"),
         "percentrank" => Some("array.percentrank"),
+        "covariance" => Some("array.covariance"),
         _ => None,
     }
 }
