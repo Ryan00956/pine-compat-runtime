@@ -1740,6 +1740,15 @@ Recommended future slices:
     Empty/upstream-`na`, capacity, kind/arity, and UDF-side-effect boundaries
     retain ordinary `array.concat` behavior. Matrix-valued continuation and
     public schemas remain unchanged.
+124. Every concrete matrix call result additionally exposes terminal
+    `.set(row, column, value)`. It preserves the receiver's float/int/bool/
+    string/color element kind, validates simple-int-compatible indexes and an
+    element-compatible value, returns `void`, and cannot continue. Local UDF
+    and local user-method alias results update shared matrix storage; fresh
+    namespace, bound-transform, imported-function, and imported-method results
+    isolate the write from source matrices. Upstream-`na` results evaluate the
+    value and no-op. Bounds, invalid type/arity, UDF-side-effect, and public-
+    schema boundaries retain ordinary `matrix.set` behavior. Done.
 
 ## Completion Gate For Future Positive Support
 

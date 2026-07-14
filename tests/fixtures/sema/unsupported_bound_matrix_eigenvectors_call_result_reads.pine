@@ -6,7 +6,7 @@ bools = matrix.new<bool>(2, 2, true)
 array_values = array.from(1.0, 2.0)
 
 bad_row = values.eigenvectors().get("bad", 0)
-set_result = values.eigenvectors().set(0, 0, 2.0)
+values.eigenvectors().set(0, 0, "bad")
 size_result = values.eigenvectors().size()
 bad_receiver_kind = bools.eigenvectors().rows()
 wrong_receiver = array_values.eigenvectors().rows()

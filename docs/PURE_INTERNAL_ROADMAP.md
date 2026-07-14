@@ -1039,6 +1039,15 @@ Current baseline:
   upstream-`na`, invalid arity, and UDF-side-effect boundaries are fixture-
   backed; remaining direct mutations stay gated and public schemas are
   unchanged.
+  The first matrix call-result mutation slice adds terminal
+  `.set(row, column, value)` to every concrete matrix-result producer. It
+  preserves float/int/bool/string/color element kinds, simple-int indexes,
+  ordinary bounds and upstream-`na` behavior, returns `void`, and cannot
+  continue. Local UDF or local user-method aliases update shared storage;
+  namespace, bound-transform, imported-function, and imported-method results
+  isolate writes in fresh matrices. Invalid type/arity, UDF-side-effect, and
+  public-schema boundaries are fixture-backed; other matrix-result mutations
+  remain gated.
 
 Remaining internal work:
 
@@ -1084,7 +1093,8 @@ Remaining internal work:
   unknown/`na` results
   without a concrete supported type or identity, terminal producer readers
   other than the supported map-result `.keys()`/`.values()` array paths
-  followed by another method, and array mutation. The existing bound-receiver
+  followed by another method, and collection mutation outside the admitted
+  array-result set plus terminal matrix-result `.set(...)`. The existing bound-receiver
   `matrix_id.mult(array).size()` path is not part of that namespace exclusion;
 - generic or bare `array` declarations beyond current fixture-backed element
   kinds;

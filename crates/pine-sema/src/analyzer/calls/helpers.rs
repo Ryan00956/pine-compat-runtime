@@ -182,6 +182,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "columns" => Some("matrix.columns"),
         "elements_count" => Some("matrix.elements_count"),
         "get" => Some("matrix.get"),
+        "set" => Some("matrix.set"),
         "copy" => Some("matrix.copy"),
         "diff" => Some("matrix.diff"),
         "eigenvectors" => Some("matrix.eigenvectors"),

@@ -5,7 +5,7 @@ indicator("Unsupported imported user-method matrix call-result reads")
 point = lib.Point.new(1.0)
 
 bad_row = point.exposeMatrix().get("bad", 0)
-set_result = point.exposeMatrix().set(0, 0, 2.0)
+point.exposeMatrix().set(0, 0, "bad")
 size_result = point.exposeMatrix().size()
 terminal_chain = point.exposeMatrix().rows().copy()
 none_rows = point.exposeNa().rows()

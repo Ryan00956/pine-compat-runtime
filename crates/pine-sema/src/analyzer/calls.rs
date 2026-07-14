@@ -370,11 +370,18 @@ impl Analyzer {
         let Some(builtin_name) = matrix_call_result_builtin_name(method_name) else {
             self.unsupported(
                 &format!("matrix.{method_name}"),
-                "direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, `.copy()`, `.diff()`, `.eigenvectors()`, `.inv()`, `.kron()`, `.mult()`, `.pinv()`, `.pow()`, `.submatrix()`, `.transpose()`, `.row()`, `.col()`, `.eigenvalues()`, `.is_square()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`, `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, `.is_stochastic()`, `.sum()`, `.avg()`, `.min()`, `.max()`, `.mode()`, `.trace()`, `.det()`, and `.rank()`; bind the result or use the namespace helper",
+                "direct matrix call-result methods currently support only `.rows()`, `.columns()`, `.elements_count()`, `.get()`, `.set()`, `.copy()`, `.diff()`, `.eigenvectors()`, `.inv()`, `.kron()`, `.mult()`, `.pinv()`, `.pow()`, `.submatrix()`, `.transpose()`, `.row()`, `.col()`, `.eigenvalues()`, `.is_square()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`, `.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, `.is_stochastic()`, `.sum()`, `.avg()`, `.min()`, `.max()`, `.mode()`, `.trace()`, `.det()`, and `.rank()`; bind the result or use the namespace helper",
                 callee.span,
             );
             return Some(None);
         };
+        if self.function_depth > 0 && is_array_mutation_builtin(builtin_name) {
+            self.unsupported(
+                "function_side_effect",
+                &unsupported_collection_mutation_udf_reason(builtin_name),
+                callee.span,
+            );
+        }
         let signature = pine_builtins::get_phase_1_builtin(builtin_name)
             .expect("supported call-result matrix helper must be registered");
         self.check_feature_name(builtin_name, callee.span);

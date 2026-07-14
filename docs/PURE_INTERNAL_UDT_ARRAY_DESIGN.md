@@ -2089,6 +2089,13 @@ fresh namespace/map/matrix/`matrix.mult` snapshots remain source-independent.
 Empty sources, upstream `na`, self-concat cloning, the 100000-element limit,
 kind/identity/arity diagnostics, and UDF-side-effect rejection retain ordinary
 `array.concat` behavior. Public schemas remain unchanged.
+Item 121 adds terminal `.set(row, column, value)` to concrete matrix results
+returned by local/imported functions and user methods as well as the existing
+built-in and bound producer set. Concrete float/int/bool/string/color kinds,
+index/value checks, `void` return, and no-continuation behavior are preserved.
+Local alias results update shared storage, while fresh imported and built-in
+results isolate the write; upstream `na`, bounds, arity, and UDF-side-effect
+rules remain unchanged. This does not widen UDT or UDT-array identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

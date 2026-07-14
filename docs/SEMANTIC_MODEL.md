@@ -825,11 +825,18 @@ value per receiver row. The semantic result type selects matrix or array
 call-result helper dispatch without widening either closed set. Multiplication
 order, `na` propagation, zero-inner-dimension behavior, matrix cell limits,
 matrix dimension checks, and vector-length checks remain unchanged.
+`.set(row, column, value)` retains `MATRIX_SET_PARAMS` and returns `void` for
+every concrete matrix call-result producer. Its receiver kind determines the
+element-compatible value check; row and column retain their simple-int gates.
+The result is terminal. Alias-returning local UDF or user-method receivers
+mutate shared storage, while fresh namespace, bound-transform, imported-
+function, and imported-method results isolate the write. Upstream `na`, bounds,
+and UDF side-effect rules are inherited from ordinary `matrix.set`.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
-broader helpers, and mutation fail closed. The
+broader helpers, and mutation other than `.set(...)` fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the thirty-three
+exact bound matrix-valued `matrix_id.mult(other)` results share the thirty-four
 matrix helpers for matrix or scalar operands with the
 copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/predicate/aggregate-reader continuation
 rules.

@@ -52,3 +52,5 @@ plot(na(invalid.kron(int_third).kron(int_third).get(0, 0)) ? 1 : 0, "kron_invali
 plot(empty.kron(right).kron(third).rows() * 100 + empty.kron(right).kron(third).columns() * 10 + empty.kron(right).kron(third).elements_count(), "kron_empty_shape")
 plot(rekroned.get(0, 0), "rekroned_value")
 plot(left.get(0, 0), "rekron_source_value")
+left.kron(right).set(0, 0, 104.0)
+plot(left.get(0, 0) == 1.0 and right.get(0, 0) == 5.0 ? 1 : 0, "call_result_set_source_independent")

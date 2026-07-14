@@ -13,7 +13,7 @@ method mapResult(Anchor self) => map.new<int, int>()
 anchor = Anchor.new(1)
 
 bad_row = anchor.expose().get("bad", 0)
-set_result = anchor.expose().set(0, 0, 2.0)
+anchor.expose().set(0, 0, "bad")
 size_result = anchor.expose().size()
 terminal_chain = anchor.expose().rows().copy()
 none_rows = anchor.noneResult().rows()

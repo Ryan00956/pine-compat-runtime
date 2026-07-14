@@ -1702,3 +1702,11 @@ return/parameter flow remains deferred.
     concat cloning, capacity, kind/identity/arity, and UDF-side-effect behavior
     retain the ordinary `array.concat` contract. No imported identity or public
     schema field is widened. Done.
+111. Concrete matrix results from imported pure functions and imported user
+    methods, together with the existing built-in, bound, and local producer
+    set, now expose terminal `.set(row, column, value)`. The operation retains
+    concrete float/int/bool/string/color kind checks, simple-int indexes,
+    bounds, upstream-`na`, `void`, no-continuation, and UDF-side-effect rules.
+    Imported producers allocate fresh matrices, so writes do not escape to a
+    source; local alias-returning producers retain shared-storage behavior. No
+    imported UDT identity or public schema is widened. Done.

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added terminal `.set(row, column, value)` to every concrete matrix call
+  result. It preserves the receiver's float/int/bool/string/color element kind,
+  simple-int indexes, bounds behavior, and `void`/no-continuation contract.
+  Local UDF and local user-method alias results update shared storage; fresh
+  namespace, bound-transform, imported-function, and imported-method results
+  isolate the write from their sources. Upstream `na`, invalid type/arity, and
+  UDF side-effect boundaries retain ordinary `matrix.set` behavior; public
+  schemas are unchanged.
 - Added mutating, array-returning `.concat(id2)` to every concrete array call
   result. It preserves the receiver kind or exact scalar-tree UDT identity,
   appends a same-kind source, returns the first array id, and may continue

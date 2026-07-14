@@ -7,7 +7,7 @@ array_values = array.from(1.0, 2.0)
 
 bad_other = values.diff(array_values).rows()
 bad_row = values.diff(values).get("bad", 0)
-set_result = values.diff(values).set(0, 0, 2.0)
+values.diff(values).set(0, 0, "bad")
 size_result = values.diff(values).size()
 bad_receiver_kind = bools.diff(values).rows()
 wrong_receiver = array_values.diff(values).rows()
