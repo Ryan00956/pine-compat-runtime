@@ -1,4 +1,4 @@
-use chrono::{DateTime, Datelike, Duration, TimeZone, Utc};
+use chrono::{DateTime, Datelike, Duration, NaiveDate, TimeZone, Utc};
 use pine_ir::HirCallArg;
 
 use crate::*;
@@ -100,6 +100,38 @@ pub(crate) fn timeframe_bucket(timestamp_ms: i64, seconds: i64) -> Option<i64> {
         return None;
     }
     Some(timestamp_ms.div_euclid(duration_ms))
+}
+
+fn timeframe_change_bucket(timestamp_ms: i64, timeframe: &str, seconds: i64) -> Option<i64> {
+    if let Some(multiplier) = calendar_timeframe_multiplier(timeframe, 'W') {
+        let datetime = Utc.timestamp_millis_opt(timestamp_ms).single()?;
+        let epoch_monday = NaiveDate::from_ymd_opt(1970, 1, 5)?;
+        let current_monday = i64::from(datetime.date_naive().num_days_from_ce())
+            - i64::from(datetime.weekday().num_days_from_monday());
+        let epoch_monday = i64::from(epoch_monday.num_days_from_ce());
+        let week = current_monday.checked_sub(epoch_monday)?.div_euclid(7);
+        return Some(week.div_euclid(multiplier));
+    }
+
+    if let Some(multiplier) = calendar_timeframe_multiplier(timeframe, 'M') {
+        let datetime = Utc.timestamp_millis_opt(timestamp_ms).single()?;
+        let month = i64::from(datetime.year())
+            .checked_mul(12)?
+            .checked_add(i64::from(datetime.month0()))?;
+        return Some(month.div_euclid(multiplier));
+    }
+
+    timeframe_bucket(timestamp_ms, seconds)
+}
+
+fn calendar_timeframe_multiplier(timeframe: &str, unit: char) -> Option<i64> {
+    let number = timeframe.strip_suffix(unit)?;
+    let multiplier = if number.is_empty() {
+        1
+    } else {
+        number.parse::<i64>().ok()?
+    };
+    (multiplier > 0).then_some(multiplier)
 }
 
 pub(crate) fn timeframe_seconds(timeframe: &str) -> Option<i64> {
@@ -709,12 +741,13 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(previous_time) = self.previous_bar_time else {
             return Ok(PineValue::Bool(true));
         };
-        let Some(current_bucket) = timeframe_bucket(current_time, seconds) else {
+        let Some(current_bucket) = timeframe_change_bucket(current_time, timeframe, seconds) else {
             return Err(RuntimeError {
                 message: format!("timeframe.change unsupported timeframe `{timeframe}`"),
             });
         };
-        let Some(previous_bucket) = timeframe_bucket(previous_time, seconds) else {
+        let Some(previous_bucket) = timeframe_change_bucket(previous_time, timeframe, seconds)
+        else {
             return Err(RuntimeError {
                 message: format!("timeframe.change unsupported timeframe `{timeframe}`"),
             });

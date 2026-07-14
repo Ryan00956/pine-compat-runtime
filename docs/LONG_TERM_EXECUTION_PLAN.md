@@ -260,7 +260,8 @@ Closed coverage:
   helper coverage includes the numeric UTC `timestamp`, `weekofyear`,
   `dayofweek`, and fixed-default `time_close` subsets, plus a fixed-default
   `timeframe.period` and `timeframe.in_seconds`/`timeframe.from_seconds`
-  conversion subset, `timeframe.change` UTC bucket detection, plus
+  conversion subset, `timeframe.change` fixed intraday/day plus calendar
+  week/month UTC bucket detection, plus
   fixed-default `timeframe.is*` and `timeframe.multiplier` metadata.
 - Initial utility helper coverage includes `fixnan` for the current numeric
   and color last-non-`na` callsite subset.

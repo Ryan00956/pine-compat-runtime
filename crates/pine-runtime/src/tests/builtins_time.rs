@@ -552,6 +552,61 @@ plot(na(timeframe.change(na)) ? 1 : 0)
 }
 
 #[test]
+fn runs_calendar_week_and_month_timeframe_change() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("calendar timeframe change")
+plot(timeframe.change("W") ? 1 : 0)
+plot(timeframe.change("2W") ? 1 : 0)
+plot(timeframe.change("M") ? 1 : 0)
+plot(timeframe.change("3M") ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let timestamps = [
+        1_704_671_940_000,
+        1_704_672_000_000,
+        1_705_276_800_000,
+        1_706_745_540_000,
+        1_706_745_600_000,
+        1_709_251_200_000,
+        1_711_929_600_000,
+    ];
+    let bars = timestamps.map(|time| Bar {
+        time,
+        open: 1.0,
+        high: 1.0,
+        low: 1.0,
+        close: 1.0,
+        volume: 1.0,
+    });
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("result");
+
+    assert_values_close(
+        &result.plots[0].values,
+        &[1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0],
+    );
+    assert_values_close(
+        &result.plots[2].values,
+        &[1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+    );
+    assert_values_close(
+        &result.plots[3].values,
+        &[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+    );
+}
+
+#[test]
 fn rejects_unsupported_calendar_function_timezone() {
     let source = SourceFile::new(
         "test.pine",

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Corrected `timeframe.change()` weekly and monthly boundary detection. `W`
+  through `52W` now use UTC Monday-based calendar-week groups, while `M`
+  through `12M` use UTC calendar-month groups instead of fixed Unix-epoch
+  second buckets. Intraday and daily change detection, first-bar behavior,
+  empty/default timeframe handling, and `na` propagation are unchanged.
 - Added terminal `.put_all(source)` to every concrete scalar map call result,
   completing the registered scalar map helper set on those receivers. It
   requires an identical source template, clones source entries for self-merge

@@ -618,7 +618,9 @@ representable in that subset, preferring canonical strings such as `"1"`, `"D"`,
 unrepresentable second counts are runtime errors, while a `na` seconds argument
 returns `na`. `timeframe.change` uses the same supported timeframe string subset
 and returns `true` on the first executed bar or when the UTC timeframe bucket
-changes from the previous committed bar. An empty-string timeframe argument uses
+changes from the previous committed bar. Seconds, minutes, and days use fixed-
+duration UTC buckets; weeks use Monday-based UTC calendar-week groups, and
+months use UTC calendar-month groups. An empty-string timeframe argument uses
 the fixed default chart timeframe, while a `na` timeframe argument returns `na`.
 
 Type casts:

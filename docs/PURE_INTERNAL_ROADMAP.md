@@ -1311,6 +1311,8 @@ Current baseline:
 
 - broad fixture-backed coverage across common `ta.*`, `math.*`, `str.*`, time,
   timeframe, session, syminfo, color, and cast helpers;
+- calendar-aware UTC `timeframe.change` week and month groups alongside fixed
+  intraday/day buckets;
 - many edge-case fixtures for numeric rolling windows, `na`, tuple returns, and
   supported qualifier families.
 
