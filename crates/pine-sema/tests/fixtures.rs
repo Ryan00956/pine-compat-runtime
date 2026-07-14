@@ -6041,6 +6041,19 @@ fn reports_unsupported_str_tostring_color_array_fixture() {
 }
 
 #[test]
+fn accepts_supported_str_tostring_scalar_matrices_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_str_tostring_scalar_matrices.pine");
+}
+
+#[test]
+fn reports_unsupported_str_tostring_color_matrix_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_str_tostring_color_matrix.pine",
+        &["`str.tostring` argument `value` expects string-convertible, got simple matrix<color>"],
+    );
+}
+
+#[test]
 fn reports_unsupported_str_tostring_label_array_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_str_tostring_label_array.pine",
@@ -6079,6 +6092,14 @@ fn reports_unsupported_str_format_color_array_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_str_format_color_array.pine",
         &["`str.format` argument `arg` expects string-convertible, got simple array<color>"],
+    );
+}
+
+#[test]
+fn reports_unsupported_str_format_matrix_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_str_format_matrix.pine",
+        &["`str.format` argument `arg` expects string-convertible, got simple matrix<float>"],
     );
 }
 

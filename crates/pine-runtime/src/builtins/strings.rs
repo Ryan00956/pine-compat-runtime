@@ -107,6 +107,28 @@ pub(crate) fn stringify_array(values: &[PineValue], format: &str) -> String {
     result
 }
 
+pub(crate) fn stringify_matrix(
+    values: &[PineValue],
+    rows: usize,
+    columns: usize,
+    format: &str,
+) -> String {
+    let mut result = String::from("[");
+    for row in 0..rows {
+        if row > 0 {
+            result.push_str(", ");
+        }
+        let start = row.saturating_mul(columns);
+        let end = start.saturating_add(columns);
+        let Some(row_values) = values.get(start..end) else {
+            return "NaN".to_owned();
+        };
+        result.push_str(&stringify_array(row_values, format));
+    }
+    result.push(']');
+    result
+}
+
 pub(crate) fn stringify_array_element(value: &PineValue, format: &str) -> String {
     match value {
         PineValue::Int(value) => format_number(*value as f64, format),
@@ -790,6 +812,11 @@ impl<'a> HistoricalRuntime<'a> {
                 .ok()
                 .flatten()
                 .map(|values| stringify_array(&values, format))
+                .unwrap_or_else(|| "NaN".to_owned()),
+            PineValue::Matrix(id) => self
+                .matrix_store
+                .get(id)
+                .map(|matrix| stringify_matrix(&matrix.values, matrix.rows, matrix.columns, format))
                 .unwrap_or_else(|| "NaN".to_owned()),
             PineValue::Na => "NaN".to_owned(),
             _ => "NaN".to_owned(),

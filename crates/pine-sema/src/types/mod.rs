@@ -57,6 +57,23 @@ pub(crate) fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
                     | ValueKind::IntArray
                     | ValueKind::BoolArray
                     | ValueKind::StringArray
+                    | ValueKind::FloatMatrix
+                    | ValueKind::IntMatrix
+                    | ValueKind::BoolMatrix
+                    | ValueKind::StringMatrix
+            )
+        }),
+        Accepts::FormatConvertible => accepts_kind_compatible(arg_type, |kind| {
+            matches!(
+                kind,
+                ValueKind::Int
+                    | ValueKind::Float
+                    | ValueKind::Bool
+                    | ValueKind::String
+                    | ValueKind::FloatArray
+                    | ValueKind::IntArray
+                    | ValueKind::BoolArray
+                    | ValueKind::StringArray
             )
         }),
         Accepts::StringOrIntCompatible => accepts_kind_compatible(arg_type, |kind| {

@@ -302,7 +302,9 @@ fn accepts_expected_label(accepts: Accepts) -> Option<String> {
         Accepts::IntCompatible => Some("integer-compatible".to_owned()),
         Accepts::BoolCompatible => Some("bool-compatible".to_owned()),
         Accepts::StringCompatible => Some("string-compatible".to_owned()),
-        Accepts::StringConvertible => Some("string-convertible".to_owned()),
+        Accepts::StringConvertible | Accepts::FormatConvertible => {
+            Some("string-convertible".to_owned())
+        }
         Accepts::CastScalar => Some("int/float/bool-compatible".to_owned()),
         Accepts::StringCastScalar => Some("int/float/bool/string-compatible".to_owned()),
         Accepts::ColorCompatible => Some("color-compatible".to_owned()),

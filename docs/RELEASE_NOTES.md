@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added `str.tostring()` support for float, int, bool, and string matrices.
+  Matrix rows use nested brackets, numeric formats apply per cell, and empty
+  row/column shapes are preserved; color matrices and direct matrix arguments
+  to `str.format()` remain semantically rejected.
 - Corrected `str.trim(na)` to return an empty string, matching the helper's
   existing all-whitespace result instead of propagating `na`. ASCII trimming
   and preservation of non-ASCII whitespace remain unchanged.

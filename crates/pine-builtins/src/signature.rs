@@ -151,6 +151,7 @@ pub enum Accepts {
     ColorCompatible,
     StringCompatible,
     StringConvertible,
+    FormatConvertible,
     StringOrIntCompatible,
     CastScalar,
     StringCastScalar,

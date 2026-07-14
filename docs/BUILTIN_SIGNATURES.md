@@ -1327,7 +1327,9 @@ to a float array. `array.join` supports scalar typed arrays and the
 fixture-backed same-local scalar-tree UDT array subset, while
 `str.tostring(array)` remains limited to non-color scalar typed arrays. Color,
 linefill, drawing-id, chart-point, and UDT arrays remain outside the
-`str.tostring(array)` subset. Array size/index/range parameters are simple
+`str.tostring(array)` subset. Separately, `str.tostring` accepts the supported
+float/int/bool/string matrix families but not color matrices. Array
+size/index/range parameters are simple
 integer-compatible: explicit `na` size returns `na`, read-style `na` indexes or
 slice bounds return `na`, and mutation-style `na` indexes or fill bounds are
 no-ops. Linefill arrays are supported for generic
@@ -1903,7 +1905,7 @@ str.replace(source: string-compatible, target: string-compatible, replacement: s
 str.replace_all(source: string-compatible, target: string-compatible, replacement: string-compatible)
   -> string with strongest qualifier
 str.tonumber(string: string-compatible) -> float with same qualifier
-str.tostring(value: int|float|bool|string|float-array|int-array|bool-array|string-array|na, format?: string-compatible)
+str.tostring(value: int|float|bool|string|float-array|int-array|bool-array|string-array|float-matrix|int-matrix|bool-matrix|string-matrix|na, format?: string-compatible)
   -> string with strongest qualifier
 str.format(formatString: string-compatible, arg0?: int|float|bool|string|float-array|int-array|bool-array|string-array|na, ...)
   -> string with strongest qualifier
@@ -1938,20 +1940,22 @@ targets replace zero-width character boundaries. Replacement results over
 `str.tonumber` accepts strings containing ASCII digits, an optional leading
 sign, at most one decimal point, and optional scientific notation exponent. It
 returns `na` for invalid formats, `na` inputs, and non-finite parsed results.
-`str.tostring` supports scalar int, float, bool, string, `na`, and
-fixture-covered float-, int-, bool-, and string-array values. UDT and tuple
-values plus color, drawing-id, chart.point, UDT, map, and matrix arrays remain
-outside the `str.tostring` argument subset. Numeric formatting supports the
+`str.tostring` supports scalar int, float, bool, string, `na`, fixture-covered
+float-, int-, bool-, and string-array values, and float/int/bool/string matrices.
+Matrices render as an outer bracketed list of bracketed rows, preserve empty
+row/column shapes, and apply numeric formats to each numeric cell. Color
+matrices, UDT and tuple values, and color, drawing-id, chart.point, and UDT
+arrays remain outside the argument subset. Numeric formatting supports the
 default `#.########`, `format.mintick` and `format.price` as the default format,
 `format.volume` as `#.##`, `format.percent` as `#.##%`, and fixture-covered
 custom patterns using `#`, `0`, `.`, `,`, and trailing `%` tokens.
 `str.format` supports indexed placeholders such as `{0}`, numeric placeholders
 such as `{0,number,#.00}`, and fixture-covered `integer`, `percent`, and
 `currency` number presets, plus fixture-covered float-, int-, bool-, and
-string-array placeholders. UDT and tuple values plus color, drawing-id,
-chart.point, UDT, map, and matrix arrays remain outside the `str.format`
-argument subset. It also supports fixture-covered UTC timestamp placeholders such
-as `{0,date,yyyy-MM-dd}` and `{0,time,HH:mm:ssZ}`. Quoted
+string-array placeholders. Matrix values, UDT and tuple values, plus color,
+drawing-id, chart.point, and UDT arrays remain outside the `str.format`
+argument subset. It also supports fixture-covered UTC timestamp placeholders
+such as `{0,date,yyyy-MM-dd}` and `{0,time,HH:mm:ssZ}`. Quoted
 literal sequences between apostrophes are not parsed as placeholders, and `''`
 emits one literal apostrophe. The UTC timestamp placeholder subset shares the
 same fixture-covered `D`, `E`, `w`, and `W` token behavior as
