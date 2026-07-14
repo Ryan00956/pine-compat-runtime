@@ -83,3 +83,5 @@ plot(left.get(0, 0) == 5.0 and right.get(0, 0) == 1.0 ? 1 : 0, "call_result_swap
 left.diff(right).remove_row(0)
 left.diff(right).remove_col(0)
 plot(left.rows() == 2 and right.rows() == 2 and left.get(0, 0) == 5.0 and right.get(0, 0) == 1.0 ? 1 : 0, "call_result_remove_row_source_independent")
+left.diff(right).add_row(0, array.from(7.0, 8.0))
+plot(left.rows() == 2 and right.rows() == 2 and left.get(0, 0) == 5.0 and right.get(0, 0) == 1.0 ? 1 : 0, "call_result_add_row_source_independent")

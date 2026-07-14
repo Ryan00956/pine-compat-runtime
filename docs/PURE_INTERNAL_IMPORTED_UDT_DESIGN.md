@@ -1767,3 +1767,13 @@ return/parameter flow remains deferred.
     behavior. Bounds/`na` indexes, upstream-`na` argument evaluation, arity/
     type, and UDF side-effect rules remain unchanged. No imported UDT identity
     or public schema is widened. Done.
+119. The same concrete matrix-result producer set now exposes terminal
+    `.add_row(row, array_id)`. It validates one simple-int insertion index and
+    an element-kind-matched array, copies the array into a complete new row,
+    including for a zero-column matrix, while preserving column count and
+    element kind, returns `void`, and cannot continue. Imported and built-in
+    producers isolate shape changes in fresh matrices, while local alias-
+    returning producers retain shared-shape behavior. `0..=rows` bounds/`na`,
+    array-size, cell-budget, upstream-`na`, arity/type, and UDF side-effect
+    rules remain unchanged. No imported UDT identity or public schema is
+    widened. Done.

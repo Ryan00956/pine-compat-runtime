@@ -2145,6 +2145,14 @@ shared shape, while fresh imported and built-in results isolate the change;
 bounds/`na` indexes, upstream-`na` argument evaluation, arity/type, and UDF-
 side-effect rules remain unchanged. This does not widen UDT or UDT-array
 identity.
+Item 129 adds terminal `.add_row(row, array_id)` to the same concrete matrix-
+result producer set. It validates one simple-int insertion index and an
+element-kind-matched array, copies the array into a complete new row, including
+for a zero-column matrix, while preserving column count and element kind,
+returns `void`, and cannot continue. Local aliases update shared shape, while
+fresh imported and built-in results isolate the change; `0..=rows` bounds/
+`na`, array-size, cell-budget, upstream-`na`, arity/type, and UDF-side-effect
+rules remain unchanged. This does not widen UDT or UDT-array identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

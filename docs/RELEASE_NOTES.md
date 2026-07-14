@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal `.add_row(row, array_id)` to every concrete matrix call
+  result. It validates a simple-int insertion index and an element-kind-
+  matched array, copies the array into a new complete row—including into a
+  zero-column matrix—while preserving column count and element kind, returns
+  `void`, and cannot continue. Local UDF and local user-method alias results
+  update shared shape; fresh namespace, bound-transform, imported-function,
+  and imported-method results isolate the change. Bounds/`na` indexes, array-
+  size and cell-budget errors, upstream-`na` evaluation, UDF side effects, and
+  public schemas retain ordinary `matrix.add_row` boundaries.
 - Added terminal `.remove_col(column)` to every concrete matrix call result.
   It validates a simple-int column index, removes one complete column—including
   from a zero-row matrix—while preserving row count and element kind, returns

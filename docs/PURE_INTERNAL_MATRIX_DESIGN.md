@@ -1812,6 +1812,16 @@ Recommended future slices:
     method results isolate the change. Bounds/`na` indexes, upstream-`na`
     argument evaluation, invalid type/arity, UDF-side-effect, and public-
     schema boundaries retain ordinary `matrix.remove_col` behavior. Done.
+132. Every concrete matrix call result additionally exposes terminal
+    `.add_row(row, array_id)`. It validates one simple-int insertion index and
+    an element-kind-matched array, copies the array into a complete new row,
+    including for a zero-column matrix, while preserving column count and
+    concrete element kind, returns `void`, and cannot continue. Local UDF and
+    local user-method alias results update shared shape; fresh namespace,
+    bound-transform, imported-function, and imported-method results isolate
+    the change. `0..=rows` bounds/`na`, array-size, cell-budget, upstream-`na`,
+    invalid type/arity, UDF-side-effect, and public-schema boundaries retain
+    ordinary `matrix.add_row` behavior. Done.
 
 ## Completion Gate For Future Positive Support
 

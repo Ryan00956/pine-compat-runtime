@@ -65,3 +65,5 @@ plot(values.get(0, 0) == 4.0 and values.get(1, 0) == 2.0 ? 1 : 0, "call_result_s
 values.inv().remove_row(0)
 values.inv().remove_col(0)
 plot(values.rows() == 2 and values.get(0, 0) == 4.0 ? 1 : 0, "call_result_remove_row_source_independent")
+values.inv().add_row(0, array.from(7.0, 8.0))
+plot(values.rows() == 2 and values.columns() == 2 and values.get(0, 0) == 4.0 ? 1 : 0, "call_result_add_row_source_independent")
