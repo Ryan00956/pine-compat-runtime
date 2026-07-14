@@ -1724,3 +1724,11 @@ return/parameter flow remains deferred.
     retain shared-storage behavior. Empty/upstream-`na`, invalid arity, and UDF
     side-effect rules remain unchanged. No imported UDT identity or public
     schema is widened. Done.
+114. The same concrete matrix-result producer set now exposes terminal
+    `.reshape(rows, columns)`. It preserves row-major cells, validates simple-
+    int non-negative dimensions with unchanged element count, returns `void`,
+    and cannot continue. Imported and built-in producers isolate shape changes
+    in fresh matrices, while local alias-returning producers retain shared-
+    shape behavior. Upstream-`na` dimension evaluation, dimension/count errors,
+    arity, and UDF side-effect rules remain unchanged. No imported UDT identity
+    or public schema is widened. Done.

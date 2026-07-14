@@ -1063,6 +1063,13 @@ Current baseline:
   and imported-method results isolate writes in fresh matrices. Empty/upstream-
   `na`, invalid arity, UDF-side-effect, and public-schema boundaries are
   fixture-backed; remaining matrix-result mutations stay gated.
+  The next shape mutation slice adds terminal `.reshape(rows, columns)` to the
+  same producer set. It preserves row-major cells, requires simple-int non-
+  negative dimensions with unchanged element count, returns `void`, and cannot
+  continue. Local aliases update shared shape; fresh producer results isolate
+  the change. Upstream-`na` dimension evaluation, negative/`na` and count-
+  mismatch errors, invalid type/arity, UDF-side-effect, and public-schema
+  boundaries are fixture-backed; remaining matrix-result mutations stay gated.
 
 Remaining internal work:
 

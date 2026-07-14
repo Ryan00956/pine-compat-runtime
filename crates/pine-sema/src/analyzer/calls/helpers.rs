@@ -185,6 +185,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "set" => Some("matrix.set"),
         "fill" => Some("matrix.fill"),
         "reverse" => Some("matrix.reverse"),
+        "reshape" => Some("matrix.reshape"),
         "copy" => Some("matrix.copy"),
         "diff" => Some("matrix.diff"),
         "eigenvectors" => Some("matrix.eigenvectors"),

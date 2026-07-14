@@ -843,11 +843,17 @@ producer. It reverses the row-major cell sequence without changing shape and
 preserves local UDF/user-method alias writes versus isolated writes for fresh
 namespace, bound-transform, imported-function, and imported-method results.
 Empty/upstream-`na`, invalid arity, and UDF side-effect behavior are unchanged.
+`.reshape(rows, columns)` likewise returns terminal `void` for every concrete
+matrix call-result producer. It preserves row-major cells, validates simple-
+int dimensions, and preserves local UDF/user-method alias shape writes versus
+isolated writes for fresh producers. Negative/`na` dimensions, element-count
+mismatch, upstream-`na` dimension evaluation, and UDF side-effect behavior are
+unchanged.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
-broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()` fail closed. The
+broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)` fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the thirty-six
+exact bound matrix-valued `matrix_id.mult(other)` results share the thirty-seven
 matrix helpers for matrix or scalar operands with the
 copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/predicate/aggregate-reader continuation
 rules.

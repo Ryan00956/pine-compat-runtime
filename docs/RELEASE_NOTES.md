@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added terminal `.reshape(rows, columns)` to every concrete matrix call
+  result. It preserves row-major cells while requiring the element count to
+  remain unchanged, returns `void`, and cannot continue. Local UDF and local
+  user-method alias results update shared shape; fresh namespace, bound-
+  transform, imported-function, and imported-method results isolate the shape
+  change. Simple-int, negative/`na`, count-mismatch, UDF side-effect, and
+  upstream-`na` boundaries retain ordinary `matrix.reshape` behavior; public
+  schemas are unchanged.
 - Added terminal `.reverse()` to every concrete matrix call result. It reverses
   the row-major cell sequence in place without changing shape, returns `void`,
   and cannot continue. Local UDF and local user-method alias results update

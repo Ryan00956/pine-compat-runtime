@@ -2108,6 +2108,13 @@ set. It reverses the row-major cell sequence without changing shape, returns
 fresh imported and built-in results isolate the write; empty/upstream-`na`,
 arity, and UDF-side-effect rules remain unchanged. This does not widen UDT or
 UDT-array identity.
+Item 124 adds terminal `.reshape(rows, columns)` to the same concrete matrix-
+result producer set. It preserves row-major cells, requires simple-int non-
+negative dimensions with unchanged element count, returns `void`, and cannot
+continue. Local aliases update shared shape, while fresh imported and built-in
+results isolate the change; upstream-`na` dimension evaluation, dimension/
+count errors, arity, and UDF-side-effect rules remain unchanged. This does not
+widen UDT or UDT-array identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

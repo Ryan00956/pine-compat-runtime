@@ -17,6 +17,7 @@ mod tests {
             ("set", "matrix.set"),
             ("fill", "matrix.fill"),
             ("reverse", "matrix.reverse"),
+            ("reshape", "matrix.reshape"),
             ("copy", "matrix.copy"),
             ("diff", "matrix.diff"),
             ("eigenvectors", "matrix.eigenvectors"),

@@ -1766,6 +1766,15 @@ Recommended future slices:
     imported-method results isolate writes from source matrices. Empty and
     upstream-`na` results, invalid arity, UDF-side-effect, and public-schema
     boundaries retain ordinary `matrix.reverse` behavior. Done.
+127. Every concrete matrix call result additionally exposes terminal
+    `.reshape(rows, columns)`. It preserves row-major cells, validates simple-
+    int non-negative dimensions whose product matches the current element
+    count, returns `void`, and cannot continue. Local UDF and local user-method
+    alias results update shared shape; fresh namespace, bound-transform,
+    imported-function, and imported-method results isolate the change.
+    Upstream-`na` dimension evaluation, negative/`na` dimensions, count
+    mismatch, invalid type/arity, UDF-side-effect, and public-schema boundaries
+    retain ordinary `matrix.reshape` behavior. Done.
 
 ## Completion Gate For Future Positive Support
 
