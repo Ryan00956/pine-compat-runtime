@@ -258,11 +258,35 @@ plot(str.length(str.match("abc", "(")))
 }
 
 #[test]
-fn rejects_unsupported_str_format_time_timezone() {
+fn formats_iana_str_format_time_timezones() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("IANA formatted time")
+plot(str.format_time(1609504496000, "yyyy-MM-dd HH:mm:ssZ", "America/New_York") == "2021-01-01 07:34:56-0500" ? 1 : 0)
+plot(str.format_time(1625142896000, "yyyy-MM-dd HH:mm:ssZ", "America/New_York") == "2021-07-01 08:34:56-0400" ? 1 : 0)
+plot(str.format_time(1609504496000, "yyyy-MM-dd HH:mm:ssZ", "Asia/Tokyo") == "2021-01-01 21:34:56+0900" ? 1 : 0)
+plot(str.format_time(1609466400000, "yyyy-MM-dd E w HH:mm:ssZ", "America/New_York") == "2020-12-31 Thu 53 21:00:00-0500" ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("result");
+    for plot in &result.plots {
+        assert_values_close(&plot.values, &[1.0]);
+    }
+}
+
+#[test]
+fn rejects_invalid_str_format_time_timezone() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("bad time")
-plot(str.length(str.format_time(1609459200000, "yyyy-MM-dd", "America/New_York")))
+plot(str.length(str.format_time(1609459200000, "yyyy-MM-dd", "Mars/Olympus")))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -278,7 +302,7 @@ plot(str.length(str.format_time(1609459200000, "yyyy-MM-dd", "America/New_York")
     assert!(
         error
             .message
-            .contains("str.format_time unsupported timezone `America/New_York`"),
+            .contains("str.format_time unsupported timezone `Mars/Olympus`"),
         "{}",
         error.message
     );

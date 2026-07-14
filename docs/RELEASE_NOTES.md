@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added IANA timezone support to `str.format_time()`. Named zones resolve their
+  offset at the supplied absolute timestamp, preserving DST, local date
+  rollover, and the matching numeric `Z` offset in formatted output. Invalid
+  zone names remain runtime errors; exchange-timezone defaults remain outside
+  the fixed runtime metadata model.
 - Added IANA timezone support to the calendar component functions `year()`,
   `month()`, `weekofyear()`, `dayofmonth()`, `dayofweek()`, `hour()`,
   `minute()`, and `second()`. Named zones such as `America/New_York` and

@@ -981,7 +981,7 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     ),
     (
         "tests/fixtures/regressions/str_format_time_unsupported_timezone.pine",
-        "str.format_time unsupported timezone `America/New_York`",
+        "str.format_time unsupported timezone `Mars/Olympus`",
     ),
     (
         "tests/fixtures/regressions/str_format_time_timestamp_out_of_range.pine",

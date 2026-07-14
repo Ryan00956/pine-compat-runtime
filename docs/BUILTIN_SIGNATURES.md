@@ -498,10 +498,10 @@ time(timeframe: simple string, session?: string-compatible, timezone?: string-co
 time_close(timeframe: simple string, session?: string-compatible, timezone?: string-compatible, bars_back?: int-compatible, timeframe_bars_back?: int-compatible) -> series int
 ```
 
-Calendar component functions support UTC/GMT/numeric fixed-offset and IANA
-`timezone` arguments, resolving IANA offsets at the supplied absolute timestamp
-so DST transitions affect the returned local components. `str.format_time`,
-`time`, and `time_close` remain limited to UTC/GMT/numeric fixed-offset
+Calendar component functions and `str.format_time` support UTC/GMT/numeric
+fixed-offset and IANA `timezone` arguments, resolving IANA offsets at the
+supplied absolute timestamp so DST transitions affect returned local values.
+`time` and `time_close` remain limited to UTC/GMT/numeric fixed-offset
 `timezone` arguments; unsupported time zones are runtime errors. The component
 variables still use the runtime's UTC bar-time view while exchange timezone
 defaults remain unsupported. `timestamp` currently supports numeric calendar arguments with an
@@ -1958,14 +1958,16 @@ the first matched substring, an empty string when there is no match, `na` for
 separators split the source into Unicode scalar values. It returns `na` for
 `na` inputs and errors if the result would exceed 100,000 array elements.
 `str.format_time` supports UNIX timestamps in milliseconds and UTC/GMT/numeric
-fixed-offset timezone strings such as `UTC+4`, `GMT-5`, and `+05:30`. Omitted
+fixed-offset or IANA timezone strings such as `UTC+4`, `GMT-5`, `+05:30`, and
+`America/New_York`. IANA offsets are resolved at the supplied timestamp, so
+DST and local date rollover are reflected in the formatted value. Omitted
 or `na` `format` defaults to `yyyy-MM-dd'T'HH:mm:ssZ`; omitted or `na`
 `timezone` defaults to UTC. Supported tokens include `y`/`Y`, `M`, `d`, `H`,
 `D`, `E`, `w`, `W`, `h`, `m`, `s`, `S`, `a`, `Z`, and single-quoted literals.
 `D` renders the day of the year with optional zero-padding, `E` renders short
 or full weekday names, `w` renders the current ISO week-of-year subset, and `W`
 renders the current Monday-based week-of-month subset, both with optional
-zero-padding. IANA and exchange timezone conversion remain unsupported.
+zero-padding. Exchange timezone defaults remain unsupported.
 
 ## Math
 

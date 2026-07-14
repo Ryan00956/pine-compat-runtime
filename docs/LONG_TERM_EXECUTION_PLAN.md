@@ -258,7 +258,8 @@ Closed coverage:
   `math.round_to_mintick`, `math.random`, and `math.sum`;
   string coverage includes `str.split`; time
   helper coverage includes the numeric UTC `timestamp`, IANA-aware calendar
-  component functions such as `weekofyear` and `dayofweek`, and fixed-default
+  component functions such as `weekofyear` and `dayofweek`, IANA-aware
+  `str.format_time`, and fixed-default
   `time`/`time_close` subsets with UTC calendar
   week/month higher-timeframe boundaries, plus a fixed-default
   `timeframe.period` and `timeframe.in_seconds`/`timeframe.from_seconds`
