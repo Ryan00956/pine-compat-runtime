@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added `str.match()` support for Pine's fixed four-hex-digit `\uHHHH` Unicode
+  regex references inside and outside character classes, including exact
+  four-digit consumption and preservation inside `\Q...\E` quoted regions.
 - Corrected `str.match()` end-anchor behavior. Default `$` and `\Z` now match
   before a final newline without returning that line terminator, while `\z`
   remains absolute-end-only; global/scoped multiline mode and explicit final

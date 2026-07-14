@@ -1986,15 +1986,17 @@ horizontal-whitespace set regardless of `U`, including space, tab, nonbreaking
 space, U+1680, U+180E, U+2000 through U+200A, U+202F, U+205F, and U+3000. It
 also supports `\Q...\E` literal quoting inside or outside character classes,
 including quoted whitespace and `#` in verbose mode; an omitted closing `\E`
-quotes through the end of the pattern. By default, `$` and `\Z` match either
-at the absolute end or immediately before a final `\n`, without including that
-line terminator in the returned substring; `\z` matches only the absolute end.
-Global or scoped `(?m)` gives `$` multiline behavior, and `(?-m)` restores the
-default. It returns the first matched substring, an empty string when there is
-no match, `na` for `na` inputs, and a runtime error for invalid regex patterns.
-Backreferences, lookaround, atomic groups, possessive quantifiers, and other
-backtracking-dependent Pine regex constructs remain outside this linear-time
-subset.
+quotes through the end of the pattern. Fixed-width four-hex-digit Unicode
+references such as `\u2014` work inside and outside character classes, consume
+exactly four digits, and remain literal inside quoted regions. By default, `$`
+and `\Z` match either at the absolute end or immediately before a final `\n`,
+without including that line terminator in the returned substring; `\z` matches
+only the absolute end. Global or scoped `(?m)` gives `$` multiline behavior,
+and `(?-m)` restores the default. It returns the first matched substring, an
+empty string when there is no match, `na` for `na` inputs, and a runtime error
+for invalid regex patterns. Backreferences, lookaround, atomic groups,
+possessive quantifiers, and other backtracking-dependent Pine regex constructs
+remain outside this linear-time subset.
 `str.split` splits by a literal separator and returns a string array. Empty
 separators split the source into Unicode scalar values. It returns `na` for
 `na` inputs and errors if the result would exceed 100,000 array elements.

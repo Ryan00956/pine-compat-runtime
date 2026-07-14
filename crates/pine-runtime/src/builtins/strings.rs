@@ -264,6 +264,18 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 }
                 continue;
             }
+            if escaped == 'u' {
+                let digits_start = index + slash.len_utf8() + escaped.len_utf8();
+                let digits_end = digits_start + 4;
+                if let Some(digits) = pattern
+                    .get(digits_start..digits_end)
+                    .filter(|digits| digits.bytes().all(|byte| byte.is_ascii_hexdigit()))
+                {
+                    write!(result, r"\x{{{digits}}}").expect("writing to a String cannot fail");
+                    index = digits_end;
+                    continue;
+                }
+            }
             if escaped == 'Z' && class_depth == 0 {
                 push_pine_regex_final_anchor(
                     &mut result,
