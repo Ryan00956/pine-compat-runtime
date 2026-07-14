@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Corrected `str.match()` end-anchor behavior. Default `$` and `\Z` now match
+  before a final newline without returning that line terminator, while `\z`
+  remains absolute-end-only; global/scoped multiline mode and explicit final
+  newline matches retain their distinct behavior.
 - Added `str.match()` support for `\Q...\E` literal regex quoting, including
   metacharacters, backslashes, quoted class delimiters, whitespace and comments
   in verbose mode, resumption of regex syntax after `\E`, and quotes extending

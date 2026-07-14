@@ -1318,7 +1318,8 @@ Current baseline:
   percent preset, plus `str.match` default-ASCII predefined classes and word
   boundaries with global/scoped `(?U)` Unicode-aware switching and fixed
   Unicode `\h`/`\H` horizontal-whitespace classes plus `\Q...\E` literal
-  quoting on the linear-time regex path;
+  quoting and final-newline-aware `$`/`\Z` end anchors on the linear-time regex
+  path;
 - calendar-aware UTC `time`/`time_close` and `timeframe.change` week and month
   groups alongside fixed intraday/day buckets;
 - IANA timezone and DST-aware calendar component and `str.format_time` calls,

@@ -101,6 +101,7 @@ pub(crate) fn is_pine_numeric_string(value: &str) -> bool {
 struct PineRegexMode {
     unicode_classes: bool,
     verbose: bool,
+    multiline: bool,
 }
 
 struct PineRegexFlags<'a> {
@@ -167,6 +168,12 @@ fn apply_pine_regex_flags(mode: PineRegexMode, flags: &PineRegexFlags<'_>) -> Pi
     if flags.disabled.contains('x') {
         mode.verbose = false;
     }
+    if flags.enabled.contains('m') {
+        mode.multiline = true;
+    }
+    if flags.disabled.contains('m') {
+        mode.multiline = false;
+    }
     mode
 }
 
@@ -195,7 +202,22 @@ fn push_pine_regex_quoted(result: &mut String, quoted: &str) {
     }
 }
 
-pub(crate) fn normalize_pine_regex(pattern: &str) -> String {
+struct NormalizedPineRegex {
+    pattern: String,
+    final_newline_captures: Vec<String>,
+}
+
+fn push_pine_regex_final_anchor(
+    result: &mut String,
+    capture_names: &mut Vec<String>,
+    capture_prefix: &str,
+) {
+    let name = format!("{capture_prefix}{}", capture_names.len());
+    write!(result, r"(?:\z|(?P<{name}>\n)\z)").expect("writing to a String cannot fail");
+    capture_names.push(name);
+}
+
+fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
     const HORIZONTAL_WHITESPACE: &str =
         r"[ \t\x{00A0}\x{1680}\x{180E}\x{2000}-\x{200A}\x{202F}\x{205F}\x{3000}]";
     const NON_HORIZONTAL_WHITESPACE: &str =
@@ -206,6 +228,11 @@ pub(crate) fn normalize_pine_regex(pattern: &str) -> String {
     let mut modes = Vec::new();
     let mut class_depth = 0usize;
     let mut index = 0usize;
+    let mut final_newline_captures = Vec::new();
+    let mut final_newline_capture_prefix = "__pine_final_newline_".to_owned();
+    while pattern.contains(&final_newline_capture_prefix) {
+        final_newline_capture_prefix.push('_');
+    }
 
     while index < pattern.len() {
         let rest = &pattern[index..];
@@ -237,6 +264,15 @@ pub(crate) fn normalize_pine_regex(pattern: &str) -> String {
                 }
                 continue;
             }
+            if escaped == 'Z' && class_depth == 0 {
+                push_pine_regex_final_anchor(
+                    &mut result,
+                    &mut final_newline_captures,
+                    &final_newline_capture_prefix,
+                );
+                index += slash.len_utf8() + escaped.len_utf8();
+                continue;
+            }
             let replacement = match escaped {
                 'h' => Some(HORIZONTAL_WHITESPACE),
                 'H' => Some(NON_HORIZONTAL_WHITESPACE),
@@ -262,6 +298,16 @@ pub(crate) fn normalize_pine_regex(pattern: &str) -> String {
             result.push(slash);
             result.push(escaped);
             index += slash.len_utf8() + escaped.len_utf8();
+            continue;
+        }
+
+        if class_depth == 0 && byte == b'$' && !mode.multiline {
+            push_pine_regex_final_anchor(
+                &mut result,
+                &mut final_newline_captures,
+                &final_newline_capture_prefix,
+            );
+            index += 1;
             continue;
         }
 
@@ -292,7 +338,15 @@ pub(crate) fn normalize_pine_regex(pattern: &str) -> String {
         index += ch.len_utf8();
     }
 
-    result
+    NormalizedPineRegex {
+        pattern: result,
+        final_newline_captures,
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn normalize_pine_regex(pattern: &str) -> String {
+    normalize_pine_regex_with_metadata(pattern).pattern
 }
 
 pub(crate) fn stringify_array(values: &[PineValue], format: &str) -> String {
@@ -965,16 +1019,23 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::String(regex) = self.eval_expr(&args[1].value)? else {
             return Ok(PineValue::Na);
         };
-        let regex = normalize_pine_regex(&regex);
-        let regex = Regex::new(&regex).map_err(|err| RuntimeError {
+        let normalized = normalize_pine_regex_with_metadata(&regex);
+        let regex = Regex::new(&normalized.pattern).map_err(|err| RuntimeError {
             message: format!("str.match invalid regex: {err}"),
         })?;
+        let Some(captures) = regex.captures(&source) else {
+            return Ok(PineValue::String(String::new()));
+        };
+        let matched = captures
+            .get(0)
+            .expect("successful regex captures contain the complete match");
+        let consumed_final_newline = normalized
+            .final_newline_captures
+            .iter()
+            .any(|name| captures.name(name).is_some());
+        let end = matched.end() - usize::from(consumed_final_newline);
 
-        Ok(PineValue::String(
-            regex
-                .find(&source)
-                .map_or_else(String::new, |matched| matched.as_str().to_owned()),
-        ))
+        Ok(PineValue::String(source[matched.start()..end].to_owned()))
     }
 
     pub(crate) fn eval_str_split(
