@@ -501,10 +501,10 @@ time_close(timeframe: simple string, session?: string-compatible, timezone?: str
 Calendar component functions and `str.format_time` support UTC/GMT/numeric
 fixed-offset and IANA `timezone` arguments, resolving IANA offsets at the
 supplied absolute timestamp so DST transitions affect returned local values.
-`time` and `time_close` remain limited to UTC/GMT/numeric fixed-offset
-`timezone` arguments; unsupported time zones are runtime errors. The component
-variables still use the runtime's UTC bar-time view while exchange timezone
-defaults remain unsupported. `timestamp` currently supports numeric calendar arguments with an
+`time` and `time_close` also accept IANA zones for explicit time-based session
+interpretation and session-end clipping. Unsupported time zones are runtime
+errors. The component variables still use the runtime's UTC bar-time view while
+exchange timezone defaults remain unsupported. `timestamp` currently supports numeric calendar arguments with an
 optional UTC/GMT/numeric fixed-offset `timezone` argument, including named
 calendar parameters and normalized
 zero/negative/overflow `month`, `day`, `hour`, `minute`, and `second` offsets.
@@ -520,7 +520,7 @@ semantics remain unsupported.
 `time(timeframe, session, timezone, bars_back, timeframe_bars_back)` and
 `time_close(timeframe, session, timezone, bars_back, timeframe_bars_back)`
 currently implement the simple-string timeframe subset with optional
-time-based session strings, UTC/GMT/numeric fixed-offset timezone strings,
+time-based session strings, UTC/GMT/numeric fixed-offset or IANA timezone strings,
 int-compatible `bars_back`, and int-compatible `timeframe_bars_back` offsets.
 `""` and
 `timeframe.period` use the current fixed chart timeframe and return the current
@@ -535,10 +535,12 @@ Negative `bars_back` and `timeframe_bars_back` values can reference at most 500
 future bars in their respective offset spaces. The session subset accepts
 `24x7`, `HHmm-HHmm`,
 comma-separated intraday periods, optional Pine day digits, and fixed-offset
-timezone interpretation for those session strings. Overnight periods are
-supported in the fixed-offset calendar subset. `time_close` clips the returned
-close timestamp to the matching session period end. IANA/exchange timezone
-conversion and named-session data remain unsupported.
+or IANA timezone interpretation for those session strings. Overnight periods
+are supported. `time_close` clips the returned close timestamp to the matching
+session period end; IANA offsets follow DST at the bar and close instants,
+repeated close times choose the later instant, and nonexistent close times
+advance to the first valid local minute. Exchange timezone defaults and
+named-session data remain unsupported.
 
 Timeframe helpers:
 

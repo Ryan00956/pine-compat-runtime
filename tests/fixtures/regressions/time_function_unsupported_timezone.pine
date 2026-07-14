@@ -1,0 +1,2 @@
+indicator("Time function unsupported timezone")
+plot(time("", "0000-0001", "Mars/Olympus"))

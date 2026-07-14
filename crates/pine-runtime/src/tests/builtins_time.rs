@@ -444,6 +444,72 @@ plot(time("", "24x7") == time ? 1 : 0)
 }
 
 #[test]
+fn runs_time_and_time_close_functions_with_iana_sessions() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("IANA time sessions")
+plot(not na(time("", "0700-0702", "America/New_York")) ? 1 : 0)
+plot(not na(time("", "0800-0802", "America/New_York")) ? 1 : 0)
+plot(not na(time("", "2100-2102", "Asia/Tokyo")) ? 1 : 0)
+plot(time_close("60", "0700-0730", "America/New_York") == 1609504200000 ? 1 : 0)
+plot(time_close("60", "0800-0830", "America/New_York") == 1625142600000 ? 1 : 0)
+plot(time_close("240", "0000-0130", "America/New_York") == 1636266600000 ? 1 : 0)
+plot(time_close("60", "0000-0230", "America/New_York") == 1615701600000 ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        Bar {
+            time: 1_609_502_400_000,
+            open: 1.0,
+            high: 1.0,
+            low: 1.0,
+            close: 1.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 1_625_140_800_000,
+            open: 2.0,
+            high: 2.0,
+            low: 2.0,
+            close: 2.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 1_636_257_600_000,
+            open: 3.0,
+            high: 3.0,
+            low: 3.0,
+            close: 3.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 1_615_698_000_000,
+            open: 4.0,
+            high: 4.0,
+            low: 4.0,
+            close: 4.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("result");
+
+    assert_values_close(&result.plots[0].values, &[1.0, 0.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, 1.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[2].values, &[1.0, 1.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[3].values, &[1.0, 0.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[4].values, &[0.0, 1.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[5].values, &[0.0, 0.0, 1.0, 0.0]);
+    assert_values_close(&result.plots[6].values, &[0.0, 0.0, 0.0, 1.0]);
+}
+
+#[test]
 fn runs_timeframe_helpers() {
     let source = SourceFile::new(
         "test.pine",
@@ -923,11 +989,11 @@ plot(time_close("D", timeframe_bars_back = -501))
 }
 
 #[test]
-fn rejects_time_function_unsupported_session_timezone() {
+fn rejects_time_function_invalid_session_timezone() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("bad time session timezone")
-plot(time("", "0001-0003", "America/New_York"))
+plot(time("", "0001-0003", "Mars/Olympus"))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -943,7 +1009,7 @@ plot(time("", "0001-0003", "America/New_York"))
     assert!(
         error
             .message
-            .contains("time unsupported timezone `America/New_York`"),
+            .contains("time unsupported timezone `Mars/Olympus`"),
         "{}",
         error.message
     );

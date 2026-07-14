@@ -11,7 +11,7 @@ mod timestamp;
 
 use self::component::TimeComponent;
 pub(crate) use self::formatting::{format_datetime_with_offset, format_utc_datetime};
-use self::session::{parse_time_session, session_close_for_bar_open};
+use self::session::{parse_time_session, parse_time_session_timezone, session_close_for_bar_open};
 use self::timestamp::parse_timestamp_date_string;
 pub(crate) use self::timestamp::{format_fixed_timezone_offset, parse_fixed_timezone_offset};
 
@@ -468,10 +468,9 @@ impl<'a> HistoricalRuntime<'a> {
                 ),
             });
         }
-        let timezone_offset_seconds =
-            parse_fixed_timezone_offset(&args.timezone).ok_or_else(|| RuntimeError {
-                message: format!("{name} unsupported timezone `{}`", args.timezone),
-            })?;
+        let timezone = parse_time_session_timezone(&args.timezone).ok_or_else(|| RuntimeError {
+            message: format!("{name} unsupported timezone `{}`", args.timezone),
+        })?;
         let session = match args.session.as_deref() {
             Some("") | None => None,
             Some(session) => Some(parse_time_session(session).ok_or_else(|| RuntimeError {
@@ -545,12 +544,8 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
         if let Some(session) = session {
-            let Some(session_close) = session_close_for_bar_open(
-                open_time,
-                close_timestamp,
-                &session,
-                timezone_offset_seconds,
-            )?
+            let Some(session_close) =
+                session_close_for_bar_open(open_time, close_timestamp, &session, timezone)?
             else {
                 return Ok(PineValue::Na);
             };

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added IANA timezone support to explicit time-based sessions in `time()` and
+  `time_close()`. Session membership and close clipping follow the named zone's
+  timestamp-specific DST offset; repeated close times use the later instant,
+  while close times inside a forward DST gap advance to the first valid local
+  minute. Invalid zone names remain runtime errors.
 - Added IANA timezone support to `str.format_time()`. Named zones resolve their
   offset at the supplied absolute timestamp, preserving DST, local date
   rollover, and the matching numeric `Z` offset in formatted output. Invalid

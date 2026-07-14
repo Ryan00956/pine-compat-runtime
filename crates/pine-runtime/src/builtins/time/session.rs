@@ -1,8 +1,9 @@
-use chrono::{DateTime, Datelike, TimeZone, Timelike, Utc};
+use chrono::{DateTime, Datelike, Duration, LocalResult, Offset, TimeZone, Timelike, Utc};
+use chrono_tz::Tz;
 
 use crate::RuntimeError;
 
-use super::{dayofweek_value, utc_datetime_from_millis};
+use super::{dayofweek_value, parse_fixed_timezone_offset, utc_datetime_from_millis};
 
 pub(super) struct TimeSession {
     periods: Vec<TimeSessionPeriod>,
@@ -12,6 +13,53 @@ pub(super) struct TimeSession {
 struct TimeSessionPeriod {
     start_minute: i64,
     end_minute: i64,
+}
+
+#[derive(Clone, Copy)]
+pub(super) enum TimeSessionTimezone {
+    Fixed(i32),
+    Iana(Tz),
+}
+
+pub(super) fn parse_time_session_timezone(timezone: &str) -> Option<TimeSessionTimezone> {
+    if let Some(offset) = parse_fixed_timezone_offset(timezone) {
+        return Some(TimeSessionTimezone::Fixed(offset));
+    }
+    Some(TimeSessionTimezone::Iana(timezone.trim().parse().ok()?))
+}
+
+impl TimeSessionTimezone {
+    fn offset_seconds_at(self, datetime: &DateTime<Utc>) -> i32 {
+        match self {
+            Self::Fixed(offset) => offset,
+            Self::Iana(timezone) => timezone
+                .offset_from_utc_datetime(&datetime.naive_utc())
+                .fix()
+                .local_minus_utc(),
+        }
+    }
+
+    fn close_utc_millis(self, local_close_time: i64) -> Result<i64, RuntimeError> {
+        match self {
+            Self::Fixed(offset) => {
+                local_close_time
+                    .checked_sub(i64::from(offset).checked_mul(1000).ok_or_else(|| {
+                        RuntimeError {
+                            message: "time session timestamp is out of range".to_owned(),
+                        }
+                    })?)
+                    .ok_or_else(|| RuntimeError {
+                        message: "time session timestamp is out of range".to_owned(),
+                    })
+            }
+            Self::Iana(timezone) => {
+                let local_close = utc_datetime_from_millis(local_close_time)?.naive_utc();
+                resolve_iana_session_close(timezone, local_close).ok_or_else(|| RuntimeError {
+                    message: "time session timestamp is out of range".to_owned(),
+                })
+            }
+        }
+    }
 }
 
 pub(super) fn parse_time_session(session: &str) -> Option<TimeSession> {
@@ -47,8 +95,10 @@ pub(super) fn session_close_for_bar_open(
     open_time: i64,
     default_close: i64,
     session: &TimeSession,
-    timezone_offset_seconds: i32,
+    timezone: TimeSessionTimezone,
 ) -> Result<Option<i64>, RuntimeError> {
+    let open_datetime = utc_datetime_from_millis(open_time)?;
+    let timezone_offset_seconds = timezone.offset_seconds_at(&open_datetime);
     let timezone_offset_ms = i64::from(timezone_offset_seconds)
         .checked_mul(1000)
         .ok_or_else(|| RuntimeError {
@@ -71,15 +121,40 @@ pub(super) fn session_close_for_bar_open(
         else {
             continue;
         };
-        let close_time = local_close_time
-            .checked_sub(timezone_offset_ms)
-            .ok_or_else(|| RuntimeError {
-                message: "time session timestamp is out of range".to_owned(),
-            })?;
+        let close_time = timezone.close_utc_millis(local_close_time)?;
         return Ok(Some(default_close.min(close_time)));
     }
 
     Ok(None)
+}
+
+fn resolve_iana_session_close(timezone: Tz, local_close: chrono::NaiveDateTime) -> Option<i64> {
+    const MAX_GAP_MINUTES: i64 = 2 * 24 * 60;
+
+    // A repeated close uses the later instant so the whole repeated wall-clock
+    // interval remains in-session. A close inside a forward gap advances to
+    // the first valid local minute, matching minute-granularity session input.
+    if let Some(timestamp) = resolved_local_timestamp(timezone.from_local_datetime(&local_close)) {
+        return Some(timestamp);
+    }
+
+    for minutes in 1..=MAX_GAP_MINUTES {
+        let shifted = local_close.checked_add_signed(Duration::minutes(minutes))?;
+        if let Some(timestamp) = resolved_local_timestamp(timezone.from_local_datetime(&shifted)) {
+            return Some(timestamp);
+        }
+    }
+    None
+}
+
+fn resolved_local_timestamp(result: LocalResult<DateTime<Tz>>) -> Option<i64> {
+    match result {
+        LocalResult::Single(datetime) => Some(datetime.timestamp_millis()),
+        LocalResult::Ambiguous(first, second) => {
+            Some(first.timestamp_millis().max(second.timestamp_millis()))
+        }
+        LocalResult::None => None,
+    }
 }
 
 fn all_session_days() -> [bool; 8] {

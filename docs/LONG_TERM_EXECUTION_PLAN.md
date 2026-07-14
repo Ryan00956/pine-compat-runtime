@@ -259,8 +259,8 @@ Closed coverage:
   string coverage includes `str.split`; time
   helper coverage includes the numeric UTC `timestamp`, IANA-aware calendar
   component functions such as `weekofyear` and `dayofweek`, IANA-aware
-  `str.format_time`, and fixed-default
-  `time`/`time_close` subsets with UTC calendar
+  `str.format_time`, and `time`/`time_close` subsets with IANA-aware explicit
+  time-based sessions and UTC calendar
   week/month higher-timeframe boundaries, plus a fixed-default
   `timeframe.period` and `timeframe.in_seconds`/`timeframe.from_seconds`
   conversion subset, `timeframe.change` fixed intraday/day plus calendar
