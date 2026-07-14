@@ -1,5 +1,5 @@
 use chrono::{DateTime, Datelike, Duration, NaiveDate, Offset, TimeZone, Utc};
-use chrono_tz::Tz;
+use chrono_tz::{OffsetName, Tz};
 use pine_ir::HirCallArg;
 
 use crate::*;
@@ -10,7 +10,7 @@ mod session;
 mod timestamp;
 
 use self::component::TimeComponent;
-pub(crate) use self::formatting::{format_datetime_with_offset, format_utc_datetime};
+pub(crate) use self::formatting::{format_datetime_with_timezone, format_utc_datetime};
 use self::session::{parse_time_session, parse_time_session_timezone, session_close_for_bar_open};
 pub(crate) use self::timestamp::{format_fixed_timezone_offset, parse_fixed_timezone_offset};
 use self::timestamp::{
@@ -61,6 +61,33 @@ pub(crate) fn timezone_offset_seconds(timezone: &str, datetime: &DateTime<Utc>) 
             .fix()
             .local_minus_utc(),
     )
+}
+
+pub(crate) fn timezone_offset_and_short_name(
+    timezone: &str,
+    datetime: &DateTime<Utc>,
+) -> Option<(i32, String)> {
+    if let Some(offset) = parse_fixed_timezone_offset(timezone) {
+        return Some((offset, fixed_timezone_short_name(offset)));
+    }
+
+    let timezone = timezone.trim().parse::<Tz>().ok()?;
+    let offset = timezone.offset_from_utc_datetime(&datetime.naive_utc());
+    let offset_seconds = offset.fix().local_minus_utc();
+    let short_name = offset
+        .abbreviation()
+        .map(str::to_owned)
+        .unwrap_or_else(|| fixed_timezone_short_name(offset_seconds));
+    Some((offset_seconds, short_name))
+}
+
+fn fixed_timezone_short_name(offset: i32) -> String {
+    if offset == 0 {
+        return "UTC".to_owned();
+    }
+    let sign = if offset < 0 { '-' } else { '+' };
+    let offset = offset.abs();
+    format!("GMT{sign}{:02}:{:02}", offset / 3600, (offset % 3600) / 60)
 }
 
 pub(crate) fn timeframe_from_seconds(seconds: i64) -> Option<String> {

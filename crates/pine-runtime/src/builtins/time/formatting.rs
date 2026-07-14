@@ -9,6 +9,15 @@ pub(crate) fn format_datetime_with_offset(
     format: &str,
     timezone_offset: &str,
 ) -> String {
+    format_datetime_with_timezone(datetime, format, timezone_offset, None)
+}
+
+pub(crate) fn format_datetime_with_timezone(
+    datetime: DateTime<Utc>,
+    format: &str,
+    timezone_offset: &str,
+    timezone_short_name: Option<&str>,
+) -> String {
     let mut result = String::new();
     let mut chars = format.chars().peekable();
     while let Some(ch) = chars.next() {
@@ -50,6 +59,10 @@ pub(crate) fn format_datetime_with_offset(
             'S' => result.push_str(&format_millis(datetime.timestamp_subsec_millis(), count)),
             'a' => result.push_str(if datetime.hour() < 12 { "AM" } else { "PM" }),
             'Z' => result.push_str(timezone_offset),
+            'z' if count <= 3 => match timezone_short_name {
+                Some(name) => result.push_str(name),
+                None => result.extend(std::iter::repeat_n('z', count)),
+            },
             other => {
                 for _ in 0..count {
                     result.push(other);

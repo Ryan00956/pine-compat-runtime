@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added short `z`/`zz`/`zzz` timezone-name tokens to `str.format_time()`.
+  IANA zones render timestamp-specific abbreviations such as `EST` or `EDT`,
+  while UTC and fixed offsets render stable `UTC` or `GMT±HH:mm` text. Full
+  localized `zzzz` names remain outside the current timezone-data subset.
 - Added IANA timezone tokens to the const `timestamp(dateString)` overload.
   Named zones share numeric-calendar timestamp resolution: repeated local times
   select the earlier absolute instant and nonexistent local times shift forward

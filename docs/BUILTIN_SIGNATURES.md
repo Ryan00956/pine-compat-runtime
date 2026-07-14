@@ -1968,11 +1968,15 @@ fixed-offset or IANA timezone strings such as `UTC+4`, `GMT-5`, `+05:30`, and
 DST and local date rollover are reflected in the formatted value. Omitted
 or `na` `format` defaults to `yyyy-MM-dd'T'HH:mm:ssZ`; omitted or `na`
 `timezone` defaults to UTC. Supported tokens include `y`/`Y`, `M`, `d`, `H`,
-`D`, `E`, `w`, `W`, `h`, `m`, `s`, `S`, `a`, `Z`, and single-quoted literals.
+`D`, `E`, `w`, `W`, `h`, `m`, `s`, `S`, `a`, `Z`, short `z`/`zz`/`zzz`,
+and single-quoted literals.
 `D` renders the day of the year with optional zero-padding, `E` renders short
 or full weekday names, `w` renders the current ISO week-of-year subset, and `W`
 renders the current Monday-based week-of-month subset, both with optional
-zero-padding. Exchange timezone defaults remain unsupported.
+zero-padding. Short `z` tokens render timestamp-specific IANA abbreviations
+such as `EST`/`EDT`, `UTC` for zero offset, or canonical `GMT±HH:mm` text for
+other fixed offsets. Full localized `zzzz` names and exchange timezone defaults
+remain unsupported.
 
 ## Math
 

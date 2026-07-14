@@ -282,6 +282,32 @@ plot(str.format_time(1609466400000, "yyyy-MM-dd E w HH:mm:ssZ", "America/New_Yor
 }
 
 #[test]
+fn formats_str_format_time_short_timezone_names() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("formatted timezone names")
+plot(str.format_time(1609504496000, "z zz zzz zzzz", "America/New_York") == "EST EST EST zzzz" ? 1 : 0)
+plot(str.format_time(1625142896000, "z", "America/New_York") == "EDT" ? 1 : 0)
+plot(str.format_time(1609504496000, "z", "Asia/Tokyo") == "JST" ? 1 : 0)
+plot(str.format_time(1609459200000, "z", "UTC") == "UTC" ? 1 : 0)
+plot(str.format_time(1609459200000, "z", "UTC+4") == "GMT+04:00" ? 1 : 0)
+plot(str.format_time(1609459200000, "z", "-05:30") == "GMT-05:30" ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("result");
+    for plot in &result.plots {
+        assert_values_close(&plot.values, &[1.0]);
+    }
+}
+
+#[test]
 fn rejects_invalid_str_format_time_timezone() {
     let source = SourceFile::new(
         "test.pine",

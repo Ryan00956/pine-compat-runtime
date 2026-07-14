@@ -2,8 +2,8 @@ use pine_ir::{HirCallArg, HirExpr, HirUserTypeInfo};
 use regex::Regex;
 
 use crate::builtins::time::{
-    format_datetime_with_offset, format_fixed_timezone_offset, format_utc_datetime,
-    timezone_offset_seconds, utc_datetime_from_millis,
+    format_datetime_with_timezone, format_fixed_timezone_offset, format_utc_datetime,
+    timezone_offset_and_short_name, utc_datetime_from_millis,
 };
 use crate::*;
 
@@ -752,8 +752,8 @@ impl<'a> HistoricalRuntime<'a> {
         let datetime = utc_datetime_from_millis(timestamp).map_err(|_| RuntimeError {
             message: format!("str.format_time timestamp is out of range: {timestamp}"),
         })?;
-        let offset_seconds =
-            timezone_offset_seconds(&timezone, &datetime).ok_or_else(|| RuntimeError {
+        let (offset_seconds, timezone_short_name) =
+            timezone_offset_and_short_name(&timezone, &datetime).ok_or_else(|| RuntimeError {
                 message: format!("str.format_time unsupported timezone `{timezone}`"),
             })?;
         let Some(offset) = chrono::Duration::try_seconds(i64::from(offset_seconds)) else {
@@ -768,7 +768,12 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         let timezone_offset = format_fixed_timezone_offset(offset_seconds);
-        let result = format_datetime_with_offset(datetime, &format, &timezone_offset);
+        let result = format_datetime_with_timezone(
+            datetime,
+            &format,
+            &timezone_offset,
+            Some(&timezone_short_name),
+        );
         self.string_value_or_error(result, "str.format_time")
     }
 
