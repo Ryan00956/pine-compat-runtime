@@ -390,9 +390,12 @@ pub(crate) fn format_number(value: f64, format: &str) -> String {
         return format_volume_number(value);
     }
 
+    if format == "format.percent" {
+        return format!("{}%", format_number(value, "#.##"));
+    }
+
     let format = match format {
         "" | "format.price" => "#.########",
-        "format.percent" => "#.##%",
         other => other,
     };
     let percent = format.ends_with('%');

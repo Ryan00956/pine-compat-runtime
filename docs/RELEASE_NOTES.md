@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Corrected predefined `format.percent` string conversion to append `%` after
+  two-decimal rounding without multiplying the input by 100. Custom formatting
+  strings with a trailing `%` token retain their existing scaling behavior.
 - Corrected `str.tostring(..., format.volume)` to abbreviate numeric scalars,
   array elements, and matrix cells with K/M/B/T suffixes and volume precision,
   including whole values below 1000 and suffix promotion at rounded thresholds.
