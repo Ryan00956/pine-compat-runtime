@@ -526,10 +526,12 @@ bar's existing `time` or `time_close` value when no session is supplied and both
 offsets are omitted or 0. For nonzero `bars_back`, the runtime offsets from the
 current bar using the fixed 1-minute chart timeframe before mapping to the
 requested UTC timeframe bucket. It then applies `timeframe_bars_back` on that
-requested timeframe bucket. Higher timeframe strings in the supported timeframe
-subset return UTC bucket opening or closing timestamps. Negative `bars_back`
-and `timeframe_bars_back` values can reference at most 500 future bars in their
-respective offset spaces. The session subset accepts `24x7`, `HHmm-HHmm`,
+requested timeframe bucket. Supported seconds, minutes, and days return fixed-
+duration UTC bucket boundaries; weeks return Monday-based UTC calendar-week
+group boundaries, and months return UTC calendar-month group boundaries.
+Negative `bars_back` and `timeframe_bars_back` values can reference at most 500
+future bars in their respective offset spaces. The session subset accepts
+`24x7`, `HHmm-HHmm`,
 comma-separated intraday periods, optional Pine day digits, and fixed-offset
 timezone interpretation for those session strings. Overnight periods are
 supported in the fixed-offset calendar subset. `time_close` clips the returned

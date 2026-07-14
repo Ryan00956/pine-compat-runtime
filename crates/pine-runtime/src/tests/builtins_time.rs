@@ -192,6 +192,60 @@ plot(na(time(na)) and na(time_close(na)) ? 1 : 0)
 }
 
 #[test]
+fn runs_time_and_time_close_for_calendar_timeframes() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("calendar time functions")
+plot(time("W"))
+plot(time_close("W"))
+plot(time("2W"))
+plot(time_close("2W"))
+plot(time("2W", timeframe_bars_back = 1))
+plot(time_close("2W", timeframe_bars_back = -1))
+plot(time("M"))
+plot(time_close("M"))
+plot(time("M", timeframe_bars_back = 1))
+plot(time_close("M", timeframe_bars_back = -1))
+plot(time("3M"))
+plot(time_close("3M"))
+plot(time("3M", timeframe_bars_back = 1))
+plot(time_close("3M", timeframe_bars_back = -1))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = [Bar {
+        time: 1_706_702_400_000,
+        open: 1.0,
+        high: 1.0,
+        low: 1.0,
+        close: 1.0,
+        volume: 1.0,
+    }];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("result");
+
+    assert_values_close(&result.plots[0].values, &[1_706_486_400_000.0]);
+    assert_values_close(&result.plots[1].values, &[1_707_091_200_000.0]);
+    assert_values_close(&result.plots[2].values, &[1_705_881_600_000.0]);
+    assert_values_close(&result.plots[3].values, &[1_707_091_200_000.0]);
+    assert_values_close(&result.plots[4].values, &[1_704_672_000_000.0]);
+    assert_values_close(&result.plots[5].values, &[1_708_300_800_000.0]);
+    assert_values_close(&result.plots[6].values, &[1_704_067_200_000.0]);
+    assert_values_close(&result.plots[7].values, &[1_706_745_600_000.0]);
+    assert_values_close(&result.plots[8].values, &[1_701_388_800_000.0]);
+    assert_values_close(&result.plots[9].values, &[1_709_251_200_000.0]);
+    assert_values_close(&result.plots[10].values, &[1_704_067_200_000.0]);
+    assert_values_close(&result.plots[11].values, &[1_711_929_600_000.0]);
+    assert_values_close(&result.plots[12].values, &[1_696_118_400_000.0]);
+    assert_values_close(&result.plots[13].values, &[1_719_792_000_000.0]);
+}
+
+#[test]
 fn runs_time_and_time_close_functions_with_bars_back() {
     let source = SourceFile::new(
         "test.pine",

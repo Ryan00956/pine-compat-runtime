@@ -124,6 +124,45 @@ fn timeframe_change_bucket(timestamp_ms: i64, timeframe: &str, seconds: i64) -> 
     timeframe_bucket(timestamp_ms, seconds)
 }
 
+fn timeframe_bucket_bounds(bucket: i64, timeframe: &str, seconds: i64) -> Option<(i64, i64)> {
+    const MILLIS_PER_DAY: i64 = 86_400_000;
+
+    if let Some(multiplier) = calendar_timeframe_multiplier(timeframe, 'W') {
+        let epoch_monday = Utc.with_ymd_and_hms(1970, 1, 5, 0, 0, 0).single()?;
+        let duration_ms = multiplier.checked_mul(7)?.checked_mul(MILLIS_PER_DAY)?;
+        let open_offset_ms = bucket.checked_mul(duration_ms)?;
+        let open_time = epoch_monday
+            .timestamp_millis()
+            .checked_add(open_offset_ms)?;
+        let close_time = open_time.checked_add(duration_ms)?;
+        return Some((open_time, close_time));
+    }
+
+    if let Some(multiplier) = calendar_timeframe_multiplier(timeframe, 'M') {
+        let open_month = bucket.checked_mul(multiplier)?;
+        let close_month = open_month.checked_add(multiplier)?;
+        return Some((
+            calendar_month_start(open_month)?,
+            calendar_month_start(close_month)?,
+        ));
+    }
+
+    let duration_ms = seconds.checked_mul(1000)?;
+    let open_time = bucket.checked_mul(duration_ms)?;
+    let close_time = bucket.checked_add(1)?.checked_mul(duration_ms)?;
+    Some((open_time, close_time))
+}
+
+fn calendar_month_start(month: i64) -> Option<i64> {
+    let year = i32::try_from(month.div_euclid(12)).ok()?;
+    let month = u32::try_from(month.rem_euclid(12).checked_add(1)?).ok()?;
+    Some(
+        Utc.with_ymd_and_hms(year, month, 1, 0, 0, 0)
+            .single()?
+            .timestamp_millis(),
+    )
+}
+
 fn calendar_timeframe_multiplier(timeframe: &str, unit: char) -> Option<i64> {
     let number = timeframe.strip_suffix(unit)?;
     let multiplier = if number.is_empty() {
@@ -473,12 +512,7 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("{name} bars_back timestamp is out of range"),
             });
         };
-        let Some(duration_ms) = seconds.checked_mul(1000) else {
-            return Err(RuntimeError {
-                message: format!("{name} unsupported timeframe `{timeframe}`"),
-            });
-        };
-        let Some(bucket) = timeframe_bucket(base_time, seconds) else {
+        let Some(bucket) = timeframe_change_bucket(base_time, timeframe, seconds) else {
             return Err(RuntimeError {
                 message: format!("{name} unsupported timeframe `{timeframe}`"),
             });
@@ -488,14 +522,8 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("{name} timeframe_bars_back timestamp is out of range"),
             });
         };
-        let Some(open_time) = bucket.checked_mul(duration_ms) else {
-            return Err(RuntimeError {
-                message: format!("{name} timestamp is out of range for timeframe `{timeframe}`"),
-            });
-        };
-        let Some(close_timestamp) = bucket
-            .checked_add(1)
-            .and_then(|value| value.checked_mul(duration_ms))
+        let Some((open_time, close_timestamp)) =
+            timeframe_bucket_bounds(bucket, timeframe, seconds)
         else {
             return Err(RuntimeError {
                 message: format!("{name} timestamp is out of range for timeframe `{timeframe}`"),

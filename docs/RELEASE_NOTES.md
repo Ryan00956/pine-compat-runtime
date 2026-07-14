@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Corrected `time()` and `time_close()` W/2W through 52W and M/2M through
+  12M boundaries to use the same UTC calendar groups as `timeframe.change()`.
+  Weekly periods now open on Monday, monthly periods use real calendar-month
+  lengths, and `timeframe_bars_back` shifts whole requested calendar groups.
+  Intraday/day buckets, chart-space `bars_back`, fixed-offset session clipping,
+  and public output schemas are unchanged.
 - Corrected `timeframe.change()` weekly and monthly boundary detection. `W`
   through `52W` now use UTC Monday-based calendar-week groups, while `M`
   through `12M` use UTC calendar-month groups instead of fixed Unix-epoch
