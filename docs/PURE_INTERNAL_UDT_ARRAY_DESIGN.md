@@ -2048,6 +2048,16 @@ results and nested slices write shared parent backing; fresh matrix/map/
 `matrix.mult` snapshots leave sources unchanged. Explicit `na` indexes and
 upstream-`na` results remain no-ops after value evaluation; empty/out-of-range,
 kind/identity, arity, and UDF-body boundaries stay closed and fixture-backed.
+Item 117 adds terminal top-level `.fill(value, index_from?, index_to?)` across
+the same producer and derived-array continuation set. It validates an element-
+compatible scalar, drawing-id, `chart.point`, same-local UDT, or same-imported
+UDT value plus optional simple-int-compatible half-open bounds; omitted bounds
+fill the full result. Alias results and nested slices update shared parent
+backing, while fresh matrix/map/`matrix.mult` snapshots leave sources unchanged.
+Explicit `na`, negative, reversed, oversized, empty, and upstream-`na` cases
+no-op after all supplied arguments are evaluated. The mutation returns `void`,
+cannot continue, and retains closed kind/identity, arity, and UDF-body
+boundaries without widening public schemas.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

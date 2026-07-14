@@ -514,6 +514,15 @@ Current baseline:
   slot without changing length, returns `void`, and cannot continue; fresh
   snapshots remain source-independent. Value/arity, upstream-`na`, and UDF-
   side-effect boundaries retain ordinary behavior; public schemas stay fixed.
+  The range-fill slice adds top-level
+  `.fill(value, index_from?, index_to?)` across the same producer set. It
+  validates the element kind or concrete UDT identity and optional simple-int-
+  compatible half-open bounds; omitted bounds fill the full result. Alias/live-
+  slice writes reach parent backing, while fresh derived snapshots stay source-
+  independent. Explicit `na`, negative, reversed, oversized, empty, and
+  upstream-`na` cases no-op after all supplied arguments are evaluated. The
+  mutation returns `void`, cannot continue, stays rejected inside UDFs, and
+  leaves public schemas unchanged.
   The following closed slice admits exact
   `matrix.new<float|int|bool|string|color>` template results. They preserve the
   registered element kind, requested rectangular shape, type-compatible

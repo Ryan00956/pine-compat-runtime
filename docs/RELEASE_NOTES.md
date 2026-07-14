@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal top-level `.fill(value, index_from?, index_to?)` to every
+  concrete array call result. It validates the resolved scalar/object/
+  `chart.point` kind or same-local/same-imported scalar-tree UDT identity and
+  optional simple-int-compatible half-open bounds; omitted bounds fill the full
+  result. Alias/live-slice writes reach backing parents, while fresh matrix/map/
+  `matrix.mult` snapshots stay independent. Explicit `na`, negative, reversed,
+  oversized, empty, and upstream-`na` cases no-op after all supplied arguments
+  are evaluated. The mutation returns `void`, cannot continue, remains rejected
+  inside UDFs, and does not widen public schemas.
 - Added terminal top-level `.set(index, value)` to every concrete array call
   result. It preserves simple-int-compatible positive, in-range negative,
   explicit-`na`, empty, and out-of-range behavior; validates scalar/object/

@@ -702,3 +702,27 @@ matrix.row(na_float_matrix, 0).set(0, 1.0)
 map.values(na_map).set(0, 1.0)
 matrix.mult(mult_na_matrix, mult_vector).set(0, 1.0)
 plot(map.size(empty_map) == 0 ? 1 : 0, "namespace_call_result_set_upstream_na")
+
+str.split("alpha,beta", ",").fill("gamma", 0, 1)
+ta.pivot_point_levels("Traditional", true, true).fill(1.0, 0, 1)
+plot(1, "namespace_call_result_fill_split_pivot")
+
+matrix.row(float_matrix, 0).fill(0.5)
+matrix.col(float_matrix, 0).fill(0.5, 0, 1)
+matrix.eigenvalues(float_diagonal).fill(1.0, 0, 1)
+plot(matrix.get(float_matrix, 0, 0) == 1.5 and matrix.get(float_matrix, 0, 1) == 2.5 and matrix.get(float_diagonal, 0, 0) == 2.0 ? 1 : 0, "namespace_call_result_fill_matrix_snapshot")
+
+map.keys(int_float).fill(0)
+map.values(int_float).fill(0.5, 0, 1)
+plot(map.size(int_float) == 2 and map.get(int_float, 10) == 3.5 and map.get(int_float, 20) == 2.5 ? 1 : 0, "namespace_call_result_fill_map_snapshot")
+
+matrix.mult(mult_matrix, mult_vector).fill(5.0)
+mult_matrix.mult(mult_vector).fill(5.0, 0, 1)
+plot(matrix.get(mult_matrix, 0, 0) == 1.0 and matrix.get(mult_matrix, 1, 1) == 4.0 ? 1 : 0, "namespace_call_result_fill_mult_snapshot")
+
+str.split(na, ",").fill("value", 0, 1)
+matrix.row(na_float_matrix, 0).fill(1.0)
+map.values(empty_map).fill(1.0)
+map.values(na_map).fill(1.0, 0, 1)
+matrix.mult(mult_na_matrix, mult_vector).fill(1.0)
+plot(map.size(empty_map) == 0 ? 1 : 0, "namespace_call_result_fill_empty_upstream_na")

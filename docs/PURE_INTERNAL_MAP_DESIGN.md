@@ -626,6 +626,16 @@ Recommended future slices:
     and insertion order remain unchanged. Negative/`na`/empty/out-of-range,
     kind/arity, typed-`na` map, and UDF-side-effect boundaries retain ordinary
     behavior. Map storage, templates, and public schemas are unchanged. Done.
+51. Every concrete scalar key/value snapshot additionally exposes terminal
+    top-level `.fill(value, index_from?, index_to?)`, including keys/values
+    reached through supported built-in, copied, local/imported function, and
+    local/imported method map results. It validates the resolved scalar kind
+    plus optional simple-int-compatible half-open bounds; omitted bounds fill
+    the full fresh snapshot while source map entries and insertion order remain
+    unchanged. Explicit `na`, negative, reversed, oversized, empty, typed-`na`,
+    and upstream-`na` cases no-op after all supplied arguments are evaluated.
+    It returns `void`, cannot continue, remains rejected inside UDFs, and leaves
+    map storage, templates, and public schemas unchanged. Done.
 
 ## Completion Gate For Future Widening
 

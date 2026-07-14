@@ -92,6 +92,7 @@ const BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.unshift",
     "array.insert",
     "array.set",
+    "array.fill",
     "array.concat",
     "array method calls",
     "expression-body functions",
@@ -121,6 +122,7 @@ const UDT_IDENTITY_BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.unshift",
     "array.insert",
     "array.set",
+    "array.fill",
     "array.concat",
 ];
 
@@ -289,6 +291,7 @@ const BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.unshift",
     "array.insert",
     "array.set",
+    "array.fill",
     "array method calls",
     "expression-body functions",
     "multi-statement functions",
@@ -444,6 +447,7 @@ fn validate_udt_array_call_result_helper_fixture_paths(
             | "array.unshift"
             | "array.insert"
             | "array.set"
+            | "array.fill"
     ) {
         return Ok(());
     }

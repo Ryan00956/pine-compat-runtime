@@ -1712,6 +1712,16 @@ Recommended future slices:
     remain unchanged. Negative/`na`/empty/out-of-range, kind/arity, upstream-
     `na`, and UDF-side-effect boundaries retain ordinary behavior, while
     matrix-valued continuation and public schemas remain unchanged.
+121. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.fill(value, index_from?, index_to?)`, including row/column/eigenvalue
+    arrays reached after a concrete matrix call result. It validates the
+    resolved scalar kind plus optional simple-int-compatible half-open bounds;
+    omitted bounds fill the full fresh array snapshot while source matrices
+    remain unchanged. Explicit `na`, negative, reversed, oversized, empty, and
+    upstream-`na` cases no-op after all supplied arguments are evaluated. It
+    returns `void`, cannot continue, remains rejected inside UDFs, and leaves
+    matrix-valued continuation and public schemas unchanged.
 
 ## Completion Gate For Future Positive Support
 

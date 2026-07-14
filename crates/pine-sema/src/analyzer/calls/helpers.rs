@@ -169,6 +169,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "unshift" => Some("array.unshift"),
         "insert" => Some("array.insert"),
         "set" => Some("array.set"),
+        "fill" => Some("array.fill"),
         _ => None,
     }
 }

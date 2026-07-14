@@ -1663,3 +1663,13 @@ return/parameter flow remains deferred.
     upstream-`na` results remain no-ops after value evaluation; empty/out-of-
     range, kind/identity, arity, and UDF-body boundaries remain fixture-backed.
     No imported identity or public schema field is widened. Done.
+107. The same producer set additionally exposes terminal top-level
+    `.fill(value, index_from?, index_to?)`. It validates an element-compatible
+    scalar/object/`chart.point` or concrete imported UDT value plus optional
+    simple-int-compatible half-open bounds; omitted bounds fill the full
+    result. Imported/local alias results and nested slices update shared parent
+    backing, while fresh matrix/map/`matrix.mult` snapshots stay source-
+    independent. Explicit `na`, negative, reversed, oversized, empty, and
+    upstream-`na` cases no-op after all supplied arguments are evaluated. It
+    returns `void`, cannot continue, stays rejected inside UDFs, and widens no
+    imported identity or public schema field. Done.
