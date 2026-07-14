@@ -1915,7 +1915,8 @@ str.format_time(time: int-compatible, format?: string-compatible, timezone?: str
   -> string with strongest qualifier
 ```
 
-Supported `str.*` helpers return `na` for `na` inputs.
+Supported `str.*` helpers return `na` for `na` inputs unless documented
+otherwise below.
 `str.length` counts Unicode scalar values.
 `str.upper` and `str.lower` convert ASCII letters only and preserve non-ASCII
 characters unchanged in the current fixture-backed subset.
@@ -1925,9 +1926,11 @@ substring arguments.
 empty or `na` substring arguments return 0. `str.substring` treats `na`
 `begin_pos` as 0 and omitted, `na`, or too-large `end_pos` as the string
 length; invalid ranges are runtime errors.
-`str.trim` removes leading and trailing ASCII whitespace only. `str.repeat`
-defaults `separator` to an empty string, returns an empty string for repeat 0,
-and errors for negative counts or results over 40,960 characters.
+`str.trim` removes leading and trailing ASCII whitespace only and returns an
+empty string when its source is `na` or consists entirely of trimmed
+whitespace. `str.repeat` defaults `separator` to an empty string, returns an
+empty string for repeat 0, and errors for negative counts or results over
+40,960 characters.
 `str.replace` replaces one non-overlapping occurrence, defaulting `occurrence`
 to 0. `str.replace_all` replaces all non-overlapping occurrences. Empty
 targets replace zero-width character boundaries. Replacement results over

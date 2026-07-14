@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Corrected `str.trim(na)` to return an empty string, matching the helper's
+  existing all-whitespace result instead of propagating `na`. ASCII trimming
+  and preservation of non-ASCII whitespace remain unchanged.
 - Corrected the shared date/time formatter's `W` week-of-month token. It now
   groups days 1–7 through 29–31 into values `1..5`, so late dates in some
   31-day months no longer produce an out-of-range sixth week; both

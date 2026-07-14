@@ -521,8 +521,10 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn eval_str_trim(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
-        let PineValue::String(value) = self.eval_expr(&args[0].value)? else {
-            return Ok(PineValue::Na);
+        let value = match self.eval_expr(&args[0].value)? {
+            PineValue::String(value) => value,
+            PineValue::Na => return Ok(PineValue::String(String::new())),
+            _ => return Ok(PineValue::Na),
         };
 
         Ok(PineValue::String(
