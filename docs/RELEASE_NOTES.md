@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added `str.match()` support for Pine's `\h` and `\H` horizontal-whitespace
+  regex classes, including the complete fixed Unicode character set, character
+  class nesting, and identical behavior with Unicode-aware mode enabled or
+  disabled.
 - Corrected `str.match()` predefined regex class behavior. `\d`, `\w`, `\s`,
   their complements, and word boundaries now default to ASCII semantics, while
   global or scoped `(?U)` enables Unicode-aware matching without accidentally

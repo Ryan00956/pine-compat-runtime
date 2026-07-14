@@ -1,5 +1,6 @@
 use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
+use regex::Regex;
 
 use crate::builtins::strings::normalize_pine_regex;
 
@@ -21,6 +22,30 @@ fn normalizes_pine_regex_unicode_class_modes() {
     );
     assert_eq!(normalize_pine_regex("(?)"), "(?)");
     assert_eq!(normalize_pine_regex("(?-)"), "(?-)");
+}
+
+#[test]
+fn normalizes_pine_regex_horizontal_whitespace_classes() {
+    let horizontal =
+        Regex::new(&normalize_pine_regex(r"^\h$")).expect("normalized horizontal whitespace regex");
+    for ch in [
+        ' ', '\t', '\u{00a0}', '\u{1680}', '\u{180e}', '\u{2000}', '\u{200a}', '\u{202f}',
+        '\u{205f}', '\u{3000}',
+    ] {
+        assert!(horizontal.is_match(&ch.to_string()), "U+{:04X}", ch as u32);
+    }
+    assert!(!horizontal.is_match("\n"));
+
+    let non_horizontal = Regex::new(&normalize_pine_regex(r"^\H$"))
+        .expect("normalized non-horizontal whitespace regex");
+    assert!(non_horizontal.is_match("A"));
+    assert!(non_horizontal.is_match("\n"));
+    assert!(!non_horizontal.is_match("\u{2003}"));
+
+    assert_eq!(
+        normalize_pine_regex(r"(?U:\h)[\H](?-U:\h)"),
+        r"(?:[ \t\x{00A0}\x{1680}\x{180E}\x{2000}-\x{200A}\x{202F}\x{205F}\x{3000}])[[^ \t\x{00A0}\x{1680}\x{180E}\x{2000}-\x{200A}\x{202F}\x{205F}\x{3000}]](?:[ \t\x{00A0}\x{1680}\x{180E}\x{2000}-\x{200A}\x{202F}\x{205F}\x{3000}])"
+    );
 }
 
 #[test]
@@ -169,6 +194,12 @@ match_scoped_unicode_digit = str.match("１", "(?U:\\d)")
 match_scoped_unicode = str.match("１１", "(?U:\\d)\\d")
 match_toggled_unicode = str.match("１2", "(?U)\\d(?-U)\\d")
 match_unicode_greedy = str.match("abc", "(?U).+")
+match_horizontal_tab = str.match("\tA", "\\h")
+match_horizontal_em_space = str.match(" A", "\\h")
+match_non_horizontal = str.match(" A", "\\H")
+match_horizontal_unicode_on = str.match(" ", "(?U)\\h")
+match_horizontal_unicode_off = str.match(" ", "(?-U)\\h")
+match_horizontal_class = str.match("A ", "[\\h]")
 missing_match_regex = str.match(na, ".+")
 missing_match_pattern = str.match("NASDAQ:AAPL", na)
 split_words = str.split("A,B,,C", ",")
@@ -229,6 +260,7 @@ plot(match_ascii_word == "_A" and match_unicode_word == "β_A" and match_ascii_n
 plot(match_ascii_space == " " and match_unicode_space == " " and match_ascii_non_space == " " ? 1 : 0)
 plot(match_ascii_boundary == "A" and match_unicode_boundary == "" and match_ascii_non_boundary == "" and match_unicode_non_boundary == "A" and match_ascii_class == "1" ? 1 : 0)
 plot(match_scoped_unicode_digit == "１" and match_scoped_unicode == "" and match_toggled_unicode == "１2" and match_unicode_greedy == "abc" ? 1 : 0)
+plot(match_horizontal_tab == "\t" and match_horizontal_em_space == " " and match_non_horizontal == "A" and match_horizontal_unicode_on == " " and match_horizontal_unicode_off == " " and match_horizontal_class == " " ? 1 : 0)
 plot(na(missing_match_regex) and na(missing_match_pattern) ? 1 : 0)
 plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2) == "" and split_words.get(3) == "C" and split_missing_separator_literal.size() == 1 and split_missing_separator_literal.get(0) == "A,B" ? 1 : 0)
 plot(split_chars.size() == 2 and split_chars.get(0) == "x" and split_chars.get(1) == "y" and split_unicode.size() == 2 and split_unicode.get(0) == "å" and split_unicode.get(1) == "β" and split_empty_source_separator.size() == 1 and split_empty_source_separator.get(0) == "" and split_empty_source_chars.size() == 0 and na(split_missing) and na(split_missing_separator) ? 1 : 0)

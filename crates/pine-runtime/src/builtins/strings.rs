@@ -188,6 +188,11 @@ fn push_rust_regex_flags(result: &mut String, flags: &PineRegexFlags<'_>) {
 }
 
 pub(crate) fn normalize_pine_regex(pattern: &str) -> String {
+    const HORIZONTAL_WHITESPACE: &str =
+        r"[ \t\x{00A0}\x{1680}\x{180E}\x{2000}-\x{200A}\x{202F}\x{205F}\x{3000}]";
+    const NON_HORIZONTAL_WHITESPACE: &str =
+        r"[^ \t\x{00A0}\x{1680}\x{180E}\x{2000}-\x{200A}\x{202F}\x{205F}\x{3000}]";
+
     let mut result = String::with_capacity(pattern.len());
     let mut mode = PineRegexMode::default();
     let mut modes = Vec::new();
@@ -212,8 +217,10 @@ pub(crate) fn normalize_pine_regex(pattern: &str) -> String {
                 result.push(slash);
                 break;
             };
-            if !mode.unicode_classes {
-                let replacement = match escaped {
+            let replacement = match escaped {
+                'h' => Some(HORIZONTAL_WHITESPACE),
+                'H' => Some(NON_HORIZONTAL_WHITESPACE),
+                _ if !mode.unicode_classes => match escaped {
                     'd' => Some("[0-9]"),
                     'D' => Some("[^0-9]"),
                     'w' => Some("[A-Za-z0-9_]"),
@@ -223,12 +230,13 @@ pub(crate) fn normalize_pine_regex(pattern: &str) -> String {
                     'b' if class_depth == 0 => Some(r"(?-u:\b)"),
                     'B' if class_depth == 0 => Some(r"(?-u:\B)"),
                     _ => None,
-                };
-                if let Some(replacement) = replacement {
-                    result.push_str(replacement);
-                    index += slash.len_utf8() + escaped.len_utf8();
-                    continue;
-                }
+                },
+                _ => None,
+            };
+            if let Some(replacement) = replacement {
+                result.push_str(replacement);
+                index += slash.len_utf8() + escaped.len_utf8();
+                continue;
             }
 
             result.push(slash);
