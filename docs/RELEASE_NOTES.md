@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Corrected the shared date/time formatter's `W` week-of-month token. It now
+  groups days 1–7 through 29–31 into values `1..5`, so late dates in some
+  31-day months no longer produce an out-of-range sixth week; both
+  `str.format_time()` and UTC date placeholders are covered.
 - Corrected `str.format_time()` handling for a `na` timestamp. The function now
   replaces the missing value with `0` and formats the UNIX epoch through the
   same UTC, fixed-offset, or IANA timezone path, while `na` format and timezone

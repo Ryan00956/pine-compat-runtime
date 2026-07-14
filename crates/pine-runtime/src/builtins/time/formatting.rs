@@ -1,4 +1,4 @@
-use chrono::{DateTime, Datelike, NaiveDate, Timelike, Utc};
+use chrono::{DateTime, Datelike, Timelike, Utc};
 
 pub(crate) fn format_utc_datetime(datetime: DateTime<Utc>, format: &str) -> String {
     format_datetime_with_offset(datetime, format, "+0000")
@@ -55,7 +55,7 @@ pub(crate) fn format_datetime_with_timezone(
             'D' => push_padded_or_plain(&mut result, datetime.ordinal(), count),
             'E' => result.push_str(format_weekday(datetime.weekday(), count)),
             'w' => push_padded_or_plain(&mut result, datetime.iso_week().week(), count),
-            'W' => push_padded_or_plain(&mut result, iso_week_of_month(datetime), count),
+            'W' => push_padded_or_plain(&mut result, week_of_month(datetime), count),
             'H' => push_padded_or_plain(&mut result, datetime.hour(), count),
             'h' => {
                 let hour = datetime.hour() % 12;
@@ -123,11 +123,8 @@ fn format_month(month: u32, width: usize) -> String {
     }
 }
 
-fn iso_week_of_month(datetime: DateTime<Utc>) -> u32 {
-    let first_day = NaiveDate::from_ymd_opt(datetime.year(), datetime.month(), 1)
-        .expect("datetime month has a valid first day");
-    let leading_days = first_day.weekday().num_days_from_monday();
-    ((datetime.day() + leading_days - 1) / 7) + 1
+fn week_of_month(datetime: DateTime<Utc>) -> u32 {
+    ((datetime.day() - 1) / 7) + 1
 }
 
 fn format_weekday(weekday: chrono::Weekday, width: usize) -> &'static str {

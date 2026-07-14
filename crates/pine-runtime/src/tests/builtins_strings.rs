@@ -404,6 +404,30 @@ plot(str.format_time(na, "yyyy-MM-dd HH:mm:ssZ z", "America/New_York") == "1969-
 }
 
 #[test]
+fn formats_week_of_month_within_one_to_five() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("week of month range")
+plot(str.format_time(1690761600000, "W WW", "UTC") == "5 05" ? 1 : 0)
+plot(str.format_time(1690855200000, "yyyy-MM-dd W", "America/New_York") == "2023-07-31 5" ? 1 : 0)
+plot(str.format_time(1690855200000, "yyyy-MM-dd W", "UTC") == "2023-08-01 1" ? 1 : 0)
+plot(str.format("{0,date,W WW}", 1690761600000) == "5 05" ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("result");
+    for plot in &result.plots {
+        assert_values_close(&plot.values, &[1.0]);
+    }
+}
+
+#[test]
 fn rejects_invalid_str_format_time_timezone() {
     let source = SourceFile::new(
         "test.pine",

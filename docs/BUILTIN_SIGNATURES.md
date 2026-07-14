@@ -1975,11 +1975,12 @@ defaults to UTC. Supported tokens include `y`/`Y`, `M`, `d`, `H`, `D`, `E`,
 single-quoted literals.
 `D` renders the day of the year with optional zero-padding, `E` renders short
 or full weekday names, `w` renders the current ISO week-of-year subset, and `W`
-renders the current Monday-based week-of-month subset, both with optional
-zero-padding. Short `z` tokens render timestamp-specific IANA abbreviations
-such as `EST`/`EDT`, `UTC` for zero offset, or canonical `GMT±HH:mm` text for
-other fixed offsets. Full localized `zzzz` names and exchange timezone defaults
-remain unsupported. Quoted literals can contain doubled apostrophes, and `''`
+renders the `1..5` week-of-month value from seven-day day-of-month groups, both
+with optional zero-padding. Short `z` tokens render timestamp-specific IANA
+abbreviations such as `EST`/`EDT`, `UTC` for zero offset, or canonical
+`GMT±HH:mm` text for other fixed offsets. Full localized `zzzz` names and
+exchange timezone defaults remain unsupported. Quoted literals can contain
+doubled apostrophes, and `''`
 outside a quoted block also renders one literal apostrophe. `h` renders the
 12-hour value in the `0..11` range, and `hh` adds a leading zero. `S` renders the
 complete `0..999` millisecond value, while `SS` and `SSS` add leading zeroes to
