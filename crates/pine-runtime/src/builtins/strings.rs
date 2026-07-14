@@ -209,6 +209,54 @@ fn push_pine_regex_quoted(result: &mut String, quoted: &str) {
     }
 }
 
+fn pine_posix_class(name: &str, unicode: bool, negated: bool) -> Option<&'static str> {
+    let (positive, negative) = if unicode {
+        match name.to_ascii_uppercase().as_str() {
+            "LOWER" => (r"\p{Lowercase}", r"\P{Lowercase}"),
+            "UPPER" => (r"\p{Uppercase}", r"\P{Uppercase}"),
+            "ASCII" => (r"[\x00-\x7F]", r"[^\x00-\x7F]"),
+            "ALPHA" => (r"\p{Alphabetic}", r"\P{Alphabetic}"),
+            "DIGIT" => (r"\p{Nd}", r"\P{Nd}"),
+            "ALNUM" => (r"[\p{Alphabetic}\p{Nd}]", r"[^\p{Alphabetic}\p{Nd}]"),
+            "PUNCT" => (r"\p{Punctuation}", r"\P{Punctuation}"),
+            "GRAPH" => (
+                r"[^\p{White_Space}\p{Cc}\p{Cn}]",
+                r"[\p{White_Space}\p{Cc}\p{Cn}]",
+            ),
+            "PRINT" => (
+                r"[[^\p{White_Space}\p{Cc}\p{Cn}]\p{Zs}]",
+                r"[[\p{White_Space}\p{Cc}\p{Cn}]&&[^\p{Zs}]]",
+            ),
+            "BLANK" => (r"[\p{Zs}\t]", r"[^\p{Zs}\t]"),
+            "CNTRL" => (r"\p{Cc}", r"\P{Cc}"),
+            "XDIGIT" => (r"[\p{Nd}\p{Hex_Digit}]", r"[^\p{Nd}\p{Hex_Digit}]"),
+            "SPACE" => (r"\p{White_Space}", r"\P{White_Space}"),
+            _ => return None,
+        }
+    } else {
+        match name {
+            "Lower" => (r"[a-z]", r"[^a-z]"),
+            "Upper" => (r"[A-Z]", r"[^A-Z]"),
+            "ASCII" => (r"[\x00-\x7F]", r"[^\x00-\x7F]"),
+            "Alpha" => (r"[A-Za-z]", r"[^A-Za-z]"),
+            "Digit" => (r"[0-9]", r"[^0-9]"),
+            "Alnum" => (r"[A-Za-z0-9]", r"[^A-Za-z0-9]"),
+            "Punct" => (
+                r"[\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E]",
+                r"[^\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E]",
+            ),
+            "Graph" => (r"[\x21-\x7E]", r"[^\x21-\x7E]"),
+            "Print" => (r"[\x20-\x7E]", r"[^\x20-\x7E]"),
+            "Blank" => (r"[\x20\t]", r"[^\x20\t]"),
+            "Cntrl" => (r"[\x00-\x1F\x7F]", r"[^\x00-\x1F\x7F]"),
+            "XDigit" => (r"[0-9A-Fa-f]", r"[^0-9A-Fa-f]"),
+            "Space" => (r"[\x20\t\n\x0B\f\r]", r"[^\x20\t\n\x0B\f\r]"),
+            _ => return None,
+        }
+    };
+    Some(if negated { negative } else { positive })
+}
+
 struct NormalizedPineRegex {
     pattern: String,
     final_newline_captures: Vec<String>,
@@ -281,6 +329,24 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                     write!(result, r"\x{{{digits}}}").expect("writing to a String cannot fail");
                     index = digits_end;
                     continue;
+                }
+            }
+            if matches!(escaped, 'p' | 'P') {
+                let property_start = index + slash.len_utf8() + escaped.len_utf8();
+                if pattern.as_bytes().get(property_start) == Some(&b'{') {
+                    let name_start = property_start + 1;
+                    if let Some(name_len) = pattern[name_start..].find('}') {
+                        let name_end = name_start + name_len;
+                        if let Some(replacement) = pine_posix_class(
+                            &pattern[name_start..name_end],
+                            mode.unicode_classes,
+                            escaped == 'P',
+                        ) {
+                            result.push_str(replacement);
+                            index = name_end + 1;
+                            continue;
+                        }
+                    }
                 }
             }
             if escaped == 'Z' && class_depth == 0 {

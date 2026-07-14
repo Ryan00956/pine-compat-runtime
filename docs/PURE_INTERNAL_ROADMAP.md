@@ -1318,10 +1318,11 @@ Current baseline:
   percent preset, plus `str.match` default-ASCII predefined classes and word
   boundaries with global/scoped `(?U)` Unicode-aware switching and fixed
   Unicode `\h`/`\H` horizontal-whitespace classes plus `\Q...\E` literal
-  quoting, fixed-width `\uHHHH` references, and final-newline-aware `$`/`\Z`
-  end anchors, plus default-dot exclusion of Pine's full line-terminator set
-  with global/scoped `(?s)` and `(?-s)` restoration, on the linear-time regex
-  path;
+  quoting, the 13 Java/Pine POSIX `\p`/`\P` classes with ASCII-default and
+  global/scoped `(?U)` Unicode compatibility mappings, fixed-width `\uHHHH`
+  references, and final-newline-aware `$`/`\Z` end anchors, plus default-dot
+  exclusion of Pine's full line-terminator set with global/scoped `(?s)` and
+  `(?-s)` restoration, on the linear-time regex path;
 - calendar-aware UTC `time`/`time_close` and `timeframe.change` week and month
   groups alongside fixed intraday/day buckets;
 - IANA timezone and DST-aware calendar component and `str.format_time` calls,

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Corrected `str.match()` Java/Pine POSIX `\p{...}` and `\P{...}` classes to
+  use ASCII definitions by default and Unicode compatibility definitions under
+  global/scoped `(?U)`, including `(?-U)` restoration, character-class nesting,
+  quoted preservation, and Unicode-mode case-insensitive POSIX names.
 - Corrected `str.match()` default-dot behavior to exclude Pine's complete line
   terminator set (LF, CR/CRLF, U+0085, U+2028, and U+2029), while preserving
   global/scoped `(?s)` dotall mode, `(?-s)` restoration, and literal dots in

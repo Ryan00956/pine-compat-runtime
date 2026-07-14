@@ -1984,11 +1984,18 @@ semantics, and `(?-U)` disables them again; Pine's `U` flag does not change
 quantifier greediness. The `\h`/`\H` classes use Pine's fixed Unicode
 horizontal-whitespace set regardless of `U`, including space, tab, nonbreaking
 space, U+1680, U+180E, U+2000 through U+200A, U+202F, U+205F, and U+3000. It
-also supports `\Q...\E` literal quoting inside or outside character classes,
-including quoted whitespace and `#` in verbose mode; an omitted closing `\E`
-quotes through the end of the pattern. Fixed-width four-hex-digit Unicode
-references such as `\u2014` work inside and outside character classes, consume
-exactly four digits, and remain literal inside quoted regions. By default, `$`
+also supports the Java/Pine POSIX property names `Lower`, `Upper`, `ASCII`,
+`Alpha`, `Digit`, `Alnum`, `Punct`, `Graph`, `Print`, `Blank`, `Cntrl`,
+`XDigit`, and `Space` for `\p{...}` and `\P{...}`. These classes use their ASCII
+definitions by default and their Unicode compatibility definitions under
+global or scoped `(?U)`; `(?-U)` restores ASCII behavior. POSIX names are
+case-sensitive by default and case-insensitive under `(?U)`. Other Unicode
+property references retain their ordinary Unicode behavior. It also supports
+`\Q...\E` literal quoting inside or outside character classes, including quoted
+whitespace and `#` in verbose mode; an omitted closing `\E` quotes through the
+end of the pattern. Fixed-width four-hex-digit Unicode references such as
+`\u2014` work inside and outside character classes, consume exactly four digits,
+and remain literal inside quoted regions. By default, `$`
 and `\Z` match either at the absolute end or immediately before a final `\n`,
 without including that line terminator in the returned substring; `\z` matches
 only the absolute end. Global or scoped `(?m)` gives `$` multiline behavior,

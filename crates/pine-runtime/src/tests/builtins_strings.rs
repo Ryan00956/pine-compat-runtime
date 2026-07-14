@@ -109,6 +109,78 @@ fn normalizes_pine_regex_dot_line_terminators() {
 }
 
 #[test]
+fn normalizes_pine_regex_posix_classes() {
+    assert_eq!(
+        normalize_pine_regex(r"\p{Lower}\P{XDigit}(?U)\p{Lower}(?-U)\p{XDigit}"),
+        r"[a-z][^0-9A-Fa-f]\p{Lowercase}[0-9A-Fa-f]"
+    );
+    assert_eq!(
+        normalize_pine_regex(r"\p{L}\p{Lowercase}\p{Unknown}"),
+        r"\p{L}\p{Lowercase}\p{Unknown}"
+    );
+    assert_eq!(
+        normalize_pine_regex(r"\p{alnum}(?U)\p{aLnUm}"),
+        r"\p{alnum}[\p{Alphabetic}\p{Nd}]"
+    );
+    assert!(Regex::new(&normalize_pine_regex(r"\p{alnum}")).is_err());
+    assert_eq!(
+        normalize_pine_regex(r"\Q\p{Lower}\E\p{Lower}"),
+        r"\x{5C}\x{70}\x{7B}\x{4C}\x{6F}\x{77}\x{65}\x{72}\x{7D}[a-z]"
+    );
+
+    for name in [
+        "Lower", "Upper", "ASCII", "Alpha", "Digit", "Alnum", "Punct", "Graph", "Print", "Blank",
+        "Cntrl", "XDigit", "Space",
+    ] {
+        for prefix in [r"\p", r"\P"] {
+            let default_pattern = format!(r"{prefix}{{{name}}}");
+            Regex::new(&normalize_pine_regex(&default_pattern))
+                .unwrap_or_else(|err| panic!("default {prefix}{{{name}}}: {err}"));
+            let unicode_pattern = format!(r"(?U:{prefix}{{{name}}})");
+            Regex::new(&normalize_pine_regex(&unicode_pattern))
+                .unwrap_or_else(|err| panic!("Unicode {prefix}{{{name}}}: {err}"));
+        }
+    }
+
+    let default_lower = Regex::new(&normalize_pine_regex(r"\p{Lower}"))
+        .expect("normalized default POSIX lower regex");
+    assert_eq!(
+        default_lower.find("βa").map(|matched| matched.as_str()),
+        Some("a")
+    );
+    let unicode_lower = Regex::new(&normalize_pine_regex(r"(?U)\p{Lower}"))
+        .expect("normalized Unicode POSIX lower regex");
+    assert_eq!(
+        unicode_lower.find("βa").map(|matched| matched.as_str()),
+        Some("β")
+    );
+
+    let default_xdigit = Regex::new(&normalize_pine_regex(r"[\p{XDigit}]"))
+        .expect("normalized default POSIX xdigit regex");
+    assert_eq!(
+        default_xdigit.find("𝟙F").map(|matched| matched.as_str()),
+        Some("F")
+    );
+    let unicode_xdigit = Regex::new(&normalize_pine_regex(r"(?U)[\p{XDigit}]"))
+        .expect("normalized Unicode POSIX xdigit regex");
+    assert_eq!(
+        unicode_xdigit.find("𝟙F").map(|matched| matched.as_str()),
+        Some("𝟙")
+    );
+
+    let unicode_graph = Regex::new(&normalize_pine_regex(r"(?U)\p{Graph}"))
+        .expect("normalized Unicode POSIX graph regex");
+    assert!(unicode_graph.is_match("—"));
+    assert!(unicode_graph.is_match("\u{200d}"));
+    assert!(!unicode_graph.is_match("\u{00a0}"));
+    assert!(!unicode_graph.is_match("\u{0378}"));
+    let unicode_print = Regex::new(&normalize_pine_regex(r"(?U)\p{Print}"))
+        .expect("normalized Unicode POSIX print regex");
+    assert!(unicode_print.is_match("\u{00a0}"));
+    assert!(!unicode_print.is_match("\t"));
+}
+
+#[test]
 fn runs_string_helpers() {
     let source = SourceFile::new(
         "test.pine",
@@ -286,6 +358,16 @@ match_dotall_line_terminators = str.match("\r  A", "(?s).+")
 match_global_dotall_reset = str.match("\rA", "(?s).(?-s).")
 match_scoped_dotall_reset = str.match("\rA", "(?s:.)(?-s:.)")
 match_literal_dots = str.match("...", "\\.[.]\\Q.\\E")
+match_posix_lower_ascii = str.match("βa", "\\p{Lower}")
+match_posix_lower_unicode = str.match("βa", "(?U)\\p{Lower}")
+match_posix_not_lower_ascii = str.match("βa", "\\P{Lower}")
+match_posix_not_lower_unicode = str.match("βA", "(?U)\\P{Lower}")
+match_posix_xdigit_ascii = str.match("𝟙F", "[\\p{XDigit}]")
+match_posix_xdigit_unicode = str.match("𝟙F", "(?U)[\\p{XDigit}]")
+match_posix_scoped_reset = str.match("βa", "(?U:\\p{Lower})(?-U:\\p{Lower})")
+match_posix_unicode_casefold_name = str.match("β", "(?U)\\p{aLpHa}")
+match_unicode_category_unchanged = str.match("β", "\\p{L}")
+match_posix_quoted = str.match("\\p{Lower}", "\\Q\\p{Lower}\\E")
 match_anchor_capture_collision = str.match("tail\n", "(?<__pine_final_newline_0>tail)$")
 match_unicode_escape = str.match("x—y", "\\u2014")
 match_unicode_escape_class = str.match("xåy", "[\\u00E5]")
@@ -359,6 +441,8 @@ plot(match_multiline_dollar == "second" and match_scoped_multiline_reset == "fir
 plot(match_dotall_greedy_end == "a\n" and match_dotall_lazy_end == "a" and match_anchor_capture_collision == "tail" ? 1 : 0)
 plot(match_default_dot_line_feed == "A" and match_default_dot_carriage_return == "A" and match_default_dot_next_line == "A" and match_default_dot_line_separator == "A" and match_default_dot_paragraph_separator == "A" ? 1 : 0)
 plot(match_dotall_line_terminators == "\r  A" and match_global_dotall_reset == "\rA" and match_scoped_dotall_reset == "\rA" and match_literal_dots == "..." ? 1 : 0)
+plot(match_posix_lower_ascii == "a" and match_posix_lower_unicode == "β" and match_posix_not_lower_ascii == "β" and match_posix_not_lower_unicode == "A" ? 1 : 0)
+plot(match_posix_xdigit_ascii == "F" and match_posix_xdigit_unicode == "𝟙" and match_posix_scoped_reset == "βa" and match_posix_unicode_casefold_name == "β" and match_unicode_category_unchanged == "β" and match_posix_quoted == "\\p{Lower}" ? 1 : 0)
 plot(match_unicode_escape == "—" and match_unicode_escape_class == "å" and match_unicode_escape_fifth_digit == "a0" and match_unicode_escape_quoted == "\\u2014—" ? 1 : 0)
 plot(na(missing_match_regex) and na(missing_match_pattern) ? 1 : 0)
 plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2) == "" and split_words.get(3) == "C" and split_missing_separator_literal.size() == 1 and split_missing_separator_literal.get(0) == "A,B" ? 1 : 0)
