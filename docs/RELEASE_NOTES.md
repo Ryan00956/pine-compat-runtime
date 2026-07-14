@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Corrected `str.tostring(..., format.volume)` to abbreviate numeric scalars,
+  array elements, and matrix cells with K/M/B/T suffixes and volume precision,
+  including whole values below 1000 and suffix promotion at rounded thresholds.
 - Corrected `str.tostring(..., format.mintick)` to round numeric scalars, array
   elements, and matrix cells to the fixed `syminfo.mintick = 0.01` subset,
   including negative half-tick ties rounding up and two trailing decimal places.

@@ -326,6 +326,40 @@ pub(crate) fn format_currency_placeholder(
     }
 }
 
+pub(crate) fn format_volume_number(value: f64) -> String {
+    const SCALES: &[(f64, &str)] = &[
+        (1_000_000_000_000.0, "T"),
+        (1_000_000_000.0, "B"),
+        (1_000_000.0, "M"),
+        (1_000.0, "K"),
+    ];
+
+    if !value.is_finite() {
+        return "NaN".to_owned();
+    }
+
+    let rounded_whole = value.round();
+    if rounded_whole.abs() < 1_000.0 {
+        return format_number(value, "#");
+    }
+
+    for (index, (scale, suffix)) in SCALES.iter().enumerate() {
+        if value.abs() < *scale && index + 1 < SCALES.len() {
+            continue;
+        }
+        let mut scaled = value / scale;
+        let rounded_scaled = (scaled * 1_000.0).round() / 1_000.0;
+        if rounded_scaled.abs() >= 1_000.0 && index > 0 {
+            let (next_scale, next_suffix) = SCALES[index - 1];
+            scaled = value / next_scale;
+            return format!("{}{next_suffix}", format_number(scaled, "#.###"));
+        }
+        return format!("{}{suffix}", format_number(scaled, "#.###"));
+    }
+
+    format_number(value, "#")
+}
+
 pub(crate) fn format_number(value: f64, format: &str) -> String {
     if !value.is_finite() {
         return "NaN".to_owned();
@@ -352,10 +386,13 @@ pub(crate) fn format_number(value: f64, format: &str) -> String {
         return format!("{rounded:.decimal_places$}");
     }
 
+    if format == "format.volume" {
+        return format_volume_number(value);
+    }
+
     let format = match format {
         "" | "format.price" => "#.########",
         "format.percent" => "#.##%",
-        "format.volume" => "#.##",
         other => other,
     };
     let percent = format.ends_with('%');

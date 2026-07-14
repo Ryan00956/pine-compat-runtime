@@ -1946,12 +1946,15 @@ Matrices render as an outer bracketed list of bracketed rows, preserve empty
 row/column shapes, and apply numeric formats to each numeric cell. Color
 matrices, UDT and tuple values, and color, drawing-id, chart.point, and UDT
 arrays remain outside the argument subset. Numeric formatting supports the
-default `#.########`, `format.price` as the default format, `format.volume` as
-`#.##`, `format.percent` as `#.##%`, and fixture-covered custom patterns using
-`#`, `0`, `.`, `,`, and trailing `%` tokens. `format.mintick` rounds to the
-nearest multiple of the fixed `syminfo.mintick = 0.01` subset with ties rounded
-up, then preserves the corresponding two fractional digits; the same per-cell
-rule applies to supported numeric arrays and matrices.
+default `#.########`, `format.price` as the default format, `format.percent` as
+`#.##%`, and fixture-covered custom patterns using `#`, `0`, `.`, `,`, and
+trailing `%` tokens. `format.volume` rounds values below 1000 to whole numbers
+and abbreviates larger magnitudes with K/M/B/T suffixes and up to three
+fractional digits, including threshold promotion after rounding.
+`format.mintick` rounds to the nearest multiple of the fixed
+`syminfo.mintick = 0.01` subset with ties rounded up, then preserves the
+corresponding two fractional digits. Both predefined formats apply per cell to
+supported numeric arrays and matrices.
 `str.format` supports indexed placeholders such as `{0}`, numeric placeholders
 such as `{0,number,#.00}`, and fixture-covered `integer`, `percent`, and
 `currency` number presets, plus fixture-covered float-, int-, bool-, and

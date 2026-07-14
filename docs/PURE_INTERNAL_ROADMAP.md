@@ -1312,7 +1312,8 @@ Current baseline:
 - broad fixture-backed coverage across common `ta.*`, `math.*`, `str.*`, time,
   timeframe, session, syminfo, color, and cast helpers, including scalar-matrix
   `str.tostring` representations for float/int/bool/string elements and fixed
-  mintick-aware numeric formatting across scalars, arrays, and matrices;
+  mintick-aware plus K/M/B/T volume numeric formatting across scalars, arrays,
+  and matrices;
 - calendar-aware UTC `time`/`time_close` and `timeframe.change` week and month
   groups alongside fixed intraday/day buckets;
 - IANA timezone and DST-aware calendar component and `str.format_time` calls,
