@@ -1796,3 +1796,11 @@ return/parameter flow remains deferred.
     shared-storage behavior. Column bounds/`na`, unsupported-order, upstream-
     `na`, arity/type, non-numeric receiver, and UDF side-effect rules remain
     unchanged. No imported UDT identity or public schema is widened. Done.
+122. Every concrete scalar map-result producer now exposes terminal
+    `.put(key, value)`. It validates the resolved scalar key/value template,
+    preserves insertion order on replacement, appends new keys, returns `void`,
+    and cannot continue. Local alias-returning producers retain shared-storage
+    behavior, while imported and built-in producers isolate writes in fresh
+    maps. Invalid key/value/arity, UDF-side-effect, remaining map-mutation, and
+    public-schema rules remain unchanged. No imported UDT identity is widened.
+    Done.

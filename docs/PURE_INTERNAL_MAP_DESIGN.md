@@ -654,6 +654,15 @@ Recommended future slices:
     order remain unchanged. Empty/upstream-`na`, capacity, kind/arity, and UDF-
     side-effect boundaries retain ordinary `array.concat` behavior. Map
     storage, templates, and public schemas remain unchanged. Done.
+54. Every concrete scalar map call-result producer additionally exposes
+    terminal `.put(key, value)`: supported `map.new<K,V>`, `map.copy(existing)`,
+    local/imported pure functions, and local/imported user methods. It validates
+    the resolved scalar key/value kinds, replaces an existing value without
+    moving its key or appends a new insertion-order entry, returns `void`, and
+    cannot continue. Local UDF and local user-method alias results update shared
+    storage; fresh built-in and imported producers isolate the write. Invalid
+    key/value/arity, UDF-side-effect, remaining map-mutation, template, and
+    public-schema boundaries retain ordinary `map.put` behavior. Done.
 
 ## Completion Gate For Future Widening
 
@@ -699,8 +708,9 @@ receives both entries. Template-less bare map declarations, non-scalar key/value
 templates, nested collection values, and map mutation inside user-defined
 functions remain unsupported until a later slice designs and fixtures those
 semantics. Unqualified local-UDF results with a concrete supported scalar map
-template now share size/get/contains/copy with copy-only continuation and
-per-call template isolation. Local and imported user-function and user-method
-results with a concrete supported scalar map template now share the same
-helpers with copy-only continuation and same-library dual-alias isolation;
+template now share size/put/get/contains/copy/keys/values with terminal put,
+copy-only map continuation, derived-array transitions, and per-call template
+isolation. Local and imported user-function and user-method results with a
+concrete supported scalar map template now share the same helpers, including
+terminal put and same-library dual-alias isolation;
 unresolved or mixed-template direct result receivers remain gated.

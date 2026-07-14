@@ -40,6 +40,12 @@ array<string> string_values = map.new<bool, string>().values()
 array<color> color_values = map.new<string, color>().values()
 array<int> int_values = map.new<color, int>().values()
 
+map.new<int, float>().put(1, 1.5)
+map.new<float, bool>().put(1.5, true)
+map.new<bool, string>().put(true, "value")
+map.new<string, color>().put(key="key", value=color.red)
+map.new<color, int>().put(color.blue, 2)
+
 int expression_udf = mapNewExpressionSize()
 float block_udf = mapNewBlockReads()
 

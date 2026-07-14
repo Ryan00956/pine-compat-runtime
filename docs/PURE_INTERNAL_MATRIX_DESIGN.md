@@ -1842,6 +1842,14 @@ Recommended future slices:
     change. Column bounds/`na`, unsupported-order, upstream-`na`, invalid type/
     arity, non-numeric receiver, UDF-side-effect, and public-schema boundaries
     retain ordinary `matrix.sort` behavior. Done.
+135. Every concrete scalar map call result additionally exposes terminal
+    `.put(key, value)`. It preserves the resolved scalar key/value template,
+    insertion order on replacement, append order for new keys, `void` return,
+    and terminal continuation boundary. Local UDF/user-method aliases update
+    shared map storage; fresh built-in/imported producers isolate the write.
+    Invalid key/value/arity, UDF-side-effect, remaining map-mutation, and public-
+    schema boundaries retain ordinary `map.put` behavior. No matrix element,
+    shape, storage, or public-schema rule is widened. Done.
 
 ## Completion Gate For Future Positive Support
 

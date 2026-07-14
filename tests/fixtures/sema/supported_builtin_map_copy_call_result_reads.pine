@@ -25,6 +25,10 @@ float copied_value = map.copy(source).values().copy().get(0)
 bool other_key_get = map.copy(int_bool).get(7)
 int color_key_get = map.copy(color_int).get(color.red)
 
+map.copy(source).put("extra", 9.0)
+map.copy(int_bool).put(8, false)
+map.copy(color_int).put(color.blue, 5)
+
 plot(direct_size + direct_get + (direct_contains ? 1 : 0) + nested_copy.size() + direct_keys.size() + (first_key == "open" ? 1 : 0) + (copied_key == "open" ? 1 : 0) + direct_values.size() + first_value + copied_value + (other_key_get ? 1 : 0) + color_key_get + copySize(source))
 map.copy(source).keys().push("extra")
 map.copy(source).values().push(1.0)

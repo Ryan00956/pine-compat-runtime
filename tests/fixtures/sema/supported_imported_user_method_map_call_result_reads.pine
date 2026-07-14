@@ -32,6 +32,9 @@ copied_values = left_point.exposeMap().copy().values().copy().size()
 int_values = left_point.exposeIntMap().values()
 dual_alias_values = right_point.exposeMap().values().size()
 
+left_point.exposeMap().put("value", 7.0)
+left_point.exposeIntMap().put(1, "one")
+
 plot(size + copy_chain + block_return + nested_return + named_control_flow + alias_qualified + constructor_receiver + dual_alias + nested_copy + keys.size() + copied_keys + int_keys.size() + dual_alias_keys + values.size() + copied_values + int_values.size() + dual_alias_values)
 left_point.exposeMap().keys().push("extra")
 left_point.exposeMap().values().push(1.0)

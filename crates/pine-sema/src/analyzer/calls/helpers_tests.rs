@@ -69,6 +69,26 @@ mod tests {
     }
 
     #[test]
+    fn map_call_result_helpers_are_a_closed_set() {
+        for (method_name, builtin_name) in [
+            ("size", "map.size"),
+            ("put", "map.put"),
+            ("get", "map.get"),
+            ("contains", "map.contains"),
+            ("copy", "map.copy"),
+            ("keys", "map.keys"),
+            ("values", "map.values"),
+        ] {
+            assert_eq!(
+                map_call_result_builtin_name(method_name),
+                Some(builtin_name)
+            );
+        }
+
+        assert_eq!(map_call_result_builtin_name("clear"), None);
+    }
+
+    #[test]
     fn array_call_result_helpers_are_a_closed_registered_set() {
         for (method_name, builtin_name) in [
             ("size", "array.size"),

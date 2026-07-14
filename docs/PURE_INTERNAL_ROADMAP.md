@@ -611,6 +611,14 @@ Current baseline:
   and source-map-independence paths. Map or call-result-array mutation,
   unsupported templates, broader helpers, and continuation after a terminal
   key/value-array reader remain gated.
+  The next map-result mutation slice adds terminal `.put(key, value)` across
+  that concrete scalar-map producer set. It validates the resolved scalar key/
+  value kinds, replaces an existing value without changing key position or
+  appends a new insertion-order entry, returns `void`, and cannot continue.
+  Local UDF/user-method alias results update shared storage; fresh `map.new`,
+  `map.copy`, imported-function, and imported-method results isolate the write.
+  Invalid key/value/arity, UDF-side-effect, remaining map-mutation, and public-
+  schema boundaries retain ordinary `map.put` behavior.
   The following read-only matrix-result slice adds `.row(index)` to every
   existing concrete matrix call-result producer: namespace and bound matrix
   operations, exact `matrix.new<float|int|bool|string|color>` templates, local
@@ -1173,7 +1181,8 @@ Remaining internal work:
   without a concrete supported type or identity, terminal producer readers
   other than the supported map-result `.keys()`/`.values()` array paths
   followed by another method, and collection mutation outside the admitted
-  array-result set plus terminal matrix-result `.set(...)`. The existing bound-receiver
+  array-result set plus the closed terminal matrix-result mutations and map-
+  result `.put(...)`. The existing bound-receiver
   `matrix_id.mult(array).size()` path is not part of that namespace exclusion;
 - generic or bare `array` declarations beyond current fixture-backed element
   kinds;

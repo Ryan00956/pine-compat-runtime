@@ -991,9 +991,10 @@ public schemas remain unchanged.
 
 Exact supported scalar `map.new<K,V>` templates use the separate
 `$builtin_map_result` synthetic prefix. The receiver retains its concrete
-scalar key/value kinds and admits `.size()`, `.get(key)`, `.contains(key)`,
-`.copy()`, `.keys()`, and `.values()`; only `.copy()` may continue another
-admitted map helper. `.keys()` and `.values()` switch to the array-result prefix
+scalar key/value kinds and admits `.size()`, terminal `.put(key, value)`,
+`.get(key)`, `.contains(key)`, `.copy()`, `.keys()`, and `.values()`; only
+`.copy()` may continue another admitted map helper. `.put(...)` returns `void`
+and cannot continue. `.keys()` and `.values()` switch to the array-result prefix
 and return fresh key/value-kind-preserving arrays, which admit direct binding
 plus `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.slice(index_from, index_to)`/`.concat(id2)`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)`, bool/int/float-only `.every()`/`.some()`, and numeric-only
@@ -1004,10 +1005,10 @@ continuation and terminal read/search/aggregate checks. The ordinary map analyze
 key types and marks copy
 results with the same template metadata. Exact namespace `map.copy(existing)`
 results use the same prefix and retain both source template metadata and
-entries through the existing independent-copy runtime operation. Mutation,
-unsupported templates, non-map copy inputs, and
+entries through the existing independent-copy runtime operation. Map mutation
+other than terminal `.put(...)`, unsupported templates, non-map copy inputs, and
 other map call-result receivers fail closed. Unqualified local-UDF results with
-one concrete supported scalar map template share the same six helpers through
+one concrete supported scalar map template share the same seven helpers through
 `$call_result`; parameter passthrough, block aliases, nested calls,
 same-template control flow, constructed/copied results, named/reordered
 arguments, empty maps, and per-call scalar key/value templates retain their
@@ -1018,11 +1019,15 @@ control-flow, constructed-result, scalar-template-interleaving, same-library
 dual-alias, and independent-copy paths are preserved. Analysis-marked local
 and imported user-method results retain their receiver-style and qualified/
 direct-constructor paths. Only copy may continue as a map, while keys and
-values continue through the closed array-result set. Unknown/`na`, scalar,
-array, matrix, wrong-template/key, broader helpers, map or call-result-array
-mutation other than `.concat(id2)`, and continuation after a terminal key/
-value-array reader remain gated. This path adds no UDT/import identity or public
-schema field.
+values continue through the closed array-result set. Terminal `.put(...)`
+validates both concrete scalar kinds, preserves insertion order when replacing
+an existing value, appends new keys, writes through local alias-returning UDF/
+method results, and stays isolated on fresh built-in/imported producers.
+Unknown/`na`, scalar, array, matrix, wrong-template/key/value, broader helpers,
+map mutation other than terminal `.put(...)`, call-result-array mutation other
+than `.concat(id2)`, and continuation after a terminal key/value-array reader
+remain gated; direct UDF mutation is still rejected. This path adds no UDT/
+import identity or public schema field.
 
 For the array-helper branch, the receiver must resolve to a supported array
 kind. UDT-array producers must also carry one concrete same-local or

@@ -25,6 +25,13 @@ plot(map.new<bool, string>().contains(true) ? 1 : 0, "map_new_bool_key")
 plot(map.new<string, color>().contains("key") ? 1 : 0, "map_new_string_key")
 plot(map.new<color, int>().contains(color.red) ? 1 : 0, "map_new_color_key")
 
+map.new<int, float>().put(1, 1.5)
+map.new<float, bool>().put(1.5, true)
+map.new<bool, string>().put(true, "value")
+map.new<string, color>().put(key="key", value=color.red)
+map.new<color, int>().put(color.blue, 2)
+plot(1, "map_new_call_result_put_scalar_templates")
+
 copied = map.new<string, float>().copy()
 copied.put("value", 2.5)
 plot(copied.size(), "map_new_copy_mutation_size")

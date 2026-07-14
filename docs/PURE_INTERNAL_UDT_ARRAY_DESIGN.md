@@ -2170,6 +2170,13 @@ imported and built-in results isolate the change; column bounds/`na`,
 unsupported-order, upstream-`na`, arity/type, non-numeric receiver, and UDF-
 side-effect rules remain unchanged. This does not widen UDT or UDT-array
 identity.
+Item 132 adds terminal `.put(key, value)` to every concrete scalar map-result
+producer. It validates the resolved scalar key/value template, preserves
+insertion order on replacement, appends new keys, returns `void`, and cannot
+continue. Local alias results update shared map storage, while fresh imported
+and built-in results isolate the write; invalid key/value/arity, UDF-side-
+effect, remaining map-mutation, and public-schema rules remain unchanged. This
+does not widen UDT or UDT-array identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

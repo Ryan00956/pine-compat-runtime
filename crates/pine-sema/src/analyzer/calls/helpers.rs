@@ -229,6 +229,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
 pub(crate) fn map_call_result_builtin_name(method_name: &str) -> Option<&'static str> {
     match method_name {
         "size" => Some("map.size"),
+        "put" => Some("map.put"),
         "get" => Some("map.get"),
         "contains" => Some("map.contains"),
         "copy" => Some("map.copy"),

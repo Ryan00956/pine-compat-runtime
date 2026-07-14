@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added terminal `.put(key, value)` to every concrete scalar map call result:
+  supported `map.new<K,V>`, `map.copy(existing)`, local/imported pure functions,
+  and local/imported user methods. It reuses concrete key/value validation,
+  replaces an existing value without moving the key or appends a new insertion-
+  order entry, returns `void`, and cannot continue. Local UDF and local user-
+  method aliases update shared storage; fresh built-in and imported producers
+  isolate the write. Invalid key/value/arity, UDF side-effect, remaining map-
+  mutation, and public-schema boundaries are unchanged.
 - Added terminal numeric-matrix `.sort(column?, order?)` to concrete matrix
   call results. It defaults to column 0 and ascending order, reorders complete
   rows with stable equal keys, places `na` last ascending and first descending,

@@ -1,10 +1,18 @@
 //@version=6
 indicator("Unsupported builtin map call-result reads")
 
+badDirectPut() =>
+    map.new<string, float>().put("key", 1.0)
+    1
+
+bad_direct_put = badDirectPut()
+
 wrong_get_key = map.new<string, float>().get(1)
 wrong_contains_key = map.new<int, float>().contains("bad")
 bad_size_arity = map.new<string, float>().size(1)
-put_result = map.new<string, float>().put("key", 1.0)
+map.new<string, float>().put(1, 1.0)
+map.new<string, float>().put("key", "bad")
+map.new<string, float>().put("key")
 clear_result = map.new<string, float>().clear()
 remove_result = map.new<string, float>().remove("key")
 put_all_result = map.new<string, float>().put_all(map.new<string, float>())
