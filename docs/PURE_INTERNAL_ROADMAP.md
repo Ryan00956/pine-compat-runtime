@@ -1314,7 +1314,8 @@ Current baseline:
 - calendar-aware UTC `time`/`time_close` and `timeframe.change` week and month
   groups alongside fixed intraday/day buckets;
 - IANA timezone and DST-aware calendar component and `str.format_time` calls,
-  including timestamp-specific short timezone abbreviations,
+  including timestamp-specific short timezone abbreviations and shared
+  doubled-apostrophe date/time literal formatting,
   plus explicit `time`/`time_close` session filtering and clipping, while
   exchange timezone defaults remain outside the fixed runtime metadata model;
 - numeric and const-dateString `timestamp` IANA local-time conversion with

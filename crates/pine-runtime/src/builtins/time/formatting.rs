@@ -22,8 +22,18 @@ pub(crate) fn format_datetime_with_timezone(
     let mut chars = format.chars().peekable();
     while let Some(ch) = chars.next() {
         if ch == '\'' {
-            for literal in chars.by_ref() {
+            if chars.peek().copied() == Some('\'') {
+                chars.next();
+                result.push('\'');
+                continue;
+            }
+            while let Some(literal) = chars.next() {
                 if literal == '\'' {
+                    if chars.peek().copied() == Some('\'') {
+                        chars.next();
+                        result.push('\'');
+                        continue;
+                    }
                     break;
                 }
                 result.push(literal);

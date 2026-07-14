@@ -308,6 +308,29 @@ plot(str.format_time(1609459200000, "z", "-05:30") == "GMT-05:30" ? 1 : 0)
 }
 
 #[test]
+fn formats_datetime_literal_apostrophes() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("datetime literal apostrophes")
+plot(str.format_time(1609506245123, "hh 'o''clock' a ''", "UTC") == "01 o'clock PM '" ? 1 : 0)
+plot(str.format("{0,time,hh 'o''clock' a ''}", 1609506245123) == "01 o'clock PM '" ? 1 : 0)
+plot(str.format_time(1609506245123, "'year=''yyyy''' yyyy", "UTC") == "year='yyyy' 2021" ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("result");
+    for plot in &result.plots {
+        assert_values_close(&plot.values, &[1.0]);
+    }
+}
+
+#[test]
 fn rejects_invalid_str_format_time_timezone() {
     let source = SourceFile::new(
         "test.pine",

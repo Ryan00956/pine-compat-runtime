@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Corrected doubled-apostrophe handling in shared date/time format patterns.
+  Both `str.format_time()` and UTC `str.format()` date/time placeholders now
+  render `''` as one literal apostrophe, including inside quoted text such as
+  `'o''clock'`, while preserving existing quoted-token behavior.
 - Added short `z`/`zz`/`zzz` timezone-name tokens to `str.format_time()`.
   IANA zones render timestamp-specific abbreviations such as `EST` or `EDT`,
   while UTC and fixed offsets render stable `UTC` or `GMT±HH:mm` text. Full

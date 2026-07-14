@@ -260,7 +260,8 @@ Closed coverage:
   helper coverage includes numeric and const-dateString IANA-aware `timestamp`,
   IANA-aware calendar
   component functions such as `weekofyear` and `dayofweek`, IANA-aware
-  `str.format_time` with short timezone-name tokens, and `time`/`time_close`
+  `str.format_time` with short timezone-name tokens and doubled-apostrophe
+  literals, and `time`/`time_close`
   subsets with IANA-aware explicit
   time-based sessions and UTC calendar
   week/month higher-timeframe boundaries, plus a fixed-default

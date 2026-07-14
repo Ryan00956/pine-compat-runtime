@@ -1954,7 +1954,9 @@ emits one literal apostrophe. The UTC timestamp placeholder subset shares the
 same fixture-covered `D`, `E`, `w`, and `W` token behavior as
 `str.format_time`, including fixture-covered 12-hour clock, millisecond, and
 AM/PM tokens, but does not accept a timezone argument. Missing placeholder
-indexes remain literal text. Unmatched braces are runtime errors. Non-numeric
+indexes remain literal text. Date/time patterns preserve quoted literals and
+render each doubled apostrophe `''` as one literal apostrophe, including inside
+quoted text. Unmatched braces are runtime errors. Non-numeric
 format modifiers outside the fixture-covered subset are not yet claimed.
 `str.match` uses Rust regex syntax for the fixture-covered subset. It returns
 the first matched substring, an empty string when there is no match, `na` for
@@ -1976,7 +1978,8 @@ renders the current Monday-based week-of-month subset, both with optional
 zero-padding. Short `z` tokens render timestamp-specific IANA abbreviations
 such as `EST`/`EDT`, `UTC` for zero offset, or canonical `GMT±HH:mm` text for
 other fixed offsets. Full localized `zzzz` names and exchange timezone defaults
-remain unsupported.
+remain unsupported. Quoted literals can contain doubled apostrophes, and `''`
+outside a quoted block also renders one literal apostrophe.
 
 ## Math
 
