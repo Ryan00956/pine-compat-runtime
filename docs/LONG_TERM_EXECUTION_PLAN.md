@@ -257,8 +257,9 @@ Closed coverage:
   `math.phi`, `math.rphi`, `math.pow`, `math.round`,
   `math.round_to_mintick`, `math.random`, and `math.sum`;
   string coverage includes `str.split`; time
-  helper coverage includes the numeric UTC `timestamp`, `weekofyear`,
-  `dayofweek`, and fixed-default `time`/`time_close` subsets with UTC calendar
+  helper coverage includes the numeric UTC `timestamp`, IANA-aware calendar
+  component functions such as `weekofyear` and `dayofweek`, and fixed-default
+  `time`/`time_close` subsets with UTC calendar
   week/month higher-timeframe boundaries, plus a fixed-default
   `timeframe.period` and `timeframe.in_seconds`/`timeframe.from_seconds`
   conversion subset, `timeframe.change` fixed intraday/day plus calendar

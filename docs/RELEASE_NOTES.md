@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added IANA timezone support to the calendar component functions `year()`,
+  `month()`, `weekofyear()`, `dayofmonth()`, `dayofweek()`, `hour()`,
+  `minute()`, and `second()`. Named zones such as `America/New_York` and
+  `Asia/Tokyo` resolve their offset at the supplied absolute timestamp, so DST
+  and local date rollover are preserved. Invalid zone names remain runtime
+  errors; `timestamp()`, `str.format_time()`, time/session functions, and
+  exchange-timezone defaults remain separate unsupported IANA boundaries.
 - Corrected `time()` and `time_close()` W/2W through 52W and M/2M through
   12M boundaries to use the same UTC calendar groups as `timeframe.change()`.
   Weekly periods now open on Monday, monthly periods use real calendar-month

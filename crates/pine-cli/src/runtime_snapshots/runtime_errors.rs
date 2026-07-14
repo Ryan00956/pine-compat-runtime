@@ -991,6 +991,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/regressions/str_format_time_result_limit.pine",
         "str.format_time result cannot exceed 40960 characters",
     ),
+    (
+        "tests/fixtures/regressions/time_component_unsupported_timezone.pine",
+        "hour unsupported timezone `Mars/Olympus`",
+    ),
 ];
 
 pub(crate) type RuntimeLibraryErrorFixture = (

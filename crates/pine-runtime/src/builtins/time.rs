@@ -1,4 +1,5 @@
-use chrono::{DateTime, Datelike, Duration, NaiveDate, TimeZone, Utc};
+use chrono::{DateTime, Datelike, Duration, NaiveDate, Offset, TimeZone, Utc};
+use chrono_tz::Tz;
 use pine_ir::HirCallArg;
 
 use crate::*;
@@ -43,6 +44,20 @@ pub(crate) fn is_supported_utc_timezone(timezone: &str) -> bool {
             | "GMT-0000"
             | "GMT+00:00"
             | "GMT-00:00"
+    )
+}
+
+pub(crate) fn timezone_offset_seconds(timezone: &str, datetime: &DateTime<Utc>) -> Option<i32> {
+    if let Some(offset) = parse_fixed_timezone_offset(timezone) {
+        return Some(offset);
+    }
+
+    let timezone = timezone.trim().parse::<Tz>().ok()?;
+    Some(
+        timezone
+            .offset_from_utc_datetime(&datetime.naive_utc())
+            .fix()
+            .local_minus_utc(),
     )
 }
 

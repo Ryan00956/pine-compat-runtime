@@ -1313,6 +1313,8 @@ Current baseline:
   timeframe, session, syminfo, color, and cast helpers;
 - calendar-aware UTC `time`/`time_close` and `timeframe.change` week and month
   groups alongside fixed intraday/day buckets;
+- IANA timezone and DST-aware calendar component function calls while exchange
+  timezone defaults remain outside the fixed runtime metadata model;
 - many edge-case fixtures for numeric rolling windows, `na`, tuple returns, and
   supported qualifier families.
 

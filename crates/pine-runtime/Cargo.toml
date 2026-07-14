@@ -9,6 +9,7 @@ rust-version.workspace = true
 
 [dependencies]
 chrono = { version = "0.4", default-features = false }
+chrono-tz = "0.10"
 pine-builtins = { path = "../pine-builtins" }
 pine-ir = { path = "../pine-ir" }
 regex = "1"

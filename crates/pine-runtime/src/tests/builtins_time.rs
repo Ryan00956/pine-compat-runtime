@@ -661,11 +661,58 @@ plot(timeframe.change("3M") ? 1 : 0)
 }
 
 #[test]
+fn runs_iana_calendar_function_timezones() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("IANA calendar timezones")
+winter = 1609504496000
+summer = 1625142896000
+previous_day = 1609466400000
+plot(year(previous_day, "America/New_York"))
+plot(month(previous_day, "America/New_York"))
+plot(weekofyear(previous_day, "America/New_York"))
+plot(dayofmonth(previous_day, "America/New_York"))
+plot(dayofweek(previous_day, "America/New_York"))
+plot(hour(previous_day, "America/New_York"))
+plot(minute(previous_day, "America/New_York"))
+plot(second(previous_day, "America/New_York"))
+plot(hour(winter, "America/New_York"))
+plot(hour(summer, "America/New_York"))
+plot(hour(winter, "Asia/Tokyo"))
+plot(minute(winter, "America/New_York"))
+plot(second(winter, "America/New_York"))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("result");
+
+    assert_values_close(&result.plots[0].values, &[2020.0]);
+    assert_values_close(&result.plots[1].values, &[12.0]);
+    assert_values_close(&result.plots[2].values, &[53.0]);
+    assert_values_close(&result.plots[3].values, &[31.0]);
+    assert_values_close(&result.plots[4].values, &[5.0]);
+    assert_values_close(&result.plots[5].values, &[21.0]);
+    assert_values_close(&result.plots[6].values, &[0.0]);
+    assert_values_close(&result.plots[7].values, &[0.0]);
+    assert_values_close(&result.plots[8].values, &[7.0]);
+    assert_values_close(&result.plots[9].values, &[8.0]);
+    assert_values_close(&result.plots[10].values, &[21.0]);
+    assert_values_close(&result.plots[11].values, &[34.0]);
+    assert_values_close(&result.plots[12].values, &[56.0]);
+}
+
+#[test]
 fn rejects_unsupported_calendar_function_timezone() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("bad calendar timezone")
-plot(hour(time, "America/New_York"))
+plot(hour(time, "Mars/Olympus"))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -681,7 +728,7 @@ plot(hour(time, "America/New_York"))
     assert!(
         error
             .message
-            .contains("hour unsupported timezone `America/New_York`"),
+            .contains("hour unsupported timezone `Mars/Olympus`"),
         "{}",
         error.message
     );
