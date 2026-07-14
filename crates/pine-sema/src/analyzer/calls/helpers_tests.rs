@@ -99,6 +99,7 @@ mod tests {
             ("sort_indices", "array.sort_indices"),
             ("join", "array.join"),
             ("slice", "array.slice"),
+            ("concat", "array.concat"),
             ("clear", "array.clear"),
             ("reverse", "array.reverse"),
             ("pop", "array.pop"),

@@ -747,3 +747,18 @@ matrix.row(na_float_matrix, 0).sort()
 map.values(na_map).sort(order.descending)
 matrix.mult(mult_na_matrix, mult_vector).sort()
 plot(matrix.get(mult_matrix, 0, 0) == 1.0 and matrix.get(mult_matrix, 1, 1) == 4.0 ? 1 : 0, "namespace_call_result_sort_mult_upstream_na")
+
+namespace_concat_split = str.split("alpha,beta", ",").concat(array.from("gamma")).copy()
+plot(namespace_concat_split.size() == 3 and namespace_concat_split.last() == "gamma" ? 1 : 0, "namespace_call_result_concat_split")
+
+namespace_concat_matrix = matrix.row(float_matrix, 0).concat(array.from(3.5)).copy()
+plot(namespace_concat_matrix.last() == 3.5 and matrix.get(float_matrix, 0, 0) == 1.5 and matrix.get(float_matrix, 0, 1) == 2.5 ? 1 : 0, "namespace_call_result_concat_matrix_snapshot")
+
+namespace_concat_map = map.values(int_float).concat(array.from(4.5)).copy()
+plot(namespace_concat_map.last() == 4.5 and map.size(int_float) == 2 and map.get(int_float, 10) == 3.5 and map.get(int_float, 20) == 2.5 ? 1 : 0, "namespace_call_result_concat_map_snapshot")
+
+namespace_concat_mult = matrix.mult(mult_matrix, mult_vector).concat(array.from(5.0)).copy()
+plot(namespace_concat_mult.last() == 5.0 and matrix.get(mult_matrix, 0, 0) == 1.0 and matrix.get(mult_matrix, 1, 1) == 4.0 ? 1 : 0, "namespace_call_result_concat_mult_snapshot")
+
+namespace_concat_none = str.split(na, ",").concat(array.from("value"))
+plot(na(namespace_concat_none.size()) ? 1 : 0, "namespace_call_result_concat_upstream_na")

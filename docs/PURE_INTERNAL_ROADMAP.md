@@ -541,6 +541,14 @@ Current baseline:
   and may continue through the existing closed int-array chain; missing,
   unknown, dynamic, unsupported-field, unresolved-identity, and non-scalar-
   identity boundaries remain closed without changing public schemas.
+  The array-returning mutation slice adds `.concat(id2)` across every concrete
+  array call result and derived-array continuation. It requires the same
+  scalar/object/`chart.point` kind or exact scalar-tree UDT identity, appends
+  into the receiver, returns the first array id, and may continue through the
+  closed helper set. Alias and live-slice results update shared parent backing;
+  fresh namespace/map/matrix/`matrix.mult` snapshots remain source-independent.
+  Empty/upstream-`na`, capacity, kind/identity/arity, and UDF-side-effect
+  behavior retain the existing `array.concat` contract; schemas stay fixed.
   The following closed slice admits exact
   `matrix.new<float|int|bool|string|color>` template results. They preserve the
   registered element kind, requested rectangular shape, type-compatible
@@ -1042,7 +1050,8 @@ Remaining internal work:
 - UDT array behavior beyond the same-local and same-imported scalar-tree
   subsets, including mixed imported return identities, non-scalar imported
   returns, conflicting identities within one tuple slot, direct helpers beyond
-  the read-only `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
+  the `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/
+  `.slice(index_from, index_to)`/`.concat(id2)`/
   `.includes(value)`/`.indexof(value)`/`.lastindexof(value)` plus bool/int/float-
   only `.every()`/`.some()`, scalar/same-identity scalar-tree UDT
   `.join(separator?)`, and numeric-only

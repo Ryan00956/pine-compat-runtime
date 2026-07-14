@@ -645,6 +645,15 @@ Recommended future slices:
     after order evaluation, while bool/color kinds, invalid order/arity,
     continuation, and UDF-side-effect boundaries stay closed. Map storage,
     templates, and public schemas remain unchanged. Done.
+53. Every concrete scalar key/value snapshot additionally exposes mutating,
+    array-returning `.concat(id2)`, including keys/values reached through
+    supported built-in, copied, local/imported function, and local/imported
+    method map results. It validates a same-kind scalar-array source, appends
+    only to the fresh snapshot, returns that snapshot id, and may continue
+    through the closed array-result chain; source map entries and insertion
+    order remain unchanged. Empty/upstream-`na`, capacity, kind/arity, and UDF-
+    side-effect boundaries retain ordinary `array.concat` behavior. Map
+    storage, templates, and public schemas remain unchanged. Done.
 
 ## Completion Gate For Future Widening
 

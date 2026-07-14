@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added mutating, array-returning `.concat(id2)` to every concrete array call
+  result. It preserves the receiver kind or exact scalar-tree UDT identity,
+  appends a same-kind source, returns the first array id, and may continue
+  through the closed array-result chain. Alias and live-slice receivers update
+  shared parent backing; fresh namespace/map/matrix snapshots remain source-
+  independent. Empty and upstream-`na` behavior, the 100000-element limit,
+  kind/identity/arity checks, and UDF side-effect rejection retain the existing
+  `array.concat` contract; public schemas are unchanged.
 - Added transforming `.sort_indices(order?, sort_field?)` to concrete same-
   local and same-imported scalar-tree UDT array call results. The compile-time
   root int/float/string field is resolved against the exact result identity;

@@ -316,6 +316,8 @@ fn parses_builtin_array_result_method_receivers() {
         "value = array.from(false, true).some()\n",
         "value = array.from(1, 2).join(\"|\")\n",
         "value = array.from(1, 2, 3).slice(1, 3).get(0)\n",
+        "value = array.from(1, 2).concat(array.from(3)).copy().last()\n",
+        "value = matrix.mult(values, vector).concat(array.from(3.0)).copy().last()\n",
         "value = array.new<chart.point>(1, chart.point.now(close)).slice(0, 1).copy().last()\n",
         "value = array.new<Point>(1, Point.new(1)).slice(0, 1).first()\n",
         "value = array.new<lib.Point>(1, lib.Point.new(1)).slice(0, 1).last()\n",

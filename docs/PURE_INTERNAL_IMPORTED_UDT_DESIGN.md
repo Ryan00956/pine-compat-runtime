@@ -1692,3 +1692,13 @@ return/parameter flow remains deferred.
     the existing closed int-array chain. Missing, unknown, dynamic, bool/non-
     root fields, unresolved/mixed identities, and non-scalar imported UDTs stay
     rejected. No imported identity or public schema field is widened. Done.
+110. Every concrete array call result and derived-array continuation now
+    exposes mutating, array-returning `.concat(id2)`. The source must preserve
+    the receiver kind or exact imported scalar-tree UDT identity. The operation
+    returns the first array id and may continue through the existing closed
+    array-result chain. Imported/local alias results and live slices append to
+    shared parent backing, while fresh namespace/map/matrix/`matrix.mult`
+    snapshots remain source-independent. Empty source, upstream-`na`, self-
+    concat cloning, capacity, kind/identity/arity, and UDF-side-effect behavior
+    retain the ordinary `array.concat` contract. No imported identity or public
+    schema field is widened. Done.

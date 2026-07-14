@@ -1731,6 +1731,15 @@ Recommended future slices:
     color kinds, invalid order/arity, continuation, and UDF-side-effect
     boundaries stay closed. Matrix-valued continuation and public schemas
     remain unchanged.
+123. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes mutating, array-
+    returning `.concat(id2)`, including arrays reached after a concrete matrix
+    call result. It validates a same-kind scalar-array source, appends only to
+    the fresh array snapshot, returns that snapshot id, and may continue
+    through the closed array-result chain; source matrices remain unchanged.
+    Empty/upstream-`na`, capacity, kind/arity, and UDF-side-effect boundaries
+    retain ordinary `array.concat` behavior. Matrix-valued continuation and
+    public schemas remain unchanged.
 
 ## Completion Gate For Future Positive Support
 

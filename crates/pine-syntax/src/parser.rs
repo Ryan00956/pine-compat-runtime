@@ -784,6 +784,7 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
                             | "col"
                             | "eigenvalues"
                             | "slice"
+                            | "concat"
                             | "abs"
                             | "standardize"
                             | "sort_indices"
@@ -824,7 +825,7 @@ fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
                 if prefix == BUILTIN_ARRAY_CALL_RESULT_PREFIX
                     && matches!(
                         method.as_str(),
-                        "copy" | "slice" | "abs" | "standardize" | "sort_indices"
+                        "copy" | "slice" | "concat" | "abs" | "standardize" | "sort_indices"
                     ) =>
             {
                 Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())

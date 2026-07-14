@@ -573,7 +573,7 @@ reassignment to a different identity and unresolved nested tuple consumers
 emit root-spanned `E_TUPLE_UDT_ARRAY_IDENTITY` diagnostics. Qualified
 user-defined UDF/method results and unqualified plain local UDF results support
 direct `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
-`.slice(index_from, index_to)`,
+`.slice(index_from, index_to)`, `.concat(id2)`,
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)` dispatch for
 every currently supported array kind. Concrete bool, int, or float results
 additionally admit terminal `.every()`/`.some()`. Concrete numeric results additionally
@@ -585,6 +585,11 @@ or string results additionally admit transforming `.sort_indices(order?)`;
 concrete same-local or same-imported scalar-tree UDT results admit
 `.sort_indices(order?, sort_field?)` for a compile-time root int/float/string
 field resolved against the exact result identity.
+Every concrete result additionally admits mutating, array-returning
+`.concat(id2)` for a same-kind or exact-identity source. It returns the receiver
+id and may continue through the closed array-result path; alias/live-slice
+receivers update shared backing, fresh snapshots remain independent, and the
+ordinary upstream-`na`, capacity, arity, and UDF-side-effect gates apply.
 Every scalar result kind, plus concrete same-local or same-imported scalar-tree
 UDT array results, additionally admits terminal `.join(separator?)` with the
 ordinary array stringification and separator rules.
@@ -637,6 +642,11 @@ field/order/arity, and UDF-side-effect boundaries.
 The transforming `.slice(index_from, index_to)` preserves the receiver's
 element kind and concrete UDT identity and returns the ordinary shallow live
 parent window, so the result may continue through the same closed helper set.
+Transforming `.concat(id2)` preserves that kind/identity, appends a same-kind
+source into the receiver, returns the receiver id, and may continue through the
+same helper set. Alias/live-window writes reach shared parent backing, fresh
+snapshots remain independent, and ordinary upstream-`na`, capacity, arity, and
+UDF-side-effect behavior applies.
 The parser assigns the unqualified form the impossible internal prefix
 `$call_result`; the normalization requires a plain lexical callee, while
 qualified user-defined forms keep their source prefix.
@@ -653,17 +663,17 @@ same-imported scalar-tree UDT `array.new<T>` source templates use the matching
 canonical constructor or checked UDT-template path. The parser marks only
 those receivers with `$builtin_array_result`, and semantic analysis admits only
 `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
-`.slice(index_from, index_to)`,
+`.slice(index_from, index_to)`, `.concat(id2)`,
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)`, plus
 bool/int/float-only `.every()`/`.some()` and numeric-only `.binary_search(value)`, `.binary_search_leftmost(value)`,
 `.binary_search_rightmost(value)`, `.abs()`, and
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` or exact-identity scalar-tree UDT `.sort_indices(order?, sort_field?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)`, after them. Only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()` and
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` or exact-identity scalar-tree UDT `.sort_indices(order?, sort_field?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)`, after them. Only `.copy()`, `.slice(index_from, index_to)`, `.concat(id2)`, numeric `.abs()` and
 `.standardize()`, and sortable-scalar or exact-identity scalar-tree UDT `.sort_indices(order?, sort_field?)` produce array
 receivers that may continue; the reads/searches
 are terminal and cannot continue into a user method or any other call-result
 method, including a method on a returned scalar UDT element. `.clear()`,
-`.reverse()`, `.pop()`, `.shift()`, `.remove(index)`, `.push(value)`, `.unshift(value)`, `.insert(index, value)`, `.set(index, value)`, `.fill(value, index_from?, index_to?)`, and `.sort(order?, sort_field?)` are the
-eleven admitted mutations. `.clear()`, `.reverse()`, `.push(value)`,
+`.reverse()`, `.pop()`, `.shift()`, `.remove(index)`, `.push(value)`, `.unshift(value)`, `.insert(index, value)`, `.set(index, value)`, `.fill(value, index_from?, index_to?)`, `.sort(order?, sort_field?)`, and `.concat(id2)` are the
+twelve admitted mutations. `.clear()`, `.reverse()`, `.push(value)`,
 `.unshift(value)`, `.insert(index, value)`, `.set(index, value)`, `.fill(value, index_from?, index_to?)`, and `.sort(order?, sort_field?)` return
 `void`; `.pop()`, `.shift()`, and `.remove(index)` return the removed element;
 none can continue.
@@ -674,14 +684,14 @@ The same `$builtin_array_result` path has a second set of seven fixed producers
 outside the `array` namespace: `str.split`, `ta.pivot_point_levels`, `matrix.row`,
 `matrix.col`, `matrix.eigenvalues`, `map.keys`, and `map.values`. Each result
 admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`,
-`.slice(index_from, index_to)`,
+`.slice(index_from, index_to)`, `.concat(id2)`,
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)`, plus
 bool/int/float-only `.every()`/`.some()` and numeric-only `.binary_search(value)`, `.binary_search_leftmost(value)`,
 `.binary_search_rightmost(value)`, `.abs()`, and
 `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, all-scalar terminal `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?)`; only
-`.copy()`, `.slice(index_from, index_to)`, numeric `.abs()` and `.standardize()`, and numeric-or-string
+`.copy()`, `.slice(index_from, index_to)`, `.concat(id2)`, numeric `.abs()` and `.standardize()`, and numeric-or-string
 `.sort_indices(order?)` return array receivers eligible for another allowed
-chain. The twenty-nine value results and the eight `void` mutations are
+chain. The other twenty-nine value results and the eight `void` mutations are
 terminal. Return
 kinds stay
 producer-specific: `array<string>` for `str.split`, `array<float>` for
@@ -703,7 +713,7 @@ separate `$builtin_matrix_result` synthetic prefix. `matrix.mult` semantic
 dispatch is selected by the resolved `ReturnSpec::MatrixMult` result.
 Matrix-by-array, array-by-matrix,
 and array-by-array overloads resolve to `array<float>` and admit `.size()`,
-`.get(index)`, `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.includes(value)`,
+`.get(index)`, `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.concat(id2)`, `.includes(value)`,
 `.indexof(value)`, `.lastindexof(value)`, `.every()`, `.some()`, `.binary_search(value)`,
 `.binary_search_leftmost(value)`, `.binary_search_rightmost(value)`, and
 `.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`/`.sort_indices(order?)` plus terminal `.join(separator?)`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove(index)`, `.push(value)`, `.unshift(value)`, `.insert(index, value)`, `.set(index, value)`, `.fill(value, index_from?, index_to?)`, and `.sort(order?)`; `.slice(...)` preserves the array-valued overload and switches to the array-result prefix.
@@ -721,10 +731,10 @@ all-kind terminal `.is_square()`. Int inputs still resolve to float collection r
 parser marker to `$builtin_array_result`, producing fresh element-kind-preserving arrays
 while `.eigenvalues()` retains its fixed `simple array<float>` result and
 numeric-matrix parameter check. All three switch to the array-result prefix and
-admit `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.slice(index_from, index_to)`/`.includes(value)`/
+admit `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.slice(index_from, index_to)`/`.concat(id2)`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)`/`.every()`/`.some()`/`.binary_search(value)`/
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`/`.join(separator?)` terminal reads plus transforming `.standardize()` and `.sort_indices(order?)` and terminal `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?)`, with copy/slice/abs/standardize/sort_indices array continuation and terminal read/search/aggregate/mutation checks.
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`/`.join(separator?)` terminal reads plus transforming `.standardize()` and `.sort_indices(order?)` and terminal `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?)`, with copy/slice/concat/abs/standardize/sort_indices array continuation and terminal read/search/aggregate/mutation checks.
 `.is_square()` retains the ordinary `MATRIX_ANY_ID_PARAMS`
 signature and `simple bool` return, accepts every supported concrete matrix
 kind, and is terminal without changing the parser marker. `.is_zero()` retains
@@ -910,11 +920,11 @@ scalar key/value kinds and admits `.size()`, `.get(key)`, `.contains(key)`,
 `.copy()`, `.keys()`, and `.values()`; only `.copy()` may continue another
 admitted map helper. `.keys()` and `.values()` switch to the array-result prefix
 and return fresh key/value-kind-preserving arrays, which admit direct binding
-plus `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.slice(index_from, index_to)`/`.includes(value)`/
+plus `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.slice(index_from, index_to)`/`.concat(id2)`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)`, bool/int/float-only `.every()`/`.some()`, and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
-`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` and all-scalar terminal `.join(separator?)`, with copy/slice/abs/standardize/sort_indices array
+`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` and all-scalar terminal `.join(separator?)`, with copy/slice/concat/abs/standardize/sort_indices array
 continuation and terminal read/search/aggregate checks. The ordinary map analyzer validates
 key types and marks copy
 results with the same template metadata. Exact namespace `map.copy(existing)`
@@ -933,10 +943,10 @@ control-flow, constructed-result, scalar-template-interleaving, same-library
 dual-alias, and independent-copy paths are preserved. Analysis-marked local
 and imported user-method results retain their receiver-style and qualified/
 direct-constructor paths. Only copy may continue as a map, while keys and
-values continue through the closed array-reader set. Unknown/`na`, scalar,
+values continue through the closed array-result set. Unknown/`na`, scalar,
 array, matrix, wrong-template/key, broader helpers, map or call-result-array
-mutation, and continuation after a terminal key/value-array reader remain
-gated. This path adds no UDT/import identity or public
+mutation other than `.concat(id2)`, and continuation after a terminal key/
+value-array reader remain gated. This path adds no UDT/import identity or public
 schema field.
 
 For the array-helper branch, the receiver must resolve to a supported array
@@ -951,9 +961,9 @@ use the existing pure user-method dispatch, and explicit same-named local
 methods and imported functions remain distinct. Other `array.*` calls,
 built-in namespaces and templates outside the seven fixed producers plus the
 result-type-checked namespace `matrix.mult` paths, helpers beyond the applicable
-forty-two-item postfix read/copy/search/transform/aggregate/mutation set, non-array/non-
+forty-three-item postfix read/copy/search/transform/aggregate/mutation set, non-array/non-
 matrix/non-UDT results, unknown/`na` results without a concrete supported type
-or identity, and postfix mutation other than `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?)` remain outside this subset. A postfix read
+or identity, and postfix mutation other than `.concat(id2)`/`.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?)` remain outside this subset. A postfix read
 does not make a mutating producer pure:
 `array.concat(...).size()` still mutates the first concat input and is rejected
 inside UDFs. `.includes(value)` reuses the ordinary array element-kind and UDT-
@@ -1358,7 +1368,7 @@ returns preserve the identity selected for the current call. Qualified
 user-defined results returning any currently supported array kind, unqualified
 plain local UDF array results, the exact built-in `array.*` producer allowlist,
 and the cross-namespace array-capable path support direct
-`.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`/`.slice(index_from, index_to)`/`.includes(value)`/
+`.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`/`.slice(index_from, index_to)`/`.concat(id2)`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)`, plus bool/int/float-only `.every()`/`.some()` and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
@@ -1369,9 +1379,10 @@ unqualified local UDF may invoke the existing pure method subset. That scalar
 method exception does not apply to a built-in producer's terminal
 `.get()`/`.first()`/`.last()`/`.includes()`/`.indexof()`/`.lastindexof()`/
 `.binary_search()`/`.binary_search_leftmost()`/`.binary_search_rightmost()` or
-`.join()` result. Numeric `.abs()` returns a fresh same-kind array, while
-`.slice(...)` returns a same-kind live window; both may continue through the
-admitted array chain. The seven fixed cross-namespace
+`.join()` result. Numeric `.abs()` returns a fresh same-kind array,
+`.slice(...)` returns a same-kind live window, and `.concat(id2)` mutates and
+returns the receiver id; all three may continue through the admitted array
+chain. The seven fixed cross-namespace
 producers and the array-returning
 `matrix.mult` overloads are scalar-array-only and do
 not widen UDT identity. Namespace matrix-returning `matrix.mult` overloads and

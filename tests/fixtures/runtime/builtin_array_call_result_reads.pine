@@ -688,3 +688,20 @@ call_result_sort_indices_udt_source = array.from(First.new(123.0, 3.0), First.ne
 call_result_sort_indices_udt = array.concat(call_result_sort_indices_udt_source, array.new<First>()).sort_indices(order.ascending, "other").copy()
 call_result_sort_indices_udt_source_first = call_result_sort_indices_udt_source.first()
 plot(call_result_sort_indices_udt.size() == 3 and call_result_sort_indices_udt.first() == 1 and call_result_sort_indices_udt.last() == 0 and call_result_sort_indices_udt_source_first.shared == 123.0 ? 1 : 0, "call_result_sort_indices_udt_identity_non_mutating")
+
+call_result_concat_alias_source = array.from(1, 2)
+call_result_concat_alias = array.concat(call_result_concat_alias_source, array.from(3)).concat(array.from(4)).copy()
+plot(call_result_concat_alias_source.size() == 4 and call_result_concat_alias_source.first() == 1 and call_result_concat_alias_source.last() == 4 and call_result_concat_alias.size() == 4 ? 1 : 0, "call_result_concat_alias_continuation")
+
+call_result_concat_slice_parent = array.from(10, 20, 30, 40)
+call_result_concat_slice = array.slice(call_result_concat_slice_parent, 1, 3).concat(array.from(25)).copy()
+plot(call_result_concat_slice_parent.size() == 5 and call_result_concat_slice_parent.get(0) == 10 and call_result_concat_slice_parent.get(1) == 20 and call_result_concat_slice_parent.get(2) == 30 and call_result_concat_slice_parent.get(3) == 25 and call_result_concat_slice_parent.get(4) == 40 and call_result_concat_slice.last() == 25 ? 1 : 0, "call_result_concat_live_slice_parent")
+
+call_result_concat_udt_source = array.from(First.new(125.0, 1250.0))
+call_result_concat_udt = array.copy(call_result_concat_udt_source).concat(array.from(First.new(126.0, 1260.0))).copy()
+call_result_concat_udt_last = call_result_concat_udt.last()
+call_result_concat_point = array.new<chart.point>().concat(array.from(chart.point.now(close + 10.0))).last()
+plot(call_result_concat_udt_source.size() == 1 and call_result_concat_udt.size() == 2 and call_result_concat_udt_last.shared == 126.0 and call_result_concat_point.price == close + 10.0 ? 1 : 0, "call_result_concat_fresh_udt_point")
+
+call_result_concat_none = array.copy(noneInts()).concat(array.from(1))
+plot(na(call_result_concat_none.size()) ? 1 : 0, "call_result_concat_upstream_na")

@@ -230,18 +230,23 @@ The exact admitted producer set is `array.new_float`, `array.new_int`,
 scalar, drawing-id, `chart.point`, and concrete same-local or same-imported
 scalar-tree UDT element types enter through the corresponding canonical
 constructor or checked UDT-template path. Only `.size()`, `.get(index)`,
-`.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.includes(value)`, `.indexof(value)`, and
+`.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.concat(id2)`, `.includes(value)`, `.indexof(value)`, and
 `.lastindexof(value)`, plus bool/int/float-only `.every()`/`.some()` and numeric-only `.binary_search(value)` and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
 `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` or exact-identity scalar-tree UDT `.sort_indices(order?, sort_field?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)`, may follow one of those producer calls;
 the parser uses the impossible synthetic prefix `$builtin_array_result` and
 semantic analysis rechecks the receiver type, producer arguments, and concrete
-UDT identity before lowering. Only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()` and
+UDT identity before lowering. Only `.copy()`, `.slice(index_from, index_to)`, `.concat(id2)`, numeric `.abs()` and
 `.standardize()`, and sortable-scalar or exact-identity scalar-tree UDT `.sort_indices(order?, sort_field?)` may continue
 with another allowed array chain; the twenty-nine terminal value results and
 the eight `void` mutations cannot continue
 into a user method or any other call-result method, including a scalar UDT
 element method.
+`.concat(id2)` is the sole admitted mutating array-returning continuation. It
+requires a same-kind or exact-identity source, appends into and returns the
+receiver id, and may continue through the closed helper path. Alias/live-slice
+writes reach shared parent backing, fresh snapshots remain independent, and
+ordinary upstream-`na`, capacity, arity, and UDF-side-effect behavior applies.
 `.includes(value)` reuses the ordinary element-kind and same-identity UDT
 argument checks and equality rules, returns `series bool`, is false for an
 empty concrete array, propagates an upstream `na` array, performs no mutation,
@@ -371,10 +376,10 @@ placement is unchanged. Empty input returns an empty index array, upstream
 through the closed int-array helper path, including nested `.sort_indices()`.
 Bool/color/object/chart-point receivers, missing/unknown/dynamic or unsupported
 UDT fields, unresolved/mixed/non-scalar UDT identities, invalid order or arity,
-and direct mutation other than `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)` remain rejected.
+and direct mutation other than `.concat(id2)`/`.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)` remain rejected.
 Unsupported element templates, all other `array.*` members, built-in
 namespaces and templates outside the exact cross-namespace producer set below,
-and postfix mutation other than `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)` remain fail-closed. The
+and postfix mutation other than `.concat(id2)`/`.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)` remain fail-closed. The
 lexical prefix `array` is reserved for this
 built-in recognition, so an import or user qualifier named `array` is not a
 supported qualified call-result receiver path.
@@ -451,16 +456,16 @@ field/order/arity errors, continuation, and UDF mutation remain closed.
 One later closed slice admits exactly seven fixed non-`array` namespace
 producers on that same `$builtin_array_result` path: `str.split`,
 `ta.pivot_point_levels`, `matrix.row`, `matrix.col`,
-`matrix.eigenvalues`, `map.keys`, and `map.values`. They share the same forty-two
-parser helpers: `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`,
+`matrix.eigenvalues`, `map.keys`, and `map.values`. They share the same forty-three
+parser helpers: `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.concat(id2)`,
 `.includes(value)`, `.indexof(value)`, `.lastindexof(value)`, bool/int/float-only
 `.every()`/`.some()`, and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
-`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, all-scalar `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?)`. Only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()` and
+`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, all-scalar `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?)`. Only `.copy()`, `.slice(index_from, index_to)`, `.concat(id2)`, numeric `.abs()` and
 `.standardize()`, and numeric-or-string `.sort_indices(order?)` may continue
 into another allowed array chain; the other
-twenty-nine value results and the eight `void` mutations are terminal.
+other twenty-nine value results and the eight `void` mutations are terminal.
 `str.split` produces
 `array<string>` and
 `ta.pivot_point_levels` produces `array<float>`. `matrix.row` and `matrix.col`
@@ -477,7 +482,7 @@ of the producer snapshot. A following dynamic exception marks
 namespace-qualified `matrix.mult(...)` with `$builtin_matrix_result` and then
 dispatches by its resolved `MatrixMult` return type. Matrix-by-array,
 array-by-matrix, and array-by-array results resolve to `array<float>` and may
-use `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`,
+use `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.concat(id2)`,
 `.includes(value)`, `.indexof(value)`, `.lastindexof(value)`, `.every()`, `.some()`, and
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
@@ -494,10 +499,10 @@ all-kind terminal `.is_square()`. Int inputs still produce float collection resu
 `.row(index)` and `.col(index)` return fresh element-kind-preserving scalar arrays and switch
 to the array-result path; `.eigenvalues()` retains the existing numeric check,
 square-matrix runtime boundary, and fresh `array<float>` result before switching
-to `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.slice(index_from, index_to)`/`.includes(value)`/
+to `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.slice(index_from, index_to)`/`.concat(id2)`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)`/`.every()`/`.some()`/`.binary_search(value)`/
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`/`.join(separator?)` terminal reads plus transforming `.standardize()` and `.sort_indices(order?)` and terminal `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?)`, with copy/slice/abs/standardize/sort_indices array continuation and terminal read/search/aggregate/mutation checks. `.is_square()`
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`/`.join(separator?)` terminal reads plus transforming `.standardize()` and `.sort_indices(order?)` and terminal `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?)`, with copy/slice/concat/abs/standardize/sort_indices array continuation and terminal read/search/aggregate/mutation checks. `.is_square()`
 returns the ordinary simple bool for every
 supported concrete matrix kind and is terminal without a result-prefix
 transition. Numeric-only `.is_zero()` retains the ordinary exact-zero,
@@ -668,7 +673,7 @@ unregistered or unresolved user-function and unresolved/non-matrix method
 results,
 unsupported `map.new` and `matrix.new` templates, any other namespace
 or non-producer member,
-and postfix mutation other than `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?)` also stay outside this set. The built-in lexical prefixes
+and postfix mutation other than `.concat(id2)`/`.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?)` also stay outside this set. The built-in lexical prefixes
 `str`, `ta`, `matrix`, and `map` stay reserved for this recognition and cannot
 be hijacked by same-named user/import qualifiers. This slice adds no UDT or
 imported-type identity flow and does not change the public runtime, analysis,
@@ -1298,7 +1303,7 @@ Qualified user-defined UDF/method results, unqualified plain local UDF results,
 the exact built-in `array.*` producer allowlist, and the cross-namespace
 array-capable set in the Built-In Runtime Contract may be consumed directly
 through `.size()`, `.get(index)`, `.first()`,
-`.last()`, or `.copy()` when they return a currently supported array kind,
+`.last()`, `.copy()`, `.slice(index_from, index_to)`, or `.concat(id2)` when they return a currently supported array kind,
 including nested copy/read chains. The parser represents the unqualified form
 with the impossible synthetic prefix `$call_result` and the built-in producer
 form with `$builtin_array_result`; the former requires a plain lexical callee,
@@ -1329,8 +1334,8 @@ inputs. `matrix.eigenvectors` preserves square shape for real complete
 eigenvector results, returns empty `0 x 0`, and yields `na` for invalid-cell,
 non-real, or incomplete results. The admitted `matrix.new<T>` templates retain
 their float/int/bool/string/color result kind, requested shape,
-initial/default-`na` cells, and fresh allocation. Only `.copy()` plus numeric
-`.abs()` and `.standardize()` continue an array-result chain; matrix results
+initial/default-`na` cells, and fresh allocation. Only `.copy()`, `.slice(...)`,
+`.concat(id2)`, plus numeric `.abs()` and `.standardize()` continue an array-result chain; matrix results
 may continue through `.copy()`,
 `.submatrix(...)`, or `.transpose()`, and numeric matrix results may also
 continue through `.diff(other)`, `.eigenvectors()`, `.inv()`, `.kron(other)`, `.mult(other)`, `.pinv()`, or `.pow(power)`.

@@ -804,3 +804,14 @@ local_call_result_sort_indices_source = array.from(First.new(205.0, 3.0), First.
 local_call_result_sort_indices = return_identity(local_call_result_sort_indices_source).sort_indices(order.ascending, "other").copy()
 local_call_result_sort_indices_source_first = local_call_result_sort_indices_source.first()
 plot(local_call_result_sort_indices.size() == 3 and local_call_result_sort_indices.first() == 1 and local_call_result_sort_indices.last() == 0 and local_call_result_sort_indices_source_first.shared == 205.0 ? 1 : 0, "local_call_result_sort_indices_identity_non_mutating")
+
+local_call_result_concat_source = array.from(First.new(207.0, 2070.0))
+local_call_result_concat = return_identity(local_call_result_concat_source).concat(array.from(First.new(208.0, 2080.0))).copy()
+local_call_result_concat_last = local_call_result_concat.last()
+local_call_result_concat_source_last = local_call_result_concat_source.last()
+plot(local_call_result_concat_source.size() == 2 and local_call_result_concat_source_last.shared == 208.0 and local_call_result_concat_last.shared == 208.0 ? 1 : 0, "local_call_result_concat_alias_identity")
+
+local_method_concat_source = array.from(Second.new(2090.0, 209.0))
+local_method_concat = Second.new(0.0, 0.0).retain(local_method_concat_source).concat(array.from(Second.new(2100.0, 210.0))).copy()
+local_method_concat_last = local_method_concat.last()
+plot(local_method_concat_source.size() == 2 and local_method_concat_last.shared == 210.0 ? 1 : 0, "local_method_call_result_concat_alias_identity")

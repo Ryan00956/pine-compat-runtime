@@ -2079,6 +2079,16 @@ source, and may continue through the existing closed int-array helper set.
 Missing, unknown, dynamic, bool/non-root fields, unresolved or mixed identity,
 and non-scalar UDT boundaries remain rejected and fixture-backed; public
 schemas remain unchanged.
+Item 120 adds mutating, array-returning `.concat(id2)` to every concrete array
+call result and derived-array continuation. The second array must preserve the
+receiver scalar/object/`chart.point` kind or exact same-local/same-imported
+scalar-tree UDT identity. The operation returns the first array id and may
+continue through the closed array-result helper set. Alias-returning UDF/
+method and built-in results plus live slices append into shared parent backing;
+fresh namespace/map/matrix/`matrix.mult` snapshots remain source-independent.
+Empty sources, upstream `na`, self-concat cloning, the 100000-element limit,
+kind/identity/arity diagnostics, and UDF-side-effect rejection retain ordinary
+`array.concat` behavior. Public schemas remain unchanged.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

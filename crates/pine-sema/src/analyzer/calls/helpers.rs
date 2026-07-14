@@ -135,6 +135,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "last" => Some("array.last"),
         "copy" => Some("array.copy"),
         "slice" => Some("array.slice"),
+        "concat" => Some("array.concat"),
         "includes" => Some("array.includes"),
         "every" => Some("array.every"),
         "some" => Some("array.some"),
