@@ -331,8 +331,29 @@ pub(crate) fn format_number(value: f64, format: &str) -> String {
         return "NaN".to_owned();
     }
 
+    if format == "format.mintick" {
+        let mintick = pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+        if !mintick.is_finite() || mintick <= 0.0 {
+            return "NaN".to_owned();
+        }
+        let ticks = value / mintick;
+        let tie_tolerance = f64::EPSILON * ticks.abs().max(1.0) * 4.0;
+        let rounded = (ticks + 0.5 + tie_tolerance).floor() * mintick;
+        if !rounded.is_finite() {
+            return "NaN".to_owned();
+        }
+        let decimal_places = (0..=16)
+            .find(|places| {
+                let scaled = mintick * 10_f64.powi(*places);
+                (scaled - scaled.round()).abs() <= 1e-9
+            })
+            .unwrap_or(16) as usize;
+        let rounded = if rounded == 0.0 { 0.0 } else { rounded };
+        return format!("{rounded:.decimal_places$}");
+    }
+
     let format = match format {
-        "" | "format.mintick" | "format.price" => "#.########",
+        "" | "format.price" => "#.########",
         "format.percent" => "#.##%",
         "format.volume" => "#.##",
         other => other,

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Corrected `str.tostring(..., format.mintick)` to round numeric scalars, array
+  elements, and matrix cells to the fixed `syminfo.mintick = 0.01` subset,
+  including negative half-tick ties rounding up and two trailing decimal places.
 - Added `str.tostring()` support for float, int, bool, and string matrices.
   Matrix rows use nested brackets, numeric formats apply per cell, and empty
   row/column shapes are preserved; color matrices and direct matrix arguments
