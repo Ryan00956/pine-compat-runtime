@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added transforming `.sort_indices(order?, sort_field?)` to concrete same-
+  local and same-imported scalar-tree UDT array call results. The compile-time
+  root int/float/string field is resolved against the exact result identity;
+  the operation returns a fresh stable `array<int>` of original indexes,
+  leaves the source unchanged, and may continue through the existing closed
+  int-array chain. Missing, unknown, dynamic, or unsupported fields and
+  unresolved/non-scalar identities remain rejected; public schemas are
+  unchanged.
 - Added terminal top-level `.sort(order?, sort_field?)` to concrete array call
   results. Int/float/string results use ordinary stable ascending/default or
   descending ordering; same-local and same-imported scalar-tree UDT results

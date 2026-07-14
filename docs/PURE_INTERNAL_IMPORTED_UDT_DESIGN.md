@@ -1683,3 +1683,12 @@ return/parameter flow remains deferred.
     upstream-`na` results no-op after order evaluation; unsupported kinds,
     field/order/arity, terminal continuation, and UDF mutation remain closed.
     No imported identity or public schema field is widened. Done.
+109. Transforming `.sort_indices(order?, sort_field?)` now accepts concrete
+    same-imported scalar-tree UDT array call results from the identity-
+    preserving built-in and imported UDF/method producer paths. The required
+    compile-time root int/float/string field is resolved against the exact
+    imported identity. It returns a fresh stable `array<int>` of original
+    indexes, leaves the imported UDT source unchanged, and may continue through
+    the existing closed int-array chain. Missing, unknown, dynamic, bool/non-
+    root fields, unresolved/mixed identities, and non-scalar imported UDTs stay
+    rejected. No imported identity or public schema field is widened. Done.

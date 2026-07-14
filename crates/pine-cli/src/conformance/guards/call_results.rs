@@ -109,6 +109,7 @@ const UDT_IDENTITY_BUILTIN_ARRAY_CALL_RESULT_FEATURES: &[&str] = &[
     "array.new<UDT>",
     "array.from",
     "array.copy",
+    "array.sort_indices",
     "array.includes",
     "array.indexof",
     "array.lastindexof",

@@ -296,15 +296,9 @@ impl Analyzer {
                 callee.span,
             );
         }
-        if receiver_type.kind == ValueKind::UserTypeArray && builtin_name == "array.sort_indices" {
-            self.unsupported(
-                builtin_name,
-                "direct UDT-array call-result sort_indices requires binding the result so sort_field identity can be resolved",
-                callee.span,
-            );
-            return Some(None);
-        }
-        if receiver_type.kind == ValueKind::UserTypeArray && builtin_name == "array.sort" {
+        if receiver_type.kind == ValueKind::UserTypeArray
+            && matches!(builtin_name, "array.sort" | "array.sort_indices")
+        {
             return Some(self.analyze_user_type_array_sort_call(
                 builtin_name,
                 span,

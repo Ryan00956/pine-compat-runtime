@@ -683,3 +683,8 @@ array.concat(call_result_sort_udt_source, array.new<First>()).sort(order.ascendi
 call_result_sort_udt_first = call_result_sort_udt_source.first()
 call_result_sort_udt_last = call_result_sort_udt_source.last()
 plot(call_result_sort_udt_source.size() == 3 and call_result_sort_udt_first.shared == 117.0 and call_result_sort_udt_last.shared == 119.0 ? 1 : 0, "call_result_sort_udt_alias_field")
+
+call_result_sort_indices_udt_source = array.from(First.new(123.0, 3.0), First.new(121.0, 1.0), First.new(122.0, 2.0))
+call_result_sort_indices_udt = array.concat(call_result_sort_indices_udt_source, array.new<First>()).sort_indices(order.ascending, "other").copy()
+call_result_sort_indices_udt_source_first = call_result_sort_indices_udt_source.first()
+plot(call_result_sort_indices_udt.size() == 3 and call_result_sort_indices_udt.first() == 1 and call_result_sort_indices_udt.last() == 0 and call_result_sort_indices_udt_source_first.shared == 123.0 ? 1 : 0, "call_result_sort_indices_udt_identity_non_mutating")

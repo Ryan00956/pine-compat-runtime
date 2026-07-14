@@ -6813,7 +6813,9 @@ fn reports_unsupported_local_user_type_array_call_result_chaining_fixture() {
             "`array.stdev` argument `id` expects numeric array, got simple array<string>",
             "`array.stdev` argument `biased` expects bool-compatible, got series float",
             "`array.stdev` expects at most 2 argument(s), got 3",
-            "`array.sort_indices` is not supported: direct UDT-array call-result sort_indices requires binding the result so sort_field identity can be resolved",
+            "`array.sort_indices` requires `sort_field` for UDT arrays",
+            "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
+            "`array.sort_indices` argument `sort_field` expects const string, got series string",
             "`array.sort_indices` argument `id` expects numeric/string array, got simple array<bool>",
             "`array.sort_indices` argument `order` expects const string, got series float",
             "`array.sort_indices` expects at most 2 argument(s), got 3",
@@ -6853,7 +6855,7 @@ fn reports_unsupported_local_user_type_array_call_result_chaining_fixture() {
             "`array.sort` expects at most 2 argument(s), got 3",
         ],
     );
-    assert_diagnostic_count(path, 206);
+    assert_diagnostic_count(path, 209);
 }
 
 #[test]
@@ -7918,7 +7920,9 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
             "`array.stdev` argument `id` expects numeric array, got simple array<chart.point>",
             "`array.stdev` argument `biased` expects bool-compatible, got series float",
             "`array.stdev` expects at most 2 argument(s), got 3",
-            "`array.sort_indices` is not supported: direct UDT-array call-result sort_indices requires binding the result so sort_field identity can be resolved",
+            "`array.sort_indices` requires `sort_field` for UDT arrays",
+            "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
+            "`array.sort_indices` argument `sort_field` expects const string, got series string",
             "`array.sort_indices` argument `id` expects numeric/string array, got simple array<bool>",
             "`array.sort_indices` argument `id` expects numeric/string array, got simple array<color>",
             "`array.sort_indices` argument `id` expects numeric/string array, got simple array<chart.point>",
@@ -7949,7 +7953,7 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
             "`function_side_effect` is not supported: collection mutation via `array.sort` is not supported inside user-defined functions",
         ],
     );
-    assert_diagnostic_count(path, 251);
+    assert_diagnostic_count(path, 255);
 }
 
 #[test]
@@ -14339,7 +14343,9 @@ fn reports_unsupported_imported_user_type_array_call_result_chaining_fixture() {
             "`array.stdev` argument `id` expects numeric array, got simple array<string>",
             "`array.stdev` argument `biased` expects bool-compatible, got series float",
             "`array.stdev` expects at most 2 argument(s), got 3",
-            "`array.sort_indices` is not supported: direct UDT-array call-result sort_indices requires binding the result so sort_field identity can be resolved",
+            "`array.sort_indices` requires `sort_field` for UDT arrays",
+            "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
+            "`array.sort_indices` argument `sort_field` expects const string, got series string",
             "`array.sort_indices` argument `id` expects numeric/string array, got simple array<bool>",
             "`array.sort_indices` argument `order` expects const string, got series float",
             "`array.sort_indices` expects at most 2 argument(s), got 3",
@@ -14377,7 +14383,7 @@ fn reports_unsupported_imported_user_type_array_call_result_chaining_fixture() {
             "`array.sort` expects at most 2 argument(s), got 3",
         ],
     );
-    assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 190);
+    assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 193);
 }
 
 #[test]

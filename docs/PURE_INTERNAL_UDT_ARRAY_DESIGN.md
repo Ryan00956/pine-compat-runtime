@@ -338,8 +338,8 @@ string call results across the closed producer families. It returns an
 independent fixed int-index array with stable original indexes, established
 ordering/empty/upstream-`na` behavior, source non-mutation, and nested closed-
 array continuation. Bool/color/object/chart-point, invalid order/arity, direct
-mutation, and UDT call-result `.sort_indices()` before binding remain
-closed.
+mutation, and direct UDT call-result `.sort_indices()` remained closed at this
+slice; Item 119 admits the exact-identity scalar-tree UDT case.
 Item 104 adds terminal `.every()` to concrete bool, int, or float call results
 across the closed producer families. Nonzero numerics and `true` are truthy;
 zero, `false`, and element `na` are false. Empty results return true, upstream
@@ -1936,8 +1936,9 @@ array with stable original indexes, default ascending or explicit descending
 order, float-`na` and string-empty placement, empty results, upstream-`na`
 propagation, source non-mutation, and nested sort/copy/read/search/
 transformation/statistic continuation. Bool/color/object/chart-point, invalid
-order/arity, direct mutation, and UDT call-result `.sort_indices()` before
-an identity-preserving binding remain closed.
+order/arity, direct mutation, and direct UDT call-result `.sort_indices()`
+remained closed at this slice; Item 119 admits the exact-identity scalar-tree
+UDT case.
 Item 104 adds terminal `.every()` to concrete bool, int, or float array call
 results across static, cross-namespace, matrix/map-derived, and local/imported
 producers. It returns fixed series bool, treats nonzero numerics and `true` as
@@ -2068,6 +2069,16 @@ nested slices reorder shared parent backing, while fresh matrix/map/
 results no-op after order evaluation. Unsupported kinds, field/order/arity,
 terminal continuation, and UDF-body mutation stay closed and fixture-backed;
 public schemas remain unchanged.
+Item 119 extends transforming `.sort_indices(order?, sort_field?)` to concrete
+same-local and same-imported scalar-tree UDT call results across the identity-
+preserving built-in and user-defined producer paths. The required compile-time
+root int/float/string field is lowered against the exact result identity. The
+operation returns a fresh stable `array<int>` of original indexes, preserves
+the established empty/upstream-`na` and ordering rules, never mutates the UDT
+source, and may continue through the existing closed int-array helper set.
+Missing, unknown, dynamic, bool/non-root fields, unresolved or mixed identity,
+and non-scalar UDT boundaries remain rejected and fixture-backed; public
+schemas remain unchanged.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

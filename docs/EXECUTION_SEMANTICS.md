@@ -805,9 +805,12 @@ terminal `.every()` and `.some()`. Numeric `array<int>` and `array<float>` resul
 additionally support terminal `.binary_search(value)` and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`,
 terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`, plus non-mutating `.abs()` and `.standardize()` transformation chains that
-return a fresh same-kind array. Concrete int, float, or string results also
-admit transforming `.sort_indices(order?)` and its fixed int-array
-continuation. Every scalar result plus a concrete same-local or same-imported
+return a fresh same-kind array. Concrete int, float, or string results admit
+transforming `.sort_indices(order?)`; concrete same-local or same-imported
+scalar-tree UDT results admit `.sort_indices(order?, sort_field?)` when a
+compile-time root int/float/string field resolves against the exact result
+identity. Both forms return a fresh fixed int-array continuation. Every scalar
+result plus a concrete same-local or same-imported
 scalar-tree UDT-array result also admits terminal `.join(separator?)`. The parser
 rewrites the unqualified form to the impossible internal prefix `$call_result`
 only for a plain lexical callee; qualified user-defined forms retain their
@@ -830,10 +833,10 @@ marks the receiver with `$builtin_array_result`; only `.size()`, `.get(index)`,
 `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.includes(value)`, `.indexof(value)`, and
 `.lastindexof(value)`, plus bool/int/float-only `.every()`/`.some()` and numeric-only `.binary_search(value)` and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)` and
-`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)`, are admitted after it. The lexical prefix
+`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` or exact-identity scalar-tree UDT `.sort_indices(order?, sort_field?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)`, are admitted after it. The lexical prefix
 `array` is reserved for built-in producer recognition, so a user or import
 qualifier named `array` cannot use this qualified call-result path.
-Only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()`, numeric `.standardize()`, and numeric-or-string `.sort_indices(order?)` return arrays
+Only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()`, numeric `.standardize()`, and sortable-scalar or exact-identity scalar-tree UDT `.sort_indices(order?, sort_field?)` return arrays
 that may continue through another allowed step. The terminal `.size()`, `.get()`, `.first()`, `.last()`,
 `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, and
 `.binary_search_leftmost()`/`.binary_search_rightmost()`/`.min()`/`.max()`/

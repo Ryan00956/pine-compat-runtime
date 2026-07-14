@@ -581,7 +581,10 @@ admit `.binary_search(value)`, `.binary_search_leftmost(value)`,
 `.binary_search_rightmost(value)`, terminal
 `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`, fresh same-kind
 `.abs()` chains, and fixed-float `.standardize()` chains. Concrete int, float,
-or string results additionally admit transforming `.sort_indices(order?)`.
+or string results additionally admit transforming `.sort_indices(order?)`;
+concrete same-local or same-imported scalar-tree UDT results admit
+`.sort_indices(order?, sort_field?)` for a compile-time root int/float/string
+field resolved against the exact result identity.
 Every scalar result kind, plus concrete same-local or same-imported scalar-tree
 UDT array results, additionally admits terminal `.join(separator?)` with the
 ordinary array stringification and separator rules.
@@ -654,8 +657,8 @@ those receivers with `$builtin_array_result`, and semantic analysis admits only
 `.includes(value)`, `.indexof(value)`, and `.lastindexof(value)`, plus
 bool/int/float-only `.every()`/`.some()` and numeric-only `.binary_search(value)`, `.binary_search_leftmost(value)`,
 `.binary_search_rightmost(value)`, `.abs()`, and
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)`, after them. Only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()` and
-`.standardize()`, and numeric-or-string `.sort_indices(order?)` produce array
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` or exact-identity scalar-tree UDT `.sort_indices(order?, sort_field?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)`, after them. Only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()` and
+`.standardize()`, and sortable-scalar or exact-identity scalar-tree UDT `.sort_indices(order?, sort_field?)` produce array
 receivers that may continue; the reads/searches
 are terminal and cannot continue into a user method or any other call-result
 method, including a method on a returned scalar UDT element. `.clear()`,
@@ -1359,7 +1362,7 @@ and the cross-namespace array-capable path support direct
 `.indexof(value)`/`.lastindexof(value)`, plus bool/int/float-only `.every()`/`.some()` and numeric-only
 `.binary_search(value)`/`.binary_search_leftmost(value)`/
 `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
-`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` and scalar/same-identity scalar-tree UDT `.join(separator?)`, without widening arbitrary call-
+`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` or, on identity-preserving UDT paths, exact-identity scalar-tree UDT `.sort_indices(order?, sort_field?)`, and scalar/same-identity scalar-tree UDT `.join(separator?)`, without widening arbitrary call-
 result receivers. UDT arrays retain the concrete
 same-local/same-imported scalar-tree identity gate; scalar UDT results from an
 unqualified local UDF may invoke the existing pure method subset. That scalar

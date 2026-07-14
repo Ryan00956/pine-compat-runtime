@@ -532,6 +532,15 @@ Current baseline:
   derived snapshots stay source-independent. Empty/upstream-`na`, unsupported
   kind, field/order/arity, terminal continuation, and UDF-side-effect behavior
   remains unchanged; public schemas stay fixed.
+  The non-mutating index-ordering slice extends
+  `.sort_indices(order?, sort_field?)` to concrete same-local and same-imported
+  scalar-tree UDT call results across the identity-preserving built-in and
+  user-defined producer paths. A compile-time root int/float/string field is
+  lowered against the exact result identity. The operation returns a fresh,
+  stable `array<int>` of original indexes, leaves the UDT source unchanged,
+  and may continue through the existing closed int-array chain; missing,
+  unknown, dynamic, unsupported-field, unresolved-identity, and non-scalar-
+  identity boundaries remain closed without changing public schemas.
   The following closed slice admits exact
   `matrix.new<float|int|bool|string|color>` template results. They preserve the
   registered element kind, requested rectangular shape, type-compatible
@@ -1039,7 +1048,7 @@ Remaining internal work:
   `.join(separator?)`, and numeric-only
   `.binary_search(value)`/`.binary_search_leftmost(value)`/
   `.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/
-  `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)` set, the int/float/string-only `.sort_indices(order?)` call-result transformation with its retained UDT-binding boundary, and
+  `.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)` set, the int/float/string or exact-identity scalar-tree UDT `.sort_indices(order?, sort_field?)` call-result transformation, and
   mutation through unsupported UDF/method side-effect contexts;
 - call-result receivers outside the qualified user-defined, unqualified plain
   local-UDF, exact built-in array-producing subsets, and the result-type-checked

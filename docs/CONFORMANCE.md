@@ -233,11 +233,11 @@ constructor or checked UDT-template path. Only `.size()`, `.get(index)`,
 `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.includes(value)`, `.indexof(value)`, and
 `.lastindexof(value)`, plus bool/int/float-only `.every()`/`.some()` and numeric-only `.binary_search(value)` and
 `.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
-`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)`, may follow one of those producer calls;
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` or exact-identity scalar-tree UDT `.sort_indices(order?, sort_field?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)`, may follow one of those producer calls;
 the parser uses the impossible synthetic prefix `$builtin_array_result` and
 semantic analysis rechecks the receiver type, producer arguments, and concrete
 UDT identity before lowering. Only `.copy()`, `.slice(index_from, index_to)`, numeric `.abs()` and
-`.standardize()`, and numeric-or-string `.sort_indices(order?)` may continue
+`.standardize()`, and sortable-scalar or exact-identity scalar-tree UDT `.sort_indices(order?, sort_field?)` may continue
 with another allowed array chain; the twenty-nine terminal value results and
 the eight `void` mutations cannot continue
 into a user method or any other call-result method, including a scalar UDT
@@ -359,16 +359,19 @@ non-finite, non-mutation, and terminal boundaries as `.variance()`. It returns
 fixed `series float` equal to the square root of the selected population or
 sample variance; one numeric value therefore returns population standard
 deviation `0` and unbiased `na`.
-`.sort_indices(order?)` accepts concrete int, float, or string array results
-and returns a fresh fixed `simple array<int>` containing stable original
-indexes. Omitted order is ascending and explicit `order.descending` reverses
-the value ordering while preserving equal-value source order. Existing float-
-`na` and string-empty placement is unchanged. Empty input returns an empty
-index array, upstream `na` propagates, and the source is never mutated. The
-result may continue through the closed array-result helper path, including
-nested `.sort_indices()`. Bool/color/object/chart-point receivers, invalid
-order or arity, direct mutation other than `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)`, and UDT call-result `.sort_indices()` before an
-identity-preserving binding remain rejected.
+`.sort_indices(order?, sort_field?)` accepts concrete int, float, or string
+array results and concrete same-local or same-imported scalar-tree UDT array
+results. UDT results require a compile-time root int/float/string field
+resolved against the exact call-result identity. It returns a fresh fixed
+`simple array<int>` containing stable original indexes. Omitted order is
+ascending and explicit `order.descending` reverses the value ordering while
+preserving equal-value source order. Existing float-`na` and string-empty
+placement is unchanged. Empty input returns an empty index array, upstream
+`na` propagates, and the source is never mutated. The result may continue
+through the closed int-array helper path, including nested `.sort_indices()`.
+Bool/color/object/chart-point receivers, missing/unknown/dynamic or unsupported
+UDT fields, unresolved/mixed/non-scalar UDT identities, invalid order or arity,
+and direct mutation other than `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)` remain rejected.
 Unsupported element templates, all other `array.*` members, built-in
 namespaces and templates outside the exact cross-namespace producer set below,
 and postfix mutation other than `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)` remain fail-closed. The

@@ -401,6 +401,8 @@ anchor.exposeInts(array.from(42, 40, 41)).sort(order.ascending)
 identity(array.from("c", "a", "b")).sort(order.descending)
 identity(first_values).sort(order.ascending, "shared")
 anchor.exposeSecondBlock(second_values).sort(order.descending, "other")
+method_udt_sort_indices = First.new(0.0, 0.0).retain(first_values).sort_indices(order.ascending, "shared")
+udf_udt_sort_indices = identity(first_values).copy().sort_indices(order.descending, "other").copy()
 
 unqualified_scalar_first = readUnqualifiedScalar(First.new(2.0, 20.0))
 unqualified_scalar_second = readUnqualifiedScalar(Second.new(30.0, 3.0))
