@@ -82,6 +82,33 @@ fn normalizes_pine_regex_four_digit_unicode_escapes() {
 }
 
 #[test]
+fn normalizes_pine_regex_dot_line_terminators() {
+    let default_dot =
+        Regex::new(&normalize_pine_regex(r"\A.\z")).expect("normalized default-dot regex");
+    for ch in ['\n', '\r', '\u{0085}', '\u{2028}', '\u{2029}'] {
+        assert!(
+            !default_dot.is_match(&ch.to_string()),
+            "U+{:04X}",
+            ch as u32
+        );
+    }
+    for ch in ['A', '\u{000b}', '\u{000c}'] {
+        assert!(default_dot.is_match(&ch.to_string()), "U+{:04X}", ch as u32);
+    }
+
+    let dotall = Regex::new(&normalize_pine_regex(r"(?s:\A.\z)")).expect("normalized dotall regex");
+    for ch in ['\n', '\r', '\u{0085}', '\u{2028}', '\u{2029}'] {
+        assert!(dotall.is_match(&ch.to_string()), "U+{:04X}", ch as u32);
+    }
+
+    assert_eq!(
+        normalize_pine_regex(r".(?s).(?-s).(?s:.)(?-s:.)"),
+        r"[^\n\r\x{0085}\x{2028}\x{2029}](?s).(?-s)[^\n\r\x{0085}\x{2028}\x{2029}](?s:.)(?-s:[^\n\r\x{0085}\x{2028}\x{2029}])"
+    );
+    assert_eq!(normalize_pine_regex(r"\.[.]\Q.\E"), r"\.[.]\x{2E}");
+}
+
+#[test]
 fn runs_string_helpers() {
     let source = SourceFile::new(
         "test.pine",
@@ -250,6 +277,15 @@ match_multiline_dollar = str.match("first\nsecond", "(?m)^second$")
 match_scoped_multiline_reset = str.match("first\nsecond\n", "(?m:first$)\\n(?-m:second$)")
 match_dotall_greedy_end = str.match("a\n", "(?s).*$")
 match_dotall_lazy_end = str.match("a\n", "(?s).*?$")
+match_default_dot_line_feed = str.match("\nA", ".")
+match_default_dot_carriage_return = str.match("\rA", ".")
+match_default_dot_next_line = str.match("A", ".")
+match_default_dot_line_separator = str.match(" A", ".")
+match_default_dot_paragraph_separator = str.match(" A", ".")
+match_dotall_line_terminators = str.match("\r  A", "(?s).+")
+match_global_dotall_reset = str.match("\rA", "(?s).(?-s).")
+match_scoped_dotall_reset = str.match("\rA", "(?s:.)(?-s:.)")
+match_literal_dots = str.match("...", "\\.[.]\\Q.\\E")
 match_anchor_capture_collision = str.match("tail\n", "(?<__pine_final_newline_0>tail)$")
 match_unicode_escape = str.match("x—y", "\\u2014")
 match_unicode_escape_class = str.match("xåy", "[\\u00E5]")
@@ -321,6 +357,8 @@ plot(match_final_newline_dollar == "tail" and match_final_newline_Z == "tail" an
 plot(match_explicit_final_newline == "\n" and match_empty_final_newline_dollar == "" and match_empty_final_newline_Z == "" ? 1 : 0)
 plot(match_multiline_dollar == "second" and match_scoped_multiline_reset == "first\nsecond" ? 1 : 0)
 plot(match_dotall_greedy_end == "a\n" and match_dotall_lazy_end == "a" and match_anchor_capture_collision == "tail" ? 1 : 0)
+plot(match_default_dot_line_feed == "A" and match_default_dot_carriage_return == "A" and match_default_dot_next_line == "A" and match_default_dot_line_separator == "A" and match_default_dot_paragraph_separator == "A" ? 1 : 0)
+plot(match_dotall_line_terminators == "\r  A" and match_global_dotall_reset == "\rA" and match_scoped_dotall_reset == "\rA" and match_literal_dots == "..." ? 1 : 0)
 plot(match_unicode_escape == "—" and match_unicode_escape_class == "å" and match_unicode_escape_fifth_digit == "a0" and match_unicode_escape_quoted == "\\u2014—" ? 1 : 0)
 plot(na(missing_match_regex) and na(missing_match_pattern) ? 1 : 0)
 plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2) == "" and split_words.get(3) == "C" and split_missing_separator_literal.size() == 1 and split_missing_separator_literal.get(0) == "A,B" ? 1 : 0)

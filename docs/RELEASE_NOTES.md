@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Corrected `str.match()` default-dot behavior to exclude Pine's complete line
+  terminator set (LF, CR/CRLF, U+0085, U+2028, and U+2029), while preserving
+  global/scoped `(?s)` dotall mode, `(?-s)` restoration, and literal dots in
+  escapes, character classes, and `\Q...\E` quotes.
 - Added `str.match()` support for Pine's fixed four-hex-digit `\uHHHH` Unicode
   regex references inside and outside character classes, including exact
   four-digit consumption and preservation inside `\Q...\E` quoted regions.

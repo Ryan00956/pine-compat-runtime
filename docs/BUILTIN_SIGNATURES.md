@@ -1992,11 +1992,15 @@ exactly four digits, and remain literal inside quoted regions. By default, `$`
 and `\Z` match either at the absolute end or immediately before a final `\n`,
 without including that line terminator in the returned substring; `\z` matches
 only the absolute end. Global or scoped `(?m)` gives `$` multiline behavior,
-and `(?-m)` restores the default. It returns the first matched substring, an
-empty string when there is no match, `na` for `na` inputs, and a runtime error
-for invalid regex patterns. Backreferences, lookaround, atomic groups,
-possessive quantifiers, and other backtracking-dependent Pine regex constructs
-remain outside this linear-time subset.
+and `(?-m)` restores the default. A default `.` excludes Pine's full line
+terminator set: LF, CR (including CRLF), U+0085, U+2028, and U+2029. Global or
+scoped `(?s)` lets `.` match those characters, and `(?-s)` restores the
+default; escaped, character-class, and `\Q...\E`-quoted dots remain literal. It
+returns the first matched substring, an empty string when there is no match,
+`na` for `na` inputs, and a runtime error for invalid regex patterns.
+Backreferences, lookaround, atomic groups, possessive quantifiers, and other
+backtracking-dependent Pine regex constructs remain outside this linear-time
+subset.
 `str.split` splits by a literal separator and returns a string array. Empty
 separators split the source into Unicode scalar values. It returns `na` for
 `na` inputs and errors if the result would exceed 100,000 array elements.

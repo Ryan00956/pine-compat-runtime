@@ -167,6 +167,15 @@ match_multiline_dollar = str.match("first\nsecond", "(?m)^second$")
 match_scoped_multiline_reset = str.match("first\nsecond\n", "(?m:first$)\\n(?-m:second$)")
 match_dotall_greedy_end = str.match("a\n", "(?s).*$")
 match_dotall_lazy_end = str.match("a\n", "(?s).*?$")
+match_default_dot_line_feed = str.match("\nA", ".")
+match_default_dot_carriage_return = str.match("\rA", ".")
+match_default_dot_next_line = str.match("A", ".")
+match_default_dot_line_separator = str.match(" A", ".")
+match_default_dot_paragraph_separator = str.match(" A", ".")
+match_dotall_line_terminators = str.match("\r  A", "(?s).+")
+match_global_dotall_reset = str.match("\rA", "(?s).(?-s).")
+match_scoped_dotall_reset = str.match("\rA", "(?s:.)(?-s:.)")
+match_literal_dots = str.match("...", "\\.[.]\\Q.\\E")
 match_anchor_capture_collision = str.match("tail\n", "(?<__pine_final_newline_0>tail)$")
 match_unicode_escape = str.match("x—y", "\\u2014")
 match_unicode_escape_class = str.match("xåy", "[\\u00E5]")
@@ -259,6 +268,8 @@ plot(match_final_newline_dollar == "tail" and match_final_newline_Z == "tail" an
 plot(match_explicit_final_newline == "\n" and match_empty_final_newline_dollar == "" and match_empty_final_newline_Z == "" ? 1 : 0)
 plot(match_multiline_dollar == "second" and match_scoped_multiline_reset == "first\nsecond" ? 1 : 0)
 plot(match_dotall_greedy_end == "a\n" and match_dotall_lazy_end == "a" and match_anchor_capture_collision == "tail" ? 1 : 0)
+plot(match_default_dot_line_feed == "A" and match_default_dot_carriage_return == "A" and match_default_dot_next_line == "A" and match_default_dot_line_separator == "A" and match_default_dot_paragraph_separator == "A" ? 1 : 0)
+plot(match_dotall_line_terminators == "\r  A" and match_global_dotall_reset == "\rA" and match_scoped_dotall_reset == "\rA" and match_literal_dots == "..." ? 1 : 0)
 plot(match_unicode_escape == "—" and match_unicode_escape_class == "å" and match_unicode_escape_fifth_digit == "a0" and match_unicode_escape_quoted == "\\u2014—" ? 1 : 0)
 plot(na(missing_match_regex) and na(missing_match_pattern) ? 1 : 0)
 plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2) == "" and split_words.get(3) == "C" and split_missing_separator_literal.size() == 1 and split_missing_separator_literal.get(0) == "A,B" ? 1 : 0)

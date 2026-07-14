@@ -102,6 +102,7 @@ struct PineRegexMode {
     unicode_classes: bool,
     verbose: bool,
     multiline: bool,
+    dotall: bool,
 }
 
 struct PineRegexFlags<'a> {
@@ -173,6 +174,12 @@ fn apply_pine_regex_flags(mode: PineRegexMode, flags: &PineRegexFlags<'_>) -> Pi
     }
     if flags.disabled.contains('m') {
         mode.multiline = false;
+    }
+    if flags.enabled.contains('s') {
+        mode.dotall = true;
+    }
+    if flags.disabled.contains('s') {
+        mode.dotall = false;
     }
     mode
 }
@@ -310,6 +317,12 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
             result.push(slash);
             result.push(escaped);
             index += slash.len_utf8() + escaped.len_utf8();
+            continue;
+        }
+
+        if class_depth == 0 && byte == b'.' && !mode.dotall {
+            result.push_str(r"[^\n\r\x{0085}\x{2028}\x{2029}]");
+            index += 1;
             continue;
         }
 
