@@ -90,11 +90,11 @@ the same set as namespace `matrix.transpose(...)`, `matrix.submatrix(...)`,
 `matrix.kron(...)`, `matrix.diff(...)`, `matrix.pow(...)`, `matrix.inv(...)`,
 `matrix.pinv(...)`, and `matrix.eigenvectors(...)` results: `.rows()`, `.columns()`,
 `.elements_count()`, `.get(row, column)`, `.copy()`, `.submatrix(...)`, and
-`.transpose()`, plus terminal `.set(row, column, value)`, `.fill(value)`, `.reverse()`, `.reshape(rows, columns)`, `.swap_rows(row1, row2)`, and `.swap_columns(column1, column2)`. Numeric results
+`.transpose()`, plus terminal `.set(row, column, value)`, `.fill(value)`, `.reverse()`, `.reshape(rows, columns)`, `.swap_rows(row1, row2)`, `.swap_columns(column1, column2)`, and `.remove_row(row)`. Numeric results
 additionally admit `.diff(other)`, `.eigenvectors()`, `.inv()`, `.kron(other)`,
 `.mult(other)`, `.pinv()`, and `.pow(power)`.
 Unqualified local-UDF results that infer a concrete supported matrix kind use
-that same thirty-nine-helper closed set through `$call_result`, subject to
+that same forty-helper closed set through `$call_result`, subject to
 the numeric-only checks; parameter passthrough,
 block aliases, nested calls, same-kind control flow, matrix operations, and
 constructors retain call-specific float/int/bool/string/color kinds.
@@ -592,6 +592,13 @@ place, mutates local UDF/user-method aliases, and isolates fresh producer
 writes. It returns `void` and cannot continue; same-index no-op, bounds/`na`
 index errors, upstream-`na` argument evaluation, invalid type/arity, and UDF
 side-effect behavior are unchanged.
+Every concrete matrix call result also admits terminal `.remove_row(row)`. It
+validates one simple-int row index and removes the selected complete row,
+including from a zero-column matrix, while preserving column count and
+concrete element kind. It mutates local UDF/user-method aliases and isolates
+fresh producer shape changes. It returns `void` and cannot continue; bounds/
+`na` index errors, upstream-`na` argument evaluation, invalid type/arity, and
+UDF side-effect behavior are unchanged.
 Matrix-valued `.transpose()` accepts all supported matrix element kinds,
 returns an independent matrix with swapped row/column counts, propagates
 upstream `na`, and retains the matrix-result prefix for `.copy()`, repeated
@@ -636,10 +643,10 @@ receiver row. The resolved result selects the closed matrix or array helper
 set. Multiplication order, `na` propagation, zero inner dimensions, matrix
 cell limits, matrix dimension checks, and vector-length checks are unchanged.
 Other terminal readers, invalid arity or argument types, wrong-result helpers,
-broader postfix helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.swap_rows(...)`/`.swap_columns(...)` fail closed.
+broader postfix helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)` fail closed.
 Exact namespace `matrix.copy(values)` results also
 use `$builtin_matrix_result`, preserve the source's float/int/bool/string/color
-matrix kind through `SameAsArg`, and admit the same thirty-nine matrix helpers subject
+matrix kind through `SameAsArg`, and admit the same forty matrix helpers subject
 to the numeric eigenvalue, value-predicate, and aggregate checks, with the same
 matrix-copy/array-result and terminal-scalar-reader continuation rules. Exact namespace
 `matrix.transpose(values)`
@@ -1411,7 +1418,7 @@ numeric-matrix-receiver matrix-valued `values.mult(other)` results preserve
 multiplied or scalar-selected shape, `na` and zero-inner-dimension behavior,
 return independent `matrix<float>` storage, and share the same helper set while
 array-result overloads retain array-helper dispatch; UDF matrix-result
-receivers instead enter the same thirty-nine-helper closed set only for
+receivers instead enter the same forty-helper closed set only for
 unqualified local UDFs whose inferred result has a concrete supported matrix
 kind, with numeric-only checks retained. Parameter
 passthrough, block aliases, nested calls, same-kind control flow, constructed
@@ -1428,7 +1435,7 @@ kind, zero-dimension, dual-alias, independent-copy, and
 copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose-continuation
 paths. Unknown/`na`, scalar, array, map, unregistered or unresolved user-
 function matrix results, broader helpers, mutation other than terminal
-`.set(row, column, value)`/`.fill(value)`/`.reverse()`/`.reshape(rows, columns)`/`.swap_rows(row1, row2)`/`.swap_columns(column1, column2)`, and continuation after terminal reads remain gated.
+`.set(row, column, value)`/`.fill(value)`/`.reverse()`/`.reshape(rows, columns)`/`.swap_rows(row1, row2)`/`.swap_columns(column1, column2)`/`.remove_row(row)`, and continuation after terminal reads remain gated.
 Exact supported scalar `map.new<K,V>` templates use `$builtin_map_result` and
 admit only `.size()`, `.get(key)`, `.contains(key)`, and `.copy()`. The first
 three are terminal; only `.copy()` may continue another admitted map helper.

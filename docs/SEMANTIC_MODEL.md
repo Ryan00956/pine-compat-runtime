@@ -862,11 +862,18 @@ kind, preserves local UDF/user-method alias writes versus isolated fresh-
 producer writes, and treats equal indexes as a no-op. Bounds/`na` indexes,
 upstream-`na` argument evaluation, invalid arity/type, and UDF side-effect
 behavior are unchanged.
+`.remove_row(row)` likewise returns terminal `void` for every concrete matrix
+call-result producer. It validates one simple-int row index, removes the
+selected complete row, including from a zero-column matrix, while preserving
+column count and concrete element kind, and preserves local UDF/user-method
+alias shape writes versus isolated fresh-producer writes. Bounds/`na` indexes,
+upstream-`na` argument evaluation, invalid arity/type, and UDF side-effect
+behavior are unchanged.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
-broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.swap_rows(...)`/`.swap_columns(...)` fail closed. The
+broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)` fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the thirty-nine
+exact bound matrix-valued `matrix_id.mult(other)` results share the forty
 matrix helpers for matrix or scalar operands with the
 copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/predicate/aggregate-reader continuation
 rules.

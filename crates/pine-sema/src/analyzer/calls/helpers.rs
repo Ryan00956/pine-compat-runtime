@@ -188,6 +188,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "reshape" => Some("matrix.reshape"),
         "swap_rows" => Some("matrix.swap_rows"),
         "swap_columns" => Some("matrix.swap_columns"),
+        "remove_row" => Some("matrix.remove_row"),
         "copy" => Some("matrix.copy"),
         "diff" => Some("matrix.diff"),
         "eigenvectors" => Some("matrix.eigenvectors"),

@@ -20,6 +20,7 @@ mod tests {
             ("reshape", "matrix.reshape"),
             ("swap_rows", "matrix.swap_rows"),
             ("swap_columns", "matrix.swap_columns"),
+            ("remove_row", "matrix.remove_row"),
             ("copy", "matrix.copy"),
             ("diff", "matrix.diff"),
             ("eigenvectors", "matrix.eigenvectors"),

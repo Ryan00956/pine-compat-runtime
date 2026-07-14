@@ -1793,6 +1793,16 @@ Recommended future slices:
     index no-op, bounds/`na` indexes, upstream-`na` argument evaluation,
     invalid type/arity, UDF-side-effect, and public-schema boundaries retain
     ordinary `matrix.swap_columns` behavior. Done.
+130. Every concrete matrix call result additionally exposes terminal
+    `.remove_row(row)`. It validates one simple-int row index, removes the
+    selected complete row, including from a zero-column matrix, while
+    preserving column count and concrete element kind, returns `void`, and
+    cannot continue. Local UDF and local user-method alias results update
+    shared shape; fresh namespace, bound-transform, imported-function, and
+    imported-method results isolate the change. Bounds/
+    `na` indexes, upstream-`na` argument evaluation, invalid type/arity, UDF-
+    side-effect, and public-schema boundaries retain ordinary
+    `matrix.remove_row` behavior. Done.
 
 ## Completion Gate For Future Positive Support
 

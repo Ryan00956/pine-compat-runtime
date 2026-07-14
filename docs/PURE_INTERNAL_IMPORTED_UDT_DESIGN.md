@@ -1749,3 +1749,12 @@ return/parameter flow remains deferred.
     upstream-`na` argument evaluation, arity/type, and UDF side-effect rules
     remain unchanged. No imported UDT identity or public schema is widened.
     Done.
+117. The same concrete matrix-result producer set now exposes terminal
+    `.remove_row(row)`. It validates one simple-int row index, removes the
+    selected complete row, including from a zero-column matrix, while
+    preserving column count and element kind, returns `void`, and cannot
+    continue. Imported and built-in producers
+    isolate shape changes in fresh matrices, while local alias-returning
+    producers retain shared-shape behavior. Bounds/`na` indexes, upstream-`na`
+    argument evaluation, arity/type, and UDF side-effect rules remain
+    unchanged. No imported UDT identity or public schema is widened. Done.

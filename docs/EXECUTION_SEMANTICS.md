@@ -1282,15 +1282,22 @@ without changing shape or concrete element kind, returns `void`, and cannot
 continue. Equal indexes are a no-op. Bounds/`na` index errors, upstream-`na`
 argument evaluation, invalid arity/type, and UDF side-effect rejection retain
 ordinary `matrix.swap_columns` behavior.
+Every concrete matrix-valued call result also supports terminal
+`.remove_row(row)` with the same alias-versus-fresh storage split. It requires
+one simple-int row index, removes the selected complete row, including from a
+zero-column matrix, while preserving column count and concrete element kind,
+returns `void`, and cannot continue.
+Bounds/`na` index errors, upstream-`na` argument evaluation, invalid arity/type,
+and UDF side-effect rejection retain ordinary `matrix.remove_row` behavior.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
-broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.swap_rows(...)`/`.swap_columns(...)` fail closed. The existing bound-receiver
+broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)` fail closed. The existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch. Exact
 bound numeric-matrix-receiver matrix-valued `matrix_id.mult(other)` results now
-share the thirty-nine matrix helpers and the copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/
+share the forty matrix helpers and the copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/
 predicate/aggregate-reader continuation rules for matrix or
 scalar operands while preserving the existing overload, shape, `na`, empty
 inner dimension, and cell-budget boundaries. Unqualified local-UDF results that infer
-a concrete supported matrix kind now share the thirty-nine matrix helpers through
+a concrete supported matrix kind now share the forty matrix helpers through
 `$call_result`. Parameter passthrough, block aliases, nested calls, same-kind
 control flow, constructed and matrix-operation returns, named/reordered
 arguments, and zero dimensions keep their normal call-specific float/int/bool/
@@ -1303,7 +1310,7 @@ results with a concrete supported matrix kind share those helpers across alias-
 qualified, block/nested/control-flow, five-kind, zero-dimension, dual-alias,
 independent-copy, and copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose-continuation paths. Unknown/`na`, scalar, array,
 map, unregistered or unresolved user-function matrix results, broader-helper,
-mutation other than terminal `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.swap_rows(...)`/`.swap_columns(...)`, and terminal-read continuation cases
+mutation other than terminal `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)`, and terminal-read continuation cases
 remain fail closed. The row/
 column-array transition applies uniformly to every concrete matrix producer described
 below; producer-specific “copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose-only” wording refers only to continuing as a

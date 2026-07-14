@@ -1085,6 +1085,14 @@ Current baseline:
   bounds/`na` indexes, upstream-`na` argument evaluation, invalid type/arity,
   UDF-side-effect, and public-schema boundaries are fixture-backed; remaining
   matrix-result mutations stay gated.
+  The next row-shape mutation slice adds terminal `.remove_row(row)` to the
+  same producer set. It requires one simple-int row index, removes the selected
+  complete row, including from a zero-column matrix, while preserving column
+  count and element kind, returns `void`, and cannot continue. Local aliases
+  update shared shape; fresh producer
+  results isolate the change. Bounds/`na` indexes, upstream-`na` argument
+  evaluation, invalid type/arity, UDF-side-effect, and public-schema boundaries
+  are fixture-backed; remaining matrix-result mutations stay gated.
 
 Remaining internal work:
 
