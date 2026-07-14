@@ -1927,6 +1927,12 @@ array.from(10, 20, 30).insert(4, 40)
 "#,
         "array index 4 is out of bounds for array of size 3",
     );
+    assert_array_bounds_error(
+        r#"indicator("array call-result set bounds")
+array.from(10, 20, 30).set(3, 40)
+"#,
+        "array index 3 is out of bounds for array of size 3",
+    );
 }
 
 #[test]

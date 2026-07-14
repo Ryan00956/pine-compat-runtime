@@ -573,3 +573,8 @@ imported_call_result_insert_source = array.from(left.First.new(103.0, 1030.0))
 left.direct(imported_call_result_insert_source).insert(0, left.First.new(104.0, 1040.0))
 imported_call_result_insert_first = imported_call_result_insert_source.first()
 plot(imported_call_result_insert_source.size() == 2 and imported_call_result_insert_first.shared == 104.0 and imported_call_result_insert_first.other == 1040.0 ? 1 : 0, "imported_call_result_insert_alias")
+
+imported_call_result_set_source = array.from(left.First.new(105.0, 1050.0))
+left.direct(imported_call_result_set_source).set(0, left.First.new(106.0, 1060.0))
+imported_call_result_set_first = imported_call_result_set_source.first()
+plot(imported_call_result_set_source.size() == 1 and imported_call_result_set_first.shared == 106.0 and imported_call_result_set_first.other == 1060.0 ? 1 : 0, "imported_call_result_set_alias")

@@ -782,3 +782,8 @@ local_call_result_insert_source = array.from(First.new(193.0, 1930.0))
 return_identity(local_call_result_insert_source).insert(0, First.new(194.0, 1940.0))
 local_call_result_insert_first = local_call_result_insert_source.first()
 plot(local_call_result_insert_source.size() == 2 and local_call_result_insert_first.shared == 194.0 and local_call_result_insert_first.other == 1940.0 ? 1 : 0, "local_call_result_insert_alias")
+
+local_call_result_set_source = array.from(First.new(195.0, 1950.0))
+return_identity(local_call_result_set_source).set(0, First.new(196.0, 1960.0))
+local_call_result_set_first = local_call_result_set_source.first()
+plot(local_call_result_set_source.size() == 1 and local_call_result_set_first.shared == 196.0 and local_call_result_set_first.other == 1960.0 ? 1 : 0, "local_call_result_set_alias")

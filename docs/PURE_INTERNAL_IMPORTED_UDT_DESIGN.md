@@ -1653,3 +1653,13 @@ return/parameter flow remains deferred.
     no-ops after value evaluation; bounds, kind/identity, arity, capacity, and
     UDF-body boundaries remain fixture-backed. No imported identity or public
     schema field is widened. Done.
+106. The same producer set additionally exposes terminal top-level
+    `.set(index, value)`. It accepts a simple-int-compatible index plus one
+    element-compatible scalar/object/`chart.point` or concrete imported UDT
+    value, replaces the positive or in-range negative slot without changing
+    length, returns `void`, and cannot continue. Imported/local alias results
+    and nested slices write shared parent backing; fresh matrix/map/
+    `matrix.mult` snapshots stay source-independent. Explicit `na` indexes and
+    upstream-`na` results remain no-ops after value evaluation; empty/out-of-
+    range, kind/identity, arity, and UDF-body boundaries remain fixture-backed.
+    No imported identity or public schema field is widened. Done.

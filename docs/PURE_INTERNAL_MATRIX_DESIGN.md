@@ -1703,6 +1703,15 @@ Recommended future slices:
     Negative/end/`na` index, bounds, kind/arity, upstream-`na`, capacity, and
     UDF-side-effect boundaries retain ordinary behavior, while matrix-valued
     continuation and public schemas remain unchanged.
+120. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.set(index, value)`, including row/column/eigenvalue arrays reached after a
+    concrete matrix call result. It validates the simple-int-compatible index
+    and resolved scalar kind, replaces one fresh-array snapshot slot without
+    changing length, returns `void`, and cannot continue; source matrices
+    remain unchanged. Negative/`na`/empty/out-of-range, kind/arity, upstream-
+    `na`, and UDF-side-effect boundaries retain ordinary behavior, while
+    matrix-valued continuation and public schemas remain unchanged.
 
 ## Completion Gate For Future Positive Support
 

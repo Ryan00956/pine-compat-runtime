@@ -507,6 +507,13 @@ Current baseline:
   and cannot continue; fresh derived snapshots stay source-independent.
   Bounds, value/arity, upstream-`na`, capacity, and UDF-side-effect boundaries
   retain ordinary behavior; public schemas remain unchanged.
+  The indexed replacement slice adds top-level `.set(index, value)` across the
+  same producer set. It preserves simple-int-compatible positive, in-range
+  negative, explicit-`na`, empty, and out-of-range index behavior, validates
+  element kind or concrete UDT identity, replaces an alias/live-slice parent
+  slot without changing length, returns `void`, and cannot continue; fresh
+  snapshots remain source-independent. Value/arity, upstream-`na`, and UDF-
+  side-effect boundaries retain ordinary behavior; public schemas stay fixed.
   The following closed slice admits exact
   `matrix.new<float|int|bool|string|color>` template results. They preserve the
   registered element kind, requested rectangular shape, type-compatible

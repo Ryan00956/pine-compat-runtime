@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal top-level `.set(index, value)` to every concrete array call
+  result. It preserves simple-int-compatible positive, in-range negative,
+  explicit-`na`, empty, and out-of-range behavior; validates scalar/object/
+  `chart.point` kind or same-local/same-imported scalar-tree UDT identity;
+  replaces one slot without changing length; returns `void`; and cannot
+  continue. Alias/live-slice writes reach backing parents, while fresh matrix/
+  map/`matrix.mult` snapshots stay independent. Type/arity, upstream-`na`, and
+  UDF-side-effect boundaries retain ordinary behavior; public schemas are
+  unchanged.
 - Added terminal top-level `.insert(index, value)` to every concrete array call
   result. It preserves simple-int-compatible positive, in-range negative, end,
   and `na` index behavior; validates scalar/object/`chart.point` kind or same-
