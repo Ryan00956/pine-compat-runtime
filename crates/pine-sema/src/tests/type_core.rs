@@ -486,7 +486,7 @@ plot(na(missing_match_regex) ? 1 : 0)
 plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2) == "" and split_words.get(3) == "C" ? 1 : 0)
 plot(split_chars.size() == 2 and split_chars.get(0) == "x" and split_chars.get(1) == "y" and na(split_missing) ? 1 : 0)
 plot(formatted_time_default == "2021-01-01T00:00:00+0000" and formatted_time_date == "2021-01-01" ? 1 : 0)
-plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and na(missing_format_time) ? 1 : 0)
+plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and missing_format_time == "1970-01-01T00:00:00+0000" ? 1 : 0)
 "##,
     );
 

@@ -1967,11 +1967,12 @@ separators split the source into Unicode scalar values. It returns `na` for
 `str.format_time` supports UNIX timestamps in milliseconds and UTC/GMT/numeric
 fixed-offset or IANA timezone strings such as `UTC+4`, `GMT-5`, `+05:30`, and
 `America/New_York`. IANA offsets are resolved at the supplied timestamp, so
-DST and local date rollover are reflected in the formatted value. Omitted
-or `na` `format` defaults to `yyyy-MM-dd'T'HH:mm:ssZ`; omitted or `na`
-`timezone` defaults to UTC. Supported tokens include `y`/`Y`, `M`, `d`, `H`,
-`D`, `E`, `w`, `W`, `h`, `m`, `s`, `S`, `a`, `Z`, short `z`/`zz`/`zzz`,
-and single-quoted literals.
+DST and local date rollover are reflected in the formatted value. A `na`
+timestamp is replaced with `0` and formats the UNIX epoch. Omitted or `na`
+`format` defaults to `yyyy-MM-dd'T'HH:mm:ssZ`; omitted or `na` `timezone`
+defaults to UTC. Supported tokens include `y`/`Y`, `M`, `d`, `H`, `D`, `E`,
+`w`, `W`, `h`, `m`, `s`, `S`, `a`, `Z`, short `z`/`zz`/`zzz`, and
+single-quoted literals.
 `D` renders the day of the year with optional zero-padding, `E` renders short
 or full weekday names, `w` renders the current ISO week-of-year subset, and `W`
 renders the current Monday-based week-of-month subset, both with optional

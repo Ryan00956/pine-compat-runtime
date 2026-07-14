@@ -172,7 +172,7 @@ plot(na(missing_match_regex) and na(missing_match_pattern) ? 1 : 0)
 plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2) == "" and split_words.get(3) == "C" and split_missing_separator_literal.size() == 1 and split_missing_separator_literal.get(0) == "A,B" ? 1 : 0)
 plot(split_chars.size() == 2 and split_chars.get(0) == "x" and split_chars.get(1) == "y" and split_unicode.size() == 2 and split_unicode.get(0) == "å" and split_unicode.get(1) == "β" and split_empty_source_separator.size() == 1 and split_empty_source_separator.get(0) == "" and split_empty_source_chars.size() == 0 and na(split_missing) and na(split_missing_separator) ? 1 : 0)
 plot(formatted_time_default == "2021-01-01T00:00:00+0000" and formatted_time_date == "2021-01-01" and formatted_time_na_format == "2021-01-01T00:00:00+0000" ? 1 : 0)
-plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and na(missing_format_time) ? 1 : 0)
+plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and missing_format_time == "1970-01-01T00:00:00+0000" ? 1 : 0)
 plot(formatted_time_alias == "00:00:00+0000" and formatted_time_gmt_alias == "00:00:00+0000" and formatted_time_na_timezone == "00:00:00+0000" ? 1 : 0)
 plot(formatted_time_fixed_east == "2021-01-01 04:00:00+0400" and formatted_time_fixed_west == "2020-12-31 19:00:00-0500" and formatted_time_numeric_offset == "05:30:00+0530" ? 1 : 0)
 plot(formatted_time_day_of_year == "1 01 001" and formatted_time_day_of_year_later == "33 033" ? 1 : 0)
@@ -364,6 +364,30 @@ plot(str.format_time(1609502400000, "h hh a", "UTC") == "0 00 PM" ? 1 : 0)
 plot(str.format_time(1609506000000, "h hh a", "UTC") == "1 01 PM" ? 1 : 0)
 plot(str.format("{0,time,h hh a}", 1609459200000) == "0 00 AM" ? 1 : 0)
 plot(str.format("{0,time,h hh a}", 1609502400000) == "0 00 PM" ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("result");
+    for plot in &result.plots {
+        assert_values_close(&plot.values, &[1.0]);
+    }
+}
+
+#[test]
+fn formats_missing_timestamps_as_unix_epoch() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("missing timestamp epoch")
+plot(str.format_time(na) == "1970-01-01T00:00:00+0000" ? 1 : 0)
+plot(str.format_time(na, na, na) == "1970-01-01T00:00:00+0000" ? 1 : 0)
+plot(str.format_time(na, "yyyy-MM-dd HH:mm:ssZ z", "UTC-5") == "1969-12-31 19:00:00-0500 GMT-05:00" ? 1 : 0)
+plot(str.format_time(na, "yyyy-MM-dd HH:mm:ssZ z", "America/New_York") == "1969-12-31 19:00:00-0500 EST" ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);

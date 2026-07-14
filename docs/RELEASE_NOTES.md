@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Corrected `str.format_time()` handling for a `na` timestamp. The function now
+  replaces the missing value with `0` and formats the UNIX epoch through the
+  same UTC, fixed-offset, or IANA timezone path, while `na` format and timezone
+  arguments retain their documented defaults.
 - Corrected `h`/`hh` formatting at midnight and noon in the shared date/time
   formatter. The 12-hour value now follows the documented `0..11` range, with
   `hh` adding a leading zero and `a` continuing to distinguish `AM` from `PM`;

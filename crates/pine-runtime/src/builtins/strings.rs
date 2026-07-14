@@ -728,7 +728,7 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let timestamp = match self.eval_expr(&args[0].value)? {
             PineValue::Int(value) => value,
-            PineValue::Na => return Ok(PineValue::Na),
+            PineValue::Na => 0,
             _ => return Ok(PineValue::Na),
         };
         let format = if let Some(arg) = args.get(1) {
