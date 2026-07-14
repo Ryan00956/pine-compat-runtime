@@ -1,3 +1,5 @@
+use std::fmt::Write as _;
+
 use pine_ir::{HirCallArg, HirExpr, HirUserTypeInfo};
 use regex::Regex;
 
@@ -187,6 +189,12 @@ fn push_rust_regex_flags(result: &mut String, flags: &PineRegexFlags<'_>) {
     result.push(if flags.scoped { ':' } else { ')' });
 }
 
+fn push_pine_regex_quoted(result: &mut String, quoted: &str) {
+    for ch in quoted.chars() {
+        write!(result, r"\x{{{:X}}}", ch as u32).expect("writing to a String cannot fail");
+    }
+}
+
 pub(crate) fn normalize_pine_regex(pattern: &str) -> String {
     const HORIZONTAL_WHITESPACE: &str =
         r"[ \t\x{00A0}\x{1680}\x{180E}\x{2000}-\x{200A}\x{202F}\x{205F}\x{3000}]";
@@ -217,6 +225,18 @@ pub(crate) fn normalize_pine_regex(pattern: &str) -> String {
                 result.push(slash);
                 break;
             };
+            if escaped == 'Q' {
+                let quoted_start = index + slash.len_utf8() + escaped.len_utf8();
+                let quoted_rest = &pattern[quoted_start..];
+                if let Some(quoted_len) = quoted_rest.find(r"\E") {
+                    push_pine_regex_quoted(&mut result, &quoted_rest[..quoted_len]);
+                    index = quoted_start + quoted_len + r"\E".len();
+                } else {
+                    push_pine_regex_quoted(&mut result, quoted_rest);
+                    index = pattern.len();
+                }
+                continue;
+            }
             let replacement = match escaped {
                 'h' => Some(HORIZONTAL_WHITESPACE),
                 'H' => Some(NON_HORIZONTAL_WHITESPACE),

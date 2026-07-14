@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added `str.match()` support for `\Q...\E` literal regex quoting, including
+  metacharacters, backslashes, quoted class delimiters, whitespace and comments
+  in verbose mode, resumption of regex syntax after `\E`, and quotes extending
+  to the pattern end when `\E` is omitted.
 - Added `str.match()` support for Pine's `\h` and `\H` horizontal-whitespace
   regex classes, including the complete fixed Unicode character set, character
   class nesting, and identical behavior with Unicode-aware mode enabled or

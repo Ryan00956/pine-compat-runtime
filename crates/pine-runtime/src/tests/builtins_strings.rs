@@ -49,6 +49,26 @@ fn normalizes_pine_regex_horizontal_whitespace_classes() {
 }
 
 #[test]
+fn normalizes_pine_regex_quoted_literals() {
+    assert_eq!(
+        normalize_pine_regex(r"\Q(?U)\d[.]# \E\d"),
+        r"\x{28}\x{3F}\x{55}\x{29}\x{5C}\x{64}\x{5B}\x{2E}\x{5D}\x{23}\x{20}[0-9]"
+    );
+
+    let verbose = Regex::new(&normalize_pine_regex(r"(?x)^\Q# [ ]\E$"))
+        .expect("normalized verbose quoted regex");
+    assert!(verbose.is_match("# [ ]"));
+
+    let in_class = Regex::new(&normalize_pine_regex(r"^[\Q]-\E]+$"))
+        .expect("normalized quoted character class regex");
+    assert!(in_class.is_match("]-"));
+
+    let unclosed =
+        Regex::new(&normalize_pine_regex(r"^\Q[a]+$")).expect("normalized unclosed quoted regex");
+    assert!(unclosed.is_match("[a]+$"));
+}
+
+#[test]
 fn runs_string_helpers() {
     let source = SourceFile::new(
         "test.pine",
@@ -200,6 +220,12 @@ match_non_horizontal = str.match(" A", "\\H")
 match_horizontal_unicode_on = str.match(" ", "(?U)\\h")
 match_horizontal_unicode_off = str.match(" ", "(?-U)\\h")
 match_horizontal_class = str.match("A ", "[\\h]")
+match_quoted_meta = str.match("x[a-z]+(?U)# y", "\\Q[a-z]+(?U)# \\E")
+match_quoted_escape = str.match("\\d123", "\\Q\\d\\E")
+match_quoted_verbose = str.match("# [ ]", "(?x)\\Q# [ ]\\E")
+match_quoted_class = str.match("]-", "[\\Q]-\\E]+")
+match_quoted_unclosed = str.match("[b]+", "\\Q[b]+")
+match_quoted_then_ascii = str.match("[a]123", "\\Q[a]\\E\\d+")
 missing_match_regex = str.match(na, ".+")
 missing_match_pattern = str.match("NASDAQ:AAPL", na)
 split_words = str.split("A,B,,C", ",")
@@ -261,6 +287,7 @@ plot(match_ascii_space == " " and match_unicode_space == " " and match_ascii_n
 plot(match_ascii_boundary == "A" and match_unicode_boundary == "" and match_ascii_non_boundary == "" and match_unicode_non_boundary == "A" and match_ascii_class == "1" ? 1 : 0)
 plot(match_scoped_unicode_digit == "１" and match_scoped_unicode == "" and match_toggled_unicode == "１2" and match_unicode_greedy == "abc" ? 1 : 0)
 plot(match_horizontal_tab == "\t" and match_horizontal_em_space == " " and match_non_horizontal == "A" and match_horizontal_unicode_on == " " and match_horizontal_unicode_off == " " and match_horizontal_class == " " ? 1 : 0)
+plot(match_quoted_meta == "[a-z]+(?U)# " and match_quoted_escape == "\\d" and match_quoted_verbose == "# [ ]" and match_quoted_class == "]-" and match_quoted_unclosed == "[b]+" and match_quoted_then_ascii == "[a]123" ? 1 : 0)
 plot(na(missing_match_regex) and na(missing_match_pattern) ? 1 : 0)
 plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2) == "" and split_words.get(3) == "C" and split_missing_separator_literal.size() == 1 and split_missing_separator_literal.get(0) == "A,B" ? 1 : 0)
 plot(split_chars.size() == 2 and split_chars.get(0) == "x" and split_chars.get(1) == "y" and split_unicode.size() == 2 and split_unicode.get(0) == "å" and split_unicode.get(1) == "β" and split_empty_source_separator.size() == 1 and split_empty_source_separator.get(0) == "" and split_empty_source_chars.size() == 0 and na(split_missing) and na(split_missing_separator) ? 1 : 0)
