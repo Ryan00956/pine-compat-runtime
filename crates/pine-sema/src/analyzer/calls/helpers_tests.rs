@@ -16,6 +16,7 @@ mod tests {
             ("get", "matrix.get"),
             ("set", "matrix.set"),
             ("fill", "matrix.fill"),
+            ("reverse", "matrix.reverse"),
             ("copy", "matrix.copy"),
             ("diff", "matrix.diff"),
             ("eigenvectors", "matrix.eigenvectors"),
@@ -56,9 +57,7 @@ mod tests {
             );
         }
 
-        for method_name in ["size", "reverse"] {
-            assert_eq!(matrix_call_result_builtin_name(method_name), None);
-        }
+        assert_eq!(matrix_call_result_builtin_name("size"), None);
     }
 
     #[test]

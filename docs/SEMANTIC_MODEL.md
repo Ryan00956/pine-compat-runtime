@@ -838,11 +838,16 @@ validates the receiver's concrete element kind and preserves alias writes for
 local UDF/user-method results versus isolated writes for fresh namespace,
 bound-transform, imported-function, and imported-method results. Empty and
 upstream-`na` no-op behavior and UDF side-effect rejection are unchanged.
+`.reverse()` also returns terminal `void` for every concrete matrix call-result
+producer. It reverses the row-major cell sequence without changing shape and
+preserves local UDF/user-method alias writes versus isolated writes for fresh
+namespace, bound-transform, imported-function, and imported-method results.
+Empty/upstream-`na`, invalid arity, and UDF side-effect behavior are unchanged.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
-broader helpers, and mutation other than `.set(...)`/`.fill(...)` fail closed. The
+broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()` fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the thirty-five
+exact bound matrix-valued `matrix_id.mult(other)` results share the thirty-six
 matrix helpers for matrix or scalar operands with the
 copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/predicate/aggregate-reader continuation
 rules.

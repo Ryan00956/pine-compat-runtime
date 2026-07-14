@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added terminal `.reverse()` to every concrete matrix call result. It reverses
+  the row-major cell sequence in place without changing shape, returns `void`,
+  and cannot continue. Local UDF and local user-method alias results update
+  shared storage; fresh namespace, bound-transform, imported-function, and
+  imported-method results isolate the reordering. Empty and upstream-`na`
+  results, invalid arity, and UDF side-effect boundaries retain ordinary
+  `matrix.reverse` behavior; public schemas are unchanged.
 - Added terminal `.fill(value)` to every concrete matrix call result. It
   preserves the receiver's float/int/bool/string/color element kind, fills all
   cells in place, returns `void`, and cannot continue. Local UDF and local

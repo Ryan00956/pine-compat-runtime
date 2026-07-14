@@ -1758,6 +1758,14 @@ Recommended future slices:
     matrices. Empty and upstream-`na` results, value evaluation, invalid type/
     arity, UDF-side-effect, and public-schema boundaries retain ordinary
     `matrix.fill` behavior. Done.
+126. Every concrete matrix call result additionally exposes terminal
+    `.reverse()`. It reverses the row-major cell sequence in place without
+    changing shape, returns `void`, accepts no explicit arguments, and cannot
+    continue. Local UDF and local user-method alias results update shared
+    matrix storage; fresh namespace, bound-transform, imported-function, and
+    imported-method results isolate writes from source matrices. Empty and
+    upstream-`na` results, invalid arity, UDF-side-effect, and public-schema
+    boundaries retain ordinary `matrix.reverse` behavior. Done.
 
 ## Completion Gate For Future Positive Support
 

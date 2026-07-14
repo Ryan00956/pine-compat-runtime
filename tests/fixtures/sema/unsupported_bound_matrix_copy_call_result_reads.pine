@@ -7,7 +7,7 @@ array_values = array.from(1.0, 2.0)
 bad_row = values.copy().get("bad", 0)
 bad_column = values.copy().get(0, "bad")
 values.copy().set(0, 0, "bad")
-reverse_result = values.copy().reverse()
+values.copy().reverse(1)
 size_result = values.copy().size()
 wrong_receiver = array_values.copy().rows()
 

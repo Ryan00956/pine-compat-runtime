@@ -1717,3 +1717,10 @@ return/parameter flow remains deferred.
     returning producers retain shared-storage behavior. Empty/upstream-`na`,
     invalid arity, and UDF-side-effect rules remain unchanged. No imported UDT
     identity or public schema is widened. Done.
+113. The same concrete matrix-result producer set now exposes terminal
+    `.reverse()`. It reverses the row-major cell sequence without changing
+    shape, returns `void`, and cannot continue. Imported and built-in producers
+    isolate writes in fresh matrices, while local alias-returning producers
+    retain shared-storage behavior. Empty/upstream-`na`, invalid arity, and UDF
+    side-effect rules remain unchanged. No imported UDT identity or public
+    schema is widened. Done.
