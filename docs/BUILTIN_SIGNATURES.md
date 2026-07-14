@@ -1979,7 +1979,9 @@ zero-padding. Short `z` tokens render timestamp-specific IANA abbreviations
 such as `EST`/`EDT`, `UTC` for zero offset, or canonical `GMT±HH:mm` text for
 other fixed offsets. Full localized `zzzz` names and exchange timezone defaults
 remain unsupported. Quoted literals can contain doubled apostrophes, and `''`
-outside a quoted block also renders one literal apostrophe.
+outside a quoted block also renders one literal apostrophe. `S` renders the
+complete `0..999` millisecond value, while `SS` and `SSS` add leading zeroes to
+a minimum width of two or three without truncating larger values.
 
 ## Math
 

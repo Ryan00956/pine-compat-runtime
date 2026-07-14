@@ -153,6 +153,9 @@ fn format_weekday(weekday: chrono::Weekday, width: usize) -> &'static str {
 }
 
 fn format_millis(millis: u32, width: usize) -> String {
-    let value = format!("{millis:03}");
-    value[..width.min(3)].to_owned()
+    match width {
+        1 => millis.to_string(),
+        2 => format!("{millis:02}"),
+        _ => format!("{millis:03}"),
+    }
 }

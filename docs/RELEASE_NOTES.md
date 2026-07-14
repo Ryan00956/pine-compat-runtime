@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Corrected `S`/`SS`/`SSS` millisecond formatting in the shared date/time
+  formatter. Single `S` now preserves the complete millisecond value, while
+  repeated tokens add leading zeroes to the requested minimum width without
+  truncating values; both `str.format_time()` and UTC date/time placeholders
+  are covered.
 - Corrected doubled-apostrophe handling in shared date/time format patterns.
   Both `str.format_time()` and UTC `str.format()` date/time placeholders now
   render `''` as one literal apostrophe, including inside quoted text such as

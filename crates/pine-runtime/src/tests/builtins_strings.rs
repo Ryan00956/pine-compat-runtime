@@ -166,7 +166,7 @@ plot(text_bool == "true" and text_bool_false == "false" and text_string == "ok" 
 plot(text_array == "[1, 3, NaN]" ? 1 : 0)
 plot(formatted == "A=42, B=1.25, A2=42" and formatted_missing == "Missing {2}" ? 1 : 0)
 plot(formatted_number == "Rounded 1.20 Percent 3.45%" and formatted_integer == "Integer 1,235" and formatted_currency == "Currency $1,234.50" ? 1 : 0)
-plot(formatted_array == "Values [1.2, 2.6, NaN]" and formatted_datetime == "2021-01-01T00:00:00+0000" and formatted_datetime_tokens == "1 Fri 53 1 00:00:00+0000" and formatted_datetime_clock_tokens == "13 13 1 01:04:05.1 123 PM" and formatted_quote == "Literal {0} and apostrophe ' X" and na(formatted_na) and formatted_na_arg == "Missing NaN" and formatted_bool == "Flag true" ? 1 : 0)
+plot(formatted_array == "Values [1.2, 2.6, NaN]" and formatted_datetime == "2021-01-01T00:00:00+0000" and formatted_datetime_tokens == "1 Fri 53 1 00:00:00+0000" and formatted_datetime_clock_tokens == "13 13 1 01:04:05.123 123 PM" and formatted_quote == "Literal {0} and apostrophe ' X" and na(formatted_na) and formatted_na_arg == "Missing NaN" and formatted_bool == "Flag true" ? 1 : 0)
 plot(match_prefix == "NASDAQ:" and match_suffix == "AAPL" and match_missing == "" ? 1 : 0)
 plot(na(missing_match_regex) and na(missing_match_pattern) ? 1 : 0)
 plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2) == "" and split_words.get(3) == "C" and split_missing_separator_literal.size() == 1 and split_missing_separator_literal.get(0) == "A,B" ? 1 : 0)
@@ -178,7 +178,7 @@ plot(formatted_time_fixed_east == "2021-01-01 04:00:00+0400" and formatted_time_
 plot(formatted_time_day_of_year == "1 01 001" and formatted_time_day_of_year_later == "33 033" ? 1 : 0)
 plot(formatted_time_weekday == "Fri Friday" and formatted_time_weekday_later == "Tue Tuesday" ? 1 : 0)
 plot(formatted_time_week_of_year == "53 53" and formatted_time_week_of_year_later == "5 05" ? 1 : 0)
-plot(formatted_time_week_of_month == "1 01" and formatted_time_week_of_month_later == "2 02" and formatted_time_clock_tokens == "13 13 1 01:04:05.1 123 PM" ? 1 : 0)
+plot(formatted_time_week_of_month == "1 01" and formatted_time_week_of_month_later == "2 02" and formatted_time_clock_tokens == "13 13 1 01:04:05.123 123 PM" ? 1 : 0)
 plot(str.tostring(1.234567891, format.mintick) == text_price ? 1 : 0)
 string_values = array.from("head", "tail")
 plot(str.tostring(string_values) == "[head, tail]" ? 1 : 0)
@@ -315,6 +315,30 @@ fn formats_datetime_literal_apostrophes() {
 plot(str.format_time(1609506245123, "hh 'o''clock' a ''", "UTC") == "01 o'clock PM '" ? 1 : 0)
 plot(str.format("{0,time,hh 'o''clock' a ''}", 1609506245123) == "01 o'clock PM '" ? 1 : 0)
 plot(str.format_time(1609506245123, "'year=''yyyy''' yyyy", "UTC") == "year='yyyy' 2021" ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("result");
+    for plot in &result.plots {
+        assert_values_close(&plot.values, &[1.0]);
+    }
+}
+
+#[test]
+fn formats_datetime_millisecond_widths() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("datetime millisecond widths")
+plot(str.format_time(1609506245000, "S SS SSS", "UTC") == "0 00 000" ? 1 : 0)
+plot(str.format_time(1609506245005, "S SS SSS", "UTC") == "5 05 005" ? 1 : 0)
+plot(str.format_time(1609506245123, "S SS SSS", "UTC") == "123 123 123" ? 1 : 0)
+plot(str.format("{0,time,S SS SSS}", 1609506245005) == "5 05 005" ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
