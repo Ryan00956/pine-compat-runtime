@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added `str.match()` support for Pine/Java Unicode block properties in
+  `\p{InBlockName}` and `\p{Block=BlockName}` form, including `\P` negation,
+  Java block aliases, character-class nesting, quoted preservation, and the
+  Unicode 16.0 block range set. Block membership is independent of `(?U)`;
+  script and general-category properties retain their ordinary behavior.
 - Corrected `str.match()` Java/Pine POSIX `\p{...}` and `\P{...}` classes to
   use ASCII definitions by default and Unicode compatibility definitions under
   global/scoped `(?U)`, including `(?-U)` restoration, character-class nesting,

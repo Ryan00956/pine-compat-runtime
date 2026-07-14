@@ -3,6 +3,7 @@ use std::fmt::Write as _;
 use pine_ir::{HirCallArg, HirExpr, HirUserTypeInfo};
 use regex::Regex;
 
+use super::regex_unicode_blocks::pine_unicode_block;
 use crate::builtins::time::{
     format_datetime_with_timezone, format_fixed_timezone_offset, format_utc_datetime,
     timezone_offset_and_short_name, utc_datetime_from_millis,
@@ -257,6 +258,28 @@ fn pine_posix_class(name: &str, unicode: bool, negated: bool) -> Option<&'static
     Some(if negated { negative } else { positive })
 }
 
+fn pine_unicode_block_property(property: &str) -> Option<&str> {
+    if let Some(name) = property.strip_prefix("In").filter(|name| !name.is_empty()) {
+        return Some(name);
+    }
+    let (kind, name) = property.split_once('=')?;
+    (kind.eq_ignore_ascii_case("Block") && !name.is_empty()).then_some(name)
+}
+
+fn push_pine_unicode_block(result: &mut String, start: u32, end: u32, negated: bool) {
+    if start >= 0xD800 && end <= 0xDFFF {
+        result.push_str(if negated {
+            r"[\x{0}-\x{D7FF}\x{E000}-\x{10FFFF}]"
+        } else {
+            r"[a&&b]"
+        });
+        return;
+    }
+
+    result.push_str(if negated { "[^" } else { "[" });
+    write!(result, r"\x{{{start:X}}}-\x{{{end:X}}}]").expect("writing to a String cannot fail");
+}
+
 struct NormalizedPineRegex {
     pattern: String,
     final_newline_captures: Vec<String>,
@@ -337,12 +360,18 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                     let name_start = property_start + 1;
                     if let Some(name_len) = pattern[name_start..].find('}') {
                         let name_end = name_start + name_len;
-                        if let Some(replacement) = pine_posix_class(
-                            &pattern[name_start..name_end],
-                            mode.unicode_classes,
-                            escaped == 'P',
-                        ) {
+                        let property = &pattern[name_start..name_end];
+                        if let Some(replacement) =
+                            pine_posix_class(property, mode.unicode_classes, escaped == 'P')
+                        {
                             result.push_str(replacement);
+                            index = name_end + 1;
+                            continue;
+                        }
+                        if let Some((start, end)) =
+                            pine_unicode_block_property(property).and_then(pine_unicode_block)
+                        {
+                            push_pine_unicode_block(&mut result, start, end, escaped == 'P');
                             index = name_end + 1;
                             continue;
                         }

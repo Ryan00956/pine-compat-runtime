@@ -1990,7 +1990,13 @@ also supports the Java/Pine POSIX property names `Lower`, `Upper`, `ASCII`,
 definitions by default and their Unicode compatibility definitions under
 global or scoped `(?U)`; `(?-U)` restores ASCII behavior. POSIX names are
 case-sensitive by default and case-insensitive under `(?U)`. Other Unicode
-property references retain their ordinary Unicode behavior. It also supports
+property references retain their ordinary Unicode behavior. Pine/Java Unicode
+block properties are supported in `\p{InBlockName}` and
+`\p{Block=BlockName}` form, together with their `\P` complements, canonical
+no-space names, and Java public-field aliases. They use the Unicode 16.0 block
+ranges and are independent of `(?U)`; script and general-category properties
+continue through the regex engine unchanged. Block properties can be nested in
+character classes and remain literal in quoted regions. It also supports
 `\Q...\E` literal quoting inside or outside character classes, including quoted
 whitespace and `#` in verbose mode; an omitted closing `\E` quotes through the
 end of the pattern. Fixed-width four-hex-digit Unicode references such as

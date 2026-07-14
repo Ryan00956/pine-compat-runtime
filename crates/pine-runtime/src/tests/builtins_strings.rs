@@ -181,6 +181,62 @@ fn normalizes_pine_regex_posix_classes() {
 }
 
 #[test]
+fn normalizes_pine_regex_unicode_blocks() {
+    assert_eq!(
+        normalize_pine_regex(r"\p{InBasicLatin}\P{Block=Latin-1Supplement}"),
+        r"[\x{0}-\x{7F}][^\x{80}-\x{FF}]"
+    );
+    assert_eq!(
+        normalize_pine_regex(r"(?U)\p{block=basic_latin}(?-U)\p{Block=Greek}\p{InGreekAndCoptic}"),
+        r"[\x{0}-\x{7F}][\x{370}-\x{3FF}][\x{370}-\x{3FF}]"
+    );
+    assert_eq!(
+        normalize_pine_regex(r"\p{IsLatin}\p{Script=Latin}\p{L}\p{gc=L}"),
+        r"\p{IsLatin}\p{Script=Latin}\p{L}\p{gc=L}"
+    );
+    assert_eq!(
+        normalize_pine_regex(r"\Q\p{InBasicLatin}\E\p{InBasicLatin}"),
+        r"\x{5C}\x{70}\x{7B}\x{49}\x{6E}\x{42}\x{61}\x{73}\x{69}\x{63}\x{4C}\x{61}\x{74}\x{69}\x{6E}\x{7D}[\x{0}-\x{7F}]"
+    );
+    assert_eq!(
+        normalize_pine_regex(r"\p{InNoSuchBlock}"),
+        r"\p{InNoSuchBlock}"
+    );
+    assert!(Regex::new(&normalize_pine_regex(r"\p{InBasic-Latin}")).is_err());
+
+    let basic_latin = Regex::new(&normalize_pine_regex(r"[\p{InBasicLatin}]"))
+        .expect("normalized nested Basic Latin block regex");
+    assert_eq!(
+        basic_latin.find("βA").map(|matched| matched.as_str()),
+        Some("A")
+    );
+
+    let latin_one = Regex::new(&normalize_pine_regex(r"\p{Block=Latin-1Supplement}"))
+        .expect("normalized Latin-1 Supplement block regex");
+    assert_eq!(
+        latin_one.find("Aå").map(|matched| matched.as_str()),
+        Some("å")
+    );
+
+    let greek = Regex::new(&normalize_pine_regex(r"\p{InGreek}"))
+        .expect("normalized Greek and Coptic block regex");
+    assert!(greek.is_match("\u{037e}"));
+    assert!(!greek.is_match("A"));
+
+    let todhri = Regex::new(&normalize_pine_regex(r"\p{Block=Todhri}"))
+        .expect("normalized Unicode 16 Todhri block regex");
+    assert!(todhri.is_match("\u{105c0}"));
+    assert!(!todhri.is_match("A"));
+
+    let surrogate = Regex::new(&normalize_pine_regex(r"\p{InHighSurrogates}"))
+        .expect("normalized surrogate block regex");
+    assert!(!surrogate.is_match("A"));
+    let not_surrogate = Regex::new(&normalize_pine_regex(r"\P{InHighSurrogates}"))
+        .expect("normalized negated surrogate block regex");
+    assert!(not_surrogate.is_match("A"));
+}
+
+#[test]
 fn runs_string_helpers() {
     let source = SourceFile::new(
         "test.pine",
@@ -368,6 +424,15 @@ match_posix_scoped_reset = str.match("βa", "(?U:\\p{Lower})(?-U:\\p{Lower})")
 match_posix_unicode_casefold_name = str.match("β", "(?U)\\p{aLpHa}")
 match_unicode_category_unchanged = str.match("β", "\\p{L}")
 match_posix_quoted = str.match("\\p{Lower}", "\\Q\\p{Lower}\\E")
+match_block_in_basic_latin = str.match("βA", "\\p{InBasicLatin}")
+match_block_named_basic_latin = str.match("βA", "\\p{block=basic_latin}")
+match_block_latin1 = str.match("Aå", "\\p{Block=Latin-1Supplement}")
+match_block_negated = str.match("Aå", "\\P{InBasicLatin}")
+match_block_class = str.match("βA", "[\\p{InBasicLatin}]")
+match_block_unicode_scopes = str.match("Aβ", "(?U:\\p{InBasicLatin})(?-U:\\p{Block=Greek})")
+match_block_quoted = str.match("\\p{InBasicLatin}", "\\Q\\p{InBasicLatin}\\E")
+match_script_property_unchanged = str.match("β", "\\p{IsGreek}")
+match_category_assignment_unchanged = str.match("β", "\\p{gc=L}")
 match_anchor_capture_collision = str.match("tail\n", "(?<__pine_final_newline_0>tail)$")
 match_unicode_escape = str.match("x—y", "\\u2014")
 match_unicode_escape_class = str.match("xåy", "[\\u00E5]")
@@ -443,6 +508,8 @@ plot(match_default_dot_line_feed == "A" and match_default_dot_carriage_return ==
 plot(match_dotall_line_terminators == "\r  A" and match_global_dotall_reset == "\rA" and match_scoped_dotall_reset == "\rA" and match_literal_dots == "..." ? 1 : 0)
 plot(match_posix_lower_ascii == "a" and match_posix_lower_unicode == "β" and match_posix_not_lower_ascii == "β" and match_posix_not_lower_unicode == "A" ? 1 : 0)
 plot(match_posix_xdigit_ascii == "F" and match_posix_xdigit_unicode == "𝟙" and match_posix_scoped_reset == "βa" and match_posix_unicode_casefold_name == "β" and match_unicode_category_unchanged == "β" and match_posix_quoted == "\\p{Lower}" ? 1 : 0)
+plot(match_block_in_basic_latin == "A" and match_block_named_basic_latin == "A" and match_block_latin1 == "å" and match_block_negated == "å" and match_block_class == "A" ? 1 : 0)
+plot(match_block_unicode_scopes == "Aβ" and match_block_quoted == "\\p{InBasicLatin}" and match_script_property_unchanged == "β" and match_category_assignment_unchanged == "β" ? 1 : 0)
 plot(match_unicode_escape == "—" and match_unicode_escape_class == "å" and match_unicode_escape_fifth_digit == "a0" and match_unicode_escape_quoted == "\\u2014—" ? 1 : 0)
 plot(na(missing_match_regex) and na(missing_match_pattern) ? 1 : 0)
 plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2) == "" and split_words.get(3) == "C" and split_missing_separator_literal.size() == 1 and split_missing_separator_literal.get(0) == "A,B" ? 1 : 0)
