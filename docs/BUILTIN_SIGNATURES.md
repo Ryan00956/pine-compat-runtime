@@ -1960,7 +1960,10 @@ supported numeric arrays and matrices.
 `str.format` supports indexed placeholders such as `{0}`, numeric placeholders
 such as `{0,number,#.00}`, and fixture-covered `integer`, `percent`, and
 `currency` number presets, plus fixture-covered float-, int-, bool-, and
-string-array placeholders. Matrix values, UDT and tuple values, plus color,
+string-array placeholders. The `percent` preset uses `#,###%`: it multiplies
+the value by 100, rounds to a whole number, inserts grouping separators, and
+appends `%`; custom percent placeholders keep their explicitly requested
+fractional precision. Matrix values, UDT and tuple values, plus color,
 drawing-id, chart.point, and UDT arrays remain outside the `str.format`
 argument subset. It also supports fixture-covered UTC timestamp placeholders
 such as `{0,date,yyyy-MM-dd}` and `{0,time,HH:mm:ssZ}`. Quoted

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Corrected the `str.format()` `percent` number preset to its grouped
+  whole-number `#,###%` behavior while retaining explicit fractional precision
+  for custom percent placeholders.
 - Corrected predefined `format.percent` string conversion to append `%` after
   two-decimal rounding without multiplying the input by 100. Custom formatting
   strings with a trailing `%` token retain their existing scaling behavior.

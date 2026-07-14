@@ -279,7 +279,7 @@ pub(crate) fn format_placeholder(
 
     let format = match parts.next().map(str::trim) {
         Some("integer") => "#,###",
-        Some("percent") => "#.##%",
+        Some("percent") => "#,###%",
         Some("currency") => return Ok(Some(format_currency_placeholder(value, runtime))),
         Some(format) if !format.is_empty() => format,
         _ => "#,###.###",
