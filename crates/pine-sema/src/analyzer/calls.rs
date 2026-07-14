@@ -284,7 +284,7 @@ impl Analyzer {
         let Some(builtin_name) = array_call_result_builtin_name(method_name) else {
             self.unsupported(
                 &format!("array.{method_name}"),
-                "direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove()`, `.push()`, `.unshift()`, `.insert()`, `.set()`, and `.fill()`; bind the result or use the namespace helper",
+                "direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove()`, `.push()`, `.unshift()`, `.insert()`, `.set()`, `.fill()`, and `.sort()`; bind the result or use the namespace helper",
                 callee.span,
             );
             return Some(None);
@@ -303,6 +303,14 @@ impl Analyzer {
                 callee.span,
             );
             return Some(None);
+        }
+        if receiver_type.kind == ValueKind::UserTypeArray && builtin_name == "array.sort" {
+            return Some(self.analyze_user_type_array_sort_call(
+                builtin_name,
+                span,
+                args,
+                arg_types,
+            ));
         }
         if receiver_type.kind != ValueKind::UserTypeArray {
             let signature = pine_builtins::get_phase_1_builtin(builtin_name)

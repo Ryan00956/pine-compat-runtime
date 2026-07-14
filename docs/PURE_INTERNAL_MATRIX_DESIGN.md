@@ -1722,6 +1722,15 @@ Recommended future slices:
     upstream-`na` cases no-op after all supplied arguments are evaluated. It
     returns `void`, cannot continue, remains rejected inside UDFs, and leaves
     matrix-valued continuation and public schemas unchanged.
+122. Every concrete int/float/string row/column array, numeric eigenvalue array,
+    and array-returning `matrix.mult` result additionally exposes terminal top-
+    level `.sort(order?)`, including arrays reached after a concrete matrix call
+    result. It preserves ordinary stable ascending/default or descending
+    ordering on the fresh array snapshot; source matrices remain unchanged.
+    Empty and upstream-`na` results no-op after order evaluation, while bool/
+    color kinds, invalid order/arity, continuation, and UDF-side-effect
+    boundaries stay closed. Matrix-valued continuation and public schemas
+    remain unchanged.
 
 ## Completion Gate For Future Positive Support
 

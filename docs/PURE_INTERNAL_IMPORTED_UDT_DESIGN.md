@@ -1673,3 +1673,13 @@ return/parameter flow remains deferred.
     upstream-`na` cases no-op after all supplied arguments are evaluated. It
     returns `void`, cannot continue, stays rejected inside UDFs, and widens no
     imported identity or public schema field. Done.
+108. The same producer set additionally exposes terminal top-level
+    `.sort(order?, sort_field?)`. Concrete int/float/string results use
+    ordinary stable ascending/default or descending ordering. Concrete
+    imported scalar-tree UDT results require a compile-time root int/float/
+    string field resolved against their exact imported identity. Imported/
+    local aliases and nested slices reorder shared parent backing, while fresh
+    matrix/map/`matrix.mult` snapshots stay source-independent. Empty and
+    upstream-`na` results no-op after order evaluation; unsupported kinds,
+    field/order/arity, terminal continuation, and UDF mutation remain closed.
+    No imported identity or public schema field is widened. Done.

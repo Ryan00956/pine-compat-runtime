@@ -523,6 +523,15 @@ Current baseline:
   upstream-`na` cases no-op after all supplied arguments are evaluated. The
   mutation returns `void`, cannot continue, stays rejected inside UDFs, and
   leaves public schemas unchanged.
+  The in-place ordering slice adds terminal top-level
+  `.sort(order?, sort_field?)` across the same concrete producer set. Int/
+  float/string results preserve ordinary stable ascending/default or descending
+  ordering; same-local and same-imported scalar-tree UDT results require a
+  compile-time root int/float/string field resolved against their exact
+  identity. Alias/live-slice results reorder parent backing, while fresh
+  derived snapshots stay source-independent. Empty/upstream-`na`, unsupported
+  kind, field/order/arity, terminal continuation, and UDF-side-effect behavior
+  remains unchanged; public schemas stay fixed.
   The following closed slice admits exact
   `matrix.new<float|int|bool|string|color>` template results. They preserve the
   registered element kind, requested rectangular shape, type-compatible

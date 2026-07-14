@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal top-level `.sort(order?, sort_field?)` to concrete array call
+  results. Int/float/string results use ordinary stable ascending/default or
+  descending ordering; same-local and same-imported scalar-tree UDT results
+  require a compile-time root int/float/string field resolved against the exact
+  identity. Alias/live-slice results reorder backing parents, while fresh map/
+  matrix/`matrix.mult` snapshots remain independent. Empty and upstream-`na`
+  results no-op after order evaluation. Unsupported kinds, field/order/arity,
+  continuation, and UDF-side-effect boundaries remain closed, and public
+  schemas are unchanged.
 - Added terminal top-level `.fill(value, index_from?, index_to?)` to every
   concrete array call result. It validates the resolved scalar/object/
   `chart.point` kind or same-local/same-imported scalar-tree UDT identity and

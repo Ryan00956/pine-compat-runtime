@@ -338,7 +338,7 @@ string call results across the closed producer families. It returns an
 independent fixed int-index array with stable original indexes, established
 ordering/empty/upstream-`na` behavior, source non-mutation, and nested closed-
 array continuation. Bool/color/object/chart-point, invalid order/arity, direct
-mutation, and UDT call-result `sort_field` ordering before binding remain
+mutation, and UDT call-result `.sort_indices()` before binding remain
 closed.
 Item 104 adds terminal `.every()` to concrete bool, int, or float call results
 across the closed producer families. Nonzero numerics and `true` are truthy;
@@ -1936,7 +1936,7 @@ array with stable original indexes, default ascending or explicit descending
 order, float-`na` and string-empty placement, empty results, upstream-`na`
 propagation, source non-mutation, and nested sort/copy/read/search/
 transformation/statistic continuation. Bool/color/object/chart-point, invalid
-order/arity, direct mutation, and UDT call-result `sort_field` ordering before
+order/arity, direct mutation, and UDT call-result `.sort_indices()` before
 an identity-preserving binding remain closed.
 Item 104 adds terminal `.every()` to concrete bool, int, or float array call
 results across static, cross-namespace, matrix/map-derived, and local/imported
@@ -2058,6 +2058,16 @@ Explicit `na`, negative, reversed, oversized, empty, and upstream-`na` cases
 no-op after all supplied arguments are evaluated. The mutation returns `void`,
 cannot continue, and retains closed kind/identity, arity, and UDF-body
 boundaries without widening public schemas.
+Item 118 adds terminal top-level `.sort(order?, sort_field?)` across the same
+producer and derived-array continuation set. Concrete int/float/string results
+use ordinary stable ascending/default or descending ordering. Same-local and
+same-imported scalar-tree UDT results require a compile-time root int/float/
+string `sort_field`, lowered against their exact identity. Alias results and
+nested slices reorder shared parent backing, while fresh matrix/map/
+`matrix.mult` snapshots leave sources unchanged. Empty and upstream-`na`
+results no-op after order evaluation. Unsupported kinds, field/order/arity,
+terminal continuation, and UDF-body mutation stay closed and fixture-backed;
+public schemas remain unchanged.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

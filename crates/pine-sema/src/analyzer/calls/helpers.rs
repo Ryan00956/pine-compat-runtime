@@ -170,6 +170,7 @@ pub(crate) fn array_call_result_builtin_name(method_name: &str) -> Option<&'stat
         "insert" => Some("array.insert"),
         "set" => Some("array.set"),
         "fill" => Some("array.fill"),
+        "sort" => Some("array.sort"),
         _ => None,
     }
 }

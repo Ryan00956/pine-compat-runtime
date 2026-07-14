@@ -184,6 +184,7 @@ fn rejects_extended_array_helper_rows_without_namespace_result_fixture_set() {
         "array.variance",
         "array.stdev",
         "array.sort_indices",
+        "array.sort",
         "array.join",
         "array.slice",
         "array.clear",

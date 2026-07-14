@@ -636,6 +636,15 @@ Recommended future slices:
     and upstream-`na` cases no-op after all supplied arguments are evaluated.
     It returns `void`, cannot continue, remains rejected inside UDFs, and leaves
     map storage, templates, and public schemas unchanged. Done.
+52. Every concrete int/float/string key/value snapshot additionally exposes
+    terminal top-level `.sort(order?)`, including keys/values reached through
+    supported built-in, copied, local/imported function, and local/imported
+    method map results. It preserves ordinary stable ascending/default or
+    descending ordering on the fresh snapshot; source map entries and insertion
+    order remain unchanged. Empty, typed-`na`, and upstream-`na` results no-op
+    after order evaluation, while bool/color kinds, invalid order/arity,
+    continuation, and UDF-side-effect boundaries stay closed. Map storage,
+    templates, and public schemas remain unchanged. Done.
 
 ## Completion Gate For Future Widening
 
