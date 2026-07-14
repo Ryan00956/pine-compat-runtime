@@ -855,11 +855,18 @@ complete rows while preserving shape and concrete element kind, preserves
 local UDF/user-method alias writes versus isolated fresh-producer writes, and
 treats equal indexes as a no-op. Bounds/`na` indexes, upstream-`na` argument
 evaluation, invalid arity/type, and UDF side-effect behavior are unchanged.
+`.swap_columns(column1, column2)` likewise returns terminal `void` for every
+concrete matrix call-result producer. It validates two simple-int column
+indexes, swaps complete columns while preserving shape and concrete element
+kind, preserves local UDF/user-method alias writes versus isolated fresh-
+producer writes, and treats equal indexes as a no-op. Bounds/`na` indexes,
+upstream-`na` argument evaluation, invalid arity/type, and UDF side-effect
+behavior are unchanged.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
-broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.swap_rows(...)` fail closed. The
+broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.swap_rows(...)`/`.swap_columns(...)` fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the thirty-eight
+exact bound matrix-valued `matrix_id.mult(other)` results share the thirty-nine
 matrix helpers for matrix or scalar operands with the
 copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/predicate/aggregate-reader continuation
 rules.

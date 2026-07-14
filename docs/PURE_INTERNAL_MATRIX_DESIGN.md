@@ -1784,6 +1784,15 @@ Recommended future slices:
     `na` indexes, upstream-`na` argument evaluation, invalid type/arity, UDF-
     side-effect, and public-schema boundaries retain ordinary
     `matrix.swap_rows` behavior. Done.
+129. Every concrete matrix call result additionally exposes terminal
+    `.swap_columns(column1, column2)`. It validates two simple-int column
+    indexes, swaps complete columns without changing shape or concrete element
+    kind, returns `void`, and cannot continue. Local UDF and local user-method
+    alias results update shared storage; fresh namespace, bound-transform,
+    imported-function, and imported-method results isolate the write. Same-
+    index no-op, bounds/`na` indexes, upstream-`na` argument evaluation,
+    invalid type/arity, UDF-side-effect, and public-schema boundaries retain
+    ordinary `matrix.swap_columns` behavior. Done.
 
 ## Completion Gate For Future Positive Support
 

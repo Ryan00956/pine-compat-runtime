@@ -1740,3 +1740,12 @@ return/parameter flow remains deferred.
     behavior. Same-index no-op, bounds/`na` indexes, upstream-`na` argument
     evaluation, arity/type, and UDF side-effect rules remain unchanged. No
     imported UDT identity or public schema is widened. Done.
+116. The same concrete matrix-result producer set now exposes terminal
+    `.swap_columns(column1, column2)`. It validates two simple-int column
+    indexes, swaps complete columns while preserving shape and element kind,
+    returns `void`, and cannot continue. Imported and built-in producers
+    isolate writes in fresh matrices, while local alias-returning producers
+    retain shared-storage behavior. Same-index no-op, bounds/`na` indexes,
+    upstream-`na` argument evaluation, arity/type, and UDF side-effect rules
+    remain unchanged. No imported UDT identity or public schema is widened.
+    Done.

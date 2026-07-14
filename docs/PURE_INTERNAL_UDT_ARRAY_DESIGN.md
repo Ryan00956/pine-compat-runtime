@@ -2122,6 +2122,13 @@ continue. Local aliases update shared storage, while fresh imported and built-
 in results isolate the write; same-index no-op, bounds/`na` indexes, upstream-
 `na` argument evaluation, arity/type, and UDF-side-effect rules remain
 unchanged. This does not widen UDT or UDT-array identity.
+Item 126 adds terminal `.swap_columns(column1, column2)` to the same concrete
+matrix-result producer set. It validates two simple-int column indexes, swaps
+complete columns while preserving shape and element kind, returns `void`, and
+cannot continue. Local aliases update shared storage, while fresh imported and
+built-in results isolate the write; same-index no-op, bounds/`na` indexes,
+upstream-`na` argument evaluation, arity/type, and UDF-side-effect rules remain
+unchanged. This does not widen UDT or UDT-array identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

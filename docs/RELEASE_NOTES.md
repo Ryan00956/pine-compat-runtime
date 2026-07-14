@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added terminal `.swap_columns(column1, column2)` to every concrete matrix
+  call result. It validates two simple-int column indexes, swaps complete
+  columns while preserving shape and element kind, returns `void`, and cannot
+  continue. Local UDF and local user-method alias results update shared
+  storage; fresh namespace, bound-transform, imported-function, and imported-
+  method results isolate the write. Same-index no-op, bounds/`na` indexes,
+  upstream-`na` argument evaluation, UDF side effects, and public schemas
+  retain ordinary `matrix.swap_columns` boundaries.
 - Added terminal `.swap_rows(row1, row2)` to every concrete matrix call
   result. It validates two simple-int row indexes, swaps complete rows while
   preserving shape and element kind, returns `void`, and cannot continue.
