@@ -95,6 +95,178 @@ pub(crate) fn is_pine_numeric_string(value: &str) -> bool {
     }
 }
 
+#[derive(Clone, Copy, Default)]
+struct PineRegexMode {
+    unicode_classes: bool,
+    verbose: bool,
+}
+
+struct PineRegexFlags<'a> {
+    end: usize,
+    scoped: bool,
+    enabled: &'a str,
+    disabled: &'a str,
+}
+
+fn parse_pine_regex_flags(pattern: &str, start: usize) -> Option<PineRegexFlags<'_>> {
+    let bytes = pattern.as_bytes();
+    if bytes.get(start..start + 2) != Some(b"(?") {
+        return None;
+    }
+
+    let flags_start = start + 2;
+    let mut index = flags_start;
+    let mut separator = None;
+    while let Some(&byte) = bytes.get(index) {
+        match byte {
+            b'i' | b'm' | b's' | b'U' | b'x' => index += 1,
+            b'-' if separator.is_none() => {
+                separator = Some(index);
+                index += 1;
+            }
+            b':' | b')' => break,
+            _ => return None,
+        }
+    }
+
+    let terminator = *bytes.get(index)?;
+    if !matches!(terminator, b':' | b')') {
+        return None;
+    }
+    let split = separator.unwrap_or(index);
+    if (separator.is_none() && split == flags_start && terminator == b')')
+        || separator.is_some_and(|separator| separator + 1 == index)
+    {
+        return None;
+    }
+    Some(PineRegexFlags {
+        end: index + 1,
+        scoped: terminator == b':',
+        enabled: &pattern[flags_start..split],
+        disabled: if separator.is_some() {
+            &pattern[split + 1..index]
+        } else {
+            ""
+        },
+    })
+}
+
+fn apply_pine_regex_flags(mode: PineRegexMode, flags: &PineRegexFlags<'_>) -> PineRegexMode {
+    let mut mode = mode;
+    if flags.enabled.contains('U') {
+        mode.unicode_classes = true;
+    }
+    if flags.disabled.contains('U') {
+        mode.unicode_classes = false;
+    }
+    if flags.enabled.contains('x') {
+        mode.verbose = true;
+    }
+    if flags.disabled.contains('x') {
+        mode.verbose = false;
+    }
+    mode
+}
+
+fn push_rust_regex_flags(result: &mut String, flags: &PineRegexFlags<'_>) {
+    let enabled = flags.enabled.replace('U', "");
+    let disabled = flags.disabled.replace('U', "");
+    if enabled.is_empty() && disabled.is_empty() {
+        if flags.scoped {
+            result.push_str("(?:");
+        }
+        return;
+    }
+
+    result.push_str("(?");
+    result.push_str(&enabled);
+    if !disabled.is_empty() {
+        result.push('-');
+        result.push_str(&disabled);
+    }
+    result.push(if flags.scoped { ':' } else { ')' });
+}
+
+pub(crate) fn normalize_pine_regex(pattern: &str) -> String {
+    let mut result = String::with_capacity(pattern.len());
+    let mut mode = PineRegexMode::default();
+    let mut modes = Vec::new();
+    let mut class_depth = 0usize;
+    let mut index = 0usize;
+
+    while index < pattern.len() {
+        let rest = &pattern[index..];
+        let byte = pattern.as_bytes()[index];
+
+        if mode.verbose && class_depth == 0 && byte == b'#' {
+            let comment_len = rest.find('\n').unwrap_or(rest.len());
+            result.push_str(&rest[..comment_len]);
+            index += comment_len;
+            continue;
+        }
+
+        if byte == b'\\' {
+            let mut chars = rest.chars();
+            let slash = chars.next().expect("regex escape starts with a character");
+            let Some(escaped) = chars.next() else {
+                result.push(slash);
+                break;
+            };
+            if !mode.unicode_classes {
+                let replacement = match escaped {
+                    'd' => Some("[0-9]"),
+                    'D' => Some("[^0-9]"),
+                    'w' => Some("[A-Za-z0-9_]"),
+                    'W' => Some("[^A-Za-z0-9_]"),
+                    's' => Some(r"[ \t\n\x0B\f\r]"),
+                    'S' => Some(r"[^ \t\n\x0B\f\r]"),
+                    'b' if class_depth == 0 => Some(r"(?-u:\b)"),
+                    'B' if class_depth == 0 => Some(r"(?-u:\B)"),
+                    _ => None,
+                };
+                if let Some(replacement) = replacement {
+                    result.push_str(replacement);
+                    index += slash.len_utf8() + escaped.len_utf8();
+                    continue;
+                }
+            }
+
+            result.push(slash);
+            result.push(escaped);
+            index += slash.len_utf8() + escaped.len_utf8();
+            continue;
+        }
+
+        if class_depth == 0 && byte == b'(' {
+            if let Some(flags) = parse_pine_regex_flags(pattern, index) {
+                let next_mode = apply_pine_regex_flags(mode, &flags);
+                push_rust_regex_flags(&mut result, &flags);
+                if flags.scoped {
+                    modes.push(mode);
+                }
+                mode = next_mode;
+                index = flags.end;
+                continue;
+            }
+            modes.push(mode);
+        } else if class_depth == 0 && byte == b')' {
+            if let Some(parent_mode) = modes.pop() {
+                mode = parent_mode;
+            }
+        } else if byte == b'[' {
+            class_depth += 1;
+        } else if byte == b']' && class_depth > 0 {
+            class_depth -= 1;
+        }
+
+        let ch = rest.chars().next().expect("regex contains a character");
+        result.push(ch);
+        index += ch.len_utf8();
+    }
+
+    result
+}
+
 pub(crate) fn stringify_array(values: &[PineValue], format: &str) -> String {
     let mut result = String::from("[");
     for (index, value) in values.iter().enumerate() {
@@ -765,6 +937,7 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::String(regex) = self.eval_expr(&args[1].value)? else {
             return Ok(PineValue::Na);
         };
+        let regex = normalize_pine_regex(&regex);
         let regex = Regex::new(&regex).map_err(|err| RuntimeError {
             message: format!("str.match invalid regex: {err}"),
         })?;

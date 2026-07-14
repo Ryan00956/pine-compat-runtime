@@ -1976,9 +1976,16 @@ placeholder indexes remain literal text. Date/time patterns preserve quoted lite
 render each doubled apostrophe `''` as one literal apostrophe, including inside
 quoted text. Unmatched braces are runtime errors. Non-numeric
 format modifiers outside the fixture-covered subset are not yet claimed.
-`str.match` uses Rust regex syntax for the fixture-covered subset. It returns
-the first matched substring, an empty string when there is no match, `na` for
-`na` inputs, and a runtime error for invalid regex patterns.
+`str.match` uses the linear-time Rust regex engine for the fixture-covered Pine
+subset. The predefined `\d`/`\D`, `\w`/`\W`, and `\s`/`\S` classes and
+`\b`/`\B` word boundaries use ASCII semantics by default, including inside
+character classes. Global or scoped `(?U)` enables their Unicode-aware
+semantics, and `(?-U)` disables them again; Pine's `U` flag does not change
+quantifier greediness. It returns the first matched substring, an empty string
+when there is no match, `na` for `na` inputs, and a runtime error for invalid
+regex patterns. Backreferences, lookaround, atomic groups, possessive
+quantifiers, and other backtracking-dependent Pine regex constructs remain
+outside this linear-time subset.
 `str.split` splits by a literal separator and returns a string array. Empty
 separators split the source into Unicode scalar values. It returns `na` for
 `na` inputs and errors if the result would exceed 100,000 array elements.

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Corrected `str.match()` predefined regex class behavior. `\d`, `\w`, `\s`,
+  their complements, and word boundaries now default to ASCII semantics, while
+  global or scoped `(?U)` enables Unicode-aware matching without accidentally
+  changing quantifier greediness; `(?-U)` restores the default within the
+  corresponding scope. The implementation retains the linear-time Rust regex
+  engine.
 - Corrected the `str.format()` `percent` number preset to its grouped
   whole-number `#,###%` behavior while retaining explicit fractional precision
   for custom percent placeholders.

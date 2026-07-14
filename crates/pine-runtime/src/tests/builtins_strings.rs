@@ -1,7 +1,27 @@
 use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
 
+use crate::builtins::strings::normalize_pine_regex;
+
 use super::*;
+
+#[test]
+fn normalizes_pine_regex_unicode_class_modes() {
+    assert_eq!(
+        normalize_pine_regex(r"\d(?U)\w(?-U)\s"),
+        r"[0-9]\w[ \t\n\x0B\f\r]"
+    );
+    assert_eq!(
+        normalize_pine_regex(r"(?iU:\d)(?-U:\w)"),
+        r"(?i:\d)(?:[A-Za-z0-9_])"
+    );
+    assert_eq!(
+        normalize_pine_regex("(?x)\\d # (?U)\\w\n(?U)\\w"),
+        "(?x)[0-9] # (?U)\\w\n\\w"
+    );
+    assert_eq!(normalize_pine_regex("(?)"), "(?)");
+    assert_eq!(normalize_pine_regex("(?-)"), "(?-)");
+}
 
 #[test]
 fn runs_string_helpers() {
@@ -129,6 +149,26 @@ formatted_bool = str.format("Flag {0}", true)
 match_prefix = str.match("NASDAQ:AAPL", "^(?:BATS|NASDAQ|NYSE|AMEX):")
 match_suffix = str.match("NASDAQ:AAPL", "AAPL$")
 match_missing = str.match("NASDAQ:AAPL", "^NYSE:")
+match_ascii_digit = str.match("１1", "\\d")
+match_unicode_digit = str.match("１1", "(?U)\\d")
+match_ascii_non_digit = str.match("１1", "\\D")
+match_unicode_non_digit = str.match("１A", "(?U)\\D")
+match_ascii_word = str.match("β_A", "\\w+")
+match_unicode_word = str.match("β_A", "(?U)\\w+")
+match_ascii_non_word = str.match("βA", "\\W")
+match_unicode_non_word = str.match("β!", "(?U)\\W")
+match_ascii_space = str.match("  ", "\\s")
+match_unicode_space = str.match("  ", "(?U)\\s")
+match_ascii_non_space = str.match("  ", "\\S")
+match_ascii_boundary = str.match("βA", "\\bA")
+match_unicode_boundary = str.match("βA", "(?U)\\bA")
+match_ascii_non_boundary = str.match("βA", "\\BA")
+match_unicode_non_boundary = str.match("βA", "(?U)\\BA")
+match_ascii_class = str.match("β1", "[\\w]+")
+match_scoped_unicode_digit = str.match("１", "(?U:\\d)")
+match_scoped_unicode = str.match("１１", "(?U:\\d)\\d")
+match_toggled_unicode = str.match("１2", "(?U)\\d(?-U)\\d")
+match_unicode_greedy = str.match("abc", "(?U).+")
 missing_match_regex = str.match(na, ".+")
 missing_match_pattern = str.match("NASDAQ:AAPL", na)
 split_words = str.split("A,B,,C", ",")
@@ -184,6 +224,11 @@ plot(formatted == "A=42, B=1.25, A2=42" and formatted_missing == "Missing {2}" ?
 plot(formatted_number == "Rounded 1.20" and formatted_percent_preset == "Percent 3%" and formatted_percent_grouped == "Percent 123,456%" and formatted_percent_custom == "Percent 3.45%" and formatted_integer == "Integer 1,235" and formatted_currency == "Currency $1,234.50" ? 1 : 0)
 plot(formatted_array == "Values [1.2, 2.6, NaN]" and formatted_datetime == "2021-01-01T00:00:00+0000" and formatted_datetime_tokens == "1 Fri 53 1 00:00:00+0000" and formatted_datetime_clock_tokens == "13 13 1 01:04:05.123 123 PM" and formatted_quote == "Literal {0} and apostrophe ' X" and na(formatted_na) and formatted_na_arg == "Missing NaN" and formatted_bool == "Flag true" ? 1 : 0)
 plot(match_prefix == "NASDAQ:" and match_suffix == "AAPL" and match_missing == "" ? 1 : 0)
+plot(match_ascii_digit == "1" and match_unicode_digit == "１" and match_ascii_non_digit == "１" and match_unicode_non_digit == "A" ? 1 : 0)
+plot(match_ascii_word == "_A" and match_unicode_word == "β_A" and match_ascii_non_word == "β" and match_unicode_non_word == "!" ? 1 : 0)
+plot(match_ascii_space == " " and match_unicode_space == " " and match_ascii_non_space == " " ? 1 : 0)
+plot(match_ascii_boundary == "A" and match_unicode_boundary == "" and match_ascii_non_boundary == "" and match_unicode_non_boundary == "A" and match_ascii_class == "1" ? 1 : 0)
+plot(match_scoped_unicode_digit == "１" and match_scoped_unicode == "" and match_toggled_unicode == "１2" and match_unicode_greedy == "abc" ? 1 : 0)
 plot(na(missing_match_regex) and na(missing_match_pattern) ? 1 : 0)
 plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2) == "" and split_words.get(3) == "C" and split_missing_separator_literal.size() == 1 and split_missing_separator_literal.get(0) == "A,B" ? 1 : 0)
 plot(split_chars.size() == 2 and split_chars.get(0) == "x" and split_chars.get(1) == "y" and split_unicode.size() == 2 and split_unicode.get(0) == "å" and split_unicode.get(1) == "β" and split_empty_source_separator.size() == 1 and split_empty_source_separator.get(0) == "" and split_empty_source_chars.size() == 0 and na(split_missing) and na(split_missing_separator) ? 1 : 0)
