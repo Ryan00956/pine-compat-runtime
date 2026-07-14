@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added terminal `.fill(value)` to every concrete matrix call result. It
+  preserves the receiver's float/int/bool/string/color element kind, fills all
+  cells in place, returns `void`, and cannot continue. Local UDF and local
+  user-method alias results update shared storage; fresh namespace, bound-
+  transform, imported-function, and imported-method results isolate the write.
+  Empty and upstream-`na` results, invalid type/arity, and UDF side-effect
+  boundaries retain ordinary `matrix.fill` behavior; public schemas are
+  unchanged.
 - Added terminal `.set(row, column, value)` to every concrete matrix call
   result. It preserves the receiver's float/int/bool/string/color element kind,
   simple-int indexes, bounds behavior, and `void`/no-continuation contract.

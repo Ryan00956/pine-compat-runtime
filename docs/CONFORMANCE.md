@@ -90,11 +90,11 @@ the same set as namespace `matrix.transpose(...)`, `matrix.submatrix(...)`,
 `matrix.kron(...)`, `matrix.diff(...)`, `matrix.pow(...)`, `matrix.inv(...)`,
 `matrix.pinv(...)`, and `matrix.eigenvectors(...)` results: `.rows()`, `.columns()`,
 `.elements_count()`, `.get(row, column)`, `.copy()`, `.submatrix(...)`, and
-`.transpose()`, plus terminal `.set(row, column, value)`. Numeric results
+`.transpose()`, plus terminal `.set(row, column, value)` and `.fill(value)`. Numeric results
 additionally admit `.diff(other)`, `.eigenvectors()`, `.inv()`, `.kron(other)`,
 `.mult(other)`, `.pinv()`, and `.pow(power)`.
 Unqualified local-UDF results that infer a concrete supported matrix kind use
-that same thirty-four-helper closed set through `$call_result`, subject to
+that same thirty-five-helper closed set through `$call_result`, subject to
 the numeric-only checks; parameter passthrough,
 block aliases, nested calls, same-kind control flow, matrix operations, and
 constructors retain call-specific float/int/bool/string/color kinds.
@@ -558,6 +558,13 @@ method results in place, mutates only the independent result for fresh
 namespace, bound-transform, imported-function, or imported-method producers,
 returns `void`, and cannot continue. An upstream-`na` result evaluates the
 value and no-ops; bounds errors and UDF side-effect rejection are unchanged.
+Every concrete matrix call result also admits terminal `.fill(value)`. It
+validates the receiver's float/int/bool/string/color element kind, replaces
+every cell, mutates local UDF/user-method aliases in place, and confines fresh
+namespace, bound-transform, imported-function, or imported-method writes to
+the transient result. It returns `void` and cannot continue; empty and
+upstream-`na` no-op behavior, value evaluation, invalid type/arity, and UDF
+side-effect rejection are unchanged.
 Matrix-valued `.transpose()` accepts all supported matrix element kinds,
 returns an independent matrix with swapped row/column counts, propagates
 upstream `na`, and retains the matrix-result prefix for `.copy()`, repeated
@@ -602,10 +609,10 @@ receiver row. The resolved result selects the closed matrix or array helper
 set. Multiplication order, `na` propagation, zero inner dimensions, matrix
 cell limits, matrix dimension checks, and vector-length checks are unchanged.
 Other terminal readers, invalid arity or argument types, wrong-result helpers,
-broader postfix helpers, and mutation other than `.set(...)` fail closed.
+broader postfix helpers, and mutation other than `.set(...)`/`.fill(...)` fail closed.
 Exact namespace `matrix.copy(values)` results also
 use `$builtin_matrix_result`, preserve the source's float/int/bool/string/color
-matrix kind through `SameAsArg`, and admit the same thirty-four matrix helpers subject
+matrix kind through `SameAsArg`, and admit the same thirty-five matrix helpers subject
 to the numeric eigenvalue, value-predicate, and aggregate checks, with the same
 matrix-copy/array-result and terminal-scalar-reader continuation rules. Exact namespace
 `matrix.transpose(values)`
@@ -1377,7 +1384,7 @@ numeric-matrix-receiver matrix-valued `values.mult(other)` results preserve
 multiplied or scalar-selected shape, `na` and zero-inner-dimension behavior,
 return independent `matrix<float>` storage, and share the same helper set while
 array-result overloads retain array-helper dispatch; UDF matrix-result
-receivers instead enter the same thirty-four-helper closed set only for
+receivers instead enter the same thirty-five-helper closed set only for
 unqualified local UDFs whose inferred result has a concrete supported matrix
 kind, with numeric-only checks retained. Parameter
 passthrough, block aliases, nested calls, same-kind control flow, constructed
@@ -1394,7 +1401,7 @@ kind, zero-dimension, dual-alias, independent-copy, and
 copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose-continuation
 paths. Unknown/`na`, scalar, array, map, unregistered or unresolved user-
 function matrix results, broader helpers, mutation other than terminal
-`.set(row, column, value)`, and continuation after terminal reads remain gated.
+`.set(row, column, value)`/`.fill(value)`, and continuation after terminal reads remain gated.
 Exact supported scalar `map.new<K,V>` templates use `$builtin_map_result` and
 admit only `.size()`, `.get(key)`, `.contains(key)`, and `.copy()`. The first
 three are terminal; only `.copy()` may continue another admitted map helper.

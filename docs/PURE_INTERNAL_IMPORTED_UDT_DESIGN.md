@@ -1710,3 +1710,10 @@ return/parameter flow remains deferred.
     Imported producers allocate fresh matrices, so writes do not escape to a
     source; local alias-returning producers retain shared-storage behavior. No
     imported UDT identity or public schema is widened. Done.
+112. The same concrete matrix-result producer set now exposes terminal
+    `.fill(value)`. It preserves float/int/bool/string/color value checks,
+    replaces every cell, returns `void`, and cannot continue. Imported and
+    built-in producers isolate writes in fresh matrices, while local alias-
+    returning producers retain shared-storage behavior. Empty/upstream-`na`,
+    invalid arity, and UDF-side-effect rules remain unchanged. No imported UDT
+    identity or public schema is widened. Done.

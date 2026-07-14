@@ -1250,15 +1250,21 @@ confined to that transient result and source matrices remain unchanged. The
 operation preserves the existing simple-int index checks, element-kind value
 validation, bounds errors, upstream-`na` value evaluation/no-op behavior,
 `void` result, no-continuation rule, and UDF side-effect rejection.
+Every concrete matrix-valued call result also supports terminal `.fill(value)`
+with the same alias-versus-fresh storage split. It validates the concrete
+float/int/bool/string/color element kind, replaces every cell in place,
+returns `void`, and cannot continue. Empty and upstream-`na` results, value
+evaluation, invalid type/arity, and UDF side-effect rejection retain ordinary
+`matrix.fill` behavior.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
-broader helpers, and mutation other than `.set(...)` fail closed. The existing bound-receiver
+broader helpers, and mutation other than `.set(...)`/`.fill(...)` fail closed. The existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch. Exact
 bound numeric-matrix-receiver matrix-valued `matrix_id.mult(other)` results now
-share the thirty-four matrix helpers and the copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/
+share the thirty-five matrix helpers and the copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/
 predicate/aggregate-reader continuation rules for matrix or
 scalar operands while preserving the existing overload, shape, `na`, empty
 inner dimension, and cell-budget boundaries. Unqualified local-UDF results that infer
-a concrete supported matrix kind now share the thirty-four matrix helpers through
+a concrete supported matrix kind now share the thirty-five matrix helpers through
 `$call_result`. Parameter passthrough, block aliases, nested calls, same-kind
 control flow, constructed and matrix-operation returns, named/reordered
 arguments, and zero dimensions keep their normal call-specific float/int/bool/
@@ -1271,7 +1277,7 @@ results with a concrete supported matrix kind share those helpers across alias-
 qualified, block/nested/control-flow, five-kind, zero-dimension, dual-alias,
 independent-copy, and copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose-continuation paths. Unknown/`na`, scalar, array,
 map, unregistered or unresolved user-function matrix results, broader-helper,
-mutation other than terminal `.set(...)`, and terminal-read continuation cases
+mutation other than terminal `.set(...)`/`.fill(...)`, and terminal-read continuation cases
 remain fail closed. The row/
 column-array transition applies uniformly to every concrete matrix producer described
 below; producer-specific “copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose-only” wording refers only to continuing as a

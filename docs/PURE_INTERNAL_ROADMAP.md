@@ -1048,6 +1048,14 @@ Current baseline:
   isolate writes in fresh matrices. Invalid type/arity, UDF-side-effect, and
   public-schema boundaries are fixture-backed; other matrix-result mutations
   remain gated.
+  The next matrix call-result mutation slice adds terminal `.fill(value)` to
+  the same concrete producer set. It preserves float/int/bool/string/color
+  element kinds, replaces every cell, returns `void`, and cannot continue.
+  Local UDF and local user-method aliases update shared storage; namespace,
+  bound-transform, imported-function, and imported-method results isolate
+  writes in fresh matrices. Empty/upstream-`na`, invalid type/arity, UDF-side-
+  effect, and public-schema boundaries are fixture-backed; remaining matrix-
+  result mutations stay gated.
 
 Remaining internal work:
 

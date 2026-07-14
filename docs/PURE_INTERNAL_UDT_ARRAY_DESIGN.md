@@ -2096,6 +2096,12 @@ index/value checks, `void` return, and no-continuation behavior are preserved.
 Local alias results update shared storage, while fresh imported and built-in
 results isolate the write; upstream `na`, bounds, arity, and UDF-side-effect
 rules remain unchanged. This does not widen UDT or UDT-array identity.
+Item 122 adds terminal `.fill(value)` to the same concrete matrix-result
+producer set. Concrete float/int/bool/string/color value checks, all-cell
+replacement, `void` return, and no-continuation behavior are preserved. Local
+alias results update shared storage, while fresh imported and built-in results
+isolate the write; empty/upstream-`na`, arity, and UDF-side-effect rules remain
+unchanged. This does not widen UDT or UDT-array identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

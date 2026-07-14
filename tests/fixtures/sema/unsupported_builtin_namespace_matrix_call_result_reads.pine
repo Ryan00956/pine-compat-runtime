@@ -5,23 +5,31 @@ badDirectSet() =>
     matrix.new<float>(1, 1, 0.0).set(0, 0, 1.0)
     1
 
+badDirectFill() =>
+    matrix.new<float>(1, 1, 0.0).fill(1.0)
+    1
+
 left = matrix.new<float>(2, 2, 1.0)
 right = matrix.new<float>(2, 2, 2.0)
 vector = array.from(3.0, 4.0)
 bool_values = matrix.new<bool>(2, 2, true)
 bad_direct_set = badDirectSet()
+bad_direct_fill = badDirectFill()
 
 matrix_bad_row = matrix.mult(left, right).get("bad", 0)
 matrix_bad_column = matrix.mult(left, right).get(0, "bad")
 matrix.mult(left, right).set("bad", 0, 3.0)
+matrix.mult(left, right).fill("bad")
 matrix_reverse = matrix.mult(left, 2.0).copy().reverse()
 matrix_size = matrix.mult(2.0, left).size()
 copy_bad_row = matrix.copy(left).get("bad", 0)
 matrix.copy(left).set(0, "bad", 3.0)
+matrix.copy(left).fill()
 copy_size = matrix.copy(left).size()
 copy_wrong_receiver = matrix.copy(vector).rows()
 transpose_bad_column = matrix.transpose(left).get(0, "bad")
 matrix.transpose(left).set(0, 0, "bad")
+matrix.transpose(left).fill(3.0, 4.0)
 transpose_size = matrix.transpose(left).size()
 transpose_wrong_receiver = matrix.transpose(vector).rows()
 submatrix_bad_from = matrix.submatrix(left, "bad").rows()
@@ -57,7 +65,9 @@ eigenvectors_size = matrix.eigenvectors(left).size()
 new_bad_rows = matrix.new<float>("bad", 2, 0.0).rows()
 new_bad_get = matrix.new<int>(2, 2, 1).get("bad", 0)
 matrix.new<bool>(1, 1, true).set(0, 0, "bad")
+matrix.new<bool>(1, 1, true).fill("bad")
 matrix.copy(left).set(0, 0, 3.0).rows()
+matrix.copy(left).fill(3.0).rows()
 new_size = matrix.new<string>(1, 1, "value").size()
 
 array_rows = matrix.mult(left, vector).rows()

@@ -832,11 +832,17 @@ The result is terminal. Alias-returning local UDF or user-method receivers
 mutate shared storage, while fresh namespace, bound-transform, imported-
 function, and imported-method results isolate the write. Upstream `na`, bounds,
 and UDF side-effect rules are inherited from ordinary `matrix.set`.
+`.fill(value)` likewise retains the registered matrix-fill signature and
+returns terminal `void` for every concrete matrix call-result producer. It
+validates the receiver's concrete element kind and preserves alias writes for
+local UDF/user-method results versus isolated writes for fresh namespace,
+bound-transform, imported-function, and imported-method results. Empty and
+upstream-`na` no-op behavior and UDF side-effect rejection are unchanged.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
-broader helpers, and mutation other than `.set(...)` fail closed. The
+broader helpers, and mutation other than `.set(...)`/`.fill(...)` fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the thirty-four
+exact bound matrix-valued `matrix_id.mult(other)` results share the thirty-five
 matrix helpers for matrix or scalar operands with the
 copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/predicate/aggregate-reader continuation
 rules.
