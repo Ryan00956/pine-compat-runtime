@@ -188,6 +188,7 @@ pub(crate) fn matrix_call_result_builtin_name(method_name: &str) -> Option<&'sta
         "reshape" => Some("matrix.reshape"),
         "add_row" => Some("matrix.add_row"),
         "add_col" => Some("matrix.add_col"),
+        "sort" => Some("matrix.sort"),
         "swap_rows" => Some("matrix.swap_rows"),
         "swap_columns" => Some("matrix.swap_columns"),
         "remove_row" => Some("matrix.remove_row"),

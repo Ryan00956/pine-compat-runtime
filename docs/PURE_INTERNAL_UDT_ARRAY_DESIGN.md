@@ -2161,6 +2161,15 @@ returns `void`, and cannot continue. Local aliases update shared shape, while
 fresh imported and built-in results isolate the change; `0..=columns` bounds/
 `na`, array-size, cell-budget, upstream-`na`, arity/type, and UDF-side-effect
 rules remain unchanged. This does not widen UDT or UDT-array identity.
+Item 131 adds terminal numeric `.sort(column?, order?)` to the concrete
+float/int matrix-result producer set. It defaults to column 0 and ascending
+order, reorders complete rows with stable equal keys, places `na` last
+ascending and first descending, preserves element kind and shape, returns
+`void`, and cannot continue. Local aliases update shared storage, while fresh
+imported and built-in results isolate the change; column bounds/`na`,
+unsupported-order, upstream-`na`, arity/type, non-numeric receiver, and UDF-
+side-effect rules remain unchanged. This does not widen UDT or UDT-array
+identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

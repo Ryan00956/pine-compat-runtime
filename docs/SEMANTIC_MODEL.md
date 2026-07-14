@@ -892,11 +892,19 @@ element kind, and preserves local UDF/user-method alias shape writes versus
 isolated fresh-producer writes. The index admits `0..=columns`; bounds/`na`,
 array-size, cell-budget, upstream-`na`, invalid arity/type, and UDF side-effect
 behavior are unchanged.
+Numeric `.sort(column?, order?)` likewise returns terminal `void` for concrete
+float/int matrix call-result producers. It defaults to column 0 and ascending
+order, reorders complete rows while preserving shape and element kind, keeps
+equal-key rows stable, and places `na` last ascending and first descending.
+Local UDF/user-method aliases mutate while fresh producers remain isolated.
+Column bounds/`na`, unsupported-order, upstream-`na`, invalid arity/type, non-
+numeric receiver, and UDF side-effect behavior retain ordinary `matrix.sort`
+boundaries.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
-broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.add_row(...)`/`.add_col(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)`/`.remove_col(...)` fail closed. The
+broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.add_row(...)`/`.add_col(...)`/`.sort(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)`/`.remove_col(...)` fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the forty-three
+exact bound matrix-valued `matrix_id.mult(other)` results share the forty-four
 matrix helpers for matrix or scalar operands with the
 copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/predicate/aggregate-reader continuation
 rules.
@@ -1028,7 +1036,7 @@ use the existing pure user-method dispatch, and explicit same-named local
 methods and imported functions remain distinct. Other `array.*` calls,
 built-in namespaces and templates outside the seven fixed producers plus the
 result-type-checked namespace `matrix.mult` paths, helpers beyond the applicable
-forty-three-item postfix read/copy/search/transform/aggregate/mutation set, non-array/non-
+forty-four-item postfix read/copy/search/transform/aggregate/mutation set, non-array/non-
 matrix/non-UDT results, unknown/`na` results without a concrete supported type
 or identity, and postfix mutation other than `.concat(id2)`/`.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?)` remain outside this subset. A postfix read
 does not make a mutating producer pure:

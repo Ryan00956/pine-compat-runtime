@@ -1119,6 +1119,14 @@ Current baseline:
   size, cell-budget, upstream-`na`, invalid type/arity, UDF-side-effect, and
   public-schema boundaries are fixture-backed; remaining matrix-result
   mutations stay gated.
+  The numeric ordering slice adds terminal `.sort(column?, order?)` to concrete
+  float/int producers. It defaults to column 0 and ascending order, reorders
+  complete rows with stable equal keys, places `na` last ascending and first
+  descending, returns `void`, and cannot continue. Local aliases update shared
+  storage; fresh producers isolate the change. Column bounds/`na`, unsupported-
+  order, upstream-`na`, invalid type/arity, non-numeric receiver, UDF-side-
+  effect, and public-schema boundaries are fixture-backed; remaining matrix-
+  result mutations stay gated.
 
 Remaining internal work:
 

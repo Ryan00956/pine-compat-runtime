@@ -918,7 +918,7 @@ UDT-array returns, unsupported or unknown templates, non-array/non-UDT results,
 unknown/`na` results without a concrete supported type or identity, other
 `array.*` producer/member calls, built-in namespaces and templates outside the
 exact cross-namespace producer set below,
-postfix helpers outside the forty-three-item read/copy/search/transform/aggregate/mutation set, and postfix
+postfix helpers outside the forty-four-item read/copy/search/transform/aggregate/mutation set, and postfix
 mutation other than `.concat(id2)`/`.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)` remain unsupported boundaries.
 The first/last index readers reuse ordinary element-kind, concrete UDT-identity, and
 structural/object equality rules. `.indexof(value)` returns the first
@@ -1312,15 +1312,23 @@ while preserving row count and concrete element kind, returns `void`, and
 cannot continue. The insertion index admits `0..=columns`. Bounds/`na` index,
 array-size, cell-budget, upstream-`na`, invalid arity/type, and UDF side-effect
 boundaries retain ordinary `matrix.add_col` behavior.
+Every concrete numeric matrix-valued call result also supports terminal
+`.sort(column?, order?)` with the same alias-versus-fresh storage split. It
+defaults to column 0 and ascending order, reorders complete rows without
+changing shape or element kind, keeps equal-key rows stable, and places `na`
+last ascending and first descending. It returns `void` and cannot continue.
+Column bounds/`na`, unsupported-order, upstream-`na`, invalid arity/type, non-
+numeric receiver, and UDF side-effect boundaries retain ordinary
+`matrix.sort` behavior.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
-broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.add_row(...)`/`.add_col(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)`/`.remove_col(...)` fail closed. The existing bound-receiver
+broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.add_row(...)`/`.add_col(...)`/`.sort(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)`/`.remove_col(...)` fail closed. The existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch. Exact
 bound numeric-matrix-receiver matrix-valued `matrix_id.mult(other)` results now
-share the forty-three matrix helpers and the copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/
+share the forty-four matrix helpers and the copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/
 predicate/aggregate-reader continuation rules for matrix or
 scalar operands while preserving the existing overload, shape, `na`, empty
 inner dimension, and cell-budget boundaries. Unqualified local-UDF results that infer
-a concrete supported matrix kind now share the forty-three matrix helpers through
+a concrete supported matrix kind now share the forty-four matrix helpers through
 `$call_result`. Parameter passthrough, block aliases, nested calls, same-kind
 control flow, constructed and matrix-operation returns, named/reordered
 arguments, and zero dimensions keep their normal call-specific float/int/bool/
@@ -1333,7 +1341,7 @@ results with a concrete supported matrix kind share those helpers across alias-
 qualified, block/nested/control-flow, five-kind, zero-dimension, dual-alias,
 independent-copy, and copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose-continuation paths. Unknown/`na`, scalar, array,
 map, unregistered or unresolved user-function matrix results, broader-helper,
-mutation other than terminal `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.add_row(...)`/`.add_col(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)`/`.remove_col(...)`, and terminal-read continuation cases
+mutation other than terminal `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.add_row(...)`/`.add_col(...)`/`.sort(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)`/`.remove_col(...)`, and terminal-read continuation cases
 remain fail closed. The row/
 column-array transition applies uniformly to every concrete matrix producer described
 below; producer-specific “copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose-only” wording refers only to continuing as a

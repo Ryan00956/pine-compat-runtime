@@ -329,7 +329,7 @@ const MATRIX_SWAP_COLUMNS_PARAMS: &[BuiltinParam] = &[
 const MATRIX_SORT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
-        accepts: Accepts::Matrix,
+        accepts: Accepts::NumericMatrix,
         optional: false,
     },
     BuiltinParam {

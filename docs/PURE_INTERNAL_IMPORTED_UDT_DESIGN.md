@@ -1787,3 +1787,12 @@ return/parameter flow remains deferred.
     `na`, array-size, cell-budget, upstream-`na`, arity/type, and UDF side-
     effect rules remain unchanged. No imported UDT identity or public schema
     is widened. Done.
+121. The same concrete numeric matrix-result producer set now exposes terminal
+    `.sort(column?, order?)`. It defaults to column 0 and ascending order,
+    reorders complete rows with stable equal keys, places `na` last ascending
+    and first descending, preserves float/int element kind and shape, returns
+    `void`, and cannot continue. Imported and built-in producers isolate the
+    change in fresh matrices, while local alias-returning producers retain
+    shared-storage behavior. Column bounds/`na`, unsupported-order, upstream-
+    `na`, arity/type, non-numeric receiver, and UDF side-effect rules remain
+    unchanged. No imported UDT identity or public schema is widened. Done.

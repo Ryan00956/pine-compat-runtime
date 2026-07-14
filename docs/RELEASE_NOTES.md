@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added terminal numeric-matrix `.sort(column?, order?)` to concrete matrix
+  call results. It defaults to column 0 and ascending order, reorders complete
+  rows with stable equal keys, places `na` last ascending and first descending,
+  returns `void`, and cannot continue. Local UDF and local user-method alias
+  results update shared storage; fresh namespace, bound-transform, imported-
+  function, and imported-method results isolate the change. Column bounds/
+  `na`, unsupported-order, upstream-`na`, UDF side effects, and public schemas
+  retain ordinary `matrix.sort` boundaries. The namespace receiver signature
+  is now explicitly numeric, matching existing method dispatch.
 - Added terminal `.add_col(column, array_id)` to every concrete matrix call
   result. It validates a simple-int insertion index and an element-kind-
   matched array, copies the array into a new complete column—including into a

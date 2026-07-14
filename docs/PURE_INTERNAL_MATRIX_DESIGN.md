@@ -1832,6 +1832,16 @@ Recommended future slices:
     the change. `0..=columns` bounds/`na`, array-size, cell-budget, upstream-
     `na`, invalid type/arity, UDF-side-effect, and public-schema boundaries
     retain ordinary `matrix.add_col` behavior. Done.
+134. Every concrete numeric matrix call result additionally exposes terminal
+    `.sort(column?, order?)`. It defaults to column 0 and ascending order,
+    reorders complete rows while preserving float/int element kind and shape,
+    keeps equal-key rows stable, places `na` last ascending and first
+    descending, returns `void`, and cannot continue. Local UDF and local user-
+    method alias results update shared storage; fresh namespace, bound-
+    transform, imported-function, and imported-method results isolate the
+    change. Column bounds/`na`, unsupported-order, upstream-`na`, invalid type/
+    arity, non-numeric receiver, UDF-side-effect, and public-schema boundaries
+    retain ordinary `matrix.sort` behavior. Done.
 
 ## Completion Gate For Future Positive Support
 
