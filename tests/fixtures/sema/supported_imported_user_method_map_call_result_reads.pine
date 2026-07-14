@@ -41,6 +41,9 @@ left_point.exposeIntMap().clear()
 left_point.exposeMap().remove("missing")
 left_point.exposeIntMap().remove(1)
 
+left_point.exposeMap().put_all(right_point.exposeMap())
+left_point.exposeIntMap().put_all(right_point.exposeIntMap())
+
 plot(size + copy_chain + block_return + nested_return + named_control_flow + alias_qualified + constructor_receiver + dual_alias + nested_copy + keys.size() + copied_keys + int_keys.size() + dual_alias_keys + values.size() + copied_values + int_values.size() + dual_alias_values)
 left_point.exposeMap().keys().push("extra")
 left_point.exposeMap().values().push(1.0)

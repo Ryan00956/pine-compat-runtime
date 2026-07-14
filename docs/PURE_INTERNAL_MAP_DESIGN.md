@@ -678,6 +678,15 @@ Recommended future slices:
     imported-function, and imported-method results isolate the removal.
     Invalid key/arity, UDF-side-effect, remaining map-mutation, template, and
     public-schema boundaries retain ordinary `map.remove` behavior. Done.
+57. Every concrete scalar map call-result producer additionally exposes
+    terminal `.put_all(source)`, completing the registered scalar map helper
+    set on those receivers. It requires an identical source template, clones
+    source entries before merging for self-merge safety, replaces values
+    without moving retained keys, appends new keys in source order, returns
+    `void`, and cannot continue. Local aliases update shared storage; fresh
+    constructor, copy, imported-function, and imported-method targets isolate
+    the merge. Invalid source/template/arity, UDF-side-effect, and public-
+    schema boundaries retain ordinary `map.put_all` behavior. Done.
 
 ## Completion Gate For Future Widening
 
@@ -723,10 +732,10 @@ receives both entries. Template-less bare map declarations, non-scalar key/value
 templates, nested collection values, and map mutation inside user-defined
 functions remain unsupported until a later slice designs and fixtures those
 semantics. Unqualified local-UDF results with a concrete supported scalar map
-template now share size/put/clear/remove/get/contains/copy/keys/values with
-terminal put/clear/remove,
+template now share the complete size/put/clear/remove/put_all/get/contains/
+copy/keys/values helper set with terminal put/clear/remove/put_all,
 copy-only map continuation, derived-array transitions, and per-call template
 isolation. Local and imported user-function and user-method results with a
 concrete supported scalar map template now share the same helpers, including
-terminal put/clear/remove and same-library dual-alias isolation;
+the complete helper set and same-library dual-alias isolation;
 unresolved or mixed-template direct result receivers remain gated.

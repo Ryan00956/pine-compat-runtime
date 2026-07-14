@@ -30,12 +30,23 @@ string_float.put("close", 2.5)
 
 string_float_other = map.new<string, float>()
 string_float_other.put("open", 8.0)
+string_float_other.put("close", 9.0)
+string_float_other.put("merged", 10.0)
 
 bool_color = map.new<bool, color>()
 bool_color.put(true, color.red)
+bool_color_other = map.new<bool, color>()
+bool_color_other.put(false, color.white)
+bool_color_other.put(true, color.red)
 
 color_bool = map.new<color, bool>()
 color_bool.put(color.blue, true)
+color_bool_other = map.new<color, bool>()
+color_bool_other.put(color.red, true)
+color_bool_other.put(color.blue, true)
+
+int_string_other = map.new<int, string>()
+int_string_other.put(1, "one")
 
 anchor = Anchor.new(1)
 copied = anchor.expose().copy()
@@ -74,6 +85,13 @@ anchor.exposeBoolColor().remove(true)
 anchor.exposeColorBool().remove(color.blue)
 anchor.exposeFresh().remove(1)
 plot(string_float.size() == 2 and string_float.keys().first() == "close" and string_float.keys().last() == "extra" and bool_color.size() == 1 and bool_color.contains(false) and color_bool.size() == 1 and color_bool.contains(color.red) ? 1 : 0, "call_result_remove_method_alias_existing_missing_order")
+
+anchor.expose().put_all(string_float_other)
+anchor.exposeBoolColor().put_all(bool_color_other)
+anchor.exposeColorBool().put_all(color_bool_other)
+anchor.expose().put_all(string_float)
+anchor.exposeFresh().put_all(int_string_other)
+plot(string_float.size() == 4 and string_float.keys().get(0) == "close" and string_float.keys().get(1) == "extra" and string_float.keys().get(2) == "open" and string_float.keys().get(3) == "merged" and string_float.get("close") == 9.0 and bool_color.size() == 2 and bool_color.get(false) == color.white and color_bool.size() == 2 and color_bool.get(color.red) ? 1 : 0, "call_result_put_all_method_alias_replace_append_self_order")
 
 anchor.expose().clear()
 anchor.exposeBoolColor().clear()

@@ -632,6 +632,15 @@ Current baseline:
   fresh constructor, copy, imported-function, and imported-method results
   isolate the removal. Invalid key/arity, UDF-side-effect, remaining mutation,
   template, and public-schema boundaries retain ordinary `map.remove` behavior.
+  The final registered scalar map-result mutation slice adds terminal
+  `.put_all(source)` across the same producer set. It requires an identical
+  source template, clones source entries for self-merge safety, replaces values
+  without moving retained keys, appends new keys in source order, returns
+  `void`, and cannot continue. Local aliases merge into shared storage; fresh
+  constructor, copy, imported-function, and imported-method targets isolate the
+  merge. Invalid source/template/arity, UDF-side-effect, and public-schema
+  boundaries retain ordinary `map.put_all` behavior. This completes the
+  registered scalar map helper set on concrete map call results.
   The following read-only matrix-result slice adds `.row(index)` to every
   existing concrete matrix call-result producer: namespace and bound matrix
   operations, exact `matrix.new<float|int|bool|string|color>` templates, local

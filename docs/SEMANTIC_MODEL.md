@@ -992,10 +992,10 @@ public schemas remain unchanged.
 Exact supported scalar `map.new<K,V>` templates use the separate
 `$builtin_map_result` synthetic prefix. The receiver retains its concrete
 scalar key/value kinds and admits `.size()`, terminal `.put(key, value)`,
-`.clear()`, and `.remove(key)`,
+`.clear()`, `.remove(key)`, and `.put_all(source)`,
 `.get(key)`, `.contains(key)`, `.copy()`, `.keys()`, and `.values()`; only
 `.copy()` may continue another admitted map helper. `.put(...)`, `.clear()`,
-and `.remove(...)` return `void` and cannot continue. `.keys()` and `.values()` switch to the array-result prefix
+`.remove(...)`, and `.put_all(...)` return `void` and cannot continue. `.keys()` and `.values()` switch to the array-result prefix
 and return fresh key/value-kind-preserving arrays, which admit direct binding
 plus `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.slice(index_from, index_to)`/`.concat(id2)`/`.includes(value)`/
 `.indexof(value)`/`.lastindexof(value)`, bool/int/float-only `.every()`/`.some()`, and numeric-only
@@ -1007,9 +1007,9 @@ key types and marks copy
 results with the same template metadata. Exact namespace `map.copy(existing)`
 results use the same prefix and retain both source template metadata and
 entries through the existing independent-copy runtime operation. Map mutation
-other than terminal `.put(...)`/`.clear()`/`.remove(...)`, unsupported templates, non-map copy inputs, and
+outside terminal `.put(...)`/`.clear()`/`.remove(...)`/`.put_all(...)`, unsupported templates, non-map copy inputs, and
 other map call-result receivers fail closed. Unqualified local-UDF results with
-one concrete supported scalar map template share the same nine helpers through
+one concrete supported scalar map template share the same ten helpers through
 `$call_result`; parameter passthrough, block aliases, nested calls,
 same-template control flow, constructed/copied results, named/reordered
 arguments, empty maps, and per-call scalar key/value templates retain their
@@ -1029,8 +1029,11 @@ mutation versus fresh-result isolation split.
 Terminal `.remove(key)` validates the key template, deletes an existing entry
 without reordering retained keys, no-ops for a missing key, and uses the same
 alias/fresh split.
+Terminal `.put_all(source)` requires identical templates, clones source entries
+before merging for self-safety, replaces retained-key values in place, appends
+new keys in source order, and uses the same alias/fresh split.
 Unknown/`na`, scalar, array, matrix, wrong-template/key/value, broader helpers,
-map mutation other than terminal `.put(...)`/`.clear()`/`.remove(...)`, call-result-array mutation other
+map mutation outside terminal `.put(...)`/`.clear()`/`.remove(...)`/`.put_all(...)`, call-result-array mutation other
 than `.concat(id2)`, and continuation after a terminal key/value-array reader
 remain gated; direct UDF mutation is still rejected. This path adds no UDT/
 import identity or public schema field.

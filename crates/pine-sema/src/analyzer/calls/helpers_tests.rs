@@ -75,6 +75,7 @@ mod tests {
             ("put", "map.put"),
             ("clear", "map.clear"),
             ("remove", "map.remove"),
+            ("put_all", "map.put_all"),
             ("get", "map.get"),
             ("contains", "map.contains"),
             ("copy", "map.copy"),
@@ -87,7 +88,7 @@ mod tests {
             );
         }
 
-        assert_eq!(map_call_result_builtin_name("put_all"), None);
+        assert_eq!(map_call_result_builtin_name("unknown"), None);
     }
 
     #[test]

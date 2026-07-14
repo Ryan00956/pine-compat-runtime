@@ -68,6 +68,13 @@ identity(color_bool).remove(color.blue)
 identity(float_int).remove(1.5)
 fresh().remove("missing")
 
+identity(string_float).put_all(string_float)
+identity(int_string).put_all(int_string)
+identity(bool_color).put_all(bool_color)
+identity(color_bool).put_all(color_bool)
+identity(float_int).put_all(float_int)
+fresh().put_all(map.new<string, float>())
+
 identity(string_float).clear()
 identity(int_string).clear()
 identity(bool_color).clear()

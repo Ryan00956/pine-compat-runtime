@@ -9,7 +9,7 @@ bad_size_arity = map.copy(source).size(1)
 map.copy(source).put(1, 1.0)
 clear_result = map.copy(source).clear(1)
 map.copy(source).remove(1)
-put_all_result = map.copy(source).put_all(source)
+map.copy(source).put_all(map.new<int, float>())
 wrong_receiver = map.copy(close).size()
 
 plot(close)

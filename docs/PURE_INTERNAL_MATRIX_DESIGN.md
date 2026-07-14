@@ -1865,6 +1865,15 @@ Recommended future slices:
     key/arity, UDF-side-effect, remaining map-mutation, template, and public-
     schema boundaries retain ordinary `map.remove` behavior. No matrix rule is
     widened. Done.
+138. Every concrete scalar map call result additionally exposes terminal
+    `.put_all(source)`, completing the registered scalar map helper set on
+    those receivers. It requires an identical source template, clones entries
+    for self-merge safety, replaces values without moving retained keys,
+    appends new keys in source order, returns `void`, and cannot continue.
+    Local aliases update shared map storage; fresh built-in/imported targets
+    isolate the merge. Invalid source/template/arity, UDF-side-effect, and
+    public-schema boundaries retain ordinary `map.put_all` behavior. No matrix
+    rule is widened. Done.
 
 ## Completion Gate For Future Positive Support
 

@@ -69,6 +69,11 @@ anchor.exposeBoolColor().remove(true)
 anchor.exposeColorBool().remove(color.blue)
 anchor.exposeFresh().remove(1)
 
+anchor.expose().put_all(string_float_other)
+anchor.exposeBoolColor().put_all(bool_color)
+anchor.exposeColorBool().put_all(color_bool)
+anchor.exposeFresh().put_all(map.new<int, string>())
+
 anchor.expose().clear()
 anchor.exposeBoolColor().clear()
 anchor.exposeColorBool().clear()

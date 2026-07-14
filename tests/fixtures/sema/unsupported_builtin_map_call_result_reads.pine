@@ -13,9 +13,14 @@ badDirectRemove() =>
     map.new<string, float>().remove("key")
     1
 
+badDirectPutAll() =>
+    map.new<string, float>().put_all(map.new<string, float>())
+    1
+
 bad_direct_put = badDirectPut()
 bad_direct_clear = badDirectClear()
 bad_direct_remove = badDirectRemove()
+bad_direct_put_all = badDirectPutAll()
 
 wrong_get_key = map.new<string, float>().get(1)
 wrong_contains_key = map.new<int, float>().contains("bad")
@@ -26,6 +31,8 @@ map.new<string, float>().put("key")
 clear_result = map.new<string, float>().clear(1)
 map.new<string, float>().remove(1)
 map.new<string, float>().remove()
-put_all_result = map.new<string, float>().put_all(map.new<string, float>())
+map.new<string, float>().put_all(map.new<int, float>())
+map.new<string, float>().put_all(close)
+map.new<string, float>().put_all()
 
 plot(close)

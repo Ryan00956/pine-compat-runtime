@@ -15,6 +15,12 @@ mutated.put("value", 7.0)
 left_point.exposeMap().put("direct", 8.0)
 left_point.exposeIntMap().put(1, "one")
 
+merge_source = map.new<string, float>()
+merge_source.put("open", 4.0)
+merge_source.put("extra", 5.0)
+int_merge_source = map.new<int, string>()
+int_merge_source.put(1, "one")
+
 plot(left_point.exposeMap().size(), "size")
 plot(na(left_point.exposeMap().get("missing")) ? 1 : 0, "get")
 plot(left_point.exposeMap().contains("missing") ? 0 : 1, "contains")
@@ -46,3 +52,7 @@ plot(left_point.exposeMap().size() == 0 and left_point.exposeIntMap().size() == 
 left_point.exposeMap().remove("missing")
 left_point.exposeIntMap().remove(1)
 plot(left_point.exposeMap().size() == 0 and left_point.exposeIntMap().size() == 0 ? 1 : 0, "call_result_remove_fresh_method_isolation")
+
+left_point.exposeMap().put_all(merge_source)
+left_point.exposeIntMap().put_all(int_merge_source)
+plot(left_point.exposeMap().size() == 0 and left_point.exposeIntMap().size() == 0 and merge_source.size() == 2 and merge_source.get("open") == 4.0 and int_merge_source.size() == 1 ? 1 : 0, "call_result_put_all_fresh_method_isolation")

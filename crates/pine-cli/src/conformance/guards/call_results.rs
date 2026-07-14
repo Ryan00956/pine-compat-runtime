@@ -607,7 +607,7 @@ fn validate_builtin_map_call_result_fixture_paths(
         feature,
         fixtures,
         BUILTIN_MAP_CALL_RESULT_FIXTURES,
-        "fixture-backed exact scalar map.new template, namespace map.copy result, concrete local/imported user-function and user-method map results with size/get/contains/copy/keys/values plus terminal put/clear/remove dispatch, fresh key/value-kind array reads, and retained template/remaining-mutation/terminal-reader boundaries",
+        "fixture-backed exact scalar map.new template, namespace map.copy result, concrete local/imported user-function and user-method map results with the complete scalar map helper set including terminal put/clear/remove/put_all dispatch, fresh key/value-kind array reads, and retained template/terminal-reader boundaries",
     )
 }
 
@@ -625,7 +625,7 @@ fn validate_user_method_map_call_result_fixture_paths(
         feature,
         fixtures,
         USER_METHOD_MAP_CALL_RESULT_FIXTURES,
-        "fixture-backed concrete local/imported user-method map-result size/get/contains/copy/keys/values plus terminal put/clear/remove dispatch, fresh key/value-kind array reads, and retained template/remaining-mutation/terminal-reader boundaries",
+        "fixture-backed concrete local/imported user-method map-result complete scalar map helper dispatch including terminal put/clear/remove/put_all, fresh key/value-kind array reads, and retained template/terminal-reader boundaries",
     )
 }
 
@@ -643,7 +643,7 @@ fn validate_imported_user_method_map_call_result_fixture_paths(
         feature,
         fixtures,
         IMPORTED_USER_METHOD_MAP_CALL_RESULT_FIXTURES,
-        "fixture-backed imported user-method map-result size/get/contains/copy/keys/values plus terminal put/clear/remove dispatch with fresh key/value-kind arrays, dual-alias isolation, and retained template/remaining-mutation/terminal-reader boundaries",
+        "fixture-backed imported user-method map-result complete scalar map helper dispatch including terminal put/clear/remove/put_all with fresh key/value-kind arrays, dual-alias isolation, and retained template/terminal-reader boundaries",
     )
 }
 
@@ -661,7 +661,7 @@ fn validate_imported_function_map_call_result_fixture_paths(
         feature,
         fixtures,
         IMPORTED_FUNCTION_MAP_CALL_RESULT_FIXTURES,
-        "fixture-backed imported pure-function map-result size/get/contains/copy/keys/values plus terminal put/clear/remove dispatch with fresh key/value-kind arrays, dual-alias isolation, and retained template/remaining-mutation/terminal-reader boundaries",
+        "fixture-backed imported pure-function map-result complete scalar map helper dispatch including terminal put/clear/remove/put_all with fresh key/value-kind arrays, dual-alias isolation, and retained template/terminal-reader boundaries",
     )
 }
 

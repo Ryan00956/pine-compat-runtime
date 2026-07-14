@@ -2190,6 +2190,14 @@ cannot continue. Local aliases update shared map storage, while fresh imported
 and built-in results isolate removal; invalid key/arity, UDF-side-effect,
 remaining map-mutation, template, and public-schema rules remain unchanged.
 This does not widen UDT or UDT-array identity.
+Item 135 adds terminal `.put_all(source)` to every concrete scalar map-result
+producer, completing the registered scalar map helper set. It requires an
+identical source template, clones entries for self-merge safety, replaces
+retained-key values in place, appends new keys in source order, returns `void`,
+and cannot continue. Local aliases update shared map storage, while fresh
+imported and built-in targets isolate the merge; invalid source/template/arity,
+UDF-side-effect, and public-schema rules remain unchanged. This does not widen
+UDT or UDT-array identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

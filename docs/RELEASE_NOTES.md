@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added terminal `.put_all(source)` to every concrete scalar map call result,
+  completing the registered scalar map helper set on those receivers. It
+  requires an identical source template, clones source entries for self-merge
+  safety, replaces values without moving retained keys, appends new keys in
+  source order, returns `void`, and cannot continue. Local aliases update
+  shared storage; fresh constructor, copy, imported-function, and imported-
+  method targets isolate the merge. Invalid source/template/arity, UDF side-
+  effect, and public-schema boundaries retain ordinary `map.put_all` behavior.
 - Added terminal `.remove(key)` to every concrete scalar map call result. It
   validates the resolved key kind, deletes a matching entry without reordering
   retained keys, no-ops for a missing key, returns `void`, and cannot continue.

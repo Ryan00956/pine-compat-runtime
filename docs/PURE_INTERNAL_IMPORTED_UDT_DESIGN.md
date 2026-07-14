@@ -1818,3 +1818,11 @@ return/parameter flow remains deferred.
     maps. Invalid key/arity, UDF-side-effect, remaining map-mutation, template,
     and public-schema rules remain unchanged. No imported UDT identity is
     widened. Done.
+125. Every concrete scalar map-result producer now exposes terminal
+    `.put_all(source)`, completing the registered scalar map helper set. It
+    requires an identical source template, clones source entries for self-
+    merge safety, replaces retained-key values in place, appends new keys in
+    source order, returns `void`, and cannot continue. Local aliases retain
+    shared-storage behavior, while imported and built-in targets isolate the
+    merge. Invalid source/template/arity, UDF-side-effect, and public-schema
+    rules remain unchanged. No imported UDT identity is widened. Done.

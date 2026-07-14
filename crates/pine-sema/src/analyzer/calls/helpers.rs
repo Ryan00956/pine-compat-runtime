@@ -232,6 +232,7 @@ pub(crate) fn map_call_result_builtin_name(method_name: &str) -> Option<&'static
         "put" => Some("map.put"),
         "clear" => Some("map.clear"),
         "remove" => Some("map.remove"),
+        "put_all" => Some("map.put_all"),
         "get" => Some("map.get"),
         "contains" => Some("map.contains"),
         "copy" => Some("map.copy"),

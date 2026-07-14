@@ -1027,6 +1027,7 @@ fn parses_map_new_template_result_method_receivers_with_map_provenance() {
         "value = map.new<string,float>().put(\"key\", 1.0)\n",
         "value = map.new<string,float>().clear()\n",
         "value = map.new<string,float>().remove(\"key\")\n",
+        "value = map.new<string,float>().put_all(map.new<string,float>())\n",
         "value = map.new<string,color>().copy().size()\n",
         "value = map.new<color,int>().copy().get(color.red)\n",
     ] {
@@ -1248,6 +1249,7 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = map.new<string, float>().put(\"key\", 1.0).custom()\n",
         "bad = map.new<string, float>().clear().custom()\n",
         "bad = map.new<string, float>().remove(\"key\").custom()\n",
+        "bad = map.new<string, float>().put_all(map.new<string, float>()).custom()\n",
         "bad = map.copy(values).size().custom()\n",
         "bad = map.copy(values).get(1).custom()\n",
         "bad = map.copy(values).contains(1).custom()\n",
