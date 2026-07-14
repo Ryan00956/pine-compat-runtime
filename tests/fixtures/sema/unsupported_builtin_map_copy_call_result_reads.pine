@@ -8,7 +8,7 @@ wrong_contains_key = map.copy(source).contains(1)
 bad_size_arity = map.copy(source).size(1)
 map.copy(source).put(1, 1.0)
 clear_result = map.copy(source).clear(1)
-remove_result = map.copy(source).remove("key")
+map.copy(source).remove(1)
 put_all_result = map.copy(source).put_all(source)
 wrong_receiver = map.copy(close).size()
 

@@ -68,6 +68,13 @@ anchor.exposeColorBool().put(color.red, false)
 anchor.exposeFresh().put(1, "one")
 plot(string_float.size() == 3 and string_float.get("open") == 4.5 and string_float.get("extra") == 6.5 and string_float.keys().last() == "extra" and bool_color.get(false) == color.blue and not color_bool.get(color.red) ? 1 : 0, "call_result_put_method_alias_replace_insert")
 
+anchor.expose().remove("open")
+anchor.expose().remove("missing")
+anchor.exposeBoolColor().remove(true)
+anchor.exposeColorBool().remove(color.blue)
+anchor.exposeFresh().remove(1)
+plot(string_float.size() == 2 and string_float.keys().first() == "close" and string_float.keys().last() == "extra" and bool_color.size() == 1 and bool_color.contains(false) and color_bool.size() == 1 and color_bool.contains(color.red) ? 1 : 0, "call_result_remove_method_alias_existing_missing_order")
+
 anchor.expose().clear()
 anchor.exposeBoolColor().clear()
 anchor.exposeColorBool().clear()

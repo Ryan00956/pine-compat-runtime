@@ -670,6 +670,14 @@ Recommended future slices:
     imported-method results isolate the clear. Arity, UDF-side-effect,
     remaining map-mutation, template, and public-schema boundaries retain
     ordinary `map.clear` behavior. Done.
+56. Every concrete scalar map call-result producer additionally exposes
+    terminal `.remove(key)`. It validates the resolved scalar key kind,
+    removes a matching entry without reordering retained keys, no-ops for a
+    missing key, returns `void`, and cannot continue. Local UDF and local user-
+    method alias results update shared storage; fresh constructor, copy,
+    imported-function, and imported-method results isolate the removal.
+    Invalid key/arity, UDF-side-effect, remaining map-mutation, template, and
+    public-schema boundaries retain ordinary `map.remove` behavior. Done.
 
 ## Completion Gate For Future Widening
 
@@ -715,10 +723,10 @@ receives both entries. Template-less bare map declarations, non-scalar key/value
 templates, nested collection values, and map mutation inside user-defined
 functions remain unsupported until a later slice designs and fixtures those
 semantics. Unqualified local-UDF results with a concrete supported scalar map
-template now share size/put/clear/get/contains/copy/keys/values with terminal
-put/clear,
+template now share size/put/clear/remove/get/contains/copy/keys/values with
+terminal put/clear/remove,
 copy-only map continuation, derived-array transitions, and per-call template
 isolation. Local and imported user-function and user-method results with a
 concrete supported scalar map template now share the same helpers, including
-terminal put/clear and same-library dual-alias isolation;
+terminal put/clear/remove and same-library dual-alias isolation;
 unresolved or mixed-template direct result receivers remain gated.

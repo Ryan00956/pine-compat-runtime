@@ -1857,6 +1857,14 @@ Recommended future slices:
     effect, remaining map-mutation, template, and public-schema boundaries
     retain ordinary `map.clear` behavior. No matrix element, shape, storage,
     or public-schema rule is widened. Done.
+137. Every concrete scalar map call result additionally exposes terminal
+    `.remove(key)`. It validates the resolved scalar key kind, removes a
+    matching entry without reordering retained keys, no-ops for a missing key,
+    returns `void`, and cannot continue. Local aliases update shared map
+    storage; fresh built-in/imported producers isolate the removal. Invalid
+    key/arity, UDF-side-effect, remaining map-mutation, template, and public-
+    schema boundaries retain ordinary `map.remove` behavior. No matrix rule is
+    widened. Done.
 
 ## Completion Gate For Future Positive Support
 

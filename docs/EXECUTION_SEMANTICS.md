@@ -1427,9 +1427,11 @@ default `na` cells, fresh allocation, and copy independence. All five kinds
 expose the same seven helpers, while numeric template results additionally
 expose `.diff(other)`, `.eigenvectors()`, `.inv()`, `.kron(other)`, `.mult(other)`, `.pinv()`, and `.pow(power)`. Exact supported scalar `map.new<K,V>` templates use the
 separate `$builtin_map_result` path, preserve known key/value kinds, allocate a
-fresh empty map, and expose `.size()`, terminal `.put(key, value)` and `.clear()`, `.get(key)`,
+fresh empty map, and expose `.size()`, terminal `.put(key, value)`, `.clear()`, and
+`.remove(key)`, `.get(key)`,
 `.contains(key)`, `.copy()`, `.keys()`, and `.values()`. Only `.copy()` may
-continue another map helper; `.put(...)` and `.clear()` return `void` and cannot continue;
+continue another map helper; `.put(...)`, `.clear()`, and `.remove(...)` return
+`void` and cannot continue;
 `.keys()` and `.values()` return fresh key/value-kind-preserving arrays that
 admit direct binding and the closed array read/search set plus `.slice(index_from, index_to)` and bool/int/float
 `.every()`/`.some()`, all-scalar terminal `.join(separator?)`, and numeric `.abs()`
@@ -1439,7 +1441,7 @@ unsupported map templates remain gated. Exact namespace
 kinds and entries in independent backing storage, and expose the same helpers
 with copy-only continuation; non-map inputs remain errors. Unqualified
 local-UDF results with one concrete supported scalar map template share the
-eight helpers through `$call_result`, preserving call-specific template/content
+nine helpers through `$call_result`, preserving call-specific template/content
 metadata, empty maps, named/reordered arguments, and independent copies; only
 copy may continue. Imported pure-function results with one concrete supported
 scalar map template share those helpers through the registered-function path
@@ -1452,8 +1454,11 @@ position on replacement and appends new keys, mutates local alias-returning
 UDF/method results, and remains isolated on fresh built-in/imported producers.
 Terminal `.clear()` empties the same backing entry list and uses the same local-
 alias mutation versus fresh built-in/imported isolation split.
+Terminal `.remove(key)` validates the concrete key kind, deletes a matching
+entry without reordering retained keys, no-ops for a missing key, and uses that
+same alias-versus-fresh split.
 Unknown/`na`, scalar, array, matrix, wrong-template/key/value, broader-helper,
-map mutation other than terminal `.put(...)`/`.clear()`, call-result-array mutation other
+map mutation other than terminal `.put(...)`/`.clear()`/`.remove(...)`, call-result-array mutation other
 than `.concat(id2)`, and continuation after a terminal key/value-array reader
 remain fail closed; direct UDF mutation is still rejected. Every other
 matrix-returning call,

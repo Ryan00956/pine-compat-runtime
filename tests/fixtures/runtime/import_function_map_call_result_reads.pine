@@ -37,3 +37,7 @@ plot(left.exposeMapFunction().size() == 0 and left.exposeIntMapFunction().size()
 left.exposeMapFunction().clear()
 left.exposeIntMapFunction().clear()
 plot(left.exposeMapFunction().size() == 0 and left.exposeIntMapFunction().size() == 0 ? 1 : 0, "call_result_clear_fresh_function_isolation")
+
+left.exposeMapFunction().remove("missing")
+left.exposeIntMapFunction().remove(1)
+plot(left.exposeMapFunction().size() == 0 and left.exposeIntMapFunction().size() == 0 ? 1 : 0, "call_result_remove_fresh_function_isolation")

@@ -52,6 +52,12 @@ map.new<bool, string>().clear()
 map.new<string, color>().clear()
 map.new<color, int>().clear()
 
+map.new<int, float>().remove(1)
+map.new<float, bool>().remove(1.5)
+map.new<bool, string>().remove(true)
+map.new<string, color>().remove("key")
+map.new<color, int>().remove(color.blue)
+
 int expression_udf = mapNewExpressionSize()
 float block_udf = mapNewBlockReads()
 

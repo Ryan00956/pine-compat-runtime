@@ -2183,6 +2183,13 @@ continue. Local alias results update shared map storage, while fresh imported
 and built-in results isolate the clear; arity, UDF-side-effect, remaining map-
 mutation, template, and public-schema rules remain unchanged. This does not
 widen UDT or UDT-array identity.
+Item 134 adds terminal `.remove(key)` to every concrete scalar map-result
+producer. It validates the resolved scalar key kind, removes a matching entry
+without reordering retained keys, no-ops for a missing key, returns `void`, and
+cannot continue. Local aliases update shared map storage, while fresh imported
+and built-in results isolate removal; invalid key/arity, UDF-side-effect,
+remaining map-mutation, template, and public-schema rules remain unchanged.
+This does not widen UDT or UDT-array identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

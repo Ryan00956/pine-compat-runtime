@@ -1810,3 +1810,11 @@ return/parameter flow remains deferred.
     while imported and built-in producers isolate clears in fresh maps. Arity,
     UDF-side-effect, remaining map-mutation, template, and public-schema rules
     remain unchanged. No imported UDT identity is widened. Done.
+124. Every concrete scalar map-result producer now exposes terminal
+    `.remove(key)`. It validates the resolved scalar key kind, removes a
+    matching entry without reordering retained keys, no-ops for a missing key,
+    returns `void`, and cannot continue. Local aliases retain shared-storage
+    behavior, while imported and built-in producers isolate removal in fresh
+    maps. Invalid key/arity, UDF-side-effect, remaining map-mutation, template,
+    and public-schema rules remain unchanged. No imported UDT identity is
+    widened. Done.

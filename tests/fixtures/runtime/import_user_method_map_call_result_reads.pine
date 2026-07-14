@@ -42,3 +42,7 @@ plot(left_point.exposeMap().size() == 0 and left_point.exposeIntMap().size() == 
 left_point.exposeMap().clear()
 left_point.exposeIntMap().clear()
 plot(left_point.exposeMap().size() == 0 and left_point.exposeIntMap().size() == 0 ? 1 : 0, "call_result_clear_fresh_method_isolation")
+
+left_point.exposeMap().remove("missing")
+left_point.exposeIntMap().remove(1)
+plot(left_point.exposeMap().size() == 0 and left_point.exposeIntMap().size() == 0 ? 1 : 0, "call_result_remove_fresh_method_isolation")

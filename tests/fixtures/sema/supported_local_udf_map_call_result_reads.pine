@@ -61,6 +61,13 @@ identity(color_bool).put(color.red, false)
 identity(float_int).put(2.5, 4)
 fresh().put("fresh", 9.0)
 
+identity(string_float).remove("v")
+identity(int_string).remove(1)
+identity(bool_color).remove(true)
+identity(color_bool).remove(color.blue)
+identity(float_int).remove(1.5)
+fresh().remove("missing")
+
 identity(string_float).clear()
 identity(int_string).clear()
 identity(bool_color).clear()

@@ -64,6 +64,11 @@ anchor.exposeBoolColor().put(false, color.blue)
 anchor.exposeColorBool().put(color.red, false)
 anchor.exposeFresh().put(1, "one")
 
+anchor.expose().remove("open")
+anchor.exposeBoolColor().remove(true)
+anchor.exposeColorBool().remove(color.blue)
+anchor.exposeFresh().remove(1)
+
 anchor.expose().clear()
 anchor.exposeBoolColor().clear()
 anchor.exposeColorBool().clear()

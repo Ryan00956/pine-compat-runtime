@@ -625,6 +625,13 @@ Current baseline:
   fresh constructor, copy, imported-function, and imported-method results
   isolate the clear. Arity, UDF-side-effect, remaining mutation, template, and
   public-schema boundaries retain ordinary `map.clear` behavior.
+  The next map-result mutation slice adds terminal `.remove(key)` across the
+  same producer set. It validates the resolved key kind, deletes a matching
+  entry without reordering retained keys, no-ops for a missing key, returns
+  `void`, and cannot continue. Local alias results update shared storage;
+  fresh constructor, copy, imported-function, and imported-method results
+  isolate the removal. Invalid key/arity, UDF-side-effect, remaining mutation,
+  template, and public-schema boundaries retain ordinary `map.remove` behavior.
   The following read-only matrix-result slice adds `.row(index)` to every
   existing concrete matrix call-result producer: namespace and bound matrix
   operations, exact `matrix.new<float|int|bool|string|color>` templates, local

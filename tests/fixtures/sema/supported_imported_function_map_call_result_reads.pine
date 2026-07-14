@@ -33,6 +33,9 @@ left.exposeIntMapFunction().put(1, "one")
 left.exposeMapFunction().clear()
 left.exposeIntMapFunction().clear()
 
+left.exposeMapFunction().remove("missing")
+left.exposeIntMapFunction().remove(1)
+
 plot(size + copy_chain + block_return + nested_return + named_control_flow + dual_alias + nested_copy + keys.size() + copied_keys + int_keys.size() + dual_alias_keys + values.size() + copied_values + int_values.size() + dual_alias_values)
 left.exposeMapFunction().keys().push("extra")
 left.exposeMapFunction().values().push(1.0)

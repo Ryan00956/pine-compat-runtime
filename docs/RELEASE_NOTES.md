@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added terminal `.remove(key)` to every concrete scalar map call result. It
+  validates the resolved key kind, deletes a matching entry without reordering
+  retained keys, no-ops for a missing key, returns `void`, and cannot continue.
+  Local UDF and local user-method aliases update shared storage; fresh
+  constructor, copy, imported-function, and imported-method results isolate the
+  removal. Invalid key/arity, UDF side-effect, remaining map-mutation, template,
+  and public-schema boundaries retain ordinary `map.remove` behavior.
 - Added terminal `.clear()` to every concrete scalar map call result. It
   empties the resolved backing entry list, returns `void`, and cannot continue.
   Local UDF and local user-method aliases update shared storage; fresh
