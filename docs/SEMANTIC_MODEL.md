@@ -884,11 +884,19 @@ element kind, and preserves local UDF/user-method alias shape writes versus
 isolated fresh-producer writes. The index admits `0..=rows`; bounds/`na`, array-
 size, cell-budget, upstream-`na`, invalid arity/type, and UDF side-effect
 behavior are unchanged.
+`.add_col(column, array_id)` likewise returns terminal `void` for every
+concrete matrix call-result producer. It validates one simple-int insertion
+index and an element-kind-matched array, copies the array into a complete new
+column—including for a zero-row matrix—while preserving row count and concrete
+element kind, and preserves local UDF/user-method alias shape writes versus
+isolated fresh-producer writes. The index admits `0..=columns`; bounds/`na`,
+array-size, cell-budget, upstream-`na`, invalid arity/type, and UDF side-effect
+behavior are unchanged.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
-broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.add_row(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)`/`.remove_col(...)` fail closed. The
+broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.add_row(...)`/`.add_col(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)`/`.remove_col(...)` fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the forty-two
+exact bound matrix-valued `matrix_id.mult(other)` results share the forty-three
 matrix helpers for matrix or scalar operands with the
 copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/predicate/aggregate-reader continuation
 rules.

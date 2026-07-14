@@ -1110,6 +1110,15 @@ Current baseline:
   cell-budget, upstream-`na`, invalid type/arity, UDF-side-effect, and public-
   schema boundaries are fixture-backed; remaining matrix-result mutations stay
   gated.
+  The symmetric insertion slice adds terminal `.add_col(column, array_id)` to
+  the same producer set. It requires one simple-int insertion index and an
+  element-kind-matched array, copies the array into a complete new column,
+  including for a zero-row matrix, while preserving row count and element
+  kind, returns `void`, and cannot continue. Local aliases update shared shape;
+  fresh producer results isolate the change. `0..=columns` bounds/`na`, array-
+  size, cell-budget, upstream-`na`, invalid type/arity, UDF-side-effect, and
+  public-schema boundaries are fixture-backed; remaining matrix-result
+  mutations stay gated.
 
 Remaining internal work:
 

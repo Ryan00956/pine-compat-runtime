@@ -19,6 +19,7 @@ mod tests {
             ("reverse", "matrix.reverse"),
             ("reshape", "matrix.reshape"),
             ("add_row", "matrix.add_row"),
+            ("add_col", "matrix.add_col"),
             ("swap_rows", "matrix.swap_rows"),
             ("swap_columns", "matrix.swap_columns"),
             ("remove_row", "matrix.remove_row"),
