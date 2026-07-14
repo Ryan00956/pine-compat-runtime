@@ -73,4 +73,5 @@ plot(tall.get(0, 0) == 1.0 and tall.get(1, 0) == 0.0 ? 1 : 0, "call_result_swap_
 tall.pinv().swap_columns(0, 1)
 plot(tall.get(0, 0) == 1.0 and tall.get(1, 0) == 0.0 ? 1 : 0, "call_result_swap_columns_source_independent")
 tall.pinv().remove_row(0)
+tall.pinv().remove_col(0)
 plot(tall.rows() == 3 and tall.get(0, 0) == 1.0 ? 1 : 0, "call_result_remove_row_source_independent")

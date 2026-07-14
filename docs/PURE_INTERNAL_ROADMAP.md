@@ -1077,6 +1077,14 @@ Current baseline:
   the write. Same-index no-op, bounds/`na` indexes, upstream-`na` argument
   evaluation, invalid type/arity, UDF-side-effect, and public-schema boundaries
   are fixture-backed; remaining matrix-result mutations stay gated.
+  The symmetric column-shape mutation slice adds terminal
+  `.remove_col(column)` to the same producer set. It requires one simple-int
+  column index, removes the selected complete column, including from a zero-
+  row matrix, while preserving row count and element kind, returns `void`, and
+  cannot continue. Local aliases update shared shape; fresh producer results
+  isolate the change. Bounds/`na` indexes, upstream-`na` argument evaluation,
+  invalid type/arity, UDF-side-effect, and public-schema boundaries are
+  fixture-backed; remaining matrix-result mutations stay gated.
   The symmetric column-permutation slice adds terminal
   `.swap_columns(column1, column2)` to the same producer set. It requires two
   simple-int column indexes, swaps complete columns while preserving shape and

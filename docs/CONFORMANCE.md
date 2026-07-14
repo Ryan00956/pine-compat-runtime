@@ -90,11 +90,11 @@ the same set as namespace `matrix.transpose(...)`, `matrix.submatrix(...)`,
 `matrix.kron(...)`, `matrix.diff(...)`, `matrix.pow(...)`, `matrix.inv(...)`,
 `matrix.pinv(...)`, and `matrix.eigenvectors(...)` results: `.rows()`, `.columns()`,
 `.elements_count()`, `.get(row, column)`, `.copy()`, `.submatrix(...)`, and
-`.transpose()`, plus terminal `.set(row, column, value)`, `.fill(value)`, `.reverse()`, `.reshape(rows, columns)`, `.swap_rows(row1, row2)`, `.swap_columns(column1, column2)`, and `.remove_row(row)`. Numeric results
+`.transpose()`, plus terminal `.set(row, column, value)`, `.fill(value)`, `.reverse()`, `.reshape(rows, columns)`, `.swap_rows(row1, row2)`, `.swap_columns(column1, column2)`, `.remove_row(row)`, and `.remove_col(column)`. Numeric results
 additionally admit `.diff(other)`, `.eigenvectors()`, `.inv()`, `.kron(other)`,
 `.mult(other)`, `.pinv()`, and `.pow(power)`.
 Unqualified local-UDF results that infer a concrete supported matrix kind use
-that same forty-helper closed set through `$call_result`, subject to
+that same forty-one-helper closed set through `$call_result`, subject to
 the numeric-only checks; parameter passthrough,
 block aliases, nested calls, same-kind control flow, matrix operations, and
 constructors retain call-specific float/int/bool/string/color kinds.
@@ -599,6 +599,13 @@ concrete element kind. It mutates local UDF/user-method aliases and isolates
 fresh producer shape changes. It returns `void` and cannot continue; bounds/
 `na` index errors, upstream-`na` argument evaluation, invalid type/arity, and
 UDF side-effect behavior are unchanged.
+Every concrete matrix call result also admits terminal `.remove_col(column)`.
+It validates one simple-int column index and removes the selected complete
+column, including from a zero-row matrix, while preserving row count and
+concrete element kind. It mutates local UDF/user-method aliases and isolates
+fresh producer shape changes. It returns `void` and cannot continue; bounds/
+`na` index errors, upstream-`na` argument evaluation, invalid type/arity, and
+UDF side-effect behavior are unchanged.
 Matrix-valued `.transpose()` accepts all supported matrix element kinds,
 returns an independent matrix with swapped row/column counts, propagates
 upstream `na`, and retains the matrix-result prefix for `.copy()`, repeated
@@ -643,10 +650,10 @@ receiver row. The resolved result selects the closed matrix or array helper
 set. Multiplication order, `na` propagation, zero inner dimensions, matrix
 cell limits, matrix dimension checks, and vector-length checks are unchanged.
 Other terminal readers, invalid arity or argument types, wrong-result helpers,
-broader postfix helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)` fail closed.
+broader postfix helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)`/`.remove_col(...)` fail closed.
 Exact namespace `matrix.copy(values)` results also
 use `$builtin_matrix_result`, preserve the source's float/int/bool/string/color
-matrix kind through `SameAsArg`, and admit the same forty matrix helpers subject
+matrix kind through `SameAsArg`, and admit the same forty-one matrix helpers subject
 to the numeric eigenvalue, value-predicate, and aggregate checks, with the same
 matrix-copy/array-result and terminal-scalar-reader continuation rules. Exact namespace
 `matrix.transpose(values)`
@@ -1418,7 +1425,7 @@ numeric-matrix-receiver matrix-valued `values.mult(other)` results preserve
 multiplied or scalar-selected shape, `na` and zero-inner-dimension behavior,
 return independent `matrix<float>` storage, and share the same helper set while
 array-result overloads retain array-helper dispatch; UDF matrix-result
-receivers instead enter the same forty-helper closed set only for
+receivers instead enter the same forty-one-helper closed set only for
 unqualified local UDFs whose inferred result has a concrete supported matrix
 kind, with numeric-only checks retained. Parameter
 passthrough, block aliases, nested calls, same-kind control flow, constructed

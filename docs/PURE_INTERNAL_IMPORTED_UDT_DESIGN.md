@@ -1758,3 +1758,12 @@ return/parameter flow remains deferred.
     producers retain shared-shape behavior. Bounds/`na` indexes, upstream-`na`
     argument evaluation, arity/type, and UDF side-effect rules remain
     unchanged. No imported UDT identity or public schema is widened. Done.
+118. The same concrete matrix-result producer set now exposes terminal
+    `.remove_col(column)`. It validates one simple-int column index, removes
+    the selected complete column, including from a zero-row matrix, while
+    preserving row count and element kind, returns `void`, and cannot
+    continue. Imported and built-in producers isolate shape changes in fresh
+    matrices, while local alias-returning producers retain shared-shape
+    behavior. Bounds/`na` indexes, upstream-`na` argument evaluation, arity/
+    type, and UDF side-effect rules remain unchanged. No imported UDT identity
+    or public schema is widened. Done.

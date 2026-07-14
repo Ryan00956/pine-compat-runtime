@@ -1803,6 +1803,15 @@ Recommended future slices:
     `na` indexes, upstream-`na` argument evaluation, invalid type/arity, UDF-
     side-effect, and public-schema boundaries retain ordinary
     `matrix.remove_row` behavior. Done.
+131. Every concrete matrix call result additionally exposes terminal
+    `.remove_col(column)`. It validates one simple-int column index, removes
+    the selected complete column, including from a zero-row matrix, while
+    preserving row count and concrete element kind, returns `void`, and cannot
+    continue. Local UDF and local user-method alias results update shared
+    shape; fresh namespace, bound-transform, imported-function, and imported-
+    method results isolate the change. Bounds/`na` indexes, upstream-`na`
+    argument evaluation, invalid type/arity, UDF-side-effect, and public-
+    schema boundaries retain ordinary `matrix.remove_col` behavior. Done.
 
 ## Completion Gate For Future Positive Support
 

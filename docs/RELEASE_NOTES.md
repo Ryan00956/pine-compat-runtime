@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added terminal `.remove_col(column)` to every concrete matrix call result.
+  It validates a simple-int column index, removes one complete column—including
+  from a zero-row matrix—while preserving row count and element kind, returns
+  `void`, and cannot continue. Local UDF and local user-method alias results
+  update shared storage; fresh namespace, bound-transform, imported-function,
+  and imported-method results isolate the shape change. Bounds/`na` indexes,
+  upstream-`na` argument evaluation, UDF side effects, and public schemas
+  retain ordinary `matrix.remove_col` boundaries.
 - Added terminal `.remove_row(row)` to every concrete matrix call result. It
   validates a simple-int row index, removes one complete row—including from a
   zero-column matrix—while preserving column count and element kind, returns
