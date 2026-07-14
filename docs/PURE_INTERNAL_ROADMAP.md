@@ -1315,7 +1315,8 @@ Current baseline:
   groups alongside fixed intraday/day buckets;
 - IANA timezone and DST-aware calendar component and `str.format_time` calls,
   including timestamp-specific short timezone abbreviations and shared
-  doubled-apostrophe literals and complete millisecond-width formatting,
+  doubled-apostrophe literals, `0..11` 12-hour tokens, and complete
+  millisecond-width formatting,
   plus explicit `time`/`time_close` session filtering and clipping, while
   exchange timezone defaults remain outside the fixed runtime metadata model;
 - numeric and const-dateString `timestamp` IANA local-time conversion with

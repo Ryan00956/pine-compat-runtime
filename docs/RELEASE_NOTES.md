@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Corrected `h`/`hh` formatting at midnight and noon in the shared date/time
+  formatter. The 12-hour value now follows the documented `0..11` range, with
+  `hh` adding a leading zero and `a` continuing to distinguish `AM` from `PM`;
+  both `str.format_time()` and UTC date/time placeholders are covered.
 - Corrected `S`/`SS`/`SSS` millisecond formatting in the shared date/time
   formatter. Single `S` now preserves the complete millisecond value, while
   repeated tokens add leading zeroes to the requested minimum width without

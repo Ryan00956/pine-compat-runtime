@@ -261,7 +261,8 @@ Closed coverage:
   IANA-aware calendar
   component functions such as `weekofyear` and `dayofweek`, IANA-aware
   `str.format_time` with short timezone-name tokens, doubled-apostrophe
-  literals, and complete millisecond-width formatting, and `time`/`time_close`
+  literals, `0..11` 12-hour tokens, and complete millisecond-width formatting,
+  and `time`/`time_close`
   subsets with IANA-aware explicit
   time-based sessions and UTC calendar
   week/month higher-timeframe boundaries, plus a fixed-default

@@ -1952,9 +1952,9 @@ as `{0,date,yyyy-MM-dd}` and `{0,time,HH:mm:ssZ}`. Quoted
 literal sequences between apostrophes are not parsed as placeholders, and `''`
 emits one literal apostrophe. The UTC timestamp placeholder subset shares the
 same fixture-covered `D`, `E`, `w`, and `W` token behavior as
-`str.format_time`, including fixture-covered 12-hour clock, millisecond, and
-AM/PM tokens, but does not accept a timezone argument. Missing placeholder
-indexes remain literal text. Date/time patterns preserve quoted literals and
+`str.format_time`, including fixture-covered `h`/`hh` 12-hour clock,
+millisecond, and AM/PM tokens, but does not accept a timezone argument. Missing
+placeholder indexes remain literal text. Date/time patterns preserve quoted literals and
 render each doubled apostrophe `''` as one literal apostrophe, including inside
 quoted text. Unmatched braces are runtime errors. Non-numeric
 format modifiers outside the fixture-covered subset are not yet claimed.
@@ -1979,7 +1979,8 @@ zero-padding. Short `z` tokens render timestamp-specific IANA abbreviations
 such as `EST`/`EDT`, `UTC` for zero offset, or canonical `GMT±HH:mm` text for
 other fixed offsets. Full localized `zzzz` names and exchange timezone defaults
 remain unsupported. Quoted literals can contain doubled apostrophes, and `''`
-outside a quoted block also renders one literal apostrophe. `S` renders the
+outside a quoted block also renders one literal apostrophe. `h` renders the
+12-hour value in the `0..11` range, and `hh` adds a leading zero. `S` renders the
 complete `0..999` millisecond value, while `SS` and `SSS` add leading zeroes to
 a minimum width of two or three without truncating larger values.
 

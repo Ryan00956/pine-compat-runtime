@@ -58,10 +58,7 @@ pub(crate) fn format_datetime_with_timezone(
             'W' => push_padded_or_plain(&mut result, iso_week_of_month(datetime), count),
             'H' => push_padded_or_plain(&mut result, datetime.hour(), count),
             'h' => {
-                let hour = match datetime.hour() % 12 {
-                    0 => 12,
-                    hour => hour,
-                };
+                let hour = datetime.hour() % 12;
                 push_padded_or_plain(&mut result, hour, count);
             }
             'm' => push_padded_or_plain(&mut result, datetime.minute(), count),
