@@ -1,0 +1,2 @@
+indicator("Timestamp date string unsupported timezone")
+plot(timestamp("20 Aug 2024 00:00 Mars/Olympus"))

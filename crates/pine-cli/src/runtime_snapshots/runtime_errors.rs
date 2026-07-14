@@ -1003,6 +1003,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/regressions/timestamp_unsupported_timezone.pine",
         "timestamp unsupported timezone `Mars/Olympus`",
     ),
+    (
+        "tests/fixtures/regressions/timestamp_date_string_unsupported_timezone.pine",
+        "timestamp unsupported dateString `20 Aug 2024 00:00 Mars/Olympus`",
+    ),
 ];
 
 pub(crate) type RuntimeLibraryErrorFixture = (

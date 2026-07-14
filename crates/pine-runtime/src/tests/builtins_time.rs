@@ -930,7 +930,7 @@ fn rejects_unsupported_timestamp_date_string() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("bad timestamp date string")
-plot(timestamp("20 Aug 2024 00:00 America/New_York"))
+plot(timestamp("20 Aug 2024 00:00 Mars/Olympus"))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -954,10 +954,36 @@ plot(timestamp("20 Aug 2024 00:00 America/New_York"))
     .expect_err("expected timestamp dateString error");
     assert!(
         err.message
-            .contains("timestamp unsupported dateString `20 Aug 2024 00:00 America/New_York`"),
+            .contains("timestamp unsupported dateString `20 Aug 2024 00:00 Mars/Olympus`"),
         "{}",
         err.message
     );
+}
+
+#[test]
+fn runs_iana_timestamp_date_strings() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("IANA timestamp date strings")
+plot(timestamp("2021-01-01 00:00 America/New_York") == 1609477200000 ? 1 : 0)
+plot(timestamp("2021-07-01 00:00 America/New_York") == 1625112000000 ? 1 : 0)
+plot(timestamp("2021-01-01 00:00 Asia/Tokyo") == 1609426800000 ? 1 : 0)
+plot(timestamp("2021-11-07 01:30 America/New_York") == 1636263000000 ? 1 : 0)
+plot(timestamp("2021-03-14 02:30 America/New_York") == 1615707000000 ? 1 : 0)
+plot(timestamp("2021-10-03 02:15 Australia/Lord_Howe") == 1633189500000 ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("result");
+    for plot in &result.plots {
+        assert_values_close(&plot.values, &[1.0]);
+    }
 }
 
 #[test]

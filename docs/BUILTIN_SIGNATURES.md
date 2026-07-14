@@ -515,9 +515,10 @@ values outside the UTC datetime range are runtime errors. The
 `timestamp(dateString)` overload accepts const strings
 for ISO dates such as `"2021-01-01"`, English month dates such as
 `"29 Aug 2024"`, optional `HH:mm` or `HH:mm:ss` time-of-day tokens, and
-optional `UTC`/`GMT`/fixed-offset timezone tokens such as `"UTC+0"` or
-`"-0400"`; omitted time-of-day and timezone default to midnight UTC. IANA
-timezone tokens in `dateString`, broader date-string parsing, and
+optional `UTC`/`GMT`/fixed-offset or IANA timezone tokens such as `"UTC+0"`,
+`"-0400"`, or `"America/New_York"`; omitted time-of-day and timezone default
+to midnight UTC. IANA overlaps and nonexistent local times use the same
+resolution policy as numeric-calendar calls. Broader date-string parsing and
 exchange-timezone default semantics remain unsupported.
 `time(timeframe, session, timezone, bars_back, timeframe_bars_back)` and
 `time_close(timeframe, session, timezone, bars_back, timeframe_bars_back)`

@@ -1,4 +1,4 @@
-use chrono::{DateTime, Duration, FixedOffset, LocalResult, NaiveDate, Offset, TimeZone, Utc};
+use chrono::{DateTime, Duration, LocalResult, NaiveDate, Offset, TimeZone, Utc};
 use chrono_tz::Tz;
 
 use super::is_supported_utc_timezone;
@@ -104,9 +104,10 @@ pub(super) fn parse_timestamp_date_string(date_string: &str) -> Result<i64, Stri
         }
         _ => (0, 0, 0, next_index),
     };
-    let offset_seconds = match tokens.get(next_index) {
-        Some(timezone) => parse_timestamp_timezone_token(timezone, value)?,
-        None => 0,
+    let timezone = match tokens.get(next_index) {
+        Some(timezone) => parse_numeric_timestamp_timezone(timezone)
+            .ok_or_else(|| format!("timestamp unsupported dateString `{value}`"))?,
+        None => NumericTimestampTimezone::Fixed(0),
     };
     if tokens.len() > next_index + usize::from(tokens.get(next_index).is_some()) {
         return Err(format!("timestamp unsupported dateString `{date_string}`"));
@@ -118,13 +119,8 @@ pub(super) fn parse_timestamp_date_string(date_string: &str) -> Result<i64, Stri
     let Some(datetime) = date.and_hms_opt(hour, minute, second) else {
         return Err(format!("timestamp invalid dateString `{date_string}`"));
     };
-    let Some(offset) = FixedOffset::east_opt(offset_seconds) else {
-        return Err(format!("timestamp unsupported dateString `{date_string}`"));
-    };
-    let Some(datetime) = offset.from_local_datetime(&datetime).single() else {
-        return Err(format!("timestamp invalid dateString `{date_string}`"));
-    };
-    Ok(datetime.timestamp_millis())
+    numeric_timestamp_millis(timezone, Utc.from_utc_datetime(&datetime))
+        .ok_or_else(|| format!("timestamp invalid dateString `{date_string}`"))
 }
 
 fn parse_timestamp_date_tokens(
@@ -193,11 +189,6 @@ fn parse_timestamp_time_token(token: &str, original: &str) -> Result<(u32, u32, 
         .map_or(Ok(0), |value| value.parse::<u32>())
         .map_err(|_| format!("timestamp unsupported dateString `{original}`"))?;
     Ok((hour, minute, second))
-}
-
-fn parse_timestamp_timezone_token(token: &str, original: &str) -> Result<i32, String> {
-    parse_fixed_timezone_offset(token)
-        .ok_or_else(|| format!("timestamp unsupported dateString `{original}`"))
 }
 
 pub(crate) fn parse_fixed_timezone_offset(timezone: &str) -> Option<i32> {
