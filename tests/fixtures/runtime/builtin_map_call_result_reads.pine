@@ -32,6 +32,13 @@ map.new<string, color>().put(key="key", value=color.red)
 map.new<color, int>().put(color.blue, 2)
 plot(1, "map_new_call_result_put_scalar_templates")
 
+map.new<int, float>().clear()
+map.new<float, bool>().clear()
+map.new<bool, string>().clear()
+map.new<string, color>().clear()
+map.new<color, int>().clear()
+plot(1, "map_new_call_result_clear_scalar_templates")
+
 copied = map.new<string, float>().copy()
 copied.put("value", 2.5)
 plot(copied.size(), "map_new_copy_mutation_size")

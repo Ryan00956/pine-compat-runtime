@@ -2177,6 +2177,12 @@ continue. Local alias results update shared map storage, while fresh imported
 and built-in results isolate the write; invalid key/value/arity, UDF-side-
 effect, remaining map-mutation, and public-schema rules remain unchanged. This
 does not widen UDT or UDT-array identity.
+Item 133 adds terminal `.clear()` to every concrete scalar map-result producer.
+It empties the resolved backing entry list, returns `void`, and cannot
+continue. Local alias results update shared map storage, while fresh imported
+and built-in results isolate the clear; arity, UDF-side-effect, remaining map-
+mutation, template, and public-schema rules remain unchanged. This does not
+widen UDT or UDT-array identity.
 Broader UDT element families, bound matrix-result receivers outside the exact
 closed set, local/imported user-method matrix-result receivers without a
 concrete supported kind, unregistered or unresolved user-function matrix-result

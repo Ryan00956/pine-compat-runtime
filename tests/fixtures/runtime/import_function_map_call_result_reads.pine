@@ -33,3 +33,7 @@ plot(left.exposeMapFunction().values().size(), "values_size")
 plot(left.exposeIntMapFunction().values().copy().size(), "int_values_size")
 plot(right.exposeMapFunction().copy().values().size(), "dual_alias_values_size")
 plot(left.exposeMapFunction().size() == 0 and left.exposeIntMapFunction().size() == 0 ? 1 : 0, "call_result_put_fresh_function_isolation")
+
+left.exposeMapFunction().clear()
+left.exposeIntMapFunction().clear()
+plot(left.exposeMapFunction().size() == 0 and left.exposeIntMapFunction().size() == 0 ? 1 : 0, "call_result_clear_fresh_function_isolation")

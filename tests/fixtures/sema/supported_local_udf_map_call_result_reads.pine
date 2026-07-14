@@ -61,6 +61,13 @@ identity(color_bool).put(color.red, false)
 identity(float_int).put(2.5, 4)
 fresh().put("fresh", 9.0)
 
+identity(string_float).clear()
+identity(int_string).clear()
+identity(bool_color).clear()
+identity(color_bool).clear()
+identity(float_int).clear()
+fresh().clear()
+
 plot(direct_size + direct_get + (direct_contains ? 1 : 0) + direct_copy.get("v") + (int_string_get == "one" ? 1 : 0) + (bool_color_get == color.red ? 1 : 0) + (color_bool_get ? 1 : 0) + float_int_get + block_get + nested_get + selected_get + fresh_size + nested_direct_get + direct_keys.size() + (copied_key == "v" ? 1 : 0) + int_key + (bool_key ? 1 : 0) + (color_key == color.blue ? 1 : 0) + float_key + direct_values.size() + copied_value + (string_value == "one" ? 1 : 0) + (color_value == color.red ? 1 : 0) + (bool_value ? 1 : 0) + int_value)
 identity(string_float).keys().push("extra")
 identity(string_float).values().push(1.0)

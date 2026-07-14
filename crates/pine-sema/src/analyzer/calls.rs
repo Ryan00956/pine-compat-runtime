@@ -408,7 +408,7 @@ impl Analyzer {
         let Some(builtin_name) = map_call_result_builtin_name(method_name) else {
             self.unsupported(
                 &format!("map.{method_name}"),
-                "direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
+                "direct map call-result methods currently support only `.size()`, terminal `.put()` and `.clear()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
                 callee.span,
             );
             return Some(None);

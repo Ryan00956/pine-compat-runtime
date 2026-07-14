@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added terminal `.clear()` to every concrete scalar map call result. It
+  empties the resolved backing entry list, returns `void`, and cannot continue.
+  Local UDF and local user-method aliases update shared storage; fresh
+  `map.new`, `map.copy`, imported-function, and imported-method results isolate
+  the clear. Arity, UDF side-effect, remaining map-mutation, template, and
+  public-schema boundaries retain ordinary `map.clear` behavior.
 - Added terminal `.put(key, value)` to every concrete scalar map call result:
   supported `map.new<K,V>`, `map.copy(existing)`, local/imported pure functions,
   and local/imported user methods. It reuses concrete key/value validation,

@@ -64,6 +64,11 @@ anchor.exposeBoolColor().put(false, color.blue)
 anchor.exposeColorBool().put(color.red, false)
 anchor.exposeFresh().put(1, "one")
 
+anchor.expose().clear()
+anchor.exposeBoolColor().clear()
+anchor.exposeColorBool().clear()
+anchor.exposeFresh().clear()
+
 plot(size + get + copy_chain + fresh + block_return + nested_return + named_control_flow + qualified_method + constructor_receiver + nested_copy + keys.size() + (first_key == "open" ? 1 : 0) + (copied_key == "close" ? 1 : 0) + fresh_keys + values.size() + first_value + copied_value + fresh_values)
 anchor.expose().keys().push("extra")
 anchor.expose().values().push(1.0)

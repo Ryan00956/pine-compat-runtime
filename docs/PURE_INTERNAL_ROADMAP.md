@@ -619,6 +619,12 @@ Current baseline:
   `map.copy`, imported-function, and imported-method results isolate the write.
   Invalid key/value/arity, UDF-side-effect, remaining map-mutation, and public-
   schema boundaries retain ordinary `map.put` behavior.
+  The following map-result mutation slice adds terminal `.clear()` across the
+  same producer set. It empties the resolved backing map, returns `void`, and
+  cannot continue. Local UDF/user-method alias results update shared storage;
+  fresh constructor, copy, imported-function, and imported-method results
+  isolate the clear. Arity, UDF-side-effect, remaining mutation, template, and
+  public-schema boundaries retain ordinary `map.clear` behavior.
   The following read-only matrix-result slice adds `.row(index)` to every
   existing concrete matrix call-result producer: namespace and bound matrix
   operations, exact `matrix.new<float|int|bool|string|color>` templates, local

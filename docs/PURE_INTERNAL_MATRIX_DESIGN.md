@@ -1850,6 +1850,13 @@ Recommended future slices:
     Invalid key/value/arity, UDF-side-effect, remaining map-mutation, and public-
     schema boundaries retain ordinary `map.put` behavior. No matrix element,
     shape, storage, or public-schema rule is widened. Done.
+136. Every concrete scalar map call result additionally exposes terminal
+    `.clear()`. It empties the resolved backing entry list, returns `void`, and
+    cannot continue. Local UDF/user-method aliases update shared map storage;
+    fresh built-in/imported producers isolate the clear. Arity, UDF-side-
+    effect, remaining map-mutation, template, and public-schema boundaries
+    retain ordinary `map.clear` behavior. No matrix element, shape, storage,
+    or public-schema rule is widened. Done.
 
 ## Completion Gate For Future Positive Support
 

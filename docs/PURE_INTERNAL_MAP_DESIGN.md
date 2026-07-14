@@ -663,6 +663,13 @@ Recommended future slices:
     storage; fresh built-in and imported producers isolate the write. Invalid
     key/value/arity, UDF-side-effect, remaining map-mutation, template, and
     public-schema boundaries retain ordinary `map.put` behavior. Done.
+55. Every concrete scalar map call-result producer additionally exposes
+    terminal `.clear()`. It empties the resolved backing entry list, returns
+    `void`, and cannot continue. Local UDF and local user-method alias results
+    update shared storage; fresh `map.new`, `map.copy`, imported-function, and
+    imported-method results isolate the clear. Arity, UDF-side-effect,
+    remaining map-mutation, template, and public-schema boundaries retain
+    ordinary `map.clear` behavior. Done.
 
 ## Completion Gate For Future Widening
 
@@ -708,9 +715,10 @@ receives both entries. Template-less bare map declarations, non-scalar key/value
 templates, nested collection values, and map mutation inside user-defined
 functions remain unsupported until a later slice designs and fixtures those
 semantics. Unqualified local-UDF results with a concrete supported scalar map
-template now share size/put/get/contains/copy/keys/values with terminal put,
+template now share size/put/clear/get/contains/copy/keys/values with terminal
+put/clear,
 copy-only map continuation, derived-array transitions, and per-call template
 isolation. Local and imported user-function and user-method results with a
 concrete supported scalar map template now share the same helpers, including
-terminal put and same-library dual-alias isolation;
+terminal put/clear and same-library dual-alias isolation;
 unresolved or mixed-template direct result receivers remain gated.

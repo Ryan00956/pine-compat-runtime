@@ -1804,3 +1804,9 @@ return/parameter flow remains deferred.
     maps. Invalid key/value/arity, UDF-side-effect, remaining map-mutation, and
     public-schema rules remain unchanged. No imported UDT identity is widened.
     Done.
+123. Every concrete scalar map-result producer now exposes terminal `.clear()`.
+    It empties the resolved backing entry list, returns `void`, and cannot
+    continue. Local alias-returning producers retain shared-storage behavior,
+    while imported and built-in producers isolate clears in fresh maps. Arity,
+    UDF-side-effect, remaining map-mutation, template, and public-schema rules
+    remain unchanged. No imported UDT identity is widened. Done.

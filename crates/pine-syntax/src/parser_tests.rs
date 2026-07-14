@@ -1025,6 +1025,7 @@ fn parses_map_new_template_result_method_receivers_with_map_provenance() {
         "value = map.new<float,bool>().get(1.5)\n",
         "value = map.new<bool,string>().contains(true)\n",
         "value = map.new<string,float>().put(\"key\", 1.0)\n",
+        "value = map.new<string,float>().clear()\n",
         "value = map.new<string,color>().copy().size()\n",
         "value = map.new<color,int>().copy().get(color.red)\n",
     ] {
@@ -1244,6 +1245,7 @@ fn rejects_methods_after_terminal_builtin_collection_result_reads() {
         "bad = map.new<string, float>().get(\"missing\").custom()\n",
         "bad = map.new<string, float>().contains(\"missing\").custom()\n",
         "bad = map.new<string, float>().put(\"key\", 1.0).custom()\n",
+        "bad = map.new<string, float>().clear().custom()\n",
         "bad = map.copy(values).size().custom()\n",
         "bad = map.copy(values).get(1).custom()\n",
         "bad = map.copy(values).contains(1).custom()\n",

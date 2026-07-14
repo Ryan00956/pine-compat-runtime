@@ -7278,7 +7278,7 @@ fn reports_unsupported_local_udf_matrix_call_result_reads_fixture() {
             "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`array.rows` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.concat()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove()`, `.push()`, `.unshift()`, `.insert()`, `.set()`, `.fill()`, and `.sort()`; bind the result or use the namespace helper",
-            "`map.rows` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
+            "`map.rows` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()` and `.clear()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
         ],
     );
     assert_diagnostic_count(path, 8);
@@ -7302,7 +7302,7 @@ fn reports_unsupported_user_method_matrix_call_result_reads_fixture() {
             "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`array.rows` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.concat()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove()`, `.push()`, `.unshift()`, `.insert()`, `.set()`, `.fill()`, and `.sort()`; bind the result or use the namespace helper",
-            "`map.rows` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
+            "`map.rows` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()` and `.clear()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
         ],
     );
     assert_diagnostic_count(path, 8);
@@ -7405,18 +7405,19 @@ fn reports_unsupported_builtin_map_call_result_reads_fixture() {
         path,
         &[
             "`function_side_effect` is not supported: collection mutation via `map.put` is not supported inside user-defined functions",
+            "`function_side_effect` is not supported: collection mutation via `map.clear` is not supported inside user-defined functions",
             "`map.get` argument `key` expects string-compatible, got const int",
             "`map.contains` argument `key` expects integer-compatible, got const string",
             "`map.size` expects 1 argument(s), got 2",
             "`map.put` argument `key` expects string-compatible, got const int",
             "`map.put` argument `value` expects numeric-compatible, got const string",
             "`map.put` expects 3 argument(s), got 2",
-            "`map.clear` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
-            "`map.remove` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
-            "`map.put_all` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
+            "`map.clear` expects 1 argument(s), got 2",
+            "`map.remove` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()` and `.clear()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
+            "`map.put_all` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()` and `.clear()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
         ],
     );
-    assert_diagnostic_count(path, 10);
+    assert_diagnostic_count(path, 11);
 }
 
 #[test]
@@ -7434,9 +7435,9 @@ fn reports_unsupported_builtin_map_copy_call_result_reads_fixture() {
             "`map.contains` argument `key` expects string-compatible, got const int",
             "`map.size` expects 1 argument(s), got 2",
             "`map.put` argument `key` expects string-compatible, got const int",
-            "`map.clear` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
-            "`map.remove` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
-            "`map.put_all` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
+            "`map.clear` expects 1 argument(s), got 2",
+            "`map.remove` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()` and `.clear()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
+            "`map.put_all` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()` and `.clear()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
             "`map.copy` argument `id` expects map, got series float",
         ],
     );
@@ -7458,8 +7459,8 @@ fn reports_unsupported_local_udf_map_call_result_reads_fixture() {
             "`map.contains` argument `key` expects string-compatible, got const int",
             "`map.get` expects 2 argument(s), got 3",
             "`map.put` argument `key` expects string-compatible, got const int",
-            "`map.clear` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
-            "`map.remove` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
+            "`map.clear` expects 1 argument(s), got 2",
+            "`map.remove` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()` and `.clear()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
             "`array.contains` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.concat()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove()`, `.push()`, `.unshift()`, `.insert()`, `.set()`, `.fill()`, and `.sort()`; bind the result or use the namespace helper",
             "`call_result.copy` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`call_result.size` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
@@ -7488,8 +7489,8 @@ fn reports_unsupported_local_user_method_map_call_result_reads_fixture() {
             "`map.contains` argument `key` expects string-compatible, got const int",
             "`map.get` expects 2 argument(s), got 3",
             "`map.put` argument `key` expects string-compatible, got const int",
-            "`map.clear` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
-            "`map.remove` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
+            "`map.clear` expects 1 argument(s), got 2",
+            "`map.remove` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()` and `.clear()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
             "`array.contains` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.concat()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove()`, `.push()`, `.unshift()`, `.insert()`, `.set()`, `.fill()`, and `.sort()`; bind the result or use the namespace helper",
             "`call_result.copy` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "ternary map branches must resolve to the same map template",
@@ -7519,8 +7520,8 @@ fn reports_unsupported_imported_user_method_map_call_result_reads_fixture() {
             "`map.contains` argument `key` expects string-compatible, got const int",
             "`map.get` expects 2 argument(s), got 3",
             "`map.put` argument `key` expects string-compatible, got const int",
-            "`map.clear` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
-            "`map.remove` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
+            "`map.clear` expects 1 argument(s), got 2",
+            "`map.remove` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()` and `.clear()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
             "`array.contains` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.concat()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove()`, `.push()`, `.unshift()`, `.insert()`, `.set()`, `.fill()`, and `.sort()`; bind the result or use the namespace helper",
             "`call_result.copy` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`call_result.size` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
@@ -7548,7 +7549,7 @@ fn reports_unsupported_imported_user_method_matrix_call_result_reads_fixture() {
             "`call_result.copy` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`array.rows` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.concat()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove()`, `.push()`, `.unshift()`, `.insert()`, `.set()`, `.fill()`, and `.sort()`; bind the result or use the namespace helper",
-            "`map.rows` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
+            "`map.rows` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()` and `.clear()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
         ],
     );
     assert_import_diagnostic_count(path, 8);
@@ -7573,7 +7574,7 @@ fn reports_unsupported_imported_function_matrix_call_result_reads_fixture() {
             "`call_result.copy` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`call_result.rows` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`array.rows` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.concat()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove()`, `.push()`, `.unshift()`, `.insert()`, `.set()`, `.fill()`, and `.sort()`; bind the result or use the namespace helper",
-            "`map.rows` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
+            "`map.rows` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()` and `.clear()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
         ],
     );
     assert_import_diagnostic_count(path, 8);
@@ -7596,8 +7597,8 @@ fn reports_unsupported_imported_function_map_call_result_reads_fixture() {
             "`map.contains` argument `key` expects string-compatible, got const int",
             "`map.get` expects 2 argument(s), got 3",
             "`map.put` argument `key` expects string-compatible, got const int",
-            "`map.clear` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
-            "`map.remove` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
+            "`map.clear` expects 1 argument(s), got 2",
+            "`map.remove` is not supported: direct map call-result methods currently support only `.size()`, terminal `.put()` and `.clear()`, `.get()`, `.contains()`, `.copy()`, `.keys()`, and `.values()`; bind the result or use the namespace helper",
             "`array.contains` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.concat()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove()`, `.push()`, `.unshift()`, `.insert()`, `.set()`, `.fill()`, and `.sort()`; bind the result or use the namespace helper",
             "`call_result.copy` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",
             "`call_result.size` is not supported: direct call-result methods require a supported concrete receiver type; bind the result first",

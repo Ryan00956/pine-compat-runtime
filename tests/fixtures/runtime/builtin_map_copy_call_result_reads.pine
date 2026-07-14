@@ -34,6 +34,11 @@ map.copy(int_bool).put(8, false)
 map.copy(color_int).put(color.blue, 5)
 plot(source.size() == 2 and source.get("open") == 1.25 and not source.contains("extra") and int_bool.size() == 1 and color_int.size() == 1 ? 1 : 0, "map_copy_call_result_put_source_independent")
 
+map.copy(source).clear()
+map.copy(int_bool).clear()
+map.copy(color_int).clear()
+plot(source.size() == 2 and source.get("open") == 1.25 and int_bool.size() == 1 and color_int.size() == 1 ? 1 : 0, "map_copy_call_result_clear_source_independent")
+
 plot(map.copy(source).size(), "copy_size")
 plot(map.copy(source).get("open"), "copy_get")
 plot(map.copy(source).contains("close") ? 1 : 0, "copy_contains")

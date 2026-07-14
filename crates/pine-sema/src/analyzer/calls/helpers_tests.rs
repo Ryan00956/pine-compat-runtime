@@ -73,6 +73,7 @@ mod tests {
         for (method_name, builtin_name) in [
             ("size", "map.size"),
             ("put", "map.put"),
+            ("clear", "map.clear"),
             ("get", "map.get"),
             ("contains", "map.contains"),
             ("copy", "map.copy"),
@@ -85,7 +86,7 @@ mod tests {
             );
         }
 
-        assert_eq!(map_call_result_builtin_name("clear"), None);
+        assert_eq!(map_call_result_builtin_name("remove"), None);
     }
 
     #[test]

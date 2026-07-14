@@ -5,7 +5,12 @@ badDirectPut() =>
     map.new<string, float>().put("key", 1.0)
     1
 
+badDirectClear() =>
+    map.new<string, float>().clear()
+    1
+
 bad_direct_put = badDirectPut()
+bad_direct_clear = badDirectClear()
 
 wrong_get_key = map.new<string, float>().get(1)
 wrong_contains_key = map.new<int, float>().contains("bad")
@@ -13,7 +18,7 @@ bad_size_arity = map.new<string, float>().size(1)
 map.new<string, float>().put(1, 1.0)
 map.new<string, float>().put("key", "bad")
 map.new<string, float>().put("key")
-clear_result = map.new<string, float>().clear()
+clear_result = map.new<string, float>().clear(1)
 remove_result = map.new<string, float>().remove("key")
 put_all_result = map.new<string, float>().put_all(map.new<string, float>())
 
