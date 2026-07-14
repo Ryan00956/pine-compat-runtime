@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added IANA timezone support to numeric-calendar `timestamp()` calls. Named
+  zones use historical DST rules after calendar overflow normalization;
+  repeated local times select the earlier absolute instant, and nonexistent
+  local times shift forward by the offset jump. Invalid zone names remain
+  runtime errors, while IANA tokens in the const `dateString` overload remain a
+  separate boundary.
 - Added IANA timezone support to explicit time-based sessions in `time()` and
   `time_close()`. Session membership and close clipping follow the named zone's
   timestamp-specific DST offset; repeated close times use the later instant,

@@ -1,6 +1,93 @@
-use chrono::{FixedOffset, NaiveDate, TimeZone};
+use chrono::{DateTime, Duration, FixedOffset, LocalResult, NaiveDate, Offset, TimeZone, Utc};
+use chrono_tz::Tz;
 
 use super::is_supported_utc_timezone;
+
+#[derive(Clone, Copy)]
+pub(super) enum NumericTimestampTimezone {
+    Fixed(i32),
+    Iana(Tz),
+}
+
+pub(super) fn parse_numeric_timestamp_timezone(timezone: &str) -> Option<NumericTimestampTimezone> {
+    if let Some(offset) = parse_fixed_timezone_offset(timezone) {
+        return Some(NumericTimestampTimezone::Fixed(offset));
+    }
+    Some(NumericTimestampTimezone::Iana(
+        timezone.trim().parse().ok()?,
+    ))
+}
+
+pub(super) fn numeric_timestamp_millis(
+    timezone: NumericTimestampTimezone,
+    local_datetime: DateTime<Utc>,
+) -> Option<i64> {
+    match timezone {
+        NumericTimestampTimezone::Fixed(offset) => local_datetime
+            .checked_sub_signed(Duration::try_seconds(i64::from(offset))?)
+            .map(|datetime| datetime.timestamp_millis()),
+        NumericTimestampTimezone::Iana(timezone) => {
+            resolve_iana_numeric_timestamp(timezone, local_datetime.naive_utc())
+        }
+    }
+}
+
+fn resolve_iana_numeric_timestamp(timezone: Tz, local: chrono::NaiveDateTime) -> Option<i64> {
+    const MAX_GAP_MINUTES: i64 = 2 * 24 * 60;
+
+    // Use compatible local-time resolution: overlaps select the earlier
+    // absolute instant, while gaps shift the input forward by the offset jump.
+    match timezone.from_local_datetime(&local) {
+        LocalResult::Single(datetime) => return Some(datetime.timestamp_millis()),
+        LocalResult::Ambiguous(first, second) => {
+            return Some(first.timestamp_millis().min(second.timestamp_millis()));
+        }
+        LocalResult::None => {}
+    }
+
+    let before_offset = nearest_iana_offset(timezone, local, -1, MAX_GAP_MINUTES)?;
+    let after_offset = nearest_iana_offset(timezone, local, 1, MAX_GAP_MINUTES)?;
+    let gap_seconds = after_offset.checked_sub(before_offset)?;
+    if gap_seconds <= 0 {
+        return None;
+    }
+    let shifted = local.checked_add_signed(Duration::seconds(i64::from(gap_seconds)))?;
+    match timezone.from_local_datetime(&shifted) {
+        LocalResult::Single(datetime) => Some(datetime.timestamp_millis()),
+        LocalResult::Ambiguous(first, second) => {
+            Some(first.timestamp_millis().min(second.timestamp_millis()))
+        }
+        LocalResult::None => None,
+    }
+}
+
+fn nearest_iana_offset(
+    timezone: Tz,
+    local: chrono::NaiveDateTime,
+    direction: i64,
+    max_minutes: i64,
+) -> Option<i32> {
+    for minutes in 1..=max_minutes {
+        let delta = Duration::minutes(direction.checked_mul(minutes)?);
+        let candidate = local.checked_add_signed(delta)?;
+        match timezone.from_local_datetime(&candidate) {
+            LocalResult::Single(datetime) => {
+                return Some(datetime.offset().fix().local_minus_utc());
+            }
+            LocalResult::Ambiguous(first, second) => {
+                let first = first.offset().fix().local_minus_utc();
+                let second = second.offset().fix().local_minus_utc();
+                return Some(if direction < 0 {
+                    first.max(second)
+                } else {
+                    first.min(second)
+                });
+            }
+            LocalResult::None => {}
+        }
+    }
+    None
+}
 
 pub(super) fn parse_timestamp_date_string(date_string: &str) -> Result<i64, String> {
     let value = date_string.trim();

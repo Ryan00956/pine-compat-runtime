@@ -801,11 +801,37 @@ plot(hour(time, "Mars/Olympus"))
 }
 
 #[test]
-fn rejects_unsupported_timestamp_timezone() {
+fn runs_iana_numeric_timestamps() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("IANA timestamps")
+plot(timestamp("America/New_York", 2021, 1, 1) == 1609477200000 ? 1 : 0)
+plot(timestamp("America/New_York", 2021, 7, 1) == 1625112000000 ? 1 : 0)
+plot(timestamp("Asia/Tokyo", 2021, 1, 1) == 1609426800000 ? 1 : 0)
+plot(timestamp("America/New_York", 2021, 11, 7, 1, 30) == 1636263000000 ? 1 : 0)
+plot(timestamp("America/New_York", 2021, 3, 14, 2, 30) == 1615707000000 ? 1 : 0)
+plot(timestamp("Australia/Lord_Howe", 2021, 10, 3, 2, 15) == 1633189500000 ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("result");
+    for plot in &result.plots {
+        assert_values_close(&plot.values, &[1.0]);
+    }
+}
+
+#[test]
+fn rejects_invalid_timestamp_timezone() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("bad timestamp timezone")
-plot(timestamp("America/New_York", 2021, 1, 1))
+plot(timestamp("Mars/Olympus", 2021, 1, 1))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -821,7 +847,7 @@ plot(timestamp("America/New_York", 2021, 1, 1))
     assert!(
         error
             .message
-            .contains("timestamp unsupported timezone `America/New_York`"),
+            .contains("timestamp unsupported timezone `Mars/Olympus`"),
         "{}",
         error.message
     );

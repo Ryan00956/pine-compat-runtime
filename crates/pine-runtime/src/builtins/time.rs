@@ -12,8 +12,10 @@ mod timestamp;
 use self::component::TimeComponent;
 pub(crate) use self::formatting::{format_datetime_with_offset, format_utc_datetime};
 use self::session::{parse_time_session, parse_time_session_timezone, session_close_for_bar_open};
-use self::timestamp::parse_timestamp_date_string;
 pub(crate) use self::timestamp::{format_fixed_timezone_offset, parse_fixed_timezone_offset};
+use self::timestamp::{
+    numeric_timestamp_millis, parse_numeric_timestamp_timezone, parse_timestamp_date_string,
+};
 
 pub(crate) fn dayofweek_value(datetime: DateTime<Utc>) -> i64 {
     i64::from(datetime.weekday().num_days_from_sunday()) + 1
@@ -324,10 +326,9 @@ impl<'a> HistoricalRuntime<'a> {
                 .map_err(|message| RuntimeError { message });
         }
         let timezone = args.timezone.unwrap_or_else(|| "UTC".to_owned());
-        let timezone_offset_seconds =
-            parse_fixed_timezone_offset(&timezone).ok_or_else(|| RuntimeError {
-                message: format!("timestamp unsupported timezone `{timezone}`"),
-            })?;
+        let timezone = parse_numeric_timestamp_timezone(&timezone).ok_or_else(|| RuntimeError {
+            message: format!("timestamp unsupported timezone `{timezone}`"),
+        })?;
         let (Some(year), Some(month), Some(day)) = (args.year, args.month, args.day) else {
             return Ok(PineValue::Na);
         };
@@ -344,12 +345,7 @@ impl<'a> HistoricalRuntime<'a> {
                 ),
             });
         };
-        let Some(offset) = Duration::try_seconds(i64::from(timezone_offset_seconds)) else {
-            return Err(RuntimeError {
-                message: format!("timestamp unsupported timezone `{timezone}`"),
-            });
-        };
-        let Some(datetime) = datetime.checked_sub_signed(offset) else {
+        let Some(timestamp) = numeric_timestamp_millis(timezone, datetime) else {
             return Err(RuntimeError {
                 message: format!(
                     "timestamp invalid UTC datetime: {year:04}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02}",
@@ -359,7 +355,7 @@ impl<'a> HistoricalRuntime<'a> {
                 ),
             });
         };
-        Ok(PineValue::Int(datetime.timestamp_millis()))
+        Ok(PineValue::Int(timestamp))
     }
 
     fn eval_timestamp_args(

@@ -505,9 +505,11 @@ supplied absolute timestamp so DST transitions affect returned local values.
 interpretation and session-end clipping. Unsupported time zones are runtime
 errors. The component variables still use the runtime's UTC bar-time view while
 exchange timezone defaults remain unsupported. `timestamp` currently supports numeric calendar arguments with an
-optional UTC/GMT/numeric fixed-offset `timezone` argument, including named
-calendar parameters and normalized
+optional UTC/GMT/numeric fixed-offset or IANA `timezone` argument, including
+named calendar parameters and normalized
 zero/negative/overflow `month`, `day`, `hour`, `minute`, and `second` offsets.
+IANA overlaps select the earlier absolute instant, and nonexistent local times
+shift forward by the zone's offset jump while preserving minute and second.
 Omitted hour/minute/second default to 0, `na` inputs return `na`, and timestamp
 values outside the UTC datetime range are runtime errors. The
 `timestamp(dateString)` overload accepts const strings
@@ -515,8 +517,8 @@ for ISO dates such as `"2021-01-01"`, English month dates such as
 `"29 Aug 2024"`, optional `HH:mm` or `HH:mm:ss` time-of-day tokens, and
 optional `UTC`/`GMT`/fixed-offset timezone tokens such as `"UTC+0"` or
 `"-0400"`; omitted time-of-day and timezone default to midnight UTC. IANA
-timezone conversion, broader date-string parsing, and exchange-timezone default
-semantics remain unsupported.
+timezone tokens in `dateString`, broader date-string parsing, and
+exchange-timezone default semantics remain unsupported.
 `time(timeframe, session, timezone, bars_back, timeframe_bars_back)` and
 `time_close(timeframe, session, timezone, bars_back, timeframe_bars_back)`
 currently implement the simple-string timeframe subset with optional

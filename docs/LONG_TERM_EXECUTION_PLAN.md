@@ -257,7 +257,7 @@ Closed coverage:
   `math.phi`, `math.rphi`, `math.pow`, `math.round`,
   `math.round_to_mintick`, `math.random`, and `math.sum`;
   string coverage includes `str.split`; time
-  helper coverage includes the numeric UTC `timestamp`, IANA-aware calendar
+  helper coverage includes numeric IANA-aware `timestamp`, IANA-aware calendar
   component functions such as `weekofyear` and `dayofweek`, IANA-aware
   `str.format_time`, and `time`/`time_close` subsets with IANA-aware explicit
   time-based sessions and UTC calendar

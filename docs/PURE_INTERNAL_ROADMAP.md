@@ -1316,6 +1316,8 @@ Current baseline:
 - IANA timezone and DST-aware calendar component and `str.format_time` calls
   plus explicit `time`/`time_close` session filtering and clipping, while
   exchange timezone defaults remain outside the fixed runtime metadata model;
+- numeric `timestamp` IANA local-time conversion with explicit overlap and DST
+  gap resolution, while IANA `dateString` tokens remain a separate boundary;
 - many edge-case fixtures for numeric rolling windows, `na`, tuple returns, and
   supported qualifier families.
 

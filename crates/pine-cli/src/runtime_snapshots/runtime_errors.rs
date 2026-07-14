@@ -999,6 +999,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/regressions/time_function_unsupported_timezone.pine",
         "time unsupported timezone `Mars/Olympus`",
     ),
+    (
+        "tests/fixtures/regressions/timestamp_unsupported_timezone.pine",
+        "timestamp unsupported timezone `Mars/Olympus`",
+    ),
 ];
 
 pub(crate) type RuntimeLibraryErrorFixture = (
