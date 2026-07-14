@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added terminal `.swap_rows(row1, row2)` to every concrete matrix call
+  result. It validates two simple-int row indexes, swaps complete rows while
+  preserving shape and element kind, returns `void`, and cannot continue.
+  Local UDF and local user-method alias results update shared storage; fresh
+  namespace, bound-transform, imported-function, and imported-method results
+  isolate the write. Same-index no-op, bounds/`na` indexes, upstream-`na`
+  argument evaluation, UDF side effects, and public schemas retain ordinary
+  `matrix.swap_rows` boundaries.
 - Added terminal `.reshape(rows, columns)` to every concrete matrix call
   result. It preserves row-major cells while requiring the element count to
   remain unchanged, returns `void`, and cannot continue. Local UDF and local

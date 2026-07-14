@@ -1070,6 +1070,13 @@ Current baseline:
   the change. Upstream-`na` dimension evaluation, negative/`na` and count-
   mismatch errors, invalid type/arity, UDF-side-effect, and public-schema
   boundaries are fixture-backed; remaining matrix-result mutations stay gated.
+  The next row-permutation slice adds terminal `.swap_rows(row1, row2)` to the
+  same producer set. It requires two simple-int row indexes, swaps complete
+  rows while preserving shape and element kind, returns `void`, and cannot
+  continue. Local aliases update shared storage; fresh producer results isolate
+  the write. Same-index no-op, bounds/`na` indexes, upstream-`na` argument
+  evaluation, invalid type/arity, UDF-side-effect, and public-schema boundaries
+  are fixture-backed; remaining matrix-result mutations stay gated.
 
 Remaining internal work:
 

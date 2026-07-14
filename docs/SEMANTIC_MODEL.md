@@ -849,11 +849,17 @@ int dimensions, and preserves local UDF/user-method alias shape writes versus
 isolated writes for fresh producers. Negative/`na` dimensions, element-count
 mismatch, upstream-`na` dimension evaluation, and UDF side-effect behavior are
 unchanged.
+`.swap_rows(row1, row2)` likewise returns terminal `void` for every concrete
+matrix call-result producer. It validates two simple-int row indexes, swaps
+complete rows while preserving shape and concrete element kind, preserves
+local UDF/user-method alias writes versus isolated fresh-producer writes, and
+treats equal indexes as a no-op. Bounds/`na` indexes, upstream-`na` argument
+evaluation, invalid arity/type, and UDF side-effect behavior are unchanged.
 Other terminal readers, wrong-result helpers, invalid arity or argument types,
-broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)` fail closed. The
+broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.swap_rows(...)` fail closed. The
 existing bound-receiver
 `matrix_id.mult(array).size()` path remains on array-helper dispatch, while
-exact bound matrix-valued `matrix_id.mult(other)` results share the thirty-seven
+exact bound matrix-valued `matrix_id.mult(other)` results share the thirty-eight
 matrix helpers for matrix or scalar operands with the
 copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/predicate/aggregate-reader continuation
 rules.

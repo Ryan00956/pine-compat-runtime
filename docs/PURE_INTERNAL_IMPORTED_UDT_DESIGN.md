@@ -1732,3 +1732,11 @@ return/parameter flow remains deferred.
     shape behavior. Upstream-`na` dimension evaluation, dimension/count errors,
     arity, and UDF side-effect rules remain unchanged. No imported UDT identity
     or public schema is widened. Done.
+115. The same concrete matrix-result producer set now exposes terminal
+    `.swap_rows(row1, row2)`. It validates two simple-int row indexes, swaps
+    complete rows while preserving shape and element kind, returns `void`, and
+    cannot continue. Imported and built-in producers isolate writes in fresh
+    matrices, while local alias-returning producers retain shared-storage
+    behavior. Same-index no-op, bounds/`na` indexes, upstream-`na` argument
+    evaluation, arity/type, and UDF side-effect rules remain unchanged. No
+    imported UDT identity or public schema is widened. Done.

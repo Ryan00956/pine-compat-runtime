@@ -1775,6 +1775,15 @@ Recommended future slices:
     Upstream-`na` dimension evaluation, negative/`na` dimensions, count
     mismatch, invalid type/arity, UDF-side-effect, and public-schema boundaries
     retain ordinary `matrix.reshape` behavior. Done.
+128. Every concrete matrix call result additionally exposes terminal
+    `.swap_rows(row1, row2)`. It validates two simple-int row indexes, swaps
+    complete rows without changing shape or concrete element kind, returns
+    `void`, and cannot continue. Local UDF and local user-method alias results
+    update shared storage; fresh namespace, bound-transform, imported-function,
+    and imported-method results isolate the write. Same-index no-op, bounds/
+    `na` indexes, upstream-`na` argument evaluation, invalid type/arity, UDF-
+    side-effect, and public-schema boundaries retain ordinary
+    `matrix.swap_rows` behavior. Done.
 
 ## Completion Gate For Future Positive Support
 
