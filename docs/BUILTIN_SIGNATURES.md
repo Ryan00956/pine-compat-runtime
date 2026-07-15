@@ -2097,7 +2097,11 @@ only the absolute end. Global or scoped `(?m)` gives `$` multiline behavior,
 and `(?-m)` restores the default. A default `.` excludes Pine's full line
 terminator set: LF, CR (including CRLF), U+0085, U+2028, and U+2029. Global or
 scoped `(?s)` lets `.` match those characters, and `(?-s)` restores the
-default; escaped, character-class, and `\Q...\E`-quoted dots remain literal. It
+default. Global or scoped `(?d)` enables Java/Pine UNIX-lines mode: only LF is
+treated as a line terminator by `.`, `^`, `$`, and `\Z`; `(?-d)` restores the
+surrounding mode. Dotall `s` still takes precedence for `.`, `\R` remains the
+full line-break matcher, and escaped, character-class, and `\Q...\E`-quoted
+dots remain literal. It
 returns the first matched substring, an empty string when there is no match,
 `na` for `na` inputs, and a runtime error for invalid regex patterns.
 Backreferences, lookaround, atomic groups, possessive quantifiers, and other

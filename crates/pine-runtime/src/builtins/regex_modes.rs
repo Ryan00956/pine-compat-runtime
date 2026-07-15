@@ -8,6 +8,7 @@ pub(crate) struct PineRegexMode {
     pub(crate) verbose: bool,
     pub(crate) multiline: bool,
     pub(crate) dotall: bool,
+    pub(crate) unix_lines: bool,
 }
 
 pub(crate) struct PineRegexFlags<'a> {
@@ -28,7 +29,7 @@ pub(crate) fn parse_pine_regex_flags(pattern: &str, start: usize) -> Option<Pine
     let mut separator = None;
     while let Some(&byte) = bytes.get(index) {
         match byte {
-            b'i' | b'm' | b's' | b'u' | b'U' | b'x' => index += 1,
+            b'd' | b'i' | b'm' | b's' | b'u' | b'U' | b'x' => index += 1,
             b'-' if separator.is_none() => {
                 separator = Some(index);
                 index += 1;
@@ -103,12 +104,18 @@ pub(crate) fn apply_pine_regex_flags(
     if flags.disabled.contains('s') {
         mode.dotall = false;
     }
+    if flags.enabled.contains('d') {
+        mode.unix_lines = true;
+    }
+    if flags.disabled.contains('d') {
+        mode.unix_lines = false;
+    }
     mode
 }
 
 pub(crate) fn push_rust_regex_flags(result: &mut String, flags: &PineRegexFlags<'_>) {
-    let enabled = flags.enabled.replace(['u', 'U'], "");
-    let disabled = flags.disabled.replace(['u', 'U'], "");
+    let enabled = flags.enabled.replace(['d', 'u', 'U'], "");
+    let disabled = flags.disabled.replace(['d', 'u', 'U'], "");
     if enabled.is_empty() && disabled.is_empty() {
         if flags.scoped {
             result.push_str("(?:");

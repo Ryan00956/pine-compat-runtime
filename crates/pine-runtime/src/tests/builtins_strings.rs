@@ -698,6 +698,39 @@ fn normalizes_pine_regex_named_character_escapes() {
 }
 
 #[test]
+fn normalizes_pine_regex_unix_lines_mode() {
+    assert_eq!(
+        normalize_pine_regex(r"(?d).(?-d:.)(?d-s:.)"),
+        r"[^\n](?:[^\n\r\x{0085}\x{2028}\x{2029}])(?-s:[^\n])"
+    );
+    assert_eq!(
+        normalize_pine_regex(r"(?dm)^.$(?-d:.)"),
+        r"(?m)^[^\n]$(?:[^\n\r\x{0085}\x{2028}\x{2029}])"
+    );
+
+    let dot =
+        Regex::new(&normalize_pine_regex(r"(?d)\A.\z")).expect("normalized global UNIX_LINES dot");
+    assert!(dot.is_match("\r"));
+    assert!(dot.is_match("\u{0085}"));
+    assert!(dot.is_match("\u{2028}"));
+    assert!(!dot.is_match("\n"));
+
+    let scoped = Regex::new(&normalize_pine_regex(r"\A(?d:.).\z"))
+        .expect("normalized scoped UNIX_LINES restoration");
+    assert!(scoped.is_match("\rA"));
+    assert!(!scoped.is_match("\r\u{2028}"));
+
+    let disabled = Regex::new(&normalize_pine_regex(r"(?d)\A(?-d:A).\z"))
+        .expect("normalized disabled UNIX_LINES scope");
+    assert!(disabled.is_match("A\r"));
+    assert!(!disabled.is_match("A\n"));
+
+    let dotall = Regex::new(&normalize_pine_regex(r"(?ds)\A.\z"))
+        .expect("normalized UNIX_LINES dotall precedence");
+    assert!(dotall.is_match("\n"));
+}
+
+#[test]
 fn rejects_invalid_pine_regex_named_character_escapes() {
     for invalid in [
         r"\N{}",

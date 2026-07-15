@@ -1348,7 +1348,9 @@ Current baseline:
   intersection, verbose, case-mode, and invalid-range boundaries, plus
   default-dot exclusion of Pine's full
   line-terminator set with
-  global/scoped `(?s)` and `(?-s)` restoration,
+  global/scoped `(?s)` and `(?-s)` restoration, plus global/scoped Java/Pine
+  `(?d)` UNIX-lines mode with LF-only dot/anchor semantics, `(?-d)` restoration,
+  dotall precedence, and `\R` independence,
   and ASCII-default `(?i)` versus independent lowercase-`u` Unicode case
   folding, with `U` implying `u`, separate `-u`/`-U` restoration, preserved
   ASCII predefined/POSIX class boundaries, and character-class

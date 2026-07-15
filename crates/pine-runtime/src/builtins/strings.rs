@@ -488,7 +488,11 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
         }
 
         if class_depth == 0 && byte == b'.' && !mode.dotall {
-            result.push_str(r"[^\n\r\x{0085}\x{2028}\x{2029}]");
+            result.push_str(if mode.unix_lines {
+                r"[^\n]"
+            } else {
+                r"[^\n\r\x{0085}\x{2028}\x{2029}]"
+            });
             index += 1;
             continue;
         }
