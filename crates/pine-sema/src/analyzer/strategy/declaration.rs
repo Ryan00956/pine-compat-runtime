@@ -5,6 +5,7 @@ const STRATEGY_PERCENT_OF_EQUITY_DEFAULT_QTY_TYPE: &str = "strategy.percent_of_e
 const STRATEGY_CASH_PER_CONTRACT_COMMISSION_TYPE: &str = "strategy.commission.cash_per_contract";
 const STRATEGY_CASH_PER_ORDER_COMMISSION_TYPE: &str = "strategy.commission.cash_per_order";
 const STRATEGY_PERCENT_COMMISSION_TYPE: &str = "strategy.commission.percent";
+const STRATEGY_NONE_ACCOUNT_CURRENCY: &str = "NONE";
 
 impl Analyzer {
     pub(crate) fn validate_strategy_declaration_args(&mut self, args: &[CallArg]) {
@@ -39,6 +40,7 @@ impl Analyzer {
                     "max_boxes_count",
                     "max_lines_count",
                     "max_polylines_count",
+                    "currency",
                 ]
                 .get(index)
                 .copied()
@@ -63,6 +65,18 @@ impl Analyzer {
                         continue;
                     }
                     self.strategy_settings.initial_capital = initial_capital;
+                }
+                "currency" => {
+                    let Some(currency) = self.known_const_string_value(&arg.value) else {
+                        continue;
+                    };
+                    if currency != STRATEGY_NONE_ACCOUNT_CURRENCY {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy` argument `currency` only supports currency.NONE in the current no-conversion subset",
+                            arg.span,
+                        ));
+                    }
                 }
                 "default_qty_type" => {
                     default_qty_type_arg = Some(arg);

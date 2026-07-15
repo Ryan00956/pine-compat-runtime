@@ -4152,6 +4152,14 @@ fn reports_unsupported_strategy_declaration_properties_fixture() {
 }
 
 #[test]
+fn reports_unsupported_strategy_currency_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_currency.pine",
+        &["`strategy` argument `currency` only supports currency.NONE"],
+    );
+}
+
+#[test]
 fn reports_unsupported_strategy_close_entries_rule_unknown_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_close_entries_rule_unknown.pine",

@@ -158,6 +158,11 @@ const STRATEGY_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
         optional: true,
     },
+    BuiltinParam {
+        name: "currency",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
 ];
 
 const INPUT_PARAMS: &[BuiltinParam] = &[

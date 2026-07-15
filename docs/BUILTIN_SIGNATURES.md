@@ -679,7 +679,7 @@ ohlc4 = (open + high + low + close) / 4
 ```text
 indicator(title: const string, shorttitle?: const string, overlay?: const bool, format?: const string, precision?: const int, scale?: const string, max_bars_back?: const int, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset, ...)
   -> void
-strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, close_entries_rule?: const string, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset)
+strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, currency?: const string, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, close_entries_rule?: const string, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset)
   -> void
 max_bars_back(source: series numeric, num: const int)
   -> void
@@ -922,9 +922,10 @@ ordinary series history and does not add a public runtime schema field.
 `strategy.account_currency` is a read-only strategy-mode simple string. In the
 current default-only `currency.NONE` declaration subset, it inherits the fixed
 `syminfo.currency` value, currently `"USD"`. Direct, UDF, and history reads are
-supported without adding a public runtime schema field. Explicit
-`strategy(..., currency=...)`, settings overrides, and currency conversion
-remain outside the current subset.
+supported without adding a public runtime schema field. The explicit
+`strategy(..., currency=currency.NONE)` no-conversion declaration is accepted;
+other currency values, settings overrides, and currency conversion remain
+outside the current subset.
 `strategy.position_entry_name` is a read-only strategy-mode series string. It
 is `na` while flat and otherwise returns the entry order ID that initially
 opened the current continuous net long position. Pyramiding additions and
@@ -1248,9 +1249,9 @@ Supported direct currency constants include the official `currency.*`
 currency-code set from `currency.AUD` through `currency.ZAR`, including
 `currency.NONE`, `currency.BTC`, `currency.ETH`, `currency.USD`, and
 `currency.USDT`, as string values such as `"USD"`. Request currency conversion
-and explicit strategy account-currency configuration or conversion are not
-implemented; the default `strategy.account_currency` read is supported as
-described above.
+and non-`NONE` strategy account-currency configuration or conversion are not
+implemented; the default and explicit `currency.NONE`
+`strategy.account_currency` reads are supported as described above.
 Supported direct strategy constants include `strategy.long`, `strategy.short`,
 `strategy.fixed`, `strategy.cash`, `strategy.percent_of_equity`,
 `strategy.oca.cancel`, `strategy.oca.none`, `strategy.oca.reduce`,

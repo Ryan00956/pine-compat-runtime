@@ -157,6 +157,8 @@ mod tests {
                 pine_ir::ValueKind::Int
             ))
         );
+        assert_eq!(signature.params[19].name, "currency");
+        assert_eq!(signature.params[19].accepts, crate::Accepts::ConstString);
         assert!(!signature.variadic);
     }
 

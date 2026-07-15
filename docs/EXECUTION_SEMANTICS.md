@@ -44,7 +44,8 @@ runtime results do not include this key.
 cash value; when omitted, the runtime uses 100000.
 With the currently supported default account-currency path (`currency.NONE`),
 `strategy.account_currency` inherits the fixed `syminfo.currency` value,
-currently `"USD"`. Explicit strategy currency configuration and currency
+currently `"USD"`. Explicit `strategy(..., currency=currency.NONE)` selects
+the same no-conversion path. Other strategy currency values and currency
 conversion remain unsupported.
 `strategy(..., default_qty_type=strategy.fixed, default_qty_value=N)` accepts a
 positive const numeric fixed default entry quantity.
@@ -184,8 +185,9 @@ reporting subset. `strategy.position_entry_name` is a historical series string.
 `strategy.account_currency` is a read-only simple string that inherits the
 current fixed symbol currency under the default `currency.NONE` path. Direct,
 UDF, and history reads are supported without expanding public strategy JSON;
-indicator use, requested-context use, mutation, explicit currency settings,
-and conversion remain unsupported.
+indicator use, requested-context use, and mutation remain unsupported. An
+explicit `currency.NONE` declaration is accepted; other currency settings and
+conversion remain unsupported.
 In the current long-only subset,
 `strategy.position_size` is `0` when flat and positive while long.
 `strategy.position_avg_price` is `na` when flat and the current average entry

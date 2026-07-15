@@ -2,11 +2,15 @@
 
 ## Unreleased
 
+- Added the no-conversion `strategy(..., currency=currency.NONE)` declaration
+  subset. It preserves the default behavior where
+  `strategy.account_currency` inherits `syminfo.currency`; explicit account
+  currencies other than `currency.NONE` remain rejected.
 - Added `strategy.account_currency` as a read-only strategy-mode
   `simple string`. Under the currently supported default `currency.NONE`
   declaration path, it inherits the fixed `syminfo.currency` value (`"USD"`).
   Direct, UDF, and history reads are supported without expanding public
-  strategy output; explicit account-currency configuration and conversion
+  strategy output; non-default account-currency configuration and conversion
   remain outside this slice.
 - Added `strategy.default_entry_qty(fill_price)` as a read-only strategy-mode
   `series float` helper over the existing fixed, cash, and percent-of-equity

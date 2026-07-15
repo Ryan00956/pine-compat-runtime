@@ -29,7 +29,8 @@ na" marker while it waits for contextual type information.
 A script may have at most one top-level declaration call. `indicator(...)`
 selects indicator mode and `strategy(...)` selects strategy mode. Phase G
 accepts `strategy(...)` with the common declaration metadata subset plus
-positive const numeric `initial_capital`. Phase L adds the fixed default
+positive const numeric `initial_capital` and the explicit no-conversion
+`currency=currency.NONE` subset. Phase L adds the fixed default
 quantity declaration subset:
 `default_qty_type=strategy.fixed, default_qty_value=N` with positive const
 numeric `N`. Stage 7 Slice 31 adds
@@ -173,8 +174,9 @@ the current default-only `currency.NONE` subset it inherits the fixed
 `syminfo.currency` value, currently `"USD"`. Simple-string consumers plus
 direct, UDF, and history reads are supported; const-string consumers,
 indicator use, requested-context use, and mutation remain rejected. Explicit
-currency declarations, settings overrides, and conversion remain unsupported,
-and no public result field is added.
+`strategy(..., currency=currency.NONE)` is accepted as the same no-conversion
+path; other currency values, settings overrides, and conversion remain
+unsupported, and no public result field is added.
 `strategy.position_entry_name` is a read-only strategy-mode `series string`
 that is `na` while flat and otherwise returns the entry order ID that initially
 opened the current continuous net long position. A pyramiding addition or a

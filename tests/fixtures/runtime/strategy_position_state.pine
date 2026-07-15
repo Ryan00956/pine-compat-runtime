@@ -1,5 +1,5 @@
 //@version=5
-strategy("Position state strategy", overlay=true)
+strategy("Position state strategy", overlay=true, currency=currency.NONE)
 identity(value) => value
 position_entry_name = strategy.position_entry_name
 position_entry_name_udf = identity(strategy.position_entry_name)
