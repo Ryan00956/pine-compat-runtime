@@ -16775,6 +16775,30 @@ fn reports_unsupported_matrix_concat_udf_fixture() {
 }
 
 #[test]
+fn accepts_supported_runtime_error_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_runtime_error.pine");
+}
+
+#[test]
+fn reports_unsupported_runtime_error_message_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_runtime_error_message.pine",
+        &["`runtime.error` argument `message` expects string-compatible, got series float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_runtime_error_return_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_runtime_error_return.pine",
+        &[
+            "declarations must be initialized with a value-producing expression",
+            "`plot` argument `series` expects series/simple numeric, got const void",
+        ],
+    );
+}
+
+#[test]
 fn reports_unsupported_matrix_add_row_fixture() {
     assert_call_arg_message(
         "tests/fixtures/sema/unsupported_matrix_add_row.pine",

@@ -1208,6 +1208,7 @@ na(x: any) -> bool with argument qualifier
 nz(x: numeric-or-color-series) -> same kind and qualifier as x
 nz(x: T, replacement: T) -> strongest qualifier of x and replacement, kind T
 fixnan(source: series/simple int|float|color) -> same kind and qualifier as source
+runtime.error(message: string-compatible) -> void
 ```
 
 `na(x)` returns a bool with the argument qualifier: input, simple, and series
@@ -1218,6 +1219,12 @@ language null helper.
 `fixnan` returns the current non-`na` source value and otherwise returns the
 last non-`na` value observed at the same callsite. It returns `na` until the
 callsite has observed a non-`na` value.
+`runtime.error` accepts const, input, simple, or series strings. When execution
+reaches the call, it evaluates the message and immediately stops the current
+script run with that exact text. It is allowed inside user-defined functions,
+supports the named `message` argument, and has no value-producing return. A
+string-compatible `na` message is normalized to `NaN`, matching the runtime's
+existing string rendering convention.
 
 ## Arrays
 

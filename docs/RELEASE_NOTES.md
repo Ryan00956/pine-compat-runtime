@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added `runtime.error(message)` with string-compatible const, input, simple,
+  and series messages, named-argument and user-defined-function support, exact
+  reached-call error propagation, a deterministic `NaN` message for `na`, and
+  semantic rejection of non-string messages or attempts to consume its `void`
+  return.
 - Added `str.match()` compatibility for Java/Pine's rule that a backslash
   quotes any non-alphanumeric ASCII character. All ASCII punctuation and
   control/whitespace literals now work inside or outside character classes,

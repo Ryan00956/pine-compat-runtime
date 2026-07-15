@@ -237,6 +237,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "polyline",
     "polyline.delete",
     "polyline.new",
+    "runtime.error",
     "math.abs",
     "math.acos",
     "math.asin",

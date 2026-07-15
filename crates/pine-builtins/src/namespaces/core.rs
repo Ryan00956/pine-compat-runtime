@@ -601,6 +601,12 @@ const MAX_BARS_BACK_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const RUNTIME_ERROR_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "message",
+    accepts: Accepts::StringCompatible,
+    optional: false,
+}];
+
 pub(crate) const SCRIPT_SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "indicator",
@@ -620,6 +626,13 @@ pub(crate) const SCRIPT_SIGNATURES: &[BuiltinSignature] = &[
         name: "max_bars_back",
         phase: BuiltinPhase::Phase1Core,
         params: MAX_BARS_BACK_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "runtime.error",
+        phase: BuiltinPhase::Phase1Core,
+        params: RUNTIME_ERROR_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

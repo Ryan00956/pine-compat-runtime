@@ -194,6 +194,11 @@ current timeframe metadata subset exposes `timeframe.period` and
 `timeframe.main_period` as the runtime's single chart timeframe string. Main
 timeframe declaration overrides and requested-context differences are not
 claimed until a separate fixture-backed slice designs that context model.
+`runtime.error(message)` is a fixture-backed internal execution outcome: it
+accepts string-compatible messages, may be called through a user-defined
+function or named argument, and stops at the first reached call with the exact
+message. Typed `na` is normalized to `NaN`; non-string messages and uses of the
+`void` result are rejected. It does not require a host log or output contract.
 Input rows in `tests/fixtures/conformance.tsv` include two separate claims:
 the executable Pine `defval`/metadata subset covered by runtime fixtures, and
 the host override subset covered by Rust runtime, CLI, Python, and WASM entry

@@ -1,0 +1,18 @@
+//@version=6
+indicator("Supported runtime error")
+
+const_message = "const message"
+input_message = input.string("input message")
+series_message = str.format("bar {0}", bar_index)
+
+fail(string message) =>
+    runtime.error(message)
+
+if bar_index < 0
+    runtime.error(const_message)
+if bar_index < 0
+    runtime.error(message=input_message)
+if bar_index < 0
+    fail(series_message)
+
+plot(close)

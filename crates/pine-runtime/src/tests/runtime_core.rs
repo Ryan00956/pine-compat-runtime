@@ -32,6 +32,58 @@ plot(close)
 }
 
 #[test]
+fn runtime_error_stops_at_reached_udf_call_with_series_message() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=6
+indicator("runtime error")
+fail(string message) =>
+    runtime.error(message)
+if bar_index == 2
+    fail(str.format("invalid bar {0}", bar_index))
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    )
+    .expect_err("reached runtime.error should stop execution");
+
+    assert_eq!(error.message, "invalid bar 2");
+}
+
+#[test]
+fn runtime_error_normalizes_na_string_message() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=6
+indicator("runtime error na")
+string message = na
+runtime.error(message=message)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("runtime.error should stop execution");
+
+    assert_eq!(error.message, "NaN");
+}
+
+#[test]
 fn rejects_hir_expression_past_runtime_eval_depth() {
     let source = SourceFile::new(
         "test.pine",

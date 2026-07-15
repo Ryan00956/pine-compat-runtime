@@ -16,6 +16,7 @@ mod regex_modes;
 mod regex_named_characters;
 mod regex_unicode_blocks;
 pub(crate) mod requests;
+pub(crate) mod runtime_errors;
 pub(crate) mod strategy;
 pub(crate) mod strings;
 pub(crate) mod syminfo;

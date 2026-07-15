@@ -440,6 +440,23 @@ bracket reservation subset is summarized in `docs/PHASE_X_AUDIT.md`; the Phase Y
 trailing reservation subset is summarized in `docs/PHASE_Y_AUDIT.md`; the Phase
 Z omitted-quantity boundary is summarized in `docs/PHASE_Z_AUDIT.md`.
 
+## Runtime Errors
+
+`runtime.error(message)` accepts a string-compatible message and returns
+`void`. The call is evaluated only when ordinary control flow reaches it. Once
+reached, its argument is evaluated and the runtime immediately returns an
+error carrying the exact string; no later statement or bar is executed. This
+propagation is unchanged through nested user-defined-function calls. A
+string-compatible `na` argument produces the deterministic message `NaN`,
+consistent with existing runtime string rendering. Non-string arguments are
+rejected during semantic analysis, and the `void` result cannot initialize a
+declaration or feed a value-consuming built-in.
+
+The error is an internal execution outcome, not an alert, log event, output
+snapshot, or host callback. It therefore adds no public runtime-result schema
+field and does not enter the output rollback or collection-mutation side-effect
+models.
+
 ## Alert Events
 
 `alertcondition(condition, title, message)` is a supported runtime side effect

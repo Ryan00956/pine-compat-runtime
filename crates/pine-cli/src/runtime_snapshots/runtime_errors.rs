@@ -1,5 +1,13 @@
 pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     (
+        "tests/fixtures/regressions/runtime_error_custom_message.pine",
+        "invalid bar 2",
+    ),
+    (
+        "tests/fixtures/regressions/runtime_error_na_message.pine",
+        "NaN",
+    ),
+    (
         "tests/fixtures/regressions/array_concat_limit.pine",
         "array.concat cannot exceed 100000 elements",
     ),

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Runtime error na message")
+
+string message = na
+runtime.error(message=message)

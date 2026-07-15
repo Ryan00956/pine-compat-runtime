@@ -1,0 +1,4 @@
+//@version=6
+indicator("Unsupported runtime error message")
+
+runtime.error(close)

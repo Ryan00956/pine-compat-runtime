@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported runtime error return")
+
+value = runtime.error("stop")
+plot(value)
