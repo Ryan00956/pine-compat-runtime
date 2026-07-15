@@ -101,6 +101,7 @@ pub(crate) fn is_pine_numeric_string(value: &str) -> bool {
 #[derive(Clone, Copy, Default)]
 struct PineRegexMode {
     unicode_classes: bool,
+    case_insensitive: bool,
     verbose: bool,
     multiline: bool,
     dotall: bool,
@@ -164,6 +165,12 @@ fn apply_pine_regex_flags(mode: PineRegexMode, flags: &PineRegexFlags<'_>) -> Pi
     if flags.disabled.contains('U') {
         mode.unicode_classes = false;
     }
+    if flags.enabled.contains('i') {
+        mode.case_insensitive = true;
+    }
+    if flags.disabled.contains('i') {
+        mode.case_insensitive = false;
+    }
     if flags.enabled.contains('x') {
         mode.verbose = true;
     }
@@ -204,9 +211,30 @@ fn push_rust_regex_flags(result: &mut String, flags: &PineRegexFlags<'_>) {
     result.push(if flags.scoped { ':' } else { ')' });
 }
 
-fn push_pine_regex_quoted(result: &mut String, quoted: &str) {
-    for ch in quoted.chars() {
+fn push_pine_regex_literal(result: &mut String, ch: char, mode: PineRegexMode, must_escape: bool) {
+    if mode.case_insensitive && !mode.unicode_classes {
+        if ch.is_ascii_alphabetic() {
+            write!(result, r"(?i-u:\x{{{:X}}})", ch as u32)
+                .expect("writing to a String cannot fail");
+            return;
+        }
+        if !ch.is_ascii() {
+            write!(result, r"(?-i:\x{{{:X}}})", ch as u32)
+                .expect("writing to a String cannot fail");
+            return;
+        }
+    }
+
+    if must_escape {
         write!(result, r"\x{{{:X}}}", ch as u32).expect("writing to a String cannot fail");
+    } else {
+        result.push(ch);
+    }
+}
+
+fn push_pine_regex_quoted(result: &mut String, quoted: &str, mode: PineRegexMode) {
+    for ch in quoted.chars() {
+        push_pine_regex_literal(result, ch, mode, true);
     }
 }
 
@@ -334,10 +362,10 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 let quoted_start = index + slash.len_utf8() + escaped.len_utf8();
                 let quoted_rest = &pattern[quoted_start..];
                 if let Some(quoted_len) = quoted_rest.find(r"\E") {
-                    push_pine_regex_quoted(&mut result, &quoted_rest[..quoted_len]);
+                    push_pine_regex_quoted(&mut result, &quoted_rest[..quoted_len], mode);
                     index = quoted_start + quoted_len + r"\E".len();
                 } else {
-                    push_pine_regex_quoted(&mut result, quoted_rest);
+                    push_pine_regex_quoted(&mut result, quoted_rest, mode);
                     index = pattern.len();
                 }
                 continue;
@@ -349,7 +377,18 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                     .get(digits_start..digits_end)
                     .filter(|digits| digits.bytes().all(|byte| byte.is_ascii_hexdigit()))
                 {
-                    write!(result, r"\x{{{digits}}}").expect("writing to a String cannot fail");
+                    let codepoint = u32::from_str_radix(digits, 16)
+                        .expect("validated four-digit hexadecimal reference");
+                    if let Some(ch) = char::from_u32(codepoint) {
+                        if class_depth == 0 && mode.case_insensitive && !mode.unicode_classes {
+                            push_pine_regex_literal(&mut result, ch, mode, true);
+                        } else {
+                            write!(result, r"\x{{{digits}}}")
+                                .expect("writing to a String cannot fail");
+                        }
+                    } else {
+                        result.push_str("[a&&b]");
+                    }
                     index = digits_end;
                     continue;
                 }
@@ -375,6 +414,9 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                             index = name_end + 1;
                             continue;
                         }
+                        result.push_str(&pattern[index..name_end + 1]);
+                        index = name_end + 1;
+                        continue;
                     }
                 }
             }
@@ -442,6 +484,16 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 index = flags.end;
                 continue;
             }
+            if rest.starts_with("(?<")
+                && !matches!(rest.as_bytes().get(3), Some(b'=' | b'!'))
+                && let Some(name_end) = rest[3..].find('>')
+            {
+                let header_end = 3 + name_end + 1;
+                result.push_str(&rest[..header_end]);
+                modes.push(mode);
+                index += header_end;
+                continue;
+            }
             modes.push(mode);
         } else if class_depth == 0 && byte == b')' {
             if let Some(parent_mode) = modes.pop() {
@@ -454,7 +506,11 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
         }
 
         let ch = rest.chars().next().expect("regex contains a character");
-        result.push(ch);
+        if class_depth == 0 {
+            push_pine_regex_literal(&mut result, ch, mode, false);
+        } else {
+            result.push(ch);
+        }
         index += ch.len_utf8();
     }
 

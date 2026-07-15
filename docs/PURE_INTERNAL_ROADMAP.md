@@ -1323,7 +1323,9 @@ Current baseline:
   `\p{InBlockName}`/`\p{Block=BlockName}` properties and `\P` complements,
   fixed-width `\uHHHH` references, and final-newline-aware `$`/`\Z` end
   anchors, plus default-dot exclusion of Pine's full line-terminator set with
-  global/scoped `(?s)` and `(?-s)` restoration, on the linear-time regex path;
+  global/scoped `(?s)` and `(?-s)` restoration, and ASCII-default versus
+  `(?U)` Unicode-aware `(?i)` folding for literal tokens outside character
+  classes, on the linear-time regex path;
 - calendar-aware UTC `time`/`time_close` and `timeframe.change` week and month
   groups alongside fixed intraday/day buckets;
 - IANA timezone and DST-aware calendar component and `str.format_time` calls,

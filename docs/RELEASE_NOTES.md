@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Corrected `str.match()` case-insensitive literal matching outside character
+  classes. Global/scoped `(?i)` now folds ordinary ASCII literals only, while
+  `(?iU)` enables Unicode-aware folding; `(?-i)`/`(?-U)` toggles, `\Q...\E`
+  quoted literals, and fixed `\uHHHH` references follow the active scope.
 - Added `str.match()` support for Pine/Java Unicode block properties in
   `\p{InBlockName}` and `\p{Block=BlockName}` form, including `\P` negation,
   Java block aliases, character-class nesting, quoted preservation, and the
