@@ -346,6 +346,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
         r"[^ \t\x{00A0}\x{1680}\x{180E}\x{2000}-\x{200A}\x{202F}\x{205F}\x{3000}]";
     const VERTICAL_WHITESPACE: &str = r"[\n\x0B\f\r\x{0085}\x{2028}\x{2029}]";
     const NON_VERTICAL_WHITESPACE: &str = r"[^\n\x0B\f\r\x{0085}\x{2028}\x{2029}]";
+    const LINE_BREAK: &str = r"(?:\r\n|[\n\x0B\f\r\x{0085}\x{2028}\x{2029}])";
 
     let mut result = String::with_capacity(pattern.len());
     let mut mode = PineRegexMode::default();
@@ -475,6 +476,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 'H' => Some(NON_HORIZONTAL_WHITESPACE),
                 'v' => Some(VERTICAL_WHITESPACE),
                 'V' => Some(NON_VERTICAL_WHITESPACE),
+                'R' if class_depth == 0 => Some(LINE_BREAK),
                 _ if !mode.unicode_classes => match escaped {
                     'd' => Some("[0-9]"),
                     'D' => Some("[^0-9]"),

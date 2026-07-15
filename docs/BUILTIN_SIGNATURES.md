@@ -1987,11 +1987,14 @@ space, U+1680, U+180E, U+2000 through U+200A, U+202F, U+205F, and U+3000. It
 also supports `\v`/`\V` using Pine's fixed vertical-whitespace set regardless
 of `U`: LF, VT, FF, CR, U+0085, U+2028, and U+2029. Both horizontal and
 vertical classes can be nested in character classes and remain literal in
-quoted regions. It also supports the Java/Pine POSIX property names `Lower`,
+quoted regions. The `\R` matcher recognizes the same seven vertical characters
+and consumes CRLF as one line break. It is independent of `U`, remains literal
+in quoted regions, and is invalid inside a character class, matching Pine's
+Java regex behavior. It also supports the Java/Pine POSIX property names `Lower`,
 `Upper`, `ASCII`, `Alpha`, `Digit`, `Alnum`, `Punct`, `Graph`, `Print`, `Blank`,
 `Cntrl`, `XDigit`, and `Space` for `\p{...}` and `\P{...}`. These classes use
-their ASCII definitions by default and their Unicode compatibility definitions under
-global or scoped `(?U)`; `(?-U)` restores ASCII behavior. POSIX names are
+their ASCII definitions by default and their Unicode compatibility definitions
+under global or scoped `(?U)`; `(?-U)` restores ASCII behavior. POSIX names are
 case-sensitive by default and case-insensitive under `(?U)`. Other Unicode
 property references retain their ordinary Unicode behavior. Pine/Java Unicode
 block properties are supported in `\p{InBlockName}` and

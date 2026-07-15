@@ -183,6 +183,37 @@ fn normalizes_pine_regex_vertical_whitespace_classes() {
 }
 
 #[test]
+fn normalizes_pine_regex_line_break_matcher() {
+    let line_break =
+        Regex::new(&normalize_pine_regex(r"\A\R\z")).expect("normalized line-break matcher");
+    for text in [
+        "\n", "\u{000b}", "\u{000c}", "\r", "\u{0085}", "\u{2028}", "\u{2029}", "\r\n",
+    ] {
+        assert!(line_break.is_match(text), "{text:?}");
+    }
+    for text in ["", "\t", " ", "A", "\n\r"] {
+        assert!(!line_break.is_match(text), "{text:?}");
+    }
+
+    let crlf = Regex::new(&normalize_pine_regex(r"\R"))
+        .expect("normalized CRLF line-break matcher")
+        .find("\r\n")
+        .expect("CRLF is a line break");
+    assert_eq!(crlf.as_str(), "\r\n");
+
+    let modes = Regex::new(&normalize_pine_regex(r"\A(?U:\R)(?-U:\R)\z"))
+        .expect("normalized line-break matcher across Unicode modes");
+    assert!(modes.is_match("\r\n\u{2028}"));
+
+    let quoted = Regex::new(&normalize_pine_regex(r"\A\Q\R\E\z"))
+        .expect("normalized quoted line-break spelling");
+    assert!(quoted.is_match(r"\R"));
+    assert!(!quoted.is_match("\r\n"));
+
+    assert!(Regex::new(&normalize_pine_regex(r"[\R]")).is_err());
+}
+
+#[test]
 fn normalizes_pine_regex_quoted_literals() {
     assert_eq!(
         normalize_pine_regex(r"\Q(?U)\d[.]# \E\d"),
@@ -571,6 +602,12 @@ match_vertical_unicode_on = str.match("", "(?U)\\v")
 match_vertical_unicode_off = str.match(" ", "(?-U)\\v")
 match_vertical_class = str.match("A ", "[\\v]")
 match_vertical_quoted = str.match("\\v", "\\Q\\v\\E")
+match_line_break_crlf = str.match("\r\nA", "\\R")
+match_line_break_line_feed = str.match("\nA", "\\R")
+match_line_break_next_line = str.match("A", "\\R")
+match_line_break_unicode_on = str.match(" ", "(?U)\\R")
+match_line_break_unicode_off = str.match(" ", "(?-U)\\R")
+match_line_break_quoted = str.match("\\R", "\\Q\\R\\E")
 match_quoted_meta = str.match("x[a-z]+(?U)# y", "\\Q[a-z]+(?U)# \\E")
 match_quoted_escape = str.match("\\d123", "\\Q\\d\\E")
 match_quoted_verbose = str.match("# [ ]", "(?x)\\Q# [ ]\\E")
@@ -719,6 +756,8 @@ plot(match_scoped_unicode_digit == "１" and match_scoped_unicode == "" and matc
 plot(match_horizontal_tab == "\t" and match_horizontal_em_space == " " and match_non_horizontal == "A" and match_horizontal_unicode_on == " " and match_horizontal_unicode_off == " " and match_horizontal_class == " " ? 1 : 0)
 plot(match_vertical_line_feed == "\n" and match_vertical_carriage_return == "\r" and match_vertical_next_line == "" and match_vertical_line_separator == " " and match_vertical_paragraph_separator == " " ? 1 : 0)
 plot(match_non_vertical == "A" and match_vertical_unicode_on == "" and match_vertical_unicode_off == " " and match_vertical_class == " " and match_vertical_quoted == "\\v" ? 1 : 0)
+plot(match_line_break_crlf == "\r\n" and match_line_break_line_feed == "\n" and match_line_break_next_line == "" ? 1 : 0)
+plot(match_line_break_unicode_on == " " and match_line_break_unicode_off == " " and match_line_break_quoted == "\\R" ? 1 : 0)
 plot(match_quoted_meta == "[a-z]+(?U)# " and match_quoted_escape == "\\d" and match_quoted_verbose == "# [ ]" and match_quoted_class == "]-" and match_quoted_unclosed == "[b]+" and match_quoted_then_ascii == "[a]123" ? 1 : 0)
 plot(match_final_newline_dollar == "tail" and match_final_newline_Z == "tail" and match_absolute_z_missing == "" and match_absolute_z == "tail" ? 1 : 0)
 plot(match_explicit_final_newline == "\n" and match_empty_final_newline_dollar == "" and match_empty_final_newline_Z == "" ? 1 : 0)

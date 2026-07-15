@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added `str.match()` support for Pine's `\R` line-break matcher across LF,
+  VT, FF, CR, NEL, line separator, and paragraph separator, with CRLF consumed
+  as one match, behavior independent of `(?U)`, quoted preservation, and
+  character-class rejection matching Pine's Java regex behavior.
 - Added `str.match()` support for Pine's `\v` and `\V` vertical-whitespace
   regex classes, including LF, VT, FF, CR, NEL, line separator, and paragraph
   separator, plus complements, character-class nesting, quoted preservation,
