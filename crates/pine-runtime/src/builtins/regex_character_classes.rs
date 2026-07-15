@@ -6,6 +6,192 @@ use regex_syntax::{
     hir::{Class, ClassUnicode, ClassUnicodeRange, HirKind},
 };
 
+use super::regex_escapes::is_pine_regex_line_separator;
+
+pub(crate) fn pine_posix_class(name: &str, unicode: bool, negated: bool) -> Option<&'static str> {
+    let (positive, negative) = if unicode {
+        match name.to_ascii_uppercase().as_str() {
+            "LOWER" => (r"\p{Lowercase}", r"\P{Lowercase}"),
+            "UPPER" => (r"\p{Uppercase}", r"\P{Uppercase}"),
+            "ASCII" => (r"[\x00-\x7F]", r"[^\x00-\x7F]"),
+            "ALPHA" => (r"\p{Alphabetic}", r"\P{Alphabetic}"),
+            "DIGIT" => (r"\p{Nd}", r"\P{Nd}"),
+            "ALNUM" => (r"[\p{Alphabetic}\p{Nd}]", r"[^\p{Alphabetic}\p{Nd}]"),
+            "PUNCT" => (r"\p{Punctuation}", r"\P{Punctuation}"),
+            "GRAPH" => (
+                r"[^\p{White_Space}\p{Cc}\p{Cn}]",
+                r"[\p{White_Space}\p{Cc}\p{Cn}]",
+            ),
+            "PRINT" => (
+                r"[[^\p{White_Space}\p{Cc}\p{Cn}]\p{Zs}]",
+                r"[[\p{White_Space}\p{Cc}\p{Cn}]&&[^\p{Zs}]]",
+            ),
+            "BLANK" => (r"[\p{Zs}\t]", r"[^\p{Zs}\t]"),
+            "CNTRL" => (r"\p{Cc}", r"\P{Cc}"),
+            "XDIGIT" => (r"[\p{Nd}\p{Hex_Digit}]", r"[^\p{Nd}\p{Hex_Digit}]"),
+            "SPACE" => (r"\p{White_Space}", r"\P{White_Space}"),
+            _ => return None,
+        }
+    } else {
+        match name {
+            "Lower" => (r"[a-z]", r"[^a-z]"),
+            "Upper" => (r"[A-Z]", r"[^A-Z]"),
+            "ASCII" => (r"[\x00-\x7F]", r"[^\x00-\x7F]"),
+            "Alpha" => (r"[A-Za-z]", r"[^A-Za-z]"),
+            "Digit" => (r"[0-9]", r"[^0-9]"),
+            "Alnum" => (r"[A-Za-z0-9]", r"[^A-Za-z0-9]"),
+            "Punct" => (
+                r"[\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E]",
+                r"[^\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E]",
+            ),
+            "Graph" => (r"[\x21-\x7E]", r"[^\x21-\x7E]"),
+            "Print" => (r"[\x20-\x7E]", r"[^\x20-\x7E]"),
+            "Blank" => (r"[\x20\t]", r"[^\x20\t]"),
+            "Cntrl" => (r"[\x00-\x1F\x7F]", r"[^\x00-\x1F\x7F]"),
+            "XDigit" => (r"[0-9A-Fa-f]", r"[^0-9A-Fa-f]"),
+            "Space" => (r"[\x20\t\n\x0B\f\r]", r"[^\x20\t\n\x0B\f\r]"),
+            _ => return None,
+        }
+    };
+    Some(if negated { negative } else { positive })
+}
+
+pub(crate) fn pine_unicode_block_property(property: &str) -> Option<&str> {
+    if let Some(name) = property.strip_prefix("In").filter(|name| !name.is_empty()) {
+        return Some(name);
+    }
+    let (kind, name) = property.split_once('=')?;
+    (kind.eq_ignore_ascii_case("Block") && !name.is_empty()).then_some(name)
+}
+
+pub(crate) fn push_pine_unicode_block(result: &mut String, start: u32, end: u32, negated: bool) {
+    if start >= 0xD800 && end <= 0xDFFF {
+        result.push_str(if negated {
+            r"[\x{0}-\x{D7FF}\x{E000}-\x{10FFFF}]"
+        } else {
+            r"[a&&b]"
+        });
+        return;
+    }
+
+    result.push_str(if negated { "[^" } else { "[" });
+    use std::fmt::Write;
+    write!(result, r"\x{{{start:X}}}-\x{{{end:X}}}]").expect("writing to a String cannot fail");
+}
+
+#[derive(Clone, Copy, Default)]
+enum PineRegexClassRangeState {
+    #[default]
+    NoStart,
+    Single,
+    Endpoint,
+}
+
+pub(crate) struct PineRegexClassPrefix {
+    pub(crate) can_negate: bool,
+    pub(crate) can_literal_close: bool,
+    range: PineRegexClassRangeState,
+    pending_intersection: bool,
+}
+
+impl PineRegexClassPrefix {
+    pub(crate) fn new() -> Self {
+        Self {
+            can_negate: true,
+            can_literal_close: true,
+            range: PineRegexClassRangeState::NoStart,
+            pending_intersection: false,
+        }
+    }
+
+    pub(crate) fn mark_atom(&mut self) {
+        self.can_negate = false;
+        self.can_literal_close = false;
+    }
+
+    pub(crate) fn mark_scalar(&mut self) {
+        self.mark_atom();
+        self.range = match self.range {
+            PineRegexClassRangeState::Endpoint => PineRegexClassRangeState::NoStart,
+            _ => PineRegexClassRangeState::Single,
+        };
+    }
+
+    pub(crate) fn mark_set(&mut self) -> bool {
+        self.mark_atom();
+        let invalid_endpoint = matches!(self.range, PineRegexClassRangeState::Endpoint);
+        self.range = PineRegexClassRangeState::NoStart;
+        invalid_endpoint
+    }
+
+    pub(crate) fn expects_range_endpoint(&self) -> bool {
+        matches!(self.range, PineRegexClassRangeState::Endpoint)
+    }
+
+    pub(crate) fn mark_raw_hyphen(&mut self, immediate_next: Option<u8>) -> bool {
+        self.mark_atom();
+        if matches!(self.range, PineRegexClassRangeState::Endpoint) {
+            self.range = PineRegexClassRangeState::NoStart;
+            return false;
+        }
+        if matches!(self.range, PineRegexClassRangeState::Single)
+            && !matches!(immediate_next, Some(b'[' | b']'))
+        {
+            self.range = PineRegexClassRangeState::Endpoint;
+            return true;
+        }
+        self.range = PineRegexClassRangeState::Single;
+        false
+    }
+
+    pub(crate) fn begin_intersection(&mut self) {
+        self.mark_atom();
+        self.range = PineRegexClassRangeState::NoStart;
+        self.pending_intersection = true;
+    }
+
+    pub(crate) fn finish_intersection(&mut self) {
+        self.mark_atom();
+        self.range = PineRegexClassRangeState::NoStart;
+        self.pending_intersection = false;
+    }
+
+    pub(crate) fn has_pending_intersection(&self) -> bool {
+        self.pending_intersection
+    }
+}
+
+fn is_verbose_ascii_space(ch: char) -> bool {
+    matches!(ch, ' ' | '\t' | '\n' | '\u{000b}' | '\u{000c}' | '\r')
+}
+
+pub(crate) fn next_pine_regex_class_token(
+    pattern: &str,
+    mut index: usize,
+    verbose: bool,
+) -> Option<char> {
+    loop {
+        let ch = pattern.get(index..)?.chars().next()?;
+        index += ch.len_utf8();
+        if !verbose || (!is_verbose_ascii_space(ch) && ch != '#') {
+            return Some(ch);
+        }
+        if is_verbose_ascii_space(ch) {
+            continue;
+        }
+
+        while let Some(comment_ch) = pattern.get(index..)?.chars().next() {
+            index += comment_ch.len_utf8();
+            if matches!(comment_ch, '\n' | '\r') {
+                break;
+            }
+            if is_pine_regex_line_separator(comment_ch) {
+                return Some(comment_ch);
+            }
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 enum CaseFoldMode {
     Ascii,

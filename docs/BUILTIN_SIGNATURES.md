@@ -2058,8 +2058,14 @@ their literal behavior. A backslash before any non-alphanumeric ASCII
 character quotes that character as a Java/Pine literal inside or outside a
 class. This includes punctuation, controls and whitespace, verbose-mode `\#`
 and `\ `, nested classes, and active case modes; unsupported alphabetic
-escapes remain errors. Outside character classes,
-global or scoped `(?i)` applies Pine's ASCII-only case folding to ordinary and
+escapes remain errors. Inside character classes, raw hyphens follow Java/Pine
+range parsing rather than Rust's character-class
+difference operator. This preserves literal leading/trailing hyphens,
+hyphen-start and hyphen-end ranges, nested classes, quoted or escaped range
+atoms, intersections (including verbose trivia between `&&`), and active case
+modes. Illegal descending ranges and set-valued range endpoints remain runtime
+regex errors. Outside character classes, global or scoped `(?i)` applies Pine's
+ASCII-only case folding to ordinary and
 `\Q...\E`-quoted literals plus `\uHHHH`/`\x` references. Lowercase `(?u)`
 independently enables Unicode-aware folding when `i` is active without changing
 the default-ASCII predefined or POSIX class sets; those expansions retain their

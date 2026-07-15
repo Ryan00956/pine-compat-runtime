@@ -214,6 +214,103 @@ fn normalizes_pine_regex_literal_class_tildes() {
 }
 
 #[test]
+fn normalizes_pine_regex_java_class_ranges() {
+    assert_eq!(
+        normalize_pine_regex(r"[a-z--m][--a][--][a-z-][a-z---m]"),
+        r"[a-z\x{2D}-m][\x{2D}-a][\x{2D}\x{2D}][a-z\x{2D}][a-z\x{2D}-\x{2D}m]"
+    );
+
+    let direct = Regex::new(&normalize_pine_regex(r"\A[a-z--m]+\z"))
+        .expect("normalized Java ranges adjacent to raw hyphens");
+    assert!(direct.is_match("-0AZaz"));
+    assert!(!direct.is_match("{"));
+
+    let leading = Regex::new(&normalize_pine_regex(r"\A[--a]+\z"))
+        .expect("normalized Java range with a hyphen start");
+    assert!(leading.is_match("-0AZa"));
+    assert!(!leading.is_match("b"));
+
+    let literal = Regex::new(&normalize_pine_regex(r"\A[--]\z"))
+        .expect("normalized literal Java hyphen pair");
+    assert!(literal.is_match("-"));
+    assert!(!literal.is_match("a"));
+
+    let low_endpoint = Regex::new(&normalize_pine_regex(r"\A[!--a]+\z"))
+        .expect("normalized Java range ending in a hyphen");
+    assert!(low_endpoint.is_match("!-a"));
+    assert!(!low_endpoint.is_match("."));
+
+    let quoted = Regex::new(&normalize_pine_regex(r"\A[\Q-\E-a]+\z"))
+        .expect("normalized quoted Java range start");
+    assert!(quoted.is_match("-0AZa"));
+    assert!(!quoted.is_match("b"));
+
+    let escaped = Regex::new(&normalize_pine_regex(r"\A[\--a]+\z"))
+        .expect("normalized escaped Java range start");
+    assert!(escaped.is_match("-0AZa"));
+    assert!(!escaped.is_match("b"));
+
+    let nested = Regex::new(&normalize_pine_regex(r"\A[a-[b]]+\z"))
+        .expect("normalized hyphen before a nested Java class");
+    assert!(nested.is_match("-ab"));
+    assert!(!nested.is_match("c"));
+
+    let intersection = Regex::new(&normalize_pine_regex(r"\A[a&&--b]\z"))
+        .expect("normalized Java range on an intersection RHS");
+    assert!(intersection.is_match("a"));
+    assert!(!intersection.is_match("b"));
+
+    let after_set = Regex::new(&normalize_pine_regex(r"\A[\p{L}--a]+\z"))
+        .expect("normalized Java hyphen range after a set atom");
+    assert!(after_set.is_match("β-0a"));
+    assert!(!after_set.is_match("!"));
+
+    let verbose = Regex::new(&normalize_pine_regex(
+        "(?x)\\A[a-z- # first hyphen\n-m]+\\z",
+    ))
+    .expect("normalized verbose Java hyphen range");
+    assert!(verbose.is_match("-0AZaz"));
+    assert!(!verbose.is_match("{"));
+
+    let verbose_intersection_pattern = normalize_pine_regex(r"(?x)\A[a & & --b]\z");
+    let verbose_intersection =
+        Regex::new(&verbose_intersection_pattern).expect("normalized verbose Java intersection");
+    assert!(verbose_intersection.is_match("a"));
+    assert!(!verbose_intersection.is_match("b"));
+
+    let commented_intersection =
+        Regex::new(&normalize_pine_regex("(?x)\\A[a& # intersection\n&--b]\\z"))
+            .expect("normalized comment-separated Java intersection");
+    assert!(commented_intersection.is_match("a"));
+    assert!(!commented_intersection.is_match("b"));
+
+    let insensitive = Regex::new(&normalize_pine_regex(r"(?iU)\A[a-z--~]+\z"))
+        .expect("normalized case-insensitive Java hyphen and tilde range");
+    assert!(insensitive.is_match("K-~"));
+    assert!(!insensitive.is_match("\u{007F}"));
+}
+
+#[test]
+fn preserves_invalid_pine_regex_java_class_ranges() {
+    for invalid in [
+        r"[a--b]",
+        r"[a--]",
+        r"[.--]",
+        r"[a-\p{L}]",
+        r"[a-\d]",
+        r"[a-\Q-\E]",
+        r"(?i)[a-\p{L}]",
+        "(?x)[a- ]",
+        "(?x)[a- ]x]",
+    ] {
+        assert!(
+            Regex::new(&normalize_pine_regex(invalid)).is_err(),
+            "{invalid}"
+        );
+    }
+}
+
+#[test]
 fn normalizes_pine_regex_ascii_literal_escapes() {
     assert_eq!(
         normalize_pine_regex(r"\!\%\_\`\~"),

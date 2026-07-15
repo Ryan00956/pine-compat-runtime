@@ -5,8 +5,9 @@ use regex::Regex;
 
 use super::{
     regex_character_classes::{
-        PineRegexClassReplacementCase, normalize_case_insensitive_class, push_case_folded_class,
-        push_case_insensitive_class_replacement,
+        PineRegexClassPrefix, PineRegexClassReplacementCase, next_pine_regex_class_token,
+        normalize_case_insensitive_class, pine_posix_class, pine_unicode_block_property,
+        push_case_folded_class, push_case_insensitive_class_replacement, push_pine_unicode_block,
     },
     regex_escapes::{
         is_pine_regex_line_separator, parse_pine_regex_code_point_escape,
@@ -113,102 +114,36 @@ pub(crate) fn is_pine_numeric_string(value: &str) -> bool {
     }
 }
 
-fn pine_posix_class(name: &str, unicode: bool, negated: bool) -> Option<&'static str> {
-    let (positive, negative) = if unicode {
-        match name.to_ascii_uppercase().as_str() {
-            "LOWER" => (r"\p{Lowercase}", r"\P{Lowercase}"),
-            "UPPER" => (r"\p{Uppercase}", r"\P{Uppercase}"),
-            "ASCII" => (r"[\x00-\x7F]", r"[^\x00-\x7F]"),
-            "ALPHA" => (r"\p{Alphabetic}", r"\P{Alphabetic}"),
-            "DIGIT" => (r"\p{Nd}", r"\P{Nd}"),
-            "ALNUM" => (r"[\p{Alphabetic}\p{Nd}]", r"[^\p{Alphabetic}\p{Nd}]"),
-            "PUNCT" => (r"\p{Punctuation}", r"\P{Punctuation}"),
-            "GRAPH" => (
-                r"[^\p{White_Space}\p{Cc}\p{Cn}]",
-                r"[\p{White_Space}\p{Cc}\p{Cn}]",
-            ),
-            "PRINT" => (
-                r"[[^\p{White_Space}\p{Cc}\p{Cn}]\p{Zs}]",
-                r"[[\p{White_Space}\p{Cc}\p{Cn}]&&[^\p{Zs}]]",
-            ),
-            "BLANK" => (r"[\p{Zs}\t]", r"[^\p{Zs}\t]"),
-            "CNTRL" => (r"\p{Cc}", r"\P{Cc}"),
-            "XDIGIT" => (r"[\p{Nd}\p{Hex_Digit}]", r"[^\p{Nd}\p{Hex_Digit}]"),
-            "SPACE" => (r"\p{White_Space}", r"\P{White_Space}"),
-            _ => return None,
-        }
-    } else {
-        match name {
-            "Lower" => (r"[a-z]", r"[^a-z]"),
-            "Upper" => (r"[A-Z]", r"[^A-Z]"),
-            "ASCII" => (r"[\x00-\x7F]", r"[^\x00-\x7F]"),
-            "Alpha" => (r"[A-Za-z]", r"[^A-Za-z]"),
-            "Digit" => (r"[0-9]", r"[^0-9]"),
-            "Alnum" => (r"[A-Za-z0-9]", r"[^A-Za-z0-9]"),
-            "Punct" => (
-                r"[\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E]",
-                r"[^\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E]",
-            ),
-            "Graph" => (r"[\x21-\x7E]", r"[^\x21-\x7E]"),
-            "Print" => (r"[\x20-\x7E]", r"[^\x20-\x7E]"),
-            "Blank" => (r"[\x20\t]", r"[^\x20\t]"),
-            "Cntrl" => (r"[\x00-\x1F\x7F]", r"[^\x00-\x1F\x7F]"),
-            "XDigit" => (r"[0-9A-Fa-f]", r"[^0-9A-Fa-f]"),
-            "Space" => (r"[\x20\t\n\x0B\f\r]", r"[^\x20\t\n\x0B\f\r]"),
-            _ => return None,
-        }
-    };
-    Some(if negated { negative } else { positive })
-}
-
-fn pine_unicode_block_property(property: &str) -> Option<&str> {
-    if let Some(name) = property.strip_prefix("In").filter(|name| !name.is_empty()) {
-        return Some(name);
-    }
-    let (kind, name) = property.split_once('=')?;
-    (kind.eq_ignore_ascii_case("Block") && !name.is_empty()).then_some(name)
-}
-
-fn push_pine_unicode_block(result: &mut String, start: u32, end: u32, negated: bool) {
-    if start >= 0xD800 && end <= 0xDFFF {
-        result.push_str(if negated {
-            r"[\x{0}-\x{D7FF}\x{E000}-\x{10FFFF}]"
-        } else {
-            r"[a&&b]"
-        });
-        return;
-    }
-
-    result.push_str(if negated { "[^" } else { "[" });
-    write!(result, r"\x{{{start:X}}}-\x{{{end:X}}}]").expect("writing to a String cannot fail");
-}
-
 struct NormalizedPineRegex {
     pattern: String,
     final_newline_captures: Vec<String>,
 }
 
-struct PineRegexClassPrefix {
-    can_negate: bool,
-    can_literal_close: bool,
-}
-
-impl PineRegexClassPrefix {
-    fn new() -> Self {
-        Self {
-            can_negate: true,
-            can_literal_close: true,
-        }
-    }
-
-    fn mark_atom(&mut self) {
-        self.can_negate = false;
-        self.can_literal_close = false;
-    }
-}
-
 fn is_verbose_ascii_space(byte: u8) -> bool {
     matches!(byte, b' ' | b'\t' | b'\n' | 0x0B | 0x0C | b'\r')
+}
+
+fn mark_pine_regex_class_scalar(class_prefixes: &mut [PineRegexClassPrefix]) {
+    if let Some(prefix) = class_prefixes.last_mut() {
+        prefix.mark_scalar();
+    }
+}
+
+fn mark_pine_regex_class_set(result: &mut String, class_prefixes: &mut [PineRegexClassPrefix]) {
+    if class_prefixes
+        .last_mut()
+        .is_some_and(PineRegexClassPrefix::mark_set)
+    {
+        result.push_str(r"\p{__PineInvalidJavaRange}");
+    }
+}
+
+fn mark_pine_regex_quoted_scalars(quoted: &str, class_prefixes: &mut [PineRegexClassPrefix]) {
+    if let Some(prefix) = class_prefixes.last_mut() {
+        for _ in quoted.chars() {
+            prefix.mark_scalar();
+        }
+    }
 }
 
 fn push_pine_regex_final_anchor(
@@ -257,16 +192,19 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
             continue;
         }
         if mode.verbose && is_verbose_ascii_space(byte) {
-            result.push(byte as char);
+            if !class_prefixes
+                .last()
+                .is_some_and(PineRegexClassPrefix::has_pending_intersection)
+            {
+                result.push(byte as char);
+            }
             index += 1;
             continue;
         }
         if mode.verbose {
             let ch = rest.chars().next().expect("regex contains a character");
             if !ch.is_ascii() && ch.is_whitespace() {
-                if let Some(prefix) = class_prefixes.last_mut() {
-                    prefix.mark_atom();
-                }
+                mark_pine_regex_class_scalar(&mut class_prefixes);
                 if class_depth == 0 {
                     push_pine_regex_literal(&mut result, ch, mode, true);
                 } else {
@@ -289,11 +227,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 let quoted_start = index + slash.len_utf8() + escaped.len_utf8();
                 let quoted_rest = &pattern[quoted_start..];
                 if let Some(quoted_len) = quoted_rest.find(r"\E") {
-                    if quoted_len > 0
-                        && let Some(prefix) = class_prefixes.last_mut()
-                    {
-                        prefix.mark_atom();
-                    }
+                    mark_pine_regex_quoted_scalars(&quoted_rest[..quoted_len], &mut class_prefixes);
                     push_pine_regex_quoted(
                         &mut result,
                         &quoted_rest[..quoted_len],
@@ -302,20 +236,14 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                     );
                     index = quoted_start + quoted_len + r"\E".len();
                 } else {
-                    if !quoted_rest.is_empty()
-                        && let Some(prefix) = class_prefixes.last_mut()
-                    {
-                        prefix.mark_atom();
-                    }
+                    mark_pine_regex_quoted_scalars(quoted_rest, &mut class_prefixes);
                     push_pine_regex_quoted(&mut result, quoted_rest, mode, class_depth > 0);
                     index = pattern.len();
                 }
                 continue;
             }
             if mode.verbose && !escaped.is_ascii() && escaped.is_whitespace() {
-                if let Some(prefix) = class_prefixes.last_mut() {
-                    prefix.mark_atom();
-                }
+                mark_pine_regex_class_scalar(&mut class_prefixes);
                 if class_depth == 0 {
                     push_pine_regex_literal(&mut result, escaped, mode, true);
                 } else {
@@ -326,21 +254,17 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 continue;
             }
             if escaped.is_ascii() && !escaped.is_ascii_alphanumeric() {
-                if let Some(prefix) = class_prefixes.last_mut() {
-                    prefix.mark_atom();
-                }
+                mark_pine_regex_class_scalar(&mut class_prefixes);
                 write!(result, r"\x{{{:X}}}", escaped as u32)
                     .expect("writing to a String cannot fail");
                 index += slash.len_utf8() + escaped.len_utf8();
                 continue;
             }
-            if let Some(prefix) = class_prefixes.last_mut() {
-                prefix.mark_atom();
-            }
             if matches!(escaped, 'u' | 'x')
                 && let Some(reference) = parse_pine_regex_code_point_escape(pattern, index)
             {
                 if let Some(ch) = reference.scalar {
+                    mark_pine_regex_class_scalar(&mut class_prefixes);
                     if class_depth == 0 && mode.case_insensitive && !mode.unicode_case {
                         push_pine_regex_literal(&mut result, ch, mode, true);
                     } else {
@@ -353,6 +277,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                         .expect("writing to a String cannot fail");
                     }
                 } else {
+                    mark_pine_regex_class_set(&mut result, &mut class_prefixes);
                     result.push_str("[a&&b]");
                 }
                 index = reference.end;
@@ -361,6 +286,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
             if escaped == 'c'
                 && let Some(control) = parse_pine_regex_control_escape(pattern, index, mode.verbose)
             {
+                mark_pine_regex_class_scalar(&mut class_prefixes);
                 if class_depth == 0 && mode.case_insensitive && !mode.unicode_case {
                     push_pine_regex_literal(&mut result, control.scalar, mode, true);
                 } else {
@@ -373,6 +299,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
             if escaped == '0'
                 && let Some(reference) = parse_pine_regex_octal_escape(pattern, index, mode.verbose)
             {
+                mark_pine_regex_class_scalar(&mut class_prefixes);
                 if class_depth == 0 && mode.case_insensitive && !mode.unicode_case {
                     push_pine_regex_literal(&mut result, reference.scalar, mode, true);
                 } else {
@@ -389,6 +316,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                     if let Some(name_len) = pattern[name_start..].find('}') {
                         let name_end = name_start + name_len;
                         let property = &pattern[name_start..name_end];
+                        mark_pine_regex_class_set(&mut result, &mut class_prefixes);
                         if let Some(replacement) = pine_java_property(property, escaped == 'P') {
                             push_case_insensitive_class_replacement(
                                 &mut result,
@@ -483,6 +411,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
             };
             if let Some(replacement) = replacement {
                 if replacement.starts_with('[') {
+                    mark_pine_regex_class_set(&mut result, &mut class_prefixes);
                     push_case_insensitive_class_replacement(
                         &mut result,
                         replacement,
@@ -495,16 +424,72 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                         &mut case_protected_spans,
                     );
                 } else {
+                    if escaped == 'e' {
+                        mark_pine_regex_class_scalar(&mut class_prefixes);
+                    }
                     result.push_str(replacement);
                 }
                 index += slash.len_utf8() + escaped.len_utf8();
                 continue;
             }
 
+            if class_depth > 0 {
+                if matches!(escaped, 'd' | 'D' | 'w' | 'W' | 's' | 'S') {
+                    mark_pine_regex_class_set(&mut result, &mut class_prefixes);
+                } else if matches!(escaped, 'a' | 'b' | 't' | 'n' | 'f' | 'r') {
+                    mark_pine_regex_class_scalar(&mut class_prefixes);
+                }
+            }
+
             result.push(slash);
             result.push(escaped);
             index += slash.len_utf8() + escaped.len_utf8();
             continue;
+        }
+
+        if class_depth > 0 && byte == b'-' {
+            let is_range = class_prefixes
+                .last_mut()
+                .expect("a character class has prefix state")
+                .mark_raw_hyphen(pattern.as_bytes().get(index + 1).copied());
+            result.push_str(if is_range { "-" } else { r"\x{2D}" });
+            index += 1;
+            continue;
+        }
+
+        if class_depth > 0
+            && matches!(byte, b'[' | b']')
+            && class_prefixes
+                .last()
+                .is_some_and(PineRegexClassPrefix::expects_range_endpoint)
+        {
+            class_prefixes
+                .last_mut()
+                .expect("a character class has prefix state")
+                .mark_scalar();
+            write!(result, r"\x{{{byte:X}}}").expect("writing to a String cannot fail");
+            index += 1;
+            continue;
+        }
+
+        if class_depth > 0 && byte == b'&' {
+            let prefix = class_prefixes
+                .last_mut()
+                .expect("a character class has prefix state");
+            if prefix.has_pending_intersection() {
+                prefix.finish_intersection();
+                result.push('&');
+                index += 1;
+                continue;
+            }
+            if !prefix.expects_range_endpoint()
+                && next_pine_regex_class_token(pattern, index + 1, mode.verbose) == Some('&')
+            {
+                prefix.begin_intersection();
+                result.push('&');
+                index += 1;
+                continue;
+            }
         }
 
         if class_depth == 0 && byte == b'.' && !mode.dotall {
@@ -550,9 +535,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 mode = parent_mode;
             }
         } else if byte == b'[' {
-            if let Some(prefix) = class_prefixes.last_mut() {
-                prefix.mark_atom();
-            }
+            mark_pine_regex_class_set(&mut result, &mut class_prefixes);
             if class_depth == 0 && mode.case_insensitive {
                 case_class_start = Some(result.len());
                 case_protected_spans.clear();
@@ -567,7 +550,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 class_prefixes
                     .last_mut()
                     .expect("an open class has prefix state")
-                    .mark_atom();
+                    .mark_scalar();
                 result.push_str(r"\x{5D}");
                 index += 1;
                 continue;
@@ -580,10 +563,10 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
             if prefix.can_negate {
                 prefix.can_negate = false;
             } else {
-                prefix.mark_atom();
+                prefix.mark_scalar();
             }
         } else if let Some(prefix) = class_prefixes.last_mut() {
-            prefix.mark_atom();
+            prefix.mark_scalar();
         }
 
         let closed_case_class = byte == b']' && class_depth == 0 && case_class_start.is_some();

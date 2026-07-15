@@ -1339,7 +1339,10 @@ Current baseline:
   trivia, and quoted regions, literal `~` class atoms protected from Rust's
   symmetric-difference syntax across ordinary, escaped, quoted, nested, range,
   and case-mode forms, Java/Pine backslash quoting for every non-alphanumeric
-  ASCII literal across ordinary/class/verbose/nested/case contexts, plus
+  ASCII literal across ordinary/class/verbose/nested/case contexts, raw class
+  hyphens normalized with Java/Pine literal/range precedence instead of Rust's
+  difference operator across leading/trailing, nested, quoted, escaped,
+  intersection, verbose, case-mode, and invalid-range boundaries, plus
   default-dot exclusion of Pine's full
   line-terminator set with
   global/scoped `(?s)` and `(?-s)` restoration,

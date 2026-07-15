@@ -928,6 +928,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "str.match invalid regex",
     ),
     (
+        "tests/fixtures/regressions/str_match_invalid_class_range.pine",
+        "str.match invalid regex",
+    ),
+    (
         "tests/fixtures/regressions/str_repeat_negative_count.pine",
         "str.repeat count cannot be negative: -1",
     ),
