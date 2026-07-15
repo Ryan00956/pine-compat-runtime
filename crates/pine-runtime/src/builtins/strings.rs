@@ -8,7 +8,10 @@ use super::{
         normalize_case_insensitive_class, push_case_folded_class,
         push_case_insensitive_class_replacement,
     },
-    regex_escapes::{parse_pine_regex_code_point_escape, parse_pine_regex_control_escape},
+    regex_escapes::{
+        parse_pine_regex_code_point_escape, parse_pine_regex_control_escape,
+        parse_pine_regex_octal_escape,
+    },
     regex_unicode_blocks::pine_unicode_block,
 };
 use crate::builtins::time::{
@@ -427,6 +430,18 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                         .expect("writing to a String cannot fail");
                 }
                 index = control.end;
+                continue;
+            }
+            if escaped == '0'
+                && let Some(reference) = parse_pine_regex_octal_escape(pattern, index, mode.verbose)
+            {
+                if class_depth == 0 && mode.case_insensitive && !mode.unicode_classes {
+                    push_pine_regex_literal(&mut result, reference.scalar, mode, true);
+                } else {
+                    write!(result, r"\x{{{:X}}}", reference.scalar as u32)
+                        .expect("writing to a String cannot fail");
+                }
+                index = reference.end;
                 continue;
             }
             if matches!(escaped, 'p' | 'P') {

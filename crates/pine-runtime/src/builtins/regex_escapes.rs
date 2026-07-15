@@ -9,23 +9,42 @@ pub(crate) struct PineRegexControlEscape {
     pub(crate) scalar: char,
 }
 
+pub(crate) struct PineRegexOctalEscape {
+    pub(crate) end: usize,
+    pub(crate) scalar: char,
+}
+
+struct PineRegexToken {
+    start: usize,
+    end: usize,
+    scalar: char,
+}
+
 fn is_verbose_ascii_space(ch: char) -> bool {
     matches!(ch, ' ' | '\t' | '\n' | '\u{000b}' | '\u{000c}' | '\r')
 }
 
-fn next_control_target(pattern: &str, mut index: usize, verbose: bool) -> Option<(char, usize)> {
+fn next_escape_token(pattern: &str, mut index: usize, verbose: bool) -> Option<PineRegexToken> {
     loop {
         let ch = pattern.get(index..)?.chars().next()?;
         let end = index + ch.len_utf8();
         if !verbose {
-            return Some((ch, end));
+            return Some(PineRegexToken {
+                start: index,
+                end,
+                scalar: ch,
+            });
         }
         if is_verbose_ascii_space(ch) {
             index = end;
             continue;
         }
         if ch != '#' {
-            return Some((ch, end));
+            return Some(PineRegexToken {
+                start: index,
+                end,
+                scalar: ch,
+            });
         }
 
         index = end;
@@ -37,9 +56,13 @@ fn next_control_target(pattern: &str, mut index: usize, verbose: bool) -> Option
             }
             // Java ends the comment at every line separator, but its verbose
             // whitespace pass only skips ASCII separators. The remaining
-            // separators therefore become the control target.
+            // separators therefore become the next escape token.
             if matches!(comment_ch, '\u{0085}' | '\u{2028}' | '\u{2029}') {
-                return Some((comment_ch, comment_end));
+                return Some(PineRegexToken {
+                    start: index,
+                    end: comment_end,
+                    scalar: comment_ch,
+                });
             }
             index = comment_end;
         }
@@ -54,10 +77,59 @@ pub(crate) fn parse_pine_regex_control_escape(
     if pattern.as_bytes().get(index..index + 2) != Some(br"\c") {
         return None;
     }
-    let (target, end) = next_control_target(pattern, index + 2, verbose)?;
-    let scalar = char::from_u32((target as u32) ^ 0x40)
+    let target = next_escape_token(pattern, index + 2, verbose)?;
+    let scalar = char::from_u32((target.scalar as u32) ^ 0x40)
         .expect("XORing a Unicode scalar with 0x40 preserves scalar validity");
-    Some(PineRegexControlEscape { end, scalar })
+    Some(PineRegexControlEscape {
+        end: target.end,
+        scalar,
+    })
+}
+
+pub(crate) fn parse_pine_regex_octal_escape(
+    pattern: &str,
+    index: usize,
+    verbose: bool,
+) -> Option<PineRegexOctalEscape> {
+    if pattern.as_bytes().get(index..index + 2) != Some(br"\0") {
+        return None;
+    }
+
+    let first = next_escape_token(pattern, index + 2, verbose)?;
+    let first_digit = first.scalar.to_digit(8)?;
+    let mut value = first_digit;
+    let mut end = first.end;
+
+    let Some(second) = next_escape_token(pattern, end, verbose) else {
+        return Some(PineRegexOctalEscape {
+            end,
+            scalar: char::from_u32(value).expect("an octal byte is a Unicode scalar"),
+        });
+    };
+    let Some(second_digit) = second.scalar.to_digit(8) else {
+        return Some(PineRegexOctalEscape {
+            end: second.start,
+            scalar: char::from_u32(value).expect("an octal byte is a Unicode scalar"),
+        });
+    };
+    value = value * 8 + second_digit;
+    end = second.end;
+
+    if let Some(third) = next_escape_token(pattern, end, verbose) {
+        if first_digit <= 3
+            && let Some(third_digit) = third.scalar.to_digit(8)
+        {
+            value = value * 8 + third_digit;
+            end = third.end;
+        } else {
+            end = third.start;
+        }
+    }
+
+    Some(PineRegexOctalEscape {
+        end,
+        scalar: char::from_u32(value).expect("an octal byte is a Unicode scalar"),
+    })
 }
 
 fn parse_hex_scalar(digits: &str) -> Option<Option<char>> {
@@ -124,7 +196,10 @@ pub(crate) fn parse_pine_regex_code_point_escape(
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_pine_regex_code_point_escape, parse_pine_regex_control_escape};
+    use super::{
+        parse_pine_regex_code_point_escape, parse_pine_regex_control_escape,
+        parse_pine_regex_octal_escape,
+    };
 
     #[test]
     fn parses_fixed_and_braced_code_point_escapes() {
@@ -184,5 +259,30 @@ mod tests {
         assert_eq!(unicode_separator.end, "\\c# note\u{2028}".len());
 
         assert!(parse_pine_regex_control_escape(r"\c", 0, false).is_none());
+    }
+
+    #[test]
+    fn parses_pine_octal_width_and_verbose_trivia() {
+        for (pattern, scalar, end) in [
+            (r"\01", '\u{0001}', 3),
+            (r"\077x", '?', 4),
+            (r"\0377x", 'ÿ', 5),
+            (r"\0777", '?', 4),
+            (r"\0400", ' ', 4),
+            (r"\0128", '\n', 4),
+        ] {
+            let parsed = parse_pine_regex_octal_escape(pattern, 0, false)
+                .unwrap_or_else(|| panic!("valid octal escape {pattern}"));
+            assert_eq!(parsed.scalar, scalar, "{pattern}");
+            assert_eq!(parsed.end, end, "{pattern}");
+        }
+
+        let verbose = parse_pine_regex_octal_escape("\\0 1 # note\n 6 1", 0, true)
+            .expect("verbose octal escape");
+        assert_eq!(verbose.scalar, 'q');
+        assert_eq!(verbose.end, "\\0 1 # note\n 6 1".len());
+
+        assert!(parse_pine_regex_octal_escape(r"\0", 0, false).is_none());
+        assert!(parse_pine_regex_octal_escape(r"\08", 0, false).is_none());
     }
 }

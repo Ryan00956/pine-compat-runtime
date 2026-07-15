@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added `str.match()` support for Pine's `\0n`, `\0nn`, and `\0mnn` octal
+  regex references, including Java's conditional third-digit consumption,
+  required first digit, non-octal trailing characters, character-class and
+  quoted behavior, verbose trivia skipping, and active case-mode handling.
 - Added `str.match()` support for Pine's `\e` escape-character and `\cX`
   control-character regex references, including Java's one-Unicode-scalar
   `XOR 0x40` mapping, exact consumption, character-class and quoted behavior,

@@ -2015,7 +2015,11 @@ literal in quoted regions. The fixed `\e` escape-character reference and
 `\cX` control reference are also supported inside and outside character
 classes. A control reference consumes one Unicode scalar and applies Java's
 `XOR 0x40` mapping; verbose mode skips its intervening ASCII whitespace and
-comments, and quoted spellings remain literal. Outside character classes,
+comments, and quoted spellings remain literal. Java/Pine octal references are
+supported in `\0n`, `\0nn`, and `\0mnn` form: at least one octal digit is
+required, a third digit is consumed only when the first is `0..3`, verbose
+trivia between digits is ignored, and class, quote, and case modes are
+preserved. Outside character classes,
 global or scoped `(?i)` applies Pine's ASCII-only case folding to ordinary and
 `\Q...\E`-quoted literals plus `\uHHHH`/`\x` references; `(?U)` changes those
 literals to Unicode-aware folding, and `(?-i)`/`(?-U)` restore the enclosing or

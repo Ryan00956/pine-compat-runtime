@@ -240,6 +240,39 @@ fn normalizes_pine_regex_control_character_escapes() {
 }
 
 #[test]
+fn normalizes_pine_regex_octal_escapes() {
+    let widths = Regex::new(&normalize_pine_regex(r"\A\01\077x\0377x\0777\0400\0128\z"))
+        .expect("normalized octal references");
+    assert!(widths.is_match("\u{0001}?xÿx?7 0\n8"));
+
+    let cases = Regex::new(&normalize_pine_regex(
+        r"\A(?i:\0161)(?iU:\0345)(?i:[\0161])\z",
+    ))
+    .expect("normalized case-folded octal references");
+    assert!(cases.is_match("QÅQ"));
+    assert!(!cases.is_match("ℚÅQ"));
+
+    let class = Regex::new(&normalize_pine_regex(r"\A[\0141]\z"))
+        .expect("normalized character-class octal reference");
+    assert!(class.is_match("a"));
+
+    let verbose = Regex::new(&normalize_pine_regex("(?x)\\A\\0 1 # comment\n 6 1\\z"))
+        .expect("normalized verbose octal reference");
+    assert!(verbose.is_match("q"));
+
+    let quoted = Regex::new(&normalize_pine_regex(r"\A\Q\0141\E\z"))
+        .expect("normalized quoted octal-reference spelling");
+    assert!(quoted.is_match(r"\0141"));
+
+    for invalid in [r"\0", r"\08"] {
+        assert!(
+            Regex::new(&normalize_pine_regex(invalid)).is_err(),
+            "{invalid}"
+        );
+    }
+}
+
+#[test]
 fn normalizes_pine_regex_quoted_literals() {
     assert_eq!(
         normalize_pine_regex(r"\Q(?U)\d[.]# \E\d"),
@@ -643,6 +676,16 @@ match_control_ascii_case = str.match("ℚQ", "(?i)\\c1")
 match_control_unicode_case = str.match("Ϲϲ", "(?iU)\\cβ")
 match_control_verbose = str.match("\t", "(?x)\\c # comment\n I")
 match_control_quoted = str.match("\\e\\cA", "\\Q\\e\\cA\\E")
+match_octal_two_digit_width = str.match("?7", "\\0777")
+match_octal_three_digit_width = str.match("ÿx", "\\0377x")
+match_octal_non_octal_tail = str.match("\n8", "\\0128")
+match_octal_first_digit_limit = str.match(" 0", "\\0400")
+match_octal_class = str.match("xa", "[\\0141]")
+match_octal_ascii_case = str.match("ℚQ", "(?i)\\0161")
+match_octal_ascii_non_ascii = str.match("Åå", "(?i)\\0345")
+match_octal_unicode_case = str.match("Åå", "(?iU)\\0345")
+match_octal_verbose = str.match("q", "(?x)\\0 1 # comment\n 6 1")
+match_octal_quoted = str.match("\\0141", "\\Q\\0141\\E")
 match_quoted_meta = str.match("x[a-z]+(?U)# y", "\\Q[a-z]+(?U)# \\E")
 match_quoted_escape = str.match("\\d123", "\\Q\\d\\E")
 match_quoted_verbose = str.match("# [ ]", "(?x)\\Q# [ ]\\E")
@@ -795,6 +838,8 @@ plot(match_line_break_crlf == "\r\n" and match_line_break_line_feed == "\n" and 
 plot(match_line_break_unicode_on == " " and match_line_break_unicode_off == " " and match_line_break_quoted == "\\R" ? 1 : 0)
 plot(match_control_tab == "\t" and match_control_lowercase == "!" and match_control_supplementary == "🙀" and match_control_consumption == "\tB" and match_control_class == "\t" ? 1 : 0)
 plot(match_control_ascii_case == "Q" and match_control_unicode_case == "Ϲ" and match_control_verbose == "\t" and match_control_quoted == "\\e\\cA" ? 1 : 0)
+plot(match_octal_two_digit_width == "?7" and match_octal_three_digit_width == "ÿx" and match_octal_non_octal_tail == "\n8" and match_octal_first_digit_limit == " 0" and match_octal_class == "a" ? 1 : 0)
+plot(match_octal_ascii_case == "Q" and match_octal_ascii_non_ascii == "å" and match_octal_unicode_case == "Å" and match_octal_verbose == "q" and match_octal_quoted == "\\0141" ? 1 : 0)
 plot(match_quoted_meta == "[a-z]+(?U)# " and match_quoted_escape == "\\d" and match_quoted_verbose == "# [ ]" and match_quoted_class == "]-" and match_quoted_unclosed == "[b]+" and match_quoted_then_ascii == "[a]123" ? 1 : 0)
 plot(match_final_newline_dollar == "tail" and match_final_newline_Z == "tail" and match_absolute_z_missing == "" and match_absolute_z == "tail" ? 1 : 0)
 plot(match_explicit_final_newline == "\n" and match_empty_final_newline_dollar == "" and match_empty_final_newline_Z == "" ? 1 : 0)
