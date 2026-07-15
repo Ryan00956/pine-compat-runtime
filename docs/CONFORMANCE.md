@@ -2162,7 +2162,8 @@ Pine matrix collections are partial. Runtime-owned `matrix<float>` ids support
 `matrix.elements_count`, `values.elements_count()`, `matrix.is_square`,
 `values.is_square()`, `matrix.is_binary`, `values.is_binary()`,
 `matrix.is_diagonal`, `values.is_diagonal()`, `matrix.is_antidiagonal`,
-`values.is_antidiagonal()`, `matrix.is_identity`,
+`values.is_antidiagonal()`, `matrix.is_triangular`,
+`values.is_triangular()`, `matrix.is_identity`,
 `values.is_identity()`, `matrix.is_symmetric`, `values.is_symmetric()`,
 `matrix.is_antisymmetric`, `values.is_antisymmetric()`,
 `matrix.is_stochastic`, `values.is_stochastic()`, `matrix.is_zero`,
@@ -2211,8 +2212,8 @@ while runtime-owned `matrix<int>` ids support `matrix.new<int>`, `matrix.get`,
 `matrix.swap_rows`, `matrix.swap_columns`, `matrix.sort`, `matrix.rows`,
 `matrix.columns`, `matrix.elements_count`, and `matrix.is_square`,
 `matrix.is_binary`, `matrix.is_diagonal`,
-`matrix.is_antidiagonal`, `matrix.is_identity`, `matrix.is_symmetric`,
-`matrix.is_antisymmetric`,
+`matrix.is_antidiagonal`, `matrix.is_triangular`, `matrix.is_identity`,
+`matrix.is_symmetric`, `matrix.is_antisymmetric`,
 `matrix.is_stochastic`, `matrix.is_zero`, `matrix.sum`, `matrix.avg`,
 `matrix.min`, `matrix.max`, `matrix.mode`, `matrix.trace`, `matrix.det`,
 `matrix.eigenvalues`, `matrix.eigenvectors`, `matrix.inv`, `matrix.pinv`, and
@@ -2245,6 +2246,11 @@ allow any secondary-diagonal value including `na`, require exact-zero numeric
 cells everywhere else, return false for off-diagonal `na` cells, and return
 true for empty `0 x 0` matrices, with the official fixed `series bool` return
 qualifier,
+namespace and method-call triangular predicates that require square shapes and
+exact-zero numeric cells either entirely above or entirely below the main
+diagonal, allow arbitrary diagonal and opposite-side values including `na`,
+return false when neither side is all zero, and return true for empty `0 x 0`
+matrices, with the official fixed `series bool` return qualifier,
 namespace and method-call transposes returning independent matrix copies with
 swapped row/column counts,
 namespace and method-call matrix reversals mutating cells in place while
@@ -2295,8 +2301,9 @@ Matrix get/copy helpers including
 `values.transpose()`, shape readers including
 `values.rows()`/`values.columns()`/`values.elements_count()`/`values.is_square()`, value predicates including
 `values.is_binary()`/`values.is_diagonal()`/`values.is_antidiagonal()`/
-`values.is_identity()`/`values.is_symmetric()`/`values.is_antisymmetric()`/
-`values.is_stochastic()`/`values.is_zero()`, numeric readers including
+`values.is_triangular()`/`values.is_identity()`/`values.is_symmetric()`/
+`values.is_antisymmetric()`/`values.is_stochastic()`/`values.is_zero()`,
+numeric readers including
 `values.sum()`/`values.avg()`/`values.min()`/`values.max()`/`values.mode()`/`values.trace()`/`values.det()`/`values.rank()`,
 row/column extraction helpers including
 `values.row(row)`/`values.col(column)`, submatrix helpers including
@@ -2340,8 +2347,8 @@ method syntax beyond
 `values.set(row, column, value)`, `values.copy()`,
 `values.transpose()`, `values.reverse()`, `values.reshape(rows, columns)`, `values.rows()`, `values.columns()`,
 `values.elements_count()`, `values.is_square()`, `values.is_binary()`,
-`values.is_diagonal()`, `values.is_antidiagonal()`, `values.is_identity()`,
-`values.is_symmetric()`, `values.is_antisymmetric()`,
+`values.is_diagonal()`, `values.is_antidiagonal()`, `values.is_triangular()`,
+`values.is_identity()`, `values.is_symmetric()`, `values.is_antisymmetric()`,
 `values.is_stochastic()`, `values.is_zero()`, `values.sum()`, `values.avg()`,
 `values.min()`, `values.max()`, `values.mode()`, `values.trace()`,
 `values.det()`, `values.rank()`, `values.row(row)`, `values.col(column)`,

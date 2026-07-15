@@ -1090,6 +1090,8 @@ fn reports_unsupported_matrix_is_antidiagonal_simple_bool_return_qualifier_fixtu
         &[
             "`ta.alma` argument `floor` expects simple bool-compatible, got series bool",
             "`ta.alma` argument `floor` expects simple bool-compatible, got series bool",
+            "`ta.alma` argument `floor` expects simple bool-compatible, got series bool",
+            "`ta.alma` argument `floor` expects simple bool-compatible, got series bool",
         ],
     );
 }
@@ -18340,13 +18342,17 @@ fn accepts_supported_matrix_is_diagonal_fixture() {
     );
     assert!(analysis.compatibility.unsupported.is_empty());
     assert!(
-        ["matrix.is_diagonal", "matrix.is_antidiagonal"]
+        [
+            "matrix.is_diagonal",
+            "matrix.is_antidiagonal",
+            "matrix.is_triangular",
+        ]
+        .iter()
+        .all(|feature| analysis
+            .compatibility
+            .supported
             .iter()
-            .all(|feature| analysis
-                .compatibility
-                .supported
-                .iter()
-                .any(|supported| supported.feature == *feature)),
+            .any(|supported| supported.feature == *feature)),
         "{} supported features: {:?}",
         path.display(),
         analysis.compatibility.supported
@@ -18990,6 +18996,11 @@ fn reports_unsupported_matrix_is_diagonal_fixture() {
     assert_numeric_matrix_id_message(
         "tests/fixtures/sema/unsupported_matrix_is_diagonal.pine",
         "matrix.is_antidiagonal",
+        "const na",
+    );
+    assert_numeric_matrix_id_message(
+        "tests/fixtures/sema/unsupported_matrix_is_diagonal.pine",
+        "matrix.is_triangular",
         "const na",
     );
 }

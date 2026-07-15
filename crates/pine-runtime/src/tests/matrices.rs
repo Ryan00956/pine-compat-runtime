@@ -370,6 +370,121 @@ fn reports_antidiagonal_matrix_values() {
 }
 
 #[test]
+fn reports_triangular_matrix_values() {
+    let program = runtime_program();
+    let mut runtime = HistoricalRuntime::new(&program);
+
+    let PineValue::Matrix(upper_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 3, 3, PineValue::Float(0.0))
+        .expect("upper-triangular matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(lower_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 3, 3, PineValue::Float(0.0))
+        .expect("lower-triangular matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(non_triangular_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 2, PineValue::Float(0.0))
+        .expect("non-triangular matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(rectangular_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 3, PineValue::Float(0.0))
+        .expect("rectangular matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(diagonal_na_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 2, PineValue::Float(0.0))
+        .expect("diagonal-na matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(one_side_na_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 2, PineValue::Float(0.0))
+        .expect("one-side-na matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(two_side_invalid_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 2, PineValue::Float(0.0))
+        .expect("two-side-invalid matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(int_id) = runtime
+        .new_matrix(MatrixElementKind::Int, 2, 2, PineValue::Int(0))
+        .expect("integer triangular matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(empty_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 0, 0, PineValue::Na)
+        .expect("empty matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+
+    runtime
+        .matrix_set_value(upper_id, 0, 1, PineValue::Float(1.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(upper_id, 0, 2, PineValue::Float(2.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(upper_id, 1, 2, PineValue::Float(3.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(lower_id, 1, 0, PineValue::Float(1.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(lower_id, 2, 0, PineValue::Float(2.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(lower_id, 2, 1, PineValue::Float(3.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(non_triangular_id, 0, 1, PineValue::Float(1.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(non_triangular_id, 1, 0, PineValue::Float(1.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(diagonal_na_id, 0, 0, PineValue::Na)
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(one_side_na_id, 0, 1, PineValue::Na)
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(two_side_invalid_id, 0, 1, PineValue::Na)
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(two_side_invalid_id, 1, 0, PineValue::Float(1.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(int_id, 1, 0, PineValue::Int(2))
+        .expect("matrix set should succeed");
+
+    assert_eq!(runtime.matrix_is_triangular(upper_id), Some(true));
+    assert_eq!(runtime.matrix_is_triangular(lower_id), Some(true));
+    assert_eq!(runtime.matrix_is_triangular(non_triangular_id), Some(false));
+    assert_eq!(runtime.matrix_is_triangular(rectangular_id), Some(false));
+    assert_eq!(runtime.matrix_is_triangular(diagonal_na_id), Some(true));
+    assert_eq!(runtime.matrix_is_triangular(one_side_na_id), Some(true));
+    assert_eq!(
+        runtime.matrix_is_triangular(two_side_invalid_id),
+        Some(false)
+    );
+    assert_eq!(runtime.matrix_is_triangular(int_id), Some(true));
+    assert_eq!(runtime.matrix_is_triangular(empty_id), Some(true));
+    assert_eq!(runtime.matrix_is_triangular(u32::MAX), None);
+}
+
+#[test]
 fn reports_identity_matrix_values() {
     let program = runtime_program();
     let mut runtime = HistoricalRuntime::new(&program);

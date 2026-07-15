@@ -3,4 +3,5 @@ indicator("Unsupported matrix.is_diagonal")
 
 is_diagonal = matrix.is_diagonal(na)
 is_antidiagonal = matrix.is_antidiagonal(na)
+is_triangular = matrix.is_triangular(na)
 plot(close)

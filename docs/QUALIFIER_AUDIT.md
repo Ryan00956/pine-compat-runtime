@@ -674,9 +674,10 @@ consumers.
 `matrix.is_stochastic`, and `matrix.is_zero` have fixture-backed fixed
 `simple bool` return semantics for namespace and method-call forms: results are
 accepted by simple-bool consumers and rejected by const-bool consumers.
-`matrix.is_antidiagonal` instead follows the official fixed `series bool`
-return qualifier for namespace and method-call forms: results are accepted by
-series-bool conditions and rejected by simple-bool consumers.
+`matrix.is_antidiagonal` and `matrix.is_triangular` instead follow their
+official fixed `series bool` return qualifiers for namespace and method-call
+forms: results are accepted by series-bool conditions and rejected by
+simple-bool consumers.
 `matrix.row` and `matrix.col` have fixture-backed `MatrixArray` return
 qualifier semantics for namespace and method-call forms: returned arrays
 preserve the source matrix element kind as `simple array<T>` for

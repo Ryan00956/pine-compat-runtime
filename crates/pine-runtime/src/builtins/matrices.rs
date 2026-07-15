@@ -80,6 +80,7 @@ impl<'a> HistoricalRuntime<'a> {
             "matrix.is_binary" => self.eval_matrix_is_binary(args),
             "matrix.is_diagonal" => self.eval_matrix_is_diagonal(args),
             "matrix.is_antidiagonal" => self.eval_matrix_is_antidiagonal(args),
+            "matrix.is_triangular" => self.eval_matrix_is_triangular(args),
             "matrix.is_identity" => self.eval_matrix_is_identity(args),
             "matrix.is_symmetric" => self.eval_matrix_is_symmetric(args),
             "matrix.is_antisymmetric" => self.eval_matrix_is_antisymmetric(args),
@@ -364,6 +365,19 @@ impl<'a> HistoricalRuntime<'a> {
             .unwrap_or(PineValue::Na))
     }
 
+    pub(crate) fn eval_matrix_is_triangular(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .matrix_is_triangular(id)
+            .map(PineValue::Bool)
+            .unwrap_or(PineValue::Na))
+    }
+
     pub(crate) fn eval_matrix_is_identity(
         &mut self,
         args: &[HirCallArg],
@@ -629,6 +643,37 @@ impl<'a> HistoricalRuntime<'a> {
                     }
                     let offset = row * matrix.columns + column;
                     if !matches!(matrix.values[offset].as_f64(), Some(number) if number == 0.0) {
+                        return false;
+                    }
+                }
+            }
+            true
+        })
+    }
+
+    pub(crate) fn matrix_is_triangular(&self, id: u32) -> Option<bool> {
+        self.matrix_store.get(&id).map(|matrix| {
+            if matrix.rows != matrix.columns {
+                return false;
+            }
+            let mut above_is_zero = true;
+            let mut below_is_zero = true;
+            for row in 0..matrix.rows {
+                for column in 0..matrix.columns {
+                    if row == column {
+                        continue;
+                    }
+                    let offset = row * matrix.columns + column;
+                    let is_zero = matches!(
+                        matrix.values[offset].as_f64(),
+                        Some(number) if number == 0.0
+                    );
+                    if row < column {
+                        above_is_zero &= is_zero;
+                    } else {
+                        below_is_zero &= is_zero;
+                    }
+                    if !above_is_zero && !below_is_zero {
                         return false;
                     }
                 }

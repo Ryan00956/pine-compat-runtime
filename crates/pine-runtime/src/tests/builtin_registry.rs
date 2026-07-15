@@ -202,6 +202,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "matrix.is_symmetric",
     "matrix.is_square",
     "matrix.is_stochastic",
+    "matrix.is_triangular",
     "matrix.is_zero",
     "matrix.inv",
     "matrix.kron",

@@ -617,6 +617,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "matrix.is_triangular",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATRIX_NUMERIC_ID_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_BOOL),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "matrix.is_identity",
         phase: BuiltinPhase::Phase1Core,
         params: MATRIX_NUMERIC_ID_PARAMS,

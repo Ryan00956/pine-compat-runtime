@@ -5,3 +5,5 @@ values = matrix.new<float>(2, 2, 0)
 
 plot(ta.alma(close, 2, 0.85, 6, matrix.is_antidiagonal(values)))
 plot(ta.alma(close, 2, 0.85, 6, values.is_antidiagonal()))
+plot(ta.alma(close, 2, 0.85, 6, matrix.is_triangular(values)))
+plot(ta.alma(close, 2, 0.85, 6, values.is_triangular()))
