@@ -7,7 +7,7 @@ use super::{
     regex_character_classes::{
         PineRegexClassPrefix, PineRegexClassReplacementCase, apply_pine_java_empty_intersection,
         next_pine_regex_class_token, normalize_case_insensitive_class,
-        pine_java_ampersand_revives_bit_class, pine_java_empty_intersection, pine_posix_class,
+        pine_java_ampersand_continuation, pine_java_empty_intersection, pine_posix_class,
         pine_unicode_block_property, push_case_folded_class,
         push_case_insensitive_class_replacement, push_pine_unicode_block,
     },
@@ -497,15 +497,11 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 } else if has_lhs && !rhs_is_empty {
                     result.push_str("&&");
                 } else if let Some(empty_intersection) = empty_intersection {
-                    let revives_bit_class = rhs.is_some_and(|(ampersand_index, _)| {
-                        pine_java_ampersand_revives_bit_class(
-                            pattern,
-                            ampersand_index,
-                            mode.verbose,
-                        )
-                    });
+                    let continuation = pine_java_ampersand_continuation(pattern, rhs, mode.verbose);
                     if empty_rhs_is_followed_by_ampersand
-                        && !empty_intersection.can_continue(revives_bit_class)
+                        && !empty_intersection.can_continue(
+                            continuation.expect("ampersand continuation was detected"),
+                        )
                     {
                         result.push_str(r"\p{__PineInvalidJavaIntersection}");
                     } else {
@@ -514,8 +510,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                             class_start,
                             &mut case_protected_spans,
                             empty_intersection,
-                            empty_rhs_is_followed_by_ampersand,
-                            revives_bit_class,
+                            continuation,
                         );
                     }
                 }

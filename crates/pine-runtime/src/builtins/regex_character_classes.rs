@@ -166,6 +166,13 @@ pub(crate) struct PineRegexClassContinuation {
     lost_bit_class: String,
 }
 
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub(crate) enum PineRegexAmpersandContinuation {
+    RevivesBitClass,
+    StartsIntersection,
+    DefersBitClass,
+}
+
 pub(crate) enum PineRegexEmptyIntersection {
     Redundant(PineRegexClassContinuation),
     Repeat {
@@ -177,11 +184,12 @@ pub(crate) enum PineRegexEmptyIntersection {
 }
 
 impl PineRegexEmptyIntersection {
-    pub(crate) fn can_continue(&self, revives_bit_class: bool) -> bool {
+    pub(crate) fn can_continue(&self, continuation_kind: PineRegexAmpersandContinuation) -> bool {
         match self {
             Self::Redundant(_) => true,
             Self::Repeat { continuation, .. } => {
-                continuation.lost_bit_class.is_empty() || revives_bit_class
+                continuation.lost_bit_class.is_empty()
+                    || continuation_kind != PineRegexAmpersandContinuation::DefersBitClass
             }
             Self::Invalid => false,
         }
@@ -310,8 +318,7 @@ pub(crate) fn apply_pine_java_empty_intersection(
     class_start: usize,
     protected_spans: &mut Vec<Range<usize>>,
     intersection: PineRegexEmptyIntersection,
-    continues: bool,
-    revives_bit_class: bool,
+    continuation_kind: Option<PineRegexAmpersandContinuation>,
 ) {
     let (current, current_span, continuation) = match intersection {
         PineRegexEmptyIntersection::Redundant(continuation) => (None, None, continuation),
@@ -335,7 +342,7 @@ pub(crate) fn apply_pine_java_empty_intersection(
                 .collect::<Vec<_>>()
         })
         .unwrap_or_default();
-    if continues {
+    if continuation_kind.is_some() {
         open_pine_regex_class_group(
             result,
             class_start + continuation.group_start,
@@ -352,29 +359,43 @@ pub(crate) fn apply_pine_java_empty_intersection(
                 .map(|span| copy_start + span.start..copy_start + span.end),
         );
     }
-    if continues {
+    if let Some(continuation_kind) = continuation_kind {
         result.push(']');
-        if revives_bit_class {
+        if continuation_kind == PineRegexAmpersandContinuation::RevivesBitClass {
             result.push_str(&continuation.lost_bit_class);
         }
     }
 }
 
-pub(crate) fn pine_java_ampersand_revives_bit_class(
+pub(crate) fn pine_java_ampersand_continuation(
     pattern: &str,
-    ampersand_index: usize,
+    token: Option<(usize, char)>,
     verbose: bool,
-) -> bool {
+) -> Option<PineRegexAmpersandContinuation> {
+    let Some((ampersand_index, '&')) = token else {
+        return None;
+    };
     let next = next_pine_regex_class_token(pattern, ampersand_index + 1, verbose);
-    if matches!(next, Some((_, '&'))) {
-        return false;
+    if let Some((second_index, '&')) = next {
+        let rhs = next_pine_regex_class_token(pattern, second_index + 1, verbose);
+        return Some(if rhs.is_none_or(|(_, ch)| matches!(ch, '&' | ']')) {
+            PineRegexAmpersandContinuation::DefersBitClass
+        } else {
+            PineRegexAmpersandContinuation::StartsIntersection
+        });
     }
     let Some((hyphen_index, '-')) = next else {
-        return true;
+        return Some(PineRegexAmpersandContinuation::RevivesBitClass);
     };
-    matches!(
-        pattern.as_bytes().get(hyphen_index + 1),
-        None | Some(b'[' | b']')
+    Some(
+        if matches!(
+            pattern.as_bytes().get(hyphen_index + 1),
+            None | Some(b'[' | b']')
+        ) {
+            PineRegexAmpersandContinuation::RevivesBitClass
+        } else {
+            PineRegexAmpersandContinuation::DefersBitClass
+        },
     )
 }
 
