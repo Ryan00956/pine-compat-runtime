@@ -161,18 +161,28 @@ impl PineRegexClassPrefix {
     }
 }
 
-// Java's parser can carry a mutable BitClass through later intersections. The
-// flag limits grouping rewrites to prefixes whose membership cannot be revived.
+pub(crate) struct PineRegexClassContinuation {
+    group_start: usize,
+    lost_bit_class: String,
+}
+
 pub(crate) enum PineRegexEmptyIntersection {
-    Redundant { can_group: bool },
-    Repeat { current: String, can_group: bool },
+    Redundant(PineRegexClassContinuation),
+    Repeat {
+        current: String,
+        current_span: Range<usize>,
+        continuation: PineRegexClassContinuation,
+    },
     Invalid,
 }
 
 impl PineRegexEmptyIntersection {
-    pub(crate) fn can_group(&self) -> bool {
+    pub(crate) fn can_continue(&self, revives_bit_class: bool) -> bool {
         match self {
-            Self::Redundant { can_group } | Self::Repeat { can_group, .. } => *can_group,
+            Self::Redundant(_) => true,
+            Self::Repeat { continuation, .. } => {
+                continuation.lost_bit_class.is_empty() || revives_bit_class
+            }
             Self::Invalid => false,
         }
     }
@@ -191,6 +201,29 @@ fn java_union_item_is_bit_class(item: &ClassSetItem, unicode_case_insensitive: b
     matches!(item, ClassSetItem::Literal(literal) if is_java_bit_class_literal(literal.c, unicode_case_insensitive))
 }
 
+// Pattern.clazz recursively consumes every intersection RHS, so a later empty
+// pair belongs to the rightmost RHS rather than the outer class expression.
+fn rightmost_java_class_scope(mut set: &ClassSet) -> Option<&ClassSet> {
+    loop {
+        match set {
+            ClassSet::BinaryOp(operation)
+                if operation.kind == ClassSetBinaryOpKind::Intersection =>
+            {
+                set = &operation.rhs;
+            }
+            ClassSet::BinaryOp(_) => return None,
+            ClassSet::Item(_) => return Some(set),
+        }
+    }
+}
+
+fn java_class_scope_items(item: &ClassSetItem) -> &[ClassSetItem] {
+    match item {
+        ClassSetItem::Union(union) => &union.items,
+        item => std::slice::from_ref(item),
+    }
+}
+
 pub(crate) fn pine_java_empty_intersection(
     class_prefix: &str,
     verbose: bool,
@@ -203,46 +236,66 @@ pub(crate) fn pine_java_empty_intersection(
         return PineRegexEmptyIntersection::Invalid;
     };
 
-    let ClassSet::Item(item) = &class.kind else {
-        return PineRegexEmptyIntersection::Redundant { can_group: false };
-    };
-    let ClassSetItem::Union(union) = item else {
-        return PineRegexEmptyIntersection::Redundant { can_group: true };
-    };
-    let Some(last) = union.items.last() else {
+    let Some(scope) = rightmost_java_class_scope(&class.kind) else {
         return PineRegexEmptyIntersection::Invalid;
     };
-    if union
-        .items
-        .iter()
-        .all(|item| java_union_item_is_bit_class(item, unicode_case_insensitive))
-    {
-        return PineRegexEmptyIntersection::Redundant { can_group: true };
-    }
-    if java_union_item_is_bit_class(last, unicode_case_insensitive) {
+    let ClassSet::Item(item) = scope else {
+        return PineRegexEmptyIntersection::Invalid;
+    };
+    let items = java_class_scope_items(item);
+    if items.is_empty() || matches!(item, ClassSetItem::Empty(_)) {
         return PineRegexEmptyIntersection::Invalid;
     }
 
-    let span = last.span();
+    let mut bit_class = String::new();
+    let mut predicate_count = 0usize;
+    let mut current = None;
+    for item in items {
+        if java_union_item_is_bit_class(item, unicode_case_insensitive) {
+            let ClassSetItem::Literal(literal) = item else {
+                unreachable!("checked a literal class item")
+            };
+            use std::fmt::Write;
+            write!(bit_class, r"\x{{{:X}}}", u32::from(literal.c))
+                .expect("writing to a String cannot fail");
+            current = None;
+        } else {
+            predicate_count += 1;
+            current = Some(item.span());
+        }
+    }
+
+    let mut continuation = PineRegexClassContinuation {
+        group_start: scope.span().start.offset,
+        lost_bit_class: bit_class,
+    };
+    if predicate_count == 0 {
+        continuation.lost_bit_class.clear();
+        return PineRegexEmptyIntersection::Redundant(continuation);
+    }
+    let Some(current_span) = current else {
+        return PineRegexEmptyIntersection::Invalid;
+    };
+    if predicate_count == 1 && continuation.lost_bit_class.is_empty() {
+        return PineRegexEmptyIntersection::Redundant(continuation);
+    }
+
     pattern
-        .get(span.start.offset..span.end.offset)
+        .get(current_span.start.offset..current_span.end.offset)
         .map(str::to_owned)
         .map(|current| PineRegexEmptyIntersection::Repeat {
             current,
-            can_group: false,
+            current_span: current_span.start.offset..current_span.end.offset,
+            continuation,
         })
         .unwrap_or(PineRegexEmptyIntersection::Invalid)
 }
 
-pub(crate) fn open_pine_regex_class_group(
+fn open_pine_regex_class_group(
     result: &mut String,
-    class_start: usize,
+    insert_at: usize,
     protected_spans: &mut [Range<usize>],
 ) {
-    let mut insert_at = class_start + 1;
-    if result.as_bytes().get(insert_at) == Some(&b'^') {
-        insert_at += 1;
-    }
     result.insert(insert_at, '[');
     for span in protected_spans {
         if span.start >= insert_at {
@@ -250,6 +303,79 @@ pub(crate) fn open_pine_regex_class_group(
             span.end += 1;
         }
     }
+}
+
+pub(crate) fn apply_pine_java_empty_intersection(
+    result: &mut String,
+    class_start: usize,
+    protected_spans: &mut Vec<Range<usize>>,
+    intersection: PineRegexEmptyIntersection,
+    continues: bool,
+    revives_bit_class: bool,
+) {
+    let (current, current_span, continuation) = match intersection {
+        PineRegexEmptyIntersection::Redundant(continuation) => (None, None, continuation),
+        PineRegexEmptyIntersection::Repeat {
+            current,
+            current_span,
+            continuation,
+        } => (Some(current), Some(current_span), continuation),
+        PineRegexEmptyIntersection::Invalid => {
+            result.push_str(r"\p{__PineInvalidJavaIntersection}");
+            return;
+        }
+    };
+    let copied_protected = current_span
+        .map(|span| class_start + span.start..class_start + span.end)
+        .map(|source| {
+            protected_spans
+                .iter()
+                .filter(|span| source.start <= span.start && span.end <= source.end)
+                .map(|span| span.start - source.start..span.end - source.start)
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    if continues {
+        open_pine_regex_class_group(
+            result,
+            class_start + continuation.group_start,
+            protected_spans,
+        );
+    }
+    if let Some(current) = current {
+        result.push_str("&&");
+        let copy_start = result.len();
+        result.push_str(&current);
+        protected_spans.extend(
+            copied_protected
+                .into_iter()
+                .map(|span| copy_start + span.start..copy_start + span.end),
+        );
+    }
+    if continues {
+        result.push(']');
+        if revives_bit_class {
+            result.push_str(&continuation.lost_bit_class);
+        }
+    }
+}
+
+pub(crate) fn pine_java_ampersand_revives_bit_class(
+    pattern: &str,
+    ampersand_index: usize,
+    verbose: bool,
+) -> bool {
+    let next = next_pine_regex_class_token(pattern, ampersand_index + 1, verbose);
+    if matches!(next, Some((_, '&'))) {
+        return false;
+    }
+    let Some((hyphen_index, '-')) = next else {
+        return true;
+    };
+    matches!(
+        pattern.as_bytes().get(hyphen_index + 1),
+        None | Some(b'[' | b']')
+    )
 }
 
 fn is_verbose_ascii_space(ch: char) -> bool {

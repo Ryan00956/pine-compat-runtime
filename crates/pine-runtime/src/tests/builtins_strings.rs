@@ -306,6 +306,10 @@ fn normalizes_pine_regex_class_ampersand_boundaries() {
         (r"[da-c&&]", r"[da-c&&a-c]"),
         (r"[A\d&&]", r"[A[0-9]&&[0-9]]"),
         (r"[c[ab]&&]", r"[c[ab]&&[ab]]"),
+        (r"[da-c&&&x]", r"[[da-c&&a-c]\x{64}\x{26}x]"),
+        (r"[A\d&&&x]", r"[[A[0-9]&&[0-9]]\x{41}\x{26}x]"),
+        (r"[a&&b&&&c]", r"[a&&[b]\x{26}c]"),
+        (r"[a-c&&b-d&&&x]", r"[a-c&&[b-d]\x{26}x]"),
     ] {
         assert_eq!(normalize_pine_regex(pattern), expected, "{pattern}");
     }
@@ -335,6 +339,44 @@ fn normalizes_pine_regex_class_ampersand_boundaries() {
     assert!(repeated_set.is_match("123"));
     assert!(!repeated_set.is_match("A"));
 
+    let revived_bits = Regex::new(&normalize_pine_regex(r"\A[da-c&&&x]+\z"))
+        .expect("normalized odd run with revived Java BitClass literals");
+    assert!(revived_bits.is_match("abcdx&"));
+    assert!(!revived_bits.is_match("e"));
+
+    let prior_intersection = Regex::new(&normalize_pine_regex(r"\A[a&&b&&&c]\z"))
+        .expect("normalized odd run in a Java intersection RHS");
+    for ch in ["a", "b", "c", "&"] {
+        assert!(!prior_intersection.is_match(ch), "{ch}");
+    }
+    let recovered_rhs = Regex::new(&normalize_pine_regex(r"\A[a&&b&&&a]\z"))
+        .expect("normalized Java intersection RHS revived by a later literal");
+    assert!(recovered_rhs.is_match("a"));
+
+    let intersected_range = Regex::new(&normalize_pine_regex(r"\A[a-c&&b-d&&&x]+\z"))
+        .expect("normalized odd run in a ranged intersection RHS");
+    assert!(intersected_range.is_match("bc"));
+    assert!(!intersected_range.is_match("a"));
+    assert!(!intersected_range.is_match("d"));
+
+    let predicate_union = Regex::new(&normalize_pine_regex(r"\A[[ab][cd]&&&x]+\z"))
+        .expect("normalized predicate-only Java class continuation");
+    assert!(predicate_union.is_match("cdx&"));
+    assert!(!predicate_union.is_match("a"));
+
+    let unicode_case = Regex::new(&normalize_pine_regex(r"(?iU)\A[k\d&&&x]+\z"))
+        .expect("normalized Unicode-case Java BitClass exception");
+    assert!(unicode_case.is_match("1xX&"));
+    assert!(!unicode_case.is_match("K"));
+    assert!(!unicode_case.is_match("K"));
+
+    let verbose_mixed = Regex::new(&normalize_pine_regex(
+        "(?x)\\A[d a-c & # first pair byte\n & & x]+\\z",
+    ))
+    .expect("normalized verbose mixed-predicate odd run");
+    assert!(verbose_mixed.is_match("abcdx&"));
+    assert!(!verbose_mixed.is_match("e"));
+
     for invalid in [
         r"[&&]",
         r"[&&&]",
@@ -342,10 +384,10 @@ fn normalizes_pine_regex_class_ampersand_boundaries() {
         r"[a-cd&&]",
         r"[\dA&&]",
         r"[[ab]c&&]",
-        r"[da-c&&&x]",
-        r"[A\d&&&x]",
-        r"[a&&b&&&c]",
-        r"[a-c&&b-d&&&x]",
+        r"[da-c&&&&d]",
+        r"[A\d&&&&A]",
+        r"[da-c&&&&&x]",
+        r"[Aa-c&&&-0]",
     ] {
         assert!(
             Regex::new(&normalize_pine_regex(invalid)).is_err(),

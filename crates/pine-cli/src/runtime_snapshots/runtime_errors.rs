@@ -936,6 +936,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "str.match invalid regex",
     ),
     (
+        "tests/fixtures/regressions/str_match_unsupported_deferred_bit_class.pine",
+        "str.match invalid regex",
+    ),
+    (
         "tests/fixtures/regressions/str_match_invalid_named_character.pine",
         "str.match invalid regex",
     ),

@@ -5,10 +5,11 @@ use regex::Regex;
 
 use super::{
     regex_character_classes::{
-        PineRegexClassPrefix, PineRegexClassReplacementCase, PineRegexEmptyIntersection,
-        next_pine_regex_class_token, normalize_case_insensitive_class, open_pine_regex_class_group,
-        pine_java_empty_intersection, pine_posix_class, pine_unicode_block_property,
-        push_case_folded_class, push_case_insensitive_class_replacement, push_pine_unicode_block,
+        PineRegexClassPrefix, PineRegexClassReplacementCase, apply_pine_java_empty_intersection,
+        next_pine_regex_class_token, normalize_case_insensitive_class,
+        pine_java_ampersand_revives_bit_class, pine_java_empty_intersection, pine_posix_class,
+        pine_unicode_block_property, push_case_folded_class,
+        push_case_insensitive_class_replacement, push_pine_unicode_block,
     },
     regex_escapes::{
         is_pine_regex_line_separator, parse_pine_regex_code_point_escape,
@@ -496,27 +497,26 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 } else if has_lhs && !rhs_is_empty {
                     result.push_str("&&");
                 } else if let Some(empty_intersection) = empty_intersection {
-                    if empty_rhs_is_followed_by_ampersand && !empty_intersection.can_group() {
+                    let revives_bit_class = rhs.is_some_and(|(ampersand_index, _)| {
+                        pine_java_ampersand_revives_bit_class(
+                            pattern,
+                            ampersand_index,
+                            mode.verbose,
+                        )
+                    });
+                    if empty_rhs_is_followed_by_ampersand
+                        && !empty_intersection.can_continue(revives_bit_class)
+                    {
                         result.push_str(r"\p{__PineInvalidJavaIntersection}");
                     } else {
-                        let group_intersection = empty_rhs_is_followed_by_ampersand;
-                        if group_intersection {
-                            let spans = &mut case_protected_spans;
-                            open_pine_regex_class_group(&mut result, class_start, spans);
-                        }
-                        match empty_intersection {
-                            PineRegexEmptyIntersection::Redundant { .. } => {}
-                            PineRegexEmptyIntersection::Repeat { current, .. } => {
-                                result.push_str("&&");
-                                result.push_str(&current);
-                            }
-                            PineRegexEmptyIntersection::Invalid => {
-                                result.push_str(r"\p{__PineInvalidJavaIntersection}");
-                            }
-                        }
-                        if group_intersection {
-                            result.push(']');
-                        }
+                        apply_pine_java_empty_intersection(
+                            &mut result,
+                            class_start,
+                            &mut case_protected_spans,
+                            empty_intersection,
+                            empty_rhs_is_followed_by_ampersand,
+                            revives_bit_class,
+                        );
                     }
                 }
                 index = second_index + '&'.len_utf8();

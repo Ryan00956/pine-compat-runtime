@@ -2077,11 +2077,12 @@ regex errors. Raw ampersands use Java/Pine class parsing across single literal
 atoms, leading or trailing empty pairs, and linear odd/even runs, including
 verbose-separated pairs, nested classes, quoted or escaped atoms, single ranges
 or sets, and active case modes. A leading empty intersection such as `[&&]`
-remains a regex error. Odd-run continuations that would require Java's mutable
-BitClass state after a mixed predicate or prior intersection are rejected by
-the current linear-time subset instead of being silently interpreted with
-Rust's different set algebra. Outside character classes, global or scoped
-`(?i)` applies Pine's
+remains a regex error. Direct odd-run continuations after a mixed predicate or
+prior intersection preserve Java's mutable BitClass membership and recursive
+right-hand-side scope instead of inheriting Rust's different set algebra.
+Repeated empty-pair or range-start continuations that would require deferred
+BitClass mutation remain explicit regex errors in the current linear-time
+subset. Outside character classes, global or scoped `(?i)` applies Pine's
 ASCII-only case folding to ordinary and
 `\Q...\E`-quoted literals plus `\uHHHH`/`\x` references. Lowercase `(?u)`
 independently enables Unicode-aware folding when `i` is active without changing
