@@ -604,7 +604,9 @@ line-ending normalization. It accepts exactly 40,960 characters. A longer
 literal reports `E_LEX_STRING_LIMIT` over the complete delimited span while
 retaining the token so later statements do not receive cascading parse errors.
 
-## Parenthesized Line Wrapping
+## Expression Line Wrapping
+
+### Parenthesized Wrapping
 
 While one or more round parentheses remain open, the lexer treats physical
 line endings and all indentation at the next non-comment line as layout-free
@@ -616,8 +618,19 @@ indent/dedent emission resumes, preserving surrounding local-block structure.
 If a parenthesized expression contains an `if`, `for`, `while`, or `switch`
 block expression, that enclosing parenthesis temporarily retains structural
 newlines and indentation until it closes so the nested block remains parseable.
-This rule does not add the separate legacy continuation syntax for expressions
-outside parentheses.
+
+### Legacy Wrapping Outside Parentheses
+
+Outside round parentheses, a physical line continues the current expression
+when its leading indentation is deeper than the active local block and its
+expanded column is not a multiple of four. Spaces advance one column and tabs
+advance four columns. The lexer omits the preceding newline and the
+continuation indentation, including after an end-of-line comment. Successive
+continuations may use different eligible indentation widths. This applies to
+global and local expressions, including arithmetic, ternaries, string
+concatenation, UDF bodies, and reassignment. A continuation starting at a
+multiple-of-four column remains structural layout and is therefore rejected
+when an unfinished expression precedes it.
 
 ## Variables
 

@@ -17,8 +17,8 @@ the CLI registry: host suites keep representative public-contract coverage
 without duplicating the CLI runner's fixture-specific input setup. Add a name to
 the sorted manifest only after both host suites assert that golden snapshot.
 
-At this stage the live gate discovers 719 registered CLI snapshots and verifies
-421 manifest-required snapshots in both hosts. Registered snapshots must either
+At this stage the live gate discovers 720 registered CLI snapshots and verifies
+422 manifest-required snapshots in both hosts. Registered snapshots must either
 have no public-host assertion yet or be asserted by both hosts; a single-host
 assertion fails the gate unless it has an explicit, reasoned exception. The
 current exception set is empty. The script prints both live counts, so changing

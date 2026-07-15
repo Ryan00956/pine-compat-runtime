@@ -122,6 +122,10 @@ impl<'a> Lexer<'a> {
                     self.pos += 1;
                     self.line_start = true;
                 }
+                b'\n' if self.starts_legacy_line_wrap() => {
+                    self.pos += 1;
+                    self.line_start = false;
+                }
                 b'\n' => {
                     self.single(TokenKind::Newline);
                     self.line_start = true;
@@ -183,6 +187,27 @@ impl<'a> Lexer<'a> {
 
     fn peek_next(&self) -> Option<u8> {
         self.text.as_bytes().get(self.pos + 1).copied()
+    }
+
+    fn starts_legacy_line_wrap(&self) -> bool {
+        let bytes = self.text.as_bytes();
+        let mut next = self.pos + 1;
+        let mut indent = 0_usize;
+
+        while let Some(byte) = bytes.get(next) {
+            match byte {
+                b' ' => indent += 1,
+                b'\t' => indent += 4,
+                _ => break,
+            }
+            next += 1;
+        }
+
+        let current_indent = *self
+            .indent_stack
+            .last()
+            .expect("indent stack always contains root indent");
+        indent > current_indent && !indent.is_multiple_of(4)
     }
 
     fn single(&mut self, kind: TokenKind) {
@@ -1162,6 +1187,70 @@ mod tests {
                 TokenKind::Int(0),
                 TokenKind::RParen,
                 TokenKind::Newline,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn suppresses_layout_for_legacy_line_wrapping() {
+        assert_eq!(
+            kinds(concat!(
+                "value = open +\r\n",
+                "  high + // comment\r\n",
+                "      low +\n",
+                " close\n",
+                "if true\n",
+                "    local = open +\n",
+                "\t  close\n",
+                "    plot(local)\n",
+            )),
+            vec![
+                TokenKind::Identifier("value".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Identifier("open".to_owned()),
+                TokenKind::Plus,
+                TokenKind::Identifier("high".to_owned()),
+                TokenKind::Plus,
+                TokenKind::Identifier("low".to_owned()),
+                TokenKind::Plus,
+                TokenKind::Identifier("close".to_owned()),
+                TokenKind::Newline,
+                TokenKind::If,
+                TokenKind::True,
+                TokenKind::Newline,
+                TokenKind::Indent,
+                TokenKind::Identifier("local".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Identifier("open".to_owned()),
+                TokenKind::Plus,
+                TokenKind::Identifier("close".to_owned()),
+                TokenKind::Newline,
+                TokenKind::Identifier("plot".to_owned()),
+                TokenKind::LParen,
+                TokenKind::Identifier("local".to_owned()),
+                TokenKind::RParen,
+                TokenKind::Newline,
+                TokenKind::Dedent,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn preserves_layout_for_multiple_of_four_outside_parentheses() {
+        assert_eq!(
+            kinds("value = open +\n    high\n"),
+            vec![
+                TokenKind::Identifier("value".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Identifier("open".to_owned()),
+                TokenKind::Plus,
+                TokenKind::Newline,
+                TokenKind::Indent,
+                TokenKind::Identifier("high".to_owned()),
+                TokenKind::Newline,
+                TokenKind::Dedent,
                 TokenKind::Eof,
             ]
         );

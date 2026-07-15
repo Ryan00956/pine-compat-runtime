@@ -59,6 +59,22 @@ fn parses_parenthesized_line_wrapping_fixture() {
 }
 
 #[test]
+fn parses_legacy_line_wrapping_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/legacy_line_wrapping.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.program.statements.len(), 11);
+}
+
+#[test]
+fn rejects_multiple_of_four_legacy_line_wrapping_indentation() {
+    let (_, parsed) =
+        parse_fixture("tests/fixtures/syntax/invalid_legacy_line_wrapping_indentation.pine");
+
+    assert!(has_diagnostic(&parsed.diagnostics, "E_PARSE_EXPR"));
+}
+
+#[test]
 fn reports_unterminated_single_quoted_string_fixture_and_recovers() {
     let (_, parsed) = parse_fixture("tests/fixtures/syntax/unterminated_single_quoted_string.pine");
 

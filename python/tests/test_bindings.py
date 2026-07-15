@@ -1910,6 +1910,20 @@ def test_run_script_returns_parenthesized_line_wrapping_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_legacy_line_wrapping_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/legacy_line_wrapping.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_line_wrapping.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_compound_assignments_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/compound_assignments.pine").read_text()
     expected = json.loads(

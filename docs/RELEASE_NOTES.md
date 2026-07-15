@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added legacy expression line wrapping outside parentheses, accepting
+  continuation indentation deeper than the active local block when its column
+  is not a multiple of four, including end-of-line comments and mixed widths.
 - Added current v6 parenthesized line wrapping, treating physical newlines,
   comments, and any continuation indentation inside round parentheses as
   layout-free whitespace across grouped expressions, calls, parameter lists,
