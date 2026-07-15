@@ -93,6 +93,7 @@ pub(crate) struct PineRegexClassPrefix {
     range: PineRegexClassRangeState,
     has_atom: bool,
     output_start: usize,
+    deferred_bit_class: String,
 }
 
 impl PineRegexClassPrefix {
@@ -103,6 +104,7 @@ impl PineRegexClassPrefix {
             range: PineRegexClassRangeState::NoStart,
             has_atom: false,
             output_start,
+            deferred_bit_class: String::new(),
         }
     }
 
@@ -159,6 +161,10 @@ impl PineRegexClassPrefix {
     pub(crate) fn output_start(&self) -> usize {
         self.output_start
     }
+
+    pub(crate) fn take_deferred_bit_class(&mut self) -> String {
+        std::mem::take(&mut self.deferred_bit_class)
+    }
 }
 
 pub(crate) struct PineRegexClassContinuation {
@@ -170,7 +176,8 @@ pub(crate) struct PineRegexClassContinuation {
 pub(crate) enum PineRegexAmpersandContinuation {
     RevivesBitClass,
     StartsIntersection,
-    DefersBitClass,
+    RepeatsEmptyPair,
+    StartsRange,
 }
 
 pub(crate) enum PineRegexEmptyIntersection {
@@ -189,10 +196,19 @@ impl PineRegexEmptyIntersection {
             Self::Redundant(_) => true,
             Self::Repeat { continuation, .. } => {
                 continuation.lost_bit_class.is_empty()
-                    || continuation_kind != PineRegexAmpersandContinuation::DefersBitClass
+                    || continuation_kind != PineRegexAmpersandContinuation::StartsRange
             }
             Self::Invalid => false,
         }
+    }
+
+    pub(crate) fn with_deferred_bit_class(mut self, deferred: String) -> Self {
+        let continuation = match &mut self {
+            Self::Redundant(continuation) | Self::Repeat { continuation, .. } => continuation,
+            Self::Invalid => return self,
+        };
+        continuation.lost_bit_class.insert_str(0, &deferred);
+        self
     }
 }
 
@@ -317,6 +333,7 @@ pub(crate) fn apply_pine_java_empty_intersection(
     result: &mut String,
     class_start: usize,
     protected_spans: &mut Vec<Range<usize>>,
+    class_prefixes: &mut [PineRegexClassPrefix],
     intersection: PineRegexEmptyIntersection,
     continuation_kind: Option<PineRegexAmpersandContinuation>,
 ) {
@@ -332,6 +349,12 @@ pub(crate) fn apply_pine_java_empty_intersection(
             return;
         }
     };
+    let deferred_bit_class =
+        if continuation_kind == Some(PineRegexAmpersandContinuation::RepeatsEmptyPair) {
+            continuation.lost_bit_class.clone()
+        } else {
+            String::new()
+        };
     let copied_protected = current_span
         .map(|span| class_start + span.start..class_start + span.end)
         .map(|source| {
@@ -365,6 +388,9 @@ pub(crate) fn apply_pine_java_empty_intersection(
             result.push_str(&continuation.lost_bit_class);
         }
     }
+    if let Some(prefix) = class_prefixes.last_mut() {
+        prefix.deferred_bit_class = deferred_bit_class;
+    }
 }
 
 pub(crate) fn pine_java_ampersand_continuation(
@@ -379,7 +405,7 @@ pub(crate) fn pine_java_ampersand_continuation(
     if let Some((second_index, '&')) = next {
         let rhs = next_pine_regex_class_token(pattern, second_index + 1, verbose);
         return Some(if rhs.is_none_or(|(_, ch)| matches!(ch, '&' | ']')) {
-            PineRegexAmpersandContinuation::DefersBitClass
+            PineRegexAmpersandContinuation::RepeatsEmptyPair
         } else {
             PineRegexAmpersandContinuation::StartsIntersection
         });
@@ -394,7 +420,7 @@ pub(crate) fn pine_java_ampersand_continuation(
         ) {
             PineRegexAmpersandContinuation::RevivesBitClass
         } else {
-            PineRegexAmpersandContinuation::DefersBitClass
+            PineRegexAmpersandContinuation::StartsRange
         },
     )
 }

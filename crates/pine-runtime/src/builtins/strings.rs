@@ -481,12 +481,17 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 let empty_rhs_is_followed_by_ampersand = matches!(rhs, Some((_, '&')));
                 let has_lhs = prefix.has_atom();
                 let class_start = prefix.output_start();
+                let deferred_bit_class = class_prefixes
+                    .last_mut()
+                    .expect("a character class has prefix state")
+                    .take_deferred_bit_class();
                 let empty_intersection = (has_lhs && rhs_is_empty).then(|| {
                     pine_java_empty_intersection(
                         &result[class_start..],
                         mode.verbose,
                         mode.case_insensitive && mode.unicode_case,
                     )
+                    .with_deferred_bit_class(deferred_bit_class)
                 });
                 class_prefixes
                     .last_mut()
@@ -509,6 +514,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                             &mut result,
                             class_start,
                             &mut case_protected_spans,
+                            &mut class_prefixes,
                             empty_intersection,
                             continuation,
                         );

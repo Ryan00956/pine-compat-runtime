@@ -312,6 +312,7 @@ fn normalizes_pine_regex_class_ampersand_boundaries() {
         (r"[a-c&&b-d&&&x]", r"[a-c&&[b-d]\x{26}x]"),
         (r"[da-c&&&&d]", r"[[da-c&&a-c]&&d]"),
         (r"[A\d&&&&A]", r"[[A[0-9]&&[0-9]]&&A]"),
+        (r"[da-c&&&&&x]", r"[[[da-c&&a-c]]\x{64}\x{26}x]"),
     ] {
         assert_eq!(normalize_pine_regex(pattern), expected, "{pattern}");
     }
@@ -386,6 +387,18 @@ fn normalizes_pine_regex_class_ampersand_boundaries() {
         .expect("normalized set intersection after an empty pair");
     assert!(!next_set_intersection.is_match("A"));
 
+    let repeated_empty = Regex::new(&normalize_pine_regex(r"\A[da-c&&&&&x]+\z"))
+        .expect("normalized repeated empty intersections with BitClass revival");
+    assert!(repeated_empty.is_match("abcdx&"));
+    assert!(!repeated_empty.is_match("e"));
+    let repeated_empty_rhs = Regex::new(&normalize_pine_regex(r"\A[da-c&&&&&&b]+\z"))
+        .expect("normalized repeated empty intersections before a non-empty RHS");
+    assert!(repeated_empty_rhs.is_match("b"));
+    assert!(!repeated_empty_rhs.is_match("d"));
+    let repeated_twice = Regex::new(&normalize_pine_regex(r"\A[da-c&&&&&&&x]+\z"))
+        .expect("normalized three consecutive empty intersections");
+    assert!(repeated_twice.is_match("abcdx&"));
+
     for invalid in [
         r"[&&]",
         r"[&&&]",
@@ -393,7 +406,6 @@ fn normalizes_pine_regex_class_ampersand_boundaries() {
         r"[a-cd&&]",
         r"[\dA&&]",
         r"[[ab]c&&]",
-        r"[da-c&&&&&x]",
         r"[Aa-c&&&-0]",
     ] {
         assert!(

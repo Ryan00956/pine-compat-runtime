@@ -1350,9 +1350,10 @@ Current baseline:
   odd/even-run, nested, verbose, single-range/set, quoted, escaped, case-mode,
   and invalid-leading-pair boundaries instead of Rust's unconditional `&&` set
   parsing, including direct mixed-predicate or prior-intersection odd-run
-  continuations with mutable Java BitClass revival and recursive RHS scope,
-  while repeated empty-pair or range-start continuations requiring deferred
-  BitClass mutation are explicitly rejected, plus
+  continuations with mutable Java BitClass revival and recursive RHS scope plus
+  repeated empty pairs before later literals or non-empty intersections, while
+  range-start continuations requiring the same BitClass after a later range are
+  explicitly rejected, plus
   default-dot exclusion of Pine's full
   line-terminator set with
   global/scoped `(?s)` and `(?-s)` restoration, plus global/scoped Java/Pine

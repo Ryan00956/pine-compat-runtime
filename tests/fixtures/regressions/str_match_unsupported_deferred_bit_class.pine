@@ -1,4 +1,4 @@
 //@version=5
 indicator("String match unsupported deferred BitClass state")
-matched = str.match("d", "[da-c&&&&&x]")
+matched = str.match("A", "[Aa-c&&&-0]")
 plot(str.length(matched))
