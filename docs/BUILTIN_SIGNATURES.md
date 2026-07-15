@@ -2005,8 +2005,15 @@ continue through the regex engine unchanged. Block properties can be nested in
 character classes and remain literal in quoted regions. It also supports
 `\Q...\E` literal quoting inside or outside character classes, including quoted
 whitespace and `#` in verbose mode; an omitted closing `\E` quotes through the
-end of the pattern. Fixed-width four-hex-digit Unicode references such as
-`\u2014` work inside and outside character classes, consume exactly four digits,
+end of the pattern. In verbose `(?x)` mode, Java/Pine ignores only ASCII space,
+tab, LF, VT, FF, and CR; non-ASCII Unicode whitespace remains a literal atom
+inside or outside character classes. Unescaped `#` comments end at LF, CR, NEL,
+line separator, or paragraph separator. LF and CR are then ignored as ASCII
+trivia, the three Unicode terminators remain literal, and VT/FF inside a comment
+do not terminate it. Escaped and quoted whitespace or `#` remains literal, and
+global/scoped `x` state is preserved. Fixed-width four-hex-digit Unicode
+references such as `\u2014` work inside and outside character classes,
+consume exactly four digits,
 and remain literal inside quoted regions. Two-digit `\xNN` and braced
 `\x{...}` references are also supported; the fixed form consumes exactly two
 hex digits, the braced form accepts leading zeros around a Unicode scalar, and

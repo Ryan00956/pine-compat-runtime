@@ -203,6 +203,16 @@ match_unicode_case_posix = str.match("KA", "(?iu)\\p{Lower}")
 match_unicode_classes_without_case = str.match("KKΒ", "(?iU-u)[k]\\w\\p{Lower}")
 match_unicode_modes_disabled = str.match("ÅéåA", "(?iU)(?-U)å\\w")
 match_unicode_case_references = str.match("ÅÅÅEϹ", "(?iu)\\Qå\\E\\u00E5\\x{E5}\\0145\\cβ")
+match_verbose_unicode_space = str.match("a b", "(?x)a b")
+match_verbose_unicode_space_missing = str.match("ab", "(?x)a b")
+match_verbose_escaped_unicode_space = str.match(" ", "(?x)\\ ")
+match_verbose_cr_comment = str.match("ab", "(?x)a# note\rb")
+match_verbose_next_line_comment = str.match("ab", "(?x)a# noteb")
+match_verbose_line_separator_comment = str.match("a b", "(?x)a# note b")
+match_verbose_paragraph_separator_comment = str.match("a b", "(?x)a# note b")
+match_verbose_cr_class = str.match("a", "(?x)[a# note\r]")
+match_verbose_next_line_class = str.match("", "(?x)[# note]")
+match_verbose_scoped_comment = str.match("ab ", "(?x:a# note\rb)(?-x: )")
 match_leading_class_verbose = str.match("]", "(?x)[ # note\n ]]")
 match_leading_class_empty_quote = str.match("]", "[\\Q\\E]]")
 match_leading_class_quoted = str.match("]", "[\\Q]\\E]")
@@ -386,6 +396,9 @@ plot(match_leading_class_closer == "]" and match_leading_class_closer_negated ==
 plot(match_unicode_case_literal == "KΒ" and match_unicode_case_scoped == "Åå" and match_unicode_case_literal_class == "K" ? 1 : 0)
 plot(match_unicode_case_word == "A" and match_unicode_case_word_class == "A" and match_unicode_case_posix == "A" ? 1 : 0)
 plot(match_unicode_classes_without_case == "KKΒ" and match_unicode_modes_disabled == "åA" and match_unicode_case_references == "ÅÅÅEϹ" ? 1 : 0)
+plot(match_verbose_unicode_space == "a b" and match_verbose_unicode_space_missing == "" and match_verbose_escaped_unicode_space == " " ? 1 : 0)
+plot(match_verbose_cr_comment == "ab" and match_verbose_next_line_comment == "ab" and match_verbose_line_separator_comment == "a b" and match_verbose_paragraph_separator_comment == "a b" ? 1 : 0)
+plot(match_verbose_cr_class == "a" and match_verbose_next_line_class == "" and match_verbose_scoped_comment == "ab " ? 1 : 0)
 plot(match_leading_class_verbose == "]" and match_leading_class_empty_quote == "]" and match_leading_class_quoted == "]" ? 1 : 0)
 plot(match_quoted_meta == "[a-z]+(?U)# " and match_quoted_escape == "\\d" and match_quoted_verbose == "# [ ]" and match_quoted_class == "]-" and match_quoted_unclosed == "[b]+" and match_quoted_then_ascii == "[a]123" ? 1 : 0)
 plot(match_final_newline_dollar == "tail" and match_final_newline_Z == "tail" and match_absolute_z_missing == "" and match_absolute_z == "tail" ? 1 : 0)

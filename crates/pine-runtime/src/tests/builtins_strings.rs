@@ -18,7 +18,7 @@ fn normalizes_pine_regex_unicode_class_modes() {
     );
     assert_eq!(
         normalize_pine_regex("(?x)\\d # (?U)\\w\n(?U)\\w"),
-        "(?x)[0-9] # (?U)\\w\n\\w"
+        "(?x)[0-9] \n\\w"
     );
     assert_eq!(normalize_pine_regex("(?)"), "(?)");
     assert_eq!(normalize_pine_regex("(?-)"), "(?-)");
@@ -379,6 +379,61 @@ fn normalizes_pine_regex_leading_class_closers() {
     let quoted =
         Regex::new(&normalize_pine_regex(r"\A[\Q]\E]\z")).expect("normalized quoted class closer");
     assert!(quoted.is_match("]"));
+}
+
+#[test]
+fn normalizes_pine_regex_verbose_trivia() {
+    for ch in [
+        '\u{0085}', '\u{00a0}', '\u{1680}', '\u{2003}', '\u{2028}', '\u{2029}', '\u{3000}',
+    ] {
+        let pattern = format!("(?x)\\Aa{ch}b\\z");
+        let matcher = Regex::new(&normalize_pine_regex(&pattern))
+            .unwrap_or_else(|error| panic!("normalized literal U+{:04X}: {error}", ch as u32));
+        assert!(matcher.is_match(&format!("a{ch}b")), "U+{:04X}", ch as u32);
+        assert!(!matcher.is_match("ab"), "U+{:04X}", ch as u32);
+    }
+
+    for (separator, expected) in [
+        ('\n', "ab".to_owned()),
+        ('\r', "ab".to_owned()),
+        ('\u{0085}', "a\u{0085}b".to_owned()),
+        ('\u{2028}', "a\u{2028}b".to_owned()),
+        ('\u{2029}', "a\u{2029}b".to_owned()),
+    ] {
+        let pattern = format!("(?x)\\Aa# note{separator}b\\z");
+        let matcher = Regex::new(&normalize_pine_regex(&pattern)).unwrap_or_else(|error| {
+            panic!(
+                "normalized comment terminator U+{:04X}: {error}",
+                separator as u32
+            )
+        });
+        assert!(matcher.is_match(&expected), "U+{:04X}", separator as u32);
+    }
+
+    for separator in ['\u{000b}', '\u{000c}'] {
+        assert_eq!(
+            normalize_pine_regex(&format!("(?x)\\Aa# note{separator}b\\z")),
+            r"(?x)\Aa"
+        );
+    }
+
+    let carriage_class = Regex::new(&normalize_pine_regex("(?x)\\A[a# note\r]\\z"))
+        .expect("normalized carriage-return comment inside a class");
+    assert!(carriage_class.is_match("a"));
+
+    let unicode_class = Regex::new(&normalize_pine_regex("(?x)\\A[# note\u{0085}]\\z"))
+        .expect("normalized Unicode comment terminator inside a class");
+    assert!(unicode_class.is_match("\u{0085}"));
+
+    let protected = Regex::new(&normalize_pine_regex(
+        "(?x)\\A\\Q# \u{2003}\\E\\#\\\u{2003}\\z",
+    ))
+    .expect("normalized quoted and escaped verbose literals");
+    assert!(protected.is_match("# \u{2003}#\u{2003}"));
+
+    let scoped = Regex::new(&normalize_pine_regex("(?x:\\Aa# note\rb)(?-x:\u{2003})\\z"))
+        .expect("normalized scoped verbose comment");
+    assert!(scoped.is_match("ab\u{2003}"));
 }
 
 #[test]
@@ -813,6 +868,16 @@ match_unicode_case_posix = str.match("KA", "(?iu)\\p{Lower}")
 match_unicode_classes_without_case = str.match("KKΒ", "(?iU-u)[k]\\w\\p{Lower}")
 match_unicode_modes_disabled = str.match("ÅéåA", "(?iU)(?-U)å\\w")
 match_unicode_case_references = str.match("ÅÅÅEϹ", "(?iu)\\Qå\\E\\u00E5\\x{E5}\\0145\\cβ")
+match_verbose_unicode_space = str.match("a b", "(?x)a b")
+match_verbose_unicode_space_missing = str.match("ab", "(?x)a b")
+match_verbose_escaped_unicode_space = str.match(" ", "(?x)\\ ")
+match_verbose_cr_comment = str.match("ab", "(?x)a# note\rb")
+match_verbose_next_line_comment = str.match("ab", "(?x)a# noteb")
+match_verbose_line_separator_comment = str.match("a b", "(?x)a# note b")
+match_verbose_paragraph_separator_comment = str.match("a b", "(?x)a# note b")
+match_verbose_cr_class = str.match("a", "(?x)[a# note\r]")
+match_verbose_next_line_class = str.match("", "(?x)[# note]")
+match_verbose_scoped_comment = str.match("ab ", "(?x:a# note\rb)(?-x: )")
 match_leading_class_verbose = str.match("]", "(?x)[ # note\n ]]")
 match_leading_class_empty_quote = str.match("]", "[\\Q\\E]]")
 match_leading_class_quoted = str.match("]", "[\\Q]\\E]")
@@ -975,6 +1040,9 @@ plot(match_leading_class_closer == "]" and match_leading_class_closer_negated ==
 plot(match_unicode_case_literal == "KΒ" and match_unicode_case_scoped == "Åå" and match_unicode_case_literal_class == "K" ? 1 : 0)
 plot(match_unicode_case_word == "A" and match_unicode_case_word_class == "A" and match_unicode_case_posix == "A" ? 1 : 0)
 plot(match_unicode_classes_without_case == "KKΒ" and match_unicode_modes_disabled == "åA" and match_unicode_case_references == "ÅÅÅEϹ" ? 1 : 0)
+plot(match_verbose_unicode_space == "a b" and match_verbose_unicode_space_missing == "" and match_verbose_escaped_unicode_space == " " ? 1 : 0)
+plot(match_verbose_cr_comment == "ab" and match_verbose_next_line_comment == "ab" and match_verbose_line_separator_comment == "a b" and match_verbose_paragraph_separator_comment == "a b" ? 1 : 0)
+plot(match_verbose_cr_class == "a" and match_verbose_next_line_class == "" and match_verbose_scoped_comment == "ab " ? 1 : 0)
 plot(match_leading_class_verbose == "]" and match_leading_class_empty_quote == "]" and match_leading_class_quoted == "]" ? 1 : 0)
 plot(match_quoted_meta == "[a-z]+(?U)# " and match_quoted_escape == "\\d" and match_quoted_verbose == "# [ ]" and match_quoted_class == "]-" and match_quoted_unclosed == "[b]+" and match_quoted_then_ascii == "[a]123" ? 1 : 0)
 plot(match_final_newline_dollar == "tail" and match_final_newline_Z == "tail" and match_absolute_z_missing == "" and match_absolute_z == "tail" ? 1 : 0)

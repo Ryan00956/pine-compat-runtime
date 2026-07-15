@@ -24,6 +24,10 @@ fn is_verbose_ascii_space(ch: char) -> bool {
     matches!(ch, ' ' | '\t' | '\n' | '\u{000b}' | '\u{000c}' | '\r')
 }
 
+pub(crate) fn is_pine_regex_line_separator(ch: char) -> bool {
+    matches!(ch, '\n' | '\r' | '\u{0085}' | '\u{2028}' | '\u{2029}')
+}
+
 fn next_escape_token(pattern: &str, mut index: usize, verbose: bool) -> Option<PineRegexToken> {
     loop {
         let ch = pattern.get(index..)?.chars().next()?;
@@ -57,7 +61,7 @@ fn next_escape_token(pattern: &str, mut index: usize, verbose: bool) -> Option<P
             // Java ends the comment at every line separator, but its verbose
             // whitespace pass only skips ASCII separators. The remaining
             // separators therefore become the next escape token.
-            if matches!(comment_ch, '\u{0085}' | '\u{2028}' | '\u{2029}') {
+            if is_pine_regex_line_separator(comment_ch) {
                 return Some(PineRegexToken {
                     start: index,
                     end: comment_end,

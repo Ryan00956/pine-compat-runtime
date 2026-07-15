@@ -9,8 +9,8 @@ use super::{
         push_case_insensitive_class_replacement,
     },
     regex_escapes::{
-        parse_pine_regex_code_point_escape, parse_pine_regex_control_escape,
-        parse_pine_regex_octal_escape,
+        is_pine_regex_line_separator, parse_pine_regex_code_point_escape,
+        parse_pine_regex_control_escape, parse_pine_regex_octal_escape,
     },
     regex_modes::{
         PineRegexMode, apply_pine_regex_flags, parse_pine_regex_flags, push_pine_regex_literal,
@@ -248,8 +248,10 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
         let byte = pattern.as_bytes()[index];
 
         if mode.verbose && byte == b'#' {
-            let comment_len = rest.find('\n').unwrap_or(rest.len());
-            result.push_str(&rest[..comment_len]);
+            let comment_len = rest
+                .char_indices()
+                .find_map(|(offset, ch)| is_pine_regex_line_separator(ch).then_some(offset))
+                .unwrap_or(rest.len());
             index += comment_len;
             continue;
         }
@@ -257,6 +259,22 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
             result.push(byte as char);
             index += 1;
             continue;
+        }
+        if mode.verbose {
+            let ch = rest.chars().next().expect("regex contains a character");
+            if !ch.is_ascii() && ch.is_whitespace() {
+                if let Some(prefix) = class_prefixes.last_mut() {
+                    prefix.mark_atom();
+                }
+                if class_depth == 0 {
+                    push_pine_regex_literal(&mut result, ch, mode, true);
+                } else {
+                    write!(result, r"\x{{{:X}}}", ch as u32)
+                        .expect("writing to a String cannot fail");
+                }
+                index += ch.len_utf8();
+                continue;
+            }
         }
 
         if byte == b'\\' {
@@ -291,6 +309,19 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                     push_pine_regex_quoted(&mut result, quoted_rest, mode, class_depth > 0);
                     index = pattern.len();
                 }
+                continue;
+            }
+            if mode.verbose && !escaped.is_ascii() && escaped.is_whitespace() {
+                if let Some(prefix) = class_prefixes.last_mut() {
+                    prefix.mark_atom();
+                }
+                if class_depth == 0 {
+                    push_pine_regex_literal(&mut result, escaped, mode, true);
+                } else {
+                    write!(result, r"\x{{{:X}}}", escaped as u32)
+                        .expect("writing to a String cannot fail");
+                }
+                index += slash.len_utf8() + escaped.len_utf8();
                 continue;
             }
             if let Some(prefix) = class_prefixes.last_mut() {

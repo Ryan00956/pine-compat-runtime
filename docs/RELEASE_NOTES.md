@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Corrected `str.match()` verbose `x` mode to use Java/Pine's ASCII-only
+  whitespace rules while preserving non-ASCII Unicode whitespace as literal
+  text, including escaped atoms and character classes. Comments now end at LF,
+  CR, NEL, line separator, or paragraph separator; the three Unicode
+  terminators remain literal atoms, while VT and FF do not terminate comments.
+  Global/scoped modes and quoted regions preserve these boundaries.
 - Added `str.match()` support for Java/Pine's lowercase `u` Unicode-case flag.
   Global and scoped `(?iu)` now use Unicode folding for literal, quoted, and
   escaped atoms without changing default-ASCII predefined or POSIX classes;
