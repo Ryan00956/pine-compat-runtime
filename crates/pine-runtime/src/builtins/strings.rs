@@ -5,8 +5,9 @@ use regex::Regex;
 
 use super::{
     regex_character_classes::{
-        PineRegexClassPrefix, PineRegexClassReplacementCase, next_pine_regex_class_token,
-        normalize_case_insensitive_class, pine_posix_class, pine_unicode_block_property,
+        PineRegexClassPrefix, PineRegexClassReplacementCase, PineRegexEmptyIntersection,
+        next_pine_regex_class_token, normalize_case_insensitive_class, open_pine_regex_class_group,
+        pine_java_empty_intersection, pine_posix_class, pine_unicode_block_property,
         push_case_folded_class, push_case_insensitive_class_replacement, push_pine_unicode_block,
     },
     regex_escapes::{
@@ -193,12 +194,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
             continue;
         }
         if mode.verbose && is_verbose_ascii_space(byte) {
-            if !class_prefixes
-                .last()
-                .is_some_and(PineRegexClassPrefix::has_pending_intersection)
-            {
-                result.push(byte as char);
-            }
+            result.push(byte as char);
             index += 1;
             continue;
         }
@@ -469,22 +465,70 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
 
         if class_depth > 0 && byte == b'&' {
             let prefix = class_prefixes
-                .last_mut()
+                .last()
                 .expect("a character class has prefix state");
-            if prefix.has_pending_intersection() {
-                prefix.finish_intersection();
-                result.push('&');
-                index += 1;
-                continue;
-            }
             if !prefix.expects_range_endpoint()
-                && next_pine_regex_class_token(pattern, index + 1, mode.verbose) == Some('&')
+                && let Some((second_index, '&')) =
+                    next_pine_regex_class_token(pattern, index + 1, mode.verbose)
             {
-                prefix.begin_intersection();
-                result.push('&');
-                index += 1;
+                let rhs = next_pine_regex_class_token(
+                    pattern,
+                    second_index + '&'.len_utf8(),
+                    mode.verbose,
+                );
+                let rhs_is_empty = rhs.is_none_or(|(_, ch)| matches!(ch, '&' | ']'));
+                let empty_rhs_is_followed_by_ampersand = matches!(rhs, Some((_, '&')));
+                let has_lhs = prefix.has_atom();
+                let class_start = prefix.output_start();
+                let empty_intersection = (has_lhs && rhs_is_empty).then(|| {
+                    pine_java_empty_intersection(
+                        &result[class_start..],
+                        mode.verbose,
+                        mode.case_insensitive && mode.unicode_case,
+                    )
+                });
+                class_prefixes
+                    .last_mut()
+                    .expect("a character class has prefix state")
+                    .mark_intersection();
+                if !has_lhs && rhs_is_empty {
+                    result.push_str(r"\p{__PineInvalidJavaIntersection}");
+                } else if has_lhs && !rhs_is_empty {
+                    result.push_str("&&");
+                } else if let Some(empty_intersection) = empty_intersection {
+                    if empty_rhs_is_followed_by_ampersand && !empty_intersection.can_group() {
+                        result.push_str(r"\p{__PineInvalidJavaIntersection}");
+                    } else {
+                        let group_intersection = empty_rhs_is_followed_by_ampersand;
+                        if group_intersection {
+                            let spans = &mut case_protected_spans;
+                            open_pine_regex_class_group(&mut result, class_start, spans);
+                        }
+                        match empty_intersection {
+                            PineRegexEmptyIntersection::Redundant { .. } => {}
+                            PineRegexEmptyIntersection::Repeat { current, .. } => {
+                                result.push_str("&&");
+                                result.push_str(&current);
+                            }
+                            PineRegexEmptyIntersection::Invalid => {
+                                result.push_str(r"\p{__PineInvalidJavaIntersection}");
+                            }
+                        }
+                        if group_intersection {
+                            result.push(']');
+                        }
+                    }
+                }
+                index = second_index + '&'.len_utf8();
                 continue;
             }
+            class_prefixes
+                .last_mut()
+                .expect("a character class has prefix state")
+                .mark_scalar();
+            result.push_str(r"\x{26}");
+            index += 1;
+            continue;
         }
 
         if class_depth == 0 && byte == b'.' && !mode.dotall {
@@ -539,7 +583,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 case_class_start = Some(result.len());
                 case_protected_spans.clear();
             }
-            class_prefixes.push(PineRegexClassPrefix::new());
+            class_prefixes.push(PineRegexClassPrefix::new(result.len()));
             class_depth += 1;
         } else if byte == b']' && class_depth > 0 {
             if class_prefixes

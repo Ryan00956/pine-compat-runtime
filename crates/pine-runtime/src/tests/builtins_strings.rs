@@ -291,6 +291,70 @@ fn normalizes_pine_regex_java_class_ranges() {
 }
 
 #[test]
+fn normalizes_pine_regex_class_ampersand_boundaries() {
+    for (pattern, expected) in [
+        (r"[&]", r"[\x{26}]"),
+        (r"[a&b]", r"[a\x{26}b]"),
+        (r"[a&&]", r"[a]"),
+        (r"[&&a]", r"[a]"),
+        (r"[a&&&b]", r"[[a]\x{26}b]"),
+        (r"[a&&&&b]", r"[[a]&&b]"),
+        (r"[a&&&&&b]", r"[[[a]]\x{26}b]"),
+        (r"[&-b]", r"[\x{26}-b]"),
+        (r"[\Q&&\E]", r"[\x{26}\x{26}]"),
+        (r"[\&]", r"[\x{26}]"),
+        (r"[da-c&&]", r"[da-c&&a-c]"),
+        (r"[A\d&&]", r"[A[0-9]&&[0-9]]"),
+        (r"[c[ab]&&]", r"[c[ab]&&[ab]]"),
+    ] {
+        assert_eq!(normalize_pine_regex(pattern), expected, "{pattern}");
+    }
+
+    let odd = Regex::new(&normalize_pine_regex(r"\A[a&&&b]+\z"))
+        .expect("normalized odd raw ampersand run");
+    assert!(odd.is_match("a&b"));
+
+    let even = Regex::new(&normalize_pine_regex(r"\A[a-b&&&&b-c]+\z"))
+        .expect("normalized even raw ampersand run");
+    assert!(even.is_match("b"));
+    assert!(!even.is_match("a"));
+    assert!(!even.is_match("c"));
+
+    let verbose = Regex::new(&normalize_pine_regex("(?x)\\A[a& # split\n&[a-b]]\\z"))
+        .expect("normalized verbose-separated ampersand pair");
+    assert!(verbose.is_match("a"));
+    assert!(!verbose.is_match("b"));
+
+    let repeated_predicate = Regex::new(&normalize_pine_regex(r"\A[da-c&&]+\z"))
+        .expect("normalized empty intersection with a final range predicate");
+    assert!(repeated_predicate.is_match("abc"));
+    assert!(!repeated_predicate.is_match("d"));
+
+    let repeated_set = Regex::new(&normalize_pine_regex(r"\A[A\d&&]+\z"))
+        .expect("normalized empty intersection with a final set predicate");
+    assert!(repeated_set.is_match("123"));
+    assert!(!repeated_set.is_match("A"));
+
+    for invalid in [
+        r"[&&]",
+        r"[&&&]",
+        r"[&&&a]",
+        r"[a-cd&&]",
+        r"[\dA&&]",
+        r"[[ab]c&&]",
+        r"[da-c&&&x]",
+        r"[A\d&&&x]",
+        r"[a&&b&&&c]",
+        r"[a-c&&b-d&&&x]",
+    ] {
+        assert!(
+            Regex::new(&normalize_pine_regex(invalid)).is_err(),
+            "{invalid}"
+        );
+    }
+}
+
+#[test]
 fn preserves_invalid_pine_regex_java_class_ranges() {
     for invalid in [
         r"[a--b]",

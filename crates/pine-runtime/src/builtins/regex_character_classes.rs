@@ -91,22 +91,25 @@ pub(crate) struct PineRegexClassPrefix {
     pub(crate) can_negate: bool,
     pub(crate) can_literal_close: bool,
     range: PineRegexClassRangeState,
-    pending_intersection: bool,
+    has_atom: bool,
+    output_start: usize,
 }
 
 impl PineRegexClassPrefix {
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(output_start: usize) -> Self {
         Self {
             can_negate: true,
             can_literal_close: true,
             range: PineRegexClassRangeState::NoStart,
-            pending_intersection: false,
+            has_atom: false,
+            output_start,
         }
     }
 
     pub(crate) fn mark_atom(&mut self) {
         self.can_negate = false;
         self.can_literal_close = false;
+        self.has_atom = true;
     }
 
     pub(crate) fn mark_scalar(&mut self) {
@@ -144,20 +147,108 @@ impl PineRegexClassPrefix {
         false
     }
 
-    pub(crate) fn begin_intersection(&mut self) {
+    pub(crate) fn mark_intersection(&mut self) {
         self.mark_atom();
         self.range = PineRegexClassRangeState::NoStart;
-        self.pending_intersection = true;
     }
 
-    pub(crate) fn finish_intersection(&mut self) {
-        self.mark_atom();
-        self.range = PineRegexClassRangeState::NoStart;
-        self.pending_intersection = false;
+    pub(crate) fn has_atom(&self) -> bool {
+        self.has_atom
     }
 
-    pub(crate) fn has_pending_intersection(&self) -> bool {
-        self.pending_intersection
+    pub(crate) fn output_start(&self) -> usize {
+        self.output_start
+    }
+}
+
+// Java's parser can carry a mutable BitClass through later intersections. The
+// flag limits grouping rewrites to prefixes whose membership cannot be revived.
+pub(crate) enum PineRegexEmptyIntersection {
+    Redundant { can_group: bool },
+    Repeat { current: String, can_group: bool },
+    Invalid,
+}
+
+impl PineRegexEmptyIntersection {
+    pub(crate) fn can_group(&self) -> bool {
+        match self {
+            Self::Redundant { can_group } | Self::Repeat { can_group, .. } => *can_group,
+            Self::Invalid => false,
+        }
+    }
+}
+
+fn is_java_bit_class_literal(ch: char, unicode_case_insensitive: bool) -> bool {
+    ch <= '\u{00FF}'
+        && !(unicode_case_insensitive
+            && matches!(
+                ch,
+                '\u{00FF}' | '\u{00B5}' | 'I' | 'i' | 'S' | 's' | 'K' | 'k' | 'Å' | 'å'
+            ))
+}
+
+fn java_union_item_is_bit_class(item: &ClassSetItem, unicode_case_insensitive: bool) -> bool {
+    matches!(item, ClassSetItem::Literal(literal) if is_java_bit_class_literal(literal.c, unicode_case_insensitive))
+}
+
+pub(crate) fn pine_java_empty_intersection(
+    class_prefix: &str,
+    verbose: bool,
+    unicode_case_insensitive: bool,
+) -> PineRegexEmptyIntersection {
+    let pattern = format!("{class_prefix}]");
+    let mut builder = ast::parse::ParserBuilder::new();
+    builder.ignore_whitespace(verbose);
+    let Ok(Ast::ClassBracketed(ref class)) = builder.build().parse(&pattern) else {
+        return PineRegexEmptyIntersection::Invalid;
+    };
+
+    let ClassSet::Item(item) = &class.kind else {
+        return PineRegexEmptyIntersection::Redundant { can_group: false };
+    };
+    let ClassSetItem::Union(union) = item else {
+        return PineRegexEmptyIntersection::Redundant { can_group: true };
+    };
+    let Some(last) = union.items.last() else {
+        return PineRegexEmptyIntersection::Invalid;
+    };
+    if union
+        .items
+        .iter()
+        .all(|item| java_union_item_is_bit_class(item, unicode_case_insensitive))
+    {
+        return PineRegexEmptyIntersection::Redundant { can_group: true };
+    }
+    if java_union_item_is_bit_class(last, unicode_case_insensitive) {
+        return PineRegexEmptyIntersection::Invalid;
+    }
+
+    let span = last.span();
+    pattern
+        .get(span.start.offset..span.end.offset)
+        .map(str::to_owned)
+        .map(|current| PineRegexEmptyIntersection::Repeat {
+            current,
+            can_group: false,
+        })
+        .unwrap_or(PineRegexEmptyIntersection::Invalid)
+}
+
+pub(crate) fn open_pine_regex_class_group(
+    result: &mut String,
+    class_start: usize,
+    protected_spans: &mut [Range<usize>],
+) {
+    let mut insert_at = class_start + 1;
+    if result.as_bytes().get(insert_at) == Some(&b'^') {
+        insert_at += 1;
+    }
+    result.insert(insert_at, '[');
+    for span in protected_spans {
+        if span.start >= insert_at {
+            span.start += 1;
+            span.end += 1;
+        }
     }
 }
 
@@ -169,24 +260,26 @@ pub(crate) fn next_pine_regex_class_token(
     pattern: &str,
     mut index: usize,
     verbose: bool,
-) -> Option<char> {
+) -> Option<(usize, char)> {
     loop {
+        let token_start = index;
         let ch = pattern.get(index..)?.chars().next()?;
         index += ch.len_utf8();
         if !verbose || (!is_verbose_ascii_space(ch) && ch != '#') {
-            return Some(ch);
+            return Some((token_start, ch));
         }
         if is_verbose_ascii_space(ch) {
             continue;
         }
 
         while let Some(comment_ch) = pattern.get(index..)?.chars().next() {
+            let comment_start = index;
             index += comment_ch.len_utf8();
             if matches!(comment_ch, '\n' | '\r') {
                 break;
             }
             if is_pine_regex_line_separator(comment_ch) {
-                return Some(comment_ch);
+                return Some((comment_start, comment_ch));
             }
         }
     }

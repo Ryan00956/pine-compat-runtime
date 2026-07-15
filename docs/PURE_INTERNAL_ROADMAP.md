@@ -1345,7 +1345,12 @@ Current baseline:
   ASCII literal across ordinary/class/verbose/nested/case contexts, raw class
   hyphens normalized with Java/Pine literal/range precedence instead of Rust's
   difference operator across leading/trailing, nested, quoted, escaped,
-  intersection, verbose, case-mode, and invalid-range boundaries, plus
+  intersection, verbose, case-mode, and invalid-range boundaries, plus raw
+  class ampersands with Java/Pine single-literal, empty-pair, linear
+  odd/even-run, nested, verbose, single-range/set, quoted, escaped, case-mode,
+  and invalid-leading-pair boundaries instead of Rust's unconditional `&&` set
+  parsing, while mixed-predicate or prior-intersection odd-run continuations
+  requiring mutable Java BitClass state are explicitly rejected, plus
   default-dot exclusion of Pine's full
   line-terminator set with
   global/scoped `(?s)` and `(?-s)` restoration, plus global/scoped Java/Pine

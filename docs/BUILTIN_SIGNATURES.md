@@ -2073,7 +2073,15 @@ difference operator. This preserves literal leading/trailing hyphens,
 hyphen-start and hyphen-end ranges, nested classes, quoted or escaped range
 atoms, intersections (including verbose trivia between `&&`), and active case
 modes. Illegal descending ranges and set-valued range endpoints remain runtime
-regex errors. Outside character classes, global or scoped `(?i)` applies Pine's
+regex errors. Raw ampersands use Java/Pine class parsing across single literal
+atoms, leading or trailing empty pairs, and linear odd/even runs, including
+verbose-separated pairs, nested classes, quoted or escaped atoms, single ranges
+or sets, and active case modes. A leading empty intersection such as `[&&]`
+remains a regex error. Odd-run continuations that would require Java's mutable
+BitClass state after a mixed predicate or prior intersection are rejected by
+the current linear-time subset instead of being silently interpreted with
+Rust's different set algebra. Outside character classes, global or scoped
+`(?i)` applies Pine's
 ASCII-only case folding to ordinary and
 `\Q...\E`-quoted literals plus `\uHHHH`/`\x` references. Lowercase `(?u)`
 independently enables Unicode-aware folding when `i` is active without changing
