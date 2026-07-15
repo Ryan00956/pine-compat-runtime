@@ -2001,13 +2001,17 @@ character classes and remain literal in quoted regions. It also supports
 whitespace and `#` in verbose mode; an omitted closing `\E` quotes through the
 end of the pattern. Fixed-width four-hex-digit Unicode references such as
 `\u2014` work inside and outside character classes, consume exactly four digits,
-and remain literal inside quoted regions. Outside character classes, global or
+and remain literal inside quoted regions. Two-digit `\xNN` and braced
+`\x{...}` references are also supported; the fixed form consumes exactly two
+hex digits, the braced form accepts leading zeros around a Unicode scalar, and
+surrogate code-unit references match no scalar value. Both spellings remain
+literal in quoted regions. Outside character classes, global or
 scoped `(?i)` applies Pine's ASCII-only case folding to ordinary and
-`\Q...\E`-quoted literals plus fixed `\uHHHH` references; `(?U)` changes those
+`\Q...\E`-quoted literals plus `\uHHHH`/`\x` references; `(?U)` changes those
 literals to Unicode-aware folding, and `(?-i)`/`(?-U)` restore the enclosing or
 default mode. The same active mode applies to character-class literals and
 ranges before negation and intersections, including predefined/POSIX class
-expansions, `\Q...\E` atoms, and fixed `\uHHHH` references. General Unicode
+expansions, `\Q...\E` atoms, and `\uHHHH`/`\x` references. General Unicode
 properties retain their Unicode case behavior, while Unicode block membership
 remains exact under either case mode. By default, `$`
 and `\Z` match either at the absolute end or immediately before a final `\n`,

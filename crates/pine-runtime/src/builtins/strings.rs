@@ -1,10 +1,14 @@
-use std::{fmt::Write as _, ops::Range};
+use std::fmt::Write as _;
 
 use pine_ir::{HirCallArg, HirExpr, HirUserTypeInfo};
 use regex::Regex;
 
 use super::{
-    regex_character_classes::normalize_case_insensitive_class,
+    regex_character_classes::{
+        normalize_case_insensitive_class, push_case_folded_class,
+        push_case_insensitive_class_replacement,
+    },
+    regex_escapes::parse_pine_regex_code_point_escape,
     regex_unicode_blocks::pine_unicode_block,
 };
 use crate::builtins::time::{
@@ -320,45 +324,6 @@ fn push_pine_unicode_block(result: &mut String, start: u32, end: u32, negated: b
     write!(result, r"\x{{{start:X}}}-\x{{{end:X}}}]").expect("writing to a String cannot fail");
 }
 
-fn push_case_folded_class(result: &mut String, class: &str) {
-    result.push_str("(?-i:");
-    result.push_str(class);
-    result.push(')');
-}
-
-fn push_pine_regex_class_replacement(
-    result: &mut String,
-    replacement: &str,
-    mode: PineRegexMode,
-    class_depth: usize,
-    protected_spans: &mut Vec<Range<usize>>,
-    exact_under_case_folding: bool,
-) {
-    if !mode.case_insensitive {
-        result.push_str(replacement);
-        return;
-    }
-
-    if class_depth > 0 {
-        let start = result.len();
-        result.push_str(replacement);
-        if exact_under_case_folding {
-            protected_spans.push(start..result.len());
-        }
-        return;
-    }
-
-    if exact_under_case_folding {
-        push_case_folded_class(result, replacement);
-    } else if let Some(class) =
-        normalize_case_insensitive_class(replacement, mode.unicode_classes, &[])
-    {
-        push_case_folded_class(result, &class);
-    } else {
-        result.push_str(replacement);
-    }
-}
-
 struct NormalizedPineRegex {
     pattern: String,
     final_newline_captures: Vec<String>,
@@ -428,28 +393,26 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 }
                 continue;
             }
-            if escaped == 'u' {
-                let digits_start = index + slash.len_utf8() + escaped.len_utf8();
-                let digits_end = digits_start + 4;
-                if let Some(digits) = pattern
-                    .get(digits_start..digits_end)
-                    .filter(|digits| digits.bytes().all(|byte| byte.is_ascii_hexdigit()))
-                {
-                    let codepoint = u32::from_str_radix(digits, 16)
-                        .expect("validated four-digit hexadecimal reference");
-                    if let Some(ch) = char::from_u32(codepoint) {
-                        if class_depth == 0 && mode.case_insensitive && !mode.unicode_classes {
-                            push_pine_regex_literal(&mut result, ch, mode, true);
-                        } else {
-                            write!(result, r"\x{{{digits}}}")
-                                .expect("writing to a String cannot fail");
-                        }
+            if matches!(escaped, 'u' | 'x')
+                && let Some(reference) = parse_pine_regex_code_point_escape(pattern, index)
+            {
+                if let Some(ch) = reference.scalar {
+                    if class_depth == 0 && mode.case_insensitive && !mode.unicode_classes {
+                        push_pine_regex_literal(&mut result, ch, mode, true);
                     } else {
-                        result.push_str("[a&&b]");
+                        write!(
+                            result,
+                            r"\x{{{:0width$X}}}",
+                            ch as u32,
+                            width = reference.hex_width
+                        )
+                        .expect("writing to a String cannot fail");
                     }
-                    index = digits_end;
-                    continue;
+                } else {
+                    result.push_str("[a&&b]");
                 }
+                index = reference.end;
+                continue;
             }
             if matches!(escaped, 'p' | 'P') {
                 let property_start = index + slash.len_utf8() + escaped.len_utf8();
@@ -461,10 +424,11 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                         if let Some(replacement) =
                             pine_posix_class(property, mode.unicode_classes, escaped == 'P')
                         {
-                            push_pine_regex_class_replacement(
+                            push_case_insensitive_class_replacement(
                                 &mut result,
                                 replacement,
-                                mode,
+                                mode.case_insensitive,
+                                mode.unicode_classes,
                                 class_depth,
                                 &mut case_protected_spans,
                                 property.eq_ignore_ascii_case("ASCII"),
@@ -477,10 +441,11 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                         {
                             let mut replacement = String::new();
                             push_pine_unicode_block(&mut replacement, start, end, escaped == 'P');
-                            push_pine_regex_class_replacement(
+                            push_case_insensitive_class_replacement(
                                 &mut result,
                                 &replacement,
-                                mode,
+                                mode.case_insensitive,
+                                mode.unicode_classes,
                                 class_depth,
                                 &mut case_protected_spans,
                                 true,
@@ -521,10 +486,11 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
             };
             if let Some(replacement) = replacement {
                 if replacement.starts_with('[') {
-                    push_pine_regex_class_replacement(
+                    push_case_insensitive_class_replacement(
                         &mut result,
                         replacement,
-                        mode,
+                        mode.case_insensitive,
+                        mode.unicode_classes,
                         class_depth,
                         &mut case_protected_spans,
                         false,

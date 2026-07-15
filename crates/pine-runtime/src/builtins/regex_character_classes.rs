@@ -223,6 +223,44 @@ pub(crate) fn normalize_case_insensitive_class(
     )?))
 }
 
+pub(crate) fn push_case_folded_class(result: &mut String, class: &str) {
+    result.push_str("(?-i:");
+    result.push_str(class);
+    result.push(')');
+}
+
+pub(crate) fn push_case_insensitive_class_replacement(
+    result: &mut String,
+    replacement: &str,
+    case_insensitive: bool,
+    unicode_case: bool,
+    class_depth: usize,
+    protected_spans: &mut Vec<Range<usize>>,
+    exact_under_case_folding: bool,
+) {
+    if !case_insensitive {
+        result.push_str(replacement);
+        return;
+    }
+
+    if class_depth > 0 {
+        let start = result.len();
+        result.push_str(replacement);
+        if exact_under_case_folding {
+            protected_spans.push(start..result.len());
+        }
+        return;
+    }
+
+    if exact_under_case_folding {
+        push_case_folded_class(result, replacement);
+    } else if let Some(class) = normalize_case_insensitive_class(replacement, unicode_case, &[]) {
+        push_case_folded_class(result, &class);
+    } else {
+        result.push_str(replacement);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use regex::Regex;

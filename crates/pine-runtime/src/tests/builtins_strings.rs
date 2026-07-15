@@ -187,6 +187,45 @@ fn normalizes_pine_regex_four_digit_unicode_escapes() {
 }
 
 #[test]
+fn normalizes_pine_regex_hex_code_point_escapes() {
+    assert_eq!(normalize_pine_regex(r"\x6B0\x{0000006B}"), r"\x{6B}0\x{6B}");
+
+    let ascii = Regex::new(&normalize_pine_regex(r"(?i)\A\x6B\x{3B2}\z"))
+        .expect("normalized ASCII-insensitive hex references");
+    assert!(ascii.is_match("Kβ"));
+    assert!(!ascii.is_match("Kβ"));
+    assert!(!ascii.is_match("KΒ"));
+
+    let unicode = Regex::new(&normalize_pine_regex(r"(?iU)\A\x6B\x{3B2}\z"))
+        .expect("normalized Unicode-insensitive hex references");
+    assert!(unicode.is_match("KΒ"));
+
+    let class = Regex::new(&normalize_pine_regex(r"(?i)\A[\x6B\x{3B2}]\z"))
+        .expect("normalized ASCII-insensitive class hex references");
+    assert!(class.is_match("K"));
+    assert!(class.is_match("β"));
+    assert!(!class.is_match("K"));
+    assert!(!class.is_match("Β"));
+
+    let surrogate = Regex::new(&normalize_pine_regex(r"\A\x{D800}\z"))
+        .expect("normalized surrogate code-unit reference");
+    assert!(!surrogate.is_match(""));
+    assert!(!surrogate.is_match("A"));
+
+    let quoted = Regex::new(&normalize_pine_regex(r"\A\Q\x6B\E\z"))
+        .expect("normalized quoted hex-reference spelling");
+    assert!(quoted.is_match(r"\x6B"));
+    assert!(!quoted.is_match("k"));
+
+    for invalid in [r"\x{}", r"\xG1", r"\x{110000}"] {
+        assert!(
+            Regex::new(&normalize_pine_regex(invalid)).is_err(),
+            "{invalid}"
+        );
+    }
+}
+
+#[test]
 fn normalizes_pine_regex_dot_line_terminators() {
     let default_dot =
         Regex::new(&normalize_pine_regex(r"\A.\z")).expect("normalized default-dot regex");
@@ -563,6 +602,16 @@ match_case_block_class = str.match("KX", "(?iU)[x\\p{InBasicLatin}]")
 match_case_quoted_class = str.match("KKβ", "(?i)[\\Qkβ\\E]")
 match_case_unicode_ref_class = str.match("KKΒβ", "(?i)[\\u006B\\u03B2]")
 match_case_scoped_class = str.match("KKβ", "(?i:[k])(?iU:[k])(?i-U:[β])")
+match_hex_fixed_consumption = str.match("xk0", "\\x6B0")
+match_hex_braced_consumption = str.match("xk0", "\\x{6B}0")
+match_hex_leading_zeros = str.match("xk", "\\x{0000006B}")
+match_hex_ascii_case = str.match("KK", "(?i)\\x6B")
+match_hex_unicode_case = str.match("KK", "(?iU)\\x6B")
+match_hex_ascii_non_ascii = str.match("Ββ", "(?i)\\x{3B2}")
+match_hex_unicode_non_ascii = str.match("Ββ", "(?iU)\\x{3B2}")
+match_hex_class = str.match("KKΒβ", "(?i)[\\x6B\\x{3B2}]")
+match_hex_quoted = str.match("\\x6B", "\\Q\\x6B\\E")
+match_hex_surrogate = str.match("A", "\\x{D800}")
 match_anchor_capture_collision = str.match("tail\n", "(?<__pine_final_newline_0>tail)$")
 match_unicode_escape = str.match("x—y", "\\u2014")
 match_unicode_escape_class = str.match("xåy", "[\\u00E5]")
@@ -647,6 +696,9 @@ plot(match_case_ascii_class == "K" and match_case_unicode_class == "K" and mat
 plot(match_case_ascii_negated_class == "K" and match_case_unicode_negated_class == "β" and match_case_ascii_intersection == "A" and match_case_unicode_range == "ſ" ? 1 : 0)
 plot(match_case_category_class == "β" and match_case_ascii_word == "K" and match_case_ascii_posix == "A" and match_case_block_class == "X" ? 1 : 0)
 plot(match_case_quoted_class == "K" and match_case_unicode_ref_class == "K" and match_case_scoped_class == "KKβ" ? 1 : 0)
+plot(match_hex_fixed_consumption == "k0" and match_hex_braced_consumption == "k0" and match_hex_leading_zeros == "k" ? 1 : 0)
+plot(match_hex_ascii_case == "K" and match_hex_unicode_case == "K" and match_hex_ascii_non_ascii == "β" and match_hex_unicode_non_ascii == "Β" ? 1 : 0)
+plot(match_hex_class == "K" and match_hex_quoted == "\\x6B" and match_hex_surrogate == "" ? 1 : 0)
 plot(match_unicode_escape == "—" and match_unicode_escape_class == "å" and match_unicode_escape_fifth_digit == "a0" and match_unicode_escape_quoted == "\\u2014—" ? 1 : 0)
 plot(na(missing_match_regex) and na(missing_match_pattern) ? 1 : 0)
 plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2) == "" and split_words.get(3) == "C" and split_missing_separator_literal.size() == 1 and split_missing_separator_literal.get(0) == "A,B" ? 1 : 0)

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added `str.match()` support for two-digit `\xNN` and braced `\x{...}`
+  hexadecimal regex references, including exact two-digit consumption,
+  arbitrary leading zeros in braced scalar values, character-class and quoted
+  behavior, ASCII/Unicode case-mode switching, and safe no-match handling for
+  surrogate code-unit references.
 - Extended `str.match()` case-insensitive compatibility through character
   classes. Literal atoms and ranges now use ASCII folding under `(?i)` and
   Unicode folding under `(?iU)` before negation and class intersections are
