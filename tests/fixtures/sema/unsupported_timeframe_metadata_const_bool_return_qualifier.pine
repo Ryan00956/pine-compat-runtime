@@ -1,4 +1,4 @@
 //@version=6
 indicator("Unsupported timeframe metadata const bool return qualifier")
 
-plot(ta.tr(timeframe.isminutes))
+plot(ta.tr(timeframe.isminutes and timeframe.isticks))

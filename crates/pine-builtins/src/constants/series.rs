@@ -175,6 +175,7 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     ("last_bar_time", SERIES_INT),
     ("timeframe.period", SIMPLE_STRING),
     ("timeframe.main_period", SIMPLE_STRING),
+    ("timeframe.isticks", SIMPLE_BOOL),
     ("timeframe.isseconds", SIMPLE_BOOL),
     ("timeframe.isminutes", SIMPLE_BOOL),
     ("timeframe.isintraday", SIMPLE_BOOL),

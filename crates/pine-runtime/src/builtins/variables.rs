@@ -130,7 +130,7 @@ impl<'a> HistoricalRuntime<'a> {
                     .to_owned(),
             );
         }
-        if name == "timeframe.isseconds" {
+        if name == "timeframe.isticks" || name == "timeframe.isseconds" {
             return PineValue::Bool(false);
         }
         if name == "timeframe.isminutes" {

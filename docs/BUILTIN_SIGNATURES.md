@@ -115,6 +115,7 @@ ohlc4     -> series float
 bar_index -> series int
 timeframe.period -> simple string
 timeframe.main_period -> simple string
+timeframe.isticks -> simple bool
 timeframe.isseconds -> simple bool
 timeframe.isminutes -> simple bool
 timeframe.isintraday -> simple bool
@@ -557,8 +558,9 @@ The current subset assumes a fixed default chart timeframe of `1` minute, so
 `timeframe.period` and `timeframe.main_period` return `"1"`,
 `timeframe.multiplier` returns `1`,
 `timeframe.isminutes` and `timeframe.isintraday` return `true`, and
-`timeframe.isseconds`, `timeframe.isdaily`, `timeframe.isweekly`,
-`timeframe.ismonthly`, and `timeframe.isdwm` return `false`.
+`timeframe.isticks`, `timeframe.isseconds`, `timeframe.isdaily`,
+`timeframe.isweekly`, `timeframe.ismonthly`, and `timeframe.isdwm` return
+`false`.
 
 `timeframe.main_period` currently matches the single chart timeframe. Main
 timeframe overrides from declaration parameters and requested-context

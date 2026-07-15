@@ -551,7 +551,7 @@ plot(na(timeframe.from_seconds(na)) ? 1 : 0)
 plot(timeframe.change("1") ? 1 : 0)
 plot(timeframe.change("") ? 1 : 0)
 plot(timeframe.change("D") ? 1 : 0)
-plot(timeframe.isminutes and timeframe.isintraday and not timeframe.isseconds and not timeframe.isdaily and not timeframe.isweekly and not timeframe.ismonthly and not timeframe.isdwm ? 1 : 0)
+plot(timeframe.isminutes and timeframe.isintraday and not timeframe.isticks and not timeframe.isseconds and not timeframe.isdaily and not timeframe.isweekly and not timeframe.ismonthly and not timeframe.isdwm ? 1 : 0)
 plot(timeframe.multiplier)
 "#,
     );

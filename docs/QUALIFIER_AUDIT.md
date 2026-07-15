@@ -373,12 +373,12 @@ timeframe arguments and rejected by const string consumers such as
 Timeframe metadata strings `timeframe.period` and `timeframe.main_period` have
 fixture-backed fixed `simple string` return semantics using the same
 simple-string and const-string consumers.
-Timeframe metadata booleans `timeframe.isseconds`, `timeframe.isminutes`,
-`timeframe.isintraday`, `timeframe.isdaily`, `timeframe.isweekly`,
-`timeframe.ismonthly`, and `timeframe.isdwm` have fixture-backed fixed
-`simple bool` return semantics: they are accepted by simple-bool consumers such
-as `ta.alma(..., floor=...)` and rejected by const-bool consumers such as
-`ta.tr(handle_na=...)`.
+Timeframe metadata booleans `timeframe.isticks`, `timeframe.isseconds`,
+`timeframe.isminutes`, `timeframe.isintraday`, `timeframe.isdaily`,
+`timeframe.isweekly`, `timeframe.ismonthly`, and `timeframe.isdwm` have
+fixture-backed fixed `simple bool` return semantics: they are accepted by
+simple-bool consumers such as `ta.alma(..., floor=...)` and rejected by
+const-bool consumers such as `ta.tr(handle_na=...)`.
 Chart type metadata booleans `chart.is_standard`, `chart.is_heikinashi`,
 `chart.is_kagi`, `chart.is_linebreak`, `chart.is_pnf`, `chart.is_range`, and
 `chart.is_renko` have fixture-backed fixed `simple bool` return semantics using
