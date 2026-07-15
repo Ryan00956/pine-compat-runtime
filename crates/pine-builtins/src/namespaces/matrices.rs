@@ -197,6 +197,19 @@ const MATRIX_FILL_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const MATRIX_CONCAT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id1",
+        accepts: Accepts::Matrix,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "id2",
+        accepts: Accepts::Matrix,
+        optional: false,
+    },
+];
+
 const MATRIX_RESHAPE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -453,6 +466,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: MATRIX_FILL_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "matrix.concat",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATRIX_CONCAT_PARAMS,
+        returns: ReturnSpec::SameAsArg(0),
         variadic: false,
     },
     BuiltinSignature {

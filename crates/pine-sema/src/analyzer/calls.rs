@@ -10,6 +10,7 @@ mod arrays;
 mod declarations;
 mod drawing_options;
 mod helpers;
+mod matrices;
 mod return_types;
 
 pub(crate) use helpers::{
@@ -980,6 +981,7 @@ impl Analyzer {
         self.validate_user_type_array_value_args(signature, args, arg_types);
         self.validate_array_value_args(signature, args, arg_types);
         self.validate_array_concat_args(signature, args, arg_types);
+        self.validate_matrix_concat_args(signature, args, arg_types);
         self.validate_user_type_array_concat_args(signature, args, arg_types);
         self.validate_array_from_args(signature, args, arg_types);
         self.validate_user_type_array_helper_args(signature, args, arg_types);

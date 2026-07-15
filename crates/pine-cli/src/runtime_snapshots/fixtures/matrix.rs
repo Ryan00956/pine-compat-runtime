@@ -218,6 +218,10 @@ pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &
         "tests/fixtures/runtime/matrix_submatrix.pine",
     ),
     (
+        "runtime_matrix_concat.json",
+        "tests/fixtures/runtime/matrix_concat.pine",
+    ),
+    (
         "runtime_matrix_sum.json",
         "tests/fixtures/runtime/matrix_sum.pine",
     ),

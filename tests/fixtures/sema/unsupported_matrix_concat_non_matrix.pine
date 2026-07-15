@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix concat non-matrix arguments")
+
+value = matrix.concat(na, na)
+plot(value.rows())

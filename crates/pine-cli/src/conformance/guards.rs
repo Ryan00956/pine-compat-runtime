@@ -65,7 +65,6 @@ const MATRIX_UNSUPPORTED_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/unsupported_matrix_fill_method_udf.pine",
     "tests/fixtures/sema/unsupported_matrix_reshape_udf.pine",
     "tests/fixtures/sema/unsupported_matrix_reshape_method_udf.pine",
-    "tests/fixtures/sema/unsupported_matrix_method.pine",
     "tests/fixtures/sema/unsupported_matrix_add_row_method.pine",
     "tests/fixtures/sema/unsupported_matrix_add_col_method.pine",
     "tests/fixtures/sema/unsupported_matrix_remove_row_method.pine",

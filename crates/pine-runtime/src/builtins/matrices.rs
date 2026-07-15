@@ -57,6 +57,7 @@ impl<'a> HistoricalRuntime<'a> {
             "matrix.get" => self.eval_matrix_get(args),
             "matrix.set" => self.eval_matrix_set(args),
             "matrix.fill" => self.eval_matrix_fill(args),
+            "matrix.concat" => self.eval_matrix_concat(args),
             "matrix.copy" => self.eval_matrix_copy(args),
             "matrix.transpose" => self.eval_matrix_transpose(args),
             "matrix.reverse" => self.eval_matrix_reverse(args),

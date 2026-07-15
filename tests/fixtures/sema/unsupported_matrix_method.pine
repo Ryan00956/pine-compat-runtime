@@ -1,6 +1,0 @@
-//@version=6
-indicator("Unsupported matrix method")
-
-values = matrix.new<float>(1, 1, close)
-values.concat(values)
-plot(close)

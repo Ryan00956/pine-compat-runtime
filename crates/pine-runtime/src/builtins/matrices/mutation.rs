@@ -5,6 +5,21 @@ use pine_ir::HirCallArg;
 use super::*;
 
 impl<'a> HistoricalRuntime<'a> {
+    pub(crate) fn eval_matrix_concat(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let target = self.eval_expr(&args[0].value)?;
+        let source = self.eval_expr(&args[1].value)?;
+        let (PineValue::Matrix(target_id), PineValue::Matrix(source_id)) = (target, source) else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .matrix_concat(target_id, source_id)?
+            .map(PineValue::Matrix)
+            .unwrap_or(PineValue::Na))
+    }
+
     pub(crate) fn eval_matrix_reshape(
         &mut self,
         args: &[HirCallArg],
@@ -170,6 +185,51 @@ impl<'a> HistoricalRuntime<'a> {
         matrix.rows = rows;
         matrix.columns = columns;
         Ok(())
+    }
+
+    pub(crate) fn matrix_concat(
+        &mut self,
+        target_id: u32,
+        source_id: u32,
+    ) -> Result<Option<u32>, RuntimeError> {
+        let Some(source) = self.matrix_store.get(&source_id).cloned() else {
+            return Ok(None);
+        };
+        let Some(target) = self.matrix_store.get_mut(&target_id) else {
+            return Ok(None);
+        };
+        if target.kind != source.kind {
+            return Ok(None);
+        }
+        if target.columns != source.columns {
+            return Err(RuntimeError {
+                message: format!(
+                    "matrix.concat column count {} must match source column count {}",
+                    target.columns, source.columns
+                ),
+            });
+        }
+        let new_rows = target
+            .rows
+            .checked_add(source.rows)
+            .ok_or_else(|| RuntimeError {
+                message: format!("matrix cell count cannot exceed {MAX_MATRIX_CELLS}"),
+            })?;
+        let new_cells = target
+            .values
+            .len()
+            .checked_add(source.values.len())
+            .ok_or_else(|| RuntimeError {
+                message: format!("matrix cell count cannot exceed {MAX_MATRIX_CELLS}"),
+            })?;
+        if new_cells > MAX_MATRIX_CELLS {
+            return Err(RuntimeError {
+                message: format!("matrix cell count cannot exceed {MAX_MATRIX_CELLS}"),
+            });
+        }
+        target.values.extend(source.values);
+        target.rows = new_rows;
+        Ok(Some(target_id))
     }
 
     pub(crate) fn matrix_add_row(

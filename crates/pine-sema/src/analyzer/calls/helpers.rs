@@ -603,6 +603,7 @@ pub(crate) fn is_array_mutation_builtin(name: &str) -> bool {
         name,
         "matrix.set"
             | "matrix.fill"
+            | "matrix.concat"
             | "matrix.reshape"
             | "matrix.reverse"
             | "matrix.add_row"

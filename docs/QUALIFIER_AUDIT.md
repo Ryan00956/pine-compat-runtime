@@ -683,11 +683,12 @@ qualifier semantics for namespace and method-call forms: returned arrays
 preserve the source matrix element kind as `simple array<T>` for
 float/int/bool/string/color matrices and are accepted or rejected by exact
 matrix element-array consumers accordingly.
-`matrix.copy`, `matrix.transpose`, and `matrix.submatrix` have fixture-backed
+`matrix.concat`, `matrix.copy`, `matrix.transpose`, and `matrix.submatrix` have fixture-backed
 `SameAsArg` simple-matrix return qualifier semantics for namespace and
 method-call forms: returned matrices preserve the source matrix element kind for
 float/int/bool/string/color matrices and are accepted or rejected by matrix
-element-compatible consumers accordingly.
+element-compatible consumers accordingly; `matrix.concat` returns the same
+mutated first-matrix id while the other helpers return independent matrices.
 `matrix.get` has fixture-backed `MatrixElement` return qualifier semantics for
 namespace and method-call forms: float/int/bool/string/color element results
 are returned as series values accepted by matching series-compatible consumers

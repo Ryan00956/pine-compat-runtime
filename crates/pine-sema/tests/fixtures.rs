@@ -16697,10 +16697,80 @@ fn reports_unsupported_map_put_all_method_udf_fixture() {
 
 #[test]
 fn reports_unsupported_matrix_fixture() {
-    assert_unsupported_fixture(
+    assert_call_arg_message(
         "tests/fixtures/sema/unsupported_matrix.pine",
         "matrix.concat",
-        "runtime-owned matrix<float> subset",
+        "id2",
+        "simple matrix<float>",
+        "simple matrix<int>",
+    );
+}
+
+#[test]
+fn accepts_supported_matrix_concat_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_concat.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.concat"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn reports_unsupported_matrix_concat_method_template_fixture() {
+    assert_call_arg_message(
+        "tests/fixtures/sema/unsupported_matrix_concat_method_template.pine",
+        "matrix.concat",
+        "id2",
+        "simple matrix<float>",
+        "simple matrix<int>",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_concat_non_matrix_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_matrix_concat_non_matrix.pine",
+        &[
+            "`matrix.concat` argument `id1` expects matrix, got const na",
+            "`matrix.concat` argument `id2` expects matrix, got const na",
+        ],
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_concat_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_concat_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_concat_udf_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_matrix_concat_udf.pine",
+        &[
+            "`function_side_effect` is not supported: collection mutation via `matrix.concat` is not supported inside user-defined functions",
+            "`function_side_effect` is not supported: collection mutation via `matrix.concat` is not supported inside user-defined functions",
+        ],
     );
 }
 
@@ -19675,14 +19745,6 @@ fn reports_unsupported_matrix_sort_method_udf_fixture() {
         "tests/fixtures/sema/unsupported_matrix_sort_method_udf.pine",
         "function_side_effect",
         "collection mutation via",
-    );
-}
-
-#[test]
-fn reports_unsupported_matrix_method_fixture() {
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_matrix_method.pine",
-        "E_METHOD_RECEIVER_TYPE",
     );
 }
 

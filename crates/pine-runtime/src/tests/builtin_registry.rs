@@ -185,6 +185,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "matrix.add_row",
     "matrix.avg",
     "matrix.columns",
+    "matrix.concat",
     "matrix.col",
     "matrix.copy",
     "matrix.det",

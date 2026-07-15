@@ -1,0 +1,7 @@
+//@version=6
+indicator("Matrix concat column mismatch")
+
+left = matrix.new<float>(1, 2, 1)
+right = matrix.new<float>(1, 3, 2)
+matrix.concat(left, right)
+plot(left.rows())

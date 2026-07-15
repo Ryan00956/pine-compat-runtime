@@ -2145,7 +2145,8 @@ the map template is known at the caller. Template-less bare map declarations,
 non-scalar templates, and non-map map receivers remain unsupported.
 
 Pine matrix collections are partial. Runtime-owned `matrix<float>` ids support
-`matrix.new<float>`, `matrix.get`, `matrix.set`, `matrix.fill`, `matrix.copy`,
+`matrix.new<float>`, `matrix.get`, `matrix.set`, `matrix.fill`, `matrix.concat`,
+`values.concat(other)`, `matrix.copy`,
 `values.copy()`, `matrix.transpose`, `values.transpose()`, `matrix.reverse`,
 `values.reverse()`, `matrix.reshape`, `values.reshape(rows, columns)`,
 `matrix.kron`, `values.kron(other)`, matrix-or-scalar namespace `matrix.mult`,
@@ -2179,7 +2180,7 @@ Pine matrix collections are partial. Runtime-owned `matrix<float>` ids support
 `matrix.row`,
 `values.row(row)`, `matrix.col`, and `values.col(column)` with rectangular storage,
 while runtime-owned `matrix<bool>` ids support `matrix.new<bool>`,
-`matrix.get`, `matrix.set`, `matrix.fill`, `matrix.copy`,
+`matrix.get`, `matrix.set`, `matrix.fill`, `matrix.concat`, `matrix.copy`,
 `matrix.transpose`, `matrix.reverse`, `matrix.reshape`, `matrix.submatrix`,
 `matrix.row`, `matrix.col`, `matrix.add_row`, `matrix.add_col`,
 `matrix.remove_row`, `matrix.remove_col`, `matrix.swap_rows`,
@@ -2188,7 +2189,7 @@ while runtime-owned `matrix<bool>` ids support `matrix.new<bool>`,
 supported method aliases, bool or `na` cells, `array<bool>` row/column
 snapshots, and `matrix<bool>` typed declarations,
 while runtime-owned `matrix<string>` ids support `matrix.new<string>`,
-`matrix.get`, `matrix.set`, `matrix.fill`, `matrix.copy`,
+`matrix.get`, `matrix.set`, `matrix.fill`, `matrix.concat`, `matrix.copy`,
 `matrix.transpose`, `matrix.reverse`, `matrix.reshape`, `matrix.submatrix`,
 `matrix.row`, `matrix.col`, `matrix.add_row`, `matrix.add_col`,
 `matrix.remove_row`, `matrix.remove_col`, `matrix.swap_rows`,
@@ -2197,7 +2198,7 @@ while runtime-owned `matrix<string>` ids support `matrix.new<string>`,
 supported method aliases, string or `na` cells, `array<string>` row/column
 snapshots, and `matrix<string>` typed declarations,
 while runtime-owned `matrix<color>` ids support `matrix.new<color>`,
-`matrix.get`, `matrix.set`, `matrix.fill`, `matrix.copy`,
+`matrix.get`, `matrix.set`, `matrix.fill`, `matrix.concat`, `matrix.copy`,
 `matrix.transpose`, `matrix.reverse`, `matrix.reshape`, `matrix.submatrix`,
 `matrix.row`, `matrix.col`, `matrix.add_row`, `matrix.add_col`,
 `matrix.remove_row`, `matrix.remove_col`, `matrix.swap_rows`,
@@ -2206,7 +2207,7 @@ while runtime-owned `matrix<color>` ids support `matrix.new<color>`,
 supported method aliases, color or `na` cells, `array<color>` row/column
 snapshots, and `matrix<color>` typed declarations,
 while runtime-owned `matrix<int>` ids support `matrix.new<int>`, `matrix.get`,
-`matrix.set`, `matrix.fill`, `matrix.copy`, `matrix.transpose`,
+`matrix.set`, `matrix.fill`, `matrix.concat`, `matrix.copy`, `matrix.transpose`,
 `matrix.reverse`, `matrix.reshape`, `matrix.submatrix`, `matrix.row`,
 `matrix.col`, `matrix.kron`, `matrix.mult`, `matrix.diff`, `matrix.pow`,
 `matrix.add_row`, `matrix.add_col`, `matrix.remove_row`, `matrix.remove_col`,
@@ -2221,6 +2222,11 @@ while runtime-owned `matrix<int>` ids support `matrix.new<int>`, `matrix.get`,
 `matrix.eigenvalues`, `matrix.eigenvectors`, `matrix.inv`, `matrix.pinv`, and
 `matrix.rank`, including the corresponding supported method aliases and int or
 `na` cells,
+namespace and method-call concatenation that mutates and returns the first
+matrix by appending a snapshot of the second matrix's rows, preserves the
+second matrix, supports self-concatenation, compatible zero-row/zero-column
+shapes, ordinary `var` persistence and committed history snapshots, requires
+matching element kinds and column counts, and enforces the 100000-cell limit,
 namespace and method-call reshape preserving element order and element count,
 namespace and method-call reshape element-count mismatch errors,
 namespace and method-call matrix-by-matrix multiplication returning independent
@@ -2269,7 +2275,7 @@ numeric/na cells,
 int-to-float coercion, zero row/column dimensions, shape reads, shape reads
 through ordinary for and while loops, read-only UDF
 cell/shape reads and row/column extraction reads, UDF-returned independent
-copies, loop-local independent copies, while-loop independent copies, while-expression fresh/alias/zero/break/continue/history matrix results including dynamic na-offset predicates, set/get/fill/reshape mutation,
+copies, loop-local independent copies, while-loop independent copies, while-expression fresh/alias/zero/break/continue/history matrix results including dynamic na-offset predicates, set/get/fill/concat/reshape mutation,
 branch/loop set/fill/reshape mutation ordering, while-loop set/fill/reshape mutation ordering, add-row/add-column insertion ordering, row/column deletion ordering, assignment/reference aliasing, explicit
 independent copies, ordinary `var`
 persistence, committed matrix history snapshots, shape snapshots, and
@@ -2299,7 +2305,8 @@ namespace `matrix.reshape` row/column counts, negative method-alias
 row/column counts, `na` method-alias `values.reshape(rows, columns)` row/column
 counts, negative and `na` constructor
 dimensions, and the matrix
-cell-budget guard, plus `matrix.add_row` insertion row bounds and array-size
+cell-budget guard, plus `matrix.concat` column-count mismatch and concatenation
+cell-budget errors, `matrix.add_row` insertion row bounds and array-size
 mismatch errors, `matrix.add_col` insertion column bounds and array-size
 mismatch errors, `matrix.remove_row` row bounds and `na` row-index errors, and
 `matrix.remove_col` column bounds and `na` column-index errors, and
@@ -2307,7 +2314,8 @@ mismatch errors, `matrix.remove_row` row bounds and `na` row-index errors, and
 `matrix.swap_columns` column bounds and `na` column-index errors, and
 `matrix.sort` column bounds, `na` column-index, and unsupported-order errors.
 Matrix get/copy helpers including
-`values.get(row, column)` and `values.copy()`, transform helpers including
+`values.get(row, column)` and `values.copy()`, concatenation helpers including
+`values.concat(other)`, transform helpers including
 `values.transpose()`, shape readers including
 `values.rows()`/`values.columns()`/`values.elements_count()`/`values.is_square()`, value predicates including
 `values.is_binary()`/`values.is_diagonal()`/`values.is_antidiagonal()`/
@@ -2340,11 +2348,12 @@ indexes and `values.set(row, column, value)` method alias row/column indexes are
 rejected at semantic analysis time. Non-int namespace `matrix.reshape`
 row/column counts and method-alias `values.reshape(rows, columns)` row/column
 counts are rejected at semantic analysis time.
-`matrix.set`, `matrix.fill`, `matrix.reverse`, `matrix.reshape`, `matrix.add_row`,
+`matrix.set`, `matrix.fill`, `matrix.concat`, `matrix.reverse`, `matrix.reshape`, `matrix.add_row`,
 `matrix.add_col`, `matrix.remove_row`, `matrix.remove_col`, and
 `matrix.swap_rows`, `matrix.swap_columns`, and `matrix.sort`,
 including
 `values.set(row, column, value)`, `values.fill(value)`,
+`values.concat(other)`,
 `values.reverse()`, `values.reshape(rows, columns)`, `values.add_row(row, array_id)`,
 `values.add_col(column, array_id)`, `values.remove_row(row)`, and
 `values.remove_col(column)`, `values.swap_rows(row1, row2)`, and
@@ -2354,7 +2363,7 @@ Matrix templates beyond the current `float`, `int`, `bool`, `string`, and `color
 subset, including deferred element templates such as `matrix.new<label>`,
 method syntax beyond
 `values.fill(value)`, `values.get(row, column)`,
-`values.set(row, column, value)`, `values.copy()`,
+`values.set(row, column, value)`, `values.concat(other)`, `values.copy()`,
 `values.transpose()`, `values.reverse()`, `values.reshape(rows, columns)`, `values.rows()`, `values.columns()`,
 `values.elements_count()`, `values.is_square()`, `values.is_binary()`,
 `values.is_diagonal()`, `values.is_antidiagonal()`, `values.is_triangular()`,

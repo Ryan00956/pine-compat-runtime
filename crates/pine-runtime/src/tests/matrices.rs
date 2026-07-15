@@ -100,6 +100,160 @@ fn allocates_and_copies_int_matrix_storage() {
 }
 
 #[test]
+fn concatenates_matrix_rows_in_place_and_preserves_source() {
+    let program = runtime_program();
+    let mut runtime = HistoricalRuntime::new(&program);
+
+    let PineValue::Matrix(target_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 1, 2, PineValue::Float(1.0))
+        .expect("target matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    runtime
+        .matrix_set_value(target_id, 0, 1, PineValue::Float(2.0))
+        .expect("matrix set should succeed");
+    let PineValue::Matrix(source_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 2, PineValue::Float(3.0))
+        .expect("source matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    runtime
+        .matrix_set_value(source_id, 0, 1, PineValue::Float(4.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(source_id, 1, 0, PineValue::Float(5.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(source_id, 1, 1, PineValue::Float(6.0))
+        .expect("matrix set should succeed");
+
+    assert_eq!(
+        runtime
+            .matrix_concat(target_id, source_id)
+            .expect("matrix concat should succeed"),
+        Some(target_id)
+    );
+    assert_eq!(runtime.matrix_shape(target_id), Some((3, 2)));
+    assert_eq!(runtime.matrix_shape(source_id), Some((2, 2)));
+    for (row, column, expected) in [
+        (0, 0, 1.0),
+        (0, 1, 2.0),
+        (1, 0, 3.0),
+        (1, 1, 4.0),
+        (2, 0, 5.0),
+        (2, 1, 6.0),
+    ] {
+        assert_eq!(
+            runtime
+                .matrix_get_cloned(target_id, row, column)
+                .expect("matrix get should succeed"),
+            Some(PineValue::Float(expected))
+        );
+    }
+    assert_eq!(
+        runtime
+            .matrix_get_cloned(source_id, 1, 1)
+            .expect("matrix get should succeed"),
+        Some(PineValue::Float(6.0))
+    );
+
+    assert_eq!(
+        runtime
+            .matrix_concat(target_id, target_id)
+            .expect("self concat should succeed"),
+        Some(target_id)
+    );
+    assert_eq!(runtime.matrix_shape(target_id), Some((6, 2)));
+    assert_eq!(
+        runtime
+            .matrix_get_cloned(target_id, 5, 1)
+            .expect("matrix get should succeed"),
+        Some(PineValue::Float(6.0))
+    );
+
+    let PineValue::Matrix(zero_target_id) = runtime
+        .new_matrix(MatrixElementKind::Bool, 2, 0, PineValue::Na)
+        .expect("zero-column target allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(zero_source_id) = runtime
+        .new_matrix(MatrixElementKind::Bool, 3, 0, PineValue::Na)
+        .expect("zero-column source allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    assert_eq!(
+        runtime
+            .matrix_concat(zero_target_id, zero_source_id)
+            .expect("zero-column concat should succeed"),
+        Some(zero_target_id)
+    );
+    assert_eq!(runtime.matrix_shape(zero_target_id), Some((5, 0)));
+
+    let PineValue::Matrix(mismatched_columns_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 1, 3, PineValue::Float(0.0))
+        .expect("mismatched-column matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let error = runtime
+        .matrix_concat(source_id, mismatched_columns_id)
+        .expect_err("mismatched columns should fail");
+    assert_eq!(
+        error.message,
+        "matrix.concat column count 2 must match source column count 3"
+    );
+    assert_eq!(runtime.matrix_shape(source_id), Some((2, 2)));
+
+    let PineValue::Matrix(int_id) = runtime
+        .new_matrix(MatrixElementKind::Int, 1, 2, PineValue::Int(1))
+        .expect("integer matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    assert_eq!(
+        runtime
+            .matrix_concat(target_id, int_id)
+            .expect("kind mismatch should not be a runtime error"),
+        None
+    );
+    assert_eq!(runtime.matrix_shape(target_id), Some((6, 2)));
+    assert_eq!(
+        runtime
+            .matrix_concat(u32::MAX, source_id)
+            .expect("missing target should not be a runtime error"),
+        None
+    );
+    assert_eq!(
+        runtime
+            .matrix_concat(target_id, u32::MAX)
+            .expect("missing source should not be a runtime error"),
+        None
+    );
+
+    let PineValue::Matrix(large_target_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 1, 50_001, PineValue::Float(0.0))
+        .expect("large target allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(large_source_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 1, 50_001, PineValue::Float(0.0))
+        .expect("large source allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let error = runtime
+        .matrix_concat(large_target_id, large_source_id)
+        .expect_err("matrix cell limit should fail");
+    assert_eq!(error.message, "matrix cell count cannot exceed 100000");
+    assert_eq!(runtime.matrix_shape(large_target_id), Some((1, 50_001)));
+}
+
+#[test]
 fn reports_square_matrix_shape() {
     let program = runtime_program();
     let mut runtime = HistoricalRuntime::new(&program);
