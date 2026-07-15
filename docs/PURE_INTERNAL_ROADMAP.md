@@ -1338,7 +1338,9 @@ Current baseline:
   anchors, leading literal `]` character-class atoms across negation, verbose
   trivia, and quoted regions, literal `~` class atoms protected from Rust's
   symmetric-difference syntax across ordinary, escaped, quoted, nested, range,
-  and case-mode forms, plus default-dot exclusion of Pine's full
+  and case-mode forms, Java/Pine backslash quoting for every non-alphanumeric
+  ASCII literal across ordinary/class/verbose/nested/case contexts, plus
+  default-dot exclusion of Pine's full
   line-terminator set with
   global/scoped `(?s)` and `(?-s)` restoration,
   and ASCII-default `(?i)` versus independent lowercase-`u` Unicode case

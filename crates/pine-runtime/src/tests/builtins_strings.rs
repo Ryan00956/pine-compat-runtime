@@ -214,6 +214,39 @@ fn normalizes_pine_regex_literal_class_tildes() {
 }
 
 #[test]
+fn normalizes_pine_regex_ascii_literal_escapes() {
+    assert_eq!(
+        normalize_pine_regex(r"\!\%\_\`\~"),
+        r"\x{21}\x{25}\x{5F}\x{60}\x{7E}"
+    );
+
+    for byte in 0_u8..=0x7F {
+        let ch = char::from(byte);
+        if ch.is_ascii_alphanumeric() {
+            continue;
+        }
+        let escaped = format!(r"\{ch}");
+        let literal = Regex::new(&normalize_pine_regex(&format!(r"\A{escaped}\z")))
+            .unwrap_or_else(|error| panic!("normalized escaped U+{byte:04X}: {error}"));
+        assert!(literal.is_match(&ch.to_string()), "outside U+{byte:04X}");
+
+        let class = Regex::new(&normalize_pine_regex(&format!(r"\A[{escaped}]\z")))
+            .unwrap_or_else(|error| panic!("normalized class-escaped U+{byte:04X}: {error}"));
+        assert!(class.is_match(&ch.to_string()), "class U+{byte:04X}");
+    }
+
+    let verbose = Regex::new(&normalize_pine_regex(r"(?x)\A\#\ \z"))
+        .expect("normalized verbose escaped hash and space");
+    assert!(verbose.is_match("# "));
+
+    let insensitive = Regex::new(&normalize_pine_regex(r"(?i)\A\_[a]\z"))
+        .expect("normalized case-insensitive escaped punctuation");
+    assert!(insensitive.is_match("_A"));
+
+    assert!(Regex::new(&normalize_pine_regex(r"\q")).is_err());
+}
+
+#[test]
 fn normalizes_pine_regex_horizontal_whitespace_classes() {
     let horizontal =
         Regex::new(&normalize_pine_regex(r"^\h$")).expect("normalized horizontal whitespace regex");
@@ -572,7 +605,7 @@ fn normalizes_pine_regex_dot_line_terminators() {
         normalize_pine_regex(r".(?s).(?-s).(?s:.)(?-s:.)"),
         r"[^\n\r\x{0085}\x{2028}\x{2029}](?s).(?-s)[^\n\r\x{0085}\x{2028}\x{2029}](?s:.)(?-s:[^\n\r\x{0085}\x{2028}\x{2029}])"
     );
-    assert_eq!(normalize_pine_regex(r"\.[.]\Q.\E"), r"\.[.]\x{2E}");
+    assert_eq!(normalize_pine_regex(r"\.[.]\Q.\E"), r"\x{2E}[.]\x{2E}");
 }
 
 #[test]
@@ -1032,6 +1065,12 @@ match_class_tilde_escaped = str.match("A~~", "\\~[\\~]")
 match_class_tilde_nested = str.match("c~x", "[x[~~]]+")
 match_class_tilde_quoted = str.match("A~~", "[\\Q~~\\E]+")
 match_literal_tilde_outside = str.match("A~~", "~~")
+match_escaped_punctuation = str.match("A!%/_`~", "\\!\\%\\/\\_\\`\\~")
+match_escaped_punctuation_class = str.match("A!%/_`~", "[\\!\\%\\/\\_\\`\\~]+")
+match_escaped_meta = str.match("A$.[{(", "\\$\\.\\[\\{\\(")
+match_escaped_hash_verbose = str.match("# ", "(?x)\\#\\ ")
+match_escaped_punctuation_nested = str.match("A_~", "[x[\\_\\~]]+")
+match_escaped_punctuation_case = str.match("A_A", "(?i)\\_[a]")
 match_unicode_case_literal = str.match("KΒ", "(?iu)kβ")
 match_unicode_case_scoped = str.match("ÅÅå", "(?iu:å)(?i:å)")
 match_unicode_case_word = str.match("KA", "(?iu)\\w")
@@ -1238,6 +1277,7 @@ plot(match_octal_ascii_case == "Q" and match_octal_ascii_non_ascii == "å" and m
 plot(match_previous_anchor_start == "abc" and match_previous_anchor_later == "" and match_previous_anchor_consumed == "" and match_previous_anchor_multiline == "" and match_previous_anchor_quoted == "\\G" ? 1 : 0)
 plot(match_leading_class_closer == "]" and match_leading_class_closer_negated == "a" and match_leading_class_caret == "a" and match_leading_class_case == "A" ? 1 : 0)
 plot(match_class_tilde_pair == "m~" and match_class_tilde_range == "a~" and match_class_tilde_escaped == "~~" and match_class_tilde_nested == "~x" and match_class_tilde_quoted == "~~" and match_literal_tilde_outside == "~~" ? 1 : 0)
+plot(match_escaped_punctuation == "!%/_`~" and match_escaped_punctuation_class == "!%/_`~" and match_escaped_meta == "$.[{(" and match_escaped_hash_verbose == "# " and match_escaped_punctuation_nested == "_~" and match_escaped_punctuation_case == "_A" ? 1 : 0)
 plot(match_unicode_case_literal == "KΒ" and match_unicode_case_scoped == "Åå" and match_unicode_case_literal_class == "K" ? 1 : 0)
 plot(match_unicode_case_word == "A" and match_unicode_case_word_class == "A" and match_unicode_case_posix == "A" ? 1 : 0)
 plot(match_unicode_classes_without_case == "KKΒ" and match_unicode_modes_disabled == "åA" and match_unicode_case_references == "ÅÅÅEϹ" ? 1 : 0)

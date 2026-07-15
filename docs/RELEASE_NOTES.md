@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added `str.match()` compatibility for Java/Pine's rule that a backslash
+  quotes any non-alphanumeric ASCII character. All ASCII punctuation and
+  control/whitespace literals now work inside or outside character classes,
+  including verbose-mode `\#` and `\ `, nested classes, and active case
+  modes; unknown alphabetic escapes remain invalid.
 - Corrected `str.match()` Java/Pine character classes so `~` remains a
   literal atom instead of allowing adjacent `~~` to invoke Rust's symmetric
   difference operator. Ordinary, escaped, quoted, nested, range-endpoint, and

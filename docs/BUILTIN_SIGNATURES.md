@@ -2054,7 +2054,11 @@ quoted closers, negation, or the active case mode. A `~` inside a Java/Pine
 character class is always a literal atom, including adjacent `~~`, escaped or
 quoted forms, nested classes, range endpoints, and active case modes; it does
 not expose Rust's symmetric-difference operator. Tildes outside classes retain
-their literal behavior. Outside character classes,
+their literal behavior. A backslash before any non-alphanumeric ASCII
+character quotes that character as a Java/Pine literal inside or outside a
+class. This includes punctuation, controls and whitespace, verbose-mode `\#`
+and `\ `, nested classes, and active case modes; unsupported alphabetic
+escapes remain errors. Outside character classes,
 global or scoped `(?i)` applies Pine's ASCII-only case folding to ordinary and
 `\Q...\E`-quoted literals plus `\uHHHH`/`\x` references. Lowercase `(?u)`
 independently enables Unicode-aware folding when `i` is active without changing

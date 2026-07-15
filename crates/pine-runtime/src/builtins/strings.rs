@@ -325,11 +325,12 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 index += slash.len_utf8() + escaped.len_utf8();
                 continue;
             }
-            if escaped == '~' {
+            if escaped.is_ascii() && !escaped.is_ascii_alphanumeric() {
                 if let Some(prefix) = class_prefixes.last_mut() {
                     prefix.mark_atom();
                 }
-                result.push_str(r"\x{7E}");
+                write!(result, r"\x{{{:X}}}", escaped as u32)
+                    .expect("writing to a String cannot fail");
                 index += slash.len_utf8() + escaped.len_utf8();
                 continue;
             }
