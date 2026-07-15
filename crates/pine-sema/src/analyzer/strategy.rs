@@ -5,6 +5,7 @@ mod declaration;
 const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.position_size",
     "strategy.position_avg_price",
+    "strategy.position_entry_name",
     "strategy.initial_capital",
     "strategy.openprofit",
     "strategy.openprofit_percent",

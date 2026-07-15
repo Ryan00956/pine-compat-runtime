@@ -1,6 +1,9 @@
 //@version=5
 strategy("Position state strategy", overlay=true)
 identity(value) => value
+position_entry_name = strategy.position_entry_name
+position_entry_name_udf = identity(strategy.position_entry_name)
+position_entry_name_history = strategy.position_entry_name[1]
 plot(strategy.position_size)
 plot(strategy.position_avg_price)
 if bar_index == 1
@@ -47,3 +50,6 @@ plot(position_avg_price_history)
 plot(strategy.max_contracts_held_all[1])
 plot(strategy.max_contracts_held_long[1])
 plot(strategy.max_contracts_held_short[1])
+plot(na(position_entry_name) ? na : position_entry_name == "L" ? 1 : 0)
+plot(na(position_entry_name_udf) ? na : position_entry_name_udf == "L" ? 1 : 0)
+plot(na(position_entry_name_history) ? na : position_entry_name_history == "L" ? 1 : 0)

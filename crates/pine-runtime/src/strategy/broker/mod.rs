@@ -61,6 +61,7 @@ pub struct BrokerState {
     next_close_metadata: StrategyOrderMetadata,
     next_exit_metadata: StrategyExitMetadata,
     entry_id: Option<String>,
+    position_entry_name: Option<String>,
     entry_bar_index: Option<usize>,
     entry_time: Option<i64>,
     open_trade_max_high: Option<f64>,

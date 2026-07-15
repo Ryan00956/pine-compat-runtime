@@ -117,6 +117,7 @@ impl BrokerState {
             next_close_metadata: StrategyOrderMetadata::default(),
             next_exit_metadata: StrategyExitMetadata::default(),
             entry_id: None,
+            position_entry_name: None,
             entry_bar_index: None,
             entry_time: None,
             open_trade_max_high: None,

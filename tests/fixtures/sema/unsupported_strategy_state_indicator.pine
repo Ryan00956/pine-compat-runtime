@@ -2,6 +2,7 @@
 indicator("Strategy state variables in indicator")
 plot(strategy.position_size)
 plot(strategy.position_avg_price)
+plot(na(strategy.position_entry_name) ? na : 1)
 plot(strategy.initial_capital)
 plot(strategy.openprofit)
 plot(strategy.openprofit_percent)

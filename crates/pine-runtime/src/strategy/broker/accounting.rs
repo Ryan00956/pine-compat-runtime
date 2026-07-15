@@ -589,4 +589,14 @@ impl BrokerState {
             PineValue::Na
         }
     }
+
+    #[must_use]
+    pub(crate) fn position_entry_name_value(&self) -> PineValue {
+        if self.position_size <= 0.0 {
+            return PineValue::Na;
+        }
+        self.position_entry_name
+            .as_ref()
+            .map_or(PineValue::Na, |name| PineValue::String(name.clone()))
+    }
 }

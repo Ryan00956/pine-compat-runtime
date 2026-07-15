@@ -16,6 +16,10 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
+        "strategy.position_entry_name",
+        PineType::new(Qualifier::Series, ValueKind::String),
+    ),
+    (
         "strategy.initial_capital",
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
@@ -281,6 +285,14 @@ mod tests {
                 Some(PineType::new(Qualifier::Series, ValueKind::Int))
             );
         }
+    }
+
+    #[test]
+    fn registers_strategy_position_entry_name_series_value() {
+        assert_eq!(
+            builtin_series_value_type("strategy.position_entry_name"),
+            Some(PineType::new(Qualifier::Series, ValueKind::String))
+        );
     }
 
     #[test]

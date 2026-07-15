@@ -2,6 +2,7 @@
 strategy("Supported strategy position state")
 plot(strategy.position_size)
 plot(strategy.position_avg_price)
+plot(na(strategy.position_entry_name) ? na : strategy.position_entry_name == "L" ? 1 : 0)
 plot(strategy.max_contracts_held_all)
 plot(strategy.max_contracts_held_long)
 plot(strategy.max_contracts_held_short)

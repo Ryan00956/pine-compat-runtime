@@ -2,6 +2,7 @@
 strategy("Strategy state request")
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.position_size))
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.position_avg_price))
+plot(na(request.security(syminfo.tickerid, timeframe.period, strategy.position_entry_name)) ? na : 1)
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.initial_capital))
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.openprofit))
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.openprofit_percent))

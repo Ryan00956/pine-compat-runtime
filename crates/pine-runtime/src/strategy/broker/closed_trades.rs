@@ -100,6 +100,9 @@ impl BrokerState {
     }
 
     pub(super) fn record_open_long_legacy_state(&mut self, trade: &OpenTrade) {
+        if self.position_size <= 0.0 {
+            self.position_entry_name = Some(trade.id.clone());
+        }
         self.position_size = trade.quantity;
         self.max_contracts_held_long = self.max_contracts_held_long.max(trade.quantity);
         self.avg_price = trade.entry_price;
@@ -119,6 +122,7 @@ impl BrokerState {
         self.position_size = 0.0;
         self.avg_price = 0.0;
         self.entry_id = None;
+        self.position_entry_name = None;
         self.entry_bar_index = None;
         self.entry_time = None;
         self.open_entry_commission = 0.0;

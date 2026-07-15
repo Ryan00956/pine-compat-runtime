@@ -1075,7 +1075,14 @@ Phase L adds the first read-only strategy state variables for historical
 strategy-mode scripts. `strategy.position_size` is a series float that is `0`
 when flat and positive for the current long-only position. `strategy.position_avg_price`
 is a series float that is `na` when flat and the current average entry price
-when long. The `strategy.initial_capital` slice adds a read-only series float
+when long. `strategy.position_entry_name` is a read-only series string that is
+`na` while flat and otherwise retains the entry order ID that initially opened
+the current continuous net long position. Pyramiding additions and partial
+allocation closes preserve it; a flat transition clears it before a later
+position establishes a new name. Direct, UDF, and history reads are supported,
+while indicator use, requested-context use, and mutation remain rejected, with
+no public schema expansion. The `strategy.initial_capital` slice adds a
+read-only series float
 that returns the configured or default broker starting capital unchanged on
 every bar, including ordinary UDF and history reads, without public schema
 expansion. `strategy.openprofit` is unrealized profit for the current long
@@ -2607,6 +2614,7 @@ strategy.cancel_all  partial      cancels all supported internal pending entries
 strategy equity      partial      per-bar cash, marketValue, equity, and netProfit snapshots; supports strategy.commission.cash_per_contract, strategy.commission.cash_per_order, and strategy.commission.percent commission debits plus declaration slippage applied to supported fill prices
 strategy.position_size partial    current long-only position size read-only series in strategy-mode scripts only; supports fixture-backed control-flow, UDF argument, and history-reference interactions
 strategy.position_avg_price partial current long-only average entry price read-only series, na when flat, in strategy-mode scripts only
+strategy.position_entry_name partial entry order ID that initially opened the current continuous net long position as a read-only series string in strategy-mode scripts only; na while flat, preserved across pyramiding additions and partial allocation closes, and reset after the net position becomes flat; no public strategy-result schema expansion
 strategy.initial_capital partial  configured or default broker starting capital as a read-only series float in strategy-mode scripts only; constant across bars with fixture-backed UDF and history reads; no public strategy-result schema expansion
 strategy.max_contracts_held_all partial maximum contracts/shares/lots/units held over the whole trading range as a read-only series float in strategy-mode scripts only; aliases the supported long-only maximum while shorts are unsupported
 strategy.max_contracts_held_long partial maximum long contracts/shares/lots/units held over the whole trading range as a read-only series float in strategy-mode scripts only

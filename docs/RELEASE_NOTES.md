@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added `strategy.position_entry_name` as a read-only strategy-mode
+  `series string`. It is `na` while flat, records the entry order ID that
+  initially opened the current continuous net long position, survives
+  pyramiding additions and partial allocation closes, and resets only when the
+  net position becomes flat. Direct, UDF, and history reads do not expand
+  public strategy output.
 - Added `strategy.closedtrades.first_index` as a read-only strategy-mode
   `series int`. It returns `0` throughout the current untrimmed closed-trade
   retention model, including before the first trade, and supports direct, UDF,

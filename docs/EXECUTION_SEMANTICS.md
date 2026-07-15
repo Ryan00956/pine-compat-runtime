@@ -168,12 +168,17 @@ Strategy-mode scripts can read `strategy.position_size`,
 `strategy.max_drawdown`, and
 `strategy.equity` as historical series floats. They can also read `strategy.closedtrades` and
 `strategy.opentrades` as historical series ints in the current count-only
-reporting subset. In the current long-only subset,
+reporting subset. `strategy.position_entry_name` is a historical series string.
+In the current long-only subset,
 `strategy.position_size` is `0` when flat and positive while long.
 `strategy.position_avg_price` is `na` when flat and the current average entry
-price while long. `strategy.initial_capital` returns the configured or default
-broker starting capital unchanged on every bar, including through UDF and
-history reads, without expanding public strategy JSON. `strategy.openprofit`
+price while long. `strategy.position_entry_name` is `na` while flat and holds
+the entry order ID that initially opened the current continuous net position.
+Pyramiding additions and partial allocation closes preserve it; the broker
+clears it only when the net position becomes flat, allowing the next position
+to establish a new name. `strategy.initial_capital` returns the configured or
+default broker starting capital unchanged on every bar, including through UDF
+and history reads, without expanding public strategy JSON. `strategy.openprofit`
 is `(close - avg_price) * size` while
 long and `0` when flat. `strategy.openprofit_percent` divides that value by
 realized equity (`initial_capital + strategy.netprofit`) and multiplies by 100;
@@ -230,7 +235,8 @@ in the same already-supported expression contexts as other series values,
 including branches, switches, loops, pure UDF arguments, and constant history
 references. Their history follows the normal per-expression series history
 model. Direct mutation such as `strategy.position_size := ...`,
-`strategy.closedtrades := ...`, or `strategy.closedtrades.first_index := ...`
+`strategy.position_entry_name := ...`, `strategy.closedtrades := ...`, or
+`strategy.closedtrades.first_index := ...`
 is rejected because strategy state variables are read-only.
 The first supported closed-trade namespace functions are
 `strategy.closedtrades.entry_price(trade_num)`,

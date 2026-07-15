@@ -4878,6 +4878,7 @@ fn accepts_supported_strategy_position_state_fixture() {
         &[
             "strategy.position_size",
             "strategy.position_avg_price",
+            "strategy.position_entry_name",
             "strategy.max_contracts_held_all",
             "strategy.max_contracts_held_long",
             "strategy.max_contracts_held_short",

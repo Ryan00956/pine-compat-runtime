@@ -156,6 +156,14 @@ returns the configured or default broker starting capital on every bar. It is
 available through ordinary series expressions, UDF arguments, and history
 references, while indicator use, requested-context use, and mutation remain
 rejected.
+`strategy.position_entry_name` is a read-only strategy-mode `series string`
+that is `na` while flat and otherwise returns the entry order ID that initially
+opened the current continuous net long position. A pyramiding addition or a
+partial close of the initial allocation does not replace the name; the broker
+clears it only when the net position becomes flat, after which a later position
+can establish a new name. Direct, UDF, and history reads are supported, while
+indicator use, requested-context use, and mutation remain rejected. It does
+not expand the public strategy-result schema.
 `strategy.openprofit_percent` is a read-only strategy-mode `series float` that
 returns `strategy.openprofit / (strategy.initial_capital +
 strategy.netprofit) * 100`. Direct, UDF, and history reads are supported; a

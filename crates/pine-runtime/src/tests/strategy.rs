@@ -8275,6 +8275,9 @@ fn strategy_position_state_variables_follow_broker_mutations() {
         "strategy.pine",
         r#"strategy("position state")
 identity(value) => value
+position_entry_name = strategy.position_entry_name
+position_entry_name_udf = identity(strategy.position_entry_name)
+position_entry_name_history = strategy.position_entry_name[1]
 plot(strategy.position_size)
 plot(strategy.position_avg_price)
 if bar_index == 1
@@ -8321,6 +8324,9 @@ plot(position_avg_price_history)
 plot(strategy.max_contracts_held_all[1])
 plot(strategy.max_contracts_held_long[1])
 plot(strategy.max_contracts_held_short[1])
+plot(na(position_entry_name) ? na : position_entry_name == "L" ? 1 : 0)
+plot(na(position_entry_name_udf) ? na : position_entry_name_udf == "L" ? 1 : 0)
+plot(na(position_entry_name_history) ? na : position_entry_name_history == "L" ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -8518,6 +8524,67 @@ plot(strategy.max_contracts_held_short[1])
             PineValue::Float(0.0),
             PineValue::Float(0.0),
             PineValue::Float(0.0),
+        ]
+    );
+    let position_entry_name = vec![
+        PineValue::Na,
+        PineValue::Na,
+        PineValue::Int(1),
+        PineValue::Na,
+    ];
+    assert_eq!(result.plots[21].values, position_entry_name.clone());
+    assert_eq!(result.plots[22].values, position_entry_name);
+    assert_eq!(
+        result.plots[23].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Int(1)
+        ]
+    );
+}
+
+#[test]
+fn strategy_position_entry_name_tracks_the_continuous_net_position() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("position entry name", pyramiding=2)
+if bar_index == 0
+    strategy.entry("A", strategy.long, qty=1)
+if bar_index == 1
+    strategy.entry("B", strategy.long, qty=1)
+if bar_index == 2
+    strategy.close("A")
+if bar_index == 3
+    strategy.close("B")
+if bar_index == 4
+    strategy.entry("C", strategy.long, qty=1)
+plot(na(strategy.position_entry_name) ? na : strategy.position_entry_name == "A" ? 1 : strategy.position_entry_name == "C" ? 2 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0), bar(5.0), bar(6.0)],
+    )
+    .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Na,
+            PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Int(2),
         ]
     );
 }
