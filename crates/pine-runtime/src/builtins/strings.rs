@@ -12,6 +12,10 @@ use super::{
         parse_pine_regex_code_point_escape, parse_pine_regex_control_escape,
         parse_pine_regex_octal_escape,
     },
+    regex_modes::{
+        PineRegexMode, apply_pine_regex_flags, parse_pine_regex_flags, push_pine_regex_literal,
+        push_pine_regex_quoted, push_rust_regex_flags,
+    },
     regex_unicode_blocks::pine_unicode_block,
 };
 use crate::builtins::time::{
@@ -108,155 +112,6 @@ pub(crate) fn is_pine_numeric_string(value: &str) -> bool {
     }
 }
 
-#[derive(Clone, Copy, Default)]
-struct PineRegexMode {
-    unicode_classes: bool,
-    case_insensitive: bool,
-    verbose: bool,
-    multiline: bool,
-    dotall: bool,
-}
-
-struct PineRegexFlags<'a> {
-    end: usize,
-    scoped: bool,
-    enabled: &'a str,
-    disabled: &'a str,
-}
-
-fn parse_pine_regex_flags(pattern: &str, start: usize) -> Option<PineRegexFlags<'_>> {
-    let bytes = pattern.as_bytes();
-    if bytes.get(start..start + 2) != Some(b"(?") {
-        return None;
-    }
-
-    let flags_start = start + 2;
-    let mut index = flags_start;
-    let mut separator = None;
-    while let Some(&byte) = bytes.get(index) {
-        match byte {
-            b'i' | b'm' | b's' | b'U' | b'x' => index += 1,
-            b'-' if separator.is_none() => {
-                separator = Some(index);
-                index += 1;
-            }
-            b':' | b')' => break,
-            _ => return None,
-        }
-    }
-
-    let terminator = *bytes.get(index)?;
-    if !matches!(terminator, b':' | b')') {
-        return None;
-    }
-    let split = separator.unwrap_or(index);
-    if (separator.is_none() && split == flags_start && terminator == b')')
-        || separator.is_some_and(|separator| separator + 1 == index)
-    {
-        return None;
-    }
-    Some(PineRegexFlags {
-        end: index + 1,
-        scoped: terminator == b':',
-        enabled: &pattern[flags_start..split],
-        disabled: if separator.is_some() {
-            &pattern[split + 1..index]
-        } else {
-            ""
-        },
-    })
-}
-
-fn apply_pine_regex_flags(mode: PineRegexMode, flags: &PineRegexFlags<'_>) -> PineRegexMode {
-    let mut mode = mode;
-    if flags.enabled.contains('U') {
-        mode.unicode_classes = true;
-    }
-    if flags.disabled.contains('U') {
-        mode.unicode_classes = false;
-    }
-    if flags.enabled.contains('i') {
-        mode.case_insensitive = true;
-    }
-    if flags.disabled.contains('i') {
-        mode.case_insensitive = false;
-    }
-    if flags.enabled.contains('x') {
-        mode.verbose = true;
-    }
-    if flags.disabled.contains('x') {
-        mode.verbose = false;
-    }
-    if flags.enabled.contains('m') {
-        mode.multiline = true;
-    }
-    if flags.disabled.contains('m') {
-        mode.multiline = false;
-    }
-    if flags.enabled.contains('s') {
-        mode.dotall = true;
-    }
-    if flags.disabled.contains('s') {
-        mode.dotall = false;
-    }
-    mode
-}
-
-fn push_rust_regex_flags(result: &mut String, flags: &PineRegexFlags<'_>) {
-    let enabled = flags.enabled.replace('U', "");
-    let disabled = flags.disabled.replace('U', "");
-    if enabled.is_empty() && disabled.is_empty() {
-        if flags.scoped {
-            result.push_str("(?:");
-        }
-        return;
-    }
-
-    result.push_str("(?");
-    result.push_str(&enabled);
-    if !disabled.is_empty() {
-        result.push('-');
-        result.push_str(&disabled);
-    }
-    result.push(if flags.scoped { ':' } else { ')' });
-}
-
-fn push_pine_regex_literal(result: &mut String, ch: char, mode: PineRegexMode, must_escape: bool) {
-    if mode.case_insensitive && !mode.unicode_classes {
-        if ch.is_ascii_alphabetic() {
-            write!(result, r"(?i-u:\x{{{:X}}})", ch as u32)
-                .expect("writing to a String cannot fail");
-            return;
-        }
-        if !ch.is_ascii() {
-            write!(result, r"(?-i:\x{{{:X}}})", ch as u32)
-                .expect("writing to a String cannot fail");
-            return;
-        }
-    }
-
-    if must_escape {
-        write!(result, r"\x{{{:X}}}", ch as u32).expect("writing to a String cannot fail");
-    } else {
-        result.push(ch);
-    }
-}
-
-fn push_pine_regex_quoted(
-    result: &mut String,
-    quoted: &str,
-    mode: PineRegexMode,
-    inside_class: bool,
-) {
-    for ch in quoted.chars() {
-        if inside_class {
-            write!(result, r"\x{{{:X}}}", ch as u32).expect("writing to a String cannot fail");
-        } else {
-            push_pine_regex_literal(result, ch, mode, true);
-        }
-    }
-}
-
 fn pine_posix_class(name: &str, unicode: bool, negated: bool) -> Option<&'static str> {
     let (positive, negative) = if unicode {
         match name.to_ascii_uppercase().as_str() {
@@ -332,6 +187,29 @@ struct NormalizedPineRegex {
     final_newline_captures: Vec<String>,
 }
 
+struct PineRegexClassPrefix {
+    can_negate: bool,
+    can_literal_close: bool,
+}
+
+impl PineRegexClassPrefix {
+    fn new() -> Self {
+        Self {
+            can_negate: true,
+            can_literal_close: true,
+        }
+    }
+
+    fn mark_atom(&mut self) {
+        self.can_negate = false;
+        self.can_literal_close = false;
+    }
+}
+
+fn is_verbose_ascii_space(byte: u8) -> bool {
+    matches!(byte, b' ' | b'\t' | b'\n' | 0x0B | 0x0C | b'\r')
+}
+
 fn push_pine_regex_final_anchor(
     result: &mut String,
     capture_names: &mut Vec<String>,
@@ -355,6 +233,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
     let mut mode = PineRegexMode::default();
     let mut modes = Vec::new();
     let mut class_depth = 0usize;
+    let mut class_prefixes: Vec<PineRegexClassPrefix> = Vec::new();
     let mut case_class_start = None;
     let mut case_protected_spans = Vec::new();
     let mut index = 0usize;
@@ -368,10 +247,15 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
         let rest = &pattern[index..];
         let byte = pattern.as_bytes()[index];
 
-        if mode.verbose && class_depth == 0 && byte == b'#' {
+        if mode.verbose && byte == b'#' {
             let comment_len = rest.find('\n').unwrap_or(rest.len());
             result.push_str(&rest[..comment_len]);
             index += comment_len;
+            continue;
+        }
+        if mode.verbose && is_verbose_ascii_space(byte) {
+            result.push(byte as char);
+            index += 1;
             continue;
         }
 
@@ -386,6 +270,11 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 let quoted_start = index + slash.len_utf8() + escaped.len_utf8();
                 let quoted_rest = &pattern[quoted_start..];
                 if let Some(quoted_len) = quoted_rest.find(r"\E") {
+                    if quoted_len > 0
+                        && let Some(prefix) = class_prefixes.last_mut()
+                    {
+                        prefix.mark_atom();
+                    }
                     push_pine_regex_quoted(
                         &mut result,
                         &quoted_rest[..quoted_len],
@@ -394,10 +283,18 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                     );
                     index = quoted_start + quoted_len + r"\E".len();
                 } else {
+                    if !quoted_rest.is_empty()
+                        && let Some(prefix) = class_prefixes.last_mut()
+                    {
+                        prefix.mark_atom();
+                    }
                     push_pine_regex_quoted(&mut result, quoted_rest, mode, class_depth > 0);
                     index = pattern.len();
                 }
                 continue;
+            }
+            if let Some(prefix) = class_prefixes.last_mut() {
+                prefix.mark_atom();
             }
             if matches!(escaped, 'u' | 'x')
                 && let Some(reference) = parse_pine_regex_code_point_escape(pattern, index)
@@ -590,13 +487,40 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 mode = parent_mode;
             }
         } else if byte == b'[' {
+            if let Some(prefix) = class_prefixes.last_mut() {
+                prefix.mark_atom();
+            }
             if class_depth == 0 && mode.case_insensitive {
                 case_class_start = Some(result.len());
                 case_protected_spans.clear();
             }
+            class_prefixes.push(PineRegexClassPrefix::new());
             class_depth += 1;
         } else if byte == b']' && class_depth > 0 {
+            if class_prefixes
+                .last()
+                .is_some_and(|prefix| prefix.can_literal_close)
+            {
+                class_prefixes
+                    .last_mut()
+                    .expect("an open class has prefix state")
+                    .mark_atom();
+                result.push_str(r"\x{5D}");
+                index += 1;
+                continue;
+            }
+            class_prefixes.pop();
             class_depth -= 1;
+        } else if byte == b'^'
+            && let Some(prefix) = class_prefixes.last_mut()
+        {
+            if prefix.can_negate {
+                prefix.can_negate = false;
+            } else {
+                prefix.mark_atom();
+            }
+        } else if let Some(prefix) = class_prefixes.last_mut() {
+            prefix.mark_atom();
         }
 
         let closed_case_class = byte == b']' && class_depth == 0 && case_class_start.is_some();

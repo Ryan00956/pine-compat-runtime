@@ -302,6 +302,42 @@ fn normalizes_pine_regex_previous_match_anchor() {
 }
 
 #[test]
+fn normalizes_pine_regex_leading_class_closers() {
+    let leading =
+        Regex::new(&normalize_pine_regex(r"\A[]a]\z")).expect("normalized leading class closer");
+    assert!(leading.is_match("]"));
+    assert!(leading.is_match("a"));
+    assert!(!leading.is_match("b"));
+
+    let negated = Regex::new(&normalize_pine_regex(r"\A[^]]\z"))
+        .expect("normalized negated leading class closer");
+    assert!(!negated.is_match("]"));
+    assert!(negated.is_match("a"));
+
+    let caret = Regex::new(&normalize_pine_regex(r"\A[^^]\z"))
+        .expect("normalized leading negation and caret literal");
+    assert!(!caret.is_match("^"));
+    assert!(caret.is_match("a"));
+
+    let insensitive = Regex::new(&normalize_pine_regex(r"(?i)\A[]a]\z"))
+        .expect("normalized case-insensitive leading class closer");
+    assert!(insensitive.is_match("A"));
+    assert!(insensitive.is_match("]"));
+
+    let verbose = Regex::new(&normalize_pine_regex("(?x)\\A[ # note\n ]]\\z"))
+        .expect("normalized verbose leading class closer");
+    assert!(verbose.is_match("]"));
+
+    let empty_quote = Regex::new(&normalize_pine_regex(r"\A[\Q\E]]\z"))
+        .expect("normalized leading closer after an empty quote");
+    assert!(empty_quote.is_match("]"));
+
+    let quoted =
+        Regex::new(&normalize_pine_regex(r"\A[\Q]\E]\z")).expect("normalized quoted class closer");
+    assert!(quoted.is_match("]"));
+}
+
+#[test]
 fn normalizes_pine_regex_quoted_literals() {
     assert_eq!(
         normalize_pine_regex(r"\Q(?U)\d[.]# \E\d"),
@@ -720,6 +756,13 @@ match_previous_anchor_later = str.match("xabc", "\\Gabc")
 match_previous_anchor_consumed = str.match("a", "a\\G")
 match_previous_anchor_multiline = str.match("x\nabc", "(?m)\\Gabc")
 match_previous_anchor_quoted = str.match("\\G", "\\Q\\G\\E")
+match_leading_class_closer = str.match("x]a", "[]a]")
+match_leading_class_closer_negated = str.match("]a", "[^]]")
+match_leading_class_caret = str.match("^a", "[^^]")
+match_leading_class_case = str.match("A", "(?i)[]a]")
+match_leading_class_verbose = str.match("]", "(?x)[ # note\n ]]")
+match_leading_class_empty_quote = str.match("]", "[\\Q\\E]]")
+match_leading_class_quoted = str.match("]", "[\\Q]\\E]")
 match_quoted_meta = str.match("x[a-z]+(?U)# y", "\\Q[a-z]+(?U)# \\E")
 match_quoted_escape = str.match("\\d123", "\\Q\\d\\E")
 match_quoted_verbose = str.match("# [ ]", "(?x)\\Q# [ ]\\E")
@@ -875,6 +918,8 @@ plot(match_control_ascii_case == "Q" and match_control_unicode_case == "Ϲ" and 
 plot(match_octal_two_digit_width == "?7" and match_octal_three_digit_width == "ÿx" and match_octal_non_octal_tail == "\n8" and match_octal_first_digit_limit == " 0" and match_octal_class == "a" ? 1 : 0)
 plot(match_octal_ascii_case == "Q" and match_octal_ascii_non_ascii == "å" and match_octal_unicode_case == "Å" and match_octal_verbose == "q" and match_octal_quoted == "\\0141" ? 1 : 0)
 plot(match_previous_anchor_start == "abc" and match_previous_anchor_later == "" and match_previous_anchor_consumed == "" and match_previous_anchor_multiline == "" and match_previous_anchor_quoted == "\\G" ? 1 : 0)
+plot(match_leading_class_closer == "]" and match_leading_class_closer_negated == "a" and match_leading_class_caret == "a" and match_leading_class_case == "A" ? 1 : 0)
+plot(match_leading_class_verbose == "]" and match_leading_class_empty_quote == "]" and match_leading_class_quoted == "]" ? 1 : 0)
 plot(match_quoted_meta == "[a-z]+(?U)# " and match_quoted_escape == "\\d" and match_quoted_verbose == "# [ ]" and match_quoted_class == "]-" and match_quoted_unclosed == "[b]+" and match_quoted_then_ascii == "[a]123" ? 1 : 0)
 plot(match_final_newline_dollar == "tail" and match_final_newline_Z == "tail" and match_absolute_z_missing == "" and match_absolute_z == "tail" ? 1 : 0)
 plot(match_explicit_final_newline == "\n" and match_empty_final_newline_dollar == "" and match_empty_final_newline_Z == "" ? 1 : 0)

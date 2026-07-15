@@ -11,6 +11,7 @@ pub(crate) mod matrices;
 pub(crate) mod outputs;
 mod regex_character_classes;
 mod regex_escapes;
+mod regex_modes;
 mod regex_unicode_blocks;
 pub(crate) mod requests;
 pub(crate) mod strategy;

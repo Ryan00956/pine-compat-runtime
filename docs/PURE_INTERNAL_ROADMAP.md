@@ -1326,7 +1326,9 @@ Current baseline:
   fixed-width `\uHHHH`, two-digit `\xNN`, braced `\x{...}`, one-to-three-digit
   `\0` octal, fixed `\e`, and one-scalar `\cX` control references, and
   single-search `\G` previous-match plus final-newline-aware `$`/`\Z` end
-  anchors, plus default-dot exclusion of Pine's full line-terminator set with
+  anchors, leading literal `]` character-class atoms across negation, verbose
+  trivia, and quoted regions, plus default-dot exclusion of Pine's full
+  line-terminator set with
   global/scoped `(?s)` and `(?-s)` restoration,
   and ASCII-default versus `(?U)` Unicode-aware `(?i)` folding for literal
   tokens and character classes including negation/intersection ordering and

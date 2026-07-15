@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Corrected `str.match()` Java/Pine character-class parsing so a leading `]`
+  is treated as a literal class atom, including after a leading negation,
+  verbose-mode whitespace or comments, and an empty `\\Q\\E` quote. Quoted
+  closers and active ASCII/Unicode case modes retain their existing behavior.
 - Added `str.match()` support for Pine's `\G` previous-match anchor. Under the
   API's single initial match search it is an absolute-start assertion, including
   multiline independence, consumed-prefix rejection, quoted preservation, and

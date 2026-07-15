@@ -2019,7 +2019,10 @@ comments, and quoted spellings remain literal. Java/Pine octal references are
 supported in `\0n`, `\0nn`, and `\0mnn` form: at least one octal digit is
 required, a third digit is consumed only when the first is `0..3`, verbose
 trivia between digits is ignored, and class, quote, and case modes are
-preserved. Outside character classes,
+preserved. Java/Pine character classes may use `]` as their first literal atom,
+including after a leading `^`, verbose-mode ASCII whitespace or comments, and
+an empty `\\Q\\E` quote. Such leading closers are normalized without changing
+quoted closers, negation, or the active case mode. Outside character classes,
 global or scoped `(?i)` applies Pine's ASCII-only case folding to ordinary and
 `\Q...\E`-quoted literals plus `\uHHHH`/`\x` references; `(?U)` changes those
 literals to Unicode-aware folding, and `(?-i)`/`(?-U)` restore the enclosing or
