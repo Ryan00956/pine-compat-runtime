@@ -229,32 +229,57 @@ pub(crate) fn push_case_folded_class(result: &mut String, class: &str) {
     result.push(')');
 }
 
+pub(crate) enum PineRegexClassReplacementCase {
+    Fold {
+        replacement_unicode: bool,
+        outer_unicode: bool,
+    },
+    Exact,
+}
+
 pub(crate) fn push_case_insensitive_class_replacement(
     result: &mut String,
     replacement: &str,
     case_insensitive: bool,
-    unicode_case: bool,
+    replacement_case: PineRegexClassReplacementCase,
     class_depth: usize,
     protected_spans: &mut Vec<Range<usize>>,
-    exact_under_case_folding: bool,
 ) {
     if !case_insensitive {
         result.push_str(replacement);
         return;
     }
 
+    let (replacement_unicode, outer_unicode, exact) = match replacement_case {
+        PineRegexClassReplacementCase::Fold {
+            replacement_unicode,
+            outer_unicode,
+        } => (replacement_unicode, outer_unicode, false),
+        PineRegexClassReplacementCase::Exact => (false, false, true),
+    };
+
     if class_depth > 0 {
         let start = result.len();
-        result.push_str(replacement);
-        if exact_under_case_folding {
+        if exact {
+            result.push_str(replacement);
             protected_spans.push(start..result.len());
+        } else if replacement_unicode != outer_unicode
+            && let Some(class) =
+                normalize_case_insensitive_class(replacement, replacement_unicode, &[])
+        {
+            result.push_str(&class);
+            protected_spans.push(start..result.len());
+        } else {
+            result.push_str(replacement);
         }
         return;
     }
 
-    if exact_under_case_folding {
+    if exact {
         push_case_folded_class(result, replacement);
-    } else if let Some(class) = normalize_case_insensitive_class(replacement, unicode_case, &[]) {
+    } else if let Some(class) =
+        normalize_case_insensitive_class(replacement, replacement_unicode, &[])
+    {
         push_case_folded_class(result, &class);
     } else {
         result.push_str(replacement);

@@ -5,7 +5,7 @@ use regex::Regex;
 
 use super::{
     regex_character_classes::{
-        normalize_case_insensitive_class, push_case_folded_class,
+        PineRegexClassReplacementCase, normalize_case_insensitive_class, push_case_folded_class,
         push_case_insensitive_class_replacement,
     },
     regex_escapes::{
@@ -300,7 +300,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 && let Some(reference) = parse_pine_regex_code_point_escape(pattern, index)
             {
                 if let Some(ch) = reference.scalar {
-                    if class_depth == 0 && mode.case_insensitive && !mode.unicode_classes {
+                    if class_depth == 0 && mode.case_insensitive && !mode.unicode_case {
                         push_pine_regex_literal(&mut result, ch, mode, true);
                     } else {
                         write!(
@@ -320,7 +320,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
             if escaped == 'c'
                 && let Some(control) = parse_pine_regex_control_escape(pattern, index, mode.verbose)
             {
-                if class_depth == 0 && mode.case_insensitive && !mode.unicode_classes {
+                if class_depth == 0 && mode.case_insensitive && !mode.unicode_case {
                     push_pine_regex_literal(&mut result, control.scalar, mode, true);
                 } else {
                     write!(result, r"\x{{{:X}}}", control.scalar as u32)
@@ -332,7 +332,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
             if escaped == '0'
                 && let Some(reference) = parse_pine_regex_octal_escape(pattern, index, mode.verbose)
             {
-                if class_depth == 0 && mode.case_insensitive && !mode.unicode_classes {
+                if class_depth == 0 && mode.case_insensitive && !mode.unicode_case {
                     push_pine_regex_literal(&mut result, reference.scalar, mode, true);
                 } else {
                     write!(result, r"\x{{{:X}}}", reference.scalar as u32)
@@ -355,10 +355,16 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                                 &mut result,
                                 replacement,
                                 mode.case_insensitive,
-                                mode.unicode_classes,
+                                if property.eq_ignore_ascii_case("ASCII") {
+                                    PineRegexClassReplacementCase::Exact
+                                } else {
+                                    PineRegexClassReplacementCase::Fold {
+                                        replacement_unicode: mode.unicode_classes,
+                                        outer_unicode: mode.unicode_case,
+                                    }
+                                },
                                 class_depth,
                                 &mut case_protected_spans,
-                                property.eq_ignore_ascii_case("ASCII"),
                             );
                             index = name_end + 1;
                             continue;
@@ -372,10 +378,9 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                                 &mut result,
                                 &replacement,
                                 mode.case_insensitive,
-                                mode.unicode_classes,
+                                PineRegexClassReplacementCase::Exact,
                                 class_depth,
                                 &mut case_protected_spans,
-                                true,
                             );
                             index = name_end + 1;
                             continue;
@@ -426,10 +431,12 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                         &mut result,
                         replacement,
                         mode.case_insensitive,
-                        mode.unicode_classes,
+                        PineRegexClassReplacementCase::Fold {
+                            replacement_unicode: mode.unicode_classes,
+                            outer_unicode: mode.unicode_case,
+                        },
                         class_depth,
                         &mut case_protected_spans,
-                        false,
                     );
                 } else {
                     result.push_str(replacement);
@@ -540,7 +547,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 .map(|range| range.start - start..range.end - start)
                 .collect::<Vec<_>>();
             if let Some(class) =
-                normalize_case_insensitive_class(&class, mode.unicode_classes, &protected)
+                normalize_case_insensitive_class(&class, mode.unicode_case, &protected)
             {
                 push_case_folded_class(&mut result, &class);
             } else {

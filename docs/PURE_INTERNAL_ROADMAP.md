@@ -1330,9 +1330,11 @@ Current baseline:
   trivia, and quoted regions, plus default-dot exclusion of Pine's full
   line-terminator set with
   global/scoped `(?s)` and `(?-s)` restoration,
-  and ASCII-default versus `(?U)` Unicode-aware `(?i)` folding for literal
-  tokens and character classes including negation/intersection ordering and
-  exact block membership, on the linear-time regex path;
+  and ASCII-default `(?i)` versus independent lowercase-`u` Unicode case
+  folding, with `U` implying `u`, separate `-u`/`-U` restoration, preserved
+  ASCII predefined/POSIX class boundaries, and character-class
+  negation/intersection ordering plus exact block membership, on the
+  linear-time regex path;
 - calendar-aware UTC `time`/`time_close` and `timeframe.change` week and month
   groups alongside fixed intraday/day buckets;
 - IANA timezone and DST-aware calendar component and `str.format_time` calls,

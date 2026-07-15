@@ -3,6 +3,7 @@ use std::fmt::Write as _;
 #[derive(Clone, Copy, Default)]
 pub(crate) struct PineRegexMode {
     pub(crate) unicode_classes: bool,
+    pub(crate) unicode_case: bool,
     pub(crate) case_insensitive: bool,
     pub(crate) verbose: bool,
     pub(crate) multiline: bool,
@@ -27,7 +28,7 @@ pub(crate) fn parse_pine_regex_flags(pattern: &str, start: usize) -> Option<Pine
     let mut separator = None;
     while let Some(&byte) = bytes.get(index) {
         match byte {
-            b'i' | b'm' | b's' | b'U' | b'x' => index += 1,
+            b'i' | b'm' | b's' | b'u' | b'U' | b'x' => index += 1,
             b'-' if separator.is_none() => {
                 separator = Some(index);
                 index += 1;
@@ -66,9 +67,17 @@ pub(crate) fn apply_pine_regex_flags(
     let mut mode = mode;
     if flags.enabled.contains('U') {
         mode.unicode_classes = true;
+        mode.unicode_case = true;
+    }
+    if flags.enabled.contains('u') {
+        mode.unicode_case = true;
     }
     if flags.disabled.contains('U') {
         mode.unicode_classes = false;
+        mode.unicode_case = false;
+    }
+    if flags.disabled.contains('u') {
+        mode.unicode_case = false;
     }
     if flags.enabled.contains('i') {
         mode.case_insensitive = true;
@@ -98,8 +107,8 @@ pub(crate) fn apply_pine_regex_flags(
 }
 
 pub(crate) fn push_rust_regex_flags(result: &mut String, flags: &PineRegexFlags<'_>) {
-    let enabled = flags.enabled.replace('U', "");
-    let disabled = flags.disabled.replace('U', "");
+    let enabled = flags.enabled.replace(['u', 'U'], "");
+    let disabled = flags.disabled.replace(['u', 'U'], "");
     if enabled.is_empty() && disabled.is_empty() {
         if flags.scoped {
             result.push_str("(?:");
@@ -122,7 +131,7 @@ pub(crate) fn push_pine_regex_literal(
     mode: PineRegexMode,
     must_escape: bool,
 ) {
-    if mode.case_insensitive && !mode.unicode_classes {
+    if mode.case_insensitive && !mode.unicode_case {
         if ch.is_ascii_alphabetic() {
             write!(result, r"(?i-u:\x{{{:X}}})", ch as u32)
                 .expect("writing to a String cannot fail");

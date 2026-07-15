@@ -2021,17 +2021,22 @@ required, a third digit is consumed only when the first is `0..3`, verbose
 trivia between digits is ignored, and class, quote, and case modes are
 preserved. Java/Pine character classes may use `]` as their first literal atom,
 including after a leading `^`, verbose-mode ASCII whitespace or comments, and
-an empty `\\Q\\E` quote. Such leading closers are normalized without changing
+an empty `\Q\E` quote. Such leading closers are normalized without changing
 quoted closers, negation, or the active case mode. Outside character classes,
 global or scoped `(?i)` applies Pine's ASCII-only case folding to ordinary and
-`\Q...\E`-quoted literals plus `\uHHHH`/`\x` references; `(?U)` changes those
-literals to Unicode-aware folding, and `(?-i)`/`(?-U)` restore the enclosing or
-default mode. The same active mode applies to character-class literals and
-ranges before negation and intersections, including predefined/POSIX class
-expansions, `\Q...\E` atoms, and `\uHHHH`/`\x` references. General Unicode
-properties retain their Unicode case behavior, while Unicode block membership
-remains exact under either case mode. Because `str.match` performs one initial
-match search with no reusable Matcher state, Pine's `\G` previous-match anchor
+`\Q...\E`-quoted literals plus `\uHHHH`/`\x` references. Lowercase `(?u)`
+independently enables Unicode-aware folding when `i` is active without changing
+the default-ASCII predefined or POSIX class sets; those expansions retain their
+own folding boundary even inside a larger character class. `(?U)` enables
+Unicode character classes and implies `u`, `(?-u)` disables Unicode folding
+without disabling Unicode classes, and `(?-U)` disables both. The same active
+case mode applies to character-class literals and ranges before negation and
+intersections, including `\Q...\E` atoms and `\uHHHH`/`\x` references.
+`(?-i)` and scoped groups restore their enclosing or default modes. General
+Unicode properties retain their Unicode case behavior, while Unicode block
+membership remains exact under either case mode. Because `str.match`
+performs one initial match search with no reusable Matcher state, Pine's `\G`
+previous-match anchor
 is equivalent to the absolute source start for this API. It is independent of
 multiline mode, remains literal when quoted, and is invalid in a character
 class. By default, `$`

@@ -52,6 +52,50 @@ fn normalizes_pine_regex_literal_case_modes() {
 }
 
 #[test]
+fn normalizes_pine_regex_unicode_case_flag() {
+    let literal = Regex::new(&normalize_pine_regex(r"(?iu)\Akβ\z"))
+        .expect("normalized Unicode case-insensitive literal regex");
+    assert!(literal.is_match("KΒ"));
+
+    let scoped = Regex::new(&normalize_pine_regex(r"\A(?iu:å)(?i:å)\z"))
+        .expect("normalized scoped Unicode case mode");
+    assert!(scoped.is_match("Åå"));
+    assert!(!scoped.is_match("ÅÅ"));
+
+    let literal_class = Regex::new(&normalize_pine_regex(r"(?iu)\A[k]\z"))
+        .expect("normalized Unicode-folded literal class");
+    assert!(literal_class.is_match("K"));
+
+    let predefined = Regex::new(&normalize_pine_regex(r"(?iu)\A\w[\w]\z"))
+        .expect("normalized ASCII predefined classes under Unicode case mode");
+    assert!(predefined.is_match("KA"));
+    assert!(!predefined.is_match("KA"));
+    assert!(!predefined.is_match("KK"));
+    assert!(!predefined.is_match("éA"));
+
+    let posix = Regex::new(&normalize_pine_regex(r"(?iu)\A\p{Lower}\z"))
+        .expect("normalized ASCII POSIX class under Unicode case mode");
+    assert!(posix.is_match("A"));
+    assert!(!posix.is_match("K"));
+    assert!(!posix.is_match("Β"));
+
+    let classes_without_case = Regex::new(&normalize_pine_regex(r"(?iU-u)\A[k]\w\p{Lower}\z"))
+        .expect("normalized Unicode classes with ASCII case mode");
+    assert!(classes_without_case.is_match("KKΒ"));
+    assert!(!classes_without_case.is_match("KKΒ"));
+
+    let disabled_together = Regex::new(&normalize_pine_regex(r"(?iU)(?-U)\Aå\w\z"))
+        .expect("normalized Unicode class and case disablement");
+    assert!(disabled_together.is_match("åA"));
+    assert!(!disabled_together.is_match("ÅA"));
+    assert!(!disabled_together.is_match("åé"));
+
+    let references = Regex::new(&normalize_pine_regex(r"(?iu)\A\Qå\E\u00E5\x{E5}\0145\cβ\z"))
+        .expect("normalized Unicode-folded quoted and escaped literals");
+    assert!(references.is_match("ÅÅÅEϹ"));
+}
+
+#[test]
 fn normalizes_pine_regex_character_class_case_modes() {
     let ascii = Regex::new(&normalize_pine_regex(r"(?i)\A[kβ]\z"))
         .expect("normalized ASCII-insensitive character class");
@@ -760,6 +804,15 @@ match_leading_class_closer = str.match("x]a", "[]a]")
 match_leading_class_closer_negated = str.match("]a", "[^]]")
 match_leading_class_caret = str.match("^a", "[^^]")
 match_leading_class_case = str.match("A", "(?i)[]a]")
+match_unicode_case_literal = str.match("KΒ", "(?iu)kβ")
+match_unicode_case_scoped = str.match("ÅÅå", "(?iu:å)(?i:å)")
+match_unicode_case_word = str.match("KA", "(?iu)\\w")
+match_unicode_case_word_class = str.match("KA", "(?iu)[\\w]")
+match_unicode_case_literal_class = str.match("K", "(?iu)[k]")
+match_unicode_case_posix = str.match("KA", "(?iu)\\p{Lower}")
+match_unicode_classes_without_case = str.match("KKΒ", "(?iU-u)[k]\\w\\p{Lower}")
+match_unicode_modes_disabled = str.match("ÅéåA", "(?iU)(?-U)å\\w")
+match_unicode_case_references = str.match("ÅÅÅEϹ", "(?iu)\\Qå\\E\\u00E5\\x{E5}\\0145\\cβ")
 match_leading_class_verbose = str.match("]", "(?x)[ # note\n ]]")
 match_leading_class_empty_quote = str.match("]", "[\\Q\\E]]")
 match_leading_class_quoted = str.match("]", "[\\Q]\\E]")
@@ -919,6 +972,9 @@ plot(match_octal_two_digit_width == "?7" and match_octal_three_digit_width == "�
 plot(match_octal_ascii_case == "Q" and match_octal_ascii_non_ascii == "å" and match_octal_unicode_case == "Å" and match_octal_verbose == "q" and match_octal_quoted == "\\0141" ? 1 : 0)
 plot(match_previous_anchor_start == "abc" and match_previous_anchor_later == "" and match_previous_anchor_consumed == "" and match_previous_anchor_multiline == "" and match_previous_anchor_quoted == "\\G" ? 1 : 0)
 plot(match_leading_class_closer == "]" and match_leading_class_closer_negated == "a" and match_leading_class_caret == "a" and match_leading_class_case == "A" ? 1 : 0)
+plot(match_unicode_case_literal == "KΒ" and match_unicode_case_scoped == "Åå" and match_unicode_case_literal_class == "K" ? 1 : 0)
+plot(match_unicode_case_word == "A" and match_unicode_case_word_class == "A" and match_unicode_case_posix == "A" ? 1 : 0)
+plot(match_unicode_classes_without_case == "KKΒ" and match_unicode_modes_disabled == "åA" and match_unicode_case_references == "ÅÅÅEϹ" ? 1 : 0)
 plot(match_leading_class_verbose == "]" and match_leading_class_empty_quote == "]" and match_leading_class_quoted == "]" ? 1 : 0)
 plot(match_quoted_meta == "[a-z]+(?U)# " and match_quoted_escape == "\\d" and match_quoted_verbose == "# [ ]" and match_quoted_class == "]-" and match_quoted_unclosed == "[b]+" and match_quoted_then_ascii == "[a]123" ? 1 : 0)
 plot(match_final_newline_dollar == "tail" and match_final_newline_Z == "tail" and match_absolute_z_missing == "" and match_absolute_z == "tail" ? 1 : 0)
