@@ -1,5 +1,6 @@
 //@version=5
 strategy("Strategy state request")
+plot(request.security(syminfo.tickerid, timeframe.period, strategy.account_currency) == "USD" ? 1 : 0)
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.default_entry_qty(close)))
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.position_size))
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.position_avg_price))

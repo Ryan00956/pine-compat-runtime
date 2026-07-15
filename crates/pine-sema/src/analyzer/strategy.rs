@@ -3,6 +3,7 @@ use crate::prelude::*;
 mod declaration;
 
 const STRATEGY_STATE_VARIABLES: &[&str] = &[
+    "strategy.account_currency",
     "strategy.position_size",
     "strategy.position_avg_price",
     "strategy.position_entry_name",

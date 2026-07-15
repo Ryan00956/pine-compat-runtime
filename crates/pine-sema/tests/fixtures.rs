@@ -4895,6 +4895,22 @@ fn accepts_supported_strategy_position_state_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_account_currency_fixture() {
+    assert_strategy_state_supported_fixture(
+        "tests/fixtures/sema/supported_strategy_account_currency.pine",
+        &["strategy.account_currency"],
+    );
+}
+
+#[test]
+fn reports_strategy_account_currency_const_consumer_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_account_currency_const.pine",
+        &["`timestamp` argument `dateString` expects const string, got simple string"],
+    );
+}
+
+#[test]
 fn accepts_supported_strategy_profit_state_fixture() {
     assert_strategy_state_supported_fixture(
         "tests/fixtures/sema/supported_strategy_profit_state.pine",

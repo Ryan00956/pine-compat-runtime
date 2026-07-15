@@ -267,6 +267,9 @@ impl<'a> HistoricalRuntime<'a> {
                 .collect();
             return self.new_array_from_values(ArrayElementKind::Table, tables);
         }
+        if name == "strategy.account_currency" {
+            return eval_static_builtin_value("syminfo.currency");
+        }
         if name == "strategy.position_size" {
             return PineValue::Float(self.strategy_broker.position_size());
         }

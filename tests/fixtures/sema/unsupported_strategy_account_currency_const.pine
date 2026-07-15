@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported const account currency use")
+plot(timestamp(dateString=strategy.account_currency))

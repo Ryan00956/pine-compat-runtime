@@ -1,5 +1,6 @@
 //@version=5
 strategy("Unsupported strategy state mutation")
+strategy.account_currency := "EUR"
 strategy.position_size := 1
 strategy.position_entry_name := "L"
 strategy.initial_capital := 1

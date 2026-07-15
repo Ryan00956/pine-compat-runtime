@@ -7,6 +7,7 @@ use crate::namespaces::types::{
 };
 
 const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
+    ("strategy.account_currency", SIMPLE_STRING),
     (
         "strategy.position_size",
         PineType::new(Qualifier::Series, ValueKind::Float),
@@ -292,6 +293,14 @@ mod tests {
         assert_eq!(
             builtin_series_value_type("strategy.position_entry_name"),
             Some(PineType::new(Qualifier::Series, ValueKind::String))
+        );
+    }
+
+    #[test]
+    fn registers_strategy_account_currency_simple_string_value() {
+        assert_eq!(
+            builtin_series_value_type("strategy.account_currency"),
+            Some(SIMPLE_STRING)
         );
     }
 

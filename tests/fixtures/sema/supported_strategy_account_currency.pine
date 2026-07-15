@@ -1,0 +1,6 @@
+//@version=5
+strategy("Supported strategy account currency")
+currency_prefix = syminfo.prefix(strategy.account_currency)
+plot(str.length(currency_prefix))
+plot(strategy.account_currency == "USD" ? 1 : 0)
+plot(strategy.account_currency[1] == "USD" ? 1 : 0)

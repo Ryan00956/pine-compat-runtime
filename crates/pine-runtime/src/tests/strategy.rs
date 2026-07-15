@@ -8374,6 +8374,41 @@ strategy.close("L")
 }
 
 #[test]
+fn strategy_account_currency_inherits_default_symbol_currency() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("account currency")
+identity(value) => value
+plot(strategy.account_currency == "USD" ? 1 : 0)
+plot(identity(strategy.account_currency) == "USD" ? 1 : 0)
+plot(na(strategy.account_currency[1]) ? na : strategy.account_currency[1] == "USD" ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Int(1), PineValue::Int(1), PineValue::Int(1)]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Int(1), PineValue::Int(1), PineValue::Int(1)]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![PineValue::Na, PineValue::Int(1), PineValue::Int(1)]
+    );
+}
+
+#[test]
 fn strategy_position_state_variables_follow_broker_mutations() {
     let source = SourceFile::new(
         "strategy.pine",

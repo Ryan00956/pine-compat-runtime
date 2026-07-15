@@ -695,6 +695,7 @@ strategy.cancel_all() -> void
 strategy.exit(id: simple string, from_entry?: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, comment_profit?: string-compatible, comment_loss?: string-compatible, comment_trailing?: string-compatible, alert_message?: string-compatible, alert_profit?: string-compatible, alert_loss?: string-compatible, alert_trailing?: string-compatible, disable_alert?: bool-compatible)
   -> void
 strategy.default_entry_qty(fill_price: series/simple numeric) -> series float
+strategy.account_currency -> simple string
 strategy.position_entry_name -> series string
 strategy.openprofit_percent -> series float
 strategy.netprofit_percent -> series float
@@ -918,6 +919,12 @@ multi-entry `strategy.exit` semantics remain outside the current claim.
 returns the positive configured `strategy(..., initial_capital=...)` value, or
 the existing default starting capital when omitted, on every bar. It follows
 ordinary series history and does not add a public runtime schema field.
+`strategy.account_currency` is a read-only strategy-mode simple string. In the
+current default-only `currency.NONE` declaration subset, it inherits the fixed
+`syminfo.currency` value, currently `"USD"`. Direct, UDF, and history reads are
+supported without adding a public runtime schema field. Explicit
+`strategy(..., currency=...)`, settings overrides, and currency conversion
+remain outside the current subset.
 `strategy.position_entry_name` is a read-only strategy-mode series string. It
 is `na` while flat and otherwise returns the entry order ID that initially
 opened the current continuous net long position. Pyramiding additions and
@@ -1241,7 +1248,9 @@ Supported direct currency constants include the official `currency.*`
 currency-code set from `currency.AUD` through `currency.ZAR`, including
 `currency.NONE`, `currency.BTC`, `currency.ETH`, `currency.USD`, and
 `currency.USDT`, as string values such as `"USD"`. Request currency conversion
-and strategy account currency are not implemented.
+and explicit strategy account-currency configuration or conversion are not
+implemented; the default `strategy.account_currency` read is supported as
+described above.
 Supported direct strategy constants include `strategy.long`, `strategy.short`,
 `strategy.fixed`, `strategy.cash`, `strategy.percent_of_equity`,
 `strategy.oca.cancel`, `strategy.oca.none`, `strategy.oca.reduce`,

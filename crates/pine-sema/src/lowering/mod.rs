@@ -1108,8 +1108,16 @@ impl Analyzer {
                         param_types,
                     )?)),
                 };
+                let mut lowered_expr =
+                    self.lower_expr_with_params(expr, param_exprs, param_types)?;
+                if lowered_expr.series_id.is_none() {
+                    lowered_expr.series_id = self.lower_expr_series_id(
+                        expr,
+                        PineType::new(Qualifier::Series, lowered_expr.pine_type.kind),
+                    );
+                }
                 HirExprKind::History {
-                    expr: Box::new(self.lower_expr_with_params(expr, param_exprs, param_types)?),
+                    expr: Box::new(lowered_expr),
                     offset,
                 }
             }

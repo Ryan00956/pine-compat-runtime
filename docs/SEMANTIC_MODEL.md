@@ -168,6 +168,13 @@ returns the configured or default broker starting capital on every bar. It is
 available through ordinary series expressions, UDF arguments, and history
 references, while indicator use, requested-context use, and mutation remain
 rejected.
+`strategy.account_currency` is a read-only strategy-mode `simple string`. In
+the current default-only `currency.NONE` subset it inherits the fixed
+`syminfo.currency` value, currently `"USD"`. Simple-string consumers plus
+direct, UDF, and history reads are supported; const-string consumers,
+indicator use, requested-context use, and mutation remain rejected. Explicit
+currency declarations, settings overrides, and conversion remain unsupported,
+and no public result field is added.
 `strategy.position_entry_name` is a read-only strategy-mode `series string`
 that is `na` while flat and otherwise returns the entry order ID that initially
 opened the current continuous net long position. A pyramiding addition or a
