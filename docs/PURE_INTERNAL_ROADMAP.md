@@ -1324,8 +1324,10 @@ Current baseline:
   outside character classes, the 13
   Java/Pine POSIX `\p`/`\P` classes with
   ASCII-default and global/scoped `(?U)` Unicode compatibility mappings,
-  nine basic Java/Pine `javaLowerCase` through `javaLetterOrDigit` character
-  method properties with exact case-sensitive names, `\p`/`\P` complements,
+  all 18 Java/Pine `javaLowerCase` through `javaMirrored` character method
+  properties, including distinct Java/Unicode identifier sets, exact
+  ignorable/space/whitespace/ISO-control boundaries, and bidi-mirrored
+  membership, with exact case-sensitive names, `\p`/`\P` complements,
   `U`-independent membership, class nesting, quoted preservation, and
   case-insensitive Unicode closure,
   Unicode 16.0 `\p{InBlockName}`/`\p{Block=BlockName}` properties and `\P`

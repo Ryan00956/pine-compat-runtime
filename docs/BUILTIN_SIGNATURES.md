@@ -2004,7 +2004,20 @@ classes and quoted preservation. They map to the corresponding Unicode
 lowercase, uppercase, alphabetic, ideographic, titlecase, decimal-digit,
 defined, letter, and letter-or-decimal-digit sets. Their membership is
 independent of `(?U)`, while active `(?i)` applies Unicode case closure as in
-Java. Other Unicode property references retain their ordinary Unicode behavior.
+Java. The remaining character method properties are
+`javaJavaIdentifierStart`, `javaJavaIdentifierPart`,
+`javaUnicodeIdentifierStart`, `javaUnicodeIdentifierPart`,
+`javaIdentifierIgnorable`, `javaSpaceChar`, `javaWhitespace`,
+`javaISOControl`, and `javaMirrored`. The Java identifier sets include their
+letter-number, currency, connector, digit, mark, and ignorable rules, while
+the Unicode sets use `ID_Start`/`ID_Continue` plus Java's ignorable controls
+and format characters. `javaSpaceChar` covers the separator categories;
+`javaWhitespace` additionally covers TAB through CR and U+001C–U+001F but
+excludes NEL, no-break space, figure space, and narrow no-break space.
+`javaISOControl` covers U+0000–U+001F and U+007F–U+009F, and
+`javaMirrored` follows the Unicode bidi-mirrored property. They share the same
+exact-name, complement, class, quote, case, and `U`-independent behavior.
+Other Unicode property references retain their ordinary Unicode behavior.
 Pine/Java Unicode block properties are supported in `\p{InBlockName}` and
 `\p{Block=BlockName}` form, together with their `\P` complements, canonical
 no-space names, and Java public-field aliases. They use the Unicode 16.0 block

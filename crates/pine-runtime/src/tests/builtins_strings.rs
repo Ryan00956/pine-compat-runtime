@@ -654,6 +654,87 @@ fn normalizes_pine_regex_basic_java_properties() {
 }
 
 #[test]
+fn normalizes_pine_regex_identifier_and_character_java_properties() {
+    let properties = Regex::new(&normalize_pine_regex(
+        r"\A\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}\p{javaUnicodeIdentifierStart}\p{javaUnicodeIdentifierPart}\p{javaIdentifierIgnorable}\p{javaSpaceChar}\p{javaWhitespace}\p{javaISOControl}\p{javaMirrored}\z",
+    ))
+    .expect("normalized Java identifier and character properties");
+    assert!(properties.is_match("$\u{200B}℘·\u{85}\u{A0}\u{1C}\u{9F}("));
+
+    let java_start = Regex::new(&normalize_pine_regex(r"\A\p{javaJavaIdentifierStart}+\z"))
+        .expect("normalized Java identifier-start property");
+    assert!(java_start.is_match("$_AⅠ"));
+    assert!(!java_start.is_match("℘"));
+
+    let java_part = Regex::new(&normalize_pine_regex(r"\A\p{javaJavaIdentifierPart}+\z"))
+        .expect("normalized Java identifier-part property");
+    assert!(java_part.is_match("$_AⅠ１\u{301}\u{200B}\0\u{85}"));
+    assert!(!java_part.is_match("·"));
+
+    let unicode_start = Regex::new(&normalize_pine_regex(
+        r"\A\p{javaUnicodeIdentifierStart}+\z",
+    ))
+    .expect("normalized Unicode identifier-start property");
+    assert!(unicode_start.is_match("AⅠ℘"));
+    assert!(!unicode_start.is_match("$_"));
+
+    let unicode_part = Regex::new(&normalize_pine_regex(r"\A\p{javaUnicodeIdentifierPart}+\z"))
+        .expect("normalized Unicode identifier-part property");
+    assert!(unicode_part.is_match("_AⅠ℘１\u{301}·\u{200B}\0\u{85}"));
+    assert!(!unicode_part.is_match("$"));
+
+    let ignorable = Regex::new(&normalize_pine_regex(r"\A\p{javaIdentifierIgnorable}+\z"))
+        .expect("normalized Java identifier-ignorable property");
+    assert!(ignorable.is_match("\0\u{8}\u{E}\u{1B}\u{7F}\u{85}\u{9F}\u{200B}"));
+    assert!(!ignorable.is_match("\t\u{1C}"));
+
+    let space = Regex::new(&normalize_pine_regex(r"\A\p{javaSpaceChar}+\z"))
+        .expect("normalized Java space-character property");
+    assert!(space.is_match(" \u{A0}\u{2007}\u{202F}\u{2028}\u{2029}"));
+    assert!(!space.is_match("\u{85}\u{1C}"));
+
+    let whitespace = Regex::new(&normalize_pine_regex(r"\A\p{javaWhitespace}+\z"))
+        .expect("normalized Java whitespace property");
+    assert!(whitespace.is_match("\t\n\u{B}\u{C}\r\u{1C}\u{1F} \u{2028}\u{2029}"));
+    assert!(!whitespace.is_match("\u{85}\u{A0}\u{2007}\u{202F}"));
+
+    let iso_control = Regex::new(&normalize_pine_regex(r"\A\p{javaISOControl}+\z"))
+        .expect("normalized Java ISO-control property");
+    assert!(iso_control.is_match("\0\u{1F}\u{7F}\u{9F}"));
+    assert!(!iso_control.is_match(" \u{7E}\u{A0}"));
+
+    let mirrored = Regex::new(&normalize_pine_regex(r"\A\p{javaMirrored}+\z"))
+        .expect("normalized Java mirrored property");
+    assert!(mirrored.is_match("()<>"));
+    assert!(!mirrored.is_match("A"));
+
+    let complements = Regex::new(&normalize_pine_regex(
+        r"\A\P{javaWhitespace}\P{javaSpaceChar}\P{javaMirrored}\z",
+    ))
+    .expect("normalized remaining Java property complements");
+    assert!(complements.is_match("\u{A0}\u{85}A"));
+
+    let nested = Regex::new(&normalize_pine_regex(
+        r"\A[\p{javaWhitespace}\p{javaJavaIdentifierStart}]+\z",
+    ))
+    .expect("normalized remaining Java properties inside a character class");
+    assert!(nested.is_match("\u{1C}$Ⅰ"));
+    assert!(!nested.is_match("·"));
+
+    let modes = Regex::new(&normalize_pine_regex(
+        r"\A(?U:\p{javaUnicodeIdentifierStart})(?-U:\p{javaUnicodeIdentifierStart})\z",
+    ))
+    .expect("normalized U-independent remaining Java property");
+    assert!(modes.is_match("℘℘"));
+
+    let quoted = Regex::new(&normalize_pine_regex(r"\A\Q\p{javaWhitespace}\E\z"))
+        .expect("normalized quoted remaining Java property spelling");
+    assert!(quoted.is_match(r"\p{javaWhitespace}"));
+
+    assert!(Regex::new(&normalize_pine_regex(r"\p{javawhitespace}")).is_err());
+}
+
+#[test]
 fn normalizes_pine_regex_unicode_blocks() {
     assert_eq!(
         normalize_pine_regex(r"\p{InBasicLatin}\P{Block=Latin-1Supplement}"),
@@ -977,6 +1058,19 @@ match_java_class = str.match("A１", "[\\p{javaLowerCase}\\p{javaDigit}]")
 match_java_case = str.match("Β", "(?i)\\p{javaLowerCase}")
 match_java_scopes = str.match("１１", "(?U:\\p{javaDigit})(?-U:\\p{javaDigit})")
 match_java_quoted = str.match("\\p{javaLowerCase}", "\\Q\\p{javaLowerCase}\\E")
+match_java_java_identifier_start = str.match("!$Ⅰ", "\\p{javaJavaIdentifierStart}+")
+match_java_java_identifier_part = str.match("·$", "\\p{javaJavaIdentifierPart}")
+match_java_unicode_identifier_start = str.match("$℘", "\\p{javaUnicodeIdentifierStart}")
+match_java_unicode_identifier_part = str.match("$·", "\\p{javaUnicodeIdentifierPart}")
+match_java_identifier_ignorable = str.match("A", "\\p{javaIdentifierIgnorable}")
+match_java_space_char = str.match("A ", "\\p{javaSpaceChar}")
+match_java_whitespace = str.match("  ", "\\p{javaWhitespace}")
+match_java_iso_control = str.match("A\t", "\\p{javaISOControl}")
+match_java_mirrored = str.match("A(", "\\p{javaMirrored}")
+match_java_remaining_complement = str.match(" A", "\\P{javaWhitespace}")
+match_java_remaining_class = str.match("!·", "[\\p{javaUnicodeIdentifierPart}]")
+match_java_remaining_modes = str.match("℘℘", "(?U:\\p{javaUnicodeIdentifierStart})(?-U:\\p{javaUnicodeIdentifierStart})")
+match_java_remaining_quoted = str.match("\\p{javaWhitespace}", "\\Q\\p{javaWhitespace}\\E")
 match_block_in_basic_latin = str.match("βA", "\\p{InBasicLatin}")
 match_block_named_basic_latin = str.match("βA", "\\p{block=basic_latin}")
 match_block_latin1 = str.match("Aå", "\\p{Block=Latin-1Supplement}")
@@ -1116,6 +1210,9 @@ plot(match_posix_xdigit_ascii == "F" and match_posix_xdigit_unicode == "𝟙" an
 plot(match_java_lower == "ª" and match_java_upper == "K" and match_java_alphabetic == "ͅ" and match_java_ideographic == "中" and match_java_title == "ǅ" ? 1 : 0)
 plot(match_java_digit == "１" and match_java_defined == "A" and match_java_letter == "β" and match_java_letter_or_digit == "１" and match_java_complement == "A" ? 1 : 0)
 plot(match_java_class == "１" and match_java_case == "Β" and match_java_scopes == "１１" and match_java_quoted == "\\p{javaLowerCase}" ? 1 : 0)
+plot(match_java_java_identifier_start == "$Ⅰ" and match_java_java_identifier_part == "$" and match_java_unicode_identifier_start == "℘" and match_java_unicode_identifier_part == "·" ? 1 : 0)
+plot(match_java_identifier_ignorable == "" and str.length(match_java_space_char) == 1 and match_java_whitespace == " " and match_java_iso_control == "\t" and match_java_mirrored == "(" ? 1 : 0)
+plot(str.length(match_java_remaining_complement) == 1 and match_java_remaining_class == "·" and match_java_remaining_modes == "℘℘" and match_java_remaining_quoted == "\\p{javaWhitespace}" ? 1 : 0)
 plot(match_block_in_basic_latin == "A" and match_block_named_basic_latin == "A" and match_block_latin1 == "å" and match_block_negated == "å" and match_block_class == "A" ? 1 : 0)
 plot(match_block_unicode_scopes == "Aβ" and match_block_quoted == "\\p{InBasicLatin}" and match_script_property_unchanged == "β" and match_category_assignment_unchanged == "β" ? 1 : 0)
 plot(match_case_ascii_literal == "K" and match_case_unicode_literal == "K" and match_case_ascii_non_ascii == "β" and match_case_unicode_non_ascii == "Β" ? 1 : 0)

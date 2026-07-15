@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Completed `str.match()` support for Java/Pine character method properties
+  with the remaining nine identifier, whitespace, control, and mirrored
+  classes. Java and Unicode identifier start/part retain their distinct
+  currency, connector, `Other_ID_*`, and ignorable boundaries;
+  `javaWhitespace` exactly excludes NEL and the three non-breaking spaces
+  while including the U+001C–U+001F separators. Complements, nesting, quoting,
+  exact names, and `(?U)` independence are preserved.
 - Added `str.match()` support for nine basic Java/Pine character method
   properties: `javaLowerCase`, `javaUpperCase`, `javaAlphabetic`,
   `javaIdeographic`, `javaTitleCase`, `javaDigit`, `javaDefined`,
