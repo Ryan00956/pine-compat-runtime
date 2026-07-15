@@ -488,6 +488,64 @@ plot(with_na)
 }
 
 #[test]
+fn runs_rank_correlation_index_over_historical_bars() {
+    let source = SourceFile::new(
+        "test.pine",
+        include_str!("../../../../tests/fixtures/runtime/rci.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        bar(1.0),
+        bar(2.0),
+        bar(3.0),
+        bar(2.0),
+        bar(1.0),
+        bar(2.0),
+        bar(3.0),
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_values_close(
+        &result.plots[0].values[2..],
+        &[100.0, 12.5, -100.0, 12.5, 100.0],
+    );
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[1], PineValue::Na);
+    assert_values_close(
+        &result.plots[1].values[2..],
+        &[-100.0, 12.5, 100.0, 12.5, -100.0],
+    );
+    assert_eq!(result.plots[2].values[0], PineValue::Na);
+    assert_eq!(result.plots[2].values[1], PineValue::Na);
+    assert_values_close(
+        &result.plots[2].values[2..],
+        &[50.0, 50.0, 50.0, 50.0, 50.0],
+    );
+    assert_eq!(result.plots[3].values[0], PineValue::Na);
+    assert_eq!(result.plots[3].values[1], PineValue::Na);
+    assert_values_close(&result.plots[3].values[2..3], &[100.0]);
+    assert_eq!(result.plots[3].values[3], PineValue::Na);
+    assert_eq!(result.plots[3].values[4], PineValue::Na);
+    assert_eq!(result.plots[3].values[5], PineValue::Na);
+    assert_values_close(&result.plots[3].values[6..], &[100.0]);
+    assert!(
+        result.plots[4]
+            .values
+            .iter()
+            .all(|value| *value == PineValue::Na)
+    );
+    assert_eq!(result.plots[5].values, result.plots[0].values);
+}
+
+#[test]
 fn runs_covariance_over_historical_bars() {
     let source = SourceFile::new(
         "test.pine",

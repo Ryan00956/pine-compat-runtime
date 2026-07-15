@@ -17,6 +17,19 @@ pub(super) const TA_SOURCE_LENGTH_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+pub(super) const TA_SOURCE_OR_SIMPLE_LENGTH_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "length",
+        accepts: Accepts::SimpleIntCompatible,
+        optional: false,
+    },
+];
+
 pub(super) const TA_SOURCE_DYNAMIC_LENGTH_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",

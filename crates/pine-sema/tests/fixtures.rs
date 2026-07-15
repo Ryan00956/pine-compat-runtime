@@ -1626,6 +1626,31 @@ fn reports_unsupported_ta_rsi_series_length_fixture() {
 }
 
 #[test]
+fn accepts_supported_ta_rci_return_qualifier_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_ta_rci_return_qualifier.pine");
+}
+
+#[test]
+fn reports_unsupported_ta_rci_args_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_rci_args.pine",
+        &[
+            "`ta.rci` argument `source` expects series/simple numeric, got const string",
+            "`ta.rci` argument `length` expects simple integer-compatible, got const float",
+            "`ta.rci` argument `length` expects simple integer-compatible, got series int",
+        ],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_rci_return_qualifier_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_rci_return_qualifier.pine",
+        &["`hline` argument `price` expects const/input numeric, got series float"],
+    );
+}
+
+#[test]
 fn accepts_supported_ta_ema_family_na_lengths_fixture() {
     assert_valid_fixture("tests/fixtures/sema/supported_ta_ema_family_na_lengths.pine");
 }

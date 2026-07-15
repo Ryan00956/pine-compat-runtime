@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported ta.rci arguments")
+
+plot(ta.rci("price", 3))
+plot(ta.rci(close, 3.5))
+plot(ta.rci(close, bar_index))

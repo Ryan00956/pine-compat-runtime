@@ -379,6 +379,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "ta.pivothigh",
     "ta.pivotlow",
     "ta.range",
+    "ta.rci",
     "ta.rising",
     "ta.rma",
     "ta.roc",

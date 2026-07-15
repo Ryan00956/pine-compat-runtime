@@ -49,6 +49,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "ta.rci",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SOURCE_OR_SIMPLE_LENGTH_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "ta.macd",
         phase: BuiltinPhase::Phase1Core,
         params: TA_MACD_PARAMS,

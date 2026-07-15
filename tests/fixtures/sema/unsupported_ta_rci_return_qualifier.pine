@@ -1,0 +1,4 @@
+//@version=6
+indicator("Unsupported ta.rci return qualifier")
+
+hline(ta.rci(close, 3))

@@ -1,6 +1,60 @@
 use super::*;
 
 impl<'a> HistoricalRuntime<'a> {
+    pub(crate) fn eval_rci(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let (source, length) = self.eval_source_length(args)?;
+        if length < 2 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let window = self.update_rolling_window(call_site_id, source, length);
+        if !window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        let mut ranked: Vec<_> = window
+            .values
+            .iter()
+            .flatten()
+            .copied()
+            .enumerate()
+            .collect();
+        ranked.sort_by(|left, right| left.1.total_cmp(&right.1));
+
+        let mut price_ranks = vec![0.0; length];
+        let mut start = 0;
+        while start < length {
+            let mut end = start + 1;
+            while end < length && ranked[end].1 == ranked[start].1 {
+                end += 1;
+            }
+
+            let average_rank = (start + 1 + end) as f64 / 2.0;
+            for &(original_index, _) in &ranked[start..end] {
+                price_ranks[original_index] = average_rank;
+            }
+            start = end;
+        }
+
+        let squared_rank_difference = price_ranks
+            .iter()
+            .enumerate()
+            .map(|(index, price_rank)| {
+                let difference = *price_rank - (index + 1) as f64;
+                difference * difference
+            })
+            .sum::<f64>();
+        let length = length as f64;
+        let rci =
+            (1.0 - 6.0 * squared_rank_difference / (length * (length * length - 1.0))) * 100.0;
+        Ok(finite_float_or_na(rci))
+    }
+
     pub(crate) fn eval_stdev(
         &mut self,
         call_site_id: CallSiteId,

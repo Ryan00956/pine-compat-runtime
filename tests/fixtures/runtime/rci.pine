@@ -1,0 +1,9 @@
+//@version=6
+indicator("RCI")
+
+plot(ta.rci(close, 3))
+plot(ta.rci(-close, 3))
+plot(ta.rci(3, 3))
+plot(ta.rci(bar_index == 3 ? na : close, 3))
+plot(ta.rci(close, 1))
+plot(ta.rci(length=3, source=close))

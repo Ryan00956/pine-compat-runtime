@@ -385,6 +385,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.tema" => self.eval_tema(call_site_id, args),
             "ta.rma" => self.eval_rma(call_site_id, args),
             "ta.rsi" => self.eval_rsi(call_site_id, args),
+            "ta.rci" => self.eval_rci(call_site_id, args),
             "ta.macd" => self.eval_macd(call_site_id, args),
             "ta.tsi" => self.eval_tsi(call_site_id, args),
             "ta.cmo" => self.eval_cmo(call_site_id, args),

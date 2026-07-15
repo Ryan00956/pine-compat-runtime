@@ -1482,6 +1482,7 @@ ta.dema(source: series int/float, length: simple integer-compatible) -> series f
 ta.tema(source: series int/float, length: simple integer-compatible) -> series float
 ta.rma(source: series int/float, length: simple integer-compatible) -> series float
 ta.rsi(source: series int/float, length: simple integer-compatible) -> series float
+ta.rci(source: series/simple numeric, length: simple integer-compatible) -> series float
 ta.macd(source: series int/float, fastlen: simple integer-compatible, slowlen: simple integer-compatible, siglen: simple integer-compatible)
   -> tuple(series float, series float, series float)
 ta.tsi(source: series int/float, short_length: simple integer-compatible, long_length: simple integer-compatible) -> series float
@@ -1606,6 +1607,14 @@ Rules:
 - `ta.rsi` supports named/reordered `source`/`length` arguments and uses the
   same callsite RMA-smoothed gain/loss state. Explicit `na` length returns
   `na` without advancing state.
+- `ta.rci` computes the Rank Correlation Index over a ready rolling source
+  window. It assigns ascending one-based price ranks, averages ranks for equal
+  values, and returns
+  `(1 - 6 * sum((price_rank - time_rank)^2) / (length * (length^2 - 1))) * 100`.
+  Named/reordered `source`/`length` arguments bind to the same callsite window.
+  The source accepts series or simple numeric values, while length remains
+  simple integer-compatible; lengths below two and incomplete or non-finite
+  windows return `na`.
 - `ta.macd` supports named/reordered `source`/`fastlen`/`slowlen`/`siglen`
   arguments and uses the same callsite EMA-chain state. Explicit `na` lengths
   return an all-`na` tuple.
