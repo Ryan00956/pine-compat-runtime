@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added apostrophe-delimited single-line string literals with the same const
+  string typing, UTF-8 preservation, escape handling, and unterminated-literal
+  recovery as existing quotation-mark-delimited strings.
 - Added the default same-currency subsets of
   `strategy.convert_to_account(value)` and `strategy.convert_to_symbol(value)`.
   Under omitted or explicit `currency.NONE`, both are strategy-mode

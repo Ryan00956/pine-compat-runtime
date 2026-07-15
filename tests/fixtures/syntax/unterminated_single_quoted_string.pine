@@ -1,0 +1,4 @@
+//@version=6
+indicator("Unterminated single quoted string")
+broken = 'unterminated
+plot(1)

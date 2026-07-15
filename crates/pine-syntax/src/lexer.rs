@@ -113,7 +113,7 @@ impl<'a> Lexer<'a> {
                 }
                 b'0'..=b'9' => self.number(),
                 b'a'..=b'z' | b'A'..=b'Z' | b'_' => self.identifier_or_keyword(),
-                b'"' => self.string(),
+                b'"' | b'\'' => self.string(byte),
                 b'#' => self.color_hex(),
                 b'/' if self.peek_next() == Some(b'/') => self.comment_or_version(),
                 b'+' => self.single(TokenKind::Plus),
@@ -306,22 +306,23 @@ impl<'a> Lexer<'a> {
         self.line_start = false;
     }
 
-    fn string(&mut self) {
+    fn string(&mut self, delimiter: u8) {
         let start = self.pos;
         self.pos += 1;
         let mut value = String::new();
 
         while let Some(byte) = self.peek_byte() {
+            if byte == delimiter {
+                self.pos += 1;
+                self.tokens.push(Token {
+                    kind: TokenKind::String(value),
+                    span: Span::new(start, self.pos),
+                });
+                self.line_start = false;
+                return;
+            }
+
             match byte {
-                b'"' => {
-                    self.pos += 1;
-                    self.tokens.push(Token {
-                        kind: TokenKind::String(value),
-                        span: Span::new(start, self.pos),
-                    });
-                    self.line_start = false;
-                    return;
-                }
                 b'\\' => {
                     self.pos += 1;
                     match self.peek_byte() {
@@ -337,9 +338,9 @@ impl<'a> Lexer<'a> {
                             self.pos += 1;
                             value.push('\r');
                         }
-                        Some(b'"') => {
+                        Some(escaped) if escaped == delimiter => {
                             self.pos += 1;
-                            value.push('"');
+                            value.push(char::from(delimiter));
                         }
                         Some(b'\\') => {
                             self.pos += 1;
@@ -572,6 +573,40 @@ mod tests {
                 TokenKind::Newline,
                 TokenKind::Eof,
             ]
+        );
+    }
+
+    #[test]
+    fn lexes_single_quoted_strings_and_matching_delimiter_escapes() {
+        assert_eq!(
+            kinds("double = \"a'b\\\"c\"\nsingle = 'a\"b\\'c'\n"),
+            vec![
+                TokenKind::Identifier("double".to_owned()),
+                TokenKind::Eq,
+                TokenKind::String("a'b\"c".to_owned()),
+                TokenKind::Newline,
+                TokenKind::Identifier("single".to_owned()),
+                TokenKind::Eq,
+                TokenKind::String("a\"b'c".to_owned()),
+                TokenKind::Newline,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn reports_unterminated_single_quoted_string() {
+        let source = SourceFile::new("test.pine", "value = 'unterminated\nnext = 1\n");
+        let lexed = lex(&source);
+
+        assert!(lexed.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_LEX_STRING" && diagnostic.message == "unterminated string literal"
+        }));
+        assert!(
+            lexed
+                .tokens
+                .iter()
+                .any(|token| { token.kind == TokenKind::Identifier("next".to_owned()) })
         );
     }
 
