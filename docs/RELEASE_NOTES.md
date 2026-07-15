@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added `str.match()` support for nine basic Java/Pine character method
+  properties: `javaLowerCase`, `javaUpperCase`, `javaAlphabetic`,
+  `javaIdeographic`, `javaTitleCase`, `javaDigit`, `javaDefined`,
+  `javaLetter`, and `javaLetterOrDigit`. Their exact case-sensitive names work
+  with `\p`/`\P`, nested character classes, quoted preservation, and
+  `(?i)` Unicode case closure, while membership remains independent of `(?U)`.
 - Corrected `str.match()` verbose `x` mode to use Java/Pine's ASCII-only
   whitespace rules while preserving non-ASCII Unicode whitespace as literal
   text, including escaped atoms and character classes. Comments now end at LF,

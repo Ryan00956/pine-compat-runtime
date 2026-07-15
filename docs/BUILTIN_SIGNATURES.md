@@ -1995,9 +1995,17 @@ Java regex behavior. It also supports the Java/Pine POSIX property names `Lower`
 `Cntrl`, `XDigit`, and `Space` for `\p{...}` and `\P{...}`. These classes use
 their ASCII definitions by default and their Unicode compatibility definitions
 under global or scoped `(?U)`; `(?-U)` restores ASCII behavior. POSIX names are
-case-sensitive by default and case-insensitive under `(?U)`. Other Unicode
-property references retain their ordinary Unicode behavior. Pine/Java Unicode
-block properties are supported in `\p{InBlockName}` and
+case-sensitive by default and case-insensitive under `(?U)`. The Java/Pine
+character method properties `javaLowerCase`, `javaUpperCase`,
+`javaAlphabetic`, `javaIdeographic`, `javaTitleCase`, `javaDigit`,
+`javaDefined`, `javaLetter`, and `javaLetterOrDigit` are also supported with
+exact case-sensitive names for `\p` and `\P`, including nested character
+classes and quoted preservation. They map to the corresponding Unicode
+lowercase, uppercase, alphabetic, ideographic, titlecase, decimal-digit,
+defined, letter, and letter-or-decimal-digit sets. Their membership is
+independent of `(?U)`, while active `(?i)` applies Unicode case closure as in
+Java. Other Unicode property references retain their ordinary Unicode behavior.
+Pine/Java Unicode block properties are supported in `\p{InBlockName}` and
 `\p{Block=BlockName}` form, together with their `\P` complements, canonical
 no-space names, and Java public-field aliases. They use the Unicode 16.0 block
 ranges and are independent of `(?U)`; script and general-category properties

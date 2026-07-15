@@ -12,6 +12,7 @@ use super::{
         is_pine_regex_line_separator, parse_pine_regex_code_point_escape,
         parse_pine_regex_control_escape, parse_pine_regex_octal_escape,
     },
+    regex_java_properties::pine_java_property,
     regex_modes::{
         PineRegexMode, apply_pine_regex_flags, parse_pine_regex_flags, push_pine_regex_literal,
         push_pine_regex_quoted, push_rust_regex_flags,
@@ -379,6 +380,21 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                     if let Some(name_len) = pattern[name_start..].find('}') {
                         let name_end = name_start + name_len;
                         let property = &pattern[name_start..name_end];
+                        if let Some(replacement) = pine_java_property(property, escaped == 'P') {
+                            push_case_insensitive_class_replacement(
+                                &mut result,
+                                replacement,
+                                mode.case_insensitive,
+                                PineRegexClassReplacementCase::Fold {
+                                    replacement_unicode: true,
+                                    outer_unicode: mode.unicode_case,
+                                },
+                                class_depth,
+                                &mut case_protected_spans,
+                            );
+                            index = name_end + 1;
+                            continue;
+                        }
                         if let Some(replacement) =
                             pine_posix_class(property, mode.unicode_classes, escaped == 'P')
                         {

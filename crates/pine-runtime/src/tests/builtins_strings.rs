@@ -608,6 +608,52 @@ fn normalizes_pine_regex_posix_classes() {
 }
 
 #[test]
+fn normalizes_pine_regex_basic_java_properties() {
+    let properties = Regex::new(&normalize_pine_regex(
+        r"\A\p{javaLowerCase}\p{javaUpperCase}\p{javaAlphabetic}\p{javaIdeographic}\p{javaTitleCase}\p{javaDigit}\p{javaDefined}\p{javaLetter}\p{javaLetterOrDigit}\z",
+    ))
+    .expect("normalized basic Java character properties");
+    assert!(properties.is_match("ªK\u{0345}中ǅ１Aβ１"));
+
+    let complements = Regex::new(&normalize_pine_regex(
+        r"\A\P{javaLowerCase}\P{javaDefined}\z",
+    ))
+    .expect("normalized Java character-property complements");
+    assert!(complements.is_match("A\u{0378}"));
+    assert!(!complements.is_match("a\u{0378}"));
+
+    let nested = Regex::new(&normalize_pine_regex(
+        r"\A[\p{javaLowerCase}\p{javaDigit}][\P{javaLetterOrDigit}]\z",
+    ))
+    .expect("normalized Java properties inside character classes");
+    assert!(nested.is_match("ª_"));
+    assert!(nested.is_match("１_"));
+    assert!(!nested.is_match("A_"));
+
+    for pattern in [
+        r"(?i)\A\p{javaLowerCase}\z",
+        r"(?iu)\A\p{javaLowerCase}\z",
+        r"(?iU-u)\A\p{javaLowerCase}\z",
+    ] {
+        let insensitive = Regex::new(&normalize_pine_regex(pattern))
+            .unwrap_or_else(|error| panic!("normalized case-insensitive {pattern}: {error}"));
+        assert!(insensitive.is_match("Β"), "{pattern}");
+    }
+
+    let modes = Regex::new(&normalize_pine_regex(
+        r"\A(?U:\p{javaDigit})(?-U:\p{javaDigit})\z",
+    ))
+    .expect("normalized U-independent Java property");
+    assert!(modes.is_match("１１"));
+
+    let quoted = Regex::new(&normalize_pine_regex(r"\A\Q\p{javaLowerCase}\E\z"))
+        .expect("normalized quoted Java property spelling");
+    assert!(quoted.is_match(r"\p{javaLowerCase}"));
+
+    assert!(Regex::new(&normalize_pine_regex(r"\p{javalowercase}")).is_err());
+}
+
+#[test]
 fn normalizes_pine_regex_unicode_blocks() {
     assert_eq!(
         normalize_pine_regex(r"\p{InBasicLatin}\P{Block=Latin-1Supplement}"),
@@ -917,6 +963,20 @@ match_posix_scoped_reset = str.match("βa", "(?U:\\p{Lower})(?-U:\\p{Lower})")
 match_posix_unicode_casefold_name = str.match("β", "(?U)\\p{aLpHa}")
 match_unicode_category_unchanged = str.match("β", "\\p{L}")
 match_posix_quoted = str.match("\\p{Lower}", "\\Q\\p{Lower}\\E")
+match_java_lower = str.match("Aª", "\\p{javaLowerCase}")
+match_java_upper = str.match("aK", "\\p{javaUpperCase}")
+match_java_alphabetic = str.match("1ͅ", "\\p{javaAlphabetic}")
+match_java_ideographic = str.match("A中", "\\p{javaIdeographic}")
+match_java_title = str.match("ǆǅ", "\\p{javaTitleCase}")
+match_java_digit = str.match("²１", "\\p{javaDigit}")
+match_java_defined = str.match("A", "\\p{javaDefined}")
+match_java_letter = str.match("Ⅰβ", "\\p{javaLetter}")
+match_java_letter_or_digit = str.match("_１", "\\p{javaLetterOrDigit}")
+match_java_complement = str.match("aA", "\\P{javaLowerCase}")
+match_java_class = str.match("A１", "[\\p{javaLowerCase}\\p{javaDigit}]")
+match_java_case = str.match("Β", "(?i)\\p{javaLowerCase}")
+match_java_scopes = str.match("１１", "(?U:\\p{javaDigit})(?-U:\\p{javaDigit})")
+match_java_quoted = str.match("\\p{javaLowerCase}", "\\Q\\p{javaLowerCase}\\E")
 match_block_in_basic_latin = str.match("βA", "\\p{InBasicLatin}")
 match_block_named_basic_latin = str.match("βA", "\\p{block=basic_latin}")
 match_block_latin1 = str.match("Aå", "\\p{Block=Latin-1Supplement}")
@@ -1053,6 +1113,9 @@ plot(match_default_dot_line_feed == "A" and match_default_dot_carriage_return ==
 plot(match_dotall_line_terminators == "\r  A" and match_global_dotall_reset == "\rA" and match_scoped_dotall_reset == "\rA" and match_literal_dots == "..." ? 1 : 0)
 plot(match_posix_lower_ascii == "a" and match_posix_lower_unicode == "β" and match_posix_not_lower_ascii == "β" and match_posix_not_lower_unicode == "A" ? 1 : 0)
 plot(match_posix_xdigit_ascii == "F" and match_posix_xdigit_unicode == "𝟙" and match_posix_scoped_reset == "βa" and match_posix_unicode_casefold_name == "β" and match_unicode_category_unchanged == "β" and match_posix_quoted == "\\p{Lower}" ? 1 : 0)
+plot(match_java_lower == "ª" and match_java_upper == "K" and match_java_alphabetic == "ͅ" and match_java_ideographic == "中" and match_java_title == "ǅ" ? 1 : 0)
+plot(match_java_digit == "１" and match_java_defined == "A" and match_java_letter == "β" and match_java_letter_or_digit == "１" and match_java_complement == "A" ? 1 : 0)
+plot(match_java_class == "１" and match_java_case == "Β" and match_java_scopes == "１１" and match_java_quoted == "\\p{javaLowerCase}" ? 1 : 0)
 plot(match_block_in_basic_latin == "A" and match_block_named_basic_latin == "A" and match_block_latin1 == "å" and match_block_negated == "å" and match_block_class == "A" ? 1 : 0)
 plot(match_block_unicode_scopes == "Aβ" and match_block_quoted == "\\p{InBasicLatin}" and match_script_property_unchanged == "β" and match_category_assignment_unchanged == "β" ? 1 : 0)
 plot(match_case_ascii_literal == "K" and match_case_unicode_literal == "K" and match_case_ascii_non_ascii == "β" and match_case_unicode_non_ascii == "Β" ? 1 : 0)
