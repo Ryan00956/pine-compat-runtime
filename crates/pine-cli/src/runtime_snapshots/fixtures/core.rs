@@ -105,6 +105,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/line_wrapped_strings.pine",
     ),
     (
+        "runtime_parenthesized_line_wrapping.json",
+        "tests/fixtures/runtime/parenthesized_line_wrapping.pine",
+    ),
+    (
         "runtime_strings.json",
         "tests/fixtures/runtime/strings.pine",
     ),

@@ -155,6 +155,7 @@ runtime_na.json
 runtime_nvi.json
 runtime_object_array_typed_declarations.json
 runtime_obv.json
+runtime_parenthesized_line_wrapping.json
 runtime_percentile_linear_interpolation.json
 runtime_percentile_nearest_rank.json
 runtime_percentrank.json

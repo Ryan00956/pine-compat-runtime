@@ -604,6 +604,21 @@ line-ending normalization. It accepts exactly 40,960 characters. A longer
 literal reports `E_LEX_STRING_LIMIT` over the complete delimited span while
 retaining the token so later statements do not receive cascading parse errors.
 
+## Parenthesized Line Wrapping
+
+While one or more round parentheses remain open, the lexer treats physical
+line endings and all indentation at the next non-comment line as layout-free
+whitespace. This allows grouped expressions, function calls, and function
+parameter declarations to wrap with zero or more spaces, including multiples
+of four, and permits comments between wrapped parts. Nested parentheses share
+the same rule. Once the matching outer parenthesis closes, ordinary newline and
+indent/dedent emission resumes, preserving surrounding local-block structure.
+If a parenthesized expression contains an `if`, `for`, `while`, or `switch`
+block expression, that enclosing parenthesis temporarily retains structural
+newlines and indentation until it closes so the nested block remains parseable.
+This rule does not add the separate legacy continuation syntax for expressions
+outside parentheses.
+
 ## Variables
 
 ### Normal Declarations

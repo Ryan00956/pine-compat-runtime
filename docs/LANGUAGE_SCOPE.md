@@ -51,6 +51,8 @@ Expressions:
 - tuple expressions and tuple assignment
 - arithmetic operators: numeric `+`, `-`, `*`, `/`, `%`, plus string `+`
   concatenation with strongest-operand qualifier and `na` propagation
+- parenthesized expressions, calls, and parameter declarations may wrap across
+  physical lines with zero or more spaces of continuation indentation
 - comparison operators: `==`, `!=`, `>`, `>=`, `<`, `<=`
 - logical operators: `and`, `or`, `not`
 - ternary operator: `condition ? a : b`

@@ -85,6 +85,8 @@ struct Lexer<'a> {
     diagnostics: Vec<Diagnostic>,
     line_start: bool,
     indent_stack: Vec<usize>,
+    paren_depth: usize,
+    structured_layout_paren_depth: Option<usize>,
 }
 
 impl<'a> Lexer<'a> {
@@ -97,6 +99,8 @@ impl<'a> Lexer<'a> {
             diagnostics: Vec::new(),
             line_start: true,
             indent_stack: vec![0],
+            paren_depth: 0,
+            structured_layout_paren_depth: None,
         }
     }
 
@@ -113,6 +117,10 @@ impl<'a> Lexer<'a> {
             match byte {
                 b' ' | b'\t' | b'\r' => {
                     self.pos += 1;
+                }
+                b'\n' if self.paren_depth > 0 && self.structured_layout_paren_depth.is_none() => {
+                    self.pos += 1;
+                    self.line_start = true;
                 }
                 b'\n' => {
                     self.single(TokenKind::Newline);
@@ -149,8 +157,8 @@ impl<'a> Lexer<'a> {
                 b'?' => self.single(TokenKind::Question),
                 b'.' => self.single(TokenKind::Dot),
                 b',' => self.single(TokenKind::Comma),
-                b'(' => self.single(TokenKind::LParen),
-                b')' => self.single(TokenKind::RParen),
+                b'(' => self.open_paren(),
+                b')' => self.close_paren(),
                 b'[' => self.single(TokenKind::LBracket),
                 b']' => self.single(TokenKind::RBracket),
                 _ => self.unexpected_byte(),
@@ -197,6 +205,22 @@ impl<'a> Lexer<'a> {
             kind,
             span: Span::new(start, self.pos),
         });
+    }
+
+    fn open_paren(&mut self) {
+        self.single(TokenKind::LParen);
+        self.paren_depth += 1;
+    }
+
+    fn close_paren(&mut self) {
+        self.single(TokenKind::RParen);
+        if self
+            .structured_layout_paren_depth
+            .is_some_and(|depth| self.paren_depth <= depth)
+        {
+            self.structured_layout_paren_depth = None;
+        }
+        self.paren_depth = self.paren_depth.saturating_sub(1);
     }
 
     fn number(&mut self) {
@@ -319,6 +343,12 @@ impl<'a> Lexer<'a> {
             span: Span::new(start, self.pos),
         });
         self.line_start = false;
+        if self.paren_depth > 0
+            && matches!(raw, "if" | "for" | "switch" | "while")
+            && self.structured_layout_paren_depth.is_none()
+        {
+            self.structured_layout_paren_depth = Some(self.paren_depth);
+        }
     }
 
     fn string(&mut self, delimiter: u8) {
@@ -586,6 +616,11 @@ impl<'a> Lexer<'a> {
         }
 
         if self.peek_byte() == Some(b'/') && self.peek_next() == Some(b'/') {
+            return;
+        }
+
+        if self.paren_depth > 0 && self.structured_layout_paren_depth.is_none() {
+            self.line_start = false;
             return;
         }
 
@@ -1052,6 +1087,81 @@ mod tests {
                 TokenKind::RParen,
                 TokenKind::Newline,
                 TokenKind::Dedent,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn suppresses_layout_inside_parenthesized_line_wrapping() {
+        assert_eq!(
+            kinds(concat!(
+                "value = (\n",
+                "    1 + // comment\n",
+                "0 + (\n",
+                "        2\n",
+                "    )\n",
+                ")\n",
+                "after = 3\n",
+            )),
+            vec![
+                TokenKind::Identifier("value".to_owned()),
+                TokenKind::Eq,
+                TokenKind::LParen,
+                TokenKind::Int(1),
+                TokenKind::Plus,
+                TokenKind::Int(0),
+                TokenKind::Plus,
+                TokenKind::LParen,
+                TokenKind::Int(2),
+                TokenKind::RParen,
+                TokenKind::RParen,
+                TokenKind::Newline,
+                TokenKind::Identifier("after".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Int(3),
+                TokenKind::Newline,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn preserves_structured_block_layout_inside_parentheses() {
+        assert_eq!(
+            kinds(concat!(
+                "value = plot(switch\n",
+                "    true =>\n",
+                "        1\n",
+                ")\n",
+                "after = (\n",
+                "0\n",
+                ")\n",
+            )),
+            vec![
+                TokenKind::Identifier("value".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Identifier("plot".to_owned()),
+                TokenKind::LParen,
+                TokenKind::Switch,
+                TokenKind::Newline,
+                TokenKind::Indent,
+                TokenKind::True,
+                TokenKind::Arrow,
+                TokenKind::Newline,
+                TokenKind::Indent,
+                TokenKind::Int(1),
+                TokenKind::Newline,
+                TokenKind::Dedent,
+                TokenKind::Dedent,
+                TokenKind::RParen,
+                TokenKind::Newline,
+                TokenKind::Identifier("after".to_owned()),
+                TokenKind::Eq,
+                TokenKind::LParen,
+                TokenKind::Int(0),
+                TokenKind::RParen,
+                TokenKind::Newline,
                 TokenKind::Eof,
             ]
         );

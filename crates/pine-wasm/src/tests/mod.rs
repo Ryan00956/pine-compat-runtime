@@ -2445,6 +2445,17 @@ fn run_script_csv_returns_line_wrapped_strings_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_parenthesized_line_wrapping_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/parenthesized_line_wrapping.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("parenthesized line-wrapping fixture should run");
+
+    assert_snapshot("runtime_parenthesized_line_wrapping.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_compound_assignments_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/compound_assignments.pine"),

@@ -51,6 +51,14 @@ fn parses_line_wrapped_single_line_string_fixture() {
 }
 
 #[test]
+fn parses_parenthesized_line_wrapping_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/parenthesized_line_wrapping.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.program.statements.len(), 6);
+}
+
+#[test]
 fn reports_unterminated_single_quoted_string_fixture_and_recovers() {
     let (_, parsed) = parse_fixture("tests/fixtures/syntax/unterminated_single_quoted_string.pine");
 

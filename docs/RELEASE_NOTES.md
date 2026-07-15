@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added current v6 parenthesized line wrapping, treating physical newlines,
+  comments, and any continuation indentation inside round parentheses as
+  layout-free whitespace across grouped expressions, calls, parameter lists,
+  nested parentheses, and local blocks.
 - Enforced Pine's 40,960-decoded-character limit on single-line, line-wrapped,
   and triple-delimited string literals, with Unicode-scalar counting, a stable
   full-span diagnostic, and recovery that retains later statements.
