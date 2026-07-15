@@ -597,6 +597,13 @@ both quotation-mark and apostrophe delimiters and does not emit layout tokens.
 An unindented physical line break still terminates recovery with
 `E_LEX_STRING`.
 
+All single-line, line-wrapped, and triple-delimited literals share Pine's
+40,960-character maximum. The lexer counts the decoded string value in Unicode
+scalar characters after escape decoding, line-wrap collapsing, and multiline
+line-ending normalization. It accepts exactly 40,960 characters. A longer
+literal reports `E_LEX_STRING_LIMIT` over the complete delimited span while
+retaining the token so later statements do not receive cascading parse errors.
+
 ## Variables
 
 ### Normal Declarations

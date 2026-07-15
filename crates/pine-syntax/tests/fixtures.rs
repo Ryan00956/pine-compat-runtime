@@ -75,6 +75,14 @@ fn reports_unterminated_multiline_string_fixture() {
 }
 
 #[test]
+fn reports_oversized_string_literal_fixture_without_parse_cascade() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/string_literal_limit.pine");
+
+    assert!(has_diagnostic(&parsed.diagnostics, "E_LEX_STRING_LIMIT"));
+    assert_eq!(parsed.program.statements.len(), 3);
+}
+
+#[test]
 fn parses_compound_assignment_fixture() {
     let (_, parsed) = parse_fixture("tests/fixtures/syntax/compound_assignments.pine");
 

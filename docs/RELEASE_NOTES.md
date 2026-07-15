@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Enforced Pine's 40,960-decoded-character limit on single-line, line-wrapped,
+  and triple-delimited string literals, with Unicode-scalar counting, a stable
+  full-span diagnostic, and recovery that retains later statements.
 - Added deprecated Pine single-line string wrapping for quotation-mark and
   apostrophe literals, collapsing every space-indented physical continuation
   to one space without inserting a line terminator, with CRLF/bare-CR handling

@@ -1,5 +1,7 @@
 use crate::{Diagnostic, SourceFile, Span};
 
+const MAX_STRING_CHARS: usize = 40_960;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
     pub kind: TokenKind,
@@ -327,11 +329,7 @@ impl<'a> Lexer<'a> {
         while let Some(byte) = self.peek_byte() {
             if byte == delimiter {
                 self.pos += 1;
-                self.tokens.push(Token {
-                    kind: TokenKind::String(value),
-                    span: Span::new(start, self.pos),
-                });
-                self.line_start = false;
+                self.finish_string(start, value);
                 return;
             }
 
@@ -372,11 +370,7 @@ impl<'a> Lexer<'a> {
         while let Some(byte) = self.peek_byte() {
             if self.starts_with_repeated(delimiter, 3) {
                 self.pos += 3;
-                self.tokens.push(Token {
-                    kind: TokenKind::String(value),
-                    span: Span::new(start, self.pos),
-                });
-                self.line_start = false;
+                self.finish_string(start, value);
                 return;
             }
 
@@ -408,6 +402,22 @@ impl<'a> Lexer<'a> {
             "unterminated multiline string literal",
             Span::new(start, self.pos),
         ));
+    }
+
+    fn finish_string(&mut self, start: usize, value: String) {
+        let span = Span::new(start, self.pos);
+        if value.chars().count() > MAX_STRING_CHARS {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LEX_STRING_LIMIT",
+                format!("string literal cannot exceed {MAX_STRING_CHARS} characters"),
+                span,
+            ));
+        }
+        self.tokens.push(Token {
+            kind: TokenKind::String(value),
+            span,
+        });
+        self.line_start = false;
     }
 
     fn string_line_wrap(&mut self, value: &mut String) -> bool {
@@ -736,6 +746,53 @@ mod tests {
                 diagnostic.code == "E_LEX_STRING"
                     && diagnostic.message == "unterminated string literal"
             }));
+            assert!(
+                lexed
+                    .tokens
+                    .iter()
+                    .any(|token| { token.kind == TokenKind::Identifier("after".to_owned()) })
+            );
+        }
+    }
+
+    #[test]
+    fn enforces_decoded_string_literal_character_limit() {
+        let at_limit = "界".repeat(MAX_STRING_CHARS);
+        let accepted = SourceFile::new("test.pine", format!("value = \"{at_limit}\"\n"));
+        let lexed = lex(&accepted);
+        assert!(lexed.diagnostics.is_empty(), "{:?}", lexed.diagnostics);
+        assert!(lexed.tokens.iter().any(|token| {
+            matches!(&token.kind, TokenKind::String(value) if value == &at_limit)
+        }));
+
+        let escaped_at_limit = "\\n".repeat(MAX_STRING_CHARS);
+        let accepted_escaped =
+            SourceFile::new("test.pine", format!("value = \"{escaped_at_limit}\"\n"));
+        let lexed = lex(&accepted_escaped);
+        assert!(lexed.diagnostics.is_empty(), "{:?}", lexed.diagnostics);
+        assert!(lexed.tokens.iter().any(|token| {
+            matches!(&token.kind, TokenKind::String(value) if value.chars().count() == MAX_STRING_CHARS)
+        }));
+
+        for literal in [
+            format!("'{}'", "x".repeat(MAX_STRING_CHARS + 1)),
+            format!("\"\"\"{}\"\"\"", "x".repeat(MAX_STRING_CHARS + 1)),
+        ] {
+            let source = SourceFile::new("test.pine", format!("value = {literal}\nafter = 1\n"));
+            let expected_start = source.text().find(&literal).expect("literal start");
+            let expected_end = expected_start + literal.len();
+            let lexed = lex(&source);
+            let diagnostic = lexed
+                .diagnostics
+                .iter()
+                .find(|diagnostic| diagnostic.code == "E_LEX_STRING_LIMIT")
+                .expect("string limit diagnostic");
+
+            assert_eq!(
+                diagnostic.message,
+                "string literal cannot exceed 40960 characters"
+            );
+            assert_eq!(diagnostic.span, Span::new(expected_start, expected_end));
             assert!(
                 lexed
                     .tokens

@@ -11,6 +11,7 @@ improved over time, but codes should remain stable once published.
 - `E_LEX_INDENT`: indentation is not a supported multiple of spaces.
 - `E_LEX_INT`: invalid integer literal.
 - `E_LEX_STRING`: unterminated or invalid string literal.
+- `E_LEX_STRING_LIMIT`: decoded string literal exceeds 40,960 characters.
 - `E_LEX_VERSION`: invalid version directive.
 
 ## Parsing
