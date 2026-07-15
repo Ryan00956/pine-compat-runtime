@@ -1333,7 +1333,10 @@ Current baseline:
   Unicode 16.0 `\p{InBlockName}`/`\p{Block=BlockName}` properties and `\P`
   complements,
   fixed-width `\uHHHH`, two-digit `\xNN`, braced `\x{...}`, one-to-three-digit
-  `\0` octal, fixed `\e`, and one-scalar `\cX` control references, and
+  `\0` octal, Unicode 16.0 `\N{CHARACTER NAME}` references with exact
+  Java/Pine name boundaries, C0/C1 control names, and Java-generated CJK,
+  Hangul, and Tangut algorithmic names, fixed `\e`, and one-scalar `\cX`
+  control references, and
   single-search `\G` previous-match plus final-newline-aware `$`/`\Z` end
   anchors, leading literal `]` character-class atoms across negation, verbose
   trivia, and quoted regions, literal `~` class atoms protected from Rust's

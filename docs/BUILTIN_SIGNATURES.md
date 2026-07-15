@@ -2039,7 +2039,16 @@ and remain literal inside quoted regions. Two-digit `\xNN` and braced
 `\x{...}` references are also supported; the fixed form consumes exactly two
 hex digits, the braced form accepts leading zeros around a Unicode scalar, and
 surrogate code-unit references match no scalar value. Both spellings remain
-literal in quoted regions. The fixed `\e` escape-character reference and
+literal in quoted regions. Java/Pine `\N{UNICODE CHARACTER NAME}` references
+resolve Unicode 16.0 names case-insensitively, with Java's surrounding ASCII
+whitespace trimming and C0/C1 control names. Java-generated CJK unified
+ideograph, Hangul syllable, Tangut, and Tangut Supplement hexadecimal names are
+also supported across their Unicode 16.0 assigned ranges. They work inside or
+outside classes, participate in ranges and active case modes, and remain
+literal in quoted regions. Loose missing-space, repeated-space, underscore,
+unknown, leading-zero algorithmic, and canonical Unicode CJK/Hangul spellings
+that Java does not recognize remain invalid. The fixed `\e`
+escape-character reference and
 `\cX` control reference are also supported inside and outside character
 classes. A control reference consumes one Unicode scalar and applies Java's
 `XOR 0x40` mapping; verbose mode skips its intervening ASCII whitespace and

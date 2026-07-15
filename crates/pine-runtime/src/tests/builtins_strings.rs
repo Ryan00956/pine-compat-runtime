@@ -640,6 +640,87 @@ fn normalizes_pine_regex_four_digit_unicode_escapes() {
 }
 
 #[test]
+fn normalizes_pine_regex_named_character_escapes() {
+    assert_eq!(
+        normalize_pine_regex(r"\N{LATIN CAPITAL LETTER A}\N{GRINNING FACE}\N{LINE FEED (LF)}"),
+        r"\x{41}\x{1F600}\x{A}"
+    );
+    assert_eq!(
+        normalize_pine_regex(
+            r"\N{CJK UNIFIED IDEOGRAPHS 4E00}\N{HANGUL SYLLABLES AC00}\N{TANGUT 17000}\N{CJK UNIFIED IDEOGRAPHS EXTENSION B 20000}"
+        ),
+        r"\x{4E00}\x{AC00}\x{17000}\x{20000}"
+    );
+
+    let ascii = Regex::new(&normalize_pine_regex(r"(?i)\A\N{LATIN SMALL LETTER K}\z"))
+        .expect("normalized ASCII-insensitive named character");
+    assert!(ascii.is_match("K"));
+    assert!(ascii.is_match("k"));
+    assert!(!ascii.is_match("K"));
+
+    let unicode = Regex::new(&normalize_pine_regex(r"(?iu)\A\N{LATIN SMALL LETTER K}\z"))
+        .expect("normalized Unicode-insensitive named character");
+    assert!(unicode.is_match("K"));
+
+    let class = Regex::new(&normalize_pine_regex(
+        r"\A[\N{LATIN CAPITAL LETTER A}-\N{LATIN CAPITAL LETTER C}]+\z",
+    ))
+    .expect("normalized named character range");
+    assert!(class.is_match("ABC"));
+    assert!(!class.is_match("D"));
+
+    let tilde_range = Regex::new(&normalize_pine_regex(r"\A[a-\N{TILDE}]+\z"))
+        .expect("normalized named range endpoint");
+    assert!(tilde_range.is_match("az{|}~"));
+    assert!(!tilde_range.is_match("`"));
+
+    let controls = Regex::new(&normalize_pine_regex(
+        r"\A\N{NULL}\N{BEL}\N{BACKSPACE}\N{LINE FEED (LF)}\N{DELETE}\z",
+    ))
+    .expect("normalized Java control character names");
+    assert!(controls.is_match("\0\u{0007}\u{0008}\n\u{007F}"));
+
+    let verbose = Regex::new(&normalize_pine_regex(
+        r"(?x)\A\N{ LATIN CAPITAL LETTER A }\z",
+    ))
+    .expect("normalized trimmed verbose named character");
+    assert!(verbose.is_match("A"));
+
+    let quoted = Regex::new(&normalize_pine_regex(r"\A\Q\N{LATIN CAPITAL LETTER A}\E\z"))
+        .expect("preserved quoted named character spelling");
+    assert!(quoted.is_match(r"\N{LATIN CAPITAL LETTER A}"));
+
+    let generated = Regex::new(&normalize_pine_regex(
+        r"\A\N{cjk unified ideographs 4e00}\N{HANGUL SYLLABLES AC00}\N{TANGUT SUPPLEMENT 18D00}\z",
+    ))
+    .expect("normalized Java-generated algorithmic names");
+    assert!(generated.is_match("一가\u{18D00}"));
+}
+
+#[test]
+fn rejects_invalid_pine_regex_named_character_escapes() {
+    for invalid in [
+        r"\N{}",
+        r"\N",
+        r"\N{NO SUCH NAME}",
+        r"\N{LATIN_CAPITAL_LETTER_A}",
+        r"\N{LATINCAPITALLETTERA}",
+        r"\N{LATIN  CAPITAL LETTER A}",
+        r"\N{CJK UNIFIED IDEOGRAPH-4E00}",
+        r"\N{HANGUL SYLLABLE GA}",
+        r"\N{CJK UNIFIED IDEOGRAPHS 04E00}",
+        r"\N{CJK UNIFIED IDEOGRAPHS EXTENSION B 2A6FF}",
+        r"\N{TANGUT 18D00}",
+        r"[z-\N{HYPHEN-MINUS}]",
+    ] {
+        assert!(
+            Regex::new(&normalize_pine_regex(invalid)).is_err(),
+            "{invalid}"
+        );
+    }
+}
+
+#[test]
 fn normalizes_pine_regex_hex_code_point_escapes() {
     assert_eq!(normalize_pine_regex(r"\x6B0\x{0000006B}"), r"\x{6B}0\x{6B}");
 

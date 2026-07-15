@@ -151,6 +151,21 @@ pub(crate) fn push_pine_regex_literal(
     }
 }
 
+pub(crate) fn push_pine_regex_reference(
+    result: &mut String,
+    ch: char,
+    mode: PineRegexMode,
+    class_depth: usize,
+    hex_width: usize,
+) {
+    if class_depth == 0 && mode.case_insensitive && !mode.unicode_case {
+        push_pine_regex_literal(result, ch, mode, true);
+    } else {
+        write!(result, r"\x{{{:0width$X}}}", ch as u32, width = hex_width)
+            .expect("writing to a String cannot fail");
+    }
+}
+
 pub(crate) fn push_pine_regex_quoted(
     result: &mut String,
     quoted: &str,

@@ -16,8 +16,9 @@ use super::{
     regex_java_properties::pine_java_property,
     regex_modes::{
         PineRegexMode, apply_pine_regex_flags, parse_pine_regex_flags, push_pine_regex_literal,
-        push_pine_regex_quoted, push_rust_regex_flags,
+        push_pine_regex_quoted, push_pine_regex_reference, push_rust_regex_flags,
     },
+    regex_named_characters::parse_pine_regex_named_character_escape,
     regex_unicode_blocks::pine_unicode_block,
 };
 use crate::builtins::time::{
@@ -260,22 +261,26 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 index += slash.len_utf8() + escaped.len_utf8();
                 continue;
             }
+            if escaped == 'N'
+                && let Some(reference) = parse_pine_regex_named_character_escape(pattern, index)
+            {
+                mark_pine_regex_class_scalar(&mut class_prefixes);
+                push_pine_regex_reference(&mut result, reference.scalar, mode, class_depth, 0);
+                index = reference.end;
+                continue;
+            }
             if matches!(escaped, 'u' | 'x')
                 && let Some(reference) = parse_pine_regex_code_point_escape(pattern, index)
             {
                 if let Some(ch) = reference.scalar {
                     mark_pine_regex_class_scalar(&mut class_prefixes);
-                    if class_depth == 0 && mode.case_insensitive && !mode.unicode_case {
-                        push_pine_regex_literal(&mut result, ch, mode, true);
-                    } else {
-                        write!(
-                            result,
-                            r"\x{{{:0width$X}}}",
-                            ch as u32,
-                            width = reference.hex_width
-                        )
-                        .expect("writing to a String cannot fail");
-                    }
+                    push_pine_regex_reference(
+                        &mut result,
+                        ch,
+                        mode,
+                        class_depth,
+                        reference.hex_width,
+                    );
                 } else {
                     mark_pine_regex_class_set(&mut result, &mut class_prefixes);
                     result.push_str("[a&&b]");
@@ -287,12 +292,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 && let Some(control) = parse_pine_regex_control_escape(pattern, index, mode.verbose)
             {
                 mark_pine_regex_class_scalar(&mut class_prefixes);
-                if class_depth == 0 && mode.case_insensitive && !mode.unicode_case {
-                    push_pine_regex_literal(&mut result, control.scalar, mode, true);
-                } else {
-                    write!(result, r"\x{{{:X}}}", control.scalar as u32)
-                        .expect("writing to a String cannot fail");
-                }
+                push_pine_regex_reference(&mut result, control.scalar, mode, class_depth, 0);
                 index = control.end;
                 continue;
             }
@@ -300,12 +300,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 && let Some(reference) = parse_pine_regex_octal_escape(pattern, index, mode.verbose)
             {
                 mark_pine_regex_class_scalar(&mut class_prefixes);
-                if class_depth == 0 && mode.case_insensitive && !mode.unicode_case {
-                    push_pine_regex_literal(&mut result, reference.scalar, mode, true);
-                } else {
-                    write!(result, r"\x{{{:X}}}", reference.scalar as u32)
-                        .expect("writing to a String cannot fail");
-                }
+                push_pine_regex_reference(&mut result, reference.scalar, mode, class_depth, 0);
                 index = reference.end;
                 continue;
             }

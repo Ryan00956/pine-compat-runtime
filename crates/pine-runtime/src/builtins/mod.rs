@@ -13,6 +13,7 @@ mod regex_character_classes;
 mod regex_escapes;
 mod regex_java_properties;
 mod regex_modes;
+mod regex_named_characters;
 mod regex_unicode_blocks;
 pub(crate) mod requests;
 pub(crate) mod strategy;
