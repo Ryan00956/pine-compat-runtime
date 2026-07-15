@@ -1479,7 +1479,9 @@ in sorted order without modifying the source array. Both ordering helpers also
 support concrete same-local or same-imported scalar-tree UDT arrays. Their
 optional compile-time `sort_field` is a zero-based integer field index or a
 string field name, defaults to field index `0`, and must select a root `int`,
-`float`, or `string` field. `array.reverse` supports
+`float`, or `string` field. A UDT array element that is itself `na` raises a
+runtime error, while a selected field value may be `na` and follows the
+ordinary special-value ordering. `array.reverse` supports
 every supported typed array and is fixture-backed in branch and loop bodies for
 scalar array values.
 `array.join` supports supported scalar typed arrays, defaults the separator

@@ -1,0 +1,8 @@
+//@version=6
+indicator("Array sort UDT na element")
+
+type Item
+    float value
+
+values = array.new<Item>(1)
+array.sort(values)

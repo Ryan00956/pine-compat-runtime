@@ -38,3 +38,8 @@ reordered_indices = array.sort_indices(sort_field = "tag", id = reordered_source
 plot(reordered_indices.get(0))
 plot(reordered_indices.get(1))
 plot(reordered_indices.get(2))
+
+na_field_source = array.from(Point.new(na, "missing"), Point.new(1.0, "value"))
+na_field_indices = array.sort_indices(na_field_source)
+plot(na_field_indices.get(0))
+plot(na_field_indices.get(1))

@@ -21,6 +21,7 @@ impl<'a> HistoricalRuntime<'a> {
                 return Ok(PineValue::Void);
             };
             if let Some(mut values) = self.array_values_clone(id)? {
+                validate_user_type_sort_values("array.sort", &values)?;
                 values.sort_by(|left, right| {
                     compare_user_type_sort_field_values(left, right, field_index, descending)
                 });
@@ -60,6 +61,7 @@ impl<'a> HistoricalRuntime<'a> {
             let Some(field_index) = self.eval_array_sort_field_index(args)? else {
                 return Ok(PineValue::Na);
             };
+            validate_user_type_sort_values("array.sort_indices", &values)?;
             return Ok(self.sorted_index_array(values.len(), |left, right| {
                 compare_user_type_sort_field_values(
                     &values[*left],
@@ -123,5 +125,42 @@ impl<'a> HistoricalRuntime<'a> {
             },
             None => Ok(None),
         }
+    }
+}
+
+fn validate_user_type_sort_values(callee: &str, values: &[PineValue]) -> Result<(), RuntimeError> {
+    if values.iter().any(|value| matches!(value, PineValue::Na)) {
+        return Err(RuntimeError {
+            message: format!("{callee} cannot sort UDT arrays containing na elements"),
+        });
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_na_user_type_array_elements_before_sorting() {
+        let error = validate_user_type_sort_values(
+            "array.sort_indices",
+            &[
+                PineValue::UserType(vec![PineValue::Float(1.0)]),
+                PineValue::Na,
+            ],
+        )
+        .expect_err("top-level na UDT element should fail");
+
+        assert_eq!(
+            error.message,
+            "array.sort_indices cannot sort UDT arrays containing na elements"
+        );
+    }
+
+    #[test]
+    fn permits_na_fields_inside_concrete_user_type_elements() {
+        validate_user_type_sort_values("array.sort", &[PineValue::UserType(vec![PineValue::Na])])
+            .expect("na UDT fields should remain sortable");
     }
 }

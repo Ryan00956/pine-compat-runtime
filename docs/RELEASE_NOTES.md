@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Aligned UDT `array.sort` and `array.sort_indices` runtime validation with the
+  collection contract: an array element that is itself `na` now raises a stable
+  runtime error, while concrete UDT elements whose selected sortable field is
+  `na` retain ordinary special-value ordering. CLI, WASM, and Python error
+  paths share regression fixtures.
 - Extended same-local and same-imported scalar-tree UDT `array.sort` and
   `array.sort_indices` with the current selector contract: omitted `sort_field`
   defaults to root field index `0`, while supplied compile-time integer indexes

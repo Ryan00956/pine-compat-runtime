@@ -905,6 +905,30 @@ fn run_script_csv_returns_array_sort_indices_udt_field_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_rejects_udt_na_element_sorting() {
+    for (source, expected) in [
+        (
+            include_str!("../../../../tests/fixtures/regressions/array_sort_udt_na_element.pine"),
+            "array.sort cannot sort UDT arrays containing na elements",
+        ),
+        (
+            include_str!(
+                "../../../../tests/fixtures/regressions/array_sort_indices_udt_na_element.pine"
+            ),
+            "array.sort_indices cannot sort UDT arrays containing na elements",
+        ),
+    ] {
+        let message = run_script_csv_internal(
+            source,
+            include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        )
+        .expect_err("UDT na element sorting should fail");
+
+        assert!(message.contains(expected), "{message}");
+    }
+}
+
+#[test]
 fn run_script_csv_returns_array_join_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/array_join.pine"),

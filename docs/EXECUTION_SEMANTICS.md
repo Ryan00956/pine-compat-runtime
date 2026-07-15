@@ -1016,8 +1016,11 @@ using the ordinary ascending default and const-order rules. Same-local or same-
 imported scalar-tree UDT results use root field index `0` by default and accept
 a compile-time zero-based integer field index or string field name selecting a
 root int/float/string field. Lowering canonicalizes that selector to the field
-index for the exact element identity. Alias/live-slice results reorder backing parents; fresh map/matrix-
-derived arrays reorder only their snapshots. The call returns `void`, cannot
+index for the exact element identity. A top-level `na` UDT element raises a
+runtime error before sorting; `na` inside the selected field remains sortable
+with the ordinary special-value placement. Alias/live-slice results reorder
+backing parents; fresh map/matrix-derived arrays reorder only their snapshots.
+The call returns `void`, cannot
 continue, treats empty/upstream-`na` results as no-ops after order evaluation,
 and retains unsupported-kind, order/field/arity, and UDF-side-effect gates.
 
@@ -1788,9 +1791,12 @@ sample denominator and return `na` when fewer than two numeric values remain.
 scalar-tree UDT arrays plus same-imported scalar-tree UDT arrays constructed
 through `array.new<lib.Type>` or `array.from`. For UDT arrays, an omitted
 `sort_field` selects root field index `0`; a supplied compile-time integer index
-or string name must select a root int, float, or string field. It sorts ascending by default and accepts `order.ascending` or
-`order.descending`. `na` values and empty string elements sort last in ascending
-order and first in descending order. `array.sort_indices` returns a new int
+or string name must select a root int, float, or string field. It sorts
+ascending by default and accepts `order.ascending` or `order.descending`. `na`
+values and empty string elements sort last in ascending
+order and first in descending order. For UDT arrays this special-value rule
+applies to selected field values; an element that is itself `na` raises a
+runtime error for both ordering helpers. `array.sort_indices` returns a new int
 array containing the source indexes in sorted order, follows the same order and
 special-value rules, and leaves the source array unchanged. `array.reverse`
 reverses any supported typed array in place.

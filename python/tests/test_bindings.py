@@ -797,6 +797,28 @@ def test_run_script_returns_array_sort_indices_udt_field_fixture_contract():
     assert result == expected
 
 
+def test_run_script_rejects_udt_na_element_sorting():
+    cases = [
+        (
+            "tests/fixtures/regressions/array_sort_udt_na_element.pine",
+            "array.sort cannot sort UDT arrays containing na elements",
+        ),
+        (
+            "tests/fixtures/regressions/array_sort_indices_udt_na_element.pine",
+            "array.sort_indices cannot sort UDT arrays containing na elements",
+        ),
+    ]
+
+    for fixture, expected in cases:
+        source = (ROOT / fixture).read_text()
+        try:
+            pine_compat.run_script(source, BARS)
+        except ValueError as error:
+            assert expected in str(error)
+        else:
+            raise AssertionError(f"{fixture} should fail")
+
+
 def test_run_script_returns_array_join_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/array_join.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_array_join.json").read_text())

@@ -1,0 +1,9 @@
+//@version=6
+indicator("Array sort_indices UDT na element")
+
+type Item
+    float value
+
+values = array.new<Item>(1)
+indices = array.sort_indices(values)
+plot(indices.size())
