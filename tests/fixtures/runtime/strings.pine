@@ -1,7 +1,13 @@
-//@version=5
+//@version=6
 indicator("Strings")
 single_quoted_plain = 'single "quoted"'
 single_quoted_escaped = 'Pine\'s\n\t\\path'
+multiline_double = """first
+  second "quoted" 中"""
+multiline_single = '''alpha
+    beta's text'''
+multiline_same_line = """same""" == '''same'''
+multiline_escaped = """Pine\n\"quote\"\t\\path"""
 mode = input.string("sma", "Mode")
 upper = str.upper(mode)
 lower = str.lower(upper)
@@ -596,3 +602,7 @@ plot(str.format("Ints {0}", int_values) == "Ints [1, 2]" ? 1 : 0)
 plot(str.format("Flags {0}", bool_values) == "Flags [true, false]" ? 1 : 0)
 plot(single_quoted_plain == "single \"quoted\"" ? 1 : 0)
 plot(single_quoted_escaped == "Pine's\n\t\\path" ? 1 : 0)
+plot(multiline_double == "first\n  second \"quoted\" 中" ? 1 : 0)
+plot(multiline_single == "alpha\n    beta's text" ? 1 : 0)
+plot(multiline_same_line ? 1 : 0)
+plot(multiline_escaped == "Pine\n\"quote\"\t\\path" ? 1 : 0)

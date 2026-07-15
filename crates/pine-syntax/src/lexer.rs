@@ -113,6 +113,9 @@ impl<'a> Lexer<'a> {
                 }
                 b'0'..=b'9' => self.number(),
                 b'a'..=b'z' | b'A'..=b'Z' | b'_' => self.identifier_or_keyword(),
+                b'"' | b'\'' if self.starts_with_repeated(byte, 3) => {
+                    self.multiline_string(byte);
+                }
                 b'"' | b'\'' => self.string(byte),
                 b'#' => self.color_hex(),
                 b'/' if self.peek_next() == Some(b'/') => self.comment_or_version(),
@@ -323,39 +326,7 @@ impl<'a> Lexer<'a> {
             }
 
             match byte {
-                b'\\' => {
-                    self.pos += 1;
-                    match self.peek_byte() {
-                        Some(b'n') => {
-                            self.pos += 1;
-                            value.push('\n');
-                        }
-                        Some(b't') => {
-                            self.pos += 1;
-                            value.push('\t');
-                        }
-                        Some(b'r') => {
-                            self.pos += 1;
-                            value.push('\r');
-                        }
-                        Some(escaped) if escaped == delimiter => {
-                            self.pos += 1;
-                            value.push(char::from(delimiter));
-                        }
-                        Some(b'\\') => {
-                            self.pos += 1;
-                            value.push('\\');
-                        }
-                        Some(_) => {
-                            // Unknown escape: keep the escaped character literally,
-                            // consuming a full UTF-8 scalar value.
-                            let ch = self.text[self.pos..].chars().next().unwrap_or('\u{FFFD}');
-                            self.pos += ch.len_utf8();
-                            value.push(ch);
-                        }
-                        None => {}
-                    }
-                }
+                b'\\' => self.string_escape(delimiter, &mut value),
                 b'\n' => {
                     self.diagnostics.push(Diagnostic::error(
                         "E_LEX_STRING",
@@ -379,6 +350,93 @@ impl<'a> Lexer<'a> {
             "unterminated string literal",
             Span::new(start, self.pos),
         ));
+    }
+
+    fn multiline_string(&mut self, delimiter: u8) {
+        let start = self.pos;
+        self.pos += 3;
+        let mut value = String::new();
+
+        while let Some(byte) = self.peek_byte() {
+            if self.starts_with_repeated(delimiter, 3) {
+                self.pos += 3;
+                self.tokens.push(Token {
+                    kind: TokenKind::String(value),
+                    span: Span::new(start, self.pos),
+                });
+                self.line_start = false;
+                return;
+            }
+
+            match byte {
+                b'\\' => self.string_escape(delimiter, &mut value),
+                b'\r' => {
+                    self.pos += 1;
+                    if self.peek_byte() == Some(b'\n') {
+                        self.pos += 1;
+                    }
+                    value.push('\n');
+                }
+                b'\n' => {
+                    self.pos += 1;
+                    value.push('\n');
+                }
+                _ => {
+                    // Consume a full UTF-8 scalar value rather than a single
+                    // byte so multi-byte characters are preserved verbatim.
+                    let ch = self.text[self.pos..].chars().next().unwrap_or('\u{FFFD}');
+                    self.pos += ch.len_utf8();
+                    value.push(ch);
+                }
+            }
+        }
+
+        self.diagnostics.push(Diagnostic::error(
+            "E_LEX_STRING",
+            "unterminated multiline string literal",
+            Span::new(start, self.pos),
+        ));
+    }
+
+    fn string_escape(&mut self, delimiter: u8, value: &mut String) {
+        self.pos += 1;
+        match self.peek_byte() {
+            Some(b'n') => {
+                self.pos += 1;
+                value.push('\n');
+            }
+            Some(b't') => {
+                self.pos += 1;
+                value.push('\t');
+            }
+            Some(b'r') => {
+                self.pos += 1;
+                value.push('\r');
+            }
+            Some(escaped) if escaped == delimiter => {
+                self.pos += 1;
+                value.push(char::from(delimiter));
+            }
+            Some(b'\\') => {
+                self.pos += 1;
+                value.push('\\');
+            }
+            Some(_) => {
+                // Unknown escape: keep the escaped character literally,
+                // consuming a full UTF-8 scalar value.
+                let ch = self.text[self.pos..].chars().next().unwrap_or('\u{FFFD}');
+                self.pos += ch.len_utf8();
+                value.push(ch);
+            }
+            None => {}
+        }
+    }
+
+    fn starts_with_repeated(&self, delimiter: u8, count: usize) -> bool {
+        self.text
+            .as_bytes()
+            .get(self.pos..self.pos.saturating_add(count))
+            .is_some_and(|bytes| bytes.iter().all(|byte| *byte == delimiter))
     }
 
     fn color_hex(&mut self) {
@@ -607,6 +665,63 @@ mod tests {
                 .tokens
                 .iter()
                 .any(|token| { token.kind == TokenKind::Identifier("next".to_owned()) })
+        );
+    }
+
+    #[test]
+    fn lexes_multiline_strings_without_layout_tokens() {
+        let source = concat!(
+            "double = \"\"\"first\r\n  中 \" quote\"\"\"\n",
+            "single = '''alpha\n\tbeta's text'''\n",
+            "joined = \"\"\"a\"\"\" + '''b'''\n",
+        );
+
+        assert_eq!(
+            kinds(source),
+            vec![
+                TokenKind::Identifier("double".to_owned()),
+                TokenKind::Eq,
+                TokenKind::String("first\n  中 \" quote".to_owned()),
+                TokenKind::Newline,
+                TokenKind::Identifier("single".to_owned()),
+                TokenKind::Eq,
+                TokenKind::String("alpha\n\tbeta's text".to_owned()),
+                TokenKind::Newline,
+                TokenKind::Identifier("joined".to_owned()),
+                TokenKind::Eq,
+                TokenKind::String("a".to_owned()),
+                TokenKind::Plus,
+                TokenKind::String("b".to_owned()),
+                TokenKind::Newline,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn reports_unterminated_multiline_string_at_eof() {
+        let source = SourceFile::new(
+            "test.pine",
+            "safe = 1\nbroken = \"\"\"unterminated\n  still content\n",
+        );
+        let expected_start = source.text().find("\"\"\"").expect("opening delimiter");
+        let lexed = lex(&source);
+        let diagnostic = lexed
+            .diagnostics
+            .iter()
+            .find(|diagnostic| diagnostic.code == "E_LEX_STRING")
+            .expect("unterminated multiline string diagnostic");
+
+        assert_eq!(diagnostic.message, "unterminated multiline string literal");
+        assert_eq!(
+            diagnostic.span,
+            Span::new(expected_start, source.text().len())
+        );
+        assert!(
+            lexed
+                .tokens
+                .iter()
+                .any(|token| { token.kind == TokenKind::Identifier("safe".to_owned()) })
         );
     }
 

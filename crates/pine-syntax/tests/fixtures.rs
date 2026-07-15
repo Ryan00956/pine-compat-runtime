@@ -51,6 +51,22 @@ fn reports_unterminated_single_quoted_string_fixture_and_recovers() {
 }
 
 #[test]
+fn parses_multiline_string_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/multiline_strings.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.program.statements.len(), 11);
+}
+
+#[test]
+fn reports_unterminated_multiline_string_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/unterminated_multiline_string.pine");
+
+    assert!(has_diagnostic(&parsed.diagnostics, "E_LEX_STRING"));
+    assert!(parsed.program.statements.len() >= 2);
+}
+
+#[test]
 fn recovers_after_parse_error_fixture() {
     let (_, parsed) = parse_fixture("tests/fixtures/syntax/parse_error_recovery.pine");
 

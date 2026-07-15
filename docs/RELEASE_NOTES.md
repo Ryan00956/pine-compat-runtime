@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added v6 triple-quotation-mark and triple-apostrophe multiline string
+  literals, including literal newline and indentation preservation, CRLF
+  normalization, ordinary escape decoding, UTF-8 contents, and stable
+  unterminated-literal diagnostics at EOF.
 - Added apostrophe-delimited single-line string literals with the same const
   string typing, UTF-8 preservation, escape handling, and unterminated-literal
   recovery as existing quotation-mark-delimited strings.

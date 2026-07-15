@@ -38,8 +38,10 @@ Statements:
 
 Expressions:
 
-- literals: int, float, bool, single-line string literals delimited by matching
-  ASCII quotation marks or apostrophes, and color literals where applicable
+- literals: int, float, bool, string literals delimited by matching ASCII
+  quotation marks or apostrophes, including v6 triple-delimited multiline
+  strings with literal line breaks and indentation, and color literals where
+  applicable
 - identifiers
 - function calls
 - named arguments
