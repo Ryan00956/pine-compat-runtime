@@ -47,7 +47,14 @@ non-positive or non-finite price, and percent sizing also returns `na` for
 non-positive or non-finite supported equity. Indicator and requested-context
 use remain rejected, and no public result field is added. Currency conversion,
 symbol point value, precision, and lot-step handling remain outside the current
-contract.
+default-quantity contract.
+Under the default or explicit `currency.NONE` account-currency path,
+`strategy.convert_to_account(value)` and `strategy.convert_to_symbol(value)` are
+pure strategy-mode `series float` identities. Both accept a series/simple
+numeric value, coerce integers to floats, preserve typed `na`, and support
+direct, named, UDF, and history calls. Indicator and requested-context use are
+rejected. Cross-currency conversion remains outside the current contract, and
+neither helper adds a public result field.
 Stage 7 Slices 17, 18, and 21
 add supported commission declaration subsets:
 `commission_type=strategy.commission.cash_per_contract, commission_value=N` and
@@ -175,8 +182,9 @@ the current default-only `currency.NONE` subset it inherits the fixed
 direct, UDF, and history reads are supported; const-string consumers,
 indicator use, requested-context use, and mutation remain rejected. Explicit
 `strategy(..., currency=currency.NONE)` is accepted as the same no-conversion
-path; other currency values, settings overrides, and conversion remain
-unsupported, and no public result field is added.
+path; other currency values, settings overrides, and cross-currency conversion
+remain unsupported. The default same-currency conversion helpers are described
+above, and no public result field is added.
 `strategy.position_entry_name` is a read-only strategy-mode `series string`
 that is `na` while flat and otherwise returns the entry order ID that initially
 opened the current continuous net long position. A pyramiding addition or a

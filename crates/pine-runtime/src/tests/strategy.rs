@@ -5883,6 +5883,53 @@ plot(strategy.default_entry_qty(close)[1])
 }
 
 #[test]
+fn strategy_currency_conversions_are_identity_in_default_currency() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("currency conversion", currency=currency.NONE)
+identity(value) => value
+plot(strategy.convert_to_account(close))
+plot(identity(strategy.convert_to_symbol(value=close * 2)))
+plot(strategy.convert_to_account(7))
+plot(strategy.convert_to_symbol(close)[1])
+plot(strategy.convert_to_account(float(na)))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(1.0),
+            PineValue::Float(2.0),
+            PineValue::Float(3.0)
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Float(2.0),
+            PineValue::Float(4.0),
+            PineValue::Float(6.0)
+        ]
+    );
+    assert_eq!(result.plots[2].values, vec![PineValue::Float(7.0); 3]);
+    assert_eq!(
+        result.plots[3].values,
+        vec![PineValue::Na, PineValue::Float(1.0), PineValue::Float(2.0)]
+    );
+    assert_eq!(result.plots[4].values, vec![PineValue::Na; 3]);
+}
+
+#[test]
 fn strategy_default_entry_qty_reuses_cash_and_percent_of_equity_sizing() {
     let cash_source = SourceFile::new(
         "cash.pine",

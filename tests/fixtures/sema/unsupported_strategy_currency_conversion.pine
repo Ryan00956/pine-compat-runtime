@@ -1,0 +1,5 @@
+//@version=5
+strategy("Unsupported strategy currency conversion arguments")
+plot(strategy.convert_to_account("10"))
+plot(strategy.convert_to_symbol())
+plot(strategy.convert_to_account(close, open))

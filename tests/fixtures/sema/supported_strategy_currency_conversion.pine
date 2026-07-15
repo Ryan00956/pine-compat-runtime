@@ -1,0 +1,8 @@
+//@version=5
+strategy("Supported strategy currency conversion", currency=currency.NONE)
+identity(value) => value
+plot(strategy.convert_to_account(close))
+plot(identity(strategy.convert_to_symbol(value=close * 2)))
+plot(strategy.convert_to_account(7))
+plot(strategy.convert_to_symbol(close)[1])
+plot(strategy.convert_to_account(float(na)))

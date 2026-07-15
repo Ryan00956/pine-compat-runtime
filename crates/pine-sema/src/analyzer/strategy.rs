@@ -123,7 +123,10 @@ pub(crate) fn is_supported_strategy_trade_field_function(name: &str) -> bool {
 }
 
 pub(crate) fn is_supported_strategy_value_function(name: &str) -> bool {
-    name == "strategy.default_entry_qty" || is_supported_strategy_trade_field_function(name)
+    matches!(
+        name,
+        "strategy.convert_to_account" | "strategy.convert_to_symbol" | "strategy.default_entry_qty"
+    ) || is_supported_strategy_trade_field_function(name)
 }
 
 impl Analyzer {

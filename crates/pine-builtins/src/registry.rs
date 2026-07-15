@@ -209,6 +209,24 @@ mod tests {
     }
 
     #[test]
+    fn registers_strategy_currency_conversion_signatures() {
+        for name in ["strategy.convert_to_account", "strategy.convert_to_symbol"] {
+            let signature = get_phase_1_builtin(name).expect("strategy conversion signature");
+            assert_eq!(signature.params.len(), 1);
+            assert_eq!(signature.params[0].name, "value");
+            assert_eq!(
+                signature.params[0].accepts,
+                crate::Accepts::SeriesOrSimpleNumeric
+            );
+            assert_eq!(
+                signature.returns,
+                crate::ReturnSpec::Fixed(crate::namespaces::types::SERIES_FLOAT)
+            );
+            assert!(!signature.variadic);
+        }
+    }
+
+    #[test]
     fn registers_strategy_close_signature() {
         let signature = get_phase_1_builtin("strategy.close").expect("strategy.close signature");
         assert_eq!(signature.params[0].name, "id");

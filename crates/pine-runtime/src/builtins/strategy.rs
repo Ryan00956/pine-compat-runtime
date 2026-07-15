@@ -46,6 +46,9 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Option<Result<PineValue, RuntimeError>> {
         Some(match callee {
+            "strategy.convert_to_account" | "strategy.convert_to_symbol" => {
+                self.eval_strategy_currency_conversion(args)
+            }
             "strategy.default_entry_qty" => self.eval_strategy_default_entry_qty(args),
             "strategy.entry" => self.eval_strategy_entry(args),
             "strategy.order" => self.eval_strategy_order(args),
@@ -91,6 +94,19 @@ impl<'a> HistoricalRuntime<'a> {
             }
             _ => return None,
         })
+    }
+
+    fn eval_strategy_currency_conversion(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(value_expr) = call_arg_expr(args, 0, "value") else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .eval_expr(value_expr)?
+            .as_f64()
+            .map_or(PineValue::Na, PineValue::Float))
     }
 
     fn eval_strategy_default_entry_qty(

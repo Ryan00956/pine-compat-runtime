@@ -4911,6 +4911,37 @@ fn accepts_supported_strategy_account_currency_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_currency_conversion_fixture() {
+    assert_strategy_state_supported_fixture(
+        "tests/fixtures/sema/supported_strategy_currency_conversion.pine",
+        &["strategy.convert_to_account", "strategy.convert_to_symbol"],
+    );
+}
+
+#[test]
+fn reports_strategy_currency_conversion_argument_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_currency_conversion.pine",
+        "E_CALL_ARG_TYPE",
+    );
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_currency_conversion.pine",
+        "E_CALL_ARITY",
+    );
+}
+
+#[test]
+fn reports_strategy_currency_conversion_indicator_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_currency_conversion_indicator.pine",
+        &[
+            "`strategy.convert_to_account` is only supported in scripts declared with strategy(...)",
+            "`strategy.convert_to_symbol` is only supported in scripts declared with strategy(...)",
+        ],
+    );
+}
+
+#[test]
 fn reports_strategy_account_currency_const_consumer_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_account_currency_const.pine",

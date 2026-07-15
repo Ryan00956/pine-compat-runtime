@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added the default same-currency subsets of
+  `strategy.convert_to_account(value)` and `strategy.convert_to_symbol(value)`.
+  Under omitted or explicit `currency.NONE`, both are strategy-mode
+  `series float` identities that coerce integers to floats, preserve typed
+  `na`, and support direct, named, UDF, and history calls. Cross-currency
+  conversion remains unsupported.
 - Added the no-conversion `strategy(..., currency=currency.NONE)` declaration
   subset. It preserves the default behavior where
   `strategy.account_currency` inherits `syminfo.currency`; explicit account

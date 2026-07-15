@@ -272,7 +272,27 @@ const STRATEGY_DEFAULT_ENTRY_QTY_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const STRATEGY_CURRENCY_CONVERSION_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "value",
+    accepts: Accepts::SeriesOrSimpleNumeric,
+    optional: false,
+}];
+
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
+    BuiltinSignature {
+        name: "strategy.convert_to_account",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_CURRENCY_CONVERSION_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.convert_to_symbol",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_CURRENCY_CONVERSION_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
     BuiltinSignature {
         name: "strategy.default_entry_qty",
         phase: BuiltinPhase::Phase1Core,

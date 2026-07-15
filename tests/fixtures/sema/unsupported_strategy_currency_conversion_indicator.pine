@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported strategy currency conversion mode")
+plot(strategy.convert_to_account(close))
+plot(strategy.convert_to_symbol(close))
