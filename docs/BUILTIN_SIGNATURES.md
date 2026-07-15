@@ -2050,7 +2050,11 @@ trivia between digits is ignored, and class, quote, and case modes are
 preserved. Java/Pine character classes may use `]` as their first literal atom,
 including after a leading `^`, verbose-mode ASCII whitespace or comments, and
 an empty `\Q\E` quote. Such leading closers are normalized without changing
-quoted closers, negation, or the active case mode. Outside character classes,
+quoted closers, negation, or the active case mode. A `~` inside a Java/Pine
+character class is always a literal atom, including adjacent `~~`, escaped or
+quoted forms, nested classes, range endpoints, and active case modes; it does
+not expose Rust's symmetric-difference operator. Tildes outside classes retain
+their literal behavior. Outside character classes,
 global or scoped `(?i)` applies Pine's ASCII-only case folding to ordinary and
 `\Q...\E`-quoted literals plus `\uHHHH`/`\x` references. Lowercase `(?u)`
 independently enables Unicode-aware folding when `i` is active without changing

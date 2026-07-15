@@ -174,6 +174,46 @@ fn normalizes_pine_regex_character_class_case_modes() {
 }
 
 #[test]
+fn normalizes_pine_regex_literal_class_tildes() {
+    assert_eq!(
+        normalize_pine_regex(r"[a-z~~m][a-~~][~][\~]~~"),
+        r"[a-z\x{7E}\x{7E}m][a-\x{7E}\x{7E}][\x{7E}][\x{7E}]~~"
+    );
+
+    let pair = Regex::new(&normalize_pine_regex(r"\A[a-z~~m]+\z"))
+        .expect("normalized literal class tilde pair");
+    assert!(pair.is_match("m~"));
+    assert!(pair.is_match("az~"));
+    assert!(!pair.is_match("A"));
+
+    let range =
+        Regex::new(&normalize_pine_regex(r"\A[a-~~]+\z")).expect("normalized tilde range endpoint");
+    assert!(range.is_match("az{|}~"));
+    assert!(!range.is_match("`"));
+
+    let escaped = Regex::new(&normalize_pine_regex(r"\A\~[\~]\z"))
+        .expect("normalized escaped literal tildes");
+    assert!(escaped.is_match("~~"));
+
+    let nested = Regex::new(&normalize_pine_regex(r"\A[x[~~]]+\z"))
+        .expect("normalized nested literal class tildes");
+    assert!(nested.is_match("~x"));
+    assert!(!nested.is_match("m"));
+
+    let quoted = Regex::new(&normalize_pine_regex(r"\A[\Q~~\E]+\z"))
+        .expect("normalized quoted literal class tildes");
+    assert!(quoted.is_match("~~"));
+
+    let insensitive = Regex::new(&normalize_pine_regex(r"(?i)\A[~~a]+\z"))
+        .expect("normalized case-insensitive literal class tildes");
+    assert!(insensitive.is_match("~A"));
+
+    let outside = Regex::new(&normalize_pine_regex(r"\A~~\z"))
+        .expect("preserved unescaped tildes outside a character class");
+    assert!(outside.is_match("~~"));
+}
+
+#[test]
 fn normalizes_pine_regex_horizontal_whitespace_classes() {
     let horizontal =
         Regex::new(&normalize_pine_regex(r"^\h$")).expect("normalized horizontal whitespace regex");
@@ -986,6 +1026,12 @@ match_leading_class_closer = str.match("x]a", "[]a]")
 match_leading_class_closer_negated = str.match("]a", "[^]]")
 match_leading_class_caret = str.match("^a", "[^^]")
 match_leading_class_case = str.match("A", "(?i)[]a]")
+match_class_tilde_pair = str.match("m~", "[a-z~~m]+")
+match_class_tilde_range = str.match("`a~", "[a-~~]+")
+match_class_tilde_escaped = str.match("A~~", "\\~[\\~]")
+match_class_tilde_nested = str.match("c~x", "[x[~~]]+")
+match_class_tilde_quoted = str.match("A~~", "[\\Q~~\\E]+")
+match_literal_tilde_outside = str.match("A~~", "~~")
 match_unicode_case_literal = str.match("KΒ", "(?iu)kβ")
 match_unicode_case_scoped = str.match("ÅÅå", "(?iu:å)(?i:å)")
 match_unicode_case_word = str.match("KA", "(?iu)\\w")
@@ -1191,6 +1237,7 @@ plot(match_octal_two_digit_width == "?7" and match_octal_three_digit_width == "�
 plot(match_octal_ascii_case == "Q" and match_octal_ascii_non_ascii == "å" and match_octal_unicode_case == "Å" and match_octal_verbose == "q" and match_octal_quoted == "\\0141" ? 1 : 0)
 plot(match_previous_anchor_start == "abc" and match_previous_anchor_later == "" and match_previous_anchor_consumed == "" and match_previous_anchor_multiline == "" and match_previous_anchor_quoted == "\\G" ? 1 : 0)
 plot(match_leading_class_closer == "]" and match_leading_class_closer_negated == "a" and match_leading_class_caret == "a" and match_leading_class_case == "A" ? 1 : 0)
+plot(match_class_tilde_pair == "m~" and match_class_tilde_range == "a~" and match_class_tilde_escaped == "~~" and match_class_tilde_nested == "~x" and match_class_tilde_quoted == "~~" and match_literal_tilde_outside == "~~" ? 1 : 0)
 plot(match_unicode_case_literal == "KΒ" and match_unicode_case_scoped == "Åå" and match_unicode_case_literal_class == "K" ? 1 : 0)
 plot(match_unicode_case_word == "A" and match_unicode_case_word_class == "A" and match_unicode_case_posix == "A" ? 1 : 0)
 plot(match_unicode_classes_without_case == "KKΒ" and match_unicode_modes_disabled == "åA" and match_unicode_case_references == "ÅÅÅEϹ" ? 1 : 0)

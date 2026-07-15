@@ -325,6 +325,14 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 index += slash.len_utf8() + escaped.len_utf8();
                 continue;
             }
+            if escaped == '~' {
+                if let Some(prefix) = class_prefixes.last_mut() {
+                    prefix.mark_atom();
+                }
+                result.push_str(r"\x{7E}");
+                index += slash.len_utf8() + escaped.len_utf8();
+                continue;
+            }
             if let Some(prefix) = class_prefixes.last_mut() {
                 prefix.mark_atom();
             }
@@ -581,6 +589,8 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
         let ch = rest.chars().next().expect("regex contains a character");
         if class_depth == 0 {
             push_pine_regex_literal(&mut result, ch, mode, false);
+        } else if ch == '~' {
+            result.push_str(r"\x{7E}");
         } else {
             result.push(ch);
         }

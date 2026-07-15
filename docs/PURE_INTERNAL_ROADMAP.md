@@ -1336,7 +1336,9 @@ Current baseline:
   `\0` octal, fixed `\e`, and one-scalar `\cX` control references, and
   single-search `\G` previous-match plus final-newline-aware `$`/`\Z` end
   anchors, leading literal `]` character-class atoms across negation, verbose
-  trivia, and quoted regions, plus default-dot exclusion of Pine's full
+  trivia, and quoted regions, literal `~` class atoms protected from Rust's
+  symmetric-difference syntax across ordinary, escaped, quoted, nested, range,
+  and case-mode forms, plus default-dot exclusion of Pine's full
   line-terminator set with
   global/scoped `(?s)` and `(?-s)` restoration,
   and ASCII-default `(?i)` versus independent lowercase-`u` Unicode case

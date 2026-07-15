@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Corrected `str.match()` Java/Pine character classes so `~` remains a
+  literal atom instead of allowing adjacent `~~` to invoke Rust's symmetric
+  difference operator. Ordinary, escaped, quoted, nested, range-endpoint, and
+  case-insensitive class uses are normalized, while tildes outside classes
+  retain their literal behavior.
 - Completed `str.match()` support for Java/Pine character method properties
   with the remaining nine identifier, whitespace, control, and mirrored
   classes. Java and Unicode identifier start/part retain their distinct
