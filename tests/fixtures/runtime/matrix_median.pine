@@ -1,0 +1,36 @@
+//@version=6
+indicator("Matrix median")
+
+float_even = matrix.new<float>(2, 3, na)
+matrix.set(float_even, 0, 0, close + 4)
+matrix.set(float_even, 0, 1, close + 1)
+matrix.set(float_even, 0, 2, close + 3)
+matrix.set(float_even, 1, 0, close + 2)
+
+float_odd = matrix.new<float>(1, 3, na)
+matrix.set(float_odd, 0, 0, close + 5)
+matrix.set(float_odd, 0, 1, close + 1)
+matrix.set(float_odd, 0, 2, close + 3)
+
+int_even_positive = matrix.new<int>(1, 2, na)
+matrix.set(int_even_positive, 0, 0, 1)
+matrix.set(int_even_positive, 0, 1, 2)
+int_even_negative = matrix.new<int>(1, 2, na)
+matrix.set(int_even_negative, 0, 0, -2)
+matrix.set(int_even_negative, 0, 1, -1)
+int_odd = matrix.new<int>(1, 3, na)
+matrix.set(int_odd, 0, 0, 5)
+matrix.set(int_odd, 0, 1, 1)
+matrix.set(int_odd, 0, 2, 3)
+
+empty = matrix.new<float>(0, 2)
+all_na = matrix.new<float>(1, 2)
+
+plot(matrix.median(float_even), "float_even_namespace")
+plot(float_even.median(), "float_even_method")
+plot(matrix.median(float_odd), "float_odd")
+plot(matrix.median(int_even_positive), "int_even_positive")
+plot(int_even_negative.median(), "int_even_negative")
+plot(matrix.median(int_odd), "int_odd")
+plot(na(matrix.median(empty)) ? 1 : 0, "empty_is_na")
+plot(na(all_na.median()) ? 1 : 0, "all_na_is_na")

@@ -923,6 +923,93 @@ fn summarizes_numeric_matrix_cells_and_ignores_na() {
 }
 
 #[test]
+fn calculates_matrix_medians_by_element_kind_and_ignores_na() {
+    let program = runtime_program();
+    let mut runtime = HistoricalRuntime::new(&program);
+
+    let PineValue::Matrix(float_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 3, PineValue::Na)
+        .expect("float matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    for (column, value) in (0_i64..).zip([4.0, 1.0, 3.0]) {
+        runtime
+            .matrix_set_value(float_id, 0, column, PineValue::Float(value))
+            .expect("matrix set should succeed");
+    }
+    runtime
+        .matrix_set_value(float_id, 1, 0, PineValue::Float(2.0))
+        .expect("matrix set should succeed");
+    assert_eq!(runtime.matrix_median(float_id), Some(PineValue::Float(2.5)));
+
+    let PineValue::Matrix(int_positive_id) = runtime
+        .new_matrix(MatrixElementKind::Int, 1, 2, PineValue::Na)
+        .expect("positive integer matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    runtime
+        .matrix_set_value(int_positive_id, 0, 0, PineValue::Int(1))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(int_positive_id, 0, 1, PineValue::Int(2))
+        .expect("matrix set should succeed");
+    assert_eq!(
+        runtime.matrix_median(int_positive_id),
+        Some(PineValue::Int(1)),
+        "positive integer midpoint averages should truncate toward zero"
+    );
+
+    let PineValue::Matrix(int_negative_id) = runtime
+        .new_matrix(MatrixElementKind::Int, 1, 2, PineValue::Na)
+        .expect("negative integer matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    runtime
+        .matrix_set_value(int_negative_id, 0, 0, PineValue::Int(-2))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(int_negative_id, 0, 1, PineValue::Int(-1))
+        .expect("matrix set should succeed");
+    assert_eq!(
+        runtime.matrix_median(int_negative_id),
+        Some(PineValue::Int(-1)),
+        "negative integer midpoint averages should truncate toward zero"
+    );
+
+    let PineValue::Matrix(int_odd_id) = runtime
+        .new_matrix(MatrixElementKind::Int, 1, 3, PineValue::Na)
+        .expect("odd integer matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    for (column, value) in (0_i64..).zip([5, 1, 3]) {
+        runtime
+            .matrix_set_value(int_odd_id, 0, column, PineValue::Int(value))
+            .expect("matrix set should succeed");
+    }
+    assert_eq!(runtime.matrix_median(int_odd_id), Some(PineValue::Int(3)));
+
+    let PineValue::Matrix(empty_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 0, 2, PineValue::Na)
+        .expect("empty matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(all_na_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 1, 2, PineValue::Na)
+        .expect("all-na matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    assert_eq!(runtime.matrix_median(empty_id), None);
+    assert_eq!(runtime.matrix_median(all_na_id), None);
+    assert_eq!(runtime.matrix_median(u32::MAX), None);
+}
+
+#[test]
 fn traces_numeric_matrix_diagonal_and_ignores_na() {
     let program = runtime_program();
     let mut runtime = HistoricalRuntime::new(&program);

@@ -208,6 +208,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "matrix.kron",
     "matrix.mult",
     "matrix.max",
+    "matrix.median",
     "matrix.min",
     "matrix.mode",
     "matrix.new<float>",

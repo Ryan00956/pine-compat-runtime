@@ -1,0 +1,12 @@
+//@version=6
+indicator("Supported matrix median series return qualifier")
+
+int_values = matrix.new<int>(1, 2, 1)
+float_values = matrix.new<float>(1, 2, close)
+
+int int_namespace = matrix.median(int_values)
+int int_method = int_values.median()
+float float_namespace = matrix.median(float_values)
+float float_method = float_values.median()
+
+plot(int_namespace + int_method + float_namespace + float_method)

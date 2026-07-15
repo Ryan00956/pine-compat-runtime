@@ -17020,6 +17020,26 @@ fn reports_unsupported_matrix_aggregate_const_input_return_qualifier_fixture() {
 }
 
 #[test]
+fn accepts_supported_matrix_median_series_return_qualifier_fixture() {
+    assert_valid_fixture(
+        "tests/fixtures/sema/supported_matrix_median_series_return_qualifier.pine",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_median_const_input_return_qualifier_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_matrix_median_const_input_return_qualifier.pine",
+        &[
+            "`plot` argument `show_last` expects const/input int, got series int",
+            "`plot` argument `show_last` expects const/input int, got series int",
+            "`hline` argument `price` expects const/input numeric, got series float",
+            "`hline` argument `price` expects const/input numeric, got series float",
+        ],
+    );
+}
+
+#[test]
 fn accepts_supported_matrix_fixed_float_collection_return_qualifier_fixture() {
     assert_valid_fixture(
         "tests/fixtures/sema/supported_matrix_fixed_float_collection_return_qualifier.pine",
@@ -17950,6 +17970,33 @@ fn accepts_supported_matrix_mode_fixture() {
 }
 
 #[test]
+fn accepts_supported_matrix_median_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_matrix_median.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "matrix.median"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_supported_matrix_trace_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/supported_matrix_trace.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
@@ -18630,6 +18677,23 @@ fn reports_unsupported_matrix_mode_fixture() {
 fn reports_unsupported_matrix_mode_method_receiver_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_matrix_mode_method_receiver.pine",
+        "E_METHOD_RECEIVER_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_median_fixture() {
+    assert_numeric_matrix_id_message(
+        "tests/fixtures/sema/unsupported_matrix_median.pine",
+        "matrix.median",
+        "const na",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_median_method_receiver_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_matrix_median_method_receiver.pine",
         "E_METHOD_RECEIVER_TYPE",
     );
 }

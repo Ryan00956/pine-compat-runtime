@@ -230,6 +230,10 @@ pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &
         "tests/fixtures/runtime/matrix_min_max.pine",
     ),
     (
+        "runtime_matrix_median.json",
+        "tests/fixtures/runtime/matrix_median.pine",
+    ),
+    (
         "runtime_matrix_mode.json",
         "tests/fixtures/runtime/matrix_mode.pine",
     ),

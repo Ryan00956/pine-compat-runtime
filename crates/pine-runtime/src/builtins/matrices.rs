@@ -90,6 +90,7 @@ impl<'a> HistoricalRuntime<'a> {
             "matrix.avg" => self.eval_matrix_avg(args),
             "matrix.min" => self.eval_matrix_min(args),
             "matrix.max" => self.eval_matrix_max(args),
+            "matrix.median" => self.eval_matrix_median(args),
             "matrix.mode" => self.eval_matrix_mode(args),
             "matrix.trace" => self.eval_matrix_trace(args),
             "matrix.det" => self.eval_matrix_det(args),
@@ -468,6 +469,16 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         Ok(self.matrix_max(id).unwrap_or(PineValue::Na))
+    }
+
+    pub(crate) fn eval_matrix_median(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Matrix(id) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self.matrix_median(id).unwrap_or(PineValue::Na))
     }
 
     pub(crate) fn eval_matrix_mode(
@@ -939,6 +950,26 @@ impl<'a> HistoricalRuntime<'a> {
             .filter_map(PineValue::as_f64)
             .reduce(f64::max)
             .map(finite_float_or_na)
+    }
+
+    pub(crate) fn matrix_median(&self, id: u32) -> Option<PineValue> {
+        let matrix = self.matrix_store.get(&id)?;
+        let mut values: Vec<_> = matrix.values.iter().filter_map(PineValue::as_f64).collect();
+        if values.is_empty() {
+            return None;
+        }
+        values.sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
+        let middle = values.len() / 2;
+        let median = if values.len() % 2 == 0 {
+            (values[middle - 1] + values[middle]) / 2.0
+        } else {
+            values[middle]
+        };
+        match matrix.kind {
+            MatrixElementKind::Int => Some(PineValue::Int(median as i64)),
+            MatrixElementKind::Float => Some(finite_float_or_na(median)),
+            _ => None,
+        }
     }
 
     pub(crate) fn matrix_mode(&self, id: u32) -> Option<PineValue> {

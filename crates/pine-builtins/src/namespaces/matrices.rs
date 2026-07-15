@@ -687,6 +687,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "matrix.median",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATRIX_NUMERIC_ID_PARAMS,
+        returns: ReturnSpec::MatrixElement(0),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "matrix.mode",
         phase: BuiltinPhase::Phase1Core,
         params: MATRIX_NUMERIC_ID_PARAMS,

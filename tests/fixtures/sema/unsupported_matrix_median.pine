@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported matrix.median")
+
+median_value = matrix.median(na)
+plot(median_value)

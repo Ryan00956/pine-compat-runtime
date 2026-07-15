@@ -1,0 +1,10 @@
+//@version=6
+indicator("Unsupported matrix median const input return qualifier")
+
+int_values = matrix.new<int>(1, 2, 1)
+float_values = matrix.new<float>(1, 2, close)
+
+plot(close, show_last=matrix.median(int_values))
+plot(close, show_last=int_values.median())
+hline(matrix.median(float_values))
+hline(float_values.median())

@@ -692,6 +692,10 @@ element-compatible consumers accordingly.
 namespace and method-call forms: float/int/bool/string/color element results
 are returned as series values accepted by matching series-compatible consumers
 and rejected by stricter const/input or simple consumers.
+`matrix.median` also has fixture-backed official element-kind-preserving
+`MatrixElement` return semantics for namespace and method-call forms over
+numeric matrices: `matrix<int>` results are `series int`, while `matrix<float>`
+results are `series float`, and both are rejected by const/input consumers.
 `matrix.sum`, `matrix.avg`, `matrix.min`, `matrix.max`, `matrix.mode`,
 `matrix.trace`, and `matrix.det` have fixture-backed fixed `series float`
 return semantics for namespace and method-call forms over int/float matrices,

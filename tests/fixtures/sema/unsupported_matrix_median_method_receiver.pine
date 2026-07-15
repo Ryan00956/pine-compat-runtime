@@ -1,0 +1,4 @@
+//@version=6
+indicator("Unsupported matrix.median method receiver")
+
+plot(close.median())

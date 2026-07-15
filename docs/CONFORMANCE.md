@@ -2169,7 +2169,8 @@ Pine matrix collections are partial. Runtime-owned `matrix<float>` ids support
 `matrix.is_stochastic`, `values.is_stochastic()`, `matrix.is_zero`,
 `values.is_zero()`, `matrix.sum`,
 `values.sum()`, `matrix.avg`, `values.avg()`, `matrix.min`,
-`values.min()`, `matrix.max`, `values.max()`, `matrix.mode`, `values.mode()`,
+`values.min()`, `matrix.max`, `values.max()`, `matrix.median`,
+`values.median()`, `matrix.mode`, `values.mode()`,
 `matrix.trace`, `values.trace()`, `matrix.det`, `values.det()`,
 `matrix.eigenvalues`, `values.eigenvalues()`, `matrix.eigenvectors`,
 `values.eigenvectors()`, `matrix.inv`, `values.inv()`, `matrix.pinv`,
@@ -2215,7 +2216,8 @@ while runtime-owned `matrix<int>` ids support `matrix.new<int>`, `matrix.get`,
 `matrix.is_antidiagonal`, `matrix.is_triangular`, `matrix.is_identity`,
 `matrix.is_symmetric`, `matrix.is_antisymmetric`,
 `matrix.is_stochastic`, `matrix.is_zero`, `matrix.sum`, `matrix.avg`,
-`matrix.min`, `matrix.max`, `matrix.mode`, `matrix.trace`, `matrix.det`,
+`matrix.min`, `matrix.max`, `matrix.median`, `matrix.mode`, `matrix.trace`,
+`matrix.det`,
 `matrix.eigenvalues`, `matrix.eigenvectors`, `matrix.inv`, `matrix.pinv`, and
 `matrix.rank`, including the corresponding supported method aliases and int or
 `na` cells,
@@ -2238,8 +2240,16 @@ namespace and method-call row swaps preserving shape,
 namespace and method-call column swaps preserving shape,
 namespace and method-call row sorting by a selected column with default column
 `0`, ascending/descending order, stable equal-key row order, and `na` placement,
-namespace and method-call element-count reads, matrix sums, averages, minimums, maximums, modes, traces, determinants, eigenvalue arrays, eigenvector matrices, inverse matrices, pseudo-inverse matrices, and ranks, where aggregate readers ignore `na` cells and
-return `na` for empty or all-`na` matrices, determinants return `na` for any `na` cell and runtime-error on non-square matrices, ranks support rectangular matrices and return `na` for any `na` cell, and modes return `na` for no repeated numeric cells,
+namespace and method-call element-count reads, matrix sums, averages, minimums,
+maximums, medians, modes, traces, determinants, eigenvalue arrays, eigenvector
+matrices, inverse matrices, pseudo-inverse matrices, and ranks, where aggregate
+readers ignore `na` cells and return `na` for empty or all-`na` matrices,
+medians preserve the source element kind with official `series int`/`series
+float` overloads and average the two middle values for even element counts
+(truncating integer results toward zero), determinants return `na` for any
+`na` cell and runtime-error on non-square matrices, ranks support rectangular
+matrices and return `na` for any `na` cell, and modes return `na` for no
+repeated numeric cells,
 namespace and method-call square-shape predicates,
 namespace and method-call anti-diagonal predicates that require square shapes,
 allow any secondary-diagonal value including `na`, require exact-zero numeric
@@ -2304,7 +2314,7 @@ Matrix get/copy helpers including
 `values.is_triangular()`/`values.is_identity()`/`values.is_symmetric()`/
 `values.is_antisymmetric()`/`values.is_stochastic()`/`values.is_zero()`,
 numeric readers including
-`values.sum()`/`values.avg()`/`values.min()`/`values.max()`/`values.mode()`/`values.trace()`/`values.det()`/`values.rank()`,
+`values.sum()`/`values.avg()`/`values.min()`/`values.max()`/`values.median()`/`values.mode()`/`values.trace()`/`values.det()`/`values.rank()`,
 row/column extraction helpers including
 `values.row(row)`/`values.col(column)`, submatrix helpers including
 `values.submatrix(from_row?, to_row?, from_column?, to_column?)`, and mutating helpers including
@@ -2350,7 +2360,7 @@ method syntax beyond
 `values.is_diagonal()`, `values.is_antidiagonal()`, `values.is_triangular()`,
 `values.is_identity()`, `values.is_symmetric()`, `values.is_antisymmetric()`,
 `values.is_stochastic()`, `values.is_zero()`, `values.sum()`, `values.avg()`,
-`values.min()`, `values.max()`, `values.mode()`, `values.trace()`,
+`values.min()`, `values.max()`, `values.median()`, `values.mode()`, `values.trace()`,
 `values.det()`, `values.rank()`, `values.row(row)`, `values.col(column)`,
 `values.add_row(row, array_id)`, and
 `values.add_col(column, array_id)`, `values.remove_row(row)`, and
