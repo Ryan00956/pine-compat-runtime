@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added `strategy.openprofit_percent` as a read-only strategy-mode
+  `series float`, calculated as current unrealized profit divided by realized
+  equity (`initial_capital + netprofit`) times 100. It supports direct, UDF,
+  and history reads, returns `na` for a non-positive or non-finite denominator,
+  and does not expand public strategy output.
 - Added `strategy.initial_capital` as a read-only strategy-mode `series float`
   that returns the configured or default broker starting capital on every bar,
   including UDF and history reads, without expanding public strategy output.

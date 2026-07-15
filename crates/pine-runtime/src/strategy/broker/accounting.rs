@@ -62,6 +62,16 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn open_profit_percent(&self, close: f64) -> Option<f64> {
+        let open_profit = self.open_profit(close);
+        let realized_equity = self.initial_capital + self.realized_profit();
+        if !open_profit.is_finite() || !realized_equity.is_finite() || realized_equity <= 0.0 {
+            return None;
+        }
+        Some(normalize_zero(open_profit / realized_equity * 100.0))
+    }
+
+    #[must_use]
     pub(crate) fn open_trade_capital_held(&self, close: f64) -> Option<f64> {
         let has_active_margin = self.margin_long.is_active() || self.margin_short.is_active();
         if !has_active_margin {

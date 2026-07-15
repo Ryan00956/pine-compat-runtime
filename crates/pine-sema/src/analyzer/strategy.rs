@@ -7,6 +7,7 @@ const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.position_avg_price",
     "strategy.initial_capital",
     "strategy.openprofit",
+    "strategy.openprofit_percent",
     "strategy.netprofit",
     "strategy.netprofit_percent",
     "strategy.grossprofit",

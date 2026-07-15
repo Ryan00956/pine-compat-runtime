@@ -161,7 +161,7 @@ current matching long entry.
 
 Strategy-mode scripts can read `strategy.position_size`,
 `strategy.position_avg_price`, `strategy.initial_capital`,
-`strategy.openprofit`, `strategy.netprofit`,
+`strategy.openprofit`, `strategy.openprofit_percent`, `strategy.netprofit`,
 `strategy.grossprofit`, `strategy.grossloss`, `strategy.avg_trade`,
 `strategy.avg_winning_trade`, `strategy.avg_losing_trade`,
 `strategy.buy_and_hold_return_percent`, `strategy.max_runup`,
@@ -175,7 +175,10 @@ price while long. `strategy.initial_capital` returns the configured or default
 broker starting capital unchanged on every bar, including through UDF and
 history reads, without expanding public strategy JSON. `strategy.openprofit`
 is `(close - avg_price) * size` while
-long and `0` when flat. `strategy.netprofit` sums realized closed-trade profit.
+long and `0` when flat. `strategy.openprofit_percent` divides that value by
+realized equity (`initial_capital + strategy.netprofit`) and multiplies by 100;
+it returns `na` when the realized-equity denominator is non-positive or
+non-finite. `strategy.netprofit` sums realized closed-trade profit.
 `strategy.grossprofit` sums only positive realized closed-trade profit, so
 losing, flat, and current open trades do not change it.
 `strategy.grossloss` sums realized closed-trade losses as positive values, so

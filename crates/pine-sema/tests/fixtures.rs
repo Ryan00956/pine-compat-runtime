@@ -4892,6 +4892,7 @@ fn accepts_supported_strategy_profit_state_fixture() {
         &[
             "strategy.initial_capital",
             "strategy.openprofit",
+            "strategy.openprofit_percent",
             "strategy.netprofit",
             "strategy.netprofit_percent",
             "strategy.grossprofit",

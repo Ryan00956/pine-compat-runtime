@@ -9787,11 +9787,14 @@ plot(strategy.buy_and_hold_return_percent[1])
 }
 
 #[test]
-fn strategy_profit_percent_variables_use_initial_capital_denominator() {
+fn strategy_profit_percent_variables_use_documented_denominators() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"strategy("profit percent", initial_capital=1000)
 identity(value) => value
+openprofit_percent = strategy.openprofit_percent
+openprofit_percent_udf = identity(strategy.openprofit_percent)
+openprofit_percent_history = strategy.openprofit_percent[1]
 if bar_index == 0
     strategy.entry("W", strategy.long, qty=1)
 if bar_index == 2
@@ -9827,6 +9830,9 @@ plot(identity(strategy.grossloss_percent))
 plot(strategy.netprofit_percent[1])
 plot(strategy.grossprofit_percent[1])
 plot(strategy.grossloss_percent[1])
+plot(openprofit_percent)
+plot(openprofit_percent_udf)
+plot(openprofit_percent_history)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -9973,6 +9979,55 @@ plot(strategy.grossloss_percent[1])
             PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
+    );
+    let open_profit_percent = vec![
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(0.1),
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(-2.0 / 1001.0 * 100.0),
+    ];
+    assert_eq!(result.plots[12].values, open_profit_percent.clone());
+    assert_eq!(result.plots[13].values, open_profit_percent);
+    assert_eq!(
+        result.plots[14].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.1),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+        ]
+    );
+}
+
+#[test]
+fn strategy_openprofit_percent_is_na_without_positive_realized_equity() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("open profit percent denominator", initial_capital=1)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+if bar_index == 2
+    strategy.close("L")
+plot(strategy.openprofit_percent)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(1.0), bar(0.0)])
+        .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Float(0.0), PineValue::Float(0.0), PineValue::Na,]
     );
 }
 

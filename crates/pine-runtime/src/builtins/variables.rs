@@ -309,6 +309,13 @@ impl<'a> HistoricalRuntime<'a> {
                 PineValue::Float(self.strategy_broker.open_profit(bar.close))
             });
         }
+        if name == "strategy.openprofit_percent" {
+            return self.current_bar.map_or(PineValue::Na, |bar| {
+                self.strategy_broker
+                    .open_profit_percent(bar.close)
+                    .map_or(PineValue::Na, PineValue::Float)
+            });
+        }
         if name == "strategy.netprofit" {
             return PineValue::Float(self.strategy_broker.realized_profit());
         }

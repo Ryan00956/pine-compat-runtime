@@ -694,6 +694,7 @@ strategy.cancel(id: simple string) -> void
 strategy.cancel_all() -> void
 strategy.exit(id: simple string, from_entry?: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, comment_profit?: string-compatible, comment_loss?: string-compatible, comment_trailing?: string-compatible, alert_message?: string-compatible, alert_profit?: string-compatible, alert_loss?: string-compatible, alert_trailing?: string-compatible, disable_alert?: bool-compatible)
   -> void
+strategy.openprofit_percent -> series float
 strategy.netprofit_percent -> series float
 strategy.grossprofit -> series float
 strategy.grossprofit_percent -> series float
@@ -904,6 +905,10 @@ multi-entry `strategy.exit` semantics remain outside the current claim.
 returns the positive configured `strategy(..., initial_capital=...)` value, or
 the existing default starting capital when omitted, on every bar. It follows
 ordinary series history and does not add a public runtime schema field.
+`strategy.openprofit_percent` is a read-only strategy-mode series float that
+divides current unrealized profit by realized equity
+(`initial_capital + netprofit`) and multiplies by 100. It returns `na` when the
+realized-equity denominator is non-positive or non-finite.
 `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
 `strategy.grossloss_percent` are read-only strategy-mode series floats that
 divide the corresponding realized amount by `initial_capital` and multiply by

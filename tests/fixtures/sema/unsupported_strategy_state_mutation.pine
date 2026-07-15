@@ -2,6 +2,7 @@
 strategy("Unsupported strategy state mutation")
 strategy.position_size := 1
 strategy.initial_capital := 1
+strategy.openprofit_percent := 1
 strategy.netprofit_percent := 1
 strategy.grossprofit := 1
 strategy.grossprofit_percent := 1

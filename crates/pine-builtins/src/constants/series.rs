@@ -24,6 +24,10 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
+        "strategy.openprofit_percent",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
         "strategy.netprofit",
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
@@ -415,6 +419,7 @@ mod tests {
         for name in [
             "strategy.initial_capital",
             "strategy.openprofit",
+            "strategy.openprofit_percent",
             "strategy.netprofit",
             "strategy.netprofit_percent",
             "strategy.grossprofit",

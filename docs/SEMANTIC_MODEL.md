@@ -156,6 +156,10 @@ returns the configured or default broker starting capital on every bar. It is
 available through ordinary series expressions, UDF arguments, and history
 references, while indicator use, requested-context use, and mutation remain
 rejected.
+`strategy.openprofit_percent` is a read-only strategy-mode `series float` that
+returns `strategy.openprofit / (strategy.initial_capital +
+strategy.netprofit) * 100`. Direct, UDF, and history reads are supported; a
+non-positive or non-finite realized-equity denominator produces `na`.
 `strategy.grossprofit` is a read-only strategy-mode `series float` that sums
 positive realized closed-trade profit only; losing, flat, and current open
 trades do not change it. `strategy.netprofit_percent`,

@@ -2,6 +2,7 @@
 strategy("Supported strategy profit state")
 plot(strategy.initial_capital)
 plot(strategy.openprofit)
+plot(strategy.openprofit_percent)
 plot(strategy.netprofit)
 plot(strategy.netprofit_percent)
 plot(strategy.grossprofit)

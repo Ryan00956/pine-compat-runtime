@@ -1081,7 +1081,10 @@ every bar, including ordinary UDF and history reads, without public schema
 expansion. `strategy.openprofit` is unrealized profit for the current long
 position marked to the current close and is `0` when flat. `strategy.netprofit`
 is cumulative realized closed-trade profit only, excluding any current open
-profit. Stage 7 Slice 22 adds `strategy.grossprofit` as cumulative positive
+profit. The `strategy.openprofit_percent` slice divides current unrealized
+profit by realized equity (`initial_capital + strategy.netprofit`) and
+multiplies by 100, returning `na` when that denominator is non-positive or
+non-finite. Stage 7 Slice 22 adds `strategy.grossprofit` as cumulative positive
 realized closed-trade profit only, excluding losing, flat, and current open
 trades. Stage 7 Slice 23 adds `strategy.grossloss` as cumulative realized
 closed-trade loss as a positive value, excluding winning, flat, and current
@@ -2605,6 +2608,7 @@ strategy.max_contracts_held_all partial maximum contracts/shares/lots/units held
 strategy.max_contracts_held_long partial maximum long contracts/shares/lots/units held over the whole trading range as a read-only series float in strategy-mode scripts only
 strategy.max_contracts_held_short partial maximum short contracts/shares/lots/units held over the whole trading range as a read-only series float in strategy-mode scripts only; remains 0.0 because short entries are unsupported
 strategy.openprofit partial       current long-only unrealized profit read-only series, 0 when flat, in strategy-mode scripts only; supports fixture-backed control-flow, UDF argument, and history-reference interactions
+strategy.openprofit_percent partial current long-only unrealized profit divided by realized equity as a read-only series float in strategy-mode scripts only; returns na for a non-positive or non-finite realized-equity denominator
 strategy.netprofit  partial       cumulative realized closed-trade profit read-only series, excluding current open profit, in strategy-mode scripts only
 strategy.netprofit_percent partial cumulative realized closed-trade profit as a percentage of initial_capital, excluding current open profit, in strategy-mode scripts only
 strategy.grossprofit partial      cumulative positive realized closed-trade profit read-only series, excluding losing, flat, and current open trades, in strategy-mode scripts only
