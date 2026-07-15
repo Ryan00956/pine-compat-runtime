@@ -273,6 +273,35 @@ fn normalizes_pine_regex_octal_escapes() {
 }
 
 #[test]
+fn normalizes_pine_regex_previous_match_anchor() {
+    let anchored =
+        Regex::new(&normalize_pine_regex(r"\Gabc")).expect("normalized previous-match anchor");
+    assert_eq!(
+        anchored.find("abc").map(|matched| matched.as_str()),
+        Some("abc")
+    );
+    assert!(anchored.find("xabc").is_none());
+
+    let empty =
+        Regex::new(&normalize_pine_regex(r"\G")).expect("normalized empty previous-match anchor");
+    assert_eq!(empty.find("abc").map(|matched| matched.range()), Some(0..0));
+
+    let consumed = Regex::new(&normalize_pine_regex(r"a\G"))
+        .expect("normalized consumed-prefix previous-match anchor");
+    assert!(!consumed.is_match("a"));
+
+    let multiline = Regex::new(&normalize_pine_regex(r"(?m)\Gabc"))
+        .expect("normalized multiline previous-match anchor");
+    assert!(!multiline.is_match("x\nabc"));
+
+    let quoted = Regex::new(&normalize_pine_regex(r"\A\Q\G\E\z"))
+        .expect("normalized quoted previous-match-anchor spelling");
+    assert!(quoted.is_match(r"\G"));
+
+    assert!(Regex::new(&normalize_pine_regex(r"[\G]")).is_err());
+}
+
+#[test]
 fn normalizes_pine_regex_quoted_literals() {
     assert_eq!(
         normalize_pine_regex(r"\Q(?U)\d[.]# \E\d"),
@@ -686,6 +715,11 @@ match_octal_ascii_non_ascii = str.match("Åå", "(?i)\\0345")
 match_octal_unicode_case = str.match("Åå", "(?iU)\\0345")
 match_octal_verbose = str.match("q", "(?x)\\0 1 # comment\n 6 1")
 match_octal_quoted = str.match("\\0141", "\\Q\\0141\\E")
+match_previous_anchor_start = str.match("abc", "\\Gabc")
+match_previous_anchor_later = str.match("xabc", "\\Gabc")
+match_previous_anchor_consumed = str.match("a", "a\\G")
+match_previous_anchor_multiline = str.match("x\nabc", "(?m)\\Gabc")
+match_previous_anchor_quoted = str.match("\\G", "\\Q\\G\\E")
 match_quoted_meta = str.match("x[a-z]+(?U)# y", "\\Q[a-z]+(?U)# \\E")
 match_quoted_escape = str.match("\\d123", "\\Q\\d\\E")
 match_quoted_verbose = str.match("# [ ]", "(?x)\\Q# [ ]\\E")
@@ -840,6 +874,7 @@ plot(match_control_tab == "\t" and match_control_lowercase == "!" and match_cont
 plot(match_control_ascii_case == "Q" and match_control_unicode_case == "Ϲ" and match_control_verbose == "\t" and match_control_quoted == "\\e\\cA" ? 1 : 0)
 plot(match_octal_two_digit_width == "?7" and match_octal_three_digit_width == "ÿx" and match_octal_non_octal_tail == "\n8" and match_octal_first_digit_limit == " 0" and match_octal_class == "a" ? 1 : 0)
 plot(match_octal_ascii_case == "Q" and match_octal_ascii_non_ascii == "å" and match_octal_unicode_case == "Å" and match_octal_verbose == "q" and match_octal_quoted == "\\0141" ? 1 : 0)
+plot(match_previous_anchor_start == "abc" and match_previous_anchor_later == "" and match_previous_anchor_consumed == "" and match_previous_anchor_multiline == "" and match_previous_anchor_quoted == "\\G" ? 1 : 0)
 plot(match_quoted_meta == "[a-z]+(?U)# " and match_quoted_escape == "\\d" and match_quoted_verbose == "# [ ]" and match_quoted_class == "]-" and match_quoted_unclosed == "[b]+" and match_quoted_then_ascii == "[a]123" ? 1 : 0)
 plot(match_final_newline_dollar == "tail" and match_final_newline_Z == "tail" and match_absolute_z_missing == "" and match_absolute_z == "tail" ? 1 : 0)
 plot(match_explicit_final_newline == "\n" and match_empty_final_newline_dollar == "" and match_empty_final_newline_Z == "" ? 1 : 0)

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added `str.match()` support for Pine's `\G` previous-match anchor. Under the
+  API's single initial match search it is an absolute-start assertion, including
+  multiline independence, consumed-prefix rejection, quoted preservation, and
+  character-class rejection.
 - Added `str.match()` support for Pine's `\0n`, `\0nn`, and `\0mnn` octal
   regex references, including Java's conditional third-digit consumption,
   required first digit, non-octal trailing characters, character-class and

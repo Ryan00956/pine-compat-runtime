@@ -2027,7 +2027,11 @@ default mode. The same active mode applies to character-class literals and
 ranges before negation and intersections, including predefined/POSIX class
 expansions, `\Q...\E` atoms, and `\uHHHH`/`\x` references. General Unicode
 properties retain their Unicode case behavior, while Unicode block membership
-remains exact under either case mode. By default, `$`
+remains exact under either case mode. Because `str.match` performs one initial
+match search with no reusable Matcher state, Pine's `\G` previous-match anchor
+is equivalent to the absolute source start for this API. It is independent of
+multiline mode, remains literal when quoted, and is invalid in a character
+class. By default, `$`
 and `\Z` match either at the absolute end or immediately before a final `\n`,
 without including that line terminator in the returned substring; `\z` matches
 only the absolute end. Global or scoped `(?m)` gives `$` multiline behavior,

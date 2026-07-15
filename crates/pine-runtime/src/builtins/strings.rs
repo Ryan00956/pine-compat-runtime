@@ -498,6 +498,11 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 index += slash.len_utf8() + escaped.len_utf8();
                 continue;
             }
+            if escaped == 'G' && class_depth == 0 {
+                result.push_str(r"\A");
+                index += slash.len_utf8() + escaped.len_utf8();
+                continue;
+            }
             let replacement = match escaped {
                 'h' => Some(HORIZONTAL_WHITESPACE),
                 'H' => Some(NON_HORIZONTAL_WHITESPACE),
