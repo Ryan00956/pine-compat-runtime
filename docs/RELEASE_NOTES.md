@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added deprecated Pine single-line string wrapping for quotation-mark and
+  apostrophe literals, collapsing every space-indented physical continuation
+  to one space without inserting a line terminator, with CRLF/bare-CR handling
+  and unchanged unindented-line recovery.
 - Added scalar-variable compound assignments `+=`, `-=`, `*=`, `/=`, and `%=`
   as exact shorthand for existing reassignment expressions, including numeric
   operations, string `+=`, qualifier promotion, `na`, local/UDF execution, and

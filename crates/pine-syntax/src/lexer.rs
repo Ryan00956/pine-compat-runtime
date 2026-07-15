@@ -337,13 +337,15 @@ impl<'a> Lexer<'a> {
 
             match byte {
                 b'\\' => self.string_escape(delimiter, &mut value),
-                b'\n' => {
-                    self.diagnostics.push(Diagnostic::error(
-                        "E_LEX_STRING",
-                        "unterminated string literal",
-                        Span::new(start, self.pos),
-                    ));
-                    return;
+                b'\r' | b'\n' => {
+                    if !self.string_line_wrap(&mut value) {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_LEX_STRING",
+                            "unterminated string literal",
+                            Span::new(start, self.pos),
+                        ));
+                        return;
+                    }
                 }
                 _ => {
                     // Consume a full UTF-8 scalar value rather than a single
@@ -408,6 +410,34 @@ impl<'a> Lexer<'a> {
         ));
     }
 
+    fn string_line_wrap(&mut self, value: &mut String) -> bool {
+        let bytes = self.text.as_bytes();
+        let mut next = self.pos;
+
+        if bytes.get(next) == Some(&b'\r') {
+            next += 1;
+            if bytes.get(next) == Some(&b'\n') {
+                next += 1;
+            }
+        } else if bytes.get(next) == Some(&b'\n') {
+            next += 1;
+        } else {
+            return false;
+        }
+
+        let indent_start = next;
+        while bytes.get(next) == Some(&b' ') {
+            next += 1;
+        }
+        if next == indent_start {
+            return false;
+        }
+
+        self.pos = next;
+        value.push(' ');
+        true
+    }
+
     fn string_escape(&mut self, delimiter: u8, value: &mut String) {
         self.pos += 1;
         match self.peek_byte() {
@@ -430,6 +460,11 @@ impl<'a> Lexer<'a> {
             Some(b'\\') => {
                 self.pos += 1;
                 value.push('\\');
+            }
+            Some(b'\r' | b'\n') => {
+                // Leave physical line endings for `string` to validate as a
+                // space-indented wrap instead of treating them as unknown
+                // escaped characters.
             }
             Some(_) => {
                 // Unknown escape: keep the escaped character literally,
@@ -660,6 +695,54 @@ mod tests {
                 TokenKind::Eof,
             ]
         );
+    }
+
+    #[test]
+    fn lexes_indented_single_line_string_wraps_as_one_space() {
+        assert_eq!(
+            kinds(concat!(
+                "double = \"first\n second\n     中\"\n",
+                "single = 'alpha\r\n  beta'\n",
+                "bare_cr = \"left\r right\"\n",
+            )),
+            vec![
+                TokenKind::Identifier("double".to_owned()),
+                TokenKind::Eq,
+                TokenKind::String("first second 中".to_owned()),
+                TokenKind::Newline,
+                TokenKind::Identifier("single".to_owned()),
+                TokenKind::Eq,
+                TokenKind::String("alpha beta".to_owned()),
+                TokenKind::Newline,
+                TokenKind::Identifier("bare_cr".to_owned()),
+                TokenKind::Eq,
+                TokenKind::String("left right".to_owned()),
+                TokenKind::Newline,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn rejects_unindented_single_line_string_wrap_and_recovers() {
+        for text in [
+            "broken = \"first\nsecond\"\nafter = 1\n",
+            "broken = \"first\\\nsecond\"\nafter = 1\n",
+        ] {
+            let source = SourceFile::new("test.pine", text);
+            let lexed = lex(&source);
+
+            assert!(lexed.diagnostics.iter().any(|diagnostic| {
+                diagnostic.code == "E_LEX_STRING"
+                    && diagnostic.message == "unterminated string literal"
+            }));
+            assert!(
+                lexed
+                    .tokens
+                    .iter()
+                    .any(|token| { token.kind == TokenKind::Identifier("after".to_owned()) })
+            );
+        }
     }
 
     #[test]

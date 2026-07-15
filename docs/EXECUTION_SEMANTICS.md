@@ -587,6 +587,16 @@ side-effecting exported functions, imported UDT flow outside the covered same-id
 direct private imported UDT access and imported UDT value history outside the scalar-tree metadata subset, and alias-qualified imported method receiver type
 mismatches.
 
+## String Literals
+
+Single-line string literals may use Pine's deprecated physical-line wrapping
+syntax. Every continuation line must begin with at least one ASCII space; the
+lexer removes the physical line terminator and collapses all leading spaces on
+that continuation line to one space in the resulting string. This applies to
+both quotation-mark and apostrophe delimiters and does not emit layout tokens.
+An unindented physical line break still terminates recovery with
+`E_LEX_STRING`.
+
 ## Variables
 
 ### Normal Declarations

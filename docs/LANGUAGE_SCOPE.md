@@ -40,9 +40,10 @@ Statements:
 Expressions:
 
 - literals: int, float, bool, string literals delimited by matching ASCII
-  quotation marks or apostrophes, including v6 triple-delimited multiline
-  strings with literal line breaks and indentation, and color literals where
-  applicable
+  quotation marks or apostrophes, including deprecated single-line string
+  wrapping whose space-indented continuation lines collapse to one space, v6
+  triple-delimited multiline strings with literal line breaks and indentation,
+  and color literals where applicable
 - identifiers
 - function calls
 - named arguments
