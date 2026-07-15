@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Extended same-local and same-imported scalar-tree UDT `array.sort` and
+  `array.sort_indices` with the current selector contract: omitted `sort_field`
+  defaults to root field index `0`, while supplied compile-time integer indexes
+  and string field names select sortable root `int`, `float`, or `string`
+  fields. Namespace, method, call-result, named-argument, and const-alias forms
+  share canonical field-index lowering and host-parity fixtures.
 - Added legacy expression line wrapping outside parentheses, accepting
   continuation indentation deeper than the active local block when its column
   is not a multiple of four, including end-of-line comments and mixed widths.

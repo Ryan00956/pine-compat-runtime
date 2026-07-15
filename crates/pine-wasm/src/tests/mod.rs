@@ -883,6 +883,28 @@ fn run_script_csv_returns_array_ordering_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_array_sort_udt_field_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/array_sort_udt_field.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("UDT array sort field fixture should run");
+
+    assert_snapshot("runtime_array_sort_udt_field.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_array_sort_indices_udt_field_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/array_sort_indices_udt_field.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("UDT array sort_indices field fixture should run");
+
+    assert_snapshot("runtime_array_sort_indices_udt_field.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_array_join_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/array_join.pine"),

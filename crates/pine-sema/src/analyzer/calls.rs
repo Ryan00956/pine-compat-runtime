@@ -169,7 +169,7 @@ impl Analyzer {
         if let Some(type_name) = ut_array_sort::array_new_user_type_name(&name) {
             return self.analyze_user_type_array_new_call(&name, type_name, span, args, &arg_types);
         }
-        if ut_array_sort::is_user_type_array_ordering_call(&name, &arg_types) {
+        if ut_array_sort::is_user_type_array_ordering_call(&name, args, &arg_types) {
             return self.analyze_user_type_array_sort_call(&name, span, args, &arg_types);
         }
 
@@ -779,7 +779,11 @@ impl Analyzer {
         let mut method_arg_types = Vec::with_capacity(arg_types.len() + 1);
         method_arg_types.push(Some(receiver_type));
         method_arg_types.extend(arg_types.iter().copied());
-        if ut_array_sort::is_user_type_array_ordering_call(builtin_name, &method_arg_types) {
+        if ut_array_sort::is_user_type_array_ordering_call(
+            builtin_name,
+            &method_args,
+            &method_arg_types,
+        ) {
             return MethodResolution::Resolved(self.analyze_user_type_array_sort_call(
                 builtin_name,
                 call_span,

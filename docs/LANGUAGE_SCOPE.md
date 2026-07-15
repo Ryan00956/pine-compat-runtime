@@ -151,8 +151,10 @@ Phase 1 executable subset:
   `array.avg`, `array.range`, `array.median`, `array.mode`,
   `array.percentile_nearest_rank`, `array.percentile_linear_interpolation`,
   `array.percentrank`, `array.covariance`, `array.standardize`,
-  `array.variance`, `array.stdev`, numeric/string `array.sort`,
-  numeric/string `array.sort_indices`, `array.reverse`, scalar-array
+  `array.variance`, `array.stdev`, numeric/string `array.sort` and
+  `array.sort_indices`, same-local/same-imported scalar-tree UDT
+  `array.sort`/`array.sort_indices` by default field zero or a const int/string
+  root-field selector, `array.reverse`, scalar-array
   `array.join`, and
   equivalent method-call syntax such as
   `values.push(close)` and `values.get(0)`

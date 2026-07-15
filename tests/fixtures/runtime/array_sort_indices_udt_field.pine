@@ -19,3 +19,22 @@ plot(tag_indices.get(0))
 plot(tag_indices.get(1))
 plot(tag_indices.get(2))
 plot(first_after_tag_indices.x)
+
+default_indices_source = array.from(Point.new(3.0, "c"), Point.new(1.0, "a"), Point.new(2.0, "b"))
+default_indices = array.sort_indices(default_indices_source)
+plot(default_indices.get(0))
+plot(default_indices.get(1))
+plot(default_indices.get(2))
+
+field_index = 1
+named_index_source = array.from(Point.new(1.0, "b"), Point.new(2.0, "a"), Point.new(3.0, "c"))
+named_indices = named_index_source.sort_indices(sort_field = field_index)
+plot(named_indices.get(0))
+plot(named_indices.get(1))
+plot(named_indices.get(2))
+
+reordered_source = array.from(Point.new(1.0, "b"), Point.new(2.0, "a"), Point.new(3.0, "c"))
+reordered_indices = array.sort_indices(sort_field = "tag", id = reordered_source)
+plot(reordered_indices.get(0))
+plot(reordered_indices.get(1))
+plot(reordered_indices.get(2))

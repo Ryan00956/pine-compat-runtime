@@ -1,0 +1,18 @@
+//@version=6
+indicator("Supported array sort UDT field index")
+type Data
+    float price
+    int timestamp
+    string note
+
+values = array.from(Data.new(3.0, 30, "c"), Data.new(1.0, 10, "a"))
+array.sort(values)
+values.sort(sort_field = 1)
+indices_by_name = array.sort_indices(values, sort_field = "note")
+field_base = 1
+field_index = field_base + 1
+indices_by_index = values.sort_indices(order.descending, field_index)
+reordered_values = array.from(Data.new(3.0, 30, "c"), Data.new(1.0, 10, "a"))
+array.sort(sort_field = 1, id = reordered_values)
+reordered_indices = array.sort_indices(sort_field = "note", id = reordered_values)
+plot(array.size(values) + array.size(indices_by_name) + array.size(indices_by_index) + array.size(reordered_indices))

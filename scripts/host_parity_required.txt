@@ -37,6 +37,8 @@ runtime_array_references.json
 runtime_array_search.json
 runtime_array_slice_concat.json
 runtime_array_slice_history.json
+runtime_array_sort_indices_udt_field.json
+runtime_array_sort_udt_field.json
 runtime_array_statistics.json
 runtime_array_table_history.json
 runtime_array_table_slice_history.json

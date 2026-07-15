@@ -6991,9 +6991,8 @@ fn reports_unsupported_local_user_type_array_call_result_chaining_fixture() {
             "`array.stdev` argument `id` expects numeric array, got simple array<string>",
             "`array.stdev` argument `biased` expects bool-compatible, got series float",
             "`array.stdev` expects at most 2 argument(s), got 3",
-            "`array.sort_indices` requires `sort_field` for UDT arrays",
             "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
-            "`array.sort_indices` argument `sort_field` expects const string, got series string",
+            "`array.sort_indices` argument `sort_field` expects const int or string, got series string",
             "`array.sort_indices` argument `id` expects numeric/string array, got simple array<bool>",
             "`array.sort_indices` argument `order` expects const string, got series float",
             "`array.sort_indices` expects at most 2 argument(s), got 3",
@@ -7029,15 +7028,14 @@ fn reports_unsupported_local_user_type_array_call_result_chaining_fixture() {
             "`array.fill` argument `index_from` expects simple integer-compatible, got const string",
             "`array.fill` argument `index_to` expects simple integer-compatible, got const string",
             "`array.fill` expects at most 4 argument(s), got 5",
-            "`array.sort` requires `sort_field` for UDT arrays",
             "`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
-            "`array.sort` argument `sort_field` expects const string, got series float",
+            "`array.sort` argument `sort_field` expects const int or string, got series float",
             "`array.sort` argument `id` expects numeric/string array, got simple array<bool>",
             "`array.sort` argument `order` expects const string, got series float",
             "`array.sort` expects at most 2 argument(s), got 3",
         ],
     );
-    assert_diagnostic_count(path, 214);
+    assert_diagnostic_count(path, 210);
 }
 
 #[test]
@@ -8020,7 +8018,6 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
             "`array.*` helper does not support UDT arrays except `array.size`, `array.get`, `array.set`, `array.push`, `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`, `array.first`, `array.last`, `array.fill`, `array.clear`, `array.copy`, `array.concat`, `array.slice`, `array.reverse`, `array.join`, `array.includes`, `array.indexof`, and `array.lastindexof`",
             "`array.size` is not supported: direct UDT-array call-result methods require one concrete same-local or same-imported element identity",
             "`array.standardize` argument `id` expects numeric array, got simple array<string>",
-            "`array.sort_indices` requires `sort_field` for UDT arrays",
             "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
             "`array.slice` argument `index_from` expects simple integer-compatible, got const string",
             "`array.includes` argument `value` expects UDT `First`, got `Second`",
@@ -8164,9 +8161,8 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
             "`array.stdev` argument `id` expects numeric array, got simple array<chart.point>",
             "`array.stdev` argument `biased` expects bool-compatible, got series float",
             "`array.stdev` expects at most 2 argument(s), got 3",
-            "`array.sort_indices` requires `sort_field` for UDT arrays",
             "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
-            "`array.sort_indices` argument `sort_field` expects const string, got series string",
+            "`array.sort_indices` argument `sort_field` expects const int or string, got series string",
             "`array.sort_indices` argument `id` expects numeric/string array, got simple array<bool>",
             "`array.sort_indices` argument `id` expects numeric/string array, got simple array<color>",
             "`array.sort_indices` argument `id` expects numeric/string array, got simple array<chart.point>",
@@ -8179,7 +8175,6 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
             "`array.sort` argument `id` expects numeric/string array, got simple array<bool>",
             "`array.sort` argument `id` expects numeric/string array, got simple array<color>",
             "`array.sort` argument `id` expects numeric/string array, got simple array<chart.point>",
-            "`array.sort` requires `sort_field` for UDT arrays",
             "`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
             "`array.sort` argument `order` expects const string, got series float",
             "`array.sort` expects at most 2 argument(s), got 3",
@@ -8201,7 +8196,7 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
             "`function_side_effect` is not supported: collection mutation via `array.sort` is not supported inside user-defined functions",
         ],
     );
-    assert_diagnostic_count(path, 261);
+    assert_diagnostic_count(path, 255);
 }
 
 #[test]
@@ -9746,6 +9741,11 @@ fn accepts_supported_array_sort_udt_named_const_field_fixture() {
 }
 
 #[test]
+fn accepts_supported_array_sort_udt_field_index_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_array_sort_udt_field_index.pine");
+}
+
+#[test]
 fn reports_unsupported_array_sort_bool_fixture() {
     assert_array_sort_id_message(
         "tests/fixtures/sema/unsupported_array_sort_bool.pine",
@@ -9912,7 +9912,6 @@ fn reports_unsupported_array_sort_udt_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_sort_udt.pine",
         &[
-            "`array.sort` requires `sort_field` for UDT arrays",
             "`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
         ],
     );
@@ -9923,7 +9922,22 @@ fn reports_unsupported_array_sort_udt_method_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_sort_udt_method.pine",
         &[
-            "`array.sort` requires `sort_field` for UDT arrays",
+            "`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
+        ],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_udt_field_index_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_udt_field_index.pine",
+        &[
+            "`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
+            "`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
+            "`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
+            "`array.sort` argument `sort_field` expects const int or string, got series int",
+            "`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
+            "`array.sort` argument `sort_field` expects const int or string, got const float",
             "`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
         ],
     );
@@ -9980,7 +9994,7 @@ fn reports_unsupported_array_sort_udt_dynamic_field_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_sort_udt_dynamic_field.pine",
         &[
-            "`array.sort` argument `sort_field` expects const string, got series string",
+            "`array.sort` argument `sort_field` expects const int or string, got series string",
             "`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
         ],
     );
@@ -9991,7 +10005,7 @@ fn reports_unsupported_array_sort_udt_dynamic_field_method_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_sort_udt_dynamic_field_method.pine",
         &[
-            "`array.sort` argument `sort_field` expects const string, got series string",
+            "`array.sort` argument `sort_field` expects const int or string, got series string",
             "`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
         ],
     );
@@ -10162,7 +10176,6 @@ fn reports_unsupported_array_sort_indices_udt_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_sort_indices_udt.pine",
         &[
-            "`array.sort_indices` requires `sort_field` for UDT arrays",
             "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
         ],
     );
@@ -10173,7 +10186,6 @@ fn reports_unsupported_array_sort_indices_udt_namespace_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_sort_indices_udt_namespace.pine",
         &[
-            "`array.sort_indices` requires `sort_field` for UDT arrays",
             "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
         ],
     );
@@ -10230,7 +10242,7 @@ fn reports_unsupported_array_sort_indices_udt_dynamic_field_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_sort_indices_udt_dynamic_field.pine",
         &[
-            "`array.sort_indices` argument `sort_field` expects const string, got series string",
+            "`array.sort_indices` argument `sort_field` expects const int or string, got series string",
             "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
         ],
     );
@@ -10241,7 +10253,7 @@ fn reports_unsupported_array_sort_indices_udt_dynamic_field_method_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_sort_indices_udt_dynamic_field_method.pine",
         &[
-            "`array.sort_indices` argument `sort_field` expects const string, got series string",
+            "`array.sort_indices` argument `sort_field` expects const int or string, got series string",
             "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
         ],
     );
@@ -14464,7 +14476,6 @@ fn reports_unsupported_imported_user_type_array_call_result_chaining_fixture() {
         library,
         &[
             "`array.concat` argument `id2` expects UDT array `lib.First`, got `lib.Second`",
-            "`array.sort_indices` requires `sort_field` for UDT arrays",
             "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
             "`array.includes` argument `value` expects UDT `lib.First`, got `lib.Second`",
             "`array.includes` argument `value` expects UDT `lib.First`, got `lib.Second`",
@@ -14591,9 +14602,8 @@ fn reports_unsupported_imported_user_type_array_call_result_chaining_fixture() {
             "`array.stdev` argument `id` expects numeric array, got simple array<string>",
             "`array.stdev` argument `biased` expects bool-compatible, got series float",
             "`array.stdev` expects at most 2 argument(s), got 3",
-            "`array.sort_indices` requires `sort_field` for UDT arrays",
             "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
-            "`array.sort_indices` argument `sort_field` expects const string, got series string",
+            "`array.sort_indices` argument `sort_field` expects const int or string, got series string",
             "`array.sort_indices` argument `id` expects numeric/string array, got simple array<bool>",
             "`array.sort_indices` argument `order` expects const string, got series float",
             "`array.sort_indices` expects at most 2 argument(s), got 3",
@@ -14626,15 +14636,14 @@ fn reports_unsupported_imported_user_type_array_call_result_chaining_fixture() {
             "`array.fill` argument `index_from` expects simple integer-compatible, got const string",
             "`array.fill` argument `index_to` expects simple integer-compatible, got const string",
             "`array.fill` expects at most 4 argument(s), got 5",
-            "`array.sort` requires `sort_field` for UDT arrays",
             "`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
-            "`array.sort` argument `sort_field` expects const string, got series float",
+            "`array.sort` argument `sort_field` expects const int or string, got series float",
             "`array.sort` argument `id` expects numeric/string array, got simple array<bool>",
             "`array.sort` argument `order` expects const string, got series float",
             "`array.sort` expects at most 2 argument(s), got 3",
         ],
     );
-    assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 198);
+    assert_import_diagnostic_count_with_library(path, "user/udt_array_returns/1", library, 192);
 }
 
 #[test]
@@ -14711,7 +14720,6 @@ fn reports_unsupported_imported_udt_array_sort_missing_field_fixture() {
     assert_import_diagnostic_messages(
         "tests/fixtures/sema/unsupported_imported_udt_array_sort_missing_field.pine",
         &[
-            "`array.sort` requires `sort_field` for UDT arrays",
             "`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
         ],
     );
@@ -14742,7 +14750,7 @@ fn reports_unsupported_imported_udt_array_sort_dynamic_field_fixture() {
     assert_import_diagnostic_messages(
         "tests/fixtures/sema/unsupported_imported_udt_array_sort_dynamic_field.pine",
         &[
-            "`array.sort` argument `sort_field` expects const string, got series string",
+            "`array.sort` argument `sort_field` expects const int or string, got series string",
             "`array.sort` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
         ],
     );
@@ -14753,7 +14761,6 @@ fn reports_unsupported_imported_udt_array_sort_indices_missing_field_fixture() {
     assert_import_diagnostic_messages(
         "tests/fixtures/sema/unsupported_imported_udt_array_sort_indices_missing_field.pine",
         &[
-            "`array.sort_indices` requires `sort_field` for UDT arrays",
             "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
         ],
     );
@@ -14784,7 +14791,7 @@ fn reports_unsupported_imported_udt_array_sort_indices_dynamic_field_fixture() {
     assert_import_diagnostic_messages(
         "tests/fixtures/sema/unsupported_imported_udt_array_sort_indices_dynamic_field.pine",
         &[
-            "`array.sort_indices` argument `sort_field` expects const string, got series string",
+            "`array.sort_indices` argument `sort_field` expects const int or string, got series string",
             "`array.sort_indices` requires a scalar-tree UDT array and a root int, float, or string `sort_field`",
         ],
     );

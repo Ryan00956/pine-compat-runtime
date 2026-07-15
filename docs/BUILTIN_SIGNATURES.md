@@ -1362,7 +1362,9 @@ array.standardize(id: float-array|int-array) -> float-array
 array.variance(id: float-array|int-array, biased?: bool-compatible) -> series float
 array.stdev(id: float-array|int-array, biased?: bool-compatible) -> series float
 array.sort(id: float-array|int-array|string-array, order?: const string) -> void
+array.sort(id: UDT-array, order?: const string, sort_field?: const int|string = 0) -> void
 array.sort_indices(id: float-array|int-array|string-array, order?: const string) -> int-array
+array.sort_indices(id: UDT-array, order?: const string, sort_field?: const int|string = 0) -> int-array
 array.reverse(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> void
 array.join(id: float-array|int-array|bool-array|string-array|color-array, separator?: string-compatible) -> series string
 array.clear(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> void
@@ -1473,7 +1475,11 @@ sort ascending by default, and accept `order.ascending` or `order.descending`.
 `na` values and empty string elements sort last in ascending order and first in
 descending order. Fixture-backed `array.sort` calls can run in branch and loop
 bodies. `array.sort_indices` returns a new int array containing original indexes
-in sorted order without modifying the source array. `array.reverse` supports
+in sorted order without modifying the source array. Both ordering helpers also
+support concrete same-local or same-imported scalar-tree UDT arrays. Their
+optional compile-time `sort_field` is a zero-based integer field index or a
+string field name, defaults to field index `0`, and must select a root `int`,
+`float`, or `string` field. `array.reverse` supports
 every supported typed array and is fixture-backed in branch and loop bodies for
 scalar array values.
 `array.join` supports supported scalar typed arrays, defaults the separator

@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
 mod budget;
+mod builtin_calls;
 mod call_result_methods;
 mod function_returns;
 mod inline_calls;
@@ -170,14 +171,6 @@ pub(crate) fn lower_binary_op(op: BinaryOp) -> HirBinaryOp {
         BinaryOp::Or => HirBinaryOp::Or,
     }
 }
-fn sort_field_index_expr(index: usize) -> HirExpr {
-    HirExpr {
-        kind: HirExprKind::Literal(HirLiteral::Int(index as i64)),
-        pine_type: PineType::new(Qualifier::Const, ValueKind::Int),
-        series_id: None,
-    }
-}
-
 impl Analyzer {
     pub(crate) fn lower_program(&mut self, program: &Program) -> Option<HirProgram> {
         debug_assert!(self.source_context_stack_is_restored());
@@ -1164,32 +1157,5 @@ impl Analyzer {
 
     fn pure_expr_series_key(&self, expr: &Expr) -> Option<String> {
         pure_series::pure_expr_series_key(self, expr)
-    }
-
-    fn lower_builtin_call_args(
-        &mut self,
-        builtin_name: &str,
-        args: &[CallArg],
-        param_exprs: &HashMap<String, HirExpr>,
-        param_types: &HashMap<String, PineType>,
-    ) -> Option<Vec<HirCallArg>> {
-        let sort_field_index = matches!(builtin_name, "array.sort" | "array.sort_indices")
-            .then(|| self.user_type_array_sort_field_index(args))
-            .flatten();
-        args.iter()
-            .enumerate()
-            .map(|(index, arg)| {
-                let value = if index == 2 {
-                    sort_field_index.map(sort_field_index_expr)
-                } else {
-                    None
-                }
-                .or_else(|| self.lower_expr_with_params(&arg.value, param_exprs, param_types))?;
-                Some(HirCallArg {
-                    name: arg.name.clone(),
-                    value,
-                })
-            })
-            .collect()
     }
 }

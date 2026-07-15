@@ -578,7 +578,8 @@ scalar-tree root-field replacement, plus scalar-tree imported UDT value history 
 size/get/first/last, set replacement field reads, push append field reads,
 unshift prepend field reads, insert insertion field reads, fill replacement
 field reads, join positional stringification, includes/indexof/lastindexof
-structural equality search, sort/sort_indices by int/float/string sort_field,
+structural equality search, sort/sort_indices by the default root field or a
+compile-time int-index/string-name selector resolving to an int/float/string field,
 pop/remove/shift return field reads, clear size reset, copy independent field
 reads, reverse reordered field reads, slice window field reads, concat appended
 field reads, and statement/expression/index-value for-in value-copy field reads.
@@ -888,7 +889,7 @@ parameter passthrough returns, direct or nested constructor-return UDFs, and
 scalar-tree root-field replacement in top-level, branch, `for`-loop, `while`-loop, and
 UDF-local statement contexts, plus scalar-tree value history reads and
 `array.from` size/get/first/last, set replacement field reads,
-push append field reads, unshift prepend field reads, insert insertion field reads, fill replacement field reads, join positional stringification, includes/indexof/lastindexof structural equality search, sort/sort_indices by int/float/string sort_field, pop/remove/shift return field reads, clear size reset,
+push append field reads, unshift prepend field reads, insert insertion field reads, fill replacement field reads, join positional stringification, includes/indexof/lastindexof structural equality search, sort/sort_indices by the default root field or a compile-time int-index/string-name selector resolving to an int/float/string field, pop/remove/shift return field reads, clear size reset,
 copy independent field reads, reverse reordered field reads, slice window field
 reads, concat appended field reads, and statement/expression/index-value for-in
 value-copy field reads, plus `array<lib.Type>`/`lib.Type[]` declarations
@@ -929,8 +930,9 @@ terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mo
 return a fresh same-kind array. Concrete int, float, or string results admit
 transforming `.sort_indices(order?)`; concrete same-local or same-imported
 scalar-tree UDT results admit `.sort_indices(order?, sort_field?)` when a
-compile-time root int/float/string field resolves against the exact result
-identity. Both forms return a fresh fixed int-array continuation. Every scalar
+compile-time zero-based field index or field name resolves to a root
+int/float/string field against the exact result identity; omitting the selector
+uses field index `0`. Both forms return a fresh fixed int-array continuation. Every scalar
 result plus a concrete same-local or same-imported
 scalar-tree UDT-array result also admits terminal `.join(separator?)`. The parser
 rewrites the unqualified form to the impossible internal prefix `$call_result`
@@ -1011,9 +1013,10 @@ cases no-op after all supplied arguments are evaluated; UDF mutation remains
 rejected.
 Terminal `.sort(order?, sort_field?)` mutates concrete int/float/string results
 using the ordinary ascending default and const-order rules. Same-local or same-
-imported scalar-tree UDT results require a compile-time root int/float/string
-`sort_field`, which lowering converts to the field index for that exact element
-identity. Alias/live-slice results reorder backing parents; fresh map/matrix-
+imported scalar-tree UDT results use root field index `0` by default and accept
+a compile-time zero-based integer field index or string field name selecting a
+root int/float/string field. Lowering canonicalizes that selector to the field
+index for the exact element identity. Alias/live-slice results reorder backing parents; fresh map/matrix-
 derived arrays reorder only their snapshots. The call returns `void`, cannot
 continue, treats empty/upstream-`na` results as no-ops after order evaluation,
 and retains unsupported-kind, order/field/arity, and UDF-side-effect gates.
@@ -1222,7 +1225,8 @@ unchanged, and invalid or explicit-`na` bounds plus upstream-`na` receivers
 no-op after evaluating the value and every supplied bound.
 Terminal top-level `.sort(order?, sort_field?)` reorders the same alias/live-
 slice backing for int/float/string results or exact-identity scalar-tree UDT
-results with a compile-time sortable root field. Fresh map/matrix-derived
+results with a sortable root field selected by default index `0` or a
+compile-time integer index/string name. Fresh map/matrix-derived
 arrays remain source-independent, and empty/upstream-`na` results no-op after
 the optional order is evaluated.
 
@@ -1782,8 +1786,9 @@ biased population estimate by default; with `biased=false`, they use the
 sample denominator and return `na` when fewer than two numeric values remain.
 `array.sort` orders int/float/string arrays in place and supports same-local
 scalar-tree UDT arrays plus same-imported scalar-tree UDT arrays constructed
-through `array.from` when a compile-time `sort_field` names an int, float, or
-string field. It sorts ascending by default and accepts `order.ascending` or
+through `array.new<lib.Type>` or `array.from`. For UDT arrays, an omitted
+`sort_field` selects root field index `0`; a supplied compile-time integer index
+or string name must select a root int, float, or string field. It sorts ascending by default and accepts `order.ascending` or
 `order.descending`. `na` values and empty string elements sort last in ascending
 order and first in descending order. `array.sort_indices` returns a new int
 array containing the source indexes in sorted order, follows the same order and
