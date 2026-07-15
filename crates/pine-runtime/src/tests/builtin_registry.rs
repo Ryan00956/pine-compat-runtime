@@ -194,6 +194,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "matrix.elements_count",
     "matrix.fill",
     "matrix.get",
+    "matrix.is_antidiagonal",
     "matrix.is_antisymmetric",
     "matrix.is_binary",
     "matrix.is_diagonal",

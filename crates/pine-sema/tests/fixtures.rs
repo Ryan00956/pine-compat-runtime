@@ -1077,6 +1077,24 @@ fn reports_unsupported_matrix_predicate_const_bool_return_qualifier_fixture() {
 }
 
 #[test]
+fn accepts_supported_matrix_is_antidiagonal_series_bool_return_qualifier_fixture() {
+    assert_valid_fixture(
+        "tests/fixtures/sema/supported_matrix_is_antidiagonal_series_bool_return_qualifier.pine",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_is_antidiagonal_simple_bool_return_qualifier_fixture() {
+    assert_exact_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_matrix_is_antidiagonal_simple_bool_return_qualifier.pine",
+        &[
+            "`ta.alma` argument `floor` expects simple bool-compatible, got series bool",
+            "`ta.alma` argument `floor` expects simple bool-compatible, got series bool",
+        ],
+    );
+}
+
+#[test]
 fn accepts_supported_numeric_cast_input_return_qualifier_fixture() {
     assert_valid_fixture("tests/fixtures/sema/supported_numeric_cast_input_return_qualifier.pine");
 }
@@ -18322,11 +18340,13 @@ fn accepts_supported_matrix_is_diagonal_fixture() {
     );
     assert!(analysis.compatibility.unsupported.is_empty());
     assert!(
-        analysis
-            .compatibility
-            .supported
+        ["matrix.is_diagonal", "matrix.is_antidiagonal"]
             .iter()
-            .any(|supported| supported.feature == "matrix.is_diagonal"),
+            .all(|feature| analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|supported| supported.feature == *feature)),
         "{} supported features: {:?}",
         path.display(),
         analysis.compatibility.supported
@@ -18965,6 +18985,11 @@ fn reports_unsupported_matrix_is_diagonal_fixture() {
     assert_numeric_matrix_id_message(
         "tests/fixtures/sema/unsupported_matrix_is_diagonal.pine",
         "matrix.is_diagonal",
+        "const na",
+    );
+    assert_numeric_matrix_id_message(
+        "tests/fixtures/sema/unsupported_matrix_is_diagonal.pine",
+        "matrix.is_antidiagonal",
         "const na",
     );
 }

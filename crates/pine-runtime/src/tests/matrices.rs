@@ -284,6 +284,92 @@ fn reports_diagonal_matrix_values() {
 }
 
 #[test]
+fn reports_antidiagonal_matrix_values() {
+    let program = runtime_program();
+    let mut runtime = HistoricalRuntime::new(&program);
+
+    let PineValue::Matrix(antidiagonal_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 3, 3, PineValue::Float(0.0))
+        .expect("antidiagonal matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(rectangular_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 3, PineValue::Float(0.0))
+        .expect("rectangular matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(non_antidiagonal_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 3, 3, PineValue::Float(0.0))
+        .expect("non-antidiagonal matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(outside_na_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 2, PineValue::Float(0.0))
+        .expect("outside-na matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(diagonal_na_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 2, PineValue::Float(0.0))
+        .expect("diagonal-na matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(int_id) = runtime
+        .new_matrix(MatrixElementKind::Int, 2, 2, PineValue::Int(0))
+        .expect("integer antidiagonal matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(empty_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 0, 0, PineValue::Na)
+        .expect("empty matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+
+    runtime
+        .matrix_set_value(antidiagonal_id, 0, 2, PineValue::Float(5.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(antidiagonal_id, 1, 1, PineValue::Na)
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(antidiagonal_id, 2, 0, PineValue::Float(7.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(non_antidiagonal_id, 0, 0, PineValue::Float(1.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(outside_na_id, 0, 0, PineValue::Na)
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(diagonal_na_id, 0, 1, PineValue::Na)
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(int_id, 0, 1, PineValue::Int(1))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(int_id, 1, 0, PineValue::Int(2))
+        .expect("matrix set should succeed");
+
+    assert_eq!(runtime.matrix_is_antidiagonal(antidiagonal_id), Some(true));
+    assert_eq!(runtime.matrix_is_antidiagonal(rectangular_id), Some(false));
+    assert_eq!(
+        runtime.matrix_is_antidiagonal(non_antidiagonal_id),
+        Some(false)
+    );
+    assert_eq!(runtime.matrix_is_antidiagonal(outside_na_id), Some(false));
+    assert_eq!(runtime.matrix_is_antidiagonal(diagonal_na_id), Some(true));
+    assert_eq!(runtime.matrix_is_antidiagonal(int_id), Some(true));
+    assert_eq!(runtime.matrix_is_antidiagonal(empty_id), Some(true));
+    assert_eq!(runtime.matrix_is_antidiagonal(u32::MAX), None);
+}
+
+#[test]
 fn reports_identity_matrix_values() {
     let program = runtime_program();
     let mut runtime = HistoricalRuntime::new(&program);
