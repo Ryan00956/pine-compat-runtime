@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added `str.match()` support for Pine's `\v` and `\V` vertical-whitespace
+  regex classes, including LF, VT, FF, CR, NEL, line separator, and paragraph
+  separator, plus complements, character-class nesting, quoted preservation,
+  and behavior independent of `(?U)`.
 - Added `str.match()` support for two-digit `\xNN` and braced `\x{...}`
   hexadecimal regex references, including exact two-digit consumption,
   arbitrary leading zeros in braced scalar values, character-class and quoted

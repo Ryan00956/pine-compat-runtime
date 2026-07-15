@@ -154,6 +154,35 @@ fn normalizes_pine_regex_horizontal_whitespace_classes() {
 }
 
 #[test]
+fn normalizes_pine_regex_vertical_whitespace_classes() {
+    let vertical =
+        Regex::new(&normalize_pine_regex(r"^\v$")).expect("normalized vertical whitespace regex");
+    for ch in [
+        '\n', '\u{000b}', '\u{000c}', '\r', '\u{0085}', '\u{2028}', '\u{2029}',
+    ] {
+        assert!(vertical.is_match(&ch.to_string()), "U+{:04X}", ch as u32);
+    }
+    for ch in ['\t', ' ', '\u{00a0}', '\u{3000}', 'A'] {
+        assert!(!vertical.is_match(&ch.to_string()), "U+{:04X}", ch as u32);
+    }
+
+    let non_vertical = Regex::new(&normalize_pine_regex(r"^\V$"))
+        .expect("normalized non-vertical whitespace regex");
+    assert!(non_vertical.is_match("A"));
+    assert!(non_vertical.is_match("\t"));
+    assert!(!non_vertical.is_match("\u{2028}"));
+
+    let modes = Regex::new(&normalize_pine_regex(r"\A(?U:\v)(?-U:\v)[\V]\z"))
+        .expect("normalized vertical classes across Unicode modes");
+    assert!(modes.is_match("\u{0085}\u{2029}A"));
+
+    let quoted = Regex::new(&normalize_pine_regex(r"\A\Q\v\E\z"))
+        .expect("normalized quoted vertical-class spelling");
+    assert!(quoted.is_match(r"\v"));
+    assert!(!quoted.is_match("\u{000b}"));
+}
+
+#[test]
 fn normalizes_pine_regex_quoted_literals() {
     assert_eq!(
         normalize_pine_regex(r"\Q(?U)\d[.]# \E\d"),
@@ -532,6 +561,16 @@ match_non_horizontal = str.match(" A", "\\H")
 match_horizontal_unicode_on = str.match(" ", "(?U)\\h")
 match_horizontal_unicode_off = str.match(" ", "(?-U)\\h")
 match_horizontal_class = str.match("A ", "[\\h]")
+match_vertical_line_feed = str.match("\nA", "\\v")
+match_vertical_carriage_return = str.match("\rA", "\\v")
+match_vertical_next_line = str.match("A", "\\v")
+match_vertical_line_separator = str.match(" A", "\\v")
+match_vertical_paragraph_separator = str.match(" A", "\\v")
+match_non_vertical = str.match("\nA", "\\V")
+match_vertical_unicode_on = str.match("", "(?U)\\v")
+match_vertical_unicode_off = str.match(" ", "(?-U)\\v")
+match_vertical_class = str.match("A ", "[\\v]")
+match_vertical_quoted = str.match("\\v", "\\Q\\v\\E")
 match_quoted_meta = str.match("x[a-z]+(?U)# y", "\\Q[a-z]+(?U)# \\E")
 match_quoted_escape = str.match("\\d123", "\\Q\\d\\E")
 match_quoted_verbose = str.match("# [ ]", "(?x)\\Q# [ ]\\E")
@@ -678,6 +717,8 @@ plot(match_ascii_space == " " and match_unicode_space == " " and match_ascii_n
 plot(match_ascii_boundary == "A" and match_unicode_boundary == "" and match_ascii_non_boundary == "" and match_unicode_non_boundary == "A" and match_ascii_class == "1" ? 1 : 0)
 plot(match_scoped_unicode_digit == "１" and match_scoped_unicode == "" and match_toggled_unicode == "１2" and match_unicode_greedy == "abc" ? 1 : 0)
 plot(match_horizontal_tab == "\t" and match_horizontal_em_space == " " and match_non_horizontal == "A" and match_horizontal_unicode_on == " " and match_horizontal_unicode_off == " " and match_horizontal_class == " " ? 1 : 0)
+plot(match_vertical_line_feed == "\n" and match_vertical_carriage_return == "\r" and match_vertical_next_line == "" and match_vertical_line_separator == " " and match_vertical_paragraph_separator == " " ? 1 : 0)
+plot(match_non_vertical == "A" and match_vertical_unicode_on == "" and match_vertical_unicode_off == " " and match_vertical_class == " " and match_vertical_quoted == "\\v" ? 1 : 0)
 plot(match_quoted_meta == "[a-z]+(?U)# " and match_quoted_escape == "\\d" and match_quoted_verbose == "# [ ]" and match_quoted_class == "]-" and match_quoted_unclosed == "[b]+" and match_quoted_then_ascii == "[a]123" ? 1 : 0)
 plot(match_final_newline_dollar == "tail" and match_final_newline_Z == "tail" and match_absolute_z_missing == "" and match_absolute_z == "tail" ? 1 : 0)
 plot(match_explicit_final_newline == "\n" and match_empty_final_newline_dollar == "" and match_empty_final_newline_Z == "" ? 1 : 0)

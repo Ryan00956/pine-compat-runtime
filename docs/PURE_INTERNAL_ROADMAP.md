@@ -1317,10 +1317,10 @@ Current baseline:
   from custom scaling `%` tokens and the grouped whole-number `str.format`
   percent preset, plus `str.match` default-ASCII predefined classes and word
   boundaries with global/scoped `(?U)` Unicode-aware switching and fixed
-  Unicode `\h`/`\H` horizontal-whitespace classes plus `\Q...\E` literal
-  quoting, the 13 Java/Pine POSIX `\p`/`\P` classes with ASCII-default and
-  global/scoped `(?U)` Unicode compatibility mappings, Unicode 16.0
-  `\p{InBlockName}`/`\p{Block=BlockName}` properties and `\P` complements,
+  Unicode `\h`/`\H` horizontal- and `\v`/`\V` vertical-whitespace classes plus
+  `\Q...\E` literal quoting, the 13 Java/Pine POSIX `\p`/`\P` classes with
+  ASCII-default and global/scoped `(?U)` Unicode compatibility mappings,
+  Unicode 16.0 `\p{InBlockName}`/`\p{Block=BlockName}` properties and `\P` complements,
   fixed-width `\uHHHH`, two-digit `\xNN`, and braced `\x{...}` references, and
   final-newline-aware `$`/`\Z` end anchors, plus default-dot exclusion of Pine's
   full line-terminator set with global/scoped `(?s)` and `(?-s)` restoration,
