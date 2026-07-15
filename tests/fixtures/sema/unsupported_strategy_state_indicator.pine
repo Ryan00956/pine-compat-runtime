@@ -2,6 +2,7 @@
 indicator("Strategy state variables in indicator")
 plot(strategy.position_size)
 plot(strategy.position_avg_price)
+plot(strategy.initial_capital)
 plot(strategy.openprofit)
 plot(strategy.netprofit)
 plot(strategy.netprofit_percent)

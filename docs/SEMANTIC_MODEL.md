@@ -151,6 +151,11 @@ unsupported except for the Phase O `strategy.closedtrades` and
 Stage 7 script-visible trade field functions, and the gross profit/loss,
 profit-percent, average-trade, max run-up/drawdown, and buy-and-hold return
 variables.
+`strategy.initial_capital` is a read-only strategy-mode `series float` that
+returns the configured or default broker starting capital on every bar. It is
+available through ordinary series expressions, UDF arguments, and history
+references, while indicator use, requested-context use, and mutation remain
+rejected.
 `strategy.grossprofit` is a read-only strategy-mode `series float` that sums
 positive realized closed-trade profit only; losing, flat, and current open
 trades do not change it. `strategy.netprofit_percent`,

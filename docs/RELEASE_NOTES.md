@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added `strategy.initial_capital` as a read-only strategy-mode `series float`
+  that returns the configured or default broker starting capital on every bar,
+  including UDF and history reads, without expanding public strategy output.
 - Added the six script-visible trade percentage helpers
   `strategy.closedtrades.profit_percent`, `max_runup_percent`, and
   `max_drawdown_percent` plus their `strategy.opentrades.*` counterparts. They

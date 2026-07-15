@@ -159,8 +159,9 @@ reservation subset is explicit fixed `qty` or `qty_percent` single-trigger or
 one-downside/one-upside bracket or trailing `strategy.exit` calls for the
 current matching long entry.
 
-Strategy-mode scripts can read `strategy.position_size` and
-`strategy.position_avg_price`, `strategy.openprofit`, `strategy.netprofit`,
+Strategy-mode scripts can read `strategy.position_size`,
+`strategy.position_avg_price`, `strategy.initial_capital`,
+`strategy.openprofit`, `strategy.netprofit`,
 `strategy.grossprofit`, `strategy.grossloss`, `strategy.avg_trade`,
 `strategy.avg_winning_trade`, `strategy.avg_losing_trade`,
 `strategy.buy_and_hold_return_percent`, `strategy.max_runup`,
@@ -170,7 +171,10 @@ Strategy-mode scripts can read `strategy.position_size` and
 reporting subset. In the current long-only subset,
 `strategy.position_size` is `0` when flat and positive while long.
 `strategy.position_avg_price` is `na` when flat and the current average entry
-price while long. `strategy.openprofit` is `(close - avg_price) * size` while
+price while long. `strategy.initial_capital` returns the configured or default
+broker starting capital unchanged on every bar, including through UDF and
+history reads, without expanding public strategy JSON. `strategy.openprofit`
+is `(close - avg_price) * size` while
 long and `0` when flat. `strategy.netprofit` sums realized closed-trade profit.
 `strategy.grossprofit` sums only positive realized closed-trade profit, so
 losing, flat, and current open trades do not change it.

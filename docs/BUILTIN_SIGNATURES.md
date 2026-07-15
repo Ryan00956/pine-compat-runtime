@@ -900,6 +900,10 @@ shared absolute activation price, while `trail_points` uses each unique entry's
 own entry-price-derived activation. Duplicate same-id relative targets remain
 outside the current claim. Broader
 multi-entry `strategy.exit` semantics remain outside the current claim.
+`strategy.initial_capital` is a read-only strategy-mode series float that
+returns the positive configured `strategy(..., initial_capital=...)` value, or
+the existing default starting capital when omitted, on every bar. It follows
+ordinary series history and does not add a public runtime schema field.
 `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
 `strategy.grossloss_percent` are read-only strategy-mode series floats that
 divide the corresponding realized amount by `initial_capital` and multiply by

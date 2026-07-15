@@ -10170,6 +10170,20 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
     assert_eq!(result.plots[21].values, net_profit_after_close_history);
     assert_eq!(result.plots[22].values, equity_history);
     assert_eq!(result.plots[23].values, max_drawdown_history);
+    let initial_capital = vec![PineValue::Float(1000.0); 6];
+    assert_eq!(result.plots[24].values, initial_capital.clone());
+    assert_eq!(result.plots[25].values, initial_capital);
+    assert_eq!(
+        result.plots[26].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(1000.0),
+            PineValue::Float(1000.0),
+            PineValue::Float(1000.0),
+            PineValue::Float(1000.0),
+            PineValue::Float(1000.0),
+        ]
+    );
 }
 
 #[test]

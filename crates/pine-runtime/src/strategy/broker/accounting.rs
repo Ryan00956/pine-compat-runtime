@@ -112,6 +112,11 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn initial_capital(&self) -> f64 {
+        self.initial_capital
+    }
+
+    #[must_use]
     pub(crate) fn realized_profit(&self) -> f64 {
         normalize_zero(self.trades.iter().map(|trade| trade.profit).sum())
     }

@@ -4890,6 +4890,7 @@ fn accepts_supported_strategy_profit_state_fixture() {
     assert_strategy_state_supported_fixture(
         "tests/fixtures/sema/supported_strategy_profit_state.pine",
         &[
+            "strategy.initial_capital",
             "strategy.openprofit",
             "strategy.netprofit",
             "strategy.netprofit_percent",

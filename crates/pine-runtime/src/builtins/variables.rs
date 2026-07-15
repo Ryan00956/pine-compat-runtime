@@ -273,6 +273,9 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "strategy.position_avg_price" {
             return self.strategy_broker.position_avg_price_value();
         }
+        if name == "strategy.initial_capital" {
+            return PineValue::Float(self.strategy_broker.initial_capital());
+        }
         if name == "strategy.closedtrades" {
             return PineValue::Int(self.strategy_broker.closed_trade_count());
         }
