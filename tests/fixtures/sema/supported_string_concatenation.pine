@@ -1,0 +1,16 @@
+//@version=6
+indicator("Supported " + "string concatenation")
+
+concat(left, right) => left + right
+
+style_prefix = "plot.style_"
+style_name = style_prefix + "line"
+input_text = input.string("input", "Text")
+input_result = "prefix " + input_text
+simple_result = timeframe.period + " timeframe"
+series_result = concat(str.tostring(bar_index), " bar")
+
+plot(close, "Const title", style=style_name)
+plot(str.length(input_result), "Input result")
+plot(str.length(simple_result), "Simple result")
+plot(str.length(series_result), "Series UDF result")

@@ -66,6 +66,15 @@ impl Analyzer {
                 let right_type = self.type_of_expr_with_params(right, param_types)?;
                 match op {
                     BinaryOp::Add
+                        if left_type.kind == ValueKind::String
+                            && right_type.kind == ValueKind::String =>
+                    {
+                        Some(PineType::new(
+                            strongest_qualifier(left_type.qualifier, right_type.qualifier),
+                            ValueKind::String,
+                        ))
+                    }
+                    BinaryOp::Add
                     | BinaryOp::Sub
                     | BinaryOp::Mul
                     | BinaryOp::Div

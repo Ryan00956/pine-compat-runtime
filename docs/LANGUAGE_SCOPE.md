@@ -46,7 +46,8 @@ Expressions:
 - function calls
 - named arguments
 - tuple expressions and tuple assignment
-- arithmetic operators: `+`, `-`, `*`, `/`, `%`
+- arithmetic operators: numeric `+`, `-`, `*`, `/`, `%`, plus string `+`
+  concatenation with strongest-operand qualifier and `na` propagation
 - comparison operators: `==`, `!=`, `>`, `>=`, `<`, `<=`
 - logical operators: `and`, `or`, `not`
 - ternary operator: `condition ? a : b`

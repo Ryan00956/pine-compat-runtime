@@ -618,6 +618,15 @@ impl Analyzer {
                 let symbol = self.const_lookup_symbol(name, expr.span)?;
                 self.const_string_symbols.get(&symbol.id).cloned()
             }
+            pine_syntax::ExprKind::Binary {
+                op: pine_syntax::BinaryOp::Add,
+                left,
+                right,
+            } => {
+                let mut value = self.known_const_string_value(left)?;
+                value.push_str(&self.known_const_string_value(right)?);
+                Some(value)
+            }
             pine_syntax::ExprKind::Ternary {
                 condition,
                 then_expr,

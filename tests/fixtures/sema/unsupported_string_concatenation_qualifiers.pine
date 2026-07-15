@@ -1,0 +1,11 @@
+//@version=6
+indicator("String concatenation qualifier boundaries")
+
+input_text = input.string("input", "Text")
+input_result = input_text + " suffix"
+simple_result = timeframe.period + " timeframe"
+series_result = str.tostring(close) + " close"
+
+plot(close, title=input_result)
+simple_timestamp = timestamp(simple_result)
+series_prefix = syminfo.prefix(series_result)

@@ -1290,7 +1290,29 @@ impl Analyzer {
         span: Span,
     ) -> Option<PineType> {
         match op {
-            BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div | BinaryOp::Mod => {
+            BinaryOp::Add => {
+                if left_type.kind == ValueKind::String && right_type.kind == ValueKind::String {
+                    Some(PineType::new(
+                        strongest_qualifier(left_type.qualifier, right_type.qualifier),
+                        ValueKind::String,
+                    ))
+                } else if is_numeric(left_type.kind) && is_numeric(right_type.kind) {
+                    Some(PineType::new(
+                        strongest_qualifier(left_type.qualifier, right_type.qualifier),
+                        numeric_result_kind(op, left_type.kind, right_type.kind),
+                    ))
+                } else {
+                    self.operator_error(
+                        op,
+                        "numeric or string operands",
+                        left_type,
+                        right_type,
+                        span,
+                    );
+                    None
+                }
+            }
+            BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div | BinaryOp::Mod => {
                 if is_numeric(left_type.kind) && is_numeric(right_type.kind) {
                     Some(PineType::new(
                         strongest_qualifier(left_type.qualifier, right_type.qualifier),

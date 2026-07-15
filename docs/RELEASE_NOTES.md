@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added string `+` concatenation across const, input, simple, and series
+  qualifiers, including UDF return inference, const-expression resolution,
+  `na` propagation, UTF-8 character counting, and the 40,960-character runtime
+  limit.
 - Added v6 triple-quotation-mark and triple-apostrophe multiline string
   literals, including literal newline and indentation preservation, CRLF
   normalization, ordinary escape decoding, UTF-8 contents, and stable

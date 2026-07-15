@@ -160,7 +160,7 @@ impl<'a> HistoricalRuntime<'a> {
                 (Some(selector_value), Some(case_expr)) => {
                     let case_value = self.eval_expr(case_expr)?;
                     matches!(
-                        eval_binary(HirBinaryOp::Eq, selector_value.clone(), case_value),
+                        eval_binary(HirBinaryOp::Eq, selector_value.clone(), case_value)?,
                         PineValue::Bool(true)
                     )
                 }

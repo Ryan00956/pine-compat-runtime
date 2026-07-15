@@ -686,8 +686,25 @@ fn reports_unsupported_operator_types_fixture() {
         &[
             "operator `+` expects numeric, got const string",
             "operator `not` expects bool, got const int",
-            "operator `+` expects numeric operands, got const string and const int",
+            "operator `+` expects numeric or string operands, got const string and const int",
             "operator `and` expects bool operands, got const bool and const int",
+        ],
+    );
+}
+
+#[test]
+fn accepts_supported_string_concatenation_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_string_concatenation.pine");
+}
+
+#[test]
+fn reports_string_concatenation_qualifier_boundaries_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_string_concatenation_qualifiers.pine",
+        &[
+            "`plot` argument `title` expects const string, got input string",
+            "`timestamp` argument `dateString` expects const string, got simple string",
+            "`syminfo.prefix` argument `symbol` expects simple string, got series string",
         ],
     );
 }

@@ -1,14 +1,21 @@
 //@version=6
 indicator("Strings")
+concat_pair(left, right) => left + right
 single_quoted_plain = 'single "quoted"'
 single_quoted_escaped = 'Pine\'s\n\t\\path'
 multiline_double = """first
   second "quoted" 中"""
 multiline_single = '''alpha
     beta's text'''
-multiline_same_line = """same""" == '''same'''
+multiline_same_line = """left""" + '''right'''
 multiline_escaped = """Pine\n\"quote\"\t\\path"""
 mode = input.string("sma", "Mode")
+concat_const = "" + "Pine" + " " + "Script" + ""
+concat_input = mode + "!"
+concat_simple = timeframe.period + "!"
+concat_series = concat_pair(str.tostring(bar_index), "!")
+concat_na = string(na) + "suffix"
+concat_unicode = "中" + "文"
 upper = str.upper(mode)
 lower = str.lower(upper)
 length = str.length(upper)
@@ -604,5 +611,11 @@ plot(single_quoted_plain == "single \"quoted\"" ? 1 : 0)
 plot(single_quoted_escaped == "Pine's\n\t\\path" ? 1 : 0)
 plot(multiline_double == "first\n  second \"quoted\" 中" ? 1 : 0)
 plot(multiline_single == "alpha\n    beta's text" ? 1 : 0)
-plot(multiline_same_line ? 1 : 0)
+plot(multiline_same_line == "leftright" ? 1 : 0)
 plot(multiline_escaped == "Pine\n\"quote\"\t\\path" ? 1 : 0)
+plot(concat_const == "Pine Script" ? 1 : 0)
+plot(concat_input == "sma!" ? 1 : 0)
+plot(concat_simple == str.format("{0}!", timeframe.period) ? 1 : 0)
+plot(concat_series == str.format("{0}!", bar_index) ? 1 : 0)
+plot(na(concat_na) ? 1 : 0)
+plot(concat_unicode == "中文" ? 1 : 0)

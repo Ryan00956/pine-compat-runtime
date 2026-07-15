@@ -200,6 +200,15 @@ pub(crate) fn const_string_value(expr: &Expr) -> Option<String> {
         ExprKind::QualifiedName(parts) => {
             pine_builtins::named_string_constant(&parts.join(".")).map(str::to_owned)
         }
+        ExprKind::Binary {
+            op: BinaryOp::Add,
+            left,
+            right,
+        } => {
+            let mut value = const_string_value(left)?;
+            value.push_str(&const_string_value(right)?);
+            Some(value)
+        }
         ExprKind::Ternary {
             condition,
             then_expr,
