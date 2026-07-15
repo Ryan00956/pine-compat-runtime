@@ -307,6 +307,16 @@ fixture-backed pyramided open trades by zero-based index; invalid, out-of-range,
 flat-state, or uncommented reads return `na`, with no public strategy JSON
 expansion. Other open-trade namespace functions and public open-trade record
 output remain unsupported.
+The indexed trade-percentage slice adds
+`strategy.closedtrades.profit_percent`,
+`strategy.closedtrades.max_runup_percent`,
+`strategy.closedtrades.max_drawdown_percent`, and the matching three
+`strategy.opentrades.*` functions. Each divides the selected signed profit or
+non-negative excursion amount by `entry_price * abs(quantity)` and multiplies
+by 100. The functions return `na` for the same invalid, non-integer,
+out-of-range, or flat-state indexes as their amount counterparts, and also for
+a non-positive or non-finite entry value. They reuse the internal long-only
+trade ledger and do not expand public strategy JSON.
 Stage 7 Slice 35 adds `strategy.opentrades.capital_held` as the one variable
 inside the open-trade namespace. In the current no-margin subset it returns
 `na`; with explicit active `margin_long`, Stage 7 Margin Slice M2 returns the

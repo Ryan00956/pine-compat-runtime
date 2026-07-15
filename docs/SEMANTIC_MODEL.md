@@ -192,8 +192,10 @@ the current supported trading interval, using the supported entry equity, the
 maximum equity before that entry, and the lowest low reached while the
 supported position is open. `strategy.max_drawdown_percent` divides the
 supported drawdown amount by entry price times current supported position
-quantity and multiplies by 100. Other percent variants remain
-unsupported. The count variables are
+quantity and multiplies by 100. The indexed closed/open trade field families
+also support `profit_percent`, `max_runup_percent`, and
+`max_drawdown_percent`, each dividing the selected trade amount by its entry
+price times absolute quantity and multiplying by 100. The count variables are
 read-only strategy-mode `series int` values for the current long-only broker:
 `strategy.closedtrades` counts closed trades recorded by broker state;
 `strategy.wintrades`, `strategy.losstrades`, and `strategy.eventrades` count
@@ -205,8 +207,11 @@ when flat. The supported closed-trade namespace functions are
 `strategy.closedtrades.entry_bar_index`, `strategy.closedtrades.exit_bar_index`,
 `strategy.closedtrades.entry_time`, `strategy.closedtrades.exit_time`,
 `strategy.closedtrades.commission`,
-`strategy.closedtrades.size`, `strategy.closedtrades.profit`, and
-`strategy.closedtrades.max_runup`, and `strategy.closedtrades.max_drawdown`;
+`strategy.closedtrades.size`, `strategy.closedtrades.profit`,
+`strategy.closedtrades.profit_percent`, `strategy.closedtrades.max_runup`,
+`strategy.closedtrades.max_runup_percent`,
+`strategy.closedtrades.max_drawdown`, and
+`strategy.closedtrades.max_drawdown_percent`;
 they accept a zero-based integer `trade_num` and return `na` for missing,
 negative, out-of-range, or non-integer indexes. `commission` returns `0.0`
 without configured commission or supported entry-plus-exit commission when
@@ -223,13 +228,19 @@ position's entry price for `trade_num == 0`,
 `strategy.opentrades.entry_time`, which returns its entry fill timestamp, and
 `strategy.opentrades.size`, which returns the current open position size, and
 `strategy.opentrades.profit`, which returns the current close-based floating
-profit for that open position, and `strategy.opentrades.commission`, which
+profit for that open position, `strategy.opentrades.profit_percent`, which
+divides that amount by the selected entry value, and
+`strategy.opentrades.commission`, which
 returns `0.0` without configured commission or the current open supported entry
 commission when configured, and
 `strategy.opentrades.max_runup`, which returns the largest high-based favorable
-excursion seen so far for that open position, and
+excursion seen so far for that open position,
+`strategy.opentrades.max_runup_percent`, which returns that excursion relative
+to entry value,
 `strategy.opentrades.max_drawdown`, which returns the largest low-based adverse
-excursion seen so far for that open position. All field functions return `na`
+excursion seen so far for that open position, and
+`strategy.opentrades.max_drawdown_percent`, which returns that excursion
+relative to entry value. All field functions return `na`
 when flat or invalid. `strategy.opentrades.capital_held` is a read-only
 strategy-mode variable and returns `na` in the current no-margin subset. With
 explicit active `margin_long`, the current long-only subset returns `0.0` while

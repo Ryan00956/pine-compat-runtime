@@ -408,6 +408,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "strategy.closedtrades.profit_percent",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_TRADE_FIELD_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "strategy.closedtrades.max_runup",
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_TRADE_FIELD_PARAMS,
@@ -415,7 +422,21 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "strategy.closedtrades.max_runup_percent",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_TRADE_FIELD_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "strategy.closedtrades.max_drawdown",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_TRADE_FIELD_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.closedtrades.max_drawdown_percent",
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_TRADE_FIELD_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
@@ -471,6 +492,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "strategy.opentrades.profit_percent",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_TRADE_FIELD_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "strategy.opentrades.commission",
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_TRADE_FIELD_PARAMS,
@@ -485,7 +513,21 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "strategy.opentrades.max_runup_percent",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_TRADE_FIELD_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "strategy.opentrades.max_drawdown",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_TRADE_FIELD_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.opentrades.max_drawdown_percent",
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_TRADE_FIELD_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),

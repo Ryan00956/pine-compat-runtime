@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added the six script-visible trade percentage helpers
+  `strategy.closedtrades.profit_percent`, `max_runup_percent`, and
+  `max_drawdown_percent` plus their `strategy.opentrades.*` counterparts. They
+  divide the selected trade amount by entry price times absolute quantity,
+  preserve the current long-only indexed-ledger and `na` boundaries, and add
+  no public strategy-result fields.
 - Added `runtime.error(message)` with string-compatible const, input, simple,
   and series messages, named-argument and user-defined-function support, exact
   reached-call error propagation, a deterministic `NaN` message for `na`, and

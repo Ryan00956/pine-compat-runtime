@@ -8735,6 +8735,12 @@ plot(na(strategy.closedtrades.exit_id(1)) ? 1 : 0)
 plot(strategy.closedtrades.entry_price(1))
 plot(strategy.closedtrades.entry_price(-1))
 plot(strategy.closedtrades.entry_price(0.5))
+plot(strategy.closedtrades.profit_percent(0))
+plot(strategy.closedtrades.max_runup_percent(0))
+plot(strategy.closedtrades.max_drawdown_percent(0))
+plot(strategy.closedtrades.profit_percent(1))
+plot(strategy.closedtrades.max_runup_percent(-1))
+plot(strategy.closedtrades.max_drawdown_percent(0.5))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -8835,7 +8841,20 @@ plot(strategy.closedtrades.entry_price(0.5))
         result.plots[14].values,
         vec![PineValue::Int(1), PineValue::Int(1), PineValue::Int(1)]
     );
-    for values in result.plots[15..].iter().map(|plot| &plot.values) {
+    for values in result.plots[15..18].iter().map(|plot| &plot.values) {
+        assert_eq!(values, &vec![PineValue::Na, PineValue::Na, PineValue::Na]);
+    }
+    for values in result.plots[18..21].iter().map(|plot| &plot.values) {
+        assert_eq!(
+            values,
+            &vec![
+                PineValue::Na,
+                PineValue::Float(50.0),
+                PineValue::Float(50.0),
+            ]
+        );
+    }
+    for values in result.plots[21..].iter().map(|plot| &plot.values) {
         assert_eq!(values, &vec![PineValue::Na, PineValue::Na, PineValue::Na]);
     }
 }
@@ -8886,6 +8905,12 @@ plot(strategy.opentrades.profit(0.5))
 plot(strategy.opentrades.commission(0.5))
 plot(strategy.opentrades.max_runup(0.5))
 plot(strategy.opentrades.max_drawdown(0.5))
+plot(strategy.opentrades.profit_percent(0))
+plot(strategy.opentrades.max_runup_percent(0))
+plot(strategy.opentrades.max_drawdown_percent(0))
+plot(strategy.opentrades.profit_percent(1))
+plot(strategy.opentrades.max_runup_percent(-1))
+plot(strategy.opentrades.max_drawdown_percent(0.5))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -8966,7 +8991,25 @@ plot(strategy.opentrades.max_drawdown(0.5))
         result.plots[9].values,
         vec![PineValue::Na, PineValue::Na, PineValue::Na]
     );
-    for plot in &result.plots[10..] {
+    for plot in &result.plots[10..37] {
+        assert_eq!(
+            plot.values,
+            vec![PineValue::Na, PineValue::Na, PineValue::Na]
+        );
+    }
+    assert_eq!(
+        result.plots[37].values,
+        vec![PineValue::Na, PineValue::Float(0.0), PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[38].values,
+        vec![PineValue::Na, PineValue::Float(100.0), PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[39].values,
+        vec![PineValue::Na, PineValue::Float(50.0), PineValue::Na]
+    );
+    for plot in &result.plots[40..] {
         assert_eq!(
             plot.values,
             vec![PineValue::Na, PineValue::Na, PineValue::Na]

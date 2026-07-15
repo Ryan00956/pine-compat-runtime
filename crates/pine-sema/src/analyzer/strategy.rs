@@ -50,8 +50,11 @@ const STRATEGY_CLOSED_TRADE_FIELD_FUNCTIONS: &[&str] = &[
     "strategy.closedtrades.commission",
     "strategy.closedtrades.size",
     "strategy.closedtrades.profit",
+    "strategy.closedtrades.profit_percent",
     "strategy.closedtrades.max_runup",
+    "strategy.closedtrades.max_runup_percent",
     "strategy.closedtrades.max_drawdown",
+    "strategy.closedtrades.max_drawdown_percent",
 ];
 
 const STRATEGY_OPEN_TRADE_FIELD_FUNCTIONS: &[&str] = &[
@@ -62,9 +65,12 @@ const STRATEGY_OPEN_TRADE_FIELD_FUNCTIONS: &[&str] = &[
     "strategy.opentrades.entry_time",
     "strategy.opentrades.size",
     "strategy.opentrades.profit",
+    "strategy.opentrades.profit_percent",
     "strategy.opentrades.commission",
     "strategy.opentrades.max_runup",
+    "strategy.opentrades.max_runup_percent",
     "strategy.opentrades.max_drawdown",
+    "strategy.opentrades.max_drawdown_percent",
 ];
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

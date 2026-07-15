@@ -368,8 +368,11 @@ mod tests {
             "strategy.closedtrades.commission",
             "strategy.closedtrades.size",
             "strategy.closedtrades.profit",
+            "strategy.closedtrades.profit_percent",
             "strategy.closedtrades.max_runup",
+            "strategy.closedtrades.max_runup_percent",
             "strategy.closedtrades.max_drawdown",
+            "strategy.closedtrades.max_drawdown_percent",
             "strategy.opentrades.entry_price",
             "strategy.opentrades.entry_comment",
             "strategy.opentrades.entry_id",
@@ -377,9 +380,12 @@ mod tests {
             "strategy.opentrades.entry_time",
             "strategy.opentrades.size",
             "strategy.opentrades.profit",
+            "strategy.opentrades.profit_percent",
             "strategy.opentrades.commission",
             "strategy.opentrades.max_runup",
+            "strategy.opentrades.max_runup_percent",
             "strategy.opentrades.max_drawdown",
+            "strategy.opentrades.max_drawdown_percent",
         ] {
             let signature = get_phase_1_builtin(name).expect("trade field signature");
             assert_eq!(signature.params.len(), 1, "{name}");

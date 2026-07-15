@@ -48,13 +48,25 @@ impl<'a> HistoricalRuntime<'a> {
                 .map_or(PineValue::Na, PineValue::Float),
             "strategy.closedtrades.size" => PineValue::Float(trade.qty),
             "strategy.closedtrades.profit" => PineValue::Float(trade.profit),
+            "strategy.closedtrades.profit_percent" => self
+                .strategy_broker
+                .closed_trade_profit_percent(trade_num)
+                .map_or(PineValue::Na, PineValue::Float),
             "strategy.closedtrades.max_runup" => self
                 .strategy_broker
                 .closed_trade_max_runup(trade_num)
                 .map_or(PineValue::Na, PineValue::Float),
+            "strategy.closedtrades.max_runup_percent" => self
+                .strategy_broker
+                .closed_trade_max_runup_percent(trade_num)
+                .map_or(PineValue::Na, PineValue::Float),
             "strategy.closedtrades.max_drawdown" => self
                 .strategy_broker
                 .closed_trade_max_drawdown(trade_num)
+                .map_or(PineValue::Na, PineValue::Float),
+            "strategy.closedtrades.max_drawdown_percent" => self
+                .strategy_broker
+                .closed_trade_max_drawdown_percent(trade_num)
                 .map_or(PineValue::Na, PineValue::Float),
             _ => PineValue::Na,
         })
@@ -108,6 +120,14 @@ impl<'a> HistoricalRuntime<'a> {
                     .open_trade_profit(trade_num, bar.close)
                     .map_or(PineValue::Na, PineValue::Float)
             }
+            "strategy.opentrades.profit_percent" => {
+                let Some(bar) = self.current_bar else {
+                    return Ok(PineValue::Na);
+                };
+                self.strategy_broker
+                    .open_trade_profit_percent(trade_num, bar.close)
+                    .map_or(PineValue::Na, PineValue::Float)
+            }
             "strategy.opentrades.commission" => self
                 .strategy_broker
                 .open_trade_commission(trade_num)
@@ -116,9 +136,17 @@ impl<'a> HistoricalRuntime<'a> {
                 .strategy_broker
                 .open_trade_max_runup(trade_num)
                 .map_or(PineValue::Na, PineValue::Float),
+            "strategy.opentrades.max_runup_percent" => self
+                .strategy_broker
+                .open_trade_max_runup_percent(trade_num)
+                .map_or(PineValue::Na, PineValue::Float),
             "strategy.opentrades.max_drawdown" => self
                 .strategy_broker
                 .open_trade_max_drawdown(trade_num)
+                .map_or(PineValue::Na, PineValue::Float),
+            "strategy.opentrades.max_drawdown_percent" => self
+                .strategy_broker
+                .open_trade_max_drawdown_percent(trade_num)
                 .map_or(PineValue::Na, PineValue::Float),
             _ => PineValue::Na,
         })

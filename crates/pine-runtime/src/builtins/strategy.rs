@@ -66,8 +66,11 @@ impl<'a> HistoricalRuntime<'a> {
             | "strategy.closedtrades.commission"
             | "strategy.closedtrades.size"
             | "strategy.closedtrades.profit"
+            | "strategy.closedtrades.profit_percent"
             | "strategy.closedtrades.max_runup"
-            | "strategy.closedtrades.max_drawdown" => {
+            | "strategy.closedtrades.max_runup_percent"
+            | "strategy.closedtrades.max_drawdown"
+            | "strategy.closedtrades.max_drawdown_percent" => {
                 self.eval_strategy_closed_trade_field(callee, args)
             }
             "strategy.opentrades.entry_price"
@@ -77,9 +80,12 @@ impl<'a> HistoricalRuntime<'a> {
             | "strategy.opentrades.entry_time"
             | "strategy.opentrades.size"
             | "strategy.opentrades.profit"
+            | "strategy.opentrades.profit_percent"
             | "strategy.opentrades.commission"
             | "strategy.opentrades.max_runup"
-            | "strategy.opentrades.max_drawdown" => {
+            | "strategy.opentrades.max_runup_percent"
+            | "strategy.opentrades.max_drawdown"
+            | "strategy.opentrades.max_drawdown_percent" => {
                 self.eval_strategy_open_trade_field(callee, args)
             }
             _ => return None,

@@ -726,8 +726,11 @@ strategy.closedtrades.exit_time(trade_num: series/simple numeric) -> series int
 strategy.closedtrades.commission(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.size(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.profit(trade_num: series/simple numeric) -> series float
+strategy.closedtrades.profit_percent(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.max_runup(trade_num: series/simple numeric) -> series float
+strategy.closedtrades.max_runup_percent(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.max_drawdown(trade_num: series/simple numeric) -> series float
+strategy.closedtrades.max_drawdown_percent(trade_num: series/simple numeric) -> series float
 strategy.opentrades.capital_held -> series float
 strategy.margin_liquidation_price -> series float
 strategy.opentrades.entry_price(trade_num: series/simple numeric) -> series float
@@ -737,9 +740,12 @@ strategy.opentrades.entry_bar_index(trade_num: series/simple numeric) -> series 
 strategy.opentrades.entry_time(trade_num: series/simple numeric) -> series int
 strategy.opentrades.size(trade_num: series/simple numeric) -> series float
 strategy.opentrades.profit(trade_num: series/simple numeric) -> series float
+strategy.opentrades.profit_percent(trade_num: series/simple numeric) -> series float
 strategy.opentrades.commission(trade_num: series/simple numeric) -> series float
 strategy.opentrades.max_runup(trade_num: series/simple numeric) -> series float
+strategy.opentrades.max_runup_percent(trade_num: series/simple numeric) -> series float
 strategy.opentrades.max_drawdown(trade_num: series/simple numeric) -> series float
+strategy.opentrades.max_drawdown_percent(trade_num: series/simple numeric) -> series float
 ```
 
 Only metadata arguments needed by the output and history-retention model should
@@ -992,16 +998,25 @@ options remain unsupported.
 `strategy.closedtrades.entry_bar_index`, and
 `strategy.closedtrades.exit_bar_index`, `strategy.closedtrades.entry_time`,
 `strategy.closedtrades.exit_time`, `strategy.closedtrades.commission`,
-`strategy.closedtrades.size`, `strategy.closedtrades.profit`, and
-`strategy.closedtrades.max_runup`, and `strategy.closedtrades.max_drawdown` are
+`strategy.closedtrades.size`, `strategy.closedtrades.profit`,
+`strategy.closedtrades.profit_percent`, `strategy.closedtrades.max_runup`,
+`strategy.closedtrades.max_runup_percent`,
+`strategy.closedtrades.max_drawdown`, and
+`strategy.closedtrades.max_drawdown_percent` are
 read-only strategy-mode field functions over the current closed-trade list.
 `strategy.opentrades.entry_price`, `strategy.opentrades.entry_comment`,
 `strategy.opentrades.entry_id`, and
 `strategy.opentrades.entry_bar_index`, `strategy.opentrades.entry_time`, and
-`strategy.opentrades.size`, `strategy.opentrades.profit`, and
-`strategy.opentrades.commission`, `strategy.opentrades.max_runup`, and
-`strategy.opentrades.max_drawdown` are read-only strategy-mode field functions
+`strategy.opentrades.size`, `strategy.opentrades.profit`,
+`strategy.opentrades.profit_percent`, `strategy.opentrades.commission`,
+`strategy.opentrades.max_runup`, `strategy.opentrades.max_runup_percent`,
+`strategy.opentrades.max_drawdown`, and
+`strategy.opentrades.max_drawdown_percent` are read-only strategy-mode field functions
 over the current long-only open-trade ledger.
+The six percentage helpers divide the matching amount by the selected trade's
+entry price times absolute quantity and multiply by 100. Invalid indexes,
+flat-state open-trade reads, and non-positive or non-finite entry values return
+`na`, matching the indexed trade-field boundary.
 `strategy.opentrades.capital_held` is a read-only strategy-mode variable. The
 current no-margin subset returns `na`; with explicit active `margin_long`, the
 current long-only subset returns current open long market value multiplied by
@@ -1024,12 +1039,14 @@ current supported long position. Closed- and open-trade
 the retained trade quantity. Closed- and open-trade `max_drawdown` return the
 largest low-based adverse excursion seen so far for the retained trade
 quantity. They do not add public runtime schema fields. Other closed-trade
-fields outside `entry_price`, `entry_id`, `exit_price`, `exit_id`,
-`entry_bar_index`, `exit_bar_index`, `entry_time`, `exit_time`, `size`,
-`profit`, `commission`, `max_runup`, and `max_drawdown` remain unsupported.
-Other open-trade namespace functions outside `entry_price`, `entry_id`,
-`entry_bar_index`, `entry_time`, `size`, `profit`, `commission`, `max_runup`,
-and `max_drawdown` remain unsupported.
+fields outside `entry_price`, `entry_comment`, `entry_id`, `exit_price`,
+`exit_comment`, `exit_id`, `entry_bar_index`, `exit_bar_index`, `entry_time`,
+`exit_time`, `size`, `profit`, `profit_percent`, `commission`, `max_runup`,
+`max_runup_percent`, `max_drawdown`, and `max_drawdown_percent` remain
+unsupported. Other open-trade namespace functions outside `entry_price`,
+`entry_comment`, `entry_id`, `entry_bar_index`, `entry_time`, `size`, `profit`,
+`profit_percent`, `commission`, `max_runup`, `max_runup_percent`,
+`max_drawdown`, and `max_drawdown_percent` remain unsupported.
 
 ## Inputs
 
