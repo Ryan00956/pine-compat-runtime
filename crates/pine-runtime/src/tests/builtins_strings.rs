@@ -313,6 +313,8 @@ fn normalizes_pine_regex_class_ampersand_boundaries() {
         (r"[da-c&&&&d]", r"[[da-c&&a-c]&&d]"),
         (r"[A\d&&&&A]", r"[[A[0-9]&&[0-9]]&&A]"),
         (r"[da-c&&&&&x]", r"[[[da-c&&a-c]]\x{64}\x{26}x]"),
+        (r"[Aa-c&&&-0]", r"[[Aa-c&&a-c]\x{26}-0]"),
+        (r"[Aa-c&&&-0x]", r"[[Aa-c&&a-c]\x{26}-0\x{41}x]"),
     ] {
         assert_eq!(normalize_pine_regex(pattern), expected, "{pattern}");
     }
@@ -399,6 +401,34 @@ fn normalizes_pine_regex_class_ampersand_boundaries() {
         .expect("normalized three consecutive empty intersections");
     assert!(repeated_twice.is_match("abcdx&"));
 
+    let deferred_range = Regex::new(&normalize_pine_regex(r"\A[Aa-c&&&-0]+\z"))
+        .expect("normalized range without later BitClass mutation");
+    assert!(deferred_range.is_match("&0abc"));
+    assert!(!deferred_range.is_match("A"));
+    let revived_after_range = Regex::new(&normalize_pine_regex(r"\A[Aa-c&&&-0x]+\z"))
+        .expect("normalized BitClass mutation after a range");
+    assert!(revived_after_range.is_match("A&0abcx"));
+    let nested_after_range = Regex::new(&normalize_pine_regex(r"\A[Aa-c&&&-0[x]]+\z"))
+        .expect("normalized nested predicate after a range");
+    assert!(nested_after_range.is_match("&0abcx"));
+    assert!(!nested_after_range.is_match("A"));
+    let predicate_after_mutation = Regex::new(&normalize_pine_regex(r"\A[Aa-c&&&-0x\d&&]+\z"))
+        .expect("normalized predicate following a revived BitClass");
+    assert!(predicate_after_mutation.is_match("01"));
+    assert!(!predicate_after_mutation.is_match("A"));
+    for pattern in [r"\A[Aa-c&&&-0\x78]+\z", r"\A[Aa-c&&&-0\Qx\E]+\z"] {
+        let escaped = Regex::new(&normalize_pine_regex(pattern))
+            .expect("normalized escaped BitClass mutation after a range");
+        assert!(escaped.is_match("A&0abcx"), "{pattern}");
+    }
+    let unicode_exception = Regex::new(&normalize_pine_regex(r"(?iU)\A[da-c&&&-0k]+\z"))
+        .expect("normalized non-BitClass Unicode case literal after a range");
+    assert!(unicode_exception.is_match("KK"));
+    assert!(!unicode_exception.is_match("D"));
+    let unicode_bit = Regex::new(&normalize_pine_regex(r"(?iU)\A[da-c&&&-0x]+\z"))
+        .expect("normalized Unicode-case BitClass mutation after a range");
+    assert!(unicode_bit.is_match("DX"));
+
     for invalid in [
         r"[&&]",
         r"[&&&]",
@@ -406,7 +436,6 @@ fn normalizes_pine_regex_class_ampersand_boundaries() {
         r"[a-cd&&]",
         r"[\dA&&]",
         r"[[ab]c&&]",
-        r"[Aa-c&&&-0]",
     ] {
         assert!(
             Regex::new(&normalize_pine_regex(invalid)).is_err(),

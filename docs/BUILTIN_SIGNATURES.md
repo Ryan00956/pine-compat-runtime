@@ -2081,9 +2081,9 @@ remains a regex error. Direct odd-run continuations after a mixed predicate or
 prior intersection preserve Java's mutable BitClass membership and recursive
 right-hand-side scope instead of inheriting Rust's different set algebra,
 including repeated empty pairs before a later literal or non-empty
-intersection. Range-start continuations that require carrying the same mutable
-BitClass across a later range remain explicit regex errors in the current
-linear-time subset. Outside character classes, global or scoped `(?i)` applies Pine's
+intersection and range-start continuations that carry the same mutable BitClass
+through later ranges, nested predicates, escaped or ordinary literals, and
+subsequent intersections. Outside character classes, global or scoped `(?i)` applies Pine's
 ASCII-only case folding to ordinary and
 `\Q...\E`-quoted literals plus `\uHHHH`/`\x` references. Lowercase `(?u)`
 independently enables Unicode-aware folding when `i` is active without changing

@@ -94,6 +94,9 @@ pub(crate) struct PineRegexClassPrefix {
     has_atom: bool,
     output_start: usize,
     deferred_bit_class: String,
+    deferred_scan_start: Option<usize>,
+    deferred_verbose: bool,
+    deferred_unicode_case_insensitive: bool,
 }
 
 impl PineRegexClassPrefix {
@@ -105,6 +108,9 @@ impl PineRegexClassPrefix {
             has_atom: false,
             output_start,
             deferred_bit_class: String::new(),
+            deferred_scan_start: None,
+            deferred_verbose: false,
+            deferred_unicode_case_insensitive: false,
         }
     }
 
@@ -163,6 +169,7 @@ impl PineRegexClassPrefix {
     }
 
     pub(crate) fn take_deferred_bit_class(&mut self) -> String {
+        self.deferred_scan_start = None;
         std::mem::take(&mut self.deferred_bit_class)
     }
 }
@@ -170,6 +177,8 @@ impl PineRegexClassPrefix {
 pub(crate) struct PineRegexClassContinuation {
     group_start: usize,
     lost_bit_class: String,
+    verbose: bool,
+    unicode_case_insensitive: bool,
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -191,18 +200,14 @@ pub(crate) enum PineRegexEmptyIntersection {
 }
 
 impl PineRegexEmptyIntersection {
-    pub(crate) fn can_continue(&self, continuation_kind: PineRegexAmpersandContinuation) -> bool {
-        match self {
-            Self::Redundant(_) => true,
-            Self::Repeat { continuation, .. } => {
-                continuation.lost_bit_class.is_empty()
-                    || continuation_kind != PineRegexAmpersandContinuation::StartsRange
-            }
-            Self::Invalid => false,
-        }
-    }
-
-    pub(crate) fn with_deferred_bit_class(mut self, deferred: String) -> Self {
+    pub(crate) fn with_deferred_bit_class(
+        mut self,
+        class_prefixes: &mut [PineRegexClassPrefix],
+    ) -> Self {
+        let deferred = class_prefixes
+            .last_mut()
+            .map(PineRegexClassPrefix::take_deferred_bit_class)
+            .unwrap_or_default();
         let continuation = match &mut self {
             Self::Redundant(continuation) | Self::Repeat { continuation, .. } => continuation,
             Self::Invalid => return self,
@@ -292,6 +297,8 @@ pub(crate) fn pine_java_empty_intersection(
     let mut continuation = PineRegexClassContinuation {
         group_start: scope.span().start.offset,
         lost_bit_class: bit_class,
+        verbose,
+        unicode_case_insensitive,
     };
     if predicate_count == 0 {
         continuation.lost_bit_class.clear();
@@ -349,12 +356,17 @@ pub(crate) fn apply_pine_java_empty_intersection(
             return;
         }
     };
-    let deferred_bit_class =
-        if continuation_kind == Some(PineRegexAmpersandContinuation::RepeatsEmptyPair) {
-            continuation.lost_bit_class.clone()
-        } else {
-            String::new()
-        };
+    let deferred_bit_class = if matches!(
+        continuation_kind,
+        Some(
+            PineRegexAmpersandContinuation::RepeatsEmptyPair
+                | PineRegexAmpersandContinuation::StartsRange
+        )
+    ) {
+        continuation.lost_bit_class.clone()
+    } else {
+        String::new()
+    };
     let copied_protected = current_span
         .map(|span| class_start + span.start..class_start + span.end)
         .map(|source| {
@@ -390,6 +402,49 @@ pub(crate) fn apply_pine_java_empty_intersection(
     }
     if let Some(prefix) = class_prefixes.last_mut() {
         prefix.deferred_bit_class = deferred_bit_class;
+        prefix.deferred_scan_start =
+            (!prefix.deferred_bit_class.is_empty()).then_some(result.len());
+        prefix.deferred_verbose = continuation.verbose;
+        prefix.deferred_unicode_case_insensitive = continuation.unicode_case_insensitive;
+    }
+}
+
+pub(crate) fn resolve_java_bits(
+    result: &mut String,
+    class_prefixes: &mut [PineRegexClassPrefix],
+    protected_spans: &mut [Range<usize>],
+) {
+    let Some(prefix) = class_prefixes.last_mut() else {
+        return;
+    };
+    let Some(scan_start) = prefix.deferred_scan_start else {
+        return;
+    };
+    let pattern = format!("{}]", &result[prefix.output_start..]);
+    let mut builder = ast::parse::ParserBuilder::new();
+    builder.ignore_whitespace(prefix.deferred_verbose);
+    let Ok(Ast::ClassBracketed(ref class)) = builder.build().parse(&pattern) else {
+        return;
+    };
+    let Some(ClassSet::Item(item)) = rightmost_java_class_scope(&class.kind) else {
+        return;
+    };
+    let mutation = java_class_scope_items(item).iter().find(|item| {
+        prefix.output_start + item.span().start.offset >= scan_start
+            && java_union_item_is_bit_class(item, prefix.deferred_unicode_case_insensitive)
+    });
+    if let Some(mutation) = mutation {
+        let insert_at = prefix.output_start + mutation.span().start.offset;
+        let inserted_len = prefix.deferred_bit_class.len();
+        result.insert_str(insert_at, &prefix.deferred_bit_class);
+        for span in protected_spans {
+            if span.start >= insert_at {
+                span.start += inserted_len;
+                span.end += inserted_len;
+            }
+        }
+        prefix.deferred_bit_class.clear();
+        prefix.deferred_scan_start = None;
     }
 }
 

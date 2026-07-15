@@ -9,7 +9,7 @@ use super::{
         next_pine_regex_class_token, normalize_case_insensitive_class,
         pine_java_ampersand_continuation, pine_java_empty_intersection, pine_posix_class,
         pine_unicode_block_property, push_case_folded_class,
-        push_case_insensitive_class_replacement, push_pine_unicode_block,
+        push_case_insensitive_class_replacement, push_pine_unicode_block, resolve_java_bits,
     },
     regex_escapes::{
         is_pine_regex_line_separator, parse_pine_regex_code_point_escape,
@@ -465,6 +465,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
         }
 
         if class_depth > 0 && byte == b'&' {
+            resolve_java_bits(&mut result, &mut class_prefixes, &mut case_protected_spans);
             let prefix = class_prefixes
                 .last()
                 .expect("a character class has prefix state");
@@ -478,20 +479,15 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                     mode.verbose,
                 );
                 let rhs_is_empty = rhs.is_none_or(|(_, ch)| matches!(ch, '&' | ']'));
-                let empty_rhs_is_followed_by_ampersand = matches!(rhs, Some((_, '&')));
                 let has_lhs = prefix.has_atom();
                 let class_start = prefix.output_start();
-                let deferred_bit_class = class_prefixes
-                    .last_mut()
-                    .expect("a character class has prefix state")
-                    .take_deferred_bit_class();
                 let empty_intersection = (has_lhs && rhs_is_empty).then(|| {
                     pine_java_empty_intersection(
                         &result[class_start..],
                         mode.verbose,
                         mode.case_insensitive && mode.unicode_case,
                     )
-                    .with_deferred_bit_class(deferred_bit_class)
+                    .with_deferred_bit_class(&mut class_prefixes)
                 });
                 class_prefixes
                     .last_mut()
@@ -503,22 +499,14 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                     result.push_str("&&");
                 } else if let Some(empty_intersection) = empty_intersection {
                     let continuation = pine_java_ampersand_continuation(pattern, rhs, mode.verbose);
-                    if empty_rhs_is_followed_by_ampersand
-                        && !empty_intersection.can_continue(
-                            continuation.expect("ampersand continuation was detected"),
-                        )
-                    {
-                        result.push_str(r"\p{__PineInvalidJavaIntersection}");
-                    } else {
-                        apply_pine_java_empty_intersection(
-                            &mut result,
-                            class_start,
-                            &mut case_protected_spans,
-                            &mut class_prefixes,
-                            empty_intersection,
-                            continuation,
-                        );
-                    }
+                    apply_pine_java_empty_intersection(
+                        &mut result,
+                        class_start,
+                        &mut case_protected_spans,
+                        &mut class_prefixes,
+                        empty_intersection,
+                        continuation,
+                    );
                 }
                 index = second_index + '&'.len_utf8();
                 continue;
@@ -599,6 +587,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 index += 1;
                 continue;
             }
+            resolve_java_bits(&mut result, &mut class_prefixes, &mut case_protected_spans);
             class_prefixes.pop();
             class_depth -= 1;
         } else if byte == b'^'
