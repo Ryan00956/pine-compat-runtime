@@ -1,0 +1,50 @@
+//@version=6
+indicator("Compound assignments")
+
+calculate(value) =>
+    result = value
+    result *= 2
+    result += 1
+    result
+
+number = 10.0
+number += 2
+number -= 3
+number *= 4
+number /= 6
+number %= 4
+
+integer = 10
+integer += 5
+integer -= 3
+integer *= 2
+integer %= 7
+
+text = "Pine"
+text += " Script"
+
+missing = float(na)
+missing += 1
+
+series_value = 0
+series_value += bar_index
+
+var cumulative = 0
+cumulative += 1
+
+loop_total = 0
+for i = 1 to 3
+    loop_total += i
+
+input_value = input.float(2, "Input")
+input_value += close
+
+plot(number == 2 ? 1 : 0)
+plot(integer == 3 ? 1 : 0)
+plot(text == "Pine Script" ? 1 : 0)
+plot(na(missing) ? 1 : 0)
+plot(series_value == bar_index ? 1 : 0)
+plot(cumulative == bar_index + 1 ? 1 : 0)
+plot(loop_total == 6 ? 1 : 0)
+plot(calculate(close) == close * 2 + 1 ? 1 : 0)
+plot(input_value == close + 2 ? 1 : 0)

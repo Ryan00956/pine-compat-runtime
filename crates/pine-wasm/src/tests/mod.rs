@@ -2434,6 +2434,17 @@ fn run_script_csv_returns_strings_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_compound_assignments_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/compound_assignments.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("compound assignments fixture should run");
+
+    assert_snapshot("runtime_compound_assignments.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_colors_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/colors.pine"),

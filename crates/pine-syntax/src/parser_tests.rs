@@ -1765,6 +1765,36 @@ fn parses_reassignment() {
 }
 
 #[test]
+fn desugars_compound_assignments_to_reassignment_expressions() {
+    for (source, expected_op) in [
+        ("value += 1\n", BinaryOp::Add),
+        ("value -= 1\n", BinaryOp::Sub),
+        ("value *= 1\n", BinaryOp::Mul),
+        ("value /= 1\n", BinaryOp::Div),
+        ("value %= 1\n", BinaryOp::Mod),
+    ] {
+        let parsed = parse(source);
+
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "{source}: {:?}",
+            parsed.diagnostics
+        );
+        let StmtKind::Reassign { name, value } = &parsed.program.statements[0].kind else {
+            panic!("expected reassignment for {source}");
+        };
+        assert_eq!(name, "value");
+        assert!(matches!(
+            &value.kind,
+            ExprKind::Binary { op, left, right }
+                if *op == expected_op
+                    && matches!(&left.kind, ExprKind::Identifier(name) if name == "value")
+                    && matches!(right.kind, ExprKind::Literal(Literal::Int(1)))
+        ));
+    }
+}
+
+#[test]
 fn recovers_after_bad_declaration() {
     let parsed = parse("x =\ny = close\n");
 

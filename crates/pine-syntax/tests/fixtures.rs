@@ -67,6 +67,14 @@ fn reports_unterminated_multiline_string_fixture() {
 }
 
 #[test]
+fn parses_compound_assignment_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/compound_assignments.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.program.statements.len(), 12);
+}
+
+#[test]
 fn recovers_after_parse_error_fixture() {
     let (_, parsed) = parse_fixture("tests/fixtures/syntax/parse_error_recovery.pine");
 

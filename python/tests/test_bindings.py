@@ -1880,6 +1880,20 @@ def test_run_script_returns_strings_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_compound_assignments_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/compound_assignments.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_compound_assignments.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_colors_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/colors.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_colors.json").read_text())

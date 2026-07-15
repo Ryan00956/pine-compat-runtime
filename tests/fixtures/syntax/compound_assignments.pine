@@ -1,0 +1,13 @@
+//@version=6
+indicator("Compound assignment syntax")
+number = 10.0
+number += 2
+number -= 3
+number *= 4
+number /= 6
+number %= 4
+text = "Pine"
+text += " Script"
+missing = float(na)
+missing += 1
+plot(number)

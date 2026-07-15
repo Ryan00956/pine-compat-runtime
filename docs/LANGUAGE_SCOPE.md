@@ -30,6 +30,7 @@ Statements:
 - variable declarations
 - `var` declarations
 - reassignment with `:=`
+- scalar-variable compound reassignment with `+=`, `-=`, `*=`, `/=`, and `%=`
 - `if` statements
 - local blocks
 - user-defined functions with positional and named arguments

@@ -1,5 +1,6 @@
 use crate::{
-    DeclMode, Expr, ExprKind, FunctionBody, FunctionParam, Span, Stmt, StmtKind, TokenKind,
+    BinaryOp, DeclMode, Expr, ExprKind, FunctionBody, FunctionParam, Span, Stmt, StmtKind,
+    TokenKind,
 };
 
 use super::{ForInParts, ForParts, Parser};
@@ -97,6 +98,27 @@ impl Parser {
                 let value = self.parse_expr(0)?;
                 return Some(Stmt {
                     span: start.merge(value.span),
+                    kind: StmtKind::Reassign { name, value },
+                });
+            }
+
+            if let Some(op) = self.compound_assignment_op(1) {
+                self.bump();
+                self.bump();
+                let right = self.parse_expr(0)?;
+                let value = Expr {
+                    span: start.merge(right.span),
+                    kind: ExprKind::Binary {
+                        op,
+                        left: Box::new(Expr {
+                            span: start,
+                            kind: ExprKind::Identifier(name.clone()),
+                        }),
+                        right: Box::new(right),
+                    },
+                };
+                return Some(Stmt {
+                    span: value.span,
                     kind: StmtKind::Reassign { name, value },
                 });
             }
@@ -647,6 +669,17 @@ impl Parser {
         }
 
         Some(statements)
+    }
+
+    fn compound_assignment_op(&self, offset: usize) -> Option<BinaryOp> {
+        match self.tokens.get(self.pos + offset)?.kind {
+            TokenKind::PlusEq => Some(BinaryOp::Add),
+            TokenKind::MinusEq => Some(BinaryOp::Sub),
+            TokenKind::StarEq => Some(BinaryOp::Mul),
+            TokenKind::SlashEq => Some(BinaryOp::Div),
+            TokenKind::PercentEq => Some(BinaryOp::Mod),
+            _ => None,
+        }
     }
 
     pub(super) fn looks_like_function_decl(&self) -> bool {

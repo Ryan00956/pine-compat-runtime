@@ -1,0 +1,3 @@
+//@version=6
+indicator("Unknown compound assignment target")
+missing += 1

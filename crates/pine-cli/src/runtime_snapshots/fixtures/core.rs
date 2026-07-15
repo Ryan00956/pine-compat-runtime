@@ -97,6 +97,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     ),
     ("runtime_casts.json", "tests/fixtures/runtime/casts.pine"),
     (
+        "runtime_compound_assignments.json",
+        "tests/fixtures/runtime/compound_assignments.pine",
+    ),
+    (
         "runtime_strings.json",
         "tests/fixtures/runtime/strings.pine",
     ),

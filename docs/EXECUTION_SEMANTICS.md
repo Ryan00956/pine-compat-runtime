@@ -747,6 +747,12 @@ x := x + 1
 Reassignment updates an existing variable in the current execution scope. The
 semantic analyzer must reject reassignment to unknown names.
 
+The scalar-variable compound assignment operators are exact shorthand for the
+corresponding reassignment expression. For example, `x += value` has the same
+type, qualifier, `na`, persistence, and runtime behavior as
+`x := x + value`. The same normalization applies to `-=`, `*=`, `/=`, and
+`%=`, while string operands make `+=` use string concatenation.
+
 ### `var`
 
 ```pine

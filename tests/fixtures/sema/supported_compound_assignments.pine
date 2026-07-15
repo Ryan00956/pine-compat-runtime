@@ -1,0 +1,26 @@
+//@version=6
+indicator("Supported compound assignments")
+
+calculate(value) =>
+    result = value
+    result *= 2
+    result += 1
+    result
+
+number = 10.0
+number += 2
+number -= 3
+number *= 4
+number /= 6
+number %= 4
+
+text = "Pine"
+text += " Script"
+
+series_value = 0
+series_value += bar_index
+
+plot(number)
+plot(str.length(text))
+plot(series_value)
+plot(calculate(close))

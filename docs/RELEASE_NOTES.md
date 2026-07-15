@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added scalar-variable compound assignments `+=`, `-=`, `*=`, `/=`, and `%=`
+  as exact shorthand for existing reassignment expressions, including numeric
+  operations, string `+=`, qualifier promotion, `na`, local/UDF execution, and
+  persistent `var` state.
 - Added string `+` concatenation across const, input, simple, and series
   qualifiers, including UDF return inference, const-expression resolution,
   `na` propagation, UTF-8 character counting, and the 40,960-character runtime

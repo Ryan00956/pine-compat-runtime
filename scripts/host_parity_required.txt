@@ -66,6 +66,7 @@ runtime_cmo.json
 runtime_cog.json
 runtime_color_outputs.json
 runtime_colors.json
+runtime_compound_assignments.json
 runtime_computed_array_operands.json
 runtime_computed_lengths.json
 runtime_conditional_ta.json

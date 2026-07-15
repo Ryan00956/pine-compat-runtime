@@ -710,6 +710,31 @@ fn reports_string_concatenation_qualifier_boundaries_fixture() {
 }
 
 #[test]
+fn accepts_supported_compound_assignments_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_compound_assignments.pine");
+}
+
+#[test]
+fn reports_unsupported_compound_assignment_types_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_compound_assignment_types.pine",
+        &[
+            "operator `+` expects numeric or string operands, got const int and const string",
+            "operator `-` expects numeric operands, got const string and const string",
+            "operator `*` expects numeric operands, got const bool and const int",
+        ],
+    );
+}
+
+#[test]
+fn reports_unknown_compound_assignment_target_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_compound_assignment_unknown_target.pine",
+        "E_UNKNOWN_SYMBOL",
+    );
+}
+
+#[test]
 fn reports_unsupported_assignment_types_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_assignment_types.pine",
