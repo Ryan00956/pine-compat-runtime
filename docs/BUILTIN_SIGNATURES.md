@@ -714,6 +714,7 @@ strategy.max_drawdown_percent -> series float
 strategy.max_contracts_held_all -> series float
 strategy.max_contracts_held_long -> series float
 strategy.max_contracts_held_short -> series float
+strategy.closedtrades.first_index -> series int
 strategy.closedtrades.entry_price(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.entry_comment(trade_num: series/simple numeric) -> series string
 strategy.closedtrades.entry_id(trade_num: series/simple numeric) -> series string
@@ -913,6 +914,10 @@ realized-equity denominator is non-positive or non-finite.
 `strategy.grossloss_percent` are read-only strategy-mode series floats that
 divide the corresponding realized amount by `initial_capital` and multiply by
 100.
+`strategy.closedtrades.first_index` is a read-only strategy-mode series int.
+It remains `0` in the current broker because closed trades are not trimmed,
+including before the first close; direct, UDF, and history reads are supported,
+while platform order-limit trimming remains outside this contract.
 `strategy.buy_and_hold_return_percent` is a read-only strategy-mode series
 float that returns `(close - first_close) / first_close * 100`, using the first
 loaded bar close as `first_close`; it returns `na` when that baseline is zero or

@@ -4932,7 +4932,11 @@ fn accepts_supported_strategy_variable_interactions_fixture() {
 fn accepts_supported_strategy_trade_counts_fixture() {
     assert_strategy_state_supported_fixture(
         "tests/fixtures/sema/supported_strategy_trade_counts.pine",
-        &["strategy.closedtrades", "strategy.opentrades"],
+        &[
+            "strategy.closedtrades",
+            "strategy.closedtrades.first_index",
+            "strategy.opentrades",
+        ],
     );
 }
 

@@ -24,6 +24,7 @@ strategy.max_contracts_held_long := 1
 strategy.max_contracts_held_short := 1
 strategy.margin_liquidation_price := 1
 strategy.closedtrades := 1
+strategy.closedtrades.first_index := 1
 strategy.wintrades := 1
 strategy.losstrades := 1
 strategy.eventrades := 1

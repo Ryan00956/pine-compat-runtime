@@ -279,6 +279,9 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "strategy.closedtrades" {
             return PineValue::Int(self.strategy_broker.closed_trade_count());
         }
+        if name == "strategy.closedtrades.first_index" {
+            return PineValue::Int(self.strategy_broker.first_closed_trade_index());
+        }
         if name == "strategy.wintrades" {
             return PineValue::Int(self.strategy_broker.winning_trade_count());
         }

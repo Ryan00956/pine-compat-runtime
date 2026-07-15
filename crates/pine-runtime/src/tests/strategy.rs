@@ -10043,6 +10043,8 @@ plot(strategy.closedtrades)
 plot(strategy.opentrades)
 plot(strategy.closedtrades[1])
 plot(strategy.opentrades[1])
+plot(strategy.closedtrades.first_index)
+plot(strategy.closedtrades.first_index[1])
 "#,
     );
     let analysis = analyze_source(&source);
@@ -10097,6 +10099,16 @@ plot(strategy.opentrades[1])
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(1),
+        ]
+    );
+    assert_eq!(result.plots[4].values, vec![PineValue::Int(0); 4]);
+    assert_eq!(
+        result.plots[5].values,
+        vec![
+            PineValue::Na,
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
         ]
     );
 }

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added `strategy.closedtrades.first_index` as a read-only strategy-mode
+  `series int`. It returns `0` throughout the current untrimmed closed-trade
+  retention model, including before the first trade, and supports direct, UDF,
+  and history reads without expanding public strategy output; platform-style
+  order-limit trimming remains outside this slice.
 - Added `strategy.openprofit_percent` as a read-only strategy-mode
   `series float`, calculated as current unrealized profit divided by realized
   equity (`initial_capital + netprofit`) times 100. It supports direct, UDF,

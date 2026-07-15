@@ -306,6 +306,13 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn first_closed_trade_index(&self) -> i64 {
+        // The local broker retains every closed trade, so the oldest retained
+        // trade keeps its original zero-based index even before one exists.
+        0
+    }
+
+    #[must_use]
     pub(crate) fn closed_trade(&self, trade_num: i64) -> Option<&StrategyTrade> {
         let index = usize::try_from(trade_num).ok()?;
         self.trades.get(index)

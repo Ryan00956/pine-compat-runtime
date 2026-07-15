@@ -30,6 +30,7 @@ const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.max_contracts_held_short",
     "strategy.equity",
     "strategy.closedtrades",
+    "strategy.closedtrades.first_index",
     "strategy.wintrades",
     "strategy.losstrades",
     "strategy.eventrades",

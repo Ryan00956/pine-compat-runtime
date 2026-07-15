@@ -116,6 +116,10 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Int),
     ),
     (
+        "strategy.closedtrades.first_index",
+        PineType::new(Qualifier::Series, ValueKind::Int),
+    ),
+    (
         "strategy.wintrades",
         PineType::new(Qualifier::Series, ValueKind::Int),
     ),
@@ -266,6 +270,7 @@ mod tests {
     fn registers_strategy_trade_count_series_values() {
         for name in [
             "strategy.closedtrades",
+            "strategy.closedtrades.first_index",
             "strategy.wintrades",
             "strategy.losstrades",
             "strategy.eventrades",

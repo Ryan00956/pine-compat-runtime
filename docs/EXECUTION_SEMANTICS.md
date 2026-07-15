@@ -212,7 +212,11 @@ strategy.openprofit`, and with supported commission it also includes entry
 commission debits on open positions. Supported slippage changes entry and exit
 fill prices, so realized/floating profit and equity use those adjusted fill
 prices. `strategy.closedtrades` is the
-number of closed trades recorded by the broker. `strategy.wintrades`,
+number of closed trades recorded by the broker.
+`strategy.closedtrades.first_index` is the oldest retained closed-trade index;
+it remains `0`, including before the first close, because the current broker
+does not trim its closed-trade ledger. Platform order-limit trimming is outside
+this slice. `strategy.wintrades`,
 `strategy.losstrades`, and
 `strategy.eventrades` count closed trades whose realized profit is positive,
 negative, or zero. `strategy.opentrades` is `1` while the supported long
@@ -225,9 +229,9 @@ and equity include the fill on the triggering bar. These variables can be used
 in the same already-supported expression contexts as other series values,
 including branches, switches, loops, pure UDF arguments, and constant history
 references. Their history follows the normal per-expression series history
-model. Direct mutation such as `strategy.position_size := ...` or
-`strategy.closedtrades := ...` is rejected because strategy state variables are
-read-only.
+model. Direct mutation such as `strategy.position_size := ...`,
+`strategy.closedtrades := ...`, or `strategy.closedtrades.first_index := ...`
+is rejected because strategy state variables are read-only.
 The first supported closed-trade namespace functions are
 `strategy.closedtrades.entry_price(trade_num)`,
 `strategy.closedtrades.exit_price(trade_num)`,

@@ -204,9 +204,12 @@ supported drawdown amount by entry price times current supported position
 quantity and multiplies by 100. The indexed closed/open trade field families
 also support `profit_percent`, `max_runup_percent`, and
 `max_drawdown_percent`, each dividing the selected trade amount by its entry
-price times absolute quantity and multiplying by 100. The count variables are
-read-only strategy-mode `series int` values for the current long-only broker:
+price times absolute quantity and multiplying by 100. These integer strategy
+variables are read-only strategy-mode `series int` values for the current
+long-only broker:
 `strategy.closedtrades` counts closed trades recorded by broker state;
+`strategy.closedtrades.first_index` remains `0` because the local broker keeps
+all closed trades and does not advance an oldest-retained-trade offset;
 `strategy.wintrades`, `strategy.losstrades`, and `strategy.eventrades` count
 closed trades with positive, negative, and zero realized profit; and
 `strategy.opentrades` is `1` while the supported long position is open and `0`
