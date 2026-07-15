@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added `str.match()` support for Pine's `\e` escape-character and `\cX`
+  control-character regex references, including Java's one-Unicode-scalar
+  `XOR 0x40` mapping, exact consumption, character-class and quoted behavior,
+  verbose-mode trivia skipping, and ASCII/Unicode case-mode switching.
 - Added `str.match()` support for Pine's `\R` line-break matcher across LF,
   VT, FF, CR, NEL, line separator, and paragraph separator, with CRLF consumed
   as one match, behavior independent of `(?U)`, quoted preservation, and

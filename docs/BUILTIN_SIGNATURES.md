@@ -2011,8 +2011,12 @@ and remain literal inside quoted regions. Two-digit `\xNN` and braced
 `\x{...}` references are also supported; the fixed form consumes exactly two
 hex digits, the braced form accepts leading zeros around a Unicode scalar, and
 surrogate code-unit references match no scalar value. Both spellings remain
-literal in quoted regions. Outside character classes, global or
-scoped `(?i)` applies Pine's ASCII-only case folding to ordinary and
+literal in quoted regions. The fixed `\e` escape-character reference and
+`\cX` control reference are also supported inside and outside character
+classes. A control reference consumes one Unicode scalar and applies Java's
+`XOR 0x40` mapping; verbose mode skips its intervening ASCII whitespace and
+comments, and quoted spellings remain literal. Outside character classes,
+global or scoped `(?i)` applies Pine's ASCII-only case folding to ordinary and
 `\Q...\E`-quoted literals plus `\uHHHH`/`\x` references; `(?U)` changes those
 literals to Unicode-aware folding, and `(?-i)`/`(?-U)` restore the enclosing or
 default mode. The same active mode applies to character-class literals and

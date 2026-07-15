@@ -1323,8 +1323,9 @@ Current baseline:
   ASCII-default and global/scoped `(?U)` Unicode compatibility mappings,
   Unicode 16.0 `\p{InBlockName}`/`\p{Block=BlockName}` properties and `\P`
   complements,
-  fixed-width `\uHHHH`, two-digit `\xNN`, and braced `\x{...}` references, and
-  final-newline-aware `$`/`\Z` end anchors, plus default-dot exclusion of Pine's
+  fixed-width `\uHHHH`, two-digit `\xNN`, braced `\x{...}`, fixed `\e`, and
+  one-scalar `\cX` control references, and final-newline-aware `$`/`\Z` end
+  anchors, plus default-dot exclusion of Pine's
   full line-terminator set with global/scoped `(?s)` and `(?-s)` restoration,
   and ASCII-default versus `(?U)` Unicode-aware `(?i)` folding for literal
   tokens and character classes including negation/intersection ordering and

@@ -8,7 +8,7 @@ use super::{
         normalize_case_insensitive_class, push_case_folded_class,
         push_case_insensitive_class_replacement,
     },
-    regex_escapes::parse_pine_regex_code_point_escape,
+    regex_escapes::{parse_pine_regex_code_point_escape, parse_pine_regex_control_escape},
     regex_unicode_blocks::pine_unicode_block,
 };
 use crate::builtins::time::{
@@ -417,6 +417,18 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 index = reference.end;
                 continue;
             }
+            if escaped == 'c'
+                && let Some(control) = parse_pine_regex_control_escape(pattern, index, mode.verbose)
+            {
+                if class_depth == 0 && mode.case_insensitive && !mode.unicode_classes {
+                    push_pine_regex_literal(&mut result, control.scalar, mode, true);
+                } else {
+                    write!(result, r"\x{{{:X}}}", control.scalar as u32)
+                        .expect("writing to a String cannot fail");
+                }
+                index = control.end;
+                continue;
+            }
             if matches!(escaped, 'p' | 'P') {
                 let property_start = index + slash.len_utf8() + escaped.len_utf8();
                 if pattern.as_bytes().get(property_start) == Some(&b'{') {
@@ -477,6 +489,7 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 'v' => Some(VERTICAL_WHITESPACE),
                 'V' => Some(NON_VERTICAL_WHITESPACE),
                 'R' if class_depth == 0 => Some(LINE_BREAK),
+                'e' => Some(r"\x{1B}"),
                 _ if !mode.unicode_classes => match escaped {
                     'd' => Some("[0-9]"),
                     'D' => Some("[^0-9]"),

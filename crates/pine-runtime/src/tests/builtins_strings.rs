@@ -214,6 +214,32 @@ fn normalizes_pine_regex_line_break_matcher() {
 }
 
 #[test]
+fn normalizes_pine_regex_control_character_escapes() {
+    let escape = Regex::new(&normalize_pine_regex(r"\A\e[\e]\z"))
+        .expect("normalized escape-character references");
+    assert!(escape.is_match("\u{001b}\u{001b}"));
+
+    let controls = Regex::new(&normalize_pine_regex(r"\A\cA\ca\c😀\cAB\z"))
+        .expect("normalized control-character references");
+    assert!(controls.is_match("\u{0001}!🙀\u{0001}B"));
+
+    let cases = Regex::new(&normalize_pine_regex(r"\A(?i:\c1)(?iU:\cβ)(?i:[\c1])\z"))
+        .expect("normalized case-folded control-character references");
+    assert!(cases.is_match("QϹQ"));
+    assert!(!cases.is_match("ℚϹQ"));
+
+    let verbose = Regex::new(&normalize_pine_regex("(?x)\\A\\c # comment\n A\\z"))
+        .expect("normalized verbose control-character reference");
+    assert!(verbose.is_match("\u{0001}"));
+
+    let quoted = Regex::new(&normalize_pine_regex(r"\A\Q\e\cA\E\z"))
+        .expect("normalized quoted control-reference spellings");
+    assert!(quoted.is_match(r"\e\cA"));
+
+    assert!(Regex::new(&normalize_pine_regex(r"\c")).is_err());
+}
+
+#[test]
 fn normalizes_pine_regex_quoted_literals() {
     assert_eq!(
         normalize_pine_regex(r"\Q(?U)\d[.]# \E\d"),
@@ -608,6 +634,15 @@ match_line_break_next_line = str.match("A", "\\R")
 match_line_break_unicode_on = str.match(" ", "(?U)\\R")
 match_line_break_unicode_off = str.match(" ", "(?-U)\\R")
 match_line_break_quoted = str.match("\\R", "\\Q\\R\\E")
+match_control_tab = str.match("\tA", "\\cI")
+match_control_lowercase = str.match("!A", "\\ca")
+match_control_supplementary = str.match("🙀A", "\\c😀")
+match_control_consumption = str.match("\tB", "\\cIB")
+match_control_class = str.match("A\t", "[\\cI]")
+match_control_ascii_case = str.match("ℚQ", "(?i)\\c1")
+match_control_unicode_case = str.match("Ϲϲ", "(?iU)\\cβ")
+match_control_verbose = str.match("\t", "(?x)\\c # comment\n I")
+match_control_quoted = str.match("\\e\\cA", "\\Q\\e\\cA\\E")
 match_quoted_meta = str.match("x[a-z]+(?U)# y", "\\Q[a-z]+(?U)# \\E")
 match_quoted_escape = str.match("\\d123", "\\Q\\d\\E")
 match_quoted_verbose = str.match("# [ ]", "(?x)\\Q# [ ]\\E")
@@ -758,6 +793,8 @@ plot(match_vertical_line_feed == "\n" and match_vertical_carriage_return == "\r"
 plot(match_non_vertical == "A" and match_vertical_unicode_on == "" and match_vertical_unicode_off == " " and match_vertical_class == " " and match_vertical_quoted == "\\v" ? 1 : 0)
 plot(match_line_break_crlf == "\r\n" and match_line_break_line_feed == "\n" and match_line_break_next_line == "" ? 1 : 0)
 plot(match_line_break_unicode_on == " " and match_line_break_unicode_off == " " and match_line_break_quoted == "\\R" ? 1 : 0)
+plot(match_control_tab == "\t" and match_control_lowercase == "!" and match_control_supplementary == "🙀" and match_control_consumption == "\tB" and match_control_class == "\t" ? 1 : 0)
+plot(match_control_ascii_case == "Q" and match_control_unicode_case == "Ϲ" and match_control_verbose == "\t" and match_control_quoted == "\\e\\cA" ? 1 : 0)
 plot(match_quoted_meta == "[a-z]+(?U)# " and match_quoted_escape == "\\d" and match_quoted_verbose == "# [ ]" and match_quoted_class == "]-" and match_quoted_unclosed == "[b]+" and match_quoted_then_ascii == "[a]123" ? 1 : 0)
 plot(match_final_newline_dollar == "tail" and match_final_newline_Z == "tail" and match_absolute_z_missing == "" and match_absolute_z == "tail" ? 1 : 0)
 plot(match_explicit_final_newline == "\n" and match_empty_final_newline_dollar == "" and match_empty_final_newline_Z == "" ? 1 : 0)

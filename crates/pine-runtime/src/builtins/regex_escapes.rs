@@ -4,6 +4,62 @@ pub(crate) struct PineRegexCodePointEscape {
     pub(crate) scalar: Option<char>,
 }
 
+pub(crate) struct PineRegexControlEscape {
+    pub(crate) end: usize,
+    pub(crate) scalar: char,
+}
+
+fn is_verbose_ascii_space(ch: char) -> bool {
+    matches!(ch, ' ' | '\t' | '\n' | '\u{000b}' | '\u{000c}' | '\r')
+}
+
+fn next_control_target(pattern: &str, mut index: usize, verbose: bool) -> Option<(char, usize)> {
+    loop {
+        let ch = pattern.get(index..)?.chars().next()?;
+        let end = index + ch.len_utf8();
+        if !verbose {
+            return Some((ch, end));
+        }
+        if is_verbose_ascii_space(ch) {
+            index = end;
+            continue;
+        }
+        if ch != '#' {
+            return Some((ch, end));
+        }
+
+        index = end;
+        while let Some(comment_ch) = pattern.get(index..)?.chars().next() {
+            let comment_end = index + comment_ch.len_utf8();
+            if matches!(comment_ch, '\n' | '\r') {
+                index = comment_end;
+                break;
+            }
+            // Java ends the comment at every line separator, but its verbose
+            // whitespace pass only skips ASCII separators. The remaining
+            // separators therefore become the control target.
+            if matches!(comment_ch, '\u{0085}' | '\u{2028}' | '\u{2029}') {
+                return Some((comment_ch, comment_end));
+            }
+            index = comment_end;
+        }
+    }
+}
+
+pub(crate) fn parse_pine_regex_control_escape(
+    pattern: &str,
+    index: usize,
+    verbose: bool,
+) -> Option<PineRegexControlEscape> {
+    if pattern.as_bytes().get(index..index + 2) != Some(br"\c") {
+        return None;
+    }
+    let (target, end) = next_control_target(pattern, index + 2, verbose)?;
+    let scalar = char::from_u32((target as u32) ^ 0x40)
+        .expect("XORing a Unicode scalar with 0x40 preserves scalar validity");
+    Some(PineRegexControlEscape { end, scalar })
+}
+
 fn parse_hex_scalar(digits: &str) -> Option<Option<char>> {
     if digits.is_empty() || !digits.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return None;
@@ -68,7 +124,7 @@ pub(crate) fn parse_pine_regex_code_point_escape(
 
 #[cfg(test)]
 mod tests {
-    use super::parse_pine_regex_code_point_escape;
+    use super::{parse_pine_regex_code_point_escape, parse_pine_regex_control_escape};
 
     #[test]
     fn parses_fixed_and_braced_code_point_escapes() {
@@ -100,5 +156,33 @@ mod tests {
         assert!(parse_pine_regex_code_point_escape(r"\x{110000}", 0).is_none());
         assert!(parse_pine_regex_code_point_escape(r"\xG1", 0).is_none());
         assert!(parse_pine_regex_code_point_escape(r"\u123", 0).is_none());
+    }
+
+    #[test]
+    fn parses_control_escapes_and_verbose_trivia() {
+        let upper =
+            parse_pine_regex_control_escape(r"\cAB", 0, false).expect("uppercase control escape");
+        assert_eq!(upper.scalar, '\u{0001}');
+        assert_eq!(upper.end, 3);
+
+        let lowercase =
+            parse_pine_regex_control_escape(r"\ca", 0, false).expect("lowercase control escape");
+        assert_eq!(lowercase.scalar, '!');
+
+        let supplementary = parse_pine_regex_control_escape(r"\c😀", 0, false)
+            .expect("supplementary control escape");
+        assert_eq!(supplementary.scalar, '🙀');
+
+        let verbose = parse_pine_regex_control_escape("\\c # note\n A", 0, true)
+            .expect("verbose control escape");
+        assert_eq!(verbose.scalar, '\u{0001}');
+        assert_eq!(verbose.end, "\\c # note\n A".len());
+
+        let unicode_separator = parse_pine_regex_control_escape("\\c# note\u{2028}A", 0, true)
+            .expect("Unicode comment terminator becomes the control target");
+        assert_eq!(unicode_separator.scalar, '\u{2068}');
+        assert_eq!(unicode_separator.end, "\\c# note\u{2028}".len());
+
+        assert!(parse_pine_regex_control_escape(r"\c", 0, false).is_none());
     }
 }
