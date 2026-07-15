@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Extended `str.match()` case-insensitive compatibility through character
+  classes. Literal atoms and ranges now use ASCII folding under `(?i)` and
+  Unicode folding under `(?iU)` before negation and class intersections are
+  applied, including scoped/toggled modes, predefined and POSIX expansions,
+  general Unicode properties, quoted atoms, and fixed `\uHHHH` references.
+  Unicode block properties retain exact membership under either mode.
 - Corrected `str.match()` case-insensitive literal matching outside character
   classes. Global/scoped `(?i)` now folds ordinary ASCII literals only, while
   `(?iU)` enables Unicode-aware folding; `(?-i)`/`(?-U)` toggles, `\Q...\E`

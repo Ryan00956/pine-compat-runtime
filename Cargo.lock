@@ -282,6 +282,7 @@ dependencies = [
  "pine-sema",
  "pine-syntax",
  "regex",
+ "regex-syntax",
  "serde",
  "serde_json",
 ]

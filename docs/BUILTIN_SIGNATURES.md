@@ -2005,8 +2005,11 @@ and remain literal inside quoted regions. Outside character classes, global or
 scoped `(?i)` applies Pine's ASCII-only case folding to ordinary and
 `\Q...\E`-quoted literals plus fixed `\uHHHH` references; `(?U)` changes those
 literals to Unicode-aware folding, and `(?-i)`/`(?-U)` restore the enclosing or
-default mode. Character-class case-folding compatibility remains outside this
-fixture-backed slice. By default, `$`
+default mode. The same active mode applies to character-class literals and
+ranges before negation and intersections, including predefined/POSIX class
+expansions, `\Q...\E` atoms, and fixed `\uHHHH` references. General Unicode
+properties retain their Unicode case behavior, while Unicode block membership
+remains exact under either case mode. By default, `$`
 and `\Z` match either at the absolute end or immediately before a final `\n`,
 without including that line terminator in the returned substring; `\z` matches
 only the absolute end. Global or scoped `(?m)` gives `$` multiline behavior,

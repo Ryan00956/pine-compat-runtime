@@ -9,6 +9,7 @@ pub(crate) mod maps;
 pub(crate) mod math;
 pub(crate) mod matrices;
 pub(crate) mod outputs;
+mod regex_character_classes;
 mod regex_unicode_blocks;
 pub(crate) mod requests;
 pub(crate) mod strategy;

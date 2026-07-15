@@ -52,6 +52,84 @@ fn normalizes_pine_regex_literal_case_modes() {
 }
 
 #[test]
+fn normalizes_pine_regex_character_class_case_modes() {
+    let ascii = Regex::new(&normalize_pine_regex(r"(?i)\A[kβ]\z"))
+        .expect("normalized ASCII-insensitive character class");
+    assert!(ascii.is_match("K"));
+    assert!(ascii.is_match("β"));
+    assert!(!ascii.is_match("K"));
+    assert!(!ascii.is_match("Β"));
+
+    let unicode = Regex::new(&normalize_pine_regex(r"(?iU)\A[kβ]\z"))
+        .expect("normalized Unicode-insensitive character class");
+    assert!(unicode.is_match("K"));
+    assert!(unicode.is_match("Β"));
+
+    let negated = Regex::new(&normalize_pine_regex(r"(?i)\A[^k]\z"))
+        .expect("normalized negated ASCII-insensitive class");
+    assert!(!negated.is_match("K"));
+    assert!(negated.is_match("K"));
+
+    let intersection = Regex::new(&normalize_pine_regex(r"(?i)\A[a-z&&[^q]]\z"))
+        .expect("normalized intersected ASCII-insensitive class");
+    assert!(intersection.is_match("A"));
+    assert!(!intersection.is_match("Q"));
+    assert!(!intersection.is_match("ſ"));
+
+    let category = Regex::new(&normalize_pine_regex(r"(?i)\A[\p{Lu}]\z"))
+        .expect("normalized case-insensitive category class");
+    assert!(category.is_match("β"));
+
+    let ascii_word = Regex::new(&normalize_pine_regex(r"(?i)\A\w\z"))
+        .expect("normalized ASCII word class under case-insensitive mode");
+    assert!(ascii_word.is_match("K"));
+    assert!(!ascii_word.is_match("K"));
+
+    let ascii_lower = Regex::new(&normalize_pine_regex(r"(?i)\A\p{Lower}\z"))
+        .expect("normalized ASCII POSIX lower class under case-insensitive mode");
+    assert!(ascii_lower.is_match("A"));
+    assert!(!ascii_lower.is_match("K"));
+    assert!(!ascii_lower.is_match("β"));
+
+    let unicode_lower = Regex::new(&normalize_pine_regex(r"(?iU)\A\p{Lower}\z"))
+        .expect("normalized Unicode POSIX lower class under case-insensitive mode");
+    assert!(unicode_lower.is_match("K"));
+    assert!(unicode_lower.is_match("Β"));
+
+    let block = Regex::new(&normalize_pine_regex(r"(?iU)\A[x\p{InBasicLatin}]\z"))
+        .expect("normalized exact Unicode block under case-insensitive mode");
+    assert!(block.is_match("X"));
+    assert!(!block.is_match("K"));
+
+    let standalone_block = Regex::new(&normalize_pine_regex(r"(?iU)\A\p{InBasicLatin}\z"))
+        .expect("normalized standalone exact block under case-insensitive mode");
+    assert!(standalone_block.is_match("K"));
+    assert!(!standalone_block.is_match("K"));
+
+    let negated_block = Regex::new(&normalize_pine_regex(r"(?iU)\A\P{InBasicLatin}\z"))
+        .expect("normalized standalone negated block under case-insensitive mode");
+    assert!(!negated_block.is_match("K"));
+    assert!(negated_block.is_match("K"));
+
+    let ascii_property = Regex::new(&normalize_pine_regex(r"(?iU)\A\p{ASCII}\z"))
+        .expect("normalized exact POSIX ASCII property under case-insensitive mode");
+    assert!(ascii_property.is_match("K"));
+    assert!(!ascii_property.is_match("K"));
+
+    let quoted = Regex::new(&normalize_pine_regex(r"(?i)\A[\Qkβ\E]\z"))
+        .expect("normalized quoted ASCII-insensitive character class");
+    assert!(quoted.is_match("K"));
+    assert!(quoted.is_match("β"));
+    assert!(!quoted.is_match("K"));
+    assert!(!quoted.is_match("("));
+
+    let scoped = Regex::new(&normalize_pine_regex(r"\A(?i:[k])(?iU:[k])(?i-U:[β])\z"))
+        .expect("normalized scoped character-class case modes");
+    assert!(scoped.is_match("KKβ"));
+    assert!(!scoped.is_match("KKΒ"));
+}
+
+#[test]
 fn normalizes_pine_regex_horizontal_whitespace_classes() {
     let horizontal =
         Regex::new(&normalize_pine_regex(r"^\h$")).expect("normalized horizontal whitespace regex");
@@ -470,6 +548,21 @@ match_case_quoted_ascii = str.match("KKβ+", "(?i)\\Qkβ+\\E")
 match_case_quoted_unicode = str.match("KΒ+", "(?iU)\\Qkβ+\\E")
 match_case_unicode_ref_ascii = str.match("KK", "(?i)\\u004B")
 match_case_unicode_ref_unicode = str.match("KK", "(?iU)\\u004B")
+match_case_ascii_class = str.match("KK", "(?i)[k]")
+match_case_unicode_class = str.match("KK", "(?iU)[k]")
+match_case_ascii_class_non_ascii = str.match("Ββ", "(?i)[β]")
+match_case_unicode_class_non_ascii = str.match("Ββ", "(?iU)[β]")
+match_case_ascii_negated_class = str.match("KK", "(?i)[^k]")
+match_case_unicode_negated_class = str.match("KKβ", "(?iU)[^k]")
+match_case_ascii_intersection = str.match("QA", "(?i)[a-z&&[^q]]")
+match_case_unicode_range = str.match("ſA", "(?iU)[a-z]")
+match_case_category_class = str.match("β", "(?i)[\\p{Lu}]")
+match_case_ascii_word = str.match("KK", "(?i)\\w")
+match_case_ascii_posix = str.match("KA", "(?i)\\p{Lower}")
+match_case_block_class = str.match("KX", "(?iU)[x\\p{InBasicLatin}]")
+match_case_quoted_class = str.match("KKβ", "(?i)[\\Qkβ\\E]")
+match_case_unicode_ref_class = str.match("KKΒβ", "(?i)[\\u006B\\u03B2]")
+match_case_scoped_class = str.match("KKβ", "(?i:[k])(?iU:[k])(?i-U:[β])")
 match_anchor_capture_collision = str.match("tail\n", "(?<__pine_final_newline_0>tail)$")
 match_unicode_escape = str.match("x—y", "\\u2014")
 match_unicode_escape_class = str.match("xåy", "[\\u00E5]")
@@ -550,6 +643,10 @@ plot(match_block_unicode_scopes == "Aβ" and match_block_quoted == "\\p{InBasicL
 plot(match_case_ascii_literal == "K" and match_case_unicode_literal == "K" and match_case_ascii_non_ascii == "β" and match_case_unicode_non_ascii == "Β" ? 1 : 0)
 plot(match_case_toggle == "KKβ" and match_case_scoped == "KKβ" ? 1 : 0)
 plot(match_case_quoted_ascii == "Kβ+" and match_case_quoted_unicode == "KΒ+" and match_case_unicode_ref_ascii == "K" and match_case_unicode_ref_unicode == "K" ? 1 : 0)
+plot(match_case_ascii_class == "K" and match_case_unicode_class == "K" and match_case_ascii_class_non_ascii == "β" and match_case_unicode_class_non_ascii == "Β" ? 1 : 0)
+plot(match_case_ascii_negated_class == "K" and match_case_unicode_negated_class == "β" and match_case_ascii_intersection == "A" and match_case_unicode_range == "ſ" ? 1 : 0)
+plot(match_case_category_class == "β" and match_case_ascii_word == "K" and match_case_ascii_posix == "A" and match_case_block_class == "X" ? 1 : 0)
+plot(match_case_quoted_class == "K" and match_case_unicode_ref_class == "K" and match_case_scoped_class == "KKβ" ? 1 : 0)
 plot(match_unicode_escape == "—" and match_unicode_escape_class == "å" and match_unicode_escape_fifth_digit == "a0" and match_unicode_escape_quoted == "\\u2014—" ? 1 : 0)
 plot(na(missing_match_regex) and na(missing_match_pattern) ? 1 : 0)
 plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2) == "" and split_words.get(3) == "C" and split_missing_separator_literal.size() == 1 and split_missing_separator_literal.get(0) == "A,B" ? 1 : 0)

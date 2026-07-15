@@ -1,9 +1,12 @@
-use std::fmt::Write as _;
+use std::{fmt::Write as _, ops::Range};
 
 use pine_ir::{HirCallArg, HirExpr, HirUserTypeInfo};
 use regex::Regex;
 
-use super::regex_unicode_blocks::pine_unicode_block;
+use super::{
+    regex_character_classes::normalize_case_insensitive_class,
+    regex_unicode_blocks::pine_unicode_block,
+};
 use crate::builtins::time::{
     format_datetime_with_timezone, format_fixed_timezone_offset, format_utc_datetime,
     timezone_offset_and_short_name, utc_datetime_from_millis,
@@ -232,9 +235,18 @@ fn push_pine_regex_literal(result: &mut String, ch: char, mode: PineRegexMode, m
     }
 }
 
-fn push_pine_regex_quoted(result: &mut String, quoted: &str, mode: PineRegexMode) {
+fn push_pine_regex_quoted(
+    result: &mut String,
+    quoted: &str,
+    mode: PineRegexMode,
+    inside_class: bool,
+) {
     for ch in quoted.chars() {
-        push_pine_regex_literal(result, ch, mode, true);
+        if inside_class {
+            write!(result, r"\x{{{:X}}}", ch as u32).expect("writing to a String cannot fail");
+        } else {
+            push_pine_regex_literal(result, ch, mode, true);
+        }
     }
 }
 
@@ -308,6 +320,45 @@ fn push_pine_unicode_block(result: &mut String, start: u32, end: u32, negated: b
     write!(result, r"\x{{{start:X}}}-\x{{{end:X}}}]").expect("writing to a String cannot fail");
 }
 
+fn push_case_folded_class(result: &mut String, class: &str) {
+    result.push_str("(?-i:");
+    result.push_str(class);
+    result.push(')');
+}
+
+fn push_pine_regex_class_replacement(
+    result: &mut String,
+    replacement: &str,
+    mode: PineRegexMode,
+    class_depth: usize,
+    protected_spans: &mut Vec<Range<usize>>,
+    exact_under_case_folding: bool,
+) {
+    if !mode.case_insensitive {
+        result.push_str(replacement);
+        return;
+    }
+
+    if class_depth > 0 {
+        let start = result.len();
+        result.push_str(replacement);
+        if exact_under_case_folding {
+            protected_spans.push(start..result.len());
+        }
+        return;
+    }
+
+    if exact_under_case_folding {
+        push_case_folded_class(result, replacement);
+    } else if let Some(class) =
+        normalize_case_insensitive_class(replacement, mode.unicode_classes, &[])
+    {
+        push_case_folded_class(result, &class);
+    } else {
+        result.push_str(replacement);
+    }
+}
+
 struct NormalizedPineRegex {
     pattern: String,
     final_newline_captures: Vec<String>,
@@ -333,6 +384,8 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
     let mut mode = PineRegexMode::default();
     let mut modes = Vec::new();
     let mut class_depth = 0usize;
+    let mut case_class_start = None;
+    let mut case_protected_spans = Vec::new();
     let mut index = 0usize;
     let mut final_newline_captures = Vec::new();
     let mut final_newline_capture_prefix = "__pine_final_newline_".to_owned();
@@ -362,10 +415,15 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 let quoted_start = index + slash.len_utf8() + escaped.len_utf8();
                 let quoted_rest = &pattern[quoted_start..];
                 if let Some(quoted_len) = quoted_rest.find(r"\E") {
-                    push_pine_regex_quoted(&mut result, &quoted_rest[..quoted_len], mode);
+                    push_pine_regex_quoted(
+                        &mut result,
+                        &quoted_rest[..quoted_len],
+                        mode,
+                        class_depth > 0,
+                    );
                     index = quoted_start + quoted_len + r"\E".len();
                 } else {
-                    push_pine_regex_quoted(&mut result, quoted_rest, mode);
+                    push_pine_regex_quoted(&mut result, quoted_rest, mode, class_depth > 0);
                     index = pattern.len();
                 }
                 continue;
@@ -403,14 +461,30 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                         if let Some(replacement) =
                             pine_posix_class(property, mode.unicode_classes, escaped == 'P')
                         {
-                            result.push_str(replacement);
+                            push_pine_regex_class_replacement(
+                                &mut result,
+                                replacement,
+                                mode,
+                                class_depth,
+                                &mut case_protected_spans,
+                                property.eq_ignore_ascii_case("ASCII"),
+                            );
                             index = name_end + 1;
                             continue;
                         }
                         if let Some((start, end)) =
                             pine_unicode_block_property(property).and_then(pine_unicode_block)
                         {
-                            push_pine_unicode_block(&mut result, start, end, escaped == 'P');
+                            let mut replacement = String::new();
+                            push_pine_unicode_block(&mut replacement, start, end, escaped == 'P');
+                            push_pine_regex_class_replacement(
+                                &mut result,
+                                &replacement,
+                                mode,
+                                class_depth,
+                                &mut case_protected_spans,
+                                true,
+                            );
                             index = name_end + 1;
                             continue;
                         }
@@ -446,7 +520,18 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 _ => None,
             };
             if let Some(replacement) = replacement {
-                result.push_str(replacement);
+                if replacement.starts_with('[') {
+                    push_pine_regex_class_replacement(
+                        &mut result,
+                        replacement,
+                        mode,
+                        class_depth,
+                        &mut case_protected_spans,
+                        false,
+                    );
+                } else {
+                    result.push_str(replacement);
+                }
                 index += slash.len_utf8() + escaped.len_utf8();
                 continue;
             }
@@ -500,11 +585,16 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
                 mode = parent_mode;
             }
         } else if byte == b'[' {
+            if class_depth == 0 && mode.case_insensitive {
+                case_class_start = Some(result.len());
+                case_protected_spans.clear();
+            }
             class_depth += 1;
         } else if byte == b']' && class_depth > 0 {
             class_depth -= 1;
         }
 
+        let closed_case_class = byte == b']' && class_depth == 0 && case_class_start.is_some();
         let ch = rest.chars().next().expect("regex contains a character");
         if class_depth == 0 {
             push_pine_regex_literal(&mut result, ch, mode, false);
@@ -512,6 +602,22 @@ fn normalize_pine_regex_with_metadata(pattern: &str) -> NormalizedPineRegex {
             result.push(ch);
         }
         index += ch.len_utf8();
+
+        if closed_case_class {
+            let start = case_class_start.take().expect("checked class start");
+            let class = result.split_off(start);
+            let protected = case_protected_spans
+                .drain(..)
+                .map(|range| range.start - start..range.end - start)
+                .collect::<Vec<_>>();
+            if let Some(class) =
+                normalize_case_insensitive_class(&class, mode.unicode_classes, &protected)
+            {
+                push_case_folded_class(&mut result, &class);
+            } else {
+                result.push_str(&class);
+            }
+        }
     }
 
     NormalizedPineRegex {
