@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added `strategy.default_entry_qty(fill_price)` as a read-only strategy-mode
+  `series float` helper over the existing fixed, cash, and percent-of-equity
+  default sizing paths. It supports direct, named, UDF, and history reads,
+  reports the default order quantity without position-reversal adjustment, and
+  preserves the current no-currency-conversion/no-symbol-point-value boundary.
 - Added `strategy.position_entry_name` as a read-only strategy-mode
   `series string`. It is `na` while flat, records the entry order ID that
   initially opened the current continuous net long position, survives

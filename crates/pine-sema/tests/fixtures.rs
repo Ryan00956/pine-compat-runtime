@@ -4084,6 +4084,14 @@ fn reports_unsupported_strategy_default_quantity_fixture() {
 }
 
 #[test]
+fn reports_unsupported_strategy_default_entry_qty_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_default_entry_qty.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_strategy_commission_unknown_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_commission_unknown.pine",

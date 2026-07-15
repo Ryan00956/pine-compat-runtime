@@ -177,7 +177,7 @@ impl Analyzer {
             self.check_feature_name(&name, callee.span);
             self.validate_script_declaration_call(&name, callee.span, args);
             self.validate_strategy_order_call(&name, callee.span, args);
-            self.validate_strategy_trade_field_call(&name, callee.span);
+            self.validate_strategy_value_function_call(&name, callee.span);
             if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",

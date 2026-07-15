@@ -54,7 +54,15 @@ accepts a positive const numeric default entry percentage. When a supported
 `strategy.entry` omits `qty`, the percent-of-equity subset calculates the
 absolute quantity once at placement time as
 `strategy.equity * N / 100 / close`, using the current supported equity and
-current close. Contracts, margin constraints beyond the current explicit-margin
+current close. `strategy.default_entry_qty(fill_price)` returns the same
+configured default size without placing an order: fixed sizing returns `N`,
+cash sizing returns `N / fill_price`, and percent-of-equity sizing returns
+`strategy.equity * N / 100 / fill_price`. It does not add the quantity needed
+to reverse an existing position. Direct, named, UDF, and history reads are
+supported; non-positive or non-finite prices return `na` in the price-dependent
+modes, as does non-positive or non-finite equity in percent mode. Indicator and
+requested-context use are rejected, and the helper does not expand public
+strategy JSON. Contracts, margin constraints beyond the current explicit-margin
 long-only subset, currency conversion, symbol precision rounding, and lot-step
 constraints remain unsupported.
 `strategy(..., commission_type=strategy.commission.cash_per_contract,

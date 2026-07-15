@@ -694,6 +694,7 @@ strategy.cancel(id: simple string) -> void
 strategy.cancel_all() -> void
 strategy.exit(id: simple string, from_entry?: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, comment_profit?: string-compatible, comment_loss?: string-compatible, comment_trailing?: string-compatible, alert_message?: string-compatible, alert_profit?: string-compatible, alert_loss?: string-compatible, alert_trailing?: string-compatible, disable_alert?: bool-compatible)
   -> void
+strategy.default_entry_qty(fill_price: series/simple numeric) -> series float
 strategy.position_entry_name -> series string
 strategy.openprofit_percent -> series float
 strategy.netprofit_percent -> series float
@@ -811,7 +812,17 @@ time as cash divided by the current close under the current
 no-currency-conversion boundary. `default_qty_type=strategy.percent_of_equity`
 is also supported for positive const numeric `default_qty_value`; omitted
 supported entry `qty` resolves once at placement time from current supported
-equity and current close. `strategy(...)` accepts
+equity and current close. `strategy.default_entry_qty(fill_price)` exposes the
+same fixed, cash, and percent-of-equity sizing calculation as a read-only
+strategy-mode series float. Cash sizing divides the configured cash by
+`fill_price`; percent sizing divides the selected percentage of current
+supported equity by `fill_price`; fixed sizing returns the configured unit
+count. The helper does not add reversal quantity for an open position. Direct,
+named, UDF, and history reads are supported. Non-positive or non-finite prices
+produce `na` for price-dependent modes, as does non-positive or non-finite
+supported equity for percent sizing. Currency conversion, symbol point value,
+precision, and lot-step handling remain outside this subset.
+`strategy(...)` accepts
 `commission_type=strategy.commission.cash_per_contract`,
 `strategy.commission.cash_per_order`, or `strategy.commission.percent` with a
 finite non-negative const numeric `commission_value`; entry cash, exit cash,

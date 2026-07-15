@@ -46,6 +46,7 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Option<Result<PineValue, RuntimeError>> {
         Some(match callee {
+            "strategy.default_entry_qty" => self.eval_strategy_default_entry_qty(args),
             "strategy.entry" => self.eval_strategy_entry(args),
             "strategy.order" => self.eval_strategy_order(args),
             "strategy.close" => self.eval_strategy_close(args),
@@ -90,6 +91,30 @@ impl<'a> HistoricalRuntime<'a> {
             }
             _ => return None,
         })
+    }
+
+    fn eval_strategy_default_entry_qty(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(fill_price_expr) = call_arg_expr(args, 0, "fill_price") else {
+            return Ok(PineValue::Na);
+        };
+        let fill_price = self
+            .eval_expr(fill_price_expr)?
+            .as_f64()
+            .unwrap_or(f64::NAN);
+        let Some(bar) = self.current_bar else {
+            return Err(RuntimeError {
+                message: "`strategy.default_entry_qty` requires an active bar".to_owned(),
+            });
+        };
+        let equity = self.strategy_broker.equity_value(bar.close);
+        Ok(self
+            .program
+            .strategy_settings
+            .default_entry_qty(equity, fill_price)
+            .map_or(PineValue::Na, PineValue::Float))
     }
 
     fn eval_strategy_entry(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {

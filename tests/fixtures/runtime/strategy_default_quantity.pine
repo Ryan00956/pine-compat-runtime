@@ -1,5 +1,10 @@
 //@version=5
 strategy("Strategy default quantity", default_qty_type=strategy.fixed, default_qty_value=3)
+identity(value) => value
+default_entry_qty = strategy.default_entry_qty(close)
 if bar_index == 1
     strategy.entry("D", strategy.long)
 plot(strategy.position_size)
+plot(default_entry_qty)
+plot(identity(strategy.default_entry_qty(fill_price=close * 2)))
+plot(strategy.default_entry_qty(close)[1])

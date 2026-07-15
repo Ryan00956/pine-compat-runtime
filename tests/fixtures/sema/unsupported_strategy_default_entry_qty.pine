@@ -1,0 +1,5 @@
+//@version=5
+strategy("Invalid default entry quantity helper")
+plot(strategy.default_entry_qty("100"))
+plot(strategy.default_entry_qty())
+plot(strategy.default_entry_qty(close, open))

@@ -311,6 +311,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "strategy.close_all",
     "strategy.cancel",
     "strategy.cancel_all",
+    "strategy.default_entry_qty",
     "strategy.closedtrades.entry_bar_index",
     "strategy.closedtrades.entry_comment",
     "strategy.closedtrades.entry_id",

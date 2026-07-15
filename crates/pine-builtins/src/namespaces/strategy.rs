@@ -266,7 +266,20 @@ const STRATEGY_TRADE_FIELD_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const STRATEGY_DEFAULT_ENTRY_QTY_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "fill_price",
+    accepts: Accepts::SeriesOrSimpleNumeric,
+    optional: false,
+}];
+
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
+    BuiltinSignature {
+        name: "strategy.default_entry_qty",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_DEFAULT_ENTRY_QTY_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
     BuiltinSignature {
         name: "strategy.entry",
         phase: BuiltinPhase::Phase1Core,

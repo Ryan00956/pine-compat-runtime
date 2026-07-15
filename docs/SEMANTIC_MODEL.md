@@ -35,7 +35,19 @@ quantity declaration subset:
 numeric `N`. Stage 7 Slice 31 adds
 `default_qty_type=strategy.percent_of_equity, default_qty_value=N` with positive
 const numeric `N`; omitted supported entry quantities resolve at placement time
-from current supported equity and current close. Stage 7 Slices 17, 18, and 21
+from current supported equity and current close.
+`strategy.default_entry_qty(fill_price)` is a pure strategy-mode `series float`
+helper over those same fixed, cash, and percent-of-equity sizing paths. It
+returns the configured fixed units, cash divided by `fill_price`, or the
+configured percentage of current supported equity divided by `fill_price`,
+without placing an order or adding position-reversal quantity. Direct, named,
+UDF, and history reads are supported. Price-dependent modes return `na` for a
+non-positive or non-finite price, and percent sizing also returns `na` for
+non-positive or non-finite supported equity. Indicator and requested-context
+use remain rejected, and no public result field is added. Currency conversion,
+symbol point value, precision, and lot-step handling remain outside the current
+contract.
+Stage 7 Slices 17, 18, and 21
 add supported commission declaration subsets:
 `commission_type=strategy.commission.cash_per_contract, commission_value=N` and
 `commission_type=strategy.commission.cash_per_order, commission_value=N` with

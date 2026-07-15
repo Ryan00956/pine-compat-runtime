@@ -3,3 +3,4 @@ strategy("Strategy cash default quantity", initial_capital=1000, default_qty_typ
 if bar_index == 1
     strategy.entry("D", strategy.long)
 plot(strategy.position_size)
+plot(strategy.default_entry_qty(close))

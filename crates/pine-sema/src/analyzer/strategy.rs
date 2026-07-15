@@ -121,6 +121,10 @@ pub(crate) fn is_supported_strategy_trade_field_function(name: &str) -> bool {
         || STRATEGY_OPEN_TRADE_FIELD_FUNCTIONS.contains(&name)
 }
 
+pub(crate) fn is_supported_strategy_value_function(name: &str) -> bool {
+    name == "strategy.default_entry_qty" || is_supported_strategy_trade_field_function(name)
+}
+
 impl Analyzer {
     pub(crate) fn validate_script_declaration_call(
         &mut self,
@@ -201,8 +205,8 @@ impl Analyzer {
         }
     }
 
-    pub(crate) fn validate_strategy_trade_field_call(&mut self, name: &str, span: Span) {
-        if !is_supported_strategy_trade_field_function(name) {
+    pub(crate) fn validate_strategy_value_function_call(&mut self, name: &str, span: Span) {
+        if !is_supported_strategy_value_function(name) {
             return;
         }
 

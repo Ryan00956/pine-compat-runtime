@@ -1,5 +1,6 @@
 //@version=5
 indicator("Strategy state variables in indicator")
+plot(strategy.default_entry_qty(close))
 plot(strategy.position_size)
 plot(strategy.position_avg_price)
 plot(na(strategy.position_entry_name) ? na : 1)

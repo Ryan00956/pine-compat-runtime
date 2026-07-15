@@ -1,4 +1,8 @@
 //@version=5
 strategy("Strategy default quantity", default_qty_type=strategy.fixed, default_qty_value=3)
+identity(value) => value
 strategy.entry("L", strategy.long)
 strategy.entry("E", strategy.long, qty=5)
+plot(strategy.default_entry_qty(close))
+plot(identity(strategy.default_entry_qty(fill_price=close)))
+plot(strategy.default_entry_qty(close)[1])

@@ -5838,6 +5838,110 @@ if bar_index == 0
 }
 
 #[test]
+fn strategy_default_entry_qty_supports_direct_udf_named_and_history_reads() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("default qty helper", default_qty_type=strategy.fixed, default_qty_value=3)
+identity(value) => value
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=10)
+plot(strategy.default_entry_qty(close))
+plot(identity(strategy.default_entry_qty(fill_price=close * 2)))
+plot(strategy.default_entry_qty(close)[1])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    )
+    .expect("runtime result");
+
+    let expected = vec![
+        PineValue::Float(3.0),
+        PineValue::Float(3.0),
+        PineValue::Float(3.0),
+        PineValue::Float(3.0),
+    ];
+    assert_eq!(result.plots[0].values, expected.clone());
+    assert_eq!(result.plots[1].values, expected);
+    assert_eq!(
+        result.plots[2].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(3.0),
+            PineValue::Float(3.0),
+            PineValue::Float(3.0),
+        ]
+    );
+}
+
+#[test]
+fn strategy_default_entry_qty_reuses_cash_and_percent_of_equity_sizing() {
+    let cash_source = SourceFile::new(
+        "cash.pine",
+        r#"strategy("cash helper", default_qty_type=strategy.cash, default_qty_value=100)
+plot(strategy.default_entry_qty(close))
+plot(strategy.default_entry_qty(bar_index == 0 ? na : 0))
+"#,
+    );
+    let cash_analysis = analyze_source(&cash_source);
+    assert!(
+        cash_analysis.diagnostics.is_empty(),
+        "{:?}",
+        cash_analysis.diagnostics
+    );
+    let cash_result = run_historical(
+        &cash_analysis.hir.expect("cash HIR"),
+        &[bar(10.0), bar(20.0)],
+    )
+    .expect("cash runtime result");
+    assert_eq!(
+        cash_result.plots[0].values,
+        vec![PineValue::Float(10.0), PineValue::Float(5.0)]
+    );
+    assert_eq!(
+        cash_result.plots[1].values,
+        vec![PineValue::Na, PineValue::Na]
+    );
+
+    let percent_source = SourceFile::new(
+        "percent.pine",
+        r#"strategy("percent helper", initial_capital=1000, default_qty_type=strategy.percent_of_equity, default_qty_value=25)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=100)
+plot(strategy.default_entry_qty(10))
+"#,
+    );
+    let percent_analysis = analyze_source(&percent_source);
+    assert!(
+        percent_analysis.diagnostics.is_empty(),
+        "{:?}",
+        percent_analysis.diagnostics
+    );
+    let percent_result = run_historical(
+        &percent_analysis.hir.expect("percent HIR"),
+        &[bar(10.0), bar(20.0), bar(10.0), bar(30.0)],
+    )
+    .expect("percent runtime result");
+    assert_eq!(
+        percent_result.plots[0].values,
+        vec![
+            PineValue::Float(25.0),
+            PineValue::Float(25.0),
+            PineValue::Na,
+            PineValue::Float(50.0),
+        ]
+    );
+}
+
+#[test]
 fn strategy_entry_uses_percent_of_equity_default_qty_when_qty_is_absent() {
     let source = SourceFile::new(
         "strategy.pine",
