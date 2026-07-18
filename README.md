@@ -213,6 +213,12 @@ maturin develop --manifest-path crates/pine-python/Cargo.toml
 python -m pytest python/tests
 ```
 
+Binary wheels for the supported desktop platforms are built and tested by
+GitHub Actions. Ordinary `main` pushes retain short-lived workflow artifacts;
+version tags publish durable GitHub Release assets with a machine-readable
+manifest and SHA-256 checksums. See
+[Releasing Binary Wheels](docs/RELEASING.md).
+
 ## WASM Binding
 
 The optional WASM crate exposes a thin `wasm-bindgen` API:
