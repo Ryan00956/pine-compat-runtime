@@ -1,0 +1,9 @@
+//@version=6
+indicator("Supported color.from_gradient Numeric Compatible")
+dynamic_value = bar_index == 0 ? na : close
+missing_value = color.from_gradient(na, 1, 3, color.red, color.green)
+missing_bottom = color.from_gradient(close, na, 3, color.red, color.green)
+missing_top = color.from_gradient(close, 1, na, color.red, color.green)
+series_value = color.from_gradient(dynamic_value, 1, 3, color.red, color.green)
+plot(close, color=bar_index == 0 ? missing_value : series_value)
+plot(open, color=bar_index == 0 ? missing_bottom : missing_top)

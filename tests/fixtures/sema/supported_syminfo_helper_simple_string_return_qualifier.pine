@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported syminfo helper simple string return qualifier")
+
+prefix = syminfo.prefix("NASDAQ:AAPL")
+ticker = syminfo.ticker("NASDAQ:AAPL")
+
+plot(str.length(syminfo.prefix(prefix)))
+plot(str.length(syminfo.prefix(ticker)))

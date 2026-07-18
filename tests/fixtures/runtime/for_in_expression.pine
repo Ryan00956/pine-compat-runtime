@@ -39,6 +39,10 @@ color_matrix_values = matrix.new<color>(1, 1, color.red)
 last = for value in values
     value * 2
 
+nested_loop_last = for value in values
+    for inner = 0 to 0
+        value + 5
+
 running = bar_index * 0
 stateful = for value in values
     running := running + value
@@ -203,6 +207,7 @@ color_matrix_last = for row in color_matrix_values
     row.get(0)
 
 plot(last, "last")
+plot(nested_loop_last, "nested_loop_last")
 plot(stateful, "stateful")
 plot(continued, "continued")
 plot(stopped, "stopped")

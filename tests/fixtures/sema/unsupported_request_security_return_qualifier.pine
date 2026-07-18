@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported request.security return qualifier")
+
+plot(close, offset=request.security(syminfo.tickerid, timeframe.period, bar_index))
+hline(request.security(syminfo.tickerid, timeframe.period, close))
+plot(ta.alma(close, 4, 0.85, 6, request.security(syminfo.tickerid, timeframe.period, close > open)))
+hline(0, color=request.security(syminfo.tickerid, timeframe.period, color.red))
+prefix = syminfo.prefix(request.security(syminfo.tickerid, timeframe.period, syminfo.tickerid))

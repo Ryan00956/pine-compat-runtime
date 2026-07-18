@@ -1,6 +1,6 @@
 //@version=5
 indicator("Dynamic negative history offset ternary result")
 
-offset = close > open ? -1 : -1
+offset = close >= open ? -1 : 1
 
 plot(close[offset])

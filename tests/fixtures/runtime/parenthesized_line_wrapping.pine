@@ -1,0 +1,49 @@
+//@version=6
+indicator(
+    "Parenthesized line wrapping"
+)
+combine(
+float left,
+    float right
+) => (
+ left +
+        right
+)
+sum = (
+    open +
+high +
+        low +
+ close
+)
+nested = (
+    (open + high) +
+(
+        low +
+ close
+    )
+)
+average = sum / (
+4
+)
+local = 0.0
+if bar_index >= 0
+    local := (
+close +
+        1
+    )
+plot(
+    average == (open + high + low + close) / 4 ? 1 : 0 // comment
+)
+plot(
+nested == sum ? 1 : 0
+)
+plot(
+    combine(average, close) == average + close ? 1 : 0
+)
+plot(
+local == close + 1 ? 1 : 0
+)
+plot(switch
+    bar_index >= 0 =>
+        1
+)

@@ -1,0 +1,30 @@
+//@version=6
+indicator(
+    "Parenthesized line wrapping",
+overlay =
+        true
+)
+combine(
+float left,
+    float right
+) => (
+ left +
+        right
+)
+sum = (
+    open +
+high +
+        low +
+ close
+)
+average = sum / (
+4
+)
+plot(
+    combine(average, close),
+"Average plus close"
+)
+plot(switch
+    true =>
+        1
+)

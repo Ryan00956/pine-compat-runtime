@@ -883,6 +883,52 @@ fn run_script_csv_returns_array_ordering_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_array_sort_udt_field_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/array_sort_udt_field.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("UDT array sort field fixture should run");
+
+    assert_snapshot("runtime_array_sort_udt_field.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_array_sort_indices_udt_field_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/array_sort_indices_udt_field.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("UDT array sort_indices field fixture should run");
+
+    assert_snapshot("runtime_array_sort_indices_udt_field.json", &output);
+}
+
+#[test]
+fn run_script_csv_rejects_udt_na_element_sorting() {
+    for (source, expected) in [
+        (
+            include_str!("../../../../tests/fixtures/regressions/array_sort_udt_na_element.pine"),
+            "array.sort cannot sort UDT arrays containing na elements",
+        ),
+        (
+            include_str!(
+                "../../../../tests/fixtures/regressions/array_sort_indices_udt_na_element.pine"
+            ),
+            "array.sort_indices cannot sort UDT arrays containing na elements",
+        ),
+    ] {
+        let message = run_script_csv_internal(
+            source,
+            include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        )
+        .expect_err("UDT na element sorting should fail");
+
+        assert!(message.contains(expected), "{message}");
+    }
+}
+
+#[test]
 fn run_script_csv_returns_array_join_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/array_join.pine"),
@@ -1606,7 +1652,7 @@ fn analyze_script_reports_unsupported_user_type_varip_fixture() {
         parsed["compatibility"]["unsupported"][0]["reason"]
             .as_str()
             .expect("unsupported reason should be a string")
-            .contains("UDT varip supports only explicit scalar-field declarations")
+            .contains("UDT varip supports only explicit scalar-tree declarations")
     );
 }
 
@@ -2431,6 +2477,50 @@ fn run_script_csv_returns_strings_fixture_contract() {
     .expect("strings fixture should run");
 
     assert_snapshot("runtime_strings.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_line_wrapped_strings_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/line_wrapped_strings.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("line-wrapped strings fixture should run");
+
+    assert_snapshot("runtime_line_wrapped_strings.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_parenthesized_line_wrapping_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/parenthesized_line_wrapping.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("parenthesized line-wrapping fixture should run");
+
+    assert_snapshot("runtime_parenthesized_line_wrapping.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_legacy_line_wrapping_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/legacy_line_wrapping.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("legacy line-wrapping fixture should run");
+
+    assert_snapshot("runtime_legacy_line_wrapping.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_compound_assignments_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/compound_assignments.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("compound assignments fixture should run");
+
+    assert_snapshot("runtime_compound_assignments.json", &output);
 }
 
 #[test]
@@ -8139,6 +8229,160 @@ fn analysis_outputs_match_golden_snapshots() {
             "../../../../tests/fixtures/sema/unsupported_request.pine"
         )),
     );
+}
+
+#[test]
+fn run_script_csv_returns_polyline_new_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/polyline_new.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("polyline new fixture should run");
+
+    assert_snapshot("runtime_polyline_new.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_polyline_lifecycle_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/polyline_lifecycle.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("polyline lifecycle fixture should run");
+
+    assert_snapshot("runtime_polyline_lifecycle.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_map_methods_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/map_methods.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("map methods fixture should run");
+
+    assert_snapshot("runtime_map_methods.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_map_history_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/map_history.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("map history fixture should run");
+
+    assert_snapshot("runtime_map_history.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_map_for_in_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/map_for_in.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("map for-in fixture should run");
+
+    assert_snapshot("runtime_map_for_in.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_map_varip_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/map_varip.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("map varip fixture should run");
+
+    assert_snapshot("runtime_map_varip.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_matrix_int_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/matrix_int.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("matrix int fixture should run");
+
+    assert_snapshot("runtime_matrix_int.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_matrix_bool_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/matrix_bool.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("matrix bool fixture should run");
+
+    assert_snapshot("runtime_matrix_bool.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_matrix_history_shape_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/matrix_history_shape.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("matrix history shape fixture should run");
+
+    assert_snapshot("runtime_matrix_history_shape.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_matrix_for_in_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/matrix_for_in.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("matrix for-in fixture should run");
+
+    assert_snapshot("runtime_matrix_for_in.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_matrix_mult_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/matrix_mult.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("matrix mult fixture should run");
+
+    assert_snapshot("runtime_matrix_mult.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_matrix_inv_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/matrix_inv.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("matrix inverse fixture should run");
+
+    assert_snapshot("runtime_matrix_inv.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_matrix_varip_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/matrix_varip.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("matrix varip fixture should run");
+
+    assert_snapshot("runtime_matrix_varip.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_matrix_zero_dimensions_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/matrix_zero_dimensions.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("matrix zero dimensions fixture should run");
+
+    assert_snapshot("runtime_matrix_zero_dimensions.json", &output);
 }
 
 fn assert_snapshot(name: &str, actual: &str) {

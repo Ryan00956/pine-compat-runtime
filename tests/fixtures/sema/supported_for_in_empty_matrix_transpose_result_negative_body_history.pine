@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported empty matrix.transpose for-in result negative body history")
+source = matrix.new<float>(1, 0, 0)
+values = matrix.transpose(source)
+length = for row in values
+    -1
+plot(close[length])

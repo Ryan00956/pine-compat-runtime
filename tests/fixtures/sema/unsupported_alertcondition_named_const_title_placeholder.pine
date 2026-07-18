@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported alertcondition named const title placeholder")
+title_base = "{{close}}"
+title = title_base
+alertcondition(close > open, title, "Message")

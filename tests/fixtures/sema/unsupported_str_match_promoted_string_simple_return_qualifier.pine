@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported str.match promoted string simple return qualifier")
+
+source = timeframe.period
+
+matched_text = str.match(source, ".+")
+matched_length = str.length(matched_text)
+
+plot(close, show_last=matched_length)

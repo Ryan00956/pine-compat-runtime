@@ -2,38 +2,77 @@ use crate::prelude::*;
 
 mod type_queries;
 
-fn for_in_expr_value_kind(
+#[derive(Debug, Clone)]
+struct ForInExprKinds {
+    index_kind: Option<ValueKind>,
+    value_kind: ValueKind,
+    user_type_name: Option<String>,
+}
+
+fn for_in_expr_kinds(
     iterable_type: PineType,
     analyzer: &Analyzer,
     iterable: &Expr,
-) -> Option<(ValueKind, Option<String>)> {
+    has_index: bool,
+) -> Option<ForInExprKinds> {
+    let scalar = |value_kind| {
+        Some(ForInExprKinds {
+            index_kind: has_index.then_some(ValueKind::Int),
+            value_kind,
+            user_type_name: None,
+        })
+    };
     match iterable_type.kind {
-        ValueKind::IntArray => Some((ValueKind::Int, None)),
-        ValueKind::FloatArray => Some((ValueKind::Float, None)),
-        ValueKind::BoolArray => Some((ValueKind::Bool, None)),
-        ValueKind::StringArray => Some((ValueKind::String, None)),
-        ValueKind::ColorArray => Some((ValueKind::Color, None)),
-        ValueKind::LabelArray => Some((ValueKind::Label, None)),
-        ValueKind::LineArray => Some((ValueKind::Line, None)),
-        ValueKind::LineFillArray => Some((ValueKind::LineFill, None)),
-        ValueKind::PolylineArray => Some((ValueKind::Polyline, None)),
-        ValueKind::BoxArray => Some((ValueKind::Box, None)),
-        ValueKind::TableArray => Some((ValueKind::Table, None)),
-        ValueKind::ChartPointArray => Some((ValueKind::ChartPoint, None)),
-        ValueKind::UserTypeArray => analyzer
-            .user_type_array_name_of_expr(iterable)
-            .map(|type_name| (ValueKind::UserType, Some(type_name))),
-        ValueKind::FloatMatrix => Some((ValueKind::FloatArray, None)),
-        ValueKind::IntMatrix => Some((ValueKind::IntArray, None)),
-        ValueKind::BoolMatrix => Some((ValueKind::BoolArray, None)),
-        ValueKind::StringMatrix => Some((ValueKind::StringArray, None)),
-        ValueKind::ColorMatrix => Some((ValueKind::ColorArray, None)),
+        ValueKind::IntArray => scalar(ValueKind::Int),
+        ValueKind::FloatArray => scalar(ValueKind::Float),
+        ValueKind::BoolArray => scalar(ValueKind::Bool),
+        ValueKind::StringArray => scalar(ValueKind::String),
+        ValueKind::ColorArray => scalar(ValueKind::Color),
+        ValueKind::LabelArray => scalar(ValueKind::Label),
+        ValueKind::LineArray => scalar(ValueKind::Line),
+        ValueKind::LineFillArray => scalar(ValueKind::LineFill),
+        ValueKind::PolylineArray => scalar(ValueKind::Polyline),
+        ValueKind::BoxArray => scalar(ValueKind::Box),
+        ValueKind::TableArray => scalar(ValueKind::Table),
+        ValueKind::ChartPointArray => scalar(ValueKind::ChartPoint),
+        ValueKind::UserTypeArray => {
+            analyzer
+                .user_type_array_name_of_expr(iterable)
+                .map(|type_name| ForInExprKinds {
+                    index_kind: has_index.then_some(ValueKind::Int),
+                    value_kind: ValueKind::UserType,
+                    user_type_name: Some(type_name),
+                })
+        }
+        ValueKind::FloatMatrix => scalar(ValueKind::FloatArray),
+        ValueKind::IntMatrix => scalar(ValueKind::IntArray),
+        ValueKind::BoolMatrix => scalar(ValueKind::BoolArray),
+        ValueKind::StringMatrix => scalar(ValueKind::StringArray),
+        ValueKind::ColorMatrix => scalar(ValueKind::ColorArray),
+        ValueKind::Map => {
+            let info = analyzer.map_type_of_expr(iterable)?;
+            Some(ForInExprKinds {
+                index_kind: has_index.then_some(info.key_kind),
+                value_kind: if has_index {
+                    info.value_kind
+                } else {
+                    info.key_kind
+                },
+                user_type_name: None,
+            })
+        }
         _ => None,
     }
 }
 
 impl Analyzer {
     pub(crate) fn analyze_expr(&mut self, expr: &Expr) -> Option<PineType> {
+        // Function and method bodies can be analyzed repeatedly with different
+        // argument templates and UDT identities. Discard span-keyed collection
+        // metadata from an earlier pass before deriving the current result.
+        let key = self.expr_key(expr.span);
+        self.expr_maps.remove(&key);
+        self.expr_user_type_arrays.remove(&key);
         if !self.enter_expr_analysis(expr.span) {
             return None;
         }
@@ -56,7 +95,18 @@ impl Analyzer {
             }
             ExprKind::Identifier(name) => {
                 self.check_feature_expr(expr);
-                self.resolve_symbol(name, expr.span)
+                let pine_type = self.resolve_symbol(name, expr.span);
+                if pine_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
+                    && let Some(info) = self.map_type_of_current_symbol(name)
+                {
+                    self.mark_expr_map(expr.span, info);
+                }
+                if pine_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+                    && let Some(type_name) = self.user_type_array_name_of_current_symbol(name)
+                {
+                    self.mark_expr_user_type_array(expr.span, type_name);
+                }
+                pine_type
             }
             ExprKind::QualifiedName(parts) => {
                 if let Some(field_type) = self.resolve_chart_point_field_access(parts, expr.span) {
@@ -99,6 +149,7 @@ impl Analyzer {
                             condition_type,
                             then_type,
                             else_type,
+                            self.known_const_bool_value(condition),
                             expr.span,
                         )?;
                         if pine_type.kind == ValueKind::UserType
@@ -107,6 +158,26 @@ impl Analyzer {
                             self.diagnostics.push(Diagnostic::error(
                                 "E_BRANCH_TYPE",
                                 "ternary user-defined type branches must resolve to the same UDT identity",
+                                expr.span,
+                            ));
+                            return None;
+                        }
+                        if pine_type.kind == ValueKind::Map
+                            && !self.mark_ternary_map(expr.span, then_expr, else_expr)
+                        {
+                            self.diagnostics.push(Diagnostic::error(
+                                "E_BRANCH_TYPE",
+                                "ternary map branches must resolve to the same map template",
+                                expr.span,
+                            ));
+                            return None;
+                        }
+                        if pine_type.kind == ValueKind::UserTypeArray
+                            && !self.mark_ternary_user_type_array(expr.span, then_expr, else_expr)
+                        {
+                            self.diagnostics.push(Diagnostic::error(
+                                "E_BRANCH_TYPE",
+                                "ternary UDT array branches must resolve to the same element identity",
                                 expr.span,
                             ));
                             return None;
@@ -149,7 +220,8 @@ impl Analyzer {
             ExprKind::Call { callee, args } => {
                 let pine_type = self.analyze_call(callee, args, expr.span);
                 if let Some(pine_type) = pine_type {
-                    self.expr_types.insert(span_key(expr.span), pine_type);
+                    let key = self.expr_key(expr.span);
+                    self.expr_types.insert(key, pine_type);
                 }
                 pine_type
             }
@@ -164,9 +236,11 @@ impl Analyzer {
                     value_type.map(|pine_type| pine_type.kind),
                     Some(ValueKind::UserType)
                 ) {
-                    if let Some(type_name) = self
-                        .user_type_name_of_expr(value_expr)
-                        .filter(|type_name| self.imported_user_type_history_is_supported(type_name))
+                    if let Some(type_name) =
+                        self.user_type_name_of_expr(value_expr).filter(|type_name| {
+                            self.imported_user_type_history_is_supported(type_name)
+                                || self.local_user_type_history_is_supported(type_name)
+                        })
                     {
                         self.mark_expr_user_type(expr.span, type_name);
                         return value_type
@@ -209,21 +283,50 @@ impl Analyzer {
         if let Some(condition_type) = condition_type {
             self.expect_bool(condition_type, condition.span);
         }
+        let condition_qualifier =
+            condition_type.map_or(Qualifier::Const, |pine_type| pine_type.qualifier);
 
         self.compatibility.supported.push(FeatureUse {
             feature: "if".to_owned(),
             span,
         });
 
+        let condition_value = self.known_const_bool_value(condition);
         self.block_depth += 1;
-        let then_type = self.analyze_expr_branch_return(then_branch, "if", span);
-        let else_type = self.analyze_expr_branch_return(else_branch, "if", span);
+        self.assignment_qualifier_context.push(condition_qualifier);
+        let (then_type, else_type) = match condition_value {
+            Some(true) => {
+                let then_type = self.analyze_expr_branch_return(then_branch, "if", span, true);
+                let else_type = self.analyze_without_symbol_effects(|analyzer| {
+                    analyzer.analyze_expr_branch_return(else_branch, "if", span, true)
+                });
+                (then_type, else_type)
+            }
+            Some(false) => {
+                let then_type = self.analyze_without_symbol_effects(|analyzer| {
+                    analyzer.analyze_expr_branch_return(then_branch, "if", span, true)
+                });
+                let else_type = self.analyze_expr_branch_return(else_branch, "if", span, true);
+                (then_type, else_type)
+            }
+            None => {
+                let then_type = self.analyze_expr_branch_return(then_branch, "if", span, true);
+                let else_type = self.analyze_expr_branch_return(else_branch, "if", span, true);
+                (then_type, else_type)
+            }
+        };
+        self.assignment_qualifier_context.pop();
         self.block_depth -= 1;
 
         match (condition_type, then_type, else_type) {
             (Some(condition_type), Some(then_type), Some(else_type)) => {
-                let pine_type =
-                    self.merge_branch_types(condition_type, then_type, else_type, span)?;
+                let pine_type = self.merge_branch_types(
+                    condition_type,
+                    then_type,
+                    else_type,
+                    condition_value,
+                    span,
+                )?;
                 if pine_type.kind == ValueKind::UserType {
                     let type_name = self.user_type_name_of_if_branches(then_branch, else_branch);
                     if let Some(type_name) = type_name {
@@ -237,6 +340,26 @@ impl Analyzer {
                         return None;
                     }
                 }
+                if pine_type.kind == ValueKind::Map
+                    && !self.mark_if_map(span, then_branch, else_branch)
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_BRANCH_TYPE",
+                        "if map branches must resolve to the same map template",
+                        span,
+                    ));
+                    return None;
+                }
+                if pine_type.kind == ValueKind::UserTypeArray
+                    && !self.mark_if_user_type_array(span, then_branch, else_branch)
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_BRANCH_TYPE",
+                        "if UDT array branches must resolve to the same element identity",
+                        span,
+                    ));
+                    return None;
+                }
                 Some(pine_type)
             }
             _ => None,
@@ -248,11 +371,12 @@ impl Analyzer {
         branch: &[Stmt],
         keyword: &str,
         span: Span,
+        allow_final_loop: bool,
     ) -> Option<PineType> {
         let Some((last, prefix)) = branch.split_last() else {
             self.diagnostics.push(Diagnostic::error(
                 "E_BRANCH_RETURN",
-                format!("{keyword} expression branches must end with an expression"),
+                format!("{keyword} expression branches must end with a value-producing expression"),
                 span,
             ));
             return None;
@@ -282,11 +406,33 @@ impl Analyzer {
                     pine_type
                 }
             }
+            StmtKind::For {
+                counter,
+                from,
+                to,
+                step,
+                body,
+            } if allow_final_loop => {
+                self.analyze_for_expr(counter, from, to, step.as_ref(), body, last.span)
+            }
+            StmtKind::ForIn {
+                index,
+                value,
+                iterable,
+                body,
+            } if allow_final_loop => {
+                self.analyze_for_in_expr(index.as_deref(), value, iterable, body, last.span)
+            }
+            StmtKind::While { condition, body } if allow_final_loop => {
+                self.analyze_while_expr(condition, body, last.span)
+            }
             _ => {
                 self.analyze_stmt(last);
                 self.diagnostics.push(Diagnostic::error(
                     "E_BRANCH_RETURN",
-                    format!("{keyword} expression branches must end with an expression"),
+                    format!(
+                        "{keyword} expression branches must end with a value-producing expression"
+                    ),
                     last.span,
                 ));
                 None
@@ -294,6 +440,57 @@ impl Analyzer {
         };
         self.scope.pop_scope();
         pine_type
+    }
+
+    fn analyze_loop_expr_body_return(&mut self, last: &Stmt, keyword: &str) -> Option<PineType> {
+        match &last.kind {
+            StmtKind::Expr(expr) => {
+                let pine_type = self.analyze_expr(expr);
+                if matches!(
+                    pine_type,
+                    Some(PineType {
+                        kind: ValueKind::Void,
+                        ..
+                    })
+                ) {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_LOOP_RETURN",
+                        format!(
+                            "{keyword} expression body must end with a value-producing expression"
+                        ),
+                        expr.span,
+                    ));
+                    None
+                } else {
+                    pine_type
+                }
+            }
+            StmtKind::For {
+                counter,
+                from,
+                to,
+                step,
+                body,
+            } => self.analyze_for_expr(counter, from, to, step.as_ref(), body, last.span),
+            StmtKind::ForIn {
+                index,
+                value,
+                iterable,
+                body,
+            } => self.analyze_for_in_expr(index.as_deref(), value, iterable, body, last.span),
+            StmtKind::While { condition, body } => {
+                self.analyze_while_expr(condition, body, last.span)
+            }
+            _ => {
+                self.analyze_stmt(last);
+                self.diagnostics.push(Diagnostic::error(
+                    "E_LOOP_RETURN",
+                    format!("{keyword} expression body must end with a value-producing expression"),
+                    last.span,
+                ));
+                None
+            }
+        }
     }
 
     fn enter_expr_analysis(&mut self, span: Span) -> bool {
@@ -321,8 +518,13 @@ impl Analyzer {
         span: Span,
     ) -> Option<PineType> {
         let selector_type = selector.and_then(|selector| self.analyze_expr(selector));
-        let mut condition_qualifier = selector_type.map_or(Qualifier::Const, |ty| ty.qualifier);
+        let selector_key = selector.and_then(|selector| self.known_const_switch_key(selector));
+        let selector_qualifier = selector_type.map_or(Qualifier::Const, |ty| ty.qualifier);
+        let mut reachable_condition_qualifier = selector_qualifier;
         let mut result_type = None;
+        let mut selected_result_type = None;
+        let mut static_selection_open = selector.is_none() || selector_key.is_some();
+        let mut dynamic_tail = selector.is_some() && selector_key.is_none();
         let mut has_type_error = false;
 
         self.compatibility.supported.push(FeatureUse {
@@ -331,27 +533,110 @@ impl Analyzer {
         });
 
         for arm in arms {
+            let arm_reachable = dynamic_tail || static_selection_open;
+            let condition_value = if selector.is_none() {
+                arm.condition
+                    .as_ref()
+                    .and_then(|condition| self.known_const_bool_value(condition))
+            } else {
+                None
+            };
+            let case_key = if selector.is_some() {
+                arm.condition
+                    .as_ref()
+                    .and_then(|condition| self.known_const_switch_key(condition))
+            } else {
+                None
+            };
+            let mut arm_qualifier = selector_qualifier;
             if let Some(condition) = &arm.condition {
                 let condition_type = self.analyze_expr(condition);
                 if let Some(condition_type) = condition_type {
-                    condition_qualifier =
-                        strongest_qualifier(condition_qualifier, condition_type.qualifier);
+                    arm_qualifier = strongest_qualifier(arm_qualifier, condition_type.qualifier);
+                    if arm_reachable {
+                        reachable_condition_qualifier = strongest_qualifier(
+                            reachable_condition_qualifier,
+                            condition_type.qualifier,
+                        );
+                    }
                     if selector.is_none() {
                         self.expect_bool(condition_type, condition.span);
                     }
                 }
             }
+            if arm_reachable {
+                arm_qualifier = reachable_condition_qualifier;
+            }
 
-            if let Some(arm_type) = self.analyze_switch_arm_result(&arm.result, span) {
+            let mut statically_selected = false;
+            let commit_symbol_effects = if dynamic_tail {
+                true
+            } else if !static_selection_open {
+                false
+            } else if selector.is_none() {
+                match (&arm.condition, condition_value) {
+                    (Some(_), Some(false)) => false,
+                    (Some(_), Some(true)) | (None, _) => {
+                        static_selection_open = false;
+                        statically_selected = true;
+                        true
+                    }
+                    (Some(_), None) => {
+                        static_selection_open = false;
+                        dynamic_tail = true;
+                        true
+                    }
+                }
+            } else if let Some(selector_key) = selector_key.as_ref() {
+                match (&arm.condition, case_key.as_ref()) {
+                    (Some(_), Some(case_key)) if case_key == selector_key => {
+                        static_selection_open = false;
+                        statically_selected = true;
+                        true
+                    }
+                    (Some(_), Some(_)) => false,
+                    (Some(_), None) => {
+                        static_selection_open = false;
+                        dynamic_tail = true;
+                        true
+                    }
+                    (None, _) => {
+                        static_selection_open = false;
+                        statically_selected = true;
+                        true
+                    }
+                }
+            } else {
+                true
+            };
+
+            let arm_type = if commit_symbol_effects {
+                self.assignment_qualifier_context.push(arm_qualifier);
+                let arm_type = self.analyze_switch_arm_result(&arm.result, span);
+                self.assignment_qualifier_context.pop();
+                arm_type
+            } else {
+                self.analyze_without_symbol_effects(|analyzer| {
+                    analyzer.assignment_qualifier_context.push(arm_qualifier);
+                    let arm_type = analyzer.analyze_switch_arm_result(&arm.result, span);
+                    analyzer.assignment_qualifier_context.pop();
+                    arm_type
+                })
+            };
+
+            if let Some(arm_type) = arm_type {
+                if statically_selected && selected_result_type.is_none() {
+                    selected_result_type = Some(arm_type);
+                }
                 match merge_result_types(result_type, arm_type) {
                     Some(merged) => result_type = Some(merged),
                     None => {
                         self.diagnostics.push(Diagnostic::error(
                             "E_BRANCH_TYPE",
                             format!(
-                                "switch arms have incompatible types {:?} and {:?}",
-                                result_type.unwrap_or(UNKNOWN).kind,
-                                arm_type.kind
+                                "switch arms have incompatible types {} and {}",
+                                value_kind_name(result_type.unwrap_or(UNKNOWN).kind),
+                                value_kind_name(arm_type.kind)
                             ),
                             span,
                         ));
@@ -366,14 +651,34 @@ impl Analyzer {
         }
 
         result_type.and_then(|pine_type| {
+            let branch_qualifier =
+                selected_result_type.map_or(pine_type.qualifier, |ty: PineType| ty.qualifier);
             let pine_type = PineType::new(
-                strongest_qualifier(condition_qualifier, pine_type.qualifier),
+                strongest_qualifier(reachable_condition_qualifier, branch_qualifier),
                 pine_type.kind,
             );
             if pine_type.kind == ValueKind::UserType && !self.mark_switch_user_type(span, arms) {
                 self.diagnostics.push(Diagnostic::error(
                     "E_BRANCH_TYPE",
                     "switch user-defined type arms must resolve to the same UDT identity",
+                    span,
+                ));
+                return None;
+            }
+            if pine_type.kind == ValueKind::Map && !self.mark_switch_map(span, arms) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_BRANCH_TYPE",
+                    "switch map arms must resolve to the same map template",
+                    span,
+                ));
+                return None;
+            }
+            if pine_type.kind == ValueKind::UserTypeArray
+                && !self.mark_switch_user_type_array(span, arms)
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_BRANCH_TYPE",
+                    "switch UDT array arms must resolve to the same element identity",
                     span,
                 ));
                 return None;
@@ -391,9 +696,130 @@ impl Analyzer {
             SwitchArmResult::Expr(expr) => self.analyze_expr(expr),
             SwitchArmResult::Block(statements) => {
                 self.block_depth += 1;
-                let result = self.analyze_expr_branch_return(statements, "switch", span);
+                let result = self.analyze_expr_branch_return(statements, "switch", span, true);
                 self.block_depth -= 1;
                 result
+            }
+        }
+    }
+
+    pub(crate) fn analyze_switch_stmt(
+        &mut self,
+        selector: Option<&Expr>,
+        arms: &[SwitchArm],
+        span: Span,
+    ) {
+        let selector_type = selector.and_then(|selector| self.analyze_expr(selector));
+        let selector_key = selector.and_then(|selector| self.known_const_switch_key(selector));
+        let selector_qualifier = selector_type.map_or(Qualifier::Const, |ty| ty.qualifier);
+        let mut reachable_condition_qualifier = selector_qualifier;
+        let mut static_selection_open = selector.is_none() || selector_key.is_some();
+        let mut dynamic_tail = selector.is_some() && selector_key.is_none();
+        self.compatibility.supported.push(FeatureUse {
+            feature: "switch".to_owned(),
+            span,
+        });
+
+        for arm in arms {
+            let arm_reachable = dynamic_tail || static_selection_open;
+            let condition_value = if selector.is_none() {
+                arm.condition
+                    .as_ref()
+                    .and_then(|condition| self.known_const_bool_value(condition))
+            } else {
+                None
+            };
+            let case_key = if selector.is_some() {
+                arm.condition
+                    .as_ref()
+                    .and_then(|condition| self.known_const_switch_key(condition))
+            } else {
+                None
+            };
+            let mut arm_qualifier = selector_qualifier;
+            if let Some(condition) = &arm.condition
+                && let Some(condition_type) = self.analyze_expr(condition)
+            {
+                arm_qualifier = strongest_qualifier(arm_qualifier, condition_type.qualifier);
+                if arm_reachable {
+                    reachable_condition_qualifier = strongest_qualifier(
+                        reachable_condition_qualifier,
+                        condition_type.qualifier,
+                    );
+                }
+                if selector.is_none() {
+                    self.expect_bool(condition_type, condition.span);
+                }
+            }
+            if arm_reachable {
+                arm_qualifier = reachable_condition_qualifier;
+            }
+
+            let commit_symbol_effects = if dynamic_tail {
+                true
+            } else if !static_selection_open {
+                false
+            } else if selector.is_none() {
+                match (&arm.condition, condition_value) {
+                    (Some(_), Some(false)) => false,
+                    (Some(_), Some(true)) | (None, _) => {
+                        static_selection_open = false;
+                        true
+                    }
+                    (Some(_), None) => {
+                        dynamic_tail = true;
+                        true
+                    }
+                }
+            } else if let Some(selector_key) = selector_key.as_ref() {
+                match (&arm.condition, case_key.as_ref()) {
+                    (Some(_), Some(case_key)) if case_key == selector_key => {
+                        static_selection_open = false;
+                        true
+                    }
+                    (Some(_), Some(_)) => false,
+                    (Some(_), None) => {
+                        dynamic_tail = true;
+                        true
+                    }
+                    (None, _) => {
+                        static_selection_open = false;
+                        true
+                    }
+                }
+            } else {
+                true
+            };
+
+            if commit_symbol_effects {
+                self.analyze_switch_stmt_arm_result(&arm.result, arm_qualifier);
+            } else {
+                self.analyze_without_symbol_effects(|analyzer| {
+                    analyzer.analyze_switch_stmt_arm_result(&arm.result, arm_qualifier);
+                });
+            }
+        }
+    }
+
+    fn analyze_switch_stmt_arm_result(
+        &mut self,
+        result: &SwitchArmResult,
+        arm_qualifier: Qualifier,
+    ) {
+        match result {
+            SwitchArmResult::Expr(expr) => {
+                self.analyze_expr(expr);
+            }
+            SwitchArmResult::Block(statements) => {
+                self.block_depth += 1;
+                self.assignment_qualifier_context.push(arm_qualifier);
+                self.scope.push_scope();
+                for statement in statements {
+                    self.analyze_stmt(statement);
+                }
+                self.scope.pop_scope();
+                self.assignment_qualifier_context.pop();
+                self.block_depth -= 1;
             }
         }
     }
@@ -426,67 +852,68 @@ impl Analyzer {
             span,
         });
 
-        let counter_type = PineType::new(
-            strongest_qualifier(
-                from_type.unwrap_or(UNKNOWN).qualifier,
-                to_type.unwrap_or(UNKNOWN).qualifier,
-            ),
-            ValueKind::Int,
-        );
+        let loop_qualifier = [from_type, to_type, step_type]
+            .into_iter()
+            .flatten()
+            .map(|pine_type| pine_type.qualifier)
+            .fold(Qualifier::Const, strongest_qualifier);
+        let counter_type = PineType::new(loop_qualifier, ValueKind::Int);
         self.block_depth += 1;
         self.loop_depth += 1;
+        self.assignment_qualifier_context.push(loop_qualifier);
         self.scope.push_scope();
         let counter_symbol =
             self.define_local_symbol(counter, counter_type, None, self.function_depth == 0);
         self.bind_symbol(counter, span, counter_symbol);
+        self.symbol_tuple_element_types.remove(&counter_symbol.id);
+        self.symbol_tuple_user_type_arrays
+            .remove(&counter_symbol.id);
 
-        let return_type = if let Some((last, prefix)) = body.split_last() {
+        let mut return_type = if let Some((last, prefix)) = body.split_last() {
             for statement in prefix {
                 self.analyze_stmt(statement);
             }
-            match &last.kind {
-                StmtKind::Expr(expr) => {
-                    let pine_type = self.analyze_expr(expr);
-                    if matches!(
-                        pine_type,
-                        Some(PineType {
-                            kind: ValueKind::Void,
-                            ..
-                        })
-                    ) {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_LOOP_RETURN",
-                            "for expression body must end with a value-producing expression",
-                            expr.span,
-                        ));
-                        None
-                    } else {
-                        pine_type
-                    }
-                }
-                _ => {
-                    self.analyze_stmt(last);
-                    self.diagnostics.push(Diagnostic::error(
-                        "E_LOOP_RETURN",
-                        "for expression body must end with an expression",
-                        last.span,
-                    ));
-                    None
-                }
-            }
+            self.analyze_loop_expr_body_return(last, "for")
         } else {
             self.diagnostics.push(Diagnostic::error(
                 "E_LOOP_RETURN",
-                "for expression body must end with an expression",
+                "for expression body must end with a value-producing expression",
                 span,
             ));
             None
         };
 
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
+            && !self.mark_loop_map(span, body)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RETURN",
+                "for expression map result must resolve to a known map template",
+                span,
+            ));
+            return_type = None;
+        }
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+            && !self.mark_loop_user_type_array(span, body)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RETURN",
+                "for expression UDT array result must resolve to a known element identity",
+                span,
+            ));
+            return_type = None;
+        }
+
         self.scope.pop_scope();
+        self.assignment_qualifier_context.pop();
         self.loop_depth -= 1;
         self.block_depth -= 1;
-        return_type
+        return_type.map(|pine_type| {
+            PineType::new(
+                strongest_qualifier(loop_qualifier, pine_type.qualifier),
+                pine_type.kind,
+            )
+        })
     }
 
     pub(crate) fn analyze_for_in_expr(
@@ -500,17 +927,15 @@ impl Analyzer {
         let Some(iterable_type) = self.analyze_expr(iterable) else {
             self.unsupported(
                 "for...in expression",
-                "for...in expressions currently support array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, same-local or same-imported scalar-field UDT array, and matrix iterables only",
+                "for...in expressions currently support array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, same-local or same-imported scalar-tree UDT array, matrix iterables, and scalar maps with key-only or key/value loop variables",
                 span,
             );
             return None;
         };
-        let Some((value_kind, user_type_name)) =
-            for_in_expr_value_kind(iterable_type, self, iterable)
-        else {
+        let Some(kinds) = for_in_expr_kinds(iterable_type, self, iterable, index.is_some()) else {
             self.unsupported(
                 "for...in expression",
-                "for...in expressions currently support array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, same-local or same-imported scalar-field UDT array, and matrix iterables only",
+                "for...in expressions currently support array<int>, array<float>, array<bool>, array<string>, array<color>, array<label>, array<line>, array<linefill>, array<polyline>, array<box>, array<table>, array<chart.point>, same-local or same-imported scalar-tree UDT array, matrix iterables, and scalar maps with key-only or key/value loop variables",
                 span,
             );
             return None;
@@ -523,28 +948,37 @@ impl Analyzer {
 
         self.block_depth += 1;
         self.loop_depth += 1;
+        self.assignment_qualifier_context
+            .push(iterable_type.qualifier);
         self.scope.push_scope();
         if let Some(index) = index {
             let index_symbol = self.define_local_symbol(
                 index,
-                PineType::new(Qualifier::Series, ValueKind::Int),
+                PineType::new(
+                    Qualifier::Series,
+                    kinds.index_kind.unwrap_or(ValueKind::Int),
+                ),
                 None,
                 self.function_depth == 0,
             );
             self.bind_symbol(index, span, index_symbol);
+            self.symbol_tuple_element_types.remove(&index_symbol.id);
+            self.symbol_tuple_user_type_arrays.remove(&index_symbol.id);
         }
         let value_symbol = self.define_local_symbol(
             value,
-            PineType::new(Qualifier::Series, value_kind),
+            PineType::new(Qualifier::Series, kinds.value_kind),
             None,
             self.function_depth == 0,
         );
         self.bind_symbol(value, span, value_symbol);
-        if let Some(type_name) = user_type_name {
+        self.symbol_tuple_element_types.remove(&value_symbol.id);
+        self.symbol_tuple_user_type_arrays.remove(&value_symbol.id);
+        if let Some(type_name) = kinds.user_type_name {
             self.mark_symbol_id_user_type(value_symbol.id, type_name);
         }
 
-        let return_type = if let Some((last, prefix)) = body.split_last() {
+        let mut return_type = if let Some((last, prefix)) = body.split_last() {
             for statement in prefix {
                 self.analyze_stmt(statement);
             }
@@ -560,7 +994,7 @@ impl Analyzer {
                     ) {
                         self.diagnostics.push(Diagnostic::error(
                             "E_LOOP_RETURN",
-                            "for expression body must end with a value-producing expression",
+                            "for...in expression body must end with a value-producing expression",
                             expr.span,
                         ));
                         None
@@ -586,11 +1020,27 @@ impl Analyzer {
                         pine_type
                     }
                 }
+                StmtKind::For {
+                    counter,
+                    from,
+                    to,
+                    step,
+                    body,
+                } => self.analyze_for_expr(counter, from, to, step.as_ref(), body, last.span),
+                StmtKind::ForIn {
+                    index,
+                    value,
+                    iterable,
+                    body,
+                } => self.analyze_for_in_expr(index.as_deref(), value, iterable, body, last.span),
+                StmtKind::While { condition, body } => {
+                    self.analyze_while_expr(condition, body, last.span)
+                }
                 _ => {
                     self.analyze_stmt(last);
                     self.diagnostics.push(Diagnostic::error(
                         "E_LOOP_RETURN",
-                        "for expression body must end with an expression",
+                        "for...in expression body must end with a value-producing expression",
                         last.span,
                     ));
                     None
@@ -599,16 +1049,43 @@ impl Analyzer {
         } else {
             self.diagnostics.push(Diagnostic::error(
                 "E_LOOP_RETURN",
-                "for expression body must end with an expression",
+                "for...in expression body must end with a value-producing expression",
                 span,
             ));
             None
         };
 
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
+            && !self.mark_loop_map(span, body)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RETURN",
+                "for...in expression map result must resolve to a known map template",
+                span,
+            ));
+            return_type = None;
+        }
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+            && !self.mark_loop_user_type_array(span, body)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RETURN",
+                "for...in expression UDT array result must resolve to a known element identity",
+                span,
+            ));
+            return_type = None;
+        }
+
         self.scope.pop_scope();
+        self.assignment_qualifier_context.pop();
         self.loop_depth -= 1;
         self.block_depth -= 1;
-        return_type
+        return_type.map(|pine_type| {
+            PineType::new(
+                strongest_qualifier(iterable_type.qualifier, pine_type.qualifier),
+                pine_type.kind,
+            )
+        })
     }
 
     pub(crate) fn analyze_while_expr(
@@ -626,17 +1103,46 @@ impl Analyzer {
             span,
         });
 
+        let condition_qualifier =
+            condition_type.map_or(Qualifier::Const, |pine_type| pine_type.qualifier);
         self.block_depth += 1;
         self.loop_depth += 1;
-        let return_type = self.analyze_expr_branch_return(body, "while", span);
+        self.assignment_qualifier_context.push(condition_qualifier);
+        let mut return_type = self.analyze_expr_branch_return(body, "while", span, true);
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
+            && !self.mark_loop_map(span, body)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RETURN",
+                "while expression map result must resolve to a known map template",
+                span,
+            ));
+            return_type = None;
+        }
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserTypeArray)
+            && !self.mark_loop_user_type_array(span, body)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RETURN",
+                "while expression UDT array result must resolve to a known element identity",
+                span,
+            ));
+            return_type = None;
+        }
+        self.assignment_qualifier_context.pop();
         self.loop_depth -= 1;
         self.block_depth -= 1;
 
-        return_type
+        return_type.map(|pine_type| {
+            PineType::new(
+                strongest_qualifier(condition_qualifier, pine_type.qualifier),
+                pine_type.kind,
+            )
+        })
     }
 
     pub(crate) fn validate_history_offset(&mut self, offset: &Expr, offset_type: Option<PineType>) {
-        if let Some(value) = const_int_value(offset) {
+        if let Some(value) = self.known_history_offset_int_value(offset) {
             if value < 0 {
                 self.unsupported(
                     "negative_history_offset",
@@ -660,9 +1166,12 @@ impl Analyzer {
             return;
         }
 
+        let actual = pine_type_name(offset_type);
         self.unsupported(
             "dynamic_history_offset",
-            "dynamic history offsets require an integer expression in the current supported subset",
+            &format!(
+                "dynamic history offsets require an integer expression in the current supported subset; got {actual}"
+            ),
             offset.span,
         );
     }
@@ -677,6 +1186,13 @@ impl Analyzer {
                 span,
             });
             return Some(PineType::new(Qualifier::Const, ValueKind::Color));
+        }
+        if let Some(pine_type) = pine_builtins::builtin_series_value_type(name) {
+            self.compatibility.supported.push(FeatureUse {
+                feature: name.to_owned(),
+                span,
+            });
+            return Some(pine_type);
         }
         if pine_builtins::named_float_constant(name).is_some() {
             self.compatibility.supported.push(FeatureUse {
@@ -698,13 +1214,6 @@ impl Analyzer {
                 span,
             });
             return Some(PineType::new(Qualifier::Const, ValueKind::String));
-        }
-        if let Some(pine_type) = pine_builtins::builtin_series_value_type(name) {
-            self.compatibility.supported.push(FeatureUse {
-                feature: name.to_owned(),
-                span,
-            });
-            return Some(pine_type);
         }
 
         self.check_feature_name(name, span);
@@ -743,12 +1252,10 @@ impl Analyzer {
             self.diagnostics.push(Diagnostic::error(
                 "E_ASSIGN_TYPE",
                 format!(
-                    "cannot assign {:?} {:?} to `{}` of type {:?} {:?}",
-                    value_type.qualifier,
-                    value_type.kind,
+                    "cannot assign {} to `{}` of type {}",
+                    pine_type_name(value_type),
                     name,
-                    target_type.qualifier,
-                    target_type.kind
+                    pine_type_name(target_type)
                 ),
                 span,
             ));
@@ -765,14 +1272,11 @@ impl Analyzer {
             UnaryOp::Plus | UnaryOp::Minus if is_numeric(expr_type.kind) => Some(expr_type),
             UnaryOp::Not if expr_type.kind == ValueKind::Bool => Some(expr_type),
             _ => {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_OPERATOR_TYPE",
-                    format!(
-                        "operator {:?} does not accept {:?} {:?}",
-                        op, expr_type.qualifier, expr_type.kind
-                    ),
-                    span,
-                ));
+                let expected = match op {
+                    UnaryOp::Plus | UnaryOp::Minus => "numeric",
+                    UnaryOp::Not => "bool",
+                };
+                self.unary_operator_error(op, expected, expr_type, span);
                 None
             }
         }
@@ -786,26 +1290,61 @@ impl Analyzer {
         span: Span,
     ) -> Option<PineType> {
         match op {
-            BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div | BinaryOp::Mod => {
+            BinaryOp::Add => {
+                if left_type.kind == ValueKind::String && right_type.kind == ValueKind::String {
+                    Some(PineType::new(
+                        strongest_qualifier(left_type.qualifier, right_type.qualifier),
+                        ValueKind::String,
+                    ))
+                } else if is_numeric(left_type.kind) && is_numeric(right_type.kind) {
+                    Some(PineType::new(
+                        strongest_qualifier(left_type.qualifier, right_type.qualifier),
+                        numeric_result_kind(op, left_type.kind, right_type.kind),
+                    ))
+                } else {
+                    self.operator_error(
+                        op,
+                        "numeric or string operands",
+                        left_type,
+                        right_type,
+                        span,
+                    );
+                    None
+                }
+            }
+            BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div | BinaryOp::Mod => {
                 if is_numeric(left_type.kind) && is_numeric(right_type.kind) {
                     Some(PineType::new(
                         strongest_qualifier(left_type.qualifier, right_type.qualifier),
                         numeric_result_kind(op, left_type.kind, right_type.kind),
                     ))
                 } else {
-                    self.operator_error(op, left_type, right_type, span);
+                    self.operator_error(op, "numeric operands", left_type, right_type, span);
                     None
                 }
             }
-            BinaryOp::Eq
-            | BinaryOp::NotEq
-            | BinaryOp::Gt
-            | BinaryOp::Gte
-            | BinaryOp::Lt
-            | BinaryOp::Lte => Some(PineType::new(
-                strongest_qualifier(left_type.qualifier, right_type.qualifier),
-                ValueKind::Bool,
-            )),
+            BinaryOp::Eq | BinaryOp::NotEq => {
+                if common_kind(left_type.kind, right_type.kind).is_some() {
+                    Some(PineType::new(
+                        strongest_qualifier(left_type.qualifier, right_type.qualifier),
+                        ValueKind::Bool,
+                    ))
+                } else {
+                    self.operator_error(op, "comparable operands", left_type, right_type, span);
+                    None
+                }
+            }
+            BinaryOp::Gt | BinaryOp::Gte | BinaryOp::Lt | BinaryOp::Lte => {
+                if is_numeric(left_type.kind) && is_numeric(right_type.kind) {
+                    Some(PineType::new(
+                        strongest_qualifier(left_type.qualifier, right_type.qualifier),
+                        ValueKind::Bool,
+                    ))
+                } else {
+                    self.operator_error(op, "numeric operands", left_type, right_type, span);
+                    None
+                }
+            }
             BinaryOp::And | BinaryOp::Or => {
                 if left_type.kind == ValueKind::Bool && right_type.kind == ValueKind::Bool {
                     Some(PineType::new(
@@ -813,16 +1352,36 @@ impl Analyzer {
                         ValueKind::Bool,
                     ))
                 } else {
-                    self.operator_error(op, left_type, right_type, span);
+                    self.operator_error(op, "bool operands", left_type, right_type, span);
                     None
                 }
             }
         }
     }
 
+    pub(crate) fn unary_operator_error(
+        &mut self,
+        op: UnaryOp,
+        expected: &str,
+        expr_type: PineType,
+        span: Span,
+    ) {
+        self.diagnostics.push(Diagnostic::error(
+            "E_OPERATOR_TYPE",
+            format!(
+                "operator `{}` expects {}, got {}",
+                unary_operator_label(op),
+                expected,
+                pine_type_name(expr_type)
+            ),
+            span,
+        ));
+    }
+
     pub(crate) fn operator_error(
         &mut self,
         op: BinaryOp,
+        expected: &str,
         left_type: PineType,
         right_type: PineType,
         span: Span,
@@ -830,8 +1389,11 @@ impl Analyzer {
         self.diagnostics.push(Diagnostic::error(
             "E_OPERATOR_TYPE",
             format!(
-                "operator {:?} does not accept {:?} {:?} and {:?} {:?}",
-                op, left_type.qualifier, left_type.kind, right_type.qualifier, right_type.kind
+                "operator `{}` expects {}, got {} and {}",
+                binary_operator_label(op),
+                expected,
+                pine_type_name(left_type),
+                pine_type_name(right_type)
             ),
             span,
         ));
@@ -841,10 +1403,7 @@ impl Analyzer {
         if pine_type.kind != ValueKind::Bool {
             self.diagnostics.push(Diagnostic::error(
                 "E_CONDITION_TYPE",
-                format!(
-                    "condition must be bool, got {:?} {:?}",
-                    pine_type.qualifier, pine_type.kind
-                ),
+                format!("condition must be bool, got {}", pine_type_name(pine_type)),
                 span,
             ));
         }
@@ -855,8 +1414,8 @@ impl Analyzer {
             self.diagnostics.push(Diagnostic::error(
                 "E_LOOP_RANGE_TYPE",
                 format!(
-                    "for loop range must be int, got {:?} {:?}",
-                    pine_type.qualifier, pine_type.kind
+                    "for loop range must be int, got {}",
+                    pine_type_name(pine_type)
                 ),
                 span,
             ));
@@ -864,7 +1423,7 @@ impl Analyzer {
     }
 
     pub(crate) fn expect_non_zero_loop_step(&mut self, step: &Expr) {
-        if const_int_value(step) == Some(0) {
+        if self.known_const_int_value(step) == Some(0) {
             self.diagnostics.push(Diagnostic::error(
                 "E_LOOP_STEP",
                 "for loop step cannot be zero",
@@ -878,26 +1437,56 @@ impl Analyzer {
         condition_type: PineType,
         then_type: PineType,
         else_type: PineType,
+        condition_value: Option<bool>,
         span: Span,
     ) -> Option<PineType> {
         let Some(kind) = common_kind(then_type.kind, else_type.kind) else {
             self.diagnostics.push(Diagnostic::error(
                 "E_BRANCH_TYPE",
                 format!(
-                    "ternary branches have incompatible types {:?} and {:?}",
-                    then_type.kind, else_type.kind
+                    "ternary branches have incompatible types {} and {}",
+                    value_kind_name(then_type.kind),
+                    value_kind_name(else_type.kind)
                 ),
                 span,
             ));
             return None;
         };
+        let branch_qualifier = match condition_value {
+            Some(true) => then_type.qualifier,
+            Some(false) => else_type.qualifier,
+            None => strongest_qualifier(then_type.qualifier, else_type.qualifier),
+        };
 
         Some(PineType::new(
-            strongest_qualifier(
-                condition_type.qualifier,
-                strongest_qualifier(then_type.qualifier, else_type.qualifier),
-            ),
+            strongest_qualifier(condition_type.qualifier, branch_qualifier),
             kind,
         ))
+    }
+}
+
+fn unary_operator_label(op: UnaryOp) -> &'static str {
+    match op {
+        UnaryOp::Plus => "+",
+        UnaryOp::Minus => "-",
+        UnaryOp::Not => "not",
+    }
+}
+
+fn binary_operator_label(op: BinaryOp) -> &'static str {
+    match op {
+        BinaryOp::Add => "+",
+        BinaryOp::Sub => "-",
+        BinaryOp::Mul => "*",
+        BinaryOp::Div => "/",
+        BinaryOp::Mod => "%",
+        BinaryOp::Eq => "==",
+        BinaryOp::NotEq => "!=",
+        BinaryOp::Gt => ">",
+        BinaryOp::Gte => ">=",
+        BinaryOp::Lt => "<",
+        BinaryOp::Lte => "<=",
+        BinaryOp::And => "and",
+        BinaryOp::Or => "or",
     }
 }

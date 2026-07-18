@@ -1,0 +1,6 @@
+//@version=5
+strategy("Unsupported strategy.close named const quantity")
+strategy.entry("L", strategy.long, qty=2)
+percent_base = 0
+percent = percent_base
+strategy.close("L", qty_percent=percent)

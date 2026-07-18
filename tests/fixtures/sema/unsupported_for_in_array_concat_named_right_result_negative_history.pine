@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported for-in array.concat named right result negative history")
+left = array.new<int>(0)
+right = array.new<int>(1, 0)
+values = array.concat(id = left, id2 = right)
+length = for value in values
+    -1
+plot(close[length])

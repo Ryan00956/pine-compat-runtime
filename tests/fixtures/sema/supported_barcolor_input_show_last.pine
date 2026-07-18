@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported barcolor Input Show Last")
+
+count = input.int(5, "Show last")
+
+barcolor(color.green, show_last=count)

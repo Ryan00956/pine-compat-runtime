@@ -3,7 +3,7 @@
 Status: closed design gate; statement-form `array<int>`, `array<float>`,
 `array<bool>`, `array<string>`, `array<color>`, `array<label>`, `array<line>`,
 `array<linefill>`, `array<polyline>`, `array<box>`, `array<table>`,
-`array<chart.point>`, and same-local scalar-field UDT array runtime subsets plus
+`array<chart.point>`, and same-local scalar-tree UDT array runtime subsets plus
 the `array<int>` mutation-policy fixture slice and ordinary `var` scalar-array
 realtime rollback fixture plus scalar typed-array `varip` interaction fixture
 implemented, plus statement-form matrix row iteration and expression-form
@@ -45,7 +45,7 @@ Current evidence:
   integer bounds and executes the first `array<int>`, `array<float>`,
   `array<bool>`, `array<string>`, `array<color>`, `array<label>`,
   `array<line>`, `array<linefill>`, `array<polyline>`, `array<box>`,
-  `array<table>`, `array<chart.point>`, and same-local scalar-field UDT array
+  `array<table>`, `array<chart.point>`, and same-local scalar-tree UDT array
   `for...in` subsets with initial-length iteration.
 - `tests/fixtures/runtime/for_in.pine` records the current positive
   statement-form `for value in values` `array<int>` subset.
@@ -78,7 +78,7 @@ Current evidence:
 - `tests/fixtures/runtime/for_in_chart_point.pine` records chart.point array
   value-copy loop variables with field reads and local field mutation that does
   not write back to the source array slot.
-- `tests/fixtures/runtime/for_in_udt.pine` records same-local scalar-field UDT
+- `tests/fixtures/runtime/for_in_udt.pine` records same-local scalar-tree UDT
   array value-copy loop variables with field reads and local field mutation that
   does not write back to the source array slot.
 - `tests/fixtures/runtime/for_in_control_flow.pine` records direct `break`,
@@ -102,8 +102,11 @@ Current evidence:
 - `tests/fixtures/regressions/for_in_pop_shrink_bounds.pine` and
   `tests/fixtures/regressions/for_in_clear_shrink_bounds.pine` keep
   shrink-to-out-of-bounds iteration aligned with `array.get` runtime errors.
-- `tests/fixtures/sema/unsupported_for_in.pine` keeps map and other
-  unsupported iterable families rejected.
+- `tests/fixtures/sema/unsupported_for_in.pine` keeps remaining unsupported
+  iterable families rejected.
+- `tests/fixtures/runtime/map_for_in.pine` records statement and expression
+  direct scalar-map iteration where a single loop variable receives the key and
+  `[key, value]` receives the key and value in insertion order.
 - `tests/fixtures/runtime/matrix_for_in.pine` covers statement-form
   `for...in` over runtime-owned matrix row snapshots, including the narrow
   index/value form.
@@ -137,7 +140,7 @@ Current evidence:
   the accepted semantic subset for expression-form `array<chart.point>`
   iteration.
 - `tests/fixtures/sema/supported_for_in_expression_udt.pine` records the
-  accepted semantic subset for expression-form same-local scalar-field UDT array
+  accepted semantic subset for expression-form same-local scalar-tree UDT array
   iteration.
 - `tests/fixtures/sema/supported_for_in_expression_matrix.pine` records the
   accepted semantic subset for expression-form runtime-owned matrix row
@@ -154,7 +157,7 @@ Current evidence:
 
 Do not widen beyond the current scalar-array, label array, line array, linefill
 array, polyline array, box array, table array, chart.point array, same-local
-scalar-field UDT array, runtime-owned matrix row, and expression-form
+scalar-tree UDT array, runtime-owned matrix row, and expression-form
 scalar-array, drawing-id-array, chart.point-array, and same-local scalar-field
 UDT-array plus matrix-row subset until a runtime slice implements the behavior
 and updates fixtures, conformance, snapshots, and docs together.
@@ -204,7 +207,7 @@ Initial parser policy:
   `array<int>`, `array<float>`, `array<bool>`, `array<string>`,
   `array<color>`, `array<label>`, `array<line>`, `array<linefill>`,
   `array<polyline>`, `array<box>`, `array<table>`, `array<chart.point>`, and
-  same-local or same-imported scalar-field UDT arrays only;
+  same-local or same-imported scalar-tree UDT arrays only;
 - require a newline after the iterable expression;
 - reuse the existing indented-block parser for the body;
 - preserve spans for the loop variable, iterable expression, and body;
@@ -234,7 +237,7 @@ First positive iterable families:
 
 Deferred iterable families:
 
-- typed imported or non-scalar-field UDT arrays;
+- typed imported or non-scalar-tree UDT arrays;
 - map keys, values, or entries;
 - matrix rows, columns, or cells;
 - nested collections;
@@ -246,7 +249,8 @@ Rationale:
 - label, line, linefill, polyline, box, and table ids use the existing shallow
   object-id storage and mutation semantics;
 - broader UDT values need copy/mutation policy for structured values;
-- map iteration needs key/value ordering rules;
+- scalar map iteration now uses insertion order, with key-only and key/value
+  loop-variable binding rules;
 - matrix iteration needs row/column traversal semantics.
 
 ## Runtime Iteration Policy
@@ -299,7 +303,7 @@ First supported-array policy:
 - mutating through any alias mutates the same backing store;
 - the loop's initial length is taken from the evaluated array id;
 - `array.copy` before iteration creates an independent iteration source;
-- scalar, supported drawing id, chart.point, and same-local scalar-field UDT element
+- scalar, supported drawing id, chart.point, and same-local scalar-tree UDT element
   variables are copied values and have no alias to array slots;
 - label, line, linefill, polyline, box, and table element variables are
   shallow-copied ids, so drawing setters or lifecycle operations mutate the
@@ -308,7 +312,7 @@ First supported-array policy:
 
 Deferred policies:
 
-- typed imported or non-scalar-field UDT arrays need the broader UDT array
+- typed imported or non-scalar-tree UDT arrays need the broader UDT array
   design gate rules;
 - nested collections need deep-copy or id-reference policy before iteration.
 
@@ -342,7 +346,7 @@ When support starts, unsupported variants should fail with precise diagnostics:
 - tuple/multi-value destructuring beyond the supported index/value form;
 - map iteration before storage and order rules exist;
 - expression-form `for...in` beyond the fixture-backed scalar-array,
-  drawing-id-array, chart.point-array, same-local scalar-field UDT-array, and
+  drawing-id-array, chart.point-array, same-local scalar-tree UDT-array, and
   matrix-row subset;
 - mutation pattern that violates the selected iteration policy.
 
@@ -370,14 +374,14 @@ Recommended future slices:
     `array<bool>`, `array<string>`, `array<color>`, `array<label>`,
     `array<line>`, `array<linefill>`, `array<polyline>`, `array<box>`,
     `array<table>`, `array<chart.point>`, and same-local plus same-imported
-    scalar-field UDT arrays are done.
+    scalar-tree UDT arrays are done.
 13. Statement-form iteration over runtime-owned matrix rows is done, including
     index/value row numbers and loop-entry row snapshots.
 14. Expression-form `for value in values` over scalar arrays, drawing-id
-    arrays, chart.point arrays, same-local scalar-field UDT arrays, and
+    arrays, chart.point arrays, same-local scalar-tree UDT arrays, and
     runtime-owned matrix rows is done, including last-result, zero-iteration,
     typed-`na`, `break`, and `continue` behavior.
-15. Index/value iteration over typed imported or non-scalar-field UDT arrays and
+15. Index/value iteration over typed imported or non-scalar-tree UDT arrays and
     map iteration only after their specific design gates and storage rules are
     implemented.
 
@@ -403,11 +407,11 @@ This design gate closes the planning prerequisite, the first positive
 `array<int>`, `array<float>`, `array<bool>`, `array<string>`, `array<color>`,
 `array<label>`, `array<line>`, `array<linefill>`, `array<polyline>`,
 `array<box>`, `array<table>`, `array<chart.point>`, and same-local
-scalar-field UDT statement-form slices, the `array<int>`, `array<float>`,
+scalar-tree UDT statement-form slices, the `array<int>`, `array<float>`,
 `array<bool>`, and
 `array<string>`, `array<color>`, `array<label>`, `array<line>`,
 `array<linefill>`, `array<polyline>`, `array<box>`, `array<table>`,
-`array<chart.point>`, and same-local scalar-field UDT array index/value
+`array<chart.point>`, and same-local scalar-tree UDT array index/value
 statement-form slices, the `array<int>` mutation-policy fixture slice, the
 direct `break`/`continue` and loop-body local declaration fixture
 slice, the stateful built-in callsite fixture slice, the zero-iteration
@@ -417,7 +421,7 @@ scalar typed-array `varip` interaction fixture slice, plus explicit
 incremental-vs-historical parity coverage for the scalar-array runtime fixtures,
 and the runtime-owned matrix row statement-form slice with optional row indexes
 and loop-entry row snapshots, plus the expression-form scalar-array,
-drawing-id-array, chart.point-array, and same-local scalar-field UDT-array
+drawing-id-array, chart.point-array, and same-local scalar-tree UDT-array
 plus matrix-row slice with last-result, zero-iteration, typed-`na`, `break`,
 `continue`, and optional index-local fixtures. Broader `for...in` iteration
 remains unsupported until later slices implement fixture-backed analysis,

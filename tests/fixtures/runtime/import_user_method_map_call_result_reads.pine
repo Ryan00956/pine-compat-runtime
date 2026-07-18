@@ -1,0 +1,58 @@
+//@version=6
+import user/udt/1 as left
+import user/udt/1 as right
+indicator("Imported user-method map call-result reads")
+
+left_point = left.Point.new(1.0)
+right_point = right.Point.new(2.0)
+
+copied = left_point.exposeMap().copy()
+copied.put("copy", 9.0)
+
+mutated = left_point.exposeMap()
+mutated.put("value", 7.0)
+
+left_point.exposeMap().put("direct", 8.0)
+left_point.exposeIntMap().put(1, "one")
+
+merge_source = map.new<string, float>()
+merge_source.put("open", 4.0)
+merge_source.put("extra", 5.0)
+int_merge_source = map.new<int, string>()
+int_merge_source.put(1, "one")
+
+plot(left_point.exposeMap().size(), "size")
+plot(na(left_point.exposeMap().get("missing")) ? 1 : 0, "get")
+plot(left_point.exposeMap().contains("missing") ? 0 : 1, "contains")
+plot(left_point.exposeMap().copy().size(), "copy_chain")
+plot(copied.get("copy"), "copy_value")
+plot(na(left_point.exposeMap().get("value")) ? 1 : 0, "fresh_independence")
+plot(left_point.exposeIntMap().size(), "int_string")
+plot(left_point.exposeBoolColorMap().size(), "bool_color")
+plot(left_point.exposeColorBoolMap().size(), "color_bool")
+plot(left_point.exposeMapBlock().size(), "block_return")
+plot(left_point.exposeMapNested().size(), "nested_return")
+plot(left_point.exposeMapIf(copied=true).size(), "named_control_flow")
+plot(left.exposeMap(left_point).size(), "alias_qualified")
+plot(left.Point.new(3.0).exposeMap().copy().size(), "constructor_receiver")
+plot(right_point.exposeMap().size(), "dual_alias")
+plot(left_point.exposeMap().copy().copy().size(), "nested_copy")
+plot(left_point.exposeMap().keys().size(), "keys_size")
+plot(left_point.exposeIntMap().keys().copy().size(), "int_keys_size")
+plot(right_point.exposeMap().copy().keys().size(), "dual_alias_keys_size")
+plot(left_point.exposeMap().values().size(), "values_size")
+plot(left_point.exposeIntMap().values().copy().size(), "int_values_size")
+plot(right_point.exposeMap().copy().values().size(), "dual_alias_values_size")
+plot(left_point.exposeMap().size() == 0 and left_point.exposeIntMap().size() == 0 ? 1 : 0, "call_result_put_fresh_method_isolation")
+
+left_point.exposeMap().clear()
+left_point.exposeIntMap().clear()
+plot(left_point.exposeMap().size() == 0 and left_point.exposeIntMap().size() == 0 ? 1 : 0, "call_result_clear_fresh_method_isolation")
+
+left_point.exposeMap().remove("missing")
+left_point.exposeIntMap().remove(1)
+plot(left_point.exposeMap().size() == 0 and left_point.exposeIntMap().size() == 0 ? 1 : 0, "call_result_remove_fresh_method_isolation")
+
+left_point.exposeMap().put_all(merge_source)
+left_point.exposeIntMap().put_all(int_merge_source)
+plot(left_point.exposeMap().size() == 0 and left_point.exposeIntMap().size() == 0 and merge_source.size() == 2 and merge_source.get("open") == 4.0 and int_merge_source.size() == 1 ? 1 : 0, "call_result_put_all_fresh_method_isolation")

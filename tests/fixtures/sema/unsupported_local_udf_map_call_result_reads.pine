@@ -1,0 +1,30 @@
+//@version=6
+indicator("Unsupported local UDF map call-result reads")
+
+identity(id) => id
+
+noneResult() => na
+
+numberResult() => 1
+
+arrayResult() => array.from(1.0, 2.0)
+
+matrixResult() => matrix.new<float>(1, 1, 1.0)
+
+string_float = map.new<string, float>()
+
+bad_get_key = identity(string_float).get(1)
+bad_contains_key = identity(string_float).contains(1)
+bad_get_arity = identity(string_float).get("v", "extra")
+identity(string_float).put(1, 1.0)
+clear_result = identity(string_float).clear(1)
+identity(string_float).remove(1)
+identity(string_float).put_all(map.new<int, float>())
+copy_keys_helper = identity(string_float).copy().keys().contains("v")
+terminal_chain = identity(string_float).size().copy()
+none_size = noneResult().size()
+number_size = numberResult().size()
+array_contains = arrayResult().contains(1.0)
+matrix_contains = matrixResult().contains("v")
+
+plot(close)

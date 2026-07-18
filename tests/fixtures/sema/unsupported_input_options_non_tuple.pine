@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported input options non tuple")
+value = input.int(1, "Value", options=1)
+plot(value)

@@ -92,7 +92,7 @@ pub(crate) fn vwap_result_na(has_bands: bool) -> PineValue {
     }
 }
 
-pub(crate) fn vwap_arg<'a>(
+pub(crate) fn ta_arg<'a>(
     args: &'a [HirCallArg],
     positional: usize,
     name: &str,
@@ -107,19 +107,20 @@ pub(crate) fn vwap_arg<'a>(
         })
 }
 
+pub(crate) fn vwap_arg<'a>(
+    args: &'a [HirCallArg],
+    positional: usize,
+    name: &str,
+) -> Option<&'a HirExpr> {
+    ta_arg(args, positional, name)
+}
+
 pub(crate) fn pivot_point_arg<'a>(
     args: &'a [HirCallArg],
     positional: usize,
     name: &str,
 ) -> Option<&'a HirExpr> {
-    args.iter()
-        .find(|arg| arg.name.as_deref() == Some(name))
-        .map(|arg| &arg.value)
-        .or_else(|| {
-            args.get(positional)
-                .filter(|arg| arg.name.is_none())
-                .map(|arg| &arg.value)
-        })
+    ta_arg(args, positional, name)
 }
 
 pub(crate) fn pivot_na_levels() -> Vec<PineValue> {
@@ -384,6 +385,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.tema" => self.eval_tema(call_site_id, args),
             "ta.rma" => self.eval_rma(call_site_id, args),
             "ta.rsi" => self.eval_rsi(call_site_id, args),
+            "ta.rci" => self.eval_rci(call_site_id, args),
             "ta.macd" => self.eval_macd(call_site_id, args),
             "ta.tsi" => self.eval_tsi(call_site_id, args),
             "ta.cmo" => self.eval_cmo(call_site_id, args),

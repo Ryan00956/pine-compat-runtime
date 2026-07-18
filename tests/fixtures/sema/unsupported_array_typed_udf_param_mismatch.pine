@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported array typed UDF param mismatch")
+
+first_int(array<int> values) =>
+    array.get(values, 0)
+
+floats = array.from(close + 0.5, close + 10.5)
+plot(first_int(floats))

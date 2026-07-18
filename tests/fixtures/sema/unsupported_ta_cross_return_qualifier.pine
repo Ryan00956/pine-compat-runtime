@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported ta.cross return qualifier")
+
+ta.alma(close, 3, 0.85, 6, floor=ta.cross(close, open))
+ta.alma(close, 3, 0.85, 6, floor=ta.crossover(high, low))
+ta.alma(close, 3, 0.85, 6, floor=ta.crossunder(close, low))

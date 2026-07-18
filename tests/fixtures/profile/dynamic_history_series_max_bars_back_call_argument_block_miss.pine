@@ -1,0 +1,10 @@
+indicator("Profile dynamic series history call argument block miss", max_bars_back=10)
+src = close
+offset = bar_index == 0 ? 0 : 3
+plot(switch
+    bar_index >= 0 =>
+        length = 2
+        max_bars_back(src, length)
+        src[offset]
+    => src[offset]
+)

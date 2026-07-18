@@ -1,3 +1,0 @@
-//@version=5
-indicator("Unsupported ta.stdev Series Length")
-plot(ta.stdev(close, bar_index))

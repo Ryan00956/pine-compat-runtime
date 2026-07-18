@@ -2,12 +2,14 @@
 
 mod strategy;
 mod types;
+mod user_types;
 
 pub use strategy::{
     DEFAULT_STRATEGY_INITIAL_CAPITAL, StrategyCloseEntriesRule, StrategyCommission,
     StrategyDefaultQuantity, StrategyMarginSetting, StrategySettings,
 };
 pub use types::{PineType, Qualifier, ValueKind};
+pub use user_types::{HirUserTypeField, HirUserTypeIdentity, HirUserTypeInfo};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct SeriesId(pub u32);
@@ -20,12 +22,6 @@ pub struct VarSlotId(pub u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SymbolId(pub u32);
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct HirUserTypeIdentity {
-    pub source_id: usize,
-    pub type_name: String,
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PersistenceKind {
@@ -54,6 +50,7 @@ pub struct HirProgram {
     pub script_mode: ScriptMode,
     pub strategy_settings: StrategySettings,
     pub drawing_settings: DrawingSettings,
+    pub user_types: Vec<HirUserTypeInfo>,
     pub symbols: Vec<HirSymbol>,
     pub statements: Vec<HirStmt>,
     pub next_series_id: u32,
@@ -106,6 +103,10 @@ pub enum HirStmtKind {
         condition: HirExpr,
         then_branch: Vec<HirStmt>,
         else_branch: Vec<HirStmt>,
+    },
+    Switch {
+        selector: Option<HirExpr>,
+        arms: Vec<HirSwitchStmtArm>,
     },
     For {
         counter: SymbolId,
@@ -239,6 +240,12 @@ pub enum HirHistoryOffset {
 pub struct HirSwitchArm {
     pub condition: Option<HirExpr>,
     pub result: HirExpr,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct HirSwitchStmtArm {
+    pub condition: Option<HirExpr>,
+    pub body: Vec<HirStmt>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

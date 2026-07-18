@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{CallArg, Diagnostic, Span};
 
@@ -5,9 +7,10 @@ use super::{
     ImportedUdtConstructorArgError, ImportedUdtConstructorArgPlan, UdtConstructor,
     UdtFieldAccessStep, UserTypeIdentity,
 };
+use crate::analyzer::chart_points::{chart_point_field_index, chart_point_field_type};
 use crate::analyzer::context::Analyzer;
 use crate::compatibility::FeatureUse;
-use crate::types::{UNKNOWN, can_assign, strongest_qualifier};
+use crate::types::{UNKNOWN, can_assign, pine_type_name, strongest_qualifier, value_kind_name};
 
 impl Analyzer {
     pub(crate) fn imported_user_type_constructor_metadata(
@@ -18,28 +21,91 @@ impl Analyzer {
         self.imported_user_types.get(type_name)
     }
 
-    pub(crate) fn imported_user_type_has_scalar_fields(
+    pub(crate) fn imported_user_type_has_scalar_tree_fields(
         &self,
         user_type: &crate::modules::ImportedUserTypeInfo,
     ) -> bool {
-        user_type
-            .fields
-            .iter()
-            .all(|field| field.pine_type.is_some())
+        self.imported_user_type_has_scalar_tree_fields_inner(user_type, &mut HashSet::new())
     }
 
-    pub(crate) fn imported_user_type_constructor_has_scalar_fields(
+    fn imported_user_type_has_scalar_tree_fields_inner(
+        &self,
+        user_type: &crate::modules::ImportedUserTypeInfo,
+        seen: &mut HashSet<UserTypeIdentity>,
+    ) -> bool {
+        let identity = UserTypeIdentity {
+            source_id: user_type.identity.source_id,
+            name: user_type.identity.name.clone(),
+        };
+        if !seen.insert(identity.clone()) {
+            return false;
+        }
+        let supported = user_type.fields.iter().all(|field| {
+            if let Some(pine_type) = field.pine_type {
+                return matches!(
+                    pine_type.kind,
+                    ValueKind::Int
+                        | ValueKind::Float
+                        | ValueKind::Bool
+                        | ValueKind::String
+                        | ValueKind::Color
+                );
+            }
+            self.imported_user_type_field_user_type(user_type, field)
+                .is_some_and(|nested| {
+                    self.imported_user_type_has_scalar_tree_fields_inner(nested, seen)
+                })
+        });
+        seen.remove(&identity);
+        supported
+    }
+
+    pub(crate) fn imported_user_type_constructor_has_supported_fields(
         &self,
         callee_name: &str,
     ) -> Option<bool> {
         let user_type = self.imported_user_type_constructor_metadata(callee_name)?;
-        Some(self.imported_user_type_has_scalar_fields(user_type))
+        Some(
+            self.imported_user_type_constructor_fields_are_supported(
+                user_type,
+                &mut HashSet::new(),
+            ),
+        )
+    }
+
+    fn imported_user_type_constructor_fields_are_supported(
+        &self,
+        user_type: &crate::modules::ImportedUserTypeInfo,
+        seen: &mut HashSet<UserTypeIdentity>,
+    ) -> bool {
+        let identity = UserTypeIdentity {
+            source_id: user_type.identity.source_id,
+            name: user_type.identity.name.clone(),
+        };
+        if !seen.insert(identity.clone()) {
+            return false;
+        }
+        let supported = user_type.fields.iter().all(|field| {
+            if field.pine_type.is_some() {
+                return true;
+            }
+            self.imported_user_type_field_user_type(user_type, field)
+                .is_some_and(|nested| {
+                    self.imported_user_type_has_scalar_tree_fields_inner(nested, seen)
+                })
+        });
+        seen.remove(&identity);
+        supported
     }
 
     pub(crate) fn imported_user_type_history_is_supported(&self, type_name: &str) -> bool {
+        self.imported_user_types.contains_key(type_name)
+    }
+
+    pub(crate) fn imported_user_type_array_is_supported(&self, type_name: &str) -> bool {
         self.imported_user_types
             .get(type_name)
-            .is_some_and(|user_type| self.imported_user_type_has_scalar_fields(user_type))
+            .is_some_and(|user_type| self.imported_user_type_has_scalar_tree_fields(user_type))
     }
 
     pub(crate) fn imported_user_type_constructor_arg_plan(
@@ -91,8 +157,8 @@ impl Analyzer {
             )));
         }
         Some(Ok(ImportedUdtConstructorArgPlan {
-            scalar_fields: self
-                .imported_user_type_constructor_has_scalar_fields(callee_name)
+            supported_fields: self
+                .imported_user_type_constructor_has_supported_fields(callee_name)
                 .unwrap_or(false),
             field_arg_indices: resolved.into_iter().flatten().collect(),
         }))
@@ -117,11 +183,11 @@ impl Analyzer {
                 return Some(imported_error_constructor(&user_type));
             }
         };
-        if !plan.scalar_fields {
+        if !plan.supported_fields {
             self.diagnostics.push(Diagnostic::error(
                 "E_IMPORT_UNSUPPORTED_UDT",
                 format!(
-                    "imported UDT `{type_name}` is not supported; non-scalar or deferred field metadata remains unsupported"
+                    "imported UDT `{type_name}` is not supported; non-scalar or unresolved field metadata remains unsupported"
                 ),
                 span,
             ));
@@ -134,15 +200,17 @@ impl Analyzer {
             let field = &user_type.fields[field_index];
             let arg = &args[arg_index];
             let arg_type = self.analyze_expr(&arg.value).unwrap_or(UNKNOWN);
-            let expected_type = field
-                .pine_type
-                .expect("scalar imported UDT field has Pine type metadata");
-            if !can_assign(expected_type, arg_type) {
+            if !self.can_assign_imported_user_type_field(&user_type, field, &arg.value, arg_type) {
                 self.diagnostics.push(Diagnostic::error(
                     "E_UDT_CONSTRUCTOR_ARG",
                     format!(
-                        "cannot assign {:?} {:?} to imported field `{}` of type {:?}",
-                        arg_type.qualifier, arg_type.kind, field.name, expected_type.kind
+                        "cannot assign {} to imported field `{}` of type {}",
+                        pine_type_name(arg_type),
+                        field.name,
+                        value_kind_name(
+                            self.imported_user_type_field_kind(&user_type, field)
+                                .expect("supported imported UDT field has a resolved type")
+                        )
                     ),
                     arg.span,
                 ));
@@ -178,7 +246,7 @@ impl Analyzer {
         let plan = self
             .imported_user_type_constructor_arg_plan(callee_name, args)?
             .ok()?;
-        if !plan.scalar_fields {
+        if !plan.supported_fields {
             return None;
         }
         Some(UdtConstructor {
@@ -208,7 +276,7 @@ impl Analyzer {
         let plan = self
             .imported_user_type_constructor_arg_plan(callee_name, args)?
             .ok()?;
-        if !plan.scalar_fields {
+        if !plan.supported_fields {
             return None;
         }
         let mut qualifier = Qualifier::Const;
@@ -226,20 +294,36 @@ impl Analyzer {
         field_names: &[String],
     ) -> Option<(PineType, Option<String>, Vec<UdtFieldAccessStep>)> {
         let user_type = self.imported_user_types.get(type_name)?;
-        if field_names.len() != 1 {
-            return None;
+        let mut current_type = user_type;
+        let mut final_type = None;
+        let mut final_user_type_name = None;
+        let mut fields = Vec::with_capacity(field_names.len());
+        for (field_index, field_name) in field_names.iter().enumerate() {
+            let (index, field) = current_type
+                .fields
+                .iter()
+                .enumerate()
+                .find(|(_, field)| field.name == *field_name)?;
+            let pine_type = self.imported_user_type_field_type(current_type, field, qualifier)?;
+            final_type = Some(pine_type);
+            final_user_type_name = self.imported_user_type_field_type_name(current_type, field);
+            fields.push(UdtFieldAccessStep { index, pine_type });
+            if field_index + 1 < field_names.len() {
+                if pine_type.kind == ValueKind::ChartPoint && field_index + 2 == field_names.len() {
+                    let chart_point_field_name = &field_names[field_index + 1];
+                    let chart_point_type =
+                        chart_point_field_type(pine_type, chart_point_field_name)?;
+                    let chart_point_index = chart_point_field_index(chart_point_field_name)?;
+                    fields.push(UdtFieldAccessStep {
+                        index: chart_point_index,
+                        pine_type: chart_point_type,
+                    });
+                    return Some((chart_point_type, None, fields));
+                }
+                current_type = self.imported_user_type_field_user_type(current_type, field)?;
+            }
         }
-        let (index, field) = user_type
-            .fields
-            .iter()
-            .enumerate()
-            .find(|(_, field)| field.name == field_names[0])?;
-        let pine_type = PineType::new(qualifier, field.pine_type?.kind);
-        Some((
-            pine_type,
-            None,
-            vec![UdtFieldAccessStep { index, pine_type }],
-        ))
+        Some((final_type?, final_user_type_name, fields))
     }
 
     pub(crate) fn resolve_imported_user_type_field_path(
@@ -249,29 +333,144 @@ impl Analyzer {
         field_names: &[String],
         span: Span,
     ) -> Option<(PineType, Option<String>, Vec<UdtFieldAccessStep>)> {
-        let user_type = self.imported_user_types.get(type_name)?;
-        let field_name = field_names.first()?;
-        if !user_type
-            .fields
-            .iter()
-            .any(|field| field.name == *field_name)
-        {
-            self.diagnostics.push(Diagnostic::error(
-                "E_UDT_UNKNOWN_FIELD",
-                format!("unknown field `{field_name}` on `{type_name}`"),
-                span,
-            ));
-            return None;
-        }
-        if field_names.len() != 1 {
-            self.diagnostics.push(Diagnostic::error(
-                "E_UDT_UNKNOWN_FIELD",
-                format!("field `{field_name}` on `{type_name}` is not a user-defined type"),
-                span,
-            ));
-            return None;
+        let mut current_type_name = type_name.to_owned();
+        let mut current_type = self.imported_user_types.get(type_name)?;
+        for (field_index, field_name) in field_names.iter().enumerate() {
+            let Some(field) = current_type
+                .fields
+                .iter()
+                .find(|field| field.name == *field_name)
+            else {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_UDT_UNKNOWN_FIELD",
+                    format!("unknown field `{field_name}` on `{current_type_name}`"),
+                    span,
+                ));
+                return None;
+            };
+            if field_index + 1 < field_names.len() {
+                let Some(pine_type) =
+                    self.imported_user_type_field_type(current_type, field, qualifier)
+                else {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_UDT_UNKNOWN_FIELD",
+                        format!(
+                            "field `{field_name}` on `{current_type_name}` is not a supported field type"
+                        ),
+                        span,
+                    ));
+                    return None;
+                };
+                if pine_type.kind == ValueKind::ChartPoint && field_index + 2 == field_names.len() {
+                    let chart_point_field_name = &field_names[field_index + 1];
+                    if chart_point_field_type(pine_type, chart_point_field_name).is_some() {
+                        break;
+                    }
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CHART_POINT_UNKNOWN_FIELD",
+                        format!("unknown field `{chart_point_field_name}` on `chart.point`"),
+                        span,
+                    ));
+                    return None;
+                }
+                let Some(next_type_name) =
+                    self.imported_user_type_field_type_name(current_type, field)
+                else {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_UDT_UNKNOWN_FIELD",
+                        format!(
+                            "field `{field_name}` on `{current_type_name}` is not a user-defined type"
+                        ),
+                        span,
+                    ));
+                    return None;
+                };
+                current_type_name = next_type_name;
+                current_type = self.imported_user_types.get(&current_type_name)?;
+            }
         }
         self.imported_user_type_field_path(type_name, qualifier, field_names)
+    }
+
+    fn imported_user_type_field_type(
+        &self,
+        user_type: &crate::modules::ImportedUserTypeInfo,
+        field: &crate::modules::ImportedUserTypeFieldInfo,
+        qualifier: Qualifier,
+    ) -> Option<PineType> {
+        if let Some(pine_type) = field.pine_type {
+            return Some(PineType::new(qualifier, pine_type.kind));
+        }
+        self.imported_user_type_field_user_type(user_type, field)
+            .map(|_| PineType::new(qualifier, ValueKind::UserType))
+    }
+
+    fn imported_user_type_field_kind(
+        &self,
+        user_type: &crate::modules::ImportedUserTypeInfo,
+        field: &crate::modules::ImportedUserTypeFieldInfo,
+    ) -> Option<ValueKind> {
+        field.pine_type.map(|pine_type| pine_type.kind).or_else(|| {
+            self.imported_user_type_field_user_type(user_type, field)
+                .map(|_| ValueKind::UserType)
+        })
+    }
+
+    fn imported_user_type_field_type_name(
+        &self,
+        user_type: &crate::modules::ImportedUserTypeInfo,
+        field: &crate::modules::ImportedUserTypeFieldInfo,
+    ) -> Option<String> {
+        self.imported_user_type_field_user_type_name(user_type, field)
+            .map(str::to_owned)
+    }
+
+    fn imported_user_type_field_user_type<'a>(
+        &'a self,
+        user_type: &crate::modules::ImportedUserTypeInfo,
+        field: &crate::modules::ImportedUserTypeFieldInfo,
+    ) -> Option<&'a crate::modules::ImportedUserTypeInfo> {
+        let type_name = self.imported_user_type_field_user_type_name(user_type, field)?;
+        self.imported_user_types.get(type_name)
+    }
+
+    fn imported_user_type_field_user_type_name<'a>(
+        &'a self,
+        user_type: &crate::modules::ImportedUserTypeInfo,
+        field: &crate::modules::ImportedUserTypeFieldInfo,
+    ) -> Option<&'a str> {
+        if field.pine_type.is_some() {
+            return None;
+        }
+        self.imported_user_types
+            .iter()
+            .find(|(_, nested)| {
+                nested.identity.source_id == user_type.identity.source_id
+                    && nested.identity.name == field.type_name
+            })
+            .map(|(name, _)| name.as_str())
+    }
+
+    fn can_assign_imported_user_type_field(
+        &self,
+        user_type: &crate::modules::ImportedUserTypeInfo,
+        field: &crate::modules::ImportedUserTypeFieldInfo,
+        value: &pine_syntax::Expr,
+        value_type: PineType,
+    ) -> bool {
+        if let Some(expected_type) = field.pine_type {
+            return can_assign(expected_type, value_type);
+        }
+        let Some(expected_type) = self.imported_user_type_field_user_type(user_type, field) else {
+            return false;
+        };
+        let expected_identity = UserTypeIdentity {
+            source_id: expected_type.identity.source_id,
+            name: expected_type.identity.name.clone(),
+        };
+        self.user_type_name_of_expr(value)
+            .and_then(|actual_type_name| self.user_type_identity_for_name(&actual_type_name))
+            .is_some_and(|actual_identity| actual_identity == expected_identity)
     }
 }
 

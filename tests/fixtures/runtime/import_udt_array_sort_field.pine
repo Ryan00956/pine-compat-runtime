@@ -1,0 +1,46 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT array sort field")
+
+float_points = array.from(lib.Point.new(close + 3), lib.Point.new(close + 1), lib.Point.new(close + 2))
+array.sort(float_points, order.ascending, "x")
+float_first = float_points.get(0)
+float_indices_source = array.from(lib.Point.new(close + 2), lib.Point.new(close + 3), lib.Point.new(close + 1))
+float_indices = float_indices_source.sort_indices(order.ascending, "x")
+float_indices_source_first = array.get(float_indices_source, 0)
+
+int_offsets = array.from(lib.Offset.new(3), lib.Offset.new(1), lib.Offset.new(2))
+int_offsets.sort(order.descending, "value")
+int_first = array.get(int_offsets, 0)
+int_indices_source = array.from(lib.Offset.new(2), lib.Offset.new(3), lib.Offset.new(1))
+int_indices = array.sort_indices(int_indices_source, order.ascending, "value")
+int_indices_source_first = int_indices_source.get(0)
+
+string_offsets = array.from(lib.StringOffset.new("b"), lib.StringOffset.new("a"), lib.StringOffset.new("c"))
+array.sort(string_offsets, order.ascending, "value")
+string_first = string_offsets.get(0)
+string_indices_source = array.from(lib.StringOffset.new("b"), lib.StringOffset.new("a"), lib.StringOffset.new("c"))
+string_indices = string_indices_source.sort_indices(order.descending, "value")
+string_indices_source_first = array.get(string_indices_source, 0)
+
+default_points = array.from(lib.Point.new(close + 3), lib.Point.new(close + 1), lib.Point.new(close + 2))
+default_points.sort()
+default_point_first = default_points.get(0)
+indexed_strings = array.from(lib.StringOffset.new("b"), lib.StringOffset.new("a"), lib.StringOffset.new("c"))
+indexed_string_indices = indexed_strings.sort_indices(sort_field = 0)
+reordered_points = array.from(lib.Point.new(close + 3), lib.Point.new(close + 1), lib.Point.new(close + 2))
+array.sort(sort_field = 0, id = reordered_points)
+reordered_point_first = reordered_points.get(0)
+reordered_strings = array.from(lib.StringOffset.new("b"), lib.StringOffset.new("a"), lib.StringOffset.new("c"))
+reordered_string_indices = array.sort_indices(sort_field = 0, id = reordered_strings)
+
+float_total = float_first.x + array.get(float_indices, 0) + float_indices.get(1) + array.get(float_indices, 2) + float_indices_source_first.x
+int_total = int_first.value + int_indices.get(0) + array.get(int_indices, 1) + int_indices.get(2) + int_indices_source_first.value
+string_total = (string_first.value == "a" ? 1 : 1000) + array.get(string_indices, 0) + string_indices.get(1) + array.get(string_indices, 2) + (string_indices_source_first.value == "b" ? 2 : 1000)
+plot(float_total + int_total + string_total)
+plot(default_point_first.x)
+plot(indexed_string_indices.get(0))
+plot(indexed_string_indices.get(1))
+plot(indexed_string_indices.get(2))
+plot(reordered_point_first.x)
+plot(reordered_string_indices.get(0))

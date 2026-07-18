@@ -1,0 +1,6 @@
+//@version=6
+import user/non_scalar_udt/1 as lib
+indicator("Unsupported imported non-scalar UDT array alias declaration")
+
+lib.Marker[] markers = na
+plot(close)

@@ -1,0 +1,5 @@
+//@version=5
+strategy("Unsupported strategy order named const direction")
+dir_base = "strategy.flat"
+dir = dir_base
+strategy.order("X", dir, qty=1)

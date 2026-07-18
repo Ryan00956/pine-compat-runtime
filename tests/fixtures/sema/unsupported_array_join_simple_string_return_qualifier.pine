@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported array.join simple string return qualifier")
+
+words = array.from("alpha", "beta")
+
+timeframe.in_seconds(array.join(words))
+timeframe.in_seconds(words.join("|"))

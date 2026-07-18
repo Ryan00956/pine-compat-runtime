@@ -1,0 +1,5 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT array.new syntax")
+points = array.new<lib.Point>()
+plot(close)

@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported OHLCV series float qualifier")
+
+plot(open)
+plot(high)
+plot(low)
+plot(close)
+plot(volume)

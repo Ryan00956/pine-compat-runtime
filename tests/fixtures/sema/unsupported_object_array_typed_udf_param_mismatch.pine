@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported object array typed UDF param mismatch")
+
+first_line_x(line[] values) =>
+    line.get_x1(array.get(values, 0))
+
+labels = array.new_label()
+plot(first_line_x(labels))

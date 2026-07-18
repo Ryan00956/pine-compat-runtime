@@ -1,0 +1,10 @@
+//@version=6
+indicator("Runtime error custom message")
+
+fail(string message) =>
+    runtime.error(message)
+
+if bar_index == 2
+    fail(str.format("invalid bar {0}", bar_index))
+
+plot(close)

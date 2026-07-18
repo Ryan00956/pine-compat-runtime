@@ -1,8 +1,8 @@
 //@version=5
 indicator("Unsupported array sort UDT method")
 type Point
-    float x
+    bool active
 
-values = array.from(Point.new(close))
+values = array.from(Point.new(true))
 values.sort()
 plot(close)

@@ -1,0 +1,34 @@
+//@version=6
+indicator("Supported array SameAsArg method return qualifier")
+
+type Tool
+    float base
+
+method int_count(Tool tool, array<int> values) =>
+    tool.base + array.size(values)
+
+method float_count(Tool tool, float[] values) =>
+    tool.base + values.size()
+
+method bool_count(Tool tool, array<bool> values) =>
+    tool.base + array.size(values)
+
+method string_count(Tool tool, string[] values) =>
+    tool.base + values.size()
+
+method color_count(Tool tool, array<color> values) =>
+    tool.base + array.size(values)
+
+tool = Tool.new(close)
+ints = array.from(1, 2, 3)
+floats = array.from(1.0, 2.0, 3.0)
+bools = array.from(true, false)
+strings = array.from("a", "b")
+colors = array.from(color.red, color.green)
+
+result = tool.int_count(array.copy(ints)) + tool.float_count(floats.copy())
+result := result + tool.bool_count(array.copy(bools)) + tool.string_count(strings.copy()) + tool.color_count(array.copy(colors))
+result := result + tool.int_count(array.slice(ints, 0, 2)) + tool.float_count(floats.slice(0, 2))
+result := result + tool.bool_count(array.slice(bools, 0, 1)) + tool.string_count(strings.slice(0, 1)) + tool.color_count(colors.slice(0, 1))
+
+plot(result)

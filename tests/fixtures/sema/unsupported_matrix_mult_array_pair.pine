@@ -1,7 +1,0 @@
-//@version=6
-indicator("Unsupported matrix.mult array pair")
-
-left = array.from(close, open)
-right = array.from(high, low)
-result = matrix.mult(left, right)
-plot(close)

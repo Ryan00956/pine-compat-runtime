@@ -1,0 +1,4 @@
+//@version=6
+indicator("Unsupported max_bars_back pure const call overflow length")
+max_bars_back(close, math.max(4294967296, 1))
+plot(close)

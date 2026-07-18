@@ -1,0 +1,11 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Supported imported UDT array.indexof simple return qualifier")
+
+points = array.from(lib.Point.new(close), lib.Point.new(open))
+constructed = array.new<lib.Point>(2, lib.Point.new(high))
+
+first_index = array.indexof(points, lib.Point.new(close))
+last_index = constructed.lastindexof(lib.Point.new(high))
+
+plot(ta.sma(close, first_index + last_index + 1))

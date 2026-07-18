@@ -1,0 +1,42 @@
+//@version=6
+indicator("Unsupported matrix aggregate const input return qualifier")
+
+int_values = matrix.new<int>(2, 2, 1)
+float_values = matrix.new<float>(2, 2, close)
+
+hline(matrix.sum(int_values))
+hline(matrix.avg(int_values))
+hline(matrix.min(int_values))
+hline(matrix.max(int_values))
+hline(matrix.mode(int_values))
+hline(matrix.trace(int_values))
+hline(matrix.det(int_values))
+
+hline(int_values.sum())
+hline(int_values.avg())
+hline(int_values.min())
+hline(int_values.max())
+hline(int_values.mode())
+hline(int_values.trace())
+hline(int_values.det())
+
+hline(matrix.sum(float_values))
+hline(matrix.avg(float_values))
+hline(matrix.min(float_values))
+hline(matrix.max(float_values))
+hline(matrix.mode(float_values))
+hline(matrix.trace(float_values))
+hline(matrix.det(float_values))
+
+hline(float_values.sum())
+hline(float_values.avg())
+hline(float_values.min())
+hline(float_values.max())
+hline(float_values.mode())
+hline(float_values.trace())
+hline(float_values.det())
+
+plot(close, show_last=matrix.rank(int_values))
+plot(open, show_last=int_values.rank())
+plot(high, show_last=matrix.rank(float_values))
+plot(low, show_last=float_values.rank())

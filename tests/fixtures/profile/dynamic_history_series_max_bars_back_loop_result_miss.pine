@@ -1,0 +1,11 @@
+indicator("Profile dynamic series history loop result miss", max_bars_back=10)
+src = close
+offset = bar_index == 0 ? 0 : 3
+value = for i = 0 to 0
+    length = 2
+    switch
+        bar_index >= 0 =>
+            max_bars_back(src, length)
+            src[offset]
+        => src[offset]
+plot(value)

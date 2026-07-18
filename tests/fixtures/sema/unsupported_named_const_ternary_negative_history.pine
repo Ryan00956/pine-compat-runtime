@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported named const ternary negative history")
+use_short = true
+length = use_short ? -1 : 1
+plot(close[length])

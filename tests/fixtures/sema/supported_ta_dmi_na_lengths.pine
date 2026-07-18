@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported ta.dmi na lengths")
+[missing_di_plus, missing_di_minus, missing_di_adx] = ta.dmi(na, 2)
+[missing_adx_plus, missing_adx_minus, missing_adx_adx] = ta.dmi(2, na)
+plot(nz(missing_di_plus) + nz(missing_di_minus) + nz(missing_di_adx) + nz(missing_adx_plus) + nz(missing_adx_minus) + nz(missing_adx_adx))

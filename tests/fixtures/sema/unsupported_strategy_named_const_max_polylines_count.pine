@@ -1,0 +1,5 @@
+//@version=5
+base = 101
+count = base
+strategy("Unsupported strategy named const max polylines count", max_polylines_count=count)
+plot(close)

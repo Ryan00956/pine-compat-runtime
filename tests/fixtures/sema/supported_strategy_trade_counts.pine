@@ -1,4 +1,5 @@
 //@version=5
 strategy("Trade counts")
 plot(strategy.closedtrades)
+plot(strategy.closedtrades.first_index)
 plot(strategy.opentrades)

@@ -151,7 +151,7 @@ Semantic fixtures:
 - `tests/fixtures/sema/unsupported_strategy_exit_trailing.pine`
 - `tests/fixtures/sema/unsupported_strategy_exit_profit_trailing.pine`
 - `tests/fixtures/sema/unsupported_strategy_exit_partial_quantity.pine`
-- `tests/fixtures/sema/unsupported_strategy_exit_missing_entry.pine`
+- `tests/fixtures/sema/unsupported_strategy_exit_missing_id.pine`
 - `tests/fixtures/sema/unsupported_strategy_exit_function_side_effect.pine`
 - `tests/fixtures/sema/unsupported_request_strategy_exit.pine`
 

@@ -1,0 +1,8 @@
+indicator("Profile dynamic series history for-in statement miss", max_bars_back=10)
+src = close
+items = array.from(1)
+for item in items
+    length = 2
+    max_bars_back(src, length)
+offset = bar_index == 0 ? 0 : 3
+plot(src[offset])

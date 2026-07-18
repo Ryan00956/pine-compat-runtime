@@ -1,0 +1,19 @@
+//@version=6
+indicator("Unsupported map operation return qualifier")
+
+prices = map.new<string, float>()
+prices.put("open", open)
+prices.put("close", close)
+
+int_matrix = matrix.new<int>(1, 2, 0)
+float_matrix = matrix.new<float>(1, 2, 0.0)
+
+hline(map.get(prices, "open"))
+hline(prices.get("close"))
+input.bool(defval=map.contains(prices, "close"))
+input.bool(defval=prices.contains("open"))
+
+matrix.add_row(float_matrix, 0, map.keys(prices))
+matrix.add_row(float_matrix, 0, prices.keys())
+matrix.add_col(int_matrix, 0, map.values(prices))
+matrix.add_col(int_matrix, 0, prices.values())

@@ -1,0 +1,11 @@
+//@version=6
+indicator("Unsupported timeframe.in_seconds const/input return qualifier")
+
+current_seconds = timeframe.in_seconds()
+daily_seconds = timeframe.in_seconds("D")
+chart_tf = input.timeframe("60", "Timeframe")
+input_seconds = timeframe.in_seconds(chart_tf)
+
+plot(high, show_last=current_seconds)
+plot(open, show_last=daily_seconds)
+plot(close, show_last=input_seconds)

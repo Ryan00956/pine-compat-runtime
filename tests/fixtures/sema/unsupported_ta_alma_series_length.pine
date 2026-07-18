@@ -1,3 +1,0 @@
-//@version=5
-indicator("Unsupported ta.alma Series Length")
-plot(ta.alma(close, bar_index, 0.85, 6))

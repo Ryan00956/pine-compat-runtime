@@ -1,0 +1,4 @@
+//@version=5
+indicator("String match invalid class intersection")
+matched = str.match("&", "[&&]")
+plot(str.length(matched))

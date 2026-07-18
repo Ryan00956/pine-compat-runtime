@@ -1,0 +1,15 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Supported imported UDT array.new")
+
+points = array.new<lib.Point>(2, lib.Point.new(close))
+first = points.get(0)
+
+array<lib.Point> typed = array.new<lib.Point>()
+typed.push(lib.Point.new(open))
+typed_first = typed.get(0)
+
+wrappers = array.new<lib.Wrapper>(1, lib.Wrapper.new(lib.Point.new(high)))
+wrapper = wrappers.get(0)
+
+plot(first.x + typed_first.x + wrapper.nested.x)

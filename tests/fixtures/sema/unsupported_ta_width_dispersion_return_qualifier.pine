@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported ta width dispersion return qualifier")
+
+hline(ta.range(close, 3))
+hline(ta.dev(close, 3))
+hline(ta.bbw(close, 3, 2))
+hline(ta.kcw(close, 3, 2))

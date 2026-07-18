@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported for-in matrix.pow method result negative history")
+source = matrix.new<float>(1, 1, 1)
+values = source.pow(2)
+length = for row in values
+    -1
+plot(close[length])

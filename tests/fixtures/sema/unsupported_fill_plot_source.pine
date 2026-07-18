@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported fill plot source")
+p = plot(open)
+fill(close, p)
+plot(close)

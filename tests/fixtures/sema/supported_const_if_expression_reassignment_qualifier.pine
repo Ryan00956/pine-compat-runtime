@@ -1,0 +1,9 @@
+//@version=6
+indicator("Supported const if expression reassignment qualifier")
+length = input.int(2, "Length")
+_ = if false
+    length := bar_index
+    1
+else
+    0
+plot(ta.ema(close, length))

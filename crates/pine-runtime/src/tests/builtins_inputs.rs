@@ -41,6 +41,22 @@ fn first_call_site_id(program: &pine_ir::HirProgram, callee: &str) -> u32 {
                         return Some(call_site_id);
                     }
                 }
+                pine_ir::HirStmtKind::Switch { selector, arms } => {
+                    if let Some(call_site_id) = selector
+                        .as_ref()
+                        .and_then(|selector| find_in_expr(selector, callee))
+                        .or_else(|| {
+                            arms.iter().find_map(|arm| {
+                                arm.condition
+                                    .as_ref()
+                                    .and_then(|condition| find_in_expr(condition, callee))
+                                    .or_else(|| find_in_stmts(&arm.body, callee))
+                            })
+                        })
+                    {
+                        return Some(call_site_id);
+                    }
+                }
                 pine_ir::HirStmtKind::For {
                     from,
                     to,

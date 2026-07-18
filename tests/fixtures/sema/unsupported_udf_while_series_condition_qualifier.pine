@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported UDF while series condition qualifier")
+while_length(flag, x) =>
+    while flag
+        x
+length = input.int(2, "Length")
+plot(ta.ema(close, while_length(close > open, length)))

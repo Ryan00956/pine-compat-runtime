@@ -1,0 +1,8 @@
+indicator("Profile dynamic series history pure UDF direct UDT arg expression max_bars_back miss", max_bars_back=10)
+type Point
+    float x
+source(p) => p.x + 1
+src = source(Point.new(close))
+max_bars_back(src, 2)
+offset = bar_index == 0 ? 0 : 3
+plot(source(Point.new(close))[offset])

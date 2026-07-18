@@ -1,0 +1,11 @@
+//@version=6
+indicator("Unsupported UDF final for reassignment series bound qualifier")
+
+checked_length(limit, x) =>
+    local = x
+    for i = 0 to limit
+        local := x
+        ta.ema(close, local)
+
+length = input.int(2, "Length")
+plot(checked_length(bar_index, length))

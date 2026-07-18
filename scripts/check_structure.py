@@ -14,6 +14,16 @@ FACADE_MAX_LINES = 300
 MODEL_HELPER_MAX_LINES = 800
 IMPLEMENTATION_MAX_LINES = 1_500
 
+# Keep recently split implementation hubs below their old growth ceiling. These
+# budgets are deliberately tighter than the generic implementation threshold so
+# new responsibilities land in the focused child modules introduced for them.
+HOTSPOT_MAX_LINES: dict[str, int] = {
+    "crates/pine-sema/src/analyzer/context.rs": 500,
+    "crates/pine-sema/src/lowering/mod.rs": 1_200,
+    "crates/pine-sema/src/lowering/pure_series.rs": 1_100,
+    "crates/pine-sema/src/modules.rs": 1_200,
+}
+
 
 @dataclass(frozen=True)
 class AllowlistEntry:
@@ -91,6 +101,8 @@ def threshold_for(path: Path) -> tuple[int, str]:
     rel = relative(path)
     if rel in ALLOWLIST:
         return ALLOWLIST[rel].max_lines, "allowlisted"
+    if rel in HOTSPOT_MAX_LINES:
+        return HOTSPOT_MAX_LINES[rel], "split hotspot"
     if path.name == "lib.rs":
         return FACADE_MAX_LINES, "facade"
     if path.name in HELPER_FILENAMES:

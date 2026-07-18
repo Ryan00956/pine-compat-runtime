@@ -1,0 +1,11 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Supported imported UDT array.includes series bool return qualifier")
+
+points = array.from(lib.Point.new(close), lib.Point.new(open))
+constructed = array.new<lib.Point>(2, lib.Point.new(high))
+
+found = array.includes(points, lib.Point.new(close))
+found := found and constructed.includes(lib.Point.new(high))
+
+plot(found ? 1 : 0)

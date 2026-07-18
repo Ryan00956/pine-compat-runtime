@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported str.length simple return qualifier")
+
+length = str.length(timeframe.period)
+
+plot(close, show_last=length)

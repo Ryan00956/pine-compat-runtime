@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported max_bars_back statement switch call")
+src = close
+switch
+    close > open =>
+        base = 10
+        length = base + 10
+        max_bars_back(src, length)
+    =>
+        high
+plot(src)

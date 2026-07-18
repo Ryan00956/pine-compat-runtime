@@ -1,0 +1,10 @@
+//@version=6
+indicator("Unsupported na return qualifier")
+
+input_source = input.bool(true, "Input source")
+simple_source = timeframe.isdaily
+series_source = close
+
+plot(ta.tr(na(input_source)))
+plot(ta.tr(na(simple_source)))
+plot(ta.alma(close, 4, 0.85, 6, na(series_source)))

@@ -1,0 +1,4 @@
+//@version=5
+indicator("Supported ta trend window history")
+plot(ta.rising(close, 3) ? 1 : 0)
+plot(ta.falling(open, 2) ? 1 : 0)

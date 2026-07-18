@@ -1,0 +1,4 @@
+//@version=5
+indicator("Supported ta.supertrend na factor")
+[line, direction] = ta.supertrend(na, 10)
+plot(nz(line) + nz(direction))

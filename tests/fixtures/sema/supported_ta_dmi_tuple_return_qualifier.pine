@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported ta dmi tuple return qualifier")
+
+[plus, minus, adx] = ta.dmi(2, 2)
+
+plot(plus)
+plot(minus)
+plot(adx)

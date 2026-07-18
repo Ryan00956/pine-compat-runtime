@@ -1,8 +1,8 @@
 //@version=5
 indicator("Unsupported array sort_indices UDT namespace")
 type Point
-    float x
+    bool active
 
-values = array.from(Point.new(close))
+values = array.from(Point.new(true))
 indices = array.sort_indices(values)
 plot(close)

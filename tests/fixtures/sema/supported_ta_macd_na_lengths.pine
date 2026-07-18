@@ -1,0 +1,6 @@
+//@version=5
+indicator("Supported ta.macd na lengths")
+[fast_macd, fast_signal, fast_hist] = ta.macd(close, na, 26, 9)
+[slow_macd, slow_signal, slow_hist] = ta.macd(close, 12, na, 9)
+[sig_macd, sig_signal, sig_hist] = ta.macd(close, 12, 26, na)
+plot(nz(fast_macd) + nz(fast_signal) + nz(fast_hist) + nz(slow_macd) + nz(slow_signal) + nz(slow_hist) + nz(sig_macd) + nz(sig_signal) + nz(sig_hist))

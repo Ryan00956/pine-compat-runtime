@@ -337,6 +337,803 @@ fn profiled_run_reports_max_bars_back_retention_misses() {
 }
 
 #[test]
+fn profiled_run_reports_udf_max_bars_back_retention_misses() {
+    let options = RunOptions {
+        path: workspace_path("tests/fixtures/profile/dynamic_history_udf_max_bars_back_miss.pine"),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options).expect("profile UDF max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":2"#));
+    assert!(output.contains(r#""historyHasDynamicOffsets":true"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(r#""historyDynamicRetentionMaxMissedOffset":3"#));
+}
+
+fn assert_profile_series_max_bars_back_miss(path: &str, context: &str) {
+    assert_profile_series_max_bars_back_miss_with_libraries(path, context, Vec::new());
+}
+
+fn imported_udt_library_source() -> LibrarySourceSpec {
+    LibrarySourceSpec {
+        key: "user/udt/1".to_owned(),
+        path: workspace_path("tests/fixtures/libraries/import_udt_lib.pine"),
+    }
+}
+
+fn assert_profile_series_max_bars_back_miss_with_libraries(
+    path: &str,
+    context: &str,
+    library_sources: Vec<LibrarySourceSpec>,
+) {
+    let options = RunOptions {
+        path: workspace_path(path),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources,
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .unwrap_or_else(|err| panic!("profile {context} output: {err}"));
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_effective_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options).expect("profile series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_expression_source_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_expression_source_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile expression source series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_alias_expression_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_alias_expression_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile alias expression series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_ternary_expression_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_ternary_expression_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile ternary expression series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_qualified_builtin_ternary_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_qualified_builtin_ternary_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile qualified builtin ternary series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_pure_math_call_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_pure_math_call_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile pure math call series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_named_pure_math_call_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_named_pure_math_call_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile named pure math call series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_numeric_cast_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_numeric_cast_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile numeric cast series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_value_helper_series_max_bars_back_diagnostics() {
+    for (path, context) in [
+        (
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_nz_call_miss.pine",
+            "nz call series max_bars_back miss",
+        ),
+        (
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_named_reordered_nz_call_miss.pine",
+            "named reordered nz call series max_bars_back miss",
+        ),
+        (
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_fixnan_call_miss.pine",
+            "fixnan call series max_bars_back miss",
+        ),
+    ] {
+        assert_profile_series_max_bars_back_miss(path, context);
+    }
+}
+
+#[test]
+fn profiled_run_reports_string_numeric_source_series_max_bars_back_diagnostics() {
+    for (path, context) in [
+        (
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_str_tonumber_call_miss.pine",
+            "str.tonumber call series max_bars_back miss",
+        ),
+        (
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_str_length_call_miss.pine",
+            "str.length call series max_bars_back miss",
+        ),
+    ] {
+        assert_profile_series_max_bars_back_miss(path, context);
+    }
+}
+
+#[test]
+fn profiled_run_reports_udf_length_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_udf_length_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile UDF length series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_block_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_block_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output =
+        run_json_with_options(&options).expect("profile block series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_switch_block_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_switch_block_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile switch block series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_statement_switch_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_statement_switch_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile statement switch series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_expression_block_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_expression_block_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile expression block series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_tuple_switch_expression_block_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_tuple_switch_expression_block_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile tuple switch expression block series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_if_expression_block_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_if_expression_block_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile if expression block series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_tuple_if_expression_block_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_tuple_if_expression_block_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile tuple if expression block series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_call_argument_block_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_call_argument_block_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile call argument block series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_block_result_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_block_result_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile block result series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_loop_result_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_loop_result_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile loop result series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_for_in_result_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_for_in_result_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile for-in result series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_for_statement_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_for_statement_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile for statement series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_for_in_statement_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_for_in_statement_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile for-in statement series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_while_result_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_while_result_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile while result series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_while_statement_series_max_bars_back_diagnostic() {
+    let options = RunOptions {
+        path: workspace_path(
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_while_statement_miss.pine",
+        ),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        profile: true,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options)
+        .expect("profile while statement series max_bars_back miss output");
+
+    assert!(output.contains(r#""historyRetentionMode":"maxBarsBack""#));
+    assert!(output.contains(r#""historyMaxBarsBack":10"#));
+    assert!(output.contains(r#""historyDynamicRetentionMisses":3"#));
+    assert!(output.contains(
+        r#""diagnostics":[{"code":"W_HISTORY_MAX_BARS_BACK","message":"dynamic history offsets exceeded max_bars_back=2; 3 reads returned na, maximum requested offset was 3"}]"#
+    ));
+}
+
+#[test]
+fn profiled_run_reports_pure_expr_prefix_udf_series_max_bars_back_diagnostic() {
+    assert_profile_series_max_bars_back_miss(
+        "tests/fixtures/profile/dynamic_history_series_max_bars_back_pure_expr_prefix_udf_call_miss.pine",
+        "pure expr prefix UDF series max_bars_back miss",
+    );
+}
+
+#[test]
+fn profiled_run_reports_pure_control_flow_expression_series_max_bars_back_diagnostics() {
+    for (path, context) in [
+        (
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_pure_if_expression_identity_miss.pine",
+            "pure if expression identity series max_bars_back miss",
+        ),
+        (
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_pure_switch_expression_identity_miss.pine",
+            "pure switch expression identity series max_bars_back miss",
+        ),
+        (
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_pure_for_expression_identity_miss.pine",
+            "pure for expression identity series max_bars_back miss",
+        ),
+        (
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_pure_for_in_array_from_expression_identity_miss.pine",
+            "pure for-in array.from expression identity series max_bars_back miss",
+        ),
+        (
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_pure_while_expression_identity_miss.pine",
+            "pure while expression identity series max_bars_back miss",
+        ),
+    ] {
+        assert_profile_series_max_bars_back_miss(path, context);
+    }
+}
+
+#[test]
+fn profiled_run_reports_user_method_receiver_alias_series_max_bars_back_diagnostic() {
+    assert_profile_series_max_bars_back_miss(
+        "tests/fixtures/profile/dynamic_history_series_max_bars_back_pure_user_method_receiver_alias_field_miss.pine",
+        "pure user method receiver alias series max_bars_back miss",
+    );
+}
+
+#[test]
+fn profiled_run_reports_udt_udf_and_method_series_max_bars_back_diagnostics() {
+    let cases = [
+        (
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_pure_udf_nested_udt_field_alias_miss.pine",
+            "local pure UDF nested UDT field alias series max_bars_back miss",
+            false,
+        ),
+        (
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_pure_udf_imported_nested_udt_arg_field_miss.pine",
+            "imported pure UDF nested UDT arg field series max_bars_back miss",
+            true,
+        ),
+        (
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_nested_pure_user_method_named_direct_nested_udt_arg_expr_miss.pine",
+            "local nested pure user method named direct nested UDT arg expression series max_bars_back miss",
+            false,
+        ),
+        (
+            "tests/fixtures/profile/dynamic_history_series_max_bars_back_pure_user_method_imported_alias_qualified_direct_receiver_expr_miss.pine",
+            "imported alias-qualified direct receiver expression method series max_bars_back miss",
+            true,
+        ),
+    ];
+
+    for (path, context, needs_imported_udt_library) in cases {
+        let library_sources = needs_imported_udt_library
+            .then(imported_udt_library_source)
+            .into_iter()
+            .collect();
+        assert_profile_series_max_bars_back_miss_with_libraries(path, context, library_sources);
+    }
+}
+
+#[test]
 fn runs_request_bars_integration_fixture() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/request/request_security_host.pine"),

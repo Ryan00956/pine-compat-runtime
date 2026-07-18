@@ -1,0 +1,11 @@
+//@version=5
+indicator("Supported ta flow series length")
+length = bar_index % 2 + 2
+plot(ta.cmo(close, length))
+plot(ta.cmo(source=close, length=length))
+plot(ta.cci(close, length))
+plot(ta.cci(source=close, length=length))
+plot(ta.cog(close, length))
+plot(ta.cog(source=close, length=length))
+plot(ta.mfi(close, length))
+plot(ta.mfi(source=close, length=length))

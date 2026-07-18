@@ -1,0 +1,8 @@
+//@version=6
+indicator('Single quoted strings')
+plain = 'Pine "quotes"'
+escaped = 'Pine\'s\n\t\\path'
+mixed = "double 'apostrophe'"
+plot(plain == 'Pine "quotes"' ? 1 : 0)
+plot(escaped == "Pine's\n\t\\path" ? 1 : 0)
+plot(mixed == 'double \'apostrophe\'' ? 1 : 0)

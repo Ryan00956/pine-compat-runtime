@@ -1,3 +1,0 @@
-//@version=5
-indicator("Unsupported ta.sma Series Length")
-plot(ta.sma(close, bar_index))

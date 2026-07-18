@@ -1,0 +1,54 @@
+//@version=6
+indicator("Map control-flow results")
+
+left = map.new<string, float>()
+left.put("v", 10)
+
+right = map.new<string, float>()
+right.put("v", 20)
+right.put("extra", 30)
+
+nullable = bar_index % 2 == 0 ? left : na
+
+if_selected = if bar_index % 2 == 0
+    made = left.copy()
+    made
+else
+    made = right.copy()
+    made
+
+switch_selected = switch bar_index % 2
+    0 =>
+        made = left.copy()
+        made
+    =>
+        made = right.copy()
+        made
+
+for_selected = for i = 0 to 0
+    made = right.copy()
+    made
+
+for_in_selected = for item in array.from(0)
+    made = right.copy()
+    made
+
+int iterations = 0
+while_selected = while iterations < 1
+    iterations := iterations + 1
+    made = right.copy()
+    made
+
+empty = array.new_int()
+empty_for_in = for item in empty
+    made = left.copy()
+    made
+
+plot(nullable.get("v"))
+plot(if_selected.get("v"))
+plot(if_selected.size())
+plot(switch_selected.get("v"))
+plot(for_selected.get("v"))
+plot(for_in_selected.get("v"))
+plot(while_selected.get("v"))
+plot(empty_for_in.get("v"))

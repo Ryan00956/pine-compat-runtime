@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported math round return qualifier")
+
+number = input.float(1.5, "Number")
+precision = input.int(1, "Precision")
+
+rounded_count = math.round(number)
+rounded_price = math.round(number, precision)
+
+plot(close, show_last=rounded_count)
+hline(rounded_price)

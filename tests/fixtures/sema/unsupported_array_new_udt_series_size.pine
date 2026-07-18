@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported array.new UDT series size")
+type Point
+    float x
+points = array.new<Point>(bar_index)
+plot(array.size(points))

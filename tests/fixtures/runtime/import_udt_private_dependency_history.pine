@@ -1,0 +1,12 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT private dependency history")
+
+lib.PrivateWrapper wrapped = na
+prior = wrapped[1]
+dyn = bar_index == 0 ? na : 1
+dynamic_prior = wrapped[dyn]
+
+plot(na(wrapped) ? 1 : 0)
+plot(na(prior) ? 1 : 0)
+plot(na(dynamic_prior) ? 1 : 0)

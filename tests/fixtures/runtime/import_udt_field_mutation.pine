@@ -9,3 +9,11 @@ plot(p.x)
 var lib.Point persistent = lib.Point.new(open)
 persistent.x := persistent.x + 1
 plot(persistent.x)
+
+wrapped = lib.Wrapper.new(p)
+wrapped.nested := lib.Point.new(wrapped.nested.x + 20)
+plot(wrapped.nested.x)
+
+var lib.Wrapper persistentWrapped = lib.Wrapper.new(lib.Point.new(open))
+persistentWrapped.nested := lib.Point.new(persistentWrapped.nested.x + 2)
+plot(persistentWrapped.nested.x)

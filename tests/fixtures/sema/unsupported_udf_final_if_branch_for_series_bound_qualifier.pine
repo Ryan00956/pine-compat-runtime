@@ -1,0 +1,10 @@
+//@version=6
+indicator("Unsupported UDF final-if branch for series bound qualifier")
+choose_length(flag, limit, x) =>
+    if flag
+        for i = 0 to limit
+            x
+    else
+        x
+length = input.int(2, "Length")
+plot(ta.ema(close, choose_length(true, bar_index, length)))

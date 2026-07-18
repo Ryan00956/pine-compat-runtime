@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported plotarrow Input Show Last")
+
+count = input.int(5, "Show last")
+
+plotarrow(close - open, show_last=count)

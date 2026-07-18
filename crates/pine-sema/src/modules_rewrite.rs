@@ -1,11 +1,11 @@
 use std::collections::{HashMap, HashSet};
 
 use pine_syntax::{
-    CallArg, ExportDecl, ExportItem, Expr, ExprKind, FunctionBody, Program, Stmt, StmtKind,
-    SwitchArm, SwitchArmResult,
+    CallArg, DeclaredType, ExportDecl, ExportItem, Expr, ExprKind, FunctionBody, Program, Stmt,
+    StmtKind, SwitchArm, SwitchArmResult,
 };
 
-use crate::analyzer::calls::expr_name;
+use crate::analyzer::calls::{expr_name, postfix_call_result_method_parts};
 
 #[derive(Clone, Default)]
 pub(super) struct RewriteContext {
@@ -89,7 +89,9 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
             value,
         } => StmtKind::Decl {
             mode: *mode,
-            declared_type: declared_type.clone(),
+            declared_type: declared_type
+                .as_ref()
+                .map(|declared_type| rewrite_declared_type(declared_type, context)),
             name: name.clone(),
             value: rewrite_expr(value, context),
         },
@@ -131,7 +133,10 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
                 } => ExportItem::Function {
                     name: name.clone(),
                     params: params.clone(),
-                    body: rewrite_function_body(body, params, context),
+                    body: {
+                        let param_names = function_param_names(params);
+                        rewrite_function_body(body, &param_names, context)
+                    },
                     span: *span,
                 },
                 ExportItem::Const { name, value, span } => ExportItem::Const {
@@ -150,7 +155,10 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
         StmtKind::Function { name, params, body } => StmtKind::Function {
             name: name.clone(),
             params: params.clone(),
-            body: rewrite_function_body(body, params, context),
+            body: {
+                let param_names = function_param_names(params);
+                rewrite_function_body(body, &param_names, context)
+            },
         },
         StmtKind::Import(_)
         | StmtKind::Library(_)
@@ -180,6 +188,10 @@ pub(super) fn rewrite_function_body(
     }
 }
 
+fn function_param_names(params: &[pine_syntax::FunctionParam]) -> Vec<String> {
+    params.iter().map(|param| param.name.clone()).collect()
+}
+
 pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
     if let Some(name) = expr_name(expr)
         && let Some(value) = context.constant(&name)
@@ -189,11 +201,21 @@ pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
 
     let kind = match &expr.kind {
         ExprKind::Call { callee, args } => {
-            let callee = if let Some(name) = expr_name(callee)
+            let postfix_call_result_method =
+                postfix_call_result_method_parts(callee, args).is_some();
+            let callee = if !postfix_call_result_method
+                && let Some(name) = expr_name(callee)
                 && let Some(target) = context.function_target(&name)
             {
                 Expr {
                     kind: ExprKind::Identifier(target.clone()),
+                    span: callee.span,
+                }
+            } else if let Some(name) = expr_name(callee)
+                && let Some(target) = rewrite_array_new_type_target(&name, context)
+            {
+                Expr {
+                    kind: ExprKind::Identifier(target),
                     span: callee.span,
                 }
             } else {
@@ -325,6 +347,30 @@ fn rewrite_switch_arm_result(
     }
 }
 
+fn rewrite_declared_type(declared_type: &DeclaredType, context: &RewriteContext) -> DeclaredType {
+    match declared_type {
+        DeclaredType::Named(type_name) => DeclaredType::Named(
+            context
+                .type_target_in_type_position(type_name)
+                .cloned()
+                .unwrap_or_else(|| type_name.clone()),
+        ),
+        DeclaredType::Array { element_type } => DeclaredType::Array {
+            element_type: context
+                .type_target_in_type_position(element_type)
+                .cloned()
+                .unwrap_or_else(|| element_type.clone()),
+        },
+        DeclaredType::Matrix { .. } | DeclaredType::Map { .. } => declared_type.clone(),
+    }
+}
+
+fn rewrite_array_new_type_target(name: &str, context: &RewriteContext) -> Option<String> {
+    let type_name = name.strip_prefix("array.new<")?.strip_suffix('>')?;
+    let target = context.type_target_in_type_position(type_name)?;
+    Some(format!("array.new<{target}>"))
+}
+
 impl RewriteContext {
     fn shadowing(&self, name: &str) -> Self {
         let mut context = self.clone();
@@ -361,6 +407,10 @@ impl RewriteContext {
         self.type_targets.get(name)
     }
 
+    fn type_target_in_type_position(&self, name: &str) -> Option<&String> {
+        self.type_targets.get(name)
+    }
+
     fn is_shadowed(&self, name: &str) -> bool {
         self.shadowed_names.contains(name)
             || name
@@ -386,5 +436,143 @@ fn record_statement_bindings(statement: &Stmt, context: &mut RewriteContext) {
             context.shadowed_names.extend(names.iter().cloned());
         }
         _ => {}
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pine_syntax::Span;
+
+    fn context() -> RewriteContext {
+        RewriteContext {
+            type_targets: HashMap::from([("Point".to_owned(), "lib.Point".to_owned())]),
+            ..RewriteContext::default()
+        }
+    }
+
+    #[test]
+    fn alias_qualifies_user_type_array_new_templates() {
+        let expr = Expr {
+            kind: ExprKind::Call {
+                callee: Box::new(Expr {
+                    kind: ExprKind::Identifier("array.new<Point>".to_owned()),
+                    span: Span::new(2, 18),
+                }),
+                args: Vec::new(),
+            },
+            span: Span::new(2, 20),
+        };
+
+        let rewritten = rewrite_expr(&expr, &context());
+
+        let ExprKind::Call { callee, .. } = rewritten.kind else {
+            panic!("call expected");
+        };
+        assert_eq!(expr_name(&callee).as_deref(), Some("array.new<lib.Point>"));
+    }
+
+    #[test]
+    fn alias_qualifies_user_type_declarations() {
+        assert_eq!(
+            rewrite_declared_type(&DeclaredType::Named("Point".to_owned()), &context()),
+            DeclaredType::Named("lib.Point".to_owned())
+        );
+        assert_eq!(
+            rewrite_declared_type(
+                &DeclaredType::Array {
+                    element_type: "Point".to_owned(),
+                },
+                &context(),
+            ),
+            DeclaredType::Array {
+                element_type: "lib.Point".to_owned(),
+            }
+        );
+    }
+
+    #[test]
+    fn value_shadowing_does_not_hide_names_in_type_positions() {
+        let context = context().shadowing("Point");
+
+        assert_eq!(
+            rewrite_array_new_type_target("array.new<Point>", &context),
+            Some("array.new<lib.Point>".to_owned())
+        );
+        assert_eq!(
+            rewrite_declared_type(
+                &DeclaredType::Array {
+                    element_type: "Point".to_owned(),
+                },
+                &context,
+            ),
+            DeclaredType::Array {
+                element_type: "lib.Point".to_owned(),
+            }
+        );
+    }
+
+    #[test]
+    fn postfix_call_result_method_callee_is_not_rewritten_as_an_exported_function() {
+        let receiver = Expr {
+            kind: ExprKind::Call {
+                callee: Box::new(Expr {
+                    kind: ExprKind::QualifiedName(vec!["lib".to_owned(), "direct".to_owned()]),
+                    span: Span::new(2, 12),
+                }),
+                args: Vec::new(),
+            },
+            span: Span::new(2, 14),
+        };
+        let postfix = Expr {
+            kind: ExprKind::Call {
+                callee: Box::new(Expr {
+                    kind: ExprKind::QualifiedName(vec!["lib".to_owned(), "copy".to_owned()]),
+                    span: Span::new(15, 19),
+                }),
+                args: vec![CallArg {
+                    name: None,
+                    value: receiver.clone(),
+                    span: receiver.span,
+                }],
+            },
+            span: Span::new(2, 21),
+        };
+        let explicit = Expr {
+            kind: ExprKind::Call {
+                callee: Box::new(Expr {
+                    kind: ExprKind::QualifiedName(vec!["lib".to_owned(), "copy".to_owned()]),
+                    span: Span::new(2, 10),
+                }),
+                args: vec![CallArg {
+                    name: None,
+                    value: receiver,
+                    span: Span::new(11, 23),
+                }],
+            },
+            span: Span::new(2, 24),
+        };
+        let context = RewriteContext {
+            function_targets: HashMap::from([("lib.copy".to_owned(), "lib.copy".to_owned())]),
+            ..RewriteContext::default()
+        };
+
+        let ExprKind::Call {
+            callee: postfix_callee,
+            ..
+        } = rewrite_expr(&postfix, &context).kind
+        else {
+            panic!("postfix call expected");
+        };
+        assert!(matches!(postfix_callee.kind, ExprKind::QualifiedName(_)));
+
+        let ExprKind::Call {
+            callee: explicit_callee,
+            ..
+        } = rewrite_expr(&explicit, &context).kind
+        else {
+            panic!("explicit call expected");
+        };
+        assert!(matches!(explicit_callee.kind, ExprKind::Identifier(_)));
     }
 }

@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported for-in empty result negative body history")
+values = array.new<int>(0)
+length = for value in values
+    -1
+plot(close[length])

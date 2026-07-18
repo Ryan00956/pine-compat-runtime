@@ -1,0 +1,3 @@
+//@version=6
+indicator("Unsupported pure const call negative history")
+plot(close[int(math.min(-1, 0))])

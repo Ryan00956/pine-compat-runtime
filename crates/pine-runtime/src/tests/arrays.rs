@@ -1172,6 +1172,141 @@ plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) an
 }
 
 #[test]
+fn selects_nth_array_min_and_max_values() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("nth array min/max")
+ints = array.new_int()
+ints.push(9007199254740993)
+ints.push(na)
+ints.push(9007199254740992)
+ints.push(9007199254740994)
+ints.push(9007199254740993)
+plot(array.min(ints))
+plot(ints.min(1))
+plot(array.min(ints, 2))
+plot(array.min(nth=2, id=ints))
+plot(ints.max())
+plot(array.max(ints, 1))
+plot(ints.max(2))
+plot(array.max(ints, 3))
+plot(array.max(nth=0, id=ints))
+plot(ints.min(bar_index))
+missing_nth = int(na)
+plot(na(array.min(ints, missing_nth)) and na(ints.max(-1)) and na(array.min(ints, 4)) and na(ints.max(4)) ? 1 : 0)
+
+floats = array.new_float()
+floats.push(2.5)
+floats.push(na)
+floats.push(-1.25)
+floats.push(2.5)
+floats.push(0.5)
+plot(floats.min())
+plot(array.min(floats, 1))
+plot(floats.max(1))
+plot(array.max(floats, 2))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 15);
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Int(9_007_199_254_740_992); 3]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Int(9_007_199_254_740_993); 3]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![PineValue::Int(9_007_199_254_740_993); 3]
+    );
+    assert_eq!(
+        result.plots[3].values,
+        vec![PineValue::Int(9_007_199_254_740_993); 3]
+    );
+    assert_eq!(
+        result.plots[4].values,
+        vec![PineValue::Int(9_007_199_254_740_994); 3]
+    );
+    assert_eq!(
+        result.plots[5].values,
+        vec![PineValue::Int(9_007_199_254_740_993); 3]
+    );
+    assert_eq!(
+        result.plots[6].values,
+        vec![PineValue::Int(9_007_199_254_740_993); 3]
+    );
+    assert_eq!(
+        result.plots[7].values,
+        vec![PineValue::Int(9_007_199_254_740_992); 3]
+    );
+    assert_eq!(
+        result.plots[8].values,
+        vec![PineValue::Int(9_007_199_254_740_994); 3]
+    );
+    assert_eq!(
+        result.plots[9].values,
+        vec![
+            PineValue::Int(9_007_199_254_740_992),
+            PineValue::Int(9_007_199_254_740_993),
+            PineValue::Int(9_007_199_254_740_993),
+        ]
+    );
+    assert_values_close(&result.plots[10].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[11].values, &[-1.25, -1.25, -1.25]);
+    assert_values_close(&result.plots[12].values, &[0.5, 0.5, 0.5]);
+    assert_values_close(&result.plots[13].values, &[2.5, 2.5, 2.5]);
+    assert_values_close(&result.plots[14].values, &[0.5, 0.5, 0.5]);
+}
+
+#[test]
+fn evaluates_nth_array_min_and_max_arguments_before_reading_array() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("nth array min/max argument evaluation")
+positional = array.from(1, 2, 3)
+plot(array.min(positional, array.shift(positional)))
+plot(positional.size())
+
+reordered = array.from(100, 2, 1)
+plot(array.max(nth=array.shift(reordered) * 0 + 1, id=array.copy(reordered)))
+plot(reordered.size())
+
+method_values = array.from(1, 2, 3)
+plot(method_values.min(array.shift(method_values)))
+plot(method_values.size())
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 6);
+    assert_values_close(&result.plots[0].values, &[3.0, 3.0]);
+    assert_values_close(&result.plots[1].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[2].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[3].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[4].values, &[3.0, 3.0]);
+    assert_values_close(&result.plots[5].values, &[2.0, 2.0]);
+}
+
+#[test]
 fn runs_array_ordering_operations() {
     let source = SourceFile::new(
         "test.pine",
@@ -1719,6 +1854,38 @@ plot(array.get(values, -4))
 }
 
 #[test]
+fn rejects_udt_array_call_result_get_out_of_bounds_indexes() {
+    assert_array_bounds_error(
+        r#"//@version=6
+indicator("UDT call-result get empty bounds")
+type Point
+    float x
+type Anchor
+    int tag
+method values(Anchor self) => array.new<Point>()
+anchor = Anchor.new(1)
+item = anchor.values().get(0)
+plot(item.x)
+"#,
+        "array index 0 is out of bounds for array of size 0",
+    );
+    assert_array_bounds_error(
+        r#"//@version=6
+indicator("UDT call-result get negative bounds")
+type Point
+    float x
+type Anchor
+    int tag
+method values(Anchor self) => array.from(Point.new(10.0))
+anchor = Anchor.new(1)
+item = anchor.values().get(-2)
+plot(item.x)
+"#,
+        "array index -2 is out of bounds for array of size 1",
+    );
+}
+
+#[test]
 fn rejects_array_mutation_out_of_bounds_indexes() {
     assert_array_bounds_error(
         r#"indicator("array set bounds")
@@ -1747,6 +1914,24 @@ values = array.new_float()
 plot(array.remove(values, 0))
 "#,
         "array index 0 is out of bounds for array of size 0",
+    );
+    assert_array_bounds_error(
+        r#"indicator("array call-result remove bounds")
+plot(array.from(10, 20, 30).remove(3))
+"#,
+        "array index 3 is out of bounds for array of size 3",
+    );
+    assert_array_bounds_error(
+        r#"indicator("array call-result insert bounds")
+array.from(10, 20, 30).insert(4, 40)
+"#,
+        "array index 4 is out of bounds for array of size 3",
+    );
+    assert_array_bounds_error(
+        r#"indicator("array call-result set bounds")
+array.from(10, 20, 30).set(3, 40)
+"#,
+        "array index 3 is out of bounds for array of size 3",
     );
 }
 
@@ -1836,6 +2021,33 @@ plot(array.size(values))
 }
 
 #[test]
+fn rejects_float_array_call_result_push_past_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("array call-result push limit")
+array.new_float(100000).push(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected array call-result push limit error");
+
+    assert!(
+        error
+            .message
+            .contains("array.push cannot exceed 100000 elements"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
 fn rejects_float_array_unshift_past_limit() {
     let source = SourceFile::new(
         "test.pine",
@@ -1859,6 +2071,60 @@ plot(array.size(values))
         error
             .message
             .contains("array.unshift cannot exceed 100000 elements"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn rejects_float_array_call_result_unshift_past_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("array call-result unshift limit")
+array.new_float(100000).unshift(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected array call-result unshift limit error");
+
+    assert!(
+        error
+            .message
+            .contains("array.unshift cannot exceed 100000 elements"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn rejects_float_array_call_result_insert_past_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("array call-result insert limit")
+array.new_float(100000).insert(0, close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected array call-result insert limit error");
+
+    assert!(
+        error
+            .message
+            .contains("array.insert cannot exceed 100000 elements"),
         "{}",
         error.message
     );

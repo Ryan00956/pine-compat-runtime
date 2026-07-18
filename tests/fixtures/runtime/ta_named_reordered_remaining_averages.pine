@@ -1,0 +1,12 @@
+//@version=5
+indicator("TA named reordered remaining averages")
+ema_value = ta.ema(length=2, source=close)
+rma_value = ta.rma(length=2, source=close)
+vwma_value = ta.vwma(length=3, source=close)
+alma_value = ta.alma(floor=false, sigma=6, offset=0.85, length=3, series=close)
+linreg_value = ta.linreg(offset=0, length=3, source=close)
+plot(ema_value)
+plot(rma_value)
+plot(vwma_value)
+plot(alma_value)
+plot(linreg_value)

@@ -1,0 +1,10 @@
+//@version=6
+indicator("Supported time function series return qualifier")
+
+open_time = time("D")
+close_time = time_close("D")
+changed = timeframe.change("D")
+
+plot(open_time)
+plot(close_time)
+plot(changed ? 1 : 0)

@@ -1,0 +1,5 @@
+//@version=5
+rule_base = "ANY"
+rule = rule_base
+strategy("Supported named const close entries rule", close_entries_rule=rule)
+plot(close)

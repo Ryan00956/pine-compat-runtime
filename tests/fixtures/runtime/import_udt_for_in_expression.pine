@@ -23,7 +23,18 @@ mutated_last = for point in points
 
 source_first = points.get(0)
 
+lib.Point typed = for point in points
+    point
+typed := for point in points
+    lib.Point.new(point.x + 20)
+
+last_prior = last[1]
+typed_prior = typed[1]
+
 index_value_last = for index, point in points
     index + point.x
 
 plot(last.x + continued.x + stopped.x + mutated_last.x + source_first.x + index_value_last)
+plot(typed.x + last.x)
+plot(last_prior.x)
+plot(typed_prior.x)

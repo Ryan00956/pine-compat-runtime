@@ -1,0 +1,11 @@
+//@version=6
+indicator("Unsupported UDF final while reassignment series condition qualifier")
+
+checked_length(flag, x) =>
+    local = x
+    while flag
+        local := x
+        ta.ema(close, local)
+
+length = input.int(2, "Length")
+plot(checked_length(close > open, length))

@@ -275,8 +275,18 @@ fn analyze_fixture(path: &Path, text: String) -> Analysis {
     let source = SourceFile::new(path.display().to_string(), text.clone());
     let library = if text.contains("import user/lib/1") {
         Some(("user/lib/1", "tests/fixtures/libraries/import_lib.pine"))
+    } else if text.contains("import user/udt_array_returns/1") {
+        Some((
+            "user/udt_array_returns/1",
+            "tests/fixtures/libraries/import_udt_array_return_lib.pine",
+        ))
     } else if text.contains("import user/udt/1") {
         Some(("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine"))
+    } else if text.contains("import user/non_scalar_udt/1") {
+        Some((
+            "user/non_scalar_udt/1",
+            "tests/fixtures/libraries/import_non_scalar_udt_lib.pine",
+        ))
     } else {
         None
     };

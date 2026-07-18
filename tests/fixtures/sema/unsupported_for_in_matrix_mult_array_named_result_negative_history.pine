@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported for-in matrix.mult named array result negative history")
+left = matrix.new<float>(1, 2, 0)
+values = matrix.mult(id1 = left, id2 = array.from(1, 2))
+length = for value in values
+    -1
+plot(close[length])

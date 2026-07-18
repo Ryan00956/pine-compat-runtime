@@ -1,0 +1,18 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Unsupported imported user-method map call-result reads")
+
+point = lib.Point.new(1.0)
+
+bad_get_key = point.exposeMap().get(1)
+bad_contains_key = point.exposeMap().contains(1)
+bad_get_arity = point.exposeMap().get("v", "extra")
+point.exposeMap().put(1, 1.0)
+clear_result = point.exposeMap().clear(1)
+point.exposeMap().remove(1)
+point.exposeMap().put_all(map.new<int, float>())
+copy_keys_helper = point.exposeMap().copy().keys().contains("v")
+terminal_chain = point.exposeMap().size().copy()
+scalar_size = point.shift(1.0).size()
+
+plot(close)

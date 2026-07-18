@@ -145,7 +145,7 @@ const STR_FORMAT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "arg",
-        accepts: Accepts::StringConvertible,
+        accepts: Accepts::FormatConvertible,
         optional: true,
     },
 ];

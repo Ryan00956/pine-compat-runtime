@@ -130,7 +130,7 @@ impl<'a> HistoricalRuntime<'a> {
                     .to_owned(),
             );
         }
-        if name == "timeframe.isseconds" {
+        if name == "timeframe.isticks" || name == "timeframe.isseconds" {
             return PineValue::Bool(false);
         }
         if name == "timeframe.isminutes" {
@@ -267,14 +267,26 @@ impl<'a> HistoricalRuntime<'a> {
                 .collect();
             return self.new_array_from_values(ArrayElementKind::Table, tables);
         }
+        if name == "strategy.account_currency" {
+            return eval_static_builtin_value("syminfo.currency");
+        }
         if name == "strategy.position_size" {
             return PineValue::Float(self.strategy_broker.position_size());
         }
         if name == "strategy.position_avg_price" {
             return self.strategy_broker.position_avg_price_value();
         }
+        if name == "strategy.position_entry_name" {
+            return self.strategy_broker.position_entry_name_value();
+        }
+        if name == "strategy.initial_capital" {
+            return PineValue::Float(self.strategy_broker.initial_capital());
+        }
         if name == "strategy.closedtrades" {
             return PineValue::Int(self.strategy_broker.closed_trade_count());
+        }
+        if name == "strategy.closedtrades.first_index" {
+            return PineValue::Int(self.strategy_broker.first_closed_trade_index());
         }
         if name == "strategy.wintrades" {
             return PineValue::Int(self.strategy_broker.winning_trade_count());
@@ -304,6 +316,13 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "strategy.openprofit" {
             return self.current_bar.map_or(PineValue::Na, |bar| {
                 PineValue::Float(self.strategy_broker.open_profit(bar.close))
+            });
+        }
+        if name == "strategy.openprofit_percent" {
+            return self.current_bar.map_or(PineValue::Na, |bar| {
+                self.strategy_broker
+                    .open_profit_percent(bar.close)
+                    .map_or(PineValue::Na, PineValue::Float)
             });
         }
         if name == "strategy.netprofit" {

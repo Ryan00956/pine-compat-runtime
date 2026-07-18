@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported input defval series")
+value = input(close, "Value")
+plot(close)

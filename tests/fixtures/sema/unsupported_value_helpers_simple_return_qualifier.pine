@@ -1,0 +1,15 @@
+//@version=6
+indicator("Unsupported value helpers simple return qualifier")
+
+values = array.new_int(1, 64)
+source_int = array.size(values)
+source_float = array.size(values) + 0.5
+source_color = color.rgb(array.size(values), 128, 192)
+
+simple_int = nz(source_int)
+simple_float = fixnan(source_float)
+simple_color = fixnan(source_color)
+
+plot(close, show_last=simple_int)
+hline(simple_float)
+hline(2, color=simple_color)

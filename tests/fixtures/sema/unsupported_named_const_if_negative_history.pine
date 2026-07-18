@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported named const if negative history")
+use_short = true
+length = if use_short
+    -1
+else
+    1
+plot(close[length])

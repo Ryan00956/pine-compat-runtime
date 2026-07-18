@@ -1,5 +1,4 @@
 //@version=6
-indicator("Unsupported map for in")
-values = map.new<string, float>()
-for value in values
-    plot(1)
+indicator("Unsupported for in")
+for value in close
+    plot(value)

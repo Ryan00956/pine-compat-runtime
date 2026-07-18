@@ -1,0 +1,10 @@
+//@version=6
+indicator("Supported color.rgb Numeric Compatible")
+dynamic_red = bar_index == 0 ? na : close
+dynamic_transp = bar_index == 0 ? na : 25
+missing_red = color.rgb(na, 64, 128)
+missing_transp = color.rgb(255, 128, 0, na)
+series_channel = color.rgb(dynamic_red, 64, 128)
+series_transparency = color.rgb(255, 128, 0, dynamic_transp)
+plot(close, color=bar_index == 0 ? missing_red : missing_transp)
+plot(open, color=bar_index == 0 ? series_channel : series_transparency)

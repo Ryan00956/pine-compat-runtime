@@ -79,7 +79,7 @@ const MATH_RANDOM_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "seed",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
 ];
@@ -92,7 +92,7 @@ const MATH_SUM_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "length",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
 ];

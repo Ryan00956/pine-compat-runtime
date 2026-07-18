@@ -1,0 +1,12 @@
+//@version=6
+indicator("Unsupported ticker const string return qualifier")
+
+plot(timestamp(dateString=ticker.new("NASDAQ", "AAPL")))
+plot(timestamp(dateString=ticker.modify("NASDAQ:AAPL")))
+plot(timestamp(dateString=ticker.standard("NASDAQ:AAPL")))
+plot(timestamp(dateString=ticker.heikinashi("NASDAQ:AAPL")))
+plot(timestamp(dateString=ticker.inherit(ticker.heikinashi("NASDAQ:AAPL"), "NYSE:PFE")))
+plot(timestamp(dateString=ticker.linebreak("NASDAQ:AAPL", 3)))
+plot(timestamp(dateString=ticker.kagi("NASDAQ:AAPL", "ATR", 10)))
+plot(timestamp(dateString=ticker.pointfigure("NASDAQ:AAPL", "hl", "ATR", 14, 3)))
+plot(timestamp(dateString=ticker.renko("NASDAQ:AAPL", "ATR", 10)))

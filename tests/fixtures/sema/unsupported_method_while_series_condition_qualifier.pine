@@ -1,0 +1,13 @@
+//@version=6
+indicator("Unsupported method while series condition qualifier")
+
+type QualifierTool
+    int seed
+
+method while_length(QualifierTool tool, bool flag, int x) =>
+    while flag
+        x
+
+tool = QualifierTool.new(1)
+length = input.int(2, "Length")
+plot(ta.ema(close, tool.while_length(close > open, length)))

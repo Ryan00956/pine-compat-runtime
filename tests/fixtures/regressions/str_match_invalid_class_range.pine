@@ -1,0 +1,3 @@
+indicator("String match invalid character class range")
+matched = str.match("ab", "[a--b]")
+plot(str.length(matched))

@@ -1,0 +1,24 @@
+//@version=6
+indicator("Supported matrix concat")
+
+float_left = matrix.new<float>(1, 1, close)
+float_right = matrix.new<float>(1, 1, high)
+matrix<float> float_result = matrix.concat(float_left, float_right)
+
+int_left = matrix.new<int>(1, 1, 1)
+int_right = matrix.new<int>(1, 1, 2)
+matrix<int> int_result = int_left.concat(int_right)
+
+bool_left = matrix.new<bool>(1, 1, false)
+bool_right = matrix.new<bool>(1, 1, true)
+matrix<bool> bool_result = matrix.concat(bool_left, bool_right)
+
+string_left = matrix.new<string>(1, 1, "a")
+string_right = matrix.new<string>(1, 1, "b")
+matrix<string> string_result = string_left.concat(string_right)
+
+color_left = matrix.new<color>(1, 1, color.red)
+color_right = matrix.new<color>(1, 1, color.blue)
+matrix<color> color_result = matrix.concat(color_left, color_right)
+
+plot(float_result.rows() + int_result.rows() + bool_result.rows() + string_result.rows() + color_result.rows())

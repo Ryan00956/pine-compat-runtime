@@ -1,0 +1,14 @@
+//@version=6
+indicator("Unsupported matrix concat UDF mutation")
+
+append_namespace(target, source) =>
+    matrix.concat(target, source)
+    close
+
+append_method(target, source) =>
+    target.concat(source)
+    close
+
+left = matrix.new<float>(1, 1, close)
+right = matrix.new<float>(1, 1, high)
+plot(append_namespace(left, right) + append_method(left, right))

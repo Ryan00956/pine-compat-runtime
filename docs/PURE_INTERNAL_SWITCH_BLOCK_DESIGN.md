@@ -1,8 +1,9 @@
 # Pure Internal Switch Statement-Block Design Gate
 
 Status: design gate closed; condition-form, selector-form, and default positive
-scalar subsets are implemented for statement-block arms. Block arms without a
-final result expression remain future work.
+scalar subsets are implemented for expression statement-block arms. Statement
+context `switch` block arms can execute for side effects and outer assignment
+without a final result expression.
 
 This document defines the internal path for future statement-block arms in
 `switch` expressions. It is scoped to parser shape, semantic analysis, HIR
@@ -43,7 +44,18 @@ value = switch
         local
 ```
 
-Statement-block arms that do not end in a result expression are semantic errors.
+Expression-context statement-block arms that do not end in a result expression
+are semantic errors.
+Statement-context `switch` arms can be used as standalone statements and do not
+require a result expression:
+
+```pine
+switch direction
+    1 =>
+        total := total + high
+    =>
+        total := total + low
+```
 
 Current evidence:
 
@@ -61,6 +73,9 @@ Current evidence:
   outer reassignment from block arms.
 - `tests/fixtures/runtime/switch_statement_block_loop_control.pine` covers
   selected-arm `break`/`continue` propagation to the nearest enclosing loop.
+- `tests/fixtures/runtime/switch_statement_form.pine` covers standalone
+  statement-context switch arms in condition-form, selector-form, default-arm,
+  outer-reassignment, and loop-control paths without dummy result expressions.
 - `tests/fixtures/runtime/switch_statement_block_tuple.pine` covers tuple
   declaration/destructuring results from selected block arms.
 - `tests/fixtures/runtime/switch_statement_block_udt.pine` covers same-local
@@ -85,13 +100,15 @@ Current evidence:
   keeps branch-local block declarations from leaking after the switch
   expression.
 - `tests/fixtures/sema/unsupported_switch_statement_block_udt_identity.pine`
-  keeps mismatched UDT identities across block arms rejected.
+  keeps mismatched UDT identities across block arms rejected with a message-level
+  switch UDT identity diagnostic.
 - `tests/fixtures/runtime/import_udt_switch_statement_block.pine` and
   `crates/pine-sema/src/tests/compatibility.rs::import_accepts_switch_block_imported_user_type_result`
   cover same-imported-identity UDT constructor and block-local alias results
   from selected block arms.
 - `tests/fixtures/sema/unsupported_imported_udt_switch_identity.pine` keeps
-  local/imported UDT identity mismatches rejected across switch arms.
+  local/imported UDT identity mismatches rejected across switch arms with the
+  same message-level switch UDT identity diagnostic.
 - `crates/pine-syntax/src/ast.rs` represents switch arm results as either an
   expression or statement block, and lowering reuses `HirExprKind::Block` for
   supported block arms.
@@ -136,7 +153,8 @@ Parser policy:
 - require at least one statement in a block arm;
 - keep nested `switch`, `if`, `for`, and `while` bodies parsed by existing block
   machinery;
-- keep statement-form top-level `switch` out of scope.
+- keep statement-context `switch` lowering separate from expression `switch`
+  so expression arms continue to require a value-producing result.
 
 ## Scoping And Result Policy
 
@@ -182,8 +200,8 @@ arms introduce no new storage family by themselves.
 
 Keep these out of the first positive subset:
 
-- statement-form `switch` as a standalone statement;
-- arm blocks without a final result expression beyond the current diagnostic;
+- expression-context arm blocks without a final result expression beyond the
+  current diagnostic;
 - result-producing blocks that end in declarations, reassignment, drawing,
   strategy, or alert statements;
 - imported UDT identity interactions beyond the same-imported-identity switch

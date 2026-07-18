@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported ta zero-arg return qualifier")
+
+hline(ta.ao())
+hline(ta.bop())

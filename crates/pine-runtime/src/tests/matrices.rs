@@ -100,6 +100,160 @@ fn allocates_and_copies_int_matrix_storage() {
 }
 
 #[test]
+fn concatenates_matrix_rows_in_place_and_preserves_source() {
+    let program = runtime_program();
+    let mut runtime = HistoricalRuntime::new(&program);
+
+    let PineValue::Matrix(target_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 1, 2, PineValue::Float(1.0))
+        .expect("target matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    runtime
+        .matrix_set_value(target_id, 0, 1, PineValue::Float(2.0))
+        .expect("matrix set should succeed");
+    let PineValue::Matrix(source_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 2, PineValue::Float(3.0))
+        .expect("source matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    runtime
+        .matrix_set_value(source_id, 0, 1, PineValue::Float(4.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(source_id, 1, 0, PineValue::Float(5.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(source_id, 1, 1, PineValue::Float(6.0))
+        .expect("matrix set should succeed");
+
+    assert_eq!(
+        runtime
+            .matrix_concat(target_id, source_id)
+            .expect("matrix concat should succeed"),
+        Some(target_id)
+    );
+    assert_eq!(runtime.matrix_shape(target_id), Some((3, 2)));
+    assert_eq!(runtime.matrix_shape(source_id), Some((2, 2)));
+    for (row, column, expected) in [
+        (0, 0, 1.0),
+        (0, 1, 2.0),
+        (1, 0, 3.0),
+        (1, 1, 4.0),
+        (2, 0, 5.0),
+        (2, 1, 6.0),
+    ] {
+        assert_eq!(
+            runtime
+                .matrix_get_cloned(target_id, row, column)
+                .expect("matrix get should succeed"),
+            Some(PineValue::Float(expected))
+        );
+    }
+    assert_eq!(
+        runtime
+            .matrix_get_cloned(source_id, 1, 1)
+            .expect("matrix get should succeed"),
+        Some(PineValue::Float(6.0))
+    );
+
+    assert_eq!(
+        runtime
+            .matrix_concat(target_id, target_id)
+            .expect("self concat should succeed"),
+        Some(target_id)
+    );
+    assert_eq!(runtime.matrix_shape(target_id), Some((6, 2)));
+    assert_eq!(
+        runtime
+            .matrix_get_cloned(target_id, 5, 1)
+            .expect("matrix get should succeed"),
+        Some(PineValue::Float(6.0))
+    );
+
+    let PineValue::Matrix(zero_target_id) = runtime
+        .new_matrix(MatrixElementKind::Bool, 2, 0, PineValue::Na)
+        .expect("zero-column target allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(zero_source_id) = runtime
+        .new_matrix(MatrixElementKind::Bool, 3, 0, PineValue::Na)
+        .expect("zero-column source allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    assert_eq!(
+        runtime
+            .matrix_concat(zero_target_id, zero_source_id)
+            .expect("zero-column concat should succeed"),
+        Some(zero_target_id)
+    );
+    assert_eq!(runtime.matrix_shape(zero_target_id), Some((5, 0)));
+
+    let PineValue::Matrix(mismatched_columns_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 1, 3, PineValue::Float(0.0))
+        .expect("mismatched-column matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let error = runtime
+        .matrix_concat(source_id, mismatched_columns_id)
+        .expect_err("mismatched columns should fail");
+    assert_eq!(
+        error.message,
+        "matrix.concat column count 2 must match source column count 3"
+    );
+    assert_eq!(runtime.matrix_shape(source_id), Some((2, 2)));
+
+    let PineValue::Matrix(int_id) = runtime
+        .new_matrix(MatrixElementKind::Int, 1, 2, PineValue::Int(1))
+        .expect("integer matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    assert_eq!(
+        runtime
+            .matrix_concat(target_id, int_id)
+            .expect("kind mismatch should not be a runtime error"),
+        None
+    );
+    assert_eq!(runtime.matrix_shape(target_id), Some((6, 2)));
+    assert_eq!(
+        runtime
+            .matrix_concat(u32::MAX, source_id)
+            .expect("missing target should not be a runtime error"),
+        None
+    );
+    assert_eq!(
+        runtime
+            .matrix_concat(target_id, u32::MAX)
+            .expect("missing source should not be a runtime error"),
+        None
+    );
+
+    let PineValue::Matrix(large_target_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 1, 50_001, PineValue::Float(0.0))
+        .expect("large target allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(large_source_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 1, 50_001, PineValue::Float(0.0))
+        .expect("large source allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let error = runtime
+        .matrix_concat(large_target_id, large_source_id)
+        .expect_err("matrix cell limit should fail");
+    assert_eq!(error.message, "matrix cell count cannot exceed 100000");
+    assert_eq!(runtime.matrix_shape(large_target_id), Some((1, 50_001)));
+}
+
+#[test]
 fn reports_square_matrix_shape() {
     let program = runtime_program();
     let mut runtime = HistoricalRuntime::new(&program);
@@ -281,6 +435,207 @@ fn reports_diagonal_matrix_values() {
     assert_eq!(runtime.matrix_is_diagonal(off_diagonal_na_id), Some(false));
     assert_eq!(runtime.matrix_is_diagonal(diagonal_na_id), Some(true));
     assert_eq!(runtime.matrix_is_diagonal(empty_id), Some(true));
+}
+
+#[test]
+fn reports_antidiagonal_matrix_values() {
+    let program = runtime_program();
+    let mut runtime = HistoricalRuntime::new(&program);
+
+    let PineValue::Matrix(antidiagonal_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 3, 3, PineValue::Float(0.0))
+        .expect("antidiagonal matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(rectangular_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 3, PineValue::Float(0.0))
+        .expect("rectangular matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(non_antidiagonal_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 3, 3, PineValue::Float(0.0))
+        .expect("non-antidiagonal matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(outside_na_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 2, PineValue::Float(0.0))
+        .expect("outside-na matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(diagonal_na_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 2, PineValue::Float(0.0))
+        .expect("diagonal-na matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(int_id) = runtime
+        .new_matrix(MatrixElementKind::Int, 2, 2, PineValue::Int(0))
+        .expect("integer antidiagonal matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(empty_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 0, 0, PineValue::Na)
+        .expect("empty matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+
+    runtime
+        .matrix_set_value(antidiagonal_id, 0, 2, PineValue::Float(5.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(antidiagonal_id, 1, 1, PineValue::Na)
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(antidiagonal_id, 2, 0, PineValue::Float(7.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(non_antidiagonal_id, 0, 0, PineValue::Float(1.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(outside_na_id, 0, 0, PineValue::Na)
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(diagonal_na_id, 0, 1, PineValue::Na)
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(int_id, 0, 1, PineValue::Int(1))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(int_id, 1, 0, PineValue::Int(2))
+        .expect("matrix set should succeed");
+
+    assert_eq!(runtime.matrix_is_antidiagonal(antidiagonal_id), Some(true));
+    assert_eq!(runtime.matrix_is_antidiagonal(rectangular_id), Some(false));
+    assert_eq!(
+        runtime.matrix_is_antidiagonal(non_antidiagonal_id),
+        Some(false)
+    );
+    assert_eq!(runtime.matrix_is_antidiagonal(outside_na_id), Some(false));
+    assert_eq!(runtime.matrix_is_antidiagonal(diagonal_na_id), Some(true));
+    assert_eq!(runtime.matrix_is_antidiagonal(int_id), Some(true));
+    assert_eq!(runtime.matrix_is_antidiagonal(empty_id), Some(true));
+    assert_eq!(runtime.matrix_is_antidiagonal(u32::MAX), None);
+}
+
+#[test]
+fn reports_triangular_matrix_values() {
+    let program = runtime_program();
+    let mut runtime = HistoricalRuntime::new(&program);
+
+    let PineValue::Matrix(upper_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 3, 3, PineValue::Float(0.0))
+        .expect("upper-triangular matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(lower_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 3, 3, PineValue::Float(0.0))
+        .expect("lower-triangular matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(non_triangular_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 2, PineValue::Float(0.0))
+        .expect("non-triangular matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(rectangular_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 3, PineValue::Float(0.0))
+        .expect("rectangular matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(diagonal_na_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 2, PineValue::Float(0.0))
+        .expect("diagonal-na matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(one_side_na_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 2, PineValue::Float(0.0))
+        .expect("one-side-na matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(two_side_invalid_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 2, PineValue::Float(0.0))
+        .expect("two-side-invalid matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(int_id) = runtime
+        .new_matrix(MatrixElementKind::Int, 2, 2, PineValue::Int(0))
+        .expect("integer triangular matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(empty_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 0, 0, PineValue::Na)
+        .expect("empty matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+
+    runtime
+        .matrix_set_value(upper_id, 0, 1, PineValue::Float(1.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(upper_id, 0, 2, PineValue::Float(2.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(upper_id, 1, 2, PineValue::Float(3.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(lower_id, 1, 0, PineValue::Float(1.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(lower_id, 2, 0, PineValue::Float(2.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(lower_id, 2, 1, PineValue::Float(3.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(non_triangular_id, 0, 1, PineValue::Float(1.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(non_triangular_id, 1, 0, PineValue::Float(1.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(diagonal_na_id, 0, 0, PineValue::Na)
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(one_side_na_id, 0, 1, PineValue::Na)
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(two_side_invalid_id, 0, 1, PineValue::Na)
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(two_side_invalid_id, 1, 0, PineValue::Float(1.0))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(int_id, 1, 0, PineValue::Int(2))
+        .expect("matrix set should succeed");
+
+    assert_eq!(runtime.matrix_is_triangular(upper_id), Some(true));
+    assert_eq!(runtime.matrix_is_triangular(lower_id), Some(true));
+    assert_eq!(runtime.matrix_is_triangular(non_triangular_id), Some(false));
+    assert_eq!(runtime.matrix_is_triangular(rectangular_id), Some(false));
+    assert_eq!(runtime.matrix_is_triangular(diagonal_na_id), Some(true));
+    assert_eq!(runtime.matrix_is_triangular(one_side_na_id), Some(true));
+    assert_eq!(
+        runtime.matrix_is_triangular(two_side_invalid_id),
+        Some(false)
+    );
+    assert_eq!(runtime.matrix_is_triangular(int_id), Some(true));
+    assert_eq!(runtime.matrix_is_triangular(empty_id), Some(true));
+    assert_eq!(runtime.matrix_is_triangular(u32::MAX), None);
 }
 
 #[test]
@@ -699,6 +1054,15 @@ fn summarizes_numeric_matrix_cells_and_ignores_na() {
         .expect("matrix set should succeed");
     assert_eq!(runtime.matrix_mode(id), Some(PineValue::Float(2.0)));
 
+    runtime
+        .matrix_set_value(id, 1, 0, PineValue::Float(1.5))
+        .expect("matrix set should succeed");
+    assert_eq!(
+        runtime.matrix_mode(id),
+        Some(PineValue::Float(1.5)),
+        "equal-frequency mode ties should select the smaller value"
+    );
+
     let PineValue::Matrix(empty_id) = runtime
         .new_matrix(MatrixElementKind::Float, 0, 2, PineValue::Na)
         .expect("empty matrix allocation")
@@ -710,6 +1074,93 @@ fn summarizes_numeric_matrix_cells_and_ignores_na() {
     assert_eq!(runtime.matrix_min(empty_id), None);
     assert_eq!(runtime.matrix_max(empty_id), None);
     assert_eq!(runtime.matrix_mode(empty_id), None);
+}
+
+#[test]
+fn calculates_matrix_medians_by_element_kind_and_ignores_na() {
+    let program = runtime_program();
+    let mut runtime = HistoricalRuntime::new(&program);
+
+    let PineValue::Matrix(float_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 2, 3, PineValue::Na)
+        .expect("float matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    for (column, value) in (0_i64..).zip([4.0, 1.0, 3.0]) {
+        runtime
+            .matrix_set_value(float_id, 0, column, PineValue::Float(value))
+            .expect("matrix set should succeed");
+    }
+    runtime
+        .matrix_set_value(float_id, 1, 0, PineValue::Float(2.0))
+        .expect("matrix set should succeed");
+    assert_eq!(runtime.matrix_median(float_id), Some(PineValue::Float(2.5)));
+
+    let PineValue::Matrix(int_positive_id) = runtime
+        .new_matrix(MatrixElementKind::Int, 1, 2, PineValue::Na)
+        .expect("positive integer matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    runtime
+        .matrix_set_value(int_positive_id, 0, 0, PineValue::Int(1))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(int_positive_id, 0, 1, PineValue::Int(2))
+        .expect("matrix set should succeed");
+    assert_eq!(
+        runtime.matrix_median(int_positive_id),
+        Some(PineValue::Int(1)),
+        "positive integer midpoint averages should truncate toward zero"
+    );
+
+    let PineValue::Matrix(int_negative_id) = runtime
+        .new_matrix(MatrixElementKind::Int, 1, 2, PineValue::Na)
+        .expect("negative integer matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    runtime
+        .matrix_set_value(int_negative_id, 0, 0, PineValue::Int(-2))
+        .expect("matrix set should succeed");
+    runtime
+        .matrix_set_value(int_negative_id, 0, 1, PineValue::Int(-1))
+        .expect("matrix set should succeed");
+    assert_eq!(
+        runtime.matrix_median(int_negative_id),
+        Some(PineValue::Int(-1)),
+        "negative integer midpoint averages should truncate toward zero"
+    );
+
+    let PineValue::Matrix(int_odd_id) = runtime
+        .new_matrix(MatrixElementKind::Int, 1, 3, PineValue::Na)
+        .expect("odd integer matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    for (column, value) in (0_i64..).zip([5, 1, 3]) {
+        runtime
+            .matrix_set_value(int_odd_id, 0, column, PineValue::Int(value))
+            .expect("matrix set should succeed");
+    }
+    assert_eq!(runtime.matrix_median(int_odd_id), Some(PineValue::Int(3)));
+
+    let PineValue::Matrix(empty_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 0, 2, PineValue::Na)
+        .expect("empty matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    let PineValue::Matrix(all_na_id) = runtime
+        .new_matrix(MatrixElementKind::Float, 1, 2, PineValue::Na)
+        .expect("all-na matrix allocation")
+    else {
+        panic!("expected matrix id");
+    };
+    assert_eq!(runtime.matrix_median(empty_id), None);
+    assert_eq!(runtime.matrix_median(all_na_id), None);
+    assert_eq!(runtime.matrix_median(u32::MAX), None);
 }
 
 #[test]
@@ -1197,6 +1648,75 @@ fn computes_matrix_multiplication_independently() {
     assert_eq!(
         err.message,
         "matrix multiplication requires array size to match matrix row count"
+    );
+
+    let PineValue::Array(dot_left_id) = runtime.new_array_from_values(
+        ArrayElementKind::Float,
+        vec![
+            PineValue::Float(1.0),
+            PineValue::Float(2.0),
+            PineValue::Float(3.0),
+        ],
+    ) else {
+        panic!("expected dot left array id");
+    };
+    let PineValue::Array(dot_right_id) = runtime.new_array_from_values(
+        ArrayElementKind::Int,
+        vec![PineValue::Int(4), PineValue::Int(5), PineValue::Int(6)],
+    ) else {
+        panic!("expected dot right array id");
+    };
+    let PineValue::Array(dot_product_id) = runtime
+        .array_mult_array(dot_left_id, dot_right_id)
+        .expect("array array multiplication")
+    else {
+        panic!("expected dot product array id");
+    };
+    assert_ne!(dot_left_id, dot_product_id);
+    assert_ne!(dot_right_id, dot_product_id);
+    assert_eq!(
+        runtime
+            .array_values_clone(dot_product_id)
+            .expect("array clone should succeed"),
+        Some(vec![PineValue::Float(32.0)])
+    );
+
+    let PineValue::Array(na_dot_left_id) = runtime.new_array_from_values(
+        ArrayElementKind::Float,
+        vec![PineValue::Float(1.0), PineValue::Na],
+    ) else {
+        panic!("expected na dot left array id");
+    };
+    let PineValue::Array(na_dot_right_id) = runtime.new_array_from_values(
+        ArrayElementKind::Float,
+        vec![PineValue::Float(2.0), PineValue::Float(3.0)],
+    ) else {
+        panic!("expected na dot right array id");
+    };
+    let PineValue::Array(na_dot_product_id) = runtime
+        .array_mult_array(na_dot_left_id, na_dot_right_id)
+        .expect("na array array multiplication")
+    else {
+        panic!("expected na dot product array id");
+    };
+    assert_eq!(
+        runtime
+            .array_get_cloned(na_dot_product_id, 0)
+            .expect("array get should succeed"),
+        Some(PineValue::Na)
+    );
+
+    let PineValue::Array(short_dot_right_id) =
+        runtime.new_array_from_values(ArrayElementKind::Float, vec![PineValue::Float(1.0)])
+    else {
+        panic!("expected short dot right array id");
+    };
+    let err = runtime
+        .array_mult_array(dot_left_id, short_dot_right_id)
+        .expect_err("short right array should fail");
+    assert_eq!(
+        err.message,
+        "matrix multiplication requires left array size to match right array size"
     );
 }
 

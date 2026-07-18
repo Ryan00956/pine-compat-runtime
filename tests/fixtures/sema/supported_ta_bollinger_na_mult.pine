@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported ta Bollinger na mult")
+series_mult = bar_index == 0 ? na : 2
+[basis, upper, lower] = ta.bb(close, 3, na)
+[series_basis, series_upper, series_lower] = ta.bb(close, 3, series_mult)
+width = ta.bbw(close, 3, na)
+series_width = ta.bbw(close, 3, series_mult)
+plot(basis + upper + lower + series_basis + series_upper + series_lower + width + series_width)

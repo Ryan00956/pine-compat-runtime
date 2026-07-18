@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported str.split simple array return qualifier")
+
+string_matrix = matrix.new<string>(1, 2, "")
+
+matrix.add_row(string_matrix, 0, str.split("A,B", ","))
+matrix.add_row(string_matrix, 0, str.split(str.tostring(close), "."))

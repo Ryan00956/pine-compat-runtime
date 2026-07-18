@@ -10,7 +10,7 @@ matrix in `tests/fixtures/conformance.tsv`.
 ## Delivered Surface
 
 - Global and local scalar `varip` declarations for `int`, `float`, `bool`,
-  `string`, `color`, and `na`.
+  `string`, `color`, `chart.point`, and `na`.
 - Local scalar declaration-site storage inside `if`, `for`, `while`, and
   lowered user-defined function bodies, with independent storage per lowered UDF
   callsite.
@@ -19,7 +19,8 @@ matrix in `tests/fixtures/conformance.tsv`.
 - Realtime forming-bar execution where supported scalar `varip` slots persist
   across repeated forming updates while ordinary `var`, outputs, drawing
   objects, request caches, callsite state, non-`varip` arrays, and dynamic
-  history reads roll back to confirmed state.
+  history reads roll back to confirmed state, including ordinary
+  `var chart.point` field mutation.
 - Scalar typed-array `varip` declarations for float, int, bool, string, and
   color array ids, plus `chart.point` typed-array `varip` declarations, using
   either `array<type>` or `type[]` declaration syntax. The retained intrabar
@@ -45,12 +46,14 @@ Runtime fixtures:
 - `tests/fixtures/runtime/varip_scalar.pine`
 - `tests/fixtures/runtime/varip_local.pine`
 - `tests/fixtures/runtime/varip_array.pine`
+- `tests/fixtures/runtime/chart_point_varip.pine`
 
 Realtime fixtures:
 
 - `tests/fixtures/realtime/varip_scalar.pine`
 - `tests/fixtures/realtime/varip_local.pine`
 - `tests/fixtures/realtime/varip_array.pine`
+- `tests/fixtures/realtime/chart_point_varip.pine`
 
 Semantic fixtures:
 

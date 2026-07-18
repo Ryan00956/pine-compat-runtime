@@ -1,0 +1,15 @@
+//@version=5
+indicator("Chart point typed UDF params")
+
+make_point(int offset) =>
+    chart.point.from_index(bar_index + offset, close + offset)
+
+pass_point(chart.point point) =>
+    point
+
+point = pass_point(make_point(5))
+previous = point[1]
+
+plot(point.index)
+plot(point.price)
+plot(na(previous) ? na : previous.index)

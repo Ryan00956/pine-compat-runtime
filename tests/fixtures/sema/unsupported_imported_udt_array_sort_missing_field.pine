@@ -1,0 +1,7 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT array sort missing field")
+
+values = array.from(lib.BoolOffset.new(true))
+array.sort(values)
+plot(close)

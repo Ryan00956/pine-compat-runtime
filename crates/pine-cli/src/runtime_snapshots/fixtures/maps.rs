@@ -22,12 +22,20 @@ pub(crate) const MAP_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/map_copy.pine",
     ),
     (
+        "runtime_builtin_map_copy_call_result_reads.json",
+        "tests/fixtures/runtime/builtin_map_copy_call_result_reads.pine",
+    ),
+    (
         "runtime_map_methods.json",
         "tests/fixtures/runtime/map_methods.pine",
     ),
     (
         "runtime_map_keys_values.json",
         "tests/fixtures/runtime/map_keys_values.pine",
+    ),
+    (
+        "runtime_map_for_in.json",
+        "tests/fixtures/runtime/map_for_in.pine",
     ),
     (
         "runtime_map_put_all.json",
@@ -46,7 +54,23 @@ pub(crate) const MAP_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/map_udf_read.pine",
     ),
     (
+        "runtime_local_udf_map_call_result_reads.json",
+        "tests/fixtures/runtime/local_udf_map_call_result_reads.pine",
+    ),
+    (
+        "runtime_local_user_method_map_call_result_reads.json",
+        "tests/fixtures/runtime/local_user_method_map_call_result_reads.pine",
+    ),
+    (
         "runtime_map_typed_declarations.json",
         "tests/fixtures/runtime/map_typed_declarations.pine",
+    ),
+    (
+        "runtime_map_control_flow.json",
+        "tests/fixtures/runtime/map_control_flow.pine",
+    ),
+    (
+        "runtime_builtin_map_call_result_reads.json",
+        "tests/fixtures/runtime/builtin_map_call_result_reads.pine",
     ),
 ];

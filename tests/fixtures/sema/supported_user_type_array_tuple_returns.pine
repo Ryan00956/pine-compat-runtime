@@ -1,0 +1,211 @@
+//@version=6
+indicator("Supported UDT array tuple returns")
+
+type First
+    float shared
+    float other
+
+type Second
+    float other
+    float shared
+
+type Anchor
+    int tag
+
+pair(values) => [values, values.copy()]
+
+tupleAliasPair(values) =>
+    tuple_value = [values, values.copy()]
+    tuple_value
+
+blockPair(values) =>
+    alias = values
+    copied = values.copy()
+    [alias, copied]
+
+nestedPair(values) => blockPair(values)
+
+typedNaPair() =>
+    array<First> values = na
+    [values]
+
+sameIdentityBranchReassignPair(values, replacement) =>
+    tuple_value = [values, values]
+    if bar_index % 2 == 0
+        tuple_value := [replacement, values]
+    tuple_value
+
+naReassignPair(values) =>
+    tuple_value = [values]
+    tuple_value := [na]
+    tuple_value
+
+arrayViaTuple(values) =>
+    [alias] = [values]
+    alias
+
+arrayViaTupleAlias(values) =>
+    tuple_value = [values]
+    [alias] = tuple_value
+    alias
+
+outerPair(values) =>
+    [direct, copied] = nestedPair(values)
+    [copied, direct]
+
+finalIfPair(values) =>
+    if bar_index >= 0
+        [values, values.copy()]
+    else
+        [na, values]
+
+finalIfAliasPair(values) =>
+    if bar_index >= 0
+        tuple_value = [values, values.copy()]
+        tuple_value
+    else
+        tuple_value = [values.copy(), values]
+        tuple_value
+
+baseTernaryPair(values, bool choose) =>
+    base = [values, values.copy()]
+    choose ? base : base
+
+baseSwitchPair(values) =>
+    base = [values, values.copy()]
+    switch bar_index % 2
+        0 => base
+        => base
+
+assignedIfAliasPair(values, bool choose) =>
+    base = [values, values.copy()]
+    selected = if choose
+        base
+    else
+        base
+    selected
+
+finalSwitchPair(values) =>
+    switch bar_index % 2
+        0 => [values, values.copy()]
+        => [values.copy(), values]
+
+finalForPair(values) =>
+    for index = 0 to 0
+        [values, values.copy()]
+
+finalForInPair(values) =>
+    for item in array.from(0)
+        [values.copy(), values]
+
+finalWhilePair(values) =>
+    int iterations = 0
+    while iterations < 1
+        iterations := iterations + 1
+        [values, values.copy()]
+
+method pairFirst(Anchor self, array<First> values, bool reverse) => reverse ? [values.copy(), values] : [values, values.copy()]
+
+method pairSecond(Anchor self, array<Second> values) => blockPair(values)
+
+method pairAlias(Anchor self, array<First> values, bool reverse) =>
+    if reverse
+        tuple_value = [values.copy(), values]
+        tuple_value
+    else
+        tuple_value = [values, values.copy()]
+        tuple_value
+
+first_values = array.from(First.new(10.0, 100.0))
+second_values = array.from(Second.new(200.0, 20.0))
+first_replacement = array.from(First.new(11.0, 101.0))
+second_replacement = array.from(Second.new(201.0, 21.0))
+anchor = Anchor.new(1)
+
+[root_first, root_second] = [first_values, second_values]
+[scalar_before, middle_first, scalar_after] = [1, first_values, 2.0]
+[first_direct, first_copy] = pair(first_values)
+[second_direct, second_copy] = pair(second_values)
+[first_again, first_again_copy] = pair(first_values)
+[tuple_alias_first, tuple_alias_first_copy] = tupleAliasPair(first_values)
+[tuple_alias_second, tuple_alias_second_copy] = tupleAliasPair(second_values)
+[tuple_alias_first_again, tuple_alias_first_again_copy] = tupleAliasPair(first_values)
+[nested_copy, nested_direct] = outerPair(first_values)
+[typed_na_first] = typedNaPair()
+[branch_reassigned_first, branch_reassigned_first_copy] = sameIdentityBranchReassignPair(first_values, first_replacement)
+[branch_reassigned_second, branch_reassigned_second_copy] = sameIdentityBranchReassignPair(second_values, second_replacement)
+[branch_reassigned_first_again, branch_reassigned_first_again_copy] = sameIdentityBranchReassignPair(first_values, first_replacement)
+[na_reassigned_first] = naReassignPair(first_values)
+[array_alias_first] = [arrayViaTuple(first_values)]
+[array_alias_second] = [arrayViaTuple(second_values)]
+[array_alias_first_again] = [arrayViaTuple(first_values)]
+[array_via_alias_first] = [arrayViaTupleAlias(first_values)]
+[array_via_alias_second] = [arrayViaTupleAlias(second_values)]
+[array_via_alias_first_again] = [arrayViaTupleAlias(first_values)]
+[if_first, if_copy] = finalIfPair(first_values)
+[if_alias_first, if_alias_copy] = finalIfAliasPair(first_values)
+[if_alias_second, if_alias_second_copy] = finalIfAliasPair(second_values)
+[if_alias_first_again, if_alias_first_again_copy] = finalIfAliasPair(first_values)
+[ternary_alias_first, ternary_alias_first_copy] = baseTernaryPair(first_values, true)
+[ternary_alias_second, ternary_alias_second_copy] = baseTernaryPair(second_values, true)
+[ternary_alias_first_again, ternary_alias_first_again_copy] = baseTernaryPair(first_values, true)
+[switch_alias_first, switch_alias_first_copy] = baseSwitchPair(first_values)
+[switch_alias_second, switch_alias_second_copy] = baseSwitchPair(second_values)
+[switch_alias_first_again, switch_alias_first_again_copy] = baseSwitchPair(first_values)
+[assigned_alias_first, assigned_alias_first_copy] = assignedIfAliasPair(first_values, true)
+[assigned_alias_second, assigned_alias_second_copy] = assignedIfAliasPair(second_values, true)
+[assigned_alias_first_again, assigned_alias_first_again_copy] = assignedIfAliasPair(first_values, true)
+[switch_second, switch_second_copy] = finalSwitchPair(second_values)
+[for_first, for_first_copy] = finalForPair(first_values)
+[for_in_second_copy, for_in_second] = finalForInPair(second_values)
+[while_first, while_first_copy] = finalWhilePair(first_values)
+[method_first_copy, method_first] = anchor.pairFirst(values=first_values, reverse=true)
+[method_second, method_second_copy] = anchor.pairSecond(second_values)
+[method_alias_first_copy, method_alias_first] = anchor.pairAlias(first_values, true)
+[nullable_first] = bar_index >= 0 ? [first_values] : [na]
+
+global_self_tuple = [first_values]
+global_self_tuple = global_self_tuple
+[global_self] = global_self_tuple
+
+array<First> typed_first = first_direct
+Second[] typed_second = second_direct
+array<First> typed_na_destination = typed_na_first
+
+float iterated = 0.0
+for item in for_in_second
+    iterated := iterated + item.shared
+
+root_first_item = array.first(root_first)
+root_second_item = array.first(root_second)
+middle_first_item = array.first(middle_first)
+first_direct_item = array.first(typed_first)
+second_direct_item = array.first(typed_second)
+first_again_item = array.first(first_again)
+nested_item = array.first(nested_copy)
+if_item = array.first(if_first)
+if_alias_first_item = array.first(if_alias_first)
+if_alias_second_item = array.first(if_alias_second)
+if_alias_first_again_item = array.first(if_alias_first_again)
+switch_item = array.first(switch_second)
+for_item = array.first(for_first)
+while_item = array.first(while_first)
+method_first_item = array.first(method_first)
+method_second_item = array.first(method_second)
+method_alias_first_item = array.first(method_alias_first)
+nullable_item = array.first(nullable_first)
+array_alias_first_item = array.first(array_alias_first)
+array_alias_second_item = array.first(array_alias_second)
+array_alias_first_again_item = array.first(array_alias_first_again)
+tuple_alias_first_item = array.first(tuple_alias_first)
+tuple_alias_second_item = array.first(tuple_alias_second)
+tuple_alias_first_again_item = array.first(tuple_alias_first_again)
+array_via_alias_first_item = array.first(array_via_alias_first)
+array_via_alias_second_item = array.first(array_via_alias_second)
+array_via_alias_first_again_item = array.first(array_via_alias_first_again)
+global_self_item = array.first(global_self)
+branch_reassigned_first_item = array.first(branch_reassigned_first)
+branch_reassigned_second_item = array.first(branch_reassigned_second)
+branch_reassigned_first_again_item = array.first(branch_reassigned_first_again)
+
+plot(root_first_item.shared + root_second_item.shared + middle_first_item.shared + first_direct_item.shared + second_direct_item.shared + first_again_item.shared + nested_item.shared + if_item.shared + if_alias_first_item.shared + if_alias_second_item.shared + if_alias_first_again_item.shared + switch_item.shared + for_item.shared + iterated + while_item.shared + method_first_item.shared + method_second_item.shared + method_alias_first_item.shared + nullable_item.shared + array_alias_first_item.shared + array_alias_second_item.shared + array_alias_first_again_item.shared + tuple_alias_first_item.shared + tuple_alias_second_item.shared + tuple_alias_first_again_item.shared + global_self_item.shared + branch_reassigned_first_item.shared + branch_reassigned_second_item.shared + branch_reassigned_first_again_item.shared + (na(na_reassigned_first) ? 1 : 0))

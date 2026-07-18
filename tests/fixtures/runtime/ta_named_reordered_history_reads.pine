@@ -1,0 +1,15 @@
+//@version=5
+indicator("TA named reordered history reads")
+change_value = ta.change(length=1, source=bar_index)
+mom_value = ta.mom(length=2, source=bar_index)
+roc_value = ta.roc(length=2, source=close)
+baseline = 2.5
+cross_value = ta.cross(source2=baseline, source1=close)
+crossover_value = ta.crossover(source2=baseline, source1=close)
+crossunder_value = ta.crossunder(source2=baseline, source1=close)
+plot(change_value)
+plot(mom_value)
+plot(roc_value)
+plot(cross_value ? 1 : 0)
+plot(crossover_value ? 1 : 0)
+plot(crossunder_value ? 1 : 0)

@@ -2,6 +2,54 @@ use super::RuntimeSnapshotFixture;
 
 pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     (
+        "runtime_bound_matrix_copy_call_result_reads.json",
+        "tests/fixtures/runtime/bound_matrix_copy_call_result_reads.pine",
+    ),
+    (
+        "runtime_bound_matrix_transpose_call_result_reads.json",
+        "tests/fixtures/runtime/bound_matrix_transpose_call_result_reads.pine",
+    ),
+    (
+        "runtime_bound_matrix_submatrix_call_result_reads.json",
+        "tests/fixtures/runtime/bound_matrix_submatrix_call_result_reads.pine",
+    ),
+    (
+        "runtime_bound_matrix_kron_call_result_reads.json",
+        "tests/fixtures/runtime/bound_matrix_kron_call_result_reads.pine",
+    ),
+    (
+        "runtime_bound_matrix_diff_call_result_reads.json",
+        "tests/fixtures/runtime/bound_matrix_diff_call_result_reads.pine",
+    ),
+    (
+        "runtime_bound_matrix_pow_call_result_reads.json",
+        "tests/fixtures/runtime/bound_matrix_pow_call_result_reads.pine",
+    ),
+    (
+        "runtime_bound_matrix_inv_call_result_reads.json",
+        "tests/fixtures/runtime/bound_matrix_inv_call_result_reads.pine",
+    ),
+    (
+        "runtime_bound_matrix_pinv_call_result_reads.json",
+        "tests/fixtures/runtime/bound_matrix_pinv_call_result_reads.pine",
+    ),
+    (
+        "runtime_bound_matrix_eigenvectors_call_result_reads.json",
+        "tests/fixtures/runtime/bound_matrix_eigenvectors_call_result_reads.pine",
+    ),
+    (
+        "runtime_bound_matrix_mult_call_result_reads.json",
+        "tests/fixtures/runtime/bound_matrix_mult_call_result_reads.pine",
+    ),
+    (
+        "runtime_local_udf_matrix_call_result_reads.json",
+        "tests/fixtures/runtime/local_udf_matrix_call_result_reads.pine",
+    ),
+    (
+        "runtime_user_method_matrix_call_result_reads.json",
+        "tests/fixtures/runtime/user_method_matrix_call_result_reads.pine",
+    ),
+    (
         "runtime_matrix_float.json",
         "tests/fixtures/runtime/matrix_float.pine",
     ),
@@ -114,6 +162,10 @@ pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &
         "tests/fixtures/runtime/matrix_mult.pine",
     ),
     (
+        "runtime_builtin_namespace_matrix_call_result_reads.json",
+        "tests/fixtures/runtime/builtin_namespace_matrix_call_result_reads.pine",
+    ),
+    (
         "runtime_matrix_diff.json",
         "tests/fixtures/runtime/matrix_diff.pine",
     ),
@@ -166,6 +218,10 @@ pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &
         "tests/fixtures/runtime/matrix_submatrix.pine",
     ),
     (
+        "runtime_matrix_concat.json",
+        "tests/fixtures/runtime/matrix_concat.pine",
+    ),
+    (
         "runtime_matrix_sum.json",
         "tests/fixtures/runtime/matrix_sum.pine",
     ),
@@ -176,6 +232,10 @@ pub(crate) const MATRIX_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &
     (
         "runtime_matrix_min_max.json",
         "tests/fixtures/runtime/matrix_min_max.pine",
+    ),
+    (
+        "runtime_matrix_median.json",
+        "tests/fixtures/runtime/matrix_median.pine",
     ),
     (
         "runtime_matrix_mode.json",

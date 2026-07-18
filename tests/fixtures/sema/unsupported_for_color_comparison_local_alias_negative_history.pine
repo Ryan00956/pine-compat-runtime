@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported for color comparison local alias negative history")
+left = for i = 0 to 0
+    value = color.red
+    value
+right = color.blue
+length = left != right ? -1 : 1
+plot(close[length])

@@ -3,4 +3,6 @@ import user/udt/1 as lib
 indicator("Imported UDT method")
 
 p = lib.Point.new(close)
+wrapped = lib.Wrapper.new(p)
 plot(p.shift(1))
+plot(wrapped.nestedShift(2))

@@ -36,28 +36,15 @@ impl Analyzer {
         {
             return;
         }
-        let expected = match element_kind {
-            ValueKind::Float => "float arrays",
-            ValueKind::Int => "int arrays",
-            ValueKind::Bool => "bool arrays",
-            ValueKind::String => "string arrays",
-            ValueKind::Color => "color arrays",
-            ValueKind::Label => "label arrays",
-            ValueKind::Line => "line arrays",
-            ValueKind::LineFill => "linefill arrays",
-            ValueKind::Polyline => "polyline arrays",
-            ValueKind::Box => "box arrays",
-            ValueKind::Table => "table arrays",
-            ValueKind::ChartPoint => "chart.point arrays",
-            _ => return,
+        let Some(expected) = array_element_expected_label(element_kind) else {
+            return;
         };
 
-        self.diagnostics.push(Diagnostic::error(
-            "E_CALL_ARG_TYPE",
-            format!(
-                "`{}` argument `value` does not accept {:?} {:?} for {expected}",
-                signature.name, value_type.qualifier, value_type.kind,
-            ),
+        self.diagnostics.push(call_arg_expected_type_diagnostic(
+            signature.name,
+            "value",
+            expected,
+            value_type,
             args.get(value_index)
                 .map_or(Span::default(), |arg| arg.span),
         ));
@@ -85,12 +72,12 @@ impl Analyzer {
             return;
         }
 
-        self.diagnostics.push(Diagnostic::error(
-            "E_CALL_ARG_TYPE",
-            format!(
-                "`array.concat` argument `id2` does not accept {:?} {:?} for {:?} {:?}",
-                second_type.qualifier, second_type.kind, first_type.qualifier, first_type.kind,
-            ),
+        let expected = pine_type_name(first_type);
+        self.diagnostics.push(call_arg_expected_type_diagnostic(
+            "array.concat",
+            "id2",
+            &expected,
+            second_type,
             args.get(1).map_or(Span::default(), |arg| arg.span),
         ));
     }
@@ -112,10 +99,10 @@ impl Analyzer {
                 UserTypeArrayElementInference::SameScalarLocal(_)
                 | UserTypeArrayElementInference::SameScalarImported(_),
             ) => return,
-            Some(_) => {
+            Some(inference) => {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_TYPE",
-                    "`array.from` does not support UDT arrays",
+                    array_from_user_type_inference_message(&inference),
                     args.first().map_or(Span::default(), |arg| arg.span),
                 ));
                 return;
@@ -123,10 +110,66 @@ impl Analyzer {
             None => {}
         }
 
+        let actual = array_from_actual_arg_labels(arg_types);
+        let message = match actual {
+            Some(actual) => {
+                format!("`array.from` expects one supported array element kind, got {actual}")
+            }
+            None => "`array.from` arguments must infer one supported array element kind".to_owned(),
+        };
         self.diagnostics.push(Diagnostic::error(
             "E_CALL_ARG_TYPE",
-            "`array.from` arguments must infer one supported array element kind",
+            message,
             args.first().map_or(Span::default(), |arg| arg.span),
         ));
+    }
+}
+
+fn array_from_actual_arg_labels(arg_types: &[Option<PineType>]) -> Option<String> {
+    let labels: Option<Vec<_>> = arg_types
+        .iter()
+        .map(|arg_type| arg_type.map(pine_type_name))
+        .collect();
+    let labels = labels?;
+    match labels.as_slice() {
+        [] => None,
+        [only] => Some(only.clone()),
+        [head @ .., tail] => Some(format!("{} and {tail}", head.join(", "))),
+    }
+}
+
+fn array_from_user_type_inference_message(inference: &UserTypeArrayElementInference) -> String {
+    match inference {
+        UserTypeArrayElementInference::SameScalarLocal(_)
+        | UserTypeArrayElementInference::SameScalarImported(_) => {
+            unreachable!("supported UDT array inference returns before diagnostics")
+        }
+        UserTypeArrayElementInference::MixedLocal => {
+            "`array.from` expects one scalar-tree UDT identity, got mixed UDT identities".to_owned()
+        }
+        UserTypeArrayElementInference::UnsupportedFieldType(type_name) => {
+            format!("`array.from` does not support UDT array `{type_name}` with non-scalar fields")
+        }
+        UserTypeArrayElementInference::UnknownUserTypeName => {
+            "`array.from` expects supported scalar-tree UDT values".to_owned()
+        }
+    }
+}
+
+fn array_element_expected_label(element_kind: ValueKind) -> Option<&'static str> {
+    match element_kind {
+        ValueKind::Float => Some("numeric-compatible"),
+        ValueKind::Int => Some("integer-compatible"),
+        ValueKind::Bool => Some("bool-compatible"),
+        ValueKind::String => Some("string-compatible"),
+        ValueKind::Color => Some("color-compatible"),
+        ValueKind::Label => Some("label-compatible"),
+        ValueKind::Line => Some("line-compatible"),
+        ValueKind::LineFill => Some("linefill-compatible"),
+        ValueKind::Polyline => Some("polyline-compatible"),
+        ValueKind::Box => Some("box-compatible"),
+        ValueKind::Table => Some("table-compatible"),
+        ValueKind::ChartPoint => Some("chart.point-compatible"),
+        _ => None,
     }
 }

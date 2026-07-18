@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported max_bars_back named overflow length")
+length = 4294967296
+max_bars_back(close, length)
+plot(close)

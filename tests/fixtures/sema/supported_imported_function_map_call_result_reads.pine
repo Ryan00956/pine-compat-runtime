@@ -1,0 +1,54 @@
+//@version=6
+import user/udt/1 as left
+import user/udt/1 as right
+indicator("Supported imported function map call-result reads")
+
+copied = left.exposeMapFunction().copy()
+copied.put("copy", 9.0)
+
+size = left.exposeMapFunction().size()
+get = left.exposeMapFunction().get("missing")
+contains = left.exposeMapFunction().contains("missing")
+copy_chain = left.exposeMapFunction().copy().size()
+int_string = left.exposeIntMapFunction().get(1)
+bool_color = left.exposeBoolColorMapFunction().get(true)
+color_bool = left.exposeColorBoolMapFunction().get(color.blue)
+block_return = left.exposeMapFunctionBlock().size()
+nested_return = left.exposeMapFunctionNested().size()
+named_control_flow = left.exposeMapFunctionIf(copied=true).size()
+dual_alias = right.exposeMapFunction().size()
+nested_copy = left.exposeMapFunction().copy().copy().size()
+keys = left.exposeMapFunction().keys()
+copied_keys = left.exposeMapFunction().copy().keys().copy().size()
+int_keys = left.exposeIntMapFunction().keys()
+dual_alias_keys = right.exposeMapFunction().keys().size()
+values = left.exposeMapFunction().values()
+copied_values = left.exposeMapFunction().copy().values().copy().size()
+int_values = left.exposeIntMapFunction().values()
+dual_alias_values = right.exposeMapFunction().values().size()
+
+left.exposeMapFunction().put("value", 7.0)
+left.exposeIntMapFunction().put(1, "one")
+
+left.exposeMapFunction().clear()
+left.exposeIntMapFunction().clear()
+
+left.exposeMapFunction().remove("missing")
+left.exposeIntMapFunction().remove(1)
+
+left.exposeMapFunction().put_all(right.exposeMapFunction())
+left.exposeIntMapFunction().put_all(right.exposeIntMapFunction())
+
+plot(size + copy_chain + block_return + nested_return + named_control_flow + dual_alias + nested_copy + keys.size() + copied_keys + int_keys.size() + dual_alias_keys + values.size() + copied_values + int_values.size() + dual_alias_values)
+left.exposeMapFunction().keys().push("extra")
+left.exposeMapFunction().values().push(1.0)
+left.exposeMapFunction().keys().unshift("first")
+left.exposeMapFunction().values().unshift(0.0)
+left.exposeMapFunction().keys().insert(0, "first")
+left.exposeMapFunction().values().insert(0, 0.0)
+left.exposeMapFunction().keys().set(0, "first")
+left.exposeMapFunction().values().set(0, 0.0)
+left.exposeMapFunction().keys().fill("first")
+left.exposeMapFunction().values().fill(0.0, 0, 1)
+left.exposeMapFunction().keys().sort(order.ascending)
+left.exposeMapFunction().values().sort(order.descending)

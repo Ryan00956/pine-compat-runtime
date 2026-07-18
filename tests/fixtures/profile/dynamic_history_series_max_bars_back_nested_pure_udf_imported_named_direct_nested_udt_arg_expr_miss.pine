@@ -1,0 +1,9 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Profile dynamic series history nested pure UDF imported named direct nested UDT arg expression max_bars_back miss", max_bars_back=10)
+adjust(w, delta) => w.nested.x + delta
+source(w, delta) => adjust(delta=delta, w=w)
+src = source(delta=1, w=lib.Wrapper.new(lib.Point.new(close)))
+max_bars_back(src, 2)
+offset = bar_index == 0 ? 0 : 3
+plot(source(w=lib.Wrapper.new(lib.Point.new(close)), delta=1)[offset])

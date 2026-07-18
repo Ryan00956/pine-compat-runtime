@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported alert named const frequency")
+freq_base = "once"
+freq = freq_base
+alert("Close", freq=freq)

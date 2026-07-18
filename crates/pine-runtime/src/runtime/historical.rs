@@ -487,10 +487,8 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         let Some(max_bars_back) = self
-            .program
-            .max_bars_back
-            .map(|value| value as usize)
-            .or(self.history_dynamic_retention_max_bars_back)
+            .history_dynamic_retention_max_bars_back
+            .or_else(|| self.program.max_bars_back.map(|value| value as usize))
         else {
             return Vec::new();
         };

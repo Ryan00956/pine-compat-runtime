@@ -1,0 +1,4 @@
+//@version=6
+indicator("Unsupported plot Simple Histbase")
+values = array.new_int(1, 1)
+plot(close - open, style=plot.style_histogram, histbase=array.size(values))

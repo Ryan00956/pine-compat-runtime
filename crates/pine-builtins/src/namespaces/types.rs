@@ -22,6 +22,7 @@ pub(crate) const SERIES_CHART_POINT: PineType =
     PineType::new(Qualifier::Series, ValueKind::ChartPoint);
 pub(crate) const VOID: PineType = PineType::new(Qualifier::Const, ValueKind::Void);
 pub(crate) const SIMPLE_INT: PineType = PineType::new(Qualifier::Simple, ValueKind::Int);
+pub(crate) const SIMPLE_FLOAT: PineType = PineType::new(Qualifier::Simple, ValueKind::Float);
 pub(crate) const SIMPLE_BOOL: PineType = PineType::new(Qualifier::Simple, ValueKind::Bool);
 pub(crate) const SIMPLE_COLOR: PineType = PineType::new(Qualifier::Simple, ValueKind::Color);
 pub(crate) const SIMPLE_STRING: PineType = PineType::new(Qualifier::Simple, ValueKind::String);

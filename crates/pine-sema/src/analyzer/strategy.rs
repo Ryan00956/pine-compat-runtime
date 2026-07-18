@@ -3,9 +3,13 @@ use crate::prelude::*;
 mod declaration;
 
 const STRATEGY_STATE_VARIABLES: &[&str] = &[
+    "strategy.account_currency",
     "strategy.position_size",
     "strategy.position_avg_price",
+    "strategy.position_entry_name",
+    "strategy.initial_capital",
     "strategy.openprofit",
+    "strategy.openprofit_percent",
     "strategy.netprofit",
     "strategy.netprofit_percent",
     "strategy.grossprofit",
@@ -28,6 +32,7 @@ const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.max_contracts_held_short",
     "strategy.equity",
     "strategy.closedtrades",
+    "strategy.closedtrades.first_index",
     "strategy.wintrades",
     "strategy.losstrades",
     "strategy.eventrades",
@@ -50,8 +55,11 @@ const STRATEGY_CLOSED_TRADE_FIELD_FUNCTIONS: &[&str] = &[
     "strategy.closedtrades.commission",
     "strategy.closedtrades.size",
     "strategy.closedtrades.profit",
+    "strategy.closedtrades.profit_percent",
     "strategy.closedtrades.max_runup",
+    "strategy.closedtrades.max_runup_percent",
     "strategy.closedtrades.max_drawdown",
+    "strategy.closedtrades.max_drawdown_percent",
 ];
 
 const STRATEGY_OPEN_TRADE_FIELD_FUNCTIONS: &[&str] = &[
@@ -62,9 +70,12 @@ const STRATEGY_OPEN_TRADE_FIELD_FUNCTIONS: &[&str] = &[
     "strategy.opentrades.entry_time",
     "strategy.opentrades.size",
     "strategy.opentrades.profit",
+    "strategy.opentrades.profit_percent",
     "strategy.opentrades.commission",
     "strategy.opentrades.max_runup",
+    "strategy.opentrades.max_runup_percent",
     "strategy.opentrades.max_drawdown",
+    "strategy.opentrades.max_drawdown_percent",
 ];
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -109,6 +120,13 @@ pub(crate) fn is_strategy_state_variable(name: &str) -> bool {
 pub(crate) fn is_supported_strategy_trade_field_function(name: &str) -> bool {
     STRATEGY_CLOSED_TRADE_FIELD_FUNCTIONS.contains(&name)
         || STRATEGY_OPEN_TRADE_FIELD_FUNCTIONS.contains(&name)
+}
+
+pub(crate) fn is_supported_strategy_value_function(name: &str) -> bool {
+    matches!(
+        name,
+        "strategy.convert_to_account" | "strategy.convert_to_symbol" | "strategy.default_entry_qty"
+    ) || is_supported_strategy_trade_field_function(name)
 }
 
 impl Analyzer {
@@ -191,8 +209,8 @@ impl Analyzer {
         }
     }
 
-    pub(crate) fn validate_strategy_trade_field_call(&mut self, name: &str, span: Span) {
-        if !is_supported_strategy_trade_field_function(name) {
+    pub(crate) fn validate_strategy_value_function_call(&mut self, name: &str, span: Span) {
+        if !is_supported_strategy_value_function(name) {
             return;
         }
 
@@ -233,7 +251,7 @@ impl Analyzer {
             };
             match name {
                 "direction" => {
-                    let Some(direction) = const_string_value(&arg.value) else {
+                    let Some(direction) = self.known_const_string_value(&arg.value) else {
                         continue;
                     };
                     if direction != "strategy.long" {
@@ -245,7 +263,7 @@ impl Analyzer {
                     }
                 }
                 "qty" => {
-                    if let Some(qty) = const_numeric_value(&arg.value)
+                    if let Some(qty) = self.known_const_numeric_value(&arg.value)
                         && qty <= 0.0
                     {
                         self.diagnostics.push(Diagnostic::error(
@@ -256,7 +274,7 @@ impl Analyzer {
                     }
                 }
                 "limit" => {
-                    if let Some(limit) = const_numeric_value(&arg.value)
+                    if let Some(limit) = self.known_const_numeric_value(&arg.value)
                         && (!limit.is_finite() || limit <= 0.0)
                     {
                         self.diagnostics.push(Diagnostic::error(
@@ -267,7 +285,7 @@ impl Analyzer {
                     }
                 }
                 "stop" => {
-                    if let Some(stop) = const_numeric_value(&arg.value)
+                    if let Some(stop) = self.known_const_numeric_value(&arg.value)
                         && (!stop.is_finite() || stop <= 0.0)
                     {
                         self.diagnostics.push(Diagnostic::error(
@@ -304,7 +322,7 @@ impl Analyzer {
         let direction = args.iter().enumerate().find_map(|(index, arg)| {
             let name = strategy_order_arg_name(index, arg)?;
             (name == "direction")
-                .then(|| const_string_value(&arg.value))
+                .then(|| self.known_const_string_value(&arg.value))
                 .flatten()
         });
         let has_qty = args
@@ -329,7 +347,7 @@ impl Analyzer {
             };
             match name {
                 "direction" => {
-                    let Some(direction) = const_string_value(&arg.value) else {
+                    let Some(direction) = self.known_const_string_value(&arg.value) else {
                         continue;
                     };
                     if !matches!(direction.as_str(), "strategy.long" | "strategy.short") {
@@ -341,7 +359,7 @@ impl Analyzer {
                     }
                 }
                 "qty" => {
-                    if let Some(qty) = const_numeric_value(&arg.value)
+                    if let Some(qty) = self.known_const_numeric_value(&arg.value)
                         && (!qty.is_finite() || qty <= 0.0)
                     {
                         self.diagnostics.push(Diagnostic::error(
@@ -359,7 +377,7 @@ impl Analyzer {
                             arg.span,
                         ));
                     }
-                    if let Some(limit) = const_numeric_value(&arg.value)
+                    if let Some(limit) = self.known_const_numeric_value(&arg.value)
                         && (!limit.is_finite() || limit <= 0.0)
                     {
                         self.diagnostics.push(Diagnostic::error(
@@ -377,7 +395,7 @@ impl Analyzer {
                             arg.span,
                         ));
                     }
-                    if let Some(stop) = const_numeric_value(&arg.value)
+                    if let Some(stop) = self.known_const_numeric_value(&arg.value)
                         && (!stop.is_finite() || stop <= 0.0)
                     {
                         self.diagnostics.push(Diagnostic::error(
@@ -416,7 +434,7 @@ impl Analyzer {
             };
             match name {
                 "qty" => {
-                    if let Some(qty) = const_numeric_value(&arg.value)
+                    if let Some(qty) = self.known_const_numeric_value(&arg.value)
                         && (!qty.is_finite() || qty <= 0.0)
                     {
                         self.diagnostics.push(Diagnostic::error(
@@ -427,7 +445,7 @@ impl Analyzer {
                     }
                 }
                 "qty_percent" => {
-                    if let Some(qty_percent) = const_numeric_value(&arg.value)
+                    if let Some(qty_percent) = self.known_const_numeric_value(&arg.value)
                         && (!qty_percent.is_finite() || qty_percent <= 0.0)
                     {
                         self.diagnostics.push(Diagnostic::error(
@@ -450,6 +468,7 @@ impl Analyzer {
         let mut has_trail_price = false;
         let mut has_trail_points = false;
         let mut has_trail_offset = false;
+        let mut has_id = false;
         let mut has_unsupported_arg = false;
         for (index, arg) in args.iter().enumerate() {
             let Some(name) = arg
@@ -467,10 +486,11 @@ impl Analyzer {
                 continue;
             };
             let Some(family) = strategy_exit_arg_family(name) else {
+                has_unsupported_arg = true;
                 continue;
             };
             match family {
-                StrategyExitArgFamily::Identity => {}
+                StrategyExitArgFamily::Identity => has_id |= name == "id",
                 StrategyExitArgFamily::DownsidePriceTrigger => has_stop = true,
                 StrategyExitArgFamily::DownsideTickTrigger => has_loss = true,
                 StrategyExitArgFamily::UpsidePriceTrigger => has_limit = true,
@@ -556,7 +576,7 @@ impl Analyzer {
                     .or_else(|| args.get(3))
                     .map_or(Span::default(), |arg| arg.span),
             ));
-        } else if trigger_count == 0 && args.len() >= 2 && !has_unsupported_arg {
+        } else if trigger_count == 0 && has_id && !has_unsupported_arg {
             self.diagnostics.push(Diagnostic::error(
                 "E_CALL_ARITY",
                 "`strategy.exit` requires one of `stop`, `limit`, `profit`, or `loss`",

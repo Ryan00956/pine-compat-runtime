@@ -1,0 +1,13 @@
+//@version=6
+indicator("Unsupported array search const input return qualifier")
+
+values = array.from(1, 2, 3, 3, 5)
+
+plot(close, show_last=array.indexof(values, 2))
+plot(open, show_last=values.lastindexof(3))
+plot(high, show_last=array.binary_search(values, 3))
+plot(low, show_last=values.binary_search_leftmost(3))
+plot(hl2, show_last=array.binary_search_rightmost(values, 3))
+plot(hlc3, show_last=values.binary_search(3))
+plot(ohlc4, show_last=array.binary_search_leftmost(values, 3))
+plot(close, show_last=values.binary_search_rightmost(3))

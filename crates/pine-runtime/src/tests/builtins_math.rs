@@ -4,6 +4,39 @@ use pine_syntax::SourceFile;
 use super::*;
 
 #[test]
+fn integer_math_extremes_preserve_i64_precision() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("integer math extremes")
+maximum = math.max(9223372036854775806, 9223372036854775805)
+minimum = math.min(9223372036854775806, 9223372036854775805)
+plot(maximum)
+plot(minimum)
+plot(maximum % 2 == 0 ? 1 : 2)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect("runtime should preserve integer precision");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Int(9_223_372_036_854_775_806)]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Int(9_223_372_036_854_775_805)]
+    );
+    assert_eq!(result.plots[2].values, vec![PineValue::Int(1)]);
+}
+
+#[test]
 fn runs_selected_math_functions() {
     let source = SourceFile::new(
         "test.pine",

@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported ta supertrend tuple return qualifier")
+
+[line, direction] = ta.supertrend(2, 10)
+
+hline(line)
+hline(direction)

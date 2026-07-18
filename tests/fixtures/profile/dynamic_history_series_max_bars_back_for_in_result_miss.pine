@@ -1,0 +1,12 @@
+indicator("Profile dynamic series history for-in result miss", max_bars_back=10)
+src = close
+offset = bar_index == 0 ? 0 : 3
+items = array.from(1)
+value = for item in items
+    length = 2
+    switch
+        bar_index >= 0 =>
+            max_bars_back(src, length)
+            src[offset]
+        => src[offset]
+plot(value)

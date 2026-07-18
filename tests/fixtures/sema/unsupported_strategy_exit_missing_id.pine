@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported strategy exit missing id")
+strategy.exit(stop=1)

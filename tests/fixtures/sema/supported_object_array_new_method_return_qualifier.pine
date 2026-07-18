@@ -1,0 +1,37 @@
+//@version=6
+indicator("Supported object array.new method return qualifier")
+
+type Tool
+    float base
+
+method label_count(Tool tool, label[] values) =>
+    tool.base + array.size(values)
+
+method line_count(Tool tool, line[] values) =>
+    tool.base + array.size(values)
+
+method linefill_count(Tool tool, array<linefill> values) =>
+    tool.base + array.size(values)
+
+method polyline_count(Tool tool, array<polyline> values) =>
+    tool.base + array.size(values)
+
+method box_count(Tool tool, box[] values) =>
+    tool.base + array.size(values)
+
+method table_count(Tool tool, array<table> values) =>
+    tool.base + array.size(values)
+
+method point_count(Tool tool, array<chart.point> values) =>
+    tool.base + array.size(values)
+
+tool = Tool.new(close)
+result = tool.label_count(array.new_label()) + tool.label_count(array.new<label>())
+result := result + tool.line_count(array.new_line()) + tool.line_count(array.new<line>())
+result := result + tool.linefill_count(array.new_linefill()) + tool.linefill_count(array.new<linefill>())
+result := result + tool.polyline_count(array.new_polyline()) + tool.polyline_count(array.new<polyline>())
+result := result + tool.box_count(array.new_box()) + tool.box_count(array.new<box>())
+result := result + tool.table_count(array.new_table()) + tool.table_count(array.new<table>())
+result := result + tool.point_count(array.new<chart.point>())
+
+plot(result)

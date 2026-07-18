@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported for-in statement reassignment series iterable qualifier")
+
+array<int> values = na
+length = input.int(2, "Length")
+selected = length
+for value in values
+    selected := length
+
+plot(ta.ema(close, selected))

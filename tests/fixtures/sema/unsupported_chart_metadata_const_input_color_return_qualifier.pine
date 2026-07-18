@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported chart metadata const/input color return qualifier")
+
+hline(1, color=chart.bg_color)
+hline(2, color=chart.fg_color)

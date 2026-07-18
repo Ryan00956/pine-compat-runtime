@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported matrix concat method receiver")
+
+values = matrix.new<float>(1, 1, 1)
+value = close.concat(values)
+plot(value.rows())

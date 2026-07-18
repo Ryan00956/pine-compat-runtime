@@ -1,0 +1,4 @@
+//@version=6
+indicator("Supported plot Input Linewidth")
+width = input.int(2, "Line width")
+plot(close, linewidth=width)

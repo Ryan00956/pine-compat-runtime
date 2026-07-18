@@ -1,0 +1,35 @@
+//@version=6
+indicator("Supported array.includes object UDT series bool return qualifier")
+
+type Point
+    float x
+
+first_label = label.new(bar_index, high, "a")
+second_label = label.new(bar_index + 1, low, "b")
+first_line = line.new(bar_index, high, bar_index + 1, low)
+second_line = line.new(bar_index + 2, high + 1, bar_index + 3, low + 1)
+third_line = line.new(bar_index + 4, close, bar_index + 5, close + 1)
+first_fill = linefill.new(first_line, second_line, color.green)
+second_fill = linefill.new(second_line, third_line, color.red)
+points = array.from(chart.point.from_index(bar_index, close), chart.point.from_index(bar_index + 1, close + 1))
+first_polyline = polyline.new(points, line_color=color.red)
+second_polyline = polyline.new(points, line_color=color.green)
+first_box = box.new(bar_index, high, bar_index + 1, low)
+second_box = box.new(bar_index + 2, high + 1, bar_index + 3, low + 1)
+first_table = table.new(position.top_left, 1, 1)
+second_table = table.new(position.bottom_right, 1, 1)
+labels = array.from(first_label, second_label)
+lines = array.from(first_line, second_line)
+fills = array.from(first_fill, second_fill)
+polylines = array.from(first_polyline, second_polyline)
+boxes = array.from(first_box, second_box)
+tables = array.from(first_table, second_table)
+local_points = array.from(Point.new(close), Point.new(open))
+
+found = array.includes(labels, first_label) and lines.includes(second_line)
+found := found and array.includes(fills, first_fill) and polylines.includes(second_polyline)
+found := found and array.includes(boxes, first_box) and tables.includes(second_table)
+found := found and array.includes(points, chart.point.from_index(bar_index, close))
+found := found and local_points.includes(Point.new(open))
+
+plot(found ? 1 : 0)

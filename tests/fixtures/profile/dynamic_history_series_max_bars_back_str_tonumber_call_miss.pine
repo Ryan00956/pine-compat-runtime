@@ -1,0 +1,5 @@
+indicator("Profile dynamic series history str.tonumber call max_bars_back miss", max_bars_back=10)
+src = str.tonumber(close > open ? "1" : "2")
+max_bars_back(src, 2)
+offset = bar_index == 0 ? 0 : 3
+plot(str.tonumber(close > open ? "1" : "2")[offset])

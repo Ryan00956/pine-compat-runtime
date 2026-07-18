@@ -1,0 +1,36 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT typed UDF params")
+
+point = lib.typedPoint(lib.Point.new(close))
+shifted = lib.typedShift(point, 10)
+previous = point[1]
+dyn = bar_index == 0 ? na : 1
+dynamic_previous = point[dyn]
+dynamic_sibling = point[dyn]
+float dynamic_previous_x = na
+float dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    dynamic_previous_x := dynamic_previous.x
+    dynamic_previous.x := close + 700
+    dynamic_sibling_x_after_dynamic_mutation := dynamic_sibling.x
+
+wrapped = lib.typedWrapper(lib.Wrapper.new(point))
+wrapped_previous = wrapped[1]
+wrapped_dynamic_previous = wrapped[dyn]
+wrapped_dynamic_sibling = wrapped[dyn]
+float wrapped_dynamic_previous_x = na
+float wrapped_dynamic_sibling_x_after_dynamic_mutation = na
+if bar_index > 0
+    wrapped_dynamic_previous_x := wrapped_dynamic_previous.nested.x
+    wrapped_dynamic_previous.nested := lib.Point.new(close + 800)
+    wrapped_dynamic_sibling_x_after_dynamic_mutation := wrapped_dynamic_sibling.nested.x
+
+plot(point.x)
+plot(shifted.x)
+plot(na(previous) ? na : previous.x)
+plot(dynamic_previous_x)
+plot(dynamic_sibling_x_after_dynamic_mutation)
+plot(na(wrapped_previous) ? na : wrapped_previous.nested.x)
+plot(wrapped_dynamic_previous_x)
+plot(wrapped_dynamic_sibling_x_after_dynamic_mutation)

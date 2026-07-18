@@ -1,0 +1,91 @@
+//@version=6
+indicator("Unsupported UDT array tuple return identities")
+
+type First
+    float shared
+    float other
+
+type Second
+    float other
+    float shared
+
+type Anchor
+    int tag
+
+badSwap(first, second, bool choose) => choose ? [first, second] : [second, first]
+
+badAlias(first, second, bool choose) =>
+    tuple_value = choose ? [first, second] : [second, first]
+    tuple_value
+
+badWrapper(first, second, bool choose) => badAlias(first, second, choose)
+
+badScalarSink(first, second, bool choose) =>
+    discarded = badAlias(first, second, choose)
+    1
+
+badTupleSink(first, second, bool choose) =>
+    discarded = badAlias(first, second, choose)
+    [first, first]
+
+badFinalIfAlias(first, second, bool choose) =>
+    if choose
+        tuple_value = [first, second]
+        tuple_value
+    else
+        tuple_value = [second, first]
+        tuple_value
+
+identityPair(values) => [values]
+
+method badFirst(Anchor self, array<First> first, array<Second> second, bool choose) =>
+    if choose
+        [first, first]
+    else
+        [second, first]
+
+method badAlias(Anchor self, array<First> first, array<Second> second, bool choose) =>
+    tuple_value = choose ? [first, first] : [second, first]
+    tuple_value
+
+method badWrapper(Anchor self, array<First> first, array<Second> second, bool choose) => self.badAlias(first, second, choose)
+
+method badScalarSink(Anchor self, array<First> first, array<Second> second, bool choose) =>
+    discarded = self.badAlias(first, second, choose)
+    1
+
+method badTupleSink(Anchor self, array<First> first, array<Second> second, bool choose) =>
+    discarded = self.badAlias(first, second, choose)
+    [first, first]
+
+method badFinalIfAlias(Anchor self, array<First> first, array<Second> second, bool choose) =>
+    if choose
+        tuple_value = [first, first]
+        tuple_value
+    else
+        tuple_value = [second, first]
+        tuple_value
+
+first_values = array.from(First.new(10.0, 100.0))
+second_values = array.from(Second.new(200.0, 20.0))
+
+[bad_first, bad_second] = badSwap(first_values, second_values, true)
+escaped_bad = badSwap(first_values, second_values, true)
+escaped_alias_bad = badAlias(first_values, second_values, true)
+escaped_wrapper_one = badWrapper(first_values, second_values, true)
+escaped_wrapper_two = badWrapper(first_values, second_values, true)
+escaped_scalar_sink = badScalarSink(first_values, second_values, true)
+escaped_tuple_sink = badTupleSink(first_values, second_values, true)
+escaped_final_if_alias = badFinalIfAlias(first_values, second_values, true)
+
+anchor = Anchor.new(1)
+[bad_method_first, good_method_first] = anchor.badFirst(first_values, second_values, true)
+escaped_bad_method = anchor.badFirst(first_values, second_values, true)
+escaped_alias_bad_method = anchor.badAlias(first_values, second_values, true)
+escaped_bad_method_wrapper = anchor.badWrapper(first_values, second_values, true)
+escaped_bad_method_scalar_sink = anchor.badScalarSink(first_values, second_values, true)
+escaped_bad_method_tuple_sink = anchor.badTupleSink(first_values, second_values, true)
+escaped_bad_method_final_if_alias = anchor.badFinalIfAlias(first_values, second_values, true)
+
+[wrong_source] = identityPair(second_values)
+array<First> wrong_typed = wrong_source

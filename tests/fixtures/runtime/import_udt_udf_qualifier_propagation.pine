@@ -1,0 +1,10 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT UDF qualifier propagation")
+
+length = input.int(2, "Length")
+chart_tf = timeframe.period
+
+plot(ta.sma(close, lib.passExportedLength(length)))
+plot(timeframe.in_seconds(lib.passExportedTimeframe(chart_tf)))
+plot(ta.sma(close, lib.passExportedLengthBlock(length)))

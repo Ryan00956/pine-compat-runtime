@@ -95,6 +95,90 @@ export counter() =>
 }
 
 #[test]
+fn imported_constant_length_bounds_series_max_bars_back_retention() {
+    let analysis = analyze_import(
+        r#"indicator("imported max_bars_back length")
+import user/lib/1 as lib
+max_bars_back(close, lib.length())
+offset = bar_index == 0 ? 0 : 3
+plot(close[offset])
+plot(open[offset])
+"#,
+        r#"library("lib")
+export length() => 2
+"#,
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 2);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Float(1.0));
+    assert_eq!(profiled.result.plots[0].values[1..], vec![PineValue::Na; 3]);
+    assert_eq!(profiled.result.plots[1].values[0], PineValue::Float(1.0));
+    assert_eq!(profiled.result.plots[1].values[1], PineValue::Na);
+    assert_eq!(profiled.result.plots[1].values[2], PineValue::Na);
+    assert_eq!(profiled.result.plots[1].values[3], PineValue::Float(1.0));
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::MaxBarsBack
+    );
+    assert_eq!(profiled.profile.history_max_bars_back, None);
+    assert_eq!(profiled.profile.history_dynamic_retention_misses, 3);
+    assert_eq!(
+        profiled.profile.history_dynamic_retention_max_missed_offset,
+        Some(3)
+    );
+}
+
+#[test]
+fn imported_constant_length_bounds_declaration_max_bars_back_retention() {
+    let analysis = analyze_import(
+        r#"indicator("imported declaration max_bars_back length", max_bars_back=lib.length())
+import user/lib/1 as lib
+offset = bar_index == 0 ? 0 : 3
+plot(close[offset])
+"#,
+        r#"library("lib")
+export length() =>
+    base = 1
+    base + 1
+"#,
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(profiled.result.plots.len(), 1);
+    assert_eq!(profiled.result.plots[0].values[0], PineValue::Float(1.0));
+    assert_eq!(profiled.result.plots[0].values[1..], vec![PineValue::Na; 3]);
+    assert_eq!(profiled.profile.max_series_depth, 2);
+    assert_eq!(
+        profiled.profile.history_retention_mode,
+        HistoryRetentionMode::MaxBarsBack
+    );
+    assert_eq!(profiled.profile.history_max_bars_back, Some(2));
+    assert!(profiled.profile.history_has_dynamic_offsets);
+    assert_eq!(profiled.profile.history_dynamic_retention_misses, 3);
+    assert_eq!(
+        profiled.profile.history_dynamic_retention_max_missed_offset,
+        Some(3)
+    );
+}
+
+#[test]
 fn branch_skipped_imported_calls_do_not_advance_state() {
     let analysis = analyze_import(
         r#"indicator("imported branch state")

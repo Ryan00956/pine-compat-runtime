@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported str.tostring color matrix")
+
+values = matrix.new<color>(1, 1, color.red)
+text = str.tostring(values)
+plot(str.length(text))

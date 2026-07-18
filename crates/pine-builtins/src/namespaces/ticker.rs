@@ -68,7 +68,7 @@ const LINEBREAK_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "number_of_lines",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
 ];
@@ -86,7 +86,7 @@ const KAGI_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "param",
-        accepts: Accepts::SimpleNumeric,
+        accepts: Accepts::SimpleNumericCompatible,
         optional: false,
     },
 ];
@@ -109,12 +109,12 @@ const POINTFIGURE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "param",
-        accepts: Accepts::SimpleNumeric,
+        accepts: Accepts::SimpleNumericCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "reversal",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: false,
     },
 ];
@@ -132,7 +132,7 @@ const RENKO_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "param",
-        accepts: Accepts::SimpleNumeric,
+        accepts: Accepts::SimpleNumericCompatible,
         optional: false,
     },
 ];

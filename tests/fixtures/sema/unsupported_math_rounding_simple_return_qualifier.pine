@@ -1,0 +1,12 @@
+//@version=6
+indicator("Unsupported math rounding simple return qualifier")
+
+values = array.new_int(1, 4)
+seed = array.size(values) + 0.5
+floor_count = math.floor(seed)
+ceil_count = math.ceil(seed)
+trunc_count = math.trunc(seed)
+
+plot(close, show_last=floor_count)
+plot(open, show_last=ceil_count)
+plot(high, show_last=trunc_count)

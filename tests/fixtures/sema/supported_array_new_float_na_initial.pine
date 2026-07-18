@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported array.new_float na initial")
+values = array.new_float(2, na)
+templated = array.new<float>(2, na)
+series_values = array.new_float(2, bar_index == 0 ? na : close)
+plot(values.size() + templated.size() + series_values.size())

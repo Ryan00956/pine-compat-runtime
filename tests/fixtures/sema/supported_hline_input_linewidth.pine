@@ -1,0 +1,4 @@
+//@version=6
+indicator("Supported hline Input Linewidth")
+width = input.int(2, "Line width")
+hline(2, linewidth=width)

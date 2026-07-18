@@ -2,12 +2,19 @@
 indicator("Rate of Change edge cases")
 value = ta.roc(close, 2)
 index_value = ta.roc(bar_index, 2)
+dynamic_length = bar_index == 0 ? 1 : 2
+dynamic_value = ta.roc(close, dynamic_length)
+udf_length() =>
+    bar_index == 0 ? 1 : 2
+udf_value = ta.roc(close, udf_length())
 current_na = ta.roc(bar_index == 3 ? na : close, 2)
 history_na = ta.roc(bar_index == 2 ? na : close, 2)
 previous_zero = ta.roc(open, 2)
 invalid = ta.roc(close, 0)
 plot(value)
 plot(index_value)
+plot(dynamic_value)
+plot(udf_value)
 plot(current_na)
 plot(history_na)
 plot(previous_zero)

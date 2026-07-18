@@ -121,13 +121,75 @@ pub(crate) const RUNTIME_LIBRARY_SNAPSHOT_FIXTURES: &[RuntimeLibrarySnapshotFixt
         &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
     ),
     (
+        "runtime_import_udt_private_dependency_history.json",
+        "tests/fixtures/runtime/import_udt_private_dependency_history.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "runtime_import_non_scalar_udt_typed_na_history.json",
+        "tests/fixtures/runtime/import_non_scalar_udt_typed_na_history.pine",
+        &[(
+            "user/non_scalar_udt/1",
+            "tests/fixtures/libraries/import_non_scalar_udt_lib.pine",
+        )],
+    ),
+    (
+        "runtime_import_non_scalar_udt_constructed_history.json",
+        "tests/fixtures/runtime/import_non_scalar_udt_constructed_history.pine",
+        &[(
+            "user/non_scalar_udt/1",
+            "tests/fixtures/libraries/import_non_scalar_udt_lib.pine",
+        )],
+    ),
+    (
+        "runtime_series_history_offset_udt_field.json",
+        "tests/fixtures/runtime/series_history_offset_udt_field.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
         "runtime_import_udt_array_from.json",
         "tests/fixtures/runtime/import_udt_array_from.pine",
         &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
     ),
     (
+        "runtime_import_udt_array_new.json",
+        "tests/fixtures/runtime/import_udt_array_new.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
         "runtime_import_udt_array_typed_declarations.json",
         "tests/fixtures/runtime/import_udt_array_typed_declarations.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "runtime_import_udt_array_scalar_tree.json",
+        "tests/fixtures/runtime/import_udt_array_scalar_tree.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "runtime_import_udt_array_udf_method_returns.json",
+        "tests/fixtures/runtime/import_udt_array_udf_method_returns.pine",
+        &[(
+            "user/udt_array_returns/1",
+            "tests/fixtures/libraries/import_udt_array_return_lib.pine",
+        )],
+    ),
+    (
+        "runtime_import_udt_array_tuple_returns.json",
+        "tests/fixtures/runtime/import_udt_array_tuple_returns.pine",
+        &[(
+            "user/udt_array_returns/1",
+            "tests/fixtures/libraries/import_udt_array_return_lib.pine",
+        )],
+    ),
+    (
+        "runtime_import_udt_array_sort_field.json",
+        "tests/fixtures/runtime/import_udt_array_sort_field.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "runtime_import_udt_array_history.json",
+        "tests/fixtures/runtime/import_udt_array_history.pine",
         &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
     ),
     (
@@ -151,8 +213,38 @@ pub(crate) const RUNTIME_LIBRARY_SNAPSHOT_FIXTURES: &[RuntimeLibrarySnapshotFixt
         &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
     ),
     (
+        "runtime_import_user_method_map_call_result_reads.json",
+        "tests/fixtures/runtime/import_user_method_map_call_result_reads.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "runtime_import_user_method_matrix_call_result_reads.json",
+        "tests/fixtures/runtime/import_user_method_matrix_call_result_reads.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "runtime_import_function_matrix_call_result_reads.json",
+        "tests/fixtures/runtime/import_function_matrix_call_result_reads.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "runtime_import_function_map_call_result_reads.json",
+        "tests/fixtures/runtime/import_function_map_call_result_reads.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
         "runtime_import_udt_method_qualified.json",
         "tests/fixtures/runtime/import_udt_method_qualified.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "runtime_import_udt_method_qualifier_propagation.json",
+        "tests/fixtures/runtime/import_udt_method_qualifier_propagation.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "runtime_import_udt_method_expression_receiver.json",
+        "tests/fixtures/runtime/import_udt_method_expression_receiver.pine",
         &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
     ),
     (
@@ -181,6 +273,11 @@ pub(crate) const RUNTIME_LIBRARY_SNAPSHOT_FIXTURES: &[RuntimeLibrarySnapshotFixt
         &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
     ),
     (
+        "runtime_import_udt_method_while_switch_return.json",
+        "tests/fixtures/runtime/import_udt_method_while_switch_return.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
         "runtime_import_udt_method_nested_return.json",
         "tests/fixtures/runtime/import_udt_method_nested_return.pine",
         &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
@@ -198,6 +295,26 @@ pub(crate) const RUNTIME_LIBRARY_SNAPSHOT_FIXTURES: &[RuntimeLibrarySnapshotFixt
     (
         "runtime_import_udt_udf_passthrough.json",
         "tests/fixtures/runtime/import_udt_udf_passthrough.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "runtime_import_udt_udf_qualifier_propagation.json",
+        "tests/fixtures/runtime/import_udt_udf_qualifier_propagation.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "runtime_import_udt_typed_udf_params.json",
+        "tests/fixtures/runtime/import_udt_typed_udf_params.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "runtime_import_udt_array_typed_udf_params.json",
+        "tests/fixtures/runtime/import_udt_array_typed_udf_params.pine",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "runtime_import_udt_array_typed_method_params.json",
+        "tests/fixtures/runtime/import_udt_array_typed_method_params.pine",
         &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
     ),
     (

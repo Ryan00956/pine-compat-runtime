@@ -1,0 +1,11 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Supported imported UDT array.new return qualifier")
+
+points = array.new<lib.Point>(2, lib.Point.new(close + 1))
+first = lib.firstPoint(points)
+second = lib.secondPoint(array.new<lib.Point>(2, lib.Point.new(open + 2)))
+wrappers = array.new<lib.Wrapper>(1, lib.Wrapper.new(lib.Point.new(high + 3)))
+wrapper = wrappers.get(0)
+
+plot(first.x + second.x + wrapper.nested.x)

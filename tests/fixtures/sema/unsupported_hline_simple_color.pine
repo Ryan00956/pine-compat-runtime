@@ -1,0 +1,3 @@
+//@version=6
+indicator("Unsupported hline Simple Color")
+hline(2, color=chart.bg_color)

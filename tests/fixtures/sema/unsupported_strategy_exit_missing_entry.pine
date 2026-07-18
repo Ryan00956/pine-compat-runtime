@@ -1,3 +1,0 @@
-//@version=5
-strategy("Unsupported strategy exit missing entry")
-strategy.exit("XL")

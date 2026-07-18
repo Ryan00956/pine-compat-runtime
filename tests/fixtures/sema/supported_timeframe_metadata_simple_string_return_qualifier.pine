@@ -1,0 +1,5 @@
+//@version=6
+indicator("Supported timeframe metadata simple string return qualifier")
+
+plot(time(timeframe.period))
+plot(time(timeframe.main_period))

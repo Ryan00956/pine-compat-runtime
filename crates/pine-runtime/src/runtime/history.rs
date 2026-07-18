@@ -10,6 +10,7 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let is_dynamic_offset = matches!(offset, HirHistoryOffset::Dynamic(_));
         let Some(offset) = self.eval_history_offset(offset)? else {
+            self.eval_expr(expr)?;
             return Ok(PineValue::Na);
         };
 

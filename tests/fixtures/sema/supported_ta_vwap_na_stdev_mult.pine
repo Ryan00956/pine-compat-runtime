@@ -1,0 +1,4 @@
+//@version=5
+indicator("Supported ta.vwap na stdev_mult")
+[basis, upper, lower] = ta.vwap(close, false, na)
+plot(nz(basis) + nz(upper) + nz(lower))

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported last bar metadata simple int qualifier")
+
+plot(close, offset=last_bar_index)
+plot(open, offset=last_bar_time)

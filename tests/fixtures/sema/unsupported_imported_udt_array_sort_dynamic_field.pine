@@ -1,0 +1,8 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT array sort dynamic field")
+
+field = close > open ? "value" : "missing"
+values = array.from(lib.Point.new(close))
+array.sort(values, order.ascending, field)
+plot(close)

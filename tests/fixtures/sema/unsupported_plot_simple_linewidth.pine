@@ -1,0 +1,4 @@
+//@version=6
+indicator("Unsupported plot Simple Linewidth")
+values = array.new_int(1, 1)
+plot(close, linewidth=array.size(values))

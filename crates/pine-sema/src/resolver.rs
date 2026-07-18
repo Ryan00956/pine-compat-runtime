@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use pine_ir::{HirSymbol, PersistenceKind, PineType, SeriesId, SymbolId, VarSlotId};
 use pine_syntax::Span;
 
+use crate::source_graph::SourceContextId;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct SymbolInfo {
     pub(crate) id: SymbolId,
@@ -13,6 +15,7 @@ pub(crate) struct SymbolInfo {
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct BindingKey {
+    pub(crate) source_context_id: SourceContextId,
     pub(crate) span_start: usize,
     pub(crate) span_end: usize,
     pub(crate) name: String,
@@ -134,8 +137,13 @@ impl ScopeResolver {
         self.all_symbols.push((name.to_owned(), info));
     }
 }
-pub(crate) fn binding_key(name: &str, span: Span) -> BindingKey {
+pub(crate) fn binding_key(
+    source_context_id: SourceContextId,
+    name: &str,
+    span: Span,
+) -> BindingKey {
     BindingKey {
+        source_context_id,
         span_start: span.start,
         span_end: span.end,
         name: name.to_owned(),

@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported for-in matrix.submatrix named result negative history")
+source = matrix.new<float>(3, 2, 0)
+values = matrix.submatrix(id = source, from_row = 1, to_row = 3, from_column = 0, to_column = 2)
+length = for row in values
+    -1
+plot(close[length])

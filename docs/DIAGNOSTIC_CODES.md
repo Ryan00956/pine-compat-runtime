@@ -11,6 +11,7 @@ improved over time, but codes should remain stable once published.
 - `E_LEX_INDENT`: indentation is not a supported multiple of spaces.
 - `E_LEX_INT`: invalid integer literal.
 - `E_LEX_STRING`: unterminated or invalid string literal.
+- `E_LEX_STRING_LIMIT`: decoded string literal exceeds 40,960 characters.
 - `E_LEX_VERSION`: invalid version directive.
 
 ## Parsing
@@ -24,6 +25,7 @@ improved over time, but codes should remain stable once published.
 - `E_PARSE_EXPORT`: invalid export declaration.
 - `E_PARSE_FOR`: invalid for-loop declaration.
 - `E_PARSE_FUNCTION`: invalid function declaration.
+- `E_PARSE_METHOD`: invalid user-defined method declaration.
 - `E_PARSE_IF_EXPR`: invalid if expression.
 - `E_PARSE_IMPORT`: invalid import declaration.
 - `E_PARSE_LIBRARY`: invalid library declaration.
@@ -38,7 +40,10 @@ improved over time, but codes should remain stable once published.
 - `E_ASSIGN_TYPE`: reassignment type mismatch.
 - `E_BRANCH_RETURN`: branch expression body does not end with an expression.
 - `E_BRANCH_TYPE`: ternary branch type mismatch.
+- `E_CALL_ARG_DUPLICATE`: a built-in call argument was provided more than once.
 - `E_CALL_ARG_NAME`: unknown named argument.
+- `E_CALL_ARG_ORDER`: positional argument followed a named argument in a
+  built-in call.
 - `E_CALL_ARG_TYPE`: argument type does not satisfy the built-in signature.
 - `E_CALL_ARG_VALUE`: argument type is valid, but the value is outside the
   supported range.
@@ -53,6 +58,8 @@ improved over time, but codes should remain stable once published.
 - `E_FUNCTION_ARG_NAME`: unknown user-defined function named argument.
 - `E_FUNCTION_ARG_ORDER`: positional argument followed a named argument in a
   user-defined function call.
+- `E_FUNCTION_ARG_TYPE`: user-defined function argument type does not match the
+  declared parameter.
 - `E_FUNCTION_ARITY`: wrong number of user-defined function arguments.
 - `E_FUNCTION_DUPLICATE`: user-defined function name was declared more than
   once.
@@ -61,6 +68,8 @@ improved over time, but codes should remain stable once published.
 - `E_FUNCTION_NAME`: user-defined function name conflicts with an existing
   symbol or built-in.
 - `E_FUNCTION_PARAM`: user-defined function parameter list is invalid.
+- `E_FUNCTION_PARAM_TYPE`: user-defined function parameter declares a type
+  outside the supported subset.
 - `E_FUNCTION_RETURN`: user-defined function block does not end with an
   expression.
 - `E_UDT_ASSIGN_TYPE`: reassignment changed a local user-defined type identity.
@@ -124,6 +133,9 @@ improved over time, but codes should remain stable once published.
   not in a supported top-level location.
 - `E_SEMA_EXPR_DEPTH`: expression nesting exceeds the semantic analysis limit.
 - `E_TUPLE_ARITY`: tuple assignment target count does not match value count.
+- `E_TUPLE_UDT_ARRAY_IDENTITY`: a tuple expression, ordinary declaration,
+  reassignment, or call-return slot containing a user-defined-type array does
+  not resolve to one stable concrete element identity.
 - `E_TUPLE_TYPE`: tuple assignment value is not a tuple.
 - `E_UNKNOWN_COLOR`: color literal or color constant cannot be resolved.
 - `E_UNKNOWN_FUNCTION`: function call target cannot be resolved.

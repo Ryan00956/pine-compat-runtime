@@ -1,0 +1,9 @@
+//@version=5
+indicator("Supported ta weighted averages series length")
+length = bar_index % 2 + 2
+plot(ta.vwma(close, length))
+plot(ta.vwma(source=close, length=length))
+plot(ta.wma(close, length))
+plot(ta.wma(source=close, length=length))
+plot(ta.hma(close, length))
+plot(ta.hma(source=close, length=length))

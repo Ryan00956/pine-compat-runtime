@@ -1,0 +1,32 @@
+//@version=6
+indicator("Supported UDT array SameAsArg method return qualifier")
+
+type Point
+    float x
+    float y
+
+type Wrapper
+    Point point
+
+method first_x(Point anchor, array<Point> values) =>
+    point = array.get(values, 0)
+    anchor.x + point.x
+
+method second_y(Point anchor, Point[] values) =>
+    point = values.get(1)
+    anchor.y + point.y
+
+method first_nested_x(Wrapper anchor, array<Wrapper> values) =>
+    wrapper = values.get(0)
+    anchor.point.x + wrapper.point.x
+
+anchor = Point.new(close, open)
+nested = Wrapper.new(Point.new(high, low))
+points = array.new<Point>(2, Point.new(close + 1, open + 2))
+wrappers = array.from(Wrapper.new(Point.new(close + 3, open + 4)))
+
+result = anchor.first_x(array.copy(points)) + anchor.second_y(points.copy())
+result := result + anchor.first_x(array.slice(points, 0, 1)) + anchor.second_y(points.slice(0, 2))
+result := result + nested.first_nested_x(array.copy(wrappers)) + nested.first_nested_x(wrappers.slice(0, 1))
+
+plot(result)

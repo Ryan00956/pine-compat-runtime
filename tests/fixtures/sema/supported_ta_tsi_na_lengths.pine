@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported ta.tsi na lengths")
+missing_short = ta.tsi(close, na, 3)
+missing_long = ta.tsi(close, 2, na)
+plot(nz(missing_short) + nz(missing_long))

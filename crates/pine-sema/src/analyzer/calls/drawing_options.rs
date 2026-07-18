@@ -252,10 +252,13 @@ impl Analyzer {
             if !is_target {
                 continue;
             }
-            let Some(value) = const_int_value(&arg.value) else {
+            let Some(value) = self.known_strict_const_int_for_validation(&arg.value) else {
                 continue;
             };
-            if !(0..=3).contains(&value) {
+            if match value {
+                Ok(value) => !(0..=3).contains(&value),
+                Err(()) => true,
+            } {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_VALUE",
                     format!(
@@ -285,7 +288,7 @@ impl Analyzer {
             if !is_target {
                 continue;
             }
-            let Some(value) = const_string_value(&arg.value) else {
+            let Some(value) = self.known_const_string_value(&arg.value) else {
                 continue;
             };
             if !LABEL_SIZES

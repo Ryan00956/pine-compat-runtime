@@ -1,0 +1,9 @@
+//@version=5
+indicator("Supported time na simple string params")
+
+plot(na(time(na)) ? 1 : 0)
+plot(na(time_close(na)) ? 1 : 0)
+plot(na(time(timeframe = na)) ? 1 : 0)
+plot(na(time_close(timeframe = na)) ? 1 : 0)
+plot(na(timeframe.in_seconds(na)) ? 1 : 0)
+plot(na(timeframe.change(na)) ? 1 : 0)

@@ -674,7 +674,7 @@ fn accepts_ta_kc_and_kcw() {
 #[test]
 fn accepts_ta_pivots() {
     let analysis = analyze(
-        "plot(ta.pivothigh(close, 2, 1) + ta.pivotlow(low, 2, 1) + ta.pivothigh(2, 1) + ta.pivotlow(leftbars=2, rightbars=1))\n",
+        "plot(ta.pivothigh(close, 2, 1) + ta.pivotlow(low, 2, 1) + ta.pivothigh(2, 1) + ta.pivotlow(leftbars=2, rightbars=1) + ta.pivothigh(rightbars=1, leftbars=2))\n",
     );
 
     assert!(

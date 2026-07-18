@@ -1,0 +1,5 @@
+//@version=5
+rule_base = "LIFO"
+rule = rule_base
+strategy("Unsupported named const close entries rule", close_entries_rule=rule)
+plot(close)

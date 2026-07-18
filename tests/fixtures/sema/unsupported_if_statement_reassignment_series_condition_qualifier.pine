@@ -1,0 +1,9 @@
+//@version=5
+indicator("Unsupported if statement reassignment series condition qualifier")
+
+length = input.int(2, "Length")
+selected = length
+if close > open
+    selected := length
+
+plot(ta.ema(close, selected))

@@ -1,0 +1,16 @@
+//@version=5
+indicator("Unsupported user type array typed method param mismatch")
+
+type Point
+    float x
+
+type Other
+    float x
+
+method first_x(Point anchor, array<Point> values) =>
+    point = array.get(values, 0)
+    anchor.x + point.x
+
+anchor = Point.new(close)
+values = array.from(Other.new(close))
+plot(anchor.first_x(values))

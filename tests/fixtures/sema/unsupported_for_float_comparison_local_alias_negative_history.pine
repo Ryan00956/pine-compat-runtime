@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported for float comparison local alias negative history")
+fast = for i = 0 to 0
+    value = 3.5
+    value
+slow = 2.0
+length = fast > slow ? -1 : 1
+plot(close[length])

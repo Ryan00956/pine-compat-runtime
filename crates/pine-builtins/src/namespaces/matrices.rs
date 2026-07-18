@@ -197,6 +197,19 @@ const MATRIX_FILL_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const MATRIX_CONCAT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id1",
+        accepts: Accepts::Matrix,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "id2",
+        accepts: Accepts::Matrix,
+        optional: false,
+    },
+];
+
 const MATRIX_RESHAPE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -329,7 +342,7 @@ const MATRIX_SWAP_COLUMNS_PARAMS: &[BuiltinParam] = &[
 const MATRIX_SORT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
-        accepts: Accepts::Matrix,
+        accepts: Accepts::NumericMatrix,
         optional: false,
     },
     BuiltinParam {
@@ -453,6 +466,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: MATRIX_FILL_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "matrix.concat",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATRIX_CONCAT_PARAMS,
+        returns: ReturnSpec::SameAsArg(0),
         variadic: false,
     },
     BuiltinSignature {
@@ -610,6 +630,20 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "matrix.is_antidiagonal",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATRIX_NUMERIC_ID_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_BOOL),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "matrix.is_triangular",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATRIX_NUMERIC_ID_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_BOOL),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "matrix.is_identity",
         phase: BuiltinPhase::Phase1Core,
         params: MATRIX_NUMERIC_ID_PARAMS,
@@ -670,6 +704,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: MATRIX_NUMERIC_ID_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "matrix.median",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATRIX_NUMERIC_ID_PARAMS,
+        returns: ReturnSpec::MatrixElement(0),
         variadic: false,
     },
     BuiltinSignature {

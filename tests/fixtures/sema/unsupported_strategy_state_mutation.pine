@@ -1,6 +1,10 @@
 //@version=5
 strategy("Unsupported strategy state mutation")
+strategy.account_currency := "EUR"
 strategy.position_size := 1
+strategy.position_entry_name := "L"
+strategy.initial_capital := 1
+strategy.openprofit_percent := 1
 strategy.netprofit_percent := 1
 strategy.grossprofit := 1
 strategy.grossprofit_percent := 1
@@ -22,6 +26,7 @@ strategy.max_contracts_held_long := 1
 strategy.max_contracts_held_short := 1
 strategy.margin_liquidation_price := 1
 strategy.closedtrades := 1
+strategy.closedtrades.first_index := 1
 strategy.wintrades := 1
 strategy.losstrades := 1
 strategy.eventrades := 1

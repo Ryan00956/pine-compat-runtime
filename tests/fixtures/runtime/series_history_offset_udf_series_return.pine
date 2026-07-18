@@ -1,0 +1,11 @@
+//@version=5
+indicator("Series history offset UDF series return")
+
+source() => close + 100
+
+offset = bar_index == 0 ? 0 : 1
+maybe_offset = bar_index == 2 ? na : offset
+
+plot(source()[1])
+plot(source()[offset])
+plot(source()[maybe_offset])

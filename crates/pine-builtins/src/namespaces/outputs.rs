@@ -20,7 +20,7 @@ const PLOT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "linewidth",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::AtMostInputInt,
         optional: true,
     },
     BuiltinParam {
@@ -35,12 +35,12 @@ const PLOT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "histbase",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::AtMostInputNumeric,
         optional: true,
     },
     BuiltinParam {
         name: "offset",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -55,7 +55,7 @@ const PLOT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "show_last",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::AtMostInputInt,
         optional: true,
     },
     BuiltinParam {
@@ -70,7 +70,7 @@ const PLOT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "precision",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -93,7 +93,7 @@ const COLOR_OUTPUT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "offset",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -103,7 +103,7 @@ const COLOR_OUTPUT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "show_last",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::AtMostInputInt,
         optional: true,
     },
     BuiltinParam {
@@ -141,7 +141,7 @@ const PLOTCHAR_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "offset",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -166,7 +166,7 @@ const PLOTCHAR_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "show_last",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::AtMostInputInt,
         optional: true,
     },
     BuiltinParam {
@@ -204,7 +204,7 @@ const PLOTSHAPE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "offset",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -229,7 +229,7 @@ const PLOTSHAPE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "show_last",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::AtMostInputInt,
         optional: true,
     },
     BuiltinParam {
@@ -267,17 +267,17 @@ const PLOTARROW_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "offset",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "minheight",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "maxheight",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::SimpleIntCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -287,7 +287,7 @@ const PLOTARROW_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "show_last",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::AtMostInputInt,
         optional: true,
     },
     BuiltinParam {
@@ -340,7 +340,7 @@ const PLOTBAR_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "show_last",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::AtMostInputInt,
         optional: true,
     },
     BuiltinParam {
@@ -393,7 +393,7 @@ const PLOTCANDLE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "show_last",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::AtMostInputInt,
         optional: true,
     },
     BuiltinParam {
@@ -421,7 +421,7 @@ const HLINE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "color",
-        accepts: Accepts::ColorCompatible,
+        accepts: Accepts::AtMostInputColor,
         optional: true,
     },
     BuiltinParam {
@@ -431,7 +431,7 @@ const HLINE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "linewidth",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::AtMostInputInt,
         optional: true,
     },
     BuiltinParam {
@@ -474,7 +474,7 @@ const FILL_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "show_last",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::AtMostInputInt,
         optional: true,
     },
     BuiltinParam {

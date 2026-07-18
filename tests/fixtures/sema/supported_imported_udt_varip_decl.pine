@@ -1,0 +1,15 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Supported imported UDT varip declaration")
+
+varip lib.Point typed = lib.Point.new(close)
+typed := lib.Point.new(typed.x + 1)
+
+varip inferred = lib.Point.new(close + 10)
+inferred := lib.Point.new(inferred.x + 1)
+
+aliasSource = lib.Point.new(close + 20)
+varip alias = aliasSource
+alias := lib.Point.new(alias.x + 1)
+
+plot(typed.x + inferred.x + alias.x)

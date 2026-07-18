@@ -1,4 +1,4 @@
-use chrono::{DateTime, Datelike, NaiveDate, Timelike, Utc};
+use chrono::{DateTime, Datelike, Timelike, Utc};
 
 pub(crate) fn format_utc_datetime(datetime: DateTime<Utc>, format: &str) -> String {
     format_datetime_with_offset(datetime, format, "+0000")
@@ -9,12 +9,31 @@ pub(crate) fn format_datetime_with_offset(
     format: &str,
     timezone_offset: &str,
 ) -> String {
+    format_datetime_with_timezone(datetime, format, timezone_offset, None)
+}
+
+pub(crate) fn format_datetime_with_timezone(
+    datetime: DateTime<Utc>,
+    format: &str,
+    timezone_offset: &str,
+    timezone_short_name: Option<&str>,
+) -> String {
     let mut result = String::new();
     let mut chars = format.chars().peekable();
     while let Some(ch) = chars.next() {
         if ch == '\'' {
-            for literal in chars.by_ref() {
+            if chars.peek().copied() == Some('\'') {
+                chars.next();
+                result.push('\'');
+                continue;
+            }
+            while let Some(literal) = chars.next() {
                 if literal == '\'' {
+                    if chars.peek().copied() == Some('\'') {
+                        chars.next();
+                        result.push('\'');
+                        continue;
+                    }
                     break;
                 }
                 result.push(literal);
@@ -36,13 +55,10 @@ pub(crate) fn format_datetime_with_offset(
             'D' => push_padded_or_plain(&mut result, datetime.ordinal(), count),
             'E' => result.push_str(format_weekday(datetime.weekday(), count)),
             'w' => push_padded_or_plain(&mut result, datetime.iso_week().week(), count),
-            'W' => push_padded_or_plain(&mut result, iso_week_of_month(datetime), count),
+            'W' => push_padded_or_plain(&mut result, week_of_month(datetime), count),
             'H' => push_padded_or_plain(&mut result, datetime.hour(), count),
             'h' => {
-                let hour = match datetime.hour() % 12 {
-                    0 => 12,
-                    hour => hour,
-                };
+                let hour = datetime.hour() % 12;
                 push_padded_or_plain(&mut result, hour, count);
             }
             'm' => push_padded_or_plain(&mut result, datetime.minute(), count),
@@ -50,6 +66,10 @@ pub(crate) fn format_datetime_with_offset(
             'S' => result.push_str(&format_millis(datetime.timestamp_subsec_millis(), count)),
             'a' => result.push_str(if datetime.hour() < 12 { "AM" } else { "PM" }),
             'Z' => result.push_str(timezone_offset),
+            'z' if count <= 3 => match timezone_short_name {
+                Some(name) => result.push_str(name),
+                None => result.extend(std::iter::repeat_n('z', count)),
+            },
             other => {
                 for _ in 0..count {
                     result.push(other);
@@ -103,11 +123,8 @@ fn format_month(month: u32, width: usize) -> String {
     }
 }
 
-fn iso_week_of_month(datetime: DateTime<Utc>) -> u32 {
-    let first_day = NaiveDate::from_ymd_opt(datetime.year(), datetime.month(), 1)
-        .expect("datetime month has a valid first day");
-    let leading_days = first_day.weekday().num_days_from_monday();
-    ((datetime.day() + leading_days - 1) / 7) + 1
+fn week_of_month(datetime: DateTime<Utc>) -> u32 {
+    ((datetime.day() - 1) / 7) + 1
 }
 
 fn format_weekday(weekday: chrono::Weekday, width: usize) -> &'static str {
@@ -130,6 +147,9 @@ fn format_weekday(weekday: chrono::Weekday, width: usize) -> &'static str {
 }
 
 fn format_millis(millis: u32, width: usize) -> String {
-    let value = format!("{millis:03}");
-    value[..width.min(3)].to_owned()
+    match width {
+        1 => millis.to_string(),
+        2 => format!("{millis:02}"),
+        _ => format!("{millis:03}"),
+    }
 }

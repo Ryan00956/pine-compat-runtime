@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported alert named const frequency")
+freq_base = alert.freq_once_per_bar_close
+freq = freq_base
+alert("Close", freq=freq)

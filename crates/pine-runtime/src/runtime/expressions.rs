@@ -45,7 +45,7 @@ impl<'a> HistoricalRuntime<'a> {
                                 return Ok(PineValue::Bool(false));
                             }
                             let right = self.eval_expr(right)?;
-                            return Ok(eval_binary(*op, left, right));
+                            return eval_binary(*op, left, right);
                         }
                         HirBinaryOp::Or => {
                             let left = self.eval_expr(left)?;
@@ -53,14 +53,14 @@ impl<'a> HistoricalRuntime<'a> {
                                 return Ok(PineValue::Bool(true));
                             }
                             let right = self.eval_expr(right)?;
-                            return Ok(eval_binary(*op, left, right));
+                            return eval_binary(*op, left, right);
                         }
                         _ => {}
                     }
                 }
                 let left = self.eval_expr(left)?;
                 let right = self.eval_expr(right)?;
-                eval_binary(*op, left, right)
+                eval_binary(*op, left, right)?
             }
             HirExprKind::Ternary {
                 condition,
@@ -182,7 +182,7 @@ impl<'a> HistoricalRuntime<'a> {
                 (Some(selector_value), Some(case_expr)) => {
                     let case_value = self.eval_expr(case_expr)?;
                     matches!(
-                        eval_binary(HirBinaryOp::Eq, selector_value.clone(), case_value),
+                        eval_binary(HirBinaryOp::Eq, selector_value.clone(), case_value)?,
                         PineValue::Bool(true)
                     )
                 }
@@ -230,13 +230,17 @@ pub(crate) fn eval_unary(op: HirUnaryOp, value: PineValue) -> PineValue {
     }
 }
 
-pub(crate) fn eval_binary(op: HirBinaryOp, left: PineValue, right: PineValue) -> PineValue {
+pub(crate) fn eval_binary(
+    op: HirBinaryOp,
+    left: PineValue,
+    right: PineValue,
+) -> Result<PineValue, RuntimeError> {
     if left.is_na() || right.is_na() {
-        return PineValue::Na;
+        return Ok(PineValue::Na);
     }
 
-    match op {
-        HirBinaryOp::Add => numeric_add(left, right),
+    Ok(match op {
+        HirBinaryOp::Add => add(left, right)?,
         HirBinaryOp::Sub => numeric_sub(left, right),
         HirBinaryOp::Mul => numeric_mul(left, right),
         HirBinaryOp::Div => numeric_float_binary(left, right, |left, right| left / right),
@@ -255,6 +259,24 @@ pub(crate) fn eval_binary(op: HirBinaryOp, left: PineValue, right: PineValue) ->
             (PineValue::Bool(left), PineValue::Bool(right)) => PineValue::Bool(left || right),
             _ => PineValue::Na,
         },
+    })
+}
+
+fn add(left: PineValue, right: PineValue) -> Result<PineValue, RuntimeError> {
+    match (left, right) {
+        (PineValue::String(mut left), PineValue::String(right)) => {
+            let result_chars = left.chars().count().saturating_add(right.chars().count());
+            if result_chars > MAX_STRING_CHARS {
+                return Err(RuntimeError {
+                    message: format!(
+                        "string concatenation result cannot exceed {MAX_STRING_CHARS} characters"
+                    ),
+                });
+            }
+            left.push_str(&right);
+            Ok(PineValue::String(left))
+        }
+        (left, right) => Ok(numeric_add(left, right)),
     }
 }
 
@@ -329,5 +351,57 @@ pub(crate) fn values_equal(left: &PineValue, right: &PineValue) -> bool {
         #[allow(clippy::float_cmp)]
         (Some(left), Some(right)) => left == right,
         _ => left == right,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn concatenates_strings_and_propagates_na() {
+        assert_eq!(
+            eval_binary(
+                HirBinaryOp::Add,
+                PineValue::String("Pine ".to_owned()),
+                PineValue::String("脚本".to_owned()),
+            )
+            .expect("string concatenation"),
+            PineValue::String("Pine 脚本".to_owned())
+        );
+        assert_eq!(
+            eval_binary(
+                HirBinaryOp::Add,
+                PineValue::Na,
+                PineValue::String("suffix".to_owned()),
+            )
+            .expect("na propagation"),
+            PineValue::Na
+        );
+    }
+
+    #[test]
+    fn enforces_string_concatenation_character_limit() {
+        let at_limit = "界".repeat(MAX_STRING_CHARS);
+        assert_eq!(
+            eval_binary(
+                HirBinaryOp::Add,
+                PineValue::String(at_limit.clone()),
+                PineValue::String(String::new()),
+            )
+            .expect("limit-sized string"),
+            PineValue::String(at_limit.clone())
+        );
+
+        let error = eval_binary(
+            HirBinaryOp::Add,
+            PineValue::String(at_limit),
+            PineValue::String("x".to_owned()),
+        )
+        .expect_err("over-limit concatenation");
+        assert_eq!(
+            error.message,
+            "string concatenation result cannot exceed 40960 characters"
+        );
     }
 }

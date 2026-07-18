@@ -7,6 +7,10 @@ previous(src) =>
 current = close[0]
 last_close = close[1]
 older_close = close[2]
+constant_expr_close = close[1 + 1]
+multiplicative_expr_close = close[1 * 2]
+named_constant_offset = 1 + 1
+named_constant_close = close[named_constant_offset]
 expr_previous = (close + open)[1]
 branch_previous = close > open ? close[1] : open[1]
 
@@ -19,6 +23,8 @@ fn_previous = previous(close)
 plot(current)
 plot(na(last_close) ? close : last_close)
 plot(na(older_close) ? close : older_close)
+plot(na(constant_expr_close) ? close : constant_expr_close)
+plot(na(multiplicative_expr_close) ? close : multiplicative_expr_close)
 plot(na(expr_previous) ? close + open : expr_previous)
 plot(na(branch_previous) ? close : branch_previous)
 plot(loop_total)

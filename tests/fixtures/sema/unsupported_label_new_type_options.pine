@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported label.new type options")
+label_style = close > open ? "label.style_label_down" : "label.style_label_up"
+label.new(bar_index, high, "High", style=label_style, size=close)
+label.new(point=close)
+plot(close)

@@ -1,0 +1,7 @@
+//@version=5
+indicator("Stdev/variance dynamic length")
+length = bar_index % 2 + 2
+plot(ta.stdev(close, length))
+plot(ta.stdev(close, length, false))
+plot(ta.variance(close, length))
+plot(ta.variance(source=high, length=length, biased=false))

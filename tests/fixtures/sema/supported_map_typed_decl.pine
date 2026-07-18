@@ -8,4 +8,10 @@ prices.put("open", open)
 map<int, string> labels = map.new<int, string>()
 labels.put(bar_index, "bar")
 
-plot(prices.get("open") + (labels.get(bar_index) == "bar" ? 1 : 0))
+map volumes = map.new<string, float>()
+volumes.put("volume", volume)
+volume_copy = volumes.copy()
+volume_keys = volumes.keys()
+volume_values = volumes.values()
+
+plot(prices.get("open") + (labels.get(bar_index) == "bar" ? 1 : 0) + volume_copy.get("volume") + (volume_keys.get(0) == "volume" ? 1 : 0) + volume_values.get(0))

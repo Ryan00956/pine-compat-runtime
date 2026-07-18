@@ -1,9 +1,10 @@
 use crate::prelude::*;
 
 pub(crate) const VARIP_DRAWING_UNSUPPORTED_REASON: &str = "varip drawing object ids are not supported; retaining only an id would be unsafe while drawing object stores roll back between forming updates";
-pub(crate) const VARIP_VALUE_UNSUPPORTED_REASON: &str = "varip currently supports scalar int, float, bool, string, color, na, scalar and chart.point typed-array declarations, same-local or same-imported scalar-field UDT typed-array declarations, same-local or imported scalar-field UDT values, scalar maps, and runtime-owned float/int/bool/string/color matrices; drawing ids, tuples, non-scalar UDT arrays, and other value families are not implemented";
-pub(crate) const VARIP_UDT_UNSUPPORTED_REASON: &str = "UDT varip supports only explicit scalar-field declarations or direct scalar-field constructors from the same local or imported identity; untyped non-constructor inference, nested-field UDTs, and non-scalar UDT fields remain unsupported";
-pub(crate) const VARIP_UDT_ARRAY_UNSUPPORTED_REASON: &str = "varip UDT arrays require same-local or same-imported scalar-field element identity so the array backing store and UDT metadata can be handed off between forming updates";
+pub(crate) const VARIP_VALUE_UNSUPPORTED_REASON: &str = "varip currently supports scalar int, float, bool, string, color, na, chart.point values, scalar and chart.point typed-array declarations, same-local or same-imported scalar-tree UDT typed-array declarations, same-local or imported scalar-tree UDT values, scalar maps, and runtime-owned float/int/bool/string/color matrices; drawing ids, tuples, non-scalar UDT arrays, and other value families are not implemented";
+pub(crate) const VARIP_UDT_UNSUPPORTED_REASON: &str = "UDT varip supports only explicit scalar-tree declarations from na, same-identity constructors, same-identity aliases, fixture-backed same-identity control expressions, direct scalar-tree constructors, direct same-identity aliases from the same local or imported identity, or explicit non-scalar typed-na declarations; broader untyped non-constructor inference and non-scalar UDT values remain unsupported";
+pub(crate) const VARIP_NON_SCALAR_UDT_ASSIGN_UNSUPPORTED_REASON: &str = "non-scalar UDT varip values can only remain `na`; assigning object-backed UDT values would bypass drawing varip rollback safety";
+pub(crate) const VARIP_UDT_ARRAY_UNSUPPORTED_REASON: &str = "varip UDT arrays require same-local or same-imported scalar-tree element identity so the array backing store and UDT metadata can be handed off between forming updates";
 pub(crate) const LOG_UNSUPPORTED_REASON: &str = "Pine Logs output is not implemented; log.info, log.warning, and log.error require a host-owned log pane/output contract";
 pub(crate) const MAP_UNSUPPORTED_REASON: &str =
     "map collections are not implemented; map.* requires a dedicated key/value storage model";
@@ -46,7 +47,7 @@ pub(crate) fn unsupported_syntax_reason(feature: &str) -> &'static str {
         "library" => "library declarations are not supported in executable scripts",
         "export" => "export declarations are only supported in host-provided library sources",
         "user-defined types" => {
-            "this user-defined type form is outside the supported local scalar-field UDT subset"
+            "this user-defined type form is outside the supported local scalar-tree UDT subset"
         }
         "user-defined methods" => {
             "this user-defined method form is outside the supported pure local UDT method subset"

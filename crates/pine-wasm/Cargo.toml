@@ -18,4 +18,9 @@ pine-runtime = { path = "../pine-runtime" }
 pine-sema = { path = "../pine-sema" }
 pine-syntax = { path = "../pine-syntax" }
 serde_json = "1"
-wasm-bindgen = "0.2.121"
+wasm-bindgen = "=0.2.121"
+
+[dev-dependencies]
+# Keep the Node smoke binding generator byte-for-byte compatible with the
+# wasm-bindgen runtime embedded in this crate.
+wasm-bindgen-cli-support = "=0.2.121"

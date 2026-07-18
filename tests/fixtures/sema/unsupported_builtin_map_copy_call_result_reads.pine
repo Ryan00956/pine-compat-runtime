@@ -1,0 +1,15 @@
+//@version=6
+indicator("Unsupported builtin map.copy call-result reads")
+
+source = map.new<string, float>()
+
+wrong_get_key = map.copy(source).get(1)
+wrong_contains_key = map.copy(source).contains(1)
+bad_size_arity = map.copy(source).size(1)
+map.copy(source).put(1, 1.0)
+clear_result = map.copy(source).clear(1)
+map.copy(source).remove(1)
+map.copy(source).put_all(map.new<int, float>())
+wrong_receiver = map.copy(close).size()
+
+plot(close)

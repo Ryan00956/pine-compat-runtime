@@ -1,0 +1,10 @@
+//@version=5
+indicator("Supported line.new named const options")
+xloc_base = xloc.bar_index
+xloc_mode = xloc_base
+extend_base = extend.right
+extend_mode = extend_base
+style_base = line.style_dashed
+line_style = style_base
+line.new(x1=bar_index, y1=low, x2=bar_index + 1, y2=high, xloc=xloc_mode, extend=extend_mode, style=line_style)
+plot(close)

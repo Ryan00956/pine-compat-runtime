@@ -1,0 +1,12 @@
+//@version=6
+indicator("Supported chart metadata simple bool return qualifier")
+
+standard_alma = ta.alma(close, 2, 0.85, 6, chart.is_standard)
+heikinashi_alma = ta.alma(close, 2, 0.85, 6, chart.is_heikinashi)
+kagi_alma = ta.alma(close, 2, 0.85, 6, chart.is_kagi)
+linebreak_alma = ta.alma(close, 2, 0.85, 6, chart.is_linebreak)
+pnf_alma = ta.alma(close, 2, 0.85, 6, chart.is_pnf)
+range_alma = ta.alma(close, 2, 0.85, 6, chart.is_range)
+renko_alma = ta.alma(close, 2, 0.85, 6, chart.is_renko)
+
+plot(standard_alma + heikinashi_alma + kagi_alma + linebreak_alma + pnf_alma + range_alma + renko_alma)

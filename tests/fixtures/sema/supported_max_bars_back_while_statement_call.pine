@@ -1,0 +1,9 @@
+//@version=6
+indicator("Supported max_bars_back while statement call")
+src = close
+i = 0
+while i < 1
+    i := i + 1
+    length = 20
+    max_bars_back(src, length)
+plot(src)

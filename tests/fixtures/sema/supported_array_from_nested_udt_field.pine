@@ -1,0 +1,12 @@
+//@version=5
+indicator("Supported array.from nested UDT field")
+type Point
+    float x
+    float y
+
+type Wrapper
+    Point inner
+    float weight
+
+values = array.from(Wrapper.new(Point.new(close, open), high))
+plot(close)

@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported timeframe series simple string params")
+
+dynamic_timeframe = bar_index > 0 ? "1" : "5"
+plot(timeframe.in_seconds(dynamic_timeframe))
+plot(timeframe.change(dynamic_timeframe) ? 1 : 0)

@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported for-in matrix.eigenvectors method result negative history")
+source = matrix.new<float>(2, 2, 1.0)
+values = source.eigenvectors()
+length = for row in values
+    -1
+plot(close[length])

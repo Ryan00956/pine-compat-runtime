@@ -1,0 +1,10 @@
+//@version=6
+indicator("Supported array numeric series return qualifier")
+
+ints = array.from(1, 2, 3)
+floats = array.from(1.0, 2.0, 3.0)
+
+plot(array.min(ints) + array.max(ints) + array.sum(ints) + array.range(ints) + array.median(ints) + array.mode(ints) + array.percentile_nearest_rank(ints, 50))
+plot(ints.min() + ints.max() + ints.sum() + ints.range() + ints.median() + ints.mode() + ints.percentile_nearest_rank(50))
+plot(array.min(floats) + array.max(floats) + array.sum(floats) + array.range(floats) + array.median(floats) + array.mode(floats) + array.percentile_nearest_rank(floats, 50))
+plot(floats.min() + floats.max() + floats.sum() + floats.range() + floats.median() + floats.mode() + floats.percentile_nearest_rank(50))

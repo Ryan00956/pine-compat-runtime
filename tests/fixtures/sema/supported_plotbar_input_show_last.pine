@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported plotbar Input Show Last")
+
+count = input.int(5, "Show last")
+
+plotbar(open, high, low, close, show_last=count)

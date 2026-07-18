@@ -130,6 +130,13 @@ impl Parser {
                 left = self.finish_call(left)?;
                 continue;
             }
+            if self.at(TokenKind::Dot)
+                && self.nth_is_identifier(1)
+                && self.nth_at(2, TokenKind::LParen)
+            {
+                left = self.finish_call_result_method_call(left)?;
+                continue;
+            }
             if self.at(TokenKind::LBracket) {
                 left = self.finish_history(left)?;
                 continue;
@@ -260,6 +267,19 @@ impl Parser {
 
     fn parse_for_expr(&mut self) -> Option<Expr> {
         let start = self.expect(TokenKind::For, "expected `for`")?;
+        if self.at(TokenKind::LBracket) {
+            let (key, value) = self.parse_for_in_pair()?;
+            let parts = self.parse_for_in_tail(start, Some(key), value)?;
+            return Some(Expr {
+                span: parts.start.merge(parts.span),
+                kind: ExprKind::ForIn {
+                    index: parts.index,
+                    value: parts.value,
+                    iterable: Box::new(parts.iterable),
+                    body: parts.body,
+                },
+            });
+        }
         let counter = self.parse_for_counter()?;
         if self.at(TokenKind::Comma) {
             self.bump();
@@ -524,6 +544,73 @@ impl Parser {
         })
     }
 
+    fn finish_call_result_method_call(&mut self, receiver: Expr) -> Option<Expr> {
+        let Some(prefix) = call_result_receiver_prefix(&receiver) else {
+            self.error_here(
+                "E_PARSE_EXPR",
+                "method calls on call-result receivers require an unqualified call, qualified user-defined result, or supported built-in collection producer receiver",
+            );
+            return None;
+        };
+        let start = receiver.span;
+        let receiver_span = receiver.span;
+        self.expect(TokenKind::Dot, "expected `.` before method name")?;
+        let method_span = self.current().span;
+        let TokenKind::Identifier(method_name) = self.current().kind.clone() else {
+            self.error_here("E_PARSE_NAME", "expected method name after `.`");
+            return None;
+        };
+        self.bump();
+        self.expect(TokenKind::LParen, "expected `(` after method name")?;
+
+        let mut args = vec![CallArg {
+            name: None,
+            value: receiver,
+            span: receiver_span,
+        }];
+
+        if !self.at(TokenKind::RParen) {
+            loop {
+                let arg_start = self.current().span;
+                let name = if let TokenKind::Identifier(name) = self.current().kind.clone() {
+                    if self.nth_at(1, TokenKind::Eq) {
+                        self.bump();
+                        self.bump();
+                        Some(name)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+                let value = self.parse_expr(0)?;
+                args.push(CallArg {
+                    span: arg_start.merge(value.span),
+                    name,
+                    value,
+                });
+
+                if self.at(TokenKind::Comma) {
+                    self.bump();
+                    continue;
+                }
+                break;
+            }
+        }
+
+        let end = self.expect(TokenKind::RParen, "expected `)` after arguments")?;
+        Some(Expr {
+            span: start.merge(end),
+            kind: ExprKind::Call {
+                callee: Box::new(Expr {
+                    span: method_span,
+                    kind: ExprKind::QualifiedName(vec![prefix, method_name]),
+                }),
+                args,
+            },
+        })
+    }
+
     fn finish_history(&mut self, expr: Expr) -> Option<Expr> {
         self.expect(TokenKind::LBracket, "expected `[`")?;
         let offset = self.parse_expr(0)?;
@@ -554,6 +641,13 @@ impl Parser {
             TokenKind::Percent => Some((BinaryOp::Mod, 12, 13)),
             _ => None,
         }
+    }
+
+    fn nth_is_identifier(&self, n: usize) -> bool {
+        matches!(
+            self.tokens.get(self.pos + n).map(|token| &token.kind),
+            Some(TokenKind::Identifier(_))
+        )
     }
 
     fn skip_newlines(&mut self) {
@@ -662,4 +756,231 @@ impl Parser {
             self.pos += 1;
         }
     }
+}
+
+fn call_result_receiver_prefix(receiver: &Expr) -> Option<String> {
+    let ExprKind::Call { callee, .. } = &receiver.kind else {
+        return None;
+    };
+    match &callee.kind {
+        ExprKind::Identifier(name) if is_plain_identifier(name) => {
+            Some(UNQUALIFIED_CALL_RESULT_PREFIX.to_owned())
+        }
+        ExprKind::Identifier(name) if is_builtin_array_result_callee(name) => {
+            Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
+        }
+        ExprKind::Identifier(name) if is_builtin_matrix_result_callee(name) => {
+            Some(BUILTIN_MATRIX_CALL_RESULT_PREFIX.to_owned())
+        }
+        ExprKind::Identifier(name) if is_builtin_map_result_callee(name) => {
+            Some(BUILTIN_MAP_CALL_RESULT_PREFIX.to_owned())
+        }
+        ExprKind::QualifiedName(parts) => match parts.as_slice() {
+            [prefix, method]
+                if prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX
+                    && matches!(
+                        method.as_str(),
+                        "row"
+                            | "col"
+                            | "eigenvalues"
+                            | "slice"
+                            | "concat"
+                            | "abs"
+                            | "standardize"
+                            | "sort_indices"
+                    ) =>
+            {
+                Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
+            }
+            [prefix, method]
+                if prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX
+                    && matches!(
+                        method.as_str(),
+                        "copy"
+                            | "diff"
+                            | "eigenvectors"
+                            | "inv"
+                            | "kron"
+                            | "mult"
+                            | "pinv"
+                            | "pow"
+                            | "submatrix"
+                            | "transpose"
+                    ) =>
+            {
+                Some(BUILTIN_MATRIX_CALL_RESULT_PREFIX.to_owned())
+            }
+            [prefix, _method] if prefix == BUILTIN_MATRIX_CALL_RESULT_PREFIX => None,
+            [prefix, method]
+                if prefix == BUILTIN_MAP_CALL_RESULT_PREFIX
+                    && matches!(method.as_str(), "keys" | "values") =>
+            {
+                Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
+            }
+            [prefix, method] if prefix == BUILTIN_MAP_CALL_RESULT_PREFIX && method == "copy" => {
+                Some(BUILTIN_MAP_CALL_RESULT_PREFIX.to_owned())
+            }
+            [prefix, _method] if prefix == BUILTIN_MAP_CALL_RESULT_PREFIX => None,
+            [prefix, method]
+                if prefix == BUILTIN_ARRAY_CALL_RESULT_PREFIX
+                    && matches!(
+                        method.as_str(),
+                        "copy" | "slice" | "concat" | "abs" | "standardize" | "sort_indices"
+                    ) =>
+            {
+                Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
+            }
+            [prefix, _method] if prefix == BUILTIN_ARRAY_CALL_RESULT_PREFIX => None,
+            [namespace, member] if is_builtin_matrix_result_qualified_callee(namespace, member) => {
+                Some(BUILTIN_MATRIX_CALL_RESULT_PREFIX.to_owned())
+            }
+            [namespace, member] if is_builtin_map_result_qualified_callee(namespace, member) => {
+                Some(BUILTIN_MAP_CALL_RESULT_PREFIX.to_owned())
+            }
+            [namespace, member] if is_builtin_array_result_qualified_callee(namespace, member) => {
+                Some(BUILTIN_ARRAY_CALL_RESULT_PREFIX.to_owned())
+            }
+            [alias, _method] if !is_builtin_namespace(alias) => Some(alias.clone()),
+            [alias, _type_name, constructor]
+                if constructor == "new" && !is_builtin_namespace(alias) =>
+            {
+                Some(alias.clone())
+            }
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+const UNQUALIFIED_CALL_RESULT_PREFIX: &str = "$call_result";
+const BUILTIN_ARRAY_CALL_RESULT_PREFIX: &str = "$builtin_array_result";
+const BUILTIN_MATRIX_CALL_RESULT_PREFIX: &str = "$builtin_matrix_result";
+const BUILTIN_MAP_CALL_RESULT_PREFIX: &str = "$builtin_map_result";
+
+fn is_plain_identifier(name: &str) -> bool {
+    let mut chars = name.chars();
+    chars
+        .next()
+        .is_some_and(|ch| ch == '_' || ch.is_ascii_alphabetic())
+        && chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric())
+}
+
+fn is_builtin_array_result_callee(name: &str) -> bool {
+    name.strip_prefix("array.").is_some_and(|member| {
+        is_builtin_array_result_member(member)
+            || (member.starts_with("new<") && member.ends_with('>'))
+    })
+}
+
+fn is_builtin_array_result_qualified_callee(namespace: &str, member: &str) -> bool {
+    (namespace == "array" && is_builtin_array_result_member(member))
+        || matches!(
+            (namespace, member),
+            ("str", "split")
+                | ("ta", "pivot_point_levels")
+                | ("matrix", "eigenvalues" | "row" | "col")
+                | ("map", "keys" | "values")
+        )
+}
+
+fn is_builtin_matrix_result_qualified_callee(namespace: &str, member: &str) -> bool {
+    namespace == "matrix"
+        && matches!(
+            member,
+            "copy"
+                | "diff"
+                | "eigenvectors"
+                | "inv"
+                | "kron"
+                | "mult"
+                | "pinv"
+                | "pow"
+                | "submatrix"
+                | "transpose"
+        )
+}
+
+fn is_builtin_map_result_qualified_callee(namespace: &str, member: &str) -> bool {
+    namespace == "map" && member == "copy"
+}
+
+fn is_builtin_matrix_result_callee(name: &str) -> bool {
+    matches!(
+        name,
+        "matrix.new<float>"
+            | "matrix.new<int>"
+            | "matrix.new<bool>"
+            | "matrix.new<string>"
+            | "matrix.new<color>"
+    )
+}
+
+fn is_builtin_map_result_callee(name: &str) -> bool {
+    let Some(inner) = name
+        .strip_prefix("map.new<")
+        .and_then(|name| name.strip_suffix('>'))
+    else {
+        return false;
+    };
+    let Some((key_type, value_type)) = inner.split_once(',') else {
+        return false;
+    };
+    is_builtin_map_scalar_template(key_type) && is_builtin_map_scalar_template(value_type)
+}
+
+fn is_builtin_map_scalar_template(name: &str) -> bool {
+    matches!(name, "int" | "float" | "bool" | "string" | "color")
+}
+
+fn is_builtin_array_result_member(member: &str) -> bool {
+    matches!(
+        member,
+        "new_float"
+            | "new_int"
+            | "new_bool"
+            | "new_string"
+            | "new_color"
+            | "new_line"
+            | "new_linefill"
+            | "new_polyline"
+            | "new_label"
+            | "new_box"
+            | "new_table"
+            | "from"
+            | "copy"
+            | "slice"
+            | "concat"
+            | "abs"
+            | "standardize"
+            | "sort_indices"
+    )
+}
+
+fn is_builtin_namespace(name: &str) -> bool {
+    matches!(
+        name,
+        "array"
+            | "box"
+            | "chart"
+            | "color"
+            | "hline"
+            | "input"
+            | "label"
+            | "line"
+            | "linefill"
+            | "log"
+            | "map"
+            | "math"
+            | "matrix"
+            | "plot"
+            | "polyline"
+            | "request"
+            | "str"
+            | "strategy"
+            | "syminfo"
+            | "ta"
+            | "table"
+            | "ticker"
+            | "timeframe"
+    )
 }

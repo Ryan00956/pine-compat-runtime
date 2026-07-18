@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported local non-scalar UDT typed-na field access")
+
+type Marker
+    label id
+
+Marker marker = na
+field = marker.id
+prior = field[1]
+plot(na(field) ? 1 : 0)
+plot(na(prior) ? 1 : 0)

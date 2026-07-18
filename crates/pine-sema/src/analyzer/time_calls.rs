@@ -91,15 +91,14 @@ impl Analyzer {
         let Some(arg_type) = arg_types.get(index).copied().flatten() else {
             return;
         };
-        if !accepts_type(accepts, arg_type) {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_TYPE",
-                format!(
-                    "`{}` argument `{}` does not accept {:?} {:?}",
-                    function_name, param_name, arg_type.qualifier, arg_type.kind
-                ),
-                arg.span,
-            ));
+        if let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
+            function_name,
+            param_name,
+            accepts,
+            arg_type,
+            arg.span,
+        ) {
+            self.diagnostics.push(diagnostic);
         }
     }
 
@@ -135,12 +134,11 @@ impl Analyzer {
         if accepts_type(Accepts::StringCompatible, arg_type) {
             return Some(("session", Accepts::StringCompatible));
         }
-        self.diagnostics.push(Diagnostic::error(
-            "E_CALL_ARG_TYPE",
-            format!(
-                "`{}` second positional argument must be a session string or bars_back int",
-                function_name
-            ),
+        self.diagnostics.push(call_arg_expected_type_diagnostic(
+            function_name,
+            "second positional",
+            "a session string or bars_back int",
+            arg_type,
             args[1].span,
         ));
         None
@@ -165,12 +163,11 @@ impl Analyzer {
         if accepts_type(Accepts::IntCompatible, third_type) {
             return Some(("bars_back", Accepts::IntCompatible));
         }
-        self.diagnostics.push(Diagnostic::error(
-            "E_CALL_ARG_TYPE",
-            format!(
-                "`{}` third positional argument must be a timezone string or bars_back int",
-                function_name
-            ),
+        self.diagnostics.push(call_arg_expected_type_diagnostic(
+            function_name,
+            "third positional",
+            "a timezone string or bars_back int",
+            third_type,
             args[2].span,
         ));
         None
@@ -325,15 +322,14 @@ impl Analyzer {
         let Some(arg_type) = arg_types.get(index).copied().flatten() else {
             return;
         };
-        if !accepts_type(accepts, arg_type) {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_TYPE",
-                format!(
-                    "`{}` argument `{}` does not accept {:?} {:?}",
-                    function_name, param_name, arg_type.qualifier, arg_type.kind
-                ),
-                arg.span,
-            ));
+        if let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
+            function_name,
+            param_name,
+            accepts,
+            arg_type,
+            arg.span,
+        ) {
+            self.diagnostics.push(diagnostic);
         }
     }
 
@@ -376,11 +372,15 @@ impl Analyzer {
                 .flatten()
                 .is_some_and(|arg_type| !accepts_type(Accepts::IntCompatible, arg_type))
         {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_TYPE",
-                "`timestamp` first positional argument must be a year int or timezone string",
-                arg.span,
-            ));
+            if let Some(arg_type) = arg_types.first().copied().flatten() {
+                self.diagnostics.push(call_arg_expected_type_diagnostic(
+                    function_name,
+                    "first positional",
+                    "a year int or timezone string",
+                    arg_type,
+                    arg.span,
+                ));
+            }
             return None;
         }
 

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported max_bars_back non-const length")
+length = bar_index
+max_bars_back(close, length)
+plot(close)

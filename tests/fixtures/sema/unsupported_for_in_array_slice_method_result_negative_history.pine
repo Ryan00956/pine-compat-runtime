@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported for-in array.slice method result negative history")
+source = array.new<int>(2, 0)
+values = source.slice(0, 1)
+length = for value in values
+    -1
+plot(close[length])

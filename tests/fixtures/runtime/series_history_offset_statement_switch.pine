@@ -1,0 +1,25 @@
+//@version=5
+indicator("Series history offset statement switch")
+
+offset = bar_index - bar_index
+switch
+    bar_index == 0 =>
+        offset := 0
+    bar_index == 1 =>
+        offset := 1
+    =>
+        offset := 2
+
+maybe_offset = bar_index - bar_index
+switch bar_index
+    2 =>
+        maybe_offset := na
+    =>
+        maybe_offset := offset
+
+previous = close[offset]
+
+plot(previous)
+plot((close + open)[offset])
+plot(close[maybe_offset])
+plot(na(previous[1]) ? 1 : 0)

@@ -1,0 +1,7 @@
+//@version=5
+indicator("Supported ta.percentile Simple Percentage")
+values = array.new_int(1, 50)
+percent = array.size(values) * 50
+nearest = ta.percentile_nearest_rank(close, 3, percent)
+linear = ta.percentile_linear_interpolation(close, 3, percent)
+plot(nz(nearest) + nz(linear))

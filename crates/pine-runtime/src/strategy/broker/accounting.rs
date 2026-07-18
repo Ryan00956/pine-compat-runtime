@@ -6,6 +6,14 @@ fn normalize_zero(value: f64) -> f64 {
     if value == 0.0 { 0.0 } else { value }
 }
 
+fn trade_value_percent(amount: f64, entry_price: f64, quantity: f64) -> Option<f64> {
+    let denominator = entry_price * quantity.abs();
+    if !amount.is_finite() || !denominator.is_finite() || denominator <= 0.0 {
+        return None;
+    }
+    Some(normalize_zero(amount / denominator * 100.0))
+}
+
 impl BrokerState {
     pub(crate) fn record_equity(&mut self, bar_index: usize, close: f64) {
         let market_value = self.position_size * close;
@@ -51,6 +59,16 @@ impl BrokerState {
         } else {
             0.0
         }
+    }
+
+    #[must_use]
+    pub(crate) fn open_profit_percent(&self, close: f64) -> Option<f64> {
+        let open_profit = self.open_profit(close);
+        let realized_equity = self.initial_capital + self.realized_profit();
+        if !open_profit.is_finite() || !realized_equity.is_finite() || realized_equity <= 0.0 {
+            return None;
+        }
+        Some(normalize_zero(open_profit / realized_equity * 100.0))
     }
 
     #[must_use]
@@ -101,6 +119,11 @@ impl BrokerState {
         }
         let required_margin = qty * fill_price * self.margin_long.value_percent / 100.0;
         required_margin.is_finite() && self.equity_value(fill_price) >= required_margin
+    }
+
+    #[must_use]
+    pub(crate) fn initial_capital(&self) -> f64 {
+        self.initial_capital
     }
 
     #[must_use]
@@ -283,6 +306,13 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn first_closed_trade_index(&self) -> i64 {
+        // The local broker retains every closed trade, so the oldest retained
+        // trade keeps its original zero-based index even before one exists.
+        0
+    }
+
+    #[must_use]
     pub(crate) fn closed_trade(&self, trade_num: i64) -> Option<&StrategyTrade> {
         let index = usize::try_from(trade_num).ok()?;
         self.trades.get(index)
@@ -294,6 +324,19 @@ impl BrokerState {
         self.closed_trade_metrics
             .get(index)
             .map(|metrics| metrics.max_runup)
+    }
+
+    #[must_use]
+    pub(crate) fn closed_trade_profit_percent(&self, trade_num: i64) -> Option<f64> {
+        let trade = self.closed_trade(trade_num)?;
+        trade_value_percent(trade.profit, trade.entry_price, trade.qty)
+    }
+
+    #[must_use]
+    pub(crate) fn closed_trade_max_runup_percent(&self, trade_num: i64) -> Option<f64> {
+        let trade = self.closed_trade(trade_num)?;
+        let amount = self.closed_trade_max_runup(trade_num)?;
+        trade_value_percent(amount, trade.entry_price, trade.qty)
     }
 
     #[must_use]
@@ -310,6 +353,13 @@ impl BrokerState {
         self.closed_trade_metrics
             .get(index)
             .map(|metrics| metrics.max_drawdown)
+    }
+
+    #[must_use]
+    pub(crate) fn closed_trade_max_drawdown_percent(&self, trade_num: i64) -> Option<f64> {
+        let trade = self.closed_trade(trade_num)?;
+        let amount = self.closed_trade_max_drawdown(trade_num)?;
+        trade_value_percent(amount, trade.entry_price, trade.qty)
     }
 
     #[must_use]
@@ -410,6 +460,13 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn open_trade_profit_percent(&self, trade_num: i64, close: f64) -> Option<f64> {
+        let trade = self.open_trade_at(trade_num)?;
+        let amount = normalize_zero((close - trade.entry_price) * trade.quantity);
+        trade_value_percent(amount, trade.entry_price, trade.quantity)
+    }
+
+    #[must_use]
     pub(crate) fn open_trade_commission(&self, trade_num: i64) -> Option<f64> {
         self.open_trade_at(trade_num)
             .map(|trade| normalize_zero(trade.entry_commission))
@@ -426,6 +483,14 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn open_trade_max_runup_percent(&self, trade_num: i64) -> Option<f64> {
+        let trade = self.open_trade_at(trade_num)?;
+        let max_high = trade.max_high?;
+        let amount = normalize_zero((max_high - trade.entry_price).max(0.0) * trade.quantity);
+        trade_value_percent(amount, trade.entry_price, trade.quantity)
+    }
+
+    #[must_use]
     pub(crate) fn open_trade_max_drawdown(&self, trade_num: i64) -> Option<f64> {
         self.open_trade_at(trade_num).and_then(|trade| {
             let min_low = trade.min_low?;
@@ -433,6 +498,14 @@ impl BrokerState {
                 (trade.entry_price - min_low).max(0.0) * trade.quantity,
             ))
         })
+    }
+
+    #[must_use]
+    pub(crate) fn open_trade_max_drawdown_percent(&self, trade_num: i64) -> Option<f64> {
+        let trade = self.open_trade_at(trade_num)?;
+        let min_low = trade.min_low?;
+        let amount = normalize_zero((trade.entry_price - min_low).max(0.0) * trade.quantity);
+        trade_value_percent(amount, trade.entry_price, trade.quantity)
     }
 
     #[must_use]
@@ -515,5 +588,15 @@ impl BrokerState {
         } else {
             PineValue::Na
         }
+    }
+
+    #[must_use]
+    pub(crate) fn position_entry_name_value(&self) -> PineValue {
+        if self.position_size <= 0.0 {
+            return PineValue::Na;
+        }
+        self.position_entry_name
+            .as_ref()
+            .map_or(PineValue::Na, |name| PineValue::String(name.clone()))
     }
 }

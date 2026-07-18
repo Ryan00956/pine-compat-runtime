@@ -1,0 +1,23 @@
+//@version=5
+indicator("Unsupported ticker series simple string params")
+
+dynamic_prefix = bar_index > 0 ? "NASDAQ" : "NYSE"
+dynamic_ticker = bar_index > 0 ? "AAPL" : "IBM"
+dynamic_symbol = bar_index > 0 ? "NASDAQ:AAPL" : "NYSE:IBM"
+dynamic_session = bar_index > 0 ? session.regular : session.extended
+dynamic_style = bar_index > 0 ? "ATR" : "Traditional"
+dynamic_source = bar_index > 0 ? "hl" : "close"
+
+new_prefix = ticker.new(dynamic_prefix, "AAPL")
+new_ticker = ticker.new("NASDAQ", dynamic_ticker)
+new_session = ticker.new("NASDAQ", "AAPL", dynamic_session)
+modified_ticker = ticker.modify(dynamic_symbol)
+standard = ticker.standard(dynamic_symbol)
+heikinashi = ticker.heikinashi(dynamic_symbol)
+inherited = ticker.inherit("NASDAQ:AAPL", dynamic_symbol)
+linebreak = ticker.linebreak(dynamic_symbol, 3)
+kagi = ticker.kagi("NASDAQ:AAPL", dynamic_style, 10)
+pointfigure = ticker.pointfigure("NASDAQ:AAPL", dynamic_source, dynamic_style, 14, 3)
+renko = ticker.renko("NASDAQ:AAPL", dynamic_style, 10)
+
+plot(close)

@@ -1,0 +1,11 @@
+library("Imported UDT method side-effect fixture")
+export type Point
+    float x
+
+method mutateReceiver(Point p) =>
+    p.x := p.x + 1
+    p
+
+method mutateParam(Point p, Point other) =>
+    other.x := other.x + 1
+    p

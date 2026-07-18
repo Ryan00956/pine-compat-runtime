@@ -1,0 +1,7 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT private dependency history")
+
+lib.PrivateWrapper wrapped = na
+prior = wrapped[1]
+plot(close)

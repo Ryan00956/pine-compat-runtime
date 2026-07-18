@@ -1,0 +1,14 @@
+//@version=6
+indicator("Unsupported array sort UDT field index")
+type Data
+    color shade
+    float price
+
+values = array.from(Data.new(color.red, close))
+array.sort(values)
+array.sort(values, sort_field = -1)
+array.sort(values, sort_field = 2)
+dynamic_index = bar_index
+array.sort(values, sort_field = dynamic_index)
+array.sort(values, sort_field = 1.0)
+plot(close)

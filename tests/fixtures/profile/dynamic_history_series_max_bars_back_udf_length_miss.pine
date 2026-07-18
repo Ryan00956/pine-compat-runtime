@@ -1,0 +1,8 @@
+indicator("Profile dynamic series history UDF max_bars_back length miss", max_bars_back=10)
+src = close
+length() =>
+    base = 1
+    base + 1
+max_bars_back(src, length())
+offset = bar_index == 0 ? 0 : 3
+plot(src[offset])

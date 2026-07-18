@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported named const string comparison ternary negative history")
+left = "fast"
+right = "slow"
+use_short = left != right
+length = use_short ? -1 : 1
+plot(close[length])

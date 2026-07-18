@@ -2,6 +2,8 @@
 indicator("User-defined methods")
 type Point
     float x
+type Wrapper
+    Point point
 
 makePoint(x) => Point.new(x)
 makePointNamed(x) => Point.new(x=x)
@@ -11,6 +13,9 @@ method keep(Point p) => p
 method keepBlock(Point p) =>
     copy = p
     copy
+method keepTernary(Point p, bool flip) =>
+    copy = p
+    flip ? copy : p
 method keepIf(Point p, bool flip) =>
     if flip
         copy = p
@@ -22,10 +27,31 @@ method keepFor(Point p, int count) =>
     for i = 0 to count
         copy = p
         copy
+method keepForIn(Point p, array<int> values) =>
+    for value in values
+        copy = p
+        copy
+method keepWhile(Point p, bool keepGoing) =>
+    active = keepGoing
+    while active
+        copy = p
+        active := false
+        copy
+method keepSwitch(Point p, int selector) =>
+    switch selector
+        0 =>
+            copy = p
+            copy
+        =>
+            copy = p
+            copy
 method choose(Point p, Point other) => other
 method chooseBlock(Point p, Point other) =>
     copy = other
     copy
+method chooseTernary(Point p, Point other, bool flip) =>
+    copy = other
+    flip ? copy : other
 method chooseIf(Point p, Point other, bool flip) =>
     if flip
         copy = other
@@ -37,6 +63,24 @@ method chooseFor(Point p, Point other, int count) =>
     for i = 0 to count
         copy = other
         copy
+method chooseForIn(Point p, Point other, array<int> values) =>
+    for value in values
+        copy = other
+        copy
+method chooseWhile(Point p, Point other, bool keepGoing) =>
+    active = keepGoing
+    while active
+        copy = other
+        active := false
+        copy
+method chooseSwitch(Point p, Point other, int selector) =>
+    switch selector
+        0 =>
+            copy = other
+            copy
+        =>
+            copy = other
+            copy
 method wrap(Point p, Point other) => p.choose(other)
 method clone(Point p) => Point.new(p.x)
 method cloneOther(Point p, Point other) => Point.new(other.x)
@@ -182,6 +226,41 @@ method makeTypedForFrom(Point p, Point other, int count) =>
     made := for i = 0 to count
         Point.new(x=made.x + i + 5)
     made
+method makeTypedForInFrom(Point p, Point other, array<int> values) =>
+    copy = p
+    otherCopy = other
+    px = copy.x
+    ox = otherCopy.x
+    Point made = for value in values
+        Point.new(x=px + ox + value + 140)
+    made := for value in values
+        Point.new(x=made.x + value + 5)
+    made
+method makeTypedWhileFrom(Point p, Point other, int count) =>
+    copy = p
+    otherCopy = other
+    px = copy.x
+    ox = otherCopy.x
+    i = 0
+    Point made = while i < count
+        i := i + 1
+        Point.new(x=px + ox + i + 150)
+    j = 0
+    made := while j < count
+        j := j + 1
+        Point.new(x=made.x + j + 5)
+    made
+method toWrapper(Point p) => Wrapper.new(p)
+method makeWrapper(Point p, float x) => Wrapper.new(Point.new(x))
+method makeWrapperViaMethod(Point p, float x) => p.makeWrapper(x)
+method toWrapperSwitch(Point p, int mode) =>
+    switch mode
+        0 => Wrapper.new(Point.new(p.x + 170))
+        1 => Wrapper.new(Point.new(p.x + 175))
+        => Wrapper.new(Point.new(p.x + 180))
+method keepWrapper(Wrapper w) => w
+method keepWrapperViaMethod(Wrapper w) => w.keepWrapper()
+method chooseWrapper(Wrapper w, Wrapper other, bool flip) => flip ? w : other
 method mutateLocal(Point p, float delta) =>
     local = Point.new(p.x)
     local.x := local.x + delta
@@ -189,14 +268,23 @@ method mutateLocal(Point p, float delta) =>
 
 p = Point.new(close)
 q = Point.new(open)
+steps = array.from(1, 2)
 same = p.keep()
 sameBlock = p.keepBlock()
+sameTernary = p.keepTernary(bar_index < 2)
 sameIf = p.keepIf(bar_index < 2)
 sameFor = p.keepFor(2)
+sameForIn = p.keepForIn(steps)
+sameWhile = p.keepWhile(close > 0)
+sameSwitch = p.keepSwitch(bar_index % 2)
 chosen = p.choose(q)
 chosenBlock = p.chooseBlock(q)
+chosenTernary = p.chooseTernary(q, bar_index < 2)
 chosenIf = p.chooseIf(q, bar_index < 2)
 chosenFor = p.chooseFor(q, 2)
+chosenForIn = p.chooseForIn(q, steps)
+chosenWhile = p.chooseWhile(q, close > 0)
+chosenSwitch = p.chooseSwitch(q, bar_index % 2)
 wrapped = p.wrap(q)
 cloned = p.clone()
 clonedOther = p.cloneOther(q)
@@ -232,12 +320,94 @@ madeTypedSwitch = p.makeTypedSwitch(open, bar_index)
 madeTypedSwitchFrom = p.makeTypedSwitchFrom(q, bar_index)
 madeTypedIfFrom = p.makeTypedIfFrom(q, bar_index < 2)
 madeTypedForFrom = p.makeTypedForFrom(q, 2)
+madeTypedForInFrom = p.makeTypedForInFrom(q, steps)
+madeTypedWhileFrom = p.makeTypedWhileFrom(q, 2)
+wrappedMade = p.toWrapper()
+wrappedMadeViaMethod = p.makeWrapperViaMethod(close)
+wrappedSwitch = p.toWrapperSwitch(bar_index)
+wrappedSource = Wrapper.new(p)
+wrappedOther = Wrapper.new(Point.new(open + 190))
+wrappedKept = wrappedSource.keepWrapper()
+wrappedKeptNested = wrappedSource.keepWrapperViaMethod()
+wrappedChosen = wrappedSource.chooseWrapper(wrappedOther, bar_index % 2 == 0)
 mutatedLocal = p.mutateLocal(200)
+samePrior = same[1]
+sameSwitchPrior = sameSwitch[1]
+chosenForInPrior = chosenForIn[1]
+clonedSwitchPrior = clonedSwitch[1]
+clonedOtherSwitchPrior = clonedOtherSwitch[1]
+madeTypedSwitchFromPrior = madeTypedSwitchFrom[1]
+madeTypedForInFromPrior = madeTypedForInFrom[1]
+madeTypedWhileFromPrior = madeTypedWhileFrom[1]
+wrappedMadePrior = wrappedMade[1]
+wrappedSwitchPrior = wrappedSwitch[1]
+wrappedKeptPrior = wrappedKept[1]
+wrappedChosenPrior = wrappedChosen[1]
+dyn = bar_index == 0 ? na : 1
+sameDynamic = same[dyn]
+sameDynamicSibling = same[dyn]
+float sameDynamicX = na
+float sameDynamicSiblingXAfterMutation = na
+wrappedKeptDynamic = wrappedKept[dyn]
+wrappedKeptDynamicSibling = wrappedKept[dyn]
+float wrappedKeptDynamicX = na
+float wrappedKeptDynamicSiblingXAfterMutation = na
+wrappedPointDynamic = wrapped[dyn]
+wrappedPointDynamicSibling = wrapped[dyn]
+float wrappedPointDynamicX = na
+float wrappedPointDynamicSiblingXAfterMutation = na
+wrappedKeptNestedDynamic = wrappedKeptNested[dyn]
+wrappedKeptNestedDynamicSibling = wrappedKeptNested[dyn]
+float wrappedKeptNestedDynamicX = na
+float wrappedKeptNestedDynamicSiblingXAfterMutation = na
+clonedDynamic = cloned[dyn]
+clonedDynamicSibling = cloned[dyn]
+float clonedDynamicX = na
+float clonedDynamicSiblingXAfterMutation = na
+clonedViaMakeDynamic = clonedViaMake[dyn]
+clonedViaMakeDynamicSibling = clonedViaMake[dyn]
+float clonedViaMakeDynamicX = na
+float clonedViaMakeDynamicSiblingXAfterMutation = na
+wrappedMadeDynamic = wrappedMade[dyn]
+wrappedMadeDynamicSibling = wrappedMade[dyn]
+float wrappedMadeDynamicX = na
+float wrappedMadeDynamicSiblingXAfterMutation = na
+wrappedMadeViaMethodDynamic = wrappedMadeViaMethod[dyn]
+wrappedMadeViaMethodDynamicSibling = wrappedMadeViaMethod[dyn]
+float wrappedMadeViaMethodDynamicX = na
+float wrappedMadeViaMethodDynamicSiblingXAfterMutation = na
+if bar_index > 0
+    sameDynamicX := sameDynamic.x
+    sameDynamic.x := close + 700
+    sameDynamicSiblingXAfterMutation := sameDynamicSibling.x
+    wrappedKeptDynamicX := wrappedKeptDynamic.point.x
+    wrappedKeptDynamic.point := Point.new(close + 800)
+    wrappedKeptDynamicSiblingXAfterMutation := wrappedKeptDynamicSibling.point.x
+    wrappedPointDynamicX := wrappedPointDynamic.x
+    wrappedPointDynamic.x := close + 1100
+    wrappedPointDynamicSiblingXAfterMutation := wrappedPointDynamicSibling.x
+    wrappedKeptNestedDynamicX := wrappedKeptNestedDynamic.point.x
+    wrappedKeptNestedDynamic.point := Point.new(close + 1200)
+    wrappedKeptNestedDynamicSiblingXAfterMutation := wrappedKeptNestedDynamicSibling.point.x
+    clonedDynamicX := clonedDynamic.x
+    clonedDynamic.x := close + 900
+    clonedDynamicSiblingXAfterMutation := clonedDynamicSibling.x
+    clonedViaMakeDynamicX := clonedViaMakeDynamic.x
+    clonedViaMakeDynamic.x := close + 1300
+    clonedViaMakeDynamicSiblingXAfterMutation := clonedViaMakeDynamicSibling.x
+    wrappedMadeDynamicX := wrappedMadeDynamic.point.x
+    wrappedMadeDynamic.point := Point.new(close + 1000)
+    wrappedMadeDynamicSiblingXAfterMutation := wrappedMadeDynamicSibling.point.x
+    wrappedMadeViaMethodDynamicX := wrappedMadeViaMethodDynamic.point.x
+    wrappedMadeViaMethodDynamic.point := Point.new(close + 1400)
+    wrappedMadeViaMethodDynamicSiblingXAfterMutation := wrappedMadeViaMethodDynamicSibling.point.x
 plot(p.shift(open))
 plot(same.x + close)
 plot(sameBlock.x + close)
+plot(sameTernary.x + close + 10)
 plot(chosen.x + close)
 plot(chosenBlock.x + close)
+plot(chosenTernary.x + close + 15)
 plot(chosenIf.x + close + 20)
 plot(chosenFor.x + close + 30)
 plot(wrapped.x + close)
@@ -275,6 +445,48 @@ plot(madeTypedSwitch.x + close)
 plot(madeTypedSwitchFrom.x + close)
 plot(madeTypedIfFrom.x + close)
 plot(madeTypedForFrom.x + close)
+plot(madeTypedForInFrom.x + close)
+plot(madeTypedWhileFrom.x + close)
+plot(wrappedMade.point.x + close)
+plot(wrappedMadeViaMethod.point.x + close)
+plot(wrappedSwitch.point.x + close)
+plot(wrappedKept.point.x + close)
+plot(wrappedKeptNested.point.x + close)
+plot(wrappedChosen.point.x + close)
 plot(mutatedLocal.x + close)
 plot(sameIf.x + close)
 plot(sameFor.x + close)
+plot(sameForIn.x + close)
+plot(sameWhile.x + close)
+plot(sameSwitch.x + close)
+plot(chosenForIn.x + close + 95)
+plot(chosenWhile.x + close + 80)
+plot(chosenSwitch.x + close + 90)
+plot(samePrior.x)
+plot(sameSwitchPrior.x + close)
+plot(chosenForInPrior.x + close)
+plot(clonedSwitchPrior.x + close)
+plot(clonedOtherSwitchPrior.x + close)
+plot(madeTypedSwitchFromPrior.x + close)
+plot(madeTypedForInFromPrior.x + close)
+plot(madeTypedWhileFromPrior.x + close)
+plot(wrappedMadePrior.point.x + close)
+plot(wrappedSwitchPrior.point.x + close)
+plot(wrappedKeptPrior.point.x + close)
+plot(wrappedChosenPrior.point.x + close)
+plot(sameDynamicX)
+plot(sameDynamicSiblingXAfterMutation)
+plot(wrappedKeptDynamicX)
+plot(wrappedKeptDynamicSiblingXAfterMutation)
+plot(wrappedPointDynamicX)
+plot(wrappedPointDynamicSiblingXAfterMutation)
+plot(wrappedKeptNestedDynamicX)
+plot(wrappedKeptNestedDynamicSiblingXAfterMutation)
+plot(clonedDynamicX)
+plot(clonedDynamicSiblingXAfterMutation)
+plot(wrappedMadeDynamicX)
+plot(wrappedMadeDynamicSiblingXAfterMutation)
+plot(clonedViaMakeDynamicX)
+plot(clonedViaMakeDynamicSiblingXAfterMutation)
+plot(wrappedMadeViaMethodDynamicX)
+plot(wrappedMadeViaMethodDynamicSiblingXAfterMutation)

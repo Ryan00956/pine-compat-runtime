@@ -1,0 +1,12 @@
+//@version=5
+indicator("Dynamic negative history offset UDT field method nested passthrough")
+type Settings
+    int offset
+type SettingsBox
+    Settings settings
+
+method sameBox(SettingsBox box) => box
+
+box = SettingsBox.new(Settings.new(bar_index == 0 ? 0 : -1))
+same = box.sameBox()
+plot(close[same.settings.offset])

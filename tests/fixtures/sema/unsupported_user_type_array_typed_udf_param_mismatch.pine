@@ -1,0 +1,15 @@
+//@version=5
+indicator("Unsupported user type array typed UDF param mismatch")
+
+type Point
+    float x
+
+type Other
+    float x
+
+first_x(array<Point> values) =>
+    point = array.get(values, 0)
+    point.x
+
+others = array.from(Other.new(close))
+plot(first_x(others))

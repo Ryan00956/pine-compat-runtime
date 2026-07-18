@@ -61,6 +61,18 @@ Responsibilities:
 The analyzer is the boundary where unsupported features should become explicit
 diagnostics instead of runtime surprises.
 
+The semantic implementation keeps orchestration separate from focused tree
+walkers. `modules.rs` owns module-graph validation while
+`modules/side_effects.rs` owns side-effect and expression visitation;
+`analyzer/context.rs` owns analyzer state and allocation while constant and
+history-offset expression evaluation lives in `analyzer/context/const_eval.rs`;
+`lowering/mod.rs` owns the lowering entrypoints while reassignment collection
+and UDT parameter resolution live in dedicated lowering modules. Pure-series
+identity keeps its UDT field/value traversal in
+`lowering/pure_series/user_types.rs`. `scripts/check_structure.py` applies
+tighter line budgets to these split hotspots so new responsibilities continue
+to land in focused child modules.
+
 Phase J introduces a source graph scaffold and the first executable import
 subset. Public semantic analysis can now be driven by `AnalysisInput`, which
 contains a root `SourceFile` and an optional deterministic list of
@@ -78,14 +90,14 @@ and exported pure functions are lowered through the existing UDF path under
 alias-qualified call targets. Runtime execution still receives a fully lowered
 HIR program; it does not resolve imports or inspect source graphs.
 
-The Phase J UDT/method subset is intentionally root-local. Semantic analysis
-records local scalar-field type declarations, constructor calls, field reads,
-and pure UDT methods before lowering. UDT values lower to immutable runtime
-values, and local UDT methods lower through the same inlined body machinery as
-ordinary UDF calls with the receiver passed as the first internal parameter.
-Method-local UDT parameter identity is checked during semantic analysis and
-carried into lowering for passthrough returns. Imported UDT identity and
-imported method tables are not part of the current source-graph contract.
+Phase J began with a root-local UDT/method subset. The current analyzer records
+source-scoped local and imported scalar-tree UDT identities, constructors,
+field reads, selected field replacement, value history, arrays, and pure method
+tables before lowering. UDT values lower to runtime values with semantic identity
+metadata, and local or imported pure methods lower through the same inlined body
+machinery as ordinary UDF calls with the receiver passed as the first internal
+parameter. Broader non-scalar values, recursive identities, and side-effecting
+method flows remain outside the current source-graph contract.
 
 ### `pine-ir`
 
@@ -97,8 +109,8 @@ Suggested layers:
 - MIR: runtime-friendly control flow and expressions.
 - Bytecode: optional later target for the VM.
 
-The first release can execute MIR directly. The design should leave room for a
-bytecode VM once semantics stabilize.
+The current runtime executes HIR directly. An optional MIR layer should precede
+any bytecode VM if profiling later justifies a second execution representation.
 
 Phase 6 deferred the bytecode VM. See
 [`BYTECODE_VM_EVALUATION.md`](BYTECODE_VM_EVALUATION.md) for the decision and
@@ -225,9 +237,8 @@ but should not duplicate runtime logic in Python.
 
 Owns browser and plugin use cases.
 
-WASM support should be added after the Rust CLI and Python package are stable.
-The initial binding is intentionally thin and returns normalized JSON strings
-from compile/analyze/run entry points.
+The WASM binding is intentionally thin and returns normalized JSON strings from
+compile/analyze/run entry points without duplicating runtime semantics.
 
 ## Core Data Model
 

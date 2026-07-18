@@ -269,7 +269,7 @@ Steps:
    - `tests/fixtures/sema/unsupported_strategy_exit_stop_limit.pine`
    - `tests/fixtures/sema/unsupported_strategy_exit_trailing.pine`
    - `tests/fixtures/sema/unsupported_strategy_exit_partial_quantity.pine`
-   - `tests/fixtures/sema/unsupported_strategy_exit_missing_entry.pine`
+   - `tests/fixtures/sema/unsupported_strategy_exit_missing_id.pine`
 4. Add or tighten negative fixtures before implementation if any planned
    unsupported combination is not fixture-backed:
    - `profit + loss`.

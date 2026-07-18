@@ -1,0 +1,10 @@
+indicator("Profile dynamic series history pure for expression identity miss", max_bars_back=10)
+offset = bar_index == 0 ? 0 : 3
+src = for i = 0 to 1
+    base = close + i
+    base
+same = for i = 0 to 1
+    base = close + i
+    base
+max_bars_back(src, 2)
+plot(same[offset])

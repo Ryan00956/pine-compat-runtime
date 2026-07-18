@@ -1,0 +1,6 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Supported imported scalar-tree UDT array alias declaration")
+
+lib.Wrapper[] points = na
+plot(close)

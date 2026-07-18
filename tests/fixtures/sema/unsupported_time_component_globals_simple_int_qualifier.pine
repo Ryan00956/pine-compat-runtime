@@ -1,0 +1,11 @@
+//@version=6
+indicator("Unsupported time component globals simple int qualifier")
+
+plot(close, offset=year)
+plot(close, offset=month)
+plot(close, offset=weekofyear)
+plot(close, offset=dayofmonth)
+plot(close, offset=dayofweek)
+plot(close, offset=hour)
+plot(close, offset=minute)
+plot(close, offset=second)

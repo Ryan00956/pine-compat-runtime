@@ -1,0 +1,4 @@
+//@version=6
+indicator("Unsupported chart metadata const bool return qualifier")
+
+plot(ta.tr(chart.is_standard))

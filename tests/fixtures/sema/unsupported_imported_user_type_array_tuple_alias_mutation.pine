@@ -1,0 +1,20 @@
+//@version=6
+import user/udt_array_returns/1 as lib
+indicator("Unsupported imported UDT array tuple alias mutation")
+
+first_values = array.from(lib.First.new(10.0, 100.0))
+second_values = array.from(lib.Second.new(200.0, 20.0))
+
+direct_mixed = bar_index % 2 == 0 ? [first_values, first_values] : [second_values, second_values]
+
+direct_reassigned = [first_values, first_values]
+direct_reassigned := [second_values, second_values]
+
+branch_reassigned = [first_values, first_values]
+if bar_index % 2 == 0
+    branch_reassigned := [second_values, second_values]
+
+bad_tuple_decl_sink = lib.tupleMixedTupleDeclSinkReturn(first_values, second_values, true)
+
+anchor = lib.First.new(11.0, 101.0)
+bad_method_tuple_decl_sink = anchor.tupleMixedTupleDeclSink(first_values, second_values, true)

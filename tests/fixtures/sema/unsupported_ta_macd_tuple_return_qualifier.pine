@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported ta macd tuple return qualifier")
+
+[macd_line, signal_line, hist_line] = ta.macd(close, 12, 26, 9)
+
+hline(macd_line)
+hline(signal_line)
+hline(hist_line)

@@ -111,13 +111,15 @@ to match equivalent historical execution for the same final bar data.
 
 `var` is supported under rollback. A `var` update made during a forming update
 is temporary; the next forming update starts again from the last confirmed
-snapshot. A confirmed update persists the new `var` value.
+snapshot. A confirmed update persists the new `var` value. Single
+`chart.point` values follow this ordinary `var` rollback path, including field
+mutation on the current point value.
 
-Scalar, scalar typed-array, same-local scalar-field UDT array, scalar map, and
-supported matrix `varip` declarations are supported as a separate intrabar
-persistence path. The first forming update for a bar starts from the confirmed
-snapshot. Later forming updates for that same bar seed `varip` slots from the
-previous forming update. For supported array ids referenced by `varip` slots,
+Scalar, single chart-point value, scalar typed-array, same-local scalar-tree UDT
+array, scalar map, and supported matrix `varip` declarations are supported as a
+separate intrabar persistence path. The first forming update for a bar starts
+from the confirmed snapshot. Later forming updates for that same bar seed
+`varip` slots from the previous forming update. For supported array ids referenced by `varip` slots,
 the runtime also copies the previous forming backing array contents, element
 kind, and UDT element metadata, and advances the next array id past retained
 ids. For supported map ids referenced by `varip` slots,
@@ -147,13 +149,13 @@ diagnostics instead of being approximated.
 Phase 7 defines the model and implements rollback for repeated forming updates.
 Phase I closes the fixture-backed scalar and scalar typed-array `varip` subset
 described in `docs/PHASE_I_AUDIT.md`, with later slices adding scalar map,
-runtime-owned matrix, and same-local scalar-field UDT array backing-store
+runtime-owned matrix, and same-local scalar-tree UDT array backing-store
 handoff for `varip`. Phase H adds
 fixture-backed alert forming event rollback. Realtime fixtures cover temporary
 output rollback, alert event rollback, drawing-object lifecycle rollback for
-labels, lines, boxes, and tables, `var` rollback, scalar, scalar typed-array,
-same-local scalar-field UDT array, scalar map, and runtime-owned matrix `varip`
-intrabar persistence, stateful TA
+labels, lines, boxes, and tables, `var` rollback, scalar, chart-point value,
+scalar typed-array, same-local scalar-tree UDT array, scalar map, and
+runtime-owned matrix `varip` intrabar persistence, stateful TA
 callsite rollback inside conditional branches, array, map, and matrix rollback,
 request provider immutability and cache rollback, and dynamic history reads
 from confirmed history during forming updates.

@@ -1,0 +1,31 @@
+//@version=5
+indicator("Supported typed method params")
+
+type Tool
+    float base
+
+method scalarMix(Tool tool, int count, float amount, bool include, string label, color tone) =>
+    tool.base + count + amount + (include ? 1 : 0) + str.length(label) + (tone == color.red ? 10 : 0)
+
+method pointPrice(Tool tool, chart.point point) =>
+    tool.base + point.price
+
+method arrayMix(Tool tool, array<int> counts, float[] weights) =>
+    tool.base + array.get(counts, 0) + weights.get(1)
+
+method objectArrayMix(Tool tool, array<chart.point> points, line[] lines) =>
+    first = points.get(0)
+    tool.base + first.price + line.get_x1(lines.get(0)) + points.size() + lines.size()
+
+tool = Tool.new(close)
+point = chart.point.from_index(bar_index + 1, close + 2)
+counts = array.from(2, 3)
+weights = array.from(close + 4, close + 5)
+points = array.from(point, chart.point.from_index(bar_index + 2, close + 6))
+line_id = line.new(bar_index, low, bar_index + 1, high)
+lines = array.from(line_id)
+
+plot(tool.scalarMix(1, close + 2, close > open, "abc", color.red))
+plot(tool.pointPrice(point))
+plot(tool.arrayMix(counts, weights))
+plot(tool.objectArrayMix(points, lines))

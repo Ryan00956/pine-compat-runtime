@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported max_bars_back variable function")
+src = close
+max_bars_back(src, 20)
+plot(src[bar_index])

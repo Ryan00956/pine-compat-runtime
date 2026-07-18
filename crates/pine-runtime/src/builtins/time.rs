@@ -1,4 +1,5 @@
-use chrono::{DateTime, Datelike, Duration, TimeZone, Utc};
+use chrono::{DateTime, Datelike, Duration, NaiveDate, Offset, TimeZone, Utc};
+use chrono_tz::{OffsetName, Tz};
 use pine_ir::HirCallArg;
 
 use crate::*;
@@ -9,10 +10,12 @@ mod session;
 mod timestamp;
 
 use self::component::TimeComponent;
-pub(crate) use self::formatting::{format_datetime_with_offset, format_utc_datetime};
-use self::session::{parse_time_session, session_close_for_bar_open};
-use self::timestamp::parse_timestamp_date_string;
+pub(crate) use self::formatting::{format_datetime_with_timezone, format_utc_datetime};
+use self::session::{parse_time_session, parse_time_session_timezone, session_close_for_bar_open};
 pub(crate) use self::timestamp::{format_fixed_timezone_offset, parse_fixed_timezone_offset};
+use self::timestamp::{
+    numeric_timestamp_millis, parse_numeric_timestamp_timezone, parse_timestamp_date_string,
+};
 
 pub(crate) fn dayofweek_value(datetime: DateTime<Utc>) -> i64 {
     i64::from(datetime.weekday().num_days_from_sunday()) + 1
@@ -44,6 +47,47 @@ pub(crate) fn is_supported_utc_timezone(timezone: &str) -> bool {
             | "GMT+00:00"
             | "GMT-00:00"
     )
+}
+
+pub(crate) fn timezone_offset_seconds(timezone: &str, datetime: &DateTime<Utc>) -> Option<i32> {
+    if let Some(offset) = parse_fixed_timezone_offset(timezone) {
+        return Some(offset);
+    }
+
+    let timezone = timezone.trim().parse::<Tz>().ok()?;
+    Some(
+        timezone
+            .offset_from_utc_datetime(&datetime.naive_utc())
+            .fix()
+            .local_minus_utc(),
+    )
+}
+
+pub(crate) fn timezone_offset_and_short_name(
+    timezone: &str,
+    datetime: &DateTime<Utc>,
+) -> Option<(i32, String)> {
+    if let Some(offset) = parse_fixed_timezone_offset(timezone) {
+        return Some((offset, fixed_timezone_short_name(offset)));
+    }
+
+    let timezone = timezone.trim().parse::<Tz>().ok()?;
+    let offset = timezone.offset_from_utc_datetime(&datetime.naive_utc());
+    let offset_seconds = offset.fix().local_minus_utc();
+    let short_name = offset
+        .abbreviation()
+        .map(str::to_owned)
+        .unwrap_or_else(|| fixed_timezone_short_name(offset_seconds));
+    Some((offset_seconds, short_name))
+}
+
+fn fixed_timezone_short_name(offset: i32) -> String {
+    if offset == 0 {
+        return "UTC".to_owned();
+    }
+    let sign = if offset < 0 { '-' } else { '+' };
+    let offset = offset.abs();
+    format!("GMT{sign}{:02}:{:02}", offset / 3600, (offset % 3600) / 60)
 }
 
 pub(crate) fn timeframe_from_seconds(seconds: i64) -> Option<String> {
@@ -100,6 +144,77 @@ pub(crate) fn timeframe_bucket(timestamp_ms: i64, seconds: i64) -> Option<i64> {
         return None;
     }
     Some(timestamp_ms.div_euclid(duration_ms))
+}
+
+fn timeframe_change_bucket(timestamp_ms: i64, timeframe: &str, seconds: i64) -> Option<i64> {
+    if let Some(multiplier) = calendar_timeframe_multiplier(timeframe, 'W') {
+        let datetime = Utc.timestamp_millis_opt(timestamp_ms).single()?;
+        let epoch_monday = NaiveDate::from_ymd_opt(1970, 1, 5)?;
+        let current_monday = i64::from(datetime.date_naive().num_days_from_ce())
+            - i64::from(datetime.weekday().num_days_from_monday());
+        let epoch_monday = i64::from(epoch_monday.num_days_from_ce());
+        let week = current_monday.checked_sub(epoch_monday)?.div_euclid(7);
+        return Some(week.div_euclid(multiplier));
+    }
+
+    if let Some(multiplier) = calendar_timeframe_multiplier(timeframe, 'M') {
+        let datetime = Utc.timestamp_millis_opt(timestamp_ms).single()?;
+        let month = i64::from(datetime.year())
+            .checked_mul(12)?
+            .checked_add(i64::from(datetime.month0()))?;
+        return Some(month.div_euclid(multiplier));
+    }
+
+    timeframe_bucket(timestamp_ms, seconds)
+}
+
+fn timeframe_bucket_bounds(bucket: i64, timeframe: &str, seconds: i64) -> Option<(i64, i64)> {
+    const MILLIS_PER_DAY: i64 = 86_400_000;
+
+    if let Some(multiplier) = calendar_timeframe_multiplier(timeframe, 'W') {
+        let epoch_monday = Utc.with_ymd_and_hms(1970, 1, 5, 0, 0, 0).single()?;
+        let duration_ms = multiplier.checked_mul(7)?.checked_mul(MILLIS_PER_DAY)?;
+        let open_offset_ms = bucket.checked_mul(duration_ms)?;
+        let open_time = epoch_monday
+            .timestamp_millis()
+            .checked_add(open_offset_ms)?;
+        let close_time = open_time.checked_add(duration_ms)?;
+        return Some((open_time, close_time));
+    }
+
+    if let Some(multiplier) = calendar_timeframe_multiplier(timeframe, 'M') {
+        let open_month = bucket.checked_mul(multiplier)?;
+        let close_month = open_month.checked_add(multiplier)?;
+        return Some((
+            calendar_month_start(open_month)?,
+            calendar_month_start(close_month)?,
+        ));
+    }
+
+    let duration_ms = seconds.checked_mul(1000)?;
+    let open_time = bucket.checked_mul(duration_ms)?;
+    let close_time = bucket.checked_add(1)?.checked_mul(duration_ms)?;
+    Some((open_time, close_time))
+}
+
+fn calendar_month_start(month: i64) -> Option<i64> {
+    let year = i32::try_from(month.div_euclid(12)).ok()?;
+    let month = u32::try_from(month.rem_euclid(12).checked_add(1)?).ok()?;
+    Some(
+        Utc.with_ymd_and_hms(year, month, 1, 0, 0, 0)
+            .single()?
+            .timestamp_millis(),
+    )
+}
+
+fn calendar_timeframe_multiplier(timeframe: &str, unit: char) -> Option<i64> {
+    let number = timeframe.strip_suffix(unit)?;
+    let multiplier = if number.is_empty() {
+        1
+    } else {
+        number.parse::<i64>().ok()?
+    };
+    (multiplier > 0).then_some(multiplier)
 }
 
 pub(crate) fn timeframe_seconds(timeframe: &str) -> Option<i64> {
@@ -238,10 +353,9 @@ impl<'a> HistoricalRuntime<'a> {
                 .map_err(|message| RuntimeError { message });
         }
         let timezone = args.timezone.unwrap_or_else(|| "UTC".to_owned());
-        let timezone_offset_seconds =
-            parse_fixed_timezone_offset(&timezone).ok_or_else(|| RuntimeError {
-                message: format!("timestamp unsupported timezone `{timezone}`"),
-            })?;
+        let timezone = parse_numeric_timestamp_timezone(&timezone).ok_or_else(|| RuntimeError {
+            message: format!("timestamp unsupported timezone `{timezone}`"),
+        })?;
         let (Some(year), Some(month), Some(day)) = (args.year, args.month, args.day) else {
             return Ok(PineValue::Na);
         };
@@ -258,12 +372,7 @@ impl<'a> HistoricalRuntime<'a> {
                 ),
             });
         };
-        let Some(offset) = Duration::try_seconds(i64::from(timezone_offset_seconds)) else {
-            return Err(RuntimeError {
-                message: format!("timestamp unsupported timezone `{timezone}`"),
-            });
-        };
-        let Some(datetime) = datetime.checked_sub_signed(offset) else {
+        let Some(timestamp) = numeric_timestamp_millis(timezone, datetime) else {
             return Err(RuntimeError {
                 message: format!(
                     "timestamp invalid UTC datetime: {year:04}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02}",
@@ -273,7 +382,7 @@ impl<'a> HistoricalRuntime<'a> {
                 ),
             });
         };
-        Ok(PineValue::Int(datetime.timestamp_millis()))
+        Ok(PineValue::Int(timestamp))
     }
 
     fn eval_timestamp_args(
@@ -382,10 +491,9 @@ impl<'a> HistoricalRuntime<'a> {
                 ),
             });
         }
-        let timezone_offset_seconds =
-            parse_fixed_timezone_offset(&args.timezone).ok_or_else(|| RuntimeError {
-                message: format!("{name} unsupported timezone `{}`", args.timezone),
-            })?;
+        let timezone = parse_time_session_timezone(&args.timezone).ok_or_else(|| RuntimeError {
+            message: format!("{name} unsupported timezone `{}`", args.timezone),
+        })?;
         let session = match args.session.as_deref() {
             Some("") | None => None,
             Some(session) => Some(parse_time_session(session).ok_or_else(|| RuntimeError {
@@ -441,12 +549,7 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("{name} bars_back timestamp is out of range"),
             });
         };
-        let Some(duration_ms) = seconds.checked_mul(1000) else {
-            return Err(RuntimeError {
-                message: format!("{name} unsupported timeframe `{timeframe}`"),
-            });
-        };
-        let Some(bucket) = timeframe_bucket(base_time, seconds) else {
+        let Some(bucket) = timeframe_change_bucket(base_time, timeframe, seconds) else {
             return Err(RuntimeError {
                 message: format!("{name} unsupported timeframe `{timeframe}`"),
             });
@@ -456,26 +559,16 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("{name} timeframe_bars_back timestamp is out of range"),
             });
         };
-        let Some(open_time) = bucket.checked_mul(duration_ms) else {
-            return Err(RuntimeError {
-                message: format!("{name} timestamp is out of range for timeframe `{timeframe}`"),
-            });
-        };
-        let Some(close_timestamp) = bucket
-            .checked_add(1)
-            .and_then(|value| value.checked_mul(duration_ms))
+        let Some((open_time, close_timestamp)) =
+            timeframe_bucket_bounds(bucket, timeframe, seconds)
         else {
             return Err(RuntimeError {
                 message: format!("{name} timestamp is out of range for timeframe `{timeframe}`"),
             });
         };
         if let Some(session) = session {
-            let Some(session_close) = session_close_for_bar_open(
-                open_time,
-                close_timestamp,
-                &session,
-                timezone_offset_seconds,
-            )?
+            let Some(session_close) =
+                session_close_for_bar_open(open_time, close_timestamp, &session, timezone)?
             else {
                 return Ok(PineValue::Na);
             };
@@ -709,12 +802,13 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(previous_time) = self.previous_bar_time else {
             return Ok(PineValue::Bool(true));
         };
-        let Some(current_bucket) = timeframe_bucket(current_time, seconds) else {
+        let Some(current_bucket) = timeframe_change_bucket(current_time, timeframe, seconds) else {
             return Err(RuntimeError {
                 message: format!("timeframe.change unsupported timeframe `{timeframe}`"),
             });
         };
-        let Some(previous_bucket) = timeframe_bucket(previous_time, seconds) else {
+        let Some(previous_bucket) = timeframe_change_bucket(previous_time, timeframe, seconds)
+        else {
             return Err(RuntimeError {
                 message: format!("timeframe.change unsupported timeframe `{timeframe}`"),
             });

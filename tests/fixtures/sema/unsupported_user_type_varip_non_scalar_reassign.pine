@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported local non-scalar UDT varip reassign")
+
+type Marker
+    label id
+
+varip Marker marker = na
+marker := Marker.new(label.new(bar_index, close))
+plot(close)

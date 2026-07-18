@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported barcolor Simple Show Last")
+
+values = array.new_int(1, 1)
+
+barcolor(color.green, show_last=array.size(values))

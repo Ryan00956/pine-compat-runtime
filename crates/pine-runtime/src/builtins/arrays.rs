@@ -414,7 +414,11 @@ impl<'a> HistoricalRuntime<'a> {
                 result.push_str(&separator);
             }
             if let Some(type_name) = user_type_name {
-                result.push_str(&stringify_user_type_array_join_element(value, type_name));
+                result.push_str(&stringify_user_type_array_join_element(
+                    value,
+                    type_name,
+                    &self.program.user_types,
+                ));
             } else {
                 result.push_str(&stringify_array_join_element(value));
             }
@@ -463,6 +467,7 @@ mod tests {
             script_mode: ScriptMode::Indicator,
             strategy_settings: StrategySettings::default(),
             drawing_settings: DrawingSettings::default(),
+            user_types: Vec::new(),
             symbols: Vec::new(),
             statements: Vec::new(),
             next_series_id: 0,

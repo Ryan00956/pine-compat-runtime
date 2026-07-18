@@ -1,0 +1,20 @@
+//@version=6
+indicator("Unsupported array numeric float const input return qualifier")
+
+floats = array.from(1.0, 2.0, 3.0)
+
+hline(array.min(floats))
+hline(array.max(floats))
+hline(array.sum(floats))
+hline(array.range(floats))
+hline(array.median(floats))
+hline(array.mode(floats))
+hline(array.percentile_nearest_rank(floats, 50))
+
+hline(floats.min())
+hline(floats.max())
+hline(floats.sum())
+hline(floats.range())
+hline(floats.median())
+hline(floats.mode())
+hline(floats.percentile_nearest_rank(50))

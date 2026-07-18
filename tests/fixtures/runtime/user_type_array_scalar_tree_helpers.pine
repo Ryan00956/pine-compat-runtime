@@ -1,0 +1,49 @@
+//@version=5
+indicator("User type array scalar tree helpers")
+type Point
+    float x
+    float y
+
+type Wrapper
+    Point inner
+    float weight
+    string tag
+
+values = array.from(Wrapper.new(Point.new(1.0, 2.0), 10.0, "a"), Wrapper.new(Point.new(3.0, 4.0), 20.0, "b"), Wrapper.new(Point.new(1.0, 2.0), 10.0, "a"))
+same = Wrapper.new(Point.new(1.0, 2.0), 10.0, "a")
+other = Wrapper.new(Point.new(9.0, 9.0), 10.0, "x")
+
+plot(array.includes(values, same) ? 1 : 0)
+plot(values.includes(other) ? 1 : 0)
+plot(array.indexof(values, same))
+plot(values.lastindexof(same))
+
+filled = array.from(Wrapper.new(Point.new(1.0, 2.0), 10.0, "a"), Wrapper.new(Point.new(3.0, 4.0), 20.0, "b"), Wrapper.new(Point.new(5.0, 6.0), 30.0, "c"))
+array.fill(filled, Wrapper.new(Point.new(7.0, 8.0), 90.0, "fill"), 1, 3)
+filled_first = filled.get(0)
+filled_second = filled.get(1)
+filled_third = filled.get(2)
+plot(filled_first.inner.x * 100 + filled_second.inner.x * 10 + filled_third.inner.y)
+plot(str.length(filled_first.tag) * 100 + str.length(filled_second.tag) * 10 + str.length(filled_third.tag))
+
+joined = array.from(Wrapper.new(Point.new(1.25, 2.5), 3.0, "left"), Wrapper.new(Point.new(4.0, 5.0), 6.0, "right"))
+plot(array.join(joined, "|") == "Wrapper(Point(1.25, 2.5), 3, left)|Wrapper(Point(4, 5), 6, right)" ? 1 : 0)
+
+float sum = 0.0
+int tag_len = 0
+for item in joined
+    item.weight := item.weight + 100
+    sum := sum + item.inner.x + item.inner.y + item.weight
+    tag_len := tag_len + str.length(item.tag)
+joined_first_after = joined.get(0)
+plot(sum)
+plot(tag_len)
+plot(joined_first_after.inner.x)
+
+int index_sum = 0
+float weight_sum = 0.0
+for index, item in joined
+    index_sum := index_sum + index
+    weight_sum := weight_sum + item.weight
+plot(index_sum)
+plot(weight_sum)

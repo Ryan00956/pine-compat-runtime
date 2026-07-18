@@ -1,0 +1,16 @@
+//@version=6
+indicator("Unsupported UDF final selector switch reassignment series selector qualifier")
+
+choose_length(mode, x) =>
+    local = x
+    switch mode
+        0 =>
+            local := x
+            local
+        =>
+            local
+
+length = input.int(2, "Length")
+chosen = choose_length(bar_index, length)
+
+plot(ta.ema(close, chosen))

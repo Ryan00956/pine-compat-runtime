@@ -1,3 +1,3 @@
 indicator("String format time unsupported timezone")
-text = str.format_time(1609459200000, "yyyy-MM-dd", "America/New_York")
+text = str.format_time(1609459200000, "yyyy-MM-dd", "Mars/Olympus")
 plot(str.length(text))

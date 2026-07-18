@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported derived price and bar index simple qualifier")
+
+plot(ta.alma(close, 4, hl2, 6))
+plot(ta.alma(close, 4, hlc3, 6))
+plot(ta.alma(close, 4, 0.85, hlcc4))
+plot(ta.alma(close, 4, ohlc4, 6))
+plot(close, offset=bar_index)

@@ -1,5 +1,6 @@
 //@version=5
 strategy("Trade counts")
+identity(value) => value
 
 plot(strategy.closedtrades)
 plot(strategy.opentrades)
@@ -32,3 +33,6 @@ plot(independent_closedtrades)
 plot(independent_opentrades)
 plot(strategy.closedtrades[1])
 plot(strategy.opentrades[1])
+plot(strategy.closedtrades.first_index)
+plot(identity(strategy.closedtrades.first_index))
+plot(strategy.closedtrades.first_index[1])

@@ -1,0 +1,5 @@
+//@version=5
+base = 17
+precision = base
+indicator("Unsupported named const precision", precision=precision)
+plot(close)

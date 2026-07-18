@@ -1,3 +1,4 @@
+mod call_results;
 mod strategy;
 const MATRIX_UNSUPPORTED_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/unsupported_matrix.pine",
@@ -64,7 +65,6 @@ const MATRIX_UNSUPPORTED_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/unsupported_matrix_fill_method_udf.pine",
     "tests/fixtures/sema/unsupported_matrix_reshape_udf.pine",
     "tests/fixtures/sema/unsupported_matrix_reshape_method_udf.pine",
-    "tests/fixtures/sema/unsupported_matrix_method.pine",
     "tests/fixtures/sema/unsupported_matrix_add_row_method.pine",
     "tests/fixtures/sema/unsupported_matrix_add_col_method.pine",
     "tests/fixtures/sema/unsupported_matrix_remove_row_method.pine",
@@ -106,6 +106,7 @@ const FOR_IN_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/for_in_stateful.pine",
     "tests/fixtures/runtime/for_in_zero_iteration.pine",
     "tests/fixtures/runtime/for_in_expression.pine",
+    "tests/fixtures/runtime/map_for_in.pine",
     "tests/fixtures/runtime/matrix_for_in.pine",
     "tests/fixtures/realtime/for_in_rollback.pine",
     "tests/fixtures/realtime/for_in_varip.pine",
@@ -131,6 +132,7 @@ const FOR_IN_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/supported_for_in_expression_udt.pine",
     "tests/fixtures/sema/supported_for_in_expression_matrix.pine",
     "tests/fixtures/sema/supported_for_in_expression_index_value.pine",
+    "tests/fixtures/sema/supported_map_for_in.pine",
     "tests/fixtures/sema/unsupported_for_in_expression_non_array.pine",
 ];
 
@@ -190,7 +192,11 @@ const IMPORTED_UDT_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/import_udt_var.pine",
     "tests/fixtures/runtime/import_udt_varip.pine",
     "tests/fixtures/runtime/import_udt_history.pine",
+    "tests/fixtures/runtime/import_udt_private_dependency_history.pine",
     "tests/fixtures/runtime/import_udt_array_from.pine",
+    "tests/fixtures/runtime/import_udt_array_new.pine",
+    "tests/fixtures/runtime/import_udt_array_scalar_tree.pine",
+    "tests/fixtures/runtime/import_udt_array_sort_field.pine",
     "tests/fixtures/runtime/import_udt_field_mutation.pine",
     "tests/fixtures/runtime/import_udt_field_mutation_control_flow.pine",
     "tests/fixtures/runtime/import_udt_ternary.pine",
@@ -199,6 +205,8 @@ const IMPORTED_UDT_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/import_udt_while_expression.pine",
     "tests/fixtures/runtime/import_udt_for_expression.pine",
     "tests/fixtures/runtime/import_udt_udf_passthrough.pine",
+    "tests/fixtures/runtime/import_udt_array_typed_udf_params.pine",
+    "tests/fixtures/runtime/import_udt_array_typed_method_params.pine",
     "tests/fixtures/runtime/import_udt_udf_nested_passthrough.pine",
     "tests/fixtures/runtime/import_udt_udf_constructor_return.pine",
     "tests/fixtures/runtime/import_udt_udf_local_field_mutation.pine",
@@ -219,9 +227,9 @@ const IMPORTED_UDT_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/unsupported_imported_udt_parameter_field_mutation.pine",
     "tests/fixtures/sema/unsupported_imported_udt_global_field_mutation.pine",
     "tests/fixtures/sema/unsupported_imported_udt_nested_field_mutation.pine",
-    "tests/fixtures/sema/unsupported_imported_udt_array_decl.pine",
-    "tests/fixtures/sema/unsupported_imported_udt_array_alias_decl.pine",
-    "tests/fixtures/syntax/unsupported_imported_udt_array_new.pine",
+    "tests/fixtures/sema/supported_imported_udt_array_decl.pine",
+    "tests/fixtures/sema/supported_imported_udt_array_alias_decl.pine",
+    "tests/fixtures/sema/supported_imported_udt_array_new.pine",
     "tests/fixtures/sema/unsupported_imported_udt_assignment_identity.pine",
     "tests/fixtures/sema/unsupported_imported_udt_typed_decl_identity.pine",
     "tests/fixtures/sema/unsupported_imported_udt_var_identity.pine",
@@ -241,6 +249,7 @@ const IMPORTED_UDT_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/import_udt_method_block_return.pine",
     "tests/fixtures/runtime/import_udt_method_if_return.pine",
     "tests/fixtures/runtime/import_udt_method_for_return.pine",
+    "tests/fixtures/runtime/import_udt_method_while_switch_return.pine",
     "tests/fixtures/runtime/import_udt_method_nested_return.pine",
     "tests/fixtures/runtime/import_udt_method_local_field_mutation.pine",
     "tests/fixtures/runtime/import_udt_method_constructor_return.pine",
@@ -252,18 +261,35 @@ const UDT_VARIP_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/realtime/user_type_varip.pine",
     "tests/fixtures/runtime/user_type_array_varip.pine",
     "tests/fixtures/realtime/user_type_array_varip.pine",
+    "tests/fixtures/sema/supported_user_type_varip_decl.pine",
     "tests/fixtures/sema/supported_user_type_array_varip_decl.pine",
     "tests/fixtures/runtime/import_udt_varip.pine",
     "tests/fixtures/realtime/import_udt_varip.pine",
     "tests/fixtures/runtime/import_udt_array_varip.pine",
     "tests/fixtures/realtime/import_udt_array_varip.pine",
+    "tests/fixtures/sema/supported_imported_udt_varip_decl.pine",
     "tests/fixtures/sema/unsupported_user_type_varip.pine",
-    "tests/fixtures/sema/unsupported_user_type_array_varip_decl.pine",
-    "tests/fixtures/sema/unsupported_imported_udt_array_varip_decl.pine",
-    "tests/fixtures/sema/unsupported_user_type_varip_nested_field.pine",
+    "tests/fixtures/sema/supported_user_type_array_varip_nested_decl.pine",
+    "tests/fixtures/sema/supported_imported_udt_array_decl.pine",
+    "tests/fixtures/sema/supported_imported_udt_array_alias_decl.pine",
+    "tests/fixtures/sema/supported_imported_udt_array_varip_nested_decl.pine",
     "tests/fixtures/sema/unsupported_user_type_varip_assign_identity.pine",
     "tests/fixtures/sema/unsupported_imported_udt_varip.pine",
     "tests/fixtures/sema/unsupported_imported_udt_varip_identity.pine",
+];
+
+const UDT_ARRAY_CONTROL_FLOW_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/user_type_array_scalar_tree.pine",
+    "tests/fixtures/runtime/import_udt_array_scalar_tree.pine",
+    "tests/fixtures/sema/supported_user_type_array_control_flow.pine",
+    "tests/fixtures/sema/unsupported_user_type_array_control_flow_identity.pine",
+    "tests/fixtures/sema/supported_imported_user_type_array_control_flow.pine",
+    "tests/fixtures/sema/unsupported_imported_user_type_array_control_flow_identity.pine",
+];
+
+const LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/user_type_array_scalar_tree.pine",
+    "tests/fixtures/sema/supported_user_type_array_param_for_in.pine",
 ];
 
 pub(super) fn validate_entry(
@@ -282,6 +308,7 @@ pub(super) fn validate_entry(
         notes,
         fixtures,
     )?;
+    validate_scalar_tree_udt_contract_notes(line_number, feature, notes)?;
     validate_label_getter_feature(line_number, feature)?;
     validate_array_unsupported_type_fixture_paths(line_number, feature, notes, fixtures)?;
     validate_switch_statement_block_fixture_paths(line_number, feature, fixtures)?;
@@ -289,11 +316,97 @@ pub(super) fn validate_entry(
     validate_for_in_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_imported_udt_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_udt_varip_boundary_fixture_paths(line_number, feature, fixtures)?;
+    validate_udt_array_control_flow_fixture_paths(line_number, feature, fixtures)?;
     validate_array_binary_search_fixture_pairs(line_number, feature, fixtures)?;
+    call_results::validate_fixture_paths(line_number, feature, fixtures)?;
+    validate_local_udt_array_param_for_in_fixture_paths(line_number, feature, fixtures)?;
     validate_map_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_matrix_unsupported_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_typed_declaration_collection_fixture_paths(line_number, feature, fixtures)?;
+    call_results::validate_map_fixture_paths(line_number, feature, fixtures)?;
     strategy::validate_entry(line_number, feature, fixtures)?;
+
+    Ok(())
+}
+
+fn validate_udt_array_control_flow_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if !matches!(
+        feature,
+        "if" | "switch"
+            | "for"
+            | "while"
+            | "array.new<UDT>"
+            | "array.from"
+            | "array.*"
+            | "typed declarations"
+            | "import"
+            | "user-defined types"
+    ) {
+        return Ok(());
+    }
+
+    for fixture in UDT_ARRAY_CONTROL_FLOW_FIXTURES {
+        if !fixtures.contains(fixture) {
+            return Err(format!(
+                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed local/imported UDT array control-flow identity"
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+fn validate_local_udt_array_param_for_in_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if !matches!(
+        feature,
+        "for"
+            | "array.from"
+            | "array.*"
+            | "expression-body functions"
+            | "multi-statement functions"
+            | "typed declarations"
+            | "user-defined types"
+            | "user-defined methods"
+    ) {
+        return Ok(());
+    }
+
+    for fixture in LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES {
+        if !fixtures.contains(fixture) {
+            return Err(format!(
+                "line {line_number}: `{feature}` must reference `{fixture}` for fixture-backed local UDF/typed-method for-in over UDT-array parameters"
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+fn validate_scalar_tree_udt_contract_notes(
+    line_number: usize,
+    feature: &str,
+    notes: &str,
+) -> Result<(), String> {
+    for stale_phrase in [
+        "same-local scalar-field UDT array",
+        "same-local scalar-field UDT-array",
+        "same-imported scalar-field UDT",
+        "non-scalar-field UDT",
+    ] {
+        if notes.contains(stale_phrase) {
+            return Err(format!(
+                "line {line_number}: `{feature}` uses stale UDT boundary phrase `{stale_phrase}`; use scalar-tree terminology for the fixture-backed UDT subset"
+            ));
+        }
+    }
 
     Ok(())
 }
@@ -428,7 +541,7 @@ fn validate_imported_udt_boundary_fixture_paths(
     for fixture in IMPORTED_UDT_BOUNDARY_FIXTURES {
         if !fixtures.contains(fixture) {
             return Err(format!(
-                "line {line_number}: `import` must reference `{fixture}` while imported UDT support remains limited to the fixture-backed scalar-field identity subset"
+                "line {line_number}: `import` must reference `{fixture}` while imported UDT support remains limited to the fixture-backed scalar-tree identity subset"
             ));
         }
     }
@@ -448,7 +561,7 @@ fn validate_udt_varip_boundary_fixture_paths(
     for fixture in UDT_VARIP_BOUNDARY_FIXTURES {
         if !fixtures.contains(fixture) {
             return Err(format!(
-                "line {line_number}: `user-defined types` must reference `{fixture}` while UDT varip support remains limited to the fixture-backed scalar-field local/imported subset"
+                "line {line_number}: `user-defined types` must reference `{fixture}` while UDT varip support remains limited to the fixture-backed scalar-tree local/imported subset"
             ));
         }
     }
@@ -473,11 +586,13 @@ fn validate_map_boundary_fixture_paths(
         "tests/fixtures/runtime/map_copy.pine",
         "tests/fixtures/runtime/map_methods.pine",
         "tests/fixtures/runtime/map_keys_values.pine",
+        "tests/fixtures/runtime/map_for_in.pine",
         "tests/fixtures/runtime/map_put_all.pine",
         "tests/fixtures/runtime/map_history.pine",
         "tests/fixtures/runtime/map_varip.pine",
         "tests/fixtures/runtime/map_udf_read.pine",
         "tests/fixtures/runtime/map_typed_declarations.pine",
+        "tests/fixtures/runtime/map_control_flow.pine",
         "tests/fixtures/realtime/map_rollback.pine",
         "tests/fixtures/realtime/map_varip.pine",
         "tests/fixtures/sema/supported_map_new_size.pine",
@@ -487,11 +602,14 @@ fn validate_map_boundary_fixture_paths(
         "tests/fixtures/sema/supported_map_copy.pine",
         "tests/fixtures/sema/supported_map_methods.pine",
         "tests/fixtures/sema/supported_map_keys_values.pine",
+        "tests/fixtures/sema/supported_map_for_in.pine",
         "tests/fixtures/sema/supported_map_put_all.pine",
         "tests/fixtures/sema/supported_map_history.pine",
         "tests/fixtures/sema/supported_map_varip.pine",
         "tests/fixtures/sema/supported_map_udf_read.pine",
         "tests/fixtures/sema/supported_map_typed_decl.pine",
+        "tests/fixtures/sema/supported_map_control_flow.pine",
+        "tests/fixtures/sema/supported_map_udf_method_returns.pine",
         "tests/fixtures/sema/unsupported_map.pine",
         "tests/fixtures/sema/unsupported_map_new_template.pine",
         "tests/fixtures/sema/unsupported_map_new_dotted_template.pine",
@@ -519,10 +637,12 @@ fn validate_map_boundary_fixture_paths(
         "tests/fixtures/sema/unsupported_map_typed_decl.pine",
         "tests/fixtures/sema/unsupported_map_typed_decl_template.pine",
         "tests/fixtures/sema/unsupported_map_typed_decl_assign.pine",
+        "tests/fixtures/sema/unsupported_map_control_flow_template.pine",
+        "tests/fixtures/sema/unsupported_map_udf_method_return_templates.pine",
     ] {
         if !fixtures.contains(&fixture) {
             return Err(format!(
-                "line {line_number}: `map.*` must reference `{fixture}` while map support is limited to the fixture-backed scalar map helper, typed declaration, history, varip, read-only UDF, method-alias, and rollback subset"
+                "line {line_number}: `map.*` must reference `{fixture}` while map support is limited to the fixture-backed scalar map helper, control-flow result, direct key/value for-in, typed declaration, history, varip, read-only UDF, method-alias, and rollback subset"
             ));
         }
     }
@@ -577,12 +697,12 @@ fn validate_typed_declaration_collection_fixture_paths(
         "tests/fixtures/sema/unsupported_array_na_typed_decl.pine",
         "tests/fixtures/sema/unsupported_array_from_typed_decl.pine",
         "tests/fixtures/sema/unsupported_array_typed_decl_initial.pine",
-        "tests/fixtures/sema/unsupported_user_type_array_decl.pine",
-        "tests/fixtures/sema/unsupported_user_type_array_alias_decl.pine",
+        "tests/fixtures/sema/supported_user_type_array_decl.pine",
+        "tests/fixtures/sema/supported_user_type_array_alias_decl.pine",
         "tests/fixtures/sema/unsupported_user_type_array_from_decl.pine",
         "tests/fixtures/runtime/user_type_array_varip.pine",
         "tests/fixtures/sema/supported_user_type_array_varip_decl.pine",
-        "tests/fixtures/sema/unsupported_user_type_array_varip_decl.pine",
+        "tests/fixtures/sema/supported_user_type_array_varip_nested_decl.pine",
         "tests/fixtures/sema/unsupported_array_map_typed_decl.pine",
         "tests/fixtures/sema/unsupported_array_matrix_typed_decl.pine",
         "tests/fixtures/sema/unsupported_array_nested_typed_decl.pine",
@@ -713,15 +833,23 @@ fn validate_status_fixture_paths(
 #[cfg(test)]
 mod tests {
     use super::super::try_conformance_entries_from_tsv;
+    use super::call_results::{
+        BUILTIN_ARRAY_CALL_RESULT_FIXTURES, BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES,
+        BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES, IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES,
+        LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES,
+    };
     use super::{
         FOR_IN_BOUNDARY_FIXTURES, IMPORTED_UDT_BOUNDARY_FIXTURES,
-        MATRIX_UNSUPPORTED_BOUNDARY_FIXTURES, SWITCH_STATEMENT_BLOCK_BOUNDARY_FIXTURES,
+        LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES, MATRIX_UNSUPPORTED_BOUNDARY_FIXTURES,
+        SWITCH_STATEMENT_BLOCK_BOUNDARY_FIXTURES, UDT_ARRAY_CONTROL_FLOW_FIXTURES,
         UDT_VARIP_BOUNDARY_FIXTURES, WHILE_EXPRESSION_BOUNDARY_FIXTURES,
+        validate_local_udt_array_param_for_in_fixture_paths,
+        validate_udt_array_control_flow_fixture_paths,
     };
 
     #[test]
     fn rejects_map_row_without_current_boundary_fixture_set() {
-        let fixtures = [
+        let mut fixtures = vec![
             "tests/fixtures/runtime/map_new_size.pine",
             "tests/fixtures/runtime/map_put_get_contains.pine",
             "tests/fixtures/runtime/map_clear.pine",
@@ -729,11 +857,13 @@ mod tests {
             "tests/fixtures/runtime/map_copy.pine",
             "tests/fixtures/runtime/map_methods.pine",
             "tests/fixtures/runtime/map_keys_values.pine",
+            "tests/fixtures/runtime/map_for_in.pine",
             "tests/fixtures/runtime/map_put_all.pine",
             "tests/fixtures/runtime/map_history.pine",
             "tests/fixtures/runtime/map_varip.pine",
             "tests/fixtures/runtime/map_udf_read.pine",
             "tests/fixtures/runtime/map_typed_declarations.pine",
+            "tests/fixtures/runtime/map_control_flow.pine",
             "tests/fixtures/realtime/map_rollback.pine",
             "tests/fixtures/realtime/map_varip.pine",
             "tests/fixtures/sema/supported_map_new_size.pine",
@@ -743,11 +873,14 @@ mod tests {
             "tests/fixtures/sema/supported_map_copy.pine",
             "tests/fixtures/sema/supported_map_methods.pine",
             "tests/fixtures/sema/supported_map_keys_values.pine",
+            "tests/fixtures/sema/supported_map_for_in.pine",
             "tests/fixtures/sema/supported_map_put_all.pine",
             "tests/fixtures/sema/supported_map_history.pine",
             "tests/fixtures/sema/supported_map_varip.pine",
             "tests/fixtures/sema/supported_map_udf_read.pine",
             "tests/fixtures/sema/supported_map_typed_decl.pine",
+            "tests/fixtures/sema/supported_map_control_flow.pine",
+            "tests/fixtures/sema/supported_map_udf_method_returns.pine",
             "tests/fixtures/sema/unsupported_map.pine",
             "tests/fixtures/sema/unsupported_map_new_template.pine",
             "tests/fixtures/sema/unsupported_map_new_dotted_template.pine",
@@ -774,7 +907,10 @@ mod tests {
             "tests/fixtures/sema/unsupported_map_typed_decl.pine",
             "tests/fixtures/sema/unsupported_map_typed_decl_template.pine",
             "tests/fixtures/sema/unsupported_map_typed_decl_assign.pine",
+            "tests/fixtures/sema/unsupported_map_control_flow_template.pine",
+            "tests/fixtures/sema/unsupported_map_udf_method_return_templates.pine",
         ];
+        fixtures.extend(BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES.iter().copied());
         let tsv = format!(
             "feature\tstatus\tnotes\tfixtures\nmap.*\tpartial\tmap.new/map.size/map.put/map.get/map.contains/map.clear/map.remove subset; map collections beyond that remain unsupported\t{}\n",
             fixtures.join(";")
@@ -825,20 +961,52 @@ mod tests {
     }
 
     #[test]
+    fn rejects_stale_scalar_field_udt_boundary_notes() {
+        let tsv = "feature\tstatus\tnotes\tfixtures\narray.from\tpartial\tsame-imported scalar-field UDT element kinds remain fixture-backed\ttests/fixtures/runtime/array_from_udt_size.pine\n";
+        let error = try_conformance_entries_from_tsv(tsv)
+            .expect_err("stale scalar-field UDT boundary phrase should fail");
+
+        assert!(error.contains("same-imported scalar-field UDT"));
+        assert!(error.contains("scalar-tree terminology"));
+    }
+
+    #[test]
+    fn rejects_udt_array_rows_without_control_flow_identity_fixtures() {
+        let fixtures =
+            &UDT_ARRAY_CONTROL_FLOW_FIXTURES[..UDT_ARRAY_CONTROL_FLOW_FIXTURES.len() - 1];
+        let error = validate_udt_array_control_flow_fixture_paths(1, "import", fixtures)
+            .expect_err("missing UDT array control-flow fixture should fail");
+
+        assert!(error.contains(
+            "tests/fixtures/sema/unsupported_imported_user_type_array_control_flow_identity.pine"
+        ));
+    }
+
+    #[test]
+    fn rejects_udt_array_param_for_in_rows_without_current_fixture_set() {
+        let fixtures = &LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES
+            [..LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES.len() - 1];
+        let error = validate_local_udt_array_param_for_in_fixture_paths(1, "for", fixtures)
+            .expect_err("missing UDT-array parameter for-in fixture should fail");
+
+        assert!(error.contains("tests/fixtures/sema/supported_user_type_array_param_for_in.pine"));
+    }
+
+    #[test]
     fn rejects_typed_declarations_without_collection_boundary_fixtures() {
-        let fixtures = [
+        let mut fixtures = vec![
             "tests/fixtures/runtime/scalar_typed_declarations.pine",
             "tests/fixtures/sema/unsupported_array_typed_decl.pine",
             "tests/fixtures/sema/unsupported_var_array_typed_decl.pine",
             "tests/fixtures/sema/unsupported_array_na_typed_decl.pine",
             "tests/fixtures/sema/unsupported_array_from_typed_decl.pine",
             "tests/fixtures/sema/unsupported_array_typed_decl_initial.pine",
-            "tests/fixtures/sema/unsupported_user_type_array_decl.pine",
-            "tests/fixtures/sema/unsupported_user_type_array_alias_decl.pine",
+            "tests/fixtures/sema/supported_user_type_array_decl.pine",
+            "tests/fixtures/sema/supported_user_type_array_alias_decl.pine",
             "tests/fixtures/sema/unsupported_user_type_array_from_decl.pine",
             "tests/fixtures/runtime/user_type_array_varip.pine",
             "tests/fixtures/sema/supported_user_type_array_varip_decl.pine",
-            "tests/fixtures/sema/unsupported_user_type_array_varip_decl.pine",
+            "tests/fixtures/sema/supported_user_type_array_varip_nested_decl.pine",
             "tests/fixtures/sema/unsupported_array_map_typed_decl.pine",
             "tests/fixtures/sema/unsupported_array_nested_typed_decl.pine",
             "tests/fixtures/sema/unsupported_array_tuple_typed_decl.pine",
@@ -852,6 +1020,17 @@ mod tests {
             "tests/fixtures/sema/unsupported_matrix_int_typed_decl.pine",
             "tests/fixtures/sema/unsupported_matrix_label_typed_decl.pine",
         ];
+        fixtures.extend(UDT_ARRAY_CONTROL_FLOW_FIXTURES.iter().copied());
+        fixtures.extend(LOCAL_UDT_ARRAY_CALL_RETURN_FIXTURES.iter().copied());
+        fixtures.extend(IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES.iter().copied());
+        fixtures.extend(BUILTIN_ARRAY_CALL_RESULT_FIXTURES.iter().copied());
+        fixtures.extend(BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES.iter().copied());
+        fixtures.extend(
+            BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES
+                .iter()
+                .copied(),
+        );
+        fixtures.extend(LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES.iter().copied());
         let tsv = format!(
             "feature\tstatus\tnotes\tfixtures\ntyped declarations\tpartial\tbare array, bare map, non-scalar map templates, bare matrix, non-float matrix, and other typed declarations remain unsupported\t{}\n",
             fixtures.join(";")
@@ -872,6 +1051,7 @@ mod tests {
                 .copied()
                 .filter(|fixture| *fixture != missing),
         );
+        fixtures.extend(LOCAL_UDT_ARRAY_PARAM_FOR_IN_FIXTURES.iter().copied());
 
         let tsv = format!(
             "feature\tstatus\tnotes\tfixtures\nfor\tpartial\tstatement for...in over supported arrays and expression-form scalar-array, drawing-id-array, chart.point-array, UDT-array, and matrix-row for...in including optional index locals are fixture-backed\t{}\n",
@@ -938,9 +1118,10 @@ mod tests {
                 .copied()
                 .filter(|fixture| *fixture != missing),
         );
+        fixtures.extend(IMPORTED_UDT_ARRAY_CALL_RETURN_FIXTURES.iter().copied());
 
         let tsv = format!(
-            "feature\tstatus\tnotes\tfixtures\nimport\tpartial\timported UDT identity is supported for the scalar-field subset plus receiver-style scalar imported UDT methods including direct same-identity, block-local alias, final-if alias, final-for alias, and nested-method passthrough plus constructor returns, and method-local field mutation while  remain unsupported\t{}\n",
+            "feature\tstatus\tnotes\tfixtures\nimport\tpartial\timported UDT identity is supported for the scalar-tree subset plus receiver-style scalar imported UDT methods including direct same-identity, block-local alias, final-if alias, final-for alias, final-while alias, switch-expression alias, and nested-method passthrough plus constructor returns, and method-local field mutation while broader imported method flow remains unsupported\t{}\n",
             fixtures.join(";")
         );
         let error = try_conformance_entries_from_tsv(&tsv)
@@ -951,7 +1132,7 @@ mod tests {
 
     #[test]
     fn rejects_user_defined_types_row_without_udt_varip_boundary_fixture_set() {
-        let missing = "tests/fixtures/sema/unsupported_user_type_varip_nested_field.pine";
+        let missing = "tests/fixtures/sema/unsupported_imported_udt_varip.pine";
         let mut fixtures = vec!["tests/fixtures/runtime/user_types.pine"];
         fixtures.extend(
             UDT_VARIP_BOUNDARY_FIXTURES
@@ -961,7 +1142,7 @@ mod tests {
         );
 
         let tsv = format!(
-            "feature\tstatus\tnotes\tfixtures\nuser-defined types\tpartial\tUDT varip is limited to scalar-field local and imported identities while nested-field UDT varip remains unsupported\t{}\n",
+            "feature\tstatus\tnotes\tfixtures\nuser-defined types\tpartial\tUDT varip supports scalar-tree local and imported identities while unresolved imported UDT varip remains unsupported\t{}\n",
             fixtures.join(";")
         );
         let error = try_conformance_entries_from_tsv(&tsv)
@@ -984,6 +1165,12 @@ mod tests {
                 .iter()
                 .copied()
                 .filter(|fixture| *fixture != missing),
+        );
+        fixtures.extend(BUILTIN_NAMESPACE_ARRAY_CALL_RESULT_FIXTURES.iter().copied());
+        fixtures.extend(
+            BUILTIN_NAMESPACE_MATRIX_CALL_RESULT_FIXTURES
+                .iter()
+                .copied(),
         );
 
         let tsv = format!(

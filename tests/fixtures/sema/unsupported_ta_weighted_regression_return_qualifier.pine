@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported ta weighted regression return qualifier")
+
+hline(ta.wma(close, 3))
+hline(ta.vwma(close, 3))
+hline(ta.swma(close))
+hline(ta.hma(close, 4))
+hline(ta.alma(close, 4, 0.85, 6))
+hline(ta.linreg(close, 3, 0))

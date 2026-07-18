@@ -4,4 +4,39 @@ indicator("Imported UDT method return")
 
 p = lib.Point.new(close)
 q = p.same()
+q_prior = q[1]
+steps = array.from(1, 2)
+for_in = p.sameForIn(steps)
+for_in_prior = for_in[1]
+other = lib.Point.new(open)
+chosen_for_in = p.chooseForIn(other, steps)
+chosen_for_in_prior = chosen_for_in[1]
+wrapped = lib.Wrapper.new(p)
+wrapped_copy = wrapped.sameWrapper()
+wrapped_prior = wrapped_copy[1]
+dyn = bar_index == 0 ? na : 1
+q_dynamic = q[dyn]
+q_dynamic_sibling = q[dyn]
+float q_dynamic_x = na
+float q_dynamic_sibling_x_after_mutation = na
+wrapped_dynamic = wrapped_copy[dyn]
+wrapped_dynamic_sibling = wrapped_copy[dyn]
+float wrapped_dynamic_x = na
+float wrapped_dynamic_sibling_x_after_mutation = na
+if bar_index > 0
+    q_dynamic_x := q_dynamic.x
+    q_dynamic.x := close + 700
+    q_dynamic_sibling_x_after_mutation := q_dynamic_sibling.x
+    wrapped_dynamic_x := wrapped_dynamic.nested.x
+    wrapped_dynamic.nested := lib.Point.new(close + 800)
+    wrapped_dynamic_sibling_x_after_mutation := wrapped_dynamic_sibling.nested.x
 plot(q.x)
+plot(for_in.x + chosen_for_in.x)
+plot(wrapped_copy.nested.x)
+plot(q_prior.x)
+plot(for_in_prior.x + chosen_for_in_prior.x)
+plot(wrapped_prior.nested.x)
+plot(q_dynamic_x)
+plot(q_dynamic_sibling_x_after_mutation)
+plot(wrapped_dynamic_x)
+plot(wrapped_dynamic_sibling_x_after_mutation)

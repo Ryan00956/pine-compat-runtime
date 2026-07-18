@@ -1,0 +1,5 @@
+//@version=6
+indicator("Invalid legacy line wrapping indentation")
+value = open +
+    high
+after = close

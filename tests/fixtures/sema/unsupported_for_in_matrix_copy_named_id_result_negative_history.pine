@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported for-in matrix.copy named id result negative history")
+source = matrix.new<float>(1, 1, 0)
+values = matrix.copy(id = source)
+length = for row in values
+    -1
+plot(close[length])

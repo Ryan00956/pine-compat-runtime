@@ -1,0 +1,12 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Unsupported imported UDT array.new return qualifier")
+
+type Point
+    float x
+
+local_points = array.new<Point>(2, Point.new(close))
+first = lib.firstPoint(local_points)
+second = lib.secondPoint(array.new<Point>(2, Point.new(open)))
+
+plot(first.x + second.x)

@@ -22,6 +22,24 @@ impl SourceId {
     }
 }
 
+/// Identifies one rewritten AST context within an analysis.
+///
+/// Unlike [`SourceId`], this distinguishes separate root import instances of
+/// the same physical library source. Expression metadata can therefore use it
+/// without conflating bodies rewritten under different aliases.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub(crate) struct SourceContextId(usize);
+
+impl SourceContextId {
+    pub(crate) const fn root() -> Self {
+        Self(0)
+    }
+
+    pub(crate) const fn import_instance(index: usize) -> Self {
+        Self(index + 1)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AnalysisInput {
     root: SourceFile,
@@ -204,6 +222,12 @@ mod tests {
 
     fn source(name: &str, text: &str) -> SourceFile {
         SourceFile::new(name, text)
+    }
+
+    #[test]
+    fn source_context_root_is_zero_and_imports_start_after_it() {
+        assert_eq!(SourceContextId::root().0, 0);
+        assert_eq!(SourceContextId::import_instance(0).0, 1);
     }
 
     #[test]

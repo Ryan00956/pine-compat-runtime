@@ -1,0 +1,7 @@
+//@version=5
+indicator("Supported ta alma/linreg series length")
+length = bar_index % 2 + 2
+plot(ta.alma(close, length, 0.85, 6))
+plot(ta.alma(series=close, length=length, offset=0.85, sigma=6))
+plot(ta.linreg(close, length, 0))
+plot(ta.linreg(source=close, length=length, offset=0))

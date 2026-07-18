@@ -1,0 +1,5 @@
+//@version=6
+indicator("Supported last bar metadata series int qualifier")
+
+plot(last_bar_index)
+plot(last_bar_time)

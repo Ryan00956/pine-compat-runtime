@@ -1,0 +1,18 @@
+//@version=6
+import user/udt_array_returns/1 as left
+import user/udt_array_returns/1 as right
+indicator("Unsupported imported UDT array return identities")
+
+left_first = array.from(left.First.new(10.0, 100.0))
+left_second = array.from(left.Second.new(200.0, 20.0))
+right_first = array.from(right.First.new(30.0, 300.0))
+right_points = array.from(right.Point.new(40.0))
+
+bad_udf = left.mixedReturn(left_first, left_second, true)
+
+anchor = left.First.new(50.0, 500.0)
+bad_method = anchor.mixedFirst(left_first, left_second, true)
+
+array<left.Second> wrong_typed = left.direct(left_first)
+bad_cross_alias_udf = left.returnArray(right_points)
+bad_cross_alias_method = anchor.retainFirst(right_first)

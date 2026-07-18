@@ -1,0 +1,32 @@
+//@version=5
+indicator("Dynamic history integer result offsets")
+
+offset_ternary = bar_index == 0 ? 0 : 1
+offset_if = if bar_index == 0
+    0
+else
+    1
+offset_switch = switch
+    bar_index == 0 => 0
+    => 1
+offset_for = for i = 0 to 1
+    i
+values = array.from(0, 1)
+offset_for_in = for value in values
+    value
+value = -1
+shadow_values = array.from(0)
+offset_for_in_shadow = for value in shadow_values
+    value
+offset_while = while bar_index < 0
+    1
+offset_builtin = ta.barssince(bar_index == 1)
+
+plot(close[offset_ternary])
+plot(close[offset_if])
+plot(close[offset_switch])
+plot(close[offset_for])
+plot(close[offset_for_in])
+plot(close[offset_for_in_shadow])
+plot(close[offset_while])
+plot(close[offset_builtin])

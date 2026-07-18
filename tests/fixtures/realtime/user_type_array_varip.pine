@@ -4,10 +4,25 @@ indicator("Realtime user type array varip")
 type Point
     float x
 
+type Wrapper
+    Point nested
+
 varip array<Point> points = array.new<Point>()
 points.push(Point.new(close))
 
+varip array<Wrapper> wrappers = array.from(Wrapper.new(Point.new(close + 100)))
+wrappers.push(Wrapper.new(Point.new(close + 100)))
+
+varip array<Wrapper> new_wrappers = array.new<Wrapper>(1, Wrapper.new(Point.new(close + 200)))
+new_wrappers.push(Wrapper.new(Point.new(close + 210)))
+
 last = points.last()
+wrapper_last = wrappers.last()
+new_wrapper_last = new_wrappers.last()
 
 plot(points.size(), "size")
 plot(last.x, "last_x")
+plot(wrappers.size(), "wrapper_size")
+plot(wrapper_last.nested.x, "wrapper_last_x")
+plot(new_wrappers.size(), "new_wrapper_size")
+plot(new_wrapper_last.nested.x, "new_wrapper_last_x")

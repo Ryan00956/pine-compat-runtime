@@ -1,0 +1,26 @@
+//@version=5
+indicator("Object array typed UDF params")
+
+first_price(array<chart.point> points) =>
+    first = array.get(points, 0)
+    first.price
+
+first_line_x(line[] lines) =>
+    line.get_x1(array.get(lines, 0))
+
+point_count(array<chart.point> points) =>
+    array.size(points)
+
+line_count(line[] lines) =>
+    array.size(lines)
+
+point = chart.point.from_index(bar_index + 1, close + 1)
+points = array.from(point, chart.point.from_index(bar_index + 2, close + 2))
+line_id = line.new(bar_index, low, bar_index + 1, high)
+lines = array.from(line_id)
+
+value = first_price(points) + first_line_x(lines) + point_count(points) + line_count(lines)
+previous = value[1]
+
+plot(value)
+plot(previous)

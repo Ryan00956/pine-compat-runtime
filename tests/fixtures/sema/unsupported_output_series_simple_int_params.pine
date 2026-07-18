@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported output series simple int params")
+plot(close, offset=bar_index, precision=bar_index)
+plotchar(close > open, offset=bar_index)
+plotshape(close > open, offset=bar_index)
+plotarrow(close - open, offset=bar_index, minheight=bar_index, maxheight=bar_index)
+bgcolor(color.new(color.green, 80), offset=bar_index)
+barcolor(color.new(color.red, 80), offset=bar_index)

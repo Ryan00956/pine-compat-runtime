@@ -1,0 +1,73 @@
+//@version=6
+indicator("Supported UDF qualifier propagation")
+inc(x) => x + 1
+pass_tf(tf) =>
+    local = tf
+    local
+choose_length(flag, x) =>
+    if flag
+        local = x
+        local
+    else
+        local = x + 1
+        local
+loop_tf(tf) =>
+    for i = 0 to 0
+        local = tf
+        local
+loop_in_length(values, x) =>
+    for value in values
+        local = x
+        local
+choose_branch_loop_length(flag, values, x) =>
+    if flag
+        for i = 0 to 0
+            x
+    else
+        for value in values
+            x
+choose_branch_while_length(flag, x) =>
+    if flag
+        while false
+            x
+    else
+        x
+if_expr_loop_length(flag, x) =>
+    if flag
+        for i = 0 to 0
+            x
+    else
+        for i = 0 to 0
+            x + 1
+switch_block_loop_length(flag, x) =>
+    switch
+        flag =>
+            for i = 0 to 0
+                x
+        =>
+            while false
+                x + 1
+nested_loop_length(values, flag, x) =>
+    for outer = 0 to 0
+        for value in values
+            while flag
+                x
+while_length(flag, x) =>
+    while flag
+        x
+length = input.int(2, "Length")
+flag = input.bool(true, "Flag")
+loop_flag = input.bool(false, "Loop")
+simple_values = array.from(1, 2)
+chart_tf = timeframe.period
+plot(ta.sma(close, inc(length)))
+plot(timeframe.in_seconds(pass_tf(chart_tf)))
+plot(ta.sma(close, choose_length(flag, length)))
+plot(timeframe.in_seconds(loop_tf(chart_tf)))
+plot(ta.sma(close, loop_in_length(simple_values, length)))
+plot(ta.sma(close, choose_branch_loop_length(flag, simple_values, length)))
+plot(ta.sma(close, choose_branch_while_length(flag, length)))
+plot(ta.sma(close, if_expr_loop_length(flag, length)))
+plot(ta.sma(close, switch_block_loop_length(flag, length)))
+plot(ta.sma(close, nested_loop_length(simple_values, loop_flag, length)))
+plot(ta.sma(close, while_length(loop_flag, length)))

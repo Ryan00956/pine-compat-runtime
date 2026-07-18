@@ -1,0 +1,10 @@
+indicator("Profile dynamic series history pure for-in array.from expression identity miss", max_bars_back=10)
+offset = bar_index == 0 ? 0 : 3
+src = for value in array.from(close, open)
+    base = value + 1
+    base
+same = for value in array.from(close, open)
+    base = value + 1
+    base
+max_bars_back(src, 2)
+plot(same[offset])

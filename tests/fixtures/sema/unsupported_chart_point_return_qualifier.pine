@@ -1,0 +1,14 @@
+//@version=6
+indicator("Unsupported chart point return qualifier")
+
+new_point = chart.point.new(time, bar_index, close)
+now_point = chart.point.now(close)
+index_point = chart.point.from_index(bar_index + 1, high)
+time_point = chart.point.from_time(time + 60000, low)
+copied_point = chart.point.copy(index_point)
+
+hline(new_point)
+hline(now_point)
+hline(index_point)
+hline(time_point)
+hline(copied_point)

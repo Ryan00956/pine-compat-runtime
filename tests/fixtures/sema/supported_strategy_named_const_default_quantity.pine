@@ -1,0 +1,5 @@
+//@version=5
+qty_type_base = strategy.cash
+qty_type = qty_type_base
+strategy("Strategy named const default quantity", default_qty_type=qty_type, default_qty_value=100)
+plot(close)

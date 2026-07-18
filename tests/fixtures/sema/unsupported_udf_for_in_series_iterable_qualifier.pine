@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported UDF for-in series iterable qualifier")
+loop_length(values, x) =>
+    for value in values
+        x
+array<int> values = na
+length = input.int(2, "Length")
+plot(ta.ema(close, loop_length(values, length)))

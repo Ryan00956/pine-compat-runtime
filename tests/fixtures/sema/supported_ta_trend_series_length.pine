@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported ta.trend series length")
+length = bar_index == 0 ? 1 : 2
+plot(ta.rising(close, length) ? 1 : 0)
+plot(ta.falling(close, length) ? 1 : 0)

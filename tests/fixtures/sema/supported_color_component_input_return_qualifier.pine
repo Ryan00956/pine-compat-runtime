@@ -1,0 +1,14 @@
+//@version=6
+indicator("Supported color component input return qualifier")
+
+level_color = input.color(color.rgb(64, 128, 192, 25), "Level color")
+
+red_value = color.r(level_color)
+green_value = color.g(level_color)
+blue_value = color.b(level_color)
+transparency_value = color.t(level_color)
+
+hline(red_value)
+hline(green_value)
+hline(blue_value)
+hline(transparency_value)

@@ -257,10 +257,18 @@ Closed coverage:
   `math.phi`, `math.rphi`, `math.pow`, `math.round`,
   `math.round_to_mintick`, `math.random`, and `math.sum`;
   string coverage includes `str.split`; time
-  helper coverage includes the numeric UTC `timestamp`, `weekofyear`,
-  `dayofweek`, and fixed-default `time_close` subsets, plus a fixed-default
+  helper coverage includes numeric and const-dateString IANA-aware `timestamp`,
+  IANA-aware calendar
+  component functions such as `weekofyear` and `dayofweek`, IANA-aware
+  `str.format_time` with short timezone-name tokens, doubled-apostrophe
+  literals, `na`-to-epoch timestamps, `1..5` week-of-month and `0..11` 12-hour
+  tokens, and complete millisecond-width formatting, and `time`/`time_close`
+  subsets with IANA-aware explicit
+  time-based sessions and UTC calendar
+  week/month higher-timeframe boundaries, plus a fixed-default
   `timeframe.period` and `timeframe.in_seconds`/`timeframe.from_seconds`
-  conversion subset, `timeframe.change` UTC bucket detection, plus
+  conversion subset, `timeframe.change` fixed intraday/day plus calendar
+  week/month UTC bucket detection, plus
   fixed-default `timeframe.is*` and `timeframe.multiplier` metadata.
 - Initial utility helper coverage includes `fixnan` for the current numeric
   and color last-non-`na` callsite subset.
@@ -1128,20 +1136,20 @@ The seven broad interpreter-internal task directions are summarized in
 `docs/NEXT_INTERNAL_CAPABILITY_PLAN.md`. The order below remains the roadmap
 priority for choosing one small fixture-backed slice at a time.
 
-1. Keep strategy maintenance narrow and fixture-backed. The next strategy work
-   should start with a Stage 8 broker-expansion design gate for multi-entry
-   ledgers, short/reversal behavior, pyramiding, generic order APIs, OCA
-   allocation, and any public-output contract decision before runtime
-   compatibility claims widen.
-2. Phase J maintenance only when a small, fixture-backed change widens the
+1. Prefer a small built-in compatibility slice selected from a real fixture
+   gap, unless a narrow strategy diagnostics, accounting, or metadata issue
+   already has a clear contract.
+2. Keep the Stage 13 long-only multi-entry strategy baseline stable. Require a
+   new broker-model design before adding short/reversal behavior, custom OCA,
+   richer generic order APIs, or public pending-order contracts.
+3. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
-3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an
+4. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an
    already claimed drawing, request, alert, or `varip` subset.
-4. Phase K maintenance only when release contracts, snapshots, or matrix gates
+5. Phase K maintenance only when release contracts, snapshots, or matrix gates
    need tightening.
-5. Phase B/C maintenance when new work exposes collection, history, or
+6. Phase B/C maintenance when new work exposes collection, history, or
    qualifier gaps.
-6. Phase D maintenance for small fixture-backed built-in compatibility fixes.
 
 This order keeps the project useful for indicator and basic strategy execution
 while delaying features that require new host APIs, object lifetimes, or richer

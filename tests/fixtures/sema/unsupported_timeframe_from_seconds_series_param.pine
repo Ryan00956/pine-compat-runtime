@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported timeframe.from_seconds series param")
+
+dynamic_seconds = bar_index > 0 ? 60 : 120
+plot(timeframe.from_seconds(dynamic_seconds) == "1" ? 1 : 0)

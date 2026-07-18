@@ -2,8 +2,8 @@ use super::*;
 
 impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_tr(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
-        let handle_na = if let Some(arg) = args.first() {
-            matches!(self.eval_expr(&arg.value)?, PineValue::Bool(true))
+        let handle_na = if let Some(arg) = ta_arg(args, 0, "handle_na") {
+            matches!(self.eval_expr(arg)?, PineValue::Bool(true))
         } else {
             true
         };
@@ -16,7 +16,11 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let length = self.eval_expr(&args[0].value)?.as_i64().unwrap_or(0);
+        let length = ta_arg(args, 0, "length")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -42,10 +46,18 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let Some(factor) = self.eval_expr(&args[0].value)?.as_f64() else {
+        let Some(factor) = ta_arg(args, 0, "factor")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_f64())
+        else {
             return Ok(two_na_tuple());
         };
-        let atr_period = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let atr_period = ta_arg(args, 1, "atrPeriod")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
         if atr_period <= 0 {
             return Ok(two_na_tuple());
         }
@@ -123,8 +135,16 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let di_length = self.eval_expr(&args[0].value)?.as_i64().unwrap_or(0);
-        let adx_smoothing = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let di_length = ta_arg(args, 0, "diLength")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
+        let adx_smoothing = ta_arg(args, 1, "adxSmoothing")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
         if di_length <= 0 || adx_smoothing <= 0 {
             return Ok(three_na_tuple());
         }
@@ -204,13 +224,25 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let Some(start) = self.eval_expr(&args[0].value)?.as_f64() else {
+        let Some(start) = ta_arg(args, 0, "start")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_f64())
+        else {
             return Ok(PineValue::Na);
         };
-        let Some(increment) = self.eval_expr(&args[1].value)?.as_f64() else {
+        let Some(increment) = ta_arg(args, 1, "inc")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_f64())
+        else {
             return Ok(PineValue::Na);
         };
-        let Some(max_acceleration) = self.eval_expr(&args[2].value)?.as_f64() else {
+        let Some(max_acceleration) = ta_arg(args, 2, "max")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_f64())
+        else {
             return Ok(PineValue::Na);
         };
         if !start.is_finite() || !increment.is_finite() || !max_acceleration.is_finite() {

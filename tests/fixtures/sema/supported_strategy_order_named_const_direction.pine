@@ -1,0 +1,8 @@
+//@version=5
+strategy("Supported strategy order named const direction")
+long_dir_base = strategy.long
+long_dir = long_dir_base
+short_dir_base = strategy.short
+short_dir = short_dir_base
+strategy.order("L", long_dir, qty=1)
+strategy.order("S", short_dir, qty=1)

@@ -1,12 +1,13 @@
 use pine_ir::{PineType, Qualifier, ValueKind};
 
 use crate::namespaces::types::{
-    SERIES_BOOL, SERIES_INT, SIMPLE_BOOL, SIMPLE_BOX_ARRAY, SIMPLE_COLOR, SIMPLE_INT,
-    SIMPLE_LABEL_ARRAY, SIMPLE_LINE_ARRAY, SIMPLE_LINE_FILL_ARRAY, SIMPLE_POLYLINE_ARRAY,
-    SIMPLE_STRING, SIMPLE_TABLE_ARRAY,
+    SERIES_BOOL, SERIES_FLOAT, SERIES_INT, SIMPLE_BOOL, SIMPLE_BOX_ARRAY, SIMPLE_COLOR,
+    SIMPLE_FLOAT, SIMPLE_INT, SIMPLE_LABEL_ARRAY, SIMPLE_LINE_ARRAY, SIMPLE_LINE_FILL_ARRAY,
+    SIMPLE_POLYLINE_ARRAY, SIMPLE_STRING, SIMPLE_TABLE_ARRAY,
 };
 
 const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
+    ("strategy.account_currency", SIMPLE_STRING),
     (
         "strategy.position_size",
         PineType::new(Qualifier::Series, ValueKind::Float),
@@ -16,7 +17,19 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
+        "strategy.position_entry_name",
+        PineType::new(Qualifier::Series, ValueKind::String),
+    ),
+    (
+        "strategy.initial_capital",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
         "strategy.openprofit",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
+        "strategy.openprofit_percent",
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
@@ -108,6 +121,10 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Int),
     ),
     (
+        "strategy.closedtrades.first_index",
+        PineType::new(Qualifier::Series, ValueKind::Int),
+    ),
+    (
         "strategy.wintrades",
         PineType::new(Qualifier::Series, ValueKind::Int),
     ),
@@ -166,10 +183,16 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     ("session.islastbar", SERIES_BOOL),
     ("session.isfirstbar_regular", SERIES_BOOL),
     ("session.islastbar_regular", SERIES_BOOL),
+    ("hl2", SERIES_FLOAT),
+    ("hlc3", SERIES_FLOAT),
+    ("hlcc4", SERIES_FLOAT),
+    ("ohlc4", SERIES_FLOAT),
+    ("bar_index", SERIES_INT),
     ("last_bar_index", SERIES_INT),
     ("last_bar_time", SERIES_INT),
     ("timeframe.period", SIMPLE_STRING),
     ("timeframe.main_period", SIMPLE_STRING),
+    ("timeframe.isticks", SIMPLE_BOOL),
     ("timeframe.isseconds", SIMPLE_BOOL),
     ("timeframe.isminutes", SIMPLE_BOOL),
     ("timeframe.isintraday", SIMPLE_BOOL),
@@ -189,6 +212,26 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     ("chart.is_pnf", SIMPLE_BOOL),
     ("chart.is_range", SIMPLE_BOOL),
     ("chart.is_renko", SIMPLE_BOOL),
+    ("syminfo.tickerid", SIMPLE_STRING),
+    ("syminfo.main_tickerid", SIMPLE_STRING),
+    ("syminfo.ticker", SIMPLE_STRING),
+    ("syminfo.prefix", SIMPLE_STRING),
+    ("syminfo.description", SIMPLE_STRING),
+    ("syminfo.sector", SIMPLE_STRING),
+    ("syminfo.industry", SIMPLE_STRING),
+    ("syminfo.country", SIMPLE_STRING),
+    ("syminfo.type", SIMPLE_STRING),
+    ("syminfo.currency", SIMPLE_STRING),
+    ("syminfo.basecurrency", SIMPLE_STRING),
+    ("syminfo.session", SIMPLE_STRING),
+    ("syminfo.timezone", SIMPLE_STRING),
+    ("syminfo.root", SIMPLE_STRING),
+    ("syminfo.volumetype", SIMPLE_STRING),
+    ("syminfo.mintick", SIMPLE_FLOAT),
+    ("syminfo.mincontract", SIMPLE_FLOAT),
+    ("syminfo.pointvalue", SIMPLE_FLOAT),
+    ("syminfo.minmove", SIMPLE_INT),
+    ("syminfo.pricescale", SIMPLE_INT),
     ("label.all", SIMPLE_LABEL_ARRAY),
     ("line.all", SIMPLE_LINE_ARRAY),
     ("linefill.all", SIMPLE_LINE_FILL_ARRAY),
@@ -232,6 +275,7 @@ mod tests {
     fn registers_strategy_trade_count_series_values() {
         for name in [
             "strategy.closedtrades",
+            "strategy.closedtrades.first_index",
             "strategy.wintrades",
             "strategy.losstrades",
             "strategy.eventrades",
@@ -242,6 +286,22 @@ mod tests {
                 Some(PineType::new(Qualifier::Series, ValueKind::Int))
             );
         }
+    }
+
+    #[test]
+    fn registers_strategy_position_entry_name_series_value() {
+        assert_eq!(
+            builtin_series_value_type("strategy.position_entry_name"),
+            Some(PineType::new(Qualifier::Series, ValueKind::String))
+        );
+    }
+
+    #[test]
+    fn registers_strategy_account_currency_simple_string_value() {
+        assert_eq!(
+            builtin_series_value_type("strategy.account_currency"),
+            Some(SIMPLE_STRING)
+        );
     }
 
     #[test]
@@ -272,6 +332,43 @@ mod tests {
             "chart.left_visible_bar_time",
             "chart.right_visible_bar_time",
         ] {
+            assert_eq!(builtin_series_value_type(name), Some(SIMPLE_INT));
+        }
+    }
+
+    #[test]
+    fn registers_syminfo_string_metadata_values() {
+        for name in [
+            "syminfo.tickerid",
+            "syminfo.main_tickerid",
+            "syminfo.ticker",
+            "syminfo.prefix",
+            "syminfo.description",
+            "syminfo.sector",
+            "syminfo.industry",
+            "syminfo.country",
+            "syminfo.type",
+            "syminfo.currency",
+            "syminfo.basecurrency",
+            "syminfo.session",
+            "syminfo.timezone",
+            "syminfo.root",
+            "syminfo.volumetype",
+        ] {
+            assert_eq!(builtin_series_value_type(name), Some(SIMPLE_STRING));
+        }
+    }
+
+    #[test]
+    fn registers_syminfo_numeric_metadata_values() {
+        for name in [
+            "syminfo.mintick",
+            "syminfo.mincontract",
+            "syminfo.pointvalue",
+        ] {
+            assert_eq!(builtin_series_value_type(name), Some(SIMPLE_FLOAT));
+        }
+        for name in ["syminfo.minmove", "syminfo.pricescale"] {
             assert_eq!(builtin_series_value_type(name), Some(SIMPLE_INT));
         }
     }
@@ -311,6 +408,14 @@ mod tests {
     }
 
     #[test]
+    fn registers_derived_price_and_bar_index_values() {
+        for name in ["hl2", "hlc3", "hlcc4", "ohlc4"] {
+            assert_eq!(builtin_series_value_type(name), Some(SERIES_FLOAT));
+        }
+        assert_eq!(builtin_series_value_type("bar_index"), Some(SERIES_INT));
+    }
+
+    #[test]
     fn registers_drawing_all_array_values() {
         assert_eq!(
             builtin_series_value_type("label.all"),
@@ -338,7 +443,9 @@ mod tests {
     #[test]
     fn registers_strategy_profit_series_values() {
         for name in [
+            "strategy.initial_capital",
             "strategy.openprofit",
+            "strategy.openprofit_percent",
             "strategy.netprofit",
             "strategy.netprofit_percent",
             "strategy.grossprofit",

@@ -1,0 +1,8 @@
+//@version=5
+indicator("Supported table.cell named const text options")
+id = table.new(position.top_left, 1, 1)
+size_base = size.normal
+text_size = size_base
+format_base = text.format_bold
+text_formatting = format_base + text.format_italic
+table.cell(id, 0, 0, "A", text_size=text_size, text_formatting=text_formatting)

@@ -8,12 +8,25 @@ values.put("open", open)
 previous = values[1]
 previous_close = na(previous) ? na : previous.get("close")
 previous_size = na(previous) ? na : previous.size()
+dynamic_offset = bar_index == 0 ? na : 1
+dynamic_previous = values[dynamic_offset]
+dynamic_previous_is_na = na(dynamic_previous) ? 1 : 0
+dynamic_previous_close = na(dynamic_previous) ? na : dynamic_previous.get("close")
+dynamic_previous_size = na(dynamic_previous) ? na : dynamic_previous.size()
 
 if bar_index > 0
     previous.put("close", 100)
     previous.put("extra", 200)
 
+dynamic_previous_close_after_previous_mutation = na(dynamic_previous) ? na : dynamic_previous.get("close")
+dynamic_previous_size_after_previous_mutation = na(dynamic_previous) ? na : dynamic_previous.size()
+
 plot(previous_close, "previous_close")
 plot(values.get("close"), "current_close")
 plot(previous_size, "previous_size")
 plot(values.size(), "current_size")
+plot(dynamic_previous_is_na, "dynamic_previous_is_na")
+plot(dynamic_previous_close, "dynamic_previous_close")
+plot(dynamic_previous_size, "dynamic_previous_size")
+plot(dynamic_previous_close_after_previous_mutation, "dynamic_previous_close_after_previous_mutation")
+plot(dynamic_previous_size_after_previous_mutation, "dynamic_previous_size_after_previous_mutation")

@@ -1,0 +1,20 @@
+//@version=6
+indicator("Unsupported array numeric int const input return qualifier")
+
+ints = array.from(1, 2, 3)
+
+plot(close, show_last=array.min(ints))
+plot(close, show_last=array.max(ints))
+plot(close, show_last=array.sum(ints))
+plot(close, show_last=array.range(ints))
+plot(close, show_last=array.median(ints))
+plot(close, show_last=array.mode(ints))
+plot(close, show_last=array.percentile_nearest_rank(ints, 50))
+
+plot(close, show_last=ints.min())
+plot(close, show_last=ints.max())
+plot(close, show_last=ints.sum())
+plot(close, show_last=ints.range())
+plot(close, show_last=ints.median())
+plot(close, show_last=ints.mode())
+plot(close, show_last=ints.percentile_nearest_rank(50))

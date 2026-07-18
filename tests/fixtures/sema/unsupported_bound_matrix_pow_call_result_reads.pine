@@ -1,0 +1,15 @@
+//@version=6
+indicator("Unsupported bound matrix.pow call-result reads")
+
+values = matrix.new<float>(2, 2, 1.0)
+bools = matrix.new<bool>(2, 2, true)
+array_values = array.from(1.0, 2.0)
+
+bad_power = values.pow("bad").rows()
+bad_row = values.pow(2).get("bad", 0)
+values.pow(2).set(0, 0, "bad")
+size_result = values.pow(2).size()
+bad_receiver_kind = bools.pow(2).rows()
+wrong_receiver = array_values.pow(2).rows()
+
+plot(close)

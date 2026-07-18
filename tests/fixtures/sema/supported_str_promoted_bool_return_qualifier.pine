@@ -1,0 +1,14 @@
+//@version=6
+indicator("Supported str promoted bool return qualifier")
+
+input_text = input.string("ABCDE", "Input text")
+simple_text = timeframe.period
+series_text = str.tostring(close)
+
+input_contains = str.contains(input_text, "C")
+simple_starts = str.startswith(simple_text, "1")
+series_ends = str.endswith(series_text, "0")
+
+plot(ta.alma(close, 4, 0.85, 6, input_contains))
+plot(ta.alma(close, 4, 0.85, 6, simple_starts))
+plot(series_ends ? 1 : 0)

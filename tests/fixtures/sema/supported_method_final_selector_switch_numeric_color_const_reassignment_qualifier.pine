@@ -1,0 +1,42 @@
+//@version=6
+indicator("Supported method final selector switch numeric color const reassignment qualifier")
+
+type Box
+    int seed
+
+method choose_int_length(Box this, int mode, int x) =>
+    local = x
+    switch mode
+        1 =>
+            local := bar_index
+            local
+        =>
+            local
+
+method choose_float_length(Box this, float mode, int x) =>
+    local = x
+    switch mode
+        1.5 =>
+            local := bar_index
+            local
+        =>
+            local
+
+method choose_color_length(Box this, color mode, int x) =>
+    local = x
+    switch mode
+        color.red =>
+            local := bar_index
+            local
+        =>
+            local
+
+length = input.int(2, "Length")
+box = Box.new(1)
+int_chosen = box.choose_int_length(2, length)
+float_chosen = box.choose_float_length(2.5, length)
+color_chosen = box.choose_color_length(color.green, length)
+
+plot(ta.ema(close, int_chosen))
+plot(ta.ema(close, float_chosen))
+plot(ta.ema(close, color_chosen))

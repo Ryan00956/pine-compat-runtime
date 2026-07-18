@@ -1,0 +1,75 @@
+//@version=6
+indicator("Builtin map.copy call-result reads")
+
+copySize(id) => map.copy(id).size()
+
+copyBlockReads(id) =>
+    int size = map.copy(id).size()
+    bool contains = map.copy(id).contains("close")
+    float value = map.copy(id).get("open")
+    size + (contains ? 10 : 0) + value
+
+source = map.new<string, float>()
+map.put(source, "open", 1.25)
+map.put(source, "close", 3.75)
+
+copied = map.copy(source).copy()
+map.put(copied, "extra", 9.0)
+
+detached_keys = map.copy(source).keys()
+detached_keys.push("extra")
+
+detached_values = map.copy(source).values()
+detached_values.push(7.5)
+
+int_bool = map.new<int, bool>()
+map.put(int_bool, 7, true)
+
+color_int = map.new<color, int>()
+map.put(color_int, color.red, 4)
+
+map.copy(source).put("open", 8.5)
+map.copy(source).put("extra", 9.0)
+map.copy(int_bool).put(8, false)
+map.copy(color_int).put(color.blue, 5)
+plot(source.size() == 2 and source.get("open") == 1.25 and not source.contains("extra") and int_bool.size() == 1 and color_int.size() == 1 ? 1 : 0, "map_copy_call_result_put_source_independent")
+
+map.copy(source).clear()
+map.copy(int_bool).clear()
+map.copy(color_int).clear()
+plot(source.size() == 2 and source.get("open") == 1.25 and int_bool.size() == 1 and color_int.size() == 1 ? 1 : 0, "map_copy_call_result_clear_source_independent")
+
+map.copy(source).remove("open")
+map.copy(source).remove("missing")
+map.copy(int_bool).remove(7)
+map.copy(color_int).remove(color.red)
+plot(source.size() == 2 and source.get("open") == 1.25 and int_bool.size() == 1 and color_int.size() == 1 ? 1 : 0, "map_copy_call_result_remove_source_independent")
+
+map.copy(source).put_all(source)
+map.copy(int_bool).put_all(int_bool)
+map.copy(color_int).put_all(color_int)
+plot(source.size() == 2 and source.get("open") == 1.25 and source.keys().first() == "open" and int_bool.size() == 1 and color_int.size() == 1 ? 1 : 0, "map_copy_call_result_put_all_source_independent")
+
+plot(map.copy(source).size(), "copy_size")
+plot(map.copy(source).get("open"), "copy_get")
+plot(map.copy(source).contains("close") ? 1 : 0, "copy_contains")
+plot(na(map.copy(source).get("missing")) ? 1 : 0, "copy_missing_get")
+plot(map.copy(source).copy().get("close"), "nested_copy_get")
+plot(map.copy(source).keys().first() == "open" ? 1 : 0, "keys_first")
+plot(map.copy(source).keys().get(1) == "close" ? 1 : 0, "keys_get")
+plot(map.copy(source).keys().copy().last() == "close" ? 1 : 0, "keys_copy_last")
+plot(source.contains("extra") ? 1 : 0, "keys_detached_from_map")
+plot(detached_keys.size(), "detached_keys_size")
+plot(map.copy(source).values().first(), "values_first")
+plot(map.copy(source).values().get(1), "values_get")
+plot(map.copy(source).values().copy().last(), "values_copy_last")
+plot(source.get("open"), "values_detached_from_map")
+plot(detached_values.size(), "detached_values_size")
+plot(source.size(), "source_size")
+plot(copied.size(), "copied_size")
+plot(source.contains("extra") ? 1 : 0, "source_has_extra")
+plot(copied.get("extra"), "copied_extra")
+plot(map.copy(int_bool).get(7) ? 1 : 0, "int_bool_get")
+plot(map.copy(color_int).get(color.red), "color_int_get")
+plot(copySize(source), "expression_udf")
+plot(copyBlockReads(source), "block_udf")

@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported max_bars_back call argument block")
+src = close
+plot(switch
+    close > open =>
+        base = 5
+        length = base + 5
+        max_bars_back(src, length)
+        src[bar_index]
+    => src[bar_index]
+)

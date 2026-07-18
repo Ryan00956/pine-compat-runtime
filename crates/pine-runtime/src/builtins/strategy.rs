@@ -46,6 +46,10 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Option<Result<PineValue, RuntimeError>> {
         Some(match callee {
+            "strategy.convert_to_account" | "strategy.convert_to_symbol" => {
+                self.eval_strategy_currency_conversion(args)
+            }
+            "strategy.default_entry_qty" => self.eval_strategy_default_entry_qty(args),
             "strategy.entry" => self.eval_strategy_entry(args),
             "strategy.order" => self.eval_strategy_order(args),
             "strategy.close" => self.eval_strategy_close(args),
@@ -66,8 +70,11 @@ impl<'a> HistoricalRuntime<'a> {
             | "strategy.closedtrades.commission"
             | "strategy.closedtrades.size"
             | "strategy.closedtrades.profit"
+            | "strategy.closedtrades.profit_percent"
             | "strategy.closedtrades.max_runup"
-            | "strategy.closedtrades.max_drawdown" => {
+            | "strategy.closedtrades.max_runup_percent"
+            | "strategy.closedtrades.max_drawdown"
+            | "strategy.closedtrades.max_drawdown_percent" => {
                 self.eval_strategy_closed_trade_field(callee, args)
             }
             "strategy.opentrades.entry_price"
@@ -77,13 +84,53 @@ impl<'a> HistoricalRuntime<'a> {
             | "strategy.opentrades.entry_time"
             | "strategy.opentrades.size"
             | "strategy.opentrades.profit"
+            | "strategy.opentrades.profit_percent"
             | "strategy.opentrades.commission"
             | "strategy.opentrades.max_runup"
-            | "strategy.opentrades.max_drawdown" => {
+            | "strategy.opentrades.max_runup_percent"
+            | "strategy.opentrades.max_drawdown"
+            | "strategy.opentrades.max_drawdown_percent" => {
                 self.eval_strategy_open_trade_field(callee, args)
             }
             _ => return None,
         })
+    }
+
+    fn eval_strategy_currency_conversion(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(value_expr) = call_arg_expr(args, 0, "value") else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .eval_expr(value_expr)?
+            .as_f64()
+            .map_or(PineValue::Na, PineValue::Float))
+    }
+
+    fn eval_strategy_default_entry_qty(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(fill_price_expr) = call_arg_expr(args, 0, "fill_price") else {
+            return Ok(PineValue::Na);
+        };
+        let fill_price = self
+            .eval_expr(fill_price_expr)?
+            .as_f64()
+            .unwrap_or(f64::NAN);
+        let Some(bar) = self.current_bar else {
+            return Err(RuntimeError {
+                message: "`strategy.default_entry_qty` requires an active bar".to_owned(),
+            });
+        };
+        let equity = self.strategy_broker.equity_value(bar.close);
+        Ok(self
+            .program
+            .strategy_settings
+            .default_entry_qty(equity, fill_price)
+            .map_or(PineValue::Na, PineValue::Float))
     }
 
     fn eval_strategy_entry(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {

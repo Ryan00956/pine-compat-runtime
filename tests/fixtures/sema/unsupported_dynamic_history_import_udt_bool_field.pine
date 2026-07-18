@@ -1,0 +1,11 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported dynamic history imported UDT bool field")
+
+bool_offset = lib.makeBoolOffset(bar_index > 0)
+method_same = bool_offset.sameBool()
+qualified_method_same = lib.sameBool(bool_offset)
+
+plot(close[bool_offset.value])
+plot(open[method_same.value])
+plot(high[qualified_method_same.value])

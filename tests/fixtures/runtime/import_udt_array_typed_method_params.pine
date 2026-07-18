@@ -1,0 +1,19 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Imported UDT array typed method params")
+
+anchor = lib.Point.new(close)
+points = array.from(lib.Point.new(close + 1), lib.Point.new(close + 2))
+first = anchor.firstFrom(points)
+second = lib.secondFrom(anchor, points)
+firstNamed = anchor.firstFrom(points=points)
+secondNamed = lib.secondFrom(anchor, points=points)
+firstPrior = first[1]
+firstNamedPrior = firstNamed[1]
+value = first.x + second.x
+previous = value[1]
+
+plot(value)
+plot(previous)
+plot(firstNamed.x + secondNamed.x)
+plot(firstPrior.x + firstNamedPrior.x)

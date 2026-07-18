@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported operator types")
+
+bad_plus = +"x"
+bad_not = not 1
+bad_add = "x" + 1
+bad_and = true and 1
+plot(close)

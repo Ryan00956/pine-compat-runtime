@@ -1,0 +1,9 @@
+//@version=6
+indicator("Unsupported ta average return qualifier")
+
+hline(ta.sma(close, 3))
+hline(ta.ema(close, 3))
+hline(ta.dema(close, 3))
+hline(ta.tema(close, 3))
+hline(ta.rma(close, 3))
+hline(ta.rsi(close, 3))

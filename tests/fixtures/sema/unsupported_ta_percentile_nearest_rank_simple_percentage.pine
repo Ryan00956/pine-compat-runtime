@@ -1,4 +1,0 @@
-//@version=5
-indicator("Unsupported ta.percentile_nearest_rank Simple Percentage")
-values = array.new_int(1, 1)
-plot(ta.percentile_nearest_rank(close, 3, array.size(values)))

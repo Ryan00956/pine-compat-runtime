@@ -1,0 +1,5 @@
+//@version=5
+indicator("Supported ta.sar na params")
+plot(nz(ta.sar(na, 0.02, 0.2)))
+plot(nz(ta.sar(0.02, na, 0.2)))
+plot(nz(ta.sar(0.02, 0.02, na)))

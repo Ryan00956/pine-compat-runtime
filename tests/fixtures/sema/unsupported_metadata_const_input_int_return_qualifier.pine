@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported metadata const/input int return qualifier")
+
+plot(close, show_last=timeframe.multiplier)
+plot(open, show_last=chart.left_visible_bar_time)
+plot(high, show_last=chart.right_visible_bar_time)

@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported time globals simple int qualifier")
+
+plot(close, offset=time)
+plot(close, offset=time_close)
+plot(close, offset=time_tradingday)

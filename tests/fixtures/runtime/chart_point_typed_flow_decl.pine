@@ -1,0 +1,32 @@
+//@version=5
+indicator("Chart point typed flow declarations")
+
+chart.point branch = if bar_index % 2 == 0
+    chart.point.from_index(bar_index, close)
+else
+    chart.point.from_index(bar_index + 10, close + 10)
+
+chart.point selected = switch bar_index
+    0 => chart.point.from_index(bar_index + 20, close + 20)
+    => chart.point.from_index(bar_index + 30, close + 30)
+
+chart.point looped = for i = 0 to 0
+    chart.point.from_index(bar_index + 40, close + 40)
+
+point_values = array.from(chart.point.from_index(bar_index + 60, close + 60), chart.point.from_index(bar_index + 70, close + 70))
+chart.point for_in_selected = for point in point_values
+    point
+
+j = 0
+chart.point whiled = while j < 1
+    j := j + 1
+    chart.point.from_index(bar_index + 50, close + 50)
+
+chart.point nullable = na
+nullable := branch
+
+plot(nullable.index)
+plot(selected.index)
+plot(looped.index)
+plot(for_in_selected.index)
+plot(whiled.index)

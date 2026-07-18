@@ -1,0 +1,11 @@
+//@version=6
+indicator("Unsupported ta volume variable return qualifier")
+
+hline(ta.accdist)
+hline(ta.iii)
+hline(ta.nvi)
+hline(ta.obv)
+hline(ta.pvi)
+hline(ta.pvt)
+hline(ta.wad)
+hline(ta.wvad)

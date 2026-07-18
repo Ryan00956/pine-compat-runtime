@@ -1,0 +1,9 @@
+//@version=6
+indicator("Supported array.size simple return qualifier")
+
+values = array.from(1.0, 2.0, 3.0)
+namespace_size = array.size(values)
+method_size = values.size()
+
+plot(ta.sma(close, namespace_size))
+plot(ta.ema(close, method_size))

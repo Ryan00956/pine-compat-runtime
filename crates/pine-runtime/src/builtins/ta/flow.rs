@@ -1,3 +1,5 @@
+use pine_ir::SeriesId;
+
 use super::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -6,7 +8,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
+        let source = self.eval_flow_source(args)?;
         let Some(source) = source.as_f64() else {
             self.call_state.insert(call_site_id, PineValue::Na);
             return Ok(PineValue::Na);
@@ -29,7 +31,7 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
         mode: WindowExtreme,
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
+        let source = self.eval_flow_source(args)?;
         let Some(source) = source.as_f64() else {
             return Ok(self
                 .call_state
@@ -59,8 +61,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_flow_source_length(args)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -91,8 +92,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_flow_source_length(args)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -111,8 +111,7 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_flow_source_length(args)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -172,13 +171,44 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(finite_float_or_na(weighted.sum / volumes.sum))
     }
 
+    fn eval_flow_source(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        ta_arg(args, 0, "source")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()
+            .map(|value| value.unwrap_or(PineValue::Na))
+    }
+
+    fn eval_flow_source_length(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<(PineValue, i64), RuntimeError> {
+        let source = ta_arg(args, 0, "source")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
+        let length = ta_arg(args, 1, "length")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
+        Ok((source, length))
+    }
+
     pub(crate) fn eval_mfi(
         &mut self,
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let source_arg = ta_arg(args, 0, "source");
+        let source = source_arg
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
+        let length = ta_arg(args, 1, "length")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -192,7 +222,7 @@ impl<'a> HistoricalRuntime<'a> {
             self.update_mfi_windows(call_site_id, None, None, length);
             return Ok(PineValue::Na);
         };
-        let Some(series_id) = args[0].value.series_id else {
+        let Some(series_id) = source_arg.and_then(|arg| arg.series_id) else {
             self.update_mfi_windows(call_site_id, None, None, length);
             return Ok(PineValue::Na);
         };
@@ -314,10 +344,23 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?.as_f64();
-        let high = self.eval_expr(&args[1].value)?.as_f64();
-        let low = self.eval_expr(&args[2].value)?.as_f64();
-        let length = self.eval_expr(&args[3].value)?.as_i64().unwrap_or(0);
+        let source = ta_arg(args, 0, "source")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_f64());
+        let high = ta_arg(args, 1, "high")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_f64());
+        let low = ta_arg(args, 2, "low")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_f64());
+        let length = ta_arg(args, 3, "length")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -359,7 +402,11 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let length = self.eval_expr(&args[0].value)?.as_i64().unwrap_or(0);
+        let length = ta_arg(args, 0, "length")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -455,29 +502,44 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn eval_rising_falling(
         &mut self,
-        call_site_id: CallSiteId,
+        _call_site_id: CallSiteId,
         args: &[HirCallArg],
         mode: RisingFallingMode,
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let Some(source_arg) = ta_arg(args, 0, "source") else {
+            return Ok(PineValue::Bool(false));
+        };
+        let source = self.eval_expr(source_arg)?;
+        let length = ta_arg(args, 1, "length")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
         if length <= 0 {
             return Ok(PineValue::Bool(false));
         }
 
         let length = length as usize;
-        let current = source.as_f64();
-        let key = RollingWindowKey::RisingFalling(call_site_id);
-        let value = if let Some(current) = current {
-            self.rolling_windows
-                .get(&key)
-                .is_some_and(|window| window.is_ready(length) && window.trend(current, mode))
-        } else {
-            false
+        let Some(current) = source.as_f64() else {
+            return Ok(PineValue::Bool(false));
         };
-        self.update_rolling_window_key(key, current, length);
+        let Some(series_id) = source_arg.series_id else {
+            return Ok(PineValue::Bool(false));
+        };
+        for offset in 1..=length {
+            let Some(previous) = self.series_store.read(series_id, offset).as_f64() else {
+                return Ok(PineValue::Bool(false));
+            };
+            let trending = match mode {
+                RisingFallingMode::Rising => current > previous,
+                RisingFallingMode::Falling => current < previous,
+            };
+            if !trending {
+                return Ok(PineValue::Bool(false));
+            }
+        }
 
-        Ok(PineValue::Bool(value))
+        Ok(PineValue::Bool(true))
     }
 
     pub(crate) fn eval_cross(
@@ -485,13 +547,19 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
         mode: CrossMode,
     ) -> Result<PineValue, RuntimeError> {
-        let current_left = self.eval_expr(&args[0].value)?;
-        let current_right = self.eval_expr(&args[1].value)?;
-        let Some(left_series_id) = args[0].value.series_id else {
+        let Some(left_arg) = ta_arg(args, 0, "source1") else {
+            return Ok(PineValue::Bool(false));
+        };
+        let Some(right_arg) = ta_arg(args, 1, "source2") else {
+            return Ok(PineValue::Bool(false));
+        };
+        let current_left = self.eval_expr(left_arg)?;
+        let current_right = self.eval_expr(right_arg)?;
+        let Some(left_series_id) = left_arg.series_id else {
             return Ok(PineValue::Bool(false));
         };
         let previous_left = self.read_declared_series_history(left_series_id, 1);
-        let previous_right = if let Some(right_series_id) = args[1].value.series_id {
+        let previous_right = if let Some(right_series_id) = right_arg.series_id {
             self.read_declared_series_history(right_series_id, 1)
         } else {
             current_right.clone()
@@ -524,7 +592,10 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let condition = self.eval_expr(&args[0].value)?;
+        let condition = ta_arg(args, 0, "condition")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
         let value = if matches!(condition, PineValue::Bool(true)) {
             PineValue::Int(0)
         } else if let Some(previous) = self
@@ -548,9 +619,37 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let condition = self.eval_expr(&args[0].value)?;
-        let source = self.eval_expr(&args[1].value)?;
-        let occurrence = self.eval_expr(&args[2].value)?.as_i64().unwrap_or(-1);
+        let condition = ta_arg(args, 0, "condition")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
+        let source = ta_arg(args, 1, "source")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
+        let occurrence_arg = ta_arg(args, 2, "occurrence");
+        let occurrence = occurrence_arg
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(-1);
+
+        if matches!(condition, PineValue::Bool(true)) {
+            let retain = if occurrence_arg
+                .is_some_and(|arg| arg.pine_type.qualifier == pine_ir::Qualifier::Series)
+            {
+                MAX_SERIES_HISTORY_VALUES
+            } else if occurrence >= 0 && (occurrence as usize) < MAX_SERIES_HISTORY_VALUES {
+                occurrence as usize + 1
+            } else {
+                0
+            };
+
+            let values = self.valuewhen_state.entry(call_site_id).or_default();
+            values.push_front(source);
+            values.truncate(retain);
+        }
+
         if occurrence < 0 {
             return Ok(PineValue::Na);
         }
@@ -560,55 +659,48 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let values = self.valuewhen_state.entry(call_site_id).or_default();
-        if matches!(condition, PineValue::Bool(true)) {
-            values.push_front(source);
-            values.truncate(occurrence + 1);
-        }
-
-        Ok(values.get(occurrence).cloned().unwrap_or(PineValue::Na))
+        Ok(self
+            .valuewhen_state
+            .get(&call_site_id)
+            .and_then(|values| values.get(occurrence))
+            .cloned()
+            .unwrap_or(PineValue::Na))
     }
 
     pub(crate) fn eval_window_extreme(
         &mut self,
-        call_site_id: CallSiteId,
+        _call_site_id: CallSiteId,
         args: &[HirCallArg],
         mode: WindowExtreme,
     ) -> Result<PineValue, RuntimeError> {
-        let (source, length) = self.eval_extreme_source_length(args, mode)?;
+        let (source, series_id, length) = self.eval_extreme_source_length(args, mode)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
-        let window = self.update_rolling_window(call_site_id, source, length);
-        if !window.is_ready(length) {
+        let Some(length) = usize::try_from(length).ok() else {
             return Ok(PineValue::Na);
-        }
-
-        let value = window.extreme(mode).unwrap_or(f64::NAN);
-        Ok(finite_float_or_na(value))
+        };
+        self.window_extreme_value(source, series_id, length, mode)
+            .map_or(Ok(PineValue::Na), |value| Ok(finite_float_or_na(value)))
     }
 
     pub(crate) fn eval_window_extreme_offset(
         &mut self,
-        call_site_id: CallSiteId,
+        _call_site_id: CallSiteId,
         args: &[HirCallArg],
         mode: WindowExtreme,
     ) -> Result<PineValue, RuntimeError> {
-        let (source, length) = self.eval_extreme_source_length(args, mode)?;
+        let (source, series_id, length) = self.eval_extreme_source_length(args, mode)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
 
-        let length = length as usize;
-        let window = self.update_rolling_window(call_site_id, source, length);
-        if !window.is_ready(length) {
+        let Some(length) = usize::try_from(length).ok() else {
             return Ok(PineValue::Na);
-        }
-
-        Ok(window
-            .extreme_offset(mode)
+        };
+        Ok(self
+            .window_extreme_offset(source, series_id, length, mode)
             .map_or(PineValue::Na, |offset| PineValue::Int(offset as i64)))
     }
 
@@ -616,22 +708,90 @@ impl<'a> HistoricalRuntime<'a> {
         &mut self,
         args: &[HirCallArg],
         mode: WindowExtreme,
-    ) -> Result<(PineValue, i64), RuntimeError> {
-        if args.len() == 1 {
-            let length = self.eval_expr(&args[0].value)?.as_i64().unwrap_or(0);
-            let source_name = match mode {
-                WindowExtreme::Highest => "high",
-                WindowExtreme::Lowest => "low",
-            };
-            let source = self
-                .current_builtin_f64(source_name)
-                .map_or(PineValue::Na, PineValue::Float);
-            return Ok((source, length));
+    ) -> Result<(PineValue, Option<SeriesId>, i64), RuntimeError> {
+        let has_explicit_source = args.iter().any(|arg| arg.name.as_deref() == Some("source"))
+            || args
+                .first()
+                .is_some_and(|arg| arg.name.is_none() && args.len() > 1);
+
+        if has_explicit_source {
+            let source_arg = ta_arg(args, 0, "source");
+            let source = source_arg
+                .map(|arg| self.eval_expr(arg))
+                .transpose()?
+                .unwrap_or(PineValue::Na);
+            let length = ta_arg(args, 1, "length")
+                .map(|arg| self.eval_expr(arg))
+                .transpose()?
+                .and_then(|value| value.as_i64())
+                .unwrap_or(0);
+            return Ok((source, source_arg.and_then(|arg| arg.series_id), length));
         }
 
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
-        Ok((source, length))
+        let length = ta_arg(args, 0, "length")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
+        let source_name = match mode {
+            WindowExtreme::Highest => "high",
+            WindowExtreme::Lowest => "low",
+        };
+        let source = self
+            .current_builtin_f64(source_name)
+            .map_or(PineValue::Na, PineValue::Float);
+        Ok((source, self.builtin_series_id(source_name), length))
+    }
+
+    fn window_extreme_value(
+        &self,
+        source: PineValue,
+        series_id: Option<SeriesId>,
+        length: usize,
+        mode: WindowExtreme,
+    ) -> Option<f64> {
+        let mut extreme = finite_f64(source)?;
+        let series_id = series_id?;
+        for offset in 1..length {
+            let previous = finite_f64(self.series_store.read(series_id, offset))?;
+            extreme = match mode {
+                WindowExtreme::Highest => extreme.max(previous),
+                WindowExtreme::Lowest => extreme.min(previous),
+            };
+        }
+        Some(extreme)
+    }
+
+    fn window_extreme_offset(
+        &self,
+        source: PineValue,
+        series_id: Option<SeriesId>,
+        length: usize,
+        mode: WindowExtreme,
+    ) -> Option<usize> {
+        let mut extreme = finite_f64(source)?;
+        let mut best_offset = 0usize;
+        let series_id = series_id?;
+        for offset in 1..length {
+            let previous = finite_f64(self.series_store.read(series_id, offset))?;
+            let better = match mode {
+                WindowExtreme::Highest => previous > extreme,
+                WindowExtreme::Lowest => previous < extreme,
+            };
+            if better {
+                extreme = previous;
+                best_offset = offset;
+            }
+        }
+        Some(best_offset)
+    }
+
+    fn builtin_series_id(&self, name: &str) -> Option<SeriesId> {
+        self.program
+            .symbols
+            .iter()
+            .find(|symbol| symbol.name == name)
+            .and_then(|symbol| symbol.series_id)
     }
 
     pub(crate) fn update_rolling_window(
@@ -673,4 +833,8 @@ impl<'a> HistoricalRuntime<'a> {
         window.push(source.filter(|value| value.is_finite()), length);
         window
     }
+}
+
+fn finite_f64(value: PineValue) -> Option<f64> {
+    value.as_f64().filter(|value| value.is_finite())
 }

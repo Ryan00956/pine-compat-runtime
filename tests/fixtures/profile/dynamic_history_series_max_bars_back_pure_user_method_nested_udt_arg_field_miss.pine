@@ -1,0 +1,13 @@
+indicator("Profile dynamic series history pure user method nested UDT arg field max_bars_back miss", max_bars_back=10)
+type Point
+    float x
+type Wrapper
+    Point inner
+method source(Point p, Wrapper other) => other.inner.x + 1
+p = Point.new(open)
+inner = Point.new(close)
+other = Wrapper.new(inner)
+src = p.source(other)
+max_bars_back(src, 2)
+offset = bar_index == 0 ? 0 : 3
+plot(p.source(other)[offset])

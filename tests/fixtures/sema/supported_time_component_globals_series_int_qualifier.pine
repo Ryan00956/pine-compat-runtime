@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported time component globals series int qualifier")
+
+plot(year)
+plot(month)
+plot(weekofyear)
+plot(dayofmonth)
+plot(dayofweek)
+plot(hour)
+plot(minute)
+plot(second)

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Supported ta zero-arg return qualifier")
+
+plot(ta.ao())
+plot(ta.bop())

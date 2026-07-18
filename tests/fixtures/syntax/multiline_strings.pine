@@ -1,0 +1,16 @@
+//@version=6
+indicator("""Multiline
+title""")
+double = """first
+  second "quoted" 中"""
+single = '''alpha
+    beta's text'''
+same_line = """same""" == '''same'''
+escaped = """Pine\n\"quote\"\t\\path"""
+conditional = true ? """up
+  value""" : '''down'''
+plot(double == "first\n  second \"quoted\" 中" ? 1 : 0)
+plot(single == "alpha\n    beta's text" ? 1 : 0)
+plot(same_line ? 1 : 0)
+plot(escaped == "Pine\n\"quote\"\t\\path" ? 1 : 0)
+plot(conditional == "up\n  value" ? 1 : 0)

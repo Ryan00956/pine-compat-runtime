@@ -3,6 +3,6 @@ indicator("Dynamic negative history offset switch result")
 
 offset = switch bar_index
     0 => -1
-    => -1
+    => 1
 
 plot(close[offset])

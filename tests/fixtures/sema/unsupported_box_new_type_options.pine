@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported box.new type options")
+border_style = close > open ? "line.style_solid" : "line.style_dotted"
+box.new(bar_index, high, bar_index + 1, low, border_style=border_style, text_size=close)
+plot(close)

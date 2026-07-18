@@ -1,0 +1,4 @@
+//@version=6
+indicator("Unsupported hline Series Color")
+level_color = close > open ? color.green : color.red
+hline(2, color=level_color)

@@ -1,0 +1,7 @@
+//@version=5
+indicator("Stoch/WPR dynamic length")
+length = bar_index % 2 + 2
+plot(ta.stoch(close, high, low, length))
+plot(ta.stoch(source=close, high=high, low=low, length=length))
+plot(ta.wpr(length))
+plot(ta.wpr(length=length))

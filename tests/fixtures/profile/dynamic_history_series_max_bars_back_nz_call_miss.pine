@@ -1,0 +1,5 @@
+indicator("Profile dynamic series history nz call max_bars_back miss", max_bars_back=10)
+src = nz(close)
+max_bars_back(src, 2)
+offset = bar_index == 0 ? 0 : 3
+plot(nz(close)[offset])

@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported time function argument types")
+plot(time(1))
+plot(time_close(timeframe.period, session=1))

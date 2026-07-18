@@ -39,7 +39,8 @@ impl Analyzer {
             };
 
             if signature.name == "alert" && param_name == "freq" {
-                let supported = const_string_value(&arg.value)
+                let supported = self
+                    .known_const_string_value(&arg.value)
                     .as_deref()
                     .is_some_and(is_supported_alert_frequency);
                 if !supported {
@@ -69,7 +70,8 @@ impl Analyzer {
                         &[][..]
                     };
 
-                if let Some(placeholder) = const_string_value(&arg.value)
+                if let Some(placeholder) = self
+                    .known_const_string_value(&arg.value)
                     .as_deref()
                     .and_then(|value| unsupported_alert_placeholder(value, supported_placeholders))
                 {

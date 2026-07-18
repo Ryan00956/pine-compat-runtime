@@ -2,9 +2,12 @@ use super::*;
 
 impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_change(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
-        let current = self.eval_expr(&args[0].value)?;
-        let length = if let Some(length_arg) = args.get(1) {
-            self.eval_expr(&length_arg.value)?.as_i64().unwrap_or(1)
+        let Some(source_arg) = ta_arg(args, 0, "source") else {
+            return Ok(PineValue::Na);
+        };
+        let current = self.eval_expr(source_arg)?;
+        let length = if let Some(length_arg) = ta_arg(args, 1, "length") {
+            self.eval_expr(length_arg)?.as_i64().unwrap_or(1)
         } else {
             1
         };
@@ -12,7 +15,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let Some(series_id) = args[0].value.series_id else {
+        let Some(series_id) = source_arg.series_id else {
             return Ok(PineValue::Na);
         };
         let previous = self.series_store.read(series_id, length as usize);
@@ -56,8 +59,14 @@ impl<'a> HistoricalRuntime<'a> {
         &mut self,
         args: &[HirCallArg],
     ) -> Result<Option<(f64, f64)>, RuntimeError> {
-        let current = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let Some(source_arg) = ta_arg(args, 0, "source") else {
+            return Ok(None);
+        };
+        let Some(length_arg) = ta_arg(args, 1, "length") else {
+            return Ok(None);
+        };
+        let current = self.eval_expr(source_arg)?;
+        let length = self.eval_expr(length_arg)?.as_i64().unwrap_or(0);
         if length <= 0 {
             return Ok(None);
         }
@@ -65,7 +74,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(current) = current.as_f64() else {
             return Ok(None);
         };
-        let Some(series_id) = args[0].value.series_id else {
+        let Some(series_id) = source_arg.series_id else {
             return Ok(None);
         };
         let previous = self.series_store.read(series_id, length as usize);
@@ -81,9 +90,21 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let short_length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
-        let long_length = self.eval_expr(&args[2].value)?.as_i64().unwrap_or(0);
+        let source_arg = ta_arg(args, 0, "source");
+        let source = source_arg
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
+        let short_length = ta_arg(args, 1, "short_length")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
+        let long_length = ta_arg(args, 2, "long_length")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
         if short_length <= 0 || long_length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -91,7 +112,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(source) = source.as_f64() else {
             return Ok(PineValue::Na);
         };
-        let Some(series_id) = args[0].value.series_id else {
+        let Some(series_id) = source_arg.and_then(|arg| arg.series_id) else {
             return Ok(PineValue::Na);
         };
         let Some(previous_source) = self.read_declared_series_history(series_id, 1).as_f64() else {
@@ -131,25 +152,34 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let source_arg = ta_arg(args, 0, "source");
+        let source = source_arg
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .unwrap_or(PineValue::Na);
+        let length = ta_arg(args, 1, "length")
+            .map(|arg| self.eval_expr(arg))
+            .transpose()?
+            .and_then(|value| value.as_i64())
+            .unwrap_or(0);
         if length <= 0 {
             return Ok(PineValue::Na);
         }
 
         let length = length as usize;
-        let (positive_change, negative_change) = match (source.as_f64(), args[0].value.series_id) {
-            (Some(source), Some(series_id)) => {
-                match self.read_declared_series_history(series_id, 1).as_f64() {
-                    Some(previous) => {
-                        let change = source - previous;
-                        (Some(change.max(0.0)), Some((-change).max(0.0)))
+        let (positive_change, negative_change) =
+            match (source.as_f64(), source_arg.and_then(|arg| arg.series_id)) {
+                (Some(source), Some(series_id)) => {
+                    match self.read_declared_series_history(series_id, 1).as_f64() {
+                        Some(previous) => {
+                            let change = source - previous;
+                            (Some(change.max(0.0)), Some((-change).max(0.0)))
+                        }
+                        None => (None, None),
                     }
-                    None => (None, None),
                 }
-            }
-            _ => (None, None),
-        };
+                _ => (None, None),
+            };
 
         self.update_cmo_windows(call_site_id, positive_change, negative_change, length);
 

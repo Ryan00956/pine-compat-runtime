@@ -6,6 +6,7 @@ flat_source = close - close + 1
 plot(ta.rsi(close, 2))
 plot(ta.rsi(close, 1))
 plot(ta.rsi(close, 0))
+plot(ta.rsi(close, na))
 plot(ta.rsi(missing_source, 2))
 plot(ta.rsi(down_source, 2))
 plot(ta.rsi(flat_source, 2))

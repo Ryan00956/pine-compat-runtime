@@ -1,0 +1,5 @@
+//@version=6
+indicator("Supported max_bars_back expression source")
+len = input.int(1, "Length")
+max_bars_back(close + open, 20)
+plot((close + open)[len])

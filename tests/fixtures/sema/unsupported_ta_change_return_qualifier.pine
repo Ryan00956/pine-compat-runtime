@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported ta.change return qualifier")
+
+hline(ta.change(close))
+plot(ta.alma(close, 4, 0.85, 6, ta.change(close > open)))

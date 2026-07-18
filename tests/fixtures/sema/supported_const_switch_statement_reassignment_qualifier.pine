@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported const switch statement reassignment qualifier")
+length = input.int(2, "Length")
+switch
+    false =>
+        length := bar_index
+plot(ta.ema(close, length))

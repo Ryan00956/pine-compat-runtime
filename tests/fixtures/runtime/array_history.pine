@@ -15,7 +15,14 @@ previous_close_from_array = na(previous_each_bar) ? na : previous_each_bar.get(0
 previous_close_from_series = close[1]
 dynamic_offset = bar_index == 0 ? na : 1
 dynamic_previous_each_bar = a[dynamic_offset]
+dynamic_sibling_each_bar = a[dynamic_offset]
+dynamic_previous_close_from_array = na(dynamic_previous_each_bar) ? na : dynamic_previous_each_bar.get(0)
+if not na(dynamic_previous_each_bar)
+    dynamic_previous_each_bar.set(0, 200)
+dynamic_sibling_close_after_dynamic_mutation = na(dynamic_sibling_each_bar) ? na : dynamic_sibling_each_bar.get(0)
 plot(previous_close_from_array)
 plot(previous_close_from_series)
 plot(na(previous_each_bar) ? 1 : 0)
 plot(na(dynamic_previous_each_bar) ? 1 : 0)
+plot(dynamic_previous_close_from_array)
+plot(dynamic_sibling_close_after_dynamic_mutation)

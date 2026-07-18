@@ -1,0 +1,8 @@
+//@version=5
+indicator("Supported TA percentile series length")
+length = bar_index % 2 + 2
+simple_pct = 50
+plot(ta.percentile_nearest_rank(close, length, simple_pct))
+plot(ta.percentile_linear_interpolation(close, length, simple_pct))
+plot(ta.percentile_nearest_rank(source=3, length=length, percentage=simple_pct))
+plot(ta.percentile_linear_interpolation(percentage=simple_pct, length=length, source=3))

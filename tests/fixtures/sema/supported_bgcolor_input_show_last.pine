@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported bgcolor Input Show Last")
+
+count = input.int(5, "Show last")
+
+bgcolor(color.green, show_last=count)

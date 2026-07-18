@@ -33,6 +33,7 @@ able to integrate it through adapters.
 
 ## Design Documents
 
+- [Documentation Guide](docs/README.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Language Scope](docs/LANGUAGE_SCOPE.md)
 - [Execution Semantics](docs/EXECUTION_SEMANTICS.md)
@@ -93,11 +94,17 @@ pine-compat-runtime/
 
 ## Current Baseline
 
-The current baseline is a Rust CLI and embeddable runtime that can parse,
-analyze, and execute a small set of common indicator scripts and selected
-long-only strategy scripts over CSV OHLCV data, then emit normalized JSON
-containing series, annotations, fills,
-diagnostics, and compatibility reports.
+The current baseline is a fixture-backed Rust CLI and embeddable runtime that
+can parse, analyze, and execute a broad Pine-compatible indicator subset and a
+selected long-only strategy subset over CSV OHLCV data, then emit normalized
+JSON containing series, annotations, fills, diagnostics, and compatibility
+reports.
+
+The compatibility matrix and its referenced fixtures are the source of truth
+for support claims. Planning documents describe intended work but do not widen
+the executable subset. See the [Documentation Guide](docs/README.md) for the
+document hierarchy and the [Conformance](docs/CONFORMANCE.md) policy for the
+claim requirements.
 
 The project should not move into host-specific integration work until this
 standalone loop is reliable:
@@ -116,10 +123,11 @@ bar-by-bar execution, constant and guarded dynamic integer history offsets,
 declarations, `na`, `nz`, `input.*` defval execution, output calls, selected
 drawing objects, partial typed arrays, common `ta.*` functions, selected
 `math.*` and `str.*` functions, partial `request.security`, user-defined
-functions, local scalar-field user-defined types, pure local UDT methods, named
-colors, color helpers, tuple returns, scalar and scalar typed-array `varip`,
-partial `alertcondition`/`alert` runtime events, host-provided exact-key
-imports for exported const expressions and pure exported functions,
+functions, fixture-backed local and imported scalar-tree user-defined types,
+pure local and imported UDT methods, named colors, color helpers, tuple returns,
+scalar and scalar typed-array `varip`, partial `alertcondition`/`alert` runtime
+events, host-provided exact-key imports for exported const expressions, pure
+exported functions, and the fixture-backed imported UDT/method subset,
 incremental append execution, realtime forming-bar rollback, partial
 strategy-mode long entries, closes, stop/limit/profit/loss exits, the first
 one-downside/one-upside `strategy.exit` bracket subset, the first trailing-stop
@@ -142,10 +150,11 @@ outside explicit fixed-quantity or percent-quantity single-trigger, bracket,
 and trailing `strategy.exit` reservations, including omitted-quantity multiple
 reservations, reservation behavior outside that subset, missing-entry future
 binding beyond the supported active-entry attachment subset, alert frequency
-modes and placeholder interpolation, remote library lookup, re-exports,
-imported UDT flows beyond the fixture-backed same-imported-identity
-scalar-field subset, imported methods, side-effecting exported library
-functions, advanced drawing
+values outside the fixture-backed const-string subset and placeholder
+interpolation outside the supported `alertcondition` message subset, remote
+library lookup, re-exports, imported UDT flows beyond the fixture-backed
+same-imported-identity scalar-tree subset, unsupported imported method tails,
+side-effecting exported library functions, advanced drawing
 families and methods, unsupported collection families and element types, recursive
 functions, function side effects, and unsupported `varip` value families such
 as drawing ids and tuples.
@@ -237,11 +246,12 @@ symbols split on the last colon so exchange-prefixed keys such as
 }
 ```
 
-Build-check it with:
+Build it for `wasm32-unknown-unknown`, generate the JavaScript bindings, and
+exercise the real module through Node.js with:
 
 ```text
 rustup target add wasm32-unknown-unknown
-cargo check -p pine-wasm --target wasm32-unknown-unknown
+scripts/check_wasm_node.sh
 ```
 
 ## Development Verification
@@ -253,14 +263,15 @@ scripts/verify.sh
 ```
 
 This is the same canonical command list used by CI: Rust formatting, clippy,
-workspace tests, the `wasm32-unknown-unknown` target check, Python wheel build,
-wheel reinstall, and Python binding tests.
+workspace tests, a real `wasm32-unknown-unknown` build and Node.js execution
+smoke, Python wheel build, wheel reinstall, and Python binding tests.
 
 Prerequisites for the full gate:
 
 ```text
 python3 -m pip install --upgrade pip maturin pytest
 rustup target add wasm32-unknown-unknown
+# Install Node.js 22 LTS (or newer) and ensure `node` is on PATH.
 ```
 
 ## Performance Profile Fixtures

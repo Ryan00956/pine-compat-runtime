@@ -1,0 +1,10 @@
+//@version=6
+indicator("Supported str.match promoted string return qualifier")
+
+source = input.string("NASDAQ:AAPL", "Source")
+regex = input.string("^(?:BATS|NASDAQ|NYSE|AMEX):", "Regex")
+
+matched_text = str.match(source, regex)
+matched_length = str.length(matched_text)
+
+plot(close, show_last=matched_length)

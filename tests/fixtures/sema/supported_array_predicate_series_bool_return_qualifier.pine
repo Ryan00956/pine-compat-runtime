@@ -1,0 +1,27 @@
+//@version=6
+indicator("Supported array predicate series bool return qualifier")
+
+bools = array.from(true, false)
+ints = array.from(1, 2, 3)
+floats = array.from(1.0, 2.0, 3.0)
+
+has_two = array.includes(ints, 2)
+all_bools = array.every(bools)
+some_bools = array.some(bools)
+all_ints = array.every(ints)
+some_ints = array.some(ints)
+all_floats = array.every(floats)
+some_floats = array.some(floats)
+
+method_has_two = ints.includes(2)
+method_all_bools = bools.every()
+method_some_bools = bools.some()
+method_all_ints = ints.every()
+method_some_ints = ints.some()
+method_all_floats = floats.every()
+method_some_floats = floats.some()
+
+plot(has_two and all_bools and some_bools ? 1 : 0)
+plot(all_ints and some_ints and all_floats and some_floats ? 1 : 0)
+plot(method_has_two and method_all_bools and method_some_bools ? 1 : 0)
+plot(method_all_ints and method_some_ints and method_all_floats and method_some_floats ? 1 : 0)

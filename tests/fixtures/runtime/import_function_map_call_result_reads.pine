@@ -1,0 +1,53 @@
+//@version=6
+import user/udt/1 as left
+import user/udt/1 as right
+indicator("Imported function map call-result reads")
+
+copied = left.exposeMapFunction().copy()
+copied.put("copy", 9.0)
+
+mutated = left.exposeMapFunction()
+mutated.put("value", 7.0)
+
+left.exposeMapFunction().put("direct", 8.0)
+left.exposeIntMapFunction().put(1, "one")
+
+merge_source = map.new<string, float>()
+merge_source.put("open", 4.0)
+merge_source.put("extra", 5.0)
+int_merge_source = map.new<int, string>()
+int_merge_source.put(1, "one")
+
+plot(left.exposeMapFunction().size(), "size")
+plot(na(left.exposeMapFunction().get("missing")) ? 1 : 0, "get")
+plot(left.exposeMapFunction().contains("missing") ? 0 : 1, "contains")
+plot(left.exposeMapFunction().copy().size(), "copy_chain")
+plot(copied.get("copy"), "copy_value")
+plot(na(left.exposeMapFunction().get("value")) ? 1 : 0, "fresh_independence")
+plot(left.exposeIntMapFunction().size(), "int_string")
+plot(left.exposeBoolColorMapFunction().size(), "bool_color")
+plot(left.exposeColorBoolMapFunction().size(), "color_bool")
+plot(left.exposeMapFunctionBlock().size(), "block_return")
+plot(left.exposeMapFunctionNested().size(), "nested_return")
+plot(left.exposeMapFunctionIf(copied=true).size(), "named_control_flow")
+plot(right.exposeMapFunction().size(), "dual_alias")
+plot(left.exposeMapFunction().copy().copy().size(), "nested_copy")
+plot(left.exposeMapFunction().keys().size(), "keys_size")
+plot(left.exposeIntMapFunction().keys().copy().size(), "int_keys_size")
+plot(right.exposeMapFunction().copy().keys().size(), "dual_alias_keys_size")
+plot(left.exposeMapFunction().values().size(), "values_size")
+plot(left.exposeIntMapFunction().values().copy().size(), "int_values_size")
+plot(right.exposeMapFunction().copy().values().size(), "dual_alias_values_size")
+plot(left.exposeMapFunction().size() == 0 and left.exposeIntMapFunction().size() == 0 ? 1 : 0, "call_result_put_fresh_function_isolation")
+
+left.exposeMapFunction().clear()
+left.exposeIntMapFunction().clear()
+plot(left.exposeMapFunction().size() == 0 and left.exposeIntMapFunction().size() == 0 ? 1 : 0, "call_result_clear_fresh_function_isolation")
+
+left.exposeMapFunction().remove("missing")
+left.exposeIntMapFunction().remove(1)
+plot(left.exposeMapFunction().size() == 0 and left.exposeIntMapFunction().size() == 0 ? 1 : 0, "call_result_remove_fresh_function_isolation")
+
+left.exposeMapFunction().put_all(merge_source)
+left.exposeIntMapFunction().put_all(int_merge_source)
+plot(left.exposeMapFunction().size() == 0 and left.exposeIntMapFunction().size() == 0 and merge_source.size() == 2 and merge_source.get("open") == 4.0 and int_merge_source.size() == 1 ? 1 : 0, "call_result_put_all_fresh_function_isolation")

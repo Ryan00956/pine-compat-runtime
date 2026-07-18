@@ -10,6 +10,7 @@ else
 
 offset = bar_index < 2 ? bar_index : 2
 previous = values[offset]
+sibling = values[offset]
 previous_cell = matrix.get(previous, 0, 0)
 previous_rows = matrix.rows(previous)
 previous_columns = previous.columns()
@@ -20,6 +21,10 @@ if bar_index > 0
     matrix.set(previous, 0, 0, 100)
     previous.reshape(1, 2)
 
+sibling_cell_after_previous_mutation = matrix.get(sibling, 0, 0)
+sibling_rows_after_previous_mutation = matrix.rows(sibling)
+sibling_columns_after_previous_mutation = sibling.columns()
+
 plot(previous_cell, "previous_cell")
 plot(previous_rows, "previous_rows")
 plot(previous_columns, "previous_columns")
@@ -27,3 +32,6 @@ plot(matrix.get(values, 0, 0), "current_cell")
 plot(matrix.rows(values), "current_rows")
 plot(values.columns(), "current_columns")
 plot(na(missing) ? 1 : 0, "na_offset_is_na")
+plot(sibling_cell_after_previous_mutation, "sibling_cell_after_previous_mutation")
+plot(sibling_rows_after_previous_mutation, "sibling_rows_after_previous_mutation")
+plot(sibling_columns_after_previous_mutation, "sibling_columns_after_previous_mutation")

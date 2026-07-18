@@ -1,0 +1,32 @@
+//@version=6
+indicator("Max bars back function contexts")
+
+offset = bar_index == 0 ? 0 : 3
+
+if_value = if bar_index >= 0
+    max_bars_back(close, 2)
+    close[offset]
+else
+    close[offset]
+
+switch_value = switch
+    bar_index >= 0 =>
+        max_bars_back(high, 2)
+        high[offset]
+    => high[offset]
+
+for_value = for i = 0 to 0
+    max_bars_back(low, 2)
+    low[offset]
+
+i = 0
+while_value = while i < 1
+    i := i + 1
+    max_bars_back(volume, 2)
+    volume[offset]
+
+plot(if_value)
+plot(switch_value)
+plot(for_value)
+plot(while_value)
+plot(open[offset])

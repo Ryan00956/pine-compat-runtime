@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported plotcandle Input Show Last")
+
+count = input.int(5, "Show last")
+
+plotcandle(open, high, low, close, show_last=count)

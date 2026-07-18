@@ -1,0 +1,10 @@
+//@version=6
+indicator("Supported ta.cross return qualifier")
+
+crossed = ta.cross(close, open)
+crossed_up = ta.crossover(high, low)
+crossed_down = ta.crossunder(close, low)
+
+plot(crossed ? 1 : 0)
+plot(crossed_up ? 1 : 0)
+plot(crossed_down ? 1 : 0)

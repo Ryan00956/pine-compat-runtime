@@ -1,3 +1,0 @@
-//@version=5
-indicator("Unsupported ta.covariance Series Length")
-plot(ta.covariance(close, high, bar_index))

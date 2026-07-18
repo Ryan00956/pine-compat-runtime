@@ -52,7 +52,7 @@ pub enum StmtKind {
     Continue,
     Function {
         name: String,
-        params: Vec<String>,
+        params: Vec<FunctionParam>,
         body: FunctionBody,
     },
     Decl {
@@ -180,7 +180,7 @@ pub struct ExportDecl {
 pub enum ExportItem {
     Function {
         name: String,
-        params: Vec<String>,
+        params: Vec<FunctionParam>,
         body: FunctionBody,
         span: Span,
     },
@@ -218,6 +218,13 @@ pub struct MethodDecl {
     pub name_span: Span,
     pub params: Vec<MethodParam>,
     pub body: FunctionBody,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FunctionParam {
+    pub type_name: Option<String>,
+    pub name: String,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq)]

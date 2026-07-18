@@ -1,0 +1,8 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Profile dynamic series history imported UDT field max_bars_back miss", max_bars_back=10)
+p = lib.Point.new(close)
+src = p.x + 1
+max_bars_back(src, 2)
+offset = bar_index == 0 ? 0 : 3
+plot((p.x + 1)[offset])

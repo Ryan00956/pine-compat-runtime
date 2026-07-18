@@ -1,0 +1,13 @@
+//@version=6
+indicator("Unsupported assignment types")
+
+type Point
+    float x
+
+count = 1
+count := "bad"
+
+point = Point.new(close)
+point.x := "bad"
+
+plot(close)

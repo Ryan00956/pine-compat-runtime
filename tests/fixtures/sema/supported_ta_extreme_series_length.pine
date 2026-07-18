@@ -1,0 +1,9 @@
+//@version=5
+indicator("Supported ta extreme series length")
+length = bar_index == 0 ? 1 : 2
+plot(ta.highest(close, length))
+plot(ta.lowest(close, length))
+plot(ta.highestbars(close, length))
+plot(ta.lowestbars(close, length))
+plot(ta.highest(length))
+plot(ta.lowestbars(length=length))

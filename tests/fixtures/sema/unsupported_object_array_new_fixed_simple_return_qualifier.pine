@@ -1,0 +1,31 @@
+//@version=6
+indicator("Unsupported object array.new fixed simple return qualifier")
+
+label_count(label[] values) =>
+    array.size(values)
+
+line_count(line[] values) =>
+    array.size(values)
+
+linefill_count(array<linefill> values) =>
+    array.size(values)
+
+polyline_count(array<polyline> values) =>
+    array.size(values)
+
+box_count(box[] values) =>
+    array.size(values)
+
+table_count(array<table> values) =>
+    array.size(values)
+
+point_count(array<chart.point> values) =>
+    array.size(values)
+
+plot(line_count(array.new_label()))
+plot(label_count(array.new<line>()))
+plot(linefill_count(array.new<polyline>()))
+plot(polyline_count(array.new<linefill>()))
+plot(table_count(array.new<box>()))
+plot(box_count(array.new<table>()))
+plot(point_count(array.new<label>()))

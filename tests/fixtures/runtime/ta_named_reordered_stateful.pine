@@ -1,0 +1,12 @@
+//@version=5
+indicator("TA named reordered stateful")
+condition = bar_index == 1 or bar_index == 3
+previous_match = ta.valuewhen(occurrence=1, source=bar_index, condition=condition)
+bars_since = ta.barssince(condition=condition)
+pivot_source = bar_index == 1 ? 3 : bar_index == 2 ? 2 : bar_index == 3 ? 4 : 1
+pivot_high = ta.pivothigh(rightbars=1, source=pivot_source, leftbars=1)
+default_pivot_low = ta.pivotlow(rightbars=0, leftbars=0)
+plot(previous_match)
+plot(bars_since)
+plot(pivot_high)
+plot(default_pivot_low)

@@ -1,0 +1,7 @@
+//@version=6
+indicator("Matrix concat cell limit")
+
+left = matrix.new<float>(1, 50001, 1)
+right = matrix.new<float>(1, 50001, 2)
+left.concat(right)
+plot(left.rows())

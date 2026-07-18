@@ -1,0 +1,26 @@
+//@version=6
+indicator("Unsupported map UDF and method return templates")
+
+type Anchor
+    int tag
+
+method badReturn(Anchor self, bool use_string_key) =>
+    if use_string_key
+        string_float
+    else
+        int_string
+
+identity(id) => id
+
+badReturn(left, right, use_left) => use_left ? left : right
+
+string_float = map.new<string, float>()
+int_string = map.new<int, string>()
+
+bad_udf = badReturn(string_float, int_string, true)
+
+anchor = Anchor.new(1)
+bad_method = anchor.badReturn(true)
+
+map<string, float> wrong_typed = identity(int_string)
+map.put_all(string_float, identity(int_string))

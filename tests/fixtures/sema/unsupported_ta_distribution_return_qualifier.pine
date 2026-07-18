@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported ta distribution return qualifier")
+
+hline(ta.median(close, 3))
+hline(ta.mode(close, 3))
+hline(ta.percentile_nearest_rank(close, 3, 50))
+hline(ta.percentile_linear_interpolation(close, 3, 50))
+hline(ta.percentrank(close, 3))

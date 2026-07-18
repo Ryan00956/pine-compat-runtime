@@ -1,0 +1,12 @@
+//@version=6
+indicator("Supported str.tostring scalar matrices")
+
+float_values = matrix.new<float>(1, 1, 1.25)
+int_values = matrix.new<int>(1, 1, 2)
+bool_values = matrix.new<bool>(1, 1, true)
+string_values = matrix.new<string>(1, 1, "pine")
+
+plot(str.length(str.tostring(float_values, "#.0")))
+plot(str.length(str.tostring(int_values)))
+plot(str.length(str.tostring(bool_values)))
+plot(str.length(str.tostring(string_values)))

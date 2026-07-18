@@ -10,4 +10,8 @@ loop_value = for j = close > 2 ? 3 : na to 0 by 2
     if j == 1
         continue
     j
+nested_loop_value = for outer = 0 to 0
+    for inner = 0 to 0
+        close + 5
 plot(close + sum + nz(loop_value))
+plot(nested_loop_value)

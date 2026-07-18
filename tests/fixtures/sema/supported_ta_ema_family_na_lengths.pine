@@ -1,0 +1,8 @@
+//@version=5
+indicator("Supported ta EMA family na lengths")
+ema_value = ta.ema(close, na)
+dema_value = ta.dema(close, na)
+tema_value = ta.tema(close, na)
+rma_value = ta.rma(close, na)
+rsi_value = ta.rsi(close, na)
+plot(nz(ema_value) + nz(dema_value) + nz(tema_value) + nz(rma_value) + nz(rsi_value))

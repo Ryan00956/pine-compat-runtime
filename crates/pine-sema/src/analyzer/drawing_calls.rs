@@ -1,3 +1,4 @@
+use crate::analyzer::calls::call_arg_accepts_type_expected_diagnostic;
 use crate::prelude::*;
 
 const LINE_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
@@ -347,15 +348,14 @@ impl Analyzer {
             let Some(arg_type) = arg_types.get(index).copied().flatten() else {
                 continue;
             };
-            if !accepts_type(param.accepts, arg_type) {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_TYPE",
-                    format!(
-                        "`label.new` argument `{}` does not accept {:?} {:?}",
-                        param.name, arg_type.qualifier, arg_type.kind
-                    ),
-                    arg.span,
-                ));
+            if let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
+                "label.new",
+                param.name,
+                param.accepts,
+                arg_type,
+                arg.span,
+            ) {
+                self.diagnostics.push(diagnostic);
             }
         }
         self.validate_label_new_string_arg(args, params, "xloc", LABEL_XLOCS);
@@ -381,7 +381,8 @@ impl Analyzer {
             if param.name != name {
                 continue;
             }
-            let supported_value = const_string_value(&arg.value)
+            let supported_value = self
+                .known_const_string_value(&arg.value)
                 .as_deref()
                 .is_some_and(|value| supported.contains(&value));
             if !supported_value {
@@ -405,7 +406,7 @@ impl Analyzer {
             if param.name != "size" {
                 continue;
             }
-            let Some(value) = const_string_value(&arg.value) else {
+            let Some(value) = self.known_const_string_value(&arg.value) else {
                 continue;
             };
             if !TEXT_SIZES.iter().any(|allowed| *allowed == value) {
@@ -433,10 +434,13 @@ impl Analyzer {
             if param.name != "text_formatting" {
                 continue;
             }
-            let Some(value) = const_int_value(&arg.value) else {
+            let Some(value) = self.known_strict_const_int_for_validation(&arg.value) else {
                 continue;
             };
-            if !(0..=3).contains(&value) {
+            if match value {
+                Ok(value) => !(0..=3).contains(&value),
+                Err(()) => true,
+            } {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_VALUE",
                     "`label.new` argument `text_formatting` only supports text.format_none, text.format_bold, text.format_italic, or text.format_bold + text.format_italic",
@@ -482,15 +486,14 @@ impl Analyzer {
             let Some(arg_type) = arg_types.get(index).copied().flatten() else {
                 continue;
             };
-            if !accepts_type(param.accepts, arg_type) {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_TYPE",
-                    format!(
-                        "`line.new` argument `{}` does not accept {:?} {:?}",
-                        param.name, arg_type.qualifier, arg_type.kind
-                    ),
-                    arg.span,
-                ));
+            if let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
+                "line.new",
+                param.name,
+                param.accepts,
+                arg_type,
+                arg.span,
+            ) {
+                self.diagnostics.push(diagnostic);
             }
         }
         self.validate_line_new_string_arg(args, params, "xloc", LINE_XLOCS);
@@ -512,7 +515,8 @@ impl Analyzer {
             if param.name != name {
                 continue;
             }
-            let supported_value = const_string_value(&arg.value)
+            let supported_value = self
+                .known_const_string_value(&arg.value)
                 .as_deref()
                 .is_some_and(|value| supported.contains(&value));
             if !supported_value {
@@ -564,15 +568,14 @@ impl Analyzer {
             let Some(arg_type) = arg_types.get(index).copied().flatten() else {
                 continue;
             };
-            if !accepts_type(param.accepts, arg_type) {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_TYPE",
-                    format!(
-                        "`box.new` argument `{}` does not accept {:?} {:?}",
-                        param.name, arg_type.qualifier, arg_type.kind
-                    ),
-                    arg.span,
-                ));
+            if let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
+                "box.new",
+                param.name,
+                param.accepts,
+                arg_type,
+                arg.span,
+            ) {
+                self.diagnostics.push(diagnostic);
             }
         }
         self.validate_box_new_string_arg(args, params, "border_style", BOX_BORDER_STYLES);
@@ -600,7 +603,8 @@ impl Analyzer {
             if param.name != name {
                 continue;
             }
-            let supported_value = const_string_value(&arg.value)
+            let supported_value = self
+                .known_const_string_value(&arg.value)
                 .as_deref()
                 .is_some_and(|value| supported.contains(&value));
             if !supported_value {
@@ -624,7 +628,7 @@ impl Analyzer {
             if param.name != "text_size" {
                 continue;
             }
-            let Some(value) = const_string_value(&arg.value) else {
+            let Some(value) = self.known_const_string_value(&arg.value) else {
                 continue;
             };
             if !TEXT_SIZES.iter().any(|allowed| *allowed == value) {
@@ -648,10 +652,13 @@ impl Analyzer {
             if param.name != "text_formatting" {
                 continue;
             }
-            let Some(value) = const_int_value(&arg.value) else {
+            let Some(value) = self.known_strict_const_int_for_validation(&arg.value) else {
                 continue;
             };
-            if !(0..=3).contains(&value) {
+            if match value {
+                Ok(value) => !(0..=3).contains(&value),
+                Err(()) => true,
+            } {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_VALUE",
                     "`box.new` argument `text_formatting` only supports text.format_none, text.format_bold, text.format_italic, or text.format_bold + text.format_italic",

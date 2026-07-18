@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported ta oscillator return qualifier")
+
+hline(ta.mfi(close, 3))
+hline(ta.stoch(close, high, low, 3))
+hline(ta.wpr(3))

@@ -1,7 +1,7 @@
 # Pure Internal Matrix Design Gate
 
-Status: closed design gate with the first positive float subset and copy
-semantics implemented. The runtime store skeleton is implemented internally,
+Status: closed design gate with fixture-backed float, int, bool, string, and
+color matrix subsets. The runtime store is implemented internally,
 ordinary `var` matrix ids roll back across realtime forming updates, and
 `matrix.new<float>`, `matrix.new<int>`, `matrix.new<bool>`, `matrix.get`, `matrix.set`, `matrix.fill`,
 `values.fill(value)`, `values.get(row, column)`,
@@ -53,12 +53,112 @@ host UI, external services, or public JSON/Python/WASM matrix serialization.
 
 ## Current Boundary
 
-`matrix.*` is partially supported today for runtime-owned float matrices plus
-runtime-owned int and bool matrix subsets.
+`matrix.*` is partially supported today for runtime-owned float, int, bool,
+string, and color matrix subsets.
 
 Current evidence:
 
 - `tests/fixtures/conformance.tsv` records `matrix.*` as `partial`.
+- `tests/fixtures/runtime/bound_matrix_copy_call_result_reads.pine` plus the
+  matching supported/unsupported semantic fixtures cover direct
+  `values.copy().rows()`/`columns()`/`elements_count()`/`get()`/`copy()` for
+  float/int/bool/string/color matrices, shape and independent-storage
+  preservation, nested copies, UDF-contained reads, wrong index/helper and
+  non-matrix receiver diagnostics, and retained gates for other bound matrix
+  producers.
+- `tests/fixtures/runtime/bound_matrix_transpose_call_result_reads.pine` plus
+  the matching supported/unsupported semantic fixtures cover direct
+  `values.transpose().rows()`/`columns()`/`elements_count()`/`get()`/`copy()`
+  for float/int/bool/string/color matrices, row/column swapping, independent
+  storage, nested copies, UDF-contained reads, wrong index/helper and non-matrix
+  receiver diagnostics, and the retained bound-submatrix gate.
+- `tests/fixtures/runtime/bound_matrix_submatrix_call_result_reads.pine` plus
+  the matching supported/unsupported semantic fixtures cover direct
+  `values.submatrix(...).rows()`/`columns()`/`elements_count()`/`get()`/`copy()`
+  for float/int/bool/string/color matrices, half-open selected/default/empty
+  ranges, independent storage, nested copies, UDF-contained reads, wrong
+  range/index/helper and non-matrix receiver diagnostics, and the retained
+  bound-kron gate.
+- `tests/fixtures/runtime/bound_matrix_kron_call_result_reads.pine` plus the
+  matching supported/unsupported semantic fixtures cover direct
+  `values.kron(other).rows()`/`columns()`/`elements_count()`/`get()`/`copy()`
+  for numeric float/int matrices, expanded shape, fixed float-matrix results,
+  independent storage, nested copies, UDF-contained reads, wrong operand/
+  index/helper and non-numeric/non-matrix receiver diagnostics, and the retained
+  bound-diff gate.
+- `tests/fixtures/runtime/bound_matrix_diff_call_result_reads.pine` plus the
+  matching supported/unsupported semantic fixtures cover direct
+  `values.diff(other).rows()`/`columns()`/`elements_count()`/`get()`/`copy()`
+  for numeric matrix and scalar operands, operand direction, selected matrix
+  shape, fixed float-matrix results, independent storage, nested copies,
+  UDF-contained reads, wrong operand/index/helper and non-numeric/non-matrix
+  receiver diagnostics, and the retained bound-pow gate.
+- `tests/fixtures/runtime/bound_matrix_pow_call_result_reads.pine` plus the
+  matching supported/unsupported semantic fixtures cover direct
+  `values.pow(power).rows()`/`columns()`/`elements_count()`/`get()`/`copy()`
+  for numeric square float/int matrices, identity/copy/positive powers, fixed
+  float-matrix results, independent storage, nested copies, UDF-contained
+  reads, wrong power/index/helper and non-numeric/non-matrix receiver
+  diagnostics, and the retained bound-inverse gate.
+- `tests/fixtures/runtime/bound_matrix_inv_call_result_reads.pine` plus the
+  matching supported/unsupported semantic fixtures cover direct
+  `values.inv().rows()`/`columns()`/`elements_count()`/`get()`/`copy()` for
+  numeric square float/int matrices, invertible, singular, invalid-cell, and
+  empty inputs, fixed float-matrix results, independent storage, nested copies,
+  UDF-contained reads, wrong index/helper and non-numeric/non-matrix receiver
+  diagnostics, and the retained bound-pseudo-inverse gate.
+- `tests/fixtures/runtime/bound_matrix_pinv_call_result_reads.pine` plus the
+  matching supported/unsupported semantic fixtures cover direct
+  `values.pinv().rows()`/`columns()`/`elements_count()`/`get()`/`copy()` for
+  numeric rectangular float/int matrices, swapped shape, singular results,
+  swapped zero-cell shapes, invalid-cell `na`, fixed float-matrix results,
+  independent storage, nested copies, UDF-contained reads, wrong index/helper
+  and non-numeric/non-matrix receiver diagnostics, and the retained bound
+  `values.eigenvectors()` gate.
+- `tests/fixtures/runtime/bound_matrix_eigenvectors_call_result_reads.pine`
+  plus the matching supported/unsupported semantic fixtures cover direct
+  `values.eigenvectors().rows()`/`columns()`/`elements_count()`/`get()`/
+  `copy()` for numeric square float/int matrices, real eigenvector results,
+  empty `0 x 0`, invalid-cell/non-real `na`, fixed float-matrix results,
+  independent storage, nested copies, UDF-contained reads, wrong index/helper
+  and non-numeric/non-matrix receiver diagnostics, and the retained
+  matrix-valued bound `values.mult(other)` gate.
+- `tests/fixtures/runtime/bound_matrix_mult_call_result_reads.pine` plus the
+  matching supported/unsupported semantic fixtures cover direct matrix-result
+  `values.mult(other).rows()`/`columns()`/`elements_count()`/`get()`/`copy()`
+  for numeric matrix or scalar operands, multiplied and scalar-selected shape,
+  fixed float-matrix results, `na` and zero-inner-dimension behavior,
+  independent storage, nested copies, UDF-contained reads, and wrong result
+  helper/index/non-numeric/non-matrix diagnostics. Matrix-array overloads keep
+  array-helper dispatch; the following local-UDF slice is covered separately.
+- `tests/fixtures/runtime/local_udf_matrix_call_result_reads.pine` plus the
+  matching supported/unsupported semantic fixtures cover unqualified local-UDF
+  matrix results through rows/columns/elements_count/get/copy for parameter
+  passthrough, block aliases, nested calls, same-kind control flow,
+  matrix-operation and constructor returns, named/reordered arguments,
+  float/int/bool/string/color call-specific kinds, zero dimensions, independent
+  copies, and copy-only continuation. Unknown/`na`, scalar, array, map,
+  unregistered or unresolved user-function results, broader helpers, mutation,
+  and terminal-read continuation remain gated.
+- `tests/fixtures/runtime/user_method_matrix_call_result_reads.pine` and
+  `tests/fixtures/runtime/import_user_method_matrix_call_result_reads.pine`
+  plus their supported/unsupported semantic fixtures cover local and imported
+  user-method matrix results through rows/columns/elements_count/get/copy.
+  Receiver-style, local-type-qualified or alias-qualified, direct-constructor-
+  receiver, block/nested/same-kind-control-flow, float/int/bool/string/color,
+  zero-dimension, same-library dual-alias, independent-copy, and copy-only-
+  continuation paths are fixture-backed. Unknown/`na`, non-matrix or
+  unresolved method results, unregistered or unresolved user-function matrix
+  results, broader helpers, mutation, and terminal-read continuation remain
+  gated.
+- `tests/fixtures/runtime/import_function_matrix_call_result_reads.pine` plus
+  its supported/unsupported semantic fixtures covers registered imported pure-
+  function matrix results through rows/columns/elements_count/get/copy. Alias-
+  qualified, block/nested/same-kind-control-flow, float/int/bool/string/color,
+  zero-dimension, same-library dual-alias, independent-copy, and copy-only-
+  continuation paths are fixture-backed. Unknown/`na`, non-matrix,
+  unregistered or unresolved function results, broader helpers, mutation, and
+  terminal-read continuation remain gated.
 - `tests/fixtures/runtime/matrix_float.pine` covers `matrix.new<float>`,
   `matrix.get`, `matrix.set`, `matrix.fill`, `values.fill(value)`,
   `values.get(row, column)`, `values.set(row, column, value)`, `matrix.rows`,
@@ -700,8 +800,10 @@ dot-product results with one element per matrix row. Namespace
 `matrix.mult(vector, values)` accepts left-hand `array<float>` or `array<int>`
 operands as row vectors, requires the array size to match the matrix row count,
 and returns independent `array<float>` dot-product results with one element per
-matrix column. Array-pair and non-numeric-array `matrix.mult` overloads remain
-outside this slice.
+matrix column. Namespace `matrix.mult(left_vector, right_vector)` accepts
+numeric array pairs with equal length, treats them as a row vector and column
+vector, and returns an independent single-element `array<float>` dot-product
+result. Non-numeric-array `matrix.mult` overloads remain outside this slice.
 Matrix-by-matrix `matrix.diff(left, right)` returns an independent
 `matrix<float>` element-wise difference whose shape matches both operands,
 requires identical row and column counts, propagates `na` to a result cell when
@@ -863,7 +965,9 @@ Current history policy:
 - committed, shape, and dynamic-offset matrix history fixtures, including
   dynamic `na` offset predicates, should match full recomputation under
   incremental append execution;
-- no `varip` matrix values in the current runtime slice;
+- `matrix<float>`, `matrix<int>`, `matrix<bool>`, `matrix<string>`, and
+  `matrix<color>` `varip` declarations retain matrix ids and backing stores
+  across repeated realtime forming updates;
 - matrix state and shape roll back correctly for ordinary realtime forming
   updates.
 
@@ -948,9 +1052,9 @@ Recommended future slices:
     alias `values.eigenvectors()`.
 20. Matrix Kronecker product: done for namespace `matrix.kron` and method alias
     `values.kron(other)`.
-21. Matrix multiplication: done for matrix-by-matrix and scalar namespace
-    `matrix.mult` plus method alias `values.mult(other)`. Array overloads
-    remain unsupported.
+21. Matrix multiplication: done for matrix-by-matrix, scalar, matrix-array,
+    array-matrix, and numeric array-pair namespace `matrix.mult`, plus the
+    matrix-receiver method alias `values.mult(other)`.
 22. Matrix subtraction: done for matrix-by-matrix and scalar namespace
     `matrix.diff` plus method alias `values.diff(other)`.
 23. Matrix power: done for namespace `matrix.pow` and method alias
@@ -994,6 +1098,782 @@ Recommended future slices:
 42. Matrix `varip`: done for `matrix<float>`, `matrix<int>`,
     `matrix<bool>`, `matrix<string>`, and `matrix<color>` ids with realtime
     backing-store handoff across forming updates.
+43. Bound matrix-copy call results: done for exact supported matrix receivers
+    using `values.copy()` followed by rows/columns/elements_count/get/copy,
+    with concrete element-kind checks, shape preservation, independent backing
+    storage, copy-only continuation, and retained gates for other bound
+    producers, broader helpers, mutation, and non-matrix receivers.
+44. Bound matrix-transpose call results: done for exact supported matrix
+    receivers using `values.transpose()` followed by
+    rows/columns/elements_count/get/copy, with concrete element-kind checks,
+    swapped shape, independent backing storage, copy-only continuation, and
+    retained gates for other bound producers, broader helpers, mutation, and
+    non-matrix receivers.
+45. Bound matrix-submatrix call results: done for exact supported matrix
+    receivers using `values.submatrix(...)` followed by
+    rows/columns/elements_count/get/copy, with concrete element-kind checks,
+    selected/default/empty half-open ranges, independent backing storage,
+    copy-only continuation, and retained gates for other bound producers,
+    broader helpers, mutation, and non-matrix receivers.
+46. Bound matrix-Kronecker call results: done for exact numeric matrix receivers
+    using `values.kron(other)` followed by
+    rows/columns/elements_count/get/copy, with numeric operand checks, expanded
+    shape, fixed float-matrix results, independent backing storage, copy-only
+    continuation, and retained gates for other bound producers, broader
+    helpers, mutation, and non-matrix receivers.
+47. Bound matrix-difference call results: done for exact numeric matrix
+    receivers using `values.diff(other)` with matrix or scalar operands followed
+    by rows/columns/elements_count/get/copy, preserving operand direction and
+    selected matrix shape with fixed float-matrix results, independent backing
+    storage, copy-only continuation, and retained gates for other bound
+    producers, broader helpers, mutation, and non-matrix receivers.
+48. Bound matrix-power call results: done for exact numeric square matrix
+    receivers using `values.pow(power)` followed by
+    rows/columns/elements_count/get/copy, preserving square shape across
+    identity, copy, and positive powers with fixed float-matrix results,
+    independent backing storage, copy-only continuation, and retained gates
+    for other bound producers, broader helpers, mutation, and non-matrix
+    receivers.
+49. Bound matrix-inverse call results: done for exact numeric square matrix
+    receivers using `values.inv()` followed by
+    rows/columns/elements_count/get/copy, preserving invertible square shape,
+    empty `0 x 0` results, and `na` singular/invalid-cell results with fixed
+    float-matrix metadata, independent backing storage, copy-only continuation,
+    and retained gates for other bound producers, broader helpers, mutation,
+    and non-matrix receivers.
+50. Bound matrix-pseudo-inverse call results: done for exact numeric matrix
+    receivers using `values.pinv()` followed by
+    rows/columns/elements_count/get/copy, swapping rectangular shape,
+    preserving singular matrix results and swapped zero-cell shapes, yielding
+    `na` for invalid cells, and using fixed float-matrix metadata, independent
+    backing storage, copy-only continuation, and retained gates for other bound
+    producers, broader helpers, mutation, and non-matrix receivers.
+51. Bound matrix-eigenvector call results: done for exact numeric square matrix
+    receivers using `values.eigenvectors()` followed by
+    rows/columns/elements_count/get/copy, preserving real square shape, empty
+    `0 x 0` results, and `na` invalid-cell/non-real/incomplete results with
+    fixed float-matrix metadata, independent backing storage, copy-only
+    continuation, and retained gates for other bound producers, broader
+    helpers, mutation, and non-matrix receivers.
+52. Bound matrix-multiplication call results: done for exact numeric matrix
+    receivers using matrix-valued `values.mult(other)` with matrix or scalar
+    operands followed by rows/columns/elements_count/get/copy, preserving
+    multiplied or scalar-selected shape, fixed float-matrix results, `na` and
+    zero-inner-dimension behavior, independent backing storage, and copy-only
+    continuation. Array-result overloads retain array-helper dispatch; UDF
+    matrix results, broader helpers, mutation, and non-matrix receivers stay
+    gated.
+53. Local-UDF matrix call results: done for unqualified local functions whose
+    inferred per-call result is one concrete supported matrix kind. Parameter
+    passthrough, block aliases, nested calls, same-kind control flow,
+    matrix-operation and constructor returns, named/reordered arguments, zero
+    dimensions, float/int/bool/string/color interleaving, independent copies,
+    and rows/columns/elements_count/get/copy with copy-only continuation are
+    fixture-backed. Unknown/`na`, scalar, array, map, remaining user-function
+    results, broader helpers, mutation, and terminal-read continuation remain
+    fail closed.
+54. User-method matrix call results: done for local and imported methods whose
+    per-call result is one concrete supported matrix kind. Receiver-style,
+    local-type-qualified or alias-qualified, direct-constructor-receiver,
+    block/nested/same-kind-control-flow, float/int/bool/string/color, zero-
+    dimension, same-library dual-alias, independent-copy, and copy-only-
+    continuation paths expose rows/columns/elements_count/get/copy. Unknown/
+    `na`, non-matrix or unresolved method results, remaining user-function
+    matrix results, broader helpers, mutation, and terminal-read continuation
+    remain fail closed.
+55. Imported pure-function matrix call results: done for registered imported
+    functions whose per-call result is one concrete supported matrix kind.
+    Alias-qualified, block/nested/same-kind-control-flow, float/int/bool/string/
+    color, zero-dimension, same-library dual-alias, independent-copy, and copy-
+    only-continuation paths expose rows/columns/elements_count/get/copy.
+    Unknown/`na`, non-matrix, unregistered or unresolved function results,
+    broader helpers, mutation, and terminal-read continuation remain fail
+    closed.
+56. Scalar-map call-result key arrays: done for every existing concrete
+    scalar-map producer. `.keys()` returns a fresh key-kind-preserving array
+    and switches to size/get/first/last/copy with copy-only array continuation.
+    Built-in constructor/copy, local/imported pure-function, local/imported
+    user-method, five scalar key kinds, dual-alias, and source-independence paths
+    are fixture-backed. Direct `.values()`, map or call-result-array mutation,
+    unsupported templates, broader helpers, and terminal key-reader
+    continuation remain fail closed.
+57. Scalar-map call-result value arrays: done for the same producer set.
+    `.values()` returns a fresh value-kind-preserving array and switches to
+    size/get/first/last/copy with copy-only array continuation. Built-in
+    constructor/copy, local/imported pure-function, local/imported user-method,
+    five scalar value kinds, dual-alias, and source-independence paths are
+    fixture-backed. Map or call-result-array mutation, unsupported templates,
+    broader helpers, and terminal key/value-reader continuation remain fail
+    closed.
+58. Matrix call-result row arrays: done for every existing concrete matrix
+    producer. `.row(index)` returns a fresh element-kind-preserving scalar array
+    and switches to size/get/first/last/copy with copy-only array continuation.
+    Namespace and bound matrix operations, exact five-scalar `matrix.new<T>`
+    templates, local UDFs, local/imported user methods, and imported pure
+    functions are fixture-backed across direct binding, copy independence, and
+    dual aliases. Bad indexes use the ordinary `matrix.row` checks; `.col()`,
+    matrix or call-result-array mutation, broader helpers, and terminal row-
+    reader continuation remain fail closed.
+59. Matrix call-result column arrays: done for the same concrete matrix producer
+    set. `.col(index)` returns a fresh element-kind-preserving scalar array and
+    switches to size/get/first/last/copy with copy-only array continuation.
+    Namespace and bound matrix operations, exact five-scalar `matrix.new<T>`
+    templates, local UDFs, local/imported user methods, imported pure functions,
+    direct binding, copy independence, and dual aliases are fixture-backed.
+    Bad indexes use the ordinary `matrix.col` checks; matrix or call-result-
+    array mutation, broader matrix helpers, and terminal column-reader
+    continuation remain fail closed.
+60. Numeric matrix call-result eigenvalue arrays: done for concrete numeric
+    matrix results. `.eigenvalues()` reuses the existing numeric-matrix
+    signature and square-matrix runtime boundary, returns a fresh
+    `array<float>`, and switches to size/get/first/last/copy with copy-only array
+    continuation. Namespace/bound operations, local/imported functions and
+    methods, dual aliases, copy independence, non-numeric rejection, and array-
+    mutation rejection are fixture-backed. Broader matrix helpers and terminal
+    eigenvalue-reader continuation remain fail closed.
+61. Matrix call-result square checks: done for every existing concrete matrix
+    producer. `.is_square()` reuses the all-kind matrix signature and ordinary
+    row/column equality rule, returns a simple bool, and is terminal without a
+    matrix- or array-result prefix transition. Namespace/bound operations,
+    exact five-scalar templates, local/imported functions and methods, true and
+    false shapes, dual aliases, invalid arity, and terminal continuation are
+    fixture-backed. Broader helpers and mutation remain fail closed.
+62. Numeric matrix call-result zero checks: done for every existing concrete
+    float/int matrix producer. `.is_zero()` reuses the numeric-matrix signature
+    and exact-zero rules, including true zero-element results, false nonzero or
+    `na` cells, and `na` propagation from an upstream `na` matrix result. It
+    returns a simple bool and is terminal without a result-prefix transition.
+    Namespace/bound operations, exact numeric templates, local/imported
+    functions and methods, dual aliases, non-numeric rejection, invalid arity,
+    and terminal continuation are fixture-backed.
+63. Numeric matrix call-result binary checks: done for the same concrete
+    float/int producer set. `.is_binary()` reuses the strict 0-or-1 rule,
+    including true zero-element results, false other or `na` cells, and `na`
+    propagation from an upstream `na` matrix result. It returns a simple bool
+    and is terminal without a result-prefix transition. Namespace/bound
+    operations, exact numeric templates, local/imported functions and methods,
+    dual aliases, non-numeric rejection, invalid arity, and terminal
+    continuation are fixture-backed.
+64. Numeric matrix call-result diagonal checks: done for the same concrete
+    float/int producer set. `.is_diagonal()` permits rectangular matrices and
+    arbitrary main-diagonal cells, requires exact-zero off-diagonal cells,
+    returns true for empty matrices, returns false for off-diagonal `na`, and
+    propagates an upstream `na` matrix result. It returns a simple bool and is
+    terminal without a result-prefix transition. Provenance/dual aliases,
+    numeric rejection, invalid arity, and terminal continuation are fixture-
+    backed.
+65. Numeric matrix call-result identity checks: done for the same concrete
+    float/int producer set. `.is_identity()` requires square shape, exact-one
+    main-diagonal cells, and exact-zero off-diagonal cells; every `na` cell is
+    false, empty 0×0 matrices are true, and upstream `na` matrix results
+    propagate `na`. It returns a simple bool and is terminal without a result-
+    prefix transition. Numeric rejection, provenance/dual aliases, invalid
+    arity, and terminal continuation are fixture-backed.
+66. Numeric matrix call-result symmetric checks: done for the same concrete
+    float/int producer set. `.is_symmetric()` requires square shape and exact
+    equality of transposed pairs; every `na` cell is false, empty 0×0 matrices
+    are true, and upstream `na` matrix results propagate `na`. It returns a
+    simple bool and is terminal without a result-prefix transition. Numeric
+    rejection, provenance/dual aliases, invalid arity, and terminal
+    continuation are fixture-backed.
+67. Numeric matrix call-result antisymmetric checks: done for the same concrete
+    float/int producer set. `.is_antisymmetric()` requires square shape, an
+    exact-zero main diagonal, and exact negation across transposed pairs; every
+    `na` cell is false, empty 0×0 matrices are true, and upstream `na` matrix
+    results propagate `na`. It returns a simple bool and is terminal without a
+    result-prefix transition. Numeric rejection, provenance/dual aliases,
+    invalid arity, and terminal continuation are fixture-backed.
+68. Numeric matrix call-result stochastic checks: done for the same concrete
+    float/int producer set. `.is_stochastic()` requires a non-empty matrix of
+    finite non-negative values and returns true when every row or every column
+    sums exactly to one; empty matrices, invalid cells, and negative values are
+    false, while upstream `na` matrix results propagate `na`. It returns a
+    simple bool and is terminal without a result-prefix transition. Numeric
+    rejection, provenance/dual aliases, invalid arity, and terminal
+    continuation are fixture-backed.
+69. Numeric matrix call-result sums: done for the same concrete float/int
+    producer set. `.sum()` retains the fixed `series float` result, ignores
+    `na` cells, returns `na` for empty, all-`na`, non-finite, or upstream-`na`
+    results, and is terminal without a result-prefix transition. Numeric
+    rejection, copy continuation, provenance/dual aliases, invalid arity, and
+    terminal continuation are fixture-backed.
+70. Numeric matrix call-result averages: done for the same concrete float/int
+    producer set. `.avg()` retains the fixed `series float` result, averages
+    only non-`na` cells, returns `na` for empty, all-`na`, non-finite, or
+    upstream-`na` results, and is terminal without a result-prefix transition.
+    Numeric rejection, copy continuation, provenance/dual aliases, invalid
+    arity, and terminal continuation are fixture-backed.
+71. Numeric matrix call-result minimums: done for the same concrete float/int
+    producer set. `.min()` retains the fixed `series float` result, scans only
+    non-`na` cells, returns `na` for empty, all-`na`, non-finite, or upstream-
+    `na` results, and is terminal without a result-prefix transition. Numeric
+    rejection, copy continuation, provenance/dual aliases, invalid arity, and
+    terminal continuation are fixture-backed.
+72. Numeric matrix call-result maximums: done for the same concrete float/int
+    producer set. `.max()` retains the fixed `series float` result, scans only
+    non-`na` cells, returns `na` for empty, all-`na`, non-finite, or upstream-
+    `na` results, and is terminal without a result-prefix transition. Numeric
+    rejection, copy continuation, provenance/dual aliases, invalid arity, and
+    terminal continuation are fixture-backed.
+73. Numeric matrix call-result modes: done for the same concrete float/int
+    producer set. `.mode()` retains the fixed `series float` result, ignores
+    `na` cells, selects the smallest value among equally frequent repeats,
+    returns `na` for empty, all-`na`, no-repeat, selected non-finite, or
+    upstream-`na` results, and is terminal without a result-prefix transition.
+    Numeric rejection, copy continuation, provenance/dual aliases, invalid
+    arity, and terminal continuation are fixture-backed.
+74. Numeric matrix call-result traces: done for the same concrete float/int
+    producer set. `.trace()` retains the fixed `series float` result, sums non-
+    `na` main-diagonal cells over `min(rows, columns)`, returns `na` for an
+    empty/all-`na` diagonal, non-finite sum, or upstream-`na` result, and is
+    terminal without a result-prefix transition. Numeric rejection, copy
+    continuation, provenance/dual aliases, invalid arity, and terminal
+    continuation are fixture-backed.
+75. Numeric matrix call-result determinants: done for the same concrete
+    float/int producer set. `.det()` retains the fixed `series float` result,
+    runtime square-matrix error, `0 x 0 = 1.0`, singular zero, and invalid-cell/
+    non-finite/upstream-`na` results without adding static shape inference. It
+    is terminal without a result-prefix transition. Numeric rejection, copy
+    continuation, provenance/dual aliases, invalid arity, and terminal
+    continuation are fixture-backed.
+76. Numeric matrix call-result ranks: done for the same concrete float/int
+    producer set. `.rank()` retains the fixed `series int` result, supports
+    rectangular and singular matrices, returns `0` for zero-element matrices,
+    returns `na` for invalid/non-finite cells or upstream `na`, and is terminal
+    without a result-prefix transition. Numeric rejection, copy continuation,
+    provenance/dual aliases, invalid arity, and terminal continuation are
+    fixture-backed.
+77. Matrix call-result transposes: done for every existing concrete matrix
+    producer. `.transpose()` retains the receiver's float/int/bool/string/color
+    element kind through `SameAsArg`, allocates an independent matrix with
+    swapped row/column counts, propagates upstream `na`, preserves zero-cell
+    shapes, and keeps the matrix-result prefix so `.copy()`, another
+    `.transpose()`, or any supported matrix reader may follow. Namespace and
+    bound operations, exact templates, local/imported functions and methods,
+    five-kind reads, source independence, provenance/dual aliases, repeated
+    continuation, and invalid arity are fixture-backed. Mutation and the
+    remaining matrix-valued helpers stay gated.
+78. Matrix call-result submatrices: done for every existing concrete matrix
+    producer. `.submatrix(...)` retains the receiver's float/int/bool/string/
+    color element kind through `SameAsArg`, allocates an independent half-open
+    range with optional/default bounds, preserves empty row/column shapes,
+    propagates upstream `na`, and keeps the matrix-result prefix. Namespace and
+    bound operations, exact templates, local/imported functions and methods,
+    named arguments, nested ranges, five-kind reads, source independence,
+    provenance/dual aliases, invalid types/arity, and runtime bounds are
+    fixture-backed. Mutation and the remaining matrix-valued helpers stay
+    gated.
+79. Numeric matrix call-result inverses: done for every existing concrete
+    float/int matrix producer. `.inv()` retains the numeric receiver check,
+    always returns an independent fixed `matrix<float>`, preserves square shape
+    for invertible inputs, returns an empty `0 x 0` matrix for empty input, and
+    yields `na` for singular, invalid-cell, non-finite, or upstream-`na`
+    inputs while retaining the matrix-result prefix. Namespace and bound
+    operations, local/imported functions and methods, int-to-float lowering,
+    nested continuations, source independence, provenance/dual aliases,
+    invalid types/arity, and the runtime non-square boundary are fixture-
+    backed. Mutation and the remaining matrix-valued helpers stay gated.
+80. Numeric matrix call-result pseudo-inverses: done for the same concrete
+    float/int producer set. `.pinv()` retains the numeric receiver check,
+    always returns an independent fixed `matrix<float>`, swaps rectangular
+    row/column counts, preserves singular matrix-valued results and swapped
+    zero-cell shapes, yields `na` for invalid-cell, non-finite, or upstream-
+    `na` inputs, and retains the matrix-result prefix. Namespace and bound
+    operations, local/imported functions and methods, int-to-float lowering,
+    nested/double continuations, source independence, provenance/dual aliases,
+    invalid types/arity, and rectangular/singular/zero-cell boundaries are
+    fixture-backed. Mutation and the remaining matrix-valued helpers stay
+    gated.
+81. Numeric matrix call-result eigenvectors: done for the same concrete
+    float/int producer set. `.eigenvectors()` retains the numeric receiver
+    check, always returns an independent fixed `matrix<float>`, preserves
+    square shape for a complete real eigenvector basis, returns empty `0 x 0`,
+    retains the runtime non-square error, yields `na` for invalid-cell, non-
+    finite, non-real, incomplete, or upstream-`na` results, and retains the
+    matrix-result prefix. Namespace and bound operations, local/imported
+    functions and methods, int-to-float lowering, nested/double chains, source
+    independence, provenance/dual aliases, invalid types/arity, and runtime
+    failure boundaries are fixture-backed. Mutation and the remaining matrix-
+    valued helpers stay gated.
+82. Numeric matrix call-result powers: done for the same concrete float/int
+    producer set. `.pow(power)` retains the numeric receiver and simple-int
+    power checks, always returns an independent fixed `matrix<float>`, keeps
+    the runtime square-matrix boundary, supports identity/copy/positive powers
+    and empty `0 x 0`, preserves `na` cells for positive powers, retains
+    negative and `na` power errors, and keeps the matrix-result prefix.
+    Namespace and bound operations, local/imported functions and methods, int-
+    to-float lowering, nested powers, source independence, provenance/dual
+    aliases, invalid types/arity, and runtime failure boundaries are fixture-
+    backed. Mutation and the remaining matrix-valued helpers stay gated.
+83. Numeric matrix call-result Kronecker products: done for the same concrete
+    float/int producer set. `.kron(other)` retains the numeric receiver and
+    numeric-matrix operand checks, always returns an independent fixed
+    `matrix<float>`, multiplies both source row and column dimensions,
+    preserves `na` cells and zero dimensions, propagates upstream `na`, keeps
+    the matrix cell-budget error, and retains the matrix-result prefix.
+    Namespace and bound operations, local/imported functions and methods, int-
+    to-float lowering, nested Kronecker products, source independence,
+    provenance/dual aliases, invalid types/arity, and runtime failure
+    boundaries are fixture-backed. Mutation and the remaining matrix-valued
+    helpers stay gated.
+84. Numeric matrix call-result differences: done for the same concrete float/
+    int producer set. `.diff(other)` retains the numeric receiver and numeric-
+    matrix-or-scalar operand checks, always returns an independent fixed
+    `matrix<float>`, preserves receiver shape and left-to-right subtraction,
+    propagates `na` cells, `na` scalars, and upstream `na`, preserves zero
+    dimensions, keeps the matching-shape runtime error for matrix operands, and
+    retains the matrix-result prefix. Namespace and bound operations, local/
+    imported functions and methods, int-to-float lowering, nested differences,
+    scalar and matrix operands, source independence, provenance/dual aliases,
+    invalid types/arity, and runtime failure boundaries are fixture-backed.
+    Mutation and the remaining matrix-valued helpers stay gated.
+85. Numeric matrix call-result multiplication: done for the same concrete
+    float/int producer set. `.mult(other)` retains the numeric receiver and
+    numeric matrix/scalar/array operand checks. Matrix operands return an
+    independent fixed `matrix<float>` with receiver rows and operand columns,
+    scalar operands preserve receiver shape, and numeric-array operands return
+    an independent `array<float>` with one value per receiver row. Semantic
+    result typing selects the closed matrix or array continuation set. `na`,
+    zero-inner-dimension, multiplication-order, matrix cell-budget, matrix-
+    dimension, and vector-length behavior remains fixture-backed. Namespace
+    and bound operations, local/imported functions and methods, int-to-float
+    lowering, nested multiplication, source independence, provenance/dual
+    aliases, invalid types/arity, and runtime failure boundaries are fixture-
+    backed. Mutation and the remaining matrix-valued helpers stay gated.
+86. Terminal membership checks on array-valued call results: done for every
+    existing concrete array result, including matrix row/column/eigenvalue
+    arrays and array-returning `matrix.mult` overloads. `.includes(value)`
+    reuses ordinary element-kind validation and equality, returns `series
+    bool`, is false for an empty concrete array, propagates an upstream `na`
+    array, performs no mutation, and creates no array-result prefix. Namespace/
+    bound operations, local/imported functions and methods, scalar kinds, copy
+    continuation, invalid types/arity, and terminal-continuation paths are
+    fixture-backed. Matrix-valued continuation is unchanged.
+87. Terminal first-index searches on array-valued call results: done for every
+    existing concrete array result, including matrix row/column/eigenvalue
+    arrays and array-returning `matrix.mult` overloads. `.indexof(value)`
+    reuses ordinary element-kind validation and equality, returns the first
+    zero-based match as `simple int`, returns `-1` for missing/empty/upstream-
+    `na` arrays, performs no mutation, and creates no array-result prefix.
+    Namespace/bound operations, local/imported functions and methods, scalar
+    kinds, copy continuation, invalid types/arity, and terminal-continuation
+    paths are fixture-backed. Matrix-valued continuation is unchanged.
+88. Terminal last-index searches on array-valued call results: done for every
+    existing concrete array result, including matrix row/column/eigenvalue
+    arrays and array-returning `matrix.mult` overloads. `.lastindexof(value)`
+    reuses ordinary element-kind validation and equality, returns the last
+    zero-based match as `simple int`, returns `-1` for missing, empty, and
+    upstream-`na` arrays, performs no mutation, and creates no array-result
+    prefix. Namespace/bound operations, local/imported functions and methods,
+    scalar kinds, copy continuation, invalid types/arity, and terminal-
+    continuation paths are fixture-backed. Matrix-valued continuation is
+    unchanged.
+89. Terminal binary searches on numeric array-valued call results: done for
+    numeric matrix row/column/eigenvalue arrays and array-returning
+    `matrix.mult` overloads, alongside all other concrete numeric array-result
+    producers. `.binary_search(value)` retains the ordinary numeric receiver/
+    value checks and caller-owned ascending-input contract. Exact lower-bound
+    search returns the leftmost duplicate match as `simple int` or `-1` for
+    missing, empty, and upstream-`na` arrays, performs no mutation, and creates
+    no array-result prefix. Float/int namespace and bound operations, local/
+    imported functions and methods, nonnumeric matrix-array rejection, copy
+    continuation, invalid types/arity, and terminal-continuation paths are
+    fixture-backed. Matrix-valued continuation is unchanged.
+90. Terminal leftmost binary searches on numeric array-valued call results:
+    done for numeric matrix row/column/eigenvalue arrays and array-returning
+    `matrix.mult` overloads, alongside all other concrete numeric array-result
+    producers. `.binary_search_leftmost(value)` retains numeric and ascending-
+    input gates. Exact duplicates return their first index; misses return the
+    nearest-left index, clamped to `0` below the minimum and the last index above
+    the maximum. Empty/upstream-`na` arrays return `-1`; the `simple int` result
+    is non-mutating and terminal. Namespace/bound, local/imported function/
+    method, float/int, clamp, nonnumeric rejection, invalid types/arity, copy-
+    continuation, and terminal-continuation paths are fixture-backed. Matrix-
+    valued continuation is unchanged.
+91. Terminal rightmost binary searches on numeric array-valued call results:
+    done for numeric matrix row/column/eigenvalue arrays, array-returning
+    `matrix.mult`, and the remaining numeric array-result producers. Exact
+    duplicates return their last index; misses return the nearest-right index,
+    with the same below-min/above-max clamps, numeric/ascending gates, empty/
+    upstream-`na` `-1`, `simple int`, non-mutation, and terminal boundaries.
+    Namespace/bound, local/imported function/method, float/int, nonnumeric
+    rejection, invalid types/arity, copy-continuation, and terminal-continuation
+    paths are fixture-backed. Matrix-valued continuation is unchanged.
+92. Numeric array-valued call results additionally expose `.abs()` as a fresh
+    same-kind array transformation. Matrix row/column/eigenvalue arrays and
+    array-returning `matrix.mult` overloads preserve int/float kind, `na`, empty,
+    upstream-`na`, source independence, and copy/abs/read continuation.
+    Nonnumeric results and invalid arity remain rejected; matrix-valued
+    continuation is unchanged.
+93. Numeric array-valued call results additionally expose terminal `.min(nth?)`.
+    Matrix row/column/eigenvalue arrays and array-returning `matrix.mult`
+    overloads preserve receiver-derived series numeric kind, filtered ascending
+    zero-based ranks, dynamic integer ranks, empty/upstream-`na`, invalid rank/
+    type/arity, and terminal continuation. Matrix-valued continuation is
+    unchanged.
+94. Numeric array-valued call results additionally expose terminal `.max(nth?)`
+    with descending zero-based ranks. Matrix row/column/eigenvalue arrays and
+    array-returning `matrix.mult` overloads retain receiver-derived series
+    numeric kind, dynamic ranks, empty/upstream-`na`, invalid rank/type/arity,
+    and terminal continuation. Matrix-valued continuation is unchanged.
+95. Numeric array-valued call results additionally expose terminal `.sum()`.
+    Matrix row/column/eigenvalue arrays and array-returning `matrix.mult`
+    overloads retain receiver-derived series numeric kind, filtered `na`,
+    empty/all-`na`/upstream-`na`, invalid type/arity, and terminal continuation.
+    Matrix-valued continuation is unchanged.
+96. Numeric array-valued call results additionally expose terminal `.avg()`.
+    Matrix row/column/eigenvalue arrays and array-returning `matrix.mult`
+    overloads return fixed series float, retain filtered `na`, empty/all-`na`/
+    upstream-`na` and non-finite behavior, invalid type/arity, and terminal
+    continuation. Matrix-valued continuation is unchanged.
+97. Numeric array-valued call results additionally expose terminal `.range()`.
+    Matrix row/column/eigenvalue arrays and array-returning `matrix.mult`
+    overloads retain receiver-derived series int/float, filtered maximum-minus-
+    minimum, empty/all-`na`/upstream-`na` and non-finite behavior, invalid type/
+    arity, and terminal continuation. Matrix-valued continuation is unchanged.
+98. Numeric array-valued call results additionally expose terminal `.median()`.
+    Matrix row/column/eigenvalue arrays and array-returning `matrix.mult`
+    overloads retain filtered odd-middle/even-middle-pair semantics, receiver-
+    derived series int/float, integer truncation toward zero, empty/all-`na`/
+    upstream-`na` and non-finite-float behavior, invalid type/arity, and
+    terminal continuation. Matrix-valued continuation is unchanged.
+99. Numeric array-valued call results additionally expose terminal `.mode()`.
+    Matrix row/column/eigenvalue arrays and array-returning `matrix.mult`
+    overloads retain filtered frequency counting, smaller-value tie selection,
+    the repeated-value requirement, receiver-derived series int/float, empty/
+    all-`na`/upstream-`na` and all-unique behavior, invalid type/arity, and
+    terminal continuation. Matrix-valued continuation is unchanged.
+100. Numeric array-valued call results additionally expose terminal
+    `.percentile_nearest_rank(percentage)`. Matrix row/column/eigenvalue arrays
+    and array-returning `matrix.mult` overloads retain filtered ceiling-based
+    nearest-rank selection, 0/100 endpoints, positional or named series/simple
+    numeric percentages, receiver-derived series int/float, empty/all-`na`/
+    upstream-`na`, runtime typed-`na` and out-of-range behavior, invalid type/
+    arity, and terminal continuation. Matrix-valued continuation is unchanged.
+101. Numeric array-valued call results additionally expose terminal
+    `.percentile_linear_interpolation(percentage)`. Matrix row/column/
+    eigenvalue arrays and array-returning `matrix.mult` overloads retain sorted
+    floor/ceiling interpolation, fixed series-float results for int/float and
+    single-element inputs, positional or named series/simple numeric
+    percentages, empty/all-`na`/upstream-`na`, runtime typed-`na`, out-of-range
+    and non-finite-result behavior, invalid type/arity, and terminal
+    continuation. Matrix-valued continuation is unchanged.
+102. Numeric array-valued call results additionally expose terminal
+    `.percentrank(index)`. Matrix row/column/eigenvalue arrays and array-
+    returning `matrix.mult` overloads retain original-index target selection,
+    filtered comparison population, duplicate counting, fixed series-float
+    results, positional or named simple-int-compatible indexes, empty/all-`na`/
+    upstream-`na`, target-`na`, runtime typed-`na`, negative and out-of-range
+    behavior, invalid type/arity, and terminal continuation. Matrix-valued
+    continuation is unchanged.
+103. Numeric array-valued call results additionally expose terminal
+    `.covariance(id2, biased?)`. Matrix row/column/eigenvalue arrays and array-
+    returning `matrix.mult` overloads retain same-length numeric second-array
+    checks, original-index pairing, paired-`na` filtering, population/sample
+    bias, fixed series-float results, empty/all-`na`/upstream-`na`, mismatched-
+    length, insufficient-sample and non-finite-result behavior, invalid type/
+    arity, and terminal continuation. Matrix-valued continuation is unchanged.
+104. Numeric array-valued call results additionally expose transforming
+    `.standardize()`. Matrix row/column/eigenvalue arrays and array-returning
+    `matrix.mult` overloads retain independent fixed-float results, non-`na`
+    mean and population-deviation calculation, `na`-position preservation,
+    zero/non-finite-deviation all-`na` numeric output, empty/all-`na` empty
+    results, and upstream-`na` propagation. Invalid type/arity, source
+    independence, and copy/abs/standardize/sort_indices continuation are fixture-backed.
+    Matrix-valued continuation is unchanged.
+105. Numeric array-valued call results additionally expose terminal
+    `.variance(biased?)`. Matrix row/column/eigenvalue arrays and array-
+    returning `matrix.mult` overloads retain filtered non-`na` values,
+    population default/`true` bias, sample `false`/`na` bias, single-value
+    population zero, fixed series-float results, empty/all-`na`/upstream-`na`,
+    insufficient-sample and non-finite behavior, invalid type/arity, non-
+    mutation, and terminal continuation. Matrix-valued continuation is
+    unchanged.
+106. Numeric array-valued call results additionally expose terminal
+    `.stdev(biased?)`. Matrix row/column/eigenvalue arrays and array-returning
+    `matrix.mult` overloads take the square root of the same selected filtered
+    population or sample variance and retain bias, single-value population
+    zero, fixed series-float, empty/all-`na`/upstream-`na`, insufficient-
+    sample, non-finite, invalid type/arity, non-mutation, and terminal-
+    continuation boundaries. Matrix-valued continuation is unchanged.
+107. Int, float, or string matrix row/column arrays and numeric eigenvalue or
+    array-returning `matrix.mult` results additionally expose transforming
+    `.sort_indices(order?)`. The independent fixed int-index result preserves
+    stable original positions, default ascending or explicit descending order,
+    established float-`na` and string-empty placement, empty/upstream-`na`
+    behavior, source independence, and nested array-result continuation.
+    Bool/color results, invalid order/arity, and direct mutation remain closed;
+    matrix-valued continuation is unchanged.
+108. Bool, int, or float matrix row/column arrays plus numeric eigenvalue and
+    array-returning `matrix.mult` results additionally expose terminal
+    `.every()`. Nonzero numerics and `true` are truthy; zero, `false`, and
+    element `na` are false. Empty arrays return true, upstream `na` propagates,
+    and sources remain unchanged. String/color, extra-arity, and terminal-
+    continuation boundaries remain closed; matrix-valued continuation is
+    unchanged.
+109. The same bool/int/float row/column, eigenvalue, and array-returning
+    `matrix.mult` result families additionally expose terminal `.some()`. It
+    returns true when any nonzero numeric or `true` element exists, treats
+    zero, `false`, and element `na` as nonsatisfying, returns false for empty
+    arrays, propagates upstream `na`, leaves sources unchanged, and retains
+    string/color, extra-arity, and terminal-continuation boundaries. Matrix-
+    valued continuation is unchanged.
+110. Every scalar row/column array plus numeric eigenvalue and array-returning
+    `matrix.mult` result additionally exposes terminal `.join(separator?)`.
+    It preserves ordinary default/explicit/`na` separator and scalar/color
+    stringification rules, empty-string/upstream-`na` results, source
+    independence, and the 40960-character limit. Invalid separator/arity and
+    terminal-continuation boundaries remain closed; matrix-valued continuation
+    is unchanged.
+111. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes transforming
+    `.slice(index_from, index_to)`. It preserves the resolved element kind,
+    returns a half-open live window over the fresh array result, and may
+    continue through the closed array helper set. Row/column/eigenvalue slices
+    remain independent of the source matrix; vector `matrix.mult` overloads
+    switch from the parser's matrix-result prefix to the array-result prefix.
+    Scalar kinds, nested copy/read continuation, empty/upstream-`na`, invalid
+    bounds/type/arity, and retained matrix-valued overload boundaries are
+    fixture-backed. Matrix-valued continuation is unchanged.
+112. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.clear()`. It empties only the fresh array snapshot, returns `void`,
+    accepts no explicit arguments, tolerates empty or upstream-`na` results,
+    and cannot continue; the source matrix is unchanged. Namespace and bound
+    vector-multiplication paths retain result-type-directed array dispatch.
+    UDF-body mutation and all other postfix mutation remain rejected at this
+    slice, while matrix-valued continuation and public schemas are unchanged.
+113. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.reverse()`. It reverses only the fresh array snapshot, returns `void`,
+    accepts no explicit arguments, tolerates empty or upstream-`na` results,
+    and cannot continue; the source matrix is unchanged. Namespace and bound
+    vector-multiplication paths retain result-type-directed array dispatch.
+    UDF-body and all remaining postfix mutations stay rejected, while matrix-
+    valued continuation and public schemas are unchanged.
+114. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.pop()`. It removes and returns only the fresh array snapshot's final
+    resolved scalar element, returns `na` for empty or upstream-`na` results,
+    and cannot continue; the source matrix is unchanged. Namespace and bound
+    vector-multiplication paths retain result-type-directed array dispatch.
+    UDF-body and all remaining postfix mutations stay rejected, while matrix-
+    valued continuation and public schemas are unchanged.
+115. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.shift()`. It removes and returns only the fresh array snapshot's first
+    resolved scalar element, preserves the remaining snapshot order, returns
+    `na` for empty or upstream-`na` results, and cannot continue; the source
+    matrix is unchanged. Namespace and bound vector-multiplication paths retain
+    result-type-directed array dispatch. UDF-body and all remaining postfix
+    mutations stay rejected, while matrix-valued continuation and public
+    schemas are unchanged.
+116. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.remove(index)`. It removes and returns the selected positive or in-range
+    negative scalar from only the fresh array snapshot and preserves remaining
+    order. Explicit `na` indexes and upstream-`na` results return `na` without
+    mutation; out-of-range indexes retain runtime errors. The source matrix is
+    unchanged, and namespace/bound vector-multiplication paths retain result-
+    type-directed array dispatch. UDF-body and all remaining postfix mutations
+    stay rejected, while matrix-valued continuation and public schemas remain
+    unchanged.
+117. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.push(value)`, including row/column/eigenvalue arrays reached after a
+    concrete matrix call result. It validates the resolved scalar kind,
+    appends only to the fresh array snapshot, returns `void`, and cannot
+    continue; source matrices remain unchanged. Invalid kind/arity, upstream-
+    `na`, capacity, and UDF-side-effect boundaries retain ordinary behavior,
+    while matrix-valued continuation and public schemas remain unchanged.
+118. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.unshift(value)`, including row/column/eigenvalue arrays reached after a
+    concrete matrix call result. It validates the resolved scalar kind,
+    prepends only to the fresh array snapshot, returns `void`, and cannot
+    continue; source matrices remain unchanged. Invalid kind/arity, upstream-
+    `na`, capacity, and UDF-side-effect boundaries retain ordinary behavior,
+    while matrix-valued continuation and public schemas remain unchanged.
+119. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.insert(index, value)`, including row/column/eigenvalue arrays reached
+    after a concrete matrix call result. It validates the simple-int-compatible
+    index and resolved scalar kind, inserts only into the fresh array snapshot,
+    returns `void`, and cannot continue; source matrices remain unchanged.
+    Negative/end/`na` index, bounds, kind/arity, upstream-`na`, capacity, and
+    UDF-side-effect boundaries retain ordinary behavior, while matrix-valued
+    continuation and public schemas remain unchanged.
+120. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.set(index, value)`, including row/column/eigenvalue arrays reached after a
+    concrete matrix call result. It validates the simple-int-compatible index
+    and resolved scalar kind, replaces one fresh-array snapshot slot without
+    changing length, returns `void`, and cannot continue; source matrices
+    remain unchanged. Negative/`na`/empty/out-of-range, kind/arity, upstream-
+    `na`, and UDF-side-effect boundaries retain ordinary behavior, while
+    matrix-valued continuation and public schemas remain unchanged.
+121. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes terminal top-level
+    `.fill(value, index_from?, index_to?)`, including row/column/eigenvalue
+    arrays reached after a concrete matrix call result. It validates the
+    resolved scalar kind plus optional simple-int-compatible half-open bounds;
+    omitted bounds fill the full fresh array snapshot while source matrices
+    remain unchanged. Explicit `na`, negative, reversed, oversized, empty, and
+    upstream-`na` cases no-op after all supplied arguments are evaluated. It
+    returns `void`, cannot continue, remains rejected inside UDFs, and leaves
+    matrix-valued continuation and public schemas unchanged.
+122. Every concrete int/float/string row/column array, numeric eigenvalue array,
+    and array-returning `matrix.mult` result additionally exposes terminal top-
+    level `.sort(order?)`, including arrays reached after a concrete matrix call
+    result. It preserves ordinary stable ascending/default or descending
+    ordering on the fresh array snapshot; source matrices remain unchanged.
+    Empty and upstream-`na` results no-op after order evaluation, while bool/
+    color kinds, invalid order/arity, continuation, and UDF-side-effect
+    boundaries stay closed. Matrix-valued continuation and public schemas
+    remain unchanged.
+123. Every concrete row/column array, numeric eigenvalue array, and array-
+    returning `matrix.mult` result additionally exposes mutating, array-
+    returning `.concat(id2)`, including arrays reached after a concrete matrix
+    call result. It validates a same-kind scalar-array source, appends only to
+    the fresh array snapshot, returns that snapshot id, and may continue
+    through the closed array-result chain; source matrices remain unchanged.
+    Empty/upstream-`na`, capacity, kind/arity, and UDF-side-effect boundaries
+    retain ordinary `array.concat` behavior. Matrix-valued continuation and
+    public schemas remain unchanged.
+124. Every concrete matrix call result additionally exposes terminal
+    `.set(row, column, value)`. It preserves the receiver's float/int/bool/
+    string/color element kind, validates simple-int-compatible indexes and an
+    element-compatible value, returns `void`, and cannot continue. Local UDF
+    and local user-method alias results update shared matrix storage; fresh
+    namespace, bound-transform, imported-function, and imported-method results
+    isolate the write from source matrices. Upstream-`na` results evaluate the
+    value and no-op. Bounds, invalid type/arity, UDF-side-effect, and public-
+    schema boundaries retain ordinary `matrix.set` behavior. Done.
+125. Every concrete matrix call result additionally exposes terminal
+    `.fill(value)`. It preserves the receiver's float/int/bool/string/color
+    element kind, validates an element-compatible value, replaces every cell,
+    returns `void`, and cannot continue. Local UDF and local user-method alias
+    results update shared matrix storage; fresh namespace, bound-transform,
+    imported-function, and imported-method results isolate writes from source
+    matrices. Empty and upstream-`na` results, value evaluation, invalid type/
+    arity, UDF-side-effect, and public-schema boundaries retain ordinary
+    `matrix.fill` behavior. Done.
+126. Every concrete matrix call result additionally exposes terminal
+    `.reverse()`. It reverses the row-major cell sequence in place without
+    changing shape, returns `void`, accepts no explicit arguments, and cannot
+    continue. Local UDF and local user-method alias results update shared
+    matrix storage; fresh namespace, bound-transform, imported-function, and
+    imported-method results isolate writes from source matrices. Empty and
+    upstream-`na` results, invalid arity, UDF-side-effect, and public-schema
+    boundaries retain ordinary `matrix.reverse` behavior. Done.
+127. Every concrete matrix call result additionally exposes terminal
+    `.reshape(rows, columns)`. It preserves row-major cells, validates simple-
+    int non-negative dimensions whose product matches the current element
+    count, returns `void`, and cannot continue. Local UDF and local user-method
+    alias results update shared shape; fresh namespace, bound-transform,
+    imported-function, and imported-method results isolate the change.
+    Upstream-`na` dimension evaluation, negative/`na` dimensions, count
+    mismatch, invalid type/arity, UDF-side-effect, and public-schema boundaries
+    retain ordinary `matrix.reshape` behavior. Done.
+128. Every concrete matrix call result additionally exposes terminal
+    `.swap_rows(row1, row2)`. It validates two simple-int row indexes, swaps
+    complete rows without changing shape or concrete element kind, returns
+    `void`, and cannot continue. Local UDF and local user-method alias results
+    update shared storage; fresh namespace, bound-transform, imported-function,
+    and imported-method results isolate the write. Same-index no-op, bounds/
+    `na` indexes, upstream-`na` argument evaluation, invalid type/arity, UDF-
+    side-effect, and public-schema boundaries retain ordinary
+    `matrix.swap_rows` behavior. Done.
+129. Every concrete matrix call result additionally exposes terminal
+    `.swap_columns(column1, column2)`. It validates two simple-int column
+    indexes, swaps complete columns without changing shape or concrete element
+    kind, returns `void`, and cannot continue. Local UDF and local user-method
+    alias results update shared storage; fresh namespace, bound-transform,
+    imported-function, and imported-method results isolate the write. Same-
+    index no-op, bounds/`na` indexes, upstream-`na` argument evaluation,
+    invalid type/arity, UDF-side-effect, and public-schema boundaries retain
+    ordinary `matrix.swap_columns` behavior. Done.
+130. Every concrete matrix call result additionally exposes terminal
+    `.remove_row(row)`. It validates one simple-int row index, removes the
+    selected complete row, including from a zero-column matrix, while
+    preserving column count and concrete element kind, returns `void`, and
+    cannot continue. Local UDF and local user-method alias results update
+    shared shape; fresh namespace, bound-transform, imported-function, and
+    imported-method results isolate the change. Bounds/
+    `na` indexes, upstream-`na` argument evaluation, invalid type/arity, UDF-
+    side-effect, and public-schema boundaries retain ordinary
+    `matrix.remove_row` behavior. Done.
+131. Every concrete matrix call result additionally exposes terminal
+    `.remove_col(column)`. It validates one simple-int column index, removes
+    the selected complete column, including from a zero-row matrix, while
+    preserving row count and concrete element kind, returns `void`, and cannot
+    continue. Local UDF and local user-method alias results update shared
+    shape; fresh namespace, bound-transform, imported-function, and imported-
+    method results isolate the change. Bounds/`na` indexes, upstream-`na`
+    argument evaluation, invalid type/arity, UDF-side-effect, and public-
+    schema boundaries retain ordinary `matrix.remove_col` behavior. Done.
+132. Every concrete matrix call result additionally exposes terminal
+    `.add_row(row, array_id)`. It validates one simple-int insertion index and
+    an element-kind-matched array, copies the array into a complete new row,
+    including for a zero-column matrix, while preserving column count and
+    concrete element kind, returns `void`, and cannot continue. Local UDF and
+    local user-method alias results update shared shape; fresh namespace,
+    bound-transform, imported-function, and imported-method results isolate
+    the change. `0..=rows` bounds/`na`, array-size, cell-budget, upstream-`na`,
+    invalid type/arity, UDF-side-effect, and public-schema boundaries retain
+    ordinary `matrix.add_row` behavior. Done.
+133. Every concrete matrix call result additionally exposes terminal
+    `.add_col(column, array_id)`. It validates one simple-int insertion index
+    and an element-kind-matched array, copies the array into a complete new
+    column, including for a zero-row matrix, while preserving row count and
+    concrete element kind, returns `void`, and cannot continue. Local UDF and
+    local user-method alias results update shared shape; fresh namespace,
+    bound-transform, imported-function, and imported-method results isolate
+    the change. `0..=columns` bounds/`na`, array-size, cell-budget, upstream-
+    `na`, invalid type/arity, UDF-side-effect, and public-schema boundaries
+    retain ordinary `matrix.add_col` behavior. Done.
+134. Every concrete numeric matrix call result additionally exposes terminal
+    `.sort(column?, order?)`. It defaults to column 0 and ascending order,
+    reorders complete rows while preserving float/int element kind and shape,
+    keeps equal-key rows stable, places `na` last ascending and first
+    descending, returns `void`, and cannot continue. Local UDF and local user-
+    method alias results update shared storage; fresh namespace, bound-
+    transform, imported-function, and imported-method results isolate the
+    change. Column bounds/`na`, unsupported-order, upstream-`na`, invalid type/
+    arity, non-numeric receiver, UDF-side-effect, and public-schema boundaries
+    retain ordinary `matrix.sort` behavior. Done.
+135. Every concrete scalar map call result additionally exposes terminal
+    `.put(key, value)`. It preserves the resolved scalar key/value template,
+    insertion order on replacement, append order for new keys, `void` return,
+    and terminal continuation boundary. Local UDF/user-method aliases update
+    shared map storage; fresh built-in/imported producers isolate the write.
+    Invalid key/value/arity, UDF-side-effect, remaining map-mutation, and public-
+    schema boundaries retain ordinary `map.put` behavior. No matrix element,
+    shape, storage, or public-schema rule is widened. Done.
+136. Every concrete scalar map call result additionally exposes terminal
+    `.clear()`. It empties the resolved backing entry list, returns `void`, and
+    cannot continue. Local UDF/user-method aliases update shared map storage;
+    fresh built-in/imported producers isolate the clear. Arity, UDF-side-
+    effect, remaining map-mutation, template, and public-schema boundaries
+    retain ordinary `map.clear` behavior. No matrix element, shape, storage,
+    or public-schema rule is widened. Done.
+137. Every concrete scalar map call result additionally exposes terminal
+    `.remove(key)`. It validates the resolved scalar key kind, removes a
+    matching entry without reordering retained keys, no-ops for a missing key,
+    returns `void`, and cannot continue. Local aliases update shared map
+    storage; fresh built-in/imported producers isolate the removal. Invalid
+    key/arity, UDF-side-effect, remaining map-mutation, template, and public-
+    schema boundaries retain ordinary `map.remove` behavior. No matrix rule is
+    widened. Done.
+138. Every concrete scalar map call result additionally exposes terminal
+    `.put_all(source)`, completing the registered scalar map helper set on
+    those receivers. It requires an identical source template, clones entries
+    for self-merge safety, replaces values without moving retained keys,
+    appends new keys in source order, returns `void`, and cannot continue.
+    Local aliases update shared map storage; fresh built-in/imported targets
+    isolate the merge. Invalid source/template/arity, UDF-side-effect, and
+    public-schema boundaries retain ordinary `map.put_all` behavior. No matrix
+    rule is widened. Done.
 
 ## Completion Gate For Future Positive Support
 

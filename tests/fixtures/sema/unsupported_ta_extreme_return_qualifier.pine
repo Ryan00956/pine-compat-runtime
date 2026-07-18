@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported ta extreme return qualifier")
+
+hline(ta.highest(close, 3))
+hline(ta.lowest(low, 3))
+plot(close, offset=ta.highestbars(high, 3))
+plot(close, offset=ta.lowestbars(low, 3))

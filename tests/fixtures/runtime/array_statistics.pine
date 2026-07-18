@@ -410,3 +410,27 @@ while independent_stdev_i < 1
     independent_stdev_score := independent_stdev_biased * 10 + independent_stdev_unbiased + independent_stdev_source.size()
     independent_stdev_i := independent_stdev_i + 1
 plot(independent_stdev_score)
+
+nth_ints = array.from(na, 4, 1, 4, 2)
+nth_floats = array.from(na, 3.5, -1.5, 3.5, 2.0)
+
+// `nth` is zero-based after filtering `na`; duplicate values occupy separate ranks.
+plot(array.min(nth_ints, 0))
+plot(nth_ints.min(1))
+plot(array.min(nth=2, id=nth_ints))
+plot(nth_ints.min(nth=3))
+plot(array.max(nth=0, id=nth_ints))
+plot(nth_ints.max(1))
+plot(array.max(id=nth_ints, nth=2))
+plot(nth_ints.max(nth=3))
+plot(array.min(nth_floats, 1))
+plot(nth_floats.max(nth=1))
+
+dynamic_nth = bar_index % 4
+plot(array.min(id=nth_ints, nth=dynamic_nth))
+plot(nth_ints.max(dynamic_nth))
+
+plot(na(array.min(empty, 1)) and na(empty.max(nth=0)) and na(array.min(only_na, 0)) and na(only_na.max(1)) ? 1 : 0)
+plot(na(array.min(nth_ints, na)) and na(nth_ints.max(nth=na)) ? 1 : 0)
+plot(na(array.min(nth_ints, -1)) and na(nth_ints.max(nth=-1)) ? 1 : 0)
+plot(na(array.min(nth_ints, 4)) and na(nth_ints.max(nth=4)) ? 1 : 0)

@@ -1,0 +1,24 @@
+//@version=6
+indicator("Unsupported user-method matrix call-result reads")
+
+type Anchor
+    int tag
+
+method expose(Anchor self) => matrix.new<float>(1, 1, 1.0)
+method noneResult(Anchor self) => na
+method numberResult(Anchor self) => 1
+method arrayResult(Anchor self) => array.from(1.0, 2.0)
+method mapResult(Anchor self) => map.new<int, int>()
+
+anchor = Anchor.new(1)
+
+bad_row = anchor.expose().get("bad", 0)
+anchor.expose().set(0, 0, "bad")
+size_result = anchor.expose().size()
+terminal_chain = anchor.expose().rows().copy()
+none_rows = anchor.noneResult().rows()
+number_rows = anchor.numberResult().rows()
+array_rows = anchor.arrayResult().rows()
+map_rows = anchor.mapResult().rows()
+
+plot(close)

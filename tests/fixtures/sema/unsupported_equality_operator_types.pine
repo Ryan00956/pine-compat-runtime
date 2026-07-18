@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported equality operator types")
+
+bad_eq = "x" == 1
+bad_neq = true != 1
+plot(close)

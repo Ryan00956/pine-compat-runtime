@@ -1,0 +1,8 @@
+//@version=6
+indicator("Unsupported fill Simple Show Last")
+
+values = array.new_int(1, 1)
+top = plot(high)
+bottom = plot(low)
+
+fill(top, bottom, show_last=array.size(values))

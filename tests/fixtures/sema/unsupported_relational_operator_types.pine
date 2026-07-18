@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported relational operator types")
+
+bad_gt = "x" > 1
+bad_lte = true <= false
+plot(close)

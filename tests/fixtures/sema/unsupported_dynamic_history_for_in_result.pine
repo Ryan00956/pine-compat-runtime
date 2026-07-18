@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported dynamic history for-in result")
+
+values = array.from(0)
+offset = for value in values
+    close
+
+plot(close[offset])

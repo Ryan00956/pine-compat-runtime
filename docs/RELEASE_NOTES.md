@@ -2,7 +2,1580 @@
 
 ## Unreleased
 
-- Added fixture-backed same-imported scalar-field UDT `array.from` construction
+- Aligned UDT `array.sort` and `array.sort_indices` runtime validation with the
+  collection contract: an array element that is itself `na` now raises a stable
+  runtime error, while concrete UDT elements whose selected sortable field is
+  `na` retain ordinary special-value ordering. CLI, WASM, and Python error
+  paths share regression fixtures.
+- Extended same-local and same-imported scalar-tree UDT `array.sort` and
+  `array.sort_indices` with the current selector contract: omitted `sort_field`
+  defaults to root field index `0`, while supplied compile-time integer indexes
+  and string field names select sortable root `int`, `float`, or `string`
+  fields. Namespace, method, call-result, named-argument, and const-alias forms
+  share canonical field-index lowering and host-parity fixtures.
+- Added legacy expression line wrapping outside parentheses, accepting
+  continuation indentation deeper than the active local block when its column
+  is not a multiple of four, including end-of-line comments and mixed widths.
+- Added current v6 parenthesized line wrapping, treating physical newlines,
+  comments, and any continuation indentation inside round parentheses as
+  layout-free whitespace across grouped expressions, calls, parameter lists,
+  nested parentheses, and local blocks.
+- Enforced Pine's 40,960-decoded-character limit on single-line, line-wrapped,
+  and triple-delimited string literals, with Unicode-scalar counting, a stable
+  full-span diagnostic, and recovery that retains later statements.
+- Added deprecated Pine single-line string wrapping for quotation-mark and
+  apostrophe literals, collapsing every space-indented physical continuation
+  to one space without inserting a line terminator, with CRLF/bare-CR handling
+  and unchanged unindented-line recovery.
+- Added scalar-variable compound assignments `+=`, `-=`, `*=`, `/=`, and `%=`
+  as exact shorthand for existing reassignment expressions, including numeric
+  operations, string `+=`, qualifier promotion, `na`, local/UDF execution, and
+  persistent `var` state.
+- Added string `+` concatenation across const, input, simple, and series
+  qualifiers, including UDF return inference, const-expression resolution,
+  `na` propagation, UTF-8 character counting, and the 40,960-character runtime
+  limit.
+- Added v6 triple-quotation-mark and triple-apostrophe multiline string
+  literals, including literal newline and indentation preservation, CRLF
+  normalization, ordinary escape decoding, UTF-8 contents, and stable
+  unterminated-literal diagnostics at EOF.
+- Added apostrophe-delimited single-line string literals with the same const
+  string typing, UTF-8 preservation, escape handling, and unterminated-literal
+  recovery as existing quotation-mark-delimited strings.
+- Added the default same-currency subsets of
+  `strategy.convert_to_account(value)` and `strategy.convert_to_symbol(value)`.
+  Under omitted or explicit `currency.NONE`, both are strategy-mode
+  `series float` identities that coerce integers to floats, preserve typed
+  `na`, and support direct, named, UDF, and history calls. Cross-currency
+  conversion remains unsupported.
+- Added the no-conversion `strategy(..., currency=currency.NONE)` declaration
+  subset. It preserves the default behavior where
+  `strategy.account_currency` inherits `syminfo.currency`; explicit account
+  currencies other than `currency.NONE` remain rejected.
+- Added `strategy.account_currency` as a read-only strategy-mode
+  `simple string`. Under the currently supported default `currency.NONE`
+  declaration path, it inherits the fixed `syminfo.currency` value (`"USD"`).
+  Direct, UDF, and history reads are supported without expanding public
+  strategy output; non-default account-currency configuration and conversion
+  remain outside this slice.
+- Added `strategy.default_entry_qty(fill_price)` as a read-only strategy-mode
+  `series float` helper over the existing fixed, cash, and percent-of-equity
+  default sizing paths. It supports direct, named, UDF, and history reads,
+  reports the default order quantity without position-reversal adjustment, and
+  preserves the current no-currency-conversion/no-symbol-point-value boundary.
+- Added `strategy.position_entry_name` as a read-only strategy-mode
+  `series string`. It is `na` while flat, records the entry order ID that
+  initially opened the current continuous net long position, survives
+  pyramiding additions and partial allocation closes, and resets only when the
+  net position becomes flat. Direct, UDF, and history reads do not expand
+  public strategy output.
+- Added `strategy.closedtrades.first_index` as a read-only strategy-mode
+  `series int`. It returns `0` throughout the current untrimmed closed-trade
+  retention model, including before the first trade, and supports direct, UDF,
+  and history reads without expanding public strategy output; platform-style
+  order-limit trimming remains outside this slice.
+- Added `strategy.openprofit_percent` as a read-only strategy-mode
+  `series float`, calculated as current unrealized profit divided by realized
+  equity (`initial_capital + netprofit`) times 100. It supports direct, UDF,
+  and history reads, returns `na` for a non-positive or non-finite denominator,
+  and does not expand public strategy output.
+- Added `strategy.initial_capital` as a read-only strategy-mode `series float`
+  that returns the configured or default broker starting capital on every bar,
+  including UDF and history reads, without expanding public strategy output.
+- Added the six script-visible trade percentage helpers
+  `strategy.closedtrades.profit_percent`, `max_runup_percent`, and
+  `max_drawdown_percent` plus their `strategy.opentrades.*` counterparts. They
+  divide the selected trade amount by entry price times absolute quantity,
+  preserve the current long-only indexed-ledger and `na` boundaries, and add
+  no public strategy-result fields.
+- Added `runtime.error(message)` with string-compatible const, input, simple,
+  and series messages, named-argument and user-defined-function support, exact
+  reached-call error propagation, a deterministic `NaN` message for `na`, and
+  semantic rejection of non-string messages or attempts to consume its `void`
+  return.
+- Added `str.match()` compatibility for Java/Pine's rule that a backslash
+  quotes any non-alphanumeric ASCII character. All ASCII punctuation and
+  control/whitespace literals now work inside or outside character classes,
+  including verbose-mode `\#` and `\ `, nested classes, and active case
+  modes; unknown alphabetic escapes remain invalid.
+- Corrected `str.match()` Java/Pine character classes so `~` remains a
+  literal atom instead of allowing adjacent `~~` to invoke Rust's symmetric
+  difference operator. Ordinary, escaped, quoted, nested, range-endpoint, and
+  case-insensitive class uses are normalized, while tildes outside classes
+  retain their literal behavior.
+- Completed `str.match()` support for Java/Pine character method properties
+  with the remaining nine identifier, whitespace, control, and mirrored
+  classes. Java and Unicode identifier start/part retain their distinct
+  currency, connector, `Other_ID_*`, and ignorable boundaries;
+  `javaWhitespace` exactly excludes NEL and the three non-breaking spaces
+  while including the U+001C–U+001F separators. Complements, nesting, quoting,
+  exact names, and `(?U)` independence are preserved.
+- Added `str.match()` support for nine basic Java/Pine character method
+  properties: `javaLowerCase`, `javaUpperCase`, `javaAlphabetic`,
+  `javaIdeographic`, `javaTitleCase`, `javaDigit`, `javaDefined`,
+  `javaLetter`, and `javaLetterOrDigit`. Their exact case-sensitive names work
+  with `\p`/`\P`, nested character classes, quoted preservation, and
+  `(?i)` Unicode case closure, while membership remains independent of `(?U)`.
+- Corrected `str.match()` verbose `x` mode to use Java/Pine's ASCII-only
+  whitespace rules while preserving non-ASCII Unicode whitespace as literal
+  text, including escaped atoms and character classes. Comments now end at LF,
+  CR, NEL, line separator, or paragraph separator; the three Unicode
+  terminators remain literal atoms, while VT and FF do not terminate comments.
+  Global/scoped modes and quoted regions preserve these boundaries.
+- Added `str.match()` support for Java/Pine's lowercase `u` Unicode-case flag.
+  Global and scoped `(?iu)` now use Unicode folding for literal, quoted, and
+  escaped atoms without changing default-ASCII predefined or POSIX classes;
+  class-local expansions retain that boundary. `U` implies `u`, `-u` disables
+  case folding without disabling Unicode classes, and `-U` disables both.
+- Corrected `str.match()` Java/Pine character-class parsing so a leading `]`
+  is treated as a literal class atom, including after a leading negation,
+  verbose-mode whitespace or comments, and an empty `\Q\E` quote. Quoted
+  closers and active ASCII/Unicode case modes retain their existing behavior.
+- Added `str.match()` support for Pine's `\G` previous-match anchor. Under the
+  API's single initial match search it is an absolute-start assertion, including
+  multiline independence, consumed-prefix rejection, quoted preservation, and
+  character-class rejection.
+- Added `str.match()` support for Pine's `\0n`, `\0nn`, and `\0mnn` octal
+  regex references, including Java's conditional third-digit consumption,
+  required first digit, non-octal trailing characters, character-class and
+  quoted behavior, verbose trivia skipping, and active case-mode handling.
+- Added `str.match()` support for Pine's `\e` escape-character and `\cX`
+  control-character regex references, including Java's one-Unicode-scalar
+  `XOR 0x40` mapping, exact consumption, character-class and quoted behavior,
+  verbose-mode trivia skipping, and ASCII/Unicode case-mode switching.
+- Added `str.match()` support for Pine's `\R` line-break matcher across LF,
+  VT, FF, CR, NEL, line separator, and paragraph separator, with CRLF consumed
+  as one match, behavior independent of `(?U)`, quoted preservation, and
+  character-class rejection matching Pine's Java regex behavior.
+- Added `str.match()` support for Pine's `\v` and `\V` vertical-whitespace
+  regex classes, including LF, VT, FF, CR, NEL, line separator, and paragraph
+  separator, plus complements, character-class nesting, quoted preservation,
+  and behavior independent of `(?U)`.
+- Added `str.match()` support for two-digit `\xNN` and braced `\x{...}`
+  hexadecimal regex references, including exact two-digit consumption,
+  arbitrary leading zeros in braced scalar values, character-class and quoted
+  behavior, ASCII/Unicode case-mode switching, and safe no-match handling for
+  surrogate code-unit references.
+- Extended `str.match()` case-insensitive compatibility through character
+  classes. Literal atoms and ranges now use ASCII folding under `(?i)` and
+  Unicode folding under `(?iU)` before negation and class intersections are
+  applied, including scoped/toggled modes, predefined and POSIX expansions,
+  general Unicode properties, quoted atoms, and fixed `\uHHHH` references.
+  Unicode block properties retain exact membership under either mode.
+- Corrected `str.match()` case-insensitive literal matching outside character
+  classes. Global/scoped `(?i)` now folds ordinary ASCII literals only, while
+  `(?iU)` enables Unicode-aware folding; `(?-i)`/`(?-U)` toggles, `\Q...\E`
+  quoted literals, and fixed `\uHHHH` references follow the active scope.
+- Added `str.match()` support for Pine/Java Unicode block properties in
+  `\p{InBlockName}` and `\p{Block=BlockName}` form, including `\P` negation,
+  Java block aliases, character-class nesting, quoted preservation, and the
+  Unicode 16.0 block range set. Block membership is independent of `(?U)`;
+  script and general-category properties retain their ordinary behavior.
+- Corrected `str.match()` Java/Pine POSIX `\p{...}` and `\P{...}` classes to
+  use ASCII definitions by default and Unicode compatibility definitions under
+  global/scoped `(?U)`, including `(?-U)` restoration, character-class nesting,
+  quoted preservation, and Unicode-mode case-insensitive POSIX names.
+- Corrected `str.match()` default-dot behavior to exclude Pine's complete line
+  terminator set (LF, CR/CRLF, U+0085, U+2028, and U+2029), while preserving
+  global/scoped `(?s)` dotall mode, `(?-s)` restoration, and literal dots in
+  escapes, character classes, and `\Q...\E` quotes.
+- Added `str.match()` support for Pine's fixed four-hex-digit `\uHHHH` Unicode
+  regex references inside and outside character classes, including exact
+  four-digit consumption and preservation inside `\Q...\E` quoted regions.
+- Corrected `str.match()` end-anchor behavior. Default `$` and `\Z` now match
+  before a final newline without returning that line terminator, while `\z`
+  remains absolute-end-only; global/scoped multiline mode and explicit final
+  newline matches retain their distinct behavior.
+- Added `str.match()` support for `\Q...\E` literal regex quoting, including
+  metacharacters, backslashes, quoted class delimiters, whitespace and comments
+  in verbose mode, resumption of regex syntax after `\E`, and quotes extending
+  to the pattern end when `\E` is omitted.
+- Added `str.match()` support for Pine's `\h` and `\H` horizontal-whitespace
+  regex classes, including the complete fixed Unicode character set, character
+  class nesting, and identical behavior with Unicode-aware mode enabled or
+  disabled.
+- Corrected `str.match()` predefined regex class behavior. `\d`, `\w`, `\s`,
+  their complements, and word boundaries now default to ASCII semantics, while
+  global or scoped `(?U)` enables Unicode-aware matching without accidentally
+  changing quantifier greediness; `(?-U)` restores the default within the
+  corresponding scope. The implementation retains the linear-time Rust regex
+  engine.
+- Corrected the `str.format()` `percent` number preset to its grouped
+  whole-number `#,###%` behavior while retaining explicit fractional precision
+  for custom percent placeholders.
+- Corrected predefined `format.percent` string conversion to append `%` after
+  two-decimal rounding without multiplying the input by 100. Custom formatting
+  strings with a trailing `%` token retain their existing scaling behavior.
+- Corrected `str.tostring(..., format.volume)` to abbreviate numeric scalars,
+  array elements, and matrix cells with K/M/B/T suffixes and volume precision,
+  including whole values below 1000 and suffix promotion at rounded thresholds.
+- Corrected `str.tostring(..., format.mintick)` to round numeric scalars, array
+  elements, and matrix cells to the fixed `syminfo.mintick = 0.01` subset,
+  including negative half-tick ties rounding up and two trailing decimal places.
+- Added `str.tostring()` support for float, int, bool, and string matrices.
+  Matrix rows use nested brackets, numeric formats apply per cell, and empty
+  row/column shapes are preserved; color matrices and direct matrix arguments
+  to `str.format()` remain semantically rejected.
+- Corrected `str.trim(na)` to return an empty string, matching the helper's
+  existing all-whitespace result instead of propagating `na`. ASCII trimming
+  and preservation of non-ASCII whitespace remain unchanged.
+- Corrected the shared date/time formatter's `W` week-of-month token. It now
+  groups days 1–7 through 29–31 into values `1..5`, so late dates in some
+  31-day months no longer produce an out-of-range sixth week; both
+  `str.format_time()` and UTC date placeholders are covered.
+- Corrected `str.format_time()` handling for a `na` timestamp. The function now
+  replaces the missing value with `0` and formats the UNIX epoch through the
+  same UTC, fixed-offset, or IANA timezone path, while `na` format and timezone
+  arguments retain their documented defaults.
+- Corrected `h`/`hh` formatting at midnight and noon in the shared date/time
+  formatter. The 12-hour value now follows the documented `0..11` range, with
+  `hh` adding a leading zero and `a` continuing to distinguish `AM` from `PM`;
+  both `str.format_time()` and UTC date/time placeholders are covered.
+- Corrected `S`/`SS`/`SSS` millisecond formatting in the shared date/time
+  formatter. Single `S` now preserves the complete millisecond value, while
+  repeated tokens add leading zeroes to the requested minimum width without
+  truncating values; both `str.format_time()` and UTC date/time placeholders
+  are covered.
+- Corrected doubled-apostrophe handling in shared date/time format patterns.
+  Both `str.format_time()` and UTC `str.format()` date/time placeholders now
+  render `''` as one literal apostrophe, including inside quoted text such as
+  `'o''clock'`, while preserving existing quoted-token behavior.
+- Added short `z`/`zz`/`zzz` timezone-name tokens to `str.format_time()`.
+  IANA zones render timestamp-specific abbreviations such as `EST` or `EDT`,
+  while UTC and fixed offsets render stable `UTC` or `GMT±HH:mm` text. Full
+  localized `zzzz` names remain outside the current timezone-data subset.
+- Added IANA timezone tokens to the const `timestamp(dateString)` overload.
+  Named zones share numeric-calendar timestamp resolution: repeated local times
+  select the earlier absolute instant and nonexistent local times shift forward
+  by the actual offset jump. Invalid zone names remain runtime errors.
+- Added IANA timezone support to numeric-calendar `timestamp()` calls. Named
+  zones use historical DST rules after calendar overflow normalization;
+  repeated local times select the earlier absolute instant, and nonexistent
+  local times shift forward by the offset jump. Invalid zone names remain
+  runtime errors.
+- Added IANA timezone support to explicit time-based sessions in `time()` and
+  `time_close()`. Session membership and close clipping follow the named zone's
+  timestamp-specific DST offset; repeated close times use the later instant,
+  while close times inside a forward DST gap advance to the first valid local
+  minute. Invalid zone names remain runtime errors.
+- Added IANA timezone support to `str.format_time()`. Named zones resolve their
+  offset at the supplied absolute timestamp, preserving DST, local date
+  rollover, and the matching numeric `Z` offset in formatted output. Invalid
+  zone names remain runtime errors; exchange-timezone defaults remain outside
+  the fixed runtime metadata model.
+- Added IANA timezone support to the calendar component functions `year()`,
+  `month()`, `weekofyear()`, `dayofmonth()`, `dayofweek()`, `hour()`,
+  `minute()`, and `second()`. Named zones such as `America/New_York` and
+  `Asia/Tokyo` resolve their offset at the supplied absolute timestamp, so DST
+  and local date rollover are preserved. Invalid zone names remain runtime
+  errors; `timestamp()`, `str.format_time()`, time/session functions, and
+  exchange-timezone defaults remain separate unsupported IANA boundaries.
+- Corrected `time()` and `time_close()` W/2W through 52W and M/2M through
+  12M boundaries to use the same UTC calendar groups as `timeframe.change()`.
+  Weekly periods now open on Monday, monthly periods use real calendar-month
+  lengths, and `timeframe_bars_back` shifts whole requested calendar groups.
+  Intraday/day buckets, chart-space `bars_back`, fixed-offset session clipping,
+  and public output schemas are unchanged.
+- Corrected `timeframe.change()` weekly and monthly boundary detection. `W`
+  through `52W` now use UTC Monday-based calendar-week groups, while `M`
+  through `12M` use UTC calendar-month groups instead of fixed Unix-epoch
+  second buckets. Intraday and daily change detection, first-bar behavior,
+  empty/default timeframe handling, and `na` propagation are unchanged.
+- Added terminal `.put_all(source)` to every concrete scalar map call result,
+  completing the registered scalar map helper set on those receivers. It
+  requires an identical source template, clones source entries for self-merge
+  safety, replaces values without moving retained keys, appends new keys in
+  source order, returns `void`, and cannot continue. Local aliases update
+  shared storage; fresh constructor, copy, imported-function, and imported-
+  method targets isolate the merge. Invalid source/template/arity, UDF side-
+  effect, and public-schema boundaries retain ordinary `map.put_all` behavior.
+- Added terminal `.remove(key)` to every concrete scalar map call result. It
+  validates the resolved key kind, deletes a matching entry without reordering
+  retained keys, no-ops for a missing key, returns `void`, and cannot continue.
+  Local UDF and local user-method aliases update shared storage; fresh
+  constructor, copy, imported-function, and imported-method results isolate the
+  removal. Invalid key/arity, UDF side-effect, remaining map-mutation, template,
+  and public-schema boundaries retain ordinary `map.remove` behavior.
+- Added terminal `.clear()` to every concrete scalar map call result. It
+  empties the resolved backing entry list, returns `void`, and cannot continue.
+  Local UDF and local user-method aliases update shared storage; fresh
+  `map.new`, `map.copy`, imported-function, and imported-method results isolate
+  the clear. Arity, UDF side-effect, remaining map-mutation, template, and
+  public-schema boundaries retain ordinary `map.clear` behavior.
+- Added terminal `.put(key, value)` to every concrete scalar map call result:
+  supported `map.new<K,V>`, `map.copy(existing)`, local/imported pure functions,
+  and local/imported user methods. It reuses concrete key/value validation,
+  replaces an existing value without moving the key or appends a new insertion-
+  order entry, returns `void`, and cannot continue. Local UDF and local user-
+  method aliases update shared storage; fresh built-in and imported producers
+  isolate the write. Invalid key/value/arity, UDF side-effect, remaining map-
+  mutation, and public-schema boundaries are unchanged.
+- Added terminal numeric-matrix `.sort(column?, order?)` to concrete matrix
+  call results. It defaults to column 0 and ascending order, reorders complete
+  rows with stable equal keys, places `na` last ascending and first descending,
+  returns `void`, and cannot continue. Local UDF and local user-method alias
+  results update shared storage; fresh namespace, bound-transform, imported-
+  function, and imported-method results isolate the change. Column bounds/
+  `na`, unsupported-order, upstream-`na`, UDF side effects, and public schemas
+  retain ordinary `matrix.sort` boundaries. The namespace receiver signature
+  is now explicitly numeric, matching existing method dispatch.
+- Added terminal `.add_col(column, array_id)` to every concrete matrix call
+  result. It validates a simple-int insertion index and an element-kind-
+  matched array, copies the array into a new complete column—including into a
+  zero-row matrix—while preserving row count and element kind, returns `void`,
+  and cannot continue. Local UDF and local user-method alias results update
+  shared shape; fresh namespace, bound-transform, imported-function, and
+  imported-method results isolate the change. Bounds/`na` indexes, array-size
+  and cell-budget errors, upstream-`na` evaluation, UDF side effects, and
+  public schemas retain ordinary `matrix.add_col` boundaries.
+- Added terminal `.add_row(row, array_id)` to every concrete matrix call
+  result. It validates a simple-int insertion index and an element-kind-
+  matched array, copies the array into a new complete row—including into a
+  zero-column matrix—while preserving column count and element kind, returns
+  `void`, and cannot continue. Local UDF and local user-method alias results
+  update shared shape; fresh namespace, bound-transform, imported-function,
+  and imported-method results isolate the change. Bounds/`na` indexes, array-
+  size and cell-budget errors, upstream-`na` evaluation, UDF side effects, and
+  public schemas retain ordinary `matrix.add_row` boundaries.
+- Added terminal `.remove_col(column)` to every concrete matrix call result.
+  It validates a simple-int column index, removes one complete column—including
+  from a zero-row matrix—while preserving row count and element kind, returns
+  `void`, and cannot continue. Local UDF and local user-method alias results
+  update shared storage; fresh namespace, bound-transform, imported-function,
+  and imported-method results isolate the shape change. Bounds/`na` indexes,
+  upstream-`na` argument evaluation, UDF side effects, and public schemas
+  retain ordinary `matrix.remove_col` boundaries.
+- Added terminal `.remove_row(row)` to every concrete matrix call result. It
+  validates a simple-int row index, removes one complete row—including from a
+  zero-column matrix—while preserving column count and element kind, returns
+  `void`, and cannot continue. Local UDF and local user-method alias results
+  update shared storage; fresh namespace, bound-transform, imported-function,
+  and imported-method results
+  isolate the shape change. Bounds/`na` indexes, upstream-`na` argument
+  evaluation, UDF side effects, and public schemas retain ordinary
+  `matrix.remove_row` boundaries.
+- Added terminal `.swap_columns(column1, column2)` to every concrete matrix
+  call result. It validates two simple-int column indexes, swaps complete
+  columns while preserving shape and element kind, returns `void`, and cannot
+  continue. Local UDF and local user-method alias results update shared
+  storage; fresh namespace, bound-transform, imported-function, and imported-
+  method results isolate the write. Same-index no-op, bounds/`na` indexes,
+  upstream-`na` argument evaluation, UDF side effects, and public schemas
+  retain ordinary `matrix.swap_columns` boundaries.
+- Added terminal `.swap_rows(row1, row2)` to every concrete matrix call
+  result. It validates two simple-int row indexes, swaps complete rows while
+  preserving shape and element kind, returns `void`, and cannot continue.
+  Local UDF and local user-method alias results update shared storage; fresh
+  namespace, bound-transform, imported-function, and imported-method results
+  isolate the write. Same-index no-op, bounds/`na` indexes, upstream-`na`
+  argument evaluation, UDF side effects, and public schemas retain ordinary
+  `matrix.swap_rows` boundaries.
+- Added terminal `.reshape(rows, columns)` to every concrete matrix call
+  result. It preserves row-major cells while requiring the element count to
+  remain unchanged, returns `void`, and cannot continue. Local UDF and local
+  user-method alias results update shared shape; fresh namespace, bound-
+  transform, imported-function, and imported-method results isolate the shape
+  change. Simple-int, negative/`na`, count-mismatch, UDF side-effect, and
+  upstream-`na` boundaries retain ordinary `matrix.reshape` behavior; public
+  schemas are unchanged.
+- Added terminal `.reverse()` to every concrete matrix call result. It reverses
+  the row-major cell sequence in place without changing shape, returns `void`,
+  and cannot continue. Local UDF and local user-method alias results update
+  shared storage; fresh namespace, bound-transform, imported-function, and
+  imported-method results isolate the reordering. Empty and upstream-`na`
+  results, invalid arity, and UDF side-effect boundaries retain ordinary
+  `matrix.reverse` behavior; public schemas are unchanged.
+- Added terminal `.fill(value)` to every concrete matrix call result. It
+  preserves the receiver's float/int/bool/string/color element kind, fills all
+  cells in place, returns `void`, and cannot continue. Local UDF and local
+  user-method alias results update shared storage; fresh namespace, bound-
+  transform, imported-function, and imported-method results isolate the write.
+  Empty and upstream-`na` results, invalid type/arity, and UDF side-effect
+  boundaries retain ordinary `matrix.fill` behavior; public schemas are
+  unchanged.
+- Added terminal `.set(row, column, value)` to every concrete matrix call
+  result. It preserves the receiver's float/int/bool/string/color element kind,
+  simple-int indexes, bounds behavior, and `void`/no-continuation contract.
+  Local UDF and local user-method alias results update shared storage; fresh
+  namespace, bound-transform, imported-function, and imported-method results
+  isolate the write from their sources. Upstream `na`, invalid type/arity, and
+  UDF side-effect boundaries retain ordinary `matrix.set` behavior; public
+  schemas are unchanged.
+- Added mutating, array-returning `.concat(id2)` to every concrete array call
+  result. It preserves the receiver kind or exact scalar-tree UDT identity,
+  appends a same-kind source, returns the first array id, and may continue
+  through the closed array-result chain. Alias and live-slice receivers update
+  shared parent backing; fresh namespace/map/matrix snapshots remain source-
+  independent. Empty and upstream-`na` behavior, the 100000-element limit,
+  kind/identity/arity checks, and UDF side-effect rejection retain the existing
+  `array.concat` contract; public schemas are unchanged.
+- Added transforming `.sort_indices(order?, sort_field?)` to concrete same-
+  local and same-imported scalar-tree UDT array call results. The compile-time
+  root int/float/string field is resolved against the exact result identity;
+  the operation returns a fresh stable `array<int>` of original indexes,
+  leaves the source unchanged, and may continue through the existing closed
+  int-array chain. Missing, unknown, dynamic, or unsupported fields and
+  unresolved/non-scalar identities remain rejected; public schemas are
+  unchanged.
+- Added terminal top-level `.sort(order?, sort_field?)` to concrete array call
+  results. Int/float/string results use ordinary stable ascending/default or
+  descending ordering; same-local and same-imported scalar-tree UDT results
+  require a compile-time root int/float/string field resolved against the exact
+  identity. Alias/live-slice results reorder backing parents, while fresh map/
+  matrix/`matrix.mult` snapshots remain independent. Empty and upstream-`na`
+  results no-op after order evaluation. Unsupported kinds, field/order/arity,
+  continuation, and UDF-side-effect boundaries remain closed, and public
+  schemas are unchanged.
+- Added terminal top-level `.fill(value, index_from?, index_to?)` to every
+  concrete array call result. It validates the resolved scalar/object/
+  `chart.point` kind or same-local/same-imported scalar-tree UDT identity and
+  optional simple-int-compatible half-open bounds; omitted bounds fill the full
+  result. Alias/live-slice writes reach backing parents, while fresh matrix/map/
+  `matrix.mult` snapshots stay independent. Explicit `na`, negative, reversed,
+  oversized, empty, and upstream-`na` cases no-op after all supplied arguments
+  are evaluated. The mutation returns `void`, cannot continue, remains rejected
+  inside UDFs, and does not widen public schemas.
+- Added terminal top-level `.set(index, value)` to every concrete array call
+  result. It preserves simple-int-compatible positive, in-range negative,
+  explicit-`na`, empty, and out-of-range behavior; validates scalar/object/
+  `chart.point` kind or same-local/same-imported scalar-tree UDT identity;
+  replaces one slot without changing length; returns `void`; and cannot
+  continue. Alias/live-slice writes reach backing parents, while fresh matrix/
+  map/`matrix.mult` snapshots stay independent. Type/arity, upstream-`na`, and
+  UDF-side-effect boundaries retain ordinary behavior; public schemas are
+  unchanged.
+- Added terminal top-level `.insert(index, value)` to every concrete array call
+  result. It preserves simple-int-compatible positive, in-range negative, end,
+  and `na` index behavior; validates scalar/object/`chart.point` kind or same-
+  local/same-imported scalar-tree UDT identity; returns `void`; and cannot
+  continue. Alias-returning results and nested live slices update backing
+  parents, while fresh matrix/map/`matrix.mult` snapshots stay independent.
+  Bounds, arity, value/identity, upstream-`na`, 100000-element capacity, and
+  UDF-side-effect boundaries retain ordinary behavior; public schemas are
+  unchanged.
+- Added terminal top-level `.unshift(value)` to every concrete array call
+  result. It validates scalar/object/`chart.point` kind or same-local/same-
+  imported scalar-tree UDT identity, prepends one compatible value at the
+  resolved result's start, returns `void`, and cannot continue. Alias-returning
+  concat/local/imported results and nested live slices update backing parents;
+  fresh matrix/map/`matrix.mult` snapshots remain independent. Invalid value/
+  arity, upstream-`na`, 100000-element capacity, and UDF-side-effect boundaries
+  retain ordinary behavior; public schemas are unchanged.
+- Added terminal top-level `.push(value)` to every concrete array call result.
+  It validates scalar/object/`chart.point` kind or same-local/same-imported
+  scalar-tree UDT identity, appends one compatible value, returns `void`, and
+  cannot continue. Alias-returning concat/local/imported array results and
+  nested live slices update backing parents; fresh matrix/map/`matrix.mult`
+  snapshots remain independent. Map-result keys/values and matrix-result row/
+  column/eigenvalue continuations are also fixture-backed. Invalid value/arity,
+  upstream-`na`, 100000-element capacity, and UDF-side-effect boundaries retain
+  ordinary behavior; public schemas are unchanged.
+- Added terminal top-level `.remove(index)` to every concrete array call result.
+  It removes and returns the selected positive or in-range negative element
+  with preserved scalar/object/`chart.point` kind or same-local/same-imported
+  scalar-tree UDT identity. Explicit `na` indexes and upstream-`na` receivers
+  return `na` without mutation; out-of-range indexes retain runtime errors.
+  Alias-returning concat/local/imported function or method results and nested
+  live slices delete from their backing parent; fresh matrix/map/`matrix.mult`
+  snapshots remain independent. Index type/arity, terminal continuation, and
+  UDF-side-effect boundaries are fixture-backed; public schemas are unchanged.
+- Added terminal top-level `.shift()` to every concrete array call result. It
+  removes and returns the first resolved scalar/object/`chart.point` or same-
+  local/same-imported scalar-tree UDT element, preserves concrete UDT identity
+  and remaining-element order, returns `na` for empty/upstream-`na`, and cannot
+  continue. Alias-returning concat/local/imported function or method results
+  and nested live slices shrink their backing parent; fresh matrix row/column/
+  eigenvalue, map key/value, and array-returning `matrix.mult` snapshots remain
+  independent. Invalid arity and UDF-side-effect boundaries are fixture-backed;
+  public schemas are unchanged.
+- Added terminal top-level `.pop()` to every concrete array call result. It
+  removes and returns the final resolved scalar/object/`chart.point` or
+  same-local/same-imported scalar-tree UDT element, preserves concrete UDT
+  identity, returns `na` for empty/upstream-`na`, and cannot continue. Alias-
+  returning concat/local/imported function or method results and nested live
+  slices shrink their backing parent; fresh matrix row/column/eigenvalue, map
+  key/value, and array-returning `matrix.mult` snapshots remain independent.
+  Invalid arity and UDF-side-effect boundaries are fixture-backed; public
+  schemas are unchanged.
+- Added terminal top-level `.reverse()` to every concrete array call result.
+  It returns `void`, cannot continue, reverses alias-returning `array.concat`
+  and local/imported function or method results in place, and reorders only a
+  nested live slice window in its parent. Fresh matrix row/column/eigenvalue,
+  map key/value, and array-returning `matrix.mult` snapshots remain independent
+  of their source collections. Static/cross-namespace/local/imported, scalar,
+  object, `chart.point`, UDT, empty/upstream-`na`, invalid arity, terminal-
+  continuation, and UDF-side-effect rejection boundaries are fixture-backed;
+  public schemas are unchanged.
+- Added terminal top-level `.clear()` to every concrete array call result. It
+  returns `void`, cannot continue, clears alias-returning `array.concat` and
+  local/imported function or method results in place, and deletes a nested live
+  slice window from its parent. Fresh matrix row/column/eigenvalue, map key/
+  value, and array-returning `matrix.mult` snapshots remain independent of
+  their source collections. Static/cross-namespace/local/imported, scalar,
+  object, `chart.point`, UDT, empty/upstream-`na`, invalid arity, terminal-
+  continuation, and UDF-side-effect rejection boundaries are fixture-backed;
+  public schemas are unchanged.
+- Added transforming `.slice(index_from, index_to)` to every concrete array
+  call result. The direct path preserves scalar/object/`chart.point` element
+  kinds and same-local/same-imported scalar-tree UDT identity, returns the
+  ordinary half-open shallow live parent window, mirrors parent and window
+  writes in both directions, and can continue through the closed array helper
+  set. Static/cross-namespace, matrix/map-derived, local/imported function or
+  method, nested continuation, empty/upstream-`na`, invalid bounds/type/arity,
+  and result-type-directed `matrix.mult` parser boundaries are fixture-backed.
+- Added terminal `.join(separator?)` to every concrete scalar array call
+  result and to same-local/same-imported scalar-tree UDT array results. The
+  direct path preserves omitted/`na` comma fallback, explicit separators,
+  scalar/color/UDT formatting, empty-string and upstream-`na` results, source
+  non-mutation, and the existing 40960-character result limit. Static/cross-
+  namespace, matrix/map-derived, local/imported function/method, UDT identity,
+  invalid receiver/separator/arity, and terminal-continuation boundaries are
+  fixture-backed.
+- Added terminal `.some()` to every existing concrete bool, int, or float
+  array call result. It returns fixed `series bool` when any nonzero numeric or
+  `true` element exists, treats zero, `false`, and element `na` as
+  nonsatisfying, returns false for empty arrays, propagates upstream `na`,
+  leaves its source unchanged, and cannot continue through another postfix
+  call. Static/cross-namespace, matrix/map-derived, local/imported function/
+  method, invalid type/arity, terminal-continuation, empty/`na`, and UDT
+  boundaries are fixture-backed.
+- Added terminal `.every()` to every existing concrete bool, int, or float
+  array call result. It returns fixed `series bool`, treats nonzero numerics
+  and `true` as truthy, treats zero, `false`, and element `na` as false,
+  returns true for empty arrays, propagates an upstream `na` array, leaves its
+  source unchanged, and cannot continue through another postfix call. Static/
+  cross-namespace, matrix/map-derived, local/imported function/method, invalid
+  type/arity, terminal-continuation, empty/`na`, and UDT boundaries are
+  fixture-backed.
+- Added transforming `.sort_indices(order?)` to every existing concrete int,
+  float, or string array call result. It returns an independent fixed
+  `simple array<int>` of stable original indexes, preserves the established
+  float-`na` and string-empty ordering, supports default ascending or explicit
+  descending order, propagates upstream `na`, leaves its source unchanged, and
+  can continue through the closed array-result helper set. Static/cross-
+  namespace, matrix/map-derived, local/imported function/method, empty/`na`,
+  nested continuation, invalid type/order/arity, source-independence, and UDT
+  `sort_field` binding boundaries are fixture-backed.
+- Added terminal `.stdev(biased?)` to every existing concrete numeric array
+  call result. It returns the square root of the same filtered population or
+  sample variance selected by default/`true` versus `false`/`na` bias.
+  Single-value population standard deviation is zero; empty/all-`na`/upstream-
+  `na`, insufficient-sample, and non-finite results return `na`. Static/cross-
+  namespace, matrix/map-derived, local/imported function/method, invalid type/
+  arity, non-mutation, provenance, and terminal-continuation paths are fixture-
+  backed.
+- Added terminal `.variance(biased?)` to every existing concrete numeric array
+  call result. It filters `na`, returns fixed `series float`, uses population
+  bias by default or for `true`, and sample bias for `false` or `na`.
+  Single-value population variance is zero; empty/all-`na`/upstream-`na`,
+  insufficient-sample, and non-finite results return `na`. Static/cross-
+  namespace, matrix/map-derived, local/imported function/method, invalid type/
+  arity, non-mutation, provenance, and terminal-continuation paths are fixture-
+  backed.
+- Added transforming `.standardize()` to every existing concrete numeric
+  array call result. It returns an independent fixed `simple array<float>`,
+  computes mean and population standard deviation over non-`na` values,
+  preserves `na` positions, and maps numeric positions to `na` when deviation
+  is zero or non-finite. Empty/all-`na` inputs return an empty array and
+  upstream `na` propagates. Static/cross-namespace, matrix/map-derived,
+  local/imported function/method, invalid type/arity, source independence, and
+  copy/abs/standardize continuation paths are fixture-backed.
+- Added terminal `.covariance(id2, biased?)` to every existing concrete
+  numeric array call result. It requires a same-length numeric second array,
+  pairs original indexes, filters pairs containing `na`, defaults to the
+  population denominator, and uses the sample denominator for `false` or `na`
+  bias. It returns fixed `series float`; empty/all-`na`/upstream-`na`, length-
+  mismatch, insufficient-sample, and non-finite results return `na`. The read
+  remains non-mutating and terminal. Static/cross-namespace, matrix/map-derived,
+  local/imported function/method, invalid type/arity, provenance, and
+  continuation paths are fixture-backed.
+- Added terminal `.percentrank(index)` to every existing concrete numeric
+  array call result. It selects the target from the original array index,
+  filters `na` only from the comparison population, counts duplicates
+  independently, and returns fixed `series float`. Positional or named simple-
+  int-compatible indexes are accepted. Empty/all-`na`/upstream-`na`, target-
+  `na`, runtime typed-`na`, negative, and out-of-range indexes return `na`; the
+  read remains non-mutating and terminal. Static/cross-namespace, matrix/map-
+  derived, local/imported function/method, invalid type/arity, provenance, and
+  continuation paths are fixture-backed.
+- Added terminal `.percentile_linear_interpolation(percentage)` to every
+  existing concrete numeric array call result. It filters and sorts values,
+  interpolates at `percentage / 100 * (count - 1)`, and always returns
+  `series float` for integer, float, and single-element inputs. Positional or
+  named series/simple numeric percentages are accepted. Empty/all-`na`/
+  upstream-`na`, runtime typed-`na`, out-of-range, and non-finite results return
+  `na`; the read remains non-mutating and terminal. Static/cross-namespace,
+  matrix/map-derived, local/imported function/method, invalid type/arity,
+  provenance, and continuation paths are fixture-backed.
+- Added terminal `.percentile_nearest_rank(percentage)` to every existing
+  concrete numeric array call result. It filters and sorts values, uses
+  ceiling-based nearest-rank selection with 0/100 endpoints, preserves the
+  receiver-derived `series int`/`series float`, and accepts positional or named
+  series/simple numeric percentages. Empty/all-`na`/upstream-`na`, runtime
+  typed-`na`, negative, and above-100 percentages return `na`; the read remains
+  non-mutating and terminal. Static/cross-namespace, matrix/map-derived, local/
+  imported function/method, invalid type/arity, provenance, and continuation
+  paths are fixture-backed.
+- Added terminal `.mode()` to every existing concrete numeric array call
+  result. It filters `na`, returns the most frequent value in the receiver-
+  derived `series int`/`series float` kind, chooses the smaller value for tied
+  frequencies, and requires at least one repeated value. Empty/all-`na`/
+  upstream-`na` and all-unique arrays return `na`; the read remains non-
+  mutating and terminal. Static/cross-namespace, matrix/map-derived, local/
+  imported function/method, invalid type/arity, provenance, and terminal-
+  continuation paths are fixture-backed.
+- Added terminal `.median()` to every existing concrete numeric array call
+  result. It filters `na`, sorts remaining values, returns the middle value for
+  odd counts and the middle-pair arithmetic mean for even counts, preserves
+  receiver-derived `series int`/`series float`, and truncates integer means
+  toward zero. Empty/all-`na`/upstream-`na` arrays and non-finite float results
+  return `na`. Static/cross-namespace, matrix/map-derived, local/imported
+  function/method, invalid type/arity, provenance, and terminal-continuation
+  paths are fixture-backed.
+- Added terminal `.range()` to every existing concrete numeric array call
+  result. It returns filtered maximum minus minimum with receiver-derived
+  `series int`/`series float`, yields `na` for empty/all-`na`/upstream-`na` or
+  non-finite float differences, and remains non-mutating. Static/cross-
+  namespace, matrix/map-derived, local/imported function/method, invalid type/
+  arity, and terminal-continuation paths are fixture-backed.
+- Added terminal `.avg()` to every existing concrete numeric array call result.
+  It ignores `na`, always returns `series float`, yields `na` for empty/all-
+  `na`/upstream-`na` or non-finite results, and remains non-mutating. Static/
+  cross-namespace, matrix/map-derived, local/imported function/method, invalid
+  type/arity, and terminal-continuation paths are fixture-backed.
+- Added terminal `.sum()` to every existing concrete numeric array call result.
+  It preserves receiver-derived `series int`/`series float`, ignores `na`
+  elements, returns `na` for empty/all-`na`/upstream-`na` arrays, and remains
+  non-mutating. Static/cross-namespace, matrix/map-derived, local/imported
+  function/method, invalid type/arity, and terminal-continuation paths are
+  fixture-backed.
+- Added terminal `.max(nth?)` to every existing concrete numeric array call
+  result. It mirrors `.min(nth?)` with descending zero-based rank order while
+  preserving receiver-derived `series int`/`series float`, filtered `na`,
+  duplicate ranks, dynamic integer ranks, and `nth=0` as the maximum. Empty/
+  all-`na`/upstream-`na` arrays and `na`, negative, or out-of-range ranks return
+  `na`. Static/cross-namespace, matrix/map-derived, local/imported function/
+  method, invalid type/arity, and terminal-continuation paths are fixture-backed.
+- Added terminal `.min(nth?)` to every existing concrete numeric array call
+  result. It returns the receiver element's `series int` or `series float`,
+  filters `na`, ranks remaining values in ascending zero-based order, accepts
+  dynamic integer ranks, and defaults to rank `0`. Empty/all-`na`/upstream-`na`
+  arrays and `na`, negative, or out-of-range ranks return `na`. Static/cross-
+  namespace, matrix/map-derived, local/imported function/method, int/float,
+  rank binding, invalid type/arity, and terminal-continuation paths are fixture-
+  backed.
+- Added `.abs()` to every existing concrete numeric array call result. It
+  allocates a fresh same-kind int/float array, preserves `na` elements, leaves
+  the source unchanged, returns an empty array for an empty receiver, and
+  propagates an upstream `na` array. The result can continue through current
+  array readers, `.copy()`, or another `.abs()`. Static/cross-namespace,
+  numeric matrix/map-derived, local/imported function/method, invalid type/
+  arity, nonnumeric/UDT, empty/`na`, independence, and continuation paths are
+  fixture-backed.
+- Added terminal `.binary_search_rightmost(value)` to every existing concrete
+  numeric array call result. Exact duplicates return their last index; misses
+  return the nearest-right element index, clamped to `0` below the minimum and
+  the last index above the maximum. It retains the numeric/ascending gates,
+  empty/upstream-`na` `-1`, fixed `simple int`, non-mutation, and terminal
+  boundaries. Registered static/cross-namespace, numeric matrix/map-derived,
+  local/imported function/method, nonnumeric/UDT rejection, invalid type/arity,
+  copy-continuation, and terminal-continuation paths are fixture-backed.
+- Added terminal `.binary_search_leftmost(value)` to every existing concrete
+  numeric array call result. It preserves the numeric receiver/value and caller-
+  owned ascending-input gates. Exact duplicates return their first index;
+  misses return the nearest-left element index, clamped to `0` below the minimum
+  and the last index above the maximum. Empty and upstream-`na` arrays return
+  `-1`; the `simple int` result is non-mutating and terminal. Registered static/
+  cross-namespace, numeric matrix/map-derived, local/imported function/method,
+  clamp, nonnumeric/UDT rejection, invalid type/arity, copy-continuation, and
+  terminal-continuation paths are fixture-backed.
+- Added terminal `.binary_search(value)` to every existing concrete numeric
+  array call result. Registered static/cross-namespace producers, qualified and
+  unqualified local/imported UDF and method results, numeric matrix row/column/
+  eigenvalue/mult arrays, and numeric map key/value arrays retain the ordinary
+  numeric receiver/value checks. Callers provide ascending contents; exact
+  lower-bound search returns the leftmost duplicate match as `simple int` or
+  `-1` for missing, empty, and upstream-`na` arrays. The helper is non-mutating
+  and terminal, while bool/string/color, drawing/chart-point, and UDT result
+  arrays remain rejected. Invalid type/arity, copy continuation, provenance/
+  dual-alias, and terminal-continuation boundaries are fixture-backed.
+- Added terminal `.lastindexof(value)` last-index searches to every existing
+  concrete array call result. It covers qualified and unqualified local/
+  imported UDF and method results, registered static `array.*` producers, the
+  seven cross-namespace scalar-array producers, matrix row/column/eigenvalue
+  arrays, map key/value arrays, and array-returning `matrix.mult` overloads.
+  The helper reuses ordinary element-kind and same-identity UDT validation plus
+  structural/object equality, returns the last zero-based match as `simple
+  int`, returns `-1` for missing or empty concrete arrays and for upstream
+  `na`, performs no mutation, and creates no continuation prefix. Repeated
+  scalar and structural-UDT values, A-to-B-to-A and dual-alias isolation, copy
+  continuation, wrong type/identity, invalid arity, and terminal-continuation
+  boundaries are fixture-backed.
+- Added terminal `.indexof(value)` first-index searches to every existing
+  concrete array call result. It covers qualified and unqualified local/
+  imported UDF and method results, registered static `array.*` producers, the
+  seven cross-namespace scalar-array producers, matrix row/column/eigenvalue
+  arrays, map key/value arrays, and array-returning `matrix.mult` overloads.
+  The helper reuses ordinary element-kind and same-identity UDT validation plus
+  structural/object equality, returns the first zero-based match as `simple
+  int`, returns `-1` for missing or empty concrete arrays and for upstream
+  `na`, performs no mutation, and creates no continuation prefix. Scalar,
+  drawing/chart-point, local/imported UDT, A-to-B-to-A, dual-alias isolation,
+  copy continuation, wrong type/identity, invalid arity, and terminal-
+  continuation boundaries are fixture-backed.
+- Added terminal `.includes(value)` membership checks to every existing
+  concrete array call result: qualified and unqualified local/imported UDF and
+  method results, registered static `array.*` producers, the seven
+  cross-namespace scalar-array producers, matrix row/column/eigenvalue arrays,
+  map key/value arrays, and array-returning `matrix.mult` overloads. The helper
+  reuses ordinary element-kind and same-identity UDT argument validation plus
+  structural/object equality, returns `series bool`, is false for an empty
+  concrete array, propagates an upstream `na` array, performs no mutation, and
+  creates no continuation prefix. Scalar, drawing/chart-point, local/imported
+  UDT, A-to-B-to-A, dual-alias isolation, copy continuation, wrong type/
+  identity, invalid arity, and terminal-continuation boundaries are fixture-
+  backed.
+- Added result-type-directed `.mult(other)` continuation to every existing
+  concrete numeric matrix call result. Matrix and scalar operands return
+  independent `matrix<float>` results with multiplied or receiver-preserved
+  shape; numeric-array operands return independent `array<float>` results with
+  one value per receiver row. The resolved result selects the closed matrix or
+  array helper set while retaining numeric operand checks, `na`, zero-inner-
+  dimension, multiplication order, matrix cell-budget, matrix-dimension, and
+  vector-length behavior. Namespace and bound operations, local/imported
+  functions and methods, int-to-float lowering, nested multiplication, source
+  independence, provenance, dual aliases, invalid types/arity, and runtime
+  failure boundaries are fixture-backed; mutation and the remaining matrix-
+  valued helpers stay gated.
+- Added matrix-valued `.diff(other)` continuation to every existing concrete
+  numeric matrix call result. It retains the numeric receiver and numeric-
+  matrix-or-scalar operand checks, always returns an independent
+  `matrix<float>`, preserves receiver shape and left-to-right subtraction,
+  propagates `na` cells, `na` scalars, and upstream `na`, preserves zero
+  dimensions, keeps the matching-shape runtime error for matrix operands, and
+  retains the matrix-result prefix. Namespace and bound operations, local/
+  imported functions and methods, int-to-float lowering, nested differences,
+  scalar and matrix operands, source independence, provenance, dual aliases,
+  invalid types/arity, and runtime failure boundaries are fixture-backed;
+  mutation and the remaining matrix-valued helpers stay gated.
+- Added matrix-valued `.kron(other)` continuation to every existing concrete
+  numeric matrix call result. It retains the numeric receiver and numeric-
+  matrix operand checks, always returns an independent `matrix<float>`,
+  multiplies both source row and column dimensions, preserves `na` cells and
+  zero dimensions, propagates upstream `na`, keeps the matrix cell-budget
+  error, and retains the matrix-result prefix. Namespace and bound operations,
+  local/imported functions and methods, int-to-float lowering, nested
+  Kronecker products, source independence, provenance, dual aliases, invalid
+  types/arity, and runtime failure boundaries are fixture-backed; mutation and
+  the remaining matrix-valued helpers stay gated.
+- Added matrix-valued `.pow(power)` continuation to every existing concrete
+  numeric matrix call result. It retains the numeric receiver and simple-int
+  power checks, always returns an independent `matrix<float>`, preserves the
+  runtime square-matrix boundary, supports identity/copy/positive powers and
+  empty `0 x 0`, preserves `na` cells for positive powers, retains negative and
+  `na` power errors, and keeps the matrix-result prefix. Namespace and bound
+  operations, local/imported functions and methods, int-to-float lowering,
+  nested powers, source independence, provenance, dual aliases, invalid types/
+  arity, and runtime failure boundaries are fixture-backed; mutation and the
+  remaining matrix-valued helpers stay gated.
+- Added matrix-valued `.eigenvectors()` continuation to every existing
+  concrete numeric matrix call result. It retains the numeric receiver check,
+  always returns an independent `matrix<float>`, preserves square shape for a
+  complete real eigenvector basis, returns empty `0 x 0`, retains the runtime
+  non-square error, yields `na` for invalid-cell, non-finite, non-real,
+  incomplete, or upstream-`na` results, and retains the matrix-result prefix.
+  Namespace and bound operations, local/imported functions and methods, int-
+  to-float lowering, nested/double chains, source independence, provenance,
+  dual aliases, invalid types/arity, and runtime failure boundaries are
+  fixture-backed; mutation and the remaining matrix-valued helpers stay gated.
+- Added matrix-valued `.pinv()` continuation to every existing concrete
+  numeric matrix call result. It retains the numeric receiver check, always
+  returns an independent `matrix<float>`, swaps rectangular row/column counts,
+  preserves singular matrix-valued results and swapped zero-cell shapes,
+  yields `na` for invalid-cell, non-finite, or upstream-`na` inputs, and
+  retains the matrix-result prefix. Namespace and bound operations,
+  local/imported functions and methods, int-to-float lowering, nested and
+  double-pseudo-inverse chains, source independence, provenance, dual aliases,
+  invalid types/arity, and rectangular/singular/zero-cell boundaries are
+  fixture-backed; mutation and the remaining matrix-valued helpers stay gated.
+- Added matrix-valued `.inv()` continuation to every existing concrete numeric
+  matrix call result. It retains the numeric receiver check, always returns an
+  independent `matrix<float>`, preserves square shape for invertible inputs,
+  returns an empty `0 x 0` matrix for empty input, yields `na` for singular,
+  invalid-cell, non-finite, or upstream-`na` inputs, and retains the matrix-
+  result prefix for further supported continuations and readers. Namespace and
+  bound operations, local/imported functions and methods, int-to-float
+  lowering, nested chains, source independence, provenance, dual aliases,
+  invalid types/arity, and the runtime non-square boundary are fixture-backed;
+  mutation and the remaining matrix-valued helpers stay gated.
+- Added matrix-valued `.submatrix(...)` continuation to every existing
+  concrete matrix call result. It preserves float/int/bool/string/color
+  element kinds, returns an independent half-open range with optional/default
+  bounds, preserves empty row/column shapes, propagates upstream `na`, and may
+  continue through `.copy()`, `.submatrix(...)`, `.transpose()`, or any
+  supported matrix reader. Namespace and bound operations, exact templates,
+  local/imported functions and methods, named arguments, nested ranges, five-
+  kind reads, source independence, invalid types/arity, runtime bounds,
+  provenance, and dual aliases are fixture-backed; mutation and the remaining
+  matrix-valued helpers stay gated.
+- Added matrix-valued `.transpose()` continuation to every existing concrete
+  matrix call result. It preserves float/int/bool/string/color element kinds,
+  returns an independent matrix with swapped row/column counts, propagates
+  upstream `na`, and may continue through `.copy()`, another `.transpose()`, or
+  any supported terminal/array-producing matrix reader. Namespace and bound
+  operations, exact templates, local/imported functions and methods, empty
+  shapes, five-kind reads, source independence, invalid arity, provenance, and
+  dual aliases are fixture-backed; mutation and the remaining broader matrix-
+  valued helpers stay gated.
+- Added terminal `.rank()` reads to every existing concrete numeric matrix call
+  result. The helper retains the float/int check and fixed `series int` result,
+  supports rectangular and singular matrices, returns `0` for zero-element
+  matrices, and returns `na` for invalid/non-finite cells or upstream `na`.
+  Copy continuation, producer provenance, dual aliases, non-numeric rejection,
+  invalid arity, and terminal continuation are fixture-backed.
+- Added terminal `.det()` reads to every existing concrete numeric matrix call
+  result. The helper retains the float/int check and fixed `series float`
+  result, the runtime square-matrix boundary, `0 x 0 = 1.0`, singular zero,
+  invalid-cell/non-finite `na`, and upstream-`na` propagation without adding
+  static shape inference. Copy continuation, producer provenance, dual aliases,
+  non-numeric rejection, invalid arity, and terminal continuation are fixture-
+  backed.
+- Added terminal `.trace()` reads to every existing concrete numeric matrix
+  call result. The helper retains the float/int check and fixed `series float`
+  result, sums non-`na` main-diagonal cells across rectangular matrices, and
+  returns `na` for an empty/all-`na` diagonal, non-finite sum, or upstream-`na`
+  result. Copy continuation, producer provenance, dual aliases, non-numeric
+  rejection, invalid arity, and terminal continuation are fixture-backed.
+- Added terminal `.mode()` reads to every existing concrete numeric matrix call
+  result. The helper retains the float/int check and fixed `series float`
+  result, ignores `na` cells, selects the smaller value on an equal-frequency
+  tie, and returns `na` for empty, all-`na`, no-repeat, non-finite, or upstream-
+  `na` results. Copy continuation, producer provenance, dual aliases, non-
+  numeric rejection, invalid arity, and terminal continuation are fixture-
+  backed.
+- Added terminal `.max()` reads to every existing concrete numeric matrix call
+  result. The helper retains the float/int check and fixed `series float`
+  result, scans only non-`na` cells, and returns `na` for empty, all-`na`, non-
+  finite, or upstream-`na` results. Copy continuation, producer provenance,
+  dual aliases, non-numeric rejection, invalid arity, and terminal continuation
+  are fixture-backed.
+- Added terminal `.min()` reads to every existing concrete numeric matrix call
+  result. The helper retains the float/int check and fixed `series float`
+  result, scans only non-`na` cells, and returns `na` for empty, all-`na`, non-
+  finite, or upstream-`na` results. Copy continuation, producer provenance,
+  dual aliases, non-numeric rejection, invalid arity, and terminal continuation
+  are fixture-backed.
+- Added terminal `.avg()` reads to every existing concrete numeric matrix call
+  result. The helper retains the float/int check and fixed `series float`
+  result, averages only non-`na` cells, and returns `na` for empty, all-`na`,
+  non-finite, or upstream-`na` results. Copy continuation, producer provenance,
+  dual aliases, non-numeric rejection, invalid arity, and terminal continuation
+  are fixture-backed.
+- Added terminal `.sum()` reads to every existing concrete numeric matrix call
+  result. The helper retains the float/int check and fixed `series float`
+  result, ignores `na` cells, and returns `na` for empty, all-`na`, non-finite,
+  or upstream-`na` results. Copy continuation, producer provenance, dual
+  aliases, non-numeric rejection, invalid arity, and terminal continuation are
+  fixture-backed.
+- Added terminal `.is_stochastic()` reads to every existing concrete numeric
+  matrix call result. The helper retains the float/int check and ordinary
+  stochastic rule: a non-empty matrix of finite non-negative values is true
+  when every row or every column sums exactly to one; empty matrices, invalid
+  cells, and negative values are false, while upstream `na` matrices propagate
+  `na`. Producer provenance, dual aliases, non-numeric rejection, invalid
+  arity, and terminal continuation are fixture-backed.
+- Added terminal `.is_antisymmetric()` reads to every existing concrete numeric
+  matrix call result. The helper retains the float/int check and ordinary
+  antisymmetric rule: square shape, exact-zero main diagonal, exact negated
+  transposed pairs, false for any `na`, and true for empty 0×0 results;
+  upstream `na` matrices propagate `na`. Producer provenance, dual aliases,
+  non-numeric rejection, invalid arity, and terminal continuation are fixture-
+  backed.
+- Added terminal `.is_symmetric()` reads to every existing concrete numeric
+  matrix call result. The helper retains the float/int check and ordinary
+  symmetric rule: square shape, exact transposed-pair equality, false for any
+  `na`, and true for empty 0×0 results; upstream `na` matrices propagate `na`.
+  Producer provenance, dual aliases, non-numeric rejection, invalid arity, and
+  terminal continuation are fixture-backed.
+- Added terminal `.is_identity()` reads to every existing concrete numeric
+  matrix call result. The helper retains the float/int check and ordinary
+  identity rule: square shape, exact-one main diagonal, exact-zero off-
+  diagonal cells, false for any `na`, and true for empty 0×0 results; upstream
+  `na` matrices propagate `na`. Producer provenance, dual aliases, non-numeric
+  rejection, invalid arity, and terminal continuation are fixture-backed.
+- Added terminal `.is_diagonal()` reads to every existing concrete numeric
+  matrix call result. The helper retains the float/int check and ordinary
+  rectangular-diagonal rule: only off-diagonal cells must be exactly zero,
+  diagonal `na` is allowed, off-diagonal `na` is false, and empty results are
+  true; upstream `na` matrices propagate `na`. Producer provenance,
+  dual aliases, non-numeric rejection, invalid arity, and terminal continuation
+  are fixture-backed.
+- Added terminal `.is_binary()` reads to every existing concrete numeric
+  matrix call result. The helper retains the float/int type check and ordinary
+  strict 0-or-1 rules: binary and zero-element results are true, another value
+  or `na` cell is false, and an upstream `na` matrix result propagates `na`.
+  Namespace/bound operations, exact numeric templates, local/imported function
+  and method provenance, dual aliases, non-numeric rejection, invalid arity,
+  and terminal continuation are fixture-backed.
+- Added terminal `.is_zero()` reads to every existing concrete numeric matrix
+  call result. The helper retains the float/int matrix check and ordinary
+  zero-value rules: all-zero and zero-element results are true, a nonzero or
+  `na` cell is false, and an upstream `na` matrix result propagates `na`.
+  Namespace/bound operations, exact numeric templates, local/imported function
+  and method provenance, dual aliases, non-numeric rejection, invalid arity,
+  and terminal continuation are fixture-backed.
+- Added terminal `.is_square()` reads to every existing concrete matrix call
+  result. The helper accepts float/int/bool/string/color matrices, returns a
+  simple bool, preserves the ordinary `matrix.is_square` shape rule, and does
+  not create another postfix receiver. Namespace/bound operations, exact
+  `matrix.new<T>` templates, local and imported function or method provenance,
+  true/false shapes, dual aliases, invalid arity, and terminal continuation are
+  fixture-backed.
+- Added direct `.eigenvalues()` reads to concrete numeric matrix call results.
+  The method preserves the existing numeric-matrix type check and square-
+  matrix runtime boundary, returns a fresh `array<float>`, and supports direct
+  binding plus `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` with copy-only
+  array continuation. Namespace/bound operations, local and imported function
+  or method provenance, dual aliases, source independence, non-numeric
+  rejection, and call-result-array mutation rejection are fixture-backed.
+- Added direct `.col(index)` reads to every existing concrete matrix call-
+  result producer. Each read returns a fresh element-kind-preserving scalar
+  array with the same direct binding, array-reader, copy-only continuation,
+  source-independence, five-kind, and dual-alias guarantees as call-result
+  `.row(index)`. Column index checks, call-result-array mutation rejection, and
+  the retained broader-matrix-helper boundary are fixture-backed.
+- Added direct `.row(index)` reads to every existing concrete matrix call-result
+  producer, including namespace and bound matrix operations, exact
+  `matrix.new<float|int|bool|string|color>` templates, local UDFs, local and
+  imported user methods, and registered imported functions. Each read returns
+  a fresh element-kind-preserving scalar array that supports direct binding and
+  `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` with copy-only array
+  continuation. Index type checks, source independence, all five scalar matrix
+  kinds, dual aliases, and mutation boundaries are fixture-backed.
+- Added direct `.values()` reads for every existing concrete scalar-map call
+  result. The result is a fresh value-kind-preserving scalar array with the
+  same direct binding, `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`, copy-
+  only continuation, dual-alias, and source-map-independence guarantees as
+  call-result `.keys()`. Map or call-result-array mutation, unsupported
+  templates, broader helpers, and terminal key/value-reader continuation
+  remain gated.
+- Added direct `.keys()` reads for every existing concrete scalar-map call
+  result, including supported `map.new<K,V>`, `map.copy(existing)`, local and
+  imported pure functions, and local and imported user methods. The result is
+  a fresh key-kind-preserving scalar array that supports direct binding and
+  `.size()`/`.get()`/`.first()`/`.last()`/`.copy()` with copy-only array
+  continuation. Direct `.values()`, map or call-result-array mutation,
+  unsupported templates, broader helpers, and terminal key-reader
+  continuation remain gated.
+- Extended qualified same-local user-method and imported UDF/user-method
+  UDT-array call-result sugar with `.size()`, `.get(index)`, and `.last()`,
+  alongside the existing `.first()` and `.copy()` paths. The new read-only
+  accessors preserve simple-int or concrete UDT element return types through
+  named indexes, nested copy chains, generic A-to-B-to-A calls, and two aliases
+  of one library. Empty and typed-`na` results, `na` and negative indexes,
+  precise `get` bounds errors, and explicit same-named local/imported or scalar
+  UDT methods are fixture-backed. Unqualified local UDF results, mixed or
+  non-scalar identities, other direct helpers, and call-result mutation remain
+  gated.
+- Added direct `.first()` and `.copy()` method sugar for qualified same-local
+  user-method results carrying a concrete scalar-tree UDT-array identity.
+  Receiver-style and type-qualified calls, independent `.first()` and
+  `.copy().first()` First-to-Second-to-First sequences, generic UDF wrappers,
+  and copy independence are fixture-backed. Parser-synthetic postfix calls stay
+  distinct from explicit local methods named `first` or `copy`, including when
+  the explicit argument is itself a method call. Unqualified local UDF results
+  and helpers beyond the read-only `size`/`get`/`first`/`last`/`copy` set
+  remain gated.
+- Added direct `.first()` and `.copy()` method sugar for qualified imported UDF
+  or user-method results that carry a concrete same-imported scalar-tree UDT
+  array identity. Multi-segment `.copy().first()` chains, First-to-Second-to-
+  First calls, two aliases of one library, and copy independence now lower and
+  execute without binding the producer first. Import validation and rewriting
+  preserve the parser's postfix receiver shape, while explicit same-named
+  exports such as `lib.first(values)` and `lib.copy(values)` retain normal
+  function dispatch, even when the same library also defines scalar UDT methods
+  named `first` or `copy`; those scalar constructor, UDF-result, and
+  method-result call chains remain user methods without a duplicated receiver,
+  including method chains whose returned UDT identity differs from the input.
+  Unqualified local UDF call-result receivers and direct array helpers beyond
+  the read-only `size`/`get`/`first`/`last`/`copy` set remain explicitly
+  rejected; namespace helpers stay available.
+- Preserved same-local and same-imported scalar-tree UDT-array identity for
+  every destructured UDT-array slot of tuple literals and local/imported UDF or
+  user-method tuple returns. Direct, block, nested, final-control-flow,
+  typed-`na`, typed-destination, A-to-B-to-A, and same-library dual-alias paths
+  now lower and execute with the correct element layout; different identities
+  may occupy different tuple slots. Tuple-valued ordinary declarations retain
+  their element types and identities through direct and self aliases,
+  ternary/`switch` results, assigned `if` results, shadowing, and later
+  destructuring. The first declaration fixes each UDT-array slot identity;
+  same-identity or `na` reassignment remains valid, while direct or
+  control-flow reassignment to another identity and unresolved nested tuple
+  consumers emit root-spanned `E_TUPLE_UDT_ARRAY_IDENTITY` diagnostics.
+  Recursive tuple-declaration right-hand sides now stop after the existing
+  recursion diagnostic instead of re-entering tuple type queries and
+  overflowing the stack.
+- Preserved same-local and same-imported scalar-tree UDT array element
+  identities through ternary, `if`, `switch`, `for`, `for...in`, and `while`
+  results, including array/`na` branches, block-local aliases, typed or
+  inferred declarations, and caller-side helper or iteration consumption.
+  Mixed UDT array identities now produce precise branch diagnostics instead of
+  passing analysis without executable HIR. Generic UDF inlining now resolves
+  UDT array parameters, flow aliases, array-element helpers, and reconstructed
+  `array.from` values per call, preventing the final call's element layout from
+  leaking into earlier calls. The local and imported UDF/method return slices
+  below build on that call-specific identity model.
+- Added fixture-backed imported UDF and user-method returns for same-imported
+  scalar-tree UDT arrays. Direct and block-alias returns preserve the source
+  array id, copy/new/from paths allocate independently, and private nested calls,
+  final control flow, typed methods with named/reordered arguments, and imported
+  type-position rewrites retain the caller's concrete identity. Source-aware
+  import-instance metadata isolates interleaved calls through two aliases of the
+  same physical library. Mixed imported identities, non-scalar returns,
+  unqualified local UDF or direct call-result array methods outside the
+  read-only `size`/`get`/`first`/`last`/`copy` set, and mutation
+  through unsupported UDF/method side-effect contexts remain rejected;
+  tuple-return conflicts are rejected per destructured UDT-array slot.
+- Preserved scalar map templates at call sites when local UDFs return inferred
+  map parameters, or when local UDFs and user methods return visible maps,
+  block-local aliases, `map.new`/copy results, nested calls, or final
+  control-flow results. The same generic UDF can now return different map
+  templates at different call sites, including named and reordered arguments,
+  without leaking span-cached metadata; callers can use namespace helpers,
+  history, `for...in`, and map methods after binding the result. Function-body
+  map mutation and direct call-result method chaining remain outside this slice.
+- Preserved scalar map key/value templates through ternary, `if`, `switch`,
+  `for`, `for...in`, and `while` expression results. This includes direct
+  helper consumption, typed and inferred declarations, same-template
+  reassignment, `map`/`na` branches, nested loop results, and block-local map or
+  `na` aliases; different branch templates now produce `E_BRANCH_TYPE` instead
+  of degrading into an unknown-template receiver error.
+- Extended `array.min` and `array.max` with their optional zero-based `nth`
+  order-statistic argument for int and float arrays. Namespace and method
+  calls accept positional or named ranks, namespace arguments can be reordered,
+  and dynamic series int ranks are supported; `na` elements are filtered while
+  duplicates retain independent ranks, and empty/all-`na` arrays or `na`,
+  negative, and out-of-range ranks return `na`. Non-int ranks are rejected
+  during semantic analysis.
+- Hardened built-in argument binding so required, duplicate, and positional-
+  after-named arguments are validated against signature parameter slots, and
+  indexed return types remain correct for reordered named calls. Aligned
+  `strategy.exit` metadata with the supported optional `from_entry` form while
+  preserving diagnostics for calls that omit both fixed and trailing triggers.
+- Fixed host-parity discovery for rustfmt-expanded runtime snapshot tuples and
+  made the representative public-host contract explicit: the current gate
+  discovers 695 registered CLI snapshots and verifies the manifest-selected 418
+  snapshots against both Python and WASM golden assertions. The 48 previously
+  single-host snapshots are now paired, map/matrix coverage adds 12
+  representatives, and any future silent single-host assertion fails the gate;
+  the current reasoned-exception set is empty.
+- Replaced the wasm compile-only release check with a real Node.js execution
+  gate. It builds the wasm32 module, generates matching JavaScript bindings, and
+  exercises analysis, direct and compiled execution, library/request/input host
+  combinations, and JavaScript exception propagation.
+- Added one shared scalar constant-call evaluator for the exact `int`, `float`,
+  `math.min`, `math.max`, `math.abs`, `math.floor`, `math.ceil`, and
+  `math.trunc` whitelist. Nested supported calls now drive static branch
+  selection, declaration range checks, constant/negative history-offset
+  analysis, and declaration/per-series `max_bars_back` inference. Finite
+  `int(float)` calls match runtime truncation/saturation before downstream range
+  checks, while out-of-`i64` rounding calls, unsupported calls, `na`, and
+  non-finite results remain unknown.
+- Kept these static values aligned with execution at integer boundaries:
+  all-integer `math.min`/`math.max` preserve exact `i64` values at runtime,
+  `math.abs(i64::MIN)` is rejected by bounded integer consumers instead of
+  becoming an unchecked unknown, and HIR constant aliases retain the value
+  visible when assigned rather than following later source-symbol
+  reassignments during history-bound inference.
+- Prevented history-offset evaluation and lowering from capturing a same-named
+  global in place of a UDF or user-method parameter; dynamic callable
+  arguments now retain dynamic history behavior through lowering.
+- Fixed UDF and user-method const-argument propagation for numeric, string, and
+  color comparisons, including tuple returns, while preventing tuple type
+  queries from capturing unrelated same-named globals.
+- Fixed condition-form switch qualifier propagation so fallback assignments
+  include reachable preceding conditions and statically selected results ignore
+  unreachable tail-condition qualifiers.
+- Unified scalar `Simple*`, `Const*`, and `AtMostInput*` acceptors behind one
+  exact/at-most qualifier-bound model while preserving existing signature names,
+  `na` compatibility, and diagnostic labels.
+- Extended stable pure-series identity to nested history expressions,
+  `str.pos`, and `color.r`/`color.g`/`color.b`/`color.t`, with matching
+  historical, incremental, and realtime rollback coverage.
+- Prevented pure-series identity reuse across reassigned scalar dependencies so
+  a later expression cannot inherit an earlier value's per-series
+  `max_bars_back` retention bound, and inlined UDF/method locals keep distinct
+  pre-/post-reassignment history sources.
+- Split module validation, analyzer constant evaluation, lowering reassignment
+  collection, lowering UDT resolution, and pure-series UDT traversal into
+  focused modules, with tighter structural line-budget guards for the former
+  hotspots.
+- Fixed UDT array chained field mutation index validation so `series int`
+  indexes are rejected with the same simple-int diagnostic as `array.get`.
+- Added a fixture-backed diagnostic for imported UDT array chained field
+  mutation, keeping that writeback path explicitly unsupported instead of
+  reporting an unknown UDT element.
+- Added fixture-backed local UDT constructor and method-result call-result
+  method receivers, including `Point.new(...).method(...)` scalar returns,
+  chained UDT returns, named arguments, and caller-side history reads from
+  scalar and UDT method-returned values.
+- Added fixture-backed imported UDT method-result receiver history identity, so
+  chains such as `lib.Point.new(...).make(...).shift(...)[n]` can reuse the
+  same pure series identity as their `max_bars_back` source.
+- Extended local and imported method-result receiver history identity through
+  block-bodied pure methods that return a local UDT constructor alias.
+- Added fixture-backed local UDF-returned UDT argument history identity, so
+  repeated pure UDF calls such as `read(make(...))[n]` can reuse the
+  `max_bars_back` source series.
+- Added imported exported-UDF-returned UDT argument history coverage, so
+  `read(lib.typedPoint(...))[n]` style pure calls retain the same series
+  identity as their bounded source.
+- Added CLI profile gates for UDT/UDF/method `max_bars_back(source, N)` identity
+  paths, covering local nested UDT aliases and imported alias-qualified method
+  calls.
+- Added fixture-backed pure `if`/`switch`/`for`/`while` expression identity
+  reuse plus pure `for...in` over inline `array.from(...)` identity reuse for
+  per-series `max_bars_back(source, N)` bounds and matching dynamic history reads.
+- Added fixture-backed pure `fixnan(...)` expression identity reuse for
+  per-series `max_bars_back(source, N)` bounds and matching dynamic history
+  reads.
+- Added fixture-backed pure `str.tonumber(...)` and `str.length(...)`
+  expression identity reuse for per-series `max_bars_back(source, N)` bounds and
+  matching dynamic history reads.
+- Added fixture-backed bare scalar map declaration inference for
+  `map name = map.new<K, V>()`, preserving the inferred template through
+  method-style map reads while keeping template-less `map name = na` rejected.
+- Added fixture-backed alias-qualified imported UDT method coverage for
+  same-imported scalar-tree UDT values read directly from arrays, with mismatched
+  local/imported element receiver identities still rejected.
+- Restricted `bgcolor.show_last` and `barcolor.show_last` to const/input int
+  values, with fixture coverage for accepted `input.int` counts and rejected
+  simple integer counts.
+- Restricted `fill.show_last` to const/input int values, with fixture coverage
+  for accepted `input.int` counts and rejected simple integer counts.
+- Restricted `plotcandle.show_last` to const/input int values, with fixture
+  coverage for accepted `input.int` counts and rejected simple integer counts.
+- Restricted `plotbar.show_last` to const/input int values, with fixture
+  coverage for accepted `input.int` counts and rejected simple integer counts.
+- Restricted `plotarrow.show_last` to const/input int values, with fixture
+  coverage for accepted `input.int` counts and rejected simple integer counts.
+- Restricted `plotshape.show_last` to const/input int values, with fixture
+  coverage for accepted `input.int` counts and rejected simple integer counts.
+- Restricted `plotchar.show_last` to const/input int values, with fixture
+  coverage for accepted `input.int` counts and rejected simple integer counts.
+- Restricted `plot.show_last` to const/input int values, with fixture coverage
+  for accepted `input.int` counts and rejected simple integer counts.
+- Restricted `plot.histbase` to const/input numeric values, with fixture
+  coverage for accepted `input.float` bases and rejected simple/series numeric
+  bases.
+- Restricted `plot.linewidth` to const/input int values, with fixture coverage
+  for accepted `input.int` widths and rejected simple integer widths.
+- Restricted `hline.linewidth` to const/input int values, with fixture coverage
+  for accepted `input.int` widths and rejected simple integer widths.
+- Restricted `hline.color` to const/input color values, with fixture coverage
+  for accepted `input.color` levels and rejected dynamic series colors.
+- Added internal `AtMostInput*` scalar acceptors and shared expected/got
+  diagnostics for future const/input string, bool, and color parameter
+  signature work.
+- Added HIR and runtime/profile coverage for `max_bars_back` when `N` is
+  returned by an imported exported pure UDF, including declaration-level
+  `indicator`/`strategy` bounds and per-series helper calls.
+- Added semantic coverage for imported exported-UDF final `for`/`for...in`/`while`
+  qualifier propagation, including `switch` block-arm final loop returns, through
+  simple-compatible `ta.sma` length callsites.
+- Improved same-local UDT `array.push` value-kind diagnostics so non-UDT values
+  report the expected UDT value family with the actual Pine type.
+- Avoid false positive negative-history diagnostics for `for...in` expression
+  bodies when the iterable is statically empty, including empty copied arrays,
+  empty concatenated arrays, empty sliced arrays, empty `array.abs`,
+  `array.standardize`, and `array.sort_indices` results, empty matrices, and
+  empty transposed/sliced matrices plus empty matrix row/column and
+  eigenvalue arrays, eigenvector matrices, inverse matrices, and
+  pseudo-inverse, Kronecker-product, matrix-multiplication matrix, array, and
+  scalar results, matrix-power, and matrix-difference matrix and scalar
+  results.
+- Detect negative history offsets returned from statically non-empty `for...in`
+  expression results, including array/matrix constructor sizes, copied
+  array/matrix iterables, concatenated array iterables, statically non-empty
+  sliced array windows, `array.abs`, `array.standardize`, and
+  `array.sort_indices` result arrays, transposed matrix iterables, statically
+  non-empty matrix submatrix windows, matrix row/column and eigenvalue arrays,
+  matrix eigenvector matrices, inverse matrices, pseudo-inverse matrices, and
+  Kronecker-product, matrix-multiplication matrix, array, and scalar results,
+  matrix-power, and matrix-difference matrix and scalar results, and loop-body
+  local aliases.
+- Detect negative history offsets through `matrix.mult` and `matrix.diff`
+  `for...in` iterable results when a scalar operand is a loop-body local alias.
+- Detect negative history offsets returned from statically non-empty
+  `str.split` `for...in` expression results, while avoiding false positives for
+  statically empty empty-separator splits.
+- Detect negative history offsets returned from the fixed-slot
+  `ta.pivot_point_levels` `for...in` expression result array.
+- Detect negative history offsets returned through loop-body tuple aliases in
+  statically bounded for expressions.
+- Detect negative history offsets selected by logical condition-switch arms
+  involving values returned from statically bounded for expressions.
+- Cover const float selector-form switch qualifier narrowing, including UDF
+  parameter const-key propagation and tuple destructuring.
+- Detect negative history offsets selected by int/float/bool/string/color comparisons
+  involving values returned from statically bounded for expressions.
+- Detect negative history offsets selected by int/float/bool/string/color
+  selector-switch keys returned from statically bounded for expressions.
+- Detect negative history offsets selected by bool conditions returned from
+  statically bounded for expressions, including loop-body local aliases.
+- Detect negative history offsets returned from statically bounded for
+  expression results, including loop-body local aliases.
+- Detect negative history offsets returned through branch-local tuple aliases in
+  if and switch block results.
+- Detect negative history offsets returned through branch-local aliases in if
+  and switch block results.
+- Detect negative history offsets produced by equal-valued ternary, if, and
+  switch branches even when the controlling input condition is not constant.
+- Added semantic guard coverage for direct `array.push` calls that try to append
+  a local UDT value into a same-named imported scalar-tree UDT array.
+- Added semantic guard coverage for method-style `array.push` calls that try to
+  append a local UDT value into a same-named imported scalar-tree UDT array.
+- Added semantic guard coverage for direct `array.push` calls that try to append
+  an imported UDT value into a same-named local scalar-tree UDT array.
+- Added semantic guard coverage for method-style `array.push` calls that try to
+  append an imported UDT value into a same-named local scalar-tree UDT array.
+- Added semantic guard coverage for direct `array.set` calls that try to
+  replace a same-named imported scalar-tree UDT array element with a local UDT
+  value.
+- Added semantic guard coverage for method-style `array.set` calls that try to
+  replace a same-named imported scalar-tree UDT array element with a local UDT
+  value.
+- Added semantic guard coverage for direct `array.set` calls that try to replace
+  a same-named local scalar-tree UDT array element with an imported UDT value.
+- Added semantic guard coverage for method-style `array.set` calls that try to
+  replace a same-named local scalar-tree UDT array element with an imported UDT
+  value.
+- Added semantic guard coverage for direct `array.insert` calls that try to
+  insert a local UDT value into a same-named imported scalar-tree UDT array.
+- Added semantic guard coverage for method-style `array.insert` calls that try
+  to insert a local UDT value into a same-named imported scalar-tree UDT array.
+- Added semantic guard coverage for direct `array.insert` calls that try to
+  insert an imported UDT value into a same-named local scalar-tree UDT array.
+- Added semantic guard coverage for method-style `array.insert` calls that try
+  to insert an imported UDT value into a same-named local scalar-tree UDT array.
+- Added semantic guard coverage for direct `array.unshift` calls that try to
+  prepend a local UDT value into a same-named imported scalar-tree UDT array.
+- Added semantic guard coverage for method-style `array.unshift` calls that try
+  to prepend a local UDT value into a same-named imported scalar-tree UDT array.
+- Added semantic guard coverage for direct `array.unshift` calls that try to
+  prepend an imported UDT value into a same-named local scalar-tree UDT array.
+- Added semantic guard coverage for method-style `array.unshift` calls that try
+  to prepend an imported UDT value into a same-named local scalar-tree UDT array.
+- Added semantic guard coverage for direct `array.fill` calls that try to
+  replace same-named imported scalar-tree UDT array elements with a local UDT
+  value.
+- Added semantic guard coverage for method-style `array.fill` calls that try to
+  replace same-named imported scalar-tree UDT array elements with a local UDT
+  value.
+- Added semantic guard coverage for direct `array.fill` calls that try to
+  replace same-named local scalar-tree UDT array elements with an imported UDT
+  value.
+- Added semantic guard coverage for method-style `array.fill` calls that try to
+  replace same-named local scalar-tree UDT array elements with an imported UDT
+  value.
+- Added semantic guard coverage for direct `array.includes` calls that try to
+  search a same-named imported scalar-tree UDT array with a local UDT value.
+- Added semantic guard coverage for method-style `array.includes` calls that
+  try to search a same-named imported scalar-tree UDT array with a local UDT
+  value.
+- Added semantic guard coverage for direct `array.includes` calls that try to
+  search a same-named local scalar-tree UDT array with an imported UDT value.
+- Added semantic guard coverage for method-style `array.includes` calls that
+  try to search a same-named local scalar-tree UDT array with an imported UDT
+  value.
+- Added semantic guard coverage for direct `array.indexof` calls that try to
+  search a same-named imported scalar-tree UDT array with a local UDT value.
+- Added semantic guard coverage for method-style `array.indexof` calls that try
+  to search a same-named imported scalar-tree UDT array with a local UDT value.
+- Added semantic guard coverage for direct `array.indexof` calls that try to
+  search a same-named local scalar-tree UDT array with an imported UDT value.
+- Added semantic guard coverage for method-style `array.indexof` calls that try
+  to search a same-named local scalar-tree UDT array with an imported UDT value.
+- Added semantic guard coverage for direct `array.lastindexof` calls that try
+  to search a same-named imported scalar-tree UDT array with a local UDT value.
+- Added semantic guard coverage for method-style `array.lastindexof` calls that
+  try to search a same-named imported scalar-tree UDT array with a local UDT
+  value.
+- Added semantic guard coverage for direct `array.lastindexof` calls that try
+  to search a same-named local scalar-tree UDT array with an imported UDT value.
+- Added semantic guard coverage for method-style `array.lastindexof` calls that
+  try to search a same-named local scalar-tree UDT array with an imported UDT
+  value.
+- Added semantic guard coverage for direct `array.concat` calls that try to
+  concatenate same-named imported and local scalar-tree UDT arrays.
+- Added semantic guard coverage for method-style `array.concat` calls that try
+  to concatenate same-named imported and local scalar-tree UDT arrays.
+- Added semantic guard coverage for direct `array.concat` calls that try to
+  concatenate same-named local and imported scalar-tree UDT arrays.
+- Added semantic guard coverage for method-style `array.concat` calls that try
+  to concatenate same-named local and imported scalar-tree UDT arrays.
+- Added semantic guard coverage for imported scalar-tree UDT bool fields used
+  as dynamic history offsets, including receiver-style and alias-qualified
+  method passthrough values.
+- Added semantic guard coverage for imported nested scalar-tree UDT bool fields
+  used as dynamic history offsets, including receiver-style and alias-qualified
+  method passthrough values.
+- Added semantic guard coverage for constant-expression negative history
+  offsets.
+- Added semantic guard coverage for prior named const alias-chain negative
+  history offsets.
+- Added semantic guard coverage for prior named const expression negative
+  history offsets.
+- Added semantic guard coverage for prior named const ternary negative history
+  offsets.
+- Added syntax-level folding and semantic guard coverage for prior named const
+  if-expression negative history offsets.
+- Added semantic guard coverage for prior named const comparison-driven ternary
+  negative history offsets.
+- Added syntax-level folding and semantic guard coverage for prior named const
+  numeric if- and switch-result comparison-driven ternary negative history
+  offsets.
+- Added semantic guard coverage for prior named const string-comparison-driven
+  ternary negative history offsets.
+- Added syntax-level folding and semantic guard coverage for prior named const
+  string if- and switch-result comparison-driven ternary negative history
+  offsets.
+- Added semantic guard coverage for prior named const color-comparison-driven
+  ternary negative history offsets.
+- Added syntax-level folding and semantic guard coverage for prior named const
+  color if- and switch-result comparison-driven ternary negative history
+  offsets.
+- Added semantic guard coverage for prior named const bool-comparison-driven
+  ternary negative history offsets.
+- Added syntax-level folding and semantic guard coverage for prior named const
+  bool if- and switch-result-driven ternary negative history offsets.
+- Added semantic guard coverage for prior named const logical-expression-driven
+  ternary negative history offsets.
+- Added semantic guard coverage for prior named const selector-switch negative
+  history offsets.
+- Added syntax-level folding and semantic guard coverage for prior named const
+  selector-switch block-arm negative history offsets.
+- Added semantic guard coverage for prior named const condition-switch negative
+  history offsets.
+- Added semantic guard coverage for imported scalar-tree UDT string fields used
+  as dynamic history offsets, including receiver-style and alias-qualified
+  method passthrough values.
+- Added semantic guard coverage for imported nested scalar-tree UDT string
+  fields used as dynamic history offsets, including receiver-style and
+  alias-qualified method passthrough values.
+- Added semantic guard coverage for imported UDT array declarations, `[]`
+  aliases, `varip` declarations, and `varip` `[]` aliases whose imported UDT
+  metadata contains non-scalar fields.
+- Added semantic guard coverage for `array.new<lib.Type>()` when imported UDT
+  metadata contains non-scalar fields.
+- Added semantic guard coverage for `array.from(lib.Type.new(...))` when
+  imported UDT metadata contains non-scalar fields.
+- Added semantic guard coverage for imported UDT value history and `varip`
+  declarations on non-scalar UDT metadata, and aligned imported scalar-tree
+  checks so drawing-object fields are not treated as scalar-tree UDT fields.
+- Added fixture-backed dynamic history offsets produced by integer-valued
+  ternary, if, switch, for, for-in, while, and built-in call results.
+- Fixed `for` loop counter qualifier propagation so a series-qualified `by`
+  step promotes the counter seen inside statement and expression loop bodies.
+- Improved expression-context `if`, `switch`, `for`, and `while` return
+  diagnostics so side-effect-only or loop-control endings consistently require
+  a value-producing expression.
+- Improved `map.put_all` template mismatch diagnostics so source and target
+  key/value kinds use canonical Pine type names.
+- Improved ternary and switch branch type mismatch diagnostics so branch kinds
+  use canonical Pine type names.
+- Improved user-method parameter mismatch diagnostics so expected parameter
+  types use canonical Pine type names.
+- Improved local and imported UDT constructor field type diagnostics so they use
+  canonical Pine type names instead of Rust enum names.
+- Improved same-local UDT `array.new<T>` initial value diagnostics so non-UDT
+  values now report the expected UDT identity alongside the actual type.
+- Added runtime-backed UDF and user-method qualifier propagation coverage for
+  scalar and simple-string values returned through expression, block-local,
+  final loop, branch-loop, switch-block, nested-loop, and while-result forms,
+  plus imported exported-UDF passthrough/block-local returns and imported method
+  receiver-style and alias-qualified passthrough/block-local/final-loop returns.
+- Added runtime-backed scalar typed declaration qualifier coverage for non-`na`
+  initializer preservation, typed-`na` reassignment inheritance, UDF-local typed
+  `na` reassignment, and later series promotion.
+- Added runtime-backed const-condition qualifier narrowing coverage for
+  literal/named/equality-derived `if`, ternary, switch, tuple, UDF, nested UDF,
+  and user-method length flows into simple-only TA consumers.
+- Added runtime-backed imported UDT typed-`na` value history coverage for
+  exported UDTs whose scalar-tree metadata depends on private library UDTs.
+- Added fixture-backed named same-imported scalar-tree UDT array typed UDF and
+  method arguments, plus caller-side history reads from returned imported UDT
+  array elements.
+- Added fixture-backed receiver-style and alias-qualified imported UDT method
+  calls with named/reordered non-receiver arguments and caller-side history
+  reads from named-argument UDT returns.
+- Added fixture-backed rejection for alias-qualified imported UDT method calls
+  whose receiver is not the first argument.
+- Added fixture-backed diagnostics for imported UDT method receiver and
+  parameter field mutation side-effect boundaries.
+- Fixed imported UDT method metadata so the same method name can be exported
+  for different scalar-tree UDT receiver types.
+- Added fixture-backed `chart.point` typed-flow declaration and value history
+  coverage for values returned from `for...in` expressions.
+- Added negative coverage for non-integer and negative dynamic history offsets
+  produced by `for...in` expression results.
+- Added fixture-backed runtime and realtime typed same-local UDT `varip`
+  initialization from `for...in` and `while` expression results.
+- Extended typed same-local UDT `varip` coverage to nested scalar-tree Wrapper
+  values initialized from ternary, switch, if, for, for-in, and while expression
+  results, with historical and realtime intrabar handoff.
+- Added committed and realtime confirmed-bar history coverage for representative
+  nested scalar-tree Wrapper `varip` values initialized from same-local ternary
+  expression results.
+- Extended same-local scalar-tree UDT array `varip` coverage to nested
+  scalar-tree elements initialized through `array.from(...)` and
+  `array.new<T>()`, with historical and realtime backing-store handoff.
+- Added fixture-backed runtime coverage for `for...in`-produced dynamic series
+  history offsets, including first-bar predicates and `na` dynamic offsets.
+- Added fixture-backed user-defined method qualifier rejection for final-if
+  branches or switch block arms that return series-controlled final loops when
+  consumed by simple-only arguments.
+- Added fixture-backed user-defined method qualifier rejection for final
+  `for`, `for...in`, and `while` returns promoted by series loop controls when
+  consumed by simple-only arguments.
+- Added fixture-backed user-defined method qualifier propagation for scalar and
+  simple-string returns through expression, block-local, final-if, loop, and
+  switch return shapes, including `ta.sma` length and `timeframe.in_seconds`
+  callsites.
+- Added fixture-backed user-defined method returned history offsets and
+  method-returned scalar series values, including returned `na` offsets and
+  constant/dynamic/`na` history reads from method call results.
+- Added fixture-backed caller-side history reads from local UDT UDF and method
+  returned values, including passthrough, constructor, and control-flow returns.
+- Added fixture-backed caller-side history reads from local nested scalar-tree
+  UDT UDF and method returned values.
+- Added fixture-backed history offsets produced by local and imported
+  scalar-tree UDT integer fields, including nested local/imported fields,
+  local UDF/method-returned values, and imported UDF/method-returned values.
+- Added fixture-backed rejection for non-integer and negative history offsets
+  produced by local/imported UDT fields, including imported direct/nested fields
+  and imported UDF passthrough/constructor-returned plus receiver-style or
+  alias-qualified method-returned direct/nested fields.
+- Added fixture-backed scalar, object-id, `chart.point`, same-local
+  scalar-tree UDT array, and same-imported scalar-tree UDT array typed
+  user-defined function parameters for `array<T>` and `T[]`, including
+  `array<int>`, `float[]`, `array<chart.point>`, and `line[]` parameter syntax,
+  typed argument rejection, and history reads from UDF results.
+- Added fixture-backed scalar, `chart.point`, scalar-array, object-id-array,
+  chart.point-array, same-local scalar-tree UDT array, and same-imported
+  scalar-tree UDT array typed user-defined method parameters, including
+  receiver-style and alias-qualified imported method calls plus typed argument
+  rejection.
+- Added fixture-backed scalar and `chart.point` typed user-defined function
+  parameters, including `chart.point` constructor returns, read-only
+  passthrough, and history reads from the typed returned point value.
+- Added fixture-backed same-local UDT typed user-defined function parameters,
+  including constructor returns, read-only passthrough, caller-side field reads,
+  and history reads from the typed returned UDT value.
+- Added fixture-backed imported exported functions with same-imported UDT typed
+  parameters, preserving imported UDT identity through passthrough,
+  constructor-return, caller-side field reads, and history reads.
+- Added fixture-backed `chart.point` UDF and user-defined method value flow for
+  constructor returns and read-only passthrough, including history reads from
+  the returned point value.
+- Added fixture-backed explicit `chart.point` typed declarations initialized
+  from `if`, `switch`, `for`, and `while` expression results, plus typed `na`
+  reassignment.
+- Added fixture-backed ordinary `var chart.point` realtime rollback, covering
+  field-mutation rollback between repeated forming updates.
+- Added fixture-backed single `chart.point` value history for `if`, `switch`,
+  `for`, and `while` expression results, including dynamic `na` offsets and
+  retained previous point values after current-point mutation.
+- Added fixture-backed repeated dynamic same-bar single `chart.point` value
+  history reads for direct point values,
+  `if`/`switch`/`for`/`for...in`/`while` expression point results, and UDF- or
+  method-returned point values, proving sibling historical point copies remain
+  independent after field mutation.
+- Added fixture-backed single `chart.point` value `varip` declarations, including
+  historical var-like execution and realtime intrabar field-mutation persistence.
+- Added fixture-backed committed and realtime confirmed-bar history reads for
+  single `chart.point` value `varip` declarations with constant and dynamic
+  offsets.
+- Added fixture-backed dynamic `na` offset history reads for UDF-returned and
+  method-returned single `chart.point` values.
+- Added fixture-backed dynamic `na` offset history reads for single
+  `chart.point` values produced by `if`, `for`, `for...in`, and `while`
+  expression results, matching the existing switch-expression coverage.
+- Added fixture-backed field reads from dynamically selected historical
+  `array<chart.point>` and chart.point slice snapshots.
+- Added fixture-backed repeated dynamic same-bar `array<chart.point>` and
+  chart.point slice history reads to prove sibling historical copies remain
+  independent after mutation.
+- Added fixture-backed content reads from dynamically selected historical
+  drawing-id array and slice snapshots for label, line, box, linefill, polyline,
+  and table ids.
+- Added fixture-backed repeated dynamic same-bar label, line, box, linefill,
+  polyline, and table array/slice history reads to prove sibling historical copies remain
+  independent after slot replacement.
+- Added fixture-backed field reads from dynamically selected historical
+  same-local and same-imported scalar-tree UDT array and slice snapshots.
+- Added fixture-backed repeated dynamic same-bar same-imported scalar-tree UDT
+  array and slice history reads to prove sibling historical copies remain
+  independent after UDT slot replacement.
+- Added fixture-backed content and shape reads from dynamically selected
+  scalar array/slice, while-expression array, matrix-shape, and
+  while-expression matrix history snapshots.
+- Added fixture-backed repeated dynamic same-bar scalar array and slice history
+  reads to prove sibling historical copies remain independent after mutation.
+- Added fixture-backed repeated dynamic same-bar matrix history reads to prove
+  sibling historical matrix copies remain independent after mutation and
+  reshape.
+- Added fixture-backed single `chart.point` value history, covering constant
+  offsets, dynamic `na` offsets, and retained previous point values after
+  mutating the current point.
+- Added fixture-backed scalar map key-only direct `for...in` iteration, where
+  statement and expression forms bind the single loop variable to the map key
+  while preserving existing `[key, value]` iteration and size-change runtime
+  rejection.
+- Allowed `ta.sma` to accept integer-compatible dynamic `length` arguments
+  while preserving non-integer length and non-series source rejection.
+- Allowed `ta.bb` and `ta.bbw` to accept integer-compatible dynamic `length`
+  arguments while preserving non-integer length and non-numeric multiplier
+  rejection.
+- Allowed `ta.kc` and `ta.kcw` to accept integer-compatible dynamic `length`
+  arguments while preserving non-integer length, non-simple multiplier, and
+  non-bool `useTrueRange` rejection.
+- Allowed `math.sum` to accept integer-compatible dynamic `length` arguments
+  while preserving non-integer length rejection.
+- Allowed `ta.cmo`, `ta.cci`, `ta.cog`, and `ta.mfi` to accept
+  integer-compatible dynamic `length` arguments while preserving non-integer
+  length rejection.
+- Allowed `ta.alma` and `ta.linreg` to accept integer-compatible dynamic
+  `length` arguments while preserving non-integer length and simple-only
+  secondary parameter rejection.
+- Allowed `ta.vwma`, `ta.wma`, and `ta.hma` to accept integer-compatible
+  dynamic `length` arguments while preserving non-integer length rejection.
+- Allowed `ta.stoch` and `ta.wpr` to accept integer-compatible dynamic `length`
+  arguments while preserving non-integer length rejection.
+- Allowed `ta.percentile_nearest_rank` and
+  `ta.percentile_linear_interpolation` to accept integer-compatible dynamic
+  `length` arguments while preserving non-integer length and series-percentage
+  rejection.
+- Allowed `ta.correlation` and `ta.covariance` to accept integer-compatible
+  dynamic `length` arguments while preserving non-integer length rejection.
+- Allowed `ta.median`, `ta.mode`, and `ta.percentrank` to accept
+  integer-compatible dynamic `length` arguments while preserving non-integer
+  length rejection.
+- Allowed `ta.stdev` and `ta.variance` to accept integer-compatible dynamic
+  `length` arguments while preserving non-integer length rejection.
+- Allowed `ta.range` and `ta.dev` to accept integer-compatible dynamic
+  `length` arguments while preserving non-integer length rejection.
+- Allowed `ta.percentile_nearest_rank` and
+  `ta.percentile_linear_interpolation` to accept simple numeric `percentage`
+  arguments while preserving series-percentage semantic rejection.
+- Added fixture-backed `max_bars_back(source, N)` per-series retention for
+  matching `nz(source)` and named/reordered `nz(x=source, replacement=value)`
+  dynamic history reads, including profile miss diagnostics when source-level
+  bounds are exceeded.
+- Added fixture-backed `max_bars_back(source, N)` per-series retention when the
+  helper is declared inside `array.set`/`matrix.set` method argument blocks
+  before a dynamic history read.
+- Added fixture-backed same-imported scalar-tree UDT `array.from` construction
   with `array.size`, namespace/method `array.get`, namespace/method
   `array.first`/`array.last` field reads, namespace/method
   `array.set`/`set()` replacement field reads, namespace/method
@@ -19,22 +1592,97 @@
   field reads, `array.reverse`/`reverse()` reordered field reads,
   `array.slice`/`slice()` window field reads, and
   `array.concat`/`concat()` appended field reads, plus
-  statement/expression/index-value `for...in` value-copy field reads, while
-  `array.new<lib.Type>` remains rejected.
-- Added fixture-backed same-imported scalar-field UDT typed array declarations
+  statement/expression/index-value `for...in` value-copy field reads.
+- Added fixture-backed same-imported scalar-tree UDT `array.new<lib.Type>`
+  construction, including empty arrays, seeded initial values, typed
+  declarations, nested scalar-tree imported UDT elements, post-construction
+  mutation helpers, returned-element helpers, copy/window helpers, structural
+  search, join, sort/sort_indices, and clear.
+- Extended imported scalar-tree UDT array history coverage so arrays constructed
+  via `array.new<lib.Type>()` participate in committed snapshots, first-bar
+  `na` predicates, dynamic `na` offsets, mutation isolation, and `var` array
+  history reads.
+- Added fixture-backed same-imported scalar-tree UDT typed array declarations
   for `array<lib.Type>` and `lib.Type[]`, with `na` initialization, later
   same-identity `array.from` assignment, copy/get/push reads, and statement
   `for...in` value-copy field reads. Non-scalar imported UDT array declarations
   remain rejected.
-- Added fixture-backed same-imported scalar-field UDT array `varip`
-  declarations with historical and realtime intrabar backing-store handoff.
+- Added fixture-backed same-imported scalar-tree UDT array `varip`
+  declarations initialized through `array.from(...)` or
+  `array.new<lib.Type>(...)`, with historical and realtime intrabar
+  backing-store handoff.
   Non-scalar imported UDT array `varip` declarations remain rejected.
+- Extended scalar-tree imported UDT value `varip` coverage to same-imported
+  ternary, switch, if, for, for-in, and while expression initializers with
+  historical and realtime intrabar handoff.
+- Extended scalar-tree imported UDT value `varip` coverage to nested Wrapper
+  values initialized from same-imported ternary, switch, if, for, for-in, and
+  while expression results, with historical and realtime intrabar handoff.
+- Added committed and realtime confirmed-bar history coverage for representative
+  nested scalar-tree imported Wrapper `varip` values initialized from
+  same-imported ternary expression results.
 - Added fixture-backed imported scalar-field UDT typed-array `slice()` and
   `concat()` coverage, keeping the array helper matrix aligned with the
   imported UDT array subset.
-- Added fixture-backed scalar-field imported UDT value history with caller-side
-  field reads, while local UDT value history and broader imported UDT history
-  remain rejected.
+- Added fixture-backed scalar-tree imported UDT value history with caller-side
+  field reads, while direct private imported UDT access and imported UDT value history outside the scalar-tree metadata subset
+  remains rejected.
+- Added fixture-backed repeated dynamic same-bar scalar-tree local and imported
+  UDT value history reads, proving sibling historical UDT copies remain
+  independent after root-field replacement.
+- Extended local and imported scalar-tree UDT flow-result history fixtures to
+  prove repeated dynamic same-bar sibling copies stay independent after
+  mutating direct Point if/switch/for/for-in/while results and nested Wrapper
+  if/switch/for/for-in/while result history values.
+- Extended local and imported typed-UDF UDT history fixtures to prove repeated
+  dynamic same-bar sibling copies stay independent for returned Point and
+  Wrapper values.
+- Extended local and imported direct/nested UDF passthrough UDT history fixtures
+  to prove repeated dynamic same-bar sibling copies stay independent for
+  returned Point and Wrapper values.
+- Extended local and imported direct/nested UDF constructor-returned UDT history
+  fixtures to prove repeated dynamic same-bar sibling copies stay independent
+  for returned Point and Wrapper values.
+- Completed local and imported method direct/nested passthrough and
+  direct/nested constructor-returned UDT history fixtures to prove repeated
+  dynamic same-bar sibling copies stay independent for returned Point and
+  Wrapper values.
+- Extended scalar-tree UDT field-produced dynamic history offset fixtures to
+  cover local/imported UDF passthrough/constructor-returned direct/nested
+  Settings values and local/imported method passthrough/constructor-returned
+  direct/nested Settings values, including imported receiver-style and
+  alias-qualified method calls.
+- Extended non-integer UDT field-produced history offset diagnostics to cover
+  local and imported UDF- and method-returned direct/nested values with
+  representative float, bool, and string offset fields, including local/imported
+  UDF direct/nested passthrough/constructor-returned fields, local method
+  direct/nested passthrough/constructor-returned fields plus method-returned
+  bool/string fields, and imported receiver-style or alias-qualified method
+  direct/nested passthrough/constructor-returned fields.
+- Extended negative UDT field-produced dynamic history offset regressions to
+  cover local and imported UDF- and method-returned direct/nested values,
+  including local/imported UDF direct/nested passthrough and
+  constructor-returned fields plus local/imported method direct/nested
+  passthrough and constructor-returned fields, with imported method coverage
+  including receiver-style and alias-qualified calls.
+- Added fixture-backed committed history reads for scalar-tree local and
+  imported UDT `varip` values, including constant offsets, dynamic `na` offsets,
+  scalar Point ternary-/switch-/if-/for-/for...in-/while-initialized and
+  direct-constructor- and direct-alias-inferred values, and nested scalar-tree field reads, with
+  nested Wrapper coverage for ternary-, switch-, if-, for-, for...in-,
+  while-initialized, direct-constructor-inferred, and direct-alias-inferred values.
+- Added semantic-analysis fixtures for same-local and same-imported scalar-tree
+  UDT value history over direct values, aliases, and nested Wrapper values with
+  constant and dynamic offsets.
+- Extended realtime UDT `varip` fixtures so current values persist intrabar
+  while UDT history reads still come from confirmed bars during repeated forming
+  updates, including scalar Point ternary-/switch-/if-/for-/for...in-/while-
+  initialized plus direct-constructor- and direct-alias-inferred values, switch-, if-, for-,
+  for...in-, and while-initialized nested Wrapper values plus
+  direct-constructor-inferred and direct-alias-inferred nested Wrapper values.
+- Added semantic-analysis fixtures for same-local and same-imported scalar-tree
+  UDT `varip` declarations initialized through explicit types, direct
+  constructor inference, and direct alias inference.
 - Added fixture-backed method-local scalar-field UDT mutation for local and
   imported pure methods, while keeping receiver/parameter/global method field
   side effects rejected.
@@ -43,15 +1691,45 @@
   alias, final-if alias, final-for alias, and nested-method passthrough returns
   plus same-imported-identity constructor returns, using imported method receiver
   identity while keeping wrong receiver types rejected.
-- Added fixture-backed same-local scalar-field UDT array chained field mutation
+- Extended alias-qualified imported UDT method fixtures to cover direct
+  constructor receiver expressions with named/reordered non-receiver arguments
+  and direct constructor nested UDT arguments.
+- Added fixture-backed local and imported UDT method final-`for...in` alias
+  passthrough returns, covering both receiver and same-identity parameter
+  aliases.
+- Added fixture-backed imported UDT UDF final-if and final-for alias
+  passthrough returns, including nested passthrough chains.
+- Added fixture-backed imported UDT UDF block-local alias passthrough returns,
+  including nested passthrough chains.
+- Added fixture-backed imported UDT UDF constructor returns through ternary,
+  `if`, `for`, `for...in`, `while`, and `switch` result shapes, including
+  nested constructor-helper calls.
+- Added fixture-backed imported UDT method constructor returns through `if`,
+  `for`, `for...in`, `while`, and `switch` result shapes, including typed
+  imported return locals and nested scalar-tree Wrapper returns.
+- Added fixture-backed caller-side history reads from imported UDT method
+  passthrough and constructor-return values.
+- Added fixture-backed caller-side history reads from imported UDT UDF
+  passthrough and constructor-return values, including nested constructor-helper
+  calls.
+- Added fixture-backed dynamic and `na` offset history reads for local and
+  imported scalar-tree UDT values.
+- Added fixture-backed caller-side history reads from same-imported-identity
+  UDT `if`, `switch`, `for`, `for...in`, and `while` expression results.
+- Added fixture-backed caller-side history reads from same-local UDT `if`,
+  `switch`, `for`, `for...in`, and `while` expression results.
+- Added fixture-backed same-local scalar-tree UDT array chained field mutation
   for `array.get(points, index).field := value` and
   `points.get(index).field := value`, including slice-window parent writeback.
   UDF-local chained UDT array mutation remains rejected as a function side
   effect.
-- Added fixture-backed same-local scalar-field UDT array `varip` support for
+- Added fixture-backed same-local scalar-tree UDT array `varip` support for
   `array<T>` and `T[]` declarations. Realtime forming updates now carry the
   retained array id together with its backing store and UDT element metadata,
   while non-scalar UDT array `varip` declarations remain rejected.
+- Added fixture-backed repeated dynamic same-bar same-local scalar-tree UDT
+  array and slice history reads, proving sibling historical copies remain
+  independent after UDT slot replacement.
 - Added fixture-backed matrix `varip` support for runtime-owned
   `matrix<float>`, `matrix<int>`, `matrix<bool>`, `matrix<string>`, and
   `matrix<color>` ids. Realtime forming updates now carry matrix `varip` slots
@@ -69,7 +1747,10 @@
   aliases lower to the same runtime calls. Ordinary realtime rollback of
   map-store mutations is fixture-backed. Scalar `map<K,V>` typed declarations
   accept compatible or `na` initialization and same-template reassignment.
-  Scalar map history snapshots now return independent historical copies.
+  Scalar map history snapshots now return independent historical copies, including
+  dynamic `na` offset predicates plus key and size reads from dynamically selected
+  historical maps, and repeated same-bar history reads remain independent when a
+  sibling historical map copy is mutated.
   Scalar map `varip` now retains map ids and backing stores across realtime
   forming updates. Read-only map helpers now work through user-defined function
   parameters when the caller supplies a known scalar map template. Bare map
@@ -81,7 +1762,7 @@
   `array<int>`, `array<float>`, `array<bool>`, `array<string>`,
   `array<color>`, `array<label>`, `array<line>`, `array<linefill>`,
   `array<polyline>`, `array<box>`, `array<table>`, `array<chart.point>`, and
-  same-local scalar-field UDT array iterables plus runtime-owned matrix row
+  same-local scalar-tree UDT array iterables plus runtime-owned matrix row
   iterables, returning the loop body's last expression from the last completed
   iteration and `na` for zero-iteration or typed-`na` collections, with `break`
   returning the previous result and `continue` skipping the current result
@@ -123,10 +1804,10 @@
   `array<int>` row/column insertion data and `matrix<int>` typed declarations
   with compatible matrix or `na` initializers.
 - Added fixture-backed numeric-array `matrix.mult(values, vector)`,
-  `values.mult(vector)`, and `matrix.mult(vector, values)` support, treating
-  arrays as column or row vectors and returning independent `array<float>`
-  dot-product results with `na` propagation and semantic rejection for
-  array-pair or non-numeric arrays.
+  `values.mult(vector)`, `matrix.mult(vector, values)`, and
+  `matrix.mult(left_vector, right_vector)` support, treating arrays as column
+  or row vectors and returning independent `array<float>` dot-product results
+  with `na` propagation and semantic rejection for non-numeric arrays.
 - Added fixture-backed left-scalar namespace `matrix.diff(scalar, values)`
   support for runtime-owned float or int matrices, returning independent
   same-shape `matrix<float>` results that preserve subtraction operand order
@@ -445,58 +2126,58 @@
   values, with shallow-id loop locals, cell writes, deletion, and `table.all`
   visibility.
 - Added fixture-backed statement-form `for...in` iteration for same-local
-  scalar-field UDT arrays, with value-copy loop locals, field reads, and local
+  scalar-tree UDT arrays, with value-copy loop locals, field reads, and local
   field mutation that does not write back to the source slot.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<int>` values, with a zero-based `series int` index loop-local while
-  keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<float>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT and map/matrix iteration
+  while keeping imported or non-scalar-tree UDT and map/matrix iteration
   unsupported at that slice.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<bool>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  while keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<string>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  while keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<color>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  while keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<label>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  while keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<line>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  while keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<linefill>` values, reusing the zero-based `series int` index
-  loop-local while keeping imported or non-scalar-field UDT and map/matrix
+  loop-local while keeping imported or non-scalar-tree UDT and map/matrix
   iteration unsupported at that slice.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<polyline>` values, reusing the zero-based `series int` index
-  loop-local while keeping imported or non-scalar-field UDT and map/matrix
+  loop-local while keeping imported or non-scalar-tree UDT and map/matrix
   iteration unsupported at that slice.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<box>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  while keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<table>` values, reusing the zero-based `series int` index loop-local
-  while keeping imported or non-scalar-field UDT, map/matrix, and expression-form
+  while keeping imported or non-scalar-tree UDT, map/matrix, and expression-form
   index/value iteration unsupported.
 - Added fixture-backed statement-form `for index, value in values` iteration for
   `array<chart.point>` values, reusing the zero-based `series int` index
   loop-local while preserving value-copy point locals whose field mutation does
   not write back to the source array slot.
 - Added fixture-backed statement-form `for index, value in values` iteration for
-  same-local scalar-field UDT arrays, reusing the zero-based `series int` index
+  same-local scalar-tree UDT arrays, reusing the zero-based `series int` index
   loop-local while preserving value-copy UDT locals whose field mutation does not
   write back to the source array slot.
 - Added a semantic fixture for rejecting non-array `for...in` iterables while
@@ -552,7 +2233,7 @@
 - Added fixture-backed direct chained UDT array slot field mutation for
   same-local scalar-field arrays, including `points.get(0).x := value` and
   `array.get(points, 0).x := value`.
-- Added fixture-backed same-local scalar-field UDT array element writeback
+- Added fixture-backed same-local scalar-tree UDT array element writeback
   semantics: field mutation on a value read from an array stays local until an
   explicit same-UDT `array.set`/`set()` writes it back.
 - Added fixture-backed local pure UDF calls that consume same-local
@@ -561,16 +2242,16 @@
 - Added fixture-backed local pure UDT method calls on same-local scalar-field
   UDT values read from UDT arrays into local variables.
 - Added fixture-backed `array.join` and `join()` support for same-local
-  scalar-field UDT arrays using positional `TypeName(field0, field1, ...)`
+  scalar-tree UDT arrays using positional `TypeName(field0, field1, ...)`
   element rendering, while keeping general `str.tostring(UDT)` unsupported.
 - Added fixture-backed `array.fill` and `fill()` support for same-local
-  scalar-field UDT arrays while keeping mismatched UDT fill values rejected.
+  scalar-tree UDT arrays while keeping mismatched UDT fill values rejected.
 - Added fixture-backed `array.includes`, `array.indexof`, and
-  `array.lastindexof` support for same-local scalar-field UDT arrays using
+  `array.lastindexof` support for same-local scalar-tree UDT arrays using
   structural equality over scalar fields, while keeping mismatched UDT
   identities rejected.
 - Added fixture-backed `array<T>` and `T[]` declarations for same-local
-  scalar-field UDT arrays, with `na` initialization, same-UDT reassignment, and
+  scalar-tree UDT arrays, with `na` initialization, same-UDT reassignment, and
   UDT identity checks for mismatched array assignments.
 - Added fixture-backed `array.sort_indices` support for same-local scalar-field
   UDT arrays by compile-time `int`, `float`, or `string` `sort_field`, returning
@@ -592,6 +2273,9 @@
   reassigned from same-local-UDT `for` expressions.
 - Added fixture-backed top-level typed UDT declarations initialized and
   reassigned from same-local-UDT `for` expressions.
+- Added fixture-backed typed UDT `var` declarations initialized from
+  same-local-UDT `for...in` and `while` expressions, including realtime
+  rollback coverage.
 - Added fixture-backed typed UDT `var` declarations initialized from
   same-local-UDT `for` expressions, including realtime rollback coverage.
 - Added fixture-backed typed UDT `var` declarations initialized from
@@ -636,6 +2320,12 @@
   return values from additional local UDT parameter fields through ternary,
   switch, final if/else, and final for bodies, with matching semantic analyzer
   regression tests and execution-semantics documentation.
+- Added fixture-backed UDF-local and method-local typed UDT declarations
+  initialized and reassigned through same-local-UDT `for...in` and `while`
+  expressions.
+- Added fixture-backed scalar-tree imported UDT typed declarations initialized
+  and reassigned through same-imported-identity `for...in` expression results,
+  with a matching identity-mismatch diagnostic fixture.
 - Bumped machine-readable analysis reports to `schemaVersion: 3` and added
   top-level `inputs` metadata for executable scripts, exposing each `input*`
   call's call-site id, function name, and literal title when available.

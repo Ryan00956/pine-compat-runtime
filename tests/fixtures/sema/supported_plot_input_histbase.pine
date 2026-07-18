@@ -1,0 +1,4 @@
+//@version=6
+indicator("Supported plot Input Histbase")
+base = input.float(0.0, "Histogram base")
+plot(close - open, style=plot.style_histogram, histbase=base)

@@ -1,0 +1,99 @@
+//@version=6
+import user/udt_array_returns/1 as left
+import user/udt_array_returns/1 as right
+indicator("Supported imported UDT array tuple returns")
+
+left_first_values = array.from(left.First.new(10.0, 100.0))
+left_second_values = array.from(left.Second.new(200.0, 20.0))
+right_first_values = array.from(right.First.new(30.0, 300.0))
+
+[root_first, root_second] = [left_first_values, left_second_values]
+[direct_first, direct_copy] = left.tupleReturn(left_first_values)
+[tuple_alias_first, tuple_alias_first_copy] = left.tupleAliasReturn(left_first_values)
+[tuple_alias_second, tuple_alias_second_copy] = left.tupleAliasReturn(left_second_values)
+[tuple_alias_first_again, tuple_alias_first_again_copy] = left.tupleAliasReturn(left_first_values)
+[block_second, block_second_copy] = left.tupleBlockReturn(left_second_values)
+[nested_first, nested_first_copy] = left.tupleNestedReturn(left_first_values)
+[outer_copy, outer_direct] = left.tupleOuterReturn(left_first_values)
+[flow_second, flow_second_copy] = left.tupleFlowReturn(left_second_values)
+[if_alias_first, if_alias_first_copy] = left.tupleFinalIfAliasReturn(left_first_values)
+[if_alias_second, if_alias_second_copy] = left.tupleFinalIfAliasReturn(left_second_values)
+[if_alias_first_again, if_alias_first_again_copy] = left.tupleFinalIfAliasReturn(left_first_values)
+[ternary_alias_first, ternary_alias_first_copy] = left.tupleAliasTernaryReturn(left_first_values, true)
+[ternary_alias_second, ternary_alias_second_copy] = left.tupleAliasTernaryReturn(left_second_values, true)
+[ternary_alias_first_again, ternary_alias_first_again_copy] = left.tupleAliasTernaryReturn(left_first_values, true)
+[switch_alias_first, switch_alias_first_copy] = left.tupleAliasSwitchReturn(left_first_values)
+[switch_alias_second, switch_alias_second_copy] = left.tupleAliasSwitchReturn(left_second_values)
+[switch_alias_first_again, switch_alias_first_again_copy] = left.tupleAliasSwitchReturn(left_first_values)
+[assigned_alias_first, assigned_alias_first_copy] = left.tupleAssignedIfAliasReturn(left_first_values, true)
+[assigned_alias_second, assigned_alias_second_copy] = left.tupleAssignedIfAliasReturn(left_second_values, true)
+[assigned_alias_first_again, assigned_alias_first_again_copy] = left.tupleAssignedIfAliasReturn(left_first_values, true)
+[from_first, new_first] = left.tupleFirstFrom(left.First.new(11.0, 101.0))
+[from_second, new_second] = left.tupleSecondFrom(left.Second.new(201.0, 21.0))
+[typed_na_first] = left.tupleTypedNa()
+
+same_identity_reassigned = [left_first_values]
+same_identity_replacement = array.from(left.First.new(12.0, 102.0))
+same_identity_reassigned := [same_identity_replacement]
+[same_identity_after] = same_identity_reassigned
+na_identity_reassigned = [left_first_values]
+na_identity_reassigned := [na]
+[na_identity_after] = na_identity_reassigned
+
+[left_first_once, left_first_once_copy] = left.tupleReturn(left_first_values)
+[right_first, right_first_copy] = right.tupleReturn(right_first_values)
+[left_first_again, left_first_again_copy] = left.tupleReturn(left_first_values)
+array_alias_first = left.arrayViaTuple(left_first_values)
+array_alias_second = left.arrayViaTuple(left_second_values)
+array_alias_first_again = left.arrayViaTuple(left_first_values)
+array_via_alias_first = left.arrayViaTupleAlias(left_first_values)
+array_via_alias_second = left.arrayViaTupleAlias(left_second_values)
+array_via_alias_first_again = left.arrayViaTupleAlias(left_first_values)
+
+left_first_anchor = left.First.new(12.0, 102.0)
+left_second_anchor = left.Second.new(202.0, 22.0)
+[method_first_copy, method_first] = left_first_anchor.tuple(values=left_first_values, reverse=true)
+[method_second, method_second_copy] = left_second_anchor.tuple(left_second_values, false)
+[method_nested_second, method_nested_second_copy] = left_second_anchor.tupleNested(left_second_values)
+[method_alias_first_copy, method_alias_first] = left_first_anchor.tupleAlias(left_first_values, true)
+
+array<left.First> typed_first = direct_first
+left.Second[] typed_second = block_second
+array<left.First> typed_na_destination = typed_na_first
+
+float iterated = 0.0
+for item in method_nested_second
+    iterated := iterated + item.shared
+
+root_first_item = array.first(root_first)
+root_second_item = array.first(root_second)
+typed_first_item = array.first(typed_first)
+typed_second_item = array.first(typed_second)
+nested_first_item = array.first(nested_first)
+outer_copy_item = array.first(outer_copy)
+flow_second_item = array.first(flow_second)
+if_alias_first_item = array.first(if_alias_first)
+if_alias_second_item = array.first(if_alias_second)
+if_alias_first_again_item = array.first(if_alias_first_again)
+from_first_item = array.first(from_first)
+new_first_item = array.first(new_first)
+from_second_item = array.first(from_second)
+new_second_item = array.first(new_second)
+left_first_once_item = array.first(left_first_once)
+right_first_item = array.first(right_first)
+left_first_again_item = array.first(left_first_again)
+method_first_item = array.first(method_first)
+method_second_item = array.first(method_second)
+method_alias_first_item = array.first(method_alias_first)
+array_alias_first_item = array.first(array_alias_first)
+array_alias_second_item = array.first(array_alias_second)
+array_alias_first_again_item = array.first(array_alias_first_again)
+tuple_alias_first_item = array.first(tuple_alias_first)
+tuple_alias_second_item = array.first(tuple_alias_second)
+tuple_alias_first_again_item = array.first(tuple_alias_first_again)
+array_via_alias_first_item = array.first(array_via_alias_first)
+array_via_alias_second_item = array.first(array_via_alias_second)
+array_via_alias_first_again_item = array.first(array_via_alias_first_again)
+same_identity_after_item = array.first(same_identity_after)
+
+plot(root_first_item.shared + root_second_item.shared + typed_first_item.shared + typed_second_item.shared + nested_first_item.shared + outer_copy_item.shared + flow_second_item.shared + if_alias_first_item.shared + if_alias_second_item.shared + if_alias_first_again_item.shared + from_first_item.shared + new_first_item.shared + from_second_item.shared + new_second_item.shared + left_first_once_item.shared + right_first_item.shared + left_first_again_item.shared + method_first_item.shared + method_second_item.shared + method_alias_first_item.shared + iterated + array_alias_first_item.shared + array_alias_second_item.shared + array_alias_first_again_item.shared + tuple_alias_first_item.shared + tuple_alias_second_item.shared + tuple_alias_first_again_item.shared + same_identity_after_item.shared + (na(na_identity_after) ? 1 : 0))

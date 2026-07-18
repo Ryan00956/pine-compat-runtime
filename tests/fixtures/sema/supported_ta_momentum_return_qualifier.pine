@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported ta momentum return qualifier")
+
+momentum = ta.mom(close, 3)
+rate = ta.roc(close, 3)
+
+plot(momentum)
+plot(rate)

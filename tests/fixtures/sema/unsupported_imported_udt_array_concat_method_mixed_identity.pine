@@ -1,0 +1,11 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT array.concat method mixed identity")
+
+type Point
+    float x
+
+imported_points = array.from(lib.Point.new(close))
+local_points = array.from(Point.new(high))
+result = imported_points.concat(local_points)
+plot(close)

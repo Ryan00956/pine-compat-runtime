@@ -19,7 +19,7 @@ impl Analyzer {
             if !is_target {
                 continue;
             }
-            let Some(value) = const_string_value(&arg.value) else {
+            let Some(value) = self.known_const_string_value(&arg.value) else {
                 continue;
             };
             if !allowed.iter().any(|allowed_value| *allowed_value == value) {
@@ -73,8 +73,11 @@ impl Analyzer {
                         .get(index)
                         .is_some_and(|param| param.name == "precision"));
             if is_precision {
-                if let Some(value) = const_int_value(&arg.value)
-                    && !(0..=16).contains(&value)
+                if let Some(value) = self.known_const_int_for_validation(&arg.value)
+                    && match value {
+                        Ok(value) => !(0..=16).contains(&value),
+                        Err(()) => true,
+                    }
                 {
                     self.diagnostics.push(Diagnostic::error(
                         "E_CALL_ARG_VALUE",
@@ -99,15 +102,37 @@ impl Analyzer {
                 continue;
             }
 
-            if let Some(value) = const_int_value(&arg.value)
-                && value < 0
-            {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_VALUE",
-                    "`indicator` argument `max_bars_back` must be non-negative",
-                    arg.span,
-                ));
-            }
+            self.validate_max_bars_back_bound_value("indicator", "max_bars_back", arg);
+        }
+    }
+
+    pub(crate) fn validate_max_bars_back_bound_value(
+        &mut self,
+        call_name: &str,
+        arg_name: &str,
+        arg: &CallArg,
+    ) {
+        let Some(value) = self.known_const_int_for_validation(&arg.value) else {
+            return;
+        };
+        let message = if value.is_err() {
+            Some(format!(
+                "`{call_name}` argument `{arg_name}` must fit in a 32-bit unsigned history bound"
+            ))
+        } else if value.is_ok_and(|value| value < 0) {
+            Some(format!(
+                "`{call_name}` argument `{arg_name}` must be non-negative"
+            ))
+        } else if value.is_ok_and(|value| u32::try_from(value).is_err()) {
+            Some(format!(
+                "`{call_name}` argument `{arg_name}` must fit in a 32-bit unsigned history bound"
+            ))
+        } else {
+            None
+        };
+        if let Some(message) = message {
+            self.diagnostics
+                .push(Diagnostic::error("E_CALL_ARG_VALUE", message, arg.span));
         }
     }
 
@@ -120,55 +145,22 @@ impl Analyzer {
             return;
         }
 
-        if self.block_depth > 0 {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_VALUE",
-                "`max_bars_back` calls must be top-level statements",
-                args.first().map_or_else(Span::default, |arg| arg.span),
-            ));
-        }
-
-        if let Some(source) = args
-            .iter()
-            .enumerate()
-            .find(|(index, arg)| {
-                arg.name.as_deref() == Some("source")
-                    || (arg.name.is_none()
-                        && signature
-                            .params
-                            .get(*index)
-                            .is_some_and(|param| param.name == "source"))
-            })
-            .map(|(_, arg)| &arg.value)
-            && !matches!(source.kind, ExprKind::Identifier(_))
-        {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_VALUE",
-                "`max_bars_back` argument `source` must be a simple series identifier",
-                source.span,
-            ));
-        }
-
         for (index, arg) in args.iter().enumerate() {
-            let is_num = arg.name.as_deref() == Some("num")
-                || (arg.name.is_none()
-                    && signature
-                        .params
-                        .get(index)
-                        .is_some_and(|param| param.name == "num"));
+            let is_num = is_call_arg(signature, arg, index, "num");
             if !is_num {
                 continue;
             }
 
-            if let Some(value) = const_int_value(&arg.value)
-                && value < 0
-            {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_VALUE",
-                    "`max_bars_back` argument `num` must be non-negative",
-                    arg.span,
-                ));
-            }
+            self.validate_max_bars_back_bound_value("max_bars_back", "num", arg);
         }
     }
+}
+
+fn is_call_arg(signature: &BuiltinSignature, arg: &CallArg, index: usize, name: &str) -> bool {
+    arg.name.as_deref() == Some(name)
+        || (arg.name.is_none()
+            && signature
+                .params
+                .get(index)
+                .is_some_and(|param| param.name == name))
 }

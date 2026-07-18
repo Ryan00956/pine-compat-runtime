@@ -1,0 +1,8 @@
+//@version=5
+indicator("Supported request merge options named const")
+gaps_base = barmerge.gaps_off
+gaps = gaps_base
+lookahead_base = barmerge.lookahead_off
+lookahead = lookahead_base
+value = request.security(syminfo.tickerid, timeframe.period, close, gaps=gaps, lookahead=lookahead)
+plot(value)

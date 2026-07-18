@@ -1,0 +1,65 @@
+//@version=6
+indicator("Unsupported UDT array tuple alias mutation")
+
+type First
+    float shared
+    float other
+
+type Second
+    float other
+    float shared
+
+type Anchor
+    int tag
+
+badSwap(first, second, bool choose) => choose ? [first, second] : [second, first]
+
+badScalarReassign(first, second) =>
+    tuple_value = [first, first]
+    tuple_value := [second, second]
+    [left, right] = tuple_value
+    item = array.first(left)
+    item.shared
+
+badLoopReassign(first, second) =>
+    tuple_value = [first, first]
+    for index = 0 to 0
+        tuple_value := [second, second]
+    tuple_value
+
+badTupleDeclSink(first, second, bool choose) =>
+    [discarded_first, discarded_second] = badSwap(first, second, choose)
+    1
+
+method badScalarReassign(Anchor self, array<First> first, array<Second> second) =>
+    tuple_value = [first, first]
+    tuple_value := [second, second]
+    [left, right] = tuple_value
+    item = array.first(left)
+    item.shared
+
+method badSwap(Anchor self, array<First> first, array<Second> second, bool choose) => choose ? [first, second] : [second, first]
+
+method badTupleDeclSink(Anchor self, array<First> first, array<Second> second, bool choose) =>
+    [discarded_first, discarded_second] = self.badSwap(first, second, choose)
+    1
+
+first_values = array.from(First.new(10.0, 100.0))
+second_values = array.from(Second.new(200.0, 20.0))
+
+direct_mixed = bar_index % 2 == 0 ? [first_values, first_values] : [second_values, second_values]
+
+direct_reassigned = [first_values, first_values]
+direct_reassigned := [second_values, second_values]
+
+branch_reassigned = [first_values, first_values]
+if bar_index % 2 == 0
+    branch_reassigned := [second_values, second_values]
+
+bad_scalar = badScalarReassign(first_values, second_values)
+bad_loop = badLoopReassign(first_values, second_values)
+bad_tuple_decl_sink = badTupleDeclSink(first_values, second_values, true)
+
+anchor = Anchor.new(1)
+bad_method_scalar = anchor.badScalarReassign(first_values, second_values)
+bad_method_tuple_decl_sink = anchor.badTupleDeclSink(first_values, second_values, true)

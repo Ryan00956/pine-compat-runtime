@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported matrix is_antidiagonal series bool return qualifier")
+
+values = matrix.new<float>(2, 2, 0)
+
+namespace_result = matrix.is_antidiagonal(values)
+method_result = values.is_antidiagonal()
+triangular_namespace_result = matrix.is_triangular(values)
+triangular_method_result = values.is_triangular()
+
+plot(namespace_result and method_result and triangular_namespace_result and triangular_method_result ? 1 : 0)

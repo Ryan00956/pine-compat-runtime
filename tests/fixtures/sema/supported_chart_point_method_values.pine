@@ -1,0 +1,15 @@
+//@version=5
+indicator("Supported chart point method values")
+
+type Tool
+    float base
+
+method makePoint(Tool tool, int offset) =>
+    chart.point.from_index(bar_index + offset, tool.base + offset)
+
+method passPoint(Tool tool, chart.point point) =>
+    point
+
+tool = Tool.new(close)
+point = tool.passPoint(tool.makePoint(1))
+plot(point.index)

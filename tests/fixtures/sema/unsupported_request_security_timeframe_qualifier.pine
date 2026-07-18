@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported request.security timeframe qualifier")
+
+dynamic_timeframe = bar_index > 0 ? "1" : "5"
+plot(request.security(syminfo.tickerid, dynamic_timeframe, close))

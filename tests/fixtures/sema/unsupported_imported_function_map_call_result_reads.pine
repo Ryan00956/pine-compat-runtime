@@ -1,0 +1,16 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Unsupported imported function map call-result reads")
+
+bad_get_key = lib.exposeMapFunction().get(1)
+bad_contains_key = lib.exposeMapFunction().contains(1)
+bad_get_arity = lib.exposeMapFunction().get("v", "extra")
+lib.exposeMapFunction().put(1, 1.0)
+clear_result = lib.exposeMapFunction().clear(1)
+lib.exposeMapFunction().remove(1)
+lib.exposeMapFunction().put_all(map.new<int, float>())
+copy_keys_helper = lib.exposeMapFunction().copy().keys().contains("v")
+terminal_chain = lib.exposeMapFunction().size().copy()
+scalar_size = lib.maxBarsLength().size()
+
+plot(close)

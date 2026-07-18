@@ -1,0 +1,13 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Supported imported UDT array SameAsArg method return qualifier")
+
+anchor = lib.Point.new(close)
+points = array.new<lib.Point>(2, lib.Point.new(close + 1))
+
+first = anchor.firstFrom(array.copy(points))
+second = lib.secondFrom(anchor, points.copy())
+third = anchor.firstFrom(array.slice(points, 0, 1))
+fourth = lib.secondFrom(anchor, points.slice(0, 2))
+
+plot(first.x + second.x + third.x + fourth.x)

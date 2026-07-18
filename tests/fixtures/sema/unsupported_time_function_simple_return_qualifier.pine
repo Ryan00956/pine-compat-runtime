@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported time function simple return qualifier")
+
+plot(close, offset=time("D"))
+plot(close, offset=time_close("D"))
+plot(ta.alma(close, 4, 0.85, 6, timeframe.change("D")))

@@ -1,0 +1,11 @@
+//@version=5
+indicator("Supported chart point typed UDF params")
+
+make_point(int offset) =>
+    chart.point.from_index(bar_index + offset, close + offset)
+
+pass_point(chart.point point) =>
+    point
+
+point = pass_point(make_point(1))
+plot(point.index)

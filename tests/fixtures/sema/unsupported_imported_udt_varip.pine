@@ -1,6 +1,6 @@
 //@version=5
 import user/udt/1 as lib
-indicator("Unsupported imported UDT varip")
+indicator("Unsupported imported unresolved-field UDT varip")
 
-varip p = lib.Wrapper.new(na)
+varip wrapped = lib.PrivateWrapper.new(na)
 plot(close)

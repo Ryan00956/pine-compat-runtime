@@ -1,0 +1,112 @@
+//@version=6
+indicator("Supported UDT array parameter for-in")
+
+type First
+    float shared
+    float other
+
+type Second
+    float other
+    float shared
+
+type Anchor
+    int tag
+
+identity(values) => values
+
+sumValues(values) =>
+    float total = 0.0
+    for item in values
+        total := total + item.shared
+    total
+
+sumIndexed(values) =>
+    float total = 0.0
+    for index, item in values
+        total := total + index + item.shared
+    total
+
+sumAliased(values) =>
+    source = values
+    float total = 0.0
+    for item in source
+        total := total + item.shared
+    total
+
+sumNested(values) =>
+    float total = 0.0
+    for item in identity(values)
+        total := total + item.shared
+    total
+
+lastIndexed(values) =>
+    for index, item in values
+        item.shared + index
+
+lastValue(values) =>
+    for item in values
+        item
+
+rebuildLast(values) =>
+    for item in values
+        array.from(item)
+
+method sumFirst(Anchor self, array<First> values) =>
+    float total = 0.0
+    for index, item in values
+        total := total + index + item.shared
+    total
+
+method sumSecond(Anchor self, Second[] values) =>
+    float total = 0.0
+    for item in values
+        total := total + item.shared
+    total
+
+method lastFirst(Anchor self, array<First> values) =>
+    for index, item in values
+        item.shared + index
+
+method lastSecondValue(Anchor self, Second[] values) =>
+    for item in values
+        item
+
+first_values = array.from(First.new(10.0, 100.0), First.new(11.0, 110.0))
+second_values = array.from(Second.new(200.0, 20.0), Second.new(210.0, 21.0))
+anchor = Anchor.new(1)
+
+plot(sumValues(first_values))
+plot(sumValues(second_values))
+plot(sumValues(first_values))
+plot(sumIndexed(first_values))
+plot(sumIndexed(second_values))
+plot(sumIndexed(first_values))
+plot(sumAliased(first_values))
+plot(sumAliased(second_values))
+plot(sumAliased(first_values))
+plot(sumNested(first_values))
+plot(sumNested(second_values))
+plot(sumNested(first_values))
+plot(lastIndexed(first_values))
+plot(lastIndexed(second_values))
+plot(lastIndexed(first_values))
+last_first = lastValue(first_values)
+last_second = lastValue(second_values)
+last_first_again = lastValue(first_values)
+plot(last_first.shared)
+plot(last_second.shared)
+plot(last_first_again.shared)
+rebuilt_first = rebuildLast(first_values)
+rebuilt_second = rebuildLast(second_values)
+rebuilt_first_again = rebuildLast(first_values)
+rebuilt_first_item = array.get(rebuilt_first, 0)
+rebuilt_second_item = array.get(rebuilt_second, 0)
+rebuilt_first_again_item = array.get(rebuilt_first_again, 0)
+plot(rebuilt_first_item.shared)
+plot(rebuilt_second_item.shared)
+plot(rebuilt_first_again_item.shared)
+plot(anchor.sumFirst(first_values))
+plot(anchor.sumSecond(values=second_values))
+plot(anchor.lastFirst(first_values))
+method_last_second = anchor.lastSecondValue(values=second_values)
+plot(method_last_second.shared)

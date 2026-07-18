@@ -1,0 +1,10 @@
+//@version=5
+indicator("Unsupported table.cell_set named const text options")
+id = table.new(position.top_left, 1, 1)
+table.cell(id, 0, 0, "A")
+size_base = "size.massive"
+text_size = size_base
+format_base = text.format_bold + 4
+text_formatting = format_base
+table.cell_set_text_size(id, 0, 0, text_size)
+table.cell_set_text_formatting(id, 0, 0, text_formatting)

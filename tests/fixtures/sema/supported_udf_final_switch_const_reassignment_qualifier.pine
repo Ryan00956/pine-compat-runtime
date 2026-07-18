@@ -1,0 +1,27 @@
+//@version=6
+indicator("Supported UDF final switch const reassignment qualifier")
+
+choose_condition_length(flag, x) =>
+    local = x
+    switch
+        flag =>
+            local := bar_index
+            local
+        =>
+            local
+
+choose_selector_length(mode, x) =>
+    local = x
+    switch mode
+        "dead" =>
+            local := bar_index
+            local
+        =>
+            local
+
+length = input.int(2, "Length")
+condition_chosen = choose_condition_length(false, length)
+selector_chosen = choose_selector_length("live", length)
+
+plot(ta.ema(close, condition_chosen))
+plot(ta.ema(close, selector_chosen))

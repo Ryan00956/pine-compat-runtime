@@ -1,0 +1,3 @@
+//@version=6
+indicator("Unsupported plot Series Histbase")
+plot(close - open, style=plot.style_histogram, histbase=close)

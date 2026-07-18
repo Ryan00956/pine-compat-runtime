@@ -1,6 +1,15 @@
 //@version=5
-strategy("Position state strategy", overlay=true)
+strategy("Position state strategy", overlay=true, currency=currency.NONE)
 identity(value) => value
+position_entry_name = strategy.position_entry_name
+position_entry_name_udf = identity(strategy.position_entry_name)
+position_entry_name_history = strategy.position_entry_name[1]
+account_currency = strategy.account_currency
+account_currency_udf = identity(strategy.account_currency)
+account_currency_history = strategy.account_currency[1]
+converted_account_value = strategy.convert_to_account(close)
+converted_symbol_value = identity(strategy.convert_to_symbol(value=close * 2))
+converted_symbol_history = strategy.convert_to_symbol(close)[1]
 plot(strategy.position_size)
 plot(strategy.position_avg_price)
 if bar_index == 1
@@ -47,3 +56,12 @@ plot(position_avg_price_history)
 plot(strategy.max_contracts_held_all[1])
 plot(strategy.max_contracts_held_long[1])
 plot(strategy.max_contracts_held_short[1])
+plot(na(position_entry_name) ? na : position_entry_name == "L" ? 1 : 0)
+plot(na(position_entry_name_udf) ? na : position_entry_name_udf == "L" ? 1 : 0)
+plot(na(position_entry_name_history) ? na : position_entry_name_history == "L" ? 1 : 0)
+plot(account_currency == "USD" ? 1 : 0)
+plot(account_currency_udf == "USD" ? 1 : 0)
+plot(na(account_currency_history) ? na : account_currency_history == "USD" ? 1 : 0)
+plot(converted_account_value)
+plot(converted_symbol_value)
+plot(converted_symbol_history)

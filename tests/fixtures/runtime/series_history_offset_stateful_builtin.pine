@@ -5,12 +5,78 @@ offset = bar_index == 0 ? 0 : 1
 maybe_offset = bar_index == 2 ? na : offset
 builtin_offset = ta.barssince(bar_index == 1)
 sma_value = ta.sma(close, 2)
+cum_value = ta.cum(close)
+accdist_value = ta.accdist
+iii_value = ta.iii
+nvi_value = ta.nvi
+obv_value = ta.obv
+pvi_value = ta.pvi
+pvt_value = ta.pvt
+tr_value = ta.tr
+vwap_value = ta.vwap
+wad_value = ta.wad
+wvad_value = ta.wvad
+valuewhen_value = ta.valuewhen(bar_index == 1 or bar_index == 3, close, 0)
 previous = sma_value[offset]
+cum_previous = cum_value[offset]
+accdist_previous = accdist_value[offset]
+iii_previous = iii_value[offset]
+nvi_previous = nvi_value[offset]
+obv_previous = obv_value[offset]
+pvi_previous = pvi_value[offset]
+pvt_previous = pvt_value[offset]
+tr_previous = tr_value[offset]
+vwap_previous = vwap_value[offset]
+wad_previous = wad_value[offset]
+wvad_previous = wvad_value[offset]
 returned_offset_previous = sma_value[builtin_offset]
+valuewhen_previous = valuewhen_value[offset]
+direct_stateful_maybe_offset = ta.sma(close + 10, 2)[maybe_offset]
+direct_cumulative_maybe_offset = ta.cum(close + 10)[maybe_offset]
+direct_stateful_after_na_offset = ta.sma(close + 20, 2)[bar_index == 2 ? na : 0]
 
 plot(previous)
 plot(ta.sma(close + open, 2)[offset])
 plot(sma_value[maybe_offset])
+plot(cum_previous)
+plot(cum_value[maybe_offset])
+plot(accdist_previous)
+plot(accdist_value[maybe_offset])
+plot(iii_previous)
+plot(iii_value[maybe_offset])
+plot(nvi_previous)
+plot(nvi_value[maybe_offset])
+plot(obv_previous)
+plot(obv_value[maybe_offset])
+plot(pvi_previous)
+plot(pvi_value[maybe_offset])
+plot(pvt_previous)
+plot(pvt_value[maybe_offset])
+plot(tr_previous)
+plot(tr_value[maybe_offset])
+plot(vwap_previous)
+plot(vwap_value[maybe_offset])
+plot(wad_previous)
+plot(wad_value[maybe_offset])
+plot(wvad_previous)
+plot(wvad_value[maybe_offset])
 plot(returned_offset_previous)
+plot(valuewhen_previous)
+plot(valuewhen_value[maybe_offset])
+plot(direct_stateful_maybe_offset)
+plot(direct_cumulative_maybe_offset)
+plot(direct_stateful_after_na_offset)
 plot(na(previous[1]) ? 1 : 0)
+plot(na(cum_previous[1]) ? 1 : 0)
+plot(na(accdist_previous[1]) ? 1 : 0)
+plot(na(iii_previous[1]) ? 1 : 0)
+plot(na(nvi_previous[1]) ? 1 : 0)
+plot(na(obv_previous[1]) ? 1 : 0)
+plot(na(pvi_previous[1]) ? 1 : 0)
+plot(na(pvt_previous[1]) ? 1 : 0)
+plot(na(tr_previous[1]) ? 1 : 0)
+plot(na(vwap_previous[1]) ? 1 : 0)
+plot(na(wad_previous[1]) ? 1 : 0)
+plot(na(wvad_previous[1]) ? 1 : 0)
 plot(na(returned_offset_previous[1]) ? 1 : 0)
+plot(na(valuewhen_previous[1]) ? 1 : 0)

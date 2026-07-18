@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported str.tonumber simple return qualifier")
+
+number = str.tonumber(timeframe.period)
+
+hline(number)

@@ -1,0 +1,7 @@
+//@version=6
+import user/non_scalar_udt/1 as lib
+indicator("Supported imported non-scalar UDT typed-na varip")
+
+varip lib.Marker marker = na
+prior = marker[1]
+plot(na(prior) ? 1 : 0)

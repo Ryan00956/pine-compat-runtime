@@ -1,5 +1,7 @@
 //@version=6
-indicator("Unsupported matrix")
+indicator("Unsupported matrix concat template")
 
-value = matrix.concat(na)
-plot(value)
+float_values = matrix.new<float>(1, 1, 1)
+int_values = matrix.new<int>(1, 1, 1)
+value = matrix.concat(float_values, int_values)
+plot(value.rows())

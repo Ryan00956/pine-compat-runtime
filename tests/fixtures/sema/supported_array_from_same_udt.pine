@@ -1,0 +1,7 @@
+//@version=5
+indicator("Supported array.from same UDT")
+type Point
+    float x
+
+values = array.from(Point.new(close), Point.new(open))
+plot(close)

@@ -1,0 +1,7 @@
+//@version=5
+strategy("Supported strategy entry named const numeric")
+qty_base = 1
+qty = qty_base + 1
+limit_price = 10.0
+stop_price = 12.0
+strategy.entry("L", strategy.long, qty=qty, limit=limit_price, stop=stop_price)

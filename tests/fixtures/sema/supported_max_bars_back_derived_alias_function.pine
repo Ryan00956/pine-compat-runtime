@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported max_bars_back derived alias function")
+src = close + 100
+alias = src
+max_bars_back(alias, 20)
+plot(alias[bar_index])

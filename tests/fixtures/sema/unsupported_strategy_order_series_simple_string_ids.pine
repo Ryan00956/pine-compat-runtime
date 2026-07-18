@@ -1,0 +1,11 @@
+//@version=5
+strategy("Unsupported strategy order series simple string ids")
+
+dynamic_id = bar_index > 0 ? "L" : "E"
+dynamic_exit = bar_index > 0 ? "XL" : "XE"
+strategy.entry(dynamic_id, strategy.long, qty=1)
+strategy.order(dynamic_id, strategy.long, qty=1)
+strategy.close(dynamic_id)
+strategy.cancel(dynamic_id)
+strategy.exit(dynamic_exit, "L", stop=low)
+strategy.exit("XL", dynamic_id, limit=high)

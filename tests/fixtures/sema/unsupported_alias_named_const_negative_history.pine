@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported alias named const negative history")
+base = -1
+length = base
+plot(close[length])

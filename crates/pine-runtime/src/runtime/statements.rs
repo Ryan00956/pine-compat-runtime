@@ -1,8 +1,10 @@
-use pine_ir::{HirExpr, HirStmt, HirStmtKind, SymbolId};
+use pine_ir::{HirBinaryOp, HirExpr, HirStmt, HirStmtKind, HirSwitchStmtArm, SymbolId};
 
 use crate::builtins::matrices::matrix_array_element_kind;
 use crate::error::RuntimeLoopControl;
 use crate::*;
+
+use super::expressions::eval_binary;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum StmtControl {
@@ -18,7 +20,7 @@ struct ForInSymbols {
 }
 
 struct ForInItem {
-    index: usize,
+    index: PineValue,
     value: PineValue,
 }
 
@@ -53,6 +55,9 @@ impl<'a> HistoricalRuntime<'a> {
                         control => return Ok(control),
                     }
                 }
+            }
+            HirStmtKind::Switch { selector, arms } => {
+                return self.eval_switch_stmt(selector.as_ref(), arms);
             }
             HirStmtKind::For {
                 counter,
@@ -134,6 +139,45 @@ impl<'a> HistoricalRuntime<'a> {
                 for (symbol, value) in symbols.iter().zip(values) {
                     self.set_symbol_value(*symbol, value);
                 }
+            }
+        }
+
+        Ok(StmtControl::None)
+    }
+
+    fn eval_switch_stmt(
+        &mut self,
+        selector: Option<&HirExpr>,
+        arms: &[HirSwitchStmtArm],
+    ) -> Result<StmtControl, RuntimeError> {
+        let selector_value = match selector {
+            Some(selector) => Some(self.eval_expr(selector)?),
+            None => None,
+        };
+
+        for arm in arms {
+            let matches = match (&selector_value, &arm.condition) {
+                (Some(selector_value), Some(case_expr)) => {
+                    let case_value = self.eval_expr(case_expr)?;
+                    matches!(
+                        eval_binary(HirBinaryOp::Eq, selector_value.clone(), case_value)?,
+                        PineValue::Bool(true)
+                    )
+                }
+                (None, Some(condition)) => {
+                    matches!(self.eval_expr(condition)?, PineValue::Bool(true))
+                }
+                (_, None) => true,
+            };
+
+            if matches {
+                for statement in &arm.body {
+                    match self.eval_stmt(statement)? {
+                        StmtControl::None => {}
+                        control => return Ok(control),
+                    }
+                }
+                break;
             }
         }
 
@@ -356,7 +400,13 @@ impl<'a> HistoricalRuntime<'a> {
                             message: "for...in array is not available".to_owned(),
                         });
                     };
-                    if self.eval_for_in_iteration(index_symbol, value_symbol, index, value, body)? {
+                    if self.eval_for_in_iteration(
+                        index_symbol,
+                        value_symbol,
+                        PineValue::Int(index as i64),
+                        value,
+                        body,
+                    )? {
                         return Ok(());
                     }
                 }
@@ -382,15 +432,48 @@ impl<'a> HistoricalRuntime<'a> {
                 }
 
                 for (index, value) in row_snapshots.into_iter().enumerate() {
-                    if self.eval_for_in_iteration(index_symbol, value_symbol, index, value, body)? {
+                    if self.eval_for_in_iteration(
+                        index_symbol,
+                        value_symbol,
+                        PineValue::Int(index as i64),
+                        value,
+                        body,
+                    )? {
                         return Ok(());
                     }
+                }
+            }
+            PineValue::Map(map_id) => {
+                let Some(entries) = self
+                    .map_store
+                    .get(&map_id)
+                    .map(|storage| storage.entries.clone())
+                else {
+                    return Ok(());
+                };
+                let initial_len = entries.len();
+                for (key, value) in entries {
+                    let (index_value, loop_value) = if index_symbol.is_some() {
+                        (key, value)
+                    } else {
+                        (PineValue::Na, key)
+                    };
+                    if self.eval_for_in_iteration(
+                        index_symbol,
+                        value_symbol,
+                        index_value,
+                        loop_value,
+                        body,
+                    )? {
+                        return Ok(());
+                    }
+                    self.ensure_map_for_in_size(map_id, initial_len)?;
                 }
             }
             PineValue::Na => {}
             _ => {
                 return Err(RuntimeError {
-                    message: "for...in iterable is not an array or matrix".to_owned(),
+                    message: "for...in iterable is not an array, matrix, or map".to_owned(),
                 });
             }
         }
@@ -427,7 +510,10 @@ impl<'a> HistoricalRuntime<'a> {
                     };
                     if self.eval_for_in_expr_iteration(
                         symbols,
-                        ForInItem { index, value },
+                        ForInItem {
+                            index: PineValue::Int(index as i64),
+                            value,
+                        },
                         body,
                         result,
                         &mut loop_result,
@@ -459,7 +545,10 @@ impl<'a> HistoricalRuntime<'a> {
                 for (index, value) in row_snapshots.into_iter().enumerate() {
                     if self.eval_for_in_expr_iteration(
                         symbols,
-                        ForInItem { index, value },
+                        ForInItem {
+                            index: PineValue::Int(index as i64),
+                            value,
+                        },
                         body,
                         result,
                         &mut loop_result,
@@ -468,10 +557,41 @@ impl<'a> HistoricalRuntime<'a> {
                     }
                 }
             }
+            PineValue::Map(map_id) => {
+                let Some(entries) = self
+                    .map_store
+                    .get(&map_id)
+                    .map(|storage| storage.entries.clone())
+                else {
+                    return Ok(PineValue::Na);
+                };
+                let initial_len = entries.len();
+                for (key, value) in entries {
+                    let item = if symbols.index.is_some() {
+                        ForInItem { index: key, value }
+                    } else {
+                        ForInItem {
+                            index: PineValue::Na,
+                            value: key,
+                        }
+                    };
+                    if self.eval_for_in_expr_iteration(
+                        symbols,
+                        item,
+                        body,
+                        result,
+                        &mut loop_result,
+                    )? {
+                        break;
+                    }
+                    self.ensure_map_for_in_size(map_id, initial_len)?;
+                }
+            }
             PineValue::Na => {}
             _ => {
                 return Err(RuntimeError {
-                    message: "for...in expression iterable is not an array or matrix".to_owned(),
+                    message: "for...in expression iterable is not an array, matrix, or map"
+                        .to_owned(),
                 });
             }
         }
@@ -488,7 +608,7 @@ impl<'a> HistoricalRuntime<'a> {
         loop_result: &mut PineValue,
     ) -> Result<bool, RuntimeError> {
         if let Some(index_symbol) = symbols.index {
-            self.set_symbol_value(index_symbol, PineValue::Int(item.index as i64));
+            self.set_symbol_value(index_symbol, item.index);
         }
         self.set_symbol_value(symbols.value, item.value);
 
@@ -529,12 +649,12 @@ impl<'a> HistoricalRuntime<'a> {
         &mut self,
         index_symbol: Option<SymbolId>,
         value_symbol: SymbolId,
-        index: usize,
+        index: PineValue,
         value: PineValue,
         body: &[HirStmt],
     ) -> Result<bool, RuntimeError> {
         if let Some(index_symbol) = index_symbol {
-            self.set_symbol_value(index_symbol, PineValue::Int(index as i64));
+            self.set_symbol_value(index_symbol, index);
         }
         self.set_symbol_value(value_symbol, value);
         for statement in body {
@@ -551,5 +671,21 @@ impl<'a> HistoricalRuntime<'a> {
             }
         }
         Ok(false)
+    }
+
+    fn ensure_map_for_in_size(&self, map_id: u32, initial_len: usize) -> Result<(), RuntimeError> {
+        let Some(current_len) = self
+            .map_store
+            .get(&map_id)
+            .map(|storage| storage.entries.len())
+        else {
+            return Ok(());
+        };
+        if current_len != initial_len {
+            return Err(RuntimeError {
+                message: "map size cannot change during direct for...in iteration".to_owned(),
+            });
+        }
+        Ok(())
     }
 }

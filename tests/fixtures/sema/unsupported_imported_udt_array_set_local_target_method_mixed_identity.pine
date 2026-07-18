@@ -1,0 +1,10 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported imported UDT array.set local target method mixed identity")
+
+type Point
+    float x
+
+points = array.from(Point.new(close))
+points.set(0, lib.Point.new(high))
+plot(close)

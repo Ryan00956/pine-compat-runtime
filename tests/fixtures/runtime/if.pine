@@ -12,3 +12,10 @@ branch_value = if close > open
 else
     open + close
 plot(branch_value)
+branch_loop_value = if close > open
+    for i = 0 to 0
+        close + 1
+else
+    for i = 0 to 0
+        open + 1
+plot(branch_loop_value)

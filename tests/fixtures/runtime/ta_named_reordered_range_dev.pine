@@ -1,0 +1,4 @@
+//@version=5
+indicator("TA named reordered range dev")
+plot(ta.range(length=3, source=close))
+plot(ta.dev(length=3, source=close))

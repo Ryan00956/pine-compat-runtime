@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported syminfo metadata simple numeric qualifier")
+
+plot(ta.alma(close, 4, syminfo.mintick, syminfo.mincontract))
+plot(ta.alma(open, 4, syminfo.mincontract, syminfo.pointvalue))
+plot(close, offset=syminfo.minmove)
+plot(open, offset=syminfo.pricescale)

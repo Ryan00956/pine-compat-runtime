@@ -1,3 +1,0 @@
-//@version=5
-indicator("Unsupported ta.vwma Series Length")
-plot(ta.vwma(close, bar_index))

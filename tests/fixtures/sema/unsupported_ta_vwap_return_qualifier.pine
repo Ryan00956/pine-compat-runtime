@@ -1,0 +1,14 @@
+//@version=6
+indicator("Unsupported ta.vwap return qualifier")
+
+variable_value = ta.vwap
+source_value = ta.vwap(close)
+anchor_value = ta.vwap(close, bar_index == 1)
+[basis, upper, lower] = ta.vwap(close, false, 2.0)
+
+hline(variable_value)
+hline(source_value)
+hline(anchor_value)
+hline(basis)
+hline(upper)
+hline(lower)

@@ -1,0 +1,11 @@
+//@version=6
+indicator("Supported math abs same-as-arg return qualifier")
+
+input_count = input.int(-5, "Count")
+input_price = input.float(-1.5, "Price")
+
+abs_count = math.abs(input_count)
+abs_price = math.abs(input_price)
+
+plot(close, show_last=abs_count)
+hline(abs_price)

@@ -1,4 +1,7 @@
-use crate::{DeclMode, Expr, ExprKind, FunctionBody, Span, Stmt, StmtKind, TokenKind};
+use crate::{
+    BinaryOp, DeclMode, Expr, ExprKind, FunctionBody, FunctionParam, Span, Stmt, StmtKind,
+    TokenKind,
+};
 
 use super::{ForInParts, ForParts, Parser};
 
@@ -95,6 +98,27 @@ impl Parser {
                 let value = self.parse_expr(0)?;
                 return Some(Stmt {
                     span: start.merge(value.span),
+                    kind: StmtKind::Reassign { name, value },
+                });
+            }
+
+            if let Some(op) = self.compound_assignment_op(1) {
+                self.bump();
+                self.bump();
+                let right = self.parse_expr(0)?;
+                let value = Expr {
+                    span: start.merge(right.span),
+                    kind: ExprKind::Binary {
+                        op,
+                        left: Box::new(Expr {
+                            span: start,
+                            kind: ExprKind::Identifier(name.clone()),
+                        }),
+                        right: Box::new(right),
+                    },
+                };
+                return Some(Stmt {
+                    span: value.span,
                     kind: StmtKind::Reassign { name, value },
                 });
             }
@@ -285,6 +309,19 @@ impl Parser {
 
     fn parse_for_stmt(&mut self) -> Option<Stmt> {
         let start = self.expect(TokenKind::For, "expected `for`")?;
+        if self.at(TokenKind::LBracket) {
+            let (key, value) = self.parse_for_in_pair()?;
+            let parts = self.parse_for_in_tail(start, Some(key), value)?;
+            return Some(Stmt {
+                span: parts.start.merge(parts.span),
+                kind: StmtKind::ForIn {
+                    index: parts.index,
+                    value: parts.value,
+                    iterable: parts.iterable,
+                    body: parts.body,
+                },
+            });
+        }
         let counter = self.parse_for_counter()?;
         if self.at(TokenKind::Comma) {
             self.bump();
@@ -355,6 +392,15 @@ impl Parser {
                 None
             }
         }
+    }
+
+    pub(super) fn parse_for_in_pair(&mut self) -> Option<(String, String)> {
+        self.expect(TokenKind::LBracket, "expected `[` before for...in pair")?;
+        let key = self.parse_for_counter()?;
+        self.expect(TokenKind::Comma, "expected `,` in for...in pair")?;
+        let value = self.parse_for_counter()?;
+        self.expect(TokenKind::RBracket, "expected `]` after for...in pair")?;
+        Some((key, value))
     }
 
     pub(super) fn parse_for_range_tail(
@@ -432,16 +478,11 @@ impl Parser {
 
         if !self.at(TokenKind::RParen) {
             loop {
-                match self.current().kind.clone() {
-                    TokenKind::Identifier(param) => {
-                        params.push(param);
-                        self.bump();
-                    }
-                    _ => {
-                        self.error_here("E_PARSE_FUNCTION", "expected parameter name");
-                        return None;
-                    }
-                }
+                let Some(param) = self.parse_function_param() else {
+                    self.error_here("E_PARSE_FUNCTION", "expected parameter name");
+                    return None;
+                };
+                params.push(param);
 
                 if self.at(TokenKind::Comma) {
                     self.bump();
@@ -467,6 +508,136 @@ impl Parser {
         Some(Stmt {
             span: start.merge(span),
             kind: StmtKind::Function { name, params, body },
+        })
+    }
+
+    pub(super) fn parse_function_param(&mut self) -> Option<FunctionParam> {
+        let TokenKind::Identifier(first) = self.current().kind.clone() else {
+            return None;
+        };
+        let start = self.current().span;
+
+        if first == "array" && self.nth_at(1, TokenKind::Lt) {
+            if self.nth_at(3, TokenKind::Gt) {
+                let TokenKind::Identifier(element_type) =
+                    self.tokens.get(self.pos + 2)?.kind.clone()
+                else {
+                    return None;
+                };
+                let TokenKind::Identifier(name) = self.tokens.get(self.pos + 4)?.kind.clone()
+                else {
+                    return None;
+                };
+                let end = self.tokens.get(self.pos + 4)?.span;
+                for _ in 0..5 {
+                    self.bump();
+                }
+                return Some(FunctionParam {
+                    type_name: Some(format!("array<{element_type}>")),
+                    name,
+                    span: start.merge(end),
+                });
+            }
+
+            if self.nth_at(3, TokenKind::Dot) && self.nth_at(5, TokenKind::Gt) {
+                let TokenKind::Identifier(namespace) = self.tokens.get(self.pos + 2)?.kind.clone()
+                else {
+                    return None;
+                };
+                let TokenKind::Identifier(type_name) = self.tokens.get(self.pos + 4)?.kind.clone()
+                else {
+                    return None;
+                };
+                let TokenKind::Identifier(name) = self.tokens.get(self.pos + 6)?.kind.clone()
+                else {
+                    return None;
+                };
+                let end = self.tokens.get(self.pos + 6)?.span;
+                for _ in 0..7 {
+                    self.bump();
+                }
+                return Some(FunctionParam {
+                    type_name: Some(format!("array<{namespace}.{type_name}>")),
+                    name,
+                    span: start.merge(end),
+                });
+            }
+        }
+
+        if self.nth_at(1, TokenKind::LBracket) && self.nth_at(2, TokenKind::RBracket) {
+            let TokenKind::Identifier(name) = self.tokens.get(self.pos + 3)?.kind.clone() else {
+                return None;
+            };
+            let end = self.tokens.get(self.pos + 3)?.span;
+            for _ in 0..4 {
+                self.bump();
+            }
+            return Some(FunctionParam {
+                type_name: Some(format!("array<{first}>")),
+                name,
+                span: start.merge(end),
+            });
+        }
+
+        if self.nth_at(1, TokenKind::Dot)
+            && self.nth_at(3, TokenKind::LBracket)
+            && self.nth_at(4, TokenKind::RBracket)
+        {
+            let TokenKind::Identifier(type_name) = self.tokens.get(self.pos + 2)?.kind.clone()
+            else {
+                return None;
+            };
+            let TokenKind::Identifier(name) = self.tokens.get(self.pos + 5)?.kind.clone() else {
+                return None;
+            };
+            let end = self.tokens.get(self.pos + 5)?.span;
+            for _ in 0..6 {
+                self.bump();
+            }
+            return Some(FunctionParam {
+                type_name: Some(format!("array<{first}.{type_name}>")),
+                name,
+                span: start.merge(end),
+            });
+        }
+
+        if self.nth_at(1, TokenKind::Dot) {
+            let TokenKind::Identifier(second) = self.tokens.get(self.pos + 2)?.kind.clone() else {
+                return None;
+            };
+            let TokenKind::Identifier(name) = self.tokens.get(self.pos + 3)?.kind.clone() else {
+                return None;
+            };
+            let end = self.tokens.get(self.pos + 3)?.span;
+            self.bump();
+            self.bump();
+            self.bump();
+            self.bump();
+            return Some(FunctionParam {
+                type_name: Some(format!("{first}.{second}")),
+                name,
+                span: start.merge(end),
+            });
+        }
+
+        if let Some(next) = self.tokens.get(self.pos + 1)
+            && let TokenKind::Identifier(name) = next.kind.clone()
+        {
+            let end = next.span;
+            self.bump();
+            self.bump();
+            return Some(FunctionParam {
+                type_name: Some(first),
+                name,
+                span: start.merge(end),
+            });
+        }
+
+        self.bump();
+        Some(FunctionParam {
+            type_name: None,
+            name: first,
+            span: start,
         })
     }
 
@@ -498,6 +669,17 @@ impl Parser {
         }
 
         Some(statements)
+    }
+
+    fn compound_assignment_op(&self, offset: usize) -> Option<BinaryOp> {
+        match self.tokens.get(self.pos + offset)?.kind {
+            TokenKind::PlusEq => Some(BinaryOp::Add),
+            TokenKind::MinusEq => Some(BinaryOp::Sub),
+            TokenKind::StarEq => Some(BinaryOp::Mul),
+            TokenKind::SlashEq => Some(BinaryOp::Div),
+            TokenKind::PercentEq => Some(BinaryOp::Mod),
+            _ => None,
+        }
     }
 
     pub(super) fn looks_like_function_decl(&self) -> bool {

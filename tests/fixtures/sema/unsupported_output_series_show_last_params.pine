@@ -1,0 +1,14 @@
+//@version=5
+indicator("Unsupported output series show_last params")
+count = bar_index
+top = plot(high)
+bottom = hline(0)
+plot(close, show_last=count)
+plotchar(close > open, show_last=count)
+plotshape(close > open, show_last=count)
+plotarrow(close - open, show_last=count)
+plotbar(open, high, low, close, show_last=count)
+plotcandle(open, high, low, close, show_last=count)
+fill(top, bottom, show_last=count)
+bgcolor(color.green, show_last=count)
+barcolor(color.red, show_last=count)

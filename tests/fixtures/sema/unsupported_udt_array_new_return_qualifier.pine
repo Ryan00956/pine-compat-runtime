@@ -1,0 +1,16 @@
+//@version=6
+indicator("Unsupported UDT array.new return qualifier")
+
+type Point
+    float x
+
+type Other
+    float x
+
+first_x(array<Point> values) =>
+    point = array.get(values, 0)
+    point.x
+
+others = array.new<Other>(1, Other.new(close))
+plot(first_x(others))
+plot(first_x(array.new<Other>(1, Other.new(open))))

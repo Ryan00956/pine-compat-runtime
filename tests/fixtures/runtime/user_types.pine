@@ -77,6 +77,19 @@ var Point typed_var_for = for typed_var_i = 0 to 1
 if bar_index == 2
     typed_var_for := Point.new(high + 405, low)
 plot(typed_var_for.x + typed_var_for.y)
+typed_var_values = array.from(0, 1)
+var Point typed_var_for_in = for value in typed_var_values
+    Point.new(high + value + 450, low)
+if bar_index == 2
+    typed_var_for_in := Point.new(high + 455, low)
+plot(typed_var_for_in.x + typed_var_for_in.y)
+typed_var_while_i = 0
+var Point typed_var_while = while typed_var_while_i < 2
+    typed_var_while_i := typed_var_while_i + 1
+    Point.new(high + typed_var_while_i + 460, low)
+if bar_index == 2
+    typed_var_while := Point.new(high + 465, low)
+plot(typed_var_while.x + typed_var_while.y)
 if bar_index >= 0
     Point block_typed_point = na
     block_typed_point := Point.new(high + 40, low)

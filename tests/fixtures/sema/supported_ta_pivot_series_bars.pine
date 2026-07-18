@@ -1,0 +1,8 @@
+//@version=5
+indicator("Supported ta pivot series bars")
+leftbars = bar_index == 0 ? 1 : 2
+rightbars = bar_index == 0 ? 2 : 1
+plot(ta.pivothigh(high, leftbars, rightbars))
+plot(ta.pivotlow(low, leftbars, rightbars))
+plot(ta.pivothigh(leftbars, rightbars))
+plot(ta.pivotlow(leftbars, rightbars))

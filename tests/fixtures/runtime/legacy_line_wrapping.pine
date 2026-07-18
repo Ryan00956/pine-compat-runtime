@@ -1,0 +1,27 @@
+//@version=6
+indicator("Legacy line wrapping")
+combine(float left, float right) =>
+    adjusted = left +
+      right
+    adjusted
+sum = open + // An end-of-line comment does not end the expression.
+  high +
+      low +
+ close
+direction = close > open ?
+  1 :
+      close < open ?
+  -1 :
+      0
+message = "legacy " +
+     "line " +
+ "wrap"
+local = 0.0
+if bar_index >= 0
+    local := open +
+      close
+plot(sum == open + high + low + close ? 1 : 0)
+plot(direction == (close > open ? 1 : close < open ? -1 : 0) ? 1 : 0)
+plot(str.length(message) == 16 ? 1 : 0)
+plot(combine(open, close) == open + close ? 1 : 0)
+plot(local == open + close ? 1 : 0)

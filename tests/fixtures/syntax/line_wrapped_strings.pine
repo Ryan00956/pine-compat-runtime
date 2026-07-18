@@ -1,0 +1,12 @@
+//@version=6
+indicator("Line-wrapped strings")
+double = "Pine
+ Script"
+many_spaces = "first
+     second
+  third"
+single = 'alpha
+    beta'
+utf8 = "中
+  文"
+after = 1

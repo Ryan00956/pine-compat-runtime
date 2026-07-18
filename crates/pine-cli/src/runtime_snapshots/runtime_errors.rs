@@ -1,5 +1,13 @@
 pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     (
+        "tests/fixtures/regressions/runtime_error_custom_message.pine",
+        "invalid bar 2",
+    ),
+    (
+        "tests/fixtures/regressions/runtime_error_na_message.pine",
+        "NaN",
+    ),
+    (
         "tests/fixtures/regressions/array_concat_limit.pine",
         "array.concat cannot exceed 100000 elements",
     ),
@@ -48,6 +56,14 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "array index 1 is out of bounds for array of size 0",
     ),
     (
+        "tests/fixtures/regressions/map_for_in_put_size_change.pine",
+        "map size cannot change during direct for...in iteration",
+    ),
+    (
+        "tests/fixtures/regressions/map_for_in_key_put_size_change.pine",
+        "map size cannot change during direct for...in iteration",
+    ),
+    (
         "tests/fixtures/regressions/array_unshift_limit.pine",
         "array.unshift cannot exceed 100000 elements",
     ),
@@ -58,6 +74,14 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     (
         "tests/fixtures/regressions/array_sort_indices_unsupported_order.pine",
         "unsupported array.sort_indices order `sideways`",
+    ),
+    (
+        "tests/fixtures/regressions/array_sort_udt_na_element.pine",
+        "array.sort cannot sort UDT arrays containing na elements",
+    ),
+    (
+        "tests/fixtures/regressions/array_sort_indices_udt_na_element.pine",
+        "array.sort_indices cannot sort UDT arrays containing na elements",
     ),
     (
         "tests/fixtures/regressions/history_dynamic_negative_offset.pine",
@@ -89,6 +113,42 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     ),
     (
         "tests/fixtures/regressions/history_dynamic_negative_offset_while_result.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_udf_passthrough.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_udf_nested_passthrough.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_udf_return.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_udf_nested_return.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_method_passthrough.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_method_nested_passthrough.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_method_return.pine",
+        "history offset must be non-negative",
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_udt_field_method_nested_return.pine",
         "history offset must be non-negative",
     ),
     (
@@ -344,7 +404,19 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "matrix cell count cannot exceed 100000",
     ),
     (
+        "tests/fixtures/regressions/matrix_concat_cell_limit.pine",
+        "matrix cell count cannot exceed 100000",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_concat_column_mismatch.pine",
+        "matrix.concat column count 2 must match source column count 3",
+    ),
+    (
         "tests/fixtures/regressions/matrix_kron_cell_limit.pine",
+        "matrix cell count cannot exceed 100000",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_call_result_kron_cell_limit.pine",
         "matrix cell count cannot exceed 100000",
     ),
     (
@@ -352,11 +424,27 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "matrix cell count cannot exceed 100000",
     ),
     (
+        "tests/fixtures/regressions/matrix_call_result_mult_cell_limit.pine",
+        "matrix cell count cannot exceed 100000",
+    ),
+    (
         "tests/fixtures/regressions/matrix_mult_shape_mismatch.pine",
         "matrix multiplication requires left column count to match right row count",
     ),
     (
+        "tests/fixtures/regressions/matrix_call_result_mult_shape_mismatch.pine",
+        "matrix multiplication requires left column count to match right row count",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_call_result_mult_array_size_mismatch.pine",
+        "matrix multiplication requires matrix column count to match array size",
+    ),
+    (
         "tests/fixtures/regressions/matrix_diff_shape_mismatch.pine",
+        "matrix difference requires matching row and column counts",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_call_result_diff_shape_mismatch.pine",
         "matrix difference requires matching row and column counts",
     ),
     (
@@ -364,8 +452,20 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "matrix power requires a square matrix",
     ),
     (
+        "tests/fixtures/regressions/matrix_call_result_pow_non_square.pine",
+        "matrix power requires a square matrix",
+    ),
+    (
         "tests/fixtures/regressions/matrix_pow_negative_power.pine",
         "matrix power cannot be negative",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_call_result_pow_negative_power.pine",
+        "matrix power cannot be negative",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_call_result_pow_na_power.pine",
+        "matrix power cannot be na",
     ),
     (
         "tests/fixtures/regressions/matrix_add_row_bounds.pine",
@@ -432,6 +532,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "matrix row index 4 is out of bounds for size 4",
     ),
     (
+        "tests/fixtures/regressions/matrix_call_result_submatrix_bounds.pine",
+        "matrix row index 4 is out of bounds for size 4",
+    ),
+    (
         "tests/fixtures/regressions/matrix_submatrix_na_index.pine",
         "matrix row index cannot be na",
     ),
@@ -460,7 +564,15 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "matrix eigenvectors require a square matrix",
     ),
     (
+        "tests/fixtures/regressions/matrix_call_result_eigenvectors_non_square.pine",
+        "matrix eigenvectors require a square matrix",
+    ),
+    (
         "tests/fixtures/regressions/matrix_inv_non_square.pine",
+        "matrix inverse requires a square matrix",
+    ),
+    (
+        "tests/fixtures/regressions/matrix_call_result_inv_non_square.pine",
         "matrix inverse requires a square matrix",
     ),
     (
@@ -836,12 +948,32 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "str.match invalid regex",
     ),
     (
+        "tests/fixtures/regressions/str_match_invalid_unicode_block.pine",
+        "str.match invalid regex",
+    ),
+    (
+        "tests/fixtures/regressions/str_match_invalid_class_range.pine",
+        "str.match invalid regex",
+    ),
+    (
+        "tests/fixtures/regressions/str_match_invalid_class_intersection.pine",
+        "str.match invalid regex",
+    ),
+    (
+        "tests/fixtures/regressions/str_match_invalid_named_character.pine",
+        "str.match invalid regex",
+    ),
+    (
         "tests/fixtures/regressions/str_repeat_negative_count.pine",
         "str.repeat count cannot be negative: -1",
     ),
     (
         "tests/fixtures/regressions/str_repeat_result_limit.pine",
         "str.repeat result cannot exceed 40960 characters",
+    ),
+    (
+        "tests/fixtures/regressions/string_concatenation_result_limit.pine",
+        "string concatenation result cannot exceed 40960 characters",
     ),
     (
         "tests/fixtures/regressions/str_replace_result_limit.pine",
@@ -893,7 +1025,7 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     ),
     (
         "tests/fixtures/regressions/str_format_time_unsupported_timezone.pine",
-        "str.format_time unsupported timezone `America/New_York`",
+        "str.format_time unsupported timezone `Mars/Olympus`",
     ),
     (
         "tests/fixtures/regressions/str_format_time_timestamp_out_of_range.pine",
@@ -902,5 +1034,95 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
     (
         "tests/fixtures/regressions/str_format_time_result_limit.pine",
         "str.format_time result cannot exceed 40960 characters",
+    ),
+    (
+        "tests/fixtures/regressions/time_component_unsupported_timezone.pine",
+        "hour unsupported timezone `Mars/Olympus`",
+    ),
+    (
+        "tests/fixtures/regressions/time_function_unsupported_timezone.pine",
+        "time unsupported timezone `Mars/Olympus`",
+    ),
+    (
+        "tests/fixtures/regressions/timestamp_unsupported_timezone.pine",
+        "timestamp unsupported timezone `Mars/Olympus`",
+    ),
+    (
+        "tests/fixtures/regressions/timestamp_date_string_unsupported_timezone.pine",
+        "timestamp unsupported dateString `20 Aug 2024 00:00 Mars/Olympus`",
+    ),
+];
+
+pub(crate) type RuntimeLibraryErrorFixture = (
+    &'static str,
+    &'static str,
+    &'static [(&'static str, &'static str)],
+);
+
+pub(crate) const RUNTIME_LIBRARY_ERROR_FIXTURES: &[RuntimeLibraryErrorFixture] = &[
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_nested_field.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_udf_passthrough.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_udf_return.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_udf_nested_return.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_method_passthrough.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_method_nested_passthrough.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_alias_qualified_method_passthrough.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_alias_qualified_method_nested_passthrough.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_method_return.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_alias_qualified_method_return.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_alias_qualified_method_nested_return.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
+    ),
+    (
+        "tests/fixtures/regressions/history_dynamic_negative_offset_import_udt_field_method_nested_return.pine",
+        "history offset must be non-negative",
+        &[("user/udt/1", "tests/fixtures/libraries/import_udt_lib.pine")],
     ),
 ];

@@ -42,6 +42,16 @@ Strategy-mode runtime results include a `strategy` object with `orders`,
 runtime results do not include this key.
 `strategy(..., initial_capital=N)` accepts a positive const numeric starting
 cash value; when omitted, the runtime uses 100000.
+With the currently supported default account-currency path (`currency.NONE`),
+`strategy.account_currency` inherits the fixed `syminfo.currency` value,
+currently `"USD"`. Explicit `strategy(..., currency=currency.NONE)` selects
+the same no-conversion path. In that path,
+`strategy.convert_to_account(value)` and `strategy.convert_to_symbol(value)`
+return the numeric input as a series float, coercing integers and preserving
+typed `na`. Direct, named, UDF, and history calls are supported; indicator and
+requested-context calls are rejected. Other strategy currency values and
+cross-currency conversion remain unsupported, and neither helper expands
+public strategy JSON.
 `strategy(..., default_qty_type=strategy.fixed, default_qty_value=N)` accepts a
 positive const numeric fixed default entry quantity.
 `strategy(..., default_qty_type=strategy.cash, default_qty_value=N)` accepts a
@@ -54,9 +64,17 @@ accepts a positive const numeric default entry percentage. When a supported
 `strategy.entry` omits `qty`, the percent-of-equity subset calculates the
 absolute quantity once at placement time as
 `strategy.equity * N / 100 / close`, using the current supported equity and
-current close. Contracts, margin constraints beyond the current explicit-margin
-long-only subset, currency conversion, symbol precision rounding, and lot-step
-constraints remain unsupported.
+current close. `strategy.default_entry_qty(fill_price)` returns the same
+configured default size without placing an order: fixed sizing returns `N`,
+cash sizing returns `N / fill_price`, and percent-of-equity sizing returns
+`strategy.equity * N / 100 / fill_price`. It does not add the quantity needed
+to reverse an existing position. Direct, named, UDF, and history reads are
+supported; non-positive or non-finite prices return `na` in the price-dependent
+modes, as does non-positive or non-finite equity in percent mode. Indicator and
+requested-context use are rejected, and the helper does not expand public
+strategy JSON. Contracts, margin constraints beyond the current explicit-margin
+long-only subset, cross-currency conversion, symbol precision rounding, and
+lot-step constraints remain unsupported.
 `strategy(..., commission_type=strategy.commission.cash_per_contract,
 commission_value=N)` accepts a finite non-negative const numeric
 cash-per-contract commission. `strategy(...,
@@ -159,19 +177,38 @@ reservation subset is explicit fixed `qty` or `qty_percent` single-trigger or
 one-downside/one-upside bracket or trailing `strategy.exit` calls for the
 current matching long entry.
 
-Strategy-mode scripts can read `strategy.position_size` and
-`strategy.position_avg_price`, `strategy.openprofit`, `strategy.netprofit`,
+Strategy-mode scripts can read `strategy.position_size`,
+`strategy.position_avg_price`, `strategy.initial_capital`,
+`strategy.openprofit`, `strategy.openprofit_percent`, `strategy.netprofit`,
 `strategy.grossprofit`, `strategy.grossloss`, `strategy.avg_trade`,
 `strategy.avg_winning_trade`, `strategy.avg_losing_trade`,
 `strategy.buy_and_hold_return_percent`, `strategy.max_runup`,
 `strategy.max_drawdown`, and
 `strategy.equity` as historical series floats. They can also read `strategy.closedtrades` and
 `strategy.opentrades` as historical series ints in the current count-only
-reporting subset. In the current long-only subset,
+reporting subset. `strategy.position_entry_name` is a historical series string.
+`strategy.account_currency` is a read-only simple string that inherits the
+current fixed symbol currency under the default `currency.NONE` path. Direct,
+UDF, and history reads are supported without expanding public strategy JSON;
+indicator use, requested-context use, and mutation remain unsupported. An
+explicit `currency.NONE` declaration is accepted; other currency settings and
+cross-currency conversion remain unsupported. The same-currency conversion
+helpers follow the identity behavior described above.
+In the current long-only subset,
 `strategy.position_size` is `0` when flat and positive while long.
 `strategy.position_avg_price` is `na` when flat and the current average entry
-price while long. `strategy.openprofit` is `(close - avg_price) * size` while
-long and `0` when flat. `strategy.netprofit` sums realized closed-trade profit.
+price while long. `strategy.position_entry_name` is `na` while flat and holds
+the entry order ID that initially opened the current continuous net position.
+Pyramiding additions and partial allocation closes preserve it; the broker
+clears it only when the net position becomes flat, allowing the next position
+to establish a new name. `strategy.initial_capital` returns the configured or
+default broker starting capital unchanged on every bar, including through UDF
+and history reads, without expanding public strategy JSON. `strategy.openprofit`
+is `(close - avg_price) * size` while
+long and `0` when flat. `strategy.openprofit_percent` divides that value by
+realized equity (`initial_capital + strategy.netprofit`) and multiplies by 100;
+it returns `na` when the realized-equity denominator is non-positive or
+non-finite. `strategy.netprofit` sums realized closed-trade profit.
 `strategy.grossprofit` sums only positive realized closed-trade profit, so
 losing, flat, and current open trades do not change it.
 `strategy.grossloss` sums realized closed-trade losses as positive values, so
@@ -205,7 +242,11 @@ strategy.openprofit`, and with supported commission it also includes entry
 commission debits on open positions. Supported slippage changes entry and exit
 fill prices, so realized/floating profit and equity use those adjusted fill
 prices. `strategy.closedtrades` is the
-number of closed trades recorded by the broker. `strategy.wintrades`,
+number of closed trades recorded by the broker.
+`strategy.closedtrades.first_index` is the oldest retained closed-trade index;
+it remains `0`, including before the first close, because the current broker
+does not trim its closed-trade ledger. Platform order-limit trimming is outside
+this slice. `strategy.wintrades`,
 `strategy.losstrades`, and
 `strategy.eventrades` count closed trades whose realized profit is positive,
 negative, or zero. `strategy.opentrades` is `1` while the supported long
@@ -218,9 +259,11 @@ and equity include the fill on the triggering bar. These variables can be used
 in the same already-supported expression contexts as other series values,
 including branches, switches, loops, pure UDF arguments, and constant history
 references. Their history follows the normal per-expression series history
-model. Direct mutation such as `strategy.position_size := ...` or
-`strategy.closedtrades := ...` is rejected because strategy state variables are
-read-only.
+model. Direct mutation such as `strategy.position_size := ...`,
+`strategy.account_currency := ...`, `strategy.position_entry_name := ...`,
+`strategy.closedtrades := ...`, or
+`strategy.closedtrades.first_index := ...`
+is rejected because strategy state variables are read-only.
 The first supported closed-trade namespace functions are
 `strategy.closedtrades.entry_price(trade_num)`,
 `strategy.closedtrades.exit_price(trade_num)`,
@@ -307,6 +350,16 @@ fixture-backed pyramided open trades by zero-based index; invalid, out-of-range,
 flat-state, or uncommented reads return `na`, with no public strategy JSON
 expansion. Other open-trade namespace functions and public open-trade record
 output remain unsupported.
+The indexed trade-percentage slice adds
+`strategy.closedtrades.profit_percent`,
+`strategy.closedtrades.max_runup_percent`,
+`strategy.closedtrades.max_drawdown_percent`, and the matching three
+`strategy.opentrades.*` functions. Each divides the selected signed profit or
+non-negative excursion amount by `entry_price * abs(quantity)` and multiplies
+by 100. The functions return `na` for the same invalid, non-integer,
+out-of-range, or flat-state indexes as their amount counterparts, and also for
+a non-positive or non-finite entry value. They reuse the internal long-only
+trade ledger and do not expand public strategy JSON.
 Stage 7 Slice 35 adds `strategy.opentrades.capital_held` as the one variable
 inside the open-trade namespace. In the current no-margin subset it returns
 `na`; with explicit active `margin_long`, Stage 7 Margin Slice M2 returns the
@@ -440,6 +493,23 @@ bracket reservation subset is summarized in `docs/PHASE_X_AUDIT.md`; the Phase Y
 trailing reservation subset is summarized in `docs/PHASE_Y_AUDIT.md`; the Phase
 Z omitted-quantity boundary is summarized in `docs/PHASE_Z_AUDIT.md`.
 
+## Runtime Errors
+
+`runtime.error(message)` accepts a string-compatible message and returns
+`void`. The call is evaluated only when ordinary control flow reaches it. Once
+reached, its argument is evaluated and the runtime immediately returns an
+error carrying the exact string; no later statement or bar is executed. This
+propagation is unchanged through nested user-defined-function calls. A
+string-compatible `na` argument produces the deterministic message `NaN`,
+consistent with existing runtime string rendering. Non-string arguments are
+rejected during semantic analysis, and the `void` result cannot initialize a
+declaration or feed a value-consuming built-in.
+
+The error is an internal execution outcome, not an alert, log event, output
+snapshot, or host callback. It therefore adds no public runtime-result schema
+field and does not enter the output rollback or collection-mutation side-effect
+models.
+
 ## Alert Events
 
 `alertcondition(condition, title, message)` is a supported runtime side effect
@@ -490,31 +560,78 @@ functions lower through the same inlined UDF machinery as local functions.
 Runtime execution receives one lowered HIR program and performs no filesystem,
 network, registry, or library lookup.
 
-The executable import subset supports scalar-field imported UDT constructors,
-direct field reads, ordinary same-imported-UDT reassignment, and scalar-field
+The executable import subset supports scalar-tree imported UDT constructors,
+direct and nested field reads, ordinary same-imported-UDT reassignment, and scalar-tree
 imported UDT typed declarations, same-imported-identity ternary results, plus
 same-imported-identity `if`, `switch`, `while`, and `for` expression results,
 direct or nested UDF parameter passthrough and direct or nested constructor-return
-results, ordinary imported UDT `var` declarations, and scalar-field mutation in
+results, ordinary imported UDT `var` declarations, and scalar-tree root-field replacement in
 top-level, branch, `for`-loop, `while`-loop, and UDF-local statement contexts,
 by lowering them to ordinary UDT field-vector values with source-scoped HIR
-identity. It also supports scalar-field imported UDT `varip` declarations
-through the same intrabar value-clone slot model as local scalar-field UDT
-`varip`, plus receiver-style or alias-qualified scalar imported UDT method calls
+identity. It also supports scalar-tree imported UDT `varip` declarations
+through the same intrabar value-clone slot model as local scalar-tree UDT
+`varip`, plus receiver-style or alias-qualified scalar-tree imported UDT method calls
 including direct same-identity, block-local alias, final-if alias, final-for
-alias, nested-method passthrough plus constructor returns, and method-local
-field mutation, plus scalar-field imported UDT value history and `array.from`
+alias, final-while alias, switch-expression alias, nested-method passthrough
+plus constructor returns, and method-local
+scalar-tree root-field replacement, plus scalar-tree imported UDT value history and `array.from`
 size/get/first/last, set replacement field reads, push append field reads,
 unshift prepend field reads, insert insertion field reads, fill replacement
 field reads, join positional stringification, includes/indexof/lastindexof
-structural equality search, sort/sort_indices by int/float/string sort_field,
+structural equality search, sort/sort_indices by the default root field or a
+compile-time int-index/string-name selector resolving to an int/float/string field,
 pop/remove/shift return field reads, clear size reset, copy independent field
 reads, reverse reordered field reads, slice window field reads, concat appended
 field reads, and statement/expression/index-value for-in value-copy field reads.
 It intentionally excludes remote lookup, re-exports, unaliased imports,
-side-effecting exported functions, broader imported UDT flow, collections,
-broader imported UDT history, and alias-qualified imported method receiver type
+side-effecting exported functions, imported UDT flow outside the covered same-identity scalar-tree paths, collections,
+direct private imported UDT access and imported UDT value history outside the scalar-tree metadata subset, and alias-qualified imported method receiver type
 mismatches.
+
+## String Literals
+
+Single-line string literals may use Pine's deprecated physical-line wrapping
+syntax. Every continuation line must begin with at least one ASCII space; the
+lexer removes the physical line terminator and collapses all leading spaces on
+that continuation line to one space in the resulting string. This applies to
+both quotation-mark and apostrophe delimiters and does not emit layout tokens.
+An unindented physical line break still terminates recovery with
+`E_LEX_STRING`.
+
+All single-line, line-wrapped, and triple-delimited literals share Pine's
+40,960-character maximum. The lexer counts the decoded string value in Unicode
+scalar characters after escape decoding, line-wrap collapsing, and multiline
+line-ending normalization. It accepts exactly 40,960 characters. A longer
+literal reports `E_LEX_STRING_LIMIT` over the complete delimited span while
+retaining the token so later statements do not receive cascading parse errors.
+
+## Expression Line Wrapping
+
+### Parenthesized Wrapping
+
+While one or more round parentheses remain open, the lexer treats physical
+line endings and all indentation at the next non-comment line as layout-free
+whitespace. This allows grouped expressions, function calls, and function
+parameter declarations to wrap with zero or more spaces, including multiples
+of four, and permits comments between wrapped parts. Nested parentheses share
+the same rule. Once the matching outer parenthesis closes, ordinary newline and
+indent/dedent emission resumes, preserving surrounding local-block structure.
+If a parenthesized expression contains an `if`, `for`, `while`, or `switch`
+block expression, that enclosing parenthesis temporarily retains structural
+newlines and indentation until it closes so the nested block remains parseable.
+
+### Legacy Wrapping Outside Parentheses
+
+Outside round parentheses, a physical line continues the current expression
+when its leading indentation is deeper than the active local block and its
+expanded column is not a multiple of four. Spaces advance one column and tabs
+advance four columns. The lexer omits the preceding newline and the
+continuation indentation, including after an end-of-line comment. Successive
+continuations may use different eligible indentation widths. This applies to
+global and local expressions, including arithmetic, ternaries, string
+concatenation, UDF bodies, and reassignment. A continuation starting at a
+multiple-of-four column remains structural layout and is therefore rejected
+when an unfinished expression precedes it.
 
 ## Variables
 
@@ -577,13 +694,13 @@ same runtime error used by `array.get`. Label, line, linefill, polyline, box,
 and table array loop values are shallow-copied ids, so drawing setters or lifecycle
 operations through the loop local mutate the same drawing object while
 assignment to the loop local does not write the source array slot. Chart-point
-array and same-local or same-imported scalar-field UDT array loop values are
+array and same-local or same-imported scalar-tree UDT array loop values are
 copied into the loop-local variable, so local field mutation does not write back
 to the source slot. The narrow `for index, value in values` form supports `array<int>`,
 `array<float>`, `array<bool>`, `array<string>`, `array<color>`,
 `array<label>`, `array<line>`, `array<linefill>`, `array<polyline>`,
 `array<box>`, `array<table>`, `array<chart.point>`, and same-local or
-same-imported scalar-field UDT array iterables with a zero-based `series int`
+same-imported scalar-tree UDT array iterables with a zero-based `series int`
 index loop-local. Statement-form `for...in` also supports runtime-owned
 `matrix<float>`, `matrix<int>`, `matrix<bool>`, `matrix<string>`, and
 `matrix<color>` iterables by capturing matrix rows at loop entry and binding
@@ -594,19 +711,29 @@ execution. Expression-form `for value in values` supports `array<int>`,
 `array<float>`, `array<bool>`, `array<string>`, `array<color>`,
 `array<label>`, `array<line>`, `array<linefill>`, `array<polyline>`,
 `array<box>`, `array<table>`, `array<chart.point>`, and same-local scalar-field
-UDT array iterables, plus runtime-owned matrix row iterables, and returns the
-last expression from the last completed iteration, or `na` when the iterable is
-typed `na` or has zero rows/elements. Matrix expression-form iteration uses the
-same independent row snapshots as statement-form matrix iteration. The optional
-expression-form index local is the same zero-based `series int` slot number used
-by statement-form index/value iteration. `break` returns the previous expression
-result and `continue` skips the current iteration's result expression.
-Index/value iteration over typed imported or
-non-scalar-field UDT arrays, map iterables, expression-form `for...in` beyond
-the scalar-array, drawing-id-array, chart.point-array, same-local
-scalar-field UDT-array, and matrix-row subset,
-non-array/non-matrix iterables, and other non-scalar arrays remain outside the
-current subset.
+UDT array iterables, plus runtime-owned matrix row iterables and scalar map
+iterables, and returns the last expression from the last completed iteration, or
+`na` when the iterable is typed `na` or has zero rows/elements. Matrix
+expression-form iteration uses the same independent row snapshots as
+statement-form matrix iteration. For scalar maps, key-only forms bind the map key
+to the loop value, while key/value forms bind the key to the first loop local and
+the map value to the second loop local. The optional expression-form index local
+is the same zero-based `series int` slot number used by statement-form
+index/value iteration for arrays and matrix rows, and the map key for scalar
+maps. `break` returns the previous expression result and `continue` skips the
+current iteration's result expression. Index/value iteration over typed imported
+or non-scalar-tree UDT arrays, expression-form `for...in` beyond the
+scalar-array, drawing-id-array, chart.point-array, same-local scalar-tree
+UDT-array, matrix-row, and scalar-map subset, non-array/non-matrix/non-map
+iterables, and other non-scalar arrays remain outside the current subset.
+When the iterable is a same-local scalar-tree UDT-array parameter of a local
+UDF or typed local user method, lowering binds the value loop local with the
+element identity resolved for that call. Value-only and index/value statement
+loops, block-local aliases, and final expression-form loops may return a field
+or other scalar result, the UDT element itself, or a same-identity UDT array
+rebuilt from that element. Interleaved A-to-B-to-A UDF calls and named
+typed-method arguments retain independent field layouts, returned-element
+identities, and rebuilt-array identities.
 Ordinary `var` scalar arrays roll back
 loop-body mutation during repeated forming realtime updates, while scalar
 typed-array `varip` iteration preserves carried intrabar loop-body mutation
@@ -653,6 +780,9 @@ expression becomes the arm result. If no arm matches and no default arm exists,
 the switch returns `na`. Same-imported-identity UDT switch results are
 supported; imported/local or otherwise mismatched UDT switch results are
 rejected before runtime execution.
+Statement-context `switch` forms use the same arm-selection rules, execute only
+the selected arm, and can perform side effects, outer reassignment, or propagate
+loop control without requiring a final result expression.
 
 ### Reassignment
 
@@ -662,6 +792,12 @@ x := x + 1
 
 Reassignment updates an existing variable in the current execution scope. The
 semantic analyzer must reject reassignment to unknown names.
+
+The scalar-variable compound assignment operators are exact shorthand for the
+corresponding reassignment expression. For example, `x += value` has the same
+type, qualifier, `na`, persistence, and runtime behavior as
+`x := x + value`. The same normalization applies to `-=`, `*=`, `/=`, and
+`%=`, while string operands make `+=` use string concatenation.
 
 ### `var`
 
@@ -725,8 +861,9 @@ reassign to the same local UDT type; top-level, block-local, and loop-local
 typed UDT declarations may also initialize or reassign from same-local-UDT
 `for` expressions. UDFs may pass a local UDT value through a parameter and
 return that same parameter, or return a
-block-local alias chain that starts from that parameter, or return a nested
-passthrough UDF call that maps back to that parameter. Pure UDFs may also
+block-local, ternary-expression, final-if, final-for, final-for-in, final-while, or switch-expression alias chain
+that starts from that parameter, or return a nested passthrough UDF call that
+maps back to that parameter through those same alias forms. Pure UDFs may also
 construct and return a local UDT, directly,
 through nested pure constructor-helper UDF calls, or through same-local-UDT
 ternary, switch, `if` expression, final if/else constructor branches, or final
@@ -741,31 +878,741 @@ UDT variables may mutate scalar fields before returning the updated value.
 Mutating UDT fields on globals or parameters inside UDFs, field mutation inside
 methods, local UDT value history references, UDT `varip`, nested UDT fields, UDT
 arrays, and broader imported UDT values are rejected before runtime execution or
-remain outside the executable subset. Imported UDTs are executable only for
-host-provided exported scalar-field types constructed as `alias.Type.new(...)`
-read through direct scalar fields such as `value.x`, and reassigned from the
+remain outside the executable subset. Imported UDTs are executable for
+host-provided exported scalar-tree types constructed as `alias.Type.new(...)`
+read through direct scalar fields such as `value.x` or nested fields such as
+`wrapped.point.x`, and reassigned from the
 same imported UDT identity, including explicit `alias.Type` typed declarations
 with same-identity initialization or reassignment, same-imported-identity
 ternary, `if`, `switch`, `while`, and `for` expression results, direct or nested UDF
 parameter passthrough returns, direct or nested constructor-return UDFs, and
-scalar-field mutation in top-level, branch, `for`-loop, `while`-loop, and
-UDF-local statement contexts, plus scalar-field value history reads and
+scalar-tree root-field replacement in top-level, branch, `for`-loop, `while`-loop, and
+UDF-local statement contexts, plus scalar-tree value history reads and
 `array.from` size/get/first/last, set replacement field reads,
-push append field reads, unshift prepend field reads, insert insertion field reads, fill replacement field reads, join positional stringification, includes/indexof/lastindexof structural equality search, sort/sort_indices by int/float/string sort_field, pop/remove/shift return field reads, clear size reset,
+push append field reads, unshift prepend field reads, insert insertion field reads, fill replacement field reads, join positional stringification, includes/indexof/lastindexof structural equality search, sort/sort_indices by the default root field or a compile-time int-index/string-name selector resolving to an int/float/string field, pop/remove/shift return field reads, clear size reset,
 copy independent field reads, reverse reordered field reads, slice window field
 reads, concat appended field reads, and statement/expression/index-value for-in
 value-copy field reads, plus `array<lib.Type>`/`lib.Type[]` declarations
 initialized from `na` or same-identity imported UDT array values.
+For both local and imported scalar-tree UDT arrays, ternary, `if`, `switch`,
+`for`, `for...in`, and `while` results preserve the concrete element identity
+through HIR lowering. Array/`na` branches are allowed, while branches carrying
+different UDT identities fail semantic analysis.
+Local pure UDF/local user-method calls preserve same-local scalar-tree UDT array
+identity, and imported pure exported UDF/imported user-method calls preserve
+same-imported scalar-tree UDT array identity, through direct parameter,
+block-alias, copy, new/from, private nested-call, typed-method, and final
+control-flow returns. A direct or alias return keeps the source array id;
+`array.copy`, `array.new<T>`/`array.new<alias.Type>`, and `array.from` allocate a
+new array id. Lowering derives the element layout from the current call
+arguments, rewrites imported type positions for the active alias, and keys
+expression metadata by import instance. Interleaved calls over field-order
+variants A, B, then A, including two aliases of one physical library, therefore
+read the correct fields on every result. Tuple-return lowering applies the same
+rule independently to each destructured slot, including tuple literals,
+direct/block/nested/final-flow UDF or method results, typed-`na` locals, and
+different UDT array identities in different slots. Fresh lower symbols receive
+the current call's slot identity before later array element field reads.
+Tuple-valued ordinary declarations preserve their element types and per-slot
+identities through direct and self aliases, ternary, `if`, or `switch` aliases,
+fresh local shadowing, and later tuple destructuring. The first declaration
+fixes each UDT-array slot identity; same-identity or `na` reassignment keeps the
+existing layout, while direct or control-flow reassignment to a different
+identity is rejected before HIR emission. Qualified user-defined UDF/method
+results and unqualified plain local UDF results support direct `.size()`,
+`.get(index)`, `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.concat(id2)`, `.includes(value)`,
+`.indexof(value)`, and `.lastindexof(value)` calls when the result is any
+currently supported array kind. Bool/int/float results additionally support
+terminal `.every()` and `.some()`. Numeric `array<int>` and `array<float>` results
+additionally support terminal `.binary_search(value)` and
+`.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`,
+terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`, plus non-mutating `.abs()` and `.standardize()` transformation chains that
+return a fresh same-kind array. Concrete int, float, or string results admit
+transforming `.sort_indices(order?)`; concrete same-local or same-imported
+scalar-tree UDT results admit `.sort_indices(order?, sort_field?)` when a
+compile-time zero-based field index or field name resolves to a root
+int/float/string field against the exact result identity; omitting the selector
+uses field index `0`. Both forms return a fresh fixed int-array continuation. Every scalar
+result plus a concrete same-local or same-imported
+scalar-tree UDT-array result also admits terminal `.join(separator?)`. The parser
+rewrites the unqualified form to the impossible internal prefix `$call_result`
+only for a plain lexical callee; qualified user-defined forms retain their
+source alias/type prefix.
+Direct `.slice(index_from, index_to)` results preserve the concrete array kind
+and UDT identity, share the ordinary live parent window, and may continue
+through the closed array-result helper set.
+Direct `.concat(id2)` validates the same array kind or exact scalar-tree UDT
+identity, appends into and returns the receiver array id, and may continue
+through that same helper set. Alias and live-slice receivers update shared
+parent backing; fresh derived snapshots remain source-independent. Empty,
+upstream-`na`, capacity, arity, and UDF-side-effect behavior stays identical to
+ordinary `array.concat`.
+
+Built-in `array.*` producers have one separate, closed receiver path. Its exact
+admitted producer set is `array.new_float`, `array.new_int`, `array.new_bool`,
+`array.new_string`, `array.new_color`, `array.new_line`, `array.new_linefill`,
+`array.new_polyline`, `array.new_label`, `array.new_box`, `array.new_table`,
+`array.new<chart.point>`, supported `array.new<UDT>`, `array.from`,
+`array.copy`, `array.slice`, `array.concat`, `array.abs`,
+`array.standardize`, and `array.sort_indices`.
+Existing supported `array.new<T>` scalar, drawing-id, `chart.point`, and
+same-local/same-imported scalar-tree UDT source templates reach that path
+through their canonical constructor or checked UDT-template form. The parser
+marks the receiver with `$builtin_array_result`; only `.size()`, `.get(index)`,
+`.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.concat(id2)`, `.includes(value)`, `.indexof(value)`, and
+`.lastindexof(value)`, plus bool/int/float-only `.every()`/`.some()` and numeric-only `.binary_search(value)` and
+`.binary_search_leftmost(value)`/`.binary_search_rightmost(value)` and
+`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)` or exact-identity scalar-tree UDT `.sort_indices(order?, sort_field?)`, scalar/same-identity scalar-tree UDT `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)`, are admitted after it. The lexical prefix
+`array` is reserved for built-in producer recognition, so a user or import
+qualifier named `array` cannot use this qualified call-result path.
+Only `.copy()`, `.slice(index_from, index_to)`, `.concat(id2)`, numeric `.abs()`, numeric `.standardize()`, and sortable-scalar or exact-identity scalar-tree UDT `.sort_indices(order?, sort_field?)` return arrays
+that may continue through another allowed step. The terminal `.size()`, `.get()`, `.first()`, `.last()`,
+`.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, and
+`.binary_search_leftmost()`/`.binary_search_rightmost()`/`.min()`/`.max()`/
+`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`/`.join(separator?)` results cannot continue
+into a user method or any other call-result method,
+including a method on a returned scalar UDT element.
+`.concat(id2)` is the sole admitted mutating array-returning continuation. It
+returns the receiver id after appending a same-kind/same-identity source, so
+alias and live-window writes remain visible while fresh snapshots remain
+independent; it stays rejected inside UDF bodies.
+The terminal `.clear()` and `.reverse()` mutations likewise cannot continue:
+both return `void`, accept no explicit arguments, and are allowed only outside
+UDF bodies.
+Terminal `.pop()` also accepts no explicit arguments and is UDF-rejected, but
+returns the removed receiver-typed final element (or `na`) before terminating.
+Terminal `.shift()` has the same return typing and gates while removing the
+first element and retaining the relative order of the remaining elements.
+Terminal `.remove(index)` accepts one simple-int-compatible index and returns
+the selected removed element. Explicit `na` indexes return `na` without
+mutation, negative indexes and out-of-range errors retain ordinary semantics,
+and the result cannot continue.
+Terminal `.push(value)` accepts one element-compatible value, appends it to the
+resolved array result, returns `void`, and cannot continue. Value-kind/UDT-
+identity checks, upstream-`na` no-op behavior, UDF rejection, and the 100000-
+element limit are unchanged.
+Terminal `.unshift(value)` accepts the same compatible value set, prepends at
+the resolved result's start, returns `void`, and cannot continue. It retains
+the same UDT-identity, upstream-`na` value-evaluation/no-op, UDF-rejection, and
+100000-element boundaries.
+Terminal `.insert(index, value)` additionally requires a simple-int-compatible
+index, preserves positive, in-range negative, end, explicit-`na`, and bounds-
+error behavior, returns `void`, and cannot continue. Value/identity, upstream-
+`na`, UDF-rejection, and parent-array capacity behavior remain unchanged.
+Terminal `.set(index, value)` shares the index/value contract but replaces one
+existing positive or in-range negative slot without changing length. It returns
+`void` and cannot continue; explicit `na` indexes and upstream-`na` receivers
+no-op after value evaluation, while empty/out-of-range and UDF behavior remains
+unchanged.
+Terminal `.fill(value, index_from?, index_to?)` validates an element-compatible
+value and optional simple-int-compatible half-open bounds. Omitted bounds fill
+the full result; live slices write through to parent backing, while fresh map/
+matrix-derived arrays mutate only their snapshots. It returns `void` and cannot
+continue. Explicit `na`, negative, reversed, oversized, empty, and upstream-`na`
+cases no-op after all supplied arguments are evaluated; UDF mutation remains
+rejected.
+Terminal `.sort(order?, sort_field?)` mutates concrete int/float/string results
+using the ordinary ascending default and const-order rules. Same-local or same-
+imported scalar-tree UDT results use root field index `0` by default and accept
+a compile-time zero-based integer field index or string field name selecting a
+root int/float/string field. Lowering canonicalizes that selector to the field
+index for the exact element identity. A top-level `na` UDT element raises a
+runtime error before sorting; `na` inside the selected field remains sortable
+with the ordinary special-value placement. Alias/live-slice results reorder
+backing parents; fresh map/matrix-derived arrays reorder only their snapshots.
+The call returns `void`, cannot
+continue, treats empty/upstream-`na` results as no-ops after order evaluation,
+and retains unsupported-kind, order/field/arity, and UDF-side-effect gates.
+
+Analysis then fails closed unless the producer arguments resolve to the exact
+supported array kind and, for UDT arrays, one concrete same-local or
+same-imported scalar-tree identity. `get` preserves that element identity and
+the existing named/`na`/negative-index and bounds behavior; `size` and `last`
+retain the existing empty and typed-`na` semantics. The postfix receiver is
+lowered as an array helper rather than as a same-named local method or imported
+function, and `copy` allocates independently from the source array. An
+unqualified local UDF result carrying a concrete local or imported scalar UDT
+identity may instead invoke an existing pure user method.
+
+The allowed postfix helper does not change the producer's own semantics.
+`array.slice(...)` returns a live shallow window into its parent, so direct
+postfix reads observe that window; `array.slice(...).copy()` snapshots its
+current values into an independent array. `array.concat(left, right)` appends
+to `left` in place and returns the first array id. A following postfix read is
+itself non-mutating, but the concat call is still a collection side effect and
+remains rejected inside UDFs. Mixed scalar-return identities, non-scalar
+UDT-array returns, unsupported or unknown templates, non-array/non-UDT results,
+unknown/`na` results without a concrete supported type or identity, other
+`array.*` producer/member calls, built-in namespaces and templates outside the
+exact cross-namespace producer set below,
+postfix helpers outside the forty-four-item read/copy/search/transform/aggregate/mutation set, and postfix
+mutation other than `.concat(id2)`/`.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?, sort_field?)` remain unsupported boundaries.
+The first/last index readers reuse ordinary element-kind, concrete UDT-identity, and
+structural/object equality rules. `.indexof(value)` returns the first
+zero-based match and `.lastindexof(value)` returns the last, both as
+`simple int`; each returns `-1` for missing values, empty concrete arrays, and
+upstream `na` arrays, performs no mutation, and is terminal.
+Bool/int/float-only `.every()` returns fixed `series bool`, with nonzero
+numerics and `true` treated as truthy and zero, `false`, or element `na`
+treated as false. Empty arrays return true, upstream `na` arrays propagate,
+the source is not mutated, and the scalar result is terminal. String, color,
+drawing/object, chart-point, and UDT results plus extra arguments remain
+rejected.
+Bool/int/float-only `.some()` shares the same truthiness and fixed `series bool`
+contract, but succeeds when any nonzero numeric or `true` element exists.
+Zero, `false`, and element `na` do not satisfy it; empty arrays return false,
+upstream `na` arrays propagate, the source remains unchanged, and the result is
+terminal. The same unsupported receiver kinds and extra-arity boundary apply.
+Numeric-only `.binary_search(value)` retains the ordinary numeric-array
+receiver and numeric-value checks. The caller supplies ascending contents; the
+runtime performs an exact lower-bound search, so duplicate matches return the
+leftmost index. It returns `simple int`, uses `-1` for missing, empty, and
+upstream-`na` arrays, performs no mutation, and is terminal. Bool, string,
+color, drawing/object, chart-point, and UDT array results remain rejected.
+Numeric-only `.binary_search_leftmost(value)` shares those checks and the
+ascending-input contract. An exact duplicate returns its first index; a miss
+returns the nearest element on the left, clamped to index `0` below the minimum
+and the last index above the maximum. Empty and upstream-`na` arrays return
+`-1`. The fixed result is `simple int`, non-mutating, and terminal.
+Numeric-only `.binary_search_rightmost(value)` is the symmetric ceiling search.
+An exact duplicate returns its last index; a miss returns the nearest element
+on the right, clamped to index `0` below the minimum and the last index above the
+maximum. It shares the numeric/ascending, empty/upstream-`na`, `simple int`,
+non-mutation, and terminal boundaries.
+
+Numeric-only `.abs()` reuses the ordinary numeric-array check and allocates a
+fresh array with the receiver's int or float element kind. It preserves `na`
+elements, leaves the source array unchanged, returns an empty array for an
+empty receiver, and propagates an upstream `na` array. Because the result is a
+concrete array, it may continue through `.copy()`, another `.abs()`, or any
+currently admitted terminal reader. Bool, string, color, drawing/object,
+chart-point, and UDT array results remain rejected.
+
+Numeric-only `.min(nth?)`/`.max(nth?)` return the same `series int` or `series
+float` kind as the receiver element type. After filtering `na` elements, `nth`
+is a zero-based ascending rank for `min` and descending rank for `max`, and
+defaults to `0`; duplicate values retain separate ranks. Dynamic integer ranks
+are accepted. Empty, all-`na`, and
+upstream-`na` arrays, plus `na`, negative, or out-of-range ranks, return `na`.
+The helper does not mutate its receiver and its scalar result is terminal.
+
+Numeric-only `.sum()` returns the receiver element type's `series int` or
+`series float`, ignores `na` elements, and returns `na` for empty, all-`na`, or
+upstream-`na` arrays. It does not mutate its receiver and is terminal.
+
+Numeric-only `.avg()` averages the same filtered values but always returns
+`series float`. It shares the empty, all-`na`, upstream-`na`, non-mutation, and
+terminal boundaries, and converts a non-finite result to `na`.
+
+Numeric-only `.range()` returns the receiver element type's `series int` or
+`series float` and computes maximum minus minimum over filtered non-`na`
+values. Empty, all-`na`, and upstream-`na` arrays return `na`, as does a non-
+finite float difference; the result is non-mutating and terminal.
+
+Numeric-only `.median()` sorts filtered non-`na` values, selects the middle
+item for an odd count, and averages the middle pair for an even count. It
+returns the receiver's `series int` or `series float`; integer pair means
+truncate toward zero. Empty, all-`na`, upstream-`na`, and non-finite float
+medians return `na`; the result is non-mutating and terminal.
+
+Numeric-only `.mode()` sorts filtered non-`na` values and returns the most
+frequent value as the receiver's `series int` or `series float`. Equal maximum
+frequencies select the smaller value. Empty, all-`na`, upstream-`na`, and
+all-unique arrays return `na`; the result is non-mutating and terminal.
+
+Numeric-only `.percentile_nearest_rank(percentage)` sorts filtered non-`na`
+values and selects `ceil(percentage / 100 * count) - 1`, with `0` clamped to
+the minimum and `100` selecting the maximum. The positional or named percentage
+may be series/simple numeric. Empty, all-`na`, upstream-`na`, runtime typed-
+`na`, negative, and above-100 percentages return `na`; the receiver-derived
+`series int`/`series float` result is non-mutating and terminal.
+
+Numeric-only `.percentile_linear_interpolation(percentage)` sorts the same
+filtered values and interpolates between the floor/ceiling members at
+`percentage / 100 * (count - 1)`. Integer and float receivers, including a
+single remaining element, return `series float`. Positional or named series/
+simple numeric percentages are accepted. Empty, all-`na`, upstream-`na`,
+runtime typed-`na`, out-of-range, and non-finite interpolation results return
+`na`; the read is non-mutating and terminal.
+
+Numeric-only `.percentrank(index)` keeps the original array order for target
+selection, then filters `na` values from the comparison population and returns
+`count(value <= target) / non_na_count * 100` as `series float`. Duplicate
+values count independently. The positional or named index must be simple int-
+compatible. Empty, all-`na`, upstream-`na`, target-`na`, runtime typed-`na`,
+negative, and out-of-range indexes return `na`; the read is non-mutating and
+terminal.
+
+Numeric-only `.covariance(id2, biased?)` requires a same-length runtime numeric
+second array, pairs cells by original index, and discards a pair when either
+side is `na`. It returns `series float`, using the biased population denominator
+by default and the sample denominator when `biased` is `false` or `na`. The
+second array and bias may be positional or named. Empty/all-`na`/upstream-`na`
+pairs, mismatched lengths, sample populations below two pairs, and non-finite
+results return `na`; the read is non-mutating and terminal.
+
+Numeric-only `.standardize()` allocates a fresh fixed `simple array<float>` and
+leaves the source unchanged. It computes the mean and population standard
+deviation from non-`na` values, preserving `na` positions when at least one
+numeric value exists. A zero or non-finite standard deviation makes every
+numeric output position `na`, so constant input produces a same-length all-
+`na` array. Empty and all-`na` sources produce an empty array, while an
+upstream-`na` source produces `na`. The new array can continue through the
+closed reader, `.copy()`, `.abs()`, `.standardize()`, and `.sort_indices()` set.
+
+Numeric-only `.variance(biased?)` returns fixed `series float`, filters `na`
+elements, and leaves the source unchanged. Omitted or `true` bias uses the
+population denominator; positional or named `false` or `na` bias uses the
+sample denominator. A single numeric value has population variance `0`, while
+an unbiased population below two values returns `na`. Empty, all-`na`,
+upstream-`na`, insufficient-sample, and non-finite results also return `na`.
+The scalar read is terminal.
+
+Numeric-only `.stdev(biased?)` shares `.variance()`'s concrete receiver,
+filtered-`na`, population versus sample bias, positional/named argument,
+empty/all-`na`/upstream-`na`, sample-size, non-finite, non-mutation, and
+terminal boundaries. Its fixed `series float` result is the square root of the
+selected variance; one numeric value therefore returns population standard
+deviation `0` and unbiased `na`.
+
+Int, float, or string `.sort_indices(order?)` allocates a fresh fixed
+`simple array<int>` of stable original indexes without mutating its call-result
+receiver. Omitted order is ascending; explicit `order.descending` uses the
+existing reverse value ordering while retaining equal-value source order.
+Established float-`na` and string-empty placement, empty results, and upstream-
+`na` propagation are unchanged. The new int array retains the closed
+array-result prefix, so nested sort, copy, read, search, transformation, and
+numeric-statistic chains remain available. Bool/color/object/chart-point
+receivers, invalid order/arity, direct mutation, and UDT call-result ordering
+without an identity-preserving binding remain fail closed.
+
+Terminal top-level `.clear()` reuses the ordinary array mutation runtime. An
+alias-returning `array.concat` or local/imported UDF/method producer therefore
+clears the shared backing id, and clearing a nested `array.slice` deletes the
+live window from its parent. Matrix row/column/eigenvalue, map key/value, and
+array-returning `matrix.mult` producers allocate fresh snapshots, so clearing
+their result does not mutate the source matrix or map. Empty and upstream-`na`
+results are no-ops. The call returns `void`, cannot continue, and semantic
+analysis rejects it inside UDF bodies as a collection side effect.
+Terminal top-level `.reverse()` follows the same alias, live-window, fresh-
+snapshot, empty/upstream-`na`, `void`, no-continuation, and UDF-side-effect
+boundaries, but reverses the current array values instead of removing them.
+Terminal top-level `.pop()` follows the same alias/live-window/fresh-snapshot
+and UDF boundaries, removes the final value, and returns it with the resolved
+element kind and UDT identity. Empty and upstream-`na` results return `na`.
+Terminal top-level `.shift()` follows those boundaries, removes and returns the
+first resolved value, and preserves the order of the remaining values.
+Terminal top-level `.remove(index)` follows those identity and storage
+boundaries for the selected positive or in-range negative index. An explicit
+`na` index or upstream-`na` receiver returns `na` without mutation; out-of-range
+indexes retain the ordinary runtime error.
+Terminal top-level `.push(value)` follows the same alias/live-window/fresh-
+snapshot and UDF boundaries, appends at the resolved result's end, and returns
+`void`. Scalar/UDT value compatibility and capacity errors retain ordinary
+array semantics.
+Terminal top-level `.unshift(value)` follows those same boundaries, prepends at
+the resolved result's start, and returns `void`; a live slice inserts at its
+parent-window start while a fresh derived snapshot leaves its source unchanged.
+Terminal top-level `.insert(index, value)` follows those boundaries at the
+resolved positive, in-range negative, or end index. A live slice inserts in its
+parent window, fresh derived snapshots leave sources unchanged, and explicit
+`na` indexes or upstream-`na` receivers no-op after value evaluation.
+Terminal top-level `.set(index, value)` follows the same identity and storage
+boundaries but replaces one existing slot without changing length. Live slices
+write their parent slot, fresh derived snapshots leave sources unchanged, and
+explicit `na` indexes or upstream-`na` receivers no-op after value evaluation.
+Terminal top-level `.fill(value, index_from?, index_to?)` follows the same
+identity/storage boundary for a full result or valid half-open range. Live
+slices fill their parent window, fresh derived snapshots leave sources
+unchanged, and invalid or explicit-`na` bounds plus upstream-`na` receivers
+no-op after evaluating the value and every supplied bound.
+Terminal top-level `.sort(order?, sort_field?)` reorders the same alias/live-
+slice backing for int/float/string results or exact-identity scalar-tree UDT
+results with a sortable root field selected by default index `0` or a
+compile-time integer index/string name. Fresh map/matrix-derived
+arrays remain source-independent, and empty/upstream-`na` results no-op after
+the optional order is evaluated.
+
+The same `$builtin_array_result` lowering now has one additional exact set of
+seven fixed cross-namespace producers: `str.split`, `ta.pivot_point_levels`,
+`matrix.row`, `matrix.col`, `matrix.eigenvalues`, `map.keys`, and `map.values`.
+Each admits only `.size()`, `.get(index)`, `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.concat(id2)`,
+`.includes(value)`, `.indexof(value)`, `.lastindexof(value)`, bool/int/float-only
+`.every()`/`.some()`, and numeric-only
+`.binary_search(value)`/`.binary_search_leftmost(value)`/
+`.binary_search_rightmost(value)`/`.abs()`/`.min(nth?)`/`.max(nth?)`/`.sum()`/
+`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`, plus int/float/string `.sort_indices(order?)`, all-scalar terminal `.join(separator?)`, and terminal top-level `.clear()`/`.reverse()`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?)`; only `.copy()`, `.slice(index_from, index_to)`, `.concat(id2)`, numeric `.abs()`, numeric `.standardize()`, and numeric-or-string `.sort_indices(order?)` can continue with another allowed array chain. The other
+twenty-nine terminal value results and the eight `void` mutations cannot continue. `str.split` and
+`ta.pivot_point_levels` retain their
+existing `array<string>` and `array<float>` results. `matrix.row` and
+`matrix.col` return independent element-array snapshots for runtime-owned
+float, int, bool, string, and color matrices, while `matrix.eigenvalues`
+retains its independent `array<float>` result for the supported numeric-matrix
+subset. `map.keys` and `map.values` return independent insertion-order arrays
+whose element kind matches the scalar key or value template, where each map
+template side is one of int, float, bool, string, or color. A postfix helper
+does not change empty/`na`, negative-index, bounds-error, element-kind, or
+snapshot-copy behavior.
+
+Namespace-qualified `matrix.mult(...)` uses a separate, closed
+`$builtin_matrix_result` candidate path whose helper family is selected from
+the resolved `MatrixMult` result type. Matrix-by-array, array-by-matrix, and
+array-by-array overloads resolve to `array<float>` and may use `.size()`,
+`.get(index)`, `.first()`, `.last()`, `.copy()`, `.slice(index_from, index_to)`, `.concat(id2)`, `.includes(value)`,
+`.indexof(value)`, `.lastindexof(value)`, `.every()`, `.some()`, `.binary_search(value)`, and
+`.binary_search_leftmost(value)`/`.binary_search_rightmost(value)`/`.abs()`/
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`/`.sort_indices(order?)`/`.join(separator?)`.
+Matrix-by-matrix,
+matrix-by-scalar, and scalar-by-matrix overloads resolve to `matrix<float>` and
+may use `.rows()`, `.columns()`, `.elements_count()`, `.get(row, column)`, and
+`.copy()`, plus `.row(index)`, `.col(index)`, and numeric-only
+`.eigenvalues()`, `.is_zero()`, `.is_binary()`, `.is_diagonal()`,
+`.is_identity()`, `.is_symmetric()`, `.is_antisymmetric()`, and
+`.is_stochastic()`, plus numeric-only terminal
+`.sum()`/`.avg()`/`.min()`/`.max()`/`.mode()`/`.trace()`/`.det()`/`.rank()` and
+all-kind terminal `.is_square()`. Int inputs still produce float collections.
+Matrix `.copy()` may continue with another admitted matrix helper;
+`.row(index)` and `.col(index)` return fresh element-kind-preserving arrays;
+`.eigenvalues()` retains the existing numeric check and returns a fresh
+`array<float>`. These three helpers
+switch to the closed `.size()`/`.get()`/`.first()`/`.last()`/`.copy()`/`.concat(id2)`/
+`.includes(value)`/`.indexof(value)`/`.lastindexof(value)`/
+`.every()`/`.some()`/`.binary_search(value)`/`.binary_search_leftmost(value)` array-result path,
+plus `.binary_search_rightmost(value)`, `.abs()`, and
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.standardize()`/`.variance(biased?)`/`.stdev(biased?)`/`.sort_indices(order?)`/`.join(separator?)`/`.pop()`/`.shift()`/`.remove(index)`/`.push(value)`/`.unshift(value)`/`.insert(index, value)`/`.set(index, value)`/`.fill(value, index_from?, index_to?)`/`.sort(order?)`, where array
+`.copy()`, `.concat(id2)`, numeric `.abs()` and `.standardize()`, and numeric-or-string
+`.sort_indices(order?)` continue and the other twenty-nine terminal value results
+are terminal.
+`.is_square()`
+instead
+returns the ordinary simple bool for every supported matrix element kind and
+is terminal, so no parser result-prefix transition occurs. Numeric-only
+`.is_zero()` likewise returns the ordinary simple bool using the existing
+exact-zero, empty, and `na`-cell rules and is terminal without a prefix
+transition. Numeric-only `.is_binary()` does the same with the strict 0-or-1,
+empty, and `na`-cell rules. Numeric-only `.is_diagonal()` permits rectangular
+shape and arbitrary main-diagonal cells but requires exact-zero off-diagonal
+cells; it is terminal as well. Numeric-only `.is_identity()` adds square shape
+plus exact-one diagonal and exact-zero off-diagonal requirements, rejects every
+`na` cell, and remains terminal. Numeric-only `.is_symmetric()` requires square
+shape and exact transposed-pair equality, rejects every `na` cell, and is
+terminal. Numeric-only `.is_antisymmetric()` requires square shape, an exact-
+zero main diagonal, and exact negation across transposed pairs, rejects every
+`na` cell, and is terminal. Numeric-only `.is_stochastic()` requires a non-
+empty matrix of finite non-negative values and accepts either exact unit row
+sums or exact unit column sums; it is terminal. Numeric-only `.sum()` returns a
+fixed `series float`, ignores `na` cells, returns `na` when no numeric cell is
+present or the sum is non-finite, propagates upstream `na`, and is terminal.
+Numeric-only `.avg()` likewise returns a fixed `series float`, but divides by
+the count of non-`na` numeric cells; no numeric cells or a non-finite result
+yield `na`, upstream `na` propagates, and the reader is terminal.
+Numeric-only `.min()` also returns a fixed `series float`, scans only non-`na`
+numeric cells, returns `na` when none exist or the selected minimum is non-
+finite, propagates upstream `na`, and is terminal.
+Numeric-only `.max()` mirrors `.min()` with the selected maximum and otherwise
+retains the same fixed `series float`, `na`, non-finite, upstream-`na`, and
+terminal rules.
+Numeric-only `.mode()` returns a fixed `series float`, ignores `na` cells,
+selects the smallest value among equally frequent repeats, and returns `na`
+for empty, all-`na`, no-repeat, selected non-finite, or upstream-`na` results;
+it is terminal.
+Numeric-only `.trace()` returns a fixed `series float`, sums non-`na` main-
+diagonal cells over `min(rows, columns)`, and returns `na` for an empty/all-
+`na` diagonal, non-finite sum, or upstream-`na` result; it is terminal.
+Numeric-only `.det()` returns a fixed `series float`, retains the runtime
+square-matrix error, returns `1.0` for `0 x 0`, zero for singular matrices, and
+`na` for invalid cells, non-finite results, or upstream `na`; it is terminal
+and adds no static shape inference.
+Numeric-only `.rank()` returns a fixed `series int`, supports rectangular and
+singular matrices, returns `0` for zero-element matrices, and returns `na` for
+invalid/non-finite cells or upstream `na`; it is terminal.
+Matrix-valued `.transpose()` accepts every supported matrix element kind,
+allocates an independent matrix with swapped row/column counts, propagates
+upstream `na`, and retains the matrix-result prefix for `.copy()`, repeated
+`.transpose()`, or any supported matrix reader.
+Matrix-valued `.submatrix(...)` accepts the same element kinds, allocates an
+independent optional/default half-open range, preserves empty row/column
+shapes, propagates upstream `na`, and retains that prefix.
+Numeric matrix-valued `.inv()` always allocates an independent fixed
+`matrix<float>`, preserves square shape for invertible inputs, returns empty
+`0 x 0` for empty input, yields `na` for singular, invalid-cell, non-finite, or
+upstream-`na` inputs, and retains that prefix. Non-square inputs keep the
+ordinary runtime error because static matrix shapes are not inferred.
+Numeric matrix-valued `.pinv()` also allocates an independent fixed
+`matrix<float>`, swaps rectangular row/column counts, preserves singular
+matrix-valued results and swapped zero-cell shapes, yields `na` for invalid-
+cell, non-finite, or upstream-`na` inputs, and retains that prefix.
+Numeric matrix-valued `.eigenvectors()` allocates an independent fixed
+`matrix<float>`, preserves square shape for a complete real eigenvector basis,
+returns empty `0 x 0`, keeps the runtime non-square error, yields `na` for
+invalid-cell, non-finite, non-real, incomplete, or upstream-`na` results, and
+retains that prefix.
+Numeric matrix-valued `.pow(power)` allocates an independent fixed
+`matrix<float>`, retains the simple-int argument gate and runtime square-matrix
+boundary, supports identity/copy/positive powers and empty `0 x 0`, preserves
+`na` cells for positive powers, keeps negative and `na` power errors, and
+retains that prefix.
+Numeric matrix-valued `.kron(other)` allocates an independent fixed
+`matrix<float>` after the numeric-matrix operand check, multiplies both source
+row and column dimensions, preserves `na` cells and zero dimensions, propagates
+upstream `na`, retains the matrix cell-budget error, and keeps that prefix.
+Numeric matrix-valued `.diff(other)` allocates an independent fixed
+`matrix<float>` after the numeric-matrix-or-scalar operand check, preserves the
+receiver shape and left-to-right subtraction, propagates `na` cells, `na`
+scalars, and upstream `na`, preserves zero dimensions, retains the matching-
+shape runtime error for matrix operands, and keeps that prefix.
+Numeric matrix-valued `.mult(other)` preserves all three existing method
+overloads after the numeric matrix/scalar/array operand check. Matrix operands
+allocate an independent `matrix<float>` with receiver rows and operand columns;
+scalar operands allocate an independent receiver-shaped `matrix<float>`; and
+numeric-array operands allocate an independent `array<float>` with one value
+per receiver row. The resolved runtime result selects matrix-helper or array-
+helper continuation. Cell and scalar `na`, upstream `na`, zero inner
+dimensions, multiplication order, matrix cell-budget checks, matrix dimension
+checks, and array-length checks retain their existing behavior.
+Every concrete matrix-valued call result also supports terminal
+`.set(row, column, value)`. Alias-returning local UDF and local user-method
+results update shared matrix storage. Namespace, bound-transform, imported
+function, and imported-method producers return fresh matrices, so the write is
+confined to that transient result and source matrices remain unchanged. The
+operation preserves the existing simple-int index checks, element-kind value
+validation, bounds errors, upstream-`na` value evaluation/no-op behavior,
+`void` result, no-continuation rule, and UDF side-effect rejection.
+Every concrete matrix-valued call result also supports terminal `.fill(value)`
+with the same alias-versus-fresh storage split. It validates the concrete
+float/int/bool/string/color element kind, replaces every cell in place,
+returns `void`, and cannot continue. Empty and upstream-`na` results, value
+evaluation, invalid type/arity, and UDF side-effect rejection retain ordinary
+`matrix.fill` behavior.
+Every concrete matrix-valued call result also supports terminal `.reverse()`
+with the same alias-versus-fresh storage split. It reverses the row-major cell
+sequence in place without changing shape, returns `void`, and cannot continue.
+Empty and upstream-`na` results, invalid arity, and UDF side-effect rejection
+retain ordinary `matrix.reverse` behavior.
+Every concrete matrix-valued call result also supports terminal
+`.reshape(rows, columns)` with the same alias-versus-fresh storage split. It
+preserves row-major cells, requires simple-int non-negative dimensions whose
+product matches the current element count, returns `void`, and cannot
+continue. Upstream-`na` receivers still evaluate both dimensions before
+no-oping; negative/`na` dimensions, count mismatch, invalid arity/type, and UDF
+side-effect rejection retain ordinary `matrix.reshape` behavior.
+Every concrete matrix-valued call result also supports terminal
+`.swap_rows(row1, row2)` with the same alias-versus-fresh storage split. It
+requires two simple-int row indexes, swaps complete rows without changing
+shape or concrete element kind, returns `void`, and cannot continue. Equal
+indexes are a no-op. Bounds/`na` index errors, upstream-`na` argument
+evaluation, invalid arity/type, and UDF side-effect rejection retain ordinary
+`matrix.swap_rows` behavior.
+Every concrete matrix-valued call result also supports terminal
+`.swap_columns(column1, column2)` with the same alias-versus-fresh storage
+split. It requires two simple-int column indexes, swaps complete columns
+without changing shape or concrete element kind, returns `void`, and cannot
+continue. Equal indexes are a no-op. Bounds/`na` index errors, upstream-`na`
+argument evaluation, invalid arity/type, and UDF side-effect rejection retain
+ordinary `matrix.swap_columns` behavior.
+Every concrete matrix-valued call result also supports terminal
+`.remove_row(row)` with the same alias-versus-fresh storage split. It requires
+one simple-int row index, removes the selected complete row, including from a
+zero-column matrix, while preserving column count and concrete element kind,
+returns `void`, and cannot continue.
+Bounds/`na` index errors, upstream-`na` argument evaluation, invalid arity/type,
+and UDF side-effect rejection retain ordinary `matrix.remove_row` behavior.
+Every concrete matrix-valued call result also supports terminal
+`.remove_col(column)` with the same alias-versus-fresh storage split. It
+requires one simple-int column index, removes the selected complete column,
+including from a zero-row matrix, while preserving row count and concrete
+element kind, returns `void`, and cannot continue. Bounds/`na` index errors,
+upstream-`na` argument evaluation, invalid arity/type, and UDF side-effect
+rejection retain ordinary `matrix.remove_col` behavior.
+Every concrete matrix-valued call result also supports terminal
+`.add_row(row, array_id)` with the same alias-versus-fresh storage split. It
+requires one simple-int insertion index and an element-kind-matched array,
+copies the array into a complete new row—including for a zero-column matrix—
+while preserving column count and concrete element kind, returns `void`, and
+cannot continue. The insertion index admits `0..=rows`. Bounds/`na` index,
+array-size, cell-budget, upstream-`na`, invalid arity/type, and UDF side-effect
+boundaries retain ordinary `matrix.add_row` behavior.
+Every concrete matrix-valued call result also supports terminal
+`.add_col(column, array_id)` with the same alias-versus-fresh storage split. It
+requires one simple-int insertion index and an element-kind-matched array,
+copies the array into a complete new column—including for a zero-row matrix—
+while preserving row count and concrete element kind, returns `void`, and
+cannot continue. The insertion index admits `0..=columns`. Bounds/`na` index,
+array-size, cell-budget, upstream-`na`, invalid arity/type, and UDF side-effect
+boundaries retain ordinary `matrix.add_col` behavior.
+Every concrete numeric matrix-valued call result also supports terminal
+`.sort(column?, order?)` with the same alias-versus-fresh storage split. It
+defaults to column 0 and ascending order, reorders complete rows without
+changing shape or element kind, keeps equal-key rows stable, and places `na`
+last ascending and first descending. It returns `void` and cannot continue.
+Column bounds/`na`, unsupported-order, upstream-`na`, invalid arity/type, non-
+numeric receiver, and UDF side-effect boundaries retain ordinary
+`matrix.sort` behavior.
+Other terminal readers, wrong-result helpers, invalid arity or argument types,
+broader helpers, and mutation other than `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.add_row(...)`/`.add_col(...)`/`.sort(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)`/`.remove_col(...)` fail closed. The existing bound-receiver
+`matrix_id.mult(array).size()` path remains on array-helper dispatch. Exact
+bound numeric-matrix-receiver matrix-valued `matrix_id.mult(other)` results now
+share the forty-four matrix helpers and the copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose/row/column/eigenvalue/
+predicate/aggregate-reader continuation rules for matrix or
+scalar operands while preserving the existing overload, shape, `na`, empty
+inner dimension, and cell-budget boundaries. Unqualified local-UDF results that infer
+a concrete supported matrix kind now share the forty-four matrix helpers through
+`$call_result`. Parameter passthrough, block aliases, nested calls, same-kind
+control flow, constructed and matrix-operation returns, named/reordered
+arguments, and zero dimensions keep their normal call-specific float/int/bool/
+string/color kind and storage behavior. Local and imported user-method results
+with a concrete supported matrix kind share the same helpers through receiver-
+style, local-type-qualified or alias-qualified, direct-constructor-receiver,
+block/nested/control-flow, five-kind, zero-dimension, dual-alias, independent-
+copy, and copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose-continuation paths. Registered imported pure-function
+results with a concrete supported matrix kind share those helpers across alias-
+qualified, block/nested/control-flow, five-kind, zero-dimension, dual-alias,
+independent-copy, and copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose-continuation paths. Unknown/`na`, scalar, array,
+map, unregistered or unresolved user-function matrix results, broader-helper,
+mutation other than terminal `.set(...)`/`.fill(...)`/`.reverse()`/`.reshape(...)`/`.add_row(...)`/`.add_col(...)`/`.sort(...)`/`.swap_rows(...)`/`.swap_columns(...)`/`.remove_row(...)`/`.remove_col(...)`, and terminal-read continuation cases
+remain fail closed. The row/
+column-array transition applies uniformly to every concrete matrix producer described
+below; producer-specific “copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose-only” wording refers only to continuing as a
+matrix result, while `.row(index)`, `.col(index)`, or numeric `.eigenvalues()`
+continues as an array result and `.is_square()` plus numeric `.is_zero()` are
+terminal, as are numeric `.is_binary()`, `.is_diagonal()`, `.is_identity()`,
+`.is_symmetric()`, `.is_antisymmetric()`, `.is_stochastic()`, and `.sum()`.
+`.avg()` is terminal under the same aggregate continuation rule.
+`.min()` is terminal under that rule as well.
+`.max()` is terminal under that rule as well.
+`.mode()` is terminal under that rule as well.
+`.trace()` is terminal under that rule as well.
+`.det()` is terminal under that rule as well.
+`.rank()` is terminal under that rule as well.
+Exact namespace
+`matrix.copy(values)`
+also enters this
+prefix, always resolves through the matrix helper family, and preserves the
+source float/int/bool/string/color matrix kind through `SameAsArg`; its returned
+store and every postfix copy are independent. Exact bound matrix-receiver
+`values.copy()` results now share the same seven all-kind helpers, add
+`.diff(other)`, `.eigenvectors()`, `.inv()`, `.kron(other)`, `.mult(other)`, `.pinv()`, and `.pow(power)` for numeric results, preserve shape
+and element kind, and keep source/nested-copy storage independent; non-matrix
+receivers fail the existing method type check. Exact namespace
+`matrix.transpose(values)` shares that seven-helper and
+element-kind contract, swaps row/column shape, and
+returns independent storage. Exact bound matrix-receiver `values.transpose()`
+results now share those direct helpers, add `.diff(other)`, `.eigenvectors()`,
+`.inv()`, `.kron(other)`, `.mult(other)`, `.pinv()`, and `.pow(power)` for numeric results, and
+retain copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose continuation while other
+matrix-valued helpers and mutation remain gated. Exact namespace
+`matrix.submatrix(values, ...)` also shares the
+seven-helper and element-kind contract, returning an independent half-open range
+with default full bounds and empty row/column slices. Exact bound matrix-receiver
+`values.submatrix(...)` results now share those helpers, add `.diff(other)`,
+`.eigenvectors()`, `.inv()`, `.kron(other)`, `.mult(other)`, `.pinv()`, and `.pow(power)` for
+numeric results, and retain
+copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose
+continuation after the original receiver type check. Exact namespace
+`matrix.kron(left, right)` returns a fixed `matrix<float>` for numeric matrix
+operands, expands both source dimensions, preserves independent storage, `na`,
+and zero-dimension behavior, and shares the same fourteen helpers. Exact bound
+numeric-matrix-receiver `values.kron(other)` results now share those helpers
+and copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose continuation while preserving the existing numeric input checks.
+Exact namespace
+`matrix.diff(left, right)` returns fixed `matrix<float>` results for
+matrix-matrix, matrix-scalar, and scalar-matrix numeric operands, preserving
+the selected matrix shape, left-to-right operand order, independent storage,
+`na`, and zero-dimension behavior. Exact bound numeric-matrix-receiver
+`values.diff(other)` results now share the fourteen direct helpers and copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose
+continuation while preserving the existing operand checks and direction. Exact
+namespace `matrix.pow(values, power)` returns a fixed
+square `matrix<float>` for numeric matrices and simple-int powers, preserving
+independent identity/copy/positive-power results plus `na` and empty `0 x 0`
+behavior. Exact bound numeric-square-matrix-receiver `values.pow(power)`
+results now share the fourteen direct helpers and copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose continuation while
+preserving the existing receiver and power checks. Exact
+namespace `matrix.inv(values)` returns an independent square
+`matrix<float>` for invertible numeric inputs, an empty `0 x 0` matrix for
+empty input, and `na` for singular or invalid-cell inputs. Exact bound
+numeric-square-matrix-receiver `values.inv()` results now share the fourteen direct
+helpers and copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose continuation while preserving the existing receiver,
+shape, singular, and invalid-cell boundaries. Exact namespace
+`matrix.pinv(values)`
+returns an independent fixed `matrix<float>` pseudo-inverse for numeric inputs,
+swaps row and column counts for rectangular matrices, preserves singular
+matrix-valued results, returns the corresponding zero-cell swapped shape for
+zero-row or zero-column inputs, and yields `na` for invalid-cell inputs. Exact
+bound numeric-matrix-receiver `values.pinv()` results now share the fourteen direct
+helpers and copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose continuation while preserving the existing receiver,
+shape, singular, zero-cell, and invalid-cell boundaries. Exact namespace
+`matrix.eigenvectors(values)` returns an independent fixed `matrix<float>`
+whose columns are real eigenvectors for numeric square inputs, returns empty
+`0 x 0` for empty input, and yields `na` for invalid-cell, non-real, or
+incomplete results. Exact bound numeric-square-matrix-receiver
+`values.eigenvectors()` results now share the fourteen direct helpers and copy/diff/eigenvectors/inv/kron/mult/pinv/pow/submatrix/transpose
+continuation while preserving the existing receiver, shape, empty,
+invalid-cell, non-real, and incomplete-result boundaries. Exact `matrix.new<float>`,
+`matrix.new<int>`, `matrix.new<bool>`,
+`matrix.new<string>`, and `matrix.new<color>` template results also enter this
+path, preserve their element kind, requested shape, type-compatible initial or
+default `na` cells, fresh allocation, and copy independence. All five kinds
+expose the same seven helpers, while numeric template results additionally
+expose `.diff(other)`, `.eigenvectors()`, `.inv()`, `.kron(other)`, `.mult(other)`, `.pinv()`, and `.pow(power)`. Exact supported scalar `map.new<K,V>` templates use the
+separate `$builtin_map_result` path, preserve known key/value kinds, allocate a
+fresh empty map, and expose `.size()`, terminal `.put(key, value)`, `.clear()`,
+`.remove(key)`, and `.put_all(source)`, `.get(key)`,
+`.contains(key)`, `.copy()`, `.keys()`, and `.values()`. Only `.copy()` may
+continue another map helper; `.put(...)`, `.clear()`, `.remove(...)`, and `.put_all(...)` return
+`void` and cannot continue;
+`.keys()` and `.values()` return fresh key/value-kind-preserving arrays that
+admit direct binding and the closed array read/search set plus `.slice(index_from, index_to)` and bool/int/float
+`.every()`/`.some()`, all-scalar terminal `.join(separator?)`, and numeric `.abs()`
+and terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`, plus transforming `.standardize()`, `.sort_indices(order?)`, and `.concat(id2)` with copy/slice/concat/abs/standardize/sort_indices array continuation. Other map mutation and
+unsupported map templates remain gated. Exact namespace
+`map.copy(existing)` results enter the same path, retain the source key/value
+kinds and entries in independent backing storage, and expose the same helpers
+with copy-only continuation; non-map inputs remain errors. Unqualified
+local-UDF results with one concrete supported scalar map template share the
+ten helpers through `$call_result`, preserving call-specific template/content
+metadata, empty maps, named/reordered arguments, and independent copies; only
+copy may continue. Imported pure-function results with one concrete supported
+scalar map template share those helpers through the registered-function path
+for alias-qualified, block-return, nested-function, same-template control-flow,
+constructed-result, scalar-template-interleaving, same-library dual-alias, and
+independent-copy cases. Local and imported user-method results retain their
+analysis-marked receiver-style and qualified/direct-constructor cases.
+Terminal `.put(...)` validates the concrete key/value kinds, preserves key
+position on replacement and appends new keys, mutates local alias-returning
+UDF/method results, and remains isolated on fresh built-in/imported producers.
+Terminal `.clear()` empties the same backing entry list and uses the same local-
+alias mutation versus fresh built-in/imported isolation split.
+Terminal `.remove(key)` validates the concrete key kind, deletes a matching
+entry without reordering retained keys, no-ops for a missing key, and uses that
+same alias-versus-fresh split.
+Terminal `.put_all(source)` requires identical key/value templates, clones the
+source entries before merging for safe self-merge, replaces retained-key values
+in place, appends new keys in source order, and uses the same storage split.
+Unknown/`na`, scalar, array, matrix, wrong-template/key/value, broader-helper,
+map mutation outside terminal `.put(...)`/`.clear()`/`.remove(...)`/`.put_all(...)`, call-result-array mutation other
+than `.concat(id2)`, and continuation after a terminal key/value-array reader
+remain fail closed; direct UDF mutation is still rejected. Every other
+matrix-returning call,
+unsupported `matrix.new` template, and other namespace/non-producer call
+remains outside this path. Built-in namespace prefixes remain reserved, so
+same-named user or import qualifiers do not enter it. The extension carries no
+UDT/import identity and changes no public output schema.
+
+Both caller-side `for...in` over returned arrays and in-callee `for...in` over
+generic same-local scalar-tree UDT-array parameters preserve concrete identity,
+including final expression results that return the loop element itself or use
+it to rebuild a same-identity UDT array.
 Scalar-field imported UDT `varip` declarations may persist the same imported
 identity by value across forming updates.
 Local/imported structural lookalikes are distinct assignment identities;
-imported UDT collections beyond scalar-field `array.from` and
-`array<lib.Type>`/`lib.Type[]` size/get/first/last, set-replacement, push-append,
+imported UDT collections beyond the fixture-backed same-scalar-tree call-return
+subset above, scalar-tree `array.from`, and `array<lib.Type>`/`lib.Type[]`
+size/get/first/last, set-replacement, push-append,
 unshift-prepend, insert-insertion, fill-replacement, join-stringification,
 search-structural-equality, sort-by-field, pop/remove/shift return, clear-size,
 copy-read, reverse-read, slice-window, concat-append, and for-in-value-copy
 subset,
-nested field mutation, broader imported UDT history, UDF
+nested field mutation, direct private imported UDT access and imported UDT value history outside the scalar-tree metadata subset, UDF
 parameter/global field side effects, and method
 receiver/parameter/global field side effects remain unsupported.
 
@@ -774,7 +1621,8 @@ passed as the first internal argument and the method body is evaluated through
 the same lowered expression path as a local UDF body. A pure method may accept
 additional local UDT parameters and return the receiver itself, a block-local
 alias chain that starts from the receiver or another local UDT parameter,
-final if/else or final for local UDT aliases of those values, another local UDT
+ternary-expression aliases, final if/else, final for, final while, or
+switch-expression local UDT aliases of those values, another local UDT
 parameter directly or through a nested method passthrough call, or construct
 and return a local UDT directly, through nested pure constructor-helper UDF
 calls, or through same-local-UDT ternary, switch, `if` expression, final
@@ -784,10 +1632,55 @@ fields through block-local receiver or local UDT parameter aliases, block-local
 scalar aliases of those fields, inferred scalar parameters, or block-local
 scalar aliases of those parameters, using positional or named constructor field
 arguments; the caller may store that returned UDT value and read its fields.
-Receiver-style and alias-qualified scalar imported UDT methods may also return
-the receiver or a same-identity UDT parameter directly and preserve that
-imported identity for caller-side field reads, or construct and return the same
-imported UDT identity for caller-side field reads.
+Receiver-style and alias-qualified scalar-tree imported UDT methods may also return
+the receiver or a same-identity UDT parameter directly, through block-local,
+ternary-expression, final-if, final-for, final-while, or switch-expression
+aliases, and preserve that imported identity for caller-side field reads, or
+directly, through a nested method call, or through a ternary expression
+construct and return the same imported UDT identity for caller-side field reads.
+For local methods, a typed same-local scalar-tree UDT array parameter may be
+returned directly or through block aliases, copies, fresh constructors, nested
+local calls, and final control flow with call-specific identity. Qualified
+user-defined results returning any supported array kind, unqualified plain
+local UDF results, the exact built-in `array.*` producer allowlist, and the
+cross-namespace array-capable path support
+direct `.size()`/`.get(index)`/`.first()`/`.last()`/`.copy()`/
+`.includes(value)`/`.indexof(value)`/`.lastindexof(value)`. Concrete
+same-local/same-imported scalar-tree identity remains mandatory for UDT-array
+results, and concrete scalar UDT results from unqualified local UDFs may call
+the existing pure method subset. Built-in producer element/search readers are
+terminal and do not open that method path; only producer `.copy()` may continue
+with another allowed array read/copy. The seven fixed cross-namespace producers
+and array-returning `matrix.mult` overloads are scalar-array-only and add no
+UDT/import identity path. Namespace matrix-returning `matrix.mult` overloads,
+exact namespace `matrix.copy`/`matrix.transpose`/`matrix.submatrix`, and
+fixed-float namespace `matrix.kron`/`matrix.diff`/`matrix.pow`/`matrix.inv`/
+`matrix.pinv`/`matrix.eigenvectors` add
+only the five matrix readers/copy above. Copy/transpose/submatrix preserve the
+source scalar element kind; transpose swaps shape, submatrix selects a range,
+kron expands both dimensions, diff preserves its selected matrix operand's
+shape and left-to-right subtraction order, pow preserves square shape across
+identity/copy/positive powers, inv preserves square shape for invertible inputs
+or yields `na` for singular/invalid-cell inputs, pinv swaps rectangular shape
+while preserving singular matrix results, and eigenvectors preserves square
+shape or yields `na` for invalid-cell/non-real/incomplete results. All fixed
+producers return float matrices. The five exact `matrix.new<T>` templates
+instead retain their float/int/bool/string/color matrix kind, rectangular
+shape, initial/default-`na` cells, and fresh allocation. None of these paths carries
+UDT/import identity. The scalar `map.new<K,V>` and namespace
+`map.copy(existing)` result paths likewise carry only scalar map template
+metadata and no UDT/import identity. Bound matrix-result receivers other than
+exact matrix-receiver
+`values.copy()`/`values.transpose()`/`values.submatrix(...)`/
+`values.kron(other)`/`values.diff(other)`/`values.pow(power)`/
+`values.inv()`/`values.pinv()`/`values.eigenvectors()`/`values.mult(other)`,
+unqualified local-UDF results without a concrete supported matrix kind,
+local/imported user-method results without a concrete supported matrix kind,
+unregistered or unresolved user-function matrix results,
+built-in-qualified
+or template call results outside
+the exact static and dynamic paths, and other
+array or matrix methods remain parser/semantic boundaries.
 Method side effects, recursive methods, unsupported parameter families,
 mismatched UDT parameter identity, unknown receivers, and alias-qualified
 imported method receiver type mismatches are rejected during semantic analysis.
@@ -801,12 +1694,17 @@ varip ticks = 0
 The current executable `varip` subset supports global and local scalar
 `int`/`float`/`bool`/`string`/`color`/`na` declarations plus scalar typed-array
 ids for float, int, bool, string, and color arrays. It also supports explicitly
-typed same-local scalar-field UDT values initialized from `na`, same-UDT
-constructors, or fixture-backed same-UDT ternary/switch/if/for expressions, plus
-direct-constructor-inferred same-local scalar-field UDT values such as
-`varip p = Point.new(close)`, and scalar-field imported UDT values initialized
-from `na`, same-imported constructors, or direct constructor inference such as
-`varip p = lib.Point.new(close)`, same-local scalar-field UDT array ids,
+typed same-local scalar-tree UDT values initialized from `na`, same-UDT
+constructors, same-identity aliases, or fixture-backed same-UDT
+ternary/switch/if/for/for-in/while expressions, including nested same-local
+scalar-tree Wrapper values, plus direct-constructor-inferred
+or direct-alias-inferred same-local scalar-tree UDT values such as
+`varip p = Point.new(close)` or `varip p = existingPoint`, and scalar-tree
+imported UDT values initialized from `na`, same-imported constructors,
+same-imported aliases, same-imported ternary/switch/if/for/for-in/while
+expressions, including nested same-imported scalar-tree Wrapper values, direct
+constructor inference, or direct same-imported alias inference such as
+`varip p = lib.Point.new(close)`, same-local scalar-tree UDT array ids,
 runtime-owned scalar maps, and
 `matrix<float>`/`matrix<int>`/`matrix<bool>`/`matrix<string>`/`matrix<color>`
 ids. Local scalar declaration sites
@@ -828,6 +1726,11 @@ caches, callsite state, and history reads continue to roll back to the confirmed
 baseline. A confirmed update also seeds from the latest forming `varip` values
 before executing and then commits the resulting values into the confirmed
 runtime for the next bar.
+Committed and realtime forming history reads from supported UDT `varip` values
+use the same confirmed-history baseline, including representative same-local and
+same-imported nested scalar-tree Wrapper values initialized from ternary
+expressions. Single `chart.point` value `varip` history reads use that same
+confirmed-history baseline for constant and dynamic offsets.
 
 Skipped local declaration sites do not initialize before their first executed
 reach. Assigning a `varip` scalar typed-array slot to another variable preserves
@@ -855,7 +1758,7 @@ runtime errors.
 `array.fill` replaces all elements by default, or a half-open `[index_from,
 index_to)` window when bounds are supplied; invalid ranges are ignored.
 `array.includes`, `array.indexof`, and `array.lastindexof` use structural
-equality for same-local scalar-field UDT arrays and same-imported scalar-field
+equality for same-local scalar-tree UDT arrays and same-imported scalar-tree
 UDT arrays constructed through `array.from`; `array.indexof` and
 `array.lastindexof` return `-1` when no matching value is present. Numeric
 binary search helpers expect int/float arrays sorted ascending;
@@ -885,16 +1788,20 @@ array; otherwise `na` element positions are preserved.
 biased population estimate by default; with `biased=false`, they use the
 sample denominator and return `na` when fewer than two numeric values remain.
 `array.sort` orders int/float/string arrays in place and supports same-local
-scalar-field UDT arrays plus same-imported scalar-field UDT arrays constructed
-through `array.from` when a compile-time `sort_field` names an int, float, or
-string field. It sorts ascending by default and accepts `order.ascending` or
-`order.descending`. `na` values and empty string elements sort last in ascending
-order and first in descending order. `array.sort_indices` returns a new int
+scalar-tree UDT arrays plus same-imported scalar-tree UDT arrays constructed
+through `array.new<lib.Type>` or `array.from`. For UDT arrays, an omitted
+`sort_field` selects root field index `0`; a supplied compile-time integer index
+or string name must select a root int, float, or string field. It sorts
+ascending by default and accepts `order.ascending` or `order.descending`. `na`
+values and empty string elements sort last in ascending
+order and first in descending order. For UDT arrays this special-value rule
+applies to selected field values; an element that is itself `na` raises a
+runtime error for both ordering helpers. `array.sort_indices` returns a new int
 array containing the source indexes in sorted order, follows the same order and
 special-value rules, and leaves the source array unchanged. `array.reverse`
 reverses any supported typed array in place.
 `array.join` converts supported scalar array elements and fixture-backed
-same-local or same-imported scalar-field UDT array elements to string with the
+same-local or same-imported scalar-tree UDT array elements to string with the
 default numeric format, uses `,` as the default separator, and returns an empty
 string for empty arrays. Color elements render as normalized integer color
 values. Label and line arrays are intentionally not accepted by
@@ -930,7 +1837,19 @@ presence, `map.clear` empties the entry list while keeping the id reusable, and
 Assigning a map to another variable copies the id, not the backing store;
 `map.copy` clones the current backing store into an independent map id.
 `map.keys` and `map.values` return independent array snapshots in insertion
-order. `map.put_all(target, source)` mutates the target map by iterating source
+order. For maps whose key and value templates are each `int`, `float`, `bool`,
+`string`, or `color`, those two namespace-call results may be consumed directly
+through `.size()`, `.get(index)`, `.first()`, `.last()`, or `.copy()`. The
+returned key/value array kind follows the corresponding map template side;
+bool/int/float sides additionally admit `.every()`/`.some()`; numeric sides additionally
+admit the three binary searches, `.abs()`, and
+terminal `.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`/`.join(separator?)`, plus transforming `.standardize()` and `.sort_indices(order?)` with ordinary array rules. Only
+`.copy()`, numeric `.abs()` and `.standardize()`, and numeric-or-string
+`.sort_indices(order?)` can continue into another array chain, and each
+is independent of both the map and the first snapshot. Empty maps, typed-`na`
+maps, negative
+indexes, and bounds errors retain the ordinary array-helper behavior.
+`map.put_all(target, source)` mutates the target map by iterating source
 entries in insertion order; equal keys replace existing values without moving
 target order, and new keys append.
 Realtime forming updates start from the confirmed runtime clone, so ordinary
@@ -944,7 +1863,9 @@ the historical id does not mutate the current map or the retained history.
 Scalar map `varip` slots retain their map ids and backing stores across repeated
 realtime forming updates. Read-only map helpers can consume map ids passed
 through user-defined function parameters when semantic analysis can carry the
-caller's scalar map template to the parameter. Bare map declarations and
+caller's scalar map template to the parameter. Direct scalar-map `for...in`
+iteration visits entries in insertion order; a single loop variable receives the
+key, while `[key, value]` receives the key and value. Bare map declarations and
 non-scalar map templates remain unsupported.
 
 For matrices, the stored value is a runtime-owned matrix id. The current
@@ -1117,6 +2038,10 @@ fresh matrix copies. `matrix.row(values, row)` and
 `matrix.col(values, column)` return independent row/column snapshots:
 `array<float>` for float matrices, `array<int>` for int matrices,
 `array<bool>` for bool matrices, `array<string>` for string matrices, and `array<color>` for color matrices.
+The namespace-call results may immediately use `.size()`, `.get(index)`,
+`.first()`, `.last()`, or `.copy()` without first binding the snapshot. Only a
+postfix `.copy()` can continue into another allowed read/copy; mutating the
+postfix copy does not mutate the matrix or an earlier row/column snapshot.
 `values.row(row)` lowers to
 `matrix.row(values, row)` and returns the same independent row snapshot.
 `values.col(column)` lowers to `matrix.col(values, column)` and returns the same
@@ -1169,7 +2094,11 @@ raises a runtime error for non-square matrices.
 eigenvalues for square runtime-owned float or int matrices, returns an empty
 array for empty `0 x 0` matrices, returns `na` for any `na` or non-finite cell
 and for non-real eigenvalue results, and raises a runtime error for non-square
-matrices.
+matrices. Its namespace-call result may immediately use the same closed
+read/copy/search helpers plus terminal `.every()`/`.some()`/`.join(separator?)`, numeric `.abs()`, and terminal
+`.min(nth?)`/`.max(nth?)`/`.sum()`/`.avg()`/`.range()`/`.median()`/`.mode()`/`.percentile_nearest_rank(percentage)`/`.percentile_linear_interpolation(percentage)`/`.percentrank(index)`/`.covariance(id2, biased?)`/`.variance(biased?)`/`.stdev(biased?)`, plus transforming `.standardize()` and `.sort_indices(order?)`, with
+`.copy()`, `.abs()`, `.standardize()`, and `.sort_indices()` nestable and with ordinary empty/
+`na` and bounds behavior retained.
 `matrix.eigenvectors(values)` returns an independent `matrix<float>` whose
 columns are real eigenvectors for square runtime-owned float or int matrices,
 returns an independent empty `0 x 0` matrix for empty `0 x 0` input, returns
@@ -1505,14 +2434,16 @@ array mutation inside requested expressions remain unsupported.
 
 ### `varip`
 
-Scalar, scalar typed-array, same-local scalar-field UDT array, explicitly typed
-same-local or same-imported scalar-field UDT, and direct-constructor-inferred
-same-local or same-imported scalar-field UDT `varip` declarations use
-the intrabar persistence model described above. The explicitly typed UDT subset
-includes `na`, same-UDT constructors, and fixture-backed same-UDT ternary/switch/if/for
-initializers. Drawing object ids are rejected before runtime because their
+Scalar, scalar typed-array, single `chart.point` value, same-local scalar-tree
+UDT array, explicitly typed same-local or same-imported scalar-tree UDT, and
+direct-constructor-inferred or direct-alias-inferred same-local or same-imported
+scalar-tree UDT `varip` declarations use the intrabar persistence model
+described above. The explicitly typed UDT subset
+includes `na`, same-UDT constructors, same-identity aliases, and fixture-backed
+same-UDT ternary/switch/if/for/for-in/while initializers, including nested
+same-local and same-imported scalar-tree Wrapper values. Drawing object ids are rejected before runtime because their
 object stores are not part of the `varip` handoff; tuples,
-non-constructor-inferred UDT values, nested-field UDT values, non-scalar UDT
+broader untyped non-constructor-inferred UDT expressions, nested-field UDT values, non-scalar UDT
 array `varip`, and other value families remain rejected until their
 realtime state partitions are designed. The closed Phase I boundary for the
 original scalar and scalar
@@ -1569,6 +2500,8 @@ Rules:
 - Positive offsets refer to previous committed bars.
 - Out-of-range references return `na` unless the feature later needs stricter
   runtime errors for selected cases.
+- Dynamic `na` offsets return `na`, but still evaluate the source expression on
+  the current bar so expression and UDF-result series histories stay aligned.
 - Dynamic offsets should be supported only after constant offsets are correct.
   Runtime profiles count dynamic history reads whose requested offset exceeds
   the effective retained depth in `historyDynamicRetentionMisses` and expose

@@ -1,0 +1,5 @@
+//@version=6
+base = 8
+length = base + 2
+strategy("Supported strategy max_bars_back declaration alias named const", max_bars_back=length)
+plot(close[bar_index])

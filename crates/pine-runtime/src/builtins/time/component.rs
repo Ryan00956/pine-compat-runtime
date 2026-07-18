@@ -62,20 +62,20 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             "UTC".to_owned()
         };
-        let timezone_offset_seconds =
-            parse_fixed_timezone_offset(&timezone).ok_or_else(|| RuntimeError {
-                message: format!(
-                    "{} unsupported timezone `{timezone}`",
-                    component.function_name()
-                ),
-            })?;
         let datetime = utc_datetime_from_millis(timestamp).map_err(|_| RuntimeError {
             message: format!(
                 "{} timestamp is out of range: {timestamp}",
                 component.function_name()
             ),
         })?;
-        let Some(offset) = Duration::try_seconds(i64::from(timezone_offset_seconds)) else {
+        let offset_seconds =
+            timezone_offset_seconds(&timezone, &datetime).ok_or_else(|| RuntimeError {
+                message: format!(
+                    "{} unsupported timezone `{timezone}`",
+                    component.function_name()
+                ),
+            })?;
+        let Some(offset) = Duration::try_seconds(i64::from(offset_seconds)) else {
             return Err(RuntimeError {
                 message: format!(
                     "{} unsupported timezone `{timezone}`",

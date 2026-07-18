@@ -1,6 +1,45 @@
 use crate::prelude::*;
 
 impl Analyzer {
+    pub(crate) fn return_type_for_call(
+        &self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> Option<PineType> {
+        if signature.variadic {
+            return self.return_type(signature, arg_types);
+        }
+
+        // Indexed return specs refer to signature parameter slots, while named
+        // arguments remain in source order in the AST. Other return specs use
+        // the complete source argument list and must keep its existing shape.
+        let referenced_param = match signature.returns {
+            ReturnSpec::SameAsArg(index)
+            | ReturnSpec::BoolFromArg(index)
+            | ReturnSpec::ColorFromArg(index)
+            | ReturnSpec::FloatFromStringArg(index)
+            | ReturnSpec::ArrayElement(index)
+            | ReturnSpec::ArrayNumeric(index)
+            | ReturnSpec::MatrixElement(index)
+            | ReturnSpec::MatrixArray(index)
+            | ReturnSpec::IntFromArg(index)
+            | ReturnSpec::FloatFromArg(index)
+            | ReturnSpec::SeriesFromArg(index)
+            | ReturnSpec::ChangeFromArg(index)
+            | ReturnSpec::InputFromArg(index) => index,
+            _ => return self.return_type(signature, arg_types),
+        };
+        let referenced_type = args.iter().enumerate().find_map(|(arg_index, arg)| {
+            (super::param_index_for_arg(signature, arg_index, arg)? == referenced_param)
+                .then(|| arg_types.get(arg_index).copied().flatten())
+                .flatten()
+        });
+        let mut param_types = vec![None; referenced_param + 1];
+        param_types[referenced_param] = referenced_type;
+        self.return_type(signature, &param_types)
+    }
+
     pub(crate) fn return_type(
         &self,
         signature: &BuiltinSignature,

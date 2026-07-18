@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unterminated multiline string")
+safe = 1
+broken = """unterminated
+  still content

@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported ta momentum return qualifier")
+
+hline(ta.mom(close, 3))
+hline(ta.roc(close, 3))

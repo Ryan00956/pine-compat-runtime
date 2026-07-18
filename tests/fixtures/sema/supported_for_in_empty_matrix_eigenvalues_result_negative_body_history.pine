@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported empty matrix.eigenvalues for-in result negative body history")
+source = matrix.new<float>(0, 0, 0)
+values = matrix.eigenvalues(source)
+length = for value in values
+    -1
+plot(close[length])

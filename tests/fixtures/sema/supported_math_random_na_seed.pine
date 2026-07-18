@@ -1,0 +1,3 @@
+//@version=5
+indicator("Supported math.random na seed")
+plot(math.random(0, 1, na))

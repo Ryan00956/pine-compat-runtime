@@ -1,0 +1,56 @@
+//@version=6
+indicator("Supported builtin map.copy call-result reads")
+
+copySize(id) => map.copy(id).copy().size()
+
+source = map.new<string, float>()
+map.put(source, "open", 1.25)
+
+int_bool = map.new<int, bool>()
+map.put(int_bool, 7, true)
+
+color_int = map.new<color, int>()
+map.put(color_int, color.red, 4)
+
+int direct_size = map.copy(source).size()
+float direct_get = map.copy(source).get(key="open")
+bool direct_contains = map.copy(source).contains(key="open")
+map<string, float> nested_copy = map.copy(source).copy()
+array<string> direct_keys = map.copy(source).keys()
+string first_key = map.copy(source).keys().first()
+string copied_key = map.copy(source).keys().copy().get(0)
+array<float> direct_values = map.copy(source).values()
+float first_value = map.copy(source).values().first()
+float copied_value = map.copy(source).values().copy().get(0)
+bool other_key_get = map.copy(int_bool).get(7)
+int color_key_get = map.copy(color_int).get(color.red)
+
+map.copy(source).put("extra", 9.0)
+map.copy(int_bool).put(8, false)
+map.copy(color_int).put(color.blue, 5)
+
+map.copy(source).clear()
+map.copy(int_bool).clear()
+map.copy(color_int).clear()
+
+map.copy(source).remove("open")
+map.copy(int_bool).remove(7)
+map.copy(color_int).remove(color.red)
+
+map.copy(source).put_all(source)
+map.copy(int_bool).put_all(int_bool)
+map.copy(color_int).put_all(color_int)
+
+plot(direct_size + direct_get + (direct_contains ? 1 : 0) + nested_copy.size() + direct_keys.size() + (first_key == "open" ? 1 : 0) + (copied_key == "open" ? 1 : 0) + direct_values.size() + first_value + copied_value + (other_key_get ? 1 : 0) + color_key_get + copySize(source))
+map.copy(source).keys().push("extra")
+map.copy(source).values().push(1.0)
+map.copy(source).keys().unshift("first")
+map.copy(source).values().unshift(0.0)
+map.copy(source).keys().insert(0, "first")
+map.copy(source).values().insert(0, 0.0)
+map.copy(source).keys().set(0, "first")
+map.copy(source).values().set(0, 0.0)
+map.copy(source).keys().fill("first")
+map.copy(source).values().fill(0.0, 0, 1)
+map.copy(source).keys().sort(order.ascending)
+map.copy(source).values().sort(order.descending)

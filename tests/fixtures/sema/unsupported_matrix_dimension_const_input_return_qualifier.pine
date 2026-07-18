@@ -1,0 +1,11 @@
+//@version=6
+indicator("Unsupported matrix dimension const input return qualifier")
+
+values = matrix.new<float>(2, 3, close)
+
+plot(close, show_last=matrix.rows(values))
+plot(open, show_last=values.columns())
+plot(high, show_last=matrix.elements_count(values))
+plot(low, show_last=values.rows())
+plot(hl2, show_last=matrix.columns(values))
+plot(hlc3, show_last=values.elements_count())

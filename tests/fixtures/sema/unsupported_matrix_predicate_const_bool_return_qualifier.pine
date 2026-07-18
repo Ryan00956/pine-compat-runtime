@@ -1,0 +1,21 @@
+//@version=6
+indicator("Unsupported matrix predicate const bool return qualifier")
+
+values = matrix.new<float>(2, 2, 1)
+
+plot(ta.tr(matrix.is_square(values)))
+plot(ta.tr(values.is_square()))
+plot(ta.tr(matrix.is_binary(values)))
+plot(ta.tr(values.is_binary()))
+plot(ta.tr(matrix.is_diagonal(values)))
+plot(ta.tr(values.is_diagonal()))
+plot(ta.tr(matrix.is_identity(values)))
+plot(ta.tr(values.is_identity()))
+plot(ta.tr(matrix.is_symmetric(values)))
+plot(ta.tr(values.is_symmetric()))
+plot(ta.tr(matrix.is_antisymmetric(values)))
+plot(ta.tr(values.is_antisymmetric()))
+plot(ta.tr(matrix.is_stochastic(values)))
+plot(ta.tr(values.is_stochastic()))
+plot(ta.tr(matrix.is_zero(values)))
+plot(ta.tr(values.is_zero()))

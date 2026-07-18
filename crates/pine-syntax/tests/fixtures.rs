@@ -35,6 +35,86 @@ fn parses_soft_keyword_export_identifier_fixture() {
 }
 
 #[test]
+fn parses_single_quoted_string_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/single_quoted_strings.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.program.statements.len(), 7);
+}
+
+#[test]
+fn parses_line_wrapped_single_line_string_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/line_wrapped_strings.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.program.statements.len(), 6);
+}
+
+#[test]
+fn parses_parenthesized_line_wrapping_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/parenthesized_line_wrapping.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.program.statements.len(), 6);
+}
+
+#[test]
+fn parses_legacy_line_wrapping_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/legacy_line_wrapping.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.program.statements.len(), 11);
+}
+
+#[test]
+fn rejects_multiple_of_four_legacy_line_wrapping_indentation() {
+    let (_, parsed) =
+        parse_fixture("tests/fixtures/syntax/invalid_legacy_line_wrapping_indentation.pine");
+
+    assert!(has_diagnostic(&parsed.diagnostics, "E_PARSE_EXPR"));
+}
+
+#[test]
+fn reports_unterminated_single_quoted_string_fixture_and_recovers() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/unterminated_single_quoted_string.pine");
+
+    assert!(has_diagnostic(&parsed.diagnostics, "E_LEX_STRING"));
+    assert!(parsed.program.statements.len() >= 2);
+}
+
+#[test]
+fn parses_multiline_string_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/multiline_strings.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.program.statements.len(), 11);
+}
+
+#[test]
+fn reports_unterminated_multiline_string_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/unterminated_multiline_string.pine");
+
+    assert!(has_diagnostic(&parsed.diagnostics, "E_LEX_STRING"));
+    assert!(parsed.program.statements.len() >= 2);
+}
+
+#[test]
+fn reports_oversized_string_literal_fixture_without_parse_cascade() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/string_literal_limit.pine");
+
+    assert!(has_diagnostic(&parsed.diagnostics, "E_LEX_STRING_LIMIT"));
+    assert_eq!(parsed.program.statements.len(), 3);
+}
+
+#[test]
+fn parses_compound_assignment_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/compound_assignments.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.program.statements.len(), 12);
+}
+
+#[test]
 fn recovers_after_parse_error_fixture() {
     let (_, parsed) = parse_fixture("tests/fixtures/syntax/parse_error_recovery.pine");
 
@@ -169,16 +249,23 @@ fn rejects_array_new_udt_template_fixture() {
 }
 
 #[test]
-fn rejects_imported_udt_array_new_template_fixture() {
-    let (_, parsed) =
-        parse_fixture("tests/fixtures/syntax/unsupported_imported_udt_array_new.pine");
+fn parses_imported_udt_array_new_template_fixture() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/imported_udt_array_new.pine");
 
-    assert!(has_diagnostic(&parsed.diagnostics, "E_PARSE_EXPR"));
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
 }
 
 #[test]
 fn parses_udt_array_chained_field_mutation_fixture() {
     let (_, parsed) = parse_fixture("tests/fixtures/syntax/udt_array_chained_field_mutation.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+}
+
+#[test]
+fn parses_imported_method_call_result_receiver_fixture() {
+    let (_, parsed) =
+        parse_fixture("tests/fixtures/syntax/imported_method_call_result_receiver.pine");
 
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
 }

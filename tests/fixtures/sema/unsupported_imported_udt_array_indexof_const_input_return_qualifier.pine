@@ -1,0 +1,9 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Unsupported imported UDT array.indexof const input return qualifier")
+
+points = array.from(lib.Point.new(close), lib.Point.new(open))
+constructed = array.new<lib.Point>(2, lib.Point.new(high))
+
+plot(close, show_last=array.indexof(points, lib.Point.new(close)))
+plot(open, show_last=constructed.lastindexof(lib.Point.new(high)))

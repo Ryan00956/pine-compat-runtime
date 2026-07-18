@@ -1,0 +1,8 @@
+//@version=6
+indicator("Supported pure const call semantics", max_bars_back=math.ceil(2.1), max_labels_count=math.max(1, 2))
+budget = float(math.abs(-2))
+max_bars_back(close, int(math.min(budget, math.trunc(2.9))))
+length = input.int(2, "Length")
+selected = math.max(2, 3) == 3 ? length : bar_index
+plot(ta.ema(close, selected))
+plot(close[int(math.max(1.2, 2.8))])

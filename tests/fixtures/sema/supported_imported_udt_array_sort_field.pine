@@ -1,0 +1,19 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Supported imported UDT array sort field")
+
+float_points = array.from(lib.Point.new(close + 3), lib.Point.new(close + 1), lib.Point.new(close + 2))
+array.sort(float_points, order.ascending, "x")
+float_indices = float_points.sort_indices(order.descending, "x")
+float_first = float_points.get(0)
+
+int_offsets = array.from(lib.Offset.new(3), lib.Offset.new(1), lib.Offset.new(2))
+int_offsets.sort(order.descending, "value")
+int_indices = array.sort_indices(int_offsets, order.ascending, "value")
+int_first = int_offsets.get(0)
+
+string_offsets = array.from(lib.StringOffset.new("b"), lib.StringOffset.new("a"), lib.StringOffset.new("c"))
+array.sort(string_offsets, order.ascending, "value")
+string_indices = string_offsets.sort_indices(order.descending, "value")
+
+plot(float_first.x + float_indices.get(0) + int_first.value + int_indices.get(0) + string_indices.get(0))

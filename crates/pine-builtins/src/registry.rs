@@ -157,6 +157,8 @@ mod tests {
                 pine_ir::ValueKind::Int
             ))
         );
+        assert_eq!(signature.params[19].name, "currency");
+        assert_eq!(signature.params[19].accepts, crate::Accepts::ConstString);
         assert!(!signature.variadic);
     }
 
@@ -187,6 +189,41 @@ mod tests {
         assert_eq!(signature.params[7].accepts, crate::Accepts::BoolCompatible);
         assert!(signature.params[7].optional);
         assert!(!signature.variadic);
+    }
+
+    #[test]
+    fn registers_strategy_default_entry_qty_signature() {
+        let signature = get_phase_1_builtin("strategy.default_entry_qty")
+            .expect("strategy.default_entry_qty signature");
+        assert_eq!(signature.params.len(), 1);
+        assert_eq!(signature.params[0].name, "fill_price");
+        assert_eq!(
+            signature.params[0].accepts,
+            crate::Accepts::SeriesOrSimpleNumeric
+        );
+        assert_eq!(
+            signature.returns,
+            crate::ReturnSpec::Fixed(crate::namespaces::types::SERIES_FLOAT)
+        );
+        assert!(!signature.variadic);
+    }
+
+    #[test]
+    fn registers_strategy_currency_conversion_signatures() {
+        for name in ["strategy.convert_to_account", "strategy.convert_to_symbol"] {
+            let signature = get_phase_1_builtin(name).expect("strategy conversion signature");
+            assert_eq!(signature.params.len(), 1);
+            assert_eq!(signature.params[0].name, "value");
+            assert_eq!(
+                signature.params[0].accepts,
+                crate::Accepts::SeriesOrSimpleNumeric
+            );
+            assert_eq!(
+                signature.returns,
+                crate::ReturnSpec::Fixed(crate::namespaces::types::SERIES_FLOAT)
+            );
+            assert!(!signature.variadic);
+        }
     }
 
     #[test]
@@ -273,6 +310,7 @@ mod tests {
         assert_eq!(signature.params.len(), 20);
         assert_eq!(signature.params[0].name, "id");
         assert_eq!(signature.params[1].name, "from_entry");
+        assert!(signature.params[1].optional);
         assert_eq!(signature.params[2].name, "stop");
         assert!(signature.params[2].optional);
         assert_eq!(
@@ -367,8 +405,11 @@ mod tests {
             "strategy.closedtrades.commission",
             "strategy.closedtrades.size",
             "strategy.closedtrades.profit",
+            "strategy.closedtrades.profit_percent",
             "strategy.closedtrades.max_runup",
+            "strategy.closedtrades.max_runup_percent",
             "strategy.closedtrades.max_drawdown",
+            "strategy.closedtrades.max_drawdown_percent",
             "strategy.opentrades.entry_price",
             "strategy.opentrades.entry_comment",
             "strategy.opentrades.entry_id",
@@ -376,9 +417,12 @@ mod tests {
             "strategy.opentrades.entry_time",
             "strategy.opentrades.size",
             "strategy.opentrades.profit",
+            "strategy.opentrades.profit_percent",
             "strategy.opentrades.commission",
             "strategy.opentrades.max_runup",
+            "strategy.opentrades.max_runup_percent",
             "strategy.opentrades.max_drawdown",
+            "strategy.opentrades.max_drawdown_percent",
         ] {
             let signature = get_phase_1_builtin(name).expect("trade field signature");
             assert_eq!(signature.params.len(), 1, "{name}");

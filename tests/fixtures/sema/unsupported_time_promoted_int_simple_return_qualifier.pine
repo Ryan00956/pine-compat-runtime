@@ -1,0 +1,26 @@
+//@version=6
+indicator("Unsupported time promoted int simple return qualifier")
+
+values = array.new_int(1, 64)
+source_ts = array.size(values) + 1612235045000
+source_year = array.size(values) + 2020
+
+year_value = year(source_ts, "UTC")
+month_value = month(source_ts, "UTC")
+week_value = weekofyear(source_ts, "UTC")
+day_value = dayofmonth(source_ts, "UTC")
+weekday_value = dayofweek(source_ts, "UTC")
+hour_value = hour(source_ts, "UTC")
+minute_value = minute(source_ts, "UTC")
+second_value = second(source_ts, "UTC")
+timestamp_value = timestamp(timezone="UTC", year=source_year, month=2, day=2, hour=3, minute=4, second=5)
+
+plot(close, show_last=year_value)
+plot(open, show_last=month_value)
+plot(high, show_last=week_value)
+plot(low, show_last=day_value)
+plot(close, show_last=weekday_value)
+plot(open, show_last=hour_value)
+plot(high, show_last=minute_value)
+plot(low, show_last=second_value)
+plot(close, show_last=timestamp_value)

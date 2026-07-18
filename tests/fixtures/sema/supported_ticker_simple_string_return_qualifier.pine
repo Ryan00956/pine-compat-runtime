@@ -1,0 +1,22 @@
+//@version=6
+indicator("Supported ticker simple string return qualifier")
+
+new_symbol = ticker.new("NASDAQ", "AAPL")
+modified_symbol = ticker.modify("NASDAQ:AAPL")
+standard_symbol = ticker.standard("NASDAQ:AAPL")
+heikinashi_symbol = ticker.heikinashi("NASDAQ:AAPL")
+inherited_symbol = ticker.inherit(ticker.heikinashi("NASDAQ:AAPL"), "NYSE:PFE")
+linebreak_symbol = ticker.linebreak("NASDAQ:AAPL", 3)
+kagi_symbol = ticker.kagi("NASDAQ:AAPL", "ATR", 10)
+pointfigure_symbol = ticker.pointfigure("NASDAQ:AAPL", "hl", "ATR", 14, 3)
+renko_symbol = ticker.renko("NASDAQ:AAPL", "ATR", 10)
+
+plot(str.length(syminfo.prefix(new_symbol)))
+plot(str.length(syminfo.prefix(modified_symbol)))
+plot(str.length(syminfo.prefix(standard_symbol)))
+plot(str.length(syminfo.prefix(heikinashi_symbol)))
+plot(str.length(syminfo.prefix(inherited_symbol)))
+plot(str.length(syminfo.prefix(linebreak_symbol)))
+plot(str.length(syminfo.prefix(kagi_symbol)))
+plot(str.length(syminfo.prefix(pointfigure_symbol)))
+plot(str.length(syminfo.prefix(renko_symbol)))

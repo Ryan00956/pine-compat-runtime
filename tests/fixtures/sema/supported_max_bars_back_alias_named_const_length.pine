@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported max_bars_back alias named const length")
+base = 8
+length = base + 2
+max_bars_back(close, length)
+plot(close[bar_index])

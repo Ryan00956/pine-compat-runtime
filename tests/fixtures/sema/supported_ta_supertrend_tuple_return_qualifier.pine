@@ -1,0 +1,7 @@
+//@version=6
+indicator("Supported ta supertrend tuple return qualifier")
+
+[line, direction] = ta.supertrend(2, 10)
+
+plot(line)
+plot(direction)

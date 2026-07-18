@@ -1,0 +1,5 @@
+//@version=6
+indicator("Supported ta.rci return qualifier")
+
+ranked = ta.rci(close, 3)
+plot(ranked)

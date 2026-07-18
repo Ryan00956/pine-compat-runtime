@@ -1,0 +1,8 @@
+//@version=5
+indicator("Supported output na simple int params")
+plot(close, offset=na, precision=na)
+plotchar(close > open, offset=na)
+plotshape(close > open, offset=na)
+plotarrow(close - open, offset=na, minheight=na, maxheight=na)
+bgcolor(color.new(color.green, 80), offset=na)
+barcolor(color.new(color.red, 80), offset=na)

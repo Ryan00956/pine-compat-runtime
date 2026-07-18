@@ -5838,6 +5838,157 @@ if bar_index == 0
 }
 
 #[test]
+fn strategy_default_entry_qty_supports_direct_udf_named_and_history_reads() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("default qty helper", default_qty_type=strategy.fixed, default_qty_value=3)
+identity(value) => value
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=10)
+plot(strategy.default_entry_qty(close))
+plot(identity(strategy.default_entry_qty(fill_price=close * 2)))
+plot(strategy.default_entry_qty(close)[1])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    )
+    .expect("runtime result");
+
+    let expected = vec![
+        PineValue::Float(3.0),
+        PineValue::Float(3.0),
+        PineValue::Float(3.0),
+        PineValue::Float(3.0),
+    ];
+    assert_eq!(result.plots[0].values, expected.clone());
+    assert_eq!(result.plots[1].values, expected);
+    assert_eq!(
+        result.plots[2].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(3.0),
+            PineValue::Float(3.0),
+            PineValue::Float(3.0),
+        ]
+    );
+}
+
+#[test]
+fn strategy_currency_conversions_are_identity_in_default_currency() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("currency conversion", currency=currency.NONE)
+identity(value) => value
+plot(strategy.convert_to_account(close))
+plot(identity(strategy.convert_to_symbol(value=close * 2)))
+plot(strategy.convert_to_account(7))
+plot(strategy.convert_to_symbol(close)[1])
+plot(strategy.convert_to_account(float(na)))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(1.0),
+            PineValue::Float(2.0),
+            PineValue::Float(3.0)
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Float(2.0),
+            PineValue::Float(4.0),
+            PineValue::Float(6.0)
+        ]
+    );
+    assert_eq!(result.plots[2].values, vec![PineValue::Float(7.0); 3]);
+    assert_eq!(
+        result.plots[3].values,
+        vec![PineValue::Na, PineValue::Float(1.0), PineValue::Float(2.0)]
+    );
+    assert_eq!(result.plots[4].values, vec![PineValue::Na; 3]);
+}
+
+#[test]
+fn strategy_default_entry_qty_reuses_cash_and_percent_of_equity_sizing() {
+    let cash_source = SourceFile::new(
+        "cash.pine",
+        r#"strategy("cash helper", default_qty_type=strategy.cash, default_qty_value=100)
+plot(strategy.default_entry_qty(close))
+plot(strategy.default_entry_qty(bar_index == 0 ? na : 0))
+"#,
+    );
+    let cash_analysis = analyze_source(&cash_source);
+    assert!(
+        cash_analysis.diagnostics.is_empty(),
+        "{:?}",
+        cash_analysis.diagnostics
+    );
+    let cash_result = run_historical(
+        &cash_analysis.hir.expect("cash HIR"),
+        &[bar(10.0), bar(20.0)],
+    )
+    .expect("cash runtime result");
+    assert_eq!(
+        cash_result.plots[0].values,
+        vec![PineValue::Float(10.0), PineValue::Float(5.0)]
+    );
+    assert_eq!(
+        cash_result.plots[1].values,
+        vec![PineValue::Na, PineValue::Na]
+    );
+
+    let percent_source = SourceFile::new(
+        "percent.pine",
+        r#"strategy("percent helper", initial_capital=1000, default_qty_type=strategy.percent_of_equity, default_qty_value=25)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=100)
+plot(strategy.default_entry_qty(10))
+"#,
+    );
+    let percent_analysis = analyze_source(&percent_source);
+    assert!(
+        percent_analysis.diagnostics.is_empty(),
+        "{:?}",
+        percent_analysis.diagnostics
+    );
+    let percent_result = run_historical(
+        &percent_analysis.hir.expect("percent HIR"),
+        &[bar(10.0), bar(20.0), bar(10.0), bar(30.0)],
+    )
+    .expect("percent runtime result");
+    assert_eq!(
+        percent_result.plots[0].values,
+        vec![
+            PineValue::Float(25.0),
+            PineValue::Float(25.0),
+            PineValue::Na,
+            PineValue::Float(50.0),
+        ]
+    );
+}
+
+#[test]
 fn strategy_entry_uses_percent_of_equity_default_qty_when_qty_is_absent() {
     let source = SourceFile::new(
         "strategy.pine",
@@ -8270,11 +8421,49 @@ strategy.close("L")
 }
 
 #[test]
+fn strategy_account_currency_inherits_default_symbol_currency() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("account currency")
+identity(value) => value
+plot(strategy.account_currency == "USD" ? 1 : 0)
+plot(identity(strategy.account_currency) == "USD" ? 1 : 0)
+plot(na(strategy.account_currency[1]) ? na : strategy.account_currency[1] == "USD" ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Int(1), PineValue::Int(1), PineValue::Int(1)]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Int(1), PineValue::Int(1), PineValue::Int(1)]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![PineValue::Na, PineValue::Int(1), PineValue::Int(1)]
+    );
+}
+
+#[test]
 fn strategy_position_state_variables_follow_broker_mutations() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"strategy("position state")
 identity(value) => value
+position_entry_name = strategy.position_entry_name
+position_entry_name_udf = identity(strategy.position_entry_name)
+position_entry_name_history = strategy.position_entry_name[1]
 plot(strategy.position_size)
 plot(strategy.position_avg_price)
 if bar_index == 1
@@ -8321,6 +8510,9 @@ plot(position_avg_price_history)
 plot(strategy.max_contracts_held_all[1])
 plot(strategy.max_contracts_held_long[1])
 plot(strategy.max_contracts_held_short[1])
+plot(na(position_entry_name) ? na : position_entry_name == "L" ? 1 : 0)
+plot(na(position_entry_name_udf) ? na : position_entry_name_udf == "L" ? 1 : 0)
+plot(na(position_entry_name_history) ? na : position_entry_name_history == "L" ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -8518,6 +8710,67 @@ plot(strategy.max_contracts_held_short[1])
             PineValue::Float(0.0),
             PineValue::Float(0.0),
             PineValue::Float(0.0),
+        ]
+    );
+    let position_entry_name = vec![
+        PineValue::Na,
+        PineValue::Na,
+        PineValue::Int(1),
+        PineValue::Na,
+    ];
+    assert_eq!(result.plots[21].values, position_entry_name.clone());
+    assert_eq!(result.plots[22].values, position_entry_name);
+    assert_eq!(
+        result.plots[23].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Int(1)
+        ]
+    );
+}
+
+#[test]
+fn strategy_position_entry_name_tracks_the_continuous_net_position() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("position entry name", pyramiding=2)
+if bar_index == 0
+    strategy.entry("A", strategy.long, qty=1)
+if bar_index == 1
+    strategy.entry("B", strategy.long, qty=1)
+if bar_index == 2
+    strategy.close("A")
+if bar_index == 3
+    strategy.close("B")
+if bar_index == 4
+    strategy.entry("C", strategy.long, qty=1)
+plot(na(strategy.position_entry_name) ? na : strategy.position_entry_name == "A" ? 1 : strategy.position_entry_name == "C" ? 2 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0), bar(5.0), bar(6.0)],
+    )
+    .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Na,
+            PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Int(2),
         ]
     );
 }
@@ -8735,6 +8988,12 @@ plot(na(strategy.closedtrades.exit_id(1)) ? 1 : 0)
 plot(strategy.closedtrades.entry_price(1))
 plot(strategy.closedtrades.entry_price(-1))
 plot(strategy.closedtrades.entry_price(0.5))
+plot(strategy.closedtrades.profit_percent(0))
+plot(strategy.closedtrades.max_runup_percent(0))
+plot(strategy.closedtrades.max_drawdown_percent(0))
+plot(strategy.closedtrades.profit_percent(1))
+plot(strategy.closedtrades.max_runup_percent(-1))
+plot(strategy.closedtrades.max_drawdown_percent(0.5))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -8835,7 +9094,20 @@ plot(strategy.closedtrades.entry_price(0.5))
         result.plots[14].values,
         vec![PineValue::Int(1), PineValue::Int(1), PineValue::Int(1)]
     );
-    for values in result.plots[15..].iter().map(|plot| &plot.values) {
+    for values in result.plots[15..18].iter().map(|plot| &plot.values) {
+        assert_eq!(values, &vec![PineValue::Na, PineValue::Na, PineValue::Na]);
+    }
+    for values in result.plots[18..21].iter().map(|plot| &plot.values) {
+        assert_eq!(
+            values,
+            &vec![
+                PineValue::Na,
+                PineValue::Float(50.0),
+                PineValue::Float(50.0),
+            ]
+        );
+    }
+    for values in result.plots[21..].iter().map(|plot| &plot.values) {
         assert_eq!(values, &vec![PineValue::Na, PineValue::Na, PineValue::Na]);
     }
 }
@@ -8886,6 +9158,12 @@ plot(strategy.opentrades.profit(0.5))
 plot(strategy.opentrades.commission(0.5))
 plot(strategy.opentrades.max_runup(0.5))
 plot(strategy.opentrades.max_drawdown(0.5))
+plot(strategy.opentrades.profit_percent(0))
+plot(strategy.opentrades.max_runup_percent(0))
+plot(strategy.opentrades.max_drawdown_percent(0))
+plot(strategy.opentrades.profit_percent(1))
+plot(strategy.opentrades.max_runup_percent(-1))
+plot(strategy.opentrades.max_drawdown_percent(0.5))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -8966,7 +9244,25 @@ plot(strategy.opentrades.max_drawdown(0.5))
         result.plots[9].values,
         vec![PineValue::Na, PineValue::Na, PineValue::Na]
     );
-    for plot in &result.plots[10..] {
+    for plot in &result.plots[10..37] {
+        assert_eq!(
+            plot.values,
+            vec![PineValue::Na, PineValue::Na, PineValue::Na]
+        );
+    }
+    assert_eq!(
+        result.plots[37].values,
+        vec![PineValue::Na, PineValue::Float(0.0), PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[38].values,
+        vec![PineValue::Na, PineValue::Float(100.0), PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[39].values,
+        vec![PineValue::Na, PineValue::Float(50.0), PineValue::Na]
+    );
+    for plot in &result.plots[40..] {
         assert_eq!(
             plot.values,
             vec![PineValue::Na, PineValue::Na, PineValue::Na]
@@ -9744,11 +10040,14 @@ plot(strategy.buy_and_hold_return_percent[1])
 }
 
 #[test]
-fn strategy_profit_percent_variables_use_initial_capital_denominator() {
+fn strategy_profit_percent_variables_use_documented_denominators() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"strategy("profit percent", initial_capital=1000)
 identity(value) => value
+openprofit_percent = strategy.openprofit_percent
+openprofit_percent_udf = identity(strategy.openprofit_percent)
+openprofit_percent_history = strategy.openprofit_percent[1]
 if bar_index == 0
     strategy.entry("W", strategy.long, qty=1)
 if bar_index == 2
@@ -9784,6 +10083,9 @@ plot(identity(strategy.grossloss_percent))
 plot(strategy.netprofit_percent[1])
 plot(strategy.grossprofit_percent[1])
 plot(strategy.grossloss_percent[1])
+plot(openprofit_percent)
+plot(openprofit_percent_udf)
+plot(openprofit_percent_history)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -9931,6 +10233,55 @@ plot(strategy.grossloss_percent[1])
             PineValue::Float(0.0),
         ]
     );
+    let open_profit_percent = vec![
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(0.1),
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(-2.0 / 1001.0 * 100.0),
+    ];
+    assert_eq!(result.plots[12].values, open_profit_percent.clone());
+    assert_eq!(result.plots[13].values, open_profit_percent);
+    assert_eq!(
+        result.plots[14].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.1),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+        ]
+    );
+}
+
+#[test]
+fn strategy_openprofit_percent_is_na_without_positive_realized_equity() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("open profit percent denominator", initial_capital=1)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+if bar_index == 2
+    strategy.close("L")
+plot(strategy.openprofit_percent)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(1.0), bar(0.0)])
+        .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Float(0.0), PineValue::Float(0.0), PineValue::Na,]
+    );
 }
 
 #[test]
@@ -9945,6 +10296,8 @@ plot(strategy.closedtrades)
 plot(strategy.opentrades)
 plot(strategy.closedtrades[1])
 plot(strategy.opentrades[1])
+plot(strategy.closedtrades.first_index)
+plot(strategy.closedtrades.first_index[1])
 "#,
     );
     let analysis = analyze_source(&source);
@@ -9999,6 +10352,16 @@ plot(strategy.opentrades[1])
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(1),
+        ]
+    );
+    assert_eq!(result.plots[4].values, vec![PineValue::Int(0); 4]);
+    assert_eq!(
+        result.plots[5].values,
+        vec![
+            PineValue::Na,
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
         ]
     );
 }
@@ -10127,6 +10490,20 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
     assert_eq!(result.plots[21].values, net_profit_after_close_history);
     assert_eq!(result.plots[22].values, equity_history);
     assert_eq!(result.plots[23].values, max_drawdown_history);
+    let initial_capital = vec![PineValue::Float(1000.0); 6];
+    assert_eq!(result.plots[24].values, initial_capital.clone());
+    assert_eq!(result.plots[25].values, initial_capital);
+    assert_eq!(
+        result.plots[26].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(1000.0),
+            PineValue::Float(1000.0),
+            PineValue::Float(1000.0),
+            PineValue::Float(1000.0),
+            PineValue::Float(1000.0),
+        ]
+    );
 }
 
 #[test]

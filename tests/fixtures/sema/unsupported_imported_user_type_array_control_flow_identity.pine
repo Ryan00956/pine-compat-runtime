@@ -1,0 +1,20 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Unsupported imported UDT array control-flow identities")
+
+type Point
+    float x
+
+local_points = array.from(Point.new(close))
+imported_points = array.from(lib.Point.new(open))
+
+ternary_bad = bar_index % 2 == 0 ? local_points : imported_points
+
+if_bad = if bar_index % 2 == 0
+    local_points
+else
+    imported_points
+
+switch_bad = switch bar_index % 2
+    0 => local_points
+    => imported_points

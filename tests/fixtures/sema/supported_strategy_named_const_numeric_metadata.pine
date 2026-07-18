@@ -1,0 +1,14 @@
+//@version=6
+capital_base = 50000
+capital = capital_base * 2
+qty_base = 40
+qty = qty_base + 10
+fee_base = 0.25
+fee = fee_base * 2
+slip_base = 100
+slip = (slip_base > 0) ? slip_base : -1
+limit_ticks = slip % 60
+margin = qty
+pyramid_base = 1
+pyramid = pyramid_base + 1
+strategy("Strategy named const numeric metadata", initial_capital=capital, default_qty_type=strategy.cash, default_qty_value=qty, commission_type=strategy.commission.cash_per_order, commission_value=fee, slippage=slip, backtest_fill_limits_assumption=limit_ticks, margin_long=margin, margin_short=margin, pyramiding=pyramid)

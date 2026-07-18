@@ -1,0 +1,14 @@
+//@version=6
+indicator("Unsupported array.from return qualifier")
+
+int_matrix = matrix.new<int>(1, 2, 0)
+float_matrix = matrix.new<float>(1, 2, 0.0)
+bool_matrix = matrix.new<bool>(1, 2, false)
+string_matrix = matrix.new<string>(1, 2, "")
+color_matrix = matrix.new<color>(1, 2, color.red)
+
+matrix.add_row(float_matrix, 0, array.from(1, 2))
+matrix.add_row(int_matrix, 0, array.from(1, 2.0))
+matrix.add_row(string_matrix, 0, array.from(true, false))
+matrix.add_row(color_matrix, 0, array.from("red", "blue"))
+matrix.add_row(bool_matrix, 0, array.from(color.red, color.blue))

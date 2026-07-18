@@ -1,0 +1,6 @@
+//@version=6
+indicator("Matrix call-result inverse non-square")
+
+values = matrix.new<float>(2, 3, 1.0)
+rows = matrix.copy(values).inv().rows()
+plot(rows)

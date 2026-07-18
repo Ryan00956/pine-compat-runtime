@@ -1,0 +1,97 @@
+//@version=6
+indicator("Supported local UDF map call-result reads")
+
+identity(id) => id
+
+blockCopy(id) =>
+    made = id.copy()
+    made
+
+nested(id) => identity(id)
+
+choose(first, second, bool use_first) => use_first ? first : second
+
+fresh() => map.new<string, float>()
+
+readValue(id, key) => identity(id).get(key)
+
+string_float = map.new<string, float>()
+string_float.put("v", 1.5)
+string_float_other = map.new<string, float>()
+string_float_other.put("v", 2.5)
+int_string = map.new<int, string>()
+int_string.put(1, "one")
+bool_color = map.new<bool, color>()
+bool_color.put(true, color.red)
+color_bool = map.new<color, bool>()
+color_bool.put(color.blue, true)
+float_int = map.new<float, int>()
+float_int.put(1.5, 3)
+
+int direct_size = identity(string_float).size()
+float direct_get = identity(string_float).get("v")
+bool direct_contains = identity(string_float).contains("v")
+map<string, float> direct_copy = identity(string_float).copy().copy()
+string int_string_get = identity(int_string).get(1)
+color bool_color_get = identity(bool_color).get(true)
+bool color_bool_get = identity(color_bool).get(color.blue)
+int float_int_get = identity(float_int).get(1.5)
+float block_get = blockCopy(string_float).get("v")
+float nested_get = nested(string_float).copy().get("v")
+float selected_get = choose(second=string_float_other, first=string_float, use_first=true).get("v")
+int fresh_size = fresh().copy().size()
+float nested_direct_get = readValue(string_float, "v")
+array<string> direct_keys = identity(string_float).keys()
+string copied_key = identity(string_float).keys().copy().first()
+int int_key = identity(int_string).keys().get(0)
+bool bool_key = identity(bool_color).keys().first()
+color color_key = identity(color_bool).keys().last()
+float float_key = identity(float_int).keys().copy().get(0)
+array<float> direct_values = identity(string_float).values()
+float copied_value = identity(string_float).values().copy().first()
+string string_value = identity(int_string).values().get(0)
+color color_value = identity(bool_color).values().first()
+bool bool_value = identity(color_bool).values().last()
+int int_value = identity(float_int).values().copy().get(0)
+
+identity(string_float).put("extra", 4.5)
+identity(int_string).put(2, "two")
+identity(bool_color).put(false, color.blue)
+identity(color_bool).put(color.red, false)
+identity(float_int).put(2.5, 4)
+fresh().put("fresh", 9.0)
+
+identity(string_float).remove("v")
+identity(int_string).remove(1)
+identity(bool_color).remove(true)
+identity(color_bool).remove(color.blue)
+identity(float_int).remove(1.5)
+fresh().remove("missing")
+
+identity(string_float).put_all(string_float)
+identity(int_string).put_all(int_string)
+identity(bool_color).put_all(bool_color)
+identity(color_bool).put_all(color_bool)
+identity(float_int).put_all(float_int)
+fresh().put_all(map.new<string, float>())
+
+identity(string_float).clear()
+identity(int_string).clear()
+identity(bool_color).clear()
+identity(color_bool).clear()
+identity(float_int).clear()
+fresh().clear()
+
+plot(direct_size + direct_get + (direct_contains ? 1 : 0) + direct_copy.get("v") + (int_string_get == "one" ? 1 : 0) + (bool_color_get == color.red ? 1 : 0) + (color_bool_get ? 1 : 0) + float_int_get + block_get + nested_get + selected_get + fresh_size + nested_direct_get + direct_keys.size() + (copied_key == "v" ? 1 : 0) + int_key + (bool_key ? 1 : 0) + (color_key == color.blue ? 1 : 0) + float_key + direct_values.size() + copied_value + (string_value == "one" ? 1 : 0) + (color_value == color.red ? 1 : 0) + (bool_value ? 1 : 0) + int_value)
+identity(string_float).keys().push("extra")
+identity(string_float).values().push(1.0)
+identity(string_float).keys().unshift("first")
+identity(string_float).values().unshift(0.0)
+identity(string_float).keys().insert(0, "first")
+identity(string_float).values().insert(0, 0.0)
+identity(string_float).keys().set(0, "first")
+identity(string_float).values().set(0, 0.0)
+identity(string_float).keys().fill("first")
+identity(string_float).values().fill(0.0, 0, 1)
+identity(string_float).keys().sort(order.ascending)
+identity(string_float).values().sort(order.descending)

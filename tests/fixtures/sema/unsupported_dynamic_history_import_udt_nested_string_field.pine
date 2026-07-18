@@ -1,0 +1,11 @@
+//@version=5
+import user/udt/1 as lib
+indicator("Unsupported dynamic history imported UDT nested string field")
+
+string_box = lib.makeStringOffsetBox(bar_index == 0 ? "0" : "1")
+method_same = string_box.sameStringBox()
+qualified_method_same = lib.sameStringBox(string_box)
+
+plot(close[string_box.offset.value])
+plot(open[method_same.offset.value])
+plot(high[qualified_method_same.offset.value])

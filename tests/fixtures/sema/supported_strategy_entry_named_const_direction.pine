@@ -1,0 +1,5 @@
+//@version=5
+strategy("Supported strategy entry named const direction")
+dir_base = strategy.long
+dir = dir_base
+strategy.entry("L", dir, qty=1)

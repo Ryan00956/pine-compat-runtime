@@ -1,0 +1,6 @@
+//@version=6
+length() =>
+    base = 1
+    base + 1
+indicator("Supported max_bars_back declaration UDF length", max_bars_back=length())
+plot(close)

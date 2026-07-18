@@ -1,0 +1,14 @@
+//@version=6
+indicator("Supported bool cast return qualifier")
+
+input_source = input.bool(true, "Input source")
+simple_source = timeframe.isdaily
+series_source = close > open
+
+input_cast = bool(input_source)
+simple_cast = bool(simple_source)
+series_cast = bool(series_source)
+
+plot(ta.alma(close, 4, 0.85, 6, input_cast))
+plot(ta.alma(close, 4, 0.85, 6, simple_cast))
+plot(series_cast ? 1 : 0)

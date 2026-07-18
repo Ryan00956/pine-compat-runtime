@@ -1,0 +1,4 @@
+//@version=6
+import user/udt/1 as lib
+indicator("Supported imported max_bars_back declaration UDF length", max_bars_back=lib.maxBarsLength())
+plot(close)

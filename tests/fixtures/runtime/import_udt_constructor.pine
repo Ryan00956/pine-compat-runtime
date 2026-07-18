@@ -3,4 +3,8 @@ import user/udt/1 as lib
 indicator("Imported UDT constructor")
 
 p = lib.Point.new(close)
+wrapped = lib.Wrapper.new(p)
+lib.Wrapper typed = wrapped
+typed := lib.Wrapper.new(lib.Point.new(open))
 plot(p.x)
+plot(typed.nested.x)

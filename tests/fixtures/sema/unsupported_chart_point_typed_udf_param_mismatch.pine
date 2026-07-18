@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported chart point typed UDF param mismatch")
+
+pass_point(chart.point point) =>
+    point
+
+point = pass_point(close)
+plot(point.index)

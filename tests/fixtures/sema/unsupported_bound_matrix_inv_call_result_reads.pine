@@ -1,0 +1,14 @@
+//@version=6
+indicator("Unsupported bound matrix.inv call-result reads")
+
+values = matrix.new<float>(2, 2, 1.0)
+bools = matrix.new<bool>(2, 2, true)
+array_values = array.from(1.0, 2.0)
+
+bad_row = values.inv().get("bad", 0)
+values.inv().set(0, 0, "bad")
+size_result = values.inv().size()
+bad_receiver_kind = bools.inv().rows()
+wrong_receiver = array_values.inv().rows()
+
+plot(close)

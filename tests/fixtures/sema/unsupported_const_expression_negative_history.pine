@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported const expression negative history")
+plot(close[1 - 2])

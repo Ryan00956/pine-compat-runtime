@@ -1,0 +1,5 @@
+//@version=6
+indicator("String concatenation result limit")
+at_limit = str.repeat("x", 40960)
+too_long = at_limit + "x"
+plot(str.length(too_long))
