@@ -1,7 +1,7 @@
 # Next Internal Capability Plan
 
-Status: planning document, refreshed after the strategy running-alert host
-helper and realtime delivery design closeout on 2026-06-11.
+Status: active planning document, refreshed on 2026-07-18 after the Stage 13
+strategy baseline, imported UDT array expansion, and host-parity hardening.
 
 This document groups the next interpreter-internal work into seven large task
 directions. It does not claim new compatibility. A task becomes supported only
@@ -35,11 +35,10 @@ and trade-key internals.
 
 Good next slices:
 
-- Additional clearer no-position and wrong-entry no-op behavior for supported
-  exit shapes.
 - More fixture-backed strategy state variables or count helpers.
 - Narrow order/trade accounting improvements that keep the current public output
   shape.
+- Clearer diagnostics for still-unsupported order, account, and exit forms.
 - Small host-neutral strategy metadata/accounting checks that preserve the
   current public output shape. Strategy order metadata, public `strategy.alerts`,
   and explicit `{{strategy.order.alert_message}}` host rendering are already
@@ -121,12 +120,12 @@ Good next slices:
 
 Keep out of scope until separately designed:
 
-- UDT array behavior beyond the same-local scalar-field subset, including
-  imported or non-scalar UDT arrays.
+- UDT array behavior beyond the fixture-backed same-local and same-imported
+  scalar-tree subsets, especially non-scalar, nested-collection, or recursive
+  UDT arrays.
 - Drawing-object and `chart.point` array behavior beyond the fixture-backed
   object-id and value-array subsets.
-- Map families and matrix behavior beyond the fixture-backed `matrix<float>`
-  subset.
+- Map and matrix behavior beyond the current fixture-backed typed subsets.
 - Behavior that requires object identity or lifetime rules not already modeled.
 
 Recommended first slice: add one missing array helper for already-supported
@@ -261,9 +260,10 @@ does not require external delivery or host scheduling.
 
 ## Recommended Order
 
-1. Strategy maintenance: narrow post-Stage-13 diagnostics/accounting or metadata
-   slice, only if it has a clear contract.
-2. Built-in coverage selected from real fixture gaps.
+1. Built-in coverage selected from real fixture gaps, unless a narrow
+   post-Stage-13 strategy maintenance issue already has a clear contract.
+2. Strategy maintenance limited to diagnostics, accounting, or metadata that
+   preserves the public schema.
 3. Arrays and collections for already-supported scalar element types.
 4. User-defined type and method maintenance.
 5. Request support for one deterministic host-data case.

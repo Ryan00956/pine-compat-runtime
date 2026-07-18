@@ -1136,20 +1136,20 @@ The seven broad interpreter-internal task directions are summarized in
 `docs/NEXT_INTERNAL_CAPABILITY_PLAN.md`. The order below remains the roadmap
 priority for choosing one small fixture-backed slice at a time.
 
-1. Keep strategy maintenance narrow and fixture-backed. The next strategy work
-   should start with a Stage 8 broker-expansion design gate for multi-entry
-   ledgers, short/reversal behavior, pyramiding, generic order APIs, OCA
-   allocation, and any public-output contract decision before runtime
-   compatibility claims widen.
-2. Phase J maintenance only when a small, fixture-backed change widens the
+1. Prefer a small built-in compatibility slice selected from a real fixture
+   gap, unless a narrow strategy diagnostics, accounting, or metadata issue
+   already has a clear contract.
+2. Keep the Stage 13 long-only multi-entry strategy baseline stable. Require a
+   new broker-model design before adding short/reversal behavior, custom OCA,
+   richer generic order APIs, or public pending-order contracts.
+3. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
-3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an
+4. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an
    already claimed drawing, request, alert, or `varip` subset.
-4. Phase K maintenance only when release contracts, snapshots, or matrix gates
+5. Phase K maintenance only when release contracts, snapshots, or matrix gates
    need tightening.
-5. Phase B/C maintenance when new work exposes collection, history, or
+6. Phase B/C maintenance when new work exposes collection, history, or
    qualifier gaps.
-6. Phase D maintenance for small fixture-backed built-in compatibility fixes.
 
 This order keeps the project useful for indicator and basic strategy execution
 while delaying features that require new host APIs, object lifetimes, or richer

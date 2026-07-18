@@ -143,7 +143,7 @@ rejection.
 
 ## Release Hardening
 
-Status: in progress.
+Status: baseline complete; the release gate remains mandatory for every slice.
 
 - [x] Add CI coverage for Python binding tests.
 - [x] Add CI coverage for WASM build checks.
@@ -190,7 +190,9 @@ Status: v0.1 expansion complete. The next stage is planned in
 
 ## Next Planned Expansion
 
-Status: in progress.
+Status: baseline complete for the current partial `switch`, `while`, and typed
+array subsets. Further expansion is selected through the current capability and
+language playbooks.
 
 - [x] Add partial `switch` expression support.
 - [x] Add partial `while` statement support with an iteration guard.
@@ -198,8 +200,10 @@ Status: in progress.
 
 ## Long-Term Backlog
 
-Status: planned in
-[`LONG_TERM_EXECUTION_PLAN.md`](LONG_TERM_EXECUTION_PLAN.md).
+Status: active maintenance. Completed items below refer only to their current
+fixture-backed subsets; broader Pine compatibility remains tracked in
+[`LONG_TERM_EXECUTION_PLAN.md`](LONG_TERM_EXECUTION_PLAN.md) and
+[`NEXT_INTERNAL_CAPABILITY_PLAN.md`](NEXT_INTERNAL_CAPABILITY_PLAN.md).
 
 - [x] Harden loop and branch edge cases.
 - [x] Expand scalar typed-array support beyond float arrays.
@@ -208,9 +212,16 @@ Status: planned in
 - [x] Revisit history and qualifier semantics for the current executable subset.
 - [ ] Add per-variable `max_bars_back` and deeper history diagnostics.
 - [ ] Add more built-in coverage.
-- [ ] Design drawing object outputs.
-- [ ] Design `request.*` and multi-timeframe data providers.
-- [ ] Design strategy runtime mode.
-- [ ] Design alerts.
-- [ ] Design `varip` intrabar persistence.
-- [ ] Design libraries, imports, user-defined types, and methods.
+- [x] Design fixture-backed host-neutral drawing object outputs; additional
+  families and lifecycle behavior remain partial.
+- [x] Design deterministic host-provided `request.security` data; broader
+  `request.*` families remain unsupported.
+- [x] Design the fixture-backed long-only strategy runtime; short exposure,
+  reversals, custom OCA, and richer broker contracts remain deferred.
+- [x] Design local runtime alert output; external delivery remains host-owned
+  and deferred.
+- [x] Design scalar and supported scalar-array `varip` persistence; broader
+  value families remain partial or unsupported.
+- [x] Design exact-key imports plus the fixture-backed local/imported UDT and
+  method subsets; remote registry behavior and broader identity flows remain
+  deferred.

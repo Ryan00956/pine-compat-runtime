@@ -33,6 +33,7 @@ able to integrate it through adapters.
 
 ## Design Documents
 
+- [Documentation Guide](docs/README.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Language Scope](docs/LANGUAGE_SCOPE.md)
 - [Execution Semantics](docs/EXECUTION_SEMANTICS.md)
@@ -93,11 +94,17 @@ pine-compat-runtime/
 
 ## Current Baseline
 
-The current baseline is a Rust CLI and embeddable runtime that can parse,
-analyze, and execute a small set of common indicator scripts and selected
-long-only strategy scripts over CSV OHLCV data, then emit normalized JSON
-containing series, annotations, fills,
-diagnostics, and compatibility reports.
+The current baseline is a fixture-backed Rust CLI and embeddable runtime that
+can parse, analyze, and execute a broad Pine-compatible indicator subset and a
+selected long-only strategy subset over CSV OHLCV data, then emit normalized
+JSON containing series, annotations, fills, diagnostics, and compatibility
+reports.
+
+The compatibility matrix and its referenced fixtures are the source of truth
+for support claims. Planning documents describe intended work but do not widen
+the executable subset. See the [Documentation Guide](docs/README.md) for the
+document hierarchy and the [Conformance](docs/CONFORMANCE.md) policy for the
+claim requirements.
 
 The project should not move into host-specific integration work until this
 standalone loop is reliable:
