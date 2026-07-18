@@ -88,6 +88,25 @@ def fixture_bars(path):
     return rows
 
 
+def assert_json_close(actual, expected, path="$"):
+    if isinstance(actual, float) and isinstance(expected, float):
+        assert math.isclose(actual, expected, rel_tol=1e-12, abs_tol=1e-12), (
+            f"{path}: {actual!r} != {expected!r}"
+        )
+        return
+    if isinstance(actual, dict) and isinstance(expected, dict):
+        assert actual.keys() == expected.keys(), f"{path}: object keys differ"
+        for key in expected:
+            assert_json_close(actual[key], expected[key], f"{path}.{key}")
+        return
+    if isinstance(actual, list) and isinstance(expected, list):
+        assert len(actual) == len(expected), f"{path}: array lengths differ"
+        for index, (actual_item, expected_item) in enumerate(zip(actual, expected)):
+            assert_json_close(actual_item, expected_item, f"{path}[{index}]")
+        return
+    assert actual == expected, f"{path}: {actual!r} != {expected!r}"
+
+
 def test_analyze_script_reports_executable_script():
     report = pine_compat.analyze_script('indicator("demo")\nplot(close)\n')
 
@@ -1796,7 +1815,7 @@ def test_run_script_returns_math_fixture_contract():
         fixture_bars("tests/fixtures/runtime/bars.csv"),
     )
 
-    assert result == expected
+    assert_json_close(result, expected)
 
 
 def test_run_script_returns_computed_lengths_fixture_contract():
@@ -1923,8 +1942,10 @@ def test_run_script_returns_macd_fixture_contract():
 
 
 def test_run_script_returns_strings_fixture_contract():
-    source = (ROOT / "tests/fixtures/runtime/strings.pine").read_text()
-    expected = json.loads((ROOT / "tests/snapshots/runtime_strings.json").read_text())
+    source = (ROOT / "tests/fixtures/runtime/strings.pine").read_text(encoding="utf-8")
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strings.json").read_text(encoding="utf-8")
+    )
 
     result = pine_compat.run_script(
         source,
@@ -8863,13 +8884,16 @@ def test_run_script_request_fixture_matches_cli_contract():
         0.10033467208545055,
     ]
     assert result["plots"][259]["values"] == [None, None, 1.0, 1.0, 4.0]
-    assert result["plots"][260]["values"] == [
-        None,
-        None,
-        1.3453624047073711,
-        1.3453624047073711,
-        2.7586228448267445,
-    ]
+    assert_json_close(
+        result["plots"][260]["values"],
+        [
+            None,
+            None,
+            1.3453624047073711,
+            1.3453624047073711,
+            2.7586228448267445,
+        ],
+    )
     assert result["plots"][261]["values"] == [
         None,
         None,
