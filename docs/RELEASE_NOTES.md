@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.1.0 - 2026-07-18
+
+- Added a GitHub Actions binary-wheel pipeline for glibc Linux x86-64 and
+  Windows x86-64, including installed-wheel tests, deterministic release
+  metadata, SHA-256 checksums, and tag-to-package version validation.
+
 - Aligned UDT `array.sort` and `array.sort_indices` runtime validation with the
   collection contract: an array element that is itself `na` now raises a stable
   runtime error, while concrete UDT elements whose selected sortable field is

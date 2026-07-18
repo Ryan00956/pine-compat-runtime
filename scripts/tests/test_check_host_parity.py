@@ -83,6 +83,21 @@ def test_contract():
             set(),
         )
 
+    def test_python_snapshot_path_accepts_registered_assertion_helper(self):
+        source = '''
+def test_contract():
+    expected = json.loads(
+        (ROOT / "tests/snapshots/required.json").read_text()
+    )
+    result = run_fixture()
+    assert_json_close(result, expected)
+'''
+
+        self.assertEqual(
+            check_host_parity.python_snapshot_assertions(source),
+            {"required.json"},
+        )
+
     def test_wasm_snapshot_assertion_ignores_comments_and_strings(self):
         source = r'''
 // assert_snapshot("commented.json", &output);

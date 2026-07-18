@@ -30,6 +30,7 @@ SNAPSHOT_FIXTURE = re.compile(
 PYTHON_SNAPSHOT_PATH = re.compile(
     r'(?:^|/)tests/snapshots/([^/]+\.json)$'
 )
+PYTHON_GOLDEN_ASSERTION_HELPERS = {"assert_json_close"}
 
 
 @dataclass(frozen=True)
@@ -253,10 +254,19 @@ def python_snapshot_assertions(text: str) -> set[str]:
                         snapshot_aliases[name.id] = snapshots
 
         for node in ast.walk(function):
-            if not isinstance(node, ast.Assert):
+            assertion: ast.AST | None = None
+            if isinstance(node, ast.Assert):
+                assertion = node.test
+            elif (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id in PYTHON_GOLDEN_ASSERTION_HELPERS
+            ):
+                assertion = node
+            if assertion is None:
                 continue
-            asserted.update(_python_snapshot_names(node.test))
-            for name in ast.walk(node.test):
+            asserted.update(_python_snapshot_names(assertion))
+            for name in ast.walk(assertion):
                 if isinstance(name, ast.Name):
                     asserted.update(snapshot_aliases.get(name.id, set()))
 
