@@ -117,6 +117,7 @@ runtime_label_options.json
 runtime_label_xloc.json
 runtime_label_yloc.json
 runtime_legacy_line_wrapping.json
+runtime_legacy_v2_core.json
 runtime_legacy_v3_core.json
 runtime_legacy_v4_expressions.json
 runtime_legacy_v4_logical_strict.json

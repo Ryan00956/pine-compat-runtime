@@ -292,11 +292,11 @@ fn params_for_call(
     args: &[CallArg],
     arg_types: &[Option<PineType>],
 ) -> Result<&'static [OutputParam], Diagnostic> {
-    if dialect == PineDialect::V3 {
+    if matches!(dialect, PineDialect::V1 | PineDialect::V2 | PineDialect::V3) {
         return Ok(match name {
             "plot" => V3_PLOT_PARAMS,
             "hline" => V3_HLINE_PARAMS,
-            _ => unreachable!("only the Phase 8 v3 output subset is admitted"),
+            _ => unreachable!("only the pre-v4 plot/hline output subset is admitted"),
         });
     }
     Ok(match name {

@@ -1,0 +1,28 @@
+//@version=2
+study("Legacy v2 core")
+selfSeries = nz(selfSeries[1]) + close
+historyForward = nz(futureSeries[1])
+middle = historyForward + 1
+futureSeries = middle + close
+currentForward = laterCurrent + 1
+laterCurrent = close * 2
+up = close >= open
+previousUp = close[1] >= open[1]
+boolSum = up + previousUp
+boolProduct = up * 2
+zeroCondition = 0 ? 10 : 20
+nonzeroCondition = -2 ? 30 : 40
+naCondition = na ? 50 : 60
+numericLogical = 1 and close - open
+numericNot = not 0
+plot(selfSeries, title="self")
+plot(historyForward, title="history forward")
+plot(futureSeries, title="future")
+plot(currentForward, title="current forward")
+plot(boolSum, title="bool sum")
+plot(boolProduct, title="bool product")
+plot(zeroCondition, title="zero condition")
+plot(nonzeroCondition, title="nonzero condition")
+plot(naCondition, title="na condition")
+plot(numericLogical ? 1 : 0, title="numeric logical")
+plot(numericNot ? 1 : 0, title="numeric not")

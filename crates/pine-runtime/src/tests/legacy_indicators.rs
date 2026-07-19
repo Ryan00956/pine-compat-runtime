@@ -51,6 +51,127 @@ fn legacy_security_profile_program(
     program
 }
 
+fn legacy_v2_core_bars() -> [Bar; 6] {
+    [
+        Bar {
+            time: 0,
+            open: 10.0,
+            high: 12.0,
+            low: 9.0,
+            close: 11.0,
+            volume: 100.0,
+        },
+        Bar {
+            time: 60_000,
+            open: 12.0,
+            high: 13.0,
+            low: 10.0,
+            close: 11.0,
+            volume: 110.0,
+        },
+        Bar {
+            time: 120_000,
+            open: 11.0,
+            high: 14.0,
+            low: 10.0,
+            close: 13.0,
+            volume: 120.0,
+        },
+        Bar {
+            time: 180_000,
+            open: 13.0,
+            high: 14.0,
+            low: 9.0,
+            close: 10.0,
+            volume: 130.0,
+        },
+        Bar {
+            time: 240_000,
+            open: 10.0,
+            high: 12.0,
+            low: 8.0,
+            close: 10.0,
+            volume: 140.0,
+        },
+        Bar {
+            time: 300_000,
+            open: 9.0,
+            high: 12.0,
+            low: 8.0,
+            close: 11.0,
+            volume: 150.0,
+        },
+    ]
+}
+
+#[test]
+fn legacy_v2_core_matches_explicit_canonical_batch_incremental_and_realtime() {
+    let legacy = compile_fixture(
+        "legacy_v2_core.pine",
+        include_str!("../../../../tests/fixtures/legacy/v2/runtime/core_legacy.pine"),
+    );
+    let canonical = compile_fixture(
+        "legacy_v2_core_canonical.pine",
+        include_str!("../../../../tests/fixtures/legacy/v2/runtime/core_canonical.pine"),
+    );
+    let bars = legacy_v2_core_bars();
+    let expected = run_historical(&canonical, &bars).expect("canonical v2 conversion");
+    let batch = run_historical(&legacy, &bars).expect("legacy v2 batch");
+    assert_eq!(batch, expected);
+    assert_values_close(
+        &batch.plots[0].values,
+        &[11.0, 22.0, 35.0, 45.0, 55.0, 66.0],
+    );
+    assert_values_close(&batch.plots[1].values, &[0.0, 12.0, 24.0, 38.0, 49.0, 60.0]);
+    assert_values_close(
+        &batch.plots[3].values,
+        &[23.0, 23.0, 27.0, 21.0, 21.0, 23.0],
+    );
+    assert_eq!(batch.plots[4].values[0], PineValue::Na);
+    assert_values_close(&batch.plots[4].values[1..], &[1.0, 1.0, 1.0, 1.0, 2.0]);
+
+    let mut incremental = HistoricalRuntime::new(&legacy);
+    for bar in bars {
+        incremental.append_bar(bar).expect("incremental v2 bar");
+    }
+    assert_eq!(incremental.result(), batch);
+
+    let mut realtime = RealtimeRuntime::new(&legacy);
+    let mut realtime_result = None;
+    for bar in bars {
+        realtime_result = Some(
+            realtime
+                .update(BarUpdate::historical(bar))
+                .expect("realtime v2 historical bar"),
+        );
+    }
+    assert_eq!(realtime_result.expect("realtime result"), batch);
+}
+
+#[test]
+fn implicit_v1_and_explicit_v2_shared_runtime_profile_match() {
+    let v1_source = SourceFile::new(
+        "shared_v1.pine",
+        include_str!("../../../../tests/fixtures/legacy/v1/runtime/shared_v1.pine"),
+    );
+    let v1_analysis = pine_sema::analyze_source(&v1_source);
+    assert!(
+        v1_analysis.diagnostics.is_empty(),
+        "{:?}",
+        v1_analysis.diagnostics
+    );
+    let v1 = v1_analysis.hir.expect("implicit v1 HIR");
+    let v2 = compile_fixture(
+        "shared_v2.pine",
+        include_str!("../../../../tests/fixtures/legacy/v2/runtime/shared_v2.pine"),
+    );
+    let bars = legacy_v2_core_bars();
+    assert_eq!(
+        run_historical(&v1, &bars).expect("implicit v1 run"),
+        run_historical(&v2, &bars).expect("explicit v2 run")
+    );
+}
+
 #[test]
 fn v4_legacy_security_same_context_matches_direct_expression() {
     let legacy = compile_fixture(

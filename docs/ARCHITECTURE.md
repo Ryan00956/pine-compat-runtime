@@ -119,6 +119,15 @@ widened by this routing. Declaration-level `study(resolution=...)` remains a
 focused unsupported program-context feature rather than being approximated by
 wrapping the AST in a request call.
 
+Phase 8 admits the fixture-backed v3 declaration/input/output surface and
+pre-v4 aliases, with a focused constraint pass for untyped `na`. Phase 9 admits
+implicit v1 and explicit v2 indicators. Its declaration resolver activates a
+bounded graph only for self/forward-dependent global scalars, predeclares one
+canonical symbol per active node, and records a stable lowering order. Removed
+bool/numeric conversions are source-span keyed semantic decisions that lower
+to ordinary canonical `float`/`bool` calls. Neither mechanism adds a legacy
+execution engine: runtime dispatch continues to consume canonical HIR.
+
 The semantic compile cache includes `LEGACY_TRANSLATOR_REVISION` in every key.
 Catalog or translation-semantics changes increment that revision so cached
 analysis cannot cross translator revisions.

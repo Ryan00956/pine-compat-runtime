@@ -8,6 +8,7 @@ mod outputs;
 mod report;
 mod resolver;
 mod security;
+mod v2_declarations;
 
 use pine_ir::PineType;
 use pine_syntax::{CallArg, Expr, Program, Span};
@@ -34,6 +35,7 @@ pub(crate) use outputs::LegacyOutputBinding;
 pub(crate) use report::normalize_legacy_report;
 pub(crate) use resolver::LegacyResolution;
 pub(crate) use security::{BoundLegacySecurity, LegacySecurityBinding};
+pub(crate) use v2_declarations::LegacyV2DeclarationPlan;
 
 use crate::compatibility::CompatibilityReport;
 use crate::source_graph::SourceContextId;

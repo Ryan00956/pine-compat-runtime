@@ -48,14 +48,28 @@ improved over time, but codes should remain stable once published.
 - `E_LANGUAGE_VERSION_UNSUPPORTED`: the selected Pine language version is
   outside the supported closed range v1 through v6.
 - `E_LEGACY_INDICATOR_DECLARATION`: a legacy source has a missing, mixed, modern,
-  or otherwise inadmissible indicator declaration; v1-v2 `study()` lowering is
-  still deferred, while the verified v3/v4 `study()` subsets are executable.
-- `E_LEGACY_INPUT_OVERLOAD`: a Pine v3/v4 `input()` call has an ambiguous,
+  or otherwise inadmissible indicator declaration; the verified v1-v4
+  `study()` subsets are executable.
+- `E_LEGACY_INPUT_OVERLOAD`: a Pine v1-v4 `input()` call has an ambiguous,
   uninferable, forged, or unsupported historical type selection; the call is
   rejected before canonical lowering or runtime.
-- `E_LEGACY_OUTPUT_ARGUMENT`: a Pine v3/v4 output call uses an invalid historical
+- `E_LEGACY_OUTPUT_ARGUMENT`: a Pine v1-v4 output call uses an invalid historical
   transparency/style value or mixes incompatible fill endpoints; the call is
   rejected before canonical lowering or runtime.
+- `E_LEGACY_REFERENCE_GRAPH`: a Pine v1/v2 declaration graph has a duplicate or
+  otherwise structurally invalid global declaration.
+- `E_LEGACY_REFERENCE_GRAPH_LIMIT`: an active Pine v1/v2 declaration graph
+  exceeds 256 nodes or 4096 dependency edges.
+- `E_LEGACY_REFERENCE_GRAPH_UNSAFE`: an active Pine v1/v2 graph declaration
+  initializer contains a call, mutation, output, request, tuple, or complex
+  control flow outside the side-effect-free scalar subset.
+- `E_LEGACY_FORWARD_REFERENCE_UNSAFE`: a Pine v1/v2 current-bar forward
+  dependency crosses a non-declaration statement barrier and cannot be safely
+  reordered.
+- `E_LEGACY_REFERENCE_CYCLE`: Pine v1/v2 current-bar declaration dependencies
+  contain a cycle with no deterministic source-compatible evaluation order.
+- `E_LEGACY_REFERENCE_TYPE`: the bounded Pine v1/v2 declaration graph cannot
+  infer one stable scalar type for a participating declaration.
 - `E_LEGACY_RSI_OVERLOAD`: a v1-v4 `rsi(x, y)` call cannot select the
   historical length or two-series overload from the analyzed numeric types;
   the call is rejected instead of guessing modern `ta.rsi` behavior.

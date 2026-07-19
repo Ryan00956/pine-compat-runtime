@@ -31,6 +31,9 @@ impl Analyzer {
         self.register_user_types(program);
         self.register_methods(program);
         self.register_functions(program);
+        if self.prepare_legacy_v2_declarations(program) {
+            return;
+        }
         for statement in &program.statements {
             self.analyze_stmt(statement);
         }
@@ -412,6 +415,13 @@ impl Analyzer {
                 } else {
                     self.define_symbol_with_persistence(name, symbol_type, persistence, var_slot_id)
                 };
+                if self.legacy_v2_predeclared_symbols.contains(&symbol.id) {
+                    for binding in self.bindings.values_mut() {
+                        if binding.id == symbol.id {
+                            *binding = symbol;
+                        }
+                    }
+                }
                 if symbol_type.kind != ValueKind::Tuple {
                     self.symbol_tuple_element_types.remove(&symbol.id);
                     self.symbol_tuple_user_type_arrays.remove(&symbol.id);
@@ -649,11 +659,7 @@ impl Analyzer {
                         }
                     }
                     if assignment_is_valid && !invalid_non_scalar_udt_varip_reassign {
-                        if is_legacy_v3_na_inference {
-                            self.update_symbol_type_and_bindings(name, reassigned_type);
-                        } else {
-                            self.update_symbol_type(name, reassigned_type);
-                        }
+                        self.update_symbol_type_and_bindings(name, reassigned_type);
                     }
                     if let Some(symbol) = symbol {
                         if assignment_is_valid

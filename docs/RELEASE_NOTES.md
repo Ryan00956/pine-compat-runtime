@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added the executable Pine v1/v2 indicator slice, including implicit-v1
+  selection, historical `study`/focused `input`/`plot` admission, `sma`/`ema`,
+  a bounded scalar declaration graph for self-history and safe forward
+  references, v1/v2 bool arithmetic conversion, and v1-v5 numeric condition
+  conversion. Removed conversions lower to explicit canonical calls, unsafe or
+  cyclic graphs fail with focused diagnostics, paired v2/v6 fixtures are exact
+  across batch/incremental/realtime and CLI/Python/WASM, and all 22 eligible
+  indicators in the unchanged seed corpus now analyze, lower, and execute.
 - Added the executable Pine v3 indicator slice. Historical `study`, `input`,
   `plot`, and `hline` signatures now bind by dialect; pre-v4 colors, the old
   `color(...)` helper, input types, plot/hline styles, weekdays, chart metadata,

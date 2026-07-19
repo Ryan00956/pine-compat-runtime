@@ -123,10 +123,10 @@ impl StudyParam {
 
 pub(crate) fn bind_legacy_study_args(dialect: PineDialect, args: &[CallArg]) -> LegacyStudyBinding {
     let params = match dialect {
-        PineDialect::V3 => V3_STUDY_PARAMS,
+        PineDialect::V1 | PineDialect::V2 | PineDialect::V3 => V3_STUDY_PARAMS,
         PineDialect::V4 => V4_STUDY_PARAMS,
-        PineDialect::V1 | PineDialect::V2 | PineDialect::V5 | PineDialect::V6 => {
-            unreachable!("only Pine v3/v4 study declarations use the legacy binder")
+        PineDialect::V5 | PineDialect::V6 => {
+            unreachable!("only Pine v1-v4 study declarations use the legacy binder")
         }
     };
     let version = dialect.version();
@@ -302,20 +302,13 @@ pub(crate) fn legacy_admission_failure(
         }),
         [declaration]
             if declaration.name == "study"
-                && matches!(dialect, PineDialect::V3 | PineDialect::V4) =>
+                && matches!(
+                    dialect,
+                    PineDialect::V1 | PineDialect::V2 | PineDialect::V3 | PineDialect::V4
+                ) =>
         {
             None
         }
-        [declaration] if declaration.name == "study" => Some(LegacyAdmissionFailure {
-            code: "E_LEGACY_INDICATOR_DECLARATION",
-            message: format!(
-                "legacy {} study(...) is recognized but pre-v4 declaration lowering is not implemented yet",
-                dialect.name()
-            ),
-            feature: "study".to_owned(),
-            reason: "pre-v4 study(...) lowering is not implemented in the current phase".to_owned(),
-            span: declaration.span,
-        }),
         [declaration] if declaration.name == "indicator" => Some(LegacyAdmissionFailure {
             code: "E_LEGACY_INDICATOR_DECLARATION",
             message: format!(

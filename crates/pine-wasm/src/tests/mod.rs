@@ -74,19 +74,16 @@ fn analyzes_implicit_v1_legacy_indicator_contract() {
     );
     assert_eq!(parsed["dialect"], serde_json::json!("v1"));
     assert_eq!(parsed["scriptMode"], serde_json::json!("legacyIndicator"));
-    assert_eq!(parsed["executable"], serde_json::json!(false));
-    assert_eq!(
-        parsed["diagnostics"],
-        serde_json::json!([{
-            "code": "E_LEGACY_INDICATOR_DECLARATION",
-            "severity": "error",
-            "message": "legacy v1 study(...) is recognized but pre-v4 declaration lowering is not implemented yet",
-            "span": {"start": 0, "end": 5, "line": 1, "column": 1}
-        }])
-    );
+    assert_eq!(parsed["executable"], serde_json::json!(true));
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
     assert_eq!(
         parsed["compatibility"]["legacyTranslations"],
-        serde_json::json!([])
+        serde_json::json!([{
+            "sourceFeature": "study",
+            "canonicalFeature": "indicator",
+            "kind": "signatureReshape",
+            "span": {"start": 0, "end": 5, "line": 1, "column": 1}
+        }])
     );
     assert_eq!(
         parsed["compatibility"]["legacyEmulations"],
@@ -177,6 +174,31 @@ fn analyzes_executable_v3_names_constants_and_na_inference() {
             .iter()
             .any(|item| item["feature"] == "v3.untyped_na")
     );
+}
+
+#[test]
+fn analyzes_v2_graph_and_conversion_emulations() {
+    let output = analyze_script(include_str!(
+        "../../../../tests/fixtures/legacy/v2/runtime/core_legacy.pine"
+    ));
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(parsed["languageVersion"], serde_json::json!(2));
+    assert_eq!(parsed["dialect"], serde_json::json!("v2"));
+    assert_eq!(parsed["scriptMode"], serde_json::json!("legacyIndicator"));
+    assert_eq!(parsed["executable"], serde_json::json!(true));
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    let emulations = parsed["compatibility"]["legacyEmulations"]
+        .as_array()
+        .expect("legacy emulations");
+    for feature in [
+        "v2.self_reference",
+        "v2.forward_reference",
+        "v2.bool_arithmetic",
+        "v2.numeric_to_bool",
+    ] {
+        assert!(emulations.iter().any(|item| item["feature"] == feature));
+    }
 }
 
 #[test]
@@ -598,6 +620,17 @@ fn run_script_csv_returns_legacy_v3_core_contract() {
     .expect("legacy v3 core fixture should run");
 
     assert_snapshot("runtime_legacy_v3_core.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_legacy_v2_core_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/legacy/v2/runtime/core_legacy.pine"),
+        include_str!("../../../../tests/fixtures/legacy/v2/runtime/core_bars.csv"),
+    )
+    .expect("legacy v2 core fixture should run");
+
+    assert_snapshot("runtime_legacy_v2_core.json", &output);
 }
 
 #[test]

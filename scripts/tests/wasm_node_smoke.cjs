@@ -57,10 +57,12 @@ assert.equal(implicitLegacy.languageVersion, 1);
 assert.equal(implicitLegacy.languageVersionOrigin, 'implicit');
 assert.equal(implicitLegacy.dialect, 'v1');
 assert.equal(implicitLegacy.scriptMode, 'legacyIndicator');
-assert.deepEqual(
-  implicitLegacy.diagnostics.map(({ code }) => code),
-  ['E_LEGACY_INDICATOR_DECLARATION'],
+assert.equal(implicitLegacy.executable, true);
+assert.deepEqual(implicitLegacy.diagnostics, []);
+const implicitLegacyRun = JSON.parse(
+  pine.runScriptCsv('study("legacy")\nplot(close)\n', bars),
 );
+assert.deepEqual(implicitLegacyRun.plots[0].values, [1, 2, 3]);
 
 const legacyStrategy = JSON.parse(
   pine.analyzeScript(

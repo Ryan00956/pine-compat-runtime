@@ -1365,3 +1365,228 @@ plot(i + f + (b ? 1 : 0))
         assert!(analysis.compatibility.legacy_emulations.is_empty());
     }
 }
+
+#[test]
+fn v2_declaration_graph_preserves_symbol_identity_and_stable_current_order() {
+    let analysis = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v2/runtime/core_legacy.pine"
+    ));
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.as_ref().expect("v2 HIR");
+    let symbol_names = hir
+        .symbols
+        .iter()
+        .map(|symbol| (symbol.id, symbol.name.as_str()))
+        .collect::<std::collections::HashMap<_, _>>();
+    let declaration_names = hir
+        .statements
+        .iter()
+        .filter_map(|statement| match statement.kind {
+            HirStmtKind::Decl { symbol, .. } => symbol_names.get(&symbol).copied(),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    let later = declaration_names
+        .iter()
+        .position(|name| *name == "laterCurrent")
+        .expect("later declaration");
+    let consumer = declaration_names
+        .iter()
+        .position(|name| *name == "currentForward")
+        .expect("forward consumer");
+    assert!(later < consumer, "{declaration_names:?}");
+
+    let self_symbol = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "selfSeries")
+        .expect("self symbol");
+    assert!(self_symbol.series_id.is_some());
+    let self_decl = hir
+        .statements
+        .iter()
+        .find_map(|statement| match &statement.kind {
+            HirStmtKind::Decl { symbol, value } if *symbol == self_symbol.id => Some(value),
+            _ => None,
+        })
+        .expect("self declaration");
+    assert!(hir_expr_contains_history_symbol(self_decl, self_symbol.id));
+
+    for feature in [
+        "v2.self_reference",
+        "v2.forward_reference",
+        "v2.bool_arithmetic",
+        "v2.numeric_to_bool",
+    ] {
+        assert!(
+            analysis
+                .compatibility
+                .legacy_emulations
+                .iter()
+                .any(|emulation| emulation.feature == feature),
+            "missing {feature}"
+        );
+    }
+    assert!(hir_contains_call(hir, "float"));
+    assert!(hir_contains_call(hir, "bool"));
+}
+
+#[test]
+fn v2_declaration_graph_rejects_cycles_barriers_unsafe_calls_and_limits_once() {
+    for (source, expected) in [
+        (
+            include_str!("../../../../tests/fixtures/legacy/v2/unsupported/reference_cycle.pine"),
+            "E_LEGACY_REFERENCE_CYCLE",
+        ),
+        (
+            include_str!(
+                "../../../../tests/fixtures/legacy/v2/unsupported/forward_reference_barrier.pine"
+            ),
+            "E_LEGACY_FORWARD_REFERENCE_UNSAFE",
+        ),
+        (
+            include_str!("../../../../tests/fixtures/legacy/v2/unsupported/unsafe_graph_call.pine"),
+            "E_LEGACY_REFERENCE_GRAPH_UNSAFE",
+        ),
+    ] {
+        let analysis = analyze_production(source);
+        assert_eq!(diagnostic_codes(&analysis), vec![expected]);
+        assert!(analysis.hir.is_none());
+    }
+
+    let mut oversized = String::from(
+        "//@version=2\nstudy(\"oversized graph\")\nfirst = node256 + 1\nnode0 = close\n",
+    );
+    for index in 1..=256 {
+        oversized.push_str(&format!("node{index} = node{} + 1\n", index - 1));
+    }
+    oversized.push_str("plot(first)\n");
+    let analysis = analyze_production(&oversized);
+    assert_eq!(
+        diagnostic_codes(&analysis),
+        vec!["E_LEGACY_REFERENCE_GRAPH_LIMIT"]
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn v2_bool_arithmetic_and_pre_v6_numeric_conditions_keep_version_boundaries() {
+    let v2 = analyze_production(
+        "//@version=2\nstudy(\"coercions\")\nb=close>open\nplot(b + true)\nplot((close-open) ? 1 : 0)\n",
+    );
+    assert!(v2.diagnostics.is_empty(), "{:?}", v2.diagnostics);
+    assert!(hir_contains_call(v2.hir.as_ref().expect("v2 HIR"), "float"));
+    assert!(hir_contains_call(v2.hir.as_ref().expect("v2 HIR"), "bool"));
+
+    let v3_bool = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v3/unsupported/bool_arithmetic.pine"
+    ));
+    assert_eq!(diagnostic_codes(&v3_bool), vec!["E_OPERATOR_TYPE"]);
+    let v3_numeric =
+        analyze_production("//@version=3\nstudy(\"numeric condition\")\nplot(close ? 1 : 0)\n");
+    assert!(
+        v3_numeric.diagnostics.is_empty(),
+        "{:?}",
+        v3_numeric.diagnostics
+    );
+    assert!(hir_contains_call(
+        v3_numeric.hir.as_ref().expect("v3 numeric condition HIR"),
+        "bool"
+    ));
+
+    let v6 = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v6/unsupported/numeric_condition.pine"
+    ));
+    assert_eq!(diagnostic_codes(&v6), vec!["E_CONDITION_TYPE"]);
+    assert!(v6.hir.is_none());
+}
+
+#[test]
+fn implicit_v1_matches_explicit_v2_only_for_the_claimed_shared_profile() {
+    let v1 = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v1/runtime/shared_v1.pine"
+    ));
+    let v2 = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v2/runtime/shared_v2.pine"
+    ));
+    assert!(v1.diagnostics.is_empty(), "{:?}", v1.diagnostics);
+    assert!(v2.diagnostics.is_empty(), "{:?}", v2.diagnostics);
+    assert_eq!(
+        v1.compatibility.language_version_origin,
+        crate::VersionOrigin::ImplicitV1
+    );
+    let mut v1_hir = v1.hir.expect("v1 HIR");
+    let mut v2_hir = v2.hir.expect("v2 HIR");
+    v1_hir.language_version = None;
+    v2_hir.language_version = None;
+    assert_eq!(v1_hir, v2_hir);
+}
+
+fn hir_expr_contains_history_symbol(expr: &HirExpr, symbol: pine_ir::SymbolId) -> bool {
+    match &expr.kind {
+        HirExprKind::History { expr, .. } => {
+            matches!(expr.kind, HirExprKind::Symbol(candidate) if candidate == symbol)
+                || hir_expr_contains_history_symbol(expr, symbol)
+        }
+        HirExprKind::Unary { expr, .. } => hir_expr_contains_history_symbol(expr, symbol),
+        HirExprKind::Binary { left, right, .. } => {
+            hir_expr_contains_history_symbol(left, symbol)
+                || hir_expr_contains_history_symbol(right, symbol)
+        }
+        HirExprKind::Ternary {
+            condition,
+            then_expr,
+            else_expr,
+        } => {
+            hir_expr_contains_history_symbol(condition, symbol)
+                || hir_expr_contains_history_symbol(then_expr, symbol)
+                || hir_expr_contains_history_symbol(else_expr, symbol)
+        }
+        HirExprKind::Call { args, .. } => args
+            .iter()
+            .any(|arg| hir_expr_contains_history_symbol(&arg.value, symbol)),
+        _ => false,
+    }
+}
+
+fn hir_contains_call(hir: &pine_ir::HirProgram, expected: &str) -> bool {
+    hir.statements
+        .iter()
+        .any(|statement| match &statement.kind {
+            HirStmtKind::Expr(expr)
+            | HirStmtKind::Decl { value: expr, .. }
+            | HirStmtKind::Reassign { value: expr, .. } => hir_expr_contains_call(expr, expected),
+            _ => false,
+        })
+}
+
+fn hir_expr_contains_call(expr: &HirExpr, expected: &str) -> bool {
+    match &expr.kind {
+        HirExprKind::Call { callee, args, .. } => {
+            callee == expected
+                || args
+                    .iter()
+                    .any(|arg| hir_expr_contains_call(&arg.value, expected))
+        }
+        HirExprKind::Unary { expr, .. } | HirExprKind::History { expr, .. } => {
+            hir_expr_contains_call(expr, expected)
+        }
+        HirExprKind::Binary { left, right, .. } => {
+            hir_expr_contains_call(left, expected) || hir_expr_contains_call(right, expected)
+        }
+        HirExprKind::Ternary {
+            condition,
+            then_expr,
+            else_expr,
+        } => {
+            hir_expr_contains_call(condition, expected)
+                || hir_expr_contains_call(then_expr, expected)
+                || hir_expr_contains_call(else_expr, expected)
+        }
+        _ => false,
+    }
+}

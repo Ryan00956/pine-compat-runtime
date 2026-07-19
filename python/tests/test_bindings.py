@@ -148,7 +148,7 @@ def test_analyze_script_reports_input_call_sites():
     assert all(isinstance(item["callSiteId"], int) for item in report["inputs"])
 
 
-def test_analyze_script_reports_implicit_v1_legacy_indicator_gate():
+def test_analyze_script_reports_executable_implicit_v1_legacy_indicator():
     report = pine_compat.analyze_script('study("legacy")\nplot(close)\n')
 
     assert report["schemaVersion"] == 4
@@ -156,11 +156,12 @@ def test_analyze_script_reports_implicit_v1_legacy_indicator_gate():
     assert report["languageVersionOrigin"] == "implicit"
     assert report["dialect"] == "v1"
     assert report["scriptMode"] == "legacyIndicator"
-    assert report["executable"] is False
-    assert [item["code"] for item in report["diagnostics"]] == [
-        "E_LEGACY_INDICATOR_DECLARATION"
-    ]
-    assert report["compatibility"]["legacyTranslations"] == []
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
+    assert [
+        (item["sourceFeature"], item["canonicalFeature"], item["kind"])
+        for item in report["compatibility"]["legacyTranslations"]
+    ] == [("study", "indicator", "signatureReshape")]
     assert report["compatibility"]["legacyEmulations"] == []
 
 
@@ -211,6 +212,29 @@ def test_analyze_script_reports_executable_v3_names_constants_and_na_inference()
         item["feature"] == "v3.untyped_na"
         for item in report["compatibility"]["legacyEmulations"]
     )
+
+
+def test_analyze_script_reports_v2_graph_and_conversion_emulations():
+    source = (
+        ROOT / "tests/fixtures/legacy/v2/runtime/core_legacy.pine"
+    ).read_text()
+    report = pine_compat.analyze_script(source)
+
+    assert report["languageVersion"] == 2
+    assert report["languageVersionOrigin"] == "explicit"
+    assert report["dialect"] == "v2"
+    assert report["scriptMode"] == "legacyIndicator"
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
+    emulated = {
+        item["feature"] for item in report["compatibility"]["legacyEmulations"]
+    }
+    assert {
+        "v2.self_reference",
+        "v2.forward_reference",
+        "v2.bool_arithmetic",
+        "v2.numeric_to_bool",
+    } <= emulated
 
 
 def test_analyze_script_reports_v4_legacy_output_adaptations():
@@ -591,6 +615,22 @@ def test_run_script_returns_legacy_v3_core_contract():
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/legacy/v3/runtime/core_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v2_core_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v2/runtime/core_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v2_core.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/legacy/v2/runtime/core_bars.csv"),
     )
 
     assert result == expected

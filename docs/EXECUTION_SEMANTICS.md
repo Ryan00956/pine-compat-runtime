@@ -36,7 +36,7 @@ them as approximate.
 
 ## Legacy Indicator Expression Semantics
 
-Pine v4 indicators use version-selected semantics where a current-language
+Pine v1-v4 indicators use version-selected semantics where a current-language
 rewrite would change results. These rules are carried in HIR or selected from
 the HIR language version, so CLI, Python, WASM, historical, incremental, and
 realtime execution use the same contract. They never activate in v5/v6 source
@@ -74,6 +74,22 @@ This includes stateful calls in the right operand. The v4 aliases `change`,
 `highest`, `lowest`, `max`, and `min` lower respectively to `ta.change`,
 `ta.highest`, `ta.lowest`, `math.max`, and `math.min` only after user-defined
 and lexical resolution fails.
+
+Pine v1/v2 global scalar declarations may use self-history and safe forward
+references. Analysis activates a bounded dependency graph only for declarations
+that need it, predeclares one canonical symbol per active node, and uses a
+stable topological order for current-bar dependencies. History-only cycles are
+accepted only when one stable scalar type can be inferred. Current cycles,
+side-effecting initializers, statement-crossing current dependencies, and
+graphs above 256 nodes or 4096 edges fail before HIR. The runtime sees ordinary
+canonical declarations and history nodes, not a separate graph evaluator.
+
+In v1/v2 arithmetic, bool operands are explicitly lowered through `float` so
+true becomes 1 and false becomes 0. In v1-v5 conditions, `not`, `and`, and `or`,
+numeric and `na` operands are explicitly lowered through `bool`: zero and `na`
+are false and every other numeric value is true. Pine v3-v6 reject implicit bool
+arithmetic, and v6 rejects implicit numeric conditions. These inserted calls
+count against ordinary lowering and callsite limits.
 
 ## Strategy Mode
 

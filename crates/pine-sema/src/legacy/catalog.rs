@@ -1,8 +1,7 @@
 use super::PineDialect;
-use super::inputs::LEGACY_INPUT_DEFERRED_REASON;
 use super::outputs::LEGACY_OUTPUT_DEFERRED_REASON;
 
-pub const LEGACY_TRANSLATOR_REVISION: u32 = 7;
+pub const LEGACY_TRANSLATOR_REVISION: u32 = 8;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum LegacyRuleKind {
@@ -211,7 +210,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
     LegacyRule {
         source_name: "ema",
         canonical_name: Some("ta.ema"),
-        min_version: PineDialect::V3,
+        min_version: PineDialect::V1,
         max_version: PineDialect::V4,
         kind: LegacyRuleKind::ExactFunctionAlias,
         support: LegacyRuleSupport::Supported,
@@ -298,9 +297,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         min_version: PineDialect::V1,
         max_version: PineDialect::V2,
         kind: LegacyRuleKind::FocusedInput,
-        support: LegacyRuleSupport::UnsupportedKnown {
-            reason: LEGACY_INPUT_DEFERRED_REASON,
-        },
+        support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
         source_name: "input",
@@ -513,9 +510,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         min_version: PineDialect::V1,
         max_version: PineDialect::V2,
         kind: LegacyRuleKind::FocusedOutput,
-        support: LegacyRuleSupport::UnsupportedKnown {
-            reason: LEGACY_OUTPUT_DEFERRED_REASON,
-        },
+        support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
         source_name: "plot",
@@ -658,7 +653,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
     LegacyRule {
         source_name: "sma",
         canonical_name: Some("ta.sma"),
-        min_version: PineDialect::V3,
+        min_version: PineDialect::V1,
         max_version: PineDialect::V4,
         kind: LegacyRuleKind::ExactFunctionAlias,
         support: LegacyRuleSupport::Supported,
@@ -683,9 +678,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         min_version: PineDialect::V1,
         max_version: PineDialect::V2,
         kind: LegacyRuleKind::FocusedDeclaration,
-        support: LegacyRuleSupport::UnsupportedKnown {
-            reason: "pre-v4 study declaration lowering is not implemented yet",
-        },
+        support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
         source_name: "study",

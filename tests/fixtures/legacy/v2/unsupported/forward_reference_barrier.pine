@@ -1,0 +1,6 @@
+//@version=2
+study("v2 forward barrier")
+first = later + 1
+plot(close)
+later = close
+plot(first)

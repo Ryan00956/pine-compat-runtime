@@ -319,7 +319,7 @@ mod tests {
     }
 
     #[test]
-    fn analysis_json_exposes_implicit_v1_legacy_indicator_gate() {
+    fn analysis_json_exposes_executable_implicit_v1_legacy_indicator() {
         let source = SourceFile::new("legacy.pine", "study(\"legacy\")\nplot(close)\n");
         let analysis = analyze_source(&source);
         let parsed: serde_json::Value =
@@ -332,14 +332,16 @@ mod tests {
         );
         assert_eq!(parsed["dialect"], serde_json::json!("v1"));
         assert_eq!(parsed["scriptMode"], serde_json::json!("legacyIndicator"));
-        assert_eq!(parsed["executable"], serde_json::json!(false));
-        assert_eq!(
-            parsed["diagnostics"][0]["code"],
-            serde_json::json!("E_LEGACY_INDICATOR_DECLARATION")
-        );
+        assert_eq!(parsed["executable"], serde_json::json!(true));
+        assert_eq!(parsed["diagnostics"], serde_json::json!([]));
         assert_eq!(
             parsed["compatibility"]["legacyTranslations"],
-            serde_json::json!([])
+            serde_json::json!([{
+                "sourceFeature": "study",
+                "canonicalFeature": "indicator",
+                "kind": "signatureReshape",
+                "span": {"start": 0, "end": 5, "line": 1, "column": 1}
+            }])
         );
         assert_eq!(
             parsed["compatibility"]["legacyEmulations"],
@@ -418,6 +420,34 @@ mod tests {
                 .iter()
                 .any(|item| item["feature"] == "v3.untyped_na")
         );
+    }
+
+    #[test]
+    fn analysis_json_exposes_v2_graph_and_conversion_emulations() {
+        let source = SourceFile::new(
+            "legacy-v2-core.pine",
+            include_str!("../../../../tests/fixtures/legacy/v2/runtime/core_legacy.pine"),
+        );
+        let analysis = analyze_source(&source);
+        let parsed: serde_json::Value =
+            serde_json::from_str(&analysis_json(&source, &analysis)).expect("analysis JSON");
+
+        assert_eq!(parsed["languageVersion"], serde_json::json!(2));
+        assert_eq!(parsed["dialect"], serde_json::json!("v2"));
+        assert_eq!(parsed["scriptMode"], serde_json::json!("legacyIndicator"));
+        assert_eq!(parsed["executable"], serde_json::json!(true));
+        assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+        let emulations = parsed["compatibility"]["legacyEmulations"]
+            .as_array()
+            .expect("legacy emulations");
+        for feature in [
+            "v2.self_reference",
+            "v2.forward_reference",
+            "v2.bool_arithmetic",
+            "v2.numeric_to_bool",
+        ] {
+            assert!(emulations.iter().any(|item| item["feature"] == feature));
+        }
     }
 
     #[test]

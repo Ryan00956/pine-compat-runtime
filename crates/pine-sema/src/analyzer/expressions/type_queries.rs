@@ -64,7 +64,19 @@ impl Analyzer {
                             .map(|_| PineType::new(Qualifier::Const, ValueKind::String))
                     })
             }
-            ExprKind::Unary { expr, .. } => self.type_of_expr_with_params(expr, param_types),
+            ExprKind::Unary { op, expr } => {
+                self.type_of_expr_with_params(expr, param_types)
+                    .map(|pine_type| {
+                        PineType::new(
+                            pine_type.qualifier,
+                            if *op == UnaryOp::Not {
+                                ValueKind::Bool
+                            } else {
+                                pine_type.kind
+                            },
+                        )
+                    })
+            }
             ExprKind::Binary { op, left, right } => {
                 let left_type = self.type_of_expr_with_params(left, param_types)?;
                 let right_type = self.type_of_expr_with_params(right, param_types)?;

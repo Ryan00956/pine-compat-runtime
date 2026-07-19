@@ -17,7 +17,7 @@ fn diagnostic_codes(analysis: &crate::Analysis) -> Vec<&str> {
 }
 
 #[test]
-fn missing_directive_selects_implicit_v1_before_legacy_gate() {
+fn missing_directive_selects_executable_implicit_v1_profile() {
     let analysis = analyze("study(\"Legacy\")\nplot(close)\n");
 
     assert_eq!(analysis.compatibility.language_version, Some(1));
@@ -30,11 +30,15 @@ fn missing_directive_selects_implicit_v1_before_legacy_gate() {
         analysis.compatibility.script_mode,
         ScriptModeClassification::LegacyIndicator
     );
-    assert_eq!(
-        diagnostic_codes(&analysis),
-        vec!["E_LEGACY_INDICATOR_DECLARATION"]
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert_eq!(
+        analysis.hir.as_ref().and_then(|hir| hir.language_version),
+        Some(1)
+    );
 }
 
 #[test]
@@ -58,22 +62,15 @@ fn explicit_v1_through_v6_report_closed_dialects() {
             analysis.compatibility.dialect.map(PineDialect::version),
             Some(version)
         );
-        if version <= 2 {
-            assert_eq!(
-                diagnostic_codes(&analysis),
-                vec!["E_LEGACY_INDICATOR_DECLARATION"]
-            );
-        } else {
-            assert!(
-                analysis.diagnostics.is_empty(),
-                "{:?}",
-                analysis.diagnostics
-            );
-            assert_eq!(
-                analysis.hir.as_ref().and_then(|hir| hir.language_version),
-                Some(version)
-            );
-        }
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert_eq!(
+            analysis.hir.as_ref().and_then(|hir| hir.language_version),
+            Some(version)
+        );
     }
 }
 

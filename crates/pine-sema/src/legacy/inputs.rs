@@ -4,8 +4,6 @@ use pine_syntax::{CallArg, Diagnostic, Expr, Span};
 use super::PineDialect;
 use super::lowering::LegacyCallArgRewrite;
 
-pub(crate) const LEGACY_INPUT_DEFERRED_REASON: &str = "legacy input signatures require version-specific type constants and argument binding that are not implemented yet";
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum LegacyInputKind {
     Bool,
@@ -241,13 +239,19 @@ impl LegacyInputKind {
 
     const fn params(self, dialect: PineDialect) -> &'static [InputParam] {
         match (dialect, self) {
-            (PineDialect::V3, Self::Integer | Self::Float) => V3_NUMERIC_PARAMS,
-            (PineDialect::V3, Self::String) => V3_STRING_PARAMS,
-            (PineDialect::V3, Self::Source) => V3_SOURCE_PARAMS,
-            (PineDialect::V3, Self::Bool | Self::Symbol | Self::Resolution | Self::Session) => {
-                V3_SIMPLE_PARAMS
+            (PineDialect::V1 | PineDialect::V2 | PineDialect::V3, Self::Integer | Self::Float) => {
+                V3_NUMERIC_PARAMS
             }
-            (PineDialect::V3, Self::Color | Self::Time | Self::Price) => V3_SIMPLE_PARAMS,
+            (PineDialect::V1 | PineDialect::V2 | PineDialect::V3, Self::String) => V3_STRING_PARAMS,
+            (PineDialect::V1 | PineDialect::V2 | PineDialect::V3, Self::Source) => V3_SOURCE_PARAMS,
+            (
+                PineDialect::V1 | PineDialect::V2 | PineDialect::V3,
+                Self::Bool | Self::Symbol | Self::Resolution | Self::Session,
+            ) => V3_SIMPLE_PARAMS,
+            (
+                PineDialect::V1 | PineDialect::V2 | PineDialect::V3,
+                Self::Color | Self::Time | Self::Price,
+            ) => V3_SIMPLE_PARAMS,
             (_, Self::Integer | Self::Float) => NUMERIC_PARAMS,
             (_, Self::String) => STRING_PARAMS,
             (_, Self::Source) => SOURCE_PARAMS,

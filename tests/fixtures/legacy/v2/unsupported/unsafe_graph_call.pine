@@ -1,0 +1,5 @@
+//@version=2
+study("v2 unsafe graph call")
+first = later + 1
+later = input(2)
+plot(first)

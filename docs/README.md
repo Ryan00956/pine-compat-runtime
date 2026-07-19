@@ -94,6 +94,10 @@ cargo run -p pine-cli -- matrix --format json
 - [Legacy Indicator Phase 8 Audit](LEGACY_INDICATOR_PHASE8_AUDIT.md): executable
   v3 declarations, pre-v4 names/constants and chart metadata, focused untyped
   `na` inference, canonical runtime equivalence, and measured v3 compatibility.
+- [Legacy Indicator Phase 9 Audit](LEGACY_INDICATOR_PHASE9_AUDIT.md): executable
+  implicit-v1 and v2 declarations, bounded self/forward declaration graphs,
+  historical bool/numeric conversions, canonical runtime equivalence, and the
+  fully passing committed legacy seed corpus.
 - [Strategy Internal Gap Audit](STRATEGY_INTERNAL_GAP_AUDIT.md): current
   long-only strategy baseline and deferred broker-model work.
 - [Next Language Expansion Playbook](NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md):

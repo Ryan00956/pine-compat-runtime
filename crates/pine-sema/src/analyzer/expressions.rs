@@ -1,5 +1,7 @@
+use crate::PineDialect;
 use crate::prelude::*;
 
+mod legacy_conversions;
 mod resolution;
 mod type_queries;
 
@@ -119,17 +121,17 @@ impl Analyzer {
                 let name = expr_name(expr)?;
                 self.resolve_qualified_value(&name, expr.span)
             }
-            ExprKind::Unary { op, expr } => {
-                let expr_type = self.analyze_expr(expr)?;
-                self.infer_unary(*op, expr_type, expr.span)
+            ExprKind::Unary { op, expr: operand } => {
+                let expr_type = self.analyze_expr(operand)?;
+                self.infer_unary_with_legacy(*op, expr_type, operand.span, expr.span)
             }
             ExprKind::Binary { op, left, right } => {
                 let left_type = self.analyze_expr(left);
                 let right_type = self.analyze_expr(right);
                 match (left_type, right_type) {
-                    (Some(left_type), Some(right_type)) => {
-                        self.infer_binary(*op, left_type, right_type, expr.span)
-                    }
+                    (Some(left_type), Some(right_type)) => self.infer_binary_with_legacy(
+                        *op, left_type, right_type, left.span, right.span, expr.span,
+                    ),
                     _ => None,
                 }
             }
@@ -1336,7 +1338,17 @@ impl Analyzer {
     }
 
     pub(crate) fn expect_bool(&mut self, pine_type: PineType, span: Span) {
-        if pine_type.kind != ValueKind::Bool {
+        if pine_type.kind == ValueKind::Bool {
+            return;
+        }
+        if self.legacy.dialect() != PineDialect::V6
+            && matches!(
+                pine_type.kind,
+                ValueKind::Int | ValueKind::Float | ValueKind::Na
+            )
+        {
+            self.record_numeric_to_bool_coercion(span);
+        } else {
             self.diagnostics.push(Diagnostic::error(
                 "E_CONDITION_TYPE",
                 format!("condition must be bool, got {}", pine_type_name(pine_type)),

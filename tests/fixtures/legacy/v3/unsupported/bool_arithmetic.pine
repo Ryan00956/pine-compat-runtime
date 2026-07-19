@@ -1,0 +1,4 @@
+//@version=3
+study("v3 bool arithmetic")
+up = close >= open
+plot(up + true)
