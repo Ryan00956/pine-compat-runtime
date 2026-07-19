@@ -1,0 +1,5 @@
+//@version=3
+study("collection v3 na")
+value = na
+value := array.new_float()
+plot(close)

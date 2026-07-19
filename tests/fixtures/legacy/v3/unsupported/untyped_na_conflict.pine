@@ -1,0 +1,6 @@
+//@version=3
+study("conflicting v3 na")
+value = na
+value := close
+value := true
+plot(close)

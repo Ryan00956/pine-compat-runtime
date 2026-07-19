@@ -1,5 +1,8 @@
 pub(crate) fn runtime_fixture_bars_csv(fixture: &str) -> Option<&'static str> {
     match fixture {
+        "tests/fixtures/legacy/v3/runtime/core_legacy.pine" => Some(include_str!(
+            "../../../../tests/fixtures/legacy/v3/runtime/core_bars.csv"
+        )),
         "tests/fixtures/legacy/v4/runtime/logical_strict_legacy.pine" => Some(include_str!(
             "../../../../tests/fixtures/legacy/v4/runtime/logical_strict_bars.csv"
         )),

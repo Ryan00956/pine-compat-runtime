@@ -124,6 +124,8 @@ fn analyze_validated_modules(
         symbol_user_type_identities: HashMap::new(),
         symbol_init_exprs: HashMap::new(),
         typed_na_scalar_symbols: HashSet::new(),
+        legacy_v3_untyped_na_symbols: HashMap::new(),
+        legacy_v3_pending_na_symbols: HashSet::new(),
         non_scalar_udt_varip_symbols: HashSet::new(),
         symbol_user_type_arrays: HashMap::new(),
         symbol_tuple_element_types: HashMap::new(),

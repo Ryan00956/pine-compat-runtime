@@ -264,19 +264,19 @@ impl Analyzer {
     ) -> FocusedLegacyCallAnalysis {
         let explicit_type_marker = self
             .legacy
-            .explicit_v4_input_type_expr(args)
+            .explicit_legacy_input_type_expr(args)
             .and_then(|expr| self.known_const_string_value(expr));
-        let bound =
-            match self
-                .legacy
-                .bind_v4_input_args(args, arg_types, explicit_type_marker.as_deref())
-            {
-                crate::legacy::LegacyInputBinding::Bound(bound) => bound,
-                crate::legacy::LegacyInputBinding::Invalid(diagnostics) => {
-                    self.diagnostics.extend(diagnostics);
-                    return FocusedLegacyCallAnalysis::Analyzed(None);
-                }
-            };
+        let bound = match self.legacy.bind_legacy_input_args(
+            args,
+            arg_types,
+            explicit_type_marker.as_deref(),
+        ) {
+            crate::legacy::LegacyInputBinding::Bound(bound) => bound,
+            crate::legacy::LegacyInputBinding::Invalid(diagnostics) => {
+                self.diagnostics.extend(diagnostics);
+                return FocusedLegacyCallAnalysis::Analyzed(None);
+            }
+        };
         let signature = pine_builtins::get_phase_1_builtin(bound.canonical_name)
             .expect("validated focused input target is registered");
         let source_context_id = self.current_source_context_id();
@@ -315,7 +315,7 @@ impl Analyzer {
             .iter()
             .map(|arg| self.known_const_int_value(&arg.value))
             .collect::<Vec<_>>();
-        let bound = match self.legacy.bind_v4_output_args(
+        let bound = match self.legacy.bind_legacy_output_args(
             name,
             args,
             arg_types,

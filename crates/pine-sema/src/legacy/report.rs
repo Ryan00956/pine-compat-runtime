@@ -1,3 +1,4 @@
+use pine_ir::ValueKind;
 use pine_syntax::Span;
 
 use crate::compatibility::{
@@ -77,13 +78,17 @@ pub(crate) fn record_input_signature_translation(
 
 pub(crate) fn record_output_translation(
     report: &mut CompatibilityReport,
+    dialect: crate::PineDialect,
     rule: LegacyRule,
-    canonical_feature: &'static str,
     span: Span,
     requires_adaptation: bool,
     emulates_transparency: bool,
     emulates_numeric_style: bool,
 ) {
+    let version = dialect.version();
+    let canonical_feature = rule
+        .canonical_name
+        .expect("validated legacy output rule has a canonical target");
     if requires_adaptation {
         report.legacy_translations.push(LegacyTranslation {
             source_feature: rule.source_name.to_owned(),
@@ -95,14 +100,14 @@ pub(crate) fn record_output_translation(
     if emulates_transparency {
         report.legacy_emulations.push(LegacyEmulation {
             feature: format!("{}.transp", rule.source_name),
-            behavior: "Pine v4 transparency is applied after the base color; embedded alpha takes precedence and transparency is clamped to 0..100".to_owned(),
+            behavior: format!("Pine v{version} transparency is applied after the base color; embedded alpha takes precedence and transparency is clamped to 0..100"),
             span,
         });
     }
     if emulates_numeric_style {
         report.legacy_emulations.push(LegacyEmulation {
             feature: format!("{}.numeric_style", rule.source_name),
-            behavior: "Pine v4 numeric output styles are mapped by their documented ordinal to canonical style constants".to_owned(),
+            behavior: format!("Pine v{version} numeric output styles are mapped by their documented ordinal to canonical style constants"),
             span,
         });
     }
@@ -168,6 +173,20 @@ pub(crate) fn record_security_translation(
     report.legacy_emulations.push(LegacyEmulation {
         feature: "security.merge".to_owned(),
         behavior: behavior.to_owned(),
+        span,
+    });
+}
+
+pub(crate) fn record_v3_na_inference(
+    report: &mut CompatibilityReport,
+    span: Span,
+    kind: ValueKind,
+) {
+    report.legacy_emulations.push(LegacyEmulation {
+        feature: "v3.untyped_na".to_owned(),
+        behavior: format!(
+            "Pine v3 untyped na declaration inferred one stable canonical scalar type: {kind:?}"
+        ),
         span,
     });
 }

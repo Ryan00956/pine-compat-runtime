@@ -71,27 +71,31 @@ impl LegacyFrontEnd {
         }
     }
 
-    pub(crate) fn bind_v4_study_args(&self, args: &[CallArg]) -> LegacyStudyBinding {
-        debug_assert_eq!(self.dialect, PineDialect::V4);
-        declarations::bind_v4_study_args(args)
+    pub(crate) fn bind_legacy_study_args(&self, args: &[CallArg]) -> LegacyStudyBinding {
+        declarations::bind_legacy_study_args(self.dialect, args)
     }
 
-    pub(crate) fn explicit_v4_input_type_expr<'a>(&self, args: &'a [CallArg]) -> Option<&'a Expr> {
-        debug_assert_eq!(self.dialect, PineDialect::V4);
+    pub(crate) const fn dialect(&self) -> PineDialect {
+        self.dialect
+    }
+
+    pub(crate) fn explicit_legacy_input_type_expr<'a>(
+        &self,
+        args: &'a [CallArg],
+    ) -> Option<&'a Expr> {
         inputs::explicit_type_expr(args)
     }
 
-    pub(crate) fn bind_v4_input_args(
+    pub(crate) fn bind_legacy_input_args(
         &self,
         args: &[CallArg],
         arg_types: &[Option<PineType>],
         explicit_type_marker: Option<&str>,
     ) -> LegacyInputBinding {
-        debug_assert_eq!(self.dialect, PineDialect::V4);
-        inputs::bind_v4_input_args(args, arg_types, explicit_type_marker)
+        inputs::bind_legacy_input_args(self.dialect, args, arg_types, explicit_type_marker)
     }
 
-    pub(crate) fn bind_v4_output_args(
+    pub(crate) fn bind_legacy_output_args(
         &self,
         name: &str,
         args: &[CallArg],
@@ -99,8 +103,14 @@ impl LegacyFrontEnd {
         const_strings: &[Option<String>],
         const_ints: &[Option<i64>],
     ) -> LegacyOutputBinding {
-        debug_assert_eq!(self.dialect, PineDialect::V4);
-        outputs::bind_v4_output_args(name, args, arg_types, const_strings, const_ints)
+        outputs::bind_legacy_output_args(
+            self.dialect,
+            name,
+            args,
+            arg_types,
+            const_strings,
+            const_ints,
+        )
     }
 
     pub(crate) fn bind_legacy_expression(
@@ -233,8 +243,8 @@ impl LegacyFrontEnd {
             .record_call_arg_rewrites(source_context_id, span, plan.arg_rewrites);
         report::record_output_translation(
             report,
+            self.dialect,
             rule,
-            plan.canonical_name,
             span,
             plan.requires_adaptation,
             plan.emulates_transparency,
@@ -307,6 +317,16 @@ impl LegacyFrontEnd {
         self.lowering
             .record_call_arg_rewrites(source_context_id, span, bound.arg_rewrites.clone());
         report::record_expression_translation(report, rule, canonical_feature, bound.kind, span);
+    }
+
+    pub(crate) fn record_v3_na_inference(
+        &self,
+        report: &mut CompatibilityReport,
+        span: Span,
+        kind: pine_ir::ValueKind,
+    ) {
+        debug_assert_eq!(self.dialect, PineDialect::V3);
+        report::record_v3_na_inference(report, span, kind);
     }
 
     pub(crate) fn canonical_call_name(

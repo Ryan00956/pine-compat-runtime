@@ -1,3 +1,4 @@
+use crate::PineDialect;
 use crate::prelude::*;
 use crate::resolver::ScopeResolver;
 
@@ -11,6 +12,8 @@ pub(crate) struct SymbolState {
     symbol_user_type_identities: HashMap<SymbolId, UserTypeIdentity>,
     symbol_init_exprs: HashMap<SymbolId, SourcedExpr>,
     typed_na_scalar_symbols: std::collections::HashSet<SymbolId>,
+    legacy_v3_untyped_na_symbols: HashMap<SymbolId, Span>,
+    legacy_v3_pending_na_symbols: std::collections::HashSet<SymbolId>,
     non_scalar_udt_varip_symbols: std::collections::HashSet<SymbolId>,
     symbol_user_type_arrays: HashMap<SymbolId, String>,
     symbol_tuple_element_types: HashMap<SymbolId, Vec<PineType>>,
@@ -31,6 +34,7 @@ impl Analyzer {
         for statement in &program.statements {
             self.analyze_stmt(statement);
         }
+        self.validate_pending_legacy_v3_na_declarations();
     }
 
     pub(crate) fn analyze_stmt(&mut self, statement: &Stmt) {
@@ -364,6 +368,9 @@ impl Analyzer {
                     && value_type.kind == ValueKind::Na
                     && is_scalar_assignment_kind(symbol_type.kind)
                     && symbol_type.kind != ValueKind::Na;
+                let is_legacy_v3_untyped_na_decl = self.legacy.dialect() == PineDialect::V3
+                    && declared_type.is_none()
+                    && value_type.kind == ValueKind::Na;
                 let is_non_scalar_typed_na_udt_varip_decl =
                     matches!(mode, pine_syntax::DeclMode::Varip)
                         && declared_pine_type.is_some()
@@ -427,6 +434,11 @@ impl Analyzer {
                 }
                 if is_typed_na_scalar_decl {
                     self.typed_na_scalar_symbols.insert(symbol.id);
+                }
+                if is_legacy_v3_untyped_na_decl {
+                    self.legacy_v3_untyped_na_symbols
+                        .insert(symbol.id, statement.span);
+                    self.legacy_v3_pending_na_symbols.insert(symbol.id);
                 }
                 if is_non_scalar_typed_na_udt_varip_decl {
                     self.non_scalar_udt_varip_symbols.insert(symbol.id);
@@ -518,11 +530,27 @@ impl Analyzer {
                         .is_some_and(|symbol| self.typed_na_scalar_symbols.contains(&symbol.id))
                         && value_type.kind != ValueKind::Na
                         && is_scalar_assignment_kind(value_type.kind);
-                    let reassigned_type = if is_typed_na_scalar_reassignment {
+                    let is_legacy_v3_na_origin = symbol.as_ref().is_some_and(|symbol| {
+                        self.legacy_v3_untyped_na_symbols.contains_key(&symbol.id)
+                    });
+                    let is_pending_legacy_v3_na = symbol.as_ref().is_some_and(|symbol| {
+                        self.legacy_v3_pending_na_symbols.contains(&symbol.id)
+                    });
+                    let is_legacy_v3_na_inference = is_pending_legacy_v3_na
+                        && value_type.kind != ValueKind::Na
+                        && is_scalar_assignment_kind(value_type.kind);
+                    let invalid_legacy_v3_na_inference = is_pending_legacy_v3_na
+                        && value_type.kind != ValueKind::Na
+                        && !is_scalar_assignment_kind(value_type.kind);
+                    let reassigned_type = if is_legacy_v3_na_inference {
+                        value_type
+                    } else if is_typed_na_scalar_reassignment {
                         typed_na_scalar_reassigned_symbol_type(target_type, value_type)
                     } else {
                         reassigned_symbol_type(target_type, value_type)
                     };
+                    let assignment_is_valid =
+                        can_reassign(target_type, value_type) || is_legacy_v3_na_inference;
                     let tuple_element_types = (target_type.kind == ValueKind::Tuple
                         && value_type.kind == ValueKind::Tuple)
                         .then(|| self.tuple_element_types(value))
@@ -562,7 +590,21 @@ impl Analyzer {
                         reassigned_type,
                         self.known_const_color_value(value),
                     );
-                    if !can_reassign(target_type, value_type) {
+                    if invalid_legacy_v3_na_inference
+                        || (!assignment_is_valid && is_legacy_v3_na_origin)
+                    {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_LEGACY_V3_NA_INFERENCE",
+                            format!(
+                                "Pine v3 untyped `na` declaration `{name}` must infer exactly one scalar type; {} is not compatible",
+                                pine_type_name(value_type)
+                            ),
+                            statement.span,
+                        ));
+                        if invalid_legacy_v3_na_inference && let Some(symbol) = symbol {
+                            self.legacy_v3_pending_na_symbols.remove(&symbol.id);
+                        }
+                    } else if !assignment_is_valid {
                         self.validate_assignment(name, target_type, value_type, statement.span);
                     }
                     if target_type.kind == ValueKind::UserType
@@ -606,13 +648,15 @@ impl Analyzer {
                             self.mark_symbol_map(symbol, value_info);
                         }
                     }
-                    if can_reassign(target_type, value_type)
-                        && !invalid_non_scalar_udt_varip_reassign
-                    {
-                        self.update_symbol_type(name, reassigned_type);
+                    if assignment_is_valid && !invalid_non_scalar_udt_varip_reassign {
+                        if is_legacy_v3_na_inference {
+                            self.update_symbol_type_and_bindings(name, reassigned_type);
+                        } else {
+                            self.update_symbol_type(name, reassigned_type);
+                        }
                     }
                     if let Some(symbol) = symbol {
-                        if can_reassign(target_type, value_type)
+                        if assignment_is_valid
                             && target_type.kind == ValueKind::Tuple
                             && tuple_identity_is_valid
                         {
@@ -629,44 +673,46 @@ impl Analyzer {
                                     .insert(symbol.id, results);
                             }
                         }
-                        if can_reassign(target_type, value_type)
+                        if assignment_is_valid
                             && value_type.kind != ValueKind::Na
                             && !invalid_non_scalar_udt_varip_reassign
                         {
                             self.typed_na_scalar_symbols.remove(&symbol.id);
                         }
+                        if is_legacy_v3_na_inference {
+                            self.legacy_v3_pending_na_symbols.remove(&symbol.id);
+                            if let Some(span) =
+                                self.legacy_v3_untyped_na_symbols.get(&symbol.id).copied()
+                            {
+                                self.legacy.record_v3_na_inference(
+                                    &mut self.compatibility,
+                                    span,
+                                    reassigned_type.kind,
+                                );
+                            }
+                        }
                         self.symbol_init_exprs.remove(&symbol.id);
-                        if can_reassign(target_type, value_type)
-                            && let Some(value) = const_int_value
-                        {
+                        if assignment_is_valid && let Some(value) = const_int_value {
                             self.const_int_symbols.insert(symbol.id, value);
                         } else {
                             self.const_int_symbols.remove(&symbol.id);
                         }
-                        if can_reassign(target_type, value_type)
-                            && let Some(value) = const_numeric_value
-                        {
+                        if assignment_is_valid && let Some(value) = const_numeric_value {
                             self.const_numeric_symbols.insert(symbol.id, value);
                         } else {
                             self.const_numeric_symbols.remove(&symbol.id);
                         }
-                        if can_reassign(target_type, value_type)
-                            && let Some(value) = const_string_value
-                        {
+                        if assignment_is_valid && let Some(value) = const_string_value {
                             self.const_string_symbols.insert(symbol.id, value);
                         } else {
                             self.const_string_symbols.remove(&symbol.id);
                         }
-                        if can_reassign(target_type, value_type)
-                            && let Some(value) = const_bool_value
-                        {
+                        if assignment_is_valid && let Some(value) = const_bool_value {
                             self.const_bool_symbols.insert(symbol.id, value);
                         } else {
                             self.const_bool_symbols.remove(&symbol.id);
                         }
-                        if can_reassign(target_type, value_type)
-                            && let Some(value) = const_color_value
-                        {
+                        if assignment_is_valid && let Some(value) = const_color_value {
                             self.const_color_symbols.insert(symbol.id, value);
                         } else {
                             self.const_color_symbols.remove(&symbol.id);
@@ -899,6 +945,23 @@ impl Analyzer {
         PineType::new(qualifier, value_type.kind)
     }
 
+    fn validate_pending_legacy_v3_na_declarations(&mut self) {
+        let mut spans = self
+            .legacy_v3_pending_na_symbols
+            .iter()
+            .filter_map(|symbol_id| self.legacy_v3_untyped_na_symbols.get(symbol_id).copied())
+            .collect::<Vec<_>>();
+        spans.sort_by_key(|span| (span.start, span.end));
+        spans.dedup();
+        for span in spans {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LEGACY_V3_NA_INFERENCE",
+                "Pine v3 untyped `na` declaration has no stable scalar assignment from which to infer its type",
+                span,
+            ));
+        }
+    }
+
     fn analyze_statement_branch(&mut self, statements: &[Stmt]) {
         self.scope.push_scope();
         for statement in statements {
@@ -930,6 +993,8 @@ impl Analyzer {
             symbol_user_type_identities: self.symbol_user_type_identities.clone(),
             symbol_init_exprs: self.symbol_init_exprs.clone(),
             typed_na_scalar_symbols: self.typed_na_scalar_symbols.clone(),
+            legacy_v3_untyped_na_symbols: self.legacy_v3_untyped_na_symbols.clone(),
+            legacy_v3_pending_na_symbols: self.legacy_v3_pending_na_symbols.clone(),
             non_scalar_udt_varip_symbols: self.non_scalar_udt_varip_symbols.clone(),
             symbol_user_type_arrays: self.symbol_user_type_arrays.clone(),
             symbol_tuple_element_types: self.symbol_tuple_element_types.clone(),
@@ -949,6 +1014,8 @@ impl Analyzer {
         self.symbol_user_type_identities = state.symbol_user_type_identities;
         self.symbol_init_exprs = state.symbol_init_exprs;
         self.typed_na_scalar_symbols = state.typed_na_scalar_symbols;
+        self.legacy_v3_untyped_na_symbols = state.legacy_v3_untyped_na_symbols;
+        self.legacy_v3_pending_na_symbols = state.legacy_v3_pending_na_symbols;
         self.non_scalar_udt_varip_symbols = state.non_scalar_udt_varip_symbols;
         self.symbol_user_type_arrays = state.symbol_user_type_arrays;
         self.symbol_tuple_element_types = state.symbol_tuple_element_types;

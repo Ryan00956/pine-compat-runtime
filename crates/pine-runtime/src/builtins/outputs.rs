@@ -105,6 +105,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn normalize_legacy_style(
+        &self,
         value: PineValue,
         styles: &[&str],
         feature: &str,
@@ -116,7 +117,10 @@ impl<'a> HistoricalRuntime<'a> {
             .ok()
             .and_then(|index| styles.get(index))
             .ok_or_else(|| RuntimeError {
-                message: format!("invalid Pine v4 {feature} style ordinal `{index}`"),
+                message: format!(
+                    "invalid Pine v{} {feature} style ordinal `{index}`",
+                    self.program.language_version.unwrap_or(4)
+                ),
             })?;
         Ok(PineValue::String((*style).to_owned()))
     }
@@ -174,7 +178,7 @@ impl<'a> HistoricalRuntime<'a> {
             "style",
             PineValue::String("plot.style_line".to_owned()),
         )?;
-        let style = Self::normalize_legacy_style(style, LEGACY_PLOT_STYLES, "plot")?;
+        let style = self.normalize_legacy_style(style, LEGACY_PLOT_STYLES, "plot")?;
         let track_price = self.eval_output_arg(args, 5, "trackprice", PineValue::Bool(false))?;
         let hist_base = self.eval_output_arg(args, 6, "histbase", PineValue::Int(0))?;
         let join = self.eval_output_arg(args, 8, "join", PineValue::Bool(false))?;
@@ -539,7 +543,7 @@ impl<'a> HistoricalRuntime<'a> {
             "linestyle",
             PineValue::String("hline.style_solid".to_owned()),
         )?;
-        let style = Self::normalize_legacy_style(style, LEGACY_HLINE_STYLES, "hline")?;
+        let style = self.normalize_legacy_style(style, LEGACY_HLINE_STYLES, "hline")?;
         let linewidth = self.eval_output_arg(args, 4, "linewidth", PineValue::Int(1))?;
         let editable = self.eval_output_arg(args, 5, "editable", PineValue::Bool(true))?;
         let display = self.eval_output_arg(

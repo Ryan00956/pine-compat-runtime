@@ -145,6 +145,41 @@ fn analyzes_executable_v4_legacy_translations() {
 }
 
 #[test]
+fn analyzes_executable_v3_names_constants_and_na_inference() {
+    let output = analyze_script(include_str!(
+        "../../../../tests/fixtures/legacy/v3/runtime/core_legacy.pine"
+    ));
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(parsed["languageVersion"], serde_json::json!(3));
+    assert_eq!(parsed["dialect"], serde_json::json!("v3"));
+    assert_eq!(parsed["scriptMode"], serde_json::json!("legacyIndicator"));
+    assert_eq!(parsed["executable"], serde_json::json!(true));
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    let translations = parsed["compatibility"]["legacyTranslations"]
+        .as_array()
+        .expect("legacy translations");
+    for (source_feature, canonical_feature) in [
+        ("study", "indicator"),
+        ("integer", "input.int"),
+        ("color", "color.new"),
+        ("n", "bar_index"),
+        ("interval", "timeframe.multiplier"),
+    ] {
+        assert!(translations.iter().any(|item| {
+            item["sourceFeature"] == source_feature && item["canonicalFeature"] == canonical_feature
+        }));
+    }
+    assert!(
+        parsed["compatibility"]["legacyEmulations"]
+            .as_array()
+            .expect("legacy emulations")
+            .iter()
+            .any(|item| item["feature"] == "v3.untyped_na")
+    );
+}
+
+#[test]
 fn analyzes_v4_legacy_output_adaptations() {
     let output = analyze_script(
         "//@version=4\nstudy(\"outputs\")\np = plot(close, style=5, transp=40)\nbgcolor(color.blue)\n",
@@ -552,6 +587,17 @@ fn run_script_csv_returns_legacy_v4_output_contract() {
     .expect("legacy v4 output fixture should run");
 
     assert_snapshot("runtime_legacy_v4_outputs.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_legacy_v3_core_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/legacy/v3/runtime/core_legacy.pine"),
+        include_str!("../../../../tests/fixtures/legacy/v3/runtime/core_bars.csv"),
+    )
+    .expect("legacy v3 core fixture should run");
+
+    assert_snapshot("runtime_legacy_v3_core.json", &output);
 }
 
 #[test]

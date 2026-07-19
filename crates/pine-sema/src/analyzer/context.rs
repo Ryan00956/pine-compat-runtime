@@ -62,6 +62,8 @@ pub(crate) struct Analyzer {
     pub(crate) symbol_user_type_identities: HashMap<SymbolId, UserTypeIdentity>,
     pub(crate) symbol_init_exprs: HashMap<SymbolId, SourcedExpr>,
     pub(crate) typed_na_scalar_symbols: HashSet<SymbolId>,
+    pub(crate) legacy_v3_untyped_na_symbols: HashMap<SymbolId, Span>,
+    pub(crate) legacy_v3_pending_na_symbols: HashSet<SymbolId>,
     pub(crate) non_scalar_udt_varip_symbols: HashSet<SymbolId>,
     pub(crate) symbol_user_type_arrays: HashMap<SymbolId, String>,
     pub(crate) symbol_tuple_element_types: HashMap<SymbolId, Vec<PineType>>,
@@ -365,6 +367,22 @@ impl Analyzer {
                 symbol.series_id = None;
             }
             self.scope.update(name, symbol);
+        }
+    }
+
+    pub(crate) fn update_symbol_type_and_bindings(&mut self, name: &str, pine_type: PineType) {
+        let original = self.scope.resolve(name);
+        self.update_symbol_type(name, pine_type);
+        let Some(original) = original else {
+            return;
+        };
+        let Some(updated) = self.scope.resolve(name) else {
+            return;
+        };
+        for binding in self.bindings.values_mut() {
+            if binding.id == original.id {
+                *binding = updated;
+            }
         }
     }
 

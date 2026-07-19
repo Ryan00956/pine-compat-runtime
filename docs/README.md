@@ -91,6 +91,9 @@ cargo run -p pine-cli -- matrix --format json
   legacy security signatures, provider/chart contracts, gaps/lookahead
   alignment, repaint warnings, cross-host parity, and the declaration-timeframe
   fail-closed boundary.
+- [Legacy Indicator Phase 8 Audit](LEGACY_INDICATOR_PHASE8_AUDIT.md): executable
+  v3 declarations, pre-v4 names/constants and chart metadata, focused untyped
+  `na` inference, canonical runtime equivalence, and measured v3 compatibility.
 - [Strategy Internal Gap Audit](STRATEGY_INTERNAL_GAP_AUDIT.md): current
   long-only strategy baseline and deferred broker-model work.
 - [Next Language Expansion Playbook](NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md):

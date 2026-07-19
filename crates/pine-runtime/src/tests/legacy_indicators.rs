@@ -267,6 +267,144 @@ fn legacy_security_missing_provider_error_keeps_original_source_span() {
 }
 
 #[test]
+fn v3_core_fixture_matches_canonical_batch_incremental_and_visual_output() {
+    let legacy = compile_fixture(
+        "v3_core_legacy.pine",
+        include_str!("../../../../tests/fixtures/legacy/v3/runtime/core_legacy.pine"),
+    );
+    let canonical = compile_fixture(
+        "v3_core_canonical.pine",
+        include_str!("../../../../tests/fixtures/legacy/v3/runtime/core_canonical.pine"),
+    );
+    let bars = [
+        bar_ohlc(10.0, 12.0, 9.0, 11.0),
+        bar_ohlc(12.0, 13.0, 9.0, 10.0),
+        bar_ohlc(10.0, 15.0, 10.0, 14.0),
+        bar_ohlc(14.0, 16.0, 12.0, 15.0),
+        bar_ohlc(16.0, 17.0, 13.0, 14.0),
+    ];
+
+    let legacy_batch = run_historical(&legacy, &bars).expect("legacy v3 core run");
+    let canonical_batch = run_historical(&canonical, &bars).expect("canonical core run");
+    assert_eq!(legacy_batch, canonical_batch);
+
+    let mut incremental = HistoricalRuntime::new(&legacy);
+    for bar in bars {
+        incremental
+            .append_bar(bar)
+            .expect("incremental v3 core bar");
+    }
+    assert_eq!(legacy_batch, incremental.result());
+    assert_eq!(
+        legacy_batch.plots[0].style,
+        PineValue::String("plot.style_histogram".to_owned())
+    );
+    assert_eq!(
+        legacy_batch.plots[0].colors,
+        vec![PineValue::Color(0xF23645BF); bars.len()]
+    );
+    assert_eq!(
+        legacy_batch.hlines[0].style,
+        PineValue::String("hline.style_dotted".to_owned())
+    );
+    assert_eq!(legacy_batch.plots[1].values[1], PineValue::Na);
+}
+
+#[test]
+fn v3_chart_metadata_aliases_match_canonical_values_in_custom_context() {
+    let legacy = compile_fixture(
+        "v3_metadata_aliases.pine",
+        r#"//@version=3
+study("v3 metadata aliases")
+matches = ticker == "IBM" and tickerid == "NYSE:IBM" and period == "5" and interval == 5 and isminutes and isintraday
+plot(matches ? 1 : 0)
+"#,
+    );
+    let canonical = compile_fixture(
+        "v3_metadata_canonical.pine",
+        r#"//@version=6
+indicator("canonical metadata")
+matches = syminfo.ticker == "IBM" and syminfo.tickerid == "NYSE:IBM" and timeframe.period == "5" and timeframe.multiplier == 5 and timeframe.isminutes and timeframe.isintraday
+plot(matches ? 1 : 0)
+"#,
+    );
+    let environment = RequestEnvironment::new(
+        ChartContext::new(
+            "NYSE:IBM",
+            RequestTimeframe::parse("5").expect("five minute chart timeframe"),
+        ),
+        Arc::new(NoRequestDataProvider),
+    );
+    let bars = [timed_close(0, 1.0), timed_close(300_000, 2.0)];
+    let legacy_result =
+        run_historical_with_request_environment(&legacy, &bars, environment.clone())
+            .expect("legacy v3 metadata run");
+    let canonical_result = run_historical_with_request_environment(&canonical, &bars, environment)
+        .expect("canonical metadata run");
+
+    assert_eq!(legacy_result, canonical_result);
+    assert_values_close(&legacy_result.plots[0].values, &[1.0, 1.0]);
+}
+
+#[test]
+fn v3_timeframe_aliases_follow_minute_second_day_week_and_month_contexts() {
+    let legacy = compile_fixture(
+        "v3_timeframe_aliases.pine",
+        r#"//@version=3
+study("v3 timeframe aliases")
+plot(interval)
+plot(isminutes ? 1 : 0)
+plot(isseconds ? 1 : 0)
+plot(isintraday ? 1 : 0)
+plot(isdaily ? 1 : 0)
+plot(isweekly ? 1 : 0)
+plot(ismonthly ? 1 : 0)
+plot(isdwm ? 1 : 0)
+"#,
+    );
+    let canonical = compile_fixture(
+        "v3_timeframe_aliases_canonical.pine",
+        r#"//@version=6
+indicator("canonical timeframe metadata")
+plot(timeframe.multiplier)
+plot(timeframe.isminutes ? 1 : 0)
+plot(timeframe.isseconds ? 1 : 0)
+plot(timeframe.isintraday ? 1 : 0)
+plot(timeframe.isdaily ? 1 : 0)
+plot(timeframe.isweekly ? 1 : 0)
+plot(timeframe.ismonthly ? 1 : 0)
+plot(timeframe.isdwm ? 1 : 0)
+"#,
+    );
+    for (timeframe, expected) in [
+        ("5", [5.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]),
+        ("45S", [45.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]),
+        ("2D", [2.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0]),
+        ("3W", [3.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0]),
+        ("4M", [4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0]),
+    ] {
+        let environment = RequestEnvironment::new(
+            ChartContext::new(
+                "NYSE:IBM",
+                RequestTimeframe::parse(timeframe).expect("valid chart timeframe"),
+            ),
+            Arc::new(NoRequestDataProvider),
+        );
+        let bars = [timed_close(0, 1.0)];
+        let legacy_result =
+            run_historical_with_request_environment(&legacy, &bars, environment.clone())
+                .expect("legacy v3 timeframe metadata run");
+        let canonical_result =
+            run_historical_with_request_environment(&canonical, &bars, environment)
+                .expect("canonical timeframe metadata run");
+        assert_eq!(legacy_result, canonical_result, "{timeframe}");
+        for (plot, expected_value) in legacy_result.plots.iter().zip(expected) {
+            assert_values_close(&plot.values, &[expected_value]);
+        }
+    }
+}
+
+#[test]
 fn v4_alias_fixture_matches_canonical_historical_output() {
     let legacy = compile_fixture(
         "aliases_legacy.pine",

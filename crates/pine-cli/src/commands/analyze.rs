@@ -382,6 +382,45 @@ mod tests {
     }
 
     #[test]
+    fn analysis_json_exposes_executable_v3_names_constants_and_na_inference() {
+        let source = SourceFile::new(
+            "legacy-v3-core.pine",
+            include_str!("../../../../tests/fixtures/legacy/v3/runtime/core_legacy.pine"),
+        );
+        let analysis = analyze_source(&source);
+        let parsed: serde_json::Value =
+            serde_json::from_str(&analysis_json(&source, &analysis)).expect("analysis JSON");
+
+        assert_eq!(parsed["languageVersion"], serde_json::json!(3));
+        assert_eq!(parsed["dialect"], serde_json::json!("v3"));
+        assert_eq!(parsed["scriptMode"], serde_json::json!("legacyIndicator"));
+        assert_eq!(parsed["executable"], serde_json::json!(true));
+        assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+        let translations = parsed["compatibility"]["legacyTranslations"]
+            .as_array()
+            .expect("legacy translations");
+        for (source_feature, canonical_feature) in [
+            ("study", "indicator"),
+            ("integer", "input.int"),
+            ("color", "color.new"),
+            ("n", "bar_index"),
+            ("interval", "timeframe.multiplier"),
+        ] {
+            assert!(translations.iter().any(|item| {
+                item["sourceFeature"] == source_feature
+                    && item["canonicalFeature"] == canonical_feature
+            }));
+        }
+        assert!(
+            parsed["compatibility"]["legacyEmulations"]
+                .as_array()
+                .expect("legacy emulations")
+                .iter()
+                .any(|item| item["feature"] == "v3.untyped_na")
+        );
+    }
+
+    #[test]
     fn analysis_json_exposes_v4_expression_desugars_and_emulations() {
         let source = SourceFile::new(
             "legacy-v4-expressions.pine",

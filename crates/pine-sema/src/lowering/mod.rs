@@ -1157,11 +1157,13 @@ impl Analyzer {
         }
 
         if let ExprKind::Identifier(name) = &expr.kind {
-            if self
+            if let Some(canonical_name) = self
                 .legacy
                 .canonical_value_name(self.current_source_context_id(), expr.span)
-                .is_some()
             {
+                if let Some(symbol) = self.scope.resolve(canonical_name) {
+                    return symbol.series_id;
+                }
                 return (pine_type.qualifier == Qualifier::Series).then(|| self.alloc_series());
             }
             return self

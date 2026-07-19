@@ -1,4 +1,6 @@
-use pine_ir::{HirExpr, HirExprKind, HirHistoryOffset, HirStmtKind};
+use pine_ir::{
+    HirExpr, HirExprKind, HirHistoryOffset, HirStmtKind, PineType, Qualifier, ValueKind,
+};
 use pine_syntax::{SourceFile, Span};
 
 use crate::LegacyTranslationKind;
@@ -54,6 +56,13 @@ fn analyze_legacy(source: &str) -> crate::Analysis {
 
 fn analyze_production(source: &str) -> crate::Analysis {
     crate::analyze_source(&SourceFile::new("legacy-production.pine", source))
+}
+
+fn analyze_catalog_without_admission(source: &str) -> crate::Analysis {
+    crate::analysis::analyze_source_with_legacy_rules(
+        &SourceFile::new("legacy-catalog-test.pine", source),
+        crate::legacy::LEGACY_RULES,
+    )
 }
 
 fn normalized_hir(source: &str) -> pine_ir::HirProgram {
@@ -1041,5 +1050,318 @@ fn legacy_output_compatibility_does_not_weaken_modern_unique_types() {
             assert!(analysis.compatibility.legacy_translations.is_empty());
             assert!(analysis.compatibility.legacy_emulations.is_empty());
         }
+    }
+}
+
+#[test]
+fn v3_core_fixture_lowers_names_constants_declaration_and_na_to_canonical_hir() {
+    let source = include_str!("../../../../tests/fixtures/legacy/v3/runtime/core_legacy.pine");
+    let analysis = analyze_production(source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.as_ref().expect("v3 core HIR");
+    let value = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "value")
+        .expect("inferred v3 value symbol");
+    assert_eq!(
+        value.pine_type,
+        PineType::new(Qualifier::Series, ValueKind::Float)
+    );
+
+    let translations = analysis
+        .compatibility
+        .legacy_translations
+        .iter()
+        .map(|translation| {
+            (
+                translation.source_feature.as_str(),
+                translation.canonical_feature.as_str(),
+            )
+        })
+        .collect::<Vec<_>>();
+    for expected in [
+        ("study", "indicator"),
+        ("integer", "input.int"),
+        ("input", "input.int"),
+        ("ema", "ta.ema"),
+        ("sma", "ta.sma"),
+        ("red", "color.red"),
+        ("color", "color.new"),
+        ("histogram", "plot.style_histogram"),
+        ("n", "bar_index"),
+        ("interval", "timeframe.multiplier"),
+        ("blue", "color.blue"),
+        ("gray", "color.gray"),
+        ("dotted", "hline.style_dotted"),
+    ] {
+        assert!(translations.contains(&expected), "missing {expected:?}");
+    }
+    assert_eq!(
+        analysis
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .filter(|emulation| emulation.feature == "v3.untyped_na")
+            .count(),
+        1
+    );
+}
+
+#[test]
+fn selected_pre_v4_constants_resolve_only_through_v3() {
+    let aliases = [
+        ("aqua", "color.aqua"),
+        ("black", "color.black"),
+        ("blue", "color.blue"),
+        ("fuchsia", "color.fuchsia"),
+        ("gray", "color.gray"),
+        ("green", "color.green"),
+        ("lime", "color.lime"),
+        ("maroon", "color.maroon"),
+        ("navy", "color.navy"),
+        ("olive", "color.olive"),
+        ("orange", "color.orange"),
+        ("purple", "color.purple"),
+        ("red", "color.red"),
+        ("silver", "color.silver"),
+        ("teal", "color.teal"),
+        ("white", "color.white"),
+        ("yellow", "color.yellow"),
+        ("area", "plot.style_area"),
+        ("areabr", "plot.style_areabr"),
+        ("circles", "plot.style_circles"),
+        ("columns", "plot.style_columns"),
+        ("cross", "plot.style_cross"),
+        ("histogram", "plot.style_histogram"),
+        ("line", "plot.style_line"),
+        ("linebr", "plot.style_linebr"),
+        ("stepline", "plot.style_stepline"),
+        ("dashed", "hline.style_dashed"),
+        ("dotted", "hline.style_dotted"),
+        ("solid", "hline.style_solid"),
+        ("sunday", "dayofweek.sunday"),
+        ("monday", "dayofweek.monday"),
+        ("tuesday", "dayofweek.tuesday"),
+        ("wednesday", "dayofweek.wednesday"),
+        ("thursday", "dayofweek.thursday"),
+        ("friday", "dayofweek.friday"),
+        ("saturday", "dayofweek.saturday"),
+        ("period", "timeframe.period"),
+        ("isdaily", "timeframe.isdaily"),
+        ("isdwm", "timeframe.isdwm"),
+        ("isintraday", "timeframe.isintraday"),
+        ("isminutes", "timeframe.isminutes"),
+        ("isseconds", "timeframe.isseconds"),
+        ("ismonthly", "timeframe.ismonthly"),
+        ("isweekly", "timeframe.isweekly"),
+        ("interval", "timeframe.multiplier"),
+        ("ticker", "syminfo.ticker"),
+        ("tickerid", "syminfo.tickerid"),
+        ("n", "bar_index"),
+        ("bool", "input.bool"),
+        ("float", "input.float"),
+        ("integer", "input.int"),
+        ("resolution", "input.timeframe"),
+        ("session", "input.session"),
+        ("source", "input.source"),
+        ("string", "input.string"),
+        ("symbol", "input.symbol"),
+    ];
+
+    for version in 1..=3 {
+        for (alias, canonical) in aliases {
+            if alias == "isseconds" && version < 3 {
+                continue;
+            }
+            let analysis = analyze_catalog_without_admission(&format!(
+                "//@version={version}\nvalue = {alias}\n"
+            ));
+            assert!(
+                analysis.diagnostics.is_empty(),
+                "v{version} {alias}: {:?}",
+                analysis.diagnostics
+            );
+            assert!(
+                analysis
+                    .compatibility
+                    .legacy_translations
+                    .iter()
+                    .any(|translation| translation.source_feature == alias
+                        && translation.canonical_feature == canonical)
+            );
+        }
+    }
+
+    for version in 4..=6 {
+        for (alias, _) in aliases {
+            let analysis = analyze_catalog_without_admission(&format!(
+                "//@version={version}\nvalue = {alias}\n"
+            ));
+            assert!(!analysis.diagnostics.is_empty(), "v{version} {alias}");
+            assert!(analysis.compatibility.legacy_translations.is_empty());
+        }
+    }
+}
+
+#[test]
+fn v3_color_helper_is_versioned_and_user_symbols_still_shadow_other_aliases() {
+    for version in 1..=3 {
+        let analysis = analyze_catalog_without_admission(&format!(
+            "//@version={version}\nshade = color(red, 50)\n"
+        ));
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .legacy_translations
+                .iter()
+                .any(|translation| translation.source_feature == "color"
+                    && translation.canonical_feature == "color.new")
+        );
+    }
+
+    let shadowed = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v3/sema/shadowing.pine"
+    ));
+    assert!(
+        shadowed.diagnostics.is_empty(),
+        "{:?}",
+        shadowed.diagnostics
+    );
+    for name in [
+        "ema",
+        "red",
+        "n",
+        "interval",
+        "integer",
+        "histogram",
+        "dotted",
+        "monday",
+        "period",
+        "isdaily",
+        "ticker",
+        "tickerid",
+    ] {
+        assert!(
+            shadowed
+                .compatibility
+                .legacy_translations
+                .iter()
+                .all(|translation| translation.source_feature != name),
+            "shadowed {name} was translated"
+        );
+    }
+}
+
+#[test]
+fn v3_declaration_input_and_output_signatures_stay_version_specific() {
+    let adapted = analyze_production(
+        "//@version=3\nstudy(\"adapted output\")\nplot(close, color=red, style=5, transp=25)\n",
+    );
+    assert!(adapted.diagnostics.is_empty(), "{:?}", adapted.diagnostics);
+    for feature in ["plot.transp", "plot.numeric_style"] {
+        assert!(
+            adapted
+                .compatibility
+                .legacy_emulations
+                .iter()
+                .any(|item| { item.feature == feature && item.behavior.contains("Pine v3") })
+        );
+    }
+
+    for source in [
+        "//@version=3\nstudy(\"too wide\", \"wide\", false, 2, true)\nplot(close)\n",
+        "//@version=3\nstudy(\"format\", format=format.price)\nplot(close)\n",
+        "//@version=3\nstudy(\"input\")\nx=input(1, tooltip=\"new\")\nplot(x)\n",
+        "//@version=3\nstudy(\"plot\")\nplot(close, display=display.all)\n",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v3/unsupported/later_signature_arguments.pine"
+        ),
+    ] {
+        let analysis = analyze_production(source);
+        assert!(!analysis.diagnostics.is_empty(), "{source}");
+        assert!(analysis.hir.is_none());
+    }
+
+    let v4 = analyze_production(
+        "//@version=4\nstudy(\"v4\", format=format.price)\nx=input(1, tooltip=\"ok\")\nplot(x, display=display.all)\n",
+    );
+    assert!(v4.diagnostics.is_empty(), "{:?}", v4.diagnostics);
+}
+
+#[test]
+fn v3_untyped_na_infers_only_one_stable_scalar_type() {
+    let scalar = analyze_production(
+        r#"//@version=3
+study("v3 scalar na")
+i = na
+i := 1
+f = na
+f := close
+b = na
+b := true
+s = na
+s := "text"
+c = na
+c := red
+plot(i + f + (b ? 1 : 0))
+"#,
+    );
+    assert!(scalar.diagnostics.is_empty(), "{:?}", scalar.diagnostics);
+    let hir = scalar.hir.expect("scalar v3 HIR");
+    for (name, expected) in [
+        ("i", PineType::new(Qualifier::Const, ValueKind::Int)),
+        ("f", PineType::new(Qualifier::Series, ValueKind::Float)),
+        ("b", PineType::new(Qualifier::Const, ValueKind::Bool)),
+        ("s", PineType::new(Qualifier::Const, ValueKind::String)),
+        ("c", PineType::new(Qualifier::Const, ValueKind::Color)),
+    ] {
+        assert_eq!(
+            hir.symbols
+                .iter()
+                .find(|symbol| symbol.name == name)
+                .expect(name)
+                .pine_type,
+            expected,
+            "{name}"
+        );
+    }
+
+    for source in [
+        include_str!("../../../../tests/fixtures/legacy/v3/unsupported/untyped_na_unresolved.pine"),
+        include_str!("../../../../tests/fixtures/legacy/v3/unsupported/untyped_na_collection.pine"),
+        include_str!("../../../../tests/fixtures/legacy/v3/unsupported/untyped_na_conflict.pine"),
+    ] {
+        let analysis = analyze_production(source);
+        assert_eq!(
+            diagnostic_codes(&analysis),
+            vec!["E_LEGACY_V3_NA_INFERENCE"],
+            "{source}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    for source in [
+        "//@version=4\nstudy(\"strict v4\")\nvalue=na\nvalue:=close\nplot(close)\n",
+        "//@version=6\nindicator(\"strict v6\")\nvalue=na\nvalue:=close\nplot(close)\n",
+    ] {
+        let analysis = analyze_production(source);
+        assert!(!analysis.diagnostics.is_empty());
+        assert!(
+            diagnostic_codes(&analysis)
+                .iter()
+                .all(|code| *code != "E_LEGACY_V3_NA_INFERENCE")
+        );
+        assert!(analysis.compatibility.legacy_emulations.is_empty());
     }
 }

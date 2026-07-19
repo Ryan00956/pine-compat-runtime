@@ -96,6 +96,13 @@ const V4_STUDY_PARAMS: &[StudyParam] = &[
     ),
 ];
 
+const V3_STUDY_PARAMS: &[StudyParam] = &[
+    StudyParam::supported("title", "title"),
+    StudyParam::supported("shorttitle", "shorttitle"),
+    StudyParam::supported("overlay", "overlay"),
+    StudyParam::supported("precision", "precision"),
+];
+
 impl StudyParam {
     const fn supported(source_name: &'static str, canonical_name: &'static str) -> Self {
         Self {
@@ -114,10 +121,18 @@ impl StudyParam {
     }
 }
 
-pub(crate) fn bind_v4_study_args(args: &[CallArg]) -> LegacyStudyBinding {
+pub(crate) fn bind_legacy_study_args(dialect: PineDialect, args: &[CallArg]) -> LegacyStudyBinding {
+    let params = match dialect {
+        PineDialect::V3 => V3_STUDY_PARAMS,
+        PineDialect::V4 => V4_STUDY_PARAMS,
+        PineDialect::V1 | PineDialect::V2 | PineDialect::V5 | PineDialect::V6 => {
+            unreachable!("only Pine v3/v4 study declarations use the legacy binder")
+        }
+    };
+    let version = dialect.version();
     let mut canonical_args = Vec::with_capacity(args.len());
     let mut canonical_arg_names = Vec::with_capacity(args.len());
-    let mut bound = vec![false; V4_STUDY_PARAMS.len()];
+    let mut bound = vec![false; params.len()];
     let mut diagnostics = Vec::new();
     let mut saw_named = false;
     let mut unsupported: Option<(StudyUnsupportedKind, Span)> = None;
@@ -125,13 +140,11 @@ pub(crate) fn bind_v4_study_args(args: &[CallArg]) -> LegacyStudyBinding {
     for (arg_index, arg) in args.iter().enumerate() {
         let param_index = if let Some(name) = arg.name.as_deref() {
             saw_named = true;
-            let Some(param_index) = V4_STUDY_PARAMS
-                .iter()
-                .position(|param| param.source_name == name)
+            let Some(param_index) = params.iter().position(|param| param.source_name == name)
             else {
                 diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_NAME",
-                    format!("`study` has no argument named `{name}` in Pine v4"),
+                    format!("`study` has no argument named `{name}` in Pine v{version}"),
                     arg.span,
                 ));
                 continue;
@@ -141,17 +154,19 @@ pub(crate) fn bind_v4_study_args(args: &[CallArg]) -> LegacyStudyBinding {
             if saw_named {
                 diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_ORDER",
-                    "positional arguments cannot follow named arguments in Pine v4 `study`",
+                    format!(
+                        "positional arguments cannot follow named arguments in Pine v{version} `study`"
+                    ),
                     arg.span,
                 ));
                 continue;
             }
-            if arg_index >= V4_STUDY_PARAMS.len() {
+            if arg_index >= params.len() {
                 diagnostics.push(Diagnostic::error(
                     "E_CALL_ARITY",
                     format!(
-                        "`study` expects at most {} argument(s) in Pine v4, got {}",
-                        V4_STUDY_PARAMS.len(),
+                        "`study` expects at most {} argument(s) in Pine v{version}, got {}",
+                        params.len(),
                         args.len()
                     ),
                     arg.span,
@@ -161,7 +176,7 @@ pub(crate) fn bind_v4_study_args(args: &[CallArg]) -> LegacyStudyBinding {
             arg_index
         };
 
-        let param = V4_STUDY_PARAMS[param_index];
+        let param = params[param_index];
         if bound[param_index] {
             diagnostics.push(Diagnostic::error(
                 "E_CALL_ARG_DUPLICATE",
@@ -202,7 +217,7 @@ pub(crate) fn bind_v4_study_args(args: &[CallArg]) -> LegacyStudyBinding {
     if !bound[0] {
         diagnostics.push(Diagnostic::error(
             "E_CALL_ARITY",
-            "`study` is missing required Pine v4 argument `title`",
+            format!("`study` is missing required Pine v{version} argument `title`"),
             args.first().map_or_else(Span::default, |arg| arg.span),
         ));
     }
@@ -285,7 +300,12 @@ pub(crate) fn legacy_admission_failure(
                 .first()
                 .map_or_else(|| Span::new(0, 0), |statement| statement.span),
         }),
-        [declaration] if declaration.name == "study" && dialect == PineDialect::V4 => None,
+        [declaration]
+            if declaration.name == "study"
+                && matches!(dialect, PineDialect::V3 | PineDialect::V4) =>
+        {
+            None
+        }
         [declaration] if declaration.name == "study" => Some(LegacyAdmissionFailure {
             code: "E_LEGACY_INDICATOR_DECLARATION",
             message: format!(

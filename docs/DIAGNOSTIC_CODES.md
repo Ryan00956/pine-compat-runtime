@@ -48,12 +48,12 @@ improved over time, but codes should remain stable once published.
 - `E_LANGUAGE_VERSION_UNSUPPORTED`: the selected Pine language version is
   outside the supported closed range v1 through v6.
 - `E_LEGACY_INDICATOR_DECLARATION`: a legacy source has a missing, mixed, modern,
-  or otherwise inadmissible indicator declaration; v1-v3 `study()` lowering is
-  still deferred, while the verified v4 `study()` subset is executable.
-- `E_LEGACY_INPUT_OVERLOAD`: a Pine v4 `input()` call has an ambiguous,
+  or otherwise inadmissible indicator declaration; v1-v2 `study()` lowering is
+  still deferred, while the verified v3/v4 `study()` subsets are executable.
+- `E_LEGACY_INPUT_OVERLOAD`: a Pine v3/v4 `input()` call has an ambiguous,
   uninferable, forged, or unsupported historical type selection; the call is
   rejected before canonical lowering or runtime.
-- `E_LEGACY_OUTPUT_ARGUMENT`: a Pine v4 output call uses an invalid historical
+- `E_LEGACY_OUTPUT_ARGUMENT`: a Pine v3/v4 output call uses an invalid historical
   transparency/style value or mixes incompatible fill endpoints; the call is
   rejected before canonical lowering or runtime.
 - `E_LEGACY_RSI_OVERLOAD`: a v1-v4 `rsi(x, y)` call cannot select the
@@ -64,6 +64,10 @@ improved over time, but codes should remain stable once published.
   alignment is not guessed from series metadata.
 - `E_LEGACY_STRATEGY_OUT_OF_SCOPE`: a v1-v4 source declares `strategy()` or
   references `strategy.*`; legacy strategy execution is outside this project.
+- `E_LEGACY_V3_NA_INFERENCE`: a Pine v3 untyped `na` declaration cannot infer
+  exactly one stable scalar type from a later assignment because it is
+  unresolved, collection/object-valued, or conflicts with another assignment;
+  the declaration is rejected without relaxing v4-v6 typing.
 - `E_ASSIGN_TYPE`: reassignment type mismatch.
 - `E_BRANCH_RETURN`: branch expression body does not end with an expression.
 - `E_BRANCH_TYPE`: ternary branch type mismatch.

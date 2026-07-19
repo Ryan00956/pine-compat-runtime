@@ -45,3 +45,9 @@ families, primitive plot/hline styles, transparency defaults and alpha
 precedence, visual metadata, normalized colors, and historical execution.
 `v4/unsupported/output_arguments.pine` keeps later-only output arguments behind
 an analysis-time diagnostic.
+
+Phase 8 adds paired `v3/runtime/core_*` fixtures for the executable v3 name,
+constant, declaration, input, output, chart-metadata, and untyped-`na` slice.
+`v3/sema/shadowing.pine` proves that source declarations retain precedence over
+fallback aliases, while `v3/unsupported` owns stable fixtures for ambiguous
+`na` inference and later-only call parameters.

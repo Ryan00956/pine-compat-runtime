@@ -1,6 +1,7 @@
 use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{CallArg, Diagnostic, Expr, Span};
 
+use super::PineDialect;
 use super::lowering::LegacyCallArgRewrite;
 
 pub(crate) const LEGACY_INPUT_DEFERRED_REASON: &str = "legacy input signatures require version-specific type constants and argument binding that are not implemented yet";
@@ -93,6 +94,38 @@ const SOURCE_PARAMS: &[InputParam] = &[
     InputParam::kept("tooltip"),
 ];
 
+const V3_SIMPLE_PARAMS: &[InputParam] = &[
+    InputParam::kept("defval"),
+    InputParam::kept("title"),
+    InputParam::removed("type"),
+    InputParam::kept("confirm"),
+];
+
+const V3_NUMERIC_PARAMS: &[InputParam] = &[
+    InputParam::kept("defval"),
+    InputParam::kept("title"),
+    InputParam::removed("type"),
+    InputParam::kept("minval"),
+    InputParam::kept("maxval"),
+    InputParam::kept("confirm"),
+    InputParam::kept("step"),
+    InputParam::kept("options"),
+];
+
+const V3_STRING_PARAMS: &[InputParam] = &[
+    InputParam::kept("defval"),
+    InputParam::kept("title"),
+    InputParam::removed("type"),
+    InputParam::kept("confirm"),
+    InputParam::kept("options"),
+];
+
+const V3_SOURCE_PARAMS: &[InputParam] = &[
+    InputParam::kept("defval"),
+    InputParam::kept("title"),
+    InputParam::removed("type"),
+];
+
 impl InputParam {
     const fn kept(name: &'static str) -> Self {
         Self {
@@ -161,15 +194,15 @@ impl LegacyInputKind {
 
     fn from_source_name(name: &str) -> Option<Self> {
         Some(match name {
-            "input.bool" => Self::Bool,
+            "bool" | "input.bool" => Self::Bool,
             "input.color" => Self::Color,
-            "input.integer" => Self::Integer,
-            "input.float" => Self::Float,
-            "input.string" => Self::String,
-            "input.symbol" => Self::Symbol,
-            "input.resolution" => Self::Resolution,
-            "input.session" => Self::Session,
-            "input.source" => Self::Source,
+            "integer" | "input.integer" => Self::Integer,
+            "float" | "input.float" => Self::Float,
+            "string" | "input.string" => Self::String,
+            "symbol" | "input.symbol" => Self::Symbol,
+            "resolution" | "input.resolution" => Self::Resolution,
+            "session" | "input.session" => Self::Session,
+            "source" | "input.source" => Self::Source,
             "input.time" => Self::Time,
             "input.price" => Self::Price,
             _ => return None,
@@ -206,18 +239,28 @@ impl LegacyInputKind {
         }
     }
 
-    const fn params(self) -> &'static [InputParam] {
-        match self {
-            Self::Integer | Self::Float => NUMERIC_PARAMS,
-            Self::String => STRING_PARAMS,
-            Self::Source => SOURCE_PARAMS,
-            Self::Bool
-            | Self::Color
-            | Self::Symbol
-            | Self::Resolution
-            | Self::Session
-            | Self::Time
-            | Self::Price => SIMPLE_PARAMS,
+    const fn params(self, dialect: PineDialect) -> &'static [InputParam] {
+        match (dialect, self) {
+            (PineDialect::V3, Self::Integer | Self::Float) => V3_NUMERIC_PARAMS,
+            (PineDialect::V3, Self::String) => V3_STRING_PARAMS,
+            (PineDialect::V3, Self::Source) => V3_SOURCE_PARAMS,
+            (PineDialect::V3, Self::Bool | Self::Symbol | Self::Resolution | Self::Session) => {
+                V3_SIMPLE_PARAMS
+            }
+            (PineDialect::V3, Self::Color | Self::Time | Self::Price) => V3_SIMPLE_PARAMS,
+            (_, Self::Integer | Self::Float) => NUMERIC_PARAMS,
+            (_, Self::String) => STRING_PARAMS,
+            (_, Self::Source) => SOURCE_PARAMS,
+            (
+                _,
+                Self::Bool
+                | Self::Color
+                | Self::Symbol
+                | Self::Resolution
+                | Self::Session
+                | Self::Time
+                | Self::Price,
+            ) => SIMPLE_PARAMS,
         }
     }
 }
@@ -233,11 +276,13 @@ pub(crate) fn explicit_type_expr(args: &[CallArg]) -> Option<&Expr> {
         .map(|arg| &arg.value)
 }
 
-pub(crate) fn bind_v4_input_args(
+pub(crate) fn bind_legacy_input_args(
+    dialect: PineDialect,
     args: &[CallArg],
     arg_types: &[Option<PineType>],
     explicit_type_marker: Option<&str>,
 ) -> LegacyInputBinding {
+    let version = dialect.version();
     let defval_index = args
         .iter()
         .position(|arg| arg.name.as_deref() == Some("defval"))
@@ -251,14 +296,18 @@ pub(crate) fn bind_v4_input_args(
         let Some(marker) = explicit_type_marker else {
             return LegacyInputBinding::Invalid(vec![Diagnostic::error(
                 "E_LEGACY_INPUT_OVERLOAD",
-                "Pine v4 `input` argument `type` must be one of the versioned input.* type constants",
+                format!(
+                    "Pine v{version} `input` argument `type` must be one of the versioned input type constants"
+                ),
                 args[type_index].span,
             )]);
         };
         let Some(kind) = LegacyInputKind::from_marker(marker) else {
             return LegacyInputBinding::Invalid(vec![Diagnostic::error(
                 "E_LEGACY_INPUT_OVERLOAD",
-                "Pine v4 `input` argument `type` does not resolve to a supported input.* type constant",
+                format!(
+                    "Pine v{version} `input` argument `type` does not resolve to a supported input type constant"
+                ),
                 args[type_index].span,
             )]);
         };
@@ -267,14 +316,16 @@ pub(crate) fn bind_v4_input_args(
         let Some(defval_index) = defval_index else {
             return LegacyInputBinding::Invalid(vec![Diagnostic::error(
                 "E_CALL_ARITY",
-                "`input` is missing required Pine v4 argument `defval`",
+                format!("`input` is missing required Pine v{version} argument `defval`"),
                 args.first().map_or_else(Span::default, |arg| arg.span),
             )]);
         };
         let Some(defval_type) = arg_types.get(defval_index).copied().flatten() else {
             return LegacyInputBinding::Invalid(vec![Diagnostic::error(
                 "E_LEGACY_INPUT_OVERLOAD",
-                "cannot infer the Pine v4 `input` overload from an invalid default value",
+                format!(
+                    "cannot infer the Pine v{version} `input` overload from an invalid default value"
+                ),
                 args[defval_index].span,
             )]);
         };
@@ -282,7 +333,7 @@ pub(crate) fn bind_v4_input_args(
             return LegacyInputBinding::Invalid(vec![Diagnostic::error(
                 "E_LEGACY_INPUT_OVERLOAD",
                 format!(
-                    "cannot infer the Pine v4 `input` overload from {:?} {:?}",
+                    "cannot infer the Pine v{version} `input` overload from {:?} {:?}",
                     defval_type.qualifier, defval_type.kind
                 ),
                 args[defval_index].span,
@@ -291,7 +342,7 @@ pub(crate) fn bind_v4_input_args(
         kind
     };
 
-    let params = kind.params();
+    let params = kind.params(dialect);
     let mut bound = vec![false; params.len()];
     let mut diagnostics = Vec::new();
     let mut saw_named = false;
@@ -312,7 +363,7 @@ pub(crate) fn bind_v4_input_args(
                 diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_NAME",
                     format!(
-                        "`input` has no argument named `{name}` for the selected Pine v4 overload"
+                        "`input` has no argument named `{name}` for the selected Pine v{version} overload"
                     ),
                     arg.span,
                 ));
@@ -323,7 +374,7 @@ pub(crate) fn bind_v4_input_args(
             if saw_named {
                 diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_ORDER",
-                    "positional arguments cannot follow named arguments in Pine v4 `input`",
+                    format!("positional arguments cannot follow named arguments in Pine v{version} `input`"),
                     arg.span,
                 ));
                 continue;
@@ -332,7 +383,7 @@ pub(crate) fn bind_v4_input_args(
                 diagnostics.push(Diagnostic::error(
                     "E_CALL_ARITY",
                     format!(
-                        "selected Pine v4 `input` overload expects at most {} argument(s), got {}",
+                        "selected Pine v{version} `input` overload expects at most {} argument(s), got {}",
                         params.len(),
                         args.len()
                     ),
@@ -386,7 +437,7 @@ pub(crate) fn bind_v4_input_args(
     if !bound.first().copied().unwrap_or(false) {
         diagnostics.push(Diagnostic::error(
             "E_CALL_ARITY",
-            "`input` is missing required Pine v4 argument `defval`",
+            format!("`input` is missing required Pine v{version} argument `defval`"),
             args.first().map_or_else(Span::default, |arg| arg.span),
         ));
     }

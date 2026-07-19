@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added the executable Pine v3 indicator slice. Historical `study`, `input`,
+  `plot`, and `hline` signatures now bind by dialect; pre-v4 colors, the old
+  `color(...)` helper, input types, plot/hline styles, weekdays, chart metadata,
+  `interval`, `ticker`, `tickerid`, and `n` lower to canonical HIR with lexical
+  precedence and v4-v6 isolation. Fixture-backed untyped-`na` declarations
+  infer one stable scalar type from a later assignment or fail with
+  `E_LEGACY_V3_NA_INFERENCE`. Chart metadata follows the supplied symbol and
+  minute/second/day/week/month timeframe, and paired Rust, CLI, Python, and
+  WASM evidence makes all seven original v3 corpus indicators executable.
 - Added executable legacy `security` compatibility through the host-neutral
   request provider. Pine v1/v2 and v3/v4 signatures now bind with their
   historical default lookahead policies, verified bool/`barmerge` gaps and

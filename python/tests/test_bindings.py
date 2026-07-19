@@ -184,6 +184,35 @@ def test_analyze_script_reports_executable_v4_legacy_translations():
     ]
 
 
+def test_analyze_script_reports_executable_v3_names_constants_and_na_inference():
+    source = (
+        ROOT / "tests/fixtures/legacy/v3/runtime/core_legacy.pine"
+    ).read_text()
+    report = pine_compat.analyze_script(source)
+
+    assert report["languageVersion"] == 3
+    assert report["languageVersionOrigin"] == "explicit"
+    assert report["dialect"] == "v3"
+    assert report["scriptMode"] == "legacyIndicator"
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
+    translations = {
+        (item["sourceFeature"], item["canonicalFeature"])
+        for item in report["compatibility"]["legacyTranslations"]
+    }
+    assert {
+        ("study", "indicator"),
+        ("integer", "input.int"),
+        ("color", "color.new"),
+        ("n", "bar_index"),
+        ("interval", "timeframe.multiplier"),
+    } <= translations
+    assert any(
+        item["feature"] == "v3.untyped_na"
+        for item in report["compatibility"]["legacyEmulations"]
+    )
+
+
 def test_analyze_script_reports_v4_legacy_output_adaptations():
     report = pine_compat.analyze_script(
         '//@version=4\nstudy("outputs")\n'
@@ -546,6 +575,22 @@ def test_run_script_returns_legacy_v4_output_contract():
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v3_core_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v3/runtime/core_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v3_core.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/legacy/v3/runtime/core_bars.csv"),
     )
 
     assert result == expected

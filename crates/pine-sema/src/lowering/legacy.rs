@@ -10,7 +10,12 @@ impl Analyzer {
         }
         self.legacy
             .canonical_value_name(self.current_source_context_id(), span)
-            .map(|canonical_name| HirExprKind::Builtin(canonical_name.to_owned()))
+            .map(|canonical_name| {
+                self.scope.resolve(canonical_name).map_or_else(
+                    || HirExprKind::Builtin(canonical_name.to_owned()),
+                    |symbol| HirExprKind::Symbol(symbol.id),
+                )
+            })
     }
 
     #[allow(clippy::too_many_arguments)]

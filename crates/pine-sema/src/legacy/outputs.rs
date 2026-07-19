@@ -3,6 +3,7 @@ use pine_syntax::{CallArg, Diagnostic, Span};
 
 use crate::types::qualifier_at_most;
 
+use super::PineDialect;
 use super::lowering::LegacyCallArgRewrite;
 
 pub(crate) const LEGACY_OUTPUT_DEFERRED_REASON: &str = "legacy output arguments require version-specific style and transparency lowering that is not implemented yet";
@@ -42,6 +43,7 @@ struct OutputParam {
 
 struct StyleArgument<'a> {
     call_name: &'a str,
+    version: u16,
     param_name: &'static str,
     arg_type: Option<PineType>,
     const_string: Option<&'a str>,
@@ -222,6 +224,30 @@ const HLINE_PARAMS: &[OutputParam] = &[
     OutputParam::optional("editable"),
 ];
 
+const V3_PLOT_PARAMS: &[OutputParam] = &[
+    OutputParam::required("series"),
+    OutputParam::optional("title"),
+    OutputParam::optional("color"),
+    OutputParam::optional("linewidth"),
+    OutputParam::plot_style(),
+    OutputParam::optional("trackprice"),
+    OutputParam::transparency(),
+    OutputParam::optional("histbase"),
+    OutputParam::optional("offset"),
+    OutputParam::optional("join"),
+    OutputParam::optional("editable"),
+    OutputParam::optional("show_last"),
+];
+
+const V3_HLINE_PARAMS: &[OutputParam] = &[
+    OutputParam::required("price"),
+    OutputParam::optional("title"),
+    OutputParam::optional("color"),
+    OutputParam::hline_style(),
+    OutputParam::optional("linewidth"),
+    OutputParam::optional("editable"),
+];
+
 const FILL_PLOT_PARAMS: &[OutputParam] = &[
     OutputParam::required("plot1"),
     OutputParam::required("plot2"),
@@ -261,10 +287,18 @@ const HLINE_STYLES: &[&str] = &[
 ];
 
 fn params_for_call(
+    dialect: PineDialect,
     name: &str,
     args: &[CallArg],
     arg_types: &[Option<PineType>],
 ) -> Result<&'static [OutputParam], Diagnostic> {
+    if dialect == PineDialect::V3 {
+        return Ok(match name {
+            "plot" => V3_PLOT_PARAMS,
+            "hline" => V3_HLINE_PARAMS,
+            _ => unreachable!("only the Phase 8 v3 output subset is admitted"),
+        });
+    }
     Ok(match name {
         "plot" => PLOT_PARAMS,
         "plotchar" => PLOTCHAR_PARAMS,
@@ -335,14 +369,16 @@ fn fill_params(
     })
 }
 
-pub(crate) fn bind_v4_output_args(
+pub(crate) fn bind_legacy_output_args(
+    dialect: PineDialect,
     name: &str,
     args: &[CallArg],
     arg_types: &[Option<PineType>],
     const_strings: &[Option<String>],
     const_ints: &[Option<i64>],
 ) -> LegacyOutputBinding {
-    let params = match params_for_call(name, args, arg_types) {
+    let version = dialect.version();
+    let params = match params_for_call(dialect, name, args, arg_types) {
         Ok(params) => params,
         Err(diagnostic) => return LegacyOutputBinding::Invalid(vec![diagnostic]),
     };
@@ -375,7 +411,7 @@ pub(crate) fn bind_v4_output_args(
             else {
                 diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_NAME",
-                    format!("`{name}` has no argument named `{arg_name}` in Pine v4"),
+                    format!("`{name}` has no argument named `{arg_name}` in Pine v{version}"),
                     arg.span,
                 ));
                 continue;
@@ -386,7 +422,7 @@ pub(crate) fn bind_v4_output_args(
                 diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_ORDER",
                     format!(
-                        "positional arguments cannot follow named arguments in Pine v4 `{name}`"
+                        "positional arguments cannot follow named arguments in Pine v{version} `{name}`"
                     ),
                     arg.span,
                 ));
@@ -396,7 +432,7 @@ pub(crate) fn bind_v4_output_args(
                 diagnostics.push(Diagnostic::error(
                     "E_CALL_ARITY",
                     format!(
-                        "`{name}` expects at most {} argument(s) in Pine v4, got {}",
+                        "`{name}` expects at most {} argument(s) in Pine v{version}, got {}",
                         params.len(),
                         args.len()
                     ),
@@ -426,7 +462,7 @@ pub(crate) fn bind_v4_output_args(
             requires_adaptation = true;
             if !arg_type.is_some_and(is_legacy_transparency_type) {
                 diagnostics.push(output_error(
-                    format!("Pine v4 `{name}` argument `transp` expects an input integer or `na`"),
+                    format!("Pine v{version} `{name}` argument `transp` expects an input integer or `na`"),
                     arg.span,
                 ));
             }
@@ -442,6 +478,7 @@ pub(crate) fn bind_v4_output_args(
             OutputParamKind::PlotStyle => validate_style(
                 StyleArgument {
                     call_name: name,
+                    version,
                     param_name: "style",
                     arg_type,
                     const_string: const_strings.get(arg_index).and_then(Option::as_deref),
@@ -455,6 +492,7 @@ pub(crate) fn bind_v4_output_args(
             OutputParamKind::HLineStyle => validate_style(
                 StyleArgument {
                     call_name: name,
+                    version,
                     param_name: "linestyle",
                     arg_type,
                     const_string: const_strings.get(arg_index).and_then(Option::as_deref),
@@ -501,7 +539,7 @@ pub(crate) fn bind_v4_output_args(
             diagnostics.push(Diagnostic::error(
                 "E_CALL_ARITY",
                 format!(
-                    "`{name}` is missing required Pine v4 argument `{}`",
+                    "`{name}` is missing required Pine v{version} argument `{}`",
                     param.source_name
                 ),
                 args.first().map_or_else(Span::default, |arg| arg.span),
@@ -544,7 +582,7 @@ fn validate_style(
     };
     if !valid {
         diagnostics.push(output_error(
-            format!("Pine v4 `{}` argument `{}` must be a documented style constant or an input integer in the supported style range", argument.call_name, argument.param_name),
+            format!("Pine v{} `{}` argument `{}` must be a documented style constant or an input integer in the supported style range", argument.version, argument.call_name, argument.param_name),
             argument.span,
         ));
     }

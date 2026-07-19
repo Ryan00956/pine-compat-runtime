@@ -154,6 +154,32 @@ impl Analyzer {
         {
             return result;
         }
+        if is_legacy_call
+            && !is_shadowed_legacy_call
+            && let Some(crate::legacy::LegacyResolution::ExactAlias(rule)) =
+                self.legacy.resolve_call(&name)
+        {
+            let canonical_name = rule
+                .canonical_name
+                .expect("validated exact legacy alias has a canonical target");
+            let signature = pine_builtins::get_phase_1_builtin(canonical_name)
+                .expect("validated exact legacy function target is registered");
+            let source_context_id = self.current_source_context_id();
+            self.legacy.record_call_translation(
+                &mut self.compatibility,
+                source_context_id,
+                callee.span,
+                rule,
+            );
+            return self.analyze_registered_builtin(
+                canonical_name,
+                signature,
+                callee.span,
+                span,
+                args,
+                &arg_types,
+            );
+        }
 
         if let Some(result) = self.analyze_array_call_result_method(callee, args, span, &arg_types)
         {
@@ -269,7 +295,7 @@ impl Analyzer {
                 {
                     unreachable!("supported focused legacy rule has no analyzer owner")
                 }
-                let bound = match self.legacy.bind_v4_study_args(args) {
+                let bound = match self.legacy.bind_legacy_study_args(args) {
                     crate::legacy::LegacyStudyBinding::Bound(bound) => bound,
                     crate::legacy::LegacyStudyBinding::Invalid(diagnostics) => {
                         self.diagnostics.extend(diagnostics);

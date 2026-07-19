@@ -58,7 +58,7 @@ fn explicit_v1_through_v6_report_closed_dialects() {
             analysis.compatibility.dialect.map(PineDialect::version),
             Some(version)
         );
-        if version <= 3 {
+        if version <= 2 {
             assert_eq!(
                 diagnostic_codes(&analysis),
                 vec!["E_LEGACY_INDICATOR_DECLARATION"]

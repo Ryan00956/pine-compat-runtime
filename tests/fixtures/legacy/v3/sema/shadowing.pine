@@ -1,0 +1,16 @@
+//@version=3
+study("shadowed v3 names")
+ema(source, length) => source
+red = color.blue
+n = 10
+interval = 2
+integer = "local"
+histogram = "local plot style"
+dotted = "local hline style"
+monday = 1
+period = "local timeframe"
+isdaily = false
+ticker = "local ticker"
+tickerid = "local ticker id"
+plot(ema(close, 2), color=red)
+plot(n + interval)
