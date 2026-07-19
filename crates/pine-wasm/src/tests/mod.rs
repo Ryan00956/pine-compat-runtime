@@ -182,6 +182,40 @@ fn analyzes_v4_legacy_output_adaptations() {
 }
 
 #[test]
+fn analyzes_v4_legacy_expression_semantics() {
+    let output = analyze_script(
+        "//@version=4\nstudy(\"expressions\")\nplot(iff(close > open, high, low))\nplot(offset(close, 1))\nplot(rsi(close, open))\n",
+    );
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(parsed["executable"], serde_json::json!(true));
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    let translations = parsed["compatibility"]["legacyTranslations"]
+        .as_array()
+        .expect("legacy translations");
+    assert!(translations.iter().any(|item| {
+        item["sourceFeature"] == "iff"
+            && item["canonicalFeature"] == "eager select"
+            && item["kind"] == "expressionDesugar"
+    }));
+    assert!(translations.iter().any(|item| {
+        item["sourceFeature"] == "offset"
+            && item["canonicalFeature"] == "history access"
+            && item["kind"] == "expressionDesugar"
+    }));
+    assert!(translations.iter().any(|item| {
+        item["sourceFeature"] == "rsi"
+            && item["canonicalFeature"] == "legacy RSI two-series formula"
+            && item["kind"] == "expressionDesugar"
+    }));
+    let emulations = parsed["compatibility"]["legacyEmulations"]
+        .as_array()
+        .expect("legacy emulations");
+    assert!(emulations.iter().any(|item| item["feature"] == "iff"));
+    assert!(emulations.iter().any(|item| item["feature"] == "rsi"));
+}
+
+#[test]
 fn runs_script_from_csv_to_json() {
     let output = run_script_csv(
         "//@version=5\nindicator(\"demo\")\nplot(close)\n",
@@ -490,6 +524,39 @@ fn run_script_csv_returns_legacy_v4_output_contract() {
     .expect("legacy v4 output fixture should run");
 
     assert_snapshot("runtime_legacy_v4_outputs.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_legacy_v4_expression_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/expressions_legacy.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("legacy v4 expression fixture should run");
+
+    assert_snapshot("runtime_legacy_v4_expressions.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_legacy_v4_strict_logical_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/logical_strict_legacy.pine"),
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/logical_strict_bars.csv"),
+    )
+    .expect("legacy v4 strict logical fixture should run");
+
+    assert_snapshot("runtime_legacy_v4_logical_strict.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_legacy_v4_session_default_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/session_defaults_legacy.pine"),
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/session_weekend_bars.csv"),
+    )
+    .expect("legacy v4 session default fixture should run");
+
+    assert_snapshot("runtime_legacy_v4_session_defaults.json", &output);
 }
 
 #[test]

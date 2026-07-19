@@ -34,6 +34,47 @@ rollback, and later `varip` behavior. This should be a separate milestone.
 The first public releases should either reject realtime-only features or mark
 them as approximate.
 
+## Legacy Indicator Expression Semantics
+
+Pine v4 indicators use version-selected semantics where a current-language
+rewrite would change results. These rules are carried in HIR or selected from
+the HIR language version, so CLI, Python, WASM, historical, incremental, and
+realtime execution use the same contract. They never activate in v5/v6 source
+resolution, and they do not enable a legacy strategy path.
+
+`iff(condition, result1, result2)` binds the historical parameter names and
+evaluates `condition`, `result1`, and `result2` exactly once in that order.
+Both result expressions therefore advance their independent stateful callsites
+on every reached call. A true condition selects `result1`; false or `na`
+selects `result2`. The current compatibility slice accepts scalar numeric,
+bool, string, color, and `na` results and merges their types and qualifiers
+with the same branch rules used elsewhere. Ordinary `?:` remains lazy.
+
+`offset(source, offset)` binds the historical `source`/`offset` signature and
+lowers structurally to the native history HIR node rather than a runtime helper.
+It therefore shares constant-retention analysis, guarded dynamic integer
+offsets, `max_bars_back`, `na`, negative-offset diagnostics, expression-series
+storage, and realtime rollback with `source[offset]`.
+
+Pine v4 `rsi(x, y)` selects its overload from the second argument's analyzed
+type. A non-series integer uses canonical `ta.rsi(source, length)`. A series
+integer or any numeric float uses the historical two-series formula
+`100 - 100 / (1 + x / y)` and the runtime's ordinary finite arithmetic and
+`na` propagation. Non-numeric or otherwise ambiguous forms fail analysis with
+`E_LEGACY_RSI_OVERLOAD`; they do not guess a length overload.
+
+For `time()` and `time_close()`, a session string without an explicit day
+suffix uses Monday through Friday when the HIR language version is v1-v4 and
+all seven days for v5/v6. An explicit `:days` suffix always wins, and `24x7`
+always means all days. `input.session` strings are retained verbatim; the
+effective default-day policy is passed separately to session parsing.
+
+`and` and `or` evaluate both operands in v1-v5 and short-circuit only in v6.
+This includes stateful calls in the right operand. The v4 aliases `change`,
+`highest`, `lowest`, `max`, and `min` lower respectively to `ta.change`,
+`ta.highest`, `ta.lowest`, `math.max`, and `math.min` only after user-defined
+and lexical resolution fails.
+
 ## Strategy Mode
 
 `strategy(...)` selects strategy mode for historical execution.

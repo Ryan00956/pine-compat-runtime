@@ -139,13 +139,18 @@ impl Analyzer {
             .map(|arg| self.analyze_expr(&arg.value))
             .collect();
 
-        if let Some(guard) = self.legacy.registered_call_guard(&name, callee.span, args) {
-            self.unsupported(guard.feature, guard.reason, guard.span);
-            return None;
-        }
-
-        if let FocusedLegacyCallAnalysis::Analyzed(result) =
-            self.analyze_focused_legacy_call(&name, callee.span, span, args, &arg_types)
+        // Scope lookup is only needed for a name that can resolve through the
+        // active legacy catalog. Keeping modern calls off this path also avoids
+        // adding stack pressure to deeply chained v5/v6 call-result analysis.
+        let is_legacy_call = self.legacy.resolve_call(&name).is_some();
+        let is_shadowed_legacy_call = is_legacy_call
+            && (self.functions.contains_key(&name)
+                || (matches!(callee.kind, ExprKind::Identifier(_))
+                    && self.scope.resolve(&name).is_some()));
+        if is_legacy_call
+            && !is_shadowed_legacy_call
+            && let FocusedLegacyCallAnalysis::Analyzed(result) =
+                self.analyze_focused_legacy_call(&name, callee.span, span, args, &arg_types)
         {
             return result;
         }

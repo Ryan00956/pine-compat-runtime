@@ -240,3 +240,269 @@ plot(close, color=color.blue, transp=na)
         assert_eq!(result.plots[0].colors, vec![PineValue::Color(expected)]);
     }
 }
+
+#[test]
+fn v4_iff_eagerly_advances_both_stateful_results_while_ternary_stays_lazy() {
+    let iff = compile_fixture(
+        "legacy_iff_stateful.pine",
+        r#"//@version=4
+study("stateful iff")
+plot(iff(close > open, ema(high, 2), ema(low, 2)))
+"#,
+    );
+    let ternary = compile_fixture(
+        "legacy_ternary_stateful.pine",
+        r#"//@version=4
+study("lazy ternary")
+plot(close > open ? ema(high, 2) : ema(low, 2))
+"#,
+    );
+    let bars = [
+        bar_ohlc(1.0, 10.0, 1.0, 2.0),
+        bar_ohlc(2.0, 20.0, 2.0, 3.0),
+        bar_ohlc(3.0, 15.0, 5.0, 2.0),
+        bar_ohlc(4.0, 14.0, 6.0, 3.0),
+    ];
+
+    let iff_result = run_historical(&iff, &bars).expect("strict iff run");
+    let ternary_result = run_historical(&ternary, &bars).expect("lazy ternary run");
+    assert_values_close(
+        &iff_result.plots[0].values,
+        &[
+            10.0,
+            16.666_666_666_666_664,
+            3.888_888_888_888_889,
+            5.296_296_296_296_296,
+        ],
+    );
+    assert_values_close(
+        &ternary_result.plots[0].values,
+        &[10.0, 16.666_666_666_666_664, 5.0, 5.666_666_666_666_666],
+    );
+}
+
+#[test]
+fn v4_named_iff_evaluates_by_parameter_role_once() {
+    let program = compile_fixture(
+        "legacy_iff_named.pine",
+        r#"//@version=4
+study("named iff")
+plot(iff(result2=lowest(low, 2), condition=close > open, result1=highest(high, 2)))
+"#,
+    );
+    let bars = [
+        bar_ohlc(1.0, 10.0, 1.0, 2.0),
+        bar_ohlc(2.0, 20.0, 2.0, 3.0),
+        bar_ohlc(3.0, 15.0, 5.0, 2.0),
+    ];
+    let result = run_historical(&program, &bars).expect("named iff run");
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Na, PineValue::Float(20.0), PineValue::Float(2.0),]
+    );
+}
+
+#[test]
+fn v4_offset_matches_history_for_constant_and_dynamic_offsets() {
+    let legacy = compile_fixture(
+        "legacy_offset.pine",
+        r#"//@version=4
+study("legacy offset", max_bars_back=3)
+bars = input(1, "Bars")
+plot(offset(close, bars))
+"#,
+    );
+    let canonical = compile_fixture(
+        "canonical_history.pine",
+        r#"//@version=5
+indicator("canonical history", max_bars_back=3)
+bars = input.int(1, "Bars")
+plot(close[bars])
+"#,
+    );
+    assert!(legacy.history.has_dynamic_offsets);
+    assert_eq!(legacy.max_bars_back, Some(3));
+    let bars = [bar(10.0), bar(20.0), bar(30.0), bar(40.0)];
+    assert_eq!(
+        run_historical(&legacy, &bars).expect("legacy offset run"),
+        run_historical(&canonical, &bars).expect("canonical history run")
+    );
+
+    let call_site_id = input_calls(&legacy)[0].call_site_id;
+    let overridden = run_historical_with_input_overrides(
+        &legacy,
+        &bars,
+        InputOverrides::new().with_value(call_site_id, PineValue::Int(2)),
+    )
+    .expect("overridden legacy offset run");
+    assert_eq!(
+        overridden.plots[0].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(10.0),
+            PineValue::Float(20.0)
+        ]
+    );
+
+    let error = run_historical_with_input_overrides(
+        &legacy,
+        &bars,
+        InputOverrides::new().with_value(call_site_id, PineValue::Int(-1)),
+    )
+    .expect_err("negative legacy dynamic offset must use the history guard");
+    assert!(
+        error
+            .message
+            .contains("history offset must be non-negative")
+    );
+}
+
+#[test]
+fn v4_rsi_selects_length_and_two_series_overloads_with_formula_edges() {
+    let legacy_length = compile_fixture(
+        "legacy_rsi_length.pine",
+        r#"//@version=4
+study("legacy RSI length")
+plot(rsi(close, 2))
+"#,
+    );
+    let canonical_length = compile_fixture(
+        "canonical_rsi_length.pine",
+        r#"//@version=5
+indicator("canonical RSI length")
+plot(ta.rsi(close, 2))
+"#,
+    );
+    let legacy_series = compile_fixture(
+        "legacy_rsi_series.pine",
+        r#"//@version=4
+study("legacy RSI series")
+plot(rsi(close, open))
+"#,
+    );
+    let canonical_formula = compile_fixture(
+        "canonical_rsi_formula.pine",
+        r#"//@version=5
+indicator("canonical RSI formula")
+plot(100.0 - (100.0 / (1.0 + close / open)))
+"#,
+    );
+    let bars = [
+        bar_ohlc(2.0, 2.0, 2.0, 2.0),
+        bar_ohlc(2.0, 4.0, 1.0, 4.0),
+        bar_ohlc(2.0, 2.0, 0.0, 0.0),
+        bar_ohlc(0.0, 2.0, 0.0, 2.0),
+    ];
+
+    assert_eq!(
+        run_historical(&legacy_length, &bars)
+            .expect("legacy length RSI")
+            .plots[0]
+            .values,
+        run_historical(&canonical_length, &bars)
+            .expect("canonical length RSI")
+            .plots[0]
+            .values
+    );
+    assert_eq!(
+        run_historical(&legacy_series, &bars)
+            .expect("legacy series RSI")
+            .plots[0]
+            .values,
+        run_historical(&canonical_formula, &bars)
+            .expect("canonical RSI formula")
+            .plots[0]
+            .values
+    );
+}
+
+#[test]
+fn v4_session_defaults_exclude_weekends_without_rewriting_input_strings() {
+    let v4 = compile_fixture(
+        "legacy_session_days.pine",
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/session_defaults_legacy.pine"),
+    );
+    let v5 = compile_fixture(
+        "modern_session_days.pine",
+        r#"//@version=5
+indicator("modern session days")
+s = input.session("0000-2359", "Session")
+plot(na(time("D", s, "UTC")) ? 0 : 1)
+plot(na(time_close("D", s, "UTC")) ? 0 : 1)
+plot(s == "0000-2359" ? 1 : 0)
+"#,
+    );
+    let dated_bar = |time| Bar {
+        time,
+        open: 1.0,
+        high: 1.0,
+        low: 1.0,
+        close: 1.0,
+        volume: 1.0,
+    };
+    let bars = [
+        dated_bar(1_609_459_200_000),
+        dated_bar(1_609_545_600_000),
+        dated_bar(1_609_632_000_000),
+        dated_bar(1_609_718_400_000),
+    ];
+
+    let legacy = run_historical(&v4, &bars).expect("legacy session run");
+    let modern = run_historical(&v5, &bars).expect("modern session run");
+    assert_values_close(&legacy.plots[0].values, &[1.0, 0.0, 0.0, 1.0]);
+    assert_values_close(&legacy.plots[1].values, &[1.0, 0.0, 0.0, 1.0]);
+    assert_values_close(&legacy.plots[2].values, &[1.0, 1.0, 1.0, 1.0]);
+    assert_values_close(&modern.plots[0].values, &[1.0, 1.0, 1.0, 1.0]);
+    assert_values_close(&modern.plots[1].values, &[1.0, 1.0, 1.0, 1.0]);
+}
+
+#[test]
+fn v4_phase6_semantics_match_incremental_and_realtime_confirmed_execution() {
+    let program = compile_fixture(
+        "legacy_phase6_realtime.pine",
+        r#"//@version=4
+study("legacy phase 6 realtime")
+selected = iff(close > open, ema(high, 2), ema(low, 2))
+previous = offset(close, 1)
+up = max(change(close), 0)
+down = -min(change(close), 0)
+ratio = rsi(up, down)
+plot(selected)
+plot(previous)
+plot(ratio)
+"#,
+    );
+    let bars = [
+        bar_ohlc(1.0, 10.0, 1.0, 2.0),
+        bar_ohlc(2.0, 20.0, 2.0, 3.0),
+        bar_ohlc(3.0, 15.0, 5.0, 2.0),
+        bar_ohlc(4.0, 14.0, 6.0, 3.0),
+    ];
+    let historical = run_historical(&program, &bars).expect("phase 6 historical run");
+
+    let mut incremental = RealtimeRuntime::new(&program);
+    for bar in bars.iter().cloned() {
+        incremental
+            .update(BarUpdate::historical(bar))
+            .expect("phase 6 incremental update");
+    }
+    assert_eq!(incremental.result(), historical);
+
+    let mut realtime = RealtimeRuntime::new(&program);
+    for bar in bars[..3].iter().cloned() {
+        realtime
+            .update(BarUpdate::historical(bar))
+            .expect("phase 6 realtime history");
+    }
+    realtime
+        .update(BarUpdate::forming(bar_ohlc(8.0, 30.0, 7.0, 9.0)))
+        .expect("phase 6 forming update");
+    realtime
+        .update(BarUpdate::forming(bars[3]))
+        .expect("phase 6 rolled-back forming update");
+    let confirmed = realtime
+        .update(BarUpdate::confirmed(bars[3]))
+        .expect("phase 6 confirmed update");
+    assert_eq!(confirmed, historical);
+}

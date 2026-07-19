@@ -56,6 +56,9 @@ improved over time, but codes should remain stable once published.
 - `E_LEGACY_OUTPUT_ARGUMENT`: a Pine v4 output call uses an invalid historical
   transparency/style value or mixes incompatible fill endpoints; the call is
   rejected before canonical lowering or runtime.
+- `E_LEGACY_RSI_OVERLOAD`: a v1-v4 `rsi(x, y)` call cannot select the
+  historical length or two-series overload from the analyzed numeric types;
+  the call is rejected instead of guessing modern `ta.rsi` behavior.
 - `E_LEGACY_STRATEGY_OUT_OF_SCOPE`: a v1-v4 source declares `strategy()` or
   references `strategy.*`; legacy strategy execution is outside this project.
 - `E_ASSIGN_TYPE`: reassignment type mismatch.

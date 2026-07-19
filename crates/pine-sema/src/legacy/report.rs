@@ -5,6 +5,7 @@ use crate::compatibility::{
 };
 
 use super::catalog::{LegacyRule, LegacyRuleKind};
+use super::expressions::LegacyExpressionKind;
 
 pub(crate) fn record_exact_translation(
     report: &mut CompatibilityReport,
@@ -101,6 +102,37 @@ pub(crate) fn record_output_translation(
         report.legacy_emulations.push(LegacyEmulation {
             feature: format!("{}.numeric_style", rule.source_name),
             behavior: "Pine v4 numeric output styles are mapped by their documented ordinal to canonical style constants".to_owned(),
+            span,
+        });
+    }
+}
+
+pub(crate) fn record_expression_translation(
+    report: &mut CompatibilityReport,
+    rule: LegacyRule,
+    canonical_feature: &'static str,
+    kind: LegacyExpressionKind,
+    span: Span,
+) {
+    report.legacy_translations.push(LegacyTranslation {
+        source_feature: rule.source_name.to_owned(),
+        canonical_feature: canonical_feature.to_owned(),
+        kind: LegacyTranslationKind::ExpressionDesugar,
+        span,
+    });
+    let behavior = match kind {
+        LegacyExpressionKind::Iff => Some(
+            "Pine v1-v4 iff evaluates condition, result1, and result2 exactly once in parameter order before selecting the result",
+        ),
+        LegacyExpressionKind::RsiSeries => Some(
+            "Pine v1-v4 rsi with a non-simple-integer second argument uses the documented two-series arithmetic formula",
+        ),
+        LegacyExpressionKind::Offset | LegacyExpressionKind::RsiLength => None,
+    };
+    if let Some(behavior) = behavior {
+        report.legacy_emulations.push(LegacyEmulation {
+            feature: rule.source_name.to_owned(),
+            behavior: behavior.to_owned(),
             span,
         });
     }

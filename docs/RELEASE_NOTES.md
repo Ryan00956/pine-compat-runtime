@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added result-faithful Pine v4 expression/default compatibility. Historical
+  `iff` now evaluates condition/result1/result2 once in parameter order,
+  `offset` lowers to native guarded history, and `rsi(x, y)` selects the length
+  or removed two-series formula overload by analyzed type. Versioned session
+  parsing preserves the v4 weekday default without rewriting input strings,
+  v1-v5 logical operands remain strict while v6 remains lazy, and the exact v4
+  aliases `change`, `highest`, `lowest`, `max`, and `min` complete the affected
+  original fixtures. Historical, incremental, realtime, CLI, Python, and WASM
+  tests share the same compatibility report and output evidence.
 - Added faithful Pine v4 output compatibility for `plot`, marker/arrow outputs,
   OHLC bars/candles, `hline`, both `fill` overloads, `bgcolor`, and `barcolor`.
   Historical signatures now preserve primitive styles, output-specific

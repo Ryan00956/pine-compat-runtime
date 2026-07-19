@@ -39,12 +39,14 @@ modern sources.
 
 The v1-v4 compatibility front-end uses version-ranged exact rules only after
 lexical/user resolution fails. Exact translations preserve their original span
-in `legacyTranslations` and lower to canonical HIR names. Recognized behavioral
-forms that still require legacy expression, overload, or request semantics fail
-as supported-known work instead of silently selecting modern behavior. The
-implemented v4 subset includes historical `study()` and `input()` binding, the
-conformance-listed exact aliases, and the initial ten output families with
-versioned transparency/style semantics.
+in `legacyTranslations` and lower to canonical HIR names. The implemented v4
+subset includes historical `study()` and `input()` binding, the
+conformance-listed exact aliases, the initial ten output families with
+versioned transparency/style semantics, strict `iff`, structural `offset`, the
+type-directed legacy `rsi` overload, weekday session defaults, and pre-v6
+strict logical evaluation. Recognized multi-timeframe request forms that still
+need legacy execution semantics fail as supported-known work instead of
+silently selecting modern behavior.
 
 ## Initial Supported Syntax
 

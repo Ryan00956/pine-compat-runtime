@@ -1,4 +1,3 @@
-mod calls;
 mod catalog;
 mod declarations;
 mod dialect;
@@ -26,7 +25,11 @@ pub(crate) use catalog::{CatalogValidationError, validate_catalog};
 pub(crate) use declarations::LegacyStudyBinding;
 pub(crate) use declarations::{LegacyAdmissionFailure, legacy_admission_failure};
 pub(crate) use dialect::LanguageSelection;
+pub(crate) use expressions::{
+    BoundLegacyExpression, LegacyExpressionBinding, LegacyExpressionKind,
+};
 pub(crate) use inputs::LegacyInputBinding;
+pub(crate) use lowering::LegacyCallLowering;
 pub(crate) use outputs::LegacyOutputBinding;
 pub(crate) use report::normalize_legacy_report;
 pub(crate) use resolver::LegacyResolution;
@@ -99,13 +102,14 @@ impl LegacyFrontEnd {
         outputs::bind_v4_output_args(name, args, arg_types, const_strings, const_ints)
     }
 
-    pub(crate) fn registered_call_guard(
+    pub(crate) fn bind_legacy_expression(
         &self,
         name: &str,
-        callee_span: Span,
         args: &[CallArg],
-    ) -> Option<calls::LegacyRegisteredCallGuard> {
-        calls::registered_call_guard(self.dialect, name, callee_span, args)
+        arg_types: &[Option<PineType>],
+        call_span: Span,
+    ) -> LegacyExpressionBinding {
+        expressions::bind_legacy_expression(name, args, arg_types, call_span)
     }
 
     pub(crate) fn resolve_call(&self, source_name: &str) -> Option<LegacyResolution> {
@@ -219,6 +223,46 @@ impl LegacyFrontEnd {
         );
     }
 
+    pub(crate) fn record_expression_translation(
+        &mut self,
+        report: &mut CompatibilityReport,
+        source_context_id: SourceContextId,
+        span: Span,
+        rule: LegacyRule,
+        bound: &BoundLegacyExpression,
+    ) {
+        use expressions::LegacyExpressionKind;
+        use lowering::LegacyCallLowering;
+
+        let canonical_feature = match bound.kind {
+            LegacyExpressionKind::Iff => {
+                self.lowering
+                    .record_call(source_context_id, span, "$legacy.iff");
+                "eager select"
+            }
+            LegacyExpressionKind::Offset => {
+                self.lowering.record_call_lowering(
+                    source_context_id,
+                    span,
+                    LegacyCallLowering::HistoryOffset,
+                );
+                "history access"
+            }
+            LegacyExpressionKind::RsiLength => {
+                self.lowering.record_call(source_context_id, span, "ta.rsi");
+                "ta.rsi"
+            }
+            LegacyExpressionKind::RsiSeries => {
+                self.lowering
+                    .record_call(source_context_id, span, "$legacy.rsi_series");
+                "legacy RSI two-series formula"
+            }
+        };
+        self.lowering
+            .record_call_arg_rewrites(source_context_id, span, bound.arg_rewrites.clone());
+        report::record_expression_translation(report, rule, canonical_feature, bound.kind, span);
+    }
+
     pub(crate) fn canonical_call_name(
         &self,
         source_context_id: SourceContextId,
@@ -241,6 +285,14 @@ impl LegacyFrontEnd {
         span: Span,
     ) -> Option<&[lowering::LegacyCallArgRewrite]> {
         self.lowering.call_arg_rewrites(source_context_id, span)
+    }
+
+    pub(crate) fn call_lowering(
+        &self,
+        source_context_id: SourceContextId,
+        span: Span,
+    ) -> Option<lowering::LegacyCallLowering> {
+        self.lowering.call_lowering(source_context_id, span)
     }
 
     pub(crate) fn canonical_string_value(

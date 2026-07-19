@@ -382,6 +382,39 @@ mod tests {
     }
 
     #[test]
+    fn analysis_json_exposes_v4_expression_desugars_and_emulations() {
+        let source = SourceFile::new(
+            "legacy-v4-expressions.pine",
+            "//@version=4\nstudy(\"expressions\")\nplot(iff(close > open, high, low))\nplot(offset(close, 1))\nplot(rsi(close, open))\n",
+        );
+        let analysis = analyze_source(&source);
+        let parsed: serde_json::Value =
+            serde_json::from_str(&analysis_json(&source, &analysis)).expect("analysis JSON");
+
+        assert_eq!(parsed["executable"], serde_json::json!(true));
+        assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+        let translations = parsed["compatibility"]["legacyTranslations"]
+            .as_array()
+            .expect("legacy translations");
+        for (source_feature, canonical_feature) in [
+            ("iff", "eager select"),
+            ("offset", "history access"),
+            ("rsi", "legacy RSI two-series formula"),
+        ] {
+            assert!(translations.iter().any(|item| {
+                item["sourceFeature"] == source_feature
+                    && item["canonicalFeature"] == canonical_feature
+                    && item["kind"] == "expressionDesugar"
+            }));
+        }
+        let emulations = parsed["compatibility"]["legacyEmulations"]
+            .as_array()
+            .expect("legacy emulations");
+        assert!(emulations.iter().any(|item| item["feature"] == "iff"));
+        assert!(emulations.iter().any(|item| item["feature"] == "rsi"));
+    }
+
+    #[test]
     fn analysis_json_exposes_canonical_v4_input_metadata() {
         let source = SourceFile::new(
             "legacy-v4-inputs.pine",

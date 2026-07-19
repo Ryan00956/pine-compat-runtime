@@ -1,0 +1,6 @@
+//@version=4
+study("v4 strict logical evaluation")
+andValue = bar_index >= 2 and ema(high, 3) >= 20
+orValue = bar_index < 2 or ema(low, 3) <= -10
+plot(andValue ? 1 : 0)
+plot(orValue ? 1 : 0)

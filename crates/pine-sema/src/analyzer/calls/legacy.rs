@@ -30,6 +30,16 @@ impl Analyzer {
                     args,
                     arg_types,
                 ),
+                crate::legacy::LegacyRuleKind::FocusedExpression
+                | crate::legacy::LegacyRuleKind::FocusedCall => self
+                    .analyze_focused_legacy_expression(
+                        rule,
+                        name,
+                        callee_span,
+                        call_span,
+                        args,
+                        arg_types,
+                    ),
                 _ => FocusedLegacyCallAnalysis::NotApplicable,
             },
             crate::legacy::LegacyResolution::UnsupportedKnown(rule)
@@ -37,6 +47,8 @@ impl Analyzer {
                     rule.kind,
                     crate::legacy::LegacyRuleKind::FocusedInput
                         | crate::legacy::LegacyRuleKind::FocusedOutput
+                        | crate::legacy::LegacyRuleKind::FocusedExpression
+                        | crate::legacy::LegacyRuleKind::FocusedCall
                 ) =>
             {
                 let crate::legacy::LegacyRuleSupport::UnsupportedKnown { reason } = rule.support
@@ -48,6 +60,149 @@ impl Analyzer {
             }
             _ => FocusedLegacyCallAnalysis::NotApplicable,
         }
+    }
+
+    fn analyze_focused_legacy_expression(
+        &mut self,
+        rule: crate::legacy::LegacyRule,
+        name: &str,
+        callee_span: Span,
+        call_span: Span,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> FocusedLegacyCallAnalysis {
+        let bound = match self
+            .legacy
+            .bind_legacy_expression(name, args, arg_types, call_span)
+        {
+            crate::legacy::LegacyExpressionBinding::Bound(bound) => bound,
+            crate::legacy::LegacyExpressionBinding::Invalid(diagnostics) => {
+                self.diagnostics.extend(diagnostics);
+                return FocusedLegacyCallAnalysis::Analyzed(None);
+            }
+        };
+        let pine_type = match bound.kind {
+            crate::legacy::LegacyExpressionKind::Iff => self.analyze_legacy_iff(&bound, call_span),
+            crate::legacy::LegacyExpressionKind::Offset => self.analyze_legacy_offset(&bound),
+            crate::legacy::LegacyExpressionKind::RsiLength => {
+                let mut canonical_args = bound.ordered_args.clone();
+                canonical_args[0].name = Some("source".to_owned());
+                canonical_args[1].name = Some("length".to_owned());
+                let signature = pine_builtins::get_phase_1_builtin("ta.rsi")
+                    .expect("canonical RSI signature is registered");
+                self.analyze_registered_builtin(
+                    "ta.rsi",
+                    signature,
+                    callee_span,
+                    call_span,
+                    &canonical_args,
+                    &bound
+                        .ordered_arg_types
+                        .iter()
+                        .copied()
+                        .map(Some)
+                        .collect::<Vec<_>>(),
+                )
+            }
+            crate::legacy::LegacyExpressionKind::RsiSeries => {
+                self.analyze_legacy_rsi_series(&bound, call_span)
+            }
+        };
+        let Some(pine_type) = pine_type else {
+            return FocusedLegacyCallAnalysis::Analyzed(None);
+        };
+        let source_context_id = self.current_source_context_id();
+        self.legacy.record_expression_translation(
+            &mut self.compatibility,
+            source_context_id,
+            callee_span,
+            rule,
+            &bound,
+        );
+        FocusedLegacyCallAnalysis::Analyzed(Some(pine_type))
+    }
+
+    fn analyze_legacy_iff(
+        &mut self,
+        bound: &crate::legacy::BoundLegacyExpression,
+        call_span: Span,
+    ) -> Option<PineType> {
+        let [condition_type, then_type, else_type] = bound.ordered_arg_types.as_slice() else {
+            unreachable!("validated iff arity")
+        };
+        self.expect_bool(*condition_type, bound.ordered_args[0].span);
+        if !matches!(
+            then_type.kind,
+            ValueKind::Int
+                | ValueKind::Float
+                | ValueKind::Bool
+                | ValueKind::String
+                | ValueKind::Color
+                | ValueKind::Na
+        ) || !matches!(
+            else_type.kind,
+            ValueKind::Int
+                | ValueKind::Float
+                | ValueKind::Bool
+                | ValueKind::String
+                | ValueKind::Color
+                | ValueKind::Na
+        ) {
+            self.unsupported(
+                "iff.result",
+                "the current legacy iff slice supports scalar numeric, bool, string, color, and na results",
+                call_span,
+            );
+            return None;
+        }
+        self.merge_branch_types(
+            *condition_type,
+            *then_type,
+            *else_type,
+            self.known_const_bool_value(&bound.ordered_args[0].value),
+            call_span,
+        )
+    }
+
+    fn analyze_legacy_offset(
+        &mut self,
+        bound: &crate::legacy::BoundLegacyExpression,
+    ) -> Option<PineType> {
+        let source_type = bound.ordered_arg_types[0];
+        if matches!(source_type.kind, ValueKind::Tuple | ValueKind::Void) {
+            self.unsupported(
+                "offset.source",
+                "legacy offset does not support tuple or void source values",
+                bound.ordered_args[0].span,
+            );
+            return None;
+        }
+        self.validate_history_offset(
+            &bound.ordered_args[1].value,
+            Some(bound.ordered_arg_types[1]),
+        );
+        Some(PineType::new(Qualifier::Series, source_type.kind))
+    }
+
+    fn analyze_legacy_rsi_series(
+        &mut self,
+        bound: &crate::legacy::BoundLegacyExpression,
+        call_span: Span,
+    ) -> Option<PineType> {
+        let first = bound.ordered_arg_types[0];
+        let second = bound.ordered_arg_types[1];
+        if first.qualifier != Qualifier::Series
+            || !matches!(first.kind, ValueKind::Int | ValueKind::Float)
+            || !matches!(second.kind, ValueKind::Int | ValueKind::Float)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LEGACY_RSI_OVERLOAD",
+                "Pine v4 two-series `rsi(x, y)` requires a series numeric first argument and a numeric second argument",
+                call_span,
+            ));
+            return None;
+        }
+        Some(PineType::new(Qualifier::Series, ValueKind::Float))
     }
 
     fn analyze_focused_legacy_input(

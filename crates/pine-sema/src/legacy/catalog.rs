@@ -1,11 +1,9 @@
 use super::PineDialect;
-use super::calls::LEGACY_CALL_BINDING_DEFERRED_REASON;
-use super::expressions::{IFF_DEFERRED_REASON, OFFSET_DEFERRED_REASON};
 use super::inputs::LEGACY_INPUT_DEFERRED_REASON;
 use super::outputs::LEGACY_OUTPUT_DEFERRED_REASON;
 use super::security::LEGACY_SECURITY_DEFERRED_REASON;
 
-pub const LEGACY_TRANSLATOR_REVISION: u32 = 4;
+pub const LEGACY_TRANSLATOR_REVISION: u32 = 5;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum LegacyRuleKind {
@@ -115,6 +113,14 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
+        source_name: "change",
+        canonical_name: Some("ta.change"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
         source_name: "crossover",
         canonical_name: Some("ta.crossover"),
         min_version: PineDialect::V4,
@@ -149,6 +155,14 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
+        source_name: "highest",
+        canonical_name: Some("ta.highest"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
         source_name: "hline",
         canonical_name: Some("hline"),
         min_version: PineDialect::V1,
@@ -172,9 +186,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         min_version: PineDialect::V1,
         max_version: PineDialect::V4,
         kind: LegacyRuleKind::FocusedExpression,
-        support: LegacyRuleSupport::UnsupportedKnown {
-            reason: IFF_DEFERRED_REASON,
-        },
+        support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
         source_name: "input",
@@ -283,14 +295,36 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
+        source_name: "lowest",
+        canonical_name: Some("ta.lowest"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "max",
+        canonical_name: Some("math.max"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "min",
+        canonical_name: Some("math.min"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
         source_name: "offset",
         canonical_name: None,
         min_version: PineDialect::V1,
         max_version: PineDialect::V4,
         kind: LegacyRuleKind::FocusedExpression,
-        support: LegacyRuleSupport::UnsupportedKnown {
-            reason: OFFSET_DEFERRED_REASON,
-        },
+        support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
         source_name: "plot",
@@ -406,9 +440,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         min_version: PineDialect::V1,
         max_version: PineDialect::V4,
         kind: LegacyRuleKind::FocusedCall,
-        support: LegacyRuleSupport::UnsupportedKnown {
-            reason: LEGACY_CALL_BINDING_DEFERRED_REASON,
-        },
+        support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
         source_name: "security",
@@ -524,7 +556,8 @@ pub(crate) fn validate_catalog(rules: &[LegacyRule]) -> Vec<CatalogValidationErr
             (
                 LegacyRuleKind::FocusedInput
                 | LegacyRuleKind::FocusedInputConstant
-                | LegacyRuleKind::FocusedOutput,
+                | LegacyRuleKind::FocusedOutput
+                | LegacyRuleKind::FocusedCall,
                 LegacyRuleSupport::Supported,
                 Some(canonical),
             ) if pine_builtins::get_phase_1_builtin(canonical).is_none() => {
@@ -536,7 +569,8 @@ pub(crate) fn validate_catalog(rules: &[LegacyRule]) -> Vec<CatalogValidationErr
             (
                 LegacyRuleKind::FocusedInput
                 | LegacyRuleKind::FocusedInputConstant
-                | LegacyRuleKind::FocusedOutput,
+                | LegacyRuleKind::FocusedOutput
+                | LegacyRuleKind::FocusedCall,
                 LegacyRuleSupport::Supported,
                 None,
             ) => {
@@ -550,6 +584,8 @@ pub(crate) fn validate_catalog(rules: &[LegacyRule]) -> Vec<CatalogValidationErr
                     && !matches!(
                         kind,
                         LegacyRuleKind::FocusedDeclaration
+                            | LegacyRuleKind::FocusedCall
+                            | LegacyRuleKind::FocusedExpression
                             | LegacyRuleKind::FocusedInput
                             | LegacyRuleKind::FocusedInputConstant
                             | LegacyRuleKind::FocusedOutput

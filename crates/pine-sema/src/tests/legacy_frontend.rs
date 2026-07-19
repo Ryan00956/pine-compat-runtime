@@ -1,4 +1,4 @@
-use pine_ir::{HirExpr, HirExprKind, HirStmtKind};
+use pine_ir::{HirExpr, HirExprKind, HirHistoryOffset, HirStmtKind};
 use pine_syntax::{SourceFile, Span};
 
 use crate::LegacyTranslationKind;
@@ -377,16 +377,156 @@ fn v4_study_rejects_unmapped_declaration_options_before_lowering() {
 }
 
 #[test]
-fn v4_session_call_is_guarded_until_legacy_default_semantics_land() {
-    let analysis =
-        analyze_production("//@version=4\nstudy(\"session\")\nplot(time(\"D\", \"0930-1600\"))\n");
-
-    assert_eq!(diagnostic_codes(&analysis), vec!["E_UNSUPPORTED_FEATURE"]);
-    assert_eq!(
-        analysis.compatibility.unsupported[0].feature,
-        "time.session"
+fn v4_session_calls_lower_after_versioned_default_semantics_land() {
+    let analysis = analyze_production(
+        "//@version=4\nstudy(\"session\")\nplot(time_close(\"D\", \"0930-1600\"))\n",
     );
-    assert!(analysis.hir.is_none());
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(matches!(
+        &plot_arg(&analysis).kind,
+        HirExprKind::Call { callee, .. } if callee == "time_close"
+    ));
+}
+
+#[test]
+fn v4_iff_lowers_to_strict_internal_select_with_source_spanned_report() {
+    let source = "//@version=4\nstudy(\"iff\")\nplot(iff(close > open, high, low))\n";
+    let analysis = analyze_production(source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let HirExprKind::Call { callee, args, .. } = &plot_arg(&analysis).kind else {
+        panic!("expected strict iff call")
+    };
+    assert_eq!(callee, "$legacy.iff");
+    assert_eq!(
+        args.iter()
+            .map(|arg| arg.name.as_deref())
+            .collect::<Vec<_>>(),
+        vec![Some("condition"), Some("result1"), Some("result2")]
+    );
+    let translation = analysis
+        .compatibility
+        .legacy_translations
+        .iter()
+        .find(|translation| translation.source_feature == "iff")
+        .expect("iff translation");
+    assert_eq!(translation.kind, LegacyTranslationKind::ExpressionDesugar);
+    assert_eq!(translation.span.start, source.find("iff(close").unwrap());
+    assert!(
+        analysis
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .any(|emulation| emulation.feature == "iff")
+    );
+}
+
+#[test]
+fn v4_offset_lowers_to_native_history_and_retention_requirement() {
+    let analysis = analyze_production(
+        "//@version=4\nstudy(\"offset\")\nplot(offset(source=close, offset=2))\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(matches!(
+        &plot_arg(&analysis).kind,
+        HirExprKind::History {
+            offset: HirHistoryOffset::Constant(2),
+            ..
+        }
+    ));
+    let hir = analysis.hir.expect("HIR");
+    assert_eq!(hir.history.max_constant_offset, 2);
+    assert!(
+        hir.series_history
+            .iter()
+            .any(|requirement| requirement.max_constant_offset == 2)
+    );
+}
+
+#[test]
+fn v4_rsi_overload_selection_is_type_directed() {
+    let length = analyze_production(
+        "//@version=4\nstudy(\"length\")\nlength=input(2)\nplot(rsi(close, length))\n",
+    );
+    assert!(length.diagnostics.is_empty(), "{:?}", length.diagnostics);
+    assert!(matches!(
+        &plot_arg(&length).kind,
+        HirExprKind::Call { callee, .. } if callee == "ta.rsi"
+    ));
+
+    for second_argument in ["2.0", "bar_index"] {
+        let series = analyze_production(&format!(
+            "//@version=4\nstudy(\"series overload\")\nplot(rsi(close, {second_argument}))\n"
+        ));
+        assert!(
+            series.diagnostics.is_empty(),
+            "{second_argument}: {:?}",
+            series.diagnostics
+        );
+        assert!(
+            matches!(
+                &plot_arg(&series).kind,
+                HirExprKind::Call { callee, .. } if callee == "$legacy.rsi_series"
+            ),
+            "{second_argument}"
+        );
+    }
+
+    let series =
+        analyze_production("//@version=4\nstudy(\"series\")\nplot(rsi(x=close, y=open))\n");
+    assert!(series.diagnostics.is_empty(), "{:?}", series.diagnostics);
+    assert!(matches!(
+        &plot_arg(&series).kind,
+        HirExprKind::Call { callee, .. } if callee == "$legacy.rsi_series"
+    ));
+    assert!(
+        series
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .any(|emulation| emulation.feature == "rsi")
+    );
+
+    let invalid =
+        analyze_production("//@version=4\nstudy(\"invalid\")\nplot(rsi(close, close > open))\n");
+    assert_eq!(diagnostic_codes(&invalid), vec!["E_LEGACY_RSI_OVERLOAD"]);
+    assert!(invalid.hir.is_none());
+}
+
+#[test]
+fn focused_legacy_calls_yield_to_user_defined_functions() {
+    let analysis = analyze_production(
+        "//@version=4\nstudy(\"shadow\")\niff(condition, result1, result2) => result1\nplot(iff(true, close, open))\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .legacy_translations
+            .iter()
+            .all(|translation| translation.source_feature != "iff")
+    );
+    assert!(!matches!(
+        &plot_arg(&analysis).kind,
+        HirExprKind::Call { callee, .. } if callee == "$legacy.iff"
+    ));
 }
 
 #[test]
@@ -424,8 +564,16 @@ fn modern_sources_reject_every_production_v4_alias() {
             "sma(close, 2)",
             "ema(close, 2)",
             "bb(close, 2, 2)",
+            "change(close)",
             "crossover(close, open)",
+            "highest(high, 2)",
+            "lowest(low, 2)",
+            "max(close, open)",
+            "min(close, open)",
             "abs(close)",
+            "iff(true, close, open)",
+            "offset(close, 1)",
+            "rsi(close, 2)",
         ] {
             let analysis = analyze_production(&format!(
                 "//@version={version}\nindicator(\"modern\")\nplot({alias_call})\n"

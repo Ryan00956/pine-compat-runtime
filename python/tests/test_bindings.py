@@ -204,6 +204,31 @@ def test_analyze_script_reports_v4_legacy_output_adaptations():
     assert {"plot.transp", "plot.numeric_style", "bgcolor.transp"} <= emulated
 
 
+def test_analyze_script_reports_v4_legacy_expression_semantics():
+    report = pine_compat.analyze_script(
+        '//@version=4\nstudy("expressions")\n'
+        'plot(iff(close > open, high, low))\n'
+        'plot(offset(close, 1))\n'
+        'plot(rsi(close, open))\n'
+    )
+
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
+    translations = {
+        (item["sourceFeature"], item["canonicalFeature"], item["kind"])
+        for item in report["compatibility"]["legacyTranslations"]
+    }
+    assert {
+        ("iff", "eager select", "expressionDesugar"),
+        ("offset", "history access", "expressionDesugar"),
+        ("rsi", "legacy RSI two-series formula", "expressionDesugar"),
+    } <= translations
+    emulated = {
+        item["feature"] for item in report["compatibility"]["legacyEmulations"]
+    }
+    assert {"iff", "rsi"} <= emulated
+
+
 def test_analyze_script_reports_one_legacy_strategy_hard_stop():
     report = pine_compat.analyze_script(
         '//@version=4\nstrategy("legacy")\n'
@@ -500,6 +525,54 @@ def test_run_script_returns_legacy_v4_output_contract():
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v4_expression_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v4/runtime/expressions_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v4_expressions.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v4_strict_logical_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v4/runtime/logical_strict_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v4_logical_strict.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/legacy/v4/runtime/logical_strict_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v4_session_default_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v4/runtime/session_defaults_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v4_session_defaults.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/legacy/v4/runtime/session_weekend_bars.csv"),
     )
 
     assert result == expected

@@ -1041,6 +1041,20 @@ impl Analyzer {
                     }
                     return Some(call);
                 }
+                if self
+                    .legacy
+                    .call_lowering(self.current_source_context_id(), callee.span)
+                    == Some(crate::legacy::LegacyCallLowering::HistoryOffset)
+                {
+                    return self.lower_legacy_history_offset(
+                        callee.span,
+                        args,
+                        pine_type,
+                        series_id,
+                        param_exprs,
+                        param_types,
+                    );
+                }
                 let name = self
                     .legacy
                     .canonical_call_name(self.current_source_context_id(), callee.span)
