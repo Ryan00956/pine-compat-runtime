@@ -68,6 +68,7 @@ fn analyzer() -> Analyzer {
     Analyzer {
         diagnostics: Vec::new(),
         compatibility: CompatibilityReport::default(),
+        legacy: crate::legacy::LegacyFrontEnd::new(crate::PineDialect::V5),
         source_context_id: Cell::new(SourceContextId::root()),
         source_context_depth: Cell::new(0),
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),

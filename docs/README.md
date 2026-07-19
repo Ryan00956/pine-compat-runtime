@@ -68,6 +68,12 @@ cargo run -p pine-cli -- matrix --format json
 - [Legacy Indicator Phase 0 Baseline](LEGACY_INDICATOR_PHASE0_BASELINE.md):
   reproducible seed-corpus composition, stage rates, input availability, and
   ranked legacy failure clusters before compiler changes.
+- [Legacy Indicator Phase 1 Audit](LEGACY_INDICATOR_PHASE1_AUDIT.md): validated
+  dialect selection, script-mode gates, strategy exclusion, and public analysis
+  schema synchronization.
+- [Legacy Indicator Phase 2 Audit](LEGACY_INDICATOR_PHASE2_AUDIT.md): versioned
+  rule catalog, scoped fallback resolution, canonical HIR lowering, deterministic
+  reports, and translator cache revision.
 - [Strategy Internal Gap Audit](STRATEGY_INTERNAL_GAP_AUDIT.md): current
   long-only strategy baseline and deferred broker-model work.
 - [Next Language Expansion Playbook](NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md):

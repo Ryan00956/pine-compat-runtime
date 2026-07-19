@@ -19,6 +19,7 @@ pub struct CompileCacheStats {
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct CompileCacheKey {
+    translator_revision: u32,
     name: String,
     text: String,
     libraries: Vec<CompileCacheLibraryKey>,
@@ -71,6 +72,7 @@ impl CompileCache {
 impl CompileCacheKey {
     fn from_input(input: &AnalysisInput) -> Self {
         Self {
+            translator_revision: crate::legacy::LEGACY_TRANSLATOR_REVISION,
             name: input.root().name().to_owned(),
             text: input.root().text().to_owned(),
             libraries: input
@@ -83,5 +85,20 @@ impl CompileCacheKey {
                 })
                 .collect(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn key_carries_legacy_translator_revision() {
+        let input = AnalysisInput::new(SourceFile::new("cache.pine", "//@version=6\n"));
+        let key = CompileCacheKey::from_input(&input);
+        assert_eq!(
+            key.translator_revision,
+            crate::legacy::LEGACY_TRANSLATOR_REVISION
+        );
     }
 }

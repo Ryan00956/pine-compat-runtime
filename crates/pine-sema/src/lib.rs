@@ -8,7 +8,7 @@ mod cache;
 mod compatibility;
 mod constant_values;
 mod history;
-mod legacy;
+pub mod legacy;
 mod lowering;
 mod modules;
 mod resolver;

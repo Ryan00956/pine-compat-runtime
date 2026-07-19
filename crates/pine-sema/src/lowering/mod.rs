@@ -637,7 +637,13 @@ impl Analyzer {
         let kind = match &expr.kind {
             ExprKind::Literal(literal) => HirExprKind::Literal(lower_literal(literal)),
             ExprKind::Identifier(name) => {
-                HirExprKind::Symbol(self.bound_symbol(name, expr.span)?.id)
+                match self
+                    .legacy
+                    .canonical_value_name(self.current_source_context_id(), expr.span)
+                {
+                    Some(canonical_name) => HirExprKind::Builtin(canonical_name.to_owned()),
+                    None => HirExprKind::Symbol(self.bound_symbol(name, expr.span)?.id),
+                }
             }
             ExprKind::QualifiedName(parts) => {
                 if let Some(field) = self
@@ -1035,6 +1041,10 @@ impl Analyzer {
                     }
                     return Some(call);
                 }
+                let name = self
+                    .legacy
+                    .canonical_call_name(self.current_source_context_id(), callee.span)
+                    .map_or(name, str::to_owned);
                 if pine_builtins::get_phase_1_builtin(&name).is_none()
                     && !name.starts_with("map.")
                     && let Some((receiver_name, method_name)) = method_call_parts(callee)
@@ -1135,6 +1145,13 @@ impl Analyzer {
         }
 
         if let ExprKind::Identifier(name) = &expr.kind {
+            if self
+                .legacy
+                .canonical_value_name(self.current_source_context_id(), expr.span)
+                .is_some()
+            {
+                return (pine_type.qualifier == Qualifier::Series).then(|| self.alloc_series());
+            }
             return self
                 .bound_symbol(name, expr.span)
                 .and_then(|symbol| symbol.series_id);

@@ -26,7 +26,7 @@ pub fn analyze_source(source: &SourceFile) -> Analysis {
 }
 
 pub fn analyze_input(input: &AnalysisInput) -> Analysis {
-    analyze_validated_modules(validate_modules(input))
+    analyze_validated_modules(validate_modules(input), None)
 }
 
 #[cfg(test)]
@@ -42,13 +42,26 @@ pub(crate) fn analyze_input_with_implicit_dialect(
     input: &AnalysisInput,
     implicit_dialect: crate::PineDialect,
 ) -> Analysis {
-    analyze_validated_modules(crate::modules::validate_modules_with_implicit(
-        input,
-        implicit_dialect,
-    ))
+    analyze_validated_modules(
+        crate::modules::validate_modules_with_implicit(input, implicit_dialect),
+        None,
+    )
 }
 
-fn analyze_validated_modules(module_validation: crate::modules::ModuleValidation) -> Analysis {
+#[cfg(test)]
+pub(crate) fn analyze_source_with_legacy_rules(
+    source: &SourceFile,
+    rules: &'static [crate::legacy::LegacyRule],
+) -> Analysis {
+    let mut validation = validate_modules(&AnalysisInput::new(source.clone()));
+    validation.root_policy.legacy_admission_failure = None;
+    analyze_validated_modules(validation, Some(rules))
+}
+
+fn analyze_validated_modules(
+    module_validation: crate::modules::ModuleValidation,
+    legacy_rules: Option<&'static [crate::legacy::LegacyRule]>,
+) -> Analysis {
     let mut diagnostics = module_validation.diagnostics;
     let mut compatibility = CompatibilityReport {
         language_version: Some(module_validation.root_policy.language.raw_version),
@@ -84,9 +97,19 @@ fn analyze_validated_modules(module_validation: crate::modules::ModuleValidation
         };
     }
 
+    let dialect = module_validation
+        .root_policy
+        .language
+        .dialect
+        .expect("analysis only starts after dialect validation");
+    let legacy = match legacy_rules {
+        Some(rules) => crate::legacy::LegacyFrontEnd::with_rules(dialect, rules),
+        None => crate::legacy::LegacyFrontEnd::new(dialect),
+    };
     let mut analyzer = Analyzer {
         diagnostics,
         compatibility,
+        legacy,
         source_context_id: Cell::new(SourceContextId::root()),
         source_context_depth: Cell::new(0),
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),

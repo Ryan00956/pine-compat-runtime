@@ -69,14 +69,27 @@ halt before ordinary semantic analysis, and v1-v4 strategy declarations or
 `strategy.*` references are stopped before broker-capable HIR can be produced.
 The same source policy initializes `CompatibilityReport`, so all hosts project
 one validated version, origin, dialect, script mode, and legacy report model.
-Legacy translation catalogs and lowering are intentionally deferred to later
-phases; Phase 1 only establishes the fail-closed boundary.
+Phase 2 adds the reusable translation framework. A sorted, version-ranged rule
+catalog is consulted only as a scoped fallback after user declarations. Exact
+matches are validated using canonical built-in signatures, recorded with the
+original source span, and stored in a source-context/span-keyed lowering plan;
+HIR and runtime dispatch therefore see only canonical names. Focused input,
+output, expression, security, and overload work remains separate from exact
+aliases and fail-closed until its execution phase. Legacy translation and
+emulation reports are deterministically sorted and deduplicated before leaving
+semantic analysis.
+
+The semantic compile cache includes `LEGACY_TRANSLATOR_REVISION` in every key.
+Catalog or translation-semantics changes increment that revision so cached
+analysis cannot cross translator revisions.
 
 The semantic implementation keeps orchestration separate from focused tree
 walkers. `modules.rs` owns module-graph validation while
 `modules/side_effects.rs` owns side-effect and expression visitation;
 `analyzer/context.rs` owns analyzer state and allocation while constant and
 history-offset expression evaluation lives in `analyzer/context/const_eval.rs`;
+`analyzer/expressions/resolution.rs` owns canonical and scoped legacy value
+resolution while `analyzer/expressions.rs` retains expression traversal;
 `lowering/mod.rs` owns the lowering entrypoints while reassignment collection
 and UDT parameter resolution live in dedicated lowering modules. Pure-series
 identity keeps its UDT field/value traversal in

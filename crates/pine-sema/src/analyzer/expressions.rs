@@ -1,5 +1,6 @@
 use crate::prelude::*;
 
+mod resolution;
 mod type_queries;
 
 #[derive(Debug, Clone)]
@@ -1174,71 +1175,6 @@ impl Analyzer {
             ),
             offset.span,
         );
-    }
-
-    pub(crate) fn resolve_qualified_value(&mut self, name: &str, span: Span) -> Option<PineType> {
-        if self.validate_strategy_state_variable(name, span) {
-            return None;
-        }
-        if pine_builtins::named_color(name).is_some() {
-            self.compatibility.supported.push(FeatureUse {
-                feature: name.to_owned(),
-                span,
-            });
-            return Some(PineType::new(Qualifier::Const, ValueKind::Color));
-        }
-        if let Some(pine_type) = pine_builtins::builtin_series_value_type(name) {
-            self.compatibility.supported.push(FeatureUse {
-                feature: name.to_owned(),
-                span,
-            });
-            return Some(pine_type);
-        }
-        if pine_builtins::named_float_constant(name).is_some() {
-            self.compatibility.supported.push(FeatureUse {
-                feature: name.to_owned(),
-                span,
-            });
-            return Some(PineType::new(Qualifier::Const, ValueKind::Float));
-        }
-        if pine_builtins::named_int_constant(name).is_some() {
-            self.compatibility.supported.push(FeatureUse {
-                feature: name.to_owned(),
-                span,
-            });
-            return Some(PineType::new(Qualifier::Const, ValueKind::Int));
-        }
-        if pine_builtins::named_string_constant(name).is_some() {
-            self.compatibility.supported.push(FeatureUse {
-                feature: name.to_owned(),
-                span,
-            });
-            return Some(PineType::new(Qualifier::Const, ValueKind::String));
-        }
-
-        self.check_feature_name(name, span);
-        if name.starts_with("color.") {
-            self.diagnostics.push(Diagnostic::error(
-                "E_UNKNOWN_COLOR",
-                format!("unknown named color `{name}`"),
-                span,
-            ));
-        }
-        None
-    }
-
-    pub(crate) fn resolve_symbol(&mut self, name: &str, span: Span) -> Option<PineType> {
-        if let Some(symbol) = self.scope.resolve(name) {
-            self.bind_symbol(name, span, symbol);
-            Some(symbol.pine_type)
-        } else {
-            self.diagnostics.push(Diagnostic::error(
-                "E_UNKNOWN_SYMBOL",
-                format!("unknown symbol `{name}`"),
-                span,
-            ));
-            None
-        }
     }
 
     pub(crate) fn validate_assignment(

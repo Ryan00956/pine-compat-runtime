@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added the versioned legacy compatibility front-end: validated sorted rule
+  catalogs, scoped fallback after user declarations, original-span translation
+  records, canonical-only HIR lowering, focused unsupported-known routing,
+  deterministic legacy report ordering/deduplication, and a translator revision
+  in semantic compile-cache keys. Phase 2 uses synthetic exact aliases for
+  framework tests and does not yet enable production aliases or `study()`
+  execution.
 - Established the legacy-indicator version and mode admission boundary. Pine
   v1-v6 are represented by a closed dialect model, a missing directive selects
   implicit v1, invalid/duplicate/misplaced directives and root/library version

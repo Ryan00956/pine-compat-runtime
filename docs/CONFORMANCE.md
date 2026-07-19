@@ -73,6 +73,14 @@ matrix schema changes. CLI `analyze --format json`, Python analysis
 dictionaries, and WASM analysis JSON project this same analysis contract; the
 default CLI text report remains diagnostic console output.
 
+Legacy exact-alias conformance requires a paired source/canonical HIR or runtime
+comparison, an original-span translation record, a user-symbol collision
+control, and a v5/v6 negative control. Catalog validation must also prove that
+canonical targets exist and version ranges neither overlap nor enter modern
+dialects. Phase 2 exercises these requirements with a synthetic catalog only;
+production alias rows become support claims only when their owning phase adds
+fixtures and conformance metadata.
+
 The current pure-internal call-result subset normalizes an unqualified plain
 local UDF receiver through the parser-only `$call_result` prefix, exact static
 built-in array producers through `$builtin_array_result`, and the five exact

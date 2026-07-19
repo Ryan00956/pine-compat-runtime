@@ -12,6 +12,7 @@ use pine_syntax::{Diagnostic, Expr, FunctionBody, Program, Severity, Span};
 
 use crate::analysis::Analysis;
 use crate::compatibility::CompatibilityReport;
+use crate::legacy::LegacyFrontEnd;
 use crate::modules::ImportedUserTypeInfo;
 use crate::prelude::{ExprKey, UserTypeIdentity, UserTypeInfo};
 use crate::resolver::{BindingKey, ScopeResolver, SymbolInfo};
@@ -46,6 +47,7 @@ impl Default for LoweringLimits {
 pub(crate) struct Analyzer {
     pub(crate) diagnostics: Vec<Diagnostic>,
     pub(crate) compatibility: CompatibilityReport,
+    pub(crate) legacy: LegacyFrontEnd,
     pub(crate) source_context_id: Cell<SourceContextId>,
     pub(crate) source_context_depth: Cell<usize>,
     pub(crate) scope: ScopeResolver,
@@ -407,6 +409,7 @@ impl Analyzer {
         };
         debug_assert!(self.source_context_stack_is_restored());
 
+        crate::legacy::normalize_legacy_report(&mut self.compatibility);
         Analysis {
             diagnostics: self.diagnostics,
             compatibility: self.compatibility,

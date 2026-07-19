@@ -174,42 +174,14 @@ impl Analyzer {
         }
 
         if let Some(signature) = pine_builtins::get_phase_1_builtin(&name) {
-            self.check_feature_name(&name, callee.span);
-            self.validate_script_declaration_call(&name, callee.span, args);
-            self.validate_strategy_order_call(&name, callee.span, args);
-            self.validate_strategy_value_function_call(&name, callee.span);
-            if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
-                self.unsupported(
-                    "function_side_effect",
-                    "indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
-                    callee.span,
-                );
-            }
-            if self.function_depth > 0 && is_array_mutation_builtin(&name) {
-                self.unsupported(
-                    "function_side_effect",
-                    &unsupported_collection_mutation_udf_reason(&name),
-                    callee.span,
-                );
-            }
-
-            self.validate_call_args(signature, args, &arg_types);
-            if is_ta_vwap_bands_call(&name, args) {
-                return Some(pine_builtins::tuple_return_type());
-            }
-            if name == "array.from"
-                && let Some(
-                    UserTypeArrayElementInference::SameScalarLocal(type_name)
-                    | UserTypeArrayElementInference::SameScalarImported(type_name),
-                ) = self.array_from_user_type_element_inference(args, &arg_types)
-            {
-                let pine_type = PineType::new(Qualifier::Simple, ValueKind::UserTypeArray);
-                self.mark_expr_user_type_array(span, type_name);
-                return Some(pine_type);
-            }
-            self.mark_user_type_array_element_result(&name, span, args, &arg_types);
-            self.mark_user_type_array_result(&name, span, args, &arg_types);
-            return self.return_type_for_call(signature, args, &arg_types);
+            return self.analyze_registered_builtin(
+                &name,
+                signature,
+                callee.span,
+                span,
+                args,
+                &arg_types,
+            );
         }
 
         if matches!(callee.kind, ExprKind::QualifiedName(_))
@@ -242,6 +214,47 @@ impl Analyzer {
             return self.analyze_udf_call(&name, callee.span, span, args, &arg_types);
         }
 
+        let is_shadowed_lexical_call =
+            matches!(callee.kind, ExprKind::Identifier(_)) && self.scope.resolve(&name).is_some();
+        let legacy_resolution = if is_shadowed_lexical_call {
+            None
+        } else {
+            self.legacy.resolve_call(&name)
+        };
+        match legacy_resolution {
+            Some(crate::legacy::LegacyResolution::ExactAlias(rule)) => {
+                let canonical_name = rule
+                    .canonical_name
+                    .expect("validated exact legacy alias has a canonical target");
+                let signature = pine_builtins::get_phase_1_builtin(canonical_name)
+                    .expect("validated exact legacy function target is registered");
+                let source_context_id = self.current_source_context_id();
+                self.legacy.record_call_translation(
+                    &mut self.compatibility,
+                    source_context_id,
+                    callee.span,
+                    rule,
+                );
+                return self.analyze_registered_builtin(
+                    canonical_name,
+                    signature,
+                    callee.span,
+                    span,
+                    args,
+                    &arg_types,
+                );
+            }
+            Some(crate::legacy::LegacyResolution::UnsupportedKnown(rule)) => {
+                let crate::legacy::LegacyRuleSupport::UnsupportedKnown { reason } = rule.support
+                else {
+                    unreachable!("legacy resolver preserves rule support state")
+                };
+                self.unsupported(rule.source_name, reason, callee.span);
+                return None;
+            }
+            None => {}
+        }
+
         if let Some(reason) = unsupported_strategy_reason(&name) {
             self.unsupported(&name, reason, callee.span);
             return None;
@@ -266,6 +279,53 @@ impl Analyzer {
             callee.span,
         ));
         None
+    }
+
+    fn analyze_registered_builtin(
+        &mut self,
+        name: &str,
+        signature: &'static BuiltinSignature,
+        callee_span: Span,
+        call_span: Span,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> Option<PineType> {
+        self.check_feature_name(name, callee_span);
+        self.validate_script_declaration_call(name, callee_span, args);
+        self.validate_strategy_order_call(name, callee_span, args);
+        self.validate_strategy_value_function_call(name, callee_span);
+        if self.function_depth > 0 && is_output_or_declaration_builtin(name) {
+            self.unsupported(
+                "function_side_effect",
+                "indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+                callee_span,
+            );
+        }
+        if self.function_depth > 0 && is_array_mutation_builtin(name) {
+            self.unsupported(
+                "function_side_effect",
+                &unsupported_collection_mutation_udf_reason(name),
+                callee_span,
+            );
+        }
+
+        self.validate_call_args(signature, args, arg_types);
+        if is_ta_vwap_bands_call(name, args) {
+            return Some(pine_builtins::tuple_return_type());
+        }
+        if name == "array.from"
+            && let Some(
+                UserTypeArrayElementInference::SameScalarLocal(type_name)
+                | UserTypeArrayElementInference::SameScalarImported(type_name),
+            ) = self.array_from_user_type_element_inference(args, arg_types)
+        {
+            let pine_type = PineType::new(Qualifier::Simple, ValueKind::UserTypeArray);
+            self.mark_expr_user_type_array(call_span, type_name);
+            return Some(pine_type);
+        }
+        self.mark_user_type_array_element_result(name, call_span, args, arg_types);
+        self.mark_user_type_array_result(name, call_span, args, arg_types);
+        self.return_type_for_call(signature, args, arg_types)
     }
 
     fn analyze_array_call_result_method(

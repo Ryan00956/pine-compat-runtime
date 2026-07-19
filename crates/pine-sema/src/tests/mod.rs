@@ -15,6 +15,7 @@ mod compatibility;
 mod constant_call_semantics;
 mod history_constant_calls;
 mod legacy_dialect;
+mod legacy_frontend;
 mod lowering;
 mod methods;
 mod scopes;
