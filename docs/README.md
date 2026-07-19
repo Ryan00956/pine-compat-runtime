@@ -46,8 +46,8 @@ cargo run -p pine-cli -- matrix --format json
 - [Diagnostic Codes](DIAGNOSTIC_CODES.md): stable diagnostic codes.
 - [Realtime Model](REALTIME_MODEL.md): forming-bar rollback and intrabar state
   behavior.
-- [Release Notes](RELEASE_NOTES.md): accumulated changes for the unreleased
-  `0.1.0` line.
+- [Release Notes](RELEASE_NOTES.md): published release history and accumulated
+  changes for the next release.
 - [Releasing Binary Wheels](RELEASING.md): GitHub Actions wheel matrix, release
   contract, and application update boundary.
 
