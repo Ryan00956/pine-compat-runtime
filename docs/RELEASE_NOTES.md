@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Closed legacy host integration with CLI-owned shared goldens across Python
+  and WASM. Required runtime parity now includes implicit v1 and v4 input
+  defaults; five complete analysis snapshots cover v1-v4 and a v2 graph error.
+  The expanded guard rejects missing registry/manifest/host assertions, while
+  focused CLI, Python, and WASM tests preserve v4 input overrides and legacy
+  request errors. Source versions remain automatic; no optional policy switch
+  or unsafe migration preview was added.
 - Added the executable Pine v1/v2 indicator slice, including implicit-v1
   selection, historical `study`/focused `input`/`plot` admission, `sma`/`ema`,
   a bounded scalar declaration graph for self-history and safe forward

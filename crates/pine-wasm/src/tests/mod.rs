@@ -202,6 +202,40 @@ fn analyzes_v2_graph_and_conversion_emulations() {
 }
 
 #[test]
+fn legacy_analysis_profiles_match_cli_golden_snapshots() {
+    assert_analysis_snapshot(
+        "analysis_legacy_v1_shared.json",
+        &analyze_script(include_str!(
+            "../../../../tests/fixtures/legacy/v1/runtime/shared_v1.pine"
+        )),
+    );
+    assert_analysis_snapshot(
+        "analysis_legacy_v2_core.json",
+        &analyze_script(include_str!(
+            "../../../../tests/fixtures/legacy/v2/runtime/core_legacy.pine"
+        )),
+    );
+    assert_analysis_snapshot(
+        "analysis_legacy_v2_reference_cycle.json",
+        &analyze_script(include_str!(
+            "../../../../tests/fixtures/legacy/v2/unsupported/reference_cycle.pine"
+        )),
+    );
+    assert_analysis_snapshot(
+        "analysis_legacy_v3_core.json",
+        &analyze_script(include_str!(
+            "../../../../tests/fixtures/legacy/v3/runtime/core_legacy.pine"
+        )),
+    );
+    assert_analysis_snapshot(
+        "analysis_legacy_v4_inputs.json",
+        &analyze_script(include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/inputs_legacy.pine"
+        )),
+    );
+}
+
+#[test]
 fn analyzes_v4_legacy_output_adaptations() {
     let output = analyze_script(
         "//@version=4\nstudy(\"outputs\")\np = plot(close, style=5, transp=40)\nbgcolor(color.blue)\n",
@@ -612,6 +646,17 @@ fn run_script_csv_returns_legacy_v4_output_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_legacy_v1_shared_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/legacy/v1/runtime/shared_v1.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("legacy v1 shared fixture should run");
+
+    assert_snapshot("runtime_legacy_v1_shared.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_legacy_v3_core_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/legacy/v3/runtime/core_legacy.pine"),
@@ -642,6 +687,17 @@ fn run_script_csv_returns_legacy_v4_expression_contract() {
     .expect("legacy v4 expression fixture should run");
 
     assert_snapshot("runtime_legacy_v4_expressions.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_legacy_v4_input_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/inputs_legacy.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("legacy v4 input fixture should run");
+
+    assert_snapshot("runtime_legacy_v4_inputs.json", &output);
 }
 
 #[test]
@@ -8808,6 +8864,17 @@ fn assert_snapshot(name: &str, actual: &str) {
     let expected = fs::read_to_string(&snapshot_path)
         .unwrap_or_else(|err| panic!("failed to read {}: {err}", snapshot_path.display()));
     assert_eq!(actual.trim_end(), expected.trim_end(), "{name} changed");
+}
+
+fn assert_analysis_snapshot(name: &str, actual: &str) {
+    let snapshot_path = workspace_dir().join("tests/snapshots").join(name);
+    let expected = fs::read_to_string(&snapshot_path)
+        .unwrap_or_else(|err| panic!("failed to read {}: {err}", snapshot_path.display()));
+    let actual: serde_json::Value =
+        serde_json::from_str(actual).unwrap_or_else(|err| panic!("invalid {name}: {err}"));
+    let expected: serde_json::Value = serde_json::from_str(&expected)
+        .unwrap_or_else(|err| panic!("invalid {}: {err}", snapshot_path.display()));
+    assert_eq!(actual, expected, "{name} changed");
 }
 
 fn input_call_ids_by_title(source: &str) -> HashMap<String, u64> {

@@ -107,6 +107,35 @@ def assert_json_close(actual, expected, path="$"):
     assert actual == expected, f"{path}: {actual!r} != {expected!r}"
 
 
+def assert_analysis_snapshot(source_path, snapshot_path):
+    source = (ROOT / source_path).read_text()
+    expected = json.loads((ROOT / snapshot_path).read_text())
+    assert pine_compat.analyze_script(source) == expected
+
+
+def test_legacy_analysis_profiles_match_cli_golden_snapshots():
+    assert_analysis_snapshot(
+        "tests/fixtures/legacy/v1/runtime/shared_v1.pine",
+        "tests/snapshots/analysis_legacy_v1_shared.json",
+    )
+    assert_analysis_snapshot(
+        "tests/fixtures/legacy/v2/runtime/core_legacy.pine",
+        "tests/snapshots/analysis_legacy_v2_core.json",
+    )
+    assert_analysis_snapshot(
+        "tests/fixtures/legacy/v2/unsupported/reference_cycle.pine",
+        "tests/snapshots/analysis_legacy_v2_reference_cycle.json",
+    )
+    assert_analysis_snapshot(
+        "tests/fixtures/legacy/v3/runtime/core_legacy.pine",
+        "tests/snapshots/analysis_legacy_v3_core.json",
+    )
+    assert_analysis_snapshot(
+        "tests/fixtures/legacy/v4/runtime/inputs_legacy.pine",
+        "tests/snapshots/analysis_legacy_v4_inputs.json",
+    )
+
+
 def test_analyze_script_reports_executable_script():
     report = pine_compat.analyze_script(
         '//@version=6\nindicator("demo")\nplot(close)\n'
@@ -604,6 +633,22 @@ def test_run_script_returns_legacy_v4_output_contract():
     assert result == expected
 
 
+def test_run_script_returns_legacy_v1_shared_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v1/runtime/shared_v1.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v1_shared.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_legacy_v3_core_contract():
     source = (
         ROOT / "tests/fixtures/legacy/v3/runtime/core_legacy.pine"
@@ -642,6 +687,22 @@ def test_run_script_returns_legacy_v4_expression_contract():
     ).read_text()
     expected = json.loads(
         (ROOT / "tests/snapshots/runtime_legacy_v4_expressions.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v4_input_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v4/runtime/inputs_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v4_inputs.json").read_text()
     )
 
     result = pine_compat.run_script(

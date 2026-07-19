@@ -1,0 +1,9 @@
+# Explicit CLI/Python/WASM parity baseline for legacy analysis JSON snapshots.
+# Keep entries sorted. The CLI owns generation; Python and WASM must compare
+# their public analysis report with every required golden.
+
+analysis_legacy_v1_shared.json
+analysis_legacy_v2_core.json
+analysis_legacy_v2_reference_cycle.json
+analysis_legacy_v3_core.json
+analysis_legacy_v4_inputs.json

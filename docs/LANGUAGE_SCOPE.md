@@ -504,3 +504,11 @@ from future legacy translations and result-affecting emulations:
 
 The user experience should be "this part is unsupported" rather than "the
 script crashed."
+
+Legacy versions are authoritative on every host: no option is required to
+enable a valid v1-v4 indicator, and explicit v5/v6 source is never forced into
+a legacy profile. CLI owns representative complete analysis goldens for
+implicit v1 and explicit v2-v4 plus a focused v2 failure; Python and WASM
+compare their full reports with those same `schemaVersion: 4` values. The
+optional `legacyPolicy` rejection switch and source migration preview are not
+part of the current API or compatibility claims.

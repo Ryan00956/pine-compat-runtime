@@ -1,5 +1,7 @@
 use std::{env, process::ExitCode};
 
+#[cfg(test)]
+mod analysis_snapshots;
 mod bars_csv;
 mod commands;
 mod conformance;

@@ -111,7 +111,7 @@ fn print_text_report(source: &SourceFile, analysis: &Analysis) {
     }
 }
 
-fn analysis_json(source: &SourceFile, analysis: &Analysis) -> String {
+pub(crate) fn analysis_json(source: &SourceFile, analysis: &Analysis) -> String {
     let compatibility = &analysis.compatibility;
     let language_version = compatibility
         .language_version

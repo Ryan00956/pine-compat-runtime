@@ -128,6 +128,13 @@ bool/numeric conversions are source-span keyed semantic decisions that lower
 to ordinary canonical `float`/`bool` calls. Neither mechanism adds a legacy
 execution engine: runtime dispatch continues to consume canonical HIR.
 
+Phase 10 makes the host projection testable as one contract. CLI owns separate
+registries for runtime and complete legacy analysis goldens; Python and WASM
+consume the same files, while a static parity guard requires both assertions
+for every manifest entry. Source dialect remains the only legacy semantic
+selector. No host adapter owns a translation table, policy override, or source
+migration step.
+
 The semantic compile cache includes `LEGACY_TRANSLATOR_REVISION` in every key.
 Catalog or translation-semantics changes increment that revision so cached
 analysis cannot cross translator revisions.

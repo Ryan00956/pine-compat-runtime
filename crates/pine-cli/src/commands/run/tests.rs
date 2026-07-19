@@ -313,6 +313,40 @@ plot(color.r(shade))
 }
 
 #[test]
+fn runs_v4_legacy_input_overrides_through_cli_host() {
+    let path = workspace_path("tests/fixtures/legacy/v4/runtime/inputs_legacy.pine");
+    let input = analysis_input_from_paths(&path, &[]).expect("analysis input from legacy script");
+    let analysis = analyze_input(&input);
+    let hir = analysis.hir.expect("legacy input HIR");
+    let input_ids = input_calls(&hir)
+        .into_iter()
+        .filter_map(|input| input.title.map(|title| (title, input.call_site_id)))
+        .collect::<HashMap<_, _>>();
+    let options = RunOptions {
+        path,
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
+        profile: false,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: vec![
+            parse_input_override_spec(&format!("{}=1", input_ids["Length"]))
+                .expect("length override"),
+            parse_input_override_spec(&format!("{}=2.0", input_ids["Scale"]))
+                .expect("scale override"),
+            parse_input_override_spec(&format!("{}=1.0", input_ids["Price"]))
+                .expect("price override"),
+        ],
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options).expect("legacy input override output");
+
+    assert!(output.contains("\"values\":[3,5,7,9]"));
+}
+
+#[test]
 fn profiled_run_reports_max_bars_back_without_retention_misses() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/profile/dynamic_history_max_bars_back.pine"),

@@ -98,6 +98,10 @@ cargo run -p pine-cli -- matrix --format json
   implicit-v1 and v2 declarations, bounded self/forward declaration graphs,
   historical bool/numeric conversions, canonical runtime equivalence, and the
   fully passing committed legacy seed corpus.
+- [Legacy Indicator Phase 10 Audit](LEGACY_INDICATOR_PHASE10_AUDIT.md): required
+  v1-v4 runtime and complete analysis goldens across CLI, Python, and WASM,
+  expanded parity guardrails, automatic source-version API policy, and the
+  explicit migration-preview deferral.
 - [Strategy Internal Gap Audit](STRATEGY_INTERNAL_GAP_AUDIT.md): current
   long-only strategy baseline and deferred broker-model work.
 - [Next Language Expansion Playbook](NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md):

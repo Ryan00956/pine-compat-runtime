@@ -75,6 +75,17 @@ matrix schema changes. CLI `analyze --format json`, Python analysis
 dictionaries, and WASM analysis JSON project this same analysis contract; the
 default CLI text report remains diagnostic console output.
 
+Legacy host parity has two explicit baselines. CLI runtime fixtures generate
+the ordinary `runtime_*.json` goldens listed in
+`scripts/host_parity_required.txt`. CLI legacy analysis fixtures generate the
+complete `analysis_legacy_*.json` reports listed in
+`scripts/legacy_analysis_parity_required.txt`. Python and WASM must assert every
+required golden, and `scripts/check_host_parity.py` fails missing registrations,
+missing host assertions, duplicate entries, unrecorded pairs, or runtime /
+analysis name collisions. Analysis comparisons use complete parsed JSON values,
+so every schema field and value must agree without treating object-key order as
+semantic.
+
 Legacy exact-alias conformance requires a paired source/canonical HIR or runtime
 comparison, an original-span translation record, a user-symbol collision
 control, and a v5/v6 negative control. Catalog validation must also prove that

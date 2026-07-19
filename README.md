@@ -156,6 +156,21 @@ result = pine_compat.run_script(
 )
 ```
 
+Legacy indicators use their source version automatically; no host flag is
+needed. The same analysis schema reports the selected dialect and any
+translation/emulation evidence before execution:
+
+```python
+legacy = '''//@version=4
+study("Legacy SMA")
+length = input(20, "Length", input.integer)
+plot(sma(close, length))
+'''
+report = pine_compat.analyze_script(legacy)
+assert report["dialect"] == "v4" and report["executable"]
+result = pine_compat.run_script(legacy, bars)
+```
+
 ### CLI
 
 Run a script against CSV OHLCV data and receive normalized JSON:
