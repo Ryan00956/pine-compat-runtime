@@ -86,7 +86,7 @@ improved over time, but codes should remain stable once published.
 The legacy release audit compares every `E_LEGACY_*` and `W_LEGACY_*` token
 emitted by semantic/runtime source with this document. All 14 current legacy
 codes are listed here; Phase 11 adds no public diagnostic family and does not
-change analysis `schemaVersion: 4` or runtime `schemaVersion: 8`.
+change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 - `E_ASSIGN_TYPE`: reassignment type mismatch.
 - `E_BRANCH_RETURN`: branch expression body does not end with an expression.
 - `E_BRANCH_TYPE`: ternary branch type mismatch.

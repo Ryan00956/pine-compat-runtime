@@ -44,9 +44,9 @@ pub use output::drawings::{
 pub use output::json::{public_runtime_profiled_result_json, public_runtime_result_json};
 pub use output::model::{
     ColorSeries, FillOutput, HLineOutput, OutputMetadata, PUBLIC_MATRIX_SCHEMA_VERSION,
-    PUBLIC_OUTPUT_SCHEMA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION, PlotArrowSeries, PlotBarSeries,
-    PlotCandleSeries, PlotCharSeries, PlotSeries, PlotShapeSeries, RuntimeDiagnostic,
-    RuntimeResult,
+    PUBLIC_OUTPUT_SCHEMA_VERSION, PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION,
+    PlotArrowSeries, PlotBarSeries, PlotCandleSeries, PlotCharSeries, PlotSeries, PlotShapeSeries,
+    RuntimeDiagnostic, RuntimeResult,
 };
 pub use output::running_alerts::{
     RunningAlertConfig, RunningAlertEvaluationError, RunningAlertEventSelection,
@@ -78,7 +78,7 @@ pub use runtime::historical::{
 pub use runtime::realtime::RealtimeRuntime;
 pub use series::SeriesStore;
 pub use strategy::BrokerState;
-pub use value::PineValue;
+pub use value::{PineValue, encode_color_literal, encode_color_rgba};
 
 use algorithms::numeric::finite_float_or_na;
 use algorithms::rolling_window::{

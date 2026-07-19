@@ -1,4 +1,4 @@
-use pine_runtime::input_calls;
+use pine_runtime::{PineValue, input_calls};
 use pine_sema::{Analysis, AnalysisInput, PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_input};
 use pine_syntax::{Diagnostic, Severity, SourceFile, Span};
 
@@ -131,10 +131,44 @@ fn inputs_json(analysis: &Analysis) -> String {
             Some(title) => output.push_str(&format!("\"{}\"", json_escape(&title))),
             None => output.push_str("null"),
         }
+        output.push_str(",\"default\":");
+        match &input.default_value {
+            Some(value) => output.push_str(&input_value_json(value)),
+            None => output.push_str("null"),
+        }
+        push_optional_input_value(&mut output, "min", input.min_value.as_ref());
+        push_optional_input_value(&mut output, "max", input.max_value.as_ref());
+        push_optional_input_value(&mut output, "step", input.step.as_ref());
+        if !input.options.is_empty() {
+            output.push_str(",\"options\":[");
+            for (option_index, option) in input.options.iter().enumerate() {
+                if option_index > 0 {
+                    output.push(',');
+                }
+                output.push_str(&input_value_json(option));
+            }
+            output.push(']');
+        }
         output.push('}');
     }
     output.push(']');
     output
+}
+
+fn push_optional_input_value(output: &mut String, name: &str, value: Option<&PineValue>) {
+    if let Some(value) = value {
+        output.push_str(&format!(",\"{name}\":{}", input_value_json(value)));
+    }
+}
+
+fn input_value_json(value: &PineValue) -> String {
+    match value {
+        PineValue::Int(value) => value.to_string(),
+        PineValue::Float(value) => value.to_string(),
+        PineValue::Bool(value) => value.to_string(),
+        PineValue::String(value) => format!("\"{}\"", json_escape(value)),
+        _ => "null".to_owned(),
+    }
 }
 
 fn features_json<'a>(

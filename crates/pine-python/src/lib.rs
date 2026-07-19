@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use pine_ir::HirProgram;
 use pine_runtime::{
-    Bar, ChartContext, InMemoryRequestDataProvider, InputOverrides, PineValue, RequestEnvironment,
-    RequestKey, RequestTimeframe, input_calls,
-    run_historical_with_request_environment_and_input_overrides,
+    Bar, ChartContext, InMemoryRequestDataProvider, InputOverrides, PUBLIC_RENDER_METADATA_VERSION,
+    PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue, RequestEnvironment, RequestKey, RequestTimeframe,
+    encode_color_literal, input_calls, run_historical_with_request_environment_and_input_overrides,
 };
 use pine_sema::{Analysis, AnalysisInput, PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_input};
 use pine_syntax::{Diagnostic, SourceFile, Span};
@@ -19,7 +19,7 @@ mod tables;
 mod tests;
 use alerts::{render_strategy_order_fill_alert_template, render_strategy_order_fill_running_alert};
 use diagnostics::{diagnostics_have_errors, format_diagnostics, severity_name};
-use outputs::runtime_result_to_py;
+use outputs::{runtime_result_to_py, value_to_py};
 
 #[pyclass(name = "Program", skip_from_py_object)]
 #[derive(Clone)]
@@ -122,6 +122,9 @@ fn run_script(
 
 #[pymodule]
 fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
+    module.add("ANALYSIS_SCHEMA_VERSION", PUBLIC_ANALYSIS_SCHEMA_VERSION)?;
+    module.add("RUNTIME_SCHEMA_VERSION", PUBLIC_RUNTIME_SCHEMA_VERSION)?;
+    module.add("RENDER_METADATA_VERSION", PUBLIC_RENDER_METADATA_VERSION)?;
     module.add_class::<PyProgram>()?;
     module.add_function(wrap_pyfunction!(compile_script, module)?)?;
     module.add_function(wrap_pyfunction!(analyze_script, module)?)?;
@@ -380,14 +383,14 @@ fn parse_float_override(input_name: &str, value: &Bound<'_, PyAny>) -> PyResult<
     )))
 }
 
-fn parse_color_override(value: &Bound<'_, PyAny>) -> PyResult<u32> {
+fn parse_color_override(value: &Bound<'_, PyAny>) -> PyResult<u64> {
     if value.is_instance_of::<PyBool>() {
         return Err(PyValueError::new_err(
             "input.color override must be a u32, 0xRRGGBB, or #RRGGBB value",
         ));
     }
     if let Ok(value) = value.extract::<i64>() {
-        return u32::try_from(value).map_err(|_| {
+        return u32::try_from(value).map(u64::from).map_err(|_| {
             PyValueError::new_err("input.color override must be a u32, 0xRRGGBB, or #RRGGBB value")
         });
     }
@@ -399,30 +402,36 @@ fn parse_color_override(value: &Bound<'_, PyAny>) -> PyResult<u32> {
     ))
 }
 
-fn parse_color_u32(value: &str) -> PyResult<u32> {
+fn parse_color_u32(value: &str) -> PyResult<u64> {
     let Some(value) = value.strip_prefix('#') else {
         let Some(value) = value
             .strip_prefix("0x")
             .or_else(|| value.strip_prefix("0X"))
         else {
-            return value.parse::<u32>().map_err(|_| {
+            return value.parse::<u32>().map(u64::from).map_err(|_| {
                 PyValueError::new_err(
                     "input.color override must be a u32, 0xRRGGBB, or #RRGGBB value",
                 )
             });
         };
-        return u32::from_str_radix(value, 16).map_err(|_| {
-            PyValueError::new_err("input.color override must be a u32, 0xRRGGBB, or #RRGGBB value")
-        });
+        return u32::from_str_radix(value, 16)
+            .map(|color| encode_color_literal(color, value.len() == 8))
+            .map_err(|_| {
+                PyValueError::new_err(
+                    "input.color override must be a u32, 0xRRGGBB, or #RRGGBB value",
+                )
+            });
     };
     if !matches!(value.len(), 6 | 8) {
         return Err(PyValueError::new_err(
             "input.color override hex values must use #RRGGBB or #RRGGBBAA",
         ));
     }
-    u32::from_str_radix(value, 16).map_err(|_| {
-        PyValueError::new_err("input.color override must be a u32, 0xRRGGBB, or #RRGGBB value")
-    })
+    u32::from_str_radix(value, 16)
+        .map(|color| encode_color_literal(color, value.len() == 8))
+        .map_err(|_| {
+            PyValueError::new_err("input.color override must be a u32, 0xRRGGBB, or #RRGGBB value")
+        })
 }
 
 fn parse_bar(item: &Bound<'_, PyAny>) -> PyResult<Bar> {
@@ -513,6 +522,26 @@ fn inputs_to_py(py: Python<'_>, analysis: &Analysis) -> PyResult<Py<PyAny>> {
             item.set_item("callSiteId", input.call_site_id)?;
             item.set_item("name", input.name)?;
             item.set_item("title", input.title)?;
+            match &input.default_value {
+                Some(value) => item.set_item("default", value_to_py(py, value)?)?,
+                None => item.set_item("default", py.None())?,
+            }
+            if let Some(value) = &input.min_value {
+                item.set_item("min", value_to_py(py, value)?)?;
+            }
+            if let Some(value) = &input.max_value {
+                item.set_item("max", value_to_py(py, value)?)?;
+            }
+            if let Some(value) = &input.step {
+                item.set_item("step", value_to_py(py, value)?)?;
+            }
+            if !input.options.is_empty() {
+                let options = PyList::empty(py);
+                for value in &input.options {
+                    options.append(value_to_py(py, value)?)?;
+                }
+                item.set_item("options", options)?;
+            }
             output.append(item)?;
         }
     }

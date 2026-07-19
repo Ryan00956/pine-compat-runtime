@@ -4,7 +4,7 @@ use crate::*;
 
 pub(crate) fn eval_static_builtin_value(name: &str) -> PineValue {
     if let Some(color) = pine_builtins::named_color(name) {
-        return PineValue::Color(color);
+        return PineValue::Color(u64::from(color));
     }
     if let Some(value) = pine_builtins::named_float_constant(name) {
         return PineValue::Float(value);

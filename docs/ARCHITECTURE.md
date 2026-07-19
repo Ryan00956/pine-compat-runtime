@@ -537,17 +537,22 @@ callsite event shape. `schemaVersion: 5` adds host-neutral table cell
 `textWrap` snapshots. `schemaVersion: 6` adds top-level `lineFills` snapshots
 for the supported linefill subset. `schemaVersion: 7` adds top-level
 `polylines` snapshots for the supported `polyline.new` and lifecycle subset.
-`schemaVersion: 8` adds normalized colors and complete fixture-backed visual
-metadata to plots, markers, bars, candles, colors, hlines, and fills. Host integrations can adapt this model into
+`schemaVersion: 8` adds normalized colors and fixture-backed visual metadata
+to plots, markers, bars, candles, colors, hlines, and fills. The completed
+contract carries `renderMetadataVersion: 1`, preserves the public
+`linewidth`/`style` field names, exposes plot `format`/`precision` and
+`forceOverlay`, identifies fill endpoint kinds, and reserves bit 32 on numeric
+colors as the alpha discriminator when an RGBA payload would otherwise look
+like `0xRRGGBB`. Host integrations can adapt this model into
 their charting or API format, but should preserve the runtime schema version
 when they forward machine-readable runtime results.
 
 Machine-readable analysis and matrix outputs use separate schema ownership.
 `pine-sema::PUBLIC_ANALYSIS_SCHEMA_VERSION` owns CLI/Python/WASM analysis
 reports, while `PUBLIC_MATRIX_SCHEMA_VERSION` owns CLI matrix JSON. Runtime is
-currently `8`; analysis is currently `4`, adding `languageVersionOrigin`,
-`dialect`, `scriptMode`, `legacyTranslations`, and `legacyEmulations` to the
-existing version, diagnostic, input, and compatibility evidence; matrix
+currently `8`; analysis is currently `5`, adding compile-time input defaults,
+constraints, and options to the existing version, diagnostic, dialect,
+translation/emulation, and compatibility evidence; matrix
 remains `2`. These contracts can evolve independently when a runtime-only
 output field does not affect analysis or matrix contracts.
 

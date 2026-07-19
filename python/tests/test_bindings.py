@@ -12,6 +12,7 @@ BARS = [
 
 RUNTIME_RESULT_KEYS = {
     "schemaVersion",
+    "renderMetadataVersion",
     "plots",
     "plotChars",
     "plotShapes",
@@ -141,7 +142,7 @@ def test_analyze_script_reports_executable_script():
         '//@version=6\nindicator("demo")\nplot(close)\n'
     )
 
-    assert report["schemaVersion"] == 4
+    assert report["schemaVersion"] == 5
     assert report["languageVersion"] == 6
     assert report["languageVersionOrigin"] == "explicit"
     assert report["dialect"] == "v6"
@@ -165,7 +166,7 @@ def test_analyze_script_reports_input_call_sites():
         'plot(close)\n'
     )
 
-    assert report["schemaVersion"] == 4
+    assert report["schemaVersion"] == 5
     assert report["diagnostics"] == []
     assert [
         {"name": item["name"], "title": item["title"]}
@@ -180,7 +181,7 @@ def test_analyze_script_reports_input_call_sites():
 def test_analyze_script_reports_executable_implicit_v1_legacy_indicator():
     report = pine_compat.analyze_script('study("legacy")\nplot(close)\n')
 
-    assert report["schemaVersion"] == 4
+    assert report["schemaVersion"] == 5
     assert report["languageVersion"] == 1
     assert report["languageVersionOrigin"] == "implicit"
     assert report["dialect"] == "v1"
@@ -360,6 +361,9 @@ def test_program_run_accepts_call_site_keyed_input_overrides():
         'base = enabled and mode == "SMA" ? ta.sma(close, length) * scale : open\n'
         'plot(base)\n'
         'plot(color.r(shade))\n'
+        'plot(color.g(shade))\n'
+        'plot(color.t(shade))\n'
+        'bgcolor(shade)\n'
     )
     report = pine_compat.analyze_script(source)
     input_ids = {
@@ -376,14 +380,39 @@ def test_program_run_accepts_call_site_keyed_input_overrides():
         input_ids["Scale"]: 2.0,
         input_ids["Enabled"]: True,
         input_ids["Mode"]: "SMA",
-        input_ids["Shade"]: 0x4CAF50,
+        input_ids["Shade"]: "#00FF0080",
     }
     result = program.run(BARS, input_overrides=overrides)
     assert result["plots"][0]["values"] == [2.0, 4.0, 6.0]
-    assert result["plots"][1]["values"] == [76.0, 76.0, 76.0]
+    assert result["plots"][1]["values"] == [0.0, 0.0, 0.0]
+    assert result["plots"][2]["values"] == [255.0, 255.0, 255.0]
+    assert result["plots"][3]["values"] == [50.0, 50.0, 50.0]
+    assert result["bgColors"][0]["values"] == [4311679104, 4311679104, 4311679104]
 
     script_result = pine_compat.run_script(source, BARS, input_overrides=overrides)
     assert script_result["plots"][0]["values"] == [2.0, 4.0, 6.0]
+
+
+def test_schema_versions_and_input_constraints_are_public():
+    assert pine_compat.ANALYSIS_SCHEMA_VERSION == 5
+    assert pine_compat.RUNTIME_SCHEMA_VERSION == 8
+    assert pine_compat.RENDER_METADATA_VERSION == 1
+
+    report = pine_compat.analyze_script(
+        '//@version=6\nindicator("input metadata")\n'
+        'length = input.int(3, "Length", minval=1, maxval=9, step=2, options=[1, 3, 5])\n'
+        'plot(close)\n'
+    )
+    assert report["inputs"][0] == {
+        "callSiteId": 1,
+        "name": "input.int",
+        "title": "Length",
+        "default": 3,
+        "min": 1,
+        "max": 9,
+        "step": 2,
+        "options": [1, 3, 5],
+    }
 
 
 def test_program_run_accepts_v4_legacy_input_overrides():
@@ -402,6 +431,11 @@ def test_program_run_accepts_v4_legacy_input_overrides():
         "callSiteId": 1,
         "name": "input.int",
         "title": "Length",
+        "default": 3,
+        "min": 1,
+        "max": 9,
+        "step": 1,
+        "options": [1, 3, 5],
     }
 
     result = pine_compat.compile_script(source).run(

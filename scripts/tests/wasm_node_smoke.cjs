@@ -25,7 +25,7 @@ const bars = [
 ].join('\n');
 
 const analysis = JSON.parse(pine.analyzeScript(source));
-assert.equal(analysis.schemaVersion, 4);
+assert.equal(analysis.schemaVersion, 5);
 assert.equal(analysis.languageVersion, 6);
 assert.equal(analysis.languageVersionOrigin, 'explicit');
 assert.equal(analysis.dialect, 'v6');
@@ -40,6 +40,8 @@ assert.ok(
 );
 
 const direct = JSON.parse(pine.runScriptCsv(source, bars));
+assert.equal(direct.schemaVersion, 8);
+assert.equal(direct.renderMetadataVersion, 1);
 assert.deepEqual(direct.plots[0].values, [2, 4, 6]);
 assert.deepEqual(direct.diagnostics, []);
 

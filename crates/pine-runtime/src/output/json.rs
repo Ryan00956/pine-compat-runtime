@@ -7,14 +7,19 @@ use super::drawings::{
     BoxOutput, LabelOutput, LineFillOutput, LineOutput, PolylineOutput, TableOutput,
 };
 use super::model::{
-    ColorSeries, FillOutput, HLineOutput, PUBLIC_RUNTIME_SCHEMA_VERSION, PlotArrowSeries,
-    PlotBarSeries, PlotCandleSeries, PlotCharSeries, PlotSeries, PlotShapeSeries, RuntimeResult,
+    ColorSeries, FillOutput, HLineOutput, PUBLIC_RENDER_METADATA_VERSION,
+    PUBLIC_RUNTIME_SCHEMA_VERSION, PlotArrowSeries, PlotBarSeries, PlotCandleSeries,
+    PlotCharSeries, PlotSeries, PlotShapeSeries, RuntimeResult,
 };
 use super::strategy::StrategyResult;
 use profile::profile_json;
 
 pub fn public_runtime_result_json(result: &RuntimeResult) -> String {
     let mut output = format!("{{\"schemaVersion\":{},", PUBLIC_RUNTIME_SCHEMA_VERSION);
+    output.push_str(&format!(
+        "\"renderMetadataVersion\":{},",
+        PUBLIC_RENDER_METADATA_VERSION
+    ));
     output.push_str("\"plots\":");
     output.push_str(&plots_json(&result.plots));
     output.push_str(",\"plotChars\":");
@@ -103,6 +108,13 @@ fn plots_json(plots: &[PlotSeries]) -> String {
         );
         push_non_default_value_field(&mut output, "histBase", &plot.hist_base, &PineValue::Int(0));
         push_non_default_value_field(&mut output, "join", &plot.join, &PineValue::Bool(false));
+        push_non_default_value_field(
+            &mut output,
+            "format",
+            &plot.format,
+            &PineValue::String("format.inherit".to_owned()),
+        );
+        push_non_default_value_field(&mut output, "precision", &plot.precision, &PineValue::Na);
         output_metadata_json_into(&mut output, &plot.metadata);
         output.push('}');
     }
@@ -310,6 +322,12 @@ fn output_metadata_json_into(output: &mut String, metadata: &super::model::Outpu
         &metadata.display,
         &PineValue::String("display.all".to_owned()),
     );
+    push_non_default_value_field(
+        output,
+        "forceOverlay",
+        &metadata.force_overlay,
+        &PineValue::Bool(false),
+    );
 }
 
 fn hlines_json(hlines: &[HLineOutput]) -> String {
@@ -372,8 +390,8 @@ fn fills_json(fills: &[FillOutput]) -> String {
             output.push(',');
         }
         output.push_str(&format!(
-            "{{\"id\":{},\"firstId\":{},\"secondId\":{}",
-            fill.id, fill.first_id, fill.second_id
+            "{{\"id\":{},\"firstId\":{},\"secondId\":{},\"firstIsHLine\":{},\"secondIsHLine\":{}",
+            fill.id, fill.first_id, fill.second_id, fill.first_is_hline, fill.second_is_hline
         ));
         push_values_field(&mut output, "colors", &fill.colors);
         push_non_default_value_field(

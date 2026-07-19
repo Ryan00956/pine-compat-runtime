@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use pine_ir::HirProgram;
-use pine_runtime::{InputOverrides, PineValue, input_calls};
+use pine_runtime::{InputOverrides, PineValue, encode_color_literal, input_calls};
 use serde_json::Value;
 
 pub(crate) fn input_overrides_from_json(
@@ -78,7 +78,7 @@ fn parse_generic_input_override(value: &Value) -> Result<PineValue, String> {
     if let Some(value) = value.as_str() {
         let trimmed = value.trim();
         if trimmed.starts_with('#') || trimmed.starts_with("0x") || trimmed.starts_with("0X") {
-            return parse_color_u32(trimmed).map(PineValue::Color);
+            return parse_color_value(trimmed).map(PineValue::Color);
         }
         return Ok(PineValue::String(value.to_owned()));
     }
@@ -114,31 +114,34 @@ fn parse_color_input_override(value: &Value) -> Result<PineValue, String> {
         let value = u32::try_from(value).map_err(|_| {
             "input.color override must be a u32, 0xRRGGBB, or #RRGGBB value".to_owned()
         })?;
-        return Ok(PineValue::Color(value));
+        return Ok(PineValue::Color(u64::from(value)));
     }
     let Some(value) = value.as_str() else {
         return Err("input.color override must be a u32, 0xRRGGBB, or #RRGGBB value".to_owned());
     };
-    parse_color_u32(value.trim()).map(PineValue::Color)
+    parse_color_value(value.trim()).map(PineValue::Color)
 }
 
-fn parse_color_u32(value: &str) -> Result<u32, String> {
+fn parse_color_value(value: &str) -> Result<u64, String> {
     let Some(value) = value.strip_prefix('#') else {
         let Some(value) = value
             .strip_prefix("0x")
             .or_else(|| value.strip_prefix("0X"))
         else {
-            return value.parse::<u32>().map_err(|_| {
+            return value.parse::<u32>().map(u64::from).map_err(|_| {
                 "input.color override must be a u32, 0xRRGGBB, or #RRGGBB value".to_owned()
             });
         };
-        return u32::from_str_radix(value, 16).map_err(|_| {
-            "input.color override must be a u32, 0xRRGGBB, or #RRGGBB value".to_owned()
-        });
+        return u32::from_str_radix(value, 16)
+            .map(|color| encode_color_literal(color, value.len() == 8))
+            .map_err(|_| {
+                "input.color override must be a u32, 0xRRGGBB, or #RRGGBB value".to_owned()
+            });
     };
     if !matches!(value.len(), 6 | 8) {
         return Err("input.color override hex values must use #RRGGBB or #RRGGBBAA".to_owned());
     }
     u32::from_str_radix(value, 16)
+        .map(|color| encode_color_literal(color, value.len() == 8))
         .map_err(|_| "input.color override must be a u32, 0xRRGGBB, or #RRGGBB value".to_owned())
 }

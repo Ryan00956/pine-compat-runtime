@@ -9,6 +9,7 @@ use super::strategy::StrategyResult;
 pub const PUBLIC_RUNTIME_SCHEMA_VERSION: u32 = 8;
 pub const PUBLIC_MATRIX_SCHEMA_VERSION: u32 = 2;
 pub const PUBLIC_OUTPUT_SCHEMA_VERSION: u32 = PUBLIC_RUNTIME_SCHEMA_VERSION;
+pub const PUBLIC_RENDER_METADATA_VERSION: u32 = 1;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RuntimeResult {
@@ -44,6 +45,8 @@ pub struct PlotSeries {
     pub track_price: PineValue,
     pub hist_base: PineValue,
     pub join: PineValue,
+    pub format: PineValue,
+    pub precision: PineValue,
 }
 
 impl PlotSeries {
@@ -59,6 +62,8 @@ impl PlotSeries {
             track_price: PineValue::Bool(false),
             hist_base: PineValue::Int(0),
             join: PineValue::Bool(false),
+            format: PineValue::String("format.inherit".to_owned()),
+            precision: PineValue::Na,
         }
     }
 }
@@ -138,6 +143,7 @@ pub struct OutputMetadata {
     pub editable: PineValue,
     pub show_last: PineValue,
     pub display: PineValue,
+    pub force_overlay: PineValue,
 }
 
 impl Default for OutputMetadata {
@@ -148,6 +154,7 @@ impl Default for OutputMetadata {
             editable: PineValue::Bool(true),
             show_last: PineValue::Na,
             display: PineValue::String("display.all".to_owned()),
+            force_overlay: PineValue::Bool(false),
         }
     }
 }
@@ -193,6 +200,8 @@ pub struct FillOutput {
     pub id: u32,
     pub first_id: u32,
     pub second_id: u32,
+    pub first_is_hline: bool,
+    pub second_is_hline: bool,
     pub colors: Vec<PineValue>,
     pub title: PineValue,
     pub editable: PineValue,

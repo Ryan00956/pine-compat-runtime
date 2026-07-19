@@ -493,14 +493,14 @@ Longer-term work for these unsupported areas is tracked in
 
 ## Compatibility Report
 
-The analyzer returns the public analysis `schemaVersion: 4` contract from CLI
+The analyzer returns the public analysis `schemaVersion: 5` contract from CLI
 JSON, Python, and WASM. The top-level dialect fields describe validation and
 mode classification; compatibility keeps canonical feature evidence separate
 from future legacy translations and result-affecting emulations:
 
 ```json
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "languageVersion": 5,
   "languageVersionOrigin": "explicit",
   "dialect": "v5",
@@ -526,6 +526,8 @@ Legacy versions are authoritative on every host: no option is required to
 enable a valid v1-v4 indicator, and explicit v5/v6 source is never forced into
 a legacy profile. CLI owns representative complete analysis goldens for
 implicit v1 and explicit v2-v4 plus a focused v2 failure; Python and WASM
-compare their full reports with those same `schemaVersion: 4` values. The
+compare their full reports with those same `schemaVersion: 5` values. Input
+records also expose compile-time `default`, `min`, `max`, `step`, and `options`
+metadata when those values are present in the supported input signature. The
 optional `legacyPolicy` rejection switch and source migration preview are not
 part of the current API or compatibility claims.

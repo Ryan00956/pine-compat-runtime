@@ -42,7 +42,7 @@ fn analyzes_script_to_json() {
 #[test]
 fn analyzes_script_input_call_sites_to_json() {
     let output = analyze_script(
-        "//@version=6\nindicator(\"inputs\")\nlength = input.int(2, \"Length\")\nmode = input.string(\"SMA\", title=\"Mode\")\nplot(close)\n",
+        "//@version=6\nindicator(\"inputs\")\nlength = input.int(2, \"Length\", minval=1, maxval=9, step=1, options=[1, 2, 3])\nmode = input.string(\"SMA\", title=\"Mode\", options=[\"SMA\", \"EMA\"])\nplot(close)\n",
     );
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
@@ -53,12 +53,22 @@ fn analyzes_script_input_call_sites_to_json() {
     assert_eq!(parsed["diagnostics"], serde_json::json!([]));
     assert_eq!(parsed["inputs"][0]["name"], serde_json::json!("input.int"));
     assert_eq!(parsed["inputs"][0]["title"], serde_json::json!("Length"));
+    assert_eq!(parsed["inputs"][0]["default"], serde_json::json!(2));
+    assert_eq!(parsed["inputs"][0]["min"], serde_json::json!(1));
+    assert_eq!(parsed["inputs"][0]["max"], serde_json::json!(9));
+    assert_eq!(parsed["inputs"][0]["step"], serde_json::json!(1));
+    assert_eq!(parsed["inputs"][0]["options"], serde_json::json!([1, 2, 3]));
     assert!(parsed["inputs"][0]["callSiteId"].as_u64().is_some());
     assert_eq!(
         parsed["inputs"][1]["name"],
         serde_json::json!("input.string")
     );
     assert_eq!(parsed["inputs"][1]["title"], serde_json::json!("Mode"));
+    assert_eq!(parsed["inputs"][1]["default"], serde_json::json!("SMA"));
+    assert_eq!(
+        parsed["inputs"][1]["options"],
+        serde_json::json!(["SMA", "EMA"])
+    );
     assert!(parsed["inputs"][1]["callSiteId"].as_u64().is_some());
 }
 
@@ -374,6 +384,9 @@ shade = input.color(color.red, "Shade")
 base = enabled and mode == "SMA" ? ta.sma(close, length) * scale : open
 plot(base)
 plot(color.r(shade))
+plot(color.g(shade))
+plot(color.t(shade))
+bgcolor(shade)
 "##;
     let bars = "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n";
     let input_ids = input_call_ids_by_title(source);
@@ -382,7 +395,7 @@ plot(color.r(shade))
         (input_ids["Scale"], serde_json::json!(2.0)),
         (input_ids["Enabled"], serde_json::json!(true)),
         (input_ids["Mode"], serde_json::json!("SMA")),
-        (input_ids["Shade"], serde_json::json!("#4CAF50")),
+        (input_ids["Shade"], serde_json::json!("#00FF0080")),
     ]);
 
     let outputs = [
@@ -414,9 +427,18 @@ plot(color.r(shade))
         let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
         assert_eq!(parsed["plots"][0]["values"], serde_json::json!([2, 4, 6]));
+        assert_eq!(parsed["plots"][1]["values"], serde_json::json!([0, 0, 0]));
         assert_eq!(
-            parsed["plots"][1]["values"],
-            serde_json::json!([76, 76, 76])
+            parsed["plots"][2]["values"],
+            serde_json::json!([255, 255, 255])
+        );
+        assert_eq!(
+            parsed["plots"][3]["values"],
+            serde_json::json!([50, 50, 50])
+        );
+        assert_eq!(
+            parsed["bgColors"][0]["values"],
+            serde_json::json!([4311679104_u64, 4311679104_u64, 4311679104_u64])
         );
     }
 }

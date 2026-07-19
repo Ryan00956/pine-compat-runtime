@@ -917,6 +917,8 @@ impl<'a> HistoricalRuntime<'a> {
         fill_gaps: PineValue,
         display: PineValue,
     ) {
+        let first_is_hline = matches!(first, PineValue::HLine(_));
+        let second_is_hline = matches!(second, PineValue::HLine(_));
         let Some(first_id) = output_id(first) else {
             return;
         };
@@ -934,6 +936,8 @@ impl<'a> HistoricalRuntime<'a> {
             }
             fill.first_id = first_id;
             fill.second_id = second_id;
+            fill.first_is_hline = first_is_hline;
+            fill.second_is_hline = second_is_hline;
             fill.title = title;
             fill.editable = editable;
             fill.show_last = show_last;
@@ -947,6 +951,8 @@ impl<'a> HistoricalRuntime<'a> {
             id,
             first_id,
             second_id,
+            first_is_hline,
+            second_is_hline,
             colors,
             title,
             editable,

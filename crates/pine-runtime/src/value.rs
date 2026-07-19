@@ -41,7 +41,7 @@ pub enum PineValue {
     Float(f64),
     Bool(bool),
     String(String),
-    Color(u32),
+    Color(u64),
     Plot(u32),
     HLine(u32),
     Label(u32),
@@ -58,6 +58,32 @@ pub enum PineValue {
     Tuple(Vec<PineValue>),
     Na,
     Void,
+}
+
+/// Encodes an RGB or RGBA literal without conflating low-valued RGBA payloads
+/// (for example transparent green) with ordinary `0xRRGGBB` colors.
+#[must_use]
+pub fn encode_color_literal(value: u32, includes_alpha: bool) -> u64 {
+    if !includes_alpha {
+        return u64::from(value);
+    }
+    encode_color_rgba(value >> 8, value & 0xFF)
+}
+
+/// Encodes separate RGB and alpha channels into Pine's unambiguous color value.
+#[must_use]
+pub fn encode_color_rgba(rgb: u32, alpha: u32) -> u64 {
+    let rgb = rgb & 0xFF_FFFF;
+    let alpha = alpha & 0xFF;
+    if alpha == 0xFF {
+        return u64::from(rgb);
+    }
+    let encoded = u64::from((rgb << 8) | alpha);
+    if encoded <= 0xFF_FFFF {
+        (1 << 32) | encoded
+    } else {
+        encoded
+    }
 }
 
 impl PineValue {

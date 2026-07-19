@@ -1,5 +1,5 @@
 use crate::tables::tables_to_py;
-use pine_runtime::{PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue};
+use pine_runtime::{PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList};
 
@@ -9,6 +9,7 @@ pub(crate) fn runtime_result_to_py(
 ) -> PyResult<Py<PyAny>> {
     let output = PyDict::new(py);
     output.set_item("schemaVersion", PUBLIC_RUNTIME_SCHEMA_VERSION)?;
+    output.set_item("renderMetadataVersion", PUBLIC_RENDER_METADATA_VERSION)?;
     output.set_item("plots", plots_to_py(py, &result.plots)?)?;
     output.set_item("plotChars", plot_chars_to_py(py, &result.plot_chars)?)?;
     output.set_item("plotShapes", plot_shapes_to_py(py, &result.plot_shapes)?)?;
@@ -194,6 +195,14 @@ fn plots_to_py(py: Python<'_>, plots: &[pine_runtime::PlotSeries]) -> PyResult<P
         )?;
         set_non_default_value(py, &item, "histBase", &plot.hist_base, &PineValue::Int(0))?;
         set_non_default_value(py, &item, "join", &plot.join, &PineValue::Bool(false))?;
+        set_non_default_value(
+            py,
+            &item,
+            "format",
+            &plot.format,
+            &PineValue::String("format.inherit".to_owned()),
+        )?;
+        set_non_default_value(py, &item, "precision", &plot.precision, &PineValue::Na)?;
         set_output_metadata(py, &item, &plot.metadata)?;
         output.append(item)?;
     }
@@ -370,6 +379,8 @@ fn fills_to_py(py: Python<'_>, fills: &[pine_runtime::FillOutput]) -> PyResult<P
         item.set_item("id", fill.id)?;
         item.set_item("firstId", fill.first_id)?;
         item.set_item("secondId", fill.second_id)?;
+        item.set_item("firstIsHLine", fill.first_is_hline)?;
+        item.set_item("secondIsHLine", fill.second_is_hline)?;
         item.set_item("colors", values_to_py(py, &fill.colors)?)?;
         set_non_default_value(
             py,
@@ -445,6 +456,13 @@ fn set_output_metadata(
         "display",
         &metadata.display,
         &PineValue::String("display.all".to_owned()),
+    )?;
+    set_non_default_value(
+        py,
+        item,
+        "forceOverlay",
+        &metadata.force_overlay,
+        &PineValue::Bool(false),
     )
 }
 
@@ -694,8 +712,8 @@ fn append_value(py: Python<'_>, output: &Bound<'_, PyList>, value: &PineValue) -
         PineValue::Float(_) => output.append(py.None()),
         PineValue::Bool(value) => output.append(*value),
         PineValue::String(value) => output.append(value),
-        PineValue::Color(value)
-        | PineValue::Plot(value)
+        PineValue::Color(value) => output.append(*value),
+        PineValue::Plot(value)
         | PineValue::HLine(value)
         | PineValue::Label(value)
         | PineValue::Line(value)

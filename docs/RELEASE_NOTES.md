@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Fixed interpreter-to-host rendering data loss discovered during CandleScope
+  integration. Explicit low-valued RGBA colors now retain their alpha channel
+  internally and across host boundaries through the versioned bit-32 alpha
+  discriminator; runtime schema 8 now advertises `renderMetadataVersion: 1`, completes plot and fill metadata,
+  and keeps the established `linewidth`/`style` field names across CLI,
+  Python, and WASM. Analysis reports are now schema 5 and expose compile-time
+  input defaults, numeric constraints, steps, and options; Python also exports
+  all three schema-version constants.
 - Closed the legacy-indicator stabilization audit with explicit release
   maturity: Pine v4/v3 indicators are preview profiles, while Pine v2 and
   implicit-v1 indicators are experimental. A sorted 15-row release registry
@@ -20,7 +28,8 @@
   ceilings, explicit dialect/cache isolation tests, and an independent 4096
   declaration-edge adversarial test. All 14 emitted legacy diagnostic codes
   remain documented, public analysis/runtime/matrix schemas remain 4/8/2, and
-  all committed legacy corpus/release sources are marked original.
+  all committed legacy corpus/release sources are marked original. Subsequent
+  input-metadata hardening advances the public analysis schema to 5.
 - Closed legacy host integration with CLI-owned shared goldens across Python
   and WASM. Required runtime parity now includes implicit v1 and v4 input
   defaults; five complete analysis snapshots cover v1-v4 and a v2 graph error.

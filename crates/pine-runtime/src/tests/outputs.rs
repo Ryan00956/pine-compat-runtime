@@ -1543,11 +1543,27 @@ barcolor(close > open ? color.green : color.red, title="Bars", offset=0, editabl
 
     assert_eq!(result.plots.len(), 1);
     assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+    assert_eq!(
+        result.plots[0].metadata.title,
+        PineValue::String("Close".to_owned())
+    );
+    assert_eq!(result.plots[0].metadata.offset, PineValue::Int(1));
+    assert_eq!(
+        result.plots[0].format,
+        PineValue::String("format.price".to_owned())
+    );
+    assert_eq!(result.plots[0].precision, PineValue::Int(2));
+    assert_eq!(
+        result.plots[0].metadata.force_overlay,
+        PineValue::Bool(false)
+    );
     assert_eq!(result.hlines.len(), 1);
     assert_eq!(result.hlines[0].price, PineValue::Int(2));
     assert_eq!(result.fills.len(), 1);
     assert_eq!(result.fills[0].first_id, result.plots[0].id);
     assert_eq!(result.fills[0].second_id, result.hlines[0].id);
+    assert!(!result.fills[0].first_is_hline);
+    assert!(result.fills[0].second_is_hline);
     assert_eq!(result.bg_colors.len(), 1);
     assert_eq!(result.bg_colors[0].values.len(), 3);
     assert_eq!(result.bar_colors.len(), 1);

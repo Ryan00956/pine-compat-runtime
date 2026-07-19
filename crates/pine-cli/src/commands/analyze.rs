@@ -1,4 +1,4 @@
-use pine_runtime::input_calls;
+use pine_runtime::{PineValue, input_calls};
 use pine_sema::{Analysis, PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_input};
 use pine_syntax::{Diagnostic, Severity, SourceFile, Span};
 
@@ -182,14 +182,48 @@ fn inputs_json(analysis: &Analysis) -> String {
             |title| format!("\"{}\"", json_escape(title)),
         );
         output.push_str(&format!(
-            "{{\"callSiteId\":{},\"name\":\"{}\",\"title\":{}}}",
+            "{{\"callSiteId\":{},\"name\":\"{}\",\"title\":{},\"default\":{}",
             input.call_site_id,
             json_escape(&input.name),
-            title
+            title,
+            input
+                .default_value
+                .as_ref()
+                .map_or_else(|| "null".to_owned(), input_value_json)
         ));
+        push_optional_input_value(&mut output, "min", input.min_value.as_ref());
+        push_optional_input_value(&mut output, "max", input.max_value.as_ref());
+        push_optional_input_value(&mut output, "step", input.step.as_ref());
+        if !input.options.is_empty() {
+            output.push_str(",\"options\":[");
+            for (option_index, option) in input.options.iter().enumerate() {
+                if option_index > 0 {
+                    output.push(',');
+                }
+                output.push_str(&input_value_json(option));
+            }
+            output.push(']');
+        }
+        output.push('}');
     }
     output.push(']');
     output
+}
+
+fn push_optional_input_value(output: &mut String, name: &str, value: Option<&PineValue>) {
+    if let Some(value) = value {
+        output.push_str(&format!(",\"{name}\":{}", input_value_json(value)));
+    }
+}
+
+fn input_value_json(value: &PineValue) -> String {
+    match value {
+        PineValue::Int(value) => value.to_string(),
+        PineValue::Float(value) => value.to_string(),
+        PineValue::Bool(value) => value.to_string(),
+        PineValue::String(value) => format!("\"{}\"", json_escape(value)),
+        _ => "null".to_owned(),
+    }
 }
 
 fn features_json<'a>(
@@ -530,6 +564,11 @@ mod tests {
         assert_eq!(parsed["inputs"][0]["callSiteId"], serde_json::json!(1));
         assert_eq!(parsed["inputs"][0]["name"], serde_json::json!("input.int"));
         assert_eq!(parsed["inputs"][0]["title"], serde_json::json!("Length"));
+        assert_eq!(parsed["inputs"][0]["default"], serde_json::json!(3));
+        assert_eq!(parsed["inputs"][0]["min"], serde_json::json!(1));
+        assert_eq!(parsed["inputs"][0]["max"], serde_json::json!(9));
+        assert_eq!(parsed["inputs"][0]["step"], serde_json::json!(1));
+        assert_eq!(parsed["inputs"][0]["options"], serde_json::json!([1, 3, 5]));
         assert!(
             parsed["compatibility"]["legacyTranslations"]
                 .as_array()

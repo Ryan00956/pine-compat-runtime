@@ -66,9 +66,12 @@ host-neutral `textWrap`, linefill snapshots are exposed under `lineFills`, and
 polyline creation and lifecycle snapshots are exposed under `polylines`; plot,
 marker, bar, candle, color, hline, and fill outputs also expose normalized
 visual series and fixture-backed metadata;
-analysis JSON is currently `schemaVersion: 4`; in addition to top-level
-`inputs` metadata, it exposes validated language-version origin, dialect,
-script mode, and reserved legacy translation/emulation evidence. Matrix JSON
+runtime results also carry `renderMetadataVersion: 1` so hosts can distinguish
+native visual metadata from host defaults. Analysis JSON is currently
+`schemaVersion: 5`; in addition to top-level `inputs` callsite metadata, it
+exposes compile-time defaults, constraints, and options plus validated
+language-version origin, dialect, script mode, and reserved legacy
+translation/emulation evidence. Matrix JSON
 remains `schemaVersion: 2`.
 The contracts are separate so runtime-only fields do not force analysis or
 matrix schema changes. CLI `analyze --format json`, Python analysis

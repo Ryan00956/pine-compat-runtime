@@ -39,6 +39,7 @@ impl<'a> HistoricalRuntime<'a> {
             .unwrap_or(Ok(default))
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn eval_output_metadata(
         &mut self,
         args: &[HirCallArg],
@@ -47,6 +48,7 @@ impl<'a> HistoricalRuntime<'a> {
         editable_index: usize,
         show_last_index: Option<usize>,
         display_index: Option<usize>,
+        force_overlay_index: Option<usize>,
     ) -> Result<OutputMetadata, RuntimeError> {
         Ok(OutputMetadata {
             title: self.eval_output_arg(
@@ -77,6 +79,12 @@ impl<'a> HistoricalRuntime<'a> {
                     PineValue::String("display.all".to_owned()),
                 )?,
                 None => PineValue::String("display.all".to_owned()),
+            },
+            force_overlay: match force_overlay_index {
+                Some(index) => {
+                    self.eval_output_arg(args, index, "force_overlay", PineValue::Bool(false))?
+                }
+                None => PineValue::Bool(false),
             },
         })
     }
@@ -170,7 +178,8 @@ impl<'a> HistoricalRuntime<'a> {
         let transp = self.eval_legacy_transparency(args, None)?;
         let color = self.eval_output_arg(args, 2, "color", PineValue::Na)?;
         let color = Self::apply_legacy_transparency(color, transp);
-        let metadata = self.eval_output_metadata(args, 1, Some(7), 9, Some(10), Some(11))?;
+        let metadata =
+            self.eval_output_metadata(args, 1, Some(7), 9, Some(10), Some(11), Some(14))?;
         let linewidth = self.eval_output_arg(args, 3, "linewidth", PineValue::Int(1))?;
         let style = self.eval_output_arg(
             args,
@@ -182,6 +191,13 @@ impl<'a> HistoricalRuntime<'a> {
         let track_price = self.eval_output_arg(args, 5, "trackprice", PineValue::Bool(false))?;
         let hist_base = self.eval_output_arg(args, 6, "histbase", PineValue::Int(0))?;
         let join = self.eval_output_arg(args, 8, "join", PineValue::Bool(false))?;
+        let format = self.eval_output_arg(
+            args,
+            12,
+            "format",
+            PineValue::String("format.inherit".to_owned()),
+        )?;
+        let precision = self.eval_output_arg(args, 13, "precision", PineValue::Na)?;
         push_plot_value(&mut self.plots, self.bars, call_site_id.0, value, color);
         let output = self
             .plots
@@ -194,6 +210,8 @@ impl<'a> HistoricalRuntime<'a> {
         output.track_price = track_price;
         output.hist_base = hist_base;
         output.join = join;
+        output.format = format;
+        output.precision = precision;
         Ok(PineValue::Plot(call_site_id.0))
     }
 
@@ -228,7 +246,7 @@ impl<'a> HistoricalRuntime<'a> {
         let text_color_value = self.eval_output_arg(args, 7, "textcolor", PineValue::Na)?;
         let size_value =
             self.eval_output_arg(args, 9, "size", PineValue::String("size.auto".to_owned()))?;
-        let metadata = self.eval_output_metadata(args, 1, Some(5), 8, Some(10), Some(11))?;
+        let metadata = self.eval_output_metadata(args, 1, Some(5), 8, Some(10), Some(11), None)?;
         push_bar_aligned_output(
             &mut self.plot_chars,
             self.bars,
@@ -288,7 +306,8 @@ impl<'a> HistoricalRuntime<'a> {
             Some(expr) => self.eval_expr(expr)?,
             None => PineValue::String("size.auto".to_owned()),
         };
-        let metadata = self.eval_output_metadata(args, 1, Some(5), 8, Some(10), Some(11))?;
+        let metadata =
+            self.eval_output_metadata(args, 1, Some(5), 8, Some(10), Some(11), Some(12))?;
         push_bar_aligned_output(
             &mut self.plot_shapes,
             self.bars,
@@ -341,7 +360,8 @@ impl<'a> HistoricalRuntime<'a> {
             Some(expr) => self.eval_expr(expr)?,
             None => PineValue::Int(0),
         };
-        let metadata = self.eval_output_metadata(args, 1, Some(4), 7, Some(8), Some(9))?;
+        let metadata =
+            self.eval_output_metadata(args, 1, Some(4), 7, Some(8), Some(9), Some(10))?;
         push_bar_aligned_output(
             &mut self.plot_arrows,
             self.bars,
@@ -395,7 +415,7 @@ impl<'a> HistoricalRuntime<'a> {
             Some(expr) => self.eval_expr(expr)?,
             None => PineValue::Na,
         };
-        let metadata = self.eval_output_metadata(args, 4, None, 6, Some(7), Some(8))?;
+        let metadata = self.eval_output_metadata(args, 4, None, 6, Some(7), Some(8), None)?;
         push_bar_aligned_output(
             &mut self.plot_bars,
             self.bars,
@@ -457,7 +477,7 @@ impl<'a> HistoricalRuntime<'a> {
             Some(expr) => self.eval_expr(expr)?,
             None => PineValue::Na,
         };
-        let metadata = self.eval_output_metadata(args, 4, None, 7, Some(8), Some(10))?;
+        let metadata = self.eval_output_metadata(args, 4, None, 7, Some(8), Some(10), None)?;
         push_bar_aligned_output(
             &mut self.plot_candles,
             self.bars,
@@ -493,7 +513,7 @@ impl<'a> HistoricalRuntime<'a> {
         let value = self.eval_expr(color_arg)?;
         let transp = self.eval_legacy_transparency(args, Some(90))?;
         let value = Self::apply_legacy_transparency(value, transp);
-        let metadata = self.eval_output_metadata(args, 1, Some(2), 3, Some(4), Some(5))?;
+        let metadata = self.eval_output_metadata(args, 1, Some(2), 3, Some(4), Some(5), None)?;
         push_series_value(&mut self.bg_colors, self.bars, call_site_id.0, value);
         self.bg_colors
             .iter_mut()
@@ -514,7 +534,7 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
         let value = self.eval_expr(color_arg)?;
-        let metadata = self.eval_output_metadata(args, 1, Some(2), 3, Some(4), Some(5))?;
+        let metadata = self.eval_output_metadata(args, 1, Some(2), 3, Some(4), Some(5), None)?;
         push_series_value(&mut self.bar_colors, self.bars, call_site_id.0, value);
         self.bar_colors
             .iter_mut()

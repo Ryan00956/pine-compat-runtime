@@ -252,6 +252,9 @@ shade = input.color(color.red, "Shade")
 base = enabled and mode == "SMA" ? ta.sma(close, length) * scale : open
 plot(base)
 plot(color.r(shade))
+plot(color.g(shade))
+plot(color.t(shade))
+bgcolor(shade)
 "##,
     )
     .expect("write input override script");
@@ -269,7 +272,7 @@ plot(color.r(shade))
         parse_input_override_spec(&format!("{}=true", input_ids["Enabled"]))
             .expect("enabled override"),
         parse_input_override_spec(&format!("{}=SMA", input_ids["Mode"])).expect("mode override"),
-        parse_input_override_spec(&format!("{}=#4CAF50", input_ids["Shade"]))
+        parse_input_override_spec(&format!("{}=#00FF0080", input_ids["Shade"]))
             .expect("shade override"),
     ];
     let options = RunOptions {
@@ -287,7 +290,10 @@ plot(color.r(shade))
     let output = run_json_with_options(&options).expect("input override output");
 
     assert!(output.contains("\"values\":[2,4,6,8]"));
-    assert!(output.contains("\"values\":[76,76,76,76]"));
+    assert!(output.contains("\"values\":[0,0,0,0]"));
+    assert!(output.contains("\"values\":[255,255,255,255]"));
+    assert!(output.contains("\"values\":[50,50,50,50]"));
+    assert!(output.contains("\"values\":[4311679104,4311679104,4311679104,4311679104]"));
 
     let profile_options = RunOptions {
         path: script.to_string_lossy().into_owned(),
