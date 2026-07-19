@@ -129,7 +129,8 @@ Compile once and reuse a program across data sets or input configurations:
 ```python
 import pine_compat
 
-source = '''indicator("Configurable SMA")
+source = '''//@version=6
+indicator("Configurable SMA")
 length = input.int(20, "Length")
 plot(ta.sma(close, length))
 '''
@@ -167,6 +168,7 @@ Analyze without executing, or inject host-owned request and library data:
 
 ```bash
 cargo run -p pine-cli -- analyze script.pine
+cargo run -p pine-cli -- analyze script.pine --format json
 
 cargo run -p pine-cli -- run script.pine --bars bars.csv \
   --request-bars NYSE:IBM:5=ibm-5m.csv \

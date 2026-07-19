@@ -225,7 +225,8 @@ fn runs_input_overrides_integration_fixture() {
     ));
     fs::write(
         &script,
-        r##"indicator("input overrides")
+        r##"//@version=5
+indicator("input overrides")
 length = input.int(2, "Length")
 scale = input.float(1.0, "Scale")
 enabled = input.bool(true, "Enabled")

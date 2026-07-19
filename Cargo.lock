@@ -303,6 +303,7 @@ dependencies = [
  "pine-runtime",
  "pine-sema",
  "pine-syntax",
+ "serde_json",
 ]
 
 [[package]]

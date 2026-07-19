@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array new table size limit")
 values = array.new_table(100001)
 plot(array.size(values))

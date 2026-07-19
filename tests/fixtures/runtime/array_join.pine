@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array join fixture")
 ints = array.new_int()
 ints.push(1)

@@ -108,12 +108,20 @@ def assert_json_close(actual, expected, path="$"):
 
 
 def test_analyze_script_reports_executable_script():
-    report = pine_compat.analyze_script('indicator("demo")\nplot(close)\n')
+    report = pine_compat.analyze_script(
+        '//@version=6\nindicator("demo")\nplot(close)\n'
+    )
 
-    assert report["schemaVersion"] == 3
+    assert report["schemaVersion"] == 4
+    assert report["languageVersion"] == 6
+    assert report["languageVersionOrigin"] == "explicit"
+    assert report["dialect"] == "v6"
+    assert report["scriptMode"] == "indicator"
     assert report["executable"] is True
     assert report["diagnostics"] == []
     assert report["inputs"] == []
+    assert report["compatibility"]["legacyTranslations"] == []
+    assert report["compatibility"]["legacyEmulations"] == []
     assert any(
         feature["feature"] == "plot"
         for feature in report["compatibility"]["supported"]
@@ -122,13 +130,13 @@ def test_analyze_script_reports_executable_script():
 
 def test_analyze_script_reports_input_call_sites():
     report = pine_compat.analyze_script(
-        'indicator("inputs")\n'
+        '//@version=6\nindicator("inputs")\n'
         'length = input.int(2, "Length")\n'
         'mode = input.string("SMA", title="Mode")\n'
         'plot(close)\n'
     )
 
-    assert report["schemaVersion"] == 3
+    assert report["schemaVersion"] == 4
     assert report["diagnostics"] == []
     assert [
         {"name": item["name"], "title": item["title"]}
@@ -140,9 +148,42 @@ def test_analyze_script_reports_input_call_sites():
     assert all(isinstance(item["callSiteId"], int) for item in report["inputs"])
 
 
+def test_analyze_script_reports_implicit_v1_legacy_indicator_gate():
+    report = pine_compat.analyze_script('study("legacy")\nplot(close)\n')
+
+    assert report["schemaVersion"] == 4
+    assert report["languageVersion"] == 1
+    assert report["languageVersionOrigin"] == "implicit"
+    assert report["dialect"] == "v1"
+    assert report["scriptMode"] == "legacyIndicator"
+    assert report["executable"] is False
+    assert [item["code"] for item in report["diagnostics"]] == [
+        "E_LEGACY_INDICATOR_DECLARATION"
+    ]
+    assert report["compatibility"]["legacyTranslations"] == []
+    assert report["compatibility"]["legacyEmulations"] == []
+
+
+def test_analyze_script_reports_one_legacy_strategy_hard_stop():
+    report = pine_compat.analyze_script(
+        '//@version=4\nstrategy("legacy")\n'
+        'strategy.entry("L", strategy.long)\n'
+    )
+
+    assert report["languageVersion"] == 4
+    assert report["languageVersionOrigin"] == "explicit"
+    assert report["dialect"] == "v4"
+    assert report["scriptMode"] == "strategy"
+    assert report["executable"] is False
+    assert [item["code"] for item in report["diagnostics"]] == [
+        "E_LEGACY_STRATEGY_OUT_OF_SCOPE"
+    ]
+    assert report["compatibility"]["unsupported"][0]["feature"] == "legacy strategy"
+
+
 def test_program_run_accepts_call_site_keyed_input_overrides():
     source = (
-        'indicator("input overrides")\n'
+        '//@version=5\nindicator("input overrides")\n'
         'length = input.int(2, "Length")\n'
         'scale = input.float(1.0, "Scale")\n'
         'enabled = input.bool(true, "Enabled")\n'
@@ -179,7 +220,7 @@ def test_program_run_accepts_call_site_keyed_input_overrides():
 
 def test_program_run_accepts_generic_color_input_override_string():
     source = (
-        'indicator("generic color")\n'
+        '//@version=5\nindicator("generic color")\n'
         'shade = input(color.red, "Shade")\n'
         'plot(color.r(shade))\n'
     )
@@ -194,7 +235,7 @@ def test_program_run_accepts_generic_color_input_override_string():
 
 def test_program_run_rejects_unknown_input_override_call_site():
     program = pine_compat.compile_script(
-        'indicator("inputs")\n'
+        '//@version=5\nindicator("inputs")\n'
         'length = input.int(2, "Length")\n'
         'plot(ta.sma(close, length))\n'
     )
@@ -208,7 +249,7 @@ def test_program_run_rejects_unknown_input_override_call_site():
 
 
 def test_compile_script_returns_program_with_run_method():
-    program = pine_compat.compile_script('indicator("demo")\nplot(close)\n')
+    program = pine_compat.compile_script('//@version=5\nindicator("demo")\nplot(close)\n')
     result = program.run(BARS)
 
     assert result["schemaVersion"] == 7
@@ -230,7 +271,7 @@ def test_run_script_rejects_non_finite_bar_values():
     ]
 
     try:
-        pine_compat.run_script('indicator("demo")\nplot(close)\n', bars)
+        pine_compat.run_script('//@version=5\nindicator("demo")\nplot(close)\n', bars)
     except ValueError as error:
         assert "bar `close` value must be finite" in str(error)
     else:
@@ -244,7 +285,7 @@ def test_run_script_rejects_duplicate_bar_times():
     ]
 
     try:
-        pine_compat.run_script('indicator("demo")\nplot(close)\n', bars)
+        pine_compat.run_script('//@version=5\nindicator("demo")\nplot(close)\n', bars)
     except ValueError as error:
         assert "duplicate bar time `0`" in str(error)
     else:
@@ -258,7 +299,7 @@ def test_run_script_rejects_unsorted_bar_times():
     ]
 
     try:
-        pine_compat.run_script('indicator("demo")\nplot(close)\n', bars)
+        pine_compat.run_script('//@version=5\nindicator("demo")\nplot(close)\n', bars)
     except ValueError as error:
         assert "bars are not sorted: `0` follows `1`" in str(error)
     else:
@@ -266,7 +307,7 @@ def test_run_script_rejects_unsorted_bar_times():
 
 
 def test_run_script_converts_non_finite_plot_values_to_none():
-    result = pine_compat.run_script('indicator("demo")\nplot(1.0 / 0.0)\n', BARS)
+    result = pine_compat.run_script('//@version=5\nindicator("demo")\nplot(1.0 / 0.0)\n', BARS)
 
     assert result["plots"][0]["values"] == [None, None, None]
 
@@ -2833,7 +2874,7 @@ def test_compile_script_rejects_deep_input_without_aborting_process():
     expression = "(" * 300 + "close" + ")" * 300
 
     try:
-        pine_compat.compile_script(f'indicator("deep")\nplot({expression})\n')
+        pine_compat.compile_script(f'//@version=5\nindicator("deep")\nplot({expression})\n')
     except ValueError as error:
         assert "E_PARSE_EXPR_DEPTH" in str(error)
     else:
@@ -2842,7 +2883,7 @@ def test_compile_script_rejects_deep_input_without_aborting_process():
 
 def test_run_script_returns_empty_strategy_contract_for_strategy_mode():
     result = pine_compat.run_script(
-        'strategy("demo")\nplot(close)\n',
+        '//@version=5\nstrategy("demo")\nplot(close)\n',
         BARS,
     )
 
@@ -2856,7 +2897,7 @@ def test_run_script_returns_empty_strategy_contract_for_strategy_mode():
 
 def test_run_script_returns_strategy_entry_contract():
     result = pine_compat.run_script(
-        'strategy("demo")\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nplot(close)\n',
+        '//@version=5\nstrategy("demo")\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nplot(close)\n',
         BARS,
     )
 
@@ -3920,7 +3961,7 @@ def test_run_script_returns_strategy_profit_state_fixture_contract():
 
 def test_run_script_returns_strategy_profit_summary_plots():
     result = pine_compat.run_script(
-        'strategy("demo")\nif bar_index == 0\n    strategy.entry("W", strategy.long, qty=1)\nif bar_index == 2\n    strategy.close("W")\nif bar_index == 3\n    strategy.entry("L", strategy.long, qty=1)\nif bar_index == 5\n    strategy.close("L")\nplot(strategy.netprofit)\nplot(strategy.grossprofit)\nplot(strategy.grossloss)\nplot(strategy.avg_trade)\nplot(strategy.avg_winning_trade)\nplot(strategy.avg_losing_trade)\n',
+        '//@version=5\nstrategy("demo")\nif bar_index == 0\n    strategy.entry("W", strategy.long, qty=1)\nif bar_index == 2\n    strategy.close("W")\nif bar_index == 3\n    strategy.entry("L", strategy.long, qty=1)\nif bar_index == 5\n    strategy.close("L")\nplot(strategy.netprofit)\nplot(strategy.grossprofit)\nplot(strategy.grossloss)\nplot(strategy.avg_trade)\nplot(strategy.avg_winning_trade)\nplot(strategy.avg_losing_trade)\n',
         fixture_bars("tests/fixtures/runtime/strategy_trade_outcome_counts_bars.csv"),
     )
 
@@ -7550,7 +7591,7 @@ def test_run_script_returns_omitted_trail_points_persistent_fixture_contract():
 
 def test_run_script_returns_strategy_runtime_diagnostics():
     result = pine_compat.run_script(
-        'strategy("demo")\nif bar_index == 0\n    strategy.entry("L", strategy.long, qty=close-close)\n',
+        '//@version=5\nstrategy("demo")\nif bar_index == 0\n    strategy.entry("L", strategy.long, qty=close-close)\n',
         BARS,
     )
 
@@ -7564,7 +7605,7 @@ def test_run_script_returns_strategy_runtime_diagnostics():
 
 def test_run_script_treats_strategy_exit_missing_entry_as_noop():
     result = pine_compat.run_script(
-        'strategy("exit")\nif bar_index == 0\n    strategy.exit("XL", "L", stop=low)\n',
+        '//@version=5\nstrategy("exit")\nif bar_index == 0\n    strategy.exit("XL", "L", stop=low)\n',
         BARS,
     )
 
@@ -7952,8 +7993,8 @@ def test_run_script_treats_strategy_exit_trailing_wrong_entry_as_noop():
 
 def test_analyze_script_accepts_library_sources_without_import_use():
     report = pine_compat.analyze_script(
-        'indicator("root")\nplot(close)\n',
-        library_sources={"user/lib/1": 'library("lib")\n'},
+        '//@version=5\nindicator("root")\nplot(close)\n',
+        library_sources={"user/lib/1": '//@version=5\nlibrary("lib")\n'},
     )
 
     assert report["executable"] is True
@@ -7964,7 +8005,7 @@ def test_compile_script_requires_import_alias_for_library_source():
     try:
         pine_compat.compile_script(
             'import user/lib/1\nindicator("root")\n',
-            library_sources={"user/lib/1": 'library("lib")\n'},
+            library_sources={"user/lib/1": '//@version=5\nlibrary("lib")\n'},
         )
     except ValueError as error:
         assert "E_IMPORT_ALIAS_REQUIRED" in str(error)
@@ -7974,10 +8015,10 @@ def test_compile_script_requires_import_alias_for_library_source():
 
 def test_run_script_accepts_imported_pure_function_subset():
     result = pine_compat.run_script(
-        'indicator("root")\nimport user/lib/1 as lib\nplot(lib.scale(close) + lib.offset)\n',
+        '//@version=5\nindicator("root")\nimport user/lib/1 as lib\nplot(lib.scale(close) + lib.offset)\n',
         BARS,
         library_sources={
-            "user/lib/1": 'library("lib")\nexport offset = 2\nexport scale(value) => value * offset\n'
+            "user/lib/1": '//@version=5\nlibrary("lib")\nexport offset = 2\nexport scale(value) => value * offset\n'
         },
     )
 
@@ -7987,8 +8028,8 @@ def test_run_script_accepts_imported_pure_function_subset():
 def test_compile_script_rejects_invalid_library_source_key():
     try:
         pine_compat.compile_script(
-            'indicator("root")\nplot(close)\n',
-            library_sources={"user/lib 1": 'library("lib")\n'},
+            '//@version=5\nindicator("root")\nplot(close)\n',
+            library_sources={"user/lib 1": '//@version=5\nlibrary("lib")\n'},
         )
     except ValueError as error:
         assert "invalid library source key `user/lib 1`" in str(error)
@@ -7998,7 +8039,7 @@ def test_compile_script_rejects_invalid_library_source_key():
 
 def test_run_script_compiles_and_executes():
     result = pine_compat.run_script(
-        'indicator("math")\nplot(math.max(close, 2))\n',
+        '//@version=5\nindicator("math")\nplot(math.max(close, 2))\n',
         BARS,
     )
 
@@ -8008,9 +8049,9 @@ def test_run_script_compiles_and_executes():
 
 def test_run_script_accepts_library_sources_without_import_use():
     result = pine_compat.run_script(
-        'indicator("root")\nplot(close)\n',
+        '//@version=5\nindicator("root")\nplot(close)\n',
         BARS,
-        library_sources={"user/lib/1": 'library("lib")\n'},
+        library_sources={"user/lib/1": '//@version=5\nlibrary("lib")\n'},
     )
 
     assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
@@ -8018,7 +8059,7 @@ def test_run_script_accepts_library_sources_without_import_use():
 
 def test_run_script_returns_alertcondition_events():
     result = pine_compat.run_script(
-        'indicator("alerts")\nalertcondition(close > 1, "Above", "Close is above one")\n',
+        '//@version=5\nindicator("alerts")\nalertcondition(close > 1, "Above", "Close is above one")\n',
         BARS,
     )
 
@@ -8042,7 +8083,7 @@ def test_run_script_returns_alertcondition_events():
 
 def test_run_script_returns_alert_events():
     result = pine_compat.run_script(
-        'indicator("alerts")\nif bar_index == 1\n    alert("Reached")\n',
+        '//@version=5\nindicator("alerts")\nif bar_index == 1\n    alert("Reached")\n',
         BARS,
     )
 
@@ -8059,7 +8100,7 @@ def test_run_script_returns_alert_events():
 
 def test_run_script_returns_dynamic_alert_message_events():
     result = pine_compat.run_script(
-        'indicator("alerts")\nalert(str.tostring(close))\n',
+        '//@version=5\nindicator("alerts")\nalert(str.tostring(close))\n',
         BARS,
     )
 
@@ -8224,7 +8265,7 @@ def test_render_strategy_order_fill_running_alert_rejects_unknown_placeholder():
 
 def test_run_script_accepts_request_bars():
     result = pine_compat.run_script(
-        'indicator("request")\nplot(request.security("NYSE:IBM", timeframe.period, close))\n',
+        '//@version=5\nindicator("request")\nplot(request.security("NYSE:IBM", timeframe.period, close))\n',
         BARS,
         {
             "NYSE:IBM:1": [
@@ -9099,7 +9140,7 @@ def test_run_script_request_fixture_matches_cli_contract():
 
 def test_run_script_reports_missing_request_bars():
     program = pine_compat.compile_script(
-        'indicator("request")\nplot(request.security("NYSE:IBM", timeframe.period, close))\n'
+        '//@version=5\nindicator("request")\nplot(request.security("NYSE:IBM", timeframe.period, close))\n'
     )
 
     try:
@@ -9112,7 +9153,7 @@ def test_run_script_reports_missing_request_bars():
 
 def test_run_script_returns_label_outputs():
     result = pine_compat.run_script(
-        'indicator("labels")\nif bar_index == 0\n    label_id = label.new(bar_index, high, "start")\nplot(close)\n',
+        '//@version=5\nindicator("labels")\nif bar_index == 0\n    label_id = label.new(bar_index, high, "start")\nplot(close)\n',
         BARS,
     )
 
@@ -9144,7 +9185,7 @@ def test_run_script_returns_label_outputs():
 
 def test_run_script_returns_label_text_formatting_outputs():
     result = pine_compat.run_script(
-        'indicator("label formatting")\nif bar_index == 1\n    label_id = label.new(bar_index, high, "start", text_formatting=text.format_bold)\n    label.set_text_formatting(label_id, text.format_bold + text.format_italic)\nlabel.set_text_formatting(na, text.format_italic)\nplot(close)\n',
+        '//@version=5\nindicator("label formatting")\nif bar_index == 1\n    label_id = label.new(bar_index, high, "start", text_formatting=text.format_bold)\n    label.set_text_formatting(label_id, text.format_bold + text.format_italic)\nlabel.set_text_formatting(na, text.format_italic)\nplot(close)\n',
         BARS,
     )
 
@@ -9155,7 +9196,7 @@ def test_run_script_returns_label_text_formatting_outputs():
 
 def test_run_script_returns_label_array_outputs():
     result = pine_compat.run_script(
-        'indicator("label array")\nvar labels = array.new_label()\nif bar_index == 0\n    id = label.new(bar_index, high, "start")\n    array.push(labels, id)\nif bar_index == 1\n    copied = array.copy(labels)\n    label.set_text(array.get(copied, 0), "array")\n    if array.includes(labels, array.first(labels))\n        from_array = labels.get(0)\n        from_array.set_color(color.green)\nplot(array.size(labels))\n',
+        '//@version=5\nindicator("label array")\nvar labels = array.new_label()\nif bar_index == 0\n    id = label.new(bar_index, high, "start")\n    array.push(labels, id)\nif bar_index == 1\n    copied = array.copy(labels)\n    label.set_text(array.get(copied, 0), "array")\n    if array.includes(labels, array.first(labels))\n        from_array = labels.get(0)\n        from_array.set_color(color.green)\nplot(array.size(labels))\n',
         BARS,
     )
 
@@ -9168,7 +9209,7 @@ def test_run_script_returns_label_array_outputs():
 
 def test_run_script_returns_line_outputs():
     result = pine_compat.run_script(
-        'indicator("lines")\nif bar_index == 1\n    line_id = line.new(bar_index, low, bar_index, high)\nplot(close)\n',
+        '//@version=5\nindicator("lines")\nif bar_index == 1\n    line_id = line.new(bar_index, low, bar_index, high)\nplot(close)\n',
         BARS,
     )
 
@@ -9196,7 +9237,7 @@ def test_run_script_returns_line_outputs():
 
 def test_run_script_returns_line_new_style_outputs():
     result = pine_compat.run_script(
-        'indicator("line new style")\nif bar_index == 1\n    line_id = line.new(x1=bar_index, y1=low, x2=bar_index + 1, y2=high, xloc=xloc.bar_index, extend=extend.right, color=color.green, style=line.style_dashed, width=2, force_overlay=false)\nplot(close)\n',
+        '//@version=5\nindicator("line new style")\nif bar_index == 1\n    line_id = line.new(x1=bar_index, y1=low, x2=bar_index + 1, y2=high, xloc=xloc.bar_index, extend=extend.right, color=color.green, style=line.style_dashed, width=2, force_overlay=false)\nplot(close)\n',
         BARS,
     )
 
@@ -9224,7 +9265,7 @@ def test_run_script_returns_line_new_style_outputs():
 
 def test_run_script_returns_line_set_xloc_outputs():
     result = pine_compat.run_script(
-        'indicator("line set xloc")\nif bar_index == 1\n    line_id = line.new(bar_index, low, bar_index + 1, high)\n    line.set_xloc(line_id, bar_index - 1, bar_index + 3, xloc.bar_index)\nline.set_xloc(na, bar_index, bar_index, xloc.bar_index)\nplot(close)\n',
+        '//@version=5\nindicator("line set xloc")\nif bar_index == 1\n    line_id = line.new(bar_index, low, bar_index + 1, high)\n    line.set_xloc(line_id, bar_index - 1, bar_index + 3, xloc.bar_index)\nline.set_xloc(na, bar_index, bar_index, xloc.bar_index)\nplot(close)\n',
         BARS,
     )
 
@@ -9265,7 +9306,7 @@ def test_run_script_returns_line_set_xloc_outputs():
 
 def test_run_script_returns_line_array_outputs():
     result = pine_compat.run_script(
-        'indicator("line array")\nvar lines = array.new_line()\nif bar_index == 0\n    id = line.new(bar_index, low, bar_index + 1, high)\n    array.push(lines, id)\nif bar_index == 1\n    copied = array.copy(lines)\n    line.set_color(array.get(copied, 0), color.green)\n    if array.includes(lines, array.first(lines))\n        from_array = lines.get(0)\n        from_array.set_width(2)\nplot(array.size(lines))\n',
+        '//@version=5\nindicator("line array")\nvar lines = array.new_line()\nif bar_index == 0\n    id = line.new(bar_index, low, bar_index + 1, high)\n    array.push(lines, id)\nif bar_index == 1\n    copied = array.copy(lines)\n    line.set_color(array.get(copied, 0), color.green)\n    if array.includes(lines, array.first(lines))\n        from_array = lines.get(0)\n        from_array.set_width(2)\nplot(array.size(lines))\n',
         BARS,
     )
 
@@ -9320,7 +9361,7 @@ def test_run_script_returns_line_array_outputs():
 
 def test_run_script_returns_line_getter_plot_values():
     result = pine_compat.run_script(
-        'indicator("line getters")\nvar line_id = line.new(bar_index, low, bar_index + 1, high)\nif bar_index == 1\n    line.set_x1(line_id, bar_index - 10)\n    line.set_x2(line_id, bar_index + 10)\n    line.set_y1(line_id, low - 10)\n    line.set_y2(line_id, high + 10)\nplot(line.get_x1(line_id))\nplot(line.get_y1(line_id))\nplot(line.get_x2(line_id))\nplot(line.get_y2(line_id))\nplot(line.get_price(line_id, bar_index + 5))\n',
+        '//@version=5\nindicator("line getters")\nvar line_id = line.new(bar_index, low, bar_index + 1, high)\nif bar_index == 1\n    line.set_x1(line_id, bar_index - 10)\n    line.set_x2(line_id, bar_index + 10)\n    line.set_y1(line_id, low - 10)\n    line.set_y2(line_id, high + 10)\nplot(line.get_x1(line_id))\nplot(line.get_y1(line_id))\nplot(line.get_x2(line_id))\nplot(line.get_y2(line_id))\nplot(line.get_price(line_id, bar_index + 5))\n',
         BARS,
     )
 
@@ -9333,7 +9374,7 @@ def test_run_script_returns_line_getter_plot_values():
 
 def test_run_script_returns_box_outputs():
     result = pine_compat.run_script(
-        'indicator("boxes")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index, low)\n    box.set_bgcolor(box_id, color.green)\nplot(close)\n',
+        '//@version=5\nindicator("boxes")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index, low)\n    box.set_bgcolor(box_id, color.green)\nplot(close)\n',
         BARS,
     )
 
@@ -9392,7 +9433,7 @@ def test_run_script_returns_box_outputs():
 
 def test_run_script_returns_box_set_xloc_outputs():
     result = pine_compat.run_script(
-        'indicator("box set xloc")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index + 1, low)\n    box.set_xloc(box_id, bar_index - 1, bar_index + 3, xloc.bar_index)\nbox.set_xloc(na, bar_index, bar_index + 1, xloc.bar_index)\nplot(close)\n',
+        '//@version=5\nindicator("box set xloc")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index + 1, low)\n    box.set_xloc(box_id, bar_index - 1, bar_index + 3, xloc.bar_index)\nbox.set_xloc(na, bar_index, bar_index + 1, xloc.bar_index)\nplot(close)\n',
         BARS,
     )
 
@@ -9451,7 +9492,7 @@ def test_run_script_returns_box_set_xloc_outputs():
 
 def test_run_script_accepts_drawing_object_method_syntax():
     result = pine_compat.run_script(
-        'indicator("drawing methods")\nvar label_id = label.new(bar_index, high, "start")\nvar line_id = line.new(bar_index, low, bar_index + 1, high)\nvar box_id = box.new(bar_index, high, bar_index + 1, low)\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    label_id.set_text("method")\n    label_id.set_xy(bar_index, close)\n    line_id.set_xy1(bar_index, low)\n    line_id.set_color(color.green)\n    box_id.set_lefttop(bar_index, high)\n    box_id.set_xloc(bar_index - 1, bar_index + 1, xloc.bar_index)\n    table_id.cell(0, 0, "A")\n    table_id.set_bgcolor(color.green)\nplot(str.length(label_id.get_text()))\nplot(line_id.get_x1())\nplot(box_id.get_right())\nplot(close)\n',
+        '//@version=5\nindicator("drawing methods")\nvar label_id = label.new(bar_index, high, "start")\nvar line_id = line.new(bar_index, low, bar_index + 1, high)\nvar box_id = box.new(bar_index, high, bar_index + 1, low)\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    label_id.set_text("method")\n    label_id.set_xy(bar_index, close)\n    line_id.set_xy1(bar_index, low)\n    line_id.set_color(color.green)\n    box_id.set_lefttop(bar_index, high)\n    box_id.set_xloc(bar_index - 1, bar_index + 1, xloc.bar_index)\n    table_id.cell(0, 0, "A")\n    table_id.set_bgcolor(color.green)\nplot(str.length(label_id.get_text()))\nplot(line_id.get_x1())\nplot(box_id.get_right())\nplot(close)\n',
         BARS,
     )
 
@@ -9463,7 +9504,7 @@ def test_run_script_accepts_drawing_object_method_syntax():
 
 def test_run_script_returns_box_new_style_outputs():
     result = pine_compat.run_script(
-        'indicator("box new style")\nif bar_index == 1\n    box_id = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text="styled", text_size=size.small, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)\nplot(close)\n',
+        '//@version=5\nindicator("box new style")\nif bar_index == 1\n    box_id = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text="styled", text_size=size.small, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)\nplot(close)\n',
         BARS,
     )
 
@@ -9500,7 +9541,7 @@ def test_run_script_returns_box_new_style_outputs():
 
 def test_run_script_returns_box_text_formatting_outputs():
     result = pine_compat.run_script(
-        'indicator("box formatting")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index, low)\n    box.set_text_formatting(box_id, text.format_bold + text.format_italic)\nbox.set_text_formatting(na, text.format_italic)\nplot(close)\n',
+        '//@version=5\nindicator("box formatting")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index, low)\n    box.set_text_formatting(box_id, text.format_bold + text.format_italic)\nbox.set_text_formatting(na, text.format_italic)\nplot(close)\n',
         BARS,
     )
 
@@ -9525,7 +9566,7 @@ def table_snapshots_without_empty_merges(tables):
 
 def test_run_script_returns_table_outputs():
     result = pine_compat.run_script(
-        'indicator("tables")\nif bar_index == 1\n    table_id = table.new(position.top_right, 2, 2)\n    table.cell(table_id, 0, 0, "A", bgcolor=color.green, text_color=color.white)\n    table.cell_set_text(table_id, 0, 0, "B")\n    table.cell_set_bgcolor(table_id, 0, 0, color.red)\n    table.cell_set_text_color(table_id, 0, 0, color.blue)\n    table.cell_set_width(table_id, 0, 0, 25)\n    table.cell_set_height(table_id, 0, 0, 40)\n    table.cell_set_text_size(table_id, 0, 0, size.small)\n    table.cell_set_text_halign(table_id, 0, 0, text.align_left)\n    table.cell_set_text_valign(table_id, 0, 0, text.align_top)\n    table.cell_set_text_wrap(table_id, 0, 0, text.wrap_auto)\n    table.set_position(table_id, position.bottom_right)\n    table.set_bgcolor(table_id, color.yellow)\n    table.set_frame_color(table_id, color.black)\n    table.set_frame_width(table_id, 3)\n    table.set_border_color(table_id, color.white)\n    table.set_border_width(table_id, 4)\nplot(close)\n',
+        '//@version=5\nindicator("tables")\nif bar_index == 1\n    table_id = table.new(position.top_right, 2, 2)\n    table.cell(table_id, 0, 0, "A", bgcolor=color.green, text_color=color.white)\n    table.cell_set_text(table_id, 0, 0, "B")\n    table.cell_set_bgcolor(table_id, 0, 0, color.red)\n    table.cell_set_text_color(table_id, 0, 0, color.blue)\n    table.cell_set_width(table_id, 0, 0, 25)\n    table.cell_set_height(table_id, 0, 0, 40)\n    table.cell_set_text_size(table_id, 0, 0, size.small)\n    table.cell_set_text_halign(table_id, 0, 0, text.align_left)\n    table.cell_set_text_valign(table_id, 0, 0, text.align_top)\n    table.cell_set_text_wrap(table_id, 0, 0, text.wrap_auto)\n    table.set_position(table_id, position.bottom_right)\n    table.set_bgcolor(table_id, color.yellow)\n    table.set_frame_color(table_id, color.black)\n    table.set_frame_width(table_id, 3)\n    table.set_border_color(table_id, color.white)\n    table.set_border_width(table_id, 4)\nplot(close)\n',
         BARS,
     )
 
@@ -9734,7 +9775,7 @@ def test_run_script_returns_table_outputs():
 
 def test_run_script_returns_table_delete_outputs():
     result = pine_compat.run_script(
-        'indicator("table delete")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A")\n    table.delete(table_id)\nif bar_index == 2\n    table.cell(table_id, 0, 0, "ignored")\n    table.delete(table_id)\ntable.delete(na)\nplot(close)\n',
+        '//@version=5\nindicator("table delete")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A")\n    table.delete(table_id)\nif bar_index == 2\n    table.cell(table_id, 0, 0, "ignored")\n    table.delete(table_id)\ntable.delete(na)\nplot(close)\n',
         BARS,
     )
 
@@ -9777,7 +9818,7 @@ def test_run_script_returns_table_delete_outputs():
 
 def test_run_script_returns_table_clear_outputs():
     result = pine_compat.run_script(
-        'indicator("table clear")\nvar table_id = table.new(position.top_right, 2, 2)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A")\n    table.cell(table_id, 1, 0, "B", bgcolor=color.green)\n    table.clear(table_id, 1, 0, 1, 0)\nif bar_index == 2\n    table.clear(table_id, 0, 0, 0, 0)\ntable.clear(na, 0, 0, 0, 0)\nplot(close)\n',
+        '//@version=5\nindicator("table clear")\nvar table_id = table.new(position.top_right, 2, 2)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A")\n    table.cell(table_id, 1, 0, "B", bgcolor=color.green)\n    table.clear(table_id, 1, 0, 1, 0)\nif bar_index == 2\n    table.clear(table_id, 0, 0, 0, 0)\ntable.clear(na, 0, 0, 0, 0)\nplot(close)\n',
         BARS,
     )
 
@@ -9868,7 +9909,7 @@ def test_run_script_returns_table_clear_outputs():
 
 def test_run_script_returns_table_merge_cell_outputs():
     result = pine_compat.run_script(
-        'indicator("table merge")\nvar table_id = table.new(position.top_right, 3, 2)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A")\n    table.merge_cells(table_id, 0, 0, 2, 0)\n    table.cell(table_id, 0, 1, "B")\n    table.merge_cells(table_id, 0, 1, 1, 1)\nif bar_index == 2\n    table.clear(table_id, 0, 1, 1, 1)\ntable.merge_cells(na, 0, 0, 0, 0)\nplot(close)\n',
+        '//@version=5\nindicator("table merge")\nvar table_id = table.new(position.top_right, 3, 2)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A")\n    table.merge_cells(table_id, 0, 0, 2, 0)\n    table.cell(table_id, 0, 1, "B")\n    table.merge_cells(table_id, 0, 1, 1, 1)\nif bar_index == 2\n    table.clear(table_id, 0, 1, 1, 1)\ntable.merge_cells(na, 0, 0, 0, 0)\nplot(close)\n',
         BARS,
     )
 
@@ -9888,7 +9929,7 @@ def test_run_script_returns_table_merge_cell_outputs():
 
 def test_run_script_returns_table_cell_tooltip_outputs():
     result = pine_compat.run_script(
-        'indicator("table tooltip")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", tooltip="initial")\n    table.cell_set_tooltip(table_id, 0, 0, "updated")\ntable.cell_set_tooltip(na, 0, 0, "noop")\nplot(close)\n',
+        '//@version=5\nindicator("table tooltip")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", tooltip="initial")\n    table.cell_set_tooltip(table_id, 0, 0, "updated")\ntable.cell_set_tooltip(na, 0, 0, "noop")\nplot(close)\n',
         BARS,
     )
 
@@ -9899,7 +9940,7 @@ def test_run_script_returns_table_cell_tooltip_outputs():
 
 def test_run_script_returns_table_cell_text_font_family_outputs():
     result = pine_compat.run_script(
-        'indicator("table font")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", text_font_family=font.family_monospace)\n    table.cell_set_text_font_family(table_id, 0, 0, font.family_default)\ntable.cell_set_text_font_family(na, 0, 0, font.family_monospace)\nplot(close)\n',
+        '//@version=5\nindicator("table font")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", text_font_family=font.family_monospace)\n    table.cell_set_text_font_family(table_id, 0, 0, font.family_default)\ntable.cell_set_text_font_family(na, 0, 0, font.family_monospace)\nplot(close)\n',
         BARS,
     )
 
@@ -9910,7 +9951,7 @@ def test_run_script_returns_table_cell_text_font_family_outputs():
 
 def test_run_script_returns_table_cell_text_formatting_outputs():
     result = pine_compat.run_script(
-        'indicator("table formatting")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", text_formatting=text.format_bold)\n    table.cell_set_text_formatting(table_id, 0, 0, text.format_bold + text.format_italic)\ntable.cell_set_text_formatting(na, 0, 0, text.format_italic)\nplot(close)\n',
+        '//@version=5\nindicator("table formatting")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", text_formatting=text.format_bold)\n    table.cell_set_text_formatting(table_id, 0, 0, text.format_bold + text.format_italic)\ntable.cell_set_text_formatting(na, 0, 0, text.format_italic)\nplot(close)\n',
         BARS,
     )
 
@@ -9921,7 +9962,7 @@ def test_run_script_returns_table_cell_text_formatting_outputs():
 
 def test_run_script_returns_plotchar_outputs():
     result = pine_compat.run_script(
-        'indicator("markers")\nplotchar(close > 2, char="x", color=color.green)\nplot(close)\n',
+        '//@version=5\nindicator("markers")\nplotchar(close > 2, char="x", color=color.green)\nplot(close)\n',
         BARS,
     )
 
@@ -9932,7 +9973,7 @@ def test_run_script_returns_plotchar_outputs():
 
 def test_run_script_returns_plotshape_outputs():
     result = pine_compat.run_script(
-        'indicator("shapes")\nplotshape(close > 2, style=shape.triangleup, location=location.belowbar, color=color.green, text="Buy", textcolor=color.white, size=size.small)\nplot(close)\n',
+        '//@version=5\nindicator("shapes")\nplotshape(close > 2, style=shape.triangleup, location=location.belowbar, color=color.green, text="Buy", textcolor=color.white, size=size.small)\nplot(close)\n',
         BARS,
     )
 
@@ -9973,7 +10014,7 @@ def test_run_script_returns_plotshape_outputs():
 
 def test_run_script_returns_plotarrow_outputs():
     result = pine_compat.run_script(
-        'indicator("arrows")\nplotarrow(close - 2, colorup=color.green, colordown=color.red, minheight=5, maxheight=20)\nplot(close)\n',
+        '//@version=5\nindicator("arrows")\nplotarrow(close - 2, colorup=color.green, colordown=color.red, minheight=5, maxheight=20)\nplot(close)\n',
         BARS,
     )
 
@@ -9986,7 +10027,7 @@ def test_run_script_returns_plotarrow_outputs():
 
 def test_run_script_returns_plotbar_outputs():
     result = pine_compat.run_script(
-        'indicator("bars")\nplotbar(open, high, low, close, color=color.green)\nplot(close)\n',
+        '//@version=5\nindicator("bars")\nplotbar(open, high, low, close, color=color.green)\nplot(close)\n',
         BARS,
     )
 
@@ -9999,7 +10040,7 @@ def test_run_script_returns_plotbar_outputs():
 
 def test_run_script_returns_plotcandle_outputs():
     result = pine_compat.run_script(
-        'indicator("candles")\nplotcandle(open, high, low, close, color=color.green, wickcolor=color.white, bordercolor=color.red)\nplot(close)\n',
+        '//@version=5\nindicator("candles")\nplotcandle(open, high, low, close, color=color.green, wickcolor=color.white, bordercolor=color.red)\nplot(close)\n',
         BARS,
     )
 

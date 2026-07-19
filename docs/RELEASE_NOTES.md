@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Established the legacy-indicator version and mode admission boundary. Pine
+  v1-v6 are represented by a closed dialect model, a missing directive selects
+  implicit v1, invalid/duplicate/misplaced directives and root/library version
+  conflicts stop before ordinary semantic analysis, and v1-v4 strategy scripts
+  now receive one stable out-of-scope diagnostic without entering broker
+  analysis.
+- Bumped public analysis reports to `schemaVersion: 4` across CLI JSON, Python,
+  and WASM. Reports now expose `languageVersionOrigin`, `dialect`, `scriptMode`,
+  `legacyTranslations`, and `legacyEmulations`; CLI `analyze` accepts
+  `--format text|json`.
+- Assigned explicit v5 directives to modern fixtures that previously depended
+  on a missing-version default. The dedicated no-directive fixture remains an
+  implicit-v1 control, while v5/v6 indicator and strategy paths retain their
+  existing behavior.
+
 ## 0.1.0 - 2026-07-18
 
 - Added a GitHub Actions binary-wheel pipeline for glibc Linux x86-64 and

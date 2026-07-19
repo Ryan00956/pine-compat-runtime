@@ -10,7 +10,7 @@ fn analyze_with_library(root: &str, library: &str) -> Analysis {
         )],
     )
     .expect("library source should be valid");
-    crate::analyze_input(&input)
+    crate::analysis::analyze_input_with_implicit_dialect(&input, crate::PineDialect::V5)
 }
 
 #[test]

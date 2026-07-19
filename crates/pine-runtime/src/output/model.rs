@@ -7,7 +7,6 @@ use super::drawings::{
 use super::strategy::StrategyResult;
 
 pub const PUBLIC_RUNTIME_SCHEMA_VERSION: u32 = 7;
-pub const PUBLIC_ANALYSIS_SCHEMA_VERSION: u32 = 3;
 pub const PUBLIC_MATRIX_SCHEMA_VERSION: u32 = 2;
 pub const PUBLIC_OUTPUT_SCHEMA_VERSION: u32 = PUBLIC_RUNTIME_SCHEMA_VERSION;
 

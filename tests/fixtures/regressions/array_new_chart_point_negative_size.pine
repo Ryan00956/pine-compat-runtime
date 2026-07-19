@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array new chart point negative size")
 values = array.new<chart.point>(-1)
 plot(array.size(values))

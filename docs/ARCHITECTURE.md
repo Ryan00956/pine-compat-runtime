@@ -51,6 +51,8 @@ Owns semantic analysis.
 
 Responsibilities:
 
+- Validate the closed Pine v1-v6 dialect and classify script mode before
+  ordinary call analysis.
 - Resolve names and scopes.
 - Infer value kind and qualifier.
 - Validate declaration and reassignment rules.
@@ -60,6 +62,15 @@ Responsibilities:
 
 The analyzer is the boundary where unsupported features should become explicit
 diagnostics instead of runtime surprises.
+
+Version and legacy-mode admission are owned by `pine-sema::legacy`. Missing
+directives select implicit v1, invalid or conflicting source-graph versions
+halt before ordinary semantic analysis, and v1-v4 strategy declarations or
+`strategy.*` references are stopped before broker-capable HIR can be produced.
+The same source policy initializes `CompatibilityReport`, so all hosts project
+one validated version, origin, dialect, script mode, and legacy report model.
+Legacy translation catalogs and lowering are intentionally deferred to later
+phases; Phase 1 only establishes the fail-closed boundary.
 
 The semantic implementation keeps orchestration separate from focused tree
 walkers. `modules.rs` owns module-graph validation while
@@ -222,6 +233,7 @@ Planned commands:
 
 ```text
 pine-compat analyze script.pine
+pine-compat analyze script.pine --format json
 pine-compat run script.pine --bars bars.csv --out result.json
 pine-compat fmt-ast script.pine
 ```
@@ -422,11 +434,13 @@ for the supported linefill subset. `schemaVersion: 7` adds top-level
 their charting or API format, but should preserve the runtime schema version
 when they forward machine-readable runtime results.
 
-Machine-readable analysis and matrix outputs use separate schema ownership:
-`PUBLIC_ANALYSIS_SCHEMA_VERSION` for WASM/Python analysis reports and
-`PUBLIC_MATRIX_SCHEMA_VERSION` for CLI matrix JSON. Runtime is currently `7`;
-analysis is currently `3` after adding top-level input call-site metadata, and
-matrix remains `2`. These contracts can evolve independently when a runtime-only
+Machine-readable analysis and matrix outputs use separate schema ownership.
+`pine-sema::PUBLIC_ANALYSIS_SCHEMA_VERSION` owns CLI/Python/WASM analysis
+reports, while `PUBLIC_MATRIX_SCHEMA_VERSION` owns CLI matrix JSON. Runtime is
+currently `7`; analysis is currently `4`, adding `languageVersionOrigin`,
+`dialect`, `scriptMode`, `legacyTranslations`, and `legacyEmulations` to the
+existing version, diagnostic, input, and compatibility evidence; matrix
+remains `2`. These contracts can evolve independently when a runtime-only
 output field does not affect analysis or matrix contracts.
 
 Drawing-object outputs use sparse snapshot families. The Phase E drawing

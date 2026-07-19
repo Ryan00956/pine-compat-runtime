@@ -347,6 +347,12 @@ def feature_category(code: str, subject: str | None) -> str:
         return "legacy_type_rule"
     if code.startswith("E_OPERATOR_"):
         return "operator_type"
+    if code == "E_LEGACY_INDICATOR_DECLARATION":
+        return "legacy_declaration"
+    if code == "E_LEGACY_STRATEGY_OUT_OF_SCOPE":
+        return "scope_exclusion"
+    if code.startswith("E_LANGUAGE_VERSION_"):
+        return "version_policy"
     if code in {"E_UNKNOWN_FUNCTION", "E_UNKNOWN_SYMBOL", "E_UNKNOWN_COLOR"}:
         return "name_resolution"
     if code == "E_UNSUPPORTED_FEATURE":

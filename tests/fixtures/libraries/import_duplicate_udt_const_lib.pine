@@ -1,3 +1,4 @@
+//@version=5
 library("Duplicate exported UDT/const fixture")
 export type Point
     float x

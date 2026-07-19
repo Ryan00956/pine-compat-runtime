@@ -1,3 +1,4 @@
+//@version=5
 indicator("Line limit eviction", max_lines_count=2)
 
 if bar_index == 0

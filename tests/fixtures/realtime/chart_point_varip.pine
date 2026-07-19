@@ -1,3 +1,4 @@
+//@version=5
 indicator("Realtime chart point varip")
 
 dyn = bar_index == 0 ? na : 1

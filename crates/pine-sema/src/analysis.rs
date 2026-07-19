@@ -5,7 +5,7 @@ use pine_ir::{HirProgram, Qualifier, ValueKind};
 use pine_syntax::{Diagnostic, SourceFile};
 
 use crate::analyzer::context::Analyzer;
-use crate::compatibility::CompatibilityReport;
+use crate::compatibility::{CompatibilityReport, UnsupportedFeature};
 use crate::modules::validate_modules;
 use crate::resolver::ScopeResolver;
 use crate::source_graph::AnalysisInput;
@@ -26,16 +26,67 @@ pub fn analyze_source(source: &SourceFile) -> Analysis {
 }
 
 pub fn analyze_input(input: &AnalysisInput) -> Analysis {
-    let module_validation = validate_modules(input);
+    analyze_validated_modules(validate_modules(input))
+}
+
+#[cfg(test)]
+pub(crate) fn analyze_source_with_implicit_dialect(
+    source: &SourceFile,
+    implicit_dialect: crate::PineDialect,
+) -> Analysis {
+    analyze_input_with_implicit_dialect(&AnalysisInput::new(source.clone()), implicit_dialect)
+}
+
+#[cfg(test)]
+pub(crate) fn analyze_input_with_implicit_dialect(
+    input: &AnalysisInput,
+    implicit_dialect: crate::PineDialect,
+) -> Analysis {
+    analyze_validated_modules(crate::modules::validate_modules_with_implicit(
+        input,
+        implicit_dialect,
+    ))
+}
+
+fn analyze_validated_modules(module_validation: crate::modules::ModuleValidation) -> Analysis {
+    let mut diagnostics = module_validation.diagnostics;
+    let mut compatibility = CompatibilityReport {
+        language_version: Some(module_validation.root_policy.language.raw_version),
+        language_version_origin: module_validation.root_policy.language.origin,
+        dialect: module_validation.root_policy.language.dialect,
+        script_mode: module_validation.root_policy.script_mode,
+        ..CompatibilityReport::default()
+    };
+
+    if module_validation.halt_before_analysis {
+        return Analysis {
+            diagnostics,
+            compatibility,
+            hir: None,
+        };
+    }
+
+    if let Some(failure) = module_validation.root_policy.legacy_admission_failure {
+        diagnostics.push(Diagnostic::error(
+            failure.code,
+            failure.message,
+            failure.span,
+        ));
+        compatibility.unsupported.push(UnsupportedFeature {
+            feature: failure.feature,
+            reason: failure.reason,
+            span: failure.span,
+        });
+        return Analysis {
+            diagnostics,
+            compatibility,
+            hir: None,
+        };
+    }
+
     let mut analyzer = Analyzer {
-        diagnostics: module_validation.diagnostics,
-        compatibility: CompatibilityReport {
-            language_version: module_validation
-                .root_program
-                .version
-                .map(|version| version.version),
-            ..CompatibilityReport::default()
-        },
+        diagnostics,
+        compatibility,
         source_context_id: Cell::new(SourceContextId::root()),
         source_context_depth: Cell::new(0),
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),

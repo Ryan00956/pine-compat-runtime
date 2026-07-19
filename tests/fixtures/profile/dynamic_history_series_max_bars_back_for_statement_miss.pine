@@ -1,3 +1,4 @@
+//@version=5
 indicator("Profile dynamic series history for statement miss", max_bars_back=10)
 src = close
 for i = 0 to 0

@@ -1,3 +1,4 @@
+//@version=5
 library("Import library fixture")
 export offset = 2
 export scale(value) => value * offset

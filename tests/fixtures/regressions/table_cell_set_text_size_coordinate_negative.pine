@@ -1,3 +1,4 @@
+//@version=5
 indicator("Table cell set text size coordinate negative")
 table_id = table.new(position.top_left, 2, 1)
 table.cell_set_text_size(table_id, -1, 0, size.normal)

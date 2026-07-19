@@ -1,3 +1,4 @@
+//@version=5
 indicator("Profile dynamic series history expression source miss", max_bars_back=10)
 max_bars_back(close + open, 2)
 offset = bar_index == 0 ? 0 : 3

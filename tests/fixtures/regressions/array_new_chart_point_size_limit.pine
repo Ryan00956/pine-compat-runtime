@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array new chart point size limit")
 values = array.new<chart.point>(100001)
 plot(array.size(values))

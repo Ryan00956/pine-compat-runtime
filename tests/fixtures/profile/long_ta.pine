@@ -1,3 +1,4 @@
+//@version=5
 indicator("Profile long TA")
 sma20 = ta.sma(close, 20)
 ema20 = ta.ema(close, 20)

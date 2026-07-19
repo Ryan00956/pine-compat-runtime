@@ -1,3 +1,4 @@
+//@version=5
 indicator("Table new count limit")
 for i = 0 to 50
     table.new(position.top_left, 1, 1)

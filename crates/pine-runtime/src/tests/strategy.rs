@@ -2,7 +2,6 @@ use pine_ir::{
     HirCallArg, HirExpr, HirExprKind, HirLiteral, HirProgram, HirStmt, HirStmtKind, PineType,
     Qualifier, ScriptMode, ValueKind,
 };
-use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
 
 use super::*;

@@ -1,3 +1,4 @@
+//@version=5
 indicator("request.security same context")
 
 identity = request.security(syminfo.tickerid, timeframe.period, close + open)

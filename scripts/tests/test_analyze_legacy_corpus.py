@@ -89,6 +89,26 @@ class FakeRunner:
 
 
 class AnalyzeLegacyCorpusTests(unittest.TestCase):
+    def test_phase_one_diagnostics_have_actionable_categories(self) -> None:
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category(
+                "E_LEGACY_INDICATOR_DECLARATION", None
+            ),
+            "legacy_declaration",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category(
+                "E_LEGACY_STRATEGY_OUT_OF_SCOPE", None
+            ),
+            "scope_exclusion",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category(
+                "E_LANGUAGE_VERSION_UNSUPPORTED", None
+            ),
+            "version_policy",
+        )
+
     def test_report_is_deterministic_and_omits_source_text_and_paths(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

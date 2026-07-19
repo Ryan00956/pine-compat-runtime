@@ -1,2 +1,3 @@
+//@version=5
 indicator("Timestamp unsupported timezone")
 plot(timestamp("Mars/Olympus", 2021, 1, 1))

@@ -5,17 +5,36 @@ more important than broad, incomplete support.
 
 ## Version Policy
 
-The parser should recognize version declarations:
+The parser recognizes the exact `//@version=N` form for the closed v1 through
+v6 range:
 
 ```pine
+//@version=1
+//@version=2
+//@version=3
 //@version=4
 //@version=5
 //@version=6
 ```
 
-The analyzer carries the parsed version into HIR so the runtime can select
-version-specific behavior. Unsupported version-specific behavior must be
-reported in diagnostics.
+A missing directive selects v1 with origin `implicit`; it is not treated as the
+latest language. Leading comments, blank lines, and indentation before the
+directive are accepted. Whitespace after `=` and trailing whitespace retain
+the parser's existing acceptance, while `// @version=6` and
+`//@version =6` remain ordinary comments. A second exact directive or an exact
+directive after a source statement is rejected before ordinary semantic
+analysis. Versions outside v1-v6 and root/library version mismatches are also
+rejected before lowering.
+
+The analyzer carries the validated dialect into HIR so the runtime can select
+version-specific behavior. For v1-v4, script-mode classification runs before
+ordinary symbol and call diagnostics. `study()` is recognized as a legacy
+indicator declaration but remains non-executable until the declaration
+translation phase. `strategy()` and any `strategy.*` use in v1-v4 stop with
+one `E_LEGACY_STRATEGY_OUT_OF_SCOPE` diagnostic; legacy strategies are not in
+scope. Explicit v5/v6 `indicator()` and `strategy()` continue through the
+existing modern paths, and legacy-only declaration names are not activated for
+modern sources.
 
 ## Initial Supported Syntax
 
@@ -428,21 +447,29 @@ Longer-term work for these unsupported areas is tracked in
 
 ## Compatibility Report
 
-The analyzer should return a machine-readable report:
+The analyzer returns the public analysis `schemaVersion: 4` contract from CLI
+JSON, Python, and WASM. The top-level dialect fields describe validation and
+mode classification; compatibility keeps canonical feature evidence separate
+from future legacy translations and result-affecting emulations:
 
 ```json
 {
+  "schemaVersion": 4,
   "languageVersion": 5,
-  "supported": [
-    {"feature": "ta.ema", "span": "..."}
-  ],
-  "unsupported": [
-    {
-      "feature": "request.security",
-      "reason": "Only same-context identity and same-or-higher-timeframe scalar provider requests are supported in phase 1",
-      "span": "..."
-    }
-  ]
+  "languageVersionOrigin": "explicit",
+  "dialect": "v5",
+  "scriptMode": "indicator",
+  "executable": true,
+  "diagnostics": [],
+  "inputs": [],
+  "compatibility": {
+    "supported": [
+      {"feature": "ta.ema", "span": "..."}
+    ],
+    "unsupported": [],
+    "legacyTranslations": [],
+    "legacyEmulations": []
+  }
 }
 ```
 

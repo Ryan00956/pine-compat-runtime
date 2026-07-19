@@ -1,3 +1,4 @@
+//@version=5
 library("Private imported UDT fixture")
 type Point
     float x

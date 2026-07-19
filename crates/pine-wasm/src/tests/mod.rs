@@ -1,10 +1,11 @@
 use super::*;
-use pine_runtime::{PUBLIC_ANALYSIS_SCHEMA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION};
+use pine_runtime::PUBLIC_RUNTIME_SCHEMA_VERSION;
+use pine_sema::PUBLIC_ANALYSIS_SCHEMA_VERSION;
 use std::{collections::HashMap, env, fs, path::PathBuf};
 
 #[test]
 fn analyzes_script_to_json() {
-    let output = analyze_script("indicator(\"demo\")\nplot(close)\n");
+    let output = analyze_script("//@version=6\nindicator(\"demo\")\nplot(close)\n");
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
     assert_eq!(
@@ -12,8 +13,23 @@ fn analyzes_script_to_json() {
         serde_json::json!(PUBLIC_ANALYSIS_SCHEMA_VERSION)
     );
     assert_eq!(parsed["executable"], serde_json::json!(true));
+    assert_eq!(parsed["languageVersion"], serde_json::json!(6));
+    assert_eq!(
+        parsed["languageVersionOrigin"],
+        serde_json::json!("explicit")
+    );
+    assert_eq!(parsed["dialect"], serde_json::json!("v6"));
+    assert_eq!(parsed["scriptMode"], serde_json::json!("indicator"));
     assert_eq!(parsed["diagnostics"], serde_json::json!([]));
     assert_eq!(parsed["inputs"], serde_json::json!([]));
+    assert_eq!(
+        parsed["compatibility"]["legacyTranslations"],
+        serde_json::json!([])
+    );
+    assert_eq!(
+        parsed["compatibility"]["legacyEmulations"],
+        serde_json::json!([])
+    );
     assert!(
         parsed["compatibility"]["supported"]
             .as_array()
@@ -26,7 +42,7 @@ fn analyzes_script_to_json() {
 #[test]
 fn analyzes_script_input_call_sites_to_json() {
     let output = analyze_script(
-        "indicator(\"inputs\")\nlength = input.int(2, \"Length\")\nmode = input.string(\"SMA\", title=\"Mode\")\nplot(close)\n",
+        "//@version=6\nindicator(\"inputs\")\nlength = input.int(2, \"Length\")\nmode = input.string(\"SMA\", title=\"Mode\")\nplot(close)\n",
     );
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
@@ -47,9 +63,62 @@ fn analyzes_script_input_call_sites_to_json() {
 }
 
 #[test]
+fn analyzes_implicit_v1_legacy_indicator_contract() {
+    let output = analyze_script("study(\"legacy\")\nplot(close)\n");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(parsed["languageVersion"], serde_json::json!(1));
+    assert_eq!(
+        parsed["languageVersionOrigin"],
+        serde_json::json!("implicit")
+    );
+    assert_eq!(parsed["dialect"], serde_json::json!("v1"));
+    assert_eq!(parsed["scriptMode"], serde_json::json!("legacyIndicator"));
+    assert_eq!(parsed["executable"], serde_json::json!(false));
+    assert_eq!(
+        parsed["diagnostics"],
+        serde_json::json!([{
+            "code": "E_LEGACY_INDICATOR_DECLARATION",
+            "severity": "error",
+            "message": "legacy v1 study(...) is recognized but declaration lowering is not implemented yet",
+            "span": {"start": 0, "end": 5, "line": 1, "column": 1}
+        }])
+    );
+    assert_eq!(
+        parsed["compatibility"]["legacyTranslations"],
+        serde_json::json!([])
+    );
+    assert_eq!(
+        parsed["compatibility"]["legacyEmulations"],
+        serde_json::json!([])
+    );
+}
+
+#[test]
+fn analyzes_legacy_strategy_as_one_out_of_scope_error() {
+    let output = analyze_script(
+        "//@version=4\nstrategy(\"legacy\")\nstrategy.entry(\"L\", strategy.long)\n",
+    );
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(parsed["languageVersion"], serde_json::json!(4));
+    assert_eq!(parsed["dialect"], serde_json::json!("v4"));
+    assert_eq!(parsed["scriptMode"], serde_json::json!("strategy"));
+    assert_eq!(parsed["diagnostics"].as_array().map(Vec::len), Some(1));
+    assert_eq!(
+        parsed["diagnostics"][0]["code"],
+        serde_json::json!("E_LEGACY_STRATEGY_OUT_OF_SCOPE")
+    );
+    assert_eq!(
+        parsed["compatibility"]["unsupported"][0]["feature"],
+        serde_json::json!("legacy strategy")
+    );
+}
+
+#[test]
 fn runs_script_from_csv_to_json() {
     let output = run_script_csv(
-        "indicator(\"demo\")\nplot(close)\n",
+        "//@version=5\nindicator(\"demo\")\nplot(close)\n",
         "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
     )
     .expect("script should run");
@@ -76,7 +145,8 @@ fn runs_script_from_csv_to_json() {
 
 #[test]
 fn runs_script_from_csv_with_input_overrides_to_json() {
-    let source = r##"indicator("input overrides")
+    let source = r##"//@version=5
+indicator("input overrides")
 length = input.int(2, "Length")
 scale = input.float(1.0, "Scale")
 enabled = input.bool(true, "Enabled")
@@ -134,7 +204,8 @@ plot(color.r(shade))
 
 #[test]
 fn generic_color_input_override_accepts_hex_string() {
-    let source = r##"indicator("generic color")
+    let source = r##"//@version=5
+indicator("generic color")
 shade = input(color.red, "Shade")
 plot(color.r(shade))
 "##;
@@ -153,7 +224,7 @@ plot(color.r(shade))
 #[test]
 fn input_overrides_report_unknown_call_site() {
     let message = run_script_csv_with_input_overrides_internal(
-        "indicator(\"inputs\")\nlength = input.int(2, \"Length\")\nplot(ta.sma(close, length))\n",
+        "//@version=5\nindicator(\"inputs\")\nlength = input.int(2, \"Length\")\nplot(ta.sma(close, length))\n",
         "time,open,high,low,close,volume\n0,1,1,1,1,1\n",
         r#"{"999999":1}"#,
     )
@@ -216,7 +287,7 @@ fn runs_alert_frequency_fixture_from_csv_to_json() {
 #[test]
 fn run_script_csv_serializes_non_finite_values_as_json_null() {
     let output = run_script_csv(
-        "indicator(\"nonfinite\")\nplot(1.0 / 0.0)\n",
+        "//@version=5\nindicator(\"nonfinite\")\nplot(1.0 / 0.0)\n",
         "time,open,high,low,close,volume\n0,1,1,1,1,1\n",
     )
     .expect("script should run");
@@ -351,7 +422,7 @@ fn run_script_csv_returns_alert_fixture_contract() {
 #[test]
 fn run_script_csv_returns_dynamic_alert_message_events() {
     let output = run_script_csv(
-        "indicator(\"alerts\")\nalert(str.tostring(close))\n",
+        "//@version=5\nindicator(\"alerts\")\nalert(str.tostring(close))\n",
         "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
     )
     .expect("dynamic alert message script should run");
@@ -2643,7 +2714,7 @@ fn run_script_csv_rejects_non_finite_ohlcv_values() {
         ("volume", "0,1,1,1,1,NaN"),
     ] {
         let message = run_script_csv_internal(
-            "indicator(\"nonfinite\")\nplot(close)\n",
+            "//@version=5\nindicator(\"nonfinite\")\nplot(close)\n",
             &format!("time,open,high,low,close,volume\n{row}\n"),
         )
         .expect_err("non-finite CSV value should fail");
@@ -2659,7 +2730,7 @@ fn run_script_csv_rejects_non_finite_ohlcv_values() {
 #[test]
 fn run_script_csv_rejects_duplicate_bar_times() {
     let message = run_script_csv_internal(
-        "indicator(\"duplicate\")\nplot(close)\n",
+        "//@version=5\nindicator(\"duplicate\")\nplot(close)\n",
         "time,open,high,low,close,volume\n0,1,1,1,1,1\n0,2,2,2,2,1\n",
     )
     .expect_err("duplicate main bar time should fail");
@@ -2670,7 +2741,7 @@ fn run_script_csv_rejects_duplicate_bar_times() {
 #[test]
 fn run_script_csv_rejects_unsorted_bar_times() {
     let message = run_script_csv_internal(
-        "indicator(\"unsorted\")\nplot(close)\n",
+        "//@version=5\nindicator(\"unsorted\")\nplot(close)\n",
         "time,open,high,low,close,volume\n1,2,2,2,2,1\n0,1,1,1,1,1\n",
     )
     .expect_err("unsorted main bar times should fail");
@@ -2820,7 +2891,7 @@ fn render_strategy_order_fill_running_alert_rejects_unknown_placeholder() {
 #[test]
 fn runs_strategy_exit_missing_entry_from_csv_as_noop_json() {
     let output = run_script_csv(
-        "strategy(\"exit\")\nif bar_index == 0\n    strategy.exit(\"XL\", \"L\", stop=low)\n",
+        "//@version=5\nstrategy(\"exit\")\nif bar_index == 0\n    strategy.exit(\"XL\", \"L\", stop=low)\n",
         "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
     )
     .expect("strategy exit no-op script should run");
@@ -8055,10 +8126,9 @@ fn run_csv_with_request_bars_reports_missing_request_key() {
     );
 }
 
-const IMPORT_SOURCE: &str =
-    "indicator(\"imports\")\nimport user/lib/1 as lib\nplot(lib.scale(close) + lib.offset)\n";
-const IMPORT_REQUEST_SOURCE: &str = "indicator(\"import request\")\nimport user/lib/1 as lib\nsame = request.security(\"NYSE:IBM\", timeframe.period, open + close)\nhigher = request.security(\"NYSE:IBM\", \"5\", close)\nplot(lib.scale(same))\nplot(higher + lib.offset)\n";
-const IMPORT_LIBRARY_JSON: &str = "{\"user/lib/1\":\"library(\\\"lib\\\")\\nexport offset = 2\\nexport scale(value) => value * offset\\n\"}";
+const IMPORT_SOURCE: &str = "//@version=5\nindicator(\"imports\")\nimport user/lib/1 as lib\nplot(lib.scale(close) + lib.offset)\n";
+const IMPORT_REQUEST_SOURCE: &str = "//@version=5\nindicator(\"import request\")\nimport user/lib/1 as lib\nsame = request.security(\"NYSE:IBM\", timeframe.period, open + close)\nhigher = request.security(\"NYSE:IBM\", \"5\", close)\nplot(lib.scale(same))\nplot(higher + lib.offset)\n";
+const IMPORT_LIBRARY_JSON: &str = "{\"user/lib/1\":\"//@version=5\\nlibrary(\\\"lib\\\")\\nexport offset = 2\\nexport scale(value) => value * offset\\n\"}";
 
 fn import_fixture_library_json() -> String {
     serde_json::json!({
@@ -8155,7 +8225,7 @@ fn library_source_json_combined_api_reports_request_input_errors() {
 
 #[test]
 fn library_source_json_reports_missing_library() {
-    let output = analyze_script("import user/lib/1\nindicator(\"root\")\n");
+    let output = analyze_script("//@version=5\nimport user/lib/1\nindicator(\"root\")\n");
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
     let diagnostic_codes = parsed["diagnostics"]
         .as_array()

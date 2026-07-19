@@ -1,6 +1,8 @@
-use pine_sema::analyze_input;
-use pine_syntax::Severity;
+use pine_runtime::input_calls;
+use pine_sema::{Analysis, PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_input};
+use pine_syntax::{Diagnostic, Severity, SourceFile, Span};
 
+use crate::json::json_escape;
 use crate::library_sources::{
     LibrarySourceSpec, analysis_input_from_paths, parse_library_source_spec,
 };
@@ -11,27 +13,14 @@ pub(crate) fn run(args: Vec<String>) -> Result<(), String> {
     let input = analysis_input_from_paths(&options.path, &options.library_sources)?;
     let source = input.root().clone();
     let analysis = analyze_input(&input);
-    println!("diagnostics: {}", analysis.diagnostics.len());
-    println!(
-        "supported: {}, unsupported: {}",
-        analysis.compatibility.supported.len(),
-        analysis.compatibility.unsupported.len()
-    );
+    match options.format {
+        AnalyzeFormat::Text => print_text_report(&source, &analysis),
+        AnalyzeFormat::Json => println!("{}", analysis_json(&source, &analysis)),
+    }
     let has_errors = analysis
         .diagnostics
         .iter()
         .any(|diagnostic| diagnostic.severity == Severity::Error);
-    for diagnostic in analysis.diagnostics {
-        let line_col = source.line_col(diagnostic.span.start);
-        println!(
-            "{}:{:?}:{}:{}: {}",
-            diagnostic.code,
-            diagnostic.severity,
-            line_col.line,
-            line_col.column,
-            diagnostic.message
-        );
-    }
     if has_errors {
         return Err("analysis failed".to_owned());
     }
@@ -42,6 +31,13 @@ pub(crate) fn run(args: Vec<String>) -> Result<(), String> {
 struct AnalyzeOptions {
     path: String,
     library_sources: Vec<LibrarySourceSpec>,
+    format: AnalyzeFormat,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum AnalyzeFormat {
+    Text,
+    Json,
 }
 
 fn parse_options(args: &[String]) -> Result<AnalyzeOptions, String> {
@@ -51,6 +47,7 @@ fn parse_options(args: &[String]) -> Result<AnalyzeOptions, String> {
     let mut options = AnalyzeOptions {
         path: path.clone(),
         library_sources: Vec::new(),
+        format: AnalyzeFormat::Text,
     };
     let mut index = 1;
     while index < args.len() {
@@ -64,6 +61,14 @@ fn parse_options(args: &[String]) -> Result<AnalyzeOptions, String> {
                     .library_sources
                     .push(parse_library_source_spec(value)?);
             }
+            "--format" => {
+                index += 1;
+                options.format = match args.get(index).map(String::as_str) {
+                    Some("text") => AnalyzeFormat::Text,
+                    Some("json") => AnalyzeFormat::Json,
+                    _ => return Err(usage()),
+                };
+            }
             _ => return Err(usage()),
         }
         index += 1;
@@ -71,10 +76,299 @@ fn parse_options(args: &[String]) -> Result<AnalyzeOptions, String> {
     Ok(options)
 }
 
+fn print_text_report(source: &SourceFile, analysis: &Analysis) {
+    println!("diagnostics: {}", analysis.diagnostics.len());
+    println!(
+        "supported: {}, unsupported: {}",
+        analysis.compatibility.supported.len(),
+        analysis.compatibility.unsupported.len()
+    );
+    let dialect = analysis
+        .compatibility
+        .dialect
+        .map_or("invalid", |dialect| dialect.name());
+    println!(
+        "language: {} ({}), mode: {}",
+        dialect,
+        analysis.compatibility.language_version_origin.name(),
+        analysis.compatibility.script_mode.name()
+    );
+    println!(
+        "legacy: translations {}, emulations {}",
+        analysis.compatibility.legacy_translations.len(),
+        analysis.compatibility.legacy_emulations.len()
+    );
+    for diagnostic in &analysis.diagnostics {
+        let line_col = source.line_col(diagnostic.span.start);
+        println!(
+            "{}:{:?}:{}:{}: {}",
+            diagnostic.code,
+            diagnostic.severity,
+            line_col.line,
+            line_col.column,
+            diagnostic.message
+        );
+    }
+}
+
+fn analysis_json(source: &SourceFile, analysis: &Analysis) -> String {
+    let compatibility = &analysis.compatibility;
+    let language_version = compatibility
+        .language_version
+        .map_or_else(|| "null".to_owned(), |version| version.to_string());
+    let dialect = compatibility.dialect.map_or_else(
+        || "null".to_owned(),
+        |dialect| format!("\"{}\"", dialect.name()),
+    );
+    format!(
+        "{{\"schemaVersion\":{},\"languageVersion\":{},\"languageVersionOrigin\":\"{}\",\"dialect\":{},\"scriptMode\":\"{}\",\"executable\":{},\"diagnostics\":{},\"inputs\":{},\"compatibility\":{{\"supported\":{},\"unsupported\":{},\"legacyTranslations\":{},\"legacyEmulations\":{}}}}}",
+        PUBLIC_ANALYSIS_SCHEMA_VERSION,
+        language_version,
+        compatibility.language_version_origin.name(),
+        dialect,
+        compatibility.script_mode.name(),
+        analysis.hir.is_some(),
+        diagnostics_json(source, &analysis.diagnostics),
+        inputs_json(analysis),
+        features_json(
+            source,
+            compatibility
+                .supported
+                .iter()
+                .map(|feature| (&feature.feature, None, feature.span)),
+        ),
+        features_json(
+            source,
+            compatibility.unsupported.iter().map(|feature| (
+                &feature.feature,
+                Some(&feature.reason),
+                feature.span
+            )),
+        ),
+        legacy_translations_json(source, analysis),
+        legacy_emulations_json(source, analysis),
+    )
+}
+
+fn diagnostics_json(source: &SourceFile, diagnostics: &[Diagnostic]) -> String {
+    let mut output = String::from("[");
+    for (index, diagnostic) in diagnostics.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"code\":\"{}\",\"severity\":\"{}\",\"message\":\"{}\",\"span\":{}}}",
+            json_escape(&diagnostic.code),
+            severity_name(diagnostic.severity),
+            json_escape(&diagnostic.message),
+            span_json(source, diagnostic.span)
+        ));
+    }
+    output.push(']');
+    output
+}
+
+fn inputs_json(analysis: &Analysis) -> String {
+    let Some(hir) = &analysis.hir else {
+        return "[]".to_owned();
+    };
+    let mut output = String::from("[");
+    for (index, input) in input_calls(hir).into_iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        let title = input.title.as_deref().map_or_else(
+            || "null".to_owned(),
+            |title| format!("\"{}\"", json_escape(title)),
+        );
+        output.push_str(&format!(
+            "{{\"callSiteId\":{},\"name\":\"{}\",\"title\":{}}}",
+            input.call_site_id,
+            json_escape(&input.name),
+            title
+        ));
+    }
+    output.push(']');
+    output
+}
+
+fn features_json<'a>(
+    source: &SourceFile,
+    features: impl Iterator<Item = (&'a String, Option<&'a String>, Span)>,
+) -> String {
+    let mut output = String::from("[");
+    for (index, (feature, reason, span)) in features.enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!("{{\"feature\":\"{}\"", json_escape(feature)));
+        if let Some(reason) = reason {
+            output.push_str(&format!(",\"reason\":\"{}\"", json_escape(reason)));
+        }
+        output.push_str(&format!(",\"span\":{}}}", span_json(source, span)));
+    }
+    output.push(']');
+    output
+}
+
+fn legacy_translations_json(source: &SourceFile, analysis: &Analysis) -> String {
+    let mut output = String::from("[");
+    for (index, translation) in analysis
+        .compatibility
+        .legacy_translations
+        .iter()
+        .enumerate()
+    {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"sourceFeature\":\"{}\",\"canonicalFeature\":\"{}\",\"kind\":\"{}\",\"span\":{}}}",
+            json_escape(&translation.source_feature),
+            json_escape(&translation.canonical_feature),
+            translation.kind.name(),
+            span_json(source, translation.span)
+        ));
+    }
+    output.push(']');
+    output
+}
+
+fn legacy_emulations_json(source: &SourceFile, analysis: &Analysis) -> String {
+    let mut output = String::from("[");
+    for (index, emulation) in analysis.compatibility.legacy_emulations.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"feature\":\"{}\",\"behavior\":\"{}\",\"span\":{}}}",
+            json_escape(&emulation.feature),
+            json_escape(&emulation.behavior),
+            span_json(source, emulation.span)
+        ));
+    }
+    output.push(']');
+    output
+}
+
+fn span_json(source: &SourceFile, span: Span) -> String {
+    let line_col = source.line_col(span.start);
+    format!(
+        "{{\"start\":{},\"end\":{},\"line\":{},\"column\":{}}}",
+        span.start, span.end, line_col.line, line_col.column
+    )
+}
+
+fn severity_name(severity: Severity) -> &'static str {
+    match severity {
+        Severity::Error => "error",
+        Severity::Warning => "warning",
+        Severity::Info => "info",
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::run;
+    use super::{AnalyzeFormat, analysis_json, parse_options, run};
+    use pine_sema::{PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_source};
+    use pine_syntax::SourceFile;
     use std::{env, fs};
+
+    #[test]
+    fn parses_json_analysis_format() {
+        let options = parse_options(&[
+            "demo.pine".to_owned(),
+            "--format".to_owned(),
+            "json".to_owned(),
+        ])
+        .expect("options");
+
+        assert_eq!(options.format, AnalyzeFormat::Json);
+    }
+
+    #[test]
+    fn analysis_json_exposes_phase_one_dialect_contract() {
+        let source = SourceFile::new(
+            "test.pine",
+            "//@version=6\nindicator(\"demo\")\nplot(close)\n",
+        );
+        let analysis = analyze_source(&source);
+
+        let parsed: serde_json::Value =
+            serde_json::from_str(&analysis_json(&source, &analysis)).expect("analysis JSON");
+
+        assert_eq!(
+            parsed["schemaVersion"],
+            serde_json::json!(PUBLIC_ANALYSIS_SCHEMA_VERSION)
+        );
+        assert_eq!(parsed["languageVersion"], serde_json::json!(6));
+        assert_eq!(
+            parsed["languageVersionOrigin"],
+            serde_json::json!("explicit")
+        );
+        assert_eq!(parsed["dialect"], serde_json::json!("v6"));
+        assert_eq!(parsed["scriptMode"], serde_json::json!("indicator"));
+        assert_eq!(
+            parsed["compatibility"]["legacyTranslations"],
+            serde_json::json!([])
+        );
+        assert_eq!(
+            parsed["compatibility"]["legacyEmulations"],
+            serde_json::json!([])
+        );
+    }
+
+    #[test]
+    fn analysis_json_exposes_implicit_v1_legacy_indicator_gate() {
+        let source = SourceFile::new("legacy.pine", "study(\"legacy\")\nplot(close)\n");
+        let analysis = analyze_source(&source);
+        let parsed: serde_json::Value =
+            serde_json::from_str(&analysis_json(&source, &analysis)).expect("analysis JSON");
+
+        assert_eq!(parsed["languageVersion"], serde_json::json!(1));
+        assert_eq!(
+            parsed["languageVersionOrigin"],
+            serde_json::json!("implicit")
+        );
+        assert_eq!(parsed["dialect"], serde_json::json!("v1"));
+        assert_eq!(parsed["scriptMode"], serde_json::json!("legacyIndicator"));
+        assert_eq!(parsed["executable"], serde_json::json!(false));
+        assert_eq!(
+            parsed["diagnostics"][0]["code"],
+            serde_json::json!("E_LEGACY_INDICATOR_DECLARATION")
+        );
+        assert_eq!(
+            parsed["compatibility"]["legacyTranslations"],
+            serde_json::json!([])
+        );
+        assert_eq!(
+            parsed["compatibility"]["legacyEmulations"],
+            serde_json::json!([])
+        );
+    }
+
+    #[test]
+    fn analysis_json_exposes_one_legacy_strategy_hard_stop() {
+        let source = SourceFile::new(
+            "legacy-strategy.pine",
+            "//@version=4\nstrategy(\"legacy\")\nstrategy.entry(\"L\", strategy.long)\n",
+        );
+        let analysis = analyze_source(&source);
+        let parsed: serde_json::Value =
+            serde_json::from_str(&analysis_json(&source, &analysis)).expect("analysis JSON");
+
+        assert_eq!(parsed["languageVersion"], serde_json::json!(4));
+        assert_eq!(parsed["scriptMode"], serde_json::json!("strategy"));
+        assert_eq!(parsed["diagnostics"].as_array().map(Vec::len), Some(1));
+        assert_eq!(
+            parsed["diagnostics"][0]["code"],
+            serde_json::json!("E_LEGACY_STRATEGY_OUT_OF_SCOPE")
+        );
+        assert_eq!(
+            parsed["compatibility"]["unsupported"][0]["feature"],
+            serde_json::json!("legacy strategy")
+        );
+    }
 
     #[test]
     fn analyze_returns_error_when_error_diagnostics_exist() {
@@ -83,7 +377,8 @@ mod tests {
             std::process::id(),
             line!()
         ));
-        fs::write(&path, "indicator(\"bad\")\nplot(unknown)\n").expect("write script");
+        fs::write(&path, "//@version=5\nindicator(\"bad\")\nplot(unknown)\n")
+            .expect("write script");
 
         let result = run(vec![path.to_string_lossy().into_owned()]);
 

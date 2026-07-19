@@ -203,7 +203,7 @@ impl Analyzer {
             .script_declaration
             .map_or(ScriptMode::Indicator, |(mode, _)| mode);
         let program = HirProgram {
-            language_version: program.version.map(|version| version.version),
+            language_version: self.compatibility.language_version,
             script_mode,
             strategy_settings: self.strategy_settings,
             drawing_settings: self.drawing_settings,

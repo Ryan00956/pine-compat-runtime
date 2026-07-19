@@ -1,3 +1,4 @@
+//@version=5
 strategy("entry", pyramiding=1)
 
 if bar_index == 0

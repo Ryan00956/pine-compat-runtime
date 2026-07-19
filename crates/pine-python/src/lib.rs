@@ -2,11 +2,11 @@ use std::collections::HashMap;
 
 use pine_ir::HirProgram;
 use pine_runtime::{
-    Bar, ChartContext, InMemoryRequestDataProvider, InputOverrides, PUBLIC_ANALYSIS_SCHEMA_VERSION,
-    PineValue, RequestEnvironment, RequestKey, RequestTimeframe, input_calls,
+    Bar, ChartContext, InMemoryRequestDataProvider, InputOverrides, PineValue, RequestEnvironment,
+    RequestKey, RequestTimeframe, input_calls,
     run_historical_with_request_environment_and_input_overrides,
 };
-use pine_sema::{Analysis, AnalysisInput, analyze_input};
+use pine_sema::{Analysis, AnalysisInput, PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_input};
 use pine_syntax::{Diagnostic, SourceFile, Span};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -438,6 +438,15 @@ fn analysis_to_py(py: Python<'_>, source: &SourceFile, analysis: &Analysis) -> P
     output.set_item("schemaVersion", PUBLIC_ANALYSIS_SCHEMA_VERSION)?;
     output.set_item("languageVersion", analysis.compatibility.language_version)?;
     output.set_item(
+        "languageVersionOrigin",
+        analysis.compatibility.language_version_origin.name(),
+    )?;
+    output.set_item(
+        "dialect",
+        analysis.compatibility.dialect.map(|dialect| dialect.name()),
+    )?;
+    output.set_item("scriptMode", analysis.compatibility.script_mode.name())?;
+    output.set_item(
         "diagnostics",
         diagnostics_to_py(py, source, &analysis.diagnostics)?,
     )?;
@@ -486,6 +495,27 @@ fn compatibility_to_py(
 
     output.set_item("supported", supported)?;
     output.set_item("unsupported", unsupported)?;
+
+    let legacy_translations = PyList::empty(py);
+    for translation in &analysis.compatibility.legacy_translations {
+        let item = PyDict::new(py);
+        item.set_item("sourceFeature", &translation.source_feature)?;
+        item.set_item("canonicalFeature", &translation.canonical_feature)?;
+        item.set_item("kind", translation.kind.name())?;
+        item.set_item("span", span_to_py(py, source, translation.span)?)?;
+        legacy_translations.append(item)?;
+    }
+    output.set_item("legacyTranslations", legacy_translations)?;
+
+    let legacy_emulations = PyList::empty(py);
+    for emulation in &analysis.compatibility.legacy_emulations {
+        let item = PyDict::new(py);
+        item.set_item("feature", &emulation.feature)?;
+        item.set_item("behavior", &emulation.behavior)?;
+        item.set_item("span", span_to_py(py, source, emulation.span)?)?;
+        legacy_emulations.append(item)?;
+    }
+    output.set_item("legacyEmulations", legacy_emulations)?;
     Ok(output.into_any().unbind())
 }
 

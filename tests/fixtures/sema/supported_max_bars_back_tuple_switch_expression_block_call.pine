@@ -1,3 +1,4 @@
+//@version=5
 indicator("Supported max bars back tuple switch expression block call")
 src = close
 [branch] = switch

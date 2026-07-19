@@ -2001,7 +2001,10 @@ fn analyze_realtime_fixture(source: SourceFile) -> pine_sema::Analysis {
         return analyze_source(&source);
     };
     let library_path = workspace_fixture(library_fixture);
-    let library_text = fs::read_to_string(&library_path).expect("import library fixture");
+    let library_text = version_matched_fixture_library_text(
+        source.text(),
+        fs::read_to_string(&library_path).expect("import library fixture"),
+    );
     let input = AnalysisInput::with_library_sources(
         source,
         vec![(
@@ -2011,6 +2014,20 @@ fn analyze_realtime_fixture(source: SourceFile) -> pine_sema::Analysis {
     )
     .expect("import fixture input");
     analyze_input(&input)
+}
+
+fn version_matched_fixture_library_text(root: &str, mut library: String) -> String {
+    let root_version = root
+        .lines()
+        .find(|line| line.trim_start().starts_with("//@version="));
+    let library_version = library
+        .lines()
+        .position(|line| line.trim_start().starts_with("//@version="));
+    if let (Some(root_version), Some(0)) = (root_version, library_version) {
+        let first_newline = library.find('\n').unwrap_or(library.len());
+        library.replace_range(..first_newline, root_version.trim_start());
+    }
+    library
 }
 
 fn bar(close: f64) -> Bar {

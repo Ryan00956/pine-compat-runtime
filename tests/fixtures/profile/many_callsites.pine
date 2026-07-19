@@ -1,3 +1,4 @@
+//@version=5
 indicator("Profile many callsites")
 sma2 = ta.sma(close, 2)
 sma3 = ta.sma(high, 3)

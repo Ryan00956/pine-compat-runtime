@@ -64,13 +64,14 @@ because the top-level `alerts` array is reserved, strategy order-fill alert
 payloads are exposed under `strategy.alerts`, table cell snapshots include
 host-neutral `textWrap`, linefill snapshots are exposed under `lineFills`, and
 polyline creation and lifecycle snapshots are exposed under `polylines`;
-analysis JSON is currently `schemaVersion: 3` because it exposes top-level
-`inputs` metadata with input call-site ids, names, and titles; matrix JSON
+analysis JSON is currently `schemaVersion: 4`; in addition to top-level
+`inputs` metadata, it exposes validated language-version origin, dialect,
+script mode, and reserved legacy translation/emulation evidence. Matrix JSON
 remains `schemaVersion: 2`.
 The contracts are separate so runtime-only fields do not force analysis or
-matrix schema changes. The text-only CLI `analyze` output is
-diagnostic console output and is not part of the machine-readable schema until
-a JSON mode is added.
+matrix schema changes. CLI `analyze --format json`, Python analysis
+dictionaries, and WASM analysis JSON project this same analysis contract; the
+default CLI text report remains diagnostic console output.
 
 The current pure-internal call-result subset normalizes an unqualified plain
 local UDF receiver through the parser-only `$call_result` prefix, exact static

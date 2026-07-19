@@ -32,11 +32,25 @@ improved over time, but codes should remain stable once published.
 - `E_PARSE_NAME`: invalid qualified name.
 - `E_PARSE_SWITCH`: invalid switch expression.
 - `E_PARSE_TYPE`: invalid user-defined type declaration.
+- `E_LANGUAGE_VERSION_DUPLICATE`: more than one exact `//@version=N`
+  directive was found.
+- `E_LANGUAGE_VERSION_PLACEMENT`: an exact version directive appeared after a
+  source statement instead of in the leading comment/directive region.
 
 ## Semantic Analysis
 
 - `E_HOST_INPUT`: a host binding rejected malformed input before semantic
   analysis, such as invalid WASM library-source JSON.
+- `E_LANGUAGE_VERSION_`: internal diagnostic-family prefix used to stop before
+  ordinary semantic analysis; this prefix is not emitted as a complete code.
+- `E_LANGUAGE_VERSION_CONFLICT`: root and host-provided library sources select
+  different Pine language versions.
+- `E_LANGUAGE_VERSION_UNSUPPORTED`: the selected Pine language version is
+  outside the supported closed range v1 through v6.
+- `E_LEGACY_INDICATOR_DECLARATION`: a v1-v4 source is not yet an admissible
+  legacy indicator declaration; `study()` support lands in Phase 3.
+- `E_LEGACY_STRATEGY_OUT_OF_SCOPE`: a v1-v4 source declares `strategy()` or
+  references `strategy.*`; legacy strategy execution is outside this project.
 - `E_ASSIGN_TYPE`: reassignment type mismatch.
 - `E_BRANCH_RETURN`: branch expression body does not end with an expression.
 - `E_BRANCH_TYPE`: ternary branch type mismatch.

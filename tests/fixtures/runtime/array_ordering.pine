@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array ordering fixture")
 ints = array.new_int()
 array.push(ints, 3)

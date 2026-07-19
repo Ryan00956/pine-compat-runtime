@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array from fixture")
 type Point
     float x

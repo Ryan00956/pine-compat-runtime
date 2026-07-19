@@ -1,3 +1,4 @@
+//@version=5
 indicator("request host contract")
 same = request.security("NYSE:IBM", timeframe.period, open + close)
 higher = request.security("NYSE:IBM", "5", close)

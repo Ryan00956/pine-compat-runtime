@@ -1,3 +1,4 @@
+//@version=5
 indicator("Profile array heavy")
 var values = array.new_float()
 array.push(values, close)

@@ -1,3 +1,4 @@
+//@version=5
 indicator("While fixture")
 i = 0
 sum = 0

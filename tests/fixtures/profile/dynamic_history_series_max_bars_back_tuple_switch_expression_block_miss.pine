@@ -1,3 +1,4 @@
+//@version=5
 indicator("Profile dynamic series history tuple switch expression block miss", max_bars_back=10)
 src = close
 [branch] = switch

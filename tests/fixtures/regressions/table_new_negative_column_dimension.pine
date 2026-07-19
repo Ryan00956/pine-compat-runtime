@@ -1,3 +1,4 @@
+//@version=5
 indicator("Table new negative column dimension")
 table.new(position.top_left, -1, 1)
 plot(close)

@@ -16,3 +16,6 @@ pine-builtins = { path = "../pine-builtins" }
 pine-runtime = { path = "../pine-runtime" }
 pine-sema = { path = "../pine-sema" }
 pine-syntax = { path = "../pine-syntax" }
+
+[dev-dependencies]
+serde_json = "1"

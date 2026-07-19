@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array insert bounds")
 values = array.from(10, 20, 30)
 array.insert(values, 4, 40)

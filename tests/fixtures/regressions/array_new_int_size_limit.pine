@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array new int size limit")
 values = array.new_int(100001)
 plot(array.size(values))
