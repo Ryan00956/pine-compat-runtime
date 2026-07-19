@@ -4,6 +4,7 @@ use super::catalog::{LEGACY_RULES, LegacyRule, LegacyRuleKind, LegacyRuleSupport
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum LegacyResolution {
     ExactAlias(LegacyRule),
+    Focused(LegacyRule),
     UnsupportedKnown(LegacyRule),
 }
 
@@ -43,7 +44,10 @@ impl LegacyResolver {
             .copied()
             .find(|rule| rule.applies_to(self.dialect) && accepts(rule.kind))
             .map(|rule| match rule.support {
-                LegacyRuleSupport::Supported => LegacyResolution::ExactAlias(rule),
+                LegacyRuleSupport::Supported if rule.kind.is_exact() => {
+                    LegacyResolution::ExactAlias(rule)
+                }
+                LegacyRuleSupport::Supported => LegacyResolution::Focused(rule),
                 LegacyRuleSupport::UnsupportedKnown { .. } => {
                     LegacyResolution::UnsupportedKnown(rule)
                 }

@@ -136,6 +136,11 @@ impl Analyzer {
             .map(|arg| self.analyze_expr(&arg.value))
             .collect();
 
+        if let Some(guard) = self.legacy.registered_call_guard(&name, callee.span, args) {
+            self.unsupported(guard.feature, guard.reason, guard.span);
+            return None;
+        }
+
         if let Some(result) = self.analyze_array_call_result_method(callee, args, span, &arg_types)
         {
             return result;
@@ -241,6 +246,45 @@ impl Analyzer {
                     callee.span,
                     span,
                     args,
+                    &arg_types,
+                );
+            }
+            Some(crate::legacy::LegacyResolution::Focused(rule)) => {
+                if rule.kind != crate::legacy::LegacyRuleKind::FocusedDeclaration
+                    || rule.source_name != "study"
+                {
+                    unreachable!("supported focused legacy rule has no analyzer owner")
+                }
+                let bound = match self.legacy.bind_v4_study_args(args) {
+                    crate::legacy::LegacyStudyBinding::Bound(bound) => bound,
+                    crate::legacy::LegacyStudyBinding::Invalid(diagnostics) => {
+                        self.diagnostics.extend(diagnostics);
+                        return None;
+                    }
+                    crate::legacy::LegacyStudyBinding::Unsupported(unsupported) => {
+                        self.unsupported(unsupported.feature, unsupported.reason, unsupported.span);
+                        return None;
+                    }
+                };
+                let canonical_name = rule
+                    .canonical_name
+                    .expect("validated focused declaration has a canonical target");
+                let signature = pine_builtins::get_phase_1_builtin(canonical_name)
+                    .expect("validated focused declaration target is registered");
+                let source_context_id = self.current_source_context_id();
+                self.legacy.record_declaration_translation(
+                    &mut self.compatibility,
+                    source_context_id,
+                    callee.span,
+                    rule,
+                    bound.canonical_arg_names,
+                );
+                return self.analyze_registered_builtin(
+                    canonical_name,
+                    signature,
+                    callee.span,
+                    span,
+                    &bound.canonical_args,
                     &arg_types,
                 );
             }

@@ -1,0 +1,11 @@
+//@version=5
+indicator(title="v4 alias equivalence")
+[basis, upper, lower] = ta.bb(close, 3, 2)
+fast = ta.ema(close, 3)
+slow = ta.sma(close, 4)
+selected = ta.crossover(fast, slow) ? fast : slow
+plot(basis)
+plot(upper)
+plot(lower)
+plot(selected)
+plot(math.abs(close - open))

@@ -10,7 +10,7 @@ mod report;
 mod resolver;
 mod security;
 
-use pine_syntax::{Program, Span};
+use pine_syntax::{CallArg, Program, Span};
 
 pub use catalog::{
     LEGACY_RULES, LEGACY_TRANSLATOR_REVISION, LegacyRule, LegacyRuleKind, LegacyRuleSupport,
@@ -22,6 +22,7 @@ pub use dialect::{
 
 #[cfg(test)]
 pub(crate) use catalog::{CatalogValidationError, validate_catalog};
+pub(crate) use declarations::LegacyStudyBinding;
 pub(crate) use declarations::{LegacyAdmissionFailure, legacy_admission_failure};
 pub(crate) use dialect::LanguageSelection;
 pub(crate) use report::normalize_legacy_report;
@@ -32,6 +33,7 @@ use crate::source_graph::SourceContextId;
 
 #[derive(Debug)]
 pub(crate) struct LegacyFrontEnd {
+    dialect: PineDialect,
     resolver: resolver::LegacyResolver,
     lowering: lowering::LegacyLoweringPlan,
 }
@@ -40,6 +42,7 @@ impl LegacyFrontEnd {
     pub(crate) fn new(dialect: PineDialect) -> Self {
         debug_assert!(catalog::validate_catalog(LEGACY_RULES).is_empty());
         Self {
+            dialect,
             resolver: resolver::LegacyResolver::new(dialect),
             lowering: lowering::LegacyLoweringPlan::new(),
         }
@@ -47,9 +50,24 @@ impl LegacyFrontEnd {
 
     pub(crate) fn with_rules(dialect: PineDialect, rules: &'static [LegacyRule]) -> Self {
         Self {
+            dialect,
             resolver: resolver::LegacyResolver::with_rules(dialect, rules),
             lowering: lowering::LegacyLoweringPlan::new(),
         }
+    }
+
+    pub(crate) fn bind_v4_study_args(&self, args: &[CallArg]) -> LegacyStudyBinding {
+        debug_assert_eq!(self.dialect, PineDialect::V4);
+        declarations::bind_v4_study_args(args)
+    }
+
+    pub(crate) fn registered_call_guard(
+        &self,
+        name: &str,
+        callee_span: Span,
+        args: &[CallArg],
+    ) -> Option<calls::LegacyRegisteredCallGuard> {
+        calls::registered_call_guard(self.dialect, name, callee_span, args)
     }
 
     pub(crate) fn resolve_call(&self, source_name: &str) -> Option<LegacyResolution> {
@@ -90,6 +108,24 @@ impl LegacyFrontEnd {
         report::record_exact_translation(report, rule, span);
     }
 
+    pub(crate) fn record_declaration_translation(
+        &mut self,
+        report: &mut CompatibilityReport,
+        source_context_id: SourceContextId,
+        span: Span,
+        rule: LegacyRule,
+        canonical_arg_names: Vec<Option<&'static str>>,
+    ) {
+        let canonical_name = rule
+            .canonical_name
+            .expect("validated focused declaration has a canonical target");
+        self.lowering
+            .record_call(source_context_id, span, canonical_name);
+        self.lowering
+            .record_call_arg_names(source_context_id, span, canonical_arg_names);
+        report::record_signature_translation(report, rule, span);
+    }
+
     pub(crate) fn canonical_call_name(
         &self,
         source_context_id: SourceContextId,
@@ -104,6 +140,14 @@ impl LegacyFrontEnd {
         span: Span,
     ) -> Option<&'static str> {
         self.lowering.value_name(source_context_id, span)
+    }
+
+    pub(crate) fn canonical_call_arg_names(
+        &self,
+        source_context_id: SourceContextId,
+        span: Span,
+    ) -> Option<&[Option<&'static str>]> {
+        self.lowering.call_arg_names(source_context_id, span)
     }
 }
 

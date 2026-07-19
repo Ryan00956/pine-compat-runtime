@@ -1,4 +1,7 @@
-use pine_syntax::{Expr, ExprKind, FunctionBody, Program, Span, Stmt, StmtKind, SwitchArmResult};
+use pine_syntax::{
+    CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Program, Span, Stmt, StmtKind,
+    SwitchArmResult,
+};
 
 use super::dialect::PineDialect;
 
@@ -39,6 +42,193 @@ pub(crate) struct LegacyAdmissionFailure {
 struct DeclarationCall<'a> {
     name: &'a str,
     span: Span,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct BoundLegacyStudy {
+    pub(crate) canonical_args: Vec<CallArg>,
+    pub(crate) canonical_arg_names: Vec<Option<&'static str>>,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct LegacyStudyUnsupported {
+    pub(crate) feature: &'static str,
+    pub(crate) reason: &'static str,
+    pub(crate) span: Span,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) enum LegacyStudyBinding {
+    Bound(BoundLegacyStudy),
+    Invalid(Vec<Diagnostic>),
+    Unsupported(LegacyStudyUnsupported),
+}
+
+#[derive(Debug, Clone, Copy)]
+struct StudyParam {
+    source_name: &'static str,
+    canonical_name: Option<&'static str>,
+    unsupported: Option<StudyUnsupportedKind>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StudyUnsupportedKind {
+    Timeframe,
+    ExplicitPlotZOrder,
+}
+
+const V4_STUDY_PARAMS: &[StudyParam] = &[
+    StudyParam::supported("title", "title"),
+    StudyParam::supported("shorttitle", "shorttitle"),
+    StudyParam::supported("overlay", "overlay"),
+    StudyParam::supported("format", "format"),
+    StudyParam::supported("precision", "precision"),
+    StudyParam::supported("scale", "scale"),
+    StudyParam::supported("max_bars_back", "max_bars_back"),
+    StudyParam::supported("max_lines_count", "max_lines_count"),
+    StudyParam::supported("max_labels_count", "max_labels_count"),
+    StudyParam::unsupported("resolution", StudyUnsupportedKind::Timeframe),
+    StudyParam::unsupported("resolution_gaps", StudyUnsupportedKind::Timeframe),
+    StudyParam::supported("max_boxes_count", "max_boxes_count"),
+    StudyParam::unsupported(
+        "explicit_plot_zorder",
+        StudyUnsupportedKind::ExplicitPlotZOrder,
+    ),
+];
+
+impl StudyParam {
+    const fn supported(source_name: &'static str, canonical_name: &'static str) -> Self {
+        Self {
+            source_name,
+            canonical_name: Some(canonical_name),
+            unsupported: None,
+        }
+    }
+
+    const fn unsupported(source_name: &'static str, unsupported: StudyUnsupportedKind) -> Self {
+        Self {
+            source_name,
+            canonical_name: None,
+            unsupported: Some(unsupported),
+        }
+    }
+}
+
+pub(crate) fn bind_v4_study_args(args: &[CallArg]) -> LegacyStudyBinding {
+    let mut canonical_args = Vec::with_capacity(args.len());
+    let mut canonical_arg_names = Vec::with_capacity(args.len());
+    let mut bound = vec![false; V4_STUDY_PARAMS.len()];
+    let mut diagnostics = Vec::new();
+    let mut saw_named = false;
+    let mut unsupported: Option<(StudyUnsupportedKind, Span)> = None;
+
+    for (arg_index, arg) in args.iter().enumerate() {
+        let param_index = if let Some(name) = arg.name.as_deref() {
+            saw_named = true;
+            let Some(param_index) = V4_STUDY_PARAMS
+                .iter()
+                .position(|param| param.source_name == name)
+            else {
+                diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_NAME",
+                    format!("`study` has no argument named `{name}` in Pine v4"),
+                    arg.span,
+                ));
+                continue;
+            };
+            param_index
+        } else {
+            if saw_named {
+                diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_ORDER",
+                    "positional arguments cannot follow named arguments in Pine v4 `study`",
+                    arg.span,
+                ));
+                continue;
+            }
+            if arg_index >= V4_STUDY_PARAMS.len() {
+                diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARITY",
+                    format!(
+                        "`study` expects at most {} argument(s) in Pine v4, got {}",
+                        V4_STUDY_PARAMS.len(),
+                        args.len()
+                    ),
+                    arg.span,
+                ));
+                continue;
+            }
+            arg_index
+        };
+
+        let param = V4_STUDY_PARAMS[param_index];
+        if bound[param_index] {
+            diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_DUPLICATE",
+                format!(
+                    "`study` argument `{}` is provided more than once",
+                    param.source_name
+                ),
+                arg.span,
+            ));
+            continue;
+        }
+        bound[param_index] = true;
+
+        if let Some(kind) = param.unsupported {
+            unsupported = Some(match unsupported {
+                Some((existing_kind, existing_span)) => {
+                    let kind = if existing_kind == StudyUnsupportedKind::Timeframe {
+                        existing_kind
+                    } else {
+                        kind
+                    };
+                    (kind, existing_span.merge(arg.span))
+                }
+                None => (kind, arg.span),
+            });
+            continue;
+        }
+
+        let canonical_name = param
+            .canonical_name
+            .expect("supported v4 study parameter has a canonical target");
+        let mut canonical_arg = arg.clone();
+        canonical_arg.name = Some(canonical_name.to_owned());
+        canonical_args.push(canonical_arg);
+        canonical_arg_names.push(Some(canonical_name));
+    }
+
+    if !bound[0] {
+        diagnostics.push(Diagnostic::error(
+            "E_CALL_ARITY",
+            "`study` is missing required Pine v4 argument `title`",
+            args.first().map_or_else(Span::default, |arg| arg.span),
+        ));
+    }
+
+    if let Some((kind, span)) = unsupported {
+        return LegacyStudyBinding::Unsupported(match kind {
+            StudyUnsupportedKind::Timeframe => LegacyStudyUnsupported {
+                feature: "study.resolution",
+                reason: "Pine v4 resolution/resolution_gaps declaration semantics are deferred to the legacy security and timeframe phase",
+                span,
+            },
+            StudyUnsupportedKind::ExplicitPlotZOrder => LegacyStudyUnsupported {
+                feature: "study.explicit_plot_zorder",
+                reason: "the current canonical indicator contract has no verified equivalent for Pine v4 explicit_plot_zorder",
+                span,
+            },
+        });
+    }
+    if !diagnostics.is_empty() {
+        return LegacyStudyBinding::Invalid(diagnostics);
+    }
+
+    LegacyStudyBinding::Bound(BoundLegacyStudy {
+        canonical_args,
+        canonical_arg_names,
+    })
 }
 
 pub(crate) fn classify_script_mode(program: &Program) -> ScriptModeClassification {
@@ -95,14 +285,15 @@ pub(crate) fn legacy_admission_failure(
                 .first()
                 .map_or_else(|| Span::new(0, 0), |statement| statement.span),
         }),
+        [declaration] if declaration.name == "study" && dialect == PineDialect::V4 => None,
         [declaration] if declaration.name == "study" => Some(LegacyAdmissionFailure {
             code: "E_LEGACY_INDICATOR_DECLARATION",
             message: format!(
-                "legacy {} study(...) is recognized but declaration lowering is not implemented yet",
+                "legacy {} study(...) is recognized but pre-v4 declaration lowering is not implemented yet",
                 dialect.name()
             ),
             feature: "study".to_owned(),
-            reason: "legacy study(...) lowering is not implemented in the current phase".to_owned(),
+            reason: "pre-v4 study(...) lowering is not implemented in the current phase".to_owned(),
             span: declaration.span,
         }),
         [declaration] if declaration.name == "indicator" => Some(LegacyAdmissionFailure {

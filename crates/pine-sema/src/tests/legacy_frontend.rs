@@ -44,6 +44,22 @@ fn analyze_legacy(source: &str) -> crate::Analysis {
     )
 }
 
+fn analyze_production(source: &str) -> crate::Analysis {
+    crate::analyze_source(&SourceFile::new("legacy-production.pine", source))
+}
+
+fn normalized_hir(source: &str) -> pine_ir::HirProgram {
+    let analysis = analyze_production(source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let mut hir = analysis.hir.expect("HIR");
+    hir.language_version = None;
+    hir
+}
+
 fn plot_arg(analysis: &crate::Analysis) -> &HirExpr {
     analysis
         .hir
@@ -93,6 +109,154 @@ fn exact_function_alias_lowers_to_canonical_hir_and_preserves_source_span() {
     assert_eq!(translation.canonical_feature, "ta.sma");
     assert_eq!(translation.kind, LegacyTranslationKind::ExactAlias);
     assert_eq!(translation.span, Span::new(start, start + "sma".len()));
+}
+
+#[test]
+fn production_v4_study_and_first_alias_batch_match_canonical_hir() {
+    let legacy = include_str!("../../../../tests/fixtures/legacy/v4/runtime/aliases_legacy.pine");
+    let canonical =
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/aliases_canonical.pine");
+
+    assert_eq!(normalized_hir(legacy), normalized_hir(canonical));
+
+    let analysis = analyze_production(legacy);
+    let translations = analysis
+        .compatibility
+        .legacy_translations
+        .iter()
+        .map(|translation| {
+            (
+                translation.source_feature.as_str(),
+                translation.canonical_feature.as_str(),
+                translation.kind,
+            )
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        translations,
+        vec![
+            (
+                "study",
+                "indicator",
+                LegacyTranslationKind::SignatureReshape
+            ),
+            ("bb", "ta.bb", LegacyTranslationKind::ExactAlias),
+            ("ema", "ta.ema", LegacyTranslationKind::ExactAlias),
+            ("sma", "ta.sma", LegacyTranslationKind::ExactAlias),
+            (
+                "crossover",
+                "ta.crossover",
+                LegacyTranslationKind::ExactAlias
+            ),
+            ("abs", "math.abs", LegacyTranslationKind::ExactAlias),
+        ]
+    );
+}
+
+#[test]
+fn v4_study_binds_historical_positions_before_canonical_validation() {
+    let legacy = include_str!("../../../../tests/fixtures/legacy/v4/sema/declaration_legacy.pine");
+    let canonical =
+        include_str!("../../../../tests/fixtures/legacy/v4/sema/declaration_canonical.pine");
+
+    assert_eq!(normalized_hir(legacy), normalized_hir(canonical));
+
+    let analysis = analyze_production(legacy);
+    let hir = analysis.hir.expect("legacy declaration HIR");
+    assert_eq!(hir.max_bars_back, Some(12));
+    assert_eq!(hir.drawing_settings.max_lines_count, Some(75));
+    assert_eq!(hir.drawing_settings.max_labels_count, Some(80));
+    assert_eq!(hir.drawing_settings.max_boxes_count, Some(65));
+}
+
+#[test]
+fn v4_study_timeframe_arguments_produce_one_focused_failure() {
+    let analysis = analyze_production(
+        "//@version=4\nstudy(\"MTF\", resolution=\"D\", resolution_gaps=true)\nplot(close)\n",
+    );
+
+    assert_eq!(diagnostic_codes(&analysis), vec!["E_UNSUPPORTED_FEATURE"]);
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(
+        analysis.compatibility.unsupported[0].feature,
+        "study.resolution"
+    );
+    assert!(analysis.compatibility.legacy_translations.is_empty());
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn v4_study_rejects_unmapped_declaration_options_before_lowering() {
+    let analysis = analyze_production(
+        "//@version=4\nstudy(\"z-order\", explicit_plot_zorder=true)\nplot(close)\n",
+    );
+
+    assert_eq!(diagnostic_codes(&analysis), vec!["E_UNSUPPORTED_FEATURE"]);
+    assert_eq!(
+        analysis.compatibility.unsupported[0].feature,
+        "study.explicit_plot_zorder"
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn v4_session_call_is_guarded_until_legacy_default_semantics_land() {
+    let analysis =
+        analyze_production("//@version=4\nstudy(\"session\")\nplot(time(\"D\", \"0930-1600\"))\n");
+
+    assert_eq!(diagnostic_codes(&analysis), vec!["E_UNSUPPORTED_FEATURE"]);
+    assert_eq!(
+        analysis.compatibility.unsupported[0].feature,
+        "time.session"
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn production_aliases_still_yield_to_v4_user_functions_and_lexical_values() {
+    let udf = analyze_production(
+        "//@version=4\nstudy(\"collision\")\nsma(source, length) => source\nplot(sma(close, 2))\n",
+    );
+    assert!(udf.diagnostics.is_empty(), "{:?}", udf.diagnostics);
+    assert_eq!(
+        udf.compatibility
+            .legacy_translations
+            .iter()
+            .map(|translation| translation.source_feature.as_str())
+            .collect::<Vec<_>>(),
+        vec!["study"]
+    );
+
+    let lexical = analyze_production(
+        "//@version=4\nstudy(\"collision\")\nsma = close\nplot(sma(close, 2))\n",
+    );
+    assert_eq!(diagnostic_codes(&lexical), vec!["E_UNKNOWN_FUNCTION"]);
+    assert!(
+        lexical
+            .compatibility
+            .legacy_translations
+            .iter()
+            .all(|translation| translation.source_feature != "sma")
+    );
+}
+
+#[test]
+fn modern_sources_reject_every_production_v4_alias() {
+    for version in [5, 6] {
+        for alias_call in [
+            "sma(close, 2)",
+            "ema(close, 2)",
+            "bb(close, 2, 2)",
+            "crossover(close, open)",
+            "abs(close)",
+        ] {
+            let analysis = analyze_production(&format!(
+                "//@version={version}\nindicator(\"modern\")\nplot({alias_call})\n"
+            ));
+            assert_eq!(diagnostic_codes(&analysis), vec!["E_UNKNOWN_FUNCTION"]);
+            assert!(analysis.compatibility.legacy_translations.is_empty());
+        }
+    }
 }
 
 #[test]

@@ -80,7 +80,7 @@ fn analyzes_implicit_v1_legacy_indicator_contract() {
         serde_json::json!([{
             "code": "E_LEGACY_INDICATOR_DECLARATION",
             "severity": "error",
-            "message": "legacy v1 study(...) is recognized but declaration lowering is not implemented yet",
+            "message": "legacy v1 study(...) is recognized but pre-v4 declaration lowering is not implemented yet",
             "span": {"start": 0, "end": 5, "line": 1, "column": 1}
         }])
     );
@@ -112,6 +112,35 @@ fn analyzes_legacy_strategy_as_one_out_of_scope_error() {
     assert_eq!(
         parsed["compatibility"]["unsupported"][0]["feature"],
         serde_json::json!("legacy strategy")
+    );
+}
+
+#[test]
+fn analyzes_executable_v4_legacy_translations() {
+    let output = analyze_script("//@version=4\nstudy(\"legacy\")\nplot(sma(close, 2))\n");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(parsed["languageVersion"], serde_json::json!(4));
+    assert_eq!(parsed["dialect"], serde_json::json!("v4"));
+    assert_eq!(parsed["scriptMode"], serde_json::json!("legacyIndicator"));
+    assert_eq!(parsed["executable"], serde_json::json!(true));
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert_eq!(
+        parsed["compatibility"]["legacyTranslations"],
+        serde_json::json!([
+            {
+                "sourceFeature": "study",
+                "canonicalFeature": "indicator",
+                "kind": "signatureReshape",
+                "span": {"start": 13, "end": 18, "line": 2, "column": 1}
+            },
+            {
+                "sourceFeature": "sma",
+                "canonicalFeature": "ta.sma",
+                "kind": "exactAlias",
+                "span": {"start": 34, "end": 37, "line": 3, "column": 6}
+            }
+        ])
     );
 }
 

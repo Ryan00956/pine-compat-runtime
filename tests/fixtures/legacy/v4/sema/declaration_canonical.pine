@@ -1,0 +1,3 @@
+//@version=5
+indicator(title="v4 declaration equivalence", shorttitle="v4 decl", overlay=true, format=format.price, precision=2, scale=scale.right, max_bars_back=12, max_lines_count=75, max_labels_count=80, max_boxes_count=65)
+plot(close)

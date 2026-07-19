@@ -75,6 +75,9 @@ impl Analyzer {
                     self.expr_types.insert(self.expr_key(span), pine_type);
                     Some(pine_type)
                 }
+                crate::legacy::LegacyResolution::Focused(_) => {
+                    unreachable!("focused legacy rules are never value resolutions")
+                }
                 crate::legacy::LegacyResolution::UnsupportedKnown(rule) => {
                     let crate::legacy::LegacyRuleSupport::UnsupportedKnown { reason } =
                         rule.support

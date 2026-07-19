@@ -164,6 +164,26 @@ def test_analyze_script_reports_implicit_v1_legacy_indicator_gate():
     assert report["compatibility"]["legacyEmulations"] == []
 
 
+def test_analyze_script_reports_executable_v4_legacy_translations():
+    report = pine_compat.analyze_script(
+        '//@version=4\nstudy("legacy")\nplot(sma(close, 2))\n'
+    )
+
+    assert report["languageVersion"] == 4
+    assert report["languageVersionOrigin"] == "explicit"
+    assert report["dialect"] == "v4"
+    assert report["scriptMode"] == "legacyIndicator"
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
+    assert [
+        (item["sourceFeature"], item["canonicalFeature"], item["kind"])
+        for item in report["compatibility"]["legacyTranslations"]
+    ] == [
+        ("study", "indicator", "signatureReshape"),
+        ("sma", "ta.sma", "exactAlias"),
+    ]
+
+
 def test_analyze_script_reports_one_legacy_strategy_hard_stop():
     report = pine_compat.analyze_script(
         '//@version=4\nstrategy("legacy")\n'

@@ -1045,6 +1045,20 @@ impl Analyzer {
                     .legacy
                     .canonical_call_name(self.current_source_context_id(), callee.span)
                     .map_or(name, str::to_owned);
+                let canonical_args = self
+                    .legacy
+                    .canonical_call_arg_names(self.current_source_context_id(), callee.span)
+                    .map(|names| {
+                        args.iter()
+                            .zip(names)
+                            .map(|(arg, name)| {
+                                let mut arg = arg.clone();
+                                arg.name = (*name).map(str::to_owned);
+                                arg
+                            })
+                            .collect::<Vec<_>>()
+                    });
+                let args = canonical_args.as_deref().unwrap_or(args);
                 if pine_builtins::get_phase_1_builtin(&name).is_none()
                     && !name.starts_with("map.")
                     && let Some((receiver_name, method_name)) = method_call_parts(callee)

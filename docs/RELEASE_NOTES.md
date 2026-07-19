@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added the first executable Pine v4 indicator slice. `study(...)` now binds
+  against its historical signature and lowers to canonical `indicator` HIR for
+  the verified single-timeframe metadata subset; `resolution`,
+  `resolution_gaps`, `explicit_plot_zorder`, and legacy session defaults fail
+  closed. The v4-only `sma`, `ema`, `bb`, `crossover`, and `abs` aliases lower
+  to existing canonical implementations with original-span reports, collision
+  precedence, modern negative controls, paired HIR/runtime fixtures, and
+  synchronized CLI, Python, WASM, and conformance coverage.
 - Added the versioned legacy compatibility front-end: validated sorted rule
   catalogs, scoped fallback after user declarations, original-span translation
   records, canonical-only HIR lowering, focused unsupported-known routing,

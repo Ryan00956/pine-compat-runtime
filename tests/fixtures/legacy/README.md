@@ -29,3 +29,9 @@ python3 scripts/analyze_legacy_corpus.py --output /tmp/legacy-corpus.json
 
 The committed, redacted Phase 0 result is recorded in
 `docs/LEGACY_INDICATOR_PHASE0_BASELINE.md`.
+
+Versioned `v*/syntax`, `v*/sema`, `v*/runtime`, and `v*/unsupported`
+directories own paired compatibility fixtures added after the baseline. Phase 3
+adds v4 declaration and exact-alias pairs under `v4/sema` and `v4/runtime`;
+these files are original project fixtures and are also referenced by
+`conformance.tsv`.

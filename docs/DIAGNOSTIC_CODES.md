@@ -47,8 +47,9 @@ improved over time, but codes should remain stable once published.
   different Pine language versions.
 - `E_LANGUAGE_VERSION_UNSUPPORTED`: the selected Pine language version is
   outside the supported closed range v1 through v6.
-- `E_LEGACY_INDICATOR_DECLARATION`: a v1-v4 source is not yet an admissible
-  legacy indicator declaration; `study()` support lands in Phase 3.
+- `E_LEGACY_INDICATOR_DECLARATION`: a legacy source has a missing, mixed, modern,
+  or otherwise inadmissible indicator declaration; v1-v3 `study()` lowering is
+  still deferred, while the verified v4 `study()` subset is executable.
 - `E_LEGACY_STRATEGY_OUT_OF_SCOPE`: a v1-v4 source declares `strategy()` or
   references `strategy.*`; legacy strategy execution is outside this project.
 - `E_ASSIGN_TYPE`: reassignment type mismatch.

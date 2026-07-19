@@ -74,6 +74,9 @@ cargo run -p pine-cli -- matrix --format json
 - [Legacy Indicator Phase 2 Audit](LEGACY_INDICATOR_PHASE2_AUDIT.md): versioned
   rule catalog, scoped fallback resolution, canonical HIR lowering, deterministic
   reports, and translator cache revision.
+- [Legacy Indicator Phase 3 Audit](LEGACY_INDICATOR_PHASE3_AUDIT.md): executable
+  v4 `study` declarations, the first corpus-selected exact aliases, paired HIR
+  and runtime equivalence, and measured corpus improvement.
 - [Strategy Internal Gap Audit](STRATEGY_INTERNAL_GAP_AUDIT.md): current
   long-only strategy baseline and deferred broker-model work.
 - [Next Language Expansion Playbook](NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md):

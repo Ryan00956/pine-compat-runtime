@@ -79,6 +79,16 @@ aliases and fail-closed until its execution phase. Legacy translation and
 emulation reports are deterministically sorted and deduplicated before leaving
 semantic analysis.
 
+Phase 3 admits only Pine v4 `study(...)` declarations. A historical signature
+binder canonicalizes the supported declaration subset to named `indicator`
+arguments and stores argument-name reshaping in the source-context/span-keyed
+lowering plan. `resolution`, `resolution_gaps`, and unmapped declaration
+options fail before HIR. The first v4-only exact aliases (`sma`, `ema`, `bb`,
+`crossover`, and `abs`) reuse canonical analysis/runtime implementations; tuple
+element queries also consume the recorded canonical call name. Version-sensitive
+canonical call surfaces such as session-bearing `time(...)` are guarded until
+their focused legacy semantics phase.
+
 The semantic compile cache includes `LEGACY_TRANSLATOR_REVISION` in every key.
 Catalog or translation-semantics changes increment that revision so cached
 analysis cannot cross translator revisions.

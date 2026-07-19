@@ -12,6 +12,7 @@ mod builtins_ta_extremes;
 mod builtins_ta_flow;
 mod builtins_time;
 mod imports;
+mod legacy_indicators;
 mod matrices;
 mod methods;
 mod outputs;

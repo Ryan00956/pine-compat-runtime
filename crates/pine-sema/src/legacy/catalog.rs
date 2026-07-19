@@ -5,7 +5,7 @@ use super::inputs::LEGACY_INPUT_DEFERRED_REASON;
 use super::outputs::LEGACY_OUTPUT_DEFERRED_REASON;
 use super::security::LEGACY_SECURITY_DEFERRED_REASON;
 
-pub const LEGACY_TRANSLATOR_REVISION: u32 = 1;
+pub const LEGACY_TRANSLATOR_REVISION: u32 = 2;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum LegacyRuleKind {
@@ -56,6 +56,38 @@ impl LegacyRule {
 }
 
 pub const LEGACY_RULES: &[LegacyRule] = &[
+    LegacyRule {
+        source_name: "abs",
+        canonical_name: Some("math.abs"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "bb",
+        canonical_name: Some("ta.bb"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "crossover",
+        canonical_name: Some("ta.crossover"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "ema",
+        canonical_name: Some("ta.ema"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
     LegacyRule {
         source_name: "iff",
         canonical_name: None,
@@ -117,14 +149,30 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         },
     },
     LegacyRule {
+        source_name: "sma",
+        canonical_name: Some("ta.sma"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
         source_name: "study",
         canonical_name: Some("indicator"),
         min_version: PineDialect::V1,
-        max_version: PineDialect::V4,
+        max_version: PineDialect::V3,
         kind: LegacyRuleKind::FocusedDeclaration,
         support: LegacyRuleSupport::UnsupportedKnown {
-            reason: "legacy study declaration lowering is not implemented yet",
+            reason: "pre-v4 study declaration lowering is not implemented yet",
         },
+    },
+    LegacyRule {
+        source_name: "study",
+        canonical_name: Some("indicator"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedDeclaration,
+        support: LegacyRuleSupport::Supported,
     },
 ];
 
@@ -187,7 +235,23 @@ pub(crate) fn validate_catalog(rules: &[LegacyRule]) -> Vec<CatalogValidationErr
                     rule.source_name
                 )));
             }
-            (kind, LegacyRuleSupport::Supported, _) if !kind.is_exact() => {
+            (LegacyRuleKind::FocusedDeclaration, LegacyRuleSupport::Supported, Some(canonical))
+                if pine_builtins::get_phase_1_builtin(canonical).is_none() =>
+            {
+                errors.push(CatalogValidationError(format!(
+                    "canonical declaration `{canonical}` for `{}` is not registered",
+                    rule.source_name
+                )));
+            }
+            (LegacyRuleKind::FocusedDeclaration, LegacyRuleSupport::Supported, None) => {
+                errors.push(CatalogValidationError(format!(
+                    "supported focused declaration `{}` has no canonical target",
+                    rule.source_name
+                )));
+            }
+            (kind, LegacyRuleSupport::Supported, _)
+                if !kind.is_exact() && kind != LegacyRuleKind::FocusedDeclaration =>
+            {
                 errors.push(CatalogValidationError(format!(
                     "focused rule `{}` cannot use exact lowering",
                     rule.source_name

@@ -348,6 +348,40 @@ mod tests {
     }
 
     #[test]
+    fn analysis_json_exposes_executable_v4_translations() {
+        let source = SourceFile::new(
+            "legacy-v4.pine",
+            "//@version=4\nstudy(\"legacy\")\nplot(sma(close, 2))\n",
+        );
+        let analysis = analyze_source(&source);
+        let parsed: serde_json::Value =
+            serde_json::from_str(&analysis_json(&source, &analysis)).expect("analysis JSON");
+
+        assert_eq!(parsed["languageVersion"], serde_json::json!(4));
+        assert_eq!(parsed["dialect"], serde_json::json!("v4"));
+        assert_eq!(parsed["scriptMode"], serde_json::json!("legacyIndicator"));
+        assert_eq!(parsed["executable"], serde_json::json!(true));
+        assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+        assert_eq!(
+            parsed["compatibility"]["legacyTranslations"],
+            serde_json::json!([
+                {
+                    "sourceFeature": "study",
+                    "canonicalFeature": "indicator",
+                    "kind": "signatureReshape",
+                    "span": {"start": 13, "end": 18, "line": 2, "column": 1}
+                },
+                {
+                    "sourceFeature": "sma",
+                    "canonicalFeature": "ta.sma",
+                    "kind": "exactAlias",
+                    "span": {"start": 34, "end": 37, "line": 3, "column": 6}
+                }
+            ])
+        );
+    }
+
+    #[test]
     fn analysis_json_exposes_one_legacy_strategy_hard_stop() {
         let source = SourceFile::new(
             "legacy-strategy.pine",
