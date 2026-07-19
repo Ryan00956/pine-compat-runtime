@@ -31,7 +31,7 @@ impl LegacyResolver {
     }
 
     pub(crate) fn resolve_value(self, source_name: &str) -> Option<LegacyResolution> {
-        self.resolve(source_name, |kind| kind == LegacyRuleKind::ExactSymbolAlias)
+        self.resolve(source_name, LegacyRuleKind::is_value)
     }
 
     fn resolve(

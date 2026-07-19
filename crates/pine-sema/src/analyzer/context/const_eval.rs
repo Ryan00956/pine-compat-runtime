@@ -604,7 +604,11 @@ impl Analyzer {
     }
 
     pub(crate) fn known_const_string_value(&self, expr: &pine_syntax::Expr) -> Option<String> {
-        const_string_value(expr).or_else(|| self.known_const_string_value_from_symbols(expr))
+        self.legacy
+            .canonical_string_value(self.current_source_context_id(), expr.span)
+            .map(str::to_owned)
+            .or_else(|| const_string_value(expr))
+            .or_else(|| self.known_const_string_value_from_symbols(expr))
     }
 
     fn known_const_string_value_from_symbols(&self, expr: &pine_syntax::Expr) -> Option<String> {

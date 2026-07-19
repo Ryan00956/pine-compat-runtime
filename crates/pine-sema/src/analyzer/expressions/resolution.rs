@@ -40,6 +40,9 @@ impl Analyzer {
             });
             return Some(PineType::new(Qualifier::Const, ValueKind::String));
         }
+        if let Some(resolution) = self.legacy.resolve_value(name) {
+            return self.resolve_legacy_value(name, span, resolution);
+        }
 
         self.check_feature_name(name, span);
         if name.starts_with("color.") {
@@ -57,37 +60,7 @@ impl Analyzer {
             self.bind_symbol(name, span, symbol);
             Some(symbol.pine_type)
         } else if let Some(resolution) = self.legacy.resolve_value(name) {
-            match resolution {
-                crate::legacy::LegacyResolution::ExactAlias(rule) => {
-                    let canonical_name = rule
-                        .canonical_name
-                        .expect("validated exact legacy alias has a canonical target");
-                    let pine_type = self
-                        .resolve_qualified_value(canonical_name, span)
-                        .expect("validated exact legacy symbol target is registered");
-                    let source_context_id = self.current_source_context_id();
-                    self.legacy.record_value_translation(
-                        &mut self.compatibility,
-                        source_context_id,
-                        span,
-                        rule,
-                    );
-                    self.expr_types.insert(self.expr_key(span), pine_type);
-                    Some(pine_type)
-                }
-                crate::legacy::LegacyResolution::Focused(_) => {
-                    unreachable!("focused legacy rules are never value resolutions")
-                }
-                crate::legacy::LegacyResolution::UnsupportedKnown(rule) => {
-                    let crate::legacy::LegacyRuleSupport::UnsupportedKnown { reason } =
-                        rule.support
-                    else {
-                        unreachable!("legacy resolver preserves rule support state")
-                    };
-                    self.unsupported(rule.source_name, reason, span);
-                    None
-                }
-            }
+            self.resolve_legacy_value(name, span, resolution)
         } else {
             self.diagnostics.push(Diagnostic::error(
                 "E_UNKNOWN_SYMBOL",
@@ -95,6 +68,56 @@ impl Analyzer {
                 span,
             ));
             None
+        }
+    }
+
+    fn resolve_legacy_value(
+        &mut self,
+        _name: &str,
+        span: Span,
+        resolution: crate::legacy::LegacyResolution,
+    ) -> Option<PineType> {
+        match resolution {
+            crate::legacy::LegacyResolution::ExactAlias(rule) => {
+                let canonical_name = rule
+                    .canonical_name
+                    .expect("validated exact legacy alias has a canonical target");
+                let pine_type = self
+                    .resolve_qualified_value(canonical_name, span)
+                    .expect("validated exact legacy symbol target is registered");
+                let source_context_id = self.current_source_context_id();
+                self.legacy.record_value_translation(
+                    &mut self.compatibility,
+                    source_context_id,
+                    span,
+                    rule,
+                );
+                self.expr_types.insert(self.expr_key(span), pine_type);
+                Some(pine_type)
+            }
+            crate::legacy::LegacyResolution::Focused(rule) => {
+                if rule.kind != crate::legacy::LegacyRuleKind::FocusedInputConstant {
+                    unreachable!("supported focused legacy value has no analyzer owner")
+                }
+                let source_context_id = self.current_source_context_id();
+                self.legacy.record_input_constant_translation(
+                    &mut self.compatibility,
+                    source_context_id,
+                    span,
+                    rule,
+                );
+                let pine_type = PineType::new(Qualifier::Const, ValueKind::String);
+                self.expr_types.insert(self.expr_key(span), pine_type);
+                Some(pine_type)
+            }
+            crate::legacy::LegacyResolution::UnsupportedKnown(rule) => {
+                let crate::legacy::LegacyRuleSupport::UnsupportedKnown { reason } = rule.support
+                else {
+                    unreachable!("legacy resolver preserves rule support state")
+                };
+                self.unsupported(rule.source_name, reason, span);
+                None
+            }
         }
     }
 }

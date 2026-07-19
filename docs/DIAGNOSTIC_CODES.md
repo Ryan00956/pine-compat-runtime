@@ -50,6 +50,9 @@ improved over time, but codes should remain stable once published.
 - `E_LEGACY_INDICATOR_DECLARATION`: a legacy source has a missing, mixed, modern,
   or otherwise inadmissible indicator declaration; v1-v3 `study()` lowering is
   still deferred, while the verified v4 `study()` subset is executable.
+- `E_LEGACY_INPUT_OVERLOAD`: a Pine v4 `input()` call has an ambiguous,
+  uninferable, forged, or unsupported historical type selection; the call is
+  rejected before canonical lowering or runtime.
 - `E_LEGACY_STRATEGY_OUT_OF_SCOPE`: a v1-v4 source declares `strategy()` or
   references `strategy.*`; legacy strategy execution is outside this project.
 - `E_ASSIGN_TYPE`: reassignment type mismatch.

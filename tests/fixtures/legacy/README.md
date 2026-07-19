@@ -35,3 +35,7 @@ directories own paired compatibility fixtures added after the baseline. Phase 3
 adds v4 declaration and exact-alias pairs under `v4/sema` and `v4/runtime`;
 these files are original project fixtures and are also referenced by
 `conformance.tsv`.
+
+Phase 4 adds the paired `v4/runtime/inputs_*` fixtures for all supported Pine v4
+input type constants, metadata, callsites, default values, and scalar host
+overrides. `v4/sema/input_constant_alias.pine` owns the local const-alias case.

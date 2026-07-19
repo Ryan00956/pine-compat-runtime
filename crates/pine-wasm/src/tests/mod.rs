@@ -232,6 +232,24 @@ plot(color.r(shade))
 }
 
 #[test]
+fn runs_v4_legacy_input_overrides_through_wasm_host() {
+    let source = include_str!("../../../../tests/fixtures/legacy/v4/runtime/inputs_legacy.pine");
+    let bars = "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n";
+    let input_ids = input_call_ids_by_title(source);
+    let overrides_json = input_overrides_json(&[
+        (input_ids["Length"], serde_json::json!(1)),
+        (input_ids["Scale"], serde_json::json!(2.0)),
+        (input_ids["Price"], serde_json::json!(1.0)),
+    ]);
+
+    let output = run_script_csv_with_input_overrides(source, bars, &overrides_json)
+        .expect("legacy v4 input override output");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(parsed["plots"][0]["values"], serde_json::json!([3, 5, 7]));
+}
+
+#[test]
 fn generic_color_input_override_accepts_hex_string() {
     let source = r##"//@version=5
 indicator("generic color")

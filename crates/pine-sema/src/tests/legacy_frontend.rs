@@ -170,6 +170,164 @@ fn v4_study_binds_historical_positions_before_canonical_validation() {
 }
 
 #[test]
+fn production_v4_input_overloads_match_canonical_hir() {
+    let legacy = include_str!("../../../../tests/fixtures/legacy/v4/runtime/inputs_legacy.pine");
+    let canonical =
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/inputs_canonical.pine");
+
+    assert_eq!(normalized_hir(legacy), normalized_hir(canonical));
+
+    let analysis = analyze_production(legacy);
+    let input_targets = analysis
+        .compatibility
+        .legacy_translations
+        .iter()
+        .filter(|translation| translation.source_feature == "input")
+        .map(|translation| translation.canonical_feature.as_str())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        input_targets,
+        vec![
+            "input.int",
+            "input.float",
+            "input.bool",
+            "input.color",
+            "input.string",
+            "input.symbol",
+            "input.timeframe",
+            "input.session",
+            "input.source",
+            "input.time",
+            "input.price",
+        ]
+    );
+    assert!(
+        analysis
+            .compatibility
+            .legacy_translations
+            .iter()
+            .filter(|translation| translation.source_feature.starts_with("input."))
+            .all(|translation| translation.kind == LegacyTranslationKind::ConstantAlias)
+    );
+}
+
+#[test]
+fn v4_input_type_constant_survives_a_local_const_alias() {
+    let source =
+        include_str!("../../../../tests/fixtures/legacy/v4/sema/input_constant_alias.pine");
+    let analysis = analyze_production(source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis
+            .compatibility
+            .legacy_translations
+            .iter()
+            .filter(|translation| translation.source_feature == "input.integer")
+            .count(),
+        1
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn v4_input_infers_fixture_backed_scalar_and_source_overloads() {
+    let analysis = analyze_production(
+        "//@version=4\nstudy(\"inferred\")\ni = input(1)\nf = input(1.5)\nb = input(true)\ns = input(\"text\")\nc = input(color.red)\nsrc = input(close)\nplot(src)\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis
+            .compatibility
+            .legacy_translations
+            .iter()
+            .filter(|translation| translation.source_feature == "input")
+            .map(|translation| translation.canonical_feature.as_str())
+            .collect::<Vec<_>>(),
+        vec![
+            "input.int",
+            "input.float",
+            "input.bool",
+            "input.string",
+            "input.color",
+            "input.source",
+        ]
+    );
+}
+
+#[test]
+fn v4_input_rejects_ambiguous_and_wrong_overloads_before_runtime() {
+    let string_type = analyze_production(
+        "//@version=4\nstudy(\"bad\")\nlength = input(3, \"Length\", type=\"input.int\")\nplot(close)\n",
+    );
+    assert_eq!(
+        diagnostic_codes(&string_type),
+        vec!["E_LEGACY_INPUT_OVERLOAD"]
+    );
+    assert!(string_type.hir.is_none());
+
+    let source_confirm = analyze_production(
+        "//@version=4\nstudy(\"bad\")\nsrc = input(close, \"Source\", type=input.source, confirm=true)\nplot(close)\n",
+    );
+    assert_eq!(diagnostic_codes(&source_confirm), vec!["E_CALL_ARG_NAME"]);
+    assert!(source_confirm.hir.is_none());
+
+    let no_defval = analyze_production(
+        "//@version=4\nstudy(\"bad\")\nlength = input(title=\"Length\", type=input.integer)\nplot(close)\n",
+    );
+    assert_eq!(diagnostic_codes(&no_defval), vec!["E_CALL_ARITY"]);
+    assert!(no_defval.hir.is_none());
+}
+
+#[test]
+fn v4_integer_input_accepts_float_metadata_without_widening_modern_input_int() {
+    let legacy = analyze_production(
+        "//@version=4\nstudy(\"bounds\")\nlength = input(1, \"Length\", input.integer, minval=1.0, maxval=5.0, step=1.0)\nplot(sma(close, length))\n",
+    );
+    assert!(legacy.diagnostics.is_empty(), "{:?}", legacy.diagnostics);
+    assert!(legacy.hir.is_some());
+
+    let modern = analyze_production(
+        "//@version=5\nindicator(\"bounds\")\nlength = input.int(1, \"Length\", minval=1.0)\nplot(ta.sma(close, length))\n",
+    );
+    assert_eq!(diagnostic_codes(&modern), vec!["E_CALL_ARG_TYPE"]);
+    assert!(modern.compatibility.legacy_translations.is_empty());
+    assert!(modern.hir.is_none());
+}
+
+#[test]
+fn v4_input_constants_do_not_become_global_numeric_coercions() {
+    let analysis = analyze_production("//@version=4\nstudy(\"bad\")\nplot(input.integer * 2)\n");
+    assert!(analysis.hir.is_none());
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("numeric")),
+        "{:?}",
+        analysis.diagnostics
+    );
+}
+
+#[test]
+fn modern_sources_reject_v4_input_type_constants() {
+    for version in [5, 6] {
+        let analysis = analyze_production(&format!(
+            "//@version={version}\nindicator(\"modern\")\nkind = input.integer\nplot(close)\n"
+        ));
+        assert!(analysis.hir.is_none());
+        assert!(analysis.compatibility.legacy_translations.is_empty());
+    }
+}
+
+#[test]
 fn v4_study_timeframe_arguments_produce_one_focused_failure() {
     let analysis = analyze_production(
         "//@version=4\nstudy(\"MTF\", resolution=\"D\", resolution_gaps=true)\nplot(close)\n",

@@ -5,7 +5,7 @@ use super::inputs::LEGACY_INPUT_DEFERRED_REASON;
 use super::outputs::LEGACY_OUTPUT_DEFERRED_REASON;
 use super::security::LEGACY_SECURITY_DEFERRED_REASON;
 
-pub const LEGACY_TRANSLATOR_REVISION: u32 = 2;
+pub const LEGACY_TRANSLATOR_REVISION: u32 = 3;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum LegacyRuleKind {
@@ -14,6 +14,7 @@ pub enum LegacyRuleKind {
     FocusedCall,
     FocusedExpression,
     FocusedInput,
+    FocusedInputConstant,
     FocusedOutput,
     FocusedSecurity,
     FocusedDeclaration,
@@ -22,12 +23,17 @@ pub enum LegacyRuleKind {
 impl LegacyRuleKind {
     #[must_use]
     pub const fn is_call(self) -> bool {
-        !matches!(self, Self::ExactSymbolAlias)
+        !matches!(self, Self::ExactSymbolAlias | Self::FocusedInputConstant)
     }
 
     #[must_use]
     pub const fn is_exact(self) -> bool {
         matches!(self, Self::ExactFunctionAlias | Self::ExactSymbolAlias)
+    }
+
+    #[must_use]
+    pub const fn is_value(self) -> bool {
+        matches!(self, Self::ExactSymbolAlias | Self::FocusedInputConstant)
     }
 }
 
@@ -102,11 +108,107 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         source_name: "input",
         canonical_name: Some("input"),
         min_version: PineDialect::V1,
-        max_version: PineDialect::V4,
+        max_version: PineDialect::V3,
         kind: LegacyRuleKind::FocusedInput,
         support: LegacyRuleSupport::UnsupportedKnown {
             reason: LEGACY_INPUT_DEFERRED_REASON,
         },
+    },
+    LegacyRule {
+        source_name: "input",
+        canonical_name: Some("input"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedInput,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "input.bool",
+        canonical_name: Some("input.bool"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedInputConstant,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "input.color",
+        canonical_name: Some("input.color"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedInputConstant,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "input.float",
+        canonical_name: Some("input.float"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedInputConstant,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "input.integer",
+        canonical_name: Some("input.int"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedInputConstant,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "input.price",
+        canonical_name: Some("input.price"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedInputConstant,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "input.resolution",
+        canonical_name: Some("input.timeframe"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedInputConstant,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "input.session",
+        canonical_name: Some("input.session"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedInputConstant,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "input.source",
+        canonical_name: Some("input.source"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedInputConstant,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "input.string",
+        canonical_name: Some("input.string"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedInputConstant,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "input.symbol",
+        canonical_name: Some("input.symbol"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedInputConstant,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "input.time",
+        canonical_name: Some("input.time"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedInputConstant,
+        support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
         source_name: "offset",
@@ -249,8 +351,34 @@ pub(crate) fn validate_catalog(rules: &[LegacyRule]) -> Vec<CatalogValidationErr
                     rule.source_name
                 )));
             }
+            (
+                LegacyRuleKind::FocusedInput | LegacyRuleKind::FocusedInputConstant,
+                LegacyRuleSupport::Supported,
+                Some(canonical),
+            ) if pine_builtins::get_phase_1_builtin(canonical).is_none() => {
+                errors.push(CatalogValidationError(format!(
+                    "canonical input `{canonical}` for `{}` is not registered",
+                    rule.source_name
+                )));
+            }
+            (
+                LegacyRuleKind::FocusedInput | LegacyRuleKind::FocusedInputConstant,
+                LegacyRuleSupport::Supported,
+                None,
+            ) => {
+                errors.push(CatalogValidationError(format!(
+                    "supported focused input `{}` has no canonical target",
+                    rule.source_name
+                )));
+            }
             (kind, LegacyRuleSupport::Supported, _)
-                if !kind.is_exact() && kind != LegacyRuleKind::FocusedDeclaration =>
+                if !kind.is_exact()
+                    && !matches!(
+                        kind,
+                        LegacyRuleKind::FocusedDeclaration
+                            | LegacyRuleKind::FocusedInput
+                            | LegacyRuleKind::FocusedInputConstant
+                    ) =>
             {
                 errors.push(CatalogValidationError(format!(
                     "focused rule `{}` cannot use exact lowering",

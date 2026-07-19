@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added executable Pine v4 input compatibility. Historical `input()` overloads
+  and all eleven documented `input.*` type constants now lower to canonical
+  specialized input calls with original-span translations, stable callsite ids,
+  canonical metadata and host overrides, strict ambiguous-overload diagnostics,
+  local const aliases, modern negative controls, paired HIR/runtime fixtures,
+  and the parameter-scoped v4 integer float-metadata exception.
 - Added the first executable Pine v4 indicator slice. `study(...)` now binds
   against its historical signature and lowers to canonical `indicator` HIR for
   the verified single-timeframe metadata subset; `resolution`,

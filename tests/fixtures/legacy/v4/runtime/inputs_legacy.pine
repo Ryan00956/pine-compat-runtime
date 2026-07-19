@@ -1,0 +1,15 @@
+//@version=4
+study("v4 input equivalence")
+length = input(3, "Length", input.integer, minval=1, maxval=9, confirm=false, step=1, options=[1, 3, 5], tooltip="Bars", inline="row", group="Core")
+scale = input(1.5, "Scale", input.float, minval=0.5, maxval=3.0, confirm=false, step=0.5, options=[1.0, 1.5, 2.0], tooltip="Factor", inline="row", group="Core")
+enabled = input(true, "Enabled", input.bool, false, "Toggle", "flags", "Core")
+shade = input(color.orange, "Shade", input.color, false, "Color", "flags", "Core")
+mode = input("SMA", "Mode", input.string, false, ["SMA", "EMA"], "Average", "mode", "Core")
+symbol = input("AAPL", "Symbol", input.symbol, false, "Ticker", "symbol", "Context")
+resolution = input("60", "Resolution", input.resolution, false, "Timeframe", "context", "Context")
+session = input("0930-1600", "Session", input.session, false, "Hours", "context", "Context")
+source = input(close, "Source", input.source, "source", "Core", "Price")
+start = input(0, "Start", input.time, false, "Timestamp", "time", "Context")
+price = input(2.0, "Price", input.price, false, "Level", "time", "Context")
+selected = enabled and mode == "SMA" and symbol == "AAPL" and resolution == "60" and session == "0930-1600" and time >= start
+plot(selected ? sma(source, length) * scale + price : open, color=shade)

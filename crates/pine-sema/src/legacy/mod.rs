@@ -10,7 +10,8 @@ mod report;
 mod resolver;
 mod security;
 
-use pine_syntax::{CallArg, Program, Span};
+use pine_ir::PineType;
+use pine_syntax::{CallArg, Expr, Program, Span};
 
 pub use catalog::{
     LEGACY_RULES, LEGACY_TRANSLATOR_REVISION, LegacyRule, LegacyRuleKind, LegacyRuleSupport,
@@ -25,6 +26,7 @@ pub(crate) use catalog::{CatalogValidationError, validate_catalog};
 pub(crate) use declarations::LegacyStudyBinding;
 pub(crate) use declarations::{LegacyAdmissionFailure, legacy_admission_failure};
 pub(crate) use dialect::LanguageSelection;
+pub(crate) use inputs::LegacyInputBinding;
 pub(crate) use report::normalize_legacy_report;
 pub(crate) use resolver::LegacyResolution;
 
@@ -59,6 +61,21 @@ impl LegacyFrontEnd {
     pub(crate) fn bind_v4_study_args(&self, args: &[CallArg]) -> LegacyStudyBinding {
         debug_assert_eq!(self.dialect, PineDialect::V4);
         declarations::bind_v4_study_args(args)
+    }
+
+    pub(crate) fn explicit_v4_input_type_expr<'a>(&self, args: &'a [CallArg]) -> Option<&'a Expr> {
+        debug_assert_eq!(self.dialect, PineDialect::V4);
+        inputs::explicit_type_expr(args)
+    }
+
+    pub(crate) fn bind_v4_input_args(
+        &self,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+        explicit_type_marker: Option<&str>,
+    ) -> LegacyInputBinding {
+        debug_assert_eq!(self.dialect, PineDialect::V4);
+        inputs::bind_v4_input_args(args, arg_types, explicit_type_marker)
     }
 
     pub(crate) fn registered_call_guard(
@@ -108,6 +125,22 @@ impl LegacyFrontEnd {
         report::record_exact_translation(report, rule, span);
     }
 
+    pub(crate) fn record_input_constant_translation(
+        &mut self,
+        report: &mut CompatibilityReport,
+        source_context_id: SourceContextId,
+        span: Span,
+        rule: LegacyRule,
+    ) -> &'static str {
+        let constant = inputs::input_constant(rule.source_name)
+            .expect("supported focused input constant has a marker");
+        debug_assert_eq!(rule.canonical_name, Some(constant.canonical_name));
+        self.lowering
+            .record_string_value(source_context_id, span, constant.marker);
+        report::record_constant_translation(report, rule, span);
+        constant.marker
+    }
+
     pub(crate) fn record_declaration_translation(
         &mut self,
         report: &mut CompatibilityReport,
@@ -126,6 +159,22 @@ impl LegacyFrontEnd {
         report::record_signature_translation(report, rule, span);
     }
 
+    pub(crate) fn record_input_translation(
+        &mut self,
+        report: &mut CompatibilityReport,
+        source_context_id: SourceContextId,
+        span: Span,
+        rule: LegacyRule,
+        canonical_name: &'static str,
+        arg_rewrites: Vec<inputs::LegacyInputArgRewrite>,
+    ) {
+        self.lowering
+            .record_call(source_context_id, span, canonical_name);
+        self.lowering
+            .record_call_arg_rewrites(source_context_id, span, arg_rewrites);
+        report::record_input_signature_translation(report, rule, canonical_name, span);
+    }
+
     pub(crate) fn canonical_call_name(
         &self,
         source_context_id: SourceContextId,
@@ -142,12 +191,20 @@ impl LegacyFrontEnd {
         self.lowering.value_name(source_context_id, span)
     }
 
-    pub(crate) fn canonical_call_arg_names(
+    pub(crate) fn canonical_call_arg_rewrites(
         &self,
         source_context_id: SourceContextId,
         span: Span,
-    ) -> Option<&[Option<&'static str>]> {
-        self.lowering.call_arg_names(source_context_id, span)
+    ) -> Option<&[inputs::LegacyInputArgRewrite]> {
+        self.lowering.call_arg_rewrites(source_context_id, span)
+    }
+
+    pub(crate) fn canonical_string_value(
+        &self,
+        source_context_id: SourceContextId,
+        span: Span,
+    ) -> Option<&'static str> {
+        self.lowering.string_value(source_context_id, span)
     }
 }
 

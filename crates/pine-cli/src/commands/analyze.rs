@@ -382,6 +382,35 @@ mod tests {
     }
 
     #[test]
+    fn analysis_json_exposes_canonical_v4_input_metadata() {
+        let source = SourceFile::new(
+            "legacy-v4-inputs.pine",
+            include_str!("../../../../tests/fixtures/legacy/v4/runtime/inputs_legacy.pine"),
+        );
+        let analysis = analyze_source(&source);
+        let parsed: serde_json::Value =
+            serde_json::from_str(&analysis_json(&source, &analysis)).expect("analysis JSON");
+
+        assert_eq!(parsed["executable"], serde_json::json!(true));
+        assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+        assert_eq!(parsed["inputs"].as_array().map(Vec::len), Some(11));
+        assert_eq!(parsed["inputs"][0]["callSiteId"], serde_json::json!(1));
+        assert_eq!(parsed["inputs"][0]["name"], serde_json::json!("input.int"));
+        assert_eq!(parsed["inputs"][0]["title"], serde_json::json!("Length"));
+        assert!(
+            parsed["compatibility"]["legacyTranslations"]
+                .as_array()
+                .expect("legacy translations")
+                .iter()
+                .any(|translation| {
+                    translation["sourceFeature"] == "input.integer"
+                        && translation["canonicalFeature"] == "input.int"
+                        && translation["kind"] == "constantAlias"
+                })
+        );
+    }
+
+    #[test]
     fn analysis_json_exposes_one_legacy_strategy_hard_stop() {
         let source = SourceFile::new(
             "legacy-strategy.pine",

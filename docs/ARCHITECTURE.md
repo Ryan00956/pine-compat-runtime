@@ -89,6 +89,16 @@ element queries also consume the recorded canonical call name. Version-sensitive
 canonical call surfaces such as session-bearing `time(...)` are guarded until
 their focused legacy semantics phase.
 
+Phase 4 adds a focused Pine v4 input binder. Version-gated input type constants
+resolve to opaque legacy-only markers, historical overload tables bind their
+own positional and named order, and the lowering plan can now keep-and-rename
+or drop individual call arguments. The obsolete `type` argument is dropped
+while the original call expression retains its callsite allocation; HIR,
+runtime metadata, and host overrides therefore consume only canonical
+`input.*` names. The v4 integer float-metadata exception is applied only to the
+legacy validation view, so modern input qualifier and argument rules are not
+widened.
+
 The semantic compile cache includes `LEGACY_TRANSLATOR_REVISION` in every key.
 Catalog or translation-semantics changes increment that revision so cached
 analysis cannot cross translator revisions.

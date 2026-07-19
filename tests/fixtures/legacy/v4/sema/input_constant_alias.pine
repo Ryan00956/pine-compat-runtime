@@ -1,0 +1,5 @@
+//@version=4
+study("v4 input constant alias")
+integer_type = input.integer
+length = input(3, "Length", integer_type, minval=1)
+plot(sma(close, length))

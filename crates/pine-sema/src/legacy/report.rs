@@ -41,6 +41,36 @@ pub(crate) fn record_signature_translation(
     });
 }
 
+pub(crate) fn record_constant_translation(
+    report: &mut CompatibilityReport,
+    rule: LegacyRule,
+    span: Span,
+) {
+    let canonical_feature = rule
+        .canonical_name
+        .expect("validated legacy input constant has a canonical target");
+    report.legacy_translations.push(LegacyTranslation {
+        source_feature: rule.source_name.to_owned(),
+        canonical_feature: canonical_feature.to_owned(),
+        kind: LegacyTranslationKind::ConstantAlias,
+        span,
+    });
+}
+
+pub(crate) fn record_input_signature_translation(
+    report: &mut CompatibilityReport,
+    rule: LegacyRule,
+    canonical_feature: &'static str,
+    span: Span,
+) {
+    report.legacy_translations.push(LegacyTranslation {
+        source_feature: rule.source_name.to_owned(),
+        canonical_feature: canonical_feature.to_owned(),
+        kind: LegacyTranslationKind::SignatureReshape,
+        span,
+    });
+}
+
 pub(crate) fn normalize_legacy_report(report: &mut CompatibilityReport) {
     report.legacy_translations.sort_by(|left, right| {
         (

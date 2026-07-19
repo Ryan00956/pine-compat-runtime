@@ -5,6 +5,7 @@ mod builtin_calls;
 mod call_result_methods;
 mod function_returns;
 mod inline_calls;
+mod legacy;
 mod literals;
 mod pure_series;
 mod reassignments;
@@ -637,12 +638,10 @@ impl Analyzer {
         let kind = match &expr.kind {
             ExprKind::Literal(literal) => HirExprKind::Literal(lower_literal(literal)),
             ExprKind::Identifier(name) => {
-                match self
-                    .legacy
-                    .canonical_value_name(self.current_source_context_id(), expr.span)
-                {
-                    Some(canonical_name) => HirExprKind::Builtin(canonical_name.to_owned()),
-                    None => HirExprKind::Symbol(self.bound_symbol(name, expr.span)?.id),
+                if let Some(kind) = self.lower_legacy_value(expr.span) {
+                    kind
+                } else {
+                    HirExprKind::Symbol(self.bound_symbol(name, expr.span)?.id)
                 }
             }
             ExprKind::QualifiedName(parts) => {
@@ -699,7 +698,8 @@ impl Analyzer {
                     debug_assert_eq!(value.pine_type, field);
                     return Some(value);
                 }
-                HirExprKind::Builtin(parts.join("."))
+                self.lower_legacy_value(expr.span)
+                    .unwrap_or_else(|| HirExprKind::Builtin(parts.join(".")))
             }
             ExprKind::Unary { op, expr } => HirExprKind::Unary {
                 op: lower_unary_op(*op),
@@ -1045,19 +1045,7 @@ impl Analyzer {
                     .legacy
                     .canonical_call_name(self.current_source_context_id(), callee.span)
                     .map_or(name, str::to_owned);
-                let canonical_args = self
-                    .legacy
-                    .canonical_call_arg_names(self.current_source_context_id(), callee.span)
-                    .map(|names| {
-                        args.iter()
-                            .zip(names)
-                            .map(|(arg, name)| {
-                                let mut arg = arg.clone();
-                                arg.name = (*name).map(str::to_owned);
-                                arg
-                            })
-                            .collect::<Vec<_>>()
-                    });
+                let canonical_args = self.lower_legacy_call_args(callee.span, args);
                 let args = canonical_args.as_deref().unwrap_or(args);
                 if pine_builtins::get_phase_1_builtin(&name).is_none()
                     && !name.starts_with("map.")

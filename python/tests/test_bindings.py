@@ -238,6 +238,35 @@ def test_program_run_accepts_call_site_keyed_input_overrides():
     assert script_result["plots"][0]["values"] == [2.0, 4.0, 6.0]
 
 
+def test_program_run_accepts_v4_legacy_input_overrides():
+    source = Path(
+        "tests/fixtures/legacy/v4/runtime/inputs_legacy.pine"
+    ).read_text(encoding="utf-8")
+    report = pine_compat.analyze_script(source)
+    input_ids = {
+        item["title"]: item["callSiteId"]
+        for item in report["inputs"]
+    }
+
+    assert report["executable"] is True
+    assert len(report["inputs"]) == 11
+    assert report["inputs"][0] == {
+        "callSiteId": 1,
+        "name": "input.int",
+        "title": "Length",
+    }
+
+    result = pine_compat.compile_script(source).run(
+        BARS,
+        input_overrides={
+            input_ids["Length"]: 1,
+            input_ids["Scale"]: 2.0,
+            input_ids["Price"]: 1.0,
+        },
+    )
+    assert result["plots"][0]["values"] == [3.0, 5.0, 7.0]
+
+
 def test_program_run_accepts_generic_color_input_override_string():
     source = (
         '//@version=5\nindicator("generic color")\n'
