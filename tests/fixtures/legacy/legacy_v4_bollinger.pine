@@ -1,0 +1,6 @@
+//@version=4
+study("v4 Bollinger")
+[basis, upper, lower] = bb(close, 3, 2)
+plot(basis)
+plot(upper)
+plot(lower)

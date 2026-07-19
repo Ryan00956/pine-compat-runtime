@@ -1,0 +1,3 @@
+//@version=4
+study("v4 session defaults")
+plot(time("D", "0930-1600"))

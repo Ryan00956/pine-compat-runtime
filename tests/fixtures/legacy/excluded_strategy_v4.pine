@@ -1,0 +1,3 @@
+//@version=4
+strategy("Excluded legacy strategy")
+strategy.entry("Long", strategy.long)

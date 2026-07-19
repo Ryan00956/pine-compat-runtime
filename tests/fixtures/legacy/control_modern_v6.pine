@@ -1,0 +1,3 @@
+//@version=6
+indicator("Modern control")
+plot(ta.sma(close, 3), color=color.blue)

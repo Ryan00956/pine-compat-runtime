@@ -1,0 +1,4 @@
+//@version=2
+study("v2 security default")
+dailyHigh = security(tickerid, "D", high)
+plot(dailyHigh)

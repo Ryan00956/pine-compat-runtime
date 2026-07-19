@@ -1,0 +1,4 @@
+//@version=4
+study("v4 dynamic style")
+selectedStyle = input(1)
+plot(close, style=selectedStyle)

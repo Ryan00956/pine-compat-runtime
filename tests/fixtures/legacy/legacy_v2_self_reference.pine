@@ -1,0 +1,4 @@
+//@version=2
+study("v2 self reference")
+accumulated = nz(accumulated[1]) + close
+plot(accumulated)

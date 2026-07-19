@@ -61,6 +61,13 @@ cargo run -p pine-cli -- matrix --format json
   remaining broad backlog.
 - [Pure Internal Roadmap](PURE_INTERNAL_ROADMAP.md): interpreter-internal design
   directions.
+- [Legacy Indicator Compatibility Execution Plan](LEGACY_INDICATOR_COMPATIBILITY_EXECUTION_PLAN.md):
+  indicator-only v1-v4 compatibility, corpus measurement, versioned lowering,
+  execution phases, and release gates; legacy strategies are explicitly out of
+  scope.
+- [Legacy Indicator Phase 0 Baseline](LEGACY_INDICATOR_PHASE0_BASELINE.md):
+  reproducible seed-corpus composition, stage rates, input availability, and
+  ranked legacy failure clusters before compiler changes.
 - [Strategy Internal Gap Audit](STRATEGY_INTERNAL_GAP_AUDIT.md): current
   long-only strategy baseline and deferred broker-model work.
 - [Next Language Expansion Playbook](NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md):

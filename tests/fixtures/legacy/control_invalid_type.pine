@@ -1,0 +1,3 @@
+//@version=6
+indicator("Invalid type control")
+plot("not a numeric series")

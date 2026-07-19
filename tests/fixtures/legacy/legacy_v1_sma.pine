@@ -1,0 +1,3 @@
+study("Implicit v1 SMA")
+length = input(3)
+plot(sma(close, length))
