@@ -86,6 +86,39 @@ analysis name collisions. Analysis comparisons use complete parsed JSON values,
 so every schema field and value must agree without treating object-key order as
 semantic.
 
+## Legacy Indicator Release Profiles
+
+`tests/fixtures/legacy/release_profiles.tsv` is the release execution registry.
+It contains 12 complete legacy runtime fixtures and three additional MTF rows.
+Every row pins source version, maturity, bars/request environment, realtime
+policy, original-source provenance, and a retained-value ceiling. The runtime
+release test fails if a legacy runtime fixture is missing from the registry,
+if a row changes maturity or provenance unexpectedly, or if execution diverges
+across its required modes.
+
+| Profile | Maturity | Eligible corpus | Release rows | Historical/incremental | Realtime policy |
+| --- | --- | ---: | ---: | --- | --- |
+| v4 | preview | 12 | 9 | exact parity | forming/rollback/confirmed parity |
+| v3 | preview | 7 | 2 | exact parity | forming/rollback/confirmed parity |
+| v2 | experimental | 2 | 3 | exact parity | ordinary rows parity; lookahead row forbids future leakage |
+| implicit v1 | experimental | 1 | 1 | exact parity | forming/rollback/confirmed parity |
+
+The fixed seed corpus has 22 eligible legacy indicators and six controls plus
+one excluded legacy strategy. It reaches 100% parse, analyze/lower, and
+historical-run success with zero unknown diagnostics, but it is small and has
+no external reference-output oracle. The provisional stable gate requires at
+least 50 authorized eligible scripts per profile when samples are available;
+therefore no v1-v4 profile is labeled stable. A passing feature row means that
+the named fixture-backed behavior is supported, not that its enclosing
+language profile is stable.
+
+`scripts/profile_legacy_release.py` performs an indicative end-to-end CLI
+analysis timing pass and consumes public runtime profiles to count retained
+series/window/output values. Timing is observational and machine-dependent;
+the per-row resource ceiling is deterministic and release-gated. Corpus and
+release manifests require explicit license classes and source paths, and
+privacy-preserving corpus reports omit source text and source paths.
+
 Legacy exact-alias conformance requires a paired source/canonical HIR or runtime
 comparison, an original-span translation record, a user-symbol collision
 control, and a v5/v6 negative control. Catalog validation must also prove that

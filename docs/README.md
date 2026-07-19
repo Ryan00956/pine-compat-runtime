@@ -102,6 +102,15 @@ cargo run -p pine-cli -- matrix --format json
   v1-v4 runtime and complete analysis goldens across CLI, Python, and WASM,
   expanded parity guardrails, automatic source-version API policy, and the
   explicit migration-preview deferral.
+- [Legacy Indicator Phase 11 Release Audit](LEGACY_INDICATOR_PHASE11_RELEASE_AUDIT.md):
+  final corpus, execution-mode, MTF, resource, cache, schema, license, and
+  release-maturity closeout.
+- [Legacy v4 Profile Closeout](LEGACY_INDICATOR_V4_PROFILE_CLOSEOUT.md): v4
+  preview evidence and deferred stable gates.
+- [Legacy v3 Profile Closeout](LEGACY_INDICATOR_V3_PROFILE_CLOSEOUT.md): v3
+  preview evidence and known boundaries.
+- [Legacy v2/v1 Profile Closeout](LEGACY_INDICATOR_V2_V1_PROFILE_CLOSEOUT.md):
+  experimental declaration, conversion, lookahead, and evidence boundary.
 - [Strategy Internal Gap Audit](STRATEGY_INTERNAL_GAP_AUDIT.md): current
   long-only strategy baseline and deferred broker-model work.
 - [Next Language Expansion Playbook](NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md):

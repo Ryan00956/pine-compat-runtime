@@ -11,6 +11,31 @@ name(arg_name: qualifier kind, ...) -> qualifier kind
 
 `series<T>` means a series-qualified value of kind `T`.
 
+## Legacy Indicator Binding Policy
+
+The canonical signatures below remain the runtime contract. Pine v1-v4
+indicator sources first pass through dialect-owned historical binders:
+
+- `study(...)` maps the documented per-version metadata subset to
+  `indicator(...)`;
+- `input(...)`, `plot(...)`, `hline(...)`, marker/bar/candle outputs, fills,
+  colors, and session-bearing calls use historical parameter roles and
+  defaults before lowering to canonical calls;
+- exact unqualified aliases such as the conformance-listed `sma`, `ema`, `bb`,
+  `crossover`, `abs`, pre-v4 colors/styles/metadata, and the focused expression
+  helpers resolve only after user symbols and only in their version ranges;
+- `security(...)` uses the v1/v2 or v3/v4 historical argument table and lowers
+  to internal request dispatch carrying explicit gaps/lookahead behavior and
+  the original source span;
+- removed `rsi(x, y)` shapes are selected from analyzed types rather than
+  argument spelling.
+
+These binders do not widen modern v5/v6 signatures. An ambiguous, forged, or
+unsupported historical shape emits the relevant `E_LEGACY_*` diagnostic
+instead of falling through to a similar modern overload. The exact supported
+surface is the `legacy.*` section of the compatibility matrix, not all built-ins
+that existed in a historical Pine release.
+
 ## Phase C Qualifier Audit Notes
 
 These signatures describe the currently implemented semantic surface, not the

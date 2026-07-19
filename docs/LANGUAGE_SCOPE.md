@@ -49,6 +49,23 @@ strict logical evaluation. Recognized multi-timeframe request forms that still
 need legacy execution semantics fail as supported-known work instead of
 silently selecting modern behavior.
 
+The released indicator profiles are evidence-ranked independently from their
+individual conformance rows:
+
+| Profile | Maturity | Fixed eligible corpus | Stable gate status |
+| --- | --- | ---: | --- |
+| v4 indicator | preview | 12 | below the provisional 50-script evidence gate |
+| v3 indicator | preview | 7 | below the provisional 50-script evidence gate |
+| v2 indicator | experimental | 2 | below the provisional 50-script evidence gate |
+| implicit v1 indicator | experimental | 1 | below the provisional 50-script evidence gate |
+
+All 22 fixed original indicators parse, analyze, lower, and run historically,
+but that small non-representative corpus does not justify a stable or
+language-wide claim. Feature admission remains defined by
+`tests/fixtures/conformance.tsv`; execution-mode release coverage is frozen in
+`tests/fixtures/legacy/release_profiles.tsv`. No maturity label enables legacy
+strategies or an unlisted feature.
+
 ## Initial Supported Syntax
 
 The first executable subset should be smaller than the first parseable subset.

@@ -91,6 +91,24 @@ are false and every other numeric value is true. Pine v3-v6 reject implicit bool
 arithmetic, and v6 rejects implicit numeric conditions. These inserted calls
 count against ordinary lowering and callsite limits.
 
+### Legacy release execution gates
+
+Every source in `tests/fixtures/legacy/release_profiles.tsv` must match a full
+historical batch run when appended incrementally and when handed to the
+realtime engine as historical bars. Ordinary v1-v4 rows must also survive a
+mutated forming update, replacement forming update, rollback, and final
+confirmation with a result equal to batch execution. All requested-data rows
+run through their declared chart/provider profile. Runtime profile storage is
+counted against the manifest ceiling.
+
+The sole deliberate equality exception is the experimental v2 historical
+`security` lookahead profile. Historical `lookahead_on` may repaint prior/final
+historical values, while forming or confirmed realtime updates may only use
+confirmed requested values. Its release gate therefore asserts that the
+realtime value stays `na` where batch history has a future-backfilled value;
+making those results equal would leak future data. This profile is not claimed
+as batch/realtime value parity.
+
 ## Strategy Mode
 
 `strategy(...)` selects strategy mode for historical execution.

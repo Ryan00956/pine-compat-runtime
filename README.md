@@ -99,6 +99,21 @@ bounded strategy runtime.
 | Outputs | Versioned plots, shapes, bars, candles, fills, labels, lines, line fills, polylines, boxes, tables, alerts, diagnostics, and strategy results |
 | Hosts | Rust workspace, `pine-compat` CLI, `pine_compat` Python module, and `wasm-bindgen` API |
 
+Legacy indicator compatibility is released by source version, not as one broad
+backwards-compatibility promise:
+
+| Source profile | Maturity | Current claim |
+| --- | --- | --- |
+| Pine v4 indicators | Preview | Direct execution for the conformance-listed declaration, input, alias, output, expression, session, and `security` subsets |
+| Pine v3 indicators | Preview | Direct execution for the conformance-listed pre-v4 declaration, input/output, alias, metadata, `na`, and same-context `security` subsets |
+| Pine v2 indicators | Experimental | Direct execution for the focused declaration graph, conversion, basic indicator, and historical-lookahead `security` subsets |
+| implicit Pine v1 indicators | Experimental | Direct execution for the focused v1/v2 shared `study`/input/average/plot subset |
+
+These labels reflect evidence breadth: the fixed original seed corpus contains
+only 12 v4, 7 v3, 2 v2, and 1 v1 eligible indicators. All currently pass, but
+none reaches the provisional 50-script stable-profile evidence gate. Legacy
+strategies are excluded from every profile.
+
 Support is intentionally feature-specific. Before adopting a script corpus,
 use the analyzer or the executable compatibility matrix rather than assuming
 language-wide compatibility:
@@ -171,6 +186,10 @@ assert report["dialect"] == "v4" and report["executable"]
 result = pine_compat.run_script(legacy, bars)
 ```
 
+The returned `executable` flag proves that this source is admitted by the
+implemented subset; it does not upgrade the whole v4 language profile beyond
+preview.
+
 ### CLI
 
 Run a script against CSV OHLCV data and receive normalized JSON:
@@ -220,6 +239,11 @@ Pine feature. Important current boundaries include:
   registry lookup;
 - collection, drawing, alert, UDT, method, and import support is intentionally
   limited to fixture-backed shapes;
+- Pine v4/v3 legacy-indicator profiles are previews and Pine v2/v1 profiles are
+  experimental because the authorized release corpus is small and has no
+  external reference-output oracle;
+- legacy strategies, lower-timeframe legacy `security`, and unsupported
+  whole-program `study(resolution=...)` execution remain out of scope;
 - unsupported syntax or semantics are rejected with diagnostics rather than
   guessed.
 

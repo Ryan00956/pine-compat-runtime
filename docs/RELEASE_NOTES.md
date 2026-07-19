@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+- Closed the legacy-indicator stabilization audit with explicit release
+  maturity: Pine v4/v3 indicators are preview profiles, while Pine v2 and
+  implicit-v1 indicators are experimental. A sorted 15-row release registry
+  covers every legacy runtime fixture plus v2/v3/v4 MTF evidence across batch,
+  incremental, realtime historical handoff, forming rollback, confirmation,
+  provider alignment, and bounded runtime storage. The v2 historical
+  lookahead profile deliberately verifies no realtime future-data leakage
+  instead of asserting false batch/realtime equality.
+- Re-ran the fixed original 29-item legacy corpus twice with byte-identical
+  output: all 22 eligible indicators parse, analyze/lower, and run
+  historically, with no crash, unknown diagnostic, or scope mismatch. The
+  per-version counts of 12/7/2/1 remain below the provisional 50-script stable
+  evidence gate, and no reference-output oracle is supplied, so this result is
+  not advertised as full backwards compatibility.
+- Added a reusable legacy release profiler, deterministic retained-value
+  ceilings, explicit dialect/cache isolation tests, and an independent 4096
+  declaration-edge adversarial test. All 14 emitted legacy diagnostic codes
+  remain documented, public analysis/runtime/matrix schemas remain 4/8/2, and
+  all committed legacy corpus/release sources are marked original.
 - Closed legacy host integration with CLI-owned shared goldens across Python
   and WASM. Required runtime parity now includes implicit v1 and v4 input
   defaults; five complete analysis snapshots cover v1-v4 and a v2 graph error.

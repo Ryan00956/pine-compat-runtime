@@ -1474,6 +1474,35 @@ fn v2_declaration_graph_rejects_cycles_barriers_unsafe_calls_and_limits_once() {
 }
 
 #[test]
+fn v2_declaration_graph_enforces_the_edge_limit_independently() {
+    let mut oversized = String::from("//@version=2\nstudy(\"oversized edge graph\")\n");
+    oversized.push_str("first = ");
+    for index in 1..=100 {
+        if index > 1 {
+            oversized.push_str(" + ");
+        }
+        oversized.push_str(&format!("node{index}"));
+    }
+    oversized.push('\n');
+    oversized.push_str("node0 = close\n");
+    for index in 1..=100 {
+        oversized.push_str(&format!("node{index} = node0"));
+        for dependency in 1..index {
+            oversized.push_str(&format!(" + node{dependency}"));
+        }
+        oversized.push('\n');
+    }
+    oversized.push_str("plot(first)\n");
+
+    let analysis = analyze_production(&oversized);
+    assert_eq!(
+        diagnostic_codes(&analysis),
+        vec!["E_LEGACY_REFERENCE_GRAPH_LIMIT"]
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn v2_bool_arithmetic_and_pre_v6_numeric_conditions_keep_version_boundaries() {
     let v2 = analyze_production(
         "//@version=2\nstudy(\"coercions\")\nb=close>open\nplot(b + true)\nplot((close-open) ? 1 : 0)\n",

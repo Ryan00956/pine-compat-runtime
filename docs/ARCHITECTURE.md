@@ -135,9 +135,22 @@ for every manifest entry. Source dialect remains the only legacy semantic
 selector. No host adapter owns a translation table, policy override, or source
 migration step.
 
+Phase 11 adds a release-evidence layer without adding another execution path.
+`tests/fixtures/legacy/release_profiles.tsv` owns the sorted v1-v4 release
+fixture registry, maturity, bar/request profile, realtime policy, provenance,
+and resource ceiling. The public runtime integration test loads that manifest
+and proves source-version selection, complete runtime-fixture coverage,
+historical/incremental/realtime behavior, MTF provider behavior, and bounded
+retained storage. `scripts/profile_legacy_release.py` measures the same rows
+through the CLI boundary. These are verification consumers of the semantic HIR
+and runtime, not a second translator or host-specific compatibility switch.
+
 The semantic compile cache includes `LEGACY_TRANSLATOR_REVISION` in every key.
 Catalog or translation-semantics changes increment that revision so cached
-analysis cannot cross translator revisions.
+analysis cannot cross translator revisions. Source name and exact source text,
+including its explicit directive or implicit-v1 absence, remain part of the
+same key; a focused cache test proves identical script bodies in implicit v1
+and explicit v2 occupy separate entries.
 
 The semantic implementation keeps orchestration separate from focused tree
 walkers. `modules.rs` owns module-graph validation while
