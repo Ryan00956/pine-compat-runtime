@@ -2420,6 +2420,14 @@ does not fetch data. Hosts inject immutable requested bar streams through the
 request provider contract, keyed by symbol and timeframe, and the runtime
 validates duplicate keys plus sorted unique bar times before execution.
 
+The provider environment also owns explicit chart identity. CLI callers use
+`--chart-symbol` and `--chart-timeframe`; Python callers use the optional
+`chart_symbol` and `chart_timeframe` keywords on `run_script` or `Program.run`;
+WASM callers place an optional reserved `$chart` object with string `symbol`
+and `timeframe` fields in the request-bars JSON object. Omitted identity uses
+the deterministic default chart. Invalid or empty metadata is rejected by the
+host boundary before runtime.
+
 Same-context requests whose symbol and timeframe match the chart metadata
 evaluate the requested expression in the chart context. Provider-backed
 same-or-higher-timeframe requests evaluate the supported expression in an
@@ -2434,7 +2442,8 @@ directly. The selected tuple-returning calls currently include `ta.macd`,
 `ta.bb`, `ta.kc`, `ta.supertrend`, `ta.dmi`, and
 `ta.vwap(source, anchor, stdev_mult)`.
 
-The supported provider requested expression subset includes direct OHLCV/time sources,
+The supported provider requested expression subset includes requested-context
+`syminfo.tickerid`/`timeframe.period`, direct OHLCV/time sources,
 pure arithmetic and ternaries, history references, `na`, `nz`, selected
 stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
 `ta.cum`, `ta.sma`, `ta.ema`, `ta.dema`, `ta.tema`, `ta.rma`, `ta.rsi`,
@@ -2461,17 +2470,61 @@ symbol, requested timeframe, and expression identity for the duration of one
 runtime execution. Repeated identical calls reuse that cache instead of
 mutating provider data or chart state.
 
-Same-timeframe provider requests require an exact requested-bar timestamp
-match. Higher-timeframe provider requests use the default `gaps_off` and
-`lookahead_off` subset: a requested value is visible only after the requested
-bar has closed relative to the current chart bar, missing confirmed requested
-bars forward-fill the last confirmed requested value, and chart bars before the
+Same-timeframe modern provider requests use default `gaps_off`: the most recent
+requested value whose open is not later than the chart open is carried forward.
+Higher-timeframe modern provider requests use default `gaps_off` and
+`lookahead_off`: a requested value is visible only after the requested bar has
+closed relative to the current chart bar, missing confirmed requested bars
+forward-fill the last confirmed requested value, and chart bars before the
 first confirmed requested bar return `na`.
 
-Lower-timeframe `request.security`, `request.security_lower_tf`, optional
-parameters, explicit gaps/lookahead, advanced request families, provider local
-aliases, UDF calls, output/drawing/alert side effects, input declarations, and
-array mutation inside requested expressions remain unsupported.
+### Legacy `security`
+
+Accepted v1-v4 `security` calls reuse the same provider, requested-expression,
+cache, and state-isolation machinery after a version-specific signature binder.
+The executable call is intentionally lowered to an inaccessible internal HIR
+name whose suffix encodes `gaps_off|gaps_on` and
+`lookahead_off|lookahead_on`; it is not lowered to a public modern call with
+silently widened arguments. Runtime failures retain hidden start/end arguments
+for the original complete source call.
+
+The verified merge behavior is:
+
+| Context | `lookahead_off` | historical `lookahead_on` |
+| --- | --- | --- |
+| same timeframe, `gaps_off` | latest requested open not after chart open | same |
+| same timeframe, `gaps_on` | exact requested/chart open | same |
+| higher timeframe, `gaps_off` | latest requested close not after chart close | latest requested open not after chart open |
+| higher timeframe, `gaps_on` | requested close equals chart close | requested open equals chart open |
+
+Pine v1/v2 profiles default to lookahead on; Pine v3/v4 profiles default to
+lookahead off. Explicit compile-time bools and matching `barmerge` constants
+select gaps/lookahead where the historical signature exposes those arguments.
+For realtime forming and confirmed updates, legacy lookahead-on uses confirmed
+lookahead-off alignment, matching the historical/realtime handoff instead of
+exposing an unconfirmed future value. A program that actually reaches a
+lookahead-on call emits `W_LEGACY_SECURITY_LOOKAHEAD` once for that callsite.
+Warnings are returned in stable callsite order and do not make execution fail.
+
+The requested child runtime receives chart metadata for the requested symbol
+and timeframe, and its warnings are merged into the outer result. Mutable
+requested state, histories, arrays, drawings, `var` values, and stateful
+callsites stay separate from chart state. Missing streams and invalid timeframe
+relations are stable runtime errors; a legacy error begins with
+`legacy security at source span START..END:` across the host-specific error
+wrapper.
+
+`study(resolution=...)` is still rejected with one focused unsupported
+diagnostic. It requires a program-level execution coordinator for whole-script
+state, output alignment, gaps, realtime confirmation, provider identity, and
+cache ownership; treating it as a synthetic `request.security` expression
+would not preserve those semantics.
+
+Lower-timeframe `request.security`/legacy `security`,
+`request.security_lower_tf`, modern non-default gaps/lookahead, advanced
+request families, provider local aliases, UDF calls,
+output/drawing/alert side effects, input declarations, and array mutation
+inside requested expressions remain unsupported.
 
 ### `varip`
 

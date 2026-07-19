@@ -59,6 +59,9 @@ improved over time, but codes should remain stable once published.
 - `E_LEGACY_RSI_OVERLOAD`: a v1-v4 `rsi(x, y)` call cannot select the
   historical length or two-series overload from the analyzed numeric types;
   the call is rejected instead of guessing modern `ta.rsi` behavior.
+- `E_LEGACY_SECURITY_MERGE`: a v1-v4 `security` gaps/lookahead argument is not
+  a compile-time bool or the corresponding `barmerge` constant; runtime
+  alignment is not guessed from series metadata.
 - `E_LEGACY_STRATEGY_OUT_OF_SCOPE`: a v1-v4 source declares `strategy()` or
   references `strategy.*`; legacy strategy execution is outside this project.
 - `E_ASSIGN_TYPE`: reassignment type mismatch.
@@ -171,6 +174,11 @@ improved over time, but codes should remain stable once published.
 ## Runtime
 
 - `E_RUNTIME`: runtime execution emitted a host-visible diagnostic.
+- `W_LEGACY_SECURITY_LOOKAHEAD`: a reached legacy `security` callsite uses
+  historical lookahead-on alignment, whether by v1/v2 default or explicit
+  selection, and can repaint. The warning
+  is emitted once per distinct callsite in stable order and does not fail
+  execution.
 - `E_STRATEGY_MODE`: strategy-only feature is used outside `strategy()` mode or
   an unsupported strategy mode was requested.
 - `E_STRATEGY_MARGIN`: supported strategy entry fill requires more margin than

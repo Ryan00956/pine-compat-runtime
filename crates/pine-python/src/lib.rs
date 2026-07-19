@@ -29,16 +29,25 @@ struct PyProgram {
 
 #[pymethods]
 impl PyProgram {
-    #[pyo3(signature = (bars, request_bars=None, input_overrides=None))]
+    #[pyo3(signature = (
+        bars,
+        request_bars=None,
+        input_overrides=None,
+        chart_symbol=None,
+        chart_timeframe=None
+    ))]
     fn run(
         &self,
         py: Python<'_>,
         bars: &Bound<'_, PyAny>,
         request_bars: Option<&Bound<'_, PyAny>>,
         input_overrides: Option<&Bound<'_, PyAny>>,
+        chart_symbol: Option<&str>,
+        chart_timeframe: Option<&str>,
     ) -> PyResult<Py<PyAny>> {
         let bars = parse_bars(bars)?;
-        let request_environment = parse_request_environment(request_bars)?;
+        let request_environment =
+            parse_request_environment(request_bars, chart_symbol, chart_timeframe)?;
         let input_overrides = parse_input_overrides(input_overrides, &self.hir)?;
         let result = run_historical_with_request_environment_and_input_overrides(
             &self.hir,
@@ -80,7 +89,16 @@ fn analyze_script(
     analysis_to_py(py, &source_file, &analysis)
 }
 
-#[pyfunction(signature = (source, bars, request_bars=None, library_sources=None, input_overrides=None))]
+#[pyfunction(signature = (
+    source,
+    bars,
+    request_bars=None,
+    library_sources=None,
+    input_overrides=None,
+    chart_symbol=None,
+    chart_timeframe=None
+))]
+#[allow(clippy::too_many_arguments)]
 fn run_script(
     py: Python<'_>,
     source: &str,
@@ -88,9 +106,18 @@ fn run_script(
     request_bars: Option<&Bound<'_, PyAny>>,
     library_sources: Option<&Bound<'_, PyAny>>,
     input_overrides: Option<&Bound<'_, PyAny>>,
+    chart_symbol: Option<&str>,
+    chart_timeframe: Option<&str>,
 ) -> PyResult<Py<PyAny>> {
     let program = compile_script(source, library_sources)?;
-    program.run(py, bars, request_bars, input_overrides)
+    program.run(
+        py,
+        bars,
+        request_bars,
+        input_overrides,
+        chart_symbol,
+        chart_timeframe,
+    )
 }
 
 #[pymodule]
@@ -170,9 +197,12 @@ fn analysis_input_from_python(
 
 fn parse_request_environment(
     request_bars: Option<&Bound<'_, PyAny>>,
+    chart_symbol: Option<&str>,
+    chart_timeframe: Option<&str>,
 ) -> PyResult<RequestEnvironment> {
+    let chart = parse_chart_context(chart_symbol, chart_timeframe)?;
     let Some(request_bars) = request_bars else {
-        return Ok(RequestEnvironment::default());
+        return Ok(RequestEnvironment::default().for_chart(chart));
     };
     let dict = request_bars.cast::<PyDict>().map_err(|_| {
         PyValueError::new_err("request_bars must be a dict mapping SYMBOL:TIMEFRAME to bars")
@@ -186,9 +216,28 @@ fn parse_request_environment(
     let provider = InMemoryRequestDataProvider::from_streams(streams)
         .map_err(|err| PyValueError::new_err(err.to_string()))?;
     Ok(RequestEnvironment::new(
-        ChartContext::default(),
+        chart,
         std::sync::Arc::new(provider),
     ))
+}
+
+fn parse_chart_context(
+    chart_symbol: Option<&str>,
+    chart_timeframe: Option<&str>,
+) -> PyResult<ChartContext> {
+    let mut chart = ChartContext::default();
+    if let Some(symbol) = chart_symbol {
+        if symbol.trim().is_empty() {
+            return Err(PyValueError::new_err("chart_symbol must not be empty"));
+        }
+        chart = chart.with_symbol(symbol.trim());
+    }
+    if let Some(timeframe) = chart_timeframe {
+        let timeframe = RequestTimeframe::parse(timeframe)
+            .map_err(|err| PyValueError::new_err(err.to_string()))?;
+        chart = chart.with_timeframe(timeframe);
+    }
+    Ok(chart)
 }
 
 fn parse_request_key(key: &str) -> PyResult<RequestKey> {

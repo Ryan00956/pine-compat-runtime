@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use pine_syntax::SourceFile;
 
 use super::*;
@@ -10,6 +12,258 @@ fn compile_fixture(name: &str, source: &str) -> pine_ir::HirProgram {
         analysis.diagnostics
     );
     analysis.hir.expect("legacy fixture HIR")
+}
+
+fn timed_close(time: i64, close: f64) -> Bar {
+    Bar {
+        time,
+        open: close,
+        high: close,
+        low: close,
+        close,
+        volume: 1.0,
+    }
+}
+
+fn legacy_security_environment(bars: Vec<Bar>) -> RequestEnvironment {
+    let key = RequestKey::new(
+        "NYSE:IBM",
+        RequestTimeframe::parse("5").expect("five minute timeframe"),
+    );
+    let provider = InMemoryRequestDataProvider::from_streams([(key, bars)])
+        .expect("valid legacy security request bars");
+    RequestEnvironment::new(ChartContext::default(), Arc::new(provider))
+}
+
+fn legacy_security_profile_program(
+    name: &str,
+    gaps: &str,
+    lookahead: &str,
+    version: u16,
+) -> pine_ir::HirProgram {
+    let mut program = compile_fixture(
+        name,
+        &format!(
+            "//@version=4\nstudy(\"legacy security profile\")\nplot(security(\"NYSE:IBM\", \"5\", close, gaps={gaps}, lookahead={lookahead}))\n"
+        ),
+    );
+    program.language_version = Some(version);
+    program
+}
+
+#[test]
+fn v4_legacy_security_same_context_matches_direct_expression() {
+    let legacy = compile_fixture(
+        "legacy_security_same_context.pine",
+        "//@version=4\nstudy(\"legacy same context\")\nplot(security(syminfo.tickerid, timeframe.period, close + open))\n",
+    );
+    let direct = compile_fixture(
+        "legacy_security_same_context_direct.pine",
+        "//@version=4\nstudy(\"legacy same context direct\")\nplot(close + open)\n",
+    );
+    let bars = [
+        timed_close(0, 1.0),
+        timed_close(60_000, 2.0),
+        timed_close(120_000, 3.0),
+    ];
+
+    assert_eq!(
+        run_historical(&legacy, &bars).expect("legacy same-context run"),
+        run_historical(&direct, &bars).expect("direct same-context run")
+    );
+}
+
+#[test]
+fn legacy_v2_and_v3_security_profiles_have_distinct_historical_alignment() {
+    let v2 = legacy_security_profile_program(
+        "legacy_v2_security_profile.pine",
+        "barmerge.gaps_off",
+        "barmerge.lookahead_on",
+        2,
+    );
+    let v3 = legacy_security_profile_program(
+        "legacy_v3_security_profile.pine",
+        "barmerge.gaps_off",
+        "barmerge.lookahead_off",
+        3,
+    );
+    let environment =
+        legacy_security_environment(vec![timed_close(0, 100.0), timed_close(300_000, 200.0)]);
+    let chart = [
+        timed_close(0, 1.0),
+        timed_close(60_000, 2.0),
+        timed_close(240_000, 3.0),
+        timed_close(300_000, 4.0),
+        timed_close(540_000, 5.0),
+    ];
+
+    let v2_result = run_historical_with_request_environment(&v2, &chart, environment.clone())
+        .expect("v2 lookahead profile");
+    let v3_result = run_historical_with_request_environment(&v3, &chart, environment)
+        .expect("v3 lookahead profile");
+
+    assert_values_close(
+        &v2_result.plots[0].values,
+        &[100.0, 100.0, 100.0, 200.0, 200.0],
+    );
+    assert_eq!(v3_result.plots[0].values[0], PineValue::Na);
+    assert_eq!(v3_result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&v3_result.plots[0].values[2..], &[100.0, 100.0, 200.0]);
+    assert_eq!(v2_result.diagnostics.len(), 1);
+    assert_eq!(v2_result.diagnostics[0].code, "W_LEGACY_SECURITY_LOOKAHEAD");
+    assert!(v3_result.diagnostics.is_empty());
+}
+
+#[test]
+fn legacy_security_gaps_on_preserves_versioned_mapping_boundaries() {
+    let v2 = legacy_security_profile_program(
+        "legacy_v2_security_gaps.pine",
+        "barmerge.gaps_on",
+        "barmerge.lookahead_on",
+        2,
+    );
+    let v3 = legacy_security_profile_program(
+        "legacy_v3_security_gaps.pine",
+        "barmerge.gaps_on",
+        "barmerge.lookahead_off",
+        3,
+    );
+    let environment =
+        legacy_security_environment(vec![timed_close(0, 100.0), timed_close(300_000, 200.0)]);
+    let chart = [
+        timed_close(0, 1.0),
+        timed_close(240_000, 2.0),
+        timed_close(300_000, 3.0),
+        timed_close(540_000, 4.0),
+    ];
+    let v2_result = run_historical_with_request_environment(&v2, &chart, environment.clone())
+        .expect("v2 gaps mapping");
+    let v3_result =
+        run_historical_with_request_environment(&v3, &chart, environment).expect("v3 gaps mapping");
+
+    assert_eq!(
+        v2_result.plots[0].values,
+        vec![
+            PineValue::Float(100.0),
+            PineValue::Na,
+            PineValue::Float(200.0),
+            PineValue::Na,
+        ]
+    );
+    assert_eq!(
+        v3_result.plots[0].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(100.0),
+            PineValue::Na,
+            PineValue::Float(200.0),
+        ]
+    );
+}
+
+#[test]
+fn legacy_security_requested_state_isolated_and_incremental_matches_batch() {
+    let program = compile_fixture(
+        "legacy_security_state.pine",
+        "//@version=4\nstudy(\"legacy requested state\")\nchartAverage = sma(close, 2)\nrequestedAverage = security(\"NYSE:IBM\", \"5\", sma(close, 2))\nplot(chartAverage)\nplot(requestedAverage)\n",
+    );
+    let environment = legacy_security_environment(vec![
+        timed_close(0, 100.0),
+        timed_close(300_000, 200.0),
+        timed_close(600_000, 300.0),
+    ]);
+    let chart = [
+        timed_close(0, 1.0),
+        timed_close(240_000, 3.0),
+        timed_close(300_000, 5.0),
+        timed_close(540_000, 7.0),
+        timed_close(600_000, 9.0),
+        timed_close(840_000, 11.0),
+    ];
+    let batch = run_historical_with_request_environment(&program, &chart, environment.clone())
+        .expect("batch legacy state run");
+    let mut incremental =
+        HistoricalRuntime::with_request_environment(&program, environment.clone());
+    for bar in chart {
+        incremental
+            .append_bar(bar)
+            .expect("incremental legacy state bar");
+    }
+    assert_eq!(batch, incremental.result());
+    assert_eq!(batch.plots[0].values[0], PineValue::Na);
+    assert_values_close(&batch.plots[0].values[1..], &[2.0, 4.0, 6.0, 8.0, 10.0]);
+    assert_eq!(batch.plots[1].values[0], PineValue::Na);
+    assert_eq!(batch.plots[1].values[1], PineValue::Na);
+    assert_eq!(batch.plots[1].values[2], PineValue::Na);
+    assert_values_close(&batch.plots[1].values[3..], &[150.0, 150.0, 250.0]);
+
+    let mut realtime = RealtimeRuntime::with_request_environment(&program, environment);
+    let realtime_result = chart
+        .into_iter()
+        .map(|bar| {
+            realtime
+                .update(BarUpdate::historical(bar))
+                .expect("realtime historical handoff")
+        })
+        .last()
+        .expect("realtime result");
+    assert_eq!(batch, realtime_result);
+}
+
+#[test]
+fn legacy_security_requested_runtime_uses_requested_chart_metadata() {
+    let program = compile_fixture(
+        "legacy_security_requested_metadata.pine",
+        "//@version=4\nstudy(\"legacy requested metadata\")\ninRequestedContext = security(\"NYSE:IBM\", \"5\", syminfo.tickerid == \"NYSE:IBM\" and timeframe.period == \"5\")\nplot(inRequestedContext ? 1 : 0)\n",
+    );
+    let environment = legacy_security_environment(vec![timed_close(0, 100.0)]);
+    let result = run_historical_with_request_environment(
+        &program,
+        &[timed_close(240_000, 1.0)],
+        environment,
+    )
+    .expect("requested metadata should use the requested key");
+
+    assert_values_close(&result.plots[0].values, &[1.0]);
+}
+
+#[test]
+fn legacy_lookahead_on_realtime_updates_use_confirmed_alignment() {
+    let program = legacy_security_profile_program(
+        "legacy_v2_security_realtime.pine",
+        "barmerge.gaps_off",
+        "barmerge.lookahead_on",
+        2,
+    );
+    let environment =
+        legacy_security_environment(vec![timed_close(0, 100.0), timed_close(300_000, 200.0)]);
+    let mut runtime = RealtimeRuntime::with_request_environment(&program, environment);
+    let historical = runtime
+        .update(BarUpdate::historical(timed_close(0, 1.0)))
+        .expect("historical lookahead update");
+    let forming = runtime
+        .update(BarUpdate::forming(timed_close(60_000, 2.0)))
+        .expect("forming lookahead update");
+
+    assert_values_close(&historical.plots[0].values, &[100.0]);
+    assert_eq!(forming.plots[0].values[1], PineValue::Na);
+}
+
+#[test]
+fn legacy_security_missing_provider_error_keeps_original_source_span() {
+    let source =
+        "//@version=4\nstudy(\"legacy missing\")\nplot(security(\"NYSE:IBM\", \"5\", close))\n";
+    let program = compile_fixture("legacy_security_missing.pine", source);
+    let error = run_historical(&program, &[timed_close(0, 1.0)])
+        .expect_err("missing legacy provider data should fail");
+    let start = source.find("security(").expect("security source start");
+    let end = source[start..].find(')').expect("security source end") + start + 1;
+    assert_eq!(
+        error.message,
+        format!(
+            "legacy security at source span {start}..{end}: missing request data for symbol `NYSE:IBM` timeframe `5`"
+        )
+    );
 }
 
 #[test]

@@ -599,6 +599,10 @@ def analyze_item(
         "--bars",
         str(chart_bars_path),
     ]
+    if row.chart_symbol:
+        run_command.extend(("--chart-symbol", row.chart_symbol))
+    if row.chart_timeframe:
+        run_command.extend(("--chart-timeframe", row.chart_timeframe))
     for spec in provider_specs:
         run_command.extend(("--request-bars", spec))
     executed = command_runner(run_command, root)

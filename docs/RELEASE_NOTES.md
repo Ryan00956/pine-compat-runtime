@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Added executable legacy `security` compatibility through the host-neutral
+  request provider. Pine v1/v2 and v3/v4 signatures now bind with their
+  historical default lookahead policies, verified bool/`barmerge` gaps and
+  lookahead modes, isolated requested-context state, separate historical and
+  realtime alignment, one repaint warning per lookahead-on callsite, and
+  original source spans in provider failures. CLI, Python, and WASM can all
+  supply chart identity plus requested streams; modern `request.security`
+  remains restricted to its existing default merge surface, and
+  `study(resolution=...)` remains precisely unsupported pending a whole-program
+  execution coordinator.
 - Added result-faithful Pine v4 expression/default compatibility. Historical
   `iff` now evaluates condition/result1/result2 once in parameter order,
   `offset` lowers to native guarded history, and `rsi(x, y)` selects the length

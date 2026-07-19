@@ -415,6 +415,37 @@ mod tests {
     }
 
     #[test]
+    fn analysis_json_exposes_v4_security_routing() {
+        let source = SourceFile::new(
+            "legacy-v4-security.pine",
+            "//@version=4\nstudy(\"security\")\nplot(security(syminfo.tickerid, timeframe.period, close))\n",
+        );
+        let analysis = analyze_source(&source);
+        let parsed: serde_json::Value =
+            serde_json::from_str(&analysis_json(&source, &analysis)).expect("analysis JSON");
+
+        assert_eq!(parsed["executable"], serde_json::json!(true));
+        assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+        let translations = parsed["compatibility"]["legacyTranslations"]
+            .as_array()
+            .expect("legacy translations");
+        assert!(translations.iter().any(|item| {
+            item["sourceFeature"] == "security"
+                && item["canonicalFeature"] == "request.security"
+                && item["kind"] == "signatureReshape"
+        }));
+        let emulations = parsed["compatibility"]["legacyEmulations"]
+            .as_array()
+            .expect("legacy emulations");
+        assert!(emulations.iter().any(|item| {
+            item["feature"] == "security.merge"
+                && item["behavior"]
+                    .as_str()
+                    .is_some_and(|value| value.contains("gaps_off/lookahead_off"))
+        }));
+    }
+
+    #[test]
     fn analysis_json_exposes_canonical_v4_input_metadata() {
         let source = SourceFile::new(
             "legacy-v4-inputs.pine",

@@ -52,6 +52,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) first_bar_close: Option<f64>,
     pub(crate) request_environment: RequestEnvironment,
     pub(crate) request_cache: HashMap<RequestCacheKey, Vec<(i64, PineValue)>>,
+    pub(crate) legacy_security_repaint_warnings: HashMap<CallSiteId, (i64, i64)>,
     pub(crate) eval_expr_depth: u32,
     pub(crate) series_store: SeriesStore,
     pub(crate) series_retention: SeriesRetention,
@@ -222,6 +223,7 @@ impl<'a> HistoricalRuntime<'a> {
             first_bar_close: None,
             request_environment,
             request_cache: HashMap::new(),
+            legacy_security_repaint_warnings: HashMap::new(),
             eval_expr_depth: 0,
             series_store: SeriesStore::new(),
             series_retention: SeriesRetention::from_program(program),
@@ -482,28 +484,50 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn runtime_diagnostics(&self) -> Vec<RuntimeDiagnostic> {
+        let mut diagnostics = self
+            .legacy_security_repaint_warnings
+            .iter()
+            .map(|(callsite, (start, end))| {
+                (
+                    callsite.0,
+                    RuntimeDiagnostic {
+                        code: "W_LEGACY_SECURITY_LOOKAHEAD".to_owned(),
+                        message: format!(
+                            "legacy security at source span {start}..{end} uses historical lookahead_on behavior and can repaint"
+                        ),
+                    },
+                )
+            })
+            .collect::<Vec<_>>();
+        diagnostics.sort_by_key(|(callsite, _)| *callsite);
+        let mut diagnostics = diagnostics
+            .into_iter()
+            .map(|(_, diagnostic)| diagnostic)
+            .collect::<Vec<_>>();
+
         if self.history_dynamic_retention_misses == 0 {
-            return Vec::new();
+            return diagnostics;
         }
 
         let Some(max_bars_back) = self
             .history_dynamic_retention_max_bars_back
             .or_else(|| self.program.max_bars_back.map(|value| value as usize))
         else {
-            return Vec::new();
+            return diagnostics;
         };
 
         let max_missed_offset = self
             .history_dynamic_retention_max_missed_offset
             .unwrap_or(max_bars_back + 1);
 
-        vec![RuntimeDiagnostic {
+        diagnostics.push(RuntimeDiagnostic {
             code: "W_HISTORY_MAX_BARS_BACK".to_owned(),
             message: format!(
                 "dynamic history offsets exceeded max_bars_back={max_bars_back}; {} reads returned na, maximum requested offset was {max_missed_offset}",
                 self.history_dynamic_retention_misses
             ),
-        }]
+        });
+        diagnostics
     }
 
     #[must_use]

@@ -87,6 +87,10 @@ cargo run -p pine-cli -- matrix --format json
 - [Legacy Indicator Phase 6 Audit](LEGACY_INDICATOR_PHASE6_AUDIT.md): strict
   legacy expression evaluation, structural history lowering, type-directed RSI
   overloads, versioned session/logical defaults, and measured v4 compatibility.
+- [Legacy Indicator Phase 7 Audit](LEGACY_INDICATOR_PHASE7_AUDIT.md): versioned
+  legacy security signatures, provider/chart contracts, gaps/lookahead
+  alignment, repaint warnings, cross-host parity, and the declaration-timeframe
+  fail-closed boundary.
 - [Strategy Internal Gap Audit](STRATEGY_INTERNAL_GAP_AUDIT.md): current
   long-only strategy baseline and deferred broker-model work.
 - [Next Language Expansion Playbook](NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md):

@@ -367,8 +367,9 @@ Request data:
   `ta.vwap(source, anchor, stdev_mult)`.
 - `request.security("SYMBOL", timeframe, expression)` and
   `request.security(syminfo.tickerid, timeframe, expression)` for host-provided
-  same-or-higher-timeframe bars. The provider expression subset includes direct
-  OHLCV/time sources, pure arithmetic and ternaries, history references, `na`,
+  same-or-higher-timeframe bars. The provider expression subset includes
+  requested-context `syminfo.tickerid`/`timeframe.period`, direct OHLCV/time
+  sources, pure arithmetic and ternaries, history references, `na`,
   `nz`, selected stateless `math.*` calls, fixed-mintick
   `math.round_to_mintick`, `math.sum`, `ta.cum`, `ta.sma`, `ta.ema`,
   `ta.dema`, `ta.tema`, `ta.rma`, `ta.rsi`, `ta.tsi`, `ta.cmo`, `ta.cci`,
@@ -396,8 +397,20 @@ Request data:
   the last confirmed value.
   CLI hosts pass these bars with
   `--request-bars SYMBOL:TIMEFRAME=bars.csv`; Python hosts pass
-  `request_bars={"SYMBOL:TIMEFRAME": bars}`. WASM request dataset injection is a
-  documented temporary gap.
+  `request_bars={"SYMBOL:TIMEFRAME": bars}`; WASM hosts pass the same mapping as
+  request-bars JSON. Chart identity is explicit through CLI
+  `--chart-symbol`/`--chart-timeframe`, Python `chart_symbol`/`chart_timeframe`
+  keywords, or the WASM request JSON `$chart` object.
+- Pine v1-v4 `security(symbol, resolution, expression, ...)` for the same
+  requested-expression subset. The historical binder accepts the v1/v2
+  three-or-four-argument form and the v3/v4 three-to-five-argument positional
+  or named form. Compile-time bools or matching `barmerge` constants select
+  gaps/lookahead; v1/v2 default to historical `lookahead_on` and v3/v4 default
+  to `lookahead_off`. `gaps_on` returns values only at the selected requested
+  open/confirmation boundary, `gaps_off` carries the latest eligible value,
+  and realtime updates use confirmed alignment. A reached lookahead-on call
+  reports one non-error repaint warning per callsite. Missing streams retain
+  the original complete legacy call span.
 
 ## Explicitly Unsupported in Phase 1
 
@@ -416,6 +429,9 @@ The analyzer should reject these with clear diagnostics:
   state subset, mutable strategy state, and requested-context strategy state
 - `request.*` variants outside the narrow same-context and same-or-higher-timeframe
   provider-backed `request.security` subsets
+- legacy lower-timeframe `security`, requested expressions outside the same
+  provider-backed subset, and declaration-level `study(resolution=...)`; the
+  latter remains a precise unsupported program-context feature
 - `request.security_lower_tf`; lower-timeframe array-returning request APIs need
   typed array return semantics and host output shapes before support is claimed
 - unsupported alert frequency values outside the claimed const-string

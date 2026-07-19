@@ -446,6 +446,26 @@ fn request_security_reads_same_timeframe_external_symbol_from_provider() {
 }
 
 #[test]
+fn request_security_same_timeframe_gaps_off_forward_fills_provider_gaps() {
+    let program = compile_program(
+        "indicator(\"request external gaps\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![timed_bar(0, 20.0), timed_bar(120_000, 22.0)],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 6.0),
+            timed_bar(120_000, 7.0),
+        ])
+        .expect("default same-timeframe gaps_off should forward fill");
+
+    assert_values_close(&result.plots[0].values, &[20.0, 20.0, 22.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_arithmetic_in_requested_context() {
     let program = compile_program(
         "indicator(\"request arithmetic\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, open + close))\n",

@@ -73,11 +73,11 @@ Phase 2 adds the reusable translation framework. A sorted, version-ranged rule
 catalog is consulted only as a scoped fallback after user declarations. Exact
 matches are validated using canonical built-in signatures, recorded with the
 original source span, and stored in a source-context/span-keyed lowering plan;
-HIR and runtime dispatch therefore see only canonical names. Focused input,
-output, expression, security, and overload work remains separate from exact
-aliases and fail-closed until its execution phase. Legacy translation and
-emulation reports are deterministically sorted and deduplicated before leaving
-semantic analysis.
+HIR and runtime dispatch therefore see only canonical or inaccessible internal
+names. Focused input, output, expression, security, and overload binders remain
+separate from exact aliases, and each unsupported shape fails closed. Legacy
+translation and emulation reports are deterministically sorted and
+deduplicated before leaving semantic analysis.
 
 Phase 3 admits only Pine v4 `study(...)` declarations. A historical signature
 binder canonicalizes the supported declaration subset to named `indicator`
@@ -106,6 +106,18 @@ canonical visual arguments without synthesizing user-visible calls. Runtime
 normalization applies v4 defaults, clamps input transparency, preserves `na`
 and embedded alpha, and exposes bar-aligned visual series plus common metadata.
 Modern v5/v6 output signatures and unique style types remain unchanged.
+
+Phase 6 adds result-affecting expression compatibility: strict internal `iff`
+evaluation, structural `offset` history lowering, type-directed historical
+`rsi` overloads, and version-selected logical/session defaults. Phase 7 adds a
+focused v1-v4 `security` binder. It validates historical positional/named
+signatures and merge constants, reuses the request-expression analyzer, and
+lowers accepted calls to inaccessible HIR dispatch names that encode gaps and
+lookahead policies. Hidden span arguments preserve the original full legacy
+call for provider failures. The modern `request.security` merge surface is not
+widened by this routing. Declaration-level `study(resolution=...)` remains a
+focused unsupported program-context feature rather than being approximated by
+wrapping the AST in a request call.
 
 The semantic compile cache includes `LEGACY_TRANSLATOR_REVISION` in every key.
 Catalog or translation-semantics changes increment that revision so cached
@@ -199,12 +211,18 @@ WASM accepts a deterministic request-bars JSON object through
 `runScriptCsvWithLibrariesAndRequestBars`, and
 `Program.runCsvWithRequestBars`. WASM request keys use the same
 `SYMBOL:TIMEFRAME` format and split on the last colon, so exchange-prefixed
-symbols such as `NYSE:IBM:1` are valid. The cross-host request fixture can be
-exercised with:
+symbols such as `NYSE:IBM:1` are valid. Hosts may also set chart identity:
+CLI accepts `--chart-symbol` and `--chart-timeframe`; Python `run_script` and
+`Program.run` accept optional `chart_symbol` and `chart_timeframe` keywords;
+WASM request JSON accepts the reserved
+`"$chart":{"symbol":"...","timeframe":"..."}` object. Omitting these
+values retains the existing deterministic default chart. The cross-host
+request fixture can be exercised with:
 
 ```text
 cargo run -p pine-cli -- run tests/fixtures/request/request_security_host.pine \
   --bars tests/fixtures/request/chart_1m.csv \
+  --chart-symbol NASDAQ:AAPL --chart-timeframe 1 \
   --request-bars NYSE:IBM:1=tests/fixtures/request/ibm_1m.csv \
   --request-bars NYSE:IBM:5=tests/fixtures/request/ibm_5m.csv
 ```
@@ -218,12 +236,20 @@ uses the lowered HIR expression debug identity as the cache expression marker;
 future widening that rewrites request expressions should replace it with an
 explicit request-expression id.
 
-For higher-timeframe provider requests, alignment uses the default
-`lookahead_off`/`gaps_off` subset: same-timeframe requests still require an
-exact requested-bar timestamp match, while coarser requested bars are visible
-only after their requested bar close is not later than the current chart bar
-close. Missing higher-timeframe bars forward-fill the last confirmed requested
-value; chart bars before the first confirmed requested bar return `na`.
+Modern provider requests retain the default `lookahead_off`/`gaps_off` subset.
+Same-timeframe `gaps_off` uses the latest requested bar whose open is not later
+than the chart bar open; `gaps_on` is reserved for the legacy route and requires
+an exact boundary. Coarser lookahead-off values become visible only when the
+requested close is not later than the chart close. Legacy historical
+lookahead-on instead makes a coarser value visible from its requested open;
+forming and confirmed realtime updates intentionally use confirmed
+lookahead-off alignment. `gaps_off` forward-fills the latest eligible value,
+while `gaps_on` returns values only on the corresponding open or confirmation
+boundary. Chart bars before the first eligible requested value return `na`.
+Each provider evaluation receives a child request environment whose chart
+symbol/timeframe match the requested key; cache and callsite state remain
+isolated. Legacy missing-data errors add the original security call span, and
+v1/v2 historical lookahead emits one non-error warning per callsite.
 Lower-timeframe `request.security` alignment is intentionally not implemented
 in Phase F because it needs a separate rule for selecting intrabars inside each
 chart bar and bounded storage for multiple requested bars per chart bar. The
@@ -399,7 +425,12 @@ program = compile_script(
     source,
     library_sources={"user/lib/1": 'library("lib")\n'},
 )
-result = program.run(bars, request_bars={"NYSE:IBM:1": requested_bars})
+result = program.run(
+    bars,
+    request_bars={"NYSE:IBM:1": requested_bars},
+    chart_symbol="NASDAQ:AAPL",
+    chart_timeframe="1",
+)
 ```
 
 CLI:
@@ -408,6 +439,7 @@ CLI:
 pine-compat analyze script.pine --library-source user/lib/1=lib.pine
 pine-compat run script.pine --bars bars.csv \
   --library-source user/lib/1=lib.pine \
+  --chart-symbol NASDAQ:AAPL --chart-timeframe 1 \
   --request-bars NYSE:IBM:1=ibm.csv
 ```
 
@@ -420,8 +452,10 @@ WASM request data injection is exposed through `runScriptCsvWithRequestBars`,
 `runScriptCsvWithLibrariesAndRequestBars`, and
 `Program.runCsvWithRequestBars`. The `requestBarsJson` value is an object
 mapping `SYMBOL:TIMEFRAME` keys to arrays of `{time, open, high, low, close,
-volume}` bar objects. This is explicit host-provided data; the WASM crate does
-not fetch network data, read files, or discover symbols.
+volume}` bar objects. The reserved optional `$chart` key maps to an object with
+string `symbol` and `timeframe` fields instead of a bar array. This is explicit
+host-provided data; the WASM crate does not fetch network data, read files, or
+discover symbols.
 
 WASM input overrides are exposed through `runScriptCsvWithInputOverrides`,
 `runScriptCsvWithRequestBarsAndInputOverrides`,

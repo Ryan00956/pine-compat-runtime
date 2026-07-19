@@ -93,7 +93,7 @@ bounded strategy runtime.
 | Area | Current executable subset |
 | --- | --- |
 | Language | v4/v5/v6 declarations, series and history, `var`/partial `varip`, functions, tuples, `if`, `switch`, partial `for`/`while`, strings, UDTs, and host-provided pure library imports |
-| Indicators | Common `ta.*`, selected `math.*`/`str.*`, inputs, plots, colors, alerts, drawing objects, tables, typed collections, and fixture-backed `request.security` |
+| Indicators | Common `ta.*`, selected `math.*`/`str.*`, inputs, plots, colors, alerts, drawing objects, tables, typed collections, fixture-backed `request.security`, and the documented executable Pine v4 legacy-indicator subset including `security` |
 | Execution | Deterministic historical runs, guarded history, input overrides, incremental append, and realtime forming-bar rollback |
 | Strategies | Partial long-only entries, orders, closes, cancellations, stop/limit/bracket/trailing exits, quantity reservations, positions, trades, and equity snapshots |
 | Outputs | Versioned plots, shapes, bars, candles, fills, labels, lines, line fills, polylines, boxes, tables, alerts, diagnostics, and strategy results |
@@ -151,6 +151,8 @@ result = pine_compat.run_script(
     bars,
     request_bars={"NYSE:IBM:5": requested_bars},
     library_sources={"user/lib/1": library_source},
+    chart_symbol="NASDAQ:AAPL",
+    chart_timeframe="1",
 )
 ```
 
@@ -171,6 +173,7 @@ cargo run -p pine-cli -- analyze script.pine
 cargo run -p pine-cli -- analyze script.pine --format json
 
 cargo run -p pine-cli -- run script.pine --bars bars.csv \
+  --chart-symbol NASDAQ:AAPL --chart-timeframe 1 \
   --request-bars NYSE:IBM:5=ibm-5m.csv \
   --library-source user/lib/1=lib.pine
 ```

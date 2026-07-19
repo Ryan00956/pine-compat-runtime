@@ -121,6 +121,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/legacy/v4/runtime/outputs_legacy.pine",
     ),
     (
+        "runtime_legacy_v4_security_same_context.json",
+        "tests/fixtures/legacy/v4/runtime/security_same_context_legacy.pine",
+    ),
+    (
         "runtime_line_wrapped_strings.json",
         "tests/fixtures/runtime/line_wrapped_strings.pine",
     ),

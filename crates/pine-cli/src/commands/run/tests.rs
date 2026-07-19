@@ -41,6 +41,23 @@ fn parses_run_options_with_library_source() {
 }
 
 #[test]
+fn parses_chart_context_options_for_request_execution() {
+    let options = parse_options(&[
+        "script.pine".to_owned(),
+        "--bars".to_owned(),
+        "bars.csv".to_owned(),
+        "--chart-symbol".to_owned(),
+        "TEST".to_owned(),
+        "--chart-timeframe".to_owned(),
+        "5".to_owned(),
+    ])
+    .expect("chart context run options");
+
+    assert_eq!(options.chart_context.symbol(), "TEST");
+    assert_eq!(options.chart_context.timeframe().value(), "5");
+}
+
+#[test]
 fn parses_run_options_with_input_overrides() {
     let options = parse_options(&[
         "script.pine".to_owned(),
@@ -184,8 +201,8 @@ fn builds_request_environment_from_csv_specs() {
     let spec = parse_request_bars_spec(&format!("NYSE:IBM:1={}", path.display()))
         .expect("request bars spec");
 
-    let environment =
-        request_environment_from_specs(&[spec]).expect("request environment from CSV");
+    let environment = request_environment_from_specs(&[spec], ChartContext::default())
+        .expect("request environment from CSV");
     let bars = environment
         .provider()
         .bars(&RequestKey::new("NYSE:IBM", RequestTimeframe::default()))
@@ -207,7 +224,7 @@ fn duplicate_request_bars_keys_fail() {
     let second = parse_request_bars_spec(&format!("NYSE:IBM:1={}", path.display()))
         .expect("second request bars spec");
 
-    let error = match request_environment_from_specs(&[first, second]) {
+    let error = match request_environment_from_specs(&[first, second], ChartContext::default()) {
         Ok(_) => panic!("duplicate request bars should fail"),
         Err(error) => error,
     };
@@ -258,6 +275,7 @@ plot(color.r(shade))
     let options = RunOptions {
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -274,6 +292,7 @@ plot(color.r(shade))
     let profile_options = RunOptions {
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -298,6 +317,7 @@ fn profiled_run_reports_max_bars_back_without_retention_misses() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/profile/dynamic_history_max_bars_back.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -320,6 +340,7 @@ fn profiled_run_reports_max_bars_back_retention_misses() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/profile/dynamic_history_max_bars_back_miss.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -342,6 +363,7 @@ fn profiled_run_reports_udf_max_bars_back_retention_misses() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/profile/dynamic_history_udf_max_bars_back_miss.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -378,6 +400,7 @@ fn assert_profile_series_max_bars_back_miss_with_libraries(
     let options = RunOptions {
         path: workspace_path(path),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources,
@@ -404,6 +427,7 @@ fn profiled_run_reports_effective_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -429,6 +453,7 @@ fn profiled_run_reports_expression_source_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_expression_source_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -455,6 +480,7 @@ fn profiled_run_reports_alias_expression_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_alias_expression_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -481,6 +507,7 @@ fn profiled_run_reports_ternary_expression_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_ternary_expression_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -507,6 +534,7 @@ fn profiled_run_reports_qualified_builtin_ternary_series_max_bars_back_diagnosti
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_qualified_builtin_ternary_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -533,6 +561,7 @@ fn profiled_run_reports_pure_math_call_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_pure_math_call_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -559,6 +588,7 @@ fn profiled_run_reports_named_pure_math_call_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_named_pure_math_call_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -585,6 +615,7 @@ fn profiled_run_reports_numeric_cast_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_numeric_cast_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -647,6 +678,7 @@ fn profiled_run_reports_udf_length_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_udf_length_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -673,6 +705,7 @@ fn profiled_run_reports_block_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -699,6 +732,7 @@ fn profiled_run_reports_switch_block_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_switch_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -725,6 +759,7 @@ fn profiled_run_reports_statement_switch_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_statement_switch_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -751,6 +786,7 @@ fn profiled_run_reports_expression_block_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_expression_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -777,6 +813,7 @@ fn profiled_run_reports_tuple_switch_expression_block_series_max_bars_back_diagn
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_tuple_switch_expression_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -803,6 +840,7 @@ fn profiled_run_reports_if_expression_block_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_if_expression_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -829,6 +867,7 @@ fn profiled_run_reports_tuple_if_expression_block_series_max_bars_back_diagnosti
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_tuple_if_expression_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -855,6 +894,7 @@ fn profiled_run_reports_call_argument_block_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_call_argument_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -881,6 +921,7 @@ fn profiled_run_reports_block_result_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_block_result_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -907,6 +948,7 @@ fn profiled_run_reports_loop_result_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_loop_result_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -933,6 +975,7 @@ fn profiled_run_reports_for_in_result_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_for_in_result_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -959,6 +1002,7 @@ fn profiled_run_reports_for_statement_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_for_statement_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -985,6 +1029,7 @@ fn profiled_run_reports_for_in_statement_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_for_in_statement_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -1011,6 +1056,7 @@ fn profiled_run_reports_while_result_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_while_result_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -1037,6 +1083,7 @@ fn profiled_run_reports_while_statement_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_while_statement_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: true,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -1139,6 +1186,7 @@ fn runs_request_bars_integration_fixture() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/request/request_security_host.pine"),
         bars_path: workspace_path("tests/fixtures/request/chart_1m.csv"),
+        chart_context: ChartContext::default(),
         profile: false,
         library_sources: Vec::new(),
         request_bars: vec![
@@ -1667,10 +1715,57 @@ fn runs_request_bars_integration_fixture() {
 }
 
 #[test]
+fn runs_legacy_v4_security_provider_fixture() {
+    let options = RunOptions {
+        path: workspace_path("tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine"),
+        bars_path: workspace_path("tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+        chart_context: ChartContext::default(),
+        profile: false,
+        library_sources: Vec::new(),
+        request_bars: vec![
+            parse_request_bars_spec(&format!(
+                "NYSE:IBM:5={}",
+                workspace_path("tests/fixtures/legacy/v4/runtime/security_request_5m.csv")
+            ))
+            .expect("legacy request bars"),
+        ],
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options).expect("legacy security CLI fixture");
+    assert!(output.contains(r#""values":[null,null,100,100,200]"#));
+    assert!(output.contains(r#""diagnostics":[]"#));
+}
+
+#[test]
+fn legacy_v4_security_cli_missing_provider_error_is_source_spanned() {
+    let options = RunOptions {
+        path: workspace_path("tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine"),
+        bars_path: workspace_path("tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+        chart_context: ChartContext::default(),
+        profile: false,
+        library_sources: Vec::new(),
+        request_bars: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let error = run_json_with_options(&options).expect_err("legacy provider data is required");
+    assert_eq!(
+        error,
+        "runtime failed: legacy security at source span 52..84: missing request data for symbol `NYSE:IBM` timeframe `5`"
+    );
+}
+
+#[test]
 fn runs_imported_function_with_library_source_integration_fixture() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/import.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
         library_sources: vec![LibrarySourceSpec {
@@ -1704,6 +1799,7 @@ fn run_json_treats_strategy_exit_wrong_entry_as_noop() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_unmatched_from_entry_noop.pine"),
         bars_path: bars_path.display().to_string(),
+        chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -1730,6 +1826,7 @@ fn run_output_renders_strategy_order_alert_template() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -1751,6 +1848,7 @@ fn run_output_rejects_unknown_strategy_order_alert_placeholder() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -1772,6 +1870,7 @@ fn run_output_renders_strategy_running_alert() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -1798,6 +1897,7 @@ fn run_output_rejects_unknown_strategy_running_alert_placeholder() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
@@ -1824,6 +1924,7 @@ fn run_json_keeps_strategy_alert_template_output_out_of_default_json() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
         library_sources: Vec::new(),

@@ -33,6 +33,7 @@ pub(crate) use lowering::LegacyCallLowering;
 pub(crate) use outputs::LegacyOutputBinding;
 pub(crate) use report::normalize_legacy_report;
 pub(crate) use resolver::LegacyResolution;
+pub(crate) use security::{BoundLegacySecurity, LegacySecurityBinding};
 
 use crate::compatibility::CompatibilityReport;
 use crate::source_graph::SourceContextId;
@@ -110,6 +111,24 @@ impl LegacyFrontEnd {
         call_span: Span,
     ) -> LegacyExpressionBinding {
         expressions::bind_legacy_expression(name, args, arg_types, call_span)
+    }
+
+    pub(crate) fn bind_legacy_security_args(
+        &self,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+        const_strings: &[Option<String>],
+        const_bools: &[Option<bool>],
+        call_span: Span,
+    ) -> LegacySecurityBinding {
+        security::bind_legacy_security_args(
+            self.dialect,
+            args,
+            arg_types,
+            const_strings,
+            const_bools,
+            call_span,
+        )
     }
 
     pub(crate) fn resolve_call(&self, source_name: &str) -> Option<LegacyResolution> {
@@ -221,6 +240,33 @@ impl LegacyFrontEnd {
             plan.emulates_transparency,
             plan.emulates_numeric_style,
         );
+    }
+
+    pub(crate) fn record_security_translation(
+        &mut self,
+        report: &mut CompatibilityReport,
+        source_context_id: SourceContextId,
+        callee_span: Span,
+        call_span: Span,
+        rule: LegacyRule,
+        bound: &BoundLegacySecurity,
+    ) {
+        self.lowering
+            .record_call(source_context_id, callee_span, bound.internal_callee);
+        self.lowering.record_call_lowering(
+            source_context_id,
+            callee_span,
+            lowering::LegacyCallLowering::SecuritySpan {
+                start: call_span.start,
+                end: call_span.end,
+            },
+        );
+        self.lowering.record_call_arg_rewrites(
+            source_context_id,
+            callee_span,
+            bound.arg_rewrites.clone(),
+        );
+        report::record_security_translation(report, rule, bound, callee_span);
     }
 
     pub(crate) fn record_expression_translation(

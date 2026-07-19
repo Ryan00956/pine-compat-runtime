@@ -20,6 +20,14 @@ const TEST_RULES: &[LegacyRule] = &[
         },
     },
     LegacyRule {
+        source_name: "security",
+        canonical_name: Some("request.security"),
+        min_version: PineDialect::V1,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedSecurity,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
         source_name: "sma",
         canonical_name: Some("ta.sma"),
         min_version: PineDialect::V1,
@@ -75,6 +83,13 @@ fn plot_arg(analysis: &crate::Analysis) -> &HirExpr {
             _ => None,
         })
         .expect("plot argument")
+}
+
+fn plot_call_name(analysis: &crate::Analysis) -> &str {
+    let HirExprKind::Call { callee, .. } = &plot_arg(analysis).kind else {
+        panic!("plot argument is not a call");
+    };
+    callee
 }
 
 fn diagnostic_codes(analysis: &crate::Analysis) -> Vec<&str> {
@@ -169,6 +184,112 @@ fn production_v4_study_and_first_alias_batch_match_canonical_hir() {
             ),
             ("abs", "math.abs", LegacyTranslationKind::ExactAlias),
         ]
+    );
+}
+
+#[test]
+fn legacy_security_defaults_and_explicit_merge_values_are_versioned() {
+    let v2 = analyze_legacy("//@version=2\nplot(security(\"NYSE:IBM\", \"5\", close, false))\n");
+    assert!(v2.diagnostics.is_empty(), "{:?}", v2.diagnostics);
+    assert_eq!(
+        plot_call_name(&v2),
+        "$legacy.security.gaps_off.lookahead_on"
+    );
+
+    let v3 = analyze_legacy(
+        "//@version=3\nplot(security(symbol=\"NYSE:IBM\", resolution=\"5\", expression=close))\n",
+    );
+    assert!(v3.diagnostics.is_empty(), "{:?}", v3.diagnostics);
+    assert_eq!(
+        plot_call_name(&v3),
+        "$legacy.security.gaps_off.lookahead_off"
+    );
+
+    let v3_explicit = analyze_legacy(
+        "//@version=3\nplot(security(\"NYSE:IBM\", \"5\", close, gaps=barmerge.gaps_on, lookahead=true))\n",
+    );
+    assert!(
+        v3_explicit.diagnostics.is_empty(),
+        "{:?}",
+        v3_explicit.diagnostics
+    );
+    assert_eq!(
+        plot_call_name(&v3_explicit),
+        "$legacy.security.gaps_on.lookahead_on"
+    );
+}
+
+#[test]
+fn production_v4_security_uses_request_expression_analysis_and_source_spanned_hir() {
+    let source = "//@version=4\nstudy(\"legacy security\")\nplot(security(syminfo.tickerid, \"5\", sma(close, 2)))\n";
+    let analysis = analyze_production(source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let HirExprKind::Call { callee, args, .. } = &plot_arg(&analysis).kind else {
+        panic!("legacy security was not lowered to a call");
+    };
+    assert_eq!(callee, "$legacy.security.gaps_off.lookahead_off");
+    assert_eq!(args.len(), 5);
+    assert_eq!(args[3].name.as_deref(), Some("$legacy_span_start"));
+    assert_eq!(args[4].name.as_deref(), Some("$legacy_span_end"));
+    let HirExprKind::Call { callee, .. } = &args[2].value.kind else {
+        panic!("requested SMA expression was not lowered");
+    };
+    assert_eq!(callee, "ta.sma");
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .legacy_translations
+            .iter()
+            .any(|item| {
+                item.source_feature == "security" && item.canonical_feature == "request.security"
+            })
+    );
+}
+
+#[test]
+fn legacy_security_rejects_invalid_versioned_signatures_and_dynamic_merge_metadata() {
+    let named_v2 = analyze_legacy(
+        "//@version=2\nplot(security(symbol=\"NYSE:IBM\", resolution=\"5\", expression=close))\n",
+    );
+    assert!(diagnostic_codes(&named_v2).contains(&"E_CALL_ARG_NAME"));
+
+    let dynamic_merge = analyze_legacy(
+        "//@version=4\nflag = close > open\nplot(security(\"NYSE:IBM\", \"5\", close, flag))\n",
+    );
+    assert!(diagnostic_codes(&dynamic_merge).contains(&"E_LEGACY_SECURITY_MERGE"));
+
+    let sixth_arg = analyze_legacy(
+        "//@version=4\nplot(security(\"NYSE:IBM\", \"5\", close, false, false, false))\n",
+    );
+    assert!(diagnostic_codes(&sixth_arg).contains(&"E_CALL_ARITY"));
+}
+
+#[test]
+fn user_defined_security_function_shadows_legacy_builtin() {
+    let analysis = analyze_production(
+        "//@version=4\nstudy(\"shadow\")\nsecurity(symbol, resolution, expression) => expression + 1\nplot(security(\"X\", \"5\", close))\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(!matches!(
+        &plot_arg(&analysis).kind,
+        HirExprKind::Call { callee, .. }
+            if callee == "$legacy.security.gaps_off.lookahead_off"
+    ));
+    assert!(
+        analysis
+            .compatibility
+            .legacy_translations
+            .iter()
+            .all(|item| item.source_feature != "security")
     );
 }
 

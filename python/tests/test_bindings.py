@@ -229,6 +229,27 @@ def test_analyze_script_reports_v4_legacy_expression_semantics():
     assert {"iff", "rsi"} <= emulated
 
 
+def test_analyze_script_reports_v4_legacy_security_routing():
+    report = pine_compat.analyze_script(
+        '//@version=4\nstudy("security")\n'
+        'plot(security(syminfo.tickerid, timeframe.period, close))\n'
+    )
+
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
+    translations = {
+        (item["sourceFeature"], item["canonicalFeature"], item["kind"])
+        for item in report["compatibility"]["legacyTranslations"]
+    }
+    assert ("security", "request.security", "signatureReshape") in translations
+    emulations = report["compatibility"]["legacyEmulations"]
+    assert any(
+        item["feature"] == "security.merge"
+        and "gaps_off/lookahead_off" in item["behavior"]
+        for item in emulations
+    )
+
+
 def test_analyze_script_reports_one_legacy_strategy_hard_stop():
     report = pine_compat.analyze_script(
         '//@version=4\nstrategy("legacy")\n'
@@ -573,6 +594,26 @@ def test_run_script_returns_legacy_v4_session_default_contract():
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/legacy/v4/runtime/session_weekend_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v4_security_same_context_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/legacy/v4/runtime/security_same_context_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_legacy_v4_security_same_context.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
     )
 
     assert result == expected
@@ -9294,6 +9335,91 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][306]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
     assert result["plots"][307]["values"] == [None, 41.0, 43.0, 45.0, 47.0]
     assert result["plots"][308]["values"] == [20.01, 21.01, 22.01, 23.01, 24.01]
+
+
+def test_run_script_legacy_v4_security_provider_matches_cli_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+        {
+            "NYSE:IBM:5": fixture_bars(
+                "tests/fixtures/legacy/v4/runtime/security_request_5m.csv"
+            )
+        },
+    )
+
+    assert result["plots"][0]["values"] == [None, None, 100.0, 100.0, 200.0]
+    assert result["diagnostics"] == []
+
+
+def test_run_script_legacy_v4_security_accepts_explicit_chart_context():
+    source = (
+        '//@version=4\nstudy("legacy chart context")\n'
+        'plot(security(syminfo.tickerid, "5", close))\n'
+    )
+    requested = fixture_bars(
+        "tests/fixtures/legacy/v4/runtime/security_request_5m.csv"
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+        {"TEST:5": requested},
+        chart_symbol="TEST",
+        chart_timeframe="1",
+    )
+
+    assert result["plots"][0]["values"] == [None, None, 100.0, 100.0, 200.0]
+
+    program = pine_compat.compile_script(source)
+    compiled_result = program.run(
+        fixture_bars("tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+        {"TEST:5": requested},
+        chart_symbol="TEST",
+        chart_timeframe="1",
+    )
+    assert compiled_result["plots"] == result["plots"]
+
+
+def test_python_chart_context_rejects_invalid_values():
+    source = '//@version=4\nstudy("chart context")\nplot(close)\n'
+
+    try:
+        pine_compat.run_script(source, BARS, chart_symbol=" ")
+    except ValueError as error:
+        assert str(error) == "chart_symbol must not be empty"
+    else:
+        raise AssertionError("empty chart symbol should fail")
+
+    try:
+        pine_compat.run_script(source, BARS, chart_timeframe="bad")
+    except ValueError as error:
+        assert str(error) == "unsupported request timeframe `bad`"
+    else:
+        raise AssertionError("invalid chart timeframe should fail")
+
+
+def test_run_script_legacy_v4_security_missing_provider_keeps_source_span():
+    source = (
+        ROOT / "tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine"
+    ).read_text()
+
+    try:
+        pine_compat.run_script(
+            source,
+            fixture_bars(
+                "tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"
+            ),
+        )
+    except ValueError as error:
+        assert str(error) == (
+            "legacy security at source span 52..84: missing request data for "
+            "symbol `NYSE:IBM` timeframe `5`"
+        )
+    else:
+        raise AssertionError("legacy security missing provider should fail")
 
 
 def test_run_script_reports_missing_request_bars():

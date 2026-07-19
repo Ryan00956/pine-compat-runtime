@@ -13,6 +13,42 @@ impl Analyzer {
             .map(|canonical_name| HirExprKind::Builtin(canonical_name.to_owned()))
     }
 
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn lower_recorded_legacy_call(
+        &mut self,
+        span: Span,
+        args: &[CallArg],
+        pine_type: PineType,
+        series_id: Option<pine_ir::SeriesId>,
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<Option<HirExpr>> {
+        let lowering = self
+            .legacy
+            .call_lowering(self.current_source_context_id(), span)?;
+        Some(match lowering {
+            crate::legacy::LegacyCallLowering::HistoryOffset => self.lower_legacy_history_offset(
+                span,
+                args,
+                pine_type,
+                series_id,
+                param_exprs,
+                param_types,
+            ),
+            crate::legacy::LegacyCallLowering::SecuritySpan { start, end } => self
+                .lower_legacy_security_call(
+                    span,
+                    args,
+                    pine_type,
+                    series_id,
+                    start,
+                    end,
+                    param_exprs,
+                    param_types,
+                ),
+        })
+    }
+
     pub(super) fn lower_legacy_call_args(
         &self,
         span: Span,
@@ -80,6 +116,56 @@ impl Analyzer {
             kind: HirExprKind::History {
                 expr: Box::new(lowered_source),
                 offset,
+            },
+        })
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn lower_legacy_security_call(
+        &mut self,
+        span: Span,
+        args: &[CallArg],
+        pine_type: PineType,
+        series_id: Option<pine_ir::SeriesId>,
+        source_span_start: usize,
+        source_span_end: usize,
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
+        let callee = self
+            .legacy
+            .canonical_call_name(self.current_source_context_id(), span)?
+            .to_owned();
+        let canonical_args = self.lower_legacy_call_args(span, args)?;
+        let mut lowered_args =
+            self.lower_builtin_call_args(&callee, &canonical_args, param_exprs, param_types)?;
+        lowered_args.push(HirCallArg {
+            name: Some("$legacy_span_start".to_owned()),
+            value: HirExpr {
+                kind: HirExprKind::Literal(HirLiteral::Int(
+                    i64::try_from(source_span_start).unwrap_or(i64::MAX),
+                )),
+                pine_type: PineType::new(Qualifier::Const, ValueKind::Int),
+                series_id: None,
+            },
+        });
+        lowered_args.push(HirCallArg {
+            name: Some("$legacy_span_end".to_owned()),
+            value: HirExpr {
+                kind: HirExprKind::Literal(HirLiteral::Int(
+                    i64::try_from(source_span_end).unwrap_or(i64::MAX),
+                )),
+                pine_type: PineType::new(Qualifier::Const, ValueKind::Int),
+                series_id: None,
+            },
+        });
+        Some(HirExpr {
+            pine_type,
+            series_id,
+            kind: HirExprKind::Call {
+                callee,
+                call_site_id: self.alloc_call_site(),
+                args: lowered_args,
             },
         })
     }

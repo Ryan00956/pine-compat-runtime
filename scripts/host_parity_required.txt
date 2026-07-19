@@ -120,6 +120,7 @@ runtime_legacy_line_wrapping.json
 runtime_legacy_v4_expressions.json
 runtime_legacy_v4_logical_strict.json
 runtime_legacy_v4_outputs.json
+runtime_legacy_v4_security_same_context.json
 runtime_legacy_v4_session_defaults.json
 runtime_line_array.json
 runtime_line_control_flow.json

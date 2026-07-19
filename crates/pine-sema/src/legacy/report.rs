@@ -6,6 +6,7 @@ use crate::compatibility::{
 
 use super::catalog::{LegacyRule, LegacyRuleKind};
 use super::expressions::LegacyExpressionKind;
+use super::security::{BoundLegacySecurity, LegacySecurityGaps, LegacySecurityLookahead};
 
 pub(crate) fn record_exact_translation(
     report: &mut CompatibilityReport,
@@ -136,6 +137,39 @@ pub(crate) fn record_expression_translation(
             span,
         });
     }
+}
+
+pub(crate) fn record_security_translation(
+    report: &mut CompatibilityReport,
+    rule: LegacyRule,
+    bound: &BoundLegacySecurity,
+    span: Span,
+) {
+    report.legacy_translations.push(LegacyTranslation {
+        source_feature: rule.source_name.to_owned(),
+        canonical_feature: "request.security".to_owned(),
+        kind: LegacyTranslationKind::SignatureReshape,
+        span,
+    });
+    let behavior = match (bound.gaps, bound.lookahead) {
+        (LegacySecurityGaps::Off, LegacySecurityLookahead::Off) => {
+            "legacy security uses explicit gaps_off/lookahead_off requested-context alignment"
+        }
+        (LegacySecurityGaps::On, LegacySecurityLookahead::Off) => {
+            "legacy security uses explicit gaps_on/lookahead_off requested-context alignment"
+        }
+        (LegacySecurityGaps::Off, LegacySecurityLookahead::On) => {
+            "legacy security uses explicit gaps_off/lookahead_on historical alignment and confirmed realtime alignment"
+        }
+        (LegacySecurityGaps::On, LegacySecurityLookahead::On) => {
+            "legacy security uses explicit gaps_on/lookahead_on historical alignment and confirmed realtime alignment"
+        }
+    };
+    report.legacy_emulations.push(LegacyEmulation {
+        feature: "security.merge".to_owned(),
+        behavior: behavior.to_owned(),
+        span,
+    });
 }
 
 pub(crate) fn normalize_legacy_report(report: &mut CompatibilityReport) {

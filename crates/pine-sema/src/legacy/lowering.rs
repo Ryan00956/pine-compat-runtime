@@ -13,6 +13,7 @@ pub(crate) struct LegacyCallArgRewrite {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum LegacyCallLowering {
     HistoryOffset,
+    SecuritySpan { start: usize, end: usize },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

@@ -265,6 +265,35 @@ class AnalyzeLegacyCorpusTests(unittest.TestCase):
                 "missing_input",
             )
 
+    def test_chart_context_is_forwarded_to_historical_runtime(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "legacy.pine").write_text(
+                '//@version=4\nstudy("context")\nplot(close)\n',
+                encoding="utf-8",
+            )
+            (root / "bars.csv").write_text(
+                "time,open,high,low,close,volume\n0,1,1,1,1,1\n",
+                encoding="utf-8",
+            )
+            manifest = write_manifest(root, [row("legacy", "legacy.pine")])
+            runner = FakeRunner()
+
+            analyze_legacy_corpus.build_report(
+                analyze_legacy_corpus.parse_manifest(manifest),
+                root=root,
+                manifest_path=manifest,
+                pine_compat=root / "pine-compat",
+                build_revision="test-revision",
+                command_runner=runner,
+            )
+
+            run_command = next(command for command in runner.commands if command[1] == "run")
+            self.assertIn("--chart-symbol", run_command)
+            self.assertEqual(run_command[run_command.index("--chart-symbol") + 1], "TEST")
+            self.assertIn("--chart-timeframe", run_command)
+            self.assertEqual(run_command[run_command.index("--chart-timeframe") + 1], "1")
+
     def test_all_external_inputs_are_classified_before_compilation(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

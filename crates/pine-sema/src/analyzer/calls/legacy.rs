@@ -30,6 +30,8 @@ impl Analyzer {
                     args,
                     arg_types,
                 ),
+                crate::legacy::LegacyRuleKind::FocusedSecurity if name == "security" => self
+                    .analyze_focused_legacy_security(rule, callee_span, call_span, args, arg_types),
                 crate::legacy::LegacyRuleKind::FocusedExpression
                 | crate::legacy::LegacyRuleKind::FocusedCall => self
                     .analyze_focused_legacy_expression(
@@ -49,6 +51,7 @@ impl Analyzer {
                         | crate::legacy::LegacyRuleKind::FocusedOutput
                         | crate::legacy::LegacyRuleKind::FocusedExpression
                         | crate::legacy::LegacyRuleKind::FocusedCall
+                        | crate::legacy::LegacyRuleKind::FocusedSecurity
                 ) =>
             {
                 let crate::legacy::LegacyRuleSupport::UnsupportedKnown { reason } = rule.support
@@ -120,6 +123,52 @@ impl Analyzer {
             &bound,
         );
         FocusedLegacyCallAnalysis::Analyzed(Some(pine_type))
+    }
+
+    fn analyze_focused_legacy_security(
+        &mut self,
+        rule: crate::legacy::LegacyRule,
+        callee_span: Span,
+        call_span: Span,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> FocusedLegacyCallAnalysis {
+        let const_strings = args
+            .iter()
+            .map(|arg| self.known_const_string_value(&arg.value))
+            .collect::<Vec<_>>();
+        let const_bools = args
+            .iter()
+            .map(|arg| self.known_const_bool_value(&arg.value))
+            .collect::<Vec<_>>();
+        let bound = match self.legacy.bind_legacy_security_args(
+            args,
+            arg_types,
+            &const_strings,
+            &const_bools,
+            call_span,
+        ) {
+            crate::legacy::LegacySecurityBinding::Bound(bound) => bound,
+            crate::legacy::LegacySecurityBinding::Invalid(diagnostics) => {
+                self.diagnostics.extend(diagnostics);
+                return FocusedLegacyCallAnalysis::Analyzed(None);
+            }
+        };
+        let unsupported_before = self.compatibility.unsupported.len();
+        let pine_type = self.analyze_bound_legacy_security(callee_span, &bound);
+        if self.compatibility.unsupported.len() != unsupported_before || pine_type.is_none() {
+            return FocusedLegacyCallAnalysis::Analyzed(pine_type);
+        }
+        let source_context_id = self.current_source_context_id();
+        self.legacy.record_security_translation(
+            &mut self.compatibility,
+            source_context_id,
+            callee_span,
+            call_span,
+            rule,
+            &bound,
+        );
+        FocusedLegacyCallAnalysis::Analyzed(pine_type)
     }
 
     fn analyze_legacy_iff(

@@ -1,9 +1,8 @@
 use super::PineDialect;
 use super::inputs::LEGACY_INPUT_DEFERRED_REASON;
 use super::outputs::LEGACY_OUTPUT_DEFERRED_REASON;
-use super::security::LEGACY_SECURITY_DEFERRED_REASON;
 
-pub const LEGACY_TRANSLATOR_REVISION: u32 = 5;
+pub const LEGACY_TRANSLATOR_REVISION: u32 = 6;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum LegacyRuleKind {
@@ -448,9 +447,7 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         min_version: PineDialect::V1,
         max_version: PineDialect::V4,
         kind: LegacyRuleKind::FocusedSecurity,
-        support: LegacyRuleSupport::UnsupportedKnown {
-            reason: LEGACY_SECURITY_DEFERRED_REASON,
-        },
+        support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
         source_name: "sma",
@@ -557,7 +554,8 @@ pub(crate) fn validate_catalog(rules: &[LegacyRule]) -> Vec<CatalogValidationErr
                 LegacyRuleKind::FocusedInput
                 | LegacyRuleKind::FocusedInputConstant
                 | LegacyRuleKind::FocusedOutput
-                | LegacyRuleKind::FocusedCall,
+                | LegacyRuleKind::FocusedCall
+                | LegacyRuleKind::FocusedSecurity,
                 LegacyRuleSupport::Supported,
                 Some(canonical),
             ) if pine_builtins::get_phase_1_builtin(canonical).is_none() => {
@@ -570,7 +568,8 @@ pub(crate) fn validate_catalog(rules: &[LegacyRule]) -> Vec<CatalogValidationErr
                 LegacyRuleKind::FocusedInput
                 | LegacyRuleKind::FocusedInputConstant
                 | LegacyRuleKind::FocusedOutput
-                | LegacyRuleKind::FocusedCall,
+                | LegacyRuleKind::FocusedCall
+                | LegacyRuleKind::FocusedSecurity,
                 LegacyRuleSupport::Supported,
                 None,
             ) => {
@@ -589,6 +588,7 @@ pub(crate) fn validate_catalog(rules: &[LegacyRule]) -> Vec<CatalogValidationErr
                             | LegacyRuleKind::FocusedInput
                             | LegacyRuleKind::FocusedInputConstant
                             | LegacyRuleKind::FocusedOutput
+                            | LegacyRuleKind::FocusedSecurity
                     ) =>
             {
                 errors.push(CatalogValidationError(format!(

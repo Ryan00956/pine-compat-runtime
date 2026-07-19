@@ -216,6 +216,34 @@ fn analyzes_v4_legacy_expression_semantics() {
 }
 
 #[test]
+fn analyzes_v4_legacy_security_routing() {
+    let output = analyze_script(
+        "//@version=4\nstudy(\"security\")\nplot(security(syminfo.tickerid, timeframe.period, close))\n",
+    );
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(parsed["executable"], serde_json::json!(true));
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    let translations = parsed["compatibility"]["legacyTranslations"]
+        .as_array()
+        .expect("legacy translations");
+    assert!(translations.iter().any(|item| {
+        item["sourceFeature"] == "security"
+            && item["canonicalFeature"] == "request.security"
+            && item["kind"] == "signatureReshape"
+    }));
+    let emulations = parsed["compatibility"]["legacyEmulations"]
+        .as_array()
+        .expect("legacy emulations");
+    assert!(emulations.iter().any(|item| {
+        item["feature"] == "security.merge"
+            && item["behavior"]
+                .as_str()
+                .is_some_and(|value| value.contains("gaps_off/lookahead_off"))
+    }));
+}
+
+#[test]
 fn runs_script_from_csv_to_json() {
     let output = run_script_csv(
         "//@version=5\nindicator(\"demo\")\nplot(close)\n",
@@ -557,6 +585,19 @@ fn run_script_csv_returns_legacy_v4_session_default_contract() {
     .expect("legacy v4 session default fixture should run");
 
     assert_snapshot("runtime_legacy_v4_session_defaults.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_legacy_v4_security_same_context_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/security_same_context_legacy.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("legacy v4 same-context security fixture should run");
+
+    assert_snapshot("runtime_legacy_v4_security_same_context.json", &output);
 }
 
 #[test]
@@ -8233,6 +8274,65 @@ fn request_host_data_runs_through_direct_wasm_api() {
             Some(23.01),
             Some(24.01),
         ],
+    );
+}
+
+#[test]
+fn legacy_v4_security_provider_runs_through_direct_wasm_api() {
+    let output = run_script_csv_with_request_bars(
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine"),
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+        r#"{
+          "NYSE:IBM:5": [
+            {"time":0,"open":90,"high":110,"low":80,"close":100,"volume":10},
+            {"time":300000,"open":190,"high":210,"low":180,"close":200,"volume":20}
+          ]
+        }"#,
+    )
+    .expect("legacy v4 request fixture should run through direct WASM API");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(
+        parsed["plots"][0]["values"],
+        serde_json::json!([null, null, 100, 100, 200])
+    );
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+}
+
+#[test]
+fn legacy_v4_security_wasm_request_json_accepts_chart_context() {
+    let output = run_script_csv_with_request_bars(
+        "//@version=4\nstudy(\"legacy chart context\")\nplot(security(syminfo.tickerid, \"5\", close))\n",
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+        r#"{
+          "$chart": {"symbol":"TEST","timeframe":"1"},
+          "TEST:5": [
+            {"time":0,"open":90,"high":110,"low":80,"close":100,"volume":10},
+            {"time":300000,"open":190,"high":210,"low":180,"close":200,"volume":20}
+          ]
+        }"#,
+    )
+    .expect("WASM chart metadata should supply the legacy security context");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(
+        parsed["plots"][0]["values"],
+        serde_json::json!([null, null, 100, 100, 200])
+    );
+}
+
+#[test]
+fn legacy_v4_security_missing_provider_wasm_error_keeps_source_span() {
+    let message = run_script_csv_with_request_bars_internal(
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine"),
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+        "{}",
+    )
+    .expect_err("legacy v4 missing provider data should fail");
+
+    assert_eq!(
+        message,
+        "runtime failed: legacy security at source span 52..84: missing request data for symbol `NYSE:IBM` timeframe `5`"
     );
 }
 
