@@ -243,6 +243,15 @@ fn matrix_history_fixtures_match_incremental_append_execution() {
     }
 }
 
+#[test]
+fn legacy_v4_outputs_match_incremental_append_execution() {
+    let bars = load_bars(&workspace_fixture("tests/fixtures/runtime/bars.csv"));
+    assert_fixture_matches_incremental_append_execution(
+        "tests/fixtures/legacy/v4/runtime/outputs_legacy.pine",
+        &bars,
+    );
+}
+
 fn assert_fixture_matches_incremental_append_execution(fixture: &str, bars: &[Bar]) {
     let path = workspace_fixture(fixture);
     let text = fs::read_to_string(&path).expect("fixture should be readable");

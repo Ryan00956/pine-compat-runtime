@@ -85,6 +85,25 @@ fn diagnostic_codes(analysis: &crate::Analysis) -> Vec<&str> {
         .collect()
 }
 
+fn top_level_call<'a>(analysis: &'a crate::Analysis, name: &str) -> &'a HirExpr {
+    analysis
+        .hir
+        .as_ref()
+        .expect("HIR")
+        .statements
+        .iter()
+        .find_map(|statement| match &statement.kind {
+            HirStmtKind::Expr(
+                expr @ HirExpr {
+                    kind: HirExprKind::Call { callee, .. },
+                    ..
+                },
+            ) if callee == name => Some(expr),
+            _ => None,
+        })
+        .unwrap_or_else(|| panic!("missing top-level `{name}` call"))
+}
+
 #[test]
 fn exact_function_alias_lowers_to_canonical_hir_and_preserves_source_span() {
     let source = "//@version=4\nplot(sma(close, 2))\n";
@@ -641,4 +660,117 @@ fn legacy_report_normalization_is_stable_and_deduplicated() {
     assert_eq!(report.legacy_translations[0], earlier);
     assert_eq!(report.legacy_translations[1].source_feature, "sma");
     assert_eq!(report.legacy_emulations.len(), 1);
+}
+
+#[test]
+fn v4_output_binder_accepts_historical_signatures_and_retains_hidden_semantics() {
+    let source = r#"//@version=4
+study("v4 outputs")
+selectedStyle = input(1)
+p1 = plot(close, "p1", color.blue, 2, selectedStyle, true, 40, 0, 1, true, true, 3, display.all)
+p2 = plot(open)
+plotchar(close > open, "char", "X", location.abovebar, color.red, 25)
+plotshape(close > open, "shape", shape.circle, location.belowbar, color.green, 10)
+plotarrow(close - open, "arrow", color.green, color.red, 35)
+plotbar(open, high, low, close, "bars", color.blue)
+plotcandle(open, high, low, close, "candles", color.blue, color.gray)
+h1 = hline(1, "one", color.gray, 1)
+h2 = hline(2)
+fill(p1, p2, color.blue, 55)
+fill(hline1=h1, hline2=h2, color=color.red)
+bgcolor(color.blue, 45, title="bg")
+barcolor(color.red, title="bars")
+"#;
+    let analysis = analyze_production(source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let plot = top_level_call(&analysis, "plotchar");
+    let HirExprKind::Call { args, .. } = &plot.kind else {
+        unreachable!()
+    };
+    assert!(
+        args.iter()
+            .any(|arg| { arg.name.as_deref() == Some(pine_ir::LEGACY_TRANSPARENCY_ARG) })
+    );
+
+    let translations = analysis
+        .compatibility
+        .legacy_translations
+        .iter()
+        .filter(|translation| translation.kind == LegacyTranslationKind::OutputAdaptation)
+        .collect::<Vec<_>>();
+    assert_eq!(translations.len(), 8);
+    assert!(
+        analysis
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .any(|item| { item.feature == "plot.transp" })
+    );
+    assert!(
+        analysis
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .any(|item| { item.feature == "plot.numeric_style" })
+    );
+    assert!(
+        analysis
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .any(|item| { item.feature == "hline.numeric_style" })
+    );
+}
+
+#[test]
+fn v4_output_binder_rejects_unsupported_arguments_and_invalid_legacy_values() {
+    for (call, expected_code) in [
+        ("plot(close, force_overlay=true)", "E_CALL_ARG_NAME"),
+        ("plot(close, transp=close)", "E_LEGACY_OUTPUT_ARGUMENT"),
+        ("plot(close, style=9)", "E_LEGACY_OUTPUT_ARGUMENT"),
+        (
+            "plot(close, style=\"invented\")",
+            "E_LEGACY_OUTPUT_ARGUMENT",
+        ),
+        ("hline(1, linestyle=3)", "E_LEGACY_OUTPUT_ARGUMENT"),
+    ] {
+        let source = format!("//@version=4\nstudy(\"invalid\")\n{call}\n");
+        let analysis = analyze_production(&source);
+        assert!(
+            diagnostic_codes(&analysis).contains(&expected_code),
+            "{call}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none(), "{call}");
+    }
+
+    let mixed_fill = analyze_production(
+        "//@version=4\nstudy(\"invalid fill\")\np = plot(close)\nh = hline(1)\nfill(p, h)\n",
+    );
+    assert_eq!(
+        diagnostic_codes(&mixed_fill),
+        vec!["E_LEGACY_OUTPUT_ARGUMENT"]
+    );
+}
+
+#[test]
+fn legacy_output_compatibility_does_not_weaken_modern_unique_types() {
+    for version in [5, 6] {
+        for call in [
+            "plot(close, transp=40)",
+            "plot(close, style=1)",
+            "hline(1, linestyle=1)",
+        ] {
+            let source = format!("//@version={version}\nindicator(\"modern\")\n{call}\n");
+            let analysis = analyze_production(&source);
+            assert!(!analysis.diagnostics.is_empty(), "{version}: {call}");
+            assert!(analysis.compatibility.legacy_translations.is_empty());
+            assert!(analysis.compatibility.legacy_emulations.is_empty());
+        }
+    }
 }

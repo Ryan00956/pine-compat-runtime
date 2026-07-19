@@ -836,7 +836,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn finalize_series_outputs(&mut self) {
-        finalize_series_values(&mut self.plots, self.bars);
+        finalize_plot_values(&mut self.plots, self.bars);
         finalize_bar_aligned_outputs(&mut self.plot_chars, self.bars);
         finalize_bar_aligned_outputs(&mut self.plot_shapes, self.bars);
         finalize_bar_aligned_outputs(&mut self.plot_arrows, self.bars);
@@ -844,29 +844,91 @@ impl<'a> HistoricalRuntime<'a> {
         finalize_bar_aligned_outputs(&mut self.plot_candles, self.bars);
         finalize_series_values(&mut self.bg_colors, self.bars);
         finalize_series_values(&mut self.bar_colors, self.bars);
+        for fill in &mut self.fills {
+            while fill.colors.len() < self.bars {
+                fill.colors.push(PineValue::Na);
+            }
+            if fill.colors.len() == self.bars {
+                fill.colors.push(PineValue::Na);
+            }
+        }
     }
 
-    pub(crate) fn push_hline(&mut self, id: u32, price: PineValue) {
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn push_hline(
+        &mut self,
+        id: u32,
+        price: PineValue,
+        title: PineValue,
+        color: PineValue,
+        style: PineValue,
+        linewidth: PineValue,
+        editable: PineValue,
+        display: PineValue,
+    ) {
         if self.hlines.iter().all(|hline| hline.id != id) {
-            self.hlines.push(HLineOutput { id, price });
+            self.hlines.push(HLineOutput {
+                id,
+                price,
+                title,
+                color,
+                style,
+                linewidth,
+                editable,
+                display,
+            });
         }
     }
 
-    pub(crate) fn push_fill(&mut self, id: u32, first: PineValue, second: PineValue) {
-        if self.fills.iter().any(|fill| fill.id == id) {
-            return;
-        }
-
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn push_fill(
+        &mut self,
+        id: u32,
+        first: PineValue,
+        second: PineValue,
+        color: PineValue,
+        title: PineValue,
+        editable: PineValue,
+        show_last: PineValue,
+        fill_gaps: PineValue,
+        display: PineValue,
+    ) {
         let Some(first_id) = output_id(first) else {
             return;
         };
         let Some(second_id) = output_id(second) else {
             return;
         };
+        if let Some(fill) = self.fills.iter_mut().find(|fill| fill.id == id) {
+            while fill.colors.len() < self.bars {
+                fill.colors.push(PineValue::Na);
+            }
+            if fill.colors.len() == self.bars {
+                fill.colors.push(color);
+            } else if let Some(current) = fill.colors.last_mut() {
+                *current = color;
+            }
+            fill.first_id = first_id;
+            fill.second_id = second_id;
+            fill.title = title;
+            fill.editable = editable;
+            fill.show_last = show_last;
+            fill.fill_gaps = fill_gaps;
+            fill.display = display;
+            return;
+        }
+        let mut colors = vec![PineValue::Na; self.bars];
+        colors.push(color);
         self.fills.push(FillOutput {
             id,
             first_id,
             second_id,
+            colors,
+            title,
+            editable,
+            show_last,
+            fill_gaps,
+            display,
         });
     }
 }

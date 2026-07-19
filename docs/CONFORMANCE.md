@@ -32,7 +32,7 @@ Runtime snapshots should be normalized JSON:
 
 ```json
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "plots": [],
   "plotChars": [],
   "plotShapes": [],
@@ -59,11 +59,13 @@ The snapshot format should avoid host-specific charting details.
 Every machine-readable public output must include top-level `schemaVersion`.
 Runtime outputs use `PUBLIC_RUNTIME_SCHEMA_VERSION`; analysis outputs use
 `PUBLIC_ANALYSIS_SCHEMA_VERSION`; matrix JSON uses
-`PUBLIC_MATRIX_SCHEMA_VERSION`. Runtime output is currently `schemaVersion: 7`
+`PUBLIC_MATRIX_SCHEMA_VERSION`. Runtime output is currently `schemaVersion: 8`
 because the top-level `alerts` array is reserved, strategy order-fill alert
 payloads are exposed under `strategy.alerts`, table cell snapshots include
 host-neutral `textWrap`, linefill snapshots are exposed under `lineFills`, and
-polyline creation and lifecycle snapshots are exposed under `polylines`;
+polyline creation and lifecycle snapshots are exposed under `polylines`; plot,
+marker, bar, candle, color, hline, and fill outputs also expose normalized
+visual series and fixture-backed metadata;
 analysis JSON is currently `schemaVersion: 4`; in addition to top-level
 `inputs` metadata, it exposes validated language-version origin, dialect,
 script mode, and reserved legacy translation/emulation evidence. Matrix JSON

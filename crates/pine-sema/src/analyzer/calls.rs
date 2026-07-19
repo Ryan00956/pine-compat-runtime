@@ -10,8 +10,11 @@ mod arrays;
 mod declarations;
 mod drawing_options;
 mod helpers;
+mod legacy;
 mod matrices;
 mod return_types;
+
+use legacy::FocusedLegacyCallAnalysis;
 
 pub(crate) use helpers::{
     alias_qualified_method_name, array_call_result_builtin_name, array_method_builtin_name,
@@ -141,61 +144,10 @@ impl Analyzer {
             return None;
         }
 
-        if name == "input"
-            && let Some(resolution) = self.legacy.resolve_call(&name)
+        if let FocusedLegacyCallAnalysis::Analyzed(result) =
+            self.analyze_focused_legacy_call(&name, callee.span, span, args, &arg_types)
         {
-            match resolution {
-                crate::legacy::LegacyResolution::Focused(rule)
-                    if rule.kind == crate::legacy::LegacyRuleKind::FocusedInput =>
-                {
-                    let explicit_type_marker = self
-                        .legacy
-                        .explicit_v4_input_type_expr(args)
-                        .and_then(|expr| self.known_const_string_value(expr));
-                    let bound = match self.legacy.bind_v4_input_args(
-                        args,
-                        &arg_types,
-                        explicit_type_marker.as_deref(),
-                    ) {
-                        crate::legacy::LegacyInputBinding::Bound(bound) => bound,
-                        crate::legacy::LegacyInputBinding::Invalid(diagnostics) => {
-                            self.diagnostics.extend(diagnostics);
-                            return None;
-                        }
-                    };
-                    let signature = pine_builtins::get_phase_1_builtin(bound.canonical_name)
-                        .expect("validated focused input target is registered");
-                    let source_context_id = self.current_source_context_id();
-                    self.legacy.record_input_translation(
-                        &mut self.compatibility,
-                        source_context_id,
-                        callee.span,
-                        rule,
-                        bound.canonical_name,
-                        bound.arg_rewrites,
-                    );
-                    return self.analyze_registered_builtin(
-                        bound.canonical_name,
-                        signature,
-                        callee.span,
-                        span,
-                        &bound.canonical_args,
-                        &bound.canonical_arg_types,
-                    );
-                }
-                crate::legacy::LegacyResolution::UnsupportedKnown(rule)
-                    if rule.kind == crate::legacy::LegacyRuleKind::FocusedInput =>
-                {
-                    let crate::legacy::LegacyRuleSupport::UnsupportedKnown { reason } =
-                        rule.support
-                    else {
-                        unreachable!("legacy resolver preserves rule support state")
-                    };
-                    self.unsupported(rule.source_name, reason, callee.span);
-                    return None;
-                }
-                _ => {}
-            }
+            return result;
         }
 
         if let Some(result) = self.analyze_array_call_result_method(callee, args, span, &arg_types)

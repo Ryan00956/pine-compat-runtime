@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added faithful Pine v4 output compatibility for `plot`, marker/arrow outputs,
+  OHLC bars/candles, `hline`, both `fill` overloads, `bgcolor`, and `barcolor`.
+  Historical signatures now preserve primitive styles, output-specific
+  transparency defaults, clamping, `na`, embedded-alpha precedence, offsets,
+  visibility metadata, and realtime/incremental alignment without weakening
+  v5/v6 rules. Public runtime output is now `schemaVersion: 8`, exposing the
+  normalized visual series and metadata consistently across CLI, Python, and
+  WASM.
 - Added executable Pine v4 input compatibility. Historical `input()` overloads
   and all eleven documented `input.*` type constants now lower to canonical
   specialized input calls with original-span translations, stable callsite ids,

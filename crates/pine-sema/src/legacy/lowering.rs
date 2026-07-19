@@ -4,7 +4,11 @@ use pine_syntax::Span;
 
 use crate::source_graph::SourceContextId;
 
-use super::inputs::LegacyInputArgRewrite;
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct LegacyCallArgRewrite {
+    pub(crate) keep: bool,
+    pub(crate) canonical_name: Option<&'static str>,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct LegacyUseKey {
@@ -16,7 +20,7 @@ struct LegacyUseKey {
 #[derive(Debug, Default)]
 pub(crate) struct LegacyLoweringPlan {
     calls: HashMap<LegacyUseKey, &'static str>,
-    call_arg_rewrites: HashMap<LegacyUseKey, Vec<LegacyInputArgRewrite>>,
+    call_arg_rewrites: HashMap<LegacyUseKey, Vec<LegacyCallArgRewrite>>,
     values: HashMap<LegacyUseKey, &'static str>,
     string_values: HashMap<LegacyUseKey, &'static str>,
 }
@@ -45,7 +49,7 @@ impl LegacyLoweringPlan {
             },
             names
                 .into_iter()
-                .map(|canonical_name| LegacyInputArgRewrite {
+                .map(|canonical_name| LegacyCallArgRewrite {
                     keep: true,
                     canonical_name,
                 })
@@ -57,7 +61,7 @@ impl LegacyLoweringPlan {
         &mut self,
         source_context_id: SourceContextId,
         span: Span,
-        rewrites: Vec<LegacyInputArgRewrite>,
+        rewrites: Vec<LegacyCallArgRewrite>,
     ) {
         self.call_arg_rewrites.insert(
             LegacyUseKey {
@@ -149,7 +153,7 @@ impl LegacyLoweringPlan {
         &self,
         source_context_id: SourceContextId,
         span: Span,
-    ) -> Option<&[LegacyInputArgRewrite]> {
+    ) -> Option<&[LegacyCallArgRewrite]> {
         self.call_arg_rewrites
             .get(&LegacyUseKey {
                 source_context_id,

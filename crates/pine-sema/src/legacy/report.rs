@@ -1,6 +1,8 @@
 use pine_syntax::Span;
 
-use crate::compatibility::{CompatibilityReport, LegacyTranslation, LegacyTranslationKind};
+use crate::compatibility::{
+    CompatibilityReport, LegacyEmulation, LegacyTranslation, LegacyTranslationKind,
+};
 
 use super::catalog::{LegacyRule, LegacyRuleKind};
 
@@ -69,6 +71,39 @@ pub(crate) fn record_input_signature_translation(
         kind: LegacyTranslationKind::SignatureReshape,
         span,
     });
+}
+
+pub(crate) fn record_output_translation(
+    report: &mut CompatibilityReport,
+    rule: LegacyRule,
+    canonical_feature: &'static str,
+    span: Span,
+    requires_adaptation: bool,
+    emulates_transparency: bool,
+    emulates_numeric_style: bool,
+) {
+    if requires_adaptation {
+        report.legacy_translations.push(LegacyTranslation {
+            source_feature: rule.source_name.to_owned(),
+            canonical_feature: canonical_feature.to_owned(),
+            kind: LegacyTranslationKind::OutputAdaptation,
+            span,
+        });
+    }
+    if emulates_transparency {
+        report.legacy_emulations.push(LegacyEmulation {
+            feature: format!("{}.transp", rule.source_name),
+            behavior: "Pine v4 transparency is applied after the base color; embedded alpha takes precedence and transparency is clamped to 0..100".to_owned(),
+            span,
+        });
+    }
+    if emulates_numeric_style {
+        report.legacy_emulations.push(LegacyEmulation {
+            feature: format!("{}.numeric_style", rule.source_name),
+            behavior: "Pine v4 numeric output styles are mapped by their documented ordinal to canonical style constants".to_owned(),
+            span,
+        });
+    }
 }
 
 pub(crate) fn normalize_legacy_report(report: &mut CompatibilityReport) {

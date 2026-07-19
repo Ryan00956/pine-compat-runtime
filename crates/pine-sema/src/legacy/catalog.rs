@@ -5,7 +5,7 @@ use super::inputs::LEGACY_INPUT_DEFERRED_REASON;
 use super::outputs::LEGACY_OUTPUT_DEFERRED_REASON;
 use super::security::LEGACY_SECURITY_DEFERRED_REASON;
 
-pub const LEGACY_TRANSLATOR_REVISION: u32 = 3;
+pub const LEGACY_TRANSLATOR_REVISION: u32 = 4;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum LegacyRuleKind {
@@ -71,11 +71,47 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
+        source_name: "barcolor",
+        canonical_name: Some("barcolor"),
+        min_version: PineDialect::V1,
+        max_version: PineDialect::V3,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::UnsupportedKnown {
+            reason: LEGACY_OUTPUT_DEFERRED_REASON,
+        },
+    },
+    LegacyRule {
+        source_name: "barcolor",
+        canonical_name: Some("barcolor"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
         source_name: "bb",
         canonical_name: Some("ta.bb"),
         min_version: PineDialect::V4,
         max_version: PineDialect::V4,
         kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "bgcolor",
+        canonical_name: Some("bgcolor"),
+        min_version: PineDialect::V1,
+        max_version: PineDialect::V3,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::UnsupportedKnown {
+            reason: LEGACY_OUTPUT_DEFERRED_REASON,
+        },
+    },
+    LegacyRule {
+        source_name: "bgcolor",
+        canonical_name: Some("bgcolor"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedOutput,
         support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
@@ -92,6 +128,42 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         min_version: PineDialect::V4,
         max_version: PineDialect::V4,
         kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "fill",
+        canonical_name: Some("fill"),
+        min_version: PineDialect::V1,
+        max_version: PineDialect::V3,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::UnsupportedKnown {
+            reason: LEGACY_OUTPUT_DEFERRED_REASON,
+        },
+    },
+    LegacyRule {
+        source_name: "fill",
+        canonical_name: Some("fill"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "hline",
+        canonical_name: Some("hline"),
+        min_version: PineDialect::V1,
+        max_version: PineDialect::V3,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::UnsupportedKnown {
+            reason: LEGACY_OUTPUT_DEFERRED_REASON,
+        },
+    },
+    LegacyRule {
+        source_name: "hline",
+        canonical_name: Some("hline"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedOutput,
         support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
@@ -224,11 +296,109 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         source_name: "plot",
         canonical_name: Some("plot"),
         min_version: PineDialect::V1,
-        max_version: PineDialect::V4,
+        max_version: PineDialect::V3,
         kind: LegacyRuleKind::FocusedOutput,
         support: LegacyRuleSupport::UnsupportedKnown {
             reason: LEGACY_OUTPUT_DEFERRED_REASON,
         },
+    },
+    LegacyRule {
+        source_name: "plot",
+        canonical_name: Some("plot"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "plotarrow",
+        canonical_name: Some("plotarrow"),
+        min_version: PineDialect::V1,
+        max_version: PineDialect::V3,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::UnsupportedKnown {
+            reason: LEGACY_OUTPUT_DEFERRED_REASON,
+        },
+    },
+    LegacyRule {
+        source_name: "plotarrow",
+        canonical_name: Some("plotarrow"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "plotbar",
+        canonical_name: Some("plotbar"),
+        min_version: PineDialect::V1,
+        max_version: PineDialect::V3,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::UnsupportedKnown {
+            reason: LEGACY_OUTPUT_DEFERRED_REASON,
+        },
+    },
+    LegacyRule {
+        source_name: "plotbar",
+        canonical_name: Some("plotbar"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "plotcandle",
+        canonical_name: Some("plotcandle"),
+        min_version: PineDialect::V1,
+        max_version: PineDialect::V3,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::UnsupportedKnown {
+            reason: LEGACY_OUTPUT_DEFERRED_REASON,
+        },
+    },
+    LegacyRule {
+        source_name: "plotcandle",
+        canonical_name: Some("plotcandle"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "plotchar",
+        canonical_name: Some("plotchar"),
+        min_version: PineDialect::V1,
+        max_version: PineDialect::V3,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::UnsupportedKnown {
+            reason: LEGACY_OUTPUT_DEFERRED_REASON,
+        },
+    },
+    LegacyRule {
+        source_name: "plotchar",
+        canonical_name: Some("plotchar"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "plotshape",
+        canonical_name: Some("plotshape"),
+        min_version: PineDialect::V1,
+        max_version: PineDialect::V3,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::UnsupportedKnown {
+            reason: LEGACY_OUTPUT_DEFERRED_REASON,
+        },
+    },
+    LegacyRule {
+        source_name: "plotshape",
+        canonical_name: Some("plotshape"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
         source_name: "rsi",
@@ -352,22 +522,26 @@ pub(crate) fn validate_catalog(rules: &[LegacyRule]) -> Vec<CatalogValidationErr
                 )));
             }
             (
-                LegacyRuleKind::FocusedInput | LegacyRuleKind::FocusedInputConstant,
+                LegacyRuleKind::FocusedInput
+                | LegacyRuleKind::FocusedInputConstant
+                | LegacyRuleKind::FocusedOutput,
                 LegacyRuleSupport::Supported,
                 Some(canonical),
             ) if pine_builtins::get_phase_1_builtin(canonical).is_none() => {
                 errors.push(CatalogValidationError(format!(
-                    "canonical input `{canonical}` for `{}` is not registered",
+                    "canonical focused target `{canonical}` for `{}` is not registered",
                     rule.source_name
                 )));
             }
             (
-                LegacyRuleKind::FocusedInput | LegacyRuleKind::FocusedInputConstant,
+                LegacyRuleKind::FocusedInput
+                | LegacyRuleKind::FocusedInputConstant
+                | LegacyRuleKind::FocusedOutput,
                 LegacyRuleSupport::Supported,
                 None,
             ) => {
                 errors.push(CatalogValidationError(format!(
-                    "supported focused input `{}` has no canonical target",
+                    "supported focused rule `{}` has no canonical target",
                     rule.source_name
                 )));
             }
@@ -378,6 +552,7 @@ pub(crate) fn validate_catalog(rules: &[LegacyRule]) -> Vec<CatalogValidationErr
                         LegacyRuleKind::FocusedDeclaration
                             | LegacyRuleKind::FocusedInput
                             | LegacyRuleKind::FocusedInputConstant
+                            | LegacyRuleKind::FocusedOutput
                     ) =>
             {
                 errors.push(CatalogValidationError(format!(

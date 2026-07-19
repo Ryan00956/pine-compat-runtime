@@ -145,6 +145,43 @@ fn analyzes_executable_v4_legacy_translations() {
 }
 
 #[test]
+fn analyzes_v4_legacy_output_adaptations() {
+    let output = analyze_script(
+        "//@version=4\nstudy(\"outputs\")\np = plot(close, style=5, transp=40)\nbgcolor(color.blue)\n",
+    );
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(parsed["executable"], serde_json::json!(true));
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    let translations = parsed["compatibility"]["legacyTranslations"]
+        .as_array()
+        .expect("legacy translations");
+    assert!(translations.iter().any(|item| {
+        item["sourceFeature"] == serde_json::json!("plot")
+            && item["canonicalFeature"] == serde_json::json!("plot")
+            && item["kind"] == serde_json::json!("outputAdaptation")
+    }));
+    let emulations = parsed["compatibility"]["legacyEmulations"]
+        .as_array()
+        .expect("legacy emulations");
+    assert!(
+        emulations
+            .iter()
+            .any(|item| item["feature"] == "plot.transp")
+    );
+    assert!(
+        emulations
+            .iter()
+            .any(|item| item["feature"] == "plot.numeric_style")
+    );
+    assert!(
+        emulations
+            .iter()
+            .any(|item| item["feature"] == "bgcolor.transp")
+    );
+}
+
+#[test]
 fn runs_script_from_csv_to_json() {
     let output = run_script_csv(
         "//@version=5\nindicator(\"demo\")\nplot(close)\n",
@@ -442,6 +479,17 @@ fn run_script_csv_returns_hline_fill_fixture_contract() {
     .expect("hline/fill fixture should run");
 
     assert_snapshot("runtime_hline_fill.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_legacy_v4_output_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/outputs_legacy.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("legacy v4 output fixture should run");
+
+    assert_snapshot("runtime_legacy_v4_outputs.json", &output);
 }
 
 #[test]

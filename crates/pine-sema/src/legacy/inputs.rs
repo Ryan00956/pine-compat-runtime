@@ -1,6 +1,8 @@
 use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{CallArg, Diagnostic, Expr, Span};
 
+use super::lowering::LegacyCallArgRewrite;
+
 pub(crate) const LEGACY_INPUT_DEFERRED_REASON: &str = "legacy input signatures require version-specific type constants and argument binding that are not implemented yet";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -24,18 +26,12 @@ pub(crate) struct LegacyInputConstant {
     pub(crate) canonical_name: &'static str,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) struct LegacyInputArgRewrite {
-    pub(crate) keep: bool,
-    pub(crate) canonical_name: Option<&'static str>,
-}
-
 #[derive(Debug, Clone)]
 pub(crate) struct BoundLegacyInput {
     pub(crate) canonical_name: &'static str,
     pub(crate) canonical_args: Vec<CallArg>,
     pub(crate) canonical_arg_types: Vec<Option<PineType>>,
-    pub(crate) arg_rewrites: Vec<LegacyInputArgRewrite>,
+    pub(crate) arg_rewrites: Vec<LegacyCallArgRewrite>,
 }
 
 #[derive(Debug, Clone)]
@@ -302,7 +298,7 @@ pub(crate) fn bind_v4_input_args(
     let mut canonical_args = Vec::with_capacity(args.len().saturating_sub(1));
     let mut canonical_arg_types = Vec::with_capacity(args.len().saturating_sub(1));
     let mut arg_rewrites = vec![
-        LegacyInputArgRewrite {
+        LegacyCallArgRewrite {
             keep: false,
             canonical_name: None,
         };
@@ -381,7 +377,7 @@ pub(crate) fn bind_v4_input_args(
             *arg_type
         };
         canonical_arg_types.push(canonical_arg_type);
-        arg_rewrites[arg_index] = LegacyInputArgRewrite {
+        arg_rewrites[arg_index] = LegacyCallArgRewrite {
             keep: true,
             canonical_name: Some(canonical_name),
         };

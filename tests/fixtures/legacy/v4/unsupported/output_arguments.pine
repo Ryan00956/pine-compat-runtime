@@ -1,0 +1,3 @@
+//@version=4
+study("unsupported v4 output arguments")
+plot(close, force_overlay=true)

@@ -27,6 +27,7 @@ pub(crate) use declarations::LegacyStudyBinding;
 pub(crate) use declarations::{LegacyAdmissionFailure, legacy_admission_failure};
 pub(crate) use dialect::LanguageSelection;
 pub(crate) use inputs::LegacyInputBinding;
+pub(crate) use outputs::LegacyOutputBinding;
 pub(crate) use report::normalize_legacy_report;
 pub(crate) use resolver::LegacyResolution;
 
@@ -38,6 +39,14 @@ pub(crate) struct LegacyFrontEnd {
     dialect: PineDialect,
     resolver: resolver::LegacyResolver,
     lowering: lowering::LegacyLoweringPlan,
+}
+
+pub(crate) struct LegacyOutputTranslationPlan {
+    pub(crate) canonical_name: &'static str,
+    pub(crate) arg_rewrites: Vec<lowering::LegacyCallArgRewrite>,
+    pub(crate) requires_adaptation: bool,
+    pub(crate) emulates_transparency: bool,
+    pub(crate) emulates_numeric_style: bool,
 }
 
 impl LegacyFrontEnd {
@@ -76,6 +85,18 @@ impl LegacyFrontEnd {
     ) -> LegacyInputBinding {
         debug_assert_eq!(self.dialect, PineDialect::V4);
         inputs::bind_v4_input_args(args, arg_types, explicit_type_marker)
+    }
+
+    pub(crate) fn bind_v4_output_args(
+        &self,
+        name: &str,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+        const_strings: &[Option<String>],
+        const_ints: &[Option<i64>],
+    ) -> LegacyOutputBinding {
+        debug_assert_eq!(self.dialect, PineDialect::V4);
+        outputs::bind_v4_output_args(name, args, arg_types, const_strings, const_ints)
     }
 
     pub(crate) fn registered_call_guard(
@@ -166,13 +187,36 @@ impl LegacyFrontEnd {
         span: Span,
         rule: LegacyRule,
         canonical_name: &'static str,
-        arg_rewrites: Vec<inputs::LegacyInputArgRewrite>,
+        arg_rewrites: Vec<lowering::LegacyCallArgRewrite>,
     ) {
         self.lowering
             .record_call(source_context_id, span, canonical_name);
         self.lowering
             .record_call_arg_rewrites(source_context_id, span, arg_rewrites);
         report::record_input_signature_translation(report, rule, canonical_name, span);
+    }
+
+    pub(crate) fn record_output_translation(
+        &mut self,
+        report: &mut CompatibilityReport,
+        source_context_id: SourceContextId,
+        span: Span,
+        rule: LegacyRule,
+        plan: LegacyOutputTranslationPlan,
+    ) {
+        self.lowering
+            .record_call(source_context_id, span, plan.canonical_name);
+        self.lowering
+            .record_call_arg_rewrites(source_context_id, span, plan.arg_rewrites);
+        report::record_output_translation(
+            report,
+            rule,
+            plan.canonical_name,
+            span,
+            plan.requires_adaptation,
+            plan.emulates_transparency,
+            plan.emulates_numeric_style,
+        );
     }
 
     pub(crate) fn canonical_call_name(
@@ -195,7 +239,7 @@ impl LegacyFrontEnd {
         &self,
         source_context_id: SourceContextId,
         span: Span,
-    ) -> Option<&[inputs::LegacyInputArgRewrite]> {
+    ) -> Option<&[lowering::LegacyCallArgRewrite]> {
         self.lowering.call_arg_rewrites(source_context_id, span)
     }
 

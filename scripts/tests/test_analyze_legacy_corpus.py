@@ -83,7 +83,7 @@ class FakeRunner:
         return subprocess.CompletedProcess(
             rendered,
             0,
-            stdout='{"schemaVersion":7,"plots":[]}\n',
+            stdout='{"schemaVersion":8,"plots":[]}\n',
             stderr="",
         )
 

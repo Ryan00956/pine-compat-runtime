@@ -446,10 +446,10 @@ fn formats_runtime_result_json_with_schema_version() {
 #[test]
 fn formats_runtime_result_json_with_escaped_string_values() {
     let result = RuntimeResult {
-        plots: vec![PlotSeries {
-            id: 1,
-            values: vec![PineValue::String("line\nnext\t\"quoted\"".to_owned())],
-        }],
+        plots: vec![PlotSeries::new(
+            1,
+            vec![PineValue::String("line\nnext\t\"quoted\"".to_owned())],
+        )],
         plot_chars: vec![],
         plot_shapes: vec![],
         plot_arrows: vec![],

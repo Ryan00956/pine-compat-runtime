@@ -39,3 +39,9 @@ these files are original project fixtures and are also referenced by
 Phase 4 adds the paired `v4/runtime/inputs_*` fixtures for all supported Pine v4
 input type constants, metadata, callsites, default values, and scalar host
 overrides. `v4/sema/input_constant_alias.pine` owns the local const-alias case.
+
+Phase 5 adds paired `v4/runtime/outputs_*` fixtures for all ten initial output
+families, primitive plot/hline styles, transparency defaults and alpha
+precedence, visual metadata, normalized colors, and historical execution.
+`v4/unsupported/output_arguments.pine` keeps later-only output arguments behind
+an analysis-time diagnostic.

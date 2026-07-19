@@ -28,9 +28,10 @@ rejected before lowering.
 
 The analyzer carries the validated dialect into HIR so the runtime can select
 version-specific behavior. For v1-v4, script-mode classification runs before
-ordinary symbol and call diagnostics. `study()` is recognized as a legacy
-indicator declaration but remains non-executable until the declaration
-translation phase. `strategy()` and any `strategy.*` use in v1-v4 stop with
+ordinary symbol and call diagnostics. The fixture-backed v4 `study()` subset
+is executable through versioned declaration, input, alias, and output
+translation; v1-v3 declarations remain gated. `strategy()` and any
+`strategy.*` use in v1-v4 stop with
 one `E_LEGACY_STRATEGY_OUT_OF_SCOPE` diagnostic; legacy strategies are not in
 scope. Explicit v5/v6 `indicator()` and `strategy()` continue through the
 existing modern paths, and legacy-only declaration names are not activated for
@@ -39,11 +40,11 @@ modern sources.
 The v1-v4 compatibility front-end uses version-ranged exact rules only after
 lexical/user resolution fails. Exact translations preserve their original span
 in `legacyTranslations` and lower to canonical HIR names. Recognized behavioral
-forms that still require legacy input, output, expression, overload, or request
-semantics fail as supported-known work instead of silently selecting modern
-behavior. Phase 2 enables this framework but no production exact aliases and no
-executable `study()` profile; those claims begin only with fixture-backed later
-phases.
+forms that still require legacy expression, overload, or request semantics fail
+as supported-known work instead of silently selecting modern behavior. The
+implemented v4 subset includes historical `study()` and `input()` binding, the
+conformance-listed exact aliases, and the initial ten output families with
+versioned transparency/style semantics.
 
 ## Initial Supported Syntax
 

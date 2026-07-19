@@ -99,6 +99,14 @@ runtime metadata, and host overrides therefore consume only canonical
 legacy validation view, so modern input qualifier and argument rules are not
 widened.
 
+Phase 5 adds a focused Pine v4 output binder for the initial ten indicator
+output families. Historical argument tables remove `transp` into an internal
+HIR marker, validate exact primitive plot/hline style ordinals, and retain all
+canonical visual arguments without synthesizing user-visible calls. Runtime
+normalization applies v4 defaults, clamps input transparency, preserves `na`
+and embedded alpha, and exposes bar-aligned visual series plus common metadata.
+Modern v5/v6 output signatures and unique style types remain unchanged.
+
 The semantic compile cache includes `LEGACY_TRANSLATOR_REVISION` in every key.
 Catalog or translation-semantics changes increment that revision so cached
 analysis cannot cross translator revisions.
@@ -431,7 +439,7 @@ The core output must remain host-neutral:
 
 ```json
 {
-  "schemaVersion": 5,
+  "schemaVersion": 8,
   "plots": [],
   "plotChars": [],
   "plotShapes": [],
@@ -444,6 +452,8 @@ The core output must remain host-neutral:
   "fills": [],
   "labels": [],
   "lines": [],
+  "lineFills": [],
+  "polylines": [],
   "boxes": [],
   "tables": [],
   "alerts": [],
@@ -463,14 +473,16 @@ payloads under `strategy.alerts` without changing the top-level `alerts[]`
 callsite event shape. `schemaVersion: 5` adds host-neutral table cell
 `textWrap` snapshots. `schemaVersion: 6` adds top-level `lineFills` snapshots
 for the supported linefill subset. `schemaVersion: 7` adds top-level
-`polylines` snapshots for the supported `polyline.new` and lifecycle subset. Host integrations can adapt this model into
+`polylines` snapshots for the supported `polyline.new` and lifecycle subset.
+`schemaVersion: 8` adds normalized colors and complete fixture-backed visual
+metadata to plots, markers, bars, candles, colors, hlines, and fills. Host integrations can adapt this model into
 their charting or API format, but should preserve the runtime schema version
 when they forward machine-readable runtime results.
 
 Machine-readable analysis and matrix outputs use separate schema ownership.
 `pine-sema::PUBLIC_ANALYSIS_SCHEMA_VERSION` owns CLI/Python/WASM analysis
 reports, while `PUBLIC_MATRIX_SCHEMA_VERSION` owns CLI matrix JSON. Runtime is
-currently `7`; analysis is currently `4`, adding `languageVersionOrigin`,
+currently `8`; analysis is currently `4`, adding `languageVersionOrigin`,
 `dialect`, `scriptMode`, `legacyTranslations`, and `legacyEmulations` to the
 existing version, diagnostic, input, and compatibility evidence; matrix
 remains `2`. These contracts can evolve independently when a runtime-only
