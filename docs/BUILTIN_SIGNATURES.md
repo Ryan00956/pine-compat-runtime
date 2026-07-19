@@ -1636,7 +1636,7 @@ ta.tr -> series float
 ta.vwap -> series float
 ta.vwap(source: series/simple numeric) -> series float
 ta.vwap(source: series/simple numeric, anchor: bool-compatible) -> series float
-ta.vwap(source: series/simple numeric, anchor: bool-compatible, stdev_mult: simple numeric-compatible) -> [series float, series float, series float]
+ta.vwap(source: series/simple numeric, anchor: bool-compatible, stdev_mult: numeric-compatible) -> [series float, series float, series float]
 ta.wad -> series float
 ta.wvad -> series float
 ta.mfi(source: series int/float, length: int-compatible) -> series float
@@ -1809,18 +1809,21 @@ Rules:
   `ta.cum((ta.change(close) / close[1]) * volume)`.
 - `ta.tr` variable form is true range without first-bar `na` handling; it
   returns `na` until `close[1]` is available.
-- `ta.vwap` variable form returns cumulative
-  `sum(hlc3 * volume) / sum(volume)` over the runtime bars.
-- `ta.vwap(source)` returns cumulative `sum(source * volume) / sum(volume)` in
-  its own call-site state. `ta.vwap(source, anchor)` uses the same call-site
-  cumulative state and resets it before the current bar when `anchor` is true.
+- `ta.vwap` variable form returns `sum(hlc3 * volume) / sum(volume)` and resets
+  before the first bar in each UTC `1D` bucket. This is the runtime's fixed
+  metadata equivalent of the default daily anchor; exchange-owned session
+  calendars and timezones remain outside the interpreter-only contract.
+- `ta.vwap(source)` uses its own call-site state and the same UTC `1D` default
+  anchor. `ta.vwap(source, anchor)` returns `na` until that callsite first sees
+  a true anchor, then resets its accumulated values before every current bar
+  whose anchor is true.
   `ta.vwap(source, anchor, stdev_mult)` returns `[vwap, upper_band, lower_band]`
   using the call-site weighted standard deviation multiplied by `stdev_mult`;
-  `stdev_mult` accepts simple numeric-compatible values, and `na` returns an
-  all-`na` tuple.
+  `stdev_mult` accepts numeric-compatible values at every scalar qualifier,
+  including per-bar series values, and `na` returns an all-`na` tuple while
+  the underlying VWAP accumulator continues to advance.
   Named/reordered `source`/`anchor`/`stdev_mult` arguments bind to the same
   VWAP state. These forms return `na` while the cumulative volume is zero.
-  Session-derived anchoring is not implemented yet.
 - `ta.wad` is a built-in series variable equivalent to cumulative Williams
   Accumulation/Distribution gain using `trueHigh = max(high, close[1])` and
   `trueLow = min(low, close[1])`.

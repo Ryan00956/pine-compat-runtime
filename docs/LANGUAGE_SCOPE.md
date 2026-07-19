@@ -185,7 +185,8 @@ Phase 1 executable subset:
 - common `ta.*` helpers listed in
   [`BUILTIN_SIGNATURES.md`](BUILTIN_SIGNATURES.md), including moving averages,
   rolling statistics, momentum/history helpers, crosses, extremes, trend
-  checks, value lookups, true range, volume flow helpers, and partial VWAP
+  checks, value lookups, true range, volume flow helpers, and the fixed-metadata
+  UTC-daily/explicit-anchor VWAP contract
 - partial float, int, bool, string, color, label-id, line-id, linefill-id, box-id, and table-id arrays with `array.new_float`,
   `array.new_int`, `array.new_bool`, `array.new_string`, `array.new_color`,
   `array.new_label`, `array.new_line`, `array.new_linefill`, `array.new_box`,

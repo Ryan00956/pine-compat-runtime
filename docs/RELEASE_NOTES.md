@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Closed the current pure-internal `ta.*` indicator surface by completing the
+  remaining `ta.vwap` row. Variable and omitted-anchor call forms now reset on
+  the runtime's UTC `1D` boundary, explicit anchors return `na` until their
+  first true value and reset before the current bar, bands accept series
+  numeric multipliers, and historical, incremental/request-context, and
+  realtime rollback evidence share the same callsite state model. Exchange
+  calendar/session metadata remains a host boundary rather than an implicit
+  runtime dependency.
 - Fixed interpreter-to-host rendering data loss discovered during CandleScope
   integration. Explicit low-valued RGBA colors now retain their alpha channel
   internally and across host boundaries through the versioned bit-32 alpha

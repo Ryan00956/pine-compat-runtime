@@ -40,6 +40,64 @@ plot(math.random(0, 1, 7))
 }
 
 #[test]
+fn realtime_rollback_preserves_default_vwap_day_anchor_state() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("realtime vwap")
+plot(ta.vwap)
+plot(ta.vwap(close))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let timed_bar = |time, close| Bar {
+        time,
+        open: close,
+        high: close,
+        low: close,
+        close,
+        volume: 1.0,
+    };
+    let mut runtime = RealtimeRuntime::new(&hir);
+
+    runtime
+        .update(BarUpdate::historical(timed_bar(0, 10.0)))
+        .expect("first historical update");
+    runtime
+        .update(BarUpdate::historical(timed_bar(60_000, 20.0)))
+        .expect("second historical update");
+
+    let forming = runtime
+        .update(BarUpdate::forming(timed_bar(86_400_000, 30.0)))
+        .expect("new-day forming update");
+    assert_values_close(&forming.plots[0].values, &[10.0, 15.0, 30.0]);
+    assert_values_close(&forming.plots[1].values, &[10.0, 15.0, 30.0]);
+
+    let replacement = runtime
+        .update(BarUpdate::forming(timed_bar(86_400_000, 40.0)))
+        .expect("replacement forming update");
+    assert_values_close(&replacement.plots[0].values, &[10.0, 15.0, 40.0]);
+    assert_values_close(&replacement.plots[1].values, &[10.0, 15.0, 40.0]);
+
+    let confirmed = runtime
+        .update(BarUpdate::confirmed(timed_bar(86_400_000, 35.0)))
+        .expect("new-day confirmed update");
+    assert_values_close(&confirmed.plots[0].values, &[10.0, 15.0, 35.0]);
+    assert_values_close(&confirmed.plots[1].values, &[10.0, 15.0, 35.0]);
+
+    let next = runtime
+        .update(BarUpdate::confirmed(timed_bar(86_460_000, 45.0)))
+        .expect("same-day confirmed update");
+    assert_values_close(&next.plots[0].values, &[10.0, 15.0, 35.0, 40.0]);
+    assert_values_close(&next.plots[1].values, &[10.0, 15.0, 35.0, 40.0]);
+}
+
+#[test]
 fn barstate_realtime_flags_track_update_kind() {
     let source = SourceFile::new(
         "test.pine",

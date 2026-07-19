@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported ta.vwap series stdev_mult")
+[basis, upper, lower] = ta.vwap(close, bar_index == 0, close)
+plot(basis)
+plot(upper)
+plot(lower)

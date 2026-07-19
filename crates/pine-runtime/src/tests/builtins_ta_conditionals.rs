@@ -112,7 +112,7 @@ fn advances_conditional_vwap_anchor_only_when_branch_executes() {
         r#"indicator("conditional anchored vwap")
 score = close
 if close > open
-    score := ta.vwap(close, bar_index == 2)
+    score := ta.vwap(close, bar_index == 0 or bar_index == 2)
 plot(score)
 "#,
     );

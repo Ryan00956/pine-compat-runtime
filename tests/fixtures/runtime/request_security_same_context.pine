@@ -80,7 +80,7 @@ wvad_value = request.security(syminfo.tickerid, timeframe.period, ta.wvad)
 [kc_middle, kc_upper, kc_lower] = request.security(syminfo.tickerid, timeframe.period, ta.kc(close, 3, 2))
 [supertrend_line, supertrend_direction] = request.security(syminfo.tickerid, timeframe.period, ta.supertrend(2, 3))
 [dmi_plus, dmi_minus, dmi_adx] = request.security(syminfo.tickerid, timeframe.period, ta.dmi(3, 2))
-[vwap_basis, vwap_upper, vwap_lower] = request.security(syminfo.tickerid, timeframe.period, ta.vwap(close, false, 2.0))
+[vwap_basis, vwap_upper, vwap_lower] = request.security(syminfo.tickerid, timeframe.period, ta.vwap(close, time == 1, 2.0))
 
 plot(identity)
 plot(explicit_merge_defaults)

@@ -376,7 +376,7 @@ fn request_security_same_context_returns_dmi_tuple_expression() {
 #[test]
 fn request_security_same_context_returns_vwap_bands_tuple_expression() {
     let program = compile_program(
-        "indicator(\"request vwap tuple\")\n[basis, upper, lower] = request.security(syminfo.tickerid, timeframe.period, ta.vwap(close, false, 2.0))\nplot(basis)\nplot(upper)\nplot(lower)\n",
+        "indicator(\"request vwap tuple\")\n[basis, upper, lower] = request.security(syminfo.tickerid, timeframe.period, ta.vwap(close, time == 0, 2.0))\nplot(basis)\nplot(upper)\nplot(lower)\n",
     );
     let result = run_historical(
         &program,
@@ -1031,7 +1031,7 @@ fn request_security_aligns_provider_higher_timeframe_dmi_tuple() {
 #[test]
 fn request_security_evaluates_provider_vwap_bands_tuple_in_requested_context() {
     let program = compile_program(
-        "indicator(\"request provider vwap tuple\")\n[basis, upper, lower] = request.security(\"NYSE:IBM\", timeframe.period, ta.vwap(close, false, 2.0))\nplot(basis)\nplot(upper)\nplot(lower)\n",
+        "indicator(\"request provider vwap tuple\")\n[basis, upper, lower] = request.security(\"NYSE:IBM\", timeframe.period, ta.vwap(close, time == 0, 2.0))\nplot(basis)\nplot(upper)\nplot(lower)\n",
     );
     let environment = external_symbol_environment(
         "NYSE:IBM",
@@ -1069,7 +1069,7 @@ fn request_security_evaluates_provider_vwap_bands_tuple_in_requested_context() {
 #[test]
 fn request_security_aligns_provider_higher_timeframe_vwap_bands_tuple() {
     let program = compile_program(
-        "indicator(\"request provider htf vwap tuple\")\n[basis, upper, lower] = request.security(\"NYSE:IBM\", \"5\", ta.vwap(close, false, 2.0))\nplot(basis)\nplot(upper)\nplot(lower)\n",
+        "indicator(\"request provider htf vwap tuple\")\n[basis, upper, lower] = request.security(\"NYSE:IBM\", \"5\", ta.vwap(close, time == 0, 2.0))\nplot(basis)\nplot(upper)\nplot(lower)\n",
     );
     let environment = external_symbol_environment_with_timeframe(
         "NYSE:IBM",

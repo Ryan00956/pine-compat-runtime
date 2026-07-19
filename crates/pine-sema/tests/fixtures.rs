@@ -2013,11 +2013,8 @@ fn accepts_supported_ta_vwap_na_stdev_mult_fixture() {
 }
 
 #[test]
-fn reports_unsupported_ta_vwap_series_stdev_mult_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_ta_vwap_series_stdev_mult.pine",
-        &["`ta.vwap` argument `stdev_mult` expects simple numeric-compatible, got series float"],
-    );
+fn accepts_supported_ta_vwap_series_stdev_mult_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_ta_vwap_series_stdev_mult.pine");
 }
 
 #[test]

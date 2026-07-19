@@ -116,7 +116,6 @@ fn expected_partial_builtin(name: &str) -> bool {
                 | "max_bars_back"
                 | "alert"
                 | "alertcondition"
-                | "ta.vwap"
                 | "ticker.heikinashi"
                 | "ticker.inherit"
                 | "ticker.kagi"
