@@ -271,7 +271,7 @@ fn collect_runtime_legacy_sources(dir: &Path, output: &mut BTreeSet<String>) {
 #[test]
 fn release_manifest_is_complete_versioned_and_source_licensed() {
     let fixtures = release_fixtures();
-    assert_eq!(fixtures.len(), 15);
+    assert_eq!(fixtures.len(), 18);
     let ids = fixtures.iter().map(|row| &row.id).collect::<BTreeSet<_>>();
     assert_eq!(ids.len(), fixtures.len(), "duplicate release fixture id");
     let paths = fixtures
@@ -311,8 +311,11 @@ fn release_manifest_is_complete_versioned_and_source_licensed() {
         );
         assert_eq!(
             row.realtime_policy == "legacy_lookahead_safe",
-            row.id == "v2_security_lookahead",
-            "only the v2 historical lookahead profile may diverge in realtime"
+            matches!(
+                row.id.as_str(),
+                "v1_security_aliases" | "v2_security_lookahead"
+            ),
+            "only v1/v2 historical lookahead profiles may diverge in realtime"
         );
         assert_eq!(row.license_class, "original", "{}", row.id);
         assert!(
@@ -420,9 +423,14 @@ fn every_release_fixture_matches_batch_incremental_realtime_and_resource_gates()
                 row.id
             );
         } else {
+            let expected_confirmed = if row.id == "v1_security_aliases" {
+                pine_runtime::PineValue::Float(300.0)
+            } else {
+                pine_runtime::PineValue::Na
+            };
             assert_eq!(
                 confirmed.plots[0].values.last(),
-                Some(&pine_runtime::PineValue::Na),
+                Some(&expected_confirmed),
                 "{} realtime must not expose historical lookahead",
                 row.id
             );

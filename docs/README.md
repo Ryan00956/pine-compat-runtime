@@ -65,6 +65,12 @@ cargo run -p pine-cli -- matrix --format json
   indicator-only v1-v4 compatibility, corpus measurement, versioned lowering,
   execution phases, and release gates; legacy strategies are explicitly out of
   scope.
+- [v0.3 Indicator Compatibility Execution Plan](V0_3_INDICATOR_COMPATIBILITY_EXECUTION_PLAN.md):
+  post-v0.2.0 authorized-corpus expansion, failure-cluster prioritization, and
+  indicator-only v0.3 release gates.
+- [v0.3 Legacy Corpus R2 Readiness Baseline](V0_3_LEGACY_CORPUS_R2_BASELINE.md):
+  private authorized-corpus intake, corpus-selected syntax measurements,
+  failure ranking, and the next indicator-only decision boundary.
 - [Legacy Indicator Phase 0 Baseline](LEGACY_INDICATOR_PHASE0_BASELINE.md):
   reproducible seed-corpus composition, stage rates, input availability, and
   ranked legacy failure clusters before compiler changes.

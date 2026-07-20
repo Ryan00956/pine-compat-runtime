@@ -1859,6 +1859,38 @@ fn desugars_compound_assignments_to_reassignment_expressions() {
 }
 
 #[test]
+fn parses_legacy_comma_separated_statements() {
+    let parsed = parse("first = .10, second = 3., plot(first + second)\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    assert_eq!(parsed.program.statements.len(), 3);
+    assert!(matches!(
+        parsed.program.statements[0].kind,
+        StmtKind::Decl { .. }
+    ));
+    assert!(matches!(
+        parsed.program.statements[1].kind,
+        StmtKind::Decl { .. }
+    ));
+    assert!(matches!(
+        parsed.program.statements[2].kind,
+        StmtKind::Expr(_)
+    ));
+}
+
+#[test]
+fn rejects_comma_separated_statements_in_modern_versions() {
+    let parsed = parse("//@version=6\nfirst = 1, second = 2\n");
+
+    assert!(
+        parsed
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR")
+    );
+}
+
+#[test]
 fn recovers_after_bad_declaration() {
     let parsed = parse("x =\ny = close\n");
 
@@ -1908,6 +1940,17 @@ fn parses_if_statement() {
     };
     assert_eq!(then_branch.len(), 1);
     assert_eq!(else_branch.len(), 1);
+}
+
+#[test]
+fn parses_block_with_leading_comment_and_blank_line() {
+    let parsed = parse("if close > open\n    // explain branch\n\n    plot(close)\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::If { then_branch, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected if statement");
+    };
+    assert_eq!(then_branch.len(), 1);
 }
 
 #[test]

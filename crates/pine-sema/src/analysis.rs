@@ -116,6 +116,7 @@ fn analyze_validated_modules(
         bindings: HashMap::new(),
         lower_symbol_overrides: Vec::new(),
         lower_reassigned_symbols: HashSet::new(),
+        request_reassigned_names: HashSet::new(),
         functions: module_validation.imported_functions,
         methods: module_validation.imported_methods,
         imported_user_types: module_validation.imported_user_types,

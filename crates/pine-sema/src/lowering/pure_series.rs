@@ -669,7 +669,7 @@ fn pure_expr_series_key_with_params(
             )?
         )),
         ExprKind::Call { callee, args } => {
-            let name = expr_name(callee)?;
+            let source_name = expr_name(callee)?;
             if allow_udf_calls
                 && let Some(method_key) = pure_postfix_user_type_call_result_method_series_key_inner(
                     analyzer, callee, args, param_keys, udf_stack,
@@ -679,22 +679,34 @@ fn pure_expr_series_key_with_params(
             }
             if allow_udf_calls
                 && matches!(callee.kind, ExprKind::Identifier(_))
-                && analyzer.functions.contains_key(&name)
+                && analyzer.functions.contains_key(&source_name)
             {
                 return pure_udf_call_series_key_inner(
-                    analyzer, &name, args, param_keys, udf_stack,
+                    analyzer,
+                    &source_name,
+                    args,
+                    param_keys,
+                    udf_stack,
                 );
             }
             if allow_udf_calls
                 && let Some(method_key) = pure_alias_qualified_user_method_call_series_key_inner(
-                    analyzer, &name, args, param_keys, udf_stack,
+                    analyzer,
+                    &source_name,
+                    args,
+                    param_keys,
+                    udf_stack,
                 )
             {
                 return Some(method_key);
             }
             if allow_udf_calls
                 && let Some(method_key) = pure_local_qualified_user_method_call_series_key_inner(
-                    analyzer, &name, args, param_keys, udf_stack,
+                    analyzer,
+                    &source_name,
+                    args,
+                    param_keys,
+                    udf_stack,
                 )
             {
                 return Some(method_key);
@@ -713,6 +725,10 @@ fn pure_expr_series_key_with_params(
             {
                 return Some(method_key);
             }
+            let name = analyzer
+                .legacy
+                .canonical_call_name(analyzer.current_source_context_id(), callee.span)
+                .map_or(source_name, str::to_owned);
             let is_pure_numeric_cast = matches!(name.as_str(), "int" | "float");
             let is_pure_fixed_builtin = super::pure_fixed_builtin_call_name(&name);
             if !super::pure_math_call_name(&name) && !is_pure_numeric_cast && !is_pure_fixed_builtin

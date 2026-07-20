@@ -131,6 +131,7 @@ impl<'a> Lexer<'a> {
                     self.line_start = true;
                 }
                 b'0'..=b'9' => self.number(),
+                b'.' if self.peek_next().is_some_and(|next| next.is_ascii_digit()) => self.number(),
                 b'a'..=b'z' | b'A'..=b'Z' | b'_' => self.identifier_or_keyword(),
                 b'"' | b'\'' if self.starts_with_repeated(byte, 3) => {
                     self.multiline_string(byte);
@@ -250,19 +251,17 @@ impl<'a> Lexer<'a> {
 
     fn number(&mut self) {
         let start = self.pos;
-        self.consume_while(|byte| byte.is_ascii_digit());
-
-        let mut is_float = false;
-        if self.peek_byte() == Some(b'.')
-            && self
-                .text
-                .as_bytes()
-                .get(self.pos + 1)
-                .is_some_and(u8::is_ascii_digit)
-        {
-            is_float = true;
+        let mut is_float = self.peek_byte() == Some(b'.');
+        if is_float {
             self.pos += 1;
             self.consume_while(|byte| byte.is_ascii_digit());
+        } else {
+            self.consume_while(|byte| byte.is_ascii_digit());
+            if self.peek_byte() == Some(b'.') && self.dot_terminates_float() {
+                is_float = true;
+                self.pos += 1;
+                self.consume_while(|byte| byte.is_ascii_digit());
+            }
         }
         if self.starts_valid_exponent() {
             is_float = true;
@@ -316,6 +315,33 @@ impl<'a> Lexer<'a> {
             span: Span::new(start, self.pos),
         });
         self.line_start = false;
+    }
+
+    fn dot_terminates_float(&self) -> bool {
+        let Some(next) = self.text.as_bytes().get(self.pos + 1).copied() else {
+            return true;
+        };
+        next.is_ascii_digit()
+            || matches!(
+                next,
+                b' ' | b'\t'
+                    | b'\r'
+                    | b'\n'
+                    | b','
+                    | b')'
+                    | b']'
+                    | b'+'
+                    | b'-'
+                    | b'*'
+                    | b'/'
+                    | b'%'
+                    | b'='
+                    | b'!'
+                    | b'>'
+                    | b'<'
+                    | b'?'
+                    | b':'
+            )
     }
 
     fn starts_valid_exponent(&self) -> bool {
@@ -1005,6 +1031,32 @@ mod tests {
                 TokenKind::Identifier("c".to_owned()),
                 TokenKind::Eq,
                 TokenKind::Float(1E+6),
+                TokenKind::Newline,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn lexes_legacy_leading_and_trailing_decimal_literals() {
+        assert_eq!(
+            kinds("a = .10\nb = 3.\nc = 1.method()\n"),
+            vec![
+                TokenKind::Identifier("a".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Float(0.10),
+                TokenKind::Newline,
+                TokenKind::Identifier("b".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Float(3.0),
+                TokenKind::Newline,
+                TokenKind::Identifier("c".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Int(1),
+                TokenKind::Dot,
+                TokenKind::Identifier("method".to_owned()),
+                TokenKind::LParen,
+                TokenKind::RParen,
                 TokenKind::Newline,
                 TokenKind::Eof,
             ]

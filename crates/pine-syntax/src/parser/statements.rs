@@ -642,6 +642,9 @@ impl Parser {
     }
 
     pub(super) fn parse_indented_block(&mut self) -> Option<Vec<Stmt>> {
+        // Comment-only and blank physical lines produce newlines but no layout
+        // tokens. Pine permits them before the first statement in a block.
+        self.skip_newlines();
         self.expect(TokenKind::Indent, "expected indented block")?;
         let mut statements = Vec::new();
 
@@ -660,6 +663,7 @@ impl Parser {
                 Some(statement) => statements.push(statement),
                 None => self.recover_stmt(),
             }
+            self.skip_legacy_statement_commas();
             self.skip_newlines();
         }
 

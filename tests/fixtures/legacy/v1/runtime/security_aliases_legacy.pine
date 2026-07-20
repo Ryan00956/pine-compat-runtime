@@ -1,0 +1,7 @@
+study("Legacy security aliases")
+requestedSymbol = "NYSE:IBM"
+requestedResolution = input("5", type=resolution)
+length = input(2)
+basis = close * 2
+average = sma(basis, length)
+plot(security(requestedSymbol, requestedResolution, average))

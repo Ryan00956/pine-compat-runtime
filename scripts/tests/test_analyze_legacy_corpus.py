@@ -108,6 +108,82 @@ class AnalyzeLegacyCorpusTests(unittest.TestCase):
             ),
             "version_policy",
         )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "cross"),
+            "ta_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "round"),
+            "math_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "stdev"),
+            "ta_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "sqrt"),
+            "math_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "pivothigh"),
+            "ta_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "atr"),
+            "ta_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "floor"),
+            "math_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "sum"),
+            "math_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "barssince"),
+            "ta_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "macd"),
+            "ta_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "log10"),
+            "math_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "heikinashi"),
+            "ticker_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "tostring"),
+            "string_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "cci"),
+            "ta_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_SYMBOL", "obv"),
+            "ta_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_SYMBOL", "tr"),
+            "ta_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "ceil"),
+            "math_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "pow"),
+            "math_alias",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.feature_category("E_UNKNOWN_FUNCTION", "vwap"),
+            "ta_alias",
+        )
 
     def test_report_is_deterministic_and_omits_source_text_and_paths(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -382,6 +458,85 @@ class AnalyzeLegacyCorpusTests(unittest.TestCase):
             self.assertEqual(
                 specs,
                 [f"A:D={root / 'a.csv'}", f"Z:D={root / 'z.csv'}"],
+            )
+
+    def test_stable_baseline_thresholds_use_the_full_eligible_denominator(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "bars.csv").write_text(
+                "time,open,high,low,close,volume\n0,1,1,1,1,1\n",
+                encoding="utf-8",
+            )
+            manifest_rows = []
+            for index in range(50):
+                source_path = f"v4-{index:03}.pine"
+                (root / source_path).write_text(
+                    '//@version=4\nstudy("baseline")\nplot(close)\n',
+                    encoding="utf-8",
+                )
+                manifest_rows.append(row(f"v4-{index:03}", source_path))
+
+            manifest = write_manifest(root, manifest_rows)
+            report = analyze_legacy_corpus.build_report(
+                analyze_legacy_corpus.parse_manifest(manifest),
+                root=root,
+                manifest_path=manifest,
+                pine_compat=root / "pine-compat",
+                build_revision="test-revision",
+                command_runner=FakeRunner(),
+            )
+
+            self.assertEqual(report["schemaVersion"], 2)
+            profile = report["summary"]["versions"]["4"]
+            self.assertEqual(profile["historicalRun"]["eligibleSuccessRate"], 1.0)
+            self.assertTrue(profile["stableBaseline"]["thresholdsMet"])
+            self.assertEqual(
+                profile["stableBaseline"]["eligibleScripts"],
+                {"actual": 50, "required": 50, "remaining": 0, "met": True},
+            )
+            self.assertTrue(
+                profile["stableBaseline"]["fullExecutionAuditStillRequired"]
+            )
+
+    def test_two_percent_unknown_cluster_requires_profile_disposition(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "bars.csv").write_text(
+                "time,open,high,low,close,volume\n0,1,1,1,1,1\n",
+                encoding="utf-8",
+            )
+            manifest_rows = []
+            for index in range(50):
+                source_path = f"v4-{index:03}.pine"
+                body = "legacy_failure" if index == 0 else "plot(close)"
+                (root / source_path).write_text(
+                    f'//@version=4\nstudy("baseline")\n{body}\n',
+                    encoding="utf-8",
+                )
+                manifest_rows.append(row(f"v4-{index:03}", source_path))
+
+            manifest = write_manifest(root, manifest_rows)
+            report = analyze_legacy_corpus.build_report(
+                analyze_legacy_corpus.parse_manifest(manifest),
+                root=root,
+                manifest_path=manifest,
+                pine_compat=root / "pine-compat",
+                build_revision="test-revision",
+                command_runner=FakeRunner(),
+            )
+
+            cluster = report["summary"]["topFailureClusters"][0]
+            self.assertEqual(cluster["affectedScripts"], 1)
+            self.assertEqual(cluster["affectedScriptsByVersion"], {"4": 1})
+            self.assertEqual(cluster["eligibleShareByVersion"], {"4": 0.02})
+            self.assertTrue(cluster["requiresDisposition"])
+
+            baseline = report["summary"]["versions"]["4"]["stableBaseline"]
+            self.assertFalse(baseline["thresholdsMet"])
+            self.assertEqual(baseline["unknownClustersRequiringDisposition"], 1)
+            self.assertEqual(
+                baseline["blockingReasons"],
+                ["unknown_failure_cluster_requires_disposition"],
             )
 
 

@@ -54,6 +54,7 @@ pub(crate) struct Analyzer {
     pub(crate) bindings: HashMap<BindingKey, SymbolInfo>,
     pub(crate) lower_symbol_overrides: Vec<HashMap<SymbolId, SymbolInfo>>,
     pub(crate) lower_reassigned_symbols: HashSet<SymbolId>,
+    pub(crate) request_reassigned_names: HashSet<String>,
     pub(crate) functions: HashMap<String, FunctionInfo>,
     pub(crate) methods: HashMap<(String, String), MethodInfo>,
     pub(crate) imported_user_types: HashMap<String, ImportedUserTypeInfo>,

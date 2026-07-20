@@ -15,9 +15,15 @@ from pathlib import Path
 from typing import Callable, Iterable, Mapping, Sequence
 
 
-SCHEMA_VERSION = 1
-TOOL_VERSION = 1
+SCHEMA_VERSION = 2
+TOOL_VERSION = 2
 ROOT = Path(__file__).resolve().parents[1]
+
+STABLE_MIN_ELIGIBLE_SCRIPTS = 50
+STABLE_MIN_PARSE_RATE = 0.95
+STABLE_MIN_ANALYZE_LOWER_RATE = 0.85
+STABLE_MIN_HISTORICAL_RUN_RATE = 0.80
+FAILURE_CLUSTER_DISPOSITION_SHARE = 0.02
 
 REQUIRED_COLUMNS = (
     "id",
@@ -66,33 +72,65 @@ DECLARATION_RE = re.compile(r"(?m)^\s*(?P<mode>study|indicator|strategy)\s*\(")
 
 KNOWN_LEGACY_FEATURES = {
     "abs",
+    "atr",
+    "avg",
+    "barssince",
     "bb",
     "blue",
+    "cci",
+    "ceil",
     "change",
     "color",
+    "cross",
     "crossover",
+    "crossunder",
     "dotted",
     "ema",
+    "floor",
     "histogram",
     "highest",
+    "heikinashi",
     "iff",
     "integer",
     "interval",
     "isintraday",
     "lowest",
+    "linreg",
+    "log",
+    "log10",
     "max",
+    "macd",
+    "mfi",
     "min",
+    "mom",
     "n",
+    "obv",
     "offset",
     "period",
+    "pivothigh",
+    "pivotlow",
+    "pow",
     "red",
+    "rma",
+    "round",
     "rsi",
     "security",
+    "sign",
     "sma",
+    "sqrt",
+    "stdev",
+    "stoch",
     "study",
+    "sum",
     "ticker",
     "tickerid",
+    "tostring",
+    "tr",
+    "valuewhen",
+    "vwap",
     "transp",
+    "vwma",
+    "wma",
 }
 
 SAFE_CALL_ARGUMENTS = {
@@ -102,14 +140,23 @@ SAFE_CALL_ARGUMENTS = {
 
 CANONICAL_CANDIDATES = {
     "abs": "math.abs",
+    "atr": "ta.atr",
+    "avg": "math.avg",
+    "barssince": "ta.barssince",
     "bb": "ta.bb",
     "blue": "color.blue",
+    "cci": "ta.cci",
+    "ceil": "math.ceil",
     "change": "ta.change",
     "color": "color.new",
+    "cross": "ta.cross",
     "crossover": "ta.crossover",
+    "crossunder": "ta.crossunder",
     "dotted": "hline.style_dotted",
     "ema": "ta.ema",
+    "floor": "math.floor",
     "highest": "ta.highest",
+    "heikinashi": "ticker.heikinashi",
     "histogram": "plot.style_histogram",
     "iff": "conditional_expression",
     "input.minval": "input.int.minval",
@@ -118,20 +165,43 @@ CANONICAL_CANDIDATES = {
     "interval": "timeframe.multiplier",
     "isintraday": "timeframe.isintraday",
     "lowest": "ta.lowest",
+    "linreg": "ta.linreg",
+    "log": "math.log",
+    "log10": "math.log10",
     "max": "math.max",
+    "macd": "ta.macd",
+    "mfi": "ta.mfi",
     "min": "math.min",
+    "mom": "ta.mom",
     "n": "bar_index",
+    "obv": "ta.obv",
     "offset": "history_reference",
     "period": "timeframe.period",
+    "pivothigh": "ta.pivothigh",
+    "pivotlow": "ta.pivotlow",
     "plot.style": "plot.style_*",
     "plot.transp": "color.new",
+    "pow": "math.pow",
     "red": "color.red",
+    "rma": "ta.rma",
+    "round": "math.round",
     "rsi": "ta.rsi",
     "security": "request.security",
+    "sign": "math.sign",
     "sma": "ta.sma",
+    "sqrt": "math.sqrt",
+    "stdev": "ta.stdev",
+    "stoch": "ta.stoch",
     "study": "indicator",
+    "sum": "math.sum",
     "ticker": "syminfo.ticker",
     "tickerid": "syminfo.tickerid",
+    "tostring": "str.tostring",
+    "tr": "ta.tr",
+    "valuewhen": "ta.valuewhen",
+    "vwap": "ta.vwap",
+    "vwma": "ta.vwma",
+    "wma": "ta.wma",
 }
 
 SUBJECT_PATTERNS = (
@@ -318,17 +388,55 @@ def feature_category(code: str, subject: str | None) -> str:
         return "request_alias"
     if subject in {
         "bb",
+        "atr",
+        "barssince",
         "change",
+        "cci",
+        "cross",
         "crossover",
+        "crossunder",
         "ema",
         "highest",
         "lowest",
+        "linreg",
+        "macd",
+        "mfi",
+        "mom",
+        "obv",
+        "pivothigh",
+        "pivotlow",
+        "rma",
         "rsi",
         "sma",
+        "stdev",
+        "stoch",
+        "valuewhen",
+        "tr",
+        "vwap",
+        "vwma",
+        "wma",
     }:
         return "ta_alias"
-    if subject in {"abs", "max", "min"}:
+    if subject in {
+        "abs",
+        "avg",
+        "ceil",
+        "floor",
+        "log",
+        "log10",
+        "max",
+        "min",
+        "pow",
+        "round",
+        "sign",
+        "sqrt",
+        "sum",
+    }:
         return "math_alias"
+    if subject == "heikinashi":
+        return "ticker_alias"
+    if subject == "tostring":
+        return "string_alias"
     if subject in {"blue", "color", "red"}:
         return "color_compatibility"
     if subject in {"dotted", "histogram", "plot.style", "plot.transp"}:
@@ -656,6 +764,7 @@ def _metric(items: Iterable[Mapping[str, object]], stage_name: str) -> dict[str,
     )
     attempted = statuses[STAGE_PASSED] + statuses[STAGE_FAILED]
     rate = statuses[STAGE_PASSED] / attempted if attempted else None
+    eligible_rate = statuses[STAGE_PASSED] / len(selected) if selected else None
     output: dict[str, object] = {
         "passed": statuses[STAGE_PASSED],
         "failed": statuses[STAGE_FAILED],
@@ -664,8 +773,120 @@ def _metric(items: Iterable[Mapping[str, object]], stage_name: str) -> dict[str,
         "excluded": statuses[STAGE_EXCLUDED],
         "attempted": attempted,
         "successRate": rate,
+        "eligibleSuccessRate": eligible_rate,
     }
     return output
+
+
+def _reference_output_gate(items: Sequence[Mapping[str, object]]) -> dict[str, object]:
+    supplied = 0
+    missing = 0
+    compared_passed = 0
+    compared_failed = 0
+    compared_not_run = 0
+    for item in items:
+        availability = str(item["inputAvailability"]["referenceOutput"])  # type: ignore[index]
+        comparison = str(item["stages"]["outputCompared"]["status"])  # type: ignore[index]
+        if availability == STAGE_PASSED:
+            supplied += 1
+            if comparison == STAGE_PASSED:
+                compared_passed += 1
+            elif comparison == STAGE_FAILED:
+                compared_failed += 1
+            else:
+                compared_not_run += 1
+        elif availability == STAGE_MISSING_INPUT:
+            missing += 1
+
+    return {
+        "supplied": supplied,
+        "passed": compared_passed,
+        "failed": compared_failed,
+        "notRun": compared_not_run,
+        "missingInput": missing,
+        "availableOutputsPass": (
+            missing == 0
+            and compared_failed == 0
+            and compared_not_run == 0
+            and compared_passed == supplied
+        ),
+    }
+
+
+def _rate_threshold(
+    metric: Mapping[str, object], required_rate: float
+) -> dict[str, object]:
+    actual_rate = metric["eligibleSuccessRate"]
+    return {
+        "actual": actual_rate,
+        "required": required_rate,
+        "met": actual_rate is not None and float(actual_rate) >= required_rate,
+    }
+
+
+def _stable_baseline_gate(
+    items: Sequence[Mapping[str, object]],
+    version: int,
+    clusters: Sequence[Mapping[str, object]],
+) -> dict[str, object]:
+    parse_gate = _rate_threshold(
+        _metric(items, "parse"), STABLE_MIN_PARSE_RATE
+    )
+    analyze_metric = _metric(items, "analyze")
+    lower_metric = _metric(items, "lower")
+    analyze_lower_rate = min(
+        float(analyze_metric["eligibleSuccessRate"] or 0.0),
+        float(lower_metric["eligibleSuccessRate"] or 0.0),
+    )
+    analyze_lower_gate = {
+        "actual": analyze_lower_rate if items else None,
+        "required": STABLE_MIN_ANALYZE_LOWER_RATE,
+        "met": bool(items) and analyze_lower_rate >= STABLE_MIN_ANALYZE_LOWER_RATE,
+    }
+    historical_gate = _rate_threshold(
+        _metric(items, "historicalRun"), STABLE_MIN_HISTORICAL_RUN_RATE
+    )
+    reference_gate = _reference_output_gate(items)
+    unknown_clusters = sum(
+        1
+        for cluster in clusters
+        if str(cluster["code"])
+        in {"E_UNKNOWN_FUNCTION", "E_UNKNOWN_SYMBOL", "E_UNKNOWN_COLOR"}
+        and float(cluster.get("eligibleShareByVersion", {}).get(str(version), 0.0))
+        >= FAILURE_CLUSTER_DISPOSITION_SHARE
+    )
+    corpus_gate = {
+        "actual": len(items),
+        "required": STABLE_MIN_ELIGIBLE_SCRIPTS,
+        "remaining": max(0, STABLE_MIN_ELIGIBLE_SCRIPTS - len(items)),
+        "met": len(items) >= STABLE_MIN_ELIGIBLE_SCRIPTS,
+    }
+
+    blocking_reasons: list[str] = []
+    if not corpus_gate["met"]:
+        blocking_reasons.append("insufficient_eligible_scripts")
+    if not parse_gate["met"]:
+        blocking_reasons.append("parse_rate_below_threshold")
+    if not analyze_lower_gate["met"]:
+        blocking_reasons.append("analyze_lower_rate_below_threshold")
+    if not historical_gate["met"]:
+        blocking_reasons.append("historical_run_rate_below_threshold")
+    if not reference_gate["availableOutputsPass"]:
+        blocking_reasons.append("available_reference_output_failed_or_not_run")
+    if unknown_clusters:
+        blocking_reasons.append("unknown_failure_cluster_requires_disposition")
+
+    return {
+        "thresholdsMet": not blocking_reasons,
+        "blockingReasons": blocking_reasons,
+        "eligibleScripts": corpus_gate,
+        "parseSuccessRate": parse_gate,
+        "analyzeLowerSuccessRate": analyze_lower_gate,
+        "historicalRunSuccessRate": historical_gate,
+        "referenceOutputs": reference_gate,
+        "unknownClustersRequiringDisposition": unknown_clusters,
+        "fullExecutionAuditStillRequired": True,
+    }
 
 
 def _summary(items: list[dict[str, object]]) -> dict[str, object]:
@@ -691,22 +912,15 @@ def _summary(items: list[dict[str, object]]) -> dict[str, object]:
     version_items: dict[int, list[dict[str, object]]] = defaultdict(list)
     for item in eligible:
         version_items[int(item["expectedVersion"])].append(item)
-    versions = {
-        str(version): {
-            "eligible": len(selected),
-            "parse": _metric(selected, "parse"),
-            "analyze": _metric(selected, "analyze"),
-            "historicalRun": _metric(selected, "historicalRun"),
-        }
-        for version, selected in sorted(version_items.items())
-    }
-
     unknown_count = 0
     unsupported_count = 0
     input_availability_counts: dict[str, Counter[str]] = defaultdict(Counter)
     cluster_counts: Counter[
         tuple[str, str, str, str | None, str | None, int]
     ] = Counter()
+    cluster_items: dict[
+        tuple[str, str, str, str | None, str | None, int], set[str]
+    ] = defaultdict(set)
     for item in eligible:
         version = int(item["expectedVersion"])
         for input_name, status in item["inputAvailability"].items():  # type: ignore[union-attr]
@@ -717,14 +931,16 @@ def _summary(items: list[dict[str, object]]) -> dict[str, object]:
                 unknown_count += 1
             if code == "E_UNSUPPORTED_FEATURE":
                 unsupported_count += 1
-            cluster_counts[(
+            cluster_key = (
                 str(diagnostic["stage"]),
                 code,
                 str(diagnostic["featureCategory"]),
                 diagnostic.get("subject"),
                 diagnostic.get("canonicalCandidate"),
                 version,
-            )] += 1
+            )
+            cluster_counts[cluster_key] += 1
+            cluster_items[cluster_key].add(str(item["id"]))
 
     merged_clusters: dict[
         tuple[str, str, str, str | None, str | None], dict[str, object]
@@ -746,10 +962,17 @@ def _summary(items: list[dict[str, object]]) -> dict[str, object]:
                 "featureCategory": category,
                 "count": 0,
                 "versions": set(),
+                "affectedItems": set(),
+                "affectedItemsByVersion": defaultdict(set),
             },
         )
         cluster["count"] = int(cluster["count"]) + count
         cluster["versions"].add(version)  # type: ignore[union-attr]
+        affected = cluster_items[
+            (stage_name, code, category, subject, canonical_candidate, version)
+        ]
+        cluster["affectedItems"].update(affected)  # type: ignore[union-attr]
+        cluster["affectedItemsByVersion"][version].update(affected)  # type: ignore[index,union-attr]
         if subject is not None:
             cluster["subject"] = subject
         if canonical_candidate is not None:
@@ -758,9 +981,28 @@ def _summary(items: list[dict[str, object]]) -> dict[str, object]:
     top_clusters = []
     for cluster in merged_clusters.values():
         cluster["versions"] = sorted(cluster["versions"])  # type: ignore[arg-type]
+        affected_items = cluster.pop("affectedItems")
+        affected_by_version = cluster.pop("affectedItemsByVersion")
+        cluster["affectedScripts"] = len(affected_items)
+        cluster["eligibleShare"] = (
+            len(affected_items) / len(eligible) if eligible else 0.0
+        )
+        cluster["affectedScriptsByVersion"] = {
+            str(version): len(affected_by_version[version])
+            for version in sorted(affected_by_version)
+        }
+        cluster["eligibleShareByVersion"] = {
+            str(version): len(affected_by_version[version]) / len(version_items[version])
+            for version in sorted(affected_by_version)
+        }
+        cluster["requiresDisposition"] = any(
+            share >= FAILURE_CLUSTER_DISPOSITION_SHARE
+            for share in cluster["eligibleShareByVersion"].values()  # type: ignore[union-attr]
+        )
         top_clusters.append(cluster)
     top_clusters.sort(
         key=lambda cluster: (
+            -int(cluster["affectedScripts"]),
             -int(cluster["count"]),
             str(cluster["stage"]),
             str(cluster["code"]),
@@ -768,6 +1010,19 @@ def _summary(items: list[dict[str, object]]) -> dict[str, object]:
             str(cluster.get("subject", "")),
         )
     )
+
+    versions = {
+        str(version): {
+            "eligible": len(selected),
+            "parse": _metric(selected, "parse"),
+            "analyze": _metric(selected, "analyze"),
+            "historicalRun": _metric(selected, "historicalRun"),
+            "stableBaseline": _stable_baseline_gate(
+                selected, version, top_clusters
+            ),
+        }
+        for version, selected in sorted(version_items.items())
+    }
 
     return {
         "corpusItems": len(items),
@@ -781,6 +1036,14 @@ def _summary(items: list[dict[str, object]]) -> dict[str, object]:
         "versions": versions,
         "unknownDiagnosticCount": unknown_count,
         "knownUnsupportedDiagnosticCount": unsupported_count,
+        "stableBaselinePolicy": {
+            "minimumEligibleScripts": STABLE_MIN_ELIGIBLE_SCRIPTS,
+            "minimumParseSuccessRate": STABLE_MIN_PARSE_RATE,
+            "minimumAnalyzeLowerSuccessRate": STABLE_MIN_ANALYZE_LOWER_RATE,
+            "minimumHistoricalRunSuccessRate": STABLE_MIN_HISTORICAL_RUN_RATE,
+            "failureClusterDispositionShare": FAILURE_CLUSTER_DISPOSITION_SHARE,
+            "fullExecutionAuditRequiredAfterThresholds": True,
+        },
         "inputAvailability": {
             name: {
                 status: input_availability_counts[name][status]

@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- Opened the post-`v0.2.0` indicator-only `v0.3.0` execution track around an
+  expanded authorized legacy corpus rather than unranked feature additions.
+  Corpus report schema 2 now measures stage success over the complete eligible
+  denominator, ranks failures by affected-script prevalence, flags per-profile
+  clusters at the 2% disposition threshold, and reports progress against the
+  provisional 50-script, 95% parse, 85% analyze/lower, and 80% historical-run
+  baseline gates. Passing the automated baseline still requires the separate
+  incremental, realtime, provider, resource, cache, host-parity, and release
+  audits before any maturity promotion.
+- Added a safe private-corpus importer and measured a 104-item user-authorized
+  mixed-version intake without tracking source text or original filenames. The
+  44 eligible legacy indicators selected compact comma-separated statements,
+  leading/trailing decimal literals, and leading comment/blank block lines as
+  the first syntax slice. Parse success rose from 25/44 to 42/44, including
+  20/20 v4 scripts, while analyze/lower and historical execution remain 2/44;
+  this is a parser improvement, not a broad compatibility claim. Comma-separated
+  statements remain rejected in v5/v6, and strategies remain out of scope.
+
 ## 0.2.0 - 2026-07-20
 
 - Hardened the legacy front-end after the release-candidate audit. Legacy
@@ -100,10 +118,73 @@
   `offset` lowers to native guarded history, and `rsi(x, y)` selects the length
   or removed two-series formula overload by analyzed type. Versioned session
   parsing preserves the v4 weekday default without rewriting input strings,
-  v1-v5 logical operands remain strict while v6 remains lazy, and the exact v4
+  v1-v5 logical operands remain strict while v6 remains lazy, and the exact
   aliases `change`, `highest`, `lowest`, `max`, and `min` complete the affected
-  original fixtures. Historical, incremental, realtime, CLI, Python, and WASM
-  tests share the same compatibility report and output evidence.
+  original fixtures across their current v1-v4 range. Historical, incremental,
+  realtime, CLI, Python, and WASM tests share the same compatibility report and
+  output evidence.
+- Expanded exact indicator-call compatibility for Pine v1-v4. Unqualified
+  `cross`, `round`, `rma`, and `wma` now lower to their existing canonical
+  implementations, while `highest` and `lowest` extend through the same
+  historical range. The pre-v4 `cross` plot-style constant remains independent
+  from the call alias, user functions keep precedence, v5/v6 remain isolated,
+  and paired implicit-v1/v4 runtime fixtures verify canonical equivalence.
+- Expanded the next corpus-ranked Pine v1-v4 exact-alias group: `change`,
+  `abs`, `max`, `min`, and `crossover` now cover the full legacy range, while
+  `sqrt`, `stdev`, and `vwma` lower to their existing canonical implementations.
+  Nested pure aliases use canonical series keys, modern namespace isolation is
+  unchanged, and paired implicit-v1/v4 fixtures verify HIR and runtime parity.
+- Expanded the third corpus-ranked Pine v1-v4 exact-alias group: `pivothigh`,
+  `pivotlow`, `atr`, `avg`, `floor`, `linreg`, `stoch`, and `sum` now lower to
+  their existing canonical implementations. Default-source pivot overloads,
+  stateful callsite identity, nested pure aliases, user-function precedence,
+  modern namespace isolation, and paired implicit-v1/v4 runtime output are
+  covered without adding strategy behavior. On the unchanged 44-indicator R2
+  corpus this removes 155 unknown-function diagnostics and 83 net dependent
+  diagnostics across 17 improved scripts; whole-script execution remains 5/44
+  because independent blockers still fail closed.
+- Expanded the fourth corpus-ranked legacy-call group. Pine v1-v4
+  `barssince`, `crossunder`, `heikinashi`, `log10`, `macd`, `sign`, and
+  `valuewhen` now lower to their existing canonical implementations, while
+  Pine v4 `tostring(x, y)` uses a focused `str.tostring(value, format)`
+  signature reshape. User functions retain precedence, v5/v6 remain isolated,
+  and paired implicit-v1/v4 fixtures verify HIR and runtime equivalence. On the
+  unchanged 44-indicator R2 corpus, all 14 affected scripts improve with no
+  regressions: 176 unknown-function diagnostics and 306 dependent diagnostics
+  disappear, while whole-script execution remains 5/44 because independent
+  blockers still fail closed.
+- Expanded the fifth corpus-ranked legacy-call group. Pine v1-v4 `cci`, `ceil`,
+  `log`, `mfi`, `mom`, and `pow` now lower to their existing canonical calls;
+  `tr` supports its historical variable and function contexts, `obv` maps as a
+  series variable, and `vwap` supports its variable plus historical one-source
+  call while rejecting later multi-argument overloads. User definitions retain
+  precedence and v5/v6 remain isolated. On the unchanged R2 corpus, all 12
+  affected indicators improve with no regressions, two implicit-v1 indicators
+  become newly executable, and analysis/historical execution rises from 5/44
+  to 7/44 while 109 net diagnostics disappear.
+- Completed the bounded Pine v1-v3 indicator-output slice for `plot`,
+  `plotchar`, `plotshape`, `plotarrow`, `plotbar`, `plotcandle`, `hline`, both
+  `fill` overloads, `bgcolor`, and `barcolor`. Historical signatures retain
+  `transp` while rejecting later `display`/`fillgaps` roles; fill/background
+  default transparency, embedded alpha, visual metadata, and primitive style
+  ordinals lower to canonical runtime behavior with paired implicit-v1 output
+  fixtures and modern negative controls. On the unchanged R2 corpus, 15
+  indicators advance through output binding, seven implicit-v1 indicators
+  become newly executable, analysis/historical execution rises from 7/44 to
+  14/44, and 62 net diagnostics disappear. All 60 modern controls remain
+  identical.
+- Expanded the corpus-ranked Pine v1-v4 `security` slice to match historical
+  immutable-alias behavior. Const/input/simple symbol and resolution
+  expressions now dispatch through the existing request provider; immutable
+  top-level scalar alias graphs are recomputed on requested bars, with
+  const/input/simple dependencies captured from the outer script. Mutable or
+  persistent aliases, block-local aliases, cycles, UDF requested expressions,
+  side effects, and lower timeframes still fail closed. An implicit-v1 release
+  fixture verifies requested-context recomputation plus historical/realtime
+  lookahead separation. On the unchanged R2 corpus, the affected `security`
+  set falls from 12 scripts to 4, seven scripts newly analyze/lower, two newly
+  execute with the available inputs, and 68 net diagnostics disappear. All 60
+  modern controls remain item-identical.
 - Added faithful Pine v4 output compatibility for `plot`, marker/arrow outputs,
   OHLC bars/candles, `hline`, both `fill` overloads, `bgcolor`, and `barcolor`.
   Historical signatures now preserve primitive styles, output-specific
@@ -122,8 +203,8 @@
   against its historical signature and lowers to canonical `indicator` HIR for
   the verified single-timeframe metadata subset; `resolution`,
   `resolution_gaps`, `explicit_plot_zorder`, and legacy session defaults fail
-  closed. The v4-only `sma`, `ema`, `bb`, `crossover`, and `abs` aliases lower
-  to existing canonical implementations with original-span reports, collision
+  closed. The initial v4 `sma`, `ema`, `bb`, `crossover`, and `abs` surface
+  lowers to existing canonical implementations with original-span reports, collision
   precedence, modern negative controls, paired HIR/runtime fixtures, and
   synchronized CLI, Python, WASM, and conformance coverage.
 - Added the versioned legacy compatibility front-end: validated sorted rule

@@ -5,7 +5,7 @@ use pine_syntax::SourceFile;
 use super::*;
 
 fn compile_fixture(name: &str, source: &str) -> pine_ir::HirProgram {
-    let analysis = analyze_source(&SourceFile::new(name, source));
+    let analysis = pine_sema::analyze_source(&SourceFile::new(name, source));
     assert!(
         analysis.diagnostics.is_empty(),
         "{name}: {:?}",
@@ -212,6 +212,35 @@ fn v4_legacy_security_same_context_matches_direct_expression() {
         run_historical(&legacy, &bars).expect("legacy same-context run"),
         run_historical(&direct, &bars).expect("direct same-context run")
     );
+}
+
+#[test]
+fn implicit_v1_security_recomputes_immutable_aliases_in_requested_context() {
+    let program = compile_fixture(
+        "security_aliases_legacy.pine",
+        include_str!("../../../../tests/fixtures/legacy/v1/runtime/security_aliases_legacy.pine"),
+    );
+    let environment = legacy_security_environment(vec![
+        timed_close(0, 100.0),
+        timed_close(300_000, 200.0),
+        timed_close(600_000, 300.0),
+    ]);
+    let chart = [
+        timed_close(0, 1.0),
+        timed_close(60_000, 2.0),
+        timed_close(240_000, 3.0),
+        timed_close(300_000, 4.0),
+        timed_close(540_000, 5.0),
+        timed_close(600_000, 6.0),
+    ];
+
+    let result = run_historical_with_request_environment(&program, &chart, environment)
+        .expect("legacy security aliases should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_eq!(result.plots[0].values[2], PineValue::Na);
+    assert_values_close(&result.plots[0].values[3..], &[300.0, 300.0, 500.0]);
 }
 
 #[test]
@@ -621,6 +650,31 @@ fn v4_alias_fixture_matches_canonical_historical_output() {
 }
 
 #[test]
+fn v1_expanded_alias_fixture_matches_canonical_historical_output() {
+    let legacy = compile_fixture(
+        "aliases_legacy.pine",
+        include_str!("../../../../tests/fixtures/legacy/v1/runtime/aliases_legacy.pine"),
+    );
+    let canonical = compile_fixture(
+        "aliases_canonical.pine",
+        include_str!("../../../../tests/fixtures/legacy/v1/runtime/aliases_canonical.pine"),
+    );
+    let bars = [
+        bar_ohlc(10.2, 12.4, 9.1, 11.3),
+        bar_ohlc(11.1, 14.2, 10.3, 13.7),
+        bar_ohlc(13.8, 15.6, 11.4, 12.2),
+        bar_ohlc(12.2, 16.1, 12.0, 15.5),
+        bar_ohlc(15.5, 17.7, 13.2, 14.4),
+        bar_ohlc(14.3, 18.8, 14.1, 17.6),
+    ];
+
+    let legacy_result = run_historical(&legacy, &bars).expect("legacy v1 alias run");
+    let canonical_result = run_historical(&canonical, &bars).expect("canonical alias run");
+
+    assert_eq!(legacy_result, canonical_result);
+}
+
+#[test]
 fn v4_input_fixture_preserves_metadata_callsites_and_overrides() {
     let legacy = compile_fixture(
         "inputs_legacy.pine",
@@ -764,6 +818,35 @@ fn v4_output_fixture_matches_canonical_visual_data_and_metadata() {
         legacy_result.plot_chars[0].metadata.show_last,
         PineValue::Int(2)
     );
+}
+
+#[test]
+fn v1_output_fixture_matches_canonical_visual_data_and_metadata() {
+    let legacy = compile_fixture(
+        "v1_outputs_legacy.pine",
+        include_str!("../../../../tests/fixtures/legacy/v1/runtime/outputs_legacy.pine"),
+    );
+    let canonical = compile_fixture(
+        "v1_outputs_canonical.pine",
+        include_str!("../../../../tests/fixtures/legacy/v1/runtime/outputs_canonical.pine"),
+    );
+    let bars = [
+        bar_ohlc(10.0, 12.0, 9.0, 11.0),
+        bar_ohlc(12.0, 13.0, 9.0, 10.0),
+        bar_ohlc(10.0, 15.0, 10.0, 14.0),
+    ];
+
+    let legacy_result = run_historical(&legacy, &bars).expect("legacy v1 output run");
+    let canonical_result = run_historical(&canonical, &bars).expect("canonical v1 output run");
+    assert_eq!(legacy_result, canonical_result);
+    assert_eq!(legacy_result.plots.len(), 2);
+    assert_eq!(legacy_result.plot_chars.len(), 1);
+    assert_eq!(legacy_result.plot_shapes.len(), 1);
+    assert_eq!(legacy_result.plot_arrows.len(), 1);
+    assert_eq!(legacy_result.hlines.len(), 2);
+    assert_eq!(legacy_result.fills.len(), 3);
+    assert_eq!(legacy_result.bg_colors.len(), 2);
+    assert_eq!(legacy_result.bar_colors.len(), 1);
 }
 
 #[test]

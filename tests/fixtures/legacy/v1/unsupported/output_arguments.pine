@@ -1,0 +1,5 @@
+study("unsupported v1 output arguments")
+p1 = plot(close)
+p2 = plot(open)
+plotshape(true, display=na)
+fill(p1, p2, fillgaps=true)

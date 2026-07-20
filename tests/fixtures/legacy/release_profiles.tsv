@@ -1,4 +1,7 @@
 id	version	maturity	category	source_path	bars_profile	request_profile	realtime_policy	license_class	max_retained_values
+v1_aliases	1	experimental	runtime	tests/fixtures/legacy/v1/runtime/aliases_legacy.pine	default	none	parity	original	4096
+v1_outputs	1	experimental	runtime	tests/fixtures/legacy/v1/runtime/outputs_legacy.pine	default	none	parity	original	4096
+v1_security_aliases	1	experimental	runtime	tests/fixtures/legacy/v1/runtime/security_aliases_legacy.pine	security_chart	ibm_5	legacy_lookahead_safe	original	4096
 v1_shared	1	experimental	runtime	tests/fixtures/legacy/v1/runtime/shared_v1.pine	default	none	parity	original	4096
 v2_core	2	experimental	runtime	tests/fixtures/legacy/v2/runtime/core_legacy.pine	v2_core	none	parity	original	4096
 v2_security_lookahead	2	experimental	mtf	tests/fixtures/legacy/legacy_v2_security_lookahead.pine	legacy_chart	test_daily	legacy_lookahead_safe	original	4096

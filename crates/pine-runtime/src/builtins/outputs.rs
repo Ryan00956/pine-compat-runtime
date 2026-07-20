@@ -107,7 +107,7 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(self
             .program
             .language_version
-            .is_some_and(|version| version == 4)
+            .is_some_and(|version| (1..=4).contains(&version))
             .then_some(v4_default)
             .flatten())
     }

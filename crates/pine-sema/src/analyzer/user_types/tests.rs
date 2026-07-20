@@ -75,6 +75,7 @@ fn analyzer() -> Analyzer {
         bindings: HashMap::new(),
         lower_symbol_overrides: Vec::new(),
         lower_reassigned_symbols: HashSet::new(),
+        request_reassigned_names: HashSet::new(),
         functions: HashMap::new(),
         methods: HashMap::new(),
         imported_user_types: HashMap::new(),

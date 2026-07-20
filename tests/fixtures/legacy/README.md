@@ -27,6 +27,30 @@ cargo build -p pine-cli
 python3 scripts/analyze_legacy_corpus.py --output /tmp/legacy-corpus.json
 ```
 
+Corpus report schema 2 adds profile-level `stableBaseline` measurements and
+failure-cluster prevalence. `eligibleSuccessRate` always uses every eligible
+script in the profile as the denominator; later-stage `not_run` and
+`missing_input` rows therefore cannot inflate the promotion measurements.
+Failure clusters expose both diagnostic occurrence counts and affected-script
+shares. `requiresDisposition` becomes true at the provisional 2% per-profile
+threshold, but only qualifying unknown clusters block the automated baseline
+assessment.
+
+Passing `stableBaseline.thresholdsMet` is not a stable release claim. The
+release registry must still prove incremental, realtime, provider, resource,
+cache, and host-parity behavior.
+
+For a private or user-authorized R2 corpus, keep sources outside the repository
+and point the analyzer at an external root:
+
+```text
+python3 scripts/analyze_legacy_corpus.py \
+  --manifest /absolute/path/to/corpus-r2.tsv \
+  --root /absolute/path/to/corpus-root \
+  --build-revision corpus-r2-pre-code \
+  --output /absolute/path/to/corpus-r2-pre-code.json
+```
+
 The committed, redacted Phase 0 result is recorded in
 `docs/LEGACY_INDICATOR_PHASE0_BASELINE.md`.
 
@@ -45,6 +69,20 @@ families, primitive plot/hline styles, transparency defaults and alpha
 precedence, visual metadata, normalized colors, and historical execution.
 `v4/unsupported/output_arguments.pine` keeps later-only output arguments behind
 an analysis-time diagnostic.
+
+The corpus-ranked pre-v4 output slice adds paired `v1/runtime/outputs_*`
+fixtures for the same ten output families using the documented v3 parameter
+tables, including historical transparency defaults and context-specific style
+ordinals. `v1/unsupported/output_arguments.pine` keeps later `display` and
+`fillgaps` roles outside the v1-v3 surface.
+
+The next corpus-ranked request slice adds
+`v1/runtime/security_aliases_legacy.pine` for dynamic input resolution,
+immutable requested-series alias expansion, const/input capture, provider
+alignment, and v1 historical lookahead. The release profile verifies batch,
+incremental, realtime, provider, and resource behavior;
+`v1/unsupported/security_mutable_alias.pine` preserves the historical mutable
+variable rejection.
 
 Phase 8 adds paired `v3/runtime/core_*` fixtures for the executable v3 name,
 constant, declaration, input, output, chart-metadata, and untyped-`na` slice.

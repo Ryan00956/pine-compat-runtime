@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) scalar expressions, pure tuple literals, and selected tuple expressions, plus provider-backed same-or-higher-timeframe scalar expressions, pure tuple literals, and selected tuple expressions, are supported; optional gaps/lookahead are limited to barmerge.gaps_off and barmerge.lookahead_off, while lower-timeframe requests, provider local aliases, and side-effecting requested expressions are not implemented";
-const LEGACY_SECURITY_UNSUPPORTED_REASON: &str = "legacy security supports same-context or host-provided same-or-higher-timeframe requests whose expression is in the request.security scalar/tuple subset; lower-timeframe requests, local aliases, UDF calls, mutable captures, and side effects remain unsupported";
+const LEGACY_SECURITY_UNSUPPORTED_REASON: &str = "legacy security supports same-context or host-provided same-or-higher-timeframe requests whose expression is in the request.security scalar/tuple subset, including immutable top-level scalar aliases and const/input/simple captures; lower-timeframe requests, block-local aliases, UDF calls, mutable captures, and side effects remain unsupported";
 const REQUEST_SECURITY_LOWER_TF_UNSUPPORTED_REASON: &str = "array-returning lower-timeframe request semantics and host output shape for request.security_lower_tf are not designed in the supported request runtime";
 
 impl Analyzer {
@@ -99,9 +99,19 @@ impl Analyzer {
         let same_context_symbol = args
             .first()
             .is_some_and(|arg| self.request_symbol_is_chart(&arg.value, legacy));
-        let provider_symbol = args.first().is_some_and(|arg| {
+        let literal_provider_symbol = args.first().is_some_and(|arg| {
             matches!(&arg.value.kind, ExprKind::Literal(Literal::String(value)) if !value.trim().is_empty())
         });
+        let provider_symbol = literal_provider_symbol
+            || (legacy
+                && arg_types
+                    .first()
+                    .copied()
+                    .flatten()
+                    .is_some_and(|pine_type| {
+                        pine_type.kind == ValueKind::String
+                            && qualifier_at_most(pine_type.qualifier, Qualifier::Simple)
+                    }));
         if !same_context_symbol && !provider_symbol {
             unsupported = true;
         }
@@ -111,7 +121,17 @@ impl Analyzer {
         let literal_timeframe = args.get(1).is_some_and(|arg| {
             matches!(&arg.value.kind, ExprKind::Literal(Literal::String(value)) if !value.trim().is_empty())
         });
-        if !same_chart_timeframe && !literal_timeframe {
+        let provider_timeframe = literal_timeframe
+            || (legacy
+                && arg_types
+                    .get(1)
+                    .copied()
+                    .flatten()
+                    .is_some_and(|pine_type| {
+                        pine_type.kind == ValueKind::String
+                            && qualifier_at_most(pine_type.qualifier, Qualifier::Simple)
+                    }));
+        if !same_chart_timeframe && !provider_timeframe {
             unsupported = true;
         }
 
@@ -130,9 +150,17 @@ impl Analyzer {
             if same_context_request {
                 self.request_expression_is_same_context_value(&arg.value)
             } else if expression_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Tuple) {
-                self.request_expression_is_provider_tuple_value(&arg.value)
-            } else if provider_symbol || literal_timeframe {
-                self.request_expression_is_provider_scalar(&arg.value)
+                if legacy {
+                    self.request_expression_is_legacy_provider_tuple_value(&arg.value)
+                } else {
+                    self.request_expression_is_provider_tuple_value(&arg.value)
+                }
+            } else if provider_symbol || provider_timeframe {
+                if legacy {
+                    self.request_expression_is_legacy_provider_scalar(&arg.value)
+                } else {
+                    self.request_expression_is_provider_scalar(&arg.value)
+                }
             } else {
                 false
             }
@@ -294,6 +322,130 @@ impl Analyzer {
                     })
             }
             _ => false,
+        }
+    }
+
+    fn request_expression_is_legacy_provider_tuple_value(&self, expr: &Expr) -> bool {
+        match &expr.kind {
+            ExprKind::Tuple(items) => items
+                .iter()
+                .all(|item| self.request_expression_is_legacy_provider_scalar(item)),
+            ExprKind::Call { callee, args } => {
+                let Some(name) = self.request_expression_call_name(callee) else {
+                    return false;
+                };
+                request_provider_tuple_call_is_supported(&name)
+                    && args.iter().all(|arg| {
+                        arg.name.is_none()
+                            && self.request_expression_is_legacy_provider_scalar(&arg.value)
+                    })
+            }
+            _ => false,
+        }
+    }
+
+    fn request_expression_is_legacy_provider_scalar(&self, expr: &Expr) -> bool {
+        self.request_expression_is_legacy_provider_scalar_inner(
+            expr,
+            &mut std::collections::HashSet::new(),
+        )
+    }
+
+    fn request_expression_is_legacy_provider_scalar_inner(
+        &self,
+        expr: &Expr,
+        visiting: &mut std::collections::HashSet<SymbolId>,
+    ) -> bool {
+        match &expr.kind {
+            ExprKind::Literal(_) => true,
+            ExprKind::Identifier(name) => {
+                if is_request_provider_scalar_name(name) {
+                    return true;
+                }
+                let Some(symbol) = self
+                    .bindings
+                    .get(&self.binding_key(name, expr.span))
+                    .copied()
+                else {
+                    return false;
+                };
+                if !self.scope.symbol_is_global(symbol.id)
+                    || symbol.persistence != PersistenceKind::None
+                    || self.request_reassigned_names.contains(name)
+                    || !is_request_scalar_type(symbol.pine_type)
+                {
+                    return false;
+                }
+                if qualifier_at_most(symbol.pine_type.qualifier, Qualifier::Simple) {
+                    return true;
+                }
+                if !visiting.insert(symbol.id) {
+                    return false;
+                }
+                let supported = self
+                    .with_symbol_initializer(symbol.id, |analyzer, initializer| {
+                        Some(analyzer.request_expression_is_legacy_provider_scalar_inner(
+                            initializer,
+                            visiting,
+                        ))
+                    })
+                    .unwrap_or(false);
+                visiting.remove(&symbol.id);
+                supported
+            }
+            ExprKind::QualifiedName(_) => expr_name(expr)
+                .as_deref()
+                .is_some_and(is_request_provider_scalar_name),
+            ExprKind::Unary { expr, .. } => {
+                self.request_expression_is_legacy_provider_scalar_inner(expr, visiting)
+            }
+            ExprKind::Binary { left, right, .. } => {
+                self.request_expression_is_legacy_provider_scalar_inner(left, visiting)
+                    && self.request_expression_is_legacy_provider_scalar_inner(right, visiting)
+            }
+            ExprKind::Ternary {
+                condition,
+                then_expr,
+                else_expr,
+            } => {
+                self.request_expression_is_legacy_provider_scalar_inner(condition, visiting)
+                    && self.request_expression_is_legacy_provider_scalar_inner(then_expr, visiting)
+                    && self.request_expression_is_legacy_provider_scalar_inner(else_expr, visiting)
+            }
+            ExprKind::History { expr, offset } => {
+                self.request_expression_is_legacy_provider_scalar_inner(expr, visiting)
+                    && self.request_expression_is_legacy_provider_scalar_inner(offset, visiting)
+            }
+            ExprKind::Call { callee, args } => {
+                let Some(name) = self.request_expression_call_name(callee) else {
+                    return false;
+                };
+                request_scalar_call_is_supported(&name)
+                    && args.iter().all(|arg| {
+                        arg.name.is_none()
+                            && self.request_expression_is_legacy_provider_scalar_inner(
+                                &arg.value, visiting,
+                            )
+                    })
+            }
+            ExprKind::Switch { selector, arms } => {
+                selector.as_deref().is_none_or(|selector| {
+                    self.request_expression_is_legacy_provider_scalar_inner(selector, visiting)
+                }) && arms.iter().all(|arm| {
+                    arm.condition.as_ref().is_none_or(|condition| {
+                        self.request_expression_is_legacy_provider_scalar_inner(condition, visiting)
+                    }) && match &arm.result {
+                        SwitchArmResult::Expr(result) => self
+                            .request_expression_is_legacy_provider_scalar_inner(result, visiting),
+                        SwitchArmResult::Block(_) => false,
+                    }
+                })
+            }
+            ExprKind::Tuple(_)
+            | ExprKind::If { .. }
+            | ExprKind::For { .. }
+            | ExprKind::ForIn { .. }
+            | ExprKind::While { .. } => false,
         }
     }
 

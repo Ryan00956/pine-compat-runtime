@@ -6,14 +6,13 @@ use crate::types::qualifier_at_most;
 use super::PineDialect;
 use super::lowering::LegacyCallArgRewrite;
 
-pub(crate) const LEGACY_OUTPUT_DEFERRED_REASON: &str = "legacy output arguments require version-specific style and transparency lowering that is not implemented yet";
-
 #[derive(Debug, Clone)]
 pub(crate) struct BoundLegacyOutput {
     pub(crate) canonical_name: &'static str,
     pub(crate) canonical_args: Vec<CallArg>,
     pub(crate) canonical_arg_types: Vec<Option<PineType>>,
     pub(crate) arg_rewrites: Vec<LegacyCallArgRewrite>,
+    pub(crate) style_value_rewrites: Vec<(Span, &'static str)>,
     pub(crate) requires_adaptation: bool,
     pub(crate) emulates_transparency: bool,
     pub(crate) emulates_numeric_style: bool,
@@ -248,6 +247,73 @@ const V3_HLINE_PARAMS: &[OutputParam] = &[
     OutputParam::optional("editable"),
 ];
 
+const V3_PLOTCHAR_PARAMS: &[OutputParam] = &[
+    OutputParam::required("series"),
+    OutputParam::optional("title"),
+    OutputParam::optional("char"),
+    OutputParam::optional("location"),
+    OutputParam::optional("color"),
+    OutputParam::transparency(),
+    OutputParam::optional("offset"),
+    OutputParam::optional("text"),
+    OutputParam::optional("textcolor"),
+    OutputParam::optional("editable"),
+    OutputParam::optional("size"),
+    OutputParam::optional("show_last"),
+];
+
+const V3_PLOTSHAPE_PARAMS: &[OutputParam] = &[
+    OutputParam::required("series"),
+    OutputParam::optional("title"),
+    OutputParam::optional("style"),
+    OutputParam::optional("location"),
+    OutputParam::optional("color"),
+    OutputParam::transparency(),
+    OutputParam::optional("offset"),
+    OutputParam::optional("text"),
+    OutputParam::optional("textcolor"),
+    OutputParam::optional("editable"),
+    OutputParam::optional("size"),
+    OutputParam::optional("show_last"),
+];
+
+const V3_PLOTARROW_PARAMS: &[OutputParam] = &[
+    OutputParam::required("series"),
+    OutputParam::optional("title"),
+    OutputParam::optional("colorup"),
+    OutputParam::optional("colordown"),
+    OutputParam::transparency(),
+    OutputParam::optional("offset"),
+    OutputParam::optional("minheight"),
+    OutputParam::optional("maxheight"),
+    OutputParam::optional("editable"),
+    OutputParam::optional("show_last"),
+];
+
+const V3_PLOTBAR_PARAMS: &[OutputParam] = &[
+    OutputParam::required("open"),
+    OutputParam::required("high"),
+    OutputParam::required("low"),
+    OutputParam::required("close"),
+    OutputParam::optional("title"),
+    OutputParam::optional("color"),
+    OutputParam::optional("editable"),
+    OutputParam::optional("show_last"),
+];
+
+const V3_PLOTCANDLE_PARAMS: &[OutputParam] = &[
+    OutputParam::required("open"),
+    OutputParam::required("high"),
+    OutputParam::required("low"),
+    OutputParam::required("close"),
+    OutputParam::optional("title"),
+    OutputParam::optional("color"),
+    OutputParam::optional("wickcolor"),
+    OutputParam::optional("editable"),
+    OutputParam::optional("show_last"),
+    OutputParam::optional("bordercolor"),
+];
+
 const FILL_PLOT_PARAMS: &[OutputParam] = &[
     OutputParam::required("plot1"),
     OutputParam::required("plot2"),
@@ -267,6 +333,25 @@ const FILL_HLINE_PARAMS: &[OutputParam] = &[
     OutputParam::optional("title"),
     OutputParam::optional("editable"),
     OutputParam::optional("fillgaps"),
+];
+
+const V3_FILL_PLOT_PARAMS: &[OutputParam] = &[
+    OutputParam::required("plot1"),
+    OutputParam::required("plot2"),
+    OutputParam::optional("color"),
+    OutputParam::transparency(),
+    OutputParam::optional("title"),
+    OutputParam::optional("editable"),
+    OutputParam::optional("show_last"),
+];
+
+const V3_FILL_HLINE_PARAMS: &[OutputParam] = &[
+    OutputParam::renamed("hline1", "plot1", true),
+    OutputParam::renamed("hline2", "plot2", true),
+    OutputParam::optional("color"),
+    OutputParam::transparency(),
+    OutputParam::optional("title"),
+    OutputParam::optional("editable"),
 ];
 
 const PLOT_STYLES: &[&str] = &[
@@ -295,8 +380,16 @@ fn params_for_call(
     if matches!(dialect, PineDialect::V1 | PineDialect::V2 | PineDialect::V3) {
         return Ok(match name {
             "plot" => V3_PLOT_PARAMS,
+            "plotchar" => V3_PLOTCHAR_PARAMS,
+            "plotshape" => V3_PLOTSHAPE_PARAMS,
+            "plotarrow" => V3_PLOTARROW_PARAMS,
+            "plotbar" => V3_PLOTBAR_PARAMS,
+            "plotcandle" => V3_PLOTCANDLE_PARAMS,
+            "bgcolor" => BGCOLOR_PARAMS,
+            "barcolor" => BARCOLOR_PARAMS,
             "hline" => V3_HLINE_PARAMS,
-            _ => unreachable!("only the pre-v4 plot/hline output subset is admitted"),
+            "fill" => fill_params(dialect, args, arg_types)?,
+            _ => unreachable!("focused pre-v4 output binder called for an unknown output"),
         });
     }
     Ok(match name {
@@ -309,15 +402,17 @@ fn params_for_call(
         "bgcolor" => BGCOLOR_PARAMS,
         "barcolor" => BARCOLOR_PARAMS,
         "hline" => HLINE_PARAMS,
-        "fill" => fill_params(args, arg_types)?,
+        "fill" => fill_params(dialect, args, arg_types)?,
         _ => unreachable!("focused v4 output binder called for an unknown output"),
     })
 }
 
 fn fill_params(
+    dialect: PineDialect,
     args: &[CallArg],
     arg_types: &[Option<PineType>],
 ) -> Result<&'static [OutputParam], Diagnostic> {
+    let version = dialect.version();
     let named_hline = args
         .iter()
         .any(|arg| matches!(arg.name.as_deref(), Some("hline1" | "hline2")));
@@ -326,7 +421,7 @@ fn fill_params(
         .any(|arg| matches!(arg.name.as_deref(), Some("plot1" | "plot2")));
     if named_hline && named_plot {
         return Err(output_error(
-            "Pine v4 `fill` cannot mix plot and hline argument names",
+            format!("Pine v{version} `fill` cannot mix plot and hline argument names"),
             args.first().map_or_else(Span::default, |arg| arg.span),
         ));
     }
@@ -356,16 +451,24 @@ fn fill_params(
     });
     if !matches!(expected_kind, ValueKind::Plot | ValueKind::HLine) || endpoint_kind_mismatch {
         return Err(output_error(
-            "Pine v4 `fill` requires two plot ids or two hline ids from the same overload",
+            format!(
+                "Pine v{version} `fill` requires two plot ids or two hline ids from the same overload"
+            ),
             args.get(1)
                 .or_else(|| args.first())
                 .map_or_else(Span::default, |arg| arg.span),
         ));
     }
     Ok(if expected_kind == ValueKind::HLine {
-        FILL_HLINE_PARAMS
-    } else {
+        if dialect == PineDialect::V4 {
+            FILL_HLINE_PARAMS
+        } else {
+            V3_FILL_HLINE_PARAMS
+        }
+    } else if dialect == PineDialect::V4 {
         FILL_PLOT_PARAMS
+    } else {
+        V3_FILL_PLOT_PARAMS
     })
 }
 
@@ -396,6 +499,7 @@ pub(crate) fn bind_legacy_output_args(
     ];
     let mut emulates_transparency = matches!(name, "bgcolor" | "fill");
     let mut emulates_numeric_style = false;
+    let mut style_value_rewrites = Vec::new();
     let mut requires_adaptation = emulates_transparency;
     let canonical_signature =
         pine_builtins::get_phase_1_builtin(name).expect("focused v4 output target is registered");
@@ -484,10 +588,11 @@ pub(crate) fn bind_legacy_output_args(
                     const_string: const_strings.get(arg_index).and_then(Option::as_deref),
                     const_int: const_ints.get(arg_index).copied().flatten(),
                     styles: PLOT_STYLES,
-                    span: arg.span,
+                    span: arg.value.span,
                 },
                 &mut diagnostics,
                 &mut emulates_numeric_style,
+                &mut style_value_rewrites,
             ),
             OutputParamKind::HLineStyle => validate_style(
                 StyleArgument {
@@ -498,10 +603,11 @@ pub(crate) fn bind_legacy_output_args(
                     const_string: const_strings.get(arg_index).and_then(Option::as_deref),
                     const_int: const_ints.get(arg_index).copied().flatten(),
                     styles: HLINE_STYLES,
-                    span: arg.span,
+                    span: arg.value.span,
                 },
                 &mut diagnostics,
                 &mut emulates_numeric_style,
+                &mut style_value_rewrites,
             ),
             OutputParamKind::Canonical => arg_type,
             OutputParamKind::Transparency => unreachable!(),
@@ -554,6 +660,7 @@ pub(crate) fn bind_legacy_output_args(
         canonical_args,
         canonical_arg_types,
         arg_rewrites,
+        style_value_rewrites,
         requires_adaptation: requires_adaptation || emulates_numeric_style,
         emulates_transparency,
         emulates_numeric_style,
@@ -564,6 +671,7 @@ fn validate_style(
     argument: StyleArgument<'_>,
     diagnostics: &mut Vec<Diagnostic>,
     emulates_numeric_style: &mut bool,
+    style_value_rewrites: &mut Vec<(Span, &'static str)>,
 ) -> Option<PineType> {
     let valid = match argument.arg_type {
         Some(pine_type)
@@ -575,9 +683,19 @@ fn validate_style(
                 usize::try_from(value).is_ok_and(|value| value < argument.styles.len())
             })
         }
-        Some(pine_type) if pine_type.kind == ValueKind::String => argument
-            .const_string
-            .is_some_and(|value| argument.styles.contains(&value)),
+        Some(pine_type) if pine_type.kind == ValueKind::String => {
+            argument.const_string.is_some_and(|value| {
+                if argument.styles.contains(&value) {
+                    return true;
+                }
+                let Some(canonical_style) = contextual_legacy_style(value, argument.styles) else {
+                    return false;
+                };
+                *emulates_numeric_style = true;
+                style_value_rewrites.push((argument.span, canonical_style));
+                true
+            })
+        }
         _ => false,
     };
     if !valid {
@@ -587,6 +705,21 @@ fn validate_style(
         ));
     }
     Some(PineType::new(Qualifier::Const, ValueKind::String))
+}
+
+fn contextual_legacy_style(
+    source_style: &str,
+    target_styles: &'static [&'static str],
+) -> Option<&'static str> {
+    let ordinal = PLOT_STYLES
+        .iter()
+        .position(|candidate| *candidate == source_style)
+        .or_else(|| {
+            HLINE_STYLES
+                .iter()
+                .position(|candidate| *candidate == source_style)
+        })?;
+    target_styles.get(ordinal).copied()
 }
 
 fn is_legacy_transparency_type(pine_type: PineType) -> bool {

@@ -1,0 +1,4 @@
+study("Legacy mutable security alias")
+basis = close * 2
+basis := basis + 1
+plot(security("NYSE:IBM", "5", basis))

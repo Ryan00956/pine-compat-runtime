@@ -9,6 +9,8 @@ pub(crate) enum LegacyExpressionKind {
     Offset,
     RsiLength,
     RsiSeries,
+    Tostring,
+    Vwap,
 }
 
 #[derive(Debug, Clone)]
@@ -31,10 +33,12 @@ pub(crate) fn bind_legacy_expression(
     arg_types: &[Option<PineType>],
     call_span: Span,
 ) -> LegacyExpressionBinding {
-    let params: &[&str] = match name {
-        "iff" => &["condition", "result1", "result2"],
-        "offset" => &["source", "offset"],
-        "rsi" => &["x", "y"],
+    let (params, required_count): (&[&str], usize) = match name {
+        "iff" => (&["condition", "result1", "result2"], 3),
+        "offset" => (&["source", "offset"], 2),
+        "rsi" => (&["x", "y"], 2),
+        "tostring" => (&["x", "y"], 1),
+        "vwap" => (&["x"], 1),
         _ => return LegacyExpressionBinding::Invalid(Vec::new()),
     };
     let mut ordered = vec![None; params.len()];
@@ -104,7 +108,7 @@ pub(crate) fn bind_legacy_expression(
         rewrites[index].canonical_name = Some(params[param_index]);
     }
 
-    for (index, param) in params.iter().enumerate() {
+    for (index, param) in params.iter().take(required_count).enumerate() {
         if ordered[index].is_none() {
             diagnostics.push(Diagnostic::error(
                 "E_CALL_ARITY",
@@ -117,26 +121,31 @@ pub(crate) fn bind_legacy_expression(
         return LegacyExpressionBinding::Invalid(diagnostics);
     }
 
-    let (ordered_args, ordered_arg_types): (Vec<_>, Vec<_>) = ordered
-        .into_iter()
-        .map(|arg| arg.expect("validated required legacy argument"))
-        .unzip();
+    let (ordered_args, ordered_arg_types): (Vec<_>, Vec<_>) = ordered.into_iter().flatten().unzip();
     let kind = match name {
         "iff" => Some(LegacyExpressionKind::Iff),
         "offset" => Some(LegacyExpressionKind::Offset),
         "rsi" => rsi_overload(ordered_arg_types[1], ordered_args[1].span, &mut diagnostics),
+        "tostring" => Some(LegacyExpressionKind::Tostring),
+        "vwap" => Some(LegacyExpressionKind::Vwap),
         _ => unreachable!("legacy expression names are matched above"),
     };
     let Some(kind) = kind else {
         return LegacyExpressionBinding::Invalid(diagnostics);
     };
-    if name == "rsi" {
-        let canonical_names = match kind {
-            LegacyExpressionKind::RsiLength => ["source", "length"],
-            LegacyExpressionKind::RsiSeries => ["x", "y"],
-            _ => unreachable!("rsi overload kind"),
-        };
-        for rewrite in &mut rewrites {
+    let canonical_names: Option<&[&str]> = match (name, kind) {
+        ("rsi", LegacyExpressionKind::RsiLength) => Some(&["source", "length"]),
+        ("rsi", LegacyExpressionKind::RsiSeries) => Some(&["x", "y"]),
+        ("tostring", LegacyExpressionKind::Tostring) => Some(&["value", "format"]),
+        ("vwap", LegacyExpressionKind::Vwap) => Some(&["source"]),
+        _ => None,
+    };
+    if let Some(canonical_names) = canonical_names {
+        for (index, rewrite) in rewrites.iter_mut().enumerate() {
+            if matches!(name, "tostring" | "vwap") && args[index].name.is_none() {
+                rewrite.canonical_name = None;
+                continue;
+            }
             let Some(source_name) = rewrite.canonical_name else {
                 continue;
             };

@@ -213,7 +213,73 @@ fn production_v4_study_and_first_alias_batch_match_canonical_hir() {
                 "ta.crossover",
                 LegacyTranslationKind::ExactAlias
             ),
+            ("cross", "ta.cross", LegacyTranslationKind::ExactAlias),
+            ("change", "ta.change", LegacyTranslationKind::ExactAlias),
+            ("sqrt", "math.sqrt", LegacyTranslationKind::ExactAlias),
             ("abs", "math.abs", LegacyTranslationKind::ExactAlias),
+            ("stdev", "ta.stdev", LegacyTranslationKind::ExactAlias),
+            ("vwma", "ta.vwma", LegacyTranslationKind::ExactAlias),
+            ("max", "math.max", LegacyTranslationKind::ExactAlias),
+            ("min", "math.min", LegacyTranslationKind::ExactAlias),
+            (
+                "pivothigh",
+                "ta.pivothigh",
+                LegacyTranslationKind::ExactAlias
+            ),
+            ("pivotlow", "ta.pivotlow", LegacyTranslationKind::ExactAlias),
+            ("atr", "ta.atr", LegacyTranslationKind::ExactAlias),
+            ("avg", "math.avg", LegacyTranslationKind::ExactAlias),
+            ("floor", "math.floor", LegacyTranslationKind::ExactAlias),
+            ("linreg", "ta.linreg", LegacyTranslationKind::ExactAlias),
+            ("stoch", "ta.stoch", LegacyTranslationKind::ExactAlias),
+            ("sum", "math.sum", LegacyTranslationKind::ExactAlias),
+            (
+                "barssince",
+                "ta.barssince",
+                LegacyTranslationKind::ExactAlias
+            ),
+            (
+                "crossunder",
+                "ta.crossunder",
+                LegacyTranslationKind::ExactAlias
+            ),
+            (
+                "heikinashi",
+                "ticker.heikinashi",
+                LegacyTranslationKind::ExactAlias
+            ),
+            ("log10", "math.log10", LegacyTranslationKind::ExactAlias),
+            ("macd", "ta.macd", LegacyTranslationKind::ExactAlias),
+            ("sign", "math.sign", LegacyTranslationKind::ExactAlias),
+            (
+                "tostring",
+                "str.tostring",
+                LegacyTranslationKind::SignatureReshape
+            ),
+            (
+                "tostring",
+                "str.tostring",
+                LegacyTranslationKind::SignatureReshape
+            ),
+            (
+                "valuewhen",
+                "ta.valuewhen",
+                LegacyTranslationKind::ExactAlias
+            ),
+            ("cci", "ta.cci", LegacyTranslationKind::ExactAlias),
+            ("ceil", "math.ceil", LegacyTranslationKind::ExactAlias),
+            ("log", "math.log", LegacyTranslationKind::ExactAlias),
+            ("mfi", "ta.mfi", LegacyTranslationKind::ExactAlias),
+            ("mom", "ta.mom", LegacyTranslationKind::ExactAlias),
+            ("pow", "math.pow", LegacyTranslationKind::ExactAlias),
+            ("tr", "ta.tr", LegacyTranslationKind::SymbolAlias),
+            ("tr", "ta.tr", LegacyTranslationKind::ExactAlias),
+            ("obv", "ta.obv", LegacyTranslationKind::SymbolAlias),
+            ("vwap", "ta.vwap", LegacyTranslationKind::SymbolAlias),
+            ("vwap", "ta.vwap", LegacyTranslationKind::SignatureReshape),
+            ("round", "math.round", LegacyTranslationKind::ExactAlias),
+            ("rma", "ta.rma", LegacyTranslationKind::ExactAlias),
+            ("wma", "ta.wma", LegacyTranslationKind::ExactAlias),
         ]
     );
 }
@@ -280,6 +346,48 @@ fn production_v4_security_uses_request_expression_analysis_and_source_spanned_hi
                 item.source_feature == "security" && item.canonical_feature == "request.security"
             })
     );
+}
+
+#[test]
+fn legacy_security_accepts_immutable_global_alias_graphs_and_dynamic_simple_contexts() {
+    let analysis = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v1/runtime/security_aliases_legacy.pine"
+    ));
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+
+    let synthesized_symbol = analyze_production(
+        "//@version=4\nstudy(\"symbol expression\")\nmakeSymbol(prefix, name) => prefix + \":\" + name\nplot(security(makeSymbol(\"NYSE\", \"IBM\"), \"5\", close))\n",
+    );
+    assert!(
+        synthesized_symbol.diagnostics.is_empty(),
+        "{:?}",
+        synthesized_symbol.diagnostics
+    );
+}
+
+#[test]
+fn legacy_security_keeps_mutable_aliases_and_udf_expressions_fail_closed() {
+    let mutable = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v1/unsupported/security_mutable_alias.pine"
+    ));
+    assert!(diagnostic_codes(&mutable).contains(&"E_UNSUPPORTED_FEATURE"));
+    assert!(
+        mutable
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|item| item.feature == "security")
+    );
+
+    let udf = analyze_production(
+        "//@version=4\nstudy(\"udf request expression\")\ncalculate() => sma(close, 2)\nplot(security(\"NYSE:IBM\", \"5\", calculate()))\n",
+    );
+    assert!(diagnostic_codes(&udf).contains(&"E_UNSUPPORTED_FEATURE"));
 }
 
 #[test]
@@ -767,19 +875,541 @@ fn production_aliases_still_yield_to_v4_user_functions_and_lexical_values() {
 }
 
 #[test]
-fn modern_sources_reject_every_production_v4_alias() {
+fn expanded_exact_aliases_lower_across_their_declared_legacy_range() {
+    for version in [1, 2, 3, 4] {
+        let analysis = analyze_production(&format!(
+            "//@version={version}\nstudy(\"expanded aliases\")\ncrossed = cross(close, open)\nrounded = round(close)\nsmoothed = rma(close, 3)\nweighted = wma(close, 3)\nhigh_value = highest(high, 3)\nlow_value = lowest(low, 3)\nplot(crossed ? rounded : smoothed + weighted + high_value + low_value)\n"
+        ));
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            analysis.diagnostics
+        );
+        let hir = analysis.hir.as_ref().expect("expanded alias HIR");
+        for canonical in [
+            "ta.cross",
+            "math.round",
+            "ta.rma",
+            "ta.wma",
+            "ta.highest",
+            "ta.lowest",
+        ] {
+            assert!(
+                hir_contains_call(hir, canonical),
+                "v{version} missing canonical call {canonical}"
+            );
+        }
+        for (source, canonical) in [
+            ("cross", "ta.cross"),
+            ("round", "math.round"),
+            ("rma", "ta.rma"),
+            ("wma", "ta.wma"),
+            ("highest", "ta.highest"),
+            ("lowest", "ta.lowest"),
+        ] {
+            assert!(
+                analysis
+                    .compatibility
+                    .legacy_translations
+                    .iter()
+                    .any(|translation| translation.source_feature == source
+                        && translation.canonical_feature == canonical
+                        && translation.kind == LegacyTranslationKind::ExactAlias)
+            );
+        }
+    }
+}
+
+#[test]
+fn second_exact_alias_batch_lowers_across_the_declared_legacy_range() {
+    for version in [1, 2, 3, 4] {
+        let analysis = analyze_production(&format!(
+            "//@version={version}\nstudy(\"second alias batch\")\nchanged = change(close)\nmagnitude = abs(close - open)\nmaximum = max(close, open)\nminimum = min(close, open)\ncrossed = crossover(close, open)\nrooted = sqrt(magnitude)\ndeviation = stdev(close, 3)\nvolume_weighted = vwma(close, 3)\nplot(crossed ? changed + magnitude + maximum + minimum + rooted + deviation + volume_weighted : 0)\n"
+        ));
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            analysis.diagnostics
+        );
+        let hir = analysis.hir.as_ref().expect("second alias batch HIR");
+        for canonical in [
+            "ta.change",
+            "math.abs",
+            "math.max",
+            "math.min",
+            "ta.crossover",
+            "math.sqrt",
+            "ta.stdev",
+            "ta.vwma",
+        ] {
+            assert!(
+                hir_contains_call(hir, canonical),
+                "v{version} missing canonical call {canonical}"
+            );
+        }
+        for (source, canonical) in [
+            ("change", "ta.change"),
+            ("abs", "math.abs"),
+            ("max", "math.max"),
+            ("min", "math.min"),
+            ("crossover", "ta.crossover"),
+            ("sqrt", "math.sqrt"),
+            ("stdev", "ta.stdev"),
+            ("vwma", "ta.vwma"),
+        ] {
+            assert!(
+                analysis
+                    .compatibility
+                    .legacy_translations
+                    .iter()
+                    .any(|translation| translation.source_feature == source
+                        && translation.canonical_feature == canonical
+                        && translation.kind == LegacyTranslationKind::ExactAlias)
+            );
+        }
+    }
+}
+
+#[test]
+fn third_exact_alias_batch_lowers_across_the_declared_legacy_range() {
+    for version in [1, 2, 3, 4] {
+        let analysis = analyze_production(&format!(
+            "//@version={version}\nstudy(\"third alias batch\")\npivot_high = pivothigh(1, 1)\npivot_low = pivotlow(low, 1, 1)\nvolatility = atr(3)\naverage = avg(close, open)\nfloored = floor(close)\nregression = linreg(close, 3, 0)\noscillator = stoch(close, high, low, 3)\ntotal = sum(close, 3)\nplot(nz(pivot_high) + nz(pivot_low) + volatility + average + floored + regression + oscillator + total)\n"
+        ));
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            analysis.diagnostics
+        );
+        let hir = analysis.hir.as_ref().expect("third alias batch HIR");
+        for canonical in [
+            "ta.pivothigh",
+            "ta.pivotlow",
+            "ta.atr",
+            "math.avg",
+            "math.floor",
+            "ta.linreg",
+            "ta.stoch",
+            "math.sum",
+        ] {
+            assert!(
+                hir_contains_call(hir, canonical),
+                "v{version} missing canonical call {canonical}"
+            );
+        }
+        for (source, canonical) in [
+            ("pivothigh", "ta.pivothigh"),
+            ("pivotlow", "ta.pivotlow"),
+            ("atr", "ta.atr"),
+            ("avg", "math.avg"),
+            ("floor", "math.floor"),
+            ("linreg", "ta.linreg"),
+            ("stoch", "ta.stoch"),
+            ("sum", "math.sum"),
+        ] {
+            assert!(
+                analysis
+                    .compatibility
+                    .legacy_translations
+                    .iter()
+                    .any(|translation| translation.source_feature == source
+                        && translation.canonical_feature == canonical
+                        && translation.kind == LegacyTranslationKind::ExactAlias)
+            );
+        }
+    }
+}
+
+#[test]
+fn third_exact_alias_batch_preserves_user_function_precedence() {
+    let analysis = analyze_production(
+        "//@version=4\nstudy(\"third alias collisions\")\natr(length) => length\navg(left, right) => left + right\nfloor(value) => value\nlinreg(value, length, offset) => value + length + offset\npivothigh(left, right) => left + right\npivotlow(left, right) => left - right\nstoch(value, upper, lower, length) => value + upper + lower + length\nsum(value, length) => value + length\nplot(atr(3) + avg(close, open) + floor(close) + linreg(close, 3, 0) + pivothigh(1, 1) + pivotlow(1, 1) + stoch(close, high, low, 3) + sum(close, 3))\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    for source in [
+        "atr",
+        "avg",
+        "floor",
+        "linreg",
+        "pivothigh",
+        "pivotlow",
+        "stoch",
+        "sum",
+    ] {
+        assert!(
+            analysis
+                .compatibility
+                .legacy_translations
+                .iter()
+                .all(|translation| translation.source_feature != source),
+            "unexpected fallback translation for {source}"
+        );
+    }
+}
+
+#[test]
+fn fourth_exact_alias_batch_lowers_across_the_declared_legacy_range() {
+    for version in [1, 2, 3, 4] {
+        let analysis = analyze_production(&format!(
+            "//@version={version}\nstudy(\"fourth alias batch\")\nbars_since = barssince(close > open)\ncrossed_under = crossunder(close, open)\nheikin_ticker = heikinashi(\"NYSE:IBM\")\ndecimal_log = log10(close)\n[macd_line, signal_line, histogram] = macd(close, 2, 3, 2)\ndirection = sign(close - open)\nprevious = valuewhen(close > open, close, 0)\nplot(nz(bars_since) + (crossed_under ? 1 : 0) + (heikin_ticker != \"\" ? 1 : 0) + decimal_log + macd_line + signal_line + histogram + direction + nz(previous))\n"
+        ));
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            analysis.diagnostics
+        );
+        let hir = analysis.hir.as_ref().expect("fourth alias batch HIR");
+        for canonical in [
+            "ta.barssince",
+            "ta.crossunder",
+            "ticker.heikinashi",
+            "math.log10",
+            "ta.macd",
+            "math.sign",
+            "ta.valuewhen",
+        ] {
+            assert!(
+                hir_contains_call(hir, canonical),
+                "v{version} missing canonical call {canonical}"
+            );
+        }
+        for (source, canonical) in [
+            ("barssince", "ta.barssince"),
+            ("crossunder", "ta.crossunder"),
+            ("heikinashi", "ticker.heikinashi"),
+            ("log10", "math.log10"),
+            ("macd", "ta.macd"),
+            ("sign", "math.sign"),
+            ("valuewhen", "ta.valuewhen"),
+        ] {
+            assert!(
+                analysis
+                    .compatibility
+                    .legacy_translations
+                    .iter()
+                    .any(|translation| translation.source_feature == source
+                        && translation.canonical_feature == canonical
+                        && translation.kind == LegacyTranslationKind::ExactAlias)
+            );
+        }
+    }
+}
+
+#[test]
+fn v4_tostring_reshapes_historical_parameter_names() {
+    let analysis = analyze_production(
+        "//@version=4\nstudy(\"legacy tostring\")\nplain = tostring(close)\nformatted = tostring(x=close, y=\"#.00\")\nplot((plain != \"\" ? 1 : 0) + (formatted != \"\" ? 1 : 0))\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(hir_contains_call(
+        analysis.hir.as_ref().expect("legacy tostring HIR"),
+        "str.tostring"
+    ));
+    assert_eq!(
+        analysis
+            .compatibility
+            .legacy_translations
+            .iter()
+            .filter(|translation| translation.source_feature == "tostring")
+            .map(|translation| (translation.canonical_feature.as_str(), translation.kind))
+            .collect::<Vec<_>>(),
+        vec![
+            ("str.tostring", LegacyTranslationKind::SignatureReshape),
+            ("str.tostring", LegacyTranslationKind::SignatureReshape),
+        ]
+    );
+
+    for version in [1, 2, 3] {
+        let unavailable = analyze_production(&format!(
+            "//@version={version}\nstudy(\"tostring boundary\")\nplot(tostring(close) != \"\" ? 1 : 0)\n"
+        ));
+        assert_eq!(diagnostic_codes(&unavailable), vec!["E_UNKNOWN_FUNCTION"]);
+        assert!(
+            unavailable
+                .compatibility
+                .legacy_translations
+                .iter()
+                .all(|translation| translation.source_feature != "tostring")
+        );
+    }
+}
+
+#[test]
+fn v4_tostring_reshape_matches_canonical_hir() {
+    let legacy = "//@version=4\nstudy(\"legacy tostring parity\")\nplain = tostring(close)\nformatted = tostring(x=close, y=\"#.00\")\nplot((plain != \"\" ? 1 : 0) + (formatted != \"\" ? 1 : 0))\n";
+    let canonical = "//@version=5\nindicator(title=\"legacy tostring parity\")\nplain = str.tostring(close)\nformatted = str.tostring(value=close, format=\"#.00\")\nplot((plain != \"\" ? 1 : 0) + (formatted != \"\" ? 1 : 0))\n";
+
+    assert_eq!(normalized_hir(legacy), normalized_hir(canonical));
+}
+
+#[test]
+fn fourth_alias_batch_preserves_user_function_precedence() {
+    let analysis = analyze_production(
+        "//@version=4\nstudy(\"fourth alias collisions\")\nbarssince(condition) => condition ? 1 : 0\ncrossunder(left, right) => left < right\nheikinashi(value) => value\nlog10(value) => value\nmacd(value, fast, slow, signal) => [value, fast, slow + signal]\nsign(value) => value\ntostring(value) => \"shadowed\"\nvaluewhen(condition, value, occurrence) => condition ? value : occurrence\n[macd_line, signal_line, histogram] = macd(close, 2, 3, 2)\nrendered = tostring(close)\nplot(barssince(close > open) + (crossunder(close, open) ? 1 : 0) + (heikinashi(\"NYSE:IBM\") != \"\" ? 1 : 0) + log10(close) + macd_line + signal_line + histogram + sign(close) + (rendered != \"\" ? 1 : 0) + valuewhen(true, close, 0))\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    for source in [
+        "barssince",
+        "crossunder",
+        "heikinashi",
+        "log10",
+        "macd",
+        "sign",
+        "tostring",
+        "valuewhen",
+    ] {
+        assert!(
+            analysis
+                .compatibility
+                .legacy_translations
+                .iter()
+                .all(|translation| translation.source_feature != source),
+            "unexpected fallback translation for {source}"
+        );
+    }
+}
+
+#[test]
+fn fifth_exact_alias_batch_lowers_across_the_declared_legacy_range() {
+    for version in [1, 2, 3, 4] {
+        let analysis = analyze_production(&format!(
+            "//@version={version}\nstudy(\"fifth alias batch\")\ncommodity = cci(close, 3)\nrounded_up = ceil(close)\nnatural_log = log(close)\nmoney_flow = mfi(hlc3, 3)\nmomentum = mom(close, 2)\npowered = pow(close, 2)\ntrue_range_value = tr\ntrue_range_call = tr(true)\nbalance_volume = obv\nvwap_value = vwap\nvwap_call = vwap(close)\nplot(commodity + rounded_up + natural_log + money_flow + momentum + powered + nz(true_range_value) + true_range_call + nz(balance_volume) + nz(vwap_value) + nz(vwap_call))\n"
+        ));
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            analysis.diagnostics
+        );
+        let hir = analysis.hir.as_ref().expect("fifth alias batch HIR");
+        for canonical in [
+            "ta.cci",
+            "math.ceil",
+            "math.log",
+            "ta.mfi",
+            "ta.mom",
+            "math.pow",
+            "ta.tr",
+            "ta.vwap",
+        ] {
+            assert!(
+                hir_contains_call(hir, canonical),
+                "v{version} missing canonical call {canonical}"
+            );
+        }
+        for (source, canonical) in [
+            ("cci", "ta.cci"),
+            ("ceil", "math.ceil"),
+            ("log", "math.log"),
+            ("mfi", "ta.mfi"),
+            ("mom", "ta.mom"),
+            ("pow", "math.pow"),
+            ("tr", "ta.tr"),
+        ] {
+            assert!(
+                analysis
+                    .compatibility
+                    .legacy_translations
+                    .iter()
+                    .any(|translation| translation.source_feature == source
+                        && translation.canonical_feature == canonical
+                        && translation.kind == LegacyTranslationKind::ExactAlias),
+                "v{version} missing exact translation {source} -> {canonical}"
+            );
+        }
+        for (source, canonical) in [("tr", "ta.tr"), ("obv", "ta.obv"), ("vwap", "ta.vwap")] {
+            assert!(
+                analysis
+                    .compatibility
+                    .legacy_translations
+                    .iter()
+                    .any(|translation| translation.source_feature == source
+                        && translation.canonical_feature == canonical
+                        && translation.kind == LegacyTranslationKind::SymbolAlias),
+                "v{version} missing symbol translation {source} -> {canonical}"
+            );
+        }
+        assert!(
+            analysis
+                .compatibility
+                .legacy_translations
+                .iter()
+                .any(|translation| translation.source_feature == "vwap"
+                    && translation.canonical_feature == "ta.vwap"
+                    && translation.kind == LegacyTranslationKind::SignatureReshape)
+        );
+    }
+}
+
+#[test]
+fn legacy_vwap_restricts_and_reshapes_the_historical_single_source_signature() {
+    let legacy = "//@version=4\nstudy(\"legacy vwap parity\")\npositional = vwap(close)\nnamed = vwap(x=hlc3)\nplot(positional + named)\n";
+    let canonical = "//@version=5\nindicator(title=\"legacy vwap parity\")\npositional = ta.vwap(close)\nnamed = ta.vwap(source=hlc3)\nplot(positional + named)\n";
+    assert_eq!(normalized_hir(legacy), normalized_hir(canonical));
+
+    let invalid = analyze_production(
+        "//@version=4\nstudy(\"legacy vwap boundary\")\nplot(vwap(close, true))\n",
+    );
+    assert_eq!(diagnostic_codes(&invalid), vec!["E_CALL_ARITY"]);
+    assert!(invalid.hir.is_none());
+}
+
+#[test]
+fn fifth_alias_batch_preserves_user_function_and_value_precedence() {
+    let functions = analyze_production(
+        "//@version=4\nstudy(\"fifth alias function collisions\")\ncci(source, length) => source\nceil(value) => value\nlog(value) => value\nmfi(source, length) => source\nmom(source, length) => source\npow(base, exponent) => base\ntr(handle_na) => handle_na ? 1.0 : 0.0\nvwap(source) => source\nplot(cci(close, 3) + ceil(close) + log(close) + mfi(close, 3) + mom(close, 2) + pow(close, 2) + tr(true) + vwap(close))\n",
+    );
+    assert!(
+        functions.diagnostics.is_empty(),
+        "{:?}",
+        functions.diagnostics
+    );
+    for source in ["cci", "ceil", "log", "mfi", "mom", "pow", "tr", "vwap"] {
+        assert!(
+            functions
+                .compatibility
+                .legacy_translations
+                .iter()
+                .all(|translation| translation.source_feature != source),
+            "unexpected function fallback translation for {source}"
+        );
+    }
+
+    let values = analyze_production(
+        "//@version=4\nstudy(\"fifth alias value collisions\")\ntr = 1.0\nobv = 2.0\nvwap = 3.0\nplot(tr + obv + vwap)\n",
+    );
+    assert!(values.diagnostics.is_empty(), "{:?}", values.diagnostics);
+    for source in ["tr", "obv", "vwap"] {
+        assert!(
+            values
+                .compatibility
+                .legacy_translations
+                .iter()
+                .all(|translation| translation.source_feature != source),
+            "unexpected value fallback translation for {source}"
+        );
+    }
+}
+
+#[test]
+fn pre_v4_cross_resolves_call_and_style_constant_by_context() {
+    let analysis = analyze_production(
+        "//@version=3\nstudy(\"cross ambiguity\")\nplot(cross(close, open) ? 1 : 0)\nplot(close, style=cross)\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(hir_contains_call(
+        analysis.hir.as_ref().expect("cross ambiguity HIR"),
+        "ta.cross"
+    ));
+    assert!(
+        analysis
+            .compatibility
+            .legacy_translations
+            .iter()
+            .any(|translation| translation.source_feature == "cross"
+                && translation.canonical_feature == "ta.cross"
+                && translation.kind == LegacyTranslationKind::ExactAlias)
+    );
+    assert!(
+        analysis
+            .compatibility
+            .legacy_translations
+            .iter()
+            .any(|translation| translation.source_feature == "cross"
+                && translation.canonical_feature == "plot.style_cross"
+                && translation.kind == LegacyTranslationKind::SymbolAlias)
+    );
+
+    let shadowed = analyze_production(
+        "//@version=3\nstudy(\"cross shadowing\")\ncross(left, right) => true\nplot(cross(close, open) ? 1 : 0)\nplot(close, style=cross)\n",
+    );
+    assert!(
+        shadowed.diagnostics.is_empty(),
+        "{:?}",
+        shadowed.diagnostics
+    );
+    assert!(!hir_contains_call(
+        shadowed.hir.as_ref().expect("shadowed cross HIR"),
+        "ta.cross"
+    ));
+    assert!(
+        shadowed
+            .compatibility
+            .legacy_translations
+            .iter()
+            .all(|translation| translation.canonical_feature != "ta.cross")
+    );
+    assert!(
+        shadowed
+            .compatibility
+            .legacy_translations
+            .iter()
+            .any(|translation| translation.source_feature == "cross"
+                && translation.canonical_feature == "plot.style_cross"
+                && translation.kind == LegacyTranslationKind::SymbolAlias)
+    );
+}
+
+#[test]
+fn modern_sources_reject_every_production_legacy_alias() {
     for version in [5, 6] {
         for alias_call in [
             "sma(close, 2)",
             "ema(close, 2)",
             "bb(close, 2, 2)",
             "change(close)",
+            "cross(close, open)",
             "crossover(close, open)",
             "highest(high, 2)",
             "lowest(low, 2)",
+            "rma(close, 2)",
+            "round(close)",
+            "sqrt(close)",
+            "stdev(close, 2)",
+            "vwma(close, 2)",
+            "wma(close, 2)",
             "max(close, open)",
             "min(close, open)",
             "abs(close)",
+            "atr(2)",
+            "avg(close, open)",
+            "floor(close)",
+            "linreg(close, 2, 0)",
+            "pivothigh(1, 1)",
+            "pivotlow(1, 1)",
+            "stoch(close, high, low, 2)",
+            "sum(close, 2)",
+            "barssince(close > open)",
+            "cci(close, 2)",
+            "ceil(close)",
+            "crossunder(close, open)",
+            "heikinashi(\"NYSE:IBM\")",
+            "log(close)",
+            "log10(close)",
+            "macd(close, 2, 3, 2)",
+            "mfi(hlc3, 2)",
+            "mom(close, 2)",
+            "pow(close, 2)",
+            "sign(close)",
+            "tostring(close)",
+            "tr(true)",
+            "valuewhen(close > open, close, 0)",
+            "vwap(close)",
             "iff(true, close, open)",
             "offset(close, 1)",
             "rsi(close, 2)",
@@ -790,6 +1420,17 @@ fn modern_sources_reject_every_production_v4_alias() {
             assert_eq!(diagnostic_codes(&analysis), vec!["E_UNKNOWN_FUNCTION"]);
             assert!(analysis.compatibility.legacy_translations.is_empty());
         }
+    }
+
+    for version in [5, 6] {
+        let analysis = analyze_production(&format!(
+            "//@version={version}\nindicator(\"modern values\")\nplot(tr + obv + vwap)\n"
+        ));
+        assert_eq!(
+            diagnostic_codes(&analysis),
+            vec!["E_UNKNOWN_SYMBOL", "E_UNKNOWN_SYMBOL", "E_UNKNOWN_SYMBOL"]
+        );
+        assert!(analysis.compatibility.legacy_translations.is_empty());
     }
 }
 
@@ -1641,7 +2282,8 @@ fn legacy_udf_calls_require_positional_arguments_through_v4() {
 
 #[test]
 fn production_and_synthetic_catalogs_validate_against_canonical_registries() {
-    assert!(validate_catalog(crate::legacy::LEGACY_RULES).is_empty());
+    let production_errors = validate_catalog(crate::legacy::LEGACY_RULES);
+    assert!(production_errors.is_empty(), "{production_errors:?}");
     assert!(validate_catalog(TEST_RULES).is_empty());
 
     const INVALID: &[LegacyRule] = &[LegacyRule {
@@ -1804,6 +2446,95 @@ barcolor(color.red, title="bars")
             .iter()
             .any(|item| { item.feature == "hline.numeric_style" })
     );
+}
+
+#[test]
+fn v1_v3_output_binder_accepts_the_documented_pre_v4_signatures() {
+    for version_header in ["", "//@version=2\n", "//@version=3\n"] {
+        let source = format!(
+            r#"{version_header}study("pre-v4 outputs")
+p1 = plot(close, "p1", blue, 2, columns, true, 40, 0, 1, true, true, 3)
+p2 = plot(open)
+plotchar(close > open, "char", "X", location.abovebar, red, transp=25, offset=1, text="Up", textcolor=white, editable=false, show_last=2)
+plotshape(close < open, "shape", shape.circle, location.belowbar, green, transp=35, offset=-1, text="Dn", textcolor=white, editable=true, show_last=3)
+plotarrow(close - open, "arrow", green, red, 45, 1, 5, 20, false, 2)
+plotbar(open, high, low, close, "bars", blue, false, 2)
+plotcandle(open, high, low, close, "candles", blue, gray, true, 3, black)
+h1 = hline(10, "ten", gray, dotted, 2, false)
+h2 = hline(20)
+fill(p1, p2, green, 80, "plot fill", false, 2)
+fill(h1, h2, red, 70, "hline fill", true)
+bgcolor(close > open ? blue : na, 80, 1, false, 2, "background")
+barcolor(close > open ? green : red, -1, false, 2, "bars")
+"#
+        );
+        let analysis = analyze_production(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{version_header:?}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .legacy_emulations
+                .iter()
+                .any(|item| item.feature == "plotchar.transp"),
+            "{version_header:?}"
+        );
+        assert!(
+            analysis
+                .compatibility
+                .legacy_emulations
+                .iter()
+                .any(|item| item.feature == "fill.transp"),
+            "{version_header:?}"
+        );
+        assert!(
+            analysis
+                .compatibility
+                .legacy_translations
+                .iter()
+                .any(|item| {
+                    item.source_feature == "plotshape"
+                        && item.kind == LegacyTranslationKind::OutputAdaptation
+                }),
+            "{version_header:?}"
+        );
+    }
+}
+
+#[test]
+fn v1_v3_output_binder_rejects_later_only_parameters() {
+    for version_header in ["", "//@version=2\n", "//@version=3\n"] {
+        for call in [
+            "plotshape(true, display=na)",
+            "plotchar(true, display=na)",
+            "plotarrow(1, display=na)",
+            "plotbar(open, high, low, close, display=na)",
+            "plotcandle(open, high, low, close, display=na)",
+        ] {
+            let source = format!("{version_header}study(\"invalid\")\n{call}\n");
+            let analysis = analyze_production(&source);
+            assert!(
+                diagnostic_codes(&analysis).contains(&"E_CALL_ARG_NAME"),
+                "{version_header:?}: {call}: {:?}",
+                analysis.diagnostics
+            );
+            assert!(analysis.hir.is_none(), "{version_header:?}: {call}");
+        }
+
+        let source = format!(
+            "{version_header}study(\"invalid fill\")\np1 = plot(close)\np2 = plot(open)\nfill(p1, p2, fillgaps=true)\n"
+        );
+        let analysis = analyze_production(&source);
+        assert!(
+            diagnostic_codes(&analysis).contains(&"E_CALL_ARG_NAME"),
+            "{version_header:?}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none(), "{version_header:?}");
+    }
 }
 
 #[test]
@@ -2424,6 +3155,7 @@ fn hir_contains_call(hir: &pine_ir::HirProgram, expected: &str) -> bool {
         .any(|statement| match &statement.kind {
             HirStmtKind::Expr(expr)
             | HirStmtKind::Decl { value: expr, .. }
+            | HirStmtKind::TupleDecl { value: expr, .. }
             | HirStmtKind::Reassign { value: expr, .. } => hir_expr_contains_call(expr, expected),
             _ => false,
         })

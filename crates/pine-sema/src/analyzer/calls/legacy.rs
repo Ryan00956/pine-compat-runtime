@@ -658,6 +658,46 @@ impl Analyzer {
             crate::legacy::LegacyExpressionKind::RsiSeries => {
                 self.analyze_legacy_rsi_series(&bound, call_span)
             }
+            crate::legacy::LegacyExpressionKind::Tostring => {
+                let mut canonical_args = bound.ordered_args.clone();
+                for (arg, name) in canonical_args.iter_mut().zip(["value", "format"]) {
+                    arg.name = Some(name.to_owned());
+                }
+                let signature = pine_builtins::get_phase_1_builtin("str.tostring")
+                    .expect("canonical str.tostring signature is registered");
+                self.analyze_registered_builtin(
+                    "str.tostring",
+                    signature,
+                    callee_span,
+                    call_span,
+                    &canonical_args,
+                    &bound
+                        .ordered_arg_types
+                        .iter()
+                        .copied()
+                        .map(Some)
+                        .collect::<Vec<_>>(),
+                )
+            }
+            crate::legacy::LegacyExpressionKind::Vwap => {
+                let mut canonical_args = bound.ordered_args.clone();
+                canonical_args[0].name = Some("source".to_owned());
+                let signature = pine_builtins::get_phase_1_builtin("ta.vwap")
+                    .expect("canonical ta.vwap signature is registered");
+                self.analyze_registered_builtin(
+                    "ta.vwap",
+                    signature,
+                    callee_span,
+                    call_span,
+                    &canonical_args,
+                    &bound
+                        .ordered_arg_types
+                        .iter()
+                        .copied()
+                        .map(Some)
+                        .collect::<Vec<_>>(),
+                )
+            }
         };
         let Some(pine_type) = pine_type else {
             return FocusedLegacyCallAnalysis::Analyzed(None);
@@ -887,6 +927,7 @@ impl Analyzer {
             crate::legacy::LegacyOutputTranslationPlan {
                 canonical_name: bound.canonical_name,
                 arg_rewrites: bound.arg_rewrites,
+                style_value_rewrites: bound.style_value_rewrites,
                 requires_adaptation: bound.requires_adaptation,
                 emulates_transparency: bound.emulates_transparency,
                 emulates_numeric_style: bound.emulates_numeric_style,

@@ -27,6 +27,7 @@ struct Parser {
     pos: usize,
     diagnostics: Vec<Diagnostic>,
     expr_depth: u32,
+    source_version: u16,
 }
 
 struct ForParts {
@@ -55,11 +56,13 @@ impl Parser {
             pos: 0,
             diagnostics: lexed.diagnostics,
             expr_depth: 0,
+            source_version: 1,
         }
     }
 
     fn parse(mut self) -> Parse {
         let version = self.parse_optional_version();
+        self.source_version = version.as_ref().map_or(1, |version| version.version);
         let mut saw_version_directive = version.is_some();
         let mut statements = Vec::new();
 
@@ -91,6 +94,7 @@ impl Parser {
                 Some(statement) => statements.push(statement),
                 None => self.recover_stmt(),
             }
+            self.skip_legacy_statement_commas();
             self.skip_newlines();
         }
 
@@ -672,6 +676,14 @@ impl Parser {
     fn skip_newlines(&mut self) {
         while self.at(TokenKind::Newline) {
             self.bump();
+        }
+    }
+
+    fn skip_legacy_statement_commas(&mut self) {
+        if self.source_version <= 4 {
+            while self.at(TokenKind::Comma) {
+                self.bump();
+            }
         }
     }
 

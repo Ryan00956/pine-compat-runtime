@@ -28,6 +28,8 @@ pub(crate) struct SymbolState {
 
 impl Analyzer {
     pub(crate) fn analyze_program(&mut self, program: &Program) {
+        self.request_reassigned_names.clear();
+        collect_request_reassigned_names(&program.statements, &mut self.request_reassigned_names);
         self.register_user_types(program);
         self.register_methods(program);
         self.register_functions(program);
@@ -1056,6 +1058,181 @@ impl Analyzer {
         self.const_string_symbols = state.const_string_symbols;
         self.const_bool_symbols = state.const_bool_symbols;
         self.const_color_symbols = state.const_color_symbols;
+    }
+}
+
+fn collect_request_reassigned_names(
+    statements: &[Stmt],
+    names: &mut std::collections::HashSet<String>,
+) {
+    for statement in statements {
+        match &statement.kind {
+            StmtKind::Expr(expr) => collect_request_reassigned_names_from_expr(expr, names),
+            StmtKind::Reassign { name, value } => {
+                names.insert(name.clone());
+                collect_request_reassigned_names_from_expr(value, names);
+            }
+            StmtKind::FieldReassign {
+                receiver, value, ..
+            } => {
+                names.insert(receiver.clone());
+                collect_request_reassigned_names_from_expr(value, names);
+            }
+            StmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => {
+                collect_request_reassigned_names_from_expr(condition, names);
+                collect_request_reassigned_names(then_branch, names);
+                collect_request_reassigned_names(else_branch, names);
+            }
+            StmtKind::For {
+                from,
+                to,
+                step,
+                body,
+                ..
+            } => {
+                collect_request_reassigned_names_from_expr(from, names);
+                collect_request_reassigned_names_from_expr(to, names);
+                if let Some(step) = step {
+                    collect_request_reassigned_names_from_expr(step, names);
+                }
+                collect_request_reassigned_names(body, names);
+            }
+            StmtKind::ForIn { iterable, body, .. } => {
+                collect_request_reassigned_names_from_expr(iterable, names);
+                collect_request_reassigned_names(body, names);
+            }
+            StmtKind::While { condition, body } => {
+                collect_request_reassigned_names_from_expr(condition, names);
+                collect_request_reassigned_names(body, names);
+            }
+            StmtKind::Function { body, .. } => {
+                collect_request_reassigned_names_from_function_body(body, names);
+            }
+            StmtKind::Method(method) => {
+                collect_request_reassigned_names_from_function_body(&method.body, names);
+            }
+            StmtKind::Decl { value, .. } | StmtKind::TupleDecl { value, .. } => {
+                collect_request_reassigned_names_from_expr(value, names);
+            }
+            StmtKind::ArrayFieldReassign {
+                array,
+                index,
+                value,
+                ..
+            } => {
+                collect_request_reassigned_names_from_expr(array, names);
+                collect_request_reassigned_names_from_expr(index, names);
+                collect_request_reassigned_names_from_expr(value, names);
+            }
+            StmtKind::Import(_)
+            | StmtKind::Library(_)
+            | StmtKind::Export(_)
+            | StmtKind::UserType(_)
+            | StmtKind::Break
+            | StmtKind::Continue
+            | StmtKind::Unsupported { .. } => {}
+        }
+    }
+}
+
+fn collect_request_reassigned_names_from_function_body(
+    body: &FunctionBody,
+    names: &mut std::collections::HashSet<String>,
+) {
+    match body {
+        FunctionBody::Expr(expr) => collect_request_reassigned_names_from_expr(expr, names),
+        FunctionBody::Block(statements) => collect_request_reassigned_names(statements, names),
+    }
+}
+
+fn collect_request_reassigned_names_from_expr(
+    expr: &Expr,
+    names: &mut std::collections::HashSet<String>,
+) {
+    match &expr.kind {
+        ExprKind::Unary { expr, .. } => collect_request_reassigned_names_from_expr(expr, names),
+        ExprKind::History { expr, offset } => {
+            collect_request_reassigned_names_from_expr(expr, names);
+            collect_request_reassigned_names_from_expr(offset, names);
+        }
+        ExprKind::Binary { left, right, .. } => {
+            collect_request_reassigned_names_from_expr(left, names);
+            collect_request_reassigned_names_from_expr(right, names);
+        }
+        ExprKind::Ternary {
+            condition,
+            then_expr,
+            else_expr,
+        } => {
+            collect_request_reassigned_names_from_expr(condition, names);
+            collect_request_reassigned_names_from_expr(then_expr, names);
+            collect_request_reassigned_names_from_expr(else_expr, names);
+        }
+        ExprKind::If {
+            condition,
+            then_branch,
+            else_branch,
+        } => {
+            collect_request_reassigned_names_from_expr(condition, names);
+            collect_request_reassigned_names(then_branch, names);
+            collect_request_reassigned_names(else_branch, names);
+        }
+        ExprKind::Switch { selector, arms } => {
+            if let Some(selector) = selector {
+                collect_request_reassigned_names_from_expr(selector, names);
+            }
+            for arm in arms {
+                if let Some(condition) = &arm.condition {
+                    collect_request_reassigned_names_from_expr(condition, names);
+                }
+                match &arm.result {
+                    SwitchArmResult::Expr(expr) => {
+                        collect_request_reassigned_names_from_expr(expr, names);
+                    }
+                    SwitchArmResult::Block(statements) => {
+                        collect_request_reassigned_names(statements, names);
+                    }
+                }
+            }
+        }
+        ExprKind::For {
+            from,
+            to,
+            step,
+            body,
+            ..
+        } => {
+            collect_request_reassigned_names_from_expr(from, names);
+            collect_request_reassigned_names_from_expr(to, names);
+            if let Some(step) = step {
+                collect_request_reassigned_names_from_expr(step, names);
+            }
+            collect_request_reassigned_names(body, names);
+        }
+        ExprKind::ForIn { iterable, body, .. } => {
+            collect_request_reassigned_names_from_expr(iterable, names);
+            collect_request_reassigned_names(body, names);
+        }
+        ExprKind::While { condition, body } => {
+            collect_request_reassigned_names_from_expr(condition, names);
+            collect_request_reassigned_names(body, names);
+        }
+        ExprKind::Tuple(items) => {
+            for item in items {
+                collect_request_reassigned_names_from_expr(item, names);
+            }
+        }
+        ExprKind::Call { callee, args } => {
+            collect_request_reassigned_names_from_expr(callee, names);
+            for arg in args {
+                collect_request_reassigned_names_from_expr(&arg.value, names);
+            }
+        }
+        ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => {}
     }
 }
 

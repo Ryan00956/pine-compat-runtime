@@ -22,11 +22,21 @@ indicator sources first pass through dialect-owned historical binders:
   colors, and session-bearing calls use historical parameter roles and
   defaults before lowering to canonical calls;
 - exact unqualified aliases such as the conformance-listed `sma`, `ema`, `bb`,
-  `crossover`, `abs`, pre-v4 colors/styles/metadata, and the focused expression
-  helpers resolve only after user symbols and only in their version ranges;
+  `change`, `cross`, `crossover`, `rma`, `wma`, `vwma`, `stdev`, `highest`,
+  `lowest`, `atr`, `linreg`, `stoch`, `pivothigh`, `pivotlow`, `barssince`,
+  `crossunder`, `macd`, `valuewhen`, `cci`, `mfi`, `mom`, `tr`, `obv`,
+  `heikinashi`, `round`, `sqrt`, `log`, `log10`, `ceil`, `pow`, `sign`,
+  `floor`, `sum`, `avg`, `abs`, `max`, `min`, pre-v4
+  colors/styles/metadata, and focused helpers such as Pine v4 `tostring(x, y)`
+  and historical `vwap(x)` resolve only after user symbols and only in their
+  version ranges;
 - `security(...)` uses the v1/v2 or v3/v4 historical argument table and lowers
   to internal request dispatch carrying explicit gaps/lookahead behavior and
-  the original source span;
+  the original source span. Historical calls additionally accept
+  const/input/simple symbol and resolution expressions plus immutable
+  top-level scalar alias graphs in the requested expression; series aliases
+  are recomputed in the requested context while const/input/simple
+  dependencies are captured from the chart context;
 - removed `rsi(x, y)` shapes are selected from analyzed types rather than
   argument spelling.
 
@@ -35,6 +45,13 @@ unsupported historical shape emits the relevant `E_LEGACY_*` diagnostic
 instead of falling through to a similar modern overload. The exact supported
 surface is the `legacy.*` section of the compatibility matrix, not all built-ins
 that existed in a historical Pine release.
+
+For Pine v1-v3 outputs, the historical tables omit later `display` and
+`fillgaps` roles while retaining `transp` on plot/marker/arrow/fill/background
+calls. `fill` and `bgcolor` default to transparency 90. Primitive output-style
+constants are interpreted by their old integer ordinal in the receiving plot
+or hline family before canonical lowering; this preserves source-era behavior
+without making the canonical style types interchangeable.
 
 ## Phase C Qualifier Audit Notes
 
@@ -635,8 +652,18 @@ The current executable subset has two forms:
   Explicit default merge options are accepted as metadata:
   `gaps=barmerge.gaps_off` and `lookahead=barmerge.lookahead_off`.
 
-Lower timeframe requests, provider expression local variable aliases, UDF calls,
-stateful math calls such as `math.random`, `ta.tr` variable form,
+Historical Pine v1-v4 `security` keeps its separate versioned gaps/lookahead
+policy and widens only that legacy path to simple symbol/resolution expressions
+and immutable top-level scalar aliases. Requested series aliases are evaluated
+from their initializer graph on every requested bar. Const, input, and simple
+dependencies such as lengths are captured once from the outer script. Mutable
+or persistent aliases, block-local aliases, cycles, UDF requested expressions,
+and side effects remain rejected. This does not widen modern
+`request.security` source analysis.
+
+For modern `request.security`, lower timeframe requests, provider expression
+local variable aliases, UDF calls, stateful math calls such as `math.random`,
+`ta.tr` variable form,
 output/drawing side effects, input
 declarations, array mutation, non-default barmerge behavior, and non-default
 explicit gaps/lookahead remain unsupported.

@@ -50,6 +50,7 @@ pub(crate) struct LegacyFrontEnd {
 pub(crate) struct LegacyOutputTranslationPlan {
     pub(crate) canonical_name: &'static str,
     pub(crate) arg_rewrites: Vec<lowering::LegacyCallArgRewrite>,
+    pub(crate) style_value_rewrites: Vec<(Span, &'static str)>,
     pub(crate) requires_adaptation: bool,
     pub(crate) emulates_transparency: bool,
     pub(crate) emulates_numeric_style: bool,
@@ -243,6 +244,10 @@ impl LegacyFrontEnd {
             .record_call(source_context_id, span, plan.canonical_name);
         self.lowering
             .record_call_arg_rewrites(source_context_id, span, plan.arg_rewrites);
+        for (value_span, canonical_style) in plan.style_value_rewrites {
+            self.lowering
+                .record_string_value(source_context_id, value_span, canonical_style);
+        }
         report::record_output_translation(
             report,
             self.dialect,
@@ -314,6 +319,16 @@ impl LegacyFrontEnd {
                 self.lowering
                     .record_call(source_context_id, span, "$legacy.rsi_series");
                 "legacy RSI two-series formula"
+            }
+            LegacyExpressionKind::Tostring => {
+                self.lowering
+                    .record_call(source_context_id, span, "str.tostring");
+                "str.tostring"
+            }
+            LegacyExpressionKind::Vwap => {
+                self.lowering
+                    .record_call(source_context_id, span, "ta.vwap");
+                "ta.vwap"
             }
         };
         self.lowering

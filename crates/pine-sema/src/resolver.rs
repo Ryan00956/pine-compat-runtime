@@ -59,6 +59,12 @@ impl ScopeResolver {
             .is_some_and(|index| index == 0)
     }
 
+    pub(crate) fn symbol_is_global(&self, id: SymbolId) -> bool {
+        self.scopes
+            .first()
+            .is_some_and(|scope| scope.values().any(|symbol| symbol.id == id))
+    }
+
     pub(crate) fn define_global(&mut self, name: &str, info: SymbolInfo) {
         let global_scope = self
             .scopes

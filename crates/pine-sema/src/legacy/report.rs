@@ -120,10 +120,18 @@ pub(crate) fn record_expression_translation(
     kind: LegacyExpressionKind,
     span: Span,
 ) {
+    let translation_kind = if matches!(
+        kind,
+        LegacyExpressionKind::Tostring | LegacyExpressionKind::Vwap
+    ) {
+        LegacyTranslationKind::SignatureReshape
+    } else {
+        LegacyTranslationKind::ExpressionDesugar
+    };
     report.legacy_translations.push(LegacyTranslation {
         source_feature: rule.source_name.to_owned(),
         canonical_feature: canonical_feature.to_owned(),
-        kind: LegacyTranslationKind::ExpressionDesugar,
+        kind: translation_kind,
         span,
     });
     let behavior = match kind {
@@ -133,7 +141,10 @@ pub(crate) fn record_expression_translation(
         LegacyExpressionKind::RsiSeries => Some(
             "Pine v1-v4 rsi with a non-simple-integer second argument uses the documented two-series arithmetic formula",
         ),
-        LegacyExpressionKind::Offset | LegacyExpressionKind::RsiLength => None,
+        LegacyExpressionKind::Offset
+        | LegacyExpressionKind::RsiLength
+        | LegacyExpressionKind::Tostring
+        | LegacyExpressionKind::Vwap => None,
     };
     if let Some(behavior) = behavior {
         report.legacy_emulations.push(LegacyEmulation {
