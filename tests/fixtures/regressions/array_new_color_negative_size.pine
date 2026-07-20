@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array new color negative size")
 values = array.new_color(-1)
 plot(array.size(values))

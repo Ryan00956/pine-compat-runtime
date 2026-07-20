@@ -1,0 +1,4 @@
+study("Shared v1 v2")
+length = input(3)
+average = sma(close, length)
+plot(average)

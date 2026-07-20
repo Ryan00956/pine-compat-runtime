@@ -1,3 +1,4 @@
+//@version=5
 indicator("Switch fixture")
 direction = close > open ? 1 : close < open ? -1 : 0
 

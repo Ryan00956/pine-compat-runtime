@@ -1,0 +1,4 @@
+//@version=4
+study("v4 strict iff")
+selected = iff(close > open, highest(high, 2), lowest(low, 2))
+plot(selected)

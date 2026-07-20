@@ -1,3 +1,4 @@
+//@version=5
 indicator("Import fixture")
 import user/lib/1 as lib
 plot(lib.scale(close) + lib.offset)

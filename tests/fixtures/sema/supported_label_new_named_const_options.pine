@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Supported label.new named const options")
 xloc_base = xloc.bar_index
 xloc_mode = xloc_base

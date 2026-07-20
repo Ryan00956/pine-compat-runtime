@@ -1,0 +1,4 @@
+//@version=3
+study("unresolved v3 na")
+value = na
+plot(close)

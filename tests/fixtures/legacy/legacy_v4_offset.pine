@@ -1,0 +1,3 @@
+//@version=4
+study("v4 offset")
+plot(offset(close, 1))

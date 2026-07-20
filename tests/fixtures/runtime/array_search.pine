@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array search fixture")
 numbers = array.new_int()
 array.push(numbers, 2)

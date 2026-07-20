@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array unshift limit")
 values = array.new_int(100000)
 array.unshift(values, 1)

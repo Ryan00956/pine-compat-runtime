@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array helpers fixture")
 numbers = array.new_int()
 array.unshift(numbers, 2)

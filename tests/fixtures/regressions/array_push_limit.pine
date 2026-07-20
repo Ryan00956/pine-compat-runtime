@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array push limit")
 values = array.new_int(100000)
 array.push(values, 1)

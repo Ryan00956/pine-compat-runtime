@@ -1,0 +1,11 @@
+//@version=4
+study("v4 alias equivalence")
+[basis, upper, lower] = bb(close, 3, 2)
+fast = ema(close, 3)
+slow = sma(close, 4)
+selected = crossover(fast, slow) ? fast : slow
+plot(basis)
+plot(upper)
+plot(lower)
+plot(selected)
+plot(abs(close - open))

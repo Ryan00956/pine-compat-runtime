@@ -1,3 +1,4 @@
+//@version=5
 library("Imported UDT array returns")
 
 export type Point

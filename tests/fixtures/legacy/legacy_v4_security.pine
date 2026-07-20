@@ -1,0 +1,4 @@
+//@version=4
+study("v4 security")
+dailyClose = security(syminfo.tickerid, "D", close)
+plot(dailyClose)

@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Box control flow")
 var box_id = box.new(bar_index, high, bar_index, low)
 var left_box = box.new(bar_index - 1, high + 1, bar_index, low - 1)

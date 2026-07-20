@@ -1,0 +1,5 @@
+//@version=4
+study("v4 RSI series overload")
+up = max(change(close), 0)
+down = -min(change(close), 0)
+plot(rsi(up, down))

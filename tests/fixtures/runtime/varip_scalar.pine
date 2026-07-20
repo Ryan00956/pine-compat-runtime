@@ -1,3 +1,4 @@
+//@version=5
 indicator("varip scalar")
 varip counter = 0
 varip total = 1.5

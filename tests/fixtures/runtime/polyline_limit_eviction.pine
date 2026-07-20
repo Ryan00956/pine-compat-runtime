@@ -1,3 +1,4 @@
+//@version=5
 indicator("Polyline limit eviction", max_polylines_count=2)
 
 points = array.new<chart.point>()

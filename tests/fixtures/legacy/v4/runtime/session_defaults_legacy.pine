@@ -1,0 +1,6 @@
+//@version=4
+study("v4 session default days")
+s = input("0000-2359", "Session", input.session)
+plot(na(time("D", s, "UTC")) ? 0 : 1)
+plot(na(time_close("D", s, "UTC")) ? 0 : 1)
+plot(s == "0000-2359" ? 1 : 0)

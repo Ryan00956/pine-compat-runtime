@@ -1,3 +1,4 @@
+//@version=5
 indicator("String format default number format")
 text = str.format("Value {0,number}", 1234.567)
 plot(text == "Value 1,234.567" ? 1 : 0)

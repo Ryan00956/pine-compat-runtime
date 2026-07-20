@@ -1,3 +1,4 @@
+//@version=5
 indicator("Table new positive dimensions")
 table.new(position.top_left, 0, 1)
 plot(close)

@@ -25,14 +25,23 @@ const bars = [
 ].join('\n');
 
 const analysis = JSON.parse(pine.analyzeScript(source));
+assert.equal(analysis.schemaVersion, 5);
+assert.equal(analysis.languageVersion, 6);
+assert.equal(analysis.languageVersionOrigin, 'explicit');
+assert.equal(analysis.dialect, 'v6');
+assert.equal(analysis.scriptMode, 'indicator');
 assert.equal(analysis.executable, true);
 assert.deepEqual(analysis.diagnostics, []);
+assert.deepEqual(analysis.compatibility.legacyTranslations, []);
+assert.deepEqual(analysis.compatibility.legacyEmulations, []);
 assert.ok(
   analysis.compatibility.supported.some(({ feature }) => feature === 'plot'),
   'analysis should report plot support',
 );
 
 const direct = JSON.parse(pine.runScriptCsv(source, bars));
+assert.equal(direct.schemaVersion, 8);
+assert.equal(direct.renderMetadataVersion, 1);
 assert.deepEqual(direct.plots[0].values, [2, 4, 6]);
 assert.deepEqual(direct.diagnostics, []);
 
@@ -42,6 +51,31 @@ const compiled = JSON.parse(program.runCsv(bars));
 assert.deepEqual(compiled.plots[0].values, [2, 4, 6]);
 assert.deepEqual(compiled, direct);
 program.free();
+
+const implicitLegacy = JSON.parse(
+  pine.analyzeScript('study("legacy")\nplot(close)\n'),
+);
+assert.equal(implicitLegacy.languageVersion, 1);
+assert.equal(implicitLegacy.languageVersionOrigin, 'implicit');
+assert.equal(implicitLegacy.dialect, 'v1');
+assert.equal(implicitLegacy.scriptMode, 'legacyIndicator');
+assert.equal(implicitLegacy.executable, true);
+assert.deepEqual(implicitLegacy.diagnostics, []);
+const implicitLegacyRun = JSON.parse(
+  pine.runScriptCsv('study("legacy")\nplot(close)\n', bars),
+);
+assert.deepEqual(implicitLegacyRun.plots[0].values, [1, 2, 3]);
+
+const legacyStrategy = JSON.parse(
+  pine.analyzeScript(
+    '//@version=4\nstrategy("legacy")\nstrategy.entry("L", strategy.long)\n',
+  ),
+);
+assert.equal(legacyStrategy.scriptMode, 'strategy');
+assert.deepEqual(
+  legacyStrategy.diagnostics.map(({ code }) => code),
+  ['E_LEGACY_STRATEGY_OUT_OF_SCOPE'],
+);
 
 const combinedSource = [
   '//@version=6',
@@ -89,7 +123,7 @@ assert.deepEqual(combined.plots[0].values, [31, 61, 91]);
 assert.deepEqual(combined.diagnostics, []);
 
 assert.throws(
-  () => pine.compileScript('indicator("broken")\nplot(unknown_name)\n'),
+  () => pine.compileScript('//@version=6\nindicator("broken")\nplot(unknown_name)\n'),
   (error) => {
     // Result<_, JsValue> is intentionally thrown by wasm-bindgen. JsValue::from_str
     // crosses the boundary as a thrown string rather than an Error instance.

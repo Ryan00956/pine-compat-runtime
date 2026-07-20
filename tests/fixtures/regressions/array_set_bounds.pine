@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array set bounds")
 values = array.from(10, 20, 30)
 array.set(values, 3, 40)

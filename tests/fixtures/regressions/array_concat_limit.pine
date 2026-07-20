@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array concat limit fixture")
 left = array.new_int(100000, 1)
 right = array.new_int(1, 2)

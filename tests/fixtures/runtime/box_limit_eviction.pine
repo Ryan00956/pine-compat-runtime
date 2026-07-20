@@ -1,3 +1,4 @@
+//@version=5
 indicator("Box limit eviction", max_boxes_count=2)
 
 if bar_index == 0

@@ -1,3 +1,4 @@
+//@version=5
 indicator("String match invalid named character")
 matched = str.match("A", "\\N{LATIN_CAPITAL_LETTER_A}")
 plot(str.length(matched))

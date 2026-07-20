@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array clear fixture")
 
 floats = array.from(close, high, na)

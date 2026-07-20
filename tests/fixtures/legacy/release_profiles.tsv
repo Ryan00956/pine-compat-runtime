@@ -1,0 +1,16 @@
+id	version	maturity	category	source_path	bars_profile	request_profile	realtime_policy	license_class	max_retained_values
+v1_shared	1	experimental	runtime	tests/fixtures/legacy/v1/runtime/shared_v1.pine	default	none	parity	original	4096
+v2_core	2	experimental	runtime	tests/fixtures/legacy/v2/runtime/core_legacy.pine	v2_core	none	parity	original	4096
+v2_security_lookahead	2	experimental	mtf	tests/fixtures/legacy/legacy_v2_security_lookahead.pine	legacy_chart	test_daily	legacy_lookahead_safe	original	4096
+v2_shared	2	experimental	runtime	tests/fixtures/legacy/v2/runtime/shared_v2.pine	default	none	parity	original	4096
+v3_core	3	preview	runtime	tests/fixtures/legacy/v3/runtime/core_legacy.pine	v3_core	none	parity	original	4096
+v3_security_same_context	3	preview	mtf	tests/fixtures/legacy/legacy_v3_security.pine	legacy_chart	test_chart	parity	original	4096
+v4_aliases	4	preview	runtime	tests/fixtures/legacy/v4/runtime/aliases_legacy.pine	default	none	parity	original	4096
+v4_expressions	4	preview	runtime	tests/fixtures/legacy/v4/runtime/expressions_legacy.pine	default	none	parity	original	4096
+v4_inputs	4	preview	runtime	tests/fixtures/legacy/v4/runtime/inputs_legacy.pine	default	none	parity	original	4096
+v4_logical_strict	4	preview	runtime	tests/fixtures/legacy/v4/runtime/logical_strict_legacy.pine	logical_strict	none	parity	original	4096
+v4_outputs	4	preview	runtime	tests/fixtures/legacy/v4/runtime/outputs_legacy.pine	default	none	parity	original	4096
+v4_security_daily	4	preview	mtf	tests/fixtures/legacy/legacy_v4_security.pine	legacy_chart	test_daily	parity	original	4096
+v4_security_provider	4	preview	runtime	tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine	security_chart	ibm_5	parity	original	4096
+v4_security_same_context	4	preview	runtime	tests/fixtures/legacy/v4/runtime/security_same_context_legacy.pine	default	none	parity	original	4096
+v4_session_defaults	4	preview	runtime	tests/fixtures/legacy/v4/runtime/session_defaults_legacy.pine	session_weekend	none	parity	original	4096

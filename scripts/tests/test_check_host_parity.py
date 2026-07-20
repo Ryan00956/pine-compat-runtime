@@ -113,6 +113,27 @@ assert_snapshot("real.json", &output);
             {"real.json"},
         )
 
+    def test_analysis_snapshot_helpers_count_as_real_host_assertions(self):
+        python_source = '''
+def test_contract():
+    assert_analysis_snapshot(
+        "tests/fixtures/legacy/v2/runtime/core_legacy.pine",
+        "tests/snapshots/analysis_legacy_v2_core.json",
+    )
+'''
+        wasm_source = '''
+assert_analysis_snapshot("analysis_legacy_v2_core.json", &output);
+'''
+
+        self.assertEqual(
+            check_host_parity.python_snapshot_assertions(python_source),
+            {"analysis_legacy_v2_core.json"},
+        )
+        self.assertEqual(
+            check_host_parity.wasm_snapshot_assertions(wasm_source),
+            {"analysis_legacy_v2_core.json"},
+        )
+
     def test_new_paired_assertion_must_be_added_to_manifest(self):
         errors = check_host_parity.parity_errors(
             {"required.json", "new.json"},

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guard the explicit CLI/Python/WASM runtime snapshot parity baseline."""
+"""Guard the explicit CLI/Python/WASM runtime and legacy-analysis parity baselines."""
 
 from __future__ import annotations
 
@@ -14,6 +14,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_DIR = ROOT / "crates/pine-cli/src/runtime_snapshots/fixtures"
 REQUIRED_MANIFEST = ROOT / "scripts/host_parity_required.txt"
+ANALYSIS_FIXTURE_FILE = ROOT / "crates/pine-cli/src/analysis_snapshots.rs"
+ANALYSIS_REQUIRED_MANIFEST = ROOT / "scripts/legacy_analysis_parity_required.txt"
 WASM_TESTS = ROOT / "crates/pine-wasm/src/tests/mod.rs"
 PYTHON_TESTS = ROOT / "python/tests/test_bindings.py"
 
@@ -30,7 +32,8 @@ SNAPSHOT_FIXTURE = re.compile(
 PYTHON_SNAPSHOT_PATH = re.compile(
     r'(?:^|/)tests/snapshots/([^/]+\.json)$'
 )
-PYTHON_GOLDEN_ASSERTION_HELPERS = {"assert_json_close"}
+PYTHON_GOLDEN_ASSERTION_HELPERS = {"assert_json_close", "assert_analysis_snapshot"}
+WASM_GOLDEN_ASSERTION_HELPERS = {"assert_snapshot", "assert_analysis_snapshot"}
 
 
 @dataclass(frozen=True)
@@ -54,6 +57,12 @@ def runtime_snapshot_fixtures() -> list[RuntimeSnapshotFixture]:
     for path in sorted(FIXTURE_DIR.glob("*.rs")):
         fixtures.extend(parse_runtime_snapshot_fixtures(path.read_text(), path))
     return fixtures
+
+
+def analysis_snapshot_fixtures() -> list[RuntimeSnapshotFixture]:
+    return parse_runtime_snapshot_fixtures(
+        ANALYSIS_FIXTURE_FILE.read_text(), ANALYSIS_FIXTURE_FILE
+    )
 
 
 def parse_required_manifest(text: str) -> tuple[list[str], list[str]]:
@@ -201,7 +210,7 @@ def wasm_snapshot_assertions(text: str) -> set[str]:
             end = index + 1
             while end < len(text) and (text[end].isalnum() or text[end] == "_"):
                 end += 1
-            if text[index:end] == "assert_snapshot":
+            if text[index:end] in WASM_GOLDEN_ASSERTION_HELPERS:
                 call_start = _skip_rust_trivia(text, end)
                 if call_start < len(text) and text[call_start] == "(":
                     argument_start = _skip_rust_trivia(text, call_start + 1)
@@ -343,6 +352,14 @@ def main() -> int:
     registered = set(registered_names)
     required_names, errors = parse_required_manifest(REQUIRED_MANIFEST.read_text())
     required = set(required_names)
+    analysis_fixtures = analysis_snapshot_fixtures()
+    analysis_registered_names = [fixture.snapshot for fixture in analysis_fixtures]
+    analysis_registered = set(analysis_registered_names)
+    analysis_required_names, analysis_manifest_errors = parse_required_manifest(
+        ANALYSIS_REQUIRED_MANIFEST.read_text()
+    )
+    errors.extend(analysis_manifest_errors)
+    analysis_required = set(analysis_required_names)
 
     duplicate_registered = sorted(
         name for name, count in Counter(registered_names).items() if count > 1
@@ -353,13 +370,40 @@ def main() -> int:
             + ", ".join(duplicate_registered)
         )
 
+    duplicate_analysis_registered = sorted(
+        name
+        for name, count in Counter(analysis_registered_names).items()
+        if count > 1
+    )
+    if duplicate_analysis_registered:
+        errors.append(
+            "CLI analysis snapshot registry has duplicate entries: "
+            + ", ".join(duplicate_analysis_registered)
+        )
+    collisions = sorted(registered & analysis_registered)
+    if collisions:
+        errors.append(
+            "runtime and analysis snapshot registries overlap: " + ", ".join(collisions)
+        )
+
+    wasm_assertions = wasm_snapshot_assertions(WASM_TESTS.read_text())
+    python_assertions = python_snapshot_assertions(PYTHON_TESTS.read_text())
+
     errors.extend(
         parity_errors(
             registered,
             required,
-            wasm_snapshot_assertions(WASM_TESTS.read_text()),
-            python_snapshot_assertions(PYTHON_TESTS.read_text()),
+            wasm_assertions,
+            python_assertions,
             UNPAIRED_REGISTERED_ALLOWLIST,
+        )
+    )
+    errors.extend(
+        parity_errors(
+            analysis_registered,
+            analysis_required,
+            wasm_assertions,
+            python_assertions,
         )
     )
 
@@ -372,7 +416,9 @@ def main() -> int:
     print(
         "Host parity guard passed: "
         f"found {len(registered)} registered CLI runtime snapshots; "
-        f"verified {len(required)} required Python/WASM golden assertions."
+        f"verified {len(required)} required runtime and "
+        f"{len(analysis_required)} required legacy-analysis Python/WASM "
+        "golden assertions."
     )
     return 0
 

@@ -1,0 +1,3 @@
+//@version=6
+indicator("Invalid call control")
+plot(close, imaginary_option=1)

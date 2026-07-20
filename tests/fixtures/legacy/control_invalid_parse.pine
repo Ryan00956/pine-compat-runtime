@@ -1,0 +1,3 @@
+//@version=4
+study("Broken legacy indicator"
+plot(close)

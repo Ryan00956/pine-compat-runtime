@@ -1,0 +1,4 @@
+//@version=3
+study("v3 input and style")
+length = input(3, "Length", type=integer)
+plot(sma(close, length), style=histogram)

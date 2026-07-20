@@ -1,0 +1,4 @@
+//@version=3
+study("v3 color helper")
+shade = color(red, 50)
+plot(close, color=shade)

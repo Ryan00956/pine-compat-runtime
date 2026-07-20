@@ -1,3 +1,4 @@
+//@version=5
 library("Imported non-scalar UDT fixture")
 export type Marker
     label id

@@ -1,3 +1,4 @@
+//@version=5
 indicator("varip local")
 
 branch_out = 0

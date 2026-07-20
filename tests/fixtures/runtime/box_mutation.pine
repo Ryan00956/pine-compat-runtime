@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Box mutation")
 var box_id = box.new(bar_index, high, bar_index, low)
 if bar_index == 1

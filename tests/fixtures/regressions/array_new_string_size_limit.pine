@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array new string size limit")
 values = array.new_string(100001)
 plot(array.size(values))

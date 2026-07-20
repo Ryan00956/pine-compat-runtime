@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Box new")
 if bar_index == 1
     first = box.new(bar_index, high, bar_index, low)

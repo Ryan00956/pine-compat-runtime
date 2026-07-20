@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Unsupported label.new named const options")
 style_base = "label.style_unknown"
 label_style = style_base

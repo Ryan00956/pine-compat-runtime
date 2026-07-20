@@ -1,0 +1,12 @@
+//@version=3
+study("v3 compatibility core", shorttitle="v3 core", precision=2)
+length = input(3, "Length", type=integer, minval=1, maxval=10)
+fast = ema(close, length)
+slow = sma(close, length)
+shade = color(red, 25)
+value = na
+if close > open
+    value := close
+plot(fast - slow, "spread", shade, 2, histogram)
+plot(value + n + interval, color=blue)
+hline(10, "Ten", gray, dotted)

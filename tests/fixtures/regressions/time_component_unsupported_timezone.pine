@@ -1,2 +1,3 @@
+//@version=5
 indicator("Time component unsupported timezone")
 plot(hour(time, "Mars/Olympus"))

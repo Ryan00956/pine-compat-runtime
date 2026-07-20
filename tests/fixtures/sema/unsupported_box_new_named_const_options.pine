@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Unsupported box.new named const options")
 border_base = line.style_arrow_left
 border_mode = border_base

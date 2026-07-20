@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Timeframe")
 tf = input.timeframe("60", "TF")
 plot(timeframe.period == "1" ? 1 : 0)

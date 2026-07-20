@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Table cell")
 var table_id = table.new(position.top_right, 2, 2)
 var deleted_table = table.new(position.bottom_left, 1, 1)

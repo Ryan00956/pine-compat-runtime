@@ -1,3 +1,4 @@
+//@version=5
 indicator("Table cell set height missing cell")
 table_id = table.new(position.top_left, 1, 1)
 table.cell_set_height(table_id, 0, 0, 10)

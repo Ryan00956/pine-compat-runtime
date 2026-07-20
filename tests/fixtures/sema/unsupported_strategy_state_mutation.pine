@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 strategy("Unsupported strategy state mutation")
 strategy.account_currency := "EUR"
 strategy.position_size := 1

@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array methods fixture")
 var persisted = array.new_float()
 fresh = array.new_float(2, close)

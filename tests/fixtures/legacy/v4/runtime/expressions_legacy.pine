@@ -1,0 +1,10 @@
+//@version=4
+study("v4 expression semantics")
+selected = iff(bar_index % 2 == 0, ema(close + 10, 2), ema(close - 10, 2))
+previous = offset(close, 1)
+seriesRsi = rsi(close, open)
+lengthRsi = rsi(close, 2)
+plot(selected)
+plot(previous)
+plot(seriesRsi)
+plot(lengthRsi)

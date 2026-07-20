@@ -1,0 +1,12 @@
+//@version=6
+indicator("v3 compatibility core", shorttitle="v3 core", precision=2)
+length = input.int(3, "Length", minval=1, maxval=10)
+fast = ta.ema(close, length)
+slow = ta.sma(close, length)
+shade = color.new(color.red, 25)
+float value = na
+if close > open
+    value := close
+plot(fast - slow, "spread", shade, 2, plot.style_histogram)
+plot(value + bar_index + timeframe.multiplier, color=color.blue)
+hline(10, "Ten", color.gray, hline.style_dotted)

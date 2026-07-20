@@ -1,3 +1,4 @@
+//@version=5
 indicator("Realtime chart point var rollback")
 
 var chart.point point = chart.point.from_index(bar_index, close)

@@ -1,3 +1,4 @@
+//@version=5
 indicator("Profile dynamic series history matrix.set column block arg miss", max_bars_back=10)
 src = close
 offset = bar_index == 0 ? 0 : 3

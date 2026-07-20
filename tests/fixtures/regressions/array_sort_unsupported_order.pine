@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array sort unsupported order")
 values = array.from(2, 1)
 array.sort(values, "sideways")

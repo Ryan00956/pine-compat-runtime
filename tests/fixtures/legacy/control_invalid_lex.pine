@@ -1,0 +1,3 @@
+//@version=6
+indicator("Unterminated string control)
+plot(close)

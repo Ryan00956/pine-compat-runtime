@@ -1,0 +1,4 @@
+//@version=4
+study("v4 SMA")
+length = input(3)
+plot(sma(close, length))

@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Label new points")
 if bar_index == 1
     index_point = chart.point.from_index(bar_index + 2, high)

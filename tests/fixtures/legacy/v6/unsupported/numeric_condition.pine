@@ -1,0 +1,3 @@
+//@version=6
+indicator("v6 numeric condition")
+plot((close - open) ? 1 : 0)

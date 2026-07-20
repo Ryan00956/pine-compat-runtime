@@ -1,0 +1,3 @@
+//@version=3
+study("later signature argument", format=format.price)
+plot(close, display=display.all)

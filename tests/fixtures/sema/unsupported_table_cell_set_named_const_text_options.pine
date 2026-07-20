@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Unsupported table.cell_set named const text options")
 id = table.new(position.top_left, 1, 1)
 table.cell(id, 0, 0, "A")

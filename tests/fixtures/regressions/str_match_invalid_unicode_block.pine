@@ -1,3 +1,4 @@
+//@version=5
 indicator("String match invalid Unicode block")
 matched = str.match("A", "\\p{InBasic-Latin}")
 plot(str.length(matched))

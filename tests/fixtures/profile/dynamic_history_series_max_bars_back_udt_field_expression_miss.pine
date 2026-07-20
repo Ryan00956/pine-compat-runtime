@@ -1,3 +1,4 @@
+//@version=5
 indicator("Profile dynamic series history UDT field expression max_bars_back miss", max_bars_back=10)
 type Point
     float x

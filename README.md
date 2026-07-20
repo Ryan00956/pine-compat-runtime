@@ -42,7 +42,7 @@ application to a charting service.
 
 ## Quick Start
 
-Version `0.1.0` ships ready-to-install Python wheels for CPython 3.10+ on
+Version `0.2.0` ships ready-to-install Python wheels for CPython 3.10+ on
 glibc Linux x86-64 and Windows x86-64. See the
 [latest release](https://github.com/Ryan00956/pine-compat-runtime/releases/latest)
 for checksums and machine-readable release metadata.
@@ -51,13 +51,13 @@ Linux x86-64:
 
 ```bash
 python -m pip install \
-  "https://github.com/Ryan00956/pine-compat-runtime/releases/download/v0.1.0/pine_compat_runtime-0.1.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+  "https://github.com/Ryan00956/pine-compat-runtime/releases/download/v0.2.0/pine_compat_runtime-0.2.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
 ```
 
 Windows x86-64:
 
 ```powershell
-py -m pip install "https://github.com/Ryan00956/pine-compat-runtime/releases/download/v0.1.0/pine_compat_runtime-0.1.0-cp310-abi3-win_amd64.whl"
+py -m pip install "https://github.com/Ryan00956/pine-compat-runtime/releases/download/v0.2.0/pine_compat_runtime-0.2.0-cp310-abi3-win_amd64.whl"
 ```
 
 Then run an indicator directly from Python:
@@ -92,12 +92,27 @@ bounded strategy runtime.
 
 | Area | Current executable subset |
 | --- | --- |
-| Language | v4/v5/v6 declarations, series and history, `var`/partial `varip`, functions, tuples, `if`, `switch`, partial `for`/`while`, strings, UDTs, and host-provided pure library imports |
-| Indicators | Common `ta.*`, selected `math.*`/`str.*`, inputs, plots, colors, alerts, drawing objects, tables, typed collections, and fixture-backed `request.security` |
+| Language | fixture-backed v1-v6 declarations, series and history, bounded v1/v2 declaration graphs, `var`/partial `varip`, functions, tuples, `if`, `switch`, partial `for`/`while`, strings, UDTs, and host-provided pure library imports |
+| Indicators | Common `ta.*`, selected `math.*`/`str.*`, inputs, plots, colors, alerts, drawing objects, tables, typed collections, fixture-backed `request.security`, and the documented executable Pine v1-v4 legacy-indicator subsets including `security` |
 | Execution | Deterministic historical runs, guarded history, input overrides, incremental append, and realtime forming-bar rollback |
 | Strategies | Partial long-only entries, orders, closes, cancellations, stop/limit/bracket/trailing exits, quantity reservations, positions, trades, and equity snapshots |
 | Outputs | Versioned plots, shapes, bars, candles, fills, labels, lines, line fills, polylines, boxes, tables, alerts, diagnostics, and strategy results |
 | Hosts | Rust workspace, `pine-compat` CLI, `pine_compat` Python module, and `wasm-bindgen` API |
+
+Legacy indicator compatibility is released by source version, not as one broad
+backwards-compatibility promise:
+
+| Source profile | Maturity | Current claim |
+| --- | --- | --- |
+| Pine v4 indicators | Preview | Direct execution for the conformance-listed declaration, input, alias, output, expression, session, and `security` subsets |
+| Pine v3 indicators | Preview | Direct execution for the conformance-listed pre-v4 declaration, input/output, alias, metadata, `na`, and same-context `security` subsets |
+| Pine v2 indicators | Experimental | Direct execution for the focused declaration graph, conversion, basic indicator, and historical-lookahead `security` subsets |
+| implicit Pine v1 indicators | Experimental | Direct execution for the focused v1/v2 shared `study`/input/average/plot subset |
+
+These labels reflect evidence breadth: the fixed original seed corpus contains
+only 12 v4, 7 v3, 2 v2, and 1 v1 eligible indicators. All currently pass, but
+none reaches the provisional 50-script stable-profile evidence gate. Legacy
+strategies are excluded from every profile.
 
 Support is intentionally feature-specific. Before adopting a script corpus,
 use the analyzer or the executable compatibility matrix rather than assuming
@@ -129,7 +144,8 @@ Compile once and reuse a program across data sets or input configurations:
 ```python
 import pine_compat
 
-source = '''indicator("Configurable SMA")
+source = '''//@version=6
+indicator("Configurable SMA")
 length = input.int(20, "Length")
 plot(ta.sma(close, length))
 '''
@@ -150,8 +166,29 @@ result = pine_compat.run_script(
     bars,
     request_bars={"NYSE:IBM:5": requested_bars},
     library_sources={"user/lib/1": library_source},
+    chart_symbol="NASDAQ:AAPL",
+    chart_timeframe="1",
 )
 ```
+
+Legacy indicators use their source version automatically; no host flag is
+needed. The same analysis schema reports the selected dialect and any
+translation/emulation evidence before execution:
+
+```python
+legacy = '''//@version=4
+study("Legacy SMA")
+length = input(20, "Length", input.integer)
+plot(sma(close, length))
+'''
+report = pine_compat.analyze_script(legacy)
+assert report["dialect"] == "v4" and report["executable"]
+result = pine_compat.run_script(legacy, bars)
+```
+
+The returned `executable` flag proves that this source is admitted by the
+implemented subset; it does not upgrade the whole v4 language profile beyond
+preview.
 
 ### CLI
 
@@ -167,8 +204,10 @@ Analyze without executing, or inject host-owned request and library data:
 
 ```bash
 cargo run -p pine-cli -- analyze script.pine
+cargo run -p pine-cli -- analyze script.pine --format json
 
 cargo run -p pine-cli -- run script.pine --bars bars.csv \
+  --chart-symbol NASDAQ:AAPL --chart-timeframe 1 \
   --request-bars NYSE:IBM:5=ibm-5m.csv \
   --library-source user/lib/1=lib.pine
 ```
@@ -190,8 +229,8 @@ behavior.
 
 ## Honest Compatibility
 
-`0.1.0` is a usable first release, not a full drop-in implementation of every
-Pine feature. Important current boundaries include:
+`0.2.0` is a compatibility-focused second release, not a full drop-in
+implementation of every Pine feature. Important current boundaries include:
 
 - the strategy broker model is still a partial, primarily long-only subset;
 - `request.*` support is limited and all requested data must be supplied by the
@@ -200,6 +239,11 @@ Pine feature. Important current boundaries include:
   registry lookup;
 - collection, drawing, alert, UDT, method, and import support is intentionally
   limited to fixture-backed shapes;
+- Pine v4/v3 legacy-indicator profiles are previews and Pine v2/v1 profiles are
+  experimental because the authorized release corpus is small and has no
+  external reference-output oracle;
+- legacy strategies, lower-timeframe legacy `security`, and unsupported
+  whole-program `study(resolution=...)` execution remain out of scope;
 - unsupported syntax or semantics are rejected with diagnostics rather than
   guessed.
 

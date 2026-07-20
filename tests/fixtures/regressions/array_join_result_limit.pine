@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array join result limit")
 values = array.new_string(410)
 array.set(values, 0, str.repeat("x", 100))

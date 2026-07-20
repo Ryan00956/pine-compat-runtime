@@ -1,0 +1,15 @@
+//@version=5
+indicator(title="v4 input equivalence")
+length = input.int(defval=3, title="Length", minval=1, maxval=9, confirm=false, step=1, options=[1, 3, 5], tooltip="Bars", inline="row", group="Core")
+scale = input.float(defval=1.5, title="Scale", minval=0.5, maxval=3.0, confirm=false, step=0.5, options=[1.0, 1.5, 2.0], tooltip="Factor", inline="row", group="Core")
+enabled = input.bool(defval=true, title="Enabled", confirm=false, tooltip="Toggle", inline="flags", group="Core")
+shade = input.color(defval=color.orange, title="Shade", confirm=false, tooltip="Color", inline="flags", group="Core")
+mode = input.string(defval="SMA", title="Mode", confirm=false, options=["SMA", "EMA"], tooltip="Average", inline="mode", group="Core")
+symbol = input.symbol(defval="AAPL", title="Symbol", confirm=false, tooltip="Ticker", inline="symbol", group="Context")
+resolution = input.timeframe(defval="60", title="Resolution", confirm=false, tooltip="Timeframe", inline="context", group="Context")
+session = input.session(defval="0930-1600", title="Session", confirm=false, tooltip="Hours", inline="context", group="Context")
+source = input.source(defval=close, title="Source", inline="source", group="Core", tooltip="Price")
+start = input.time(defval=0, title="Start", confirm=false, tooltip="Timestamp", inline="time", group="Context")
+price = input.price(defval=2.0, title="Price", confirm=false, tooltip="Level", inline="time", group="Context")
+selected = enabled and mode == "SMA" and symbol == "AAPL" and resolution == "60" and session == "0930-1600" and time >= start
+plot(selected ? ta.sma(source, length) * scale + price : open, color=shade)

@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array new linefill size limit")
 values = array.new_linefill(100001)
 plot(array.size(values))

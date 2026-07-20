@@ -1,0 +1,5 @@
+//@version=2
+study("v2 reference cycle")
+left = right + 1
+right = left + 1
+plot(left)

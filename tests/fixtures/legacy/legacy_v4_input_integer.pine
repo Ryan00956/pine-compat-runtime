@@ -1,0 +1,4 @@
+//@version=4
+study("v4 integer input")
+length = input(3, "Length", type=input.integer, minval=1)
+plot(sma(close, length))

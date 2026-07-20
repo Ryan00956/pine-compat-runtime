@@ -12,6 +12,7 @@ BARS = [
 
 RUNTIME_RESULT_KEYS = {
     "schemaVersion",
+    "renderMetadataVersion",
     "plots",
     "plotChars",
     "plotShapes",
@@ -107,13 +108,50 @@ def assert_json_close(actual, expected, path="$"):
     assert actual == expected, f"{path}: {actual!r} != {expected!r}"
 
 
-def test_analyze_script_reports_executable_script():
-    report = pine_compat.analyze_script('indicator("demo")\nplot(close)\n')
+def assert_analysis_snapshot(source_path, snapshot_path):
+    source = (ROOT / source_path).read_text()
+    expected = json.loads((ROOT / snapshot_path).read_text())
+    assert pine_compat.analyze_script(source) == expected
 
-    assert report["schemaVersion"] == 3
+
+def test_legacy_analysis_profiles_match_cli_golden_snapshots():
+    assert_analysis_snapshot(
+        "tests/fixtures/legacy/v1/runtime/shared_v1.pine",
+        "tests/snapshots/analysis_legacy_v1_shared.json",
+    )
+    assert_analysis_snapshot(
+        "tests/fixtures/legacy/v2/runtime/core_legacy.pine",
+        "tests/snapshots/analysis_legacy_v2_core.json",
+    )
+    assert_analysis_snapshot(
+        "tests/fixtures/legacy/v2/unsupported/reference_cycle.pine",
+        "tests/snapshots/analysis_legacy_v2_reference_cycle.json",
+    )
+    assert_analysis_snapshot(
+        "tests/fixtures/legacy/v3/runtime/core_legacy.pine",
+        "tests/snapshots/analysis_legacy_v3_core.json",
+    )
+    assert_analysis_snapshot(
+        "tests/fixtures/legacy/v4/runtime/inputs_legacy.pine",
+        "tests/snapshots/analysis_legacy_v4_inputs.json",
+    )
+
+
+def test_analyze_script_reports_executable_script():
+    report = pine_compat.analyze_script(
+        '//@version=6\nindicator("demo")\nplot(close)\n'
+    )
+
+    assert report["schemaVersion"] == 5
+    assert report["languageVersion"] == 6
+    assert report["languageVersionOrigin"] == "explicit"
+    assert report["dialect"] == "v6"
+    assert report["scriptMode"] == "indicator"
     assert report["executable"] is True
     assert report["diagnostics"] == []
     assert report["inputs"] == []
+    assert report["compatibility"]["legacyTranslations"] == []
+    assert report["compatibility"]["legacyEmulations"] == []
     assert any(
         feature["feature"] == "plot"
         for feature in report["compatibility"]["supported"]
@@ -122,13 +160,13 @@ def test_analyze_script_reports_executable_script():
 
 def test_analyze_script_reports_input_call_sites():
     report = pine_compat.analyze_script(
-        'indicator("inputs")\n'
+        '//@version=6\nindicator("inputs")\n'
         'length = input.int(2, "Length")\n'
         'mode = input.string("SMA", title="Mode")\n'
         'plot(close)\n'
     )
 
-    assert report["schemaVersion"] == 3
+    assert report["schemaVersion"] == 5
     assert report["diagnostics"] == []
     assert [
         {"name": item["name"], "title": item["title"]}
@@ -140,9 +178,181 @@ def test_analyze_script_reports_input_call_sites():
     assert all(isinstance(item["callSiteId"], int) for item in report["inputs"])
 
 
+def test_analyze_script_reports_executable_implicit_v1_legacy_indicator():
+    report = pine_compat.analyze_script('study("legacy")\nplot(close)\n')
+
+    assert report["schemaVersion"] == 5
+    assert report["languageVersion"] == 1
+    assert report["languageVersionOrigin"] == "implicit"
+    assert report["dialect"] == "v1"
+    assert report["scriptMode"] == "legacyIndicator"
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
+    assert [
+        (item["sourceFeature"], item["canonicalFeature"], item["kind"])
+        for item in report["compatibility"]["legacyTranslations"]
+    ] == [("study", "indicator", "signatureReshape")]
+    assert report["compatibility"]["legacyEmulations"] == []
+
+
+def test_analyze_script_reports_executable_v4_legacy_translations():
+    report = pine_compat.analyze_script(
+        '//@version=4\nstudy("legacy")\nplot(sma(close, 2))\n'
+    )
+
+    assert report["languageVersion"] == 4
+    assert report["languageVersionOrigin"] == "explicit"
+    assert report["dialect"] == "v4"
+    assert report["scriptMode"] == "legacyIndicator"
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
+    assert [
+        (item["sourceFeature"], item["canonicalFeature"], item["kind"])
+        for item in report["compatibility"]["legacyTranslations"]
+    ] == [
+        ("study", "indicator", "signatureReshape"),
+        ("sma", "ta.sma", "exactAlias"),
+    ]
+
+
+def test_analyze_script_reports_executable_v3_names_constants_and_na_inference():
+    source = (
+        ROOT / "tests/fixtures/legacy/v3/runtime/core_legacy.pine"
+    ).read_text()
+    report = pine_compat.analyze_script(source)
+
+    assert report["languageVersion"] == 3
+    assert report["languageVersionOrigin"] == "explicit"
+    assert report["dialect"] == "v3"
+    assert report["scriptMode"] == "legacyIndicator"
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
+    translations = {
+        (item["sourceFeature"], item["canonicalFeature"])
+        for item in report["compatibility"]["legacyTranslations"]
+    }
+    assert {
+        ("study", "indicator"),
+        ("integer", "input.int"),
+        ("color", "color.new"),
+        ("n", "bar_index"),
+        ("interval", "timeframe.multiplier"),
+    } <= translations
+    assert any(
+        item["feature"] == "v3.untyped_na"
+        for item in report["compatibility"]["legacyEmulations"]
+    )
+
+
+def test_analyze_script_reports_v2_graph_and_conversion_emulations():
+    source = (
+        ROOT / "tests/fixtures/legacy/v2/runtime/core_legacy.pine"
+    ).read_text()
+    report = pine_compat.analyze_script(source)
+
+    assert report["languageVersion"] == 2
+    assert report["languageVersionOrigin"] == "explicit"
+    assert report["dialect"] == "v2"
+    assert report["scriptMode"] == "legacyIndicator"
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
+    emulated = {
+        item["feature"] for item in report["compatibility"]["legacyEmulations"]
+    }
+    assert {
+        "v2.self_reference",
+        "v2.forward_reference",
+        "v2.bool_arithmetic",
+        "v2.numeric_to_bool",
+    } <= emulated
+
+
+def test_analyze_script_reports_v4_legacy_output_adaptations():
+    report = pine_compat.analyze_script(
+        '//@version=4\nstudy("outputs")\n'
+        'p = plot(close, style=5, transp=40)\n'
+        'bgcolor(color.blue)\n'
+    )
+
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
+    translations = report["compatibility"]["legacyTranslations"]
+    assert ("plot", "plot", "outputAdaptation") in [
+        (item["sourceFeature"], item["canonicalFeature"], item["kind"])
+        for item in translations
+    ]
+    emulated = {
+        item["feature"] for item in report["compatibility"]["legacyEmulations"]
+    }
+    assert {"plot.transp", "plot.numeric_style", "bgcolor.transp"} <= emulated
+
+
+def test_analyze_script_reports_v4_legacy_expression_semantics():
+    report = pine_compat.analyze_script(
+        '//@version=4\nstudy("expressions")\n'
+        'plot(iff(close > open, high, low))\n'
+        'plot(offset(close, 1))\n'
+        'plot(rsi(close, open))\n'
+    )
+
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
+    translations = {
+        (item["sourceFeature"], item["canonicalFeature"], item["kind"])
+        for item in report["compatibility"]["legacyTranslations"]
+    }
+    assert {
+        ("iff", "eager select", "expressionDesugar"),
+        ("offset", "history access", "expressionDesugar"),
+        ("rsi", "legacy RSI two-series formula", "expressionDesugar"),
+    } <= translations
+    emulated = {
+        item["feature"] for item in report["compatibility"]["legacyEmulations"]
+    }
+    assert {"iff", "rsi"} <= emulated
+
+
+def test_analyze_script_reports_v4_legacy_security_routing():
+    report = pine_compat.analyze_script(
+        '//@version=4\nstudy("security")\n'
+        'plot(security(syminfo.tickerid, timeframe.period, close))\n'
+    )
+
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
+    translations = {
+        (item["sourceFeature"], item["canonicalFeature"], item["kind"])
+        for item in report["compatibility"]["legacyTranslations"]
+    }
+    assert ("security", "request.security", "signatureReshape") in translations
+    emulations = report["compatibility"]["legacyEmulations"]
+    assert any(
+        item["feature"] == "security.merge"
+        and "gaps_off/lookahead_off" in item["behavior"]
+        for item in emulations
+    )
+
+
+def test_analyze_script_reports_one_legacy_strategy_hard_stop():
+    report = pine_compat.analyze_script(
+        '//@version=4\nstrategy("legacy")\n'
+        'strategy.entry("L", strategy.long)\n'
+    )
+
+    assert report["languageVersion"] == 4
+    assert report["languageVersionOrigin"] == "explicit"
+    assert report["dialect"] == "v4"
+    assert report["scriptMode"] == "strategy"
+    assert report["executable"] is False
+    assert [item["code"] for item in report["diagnostics"]] == [
+        "E_LEGACY_STRATEGY_OUT_OF_SCOPE"
+    ]
+    assert report["compatibility"]["unsupported"][0]["feature"] == "legacy strategy"
+
+
 def test_program_run_accepts_call_site_keyed_input_overrides():
     source = (
-        'indicator("input overrides")\n'
+        '//@version=5\nindicator("input overrides")\n'
         'length = input.int(2, "Length")\n'
         'scale = input.float(1.0, "Scale")\n'
         'enabled = input.bool(true, "Enabled")\n'
@@ -151,6 +361,9 @@ def test_program_run_accepts_call_site_keyed_input_overrides():
         'base = enabled and mode == "SMA" ? ta.sma(close, length) * scale : open\n'
         'plot(base)\n'
         'plot(color.r(shade))\n'
+        'plot(color.g(shade))\n'
+        'plot(color.t(shade))\n'
+        'bgcolor(shade)\n'
     )
     report = pine_compat.analyze_script(source)
     input_ids = {
@@ -167,19 +380,78 @@ def test_program_run_accepts_call_site_keyed_input_overrides():
         input_ids["Scale"]: 2.0,
         input_ids["Enabled"]: True,
         input_ids["Mode"]: "SMA",
-        input_ids["Shade"]: 0x4CAF50,
+        input_ids["Shade"]: "#00FF0080",
     }
     result = program.run(BARS, input_overrides=overrides)
     assert result["plots"][0]["values"] == [2.0, 4.0, 6.0]
-    assert result["plots"][1]["values"] == [76.0, 76.0, 76.0]
+    assert result["plots"][1]["values"] == [0.0, 0.0, 0.0]
+    assert result["plots"][2]["values"] == [255.0, 255.0, 255.0]
+    assert result["plots"][3]["values"] == [50.0, 50.0, 50.0]
+    assert result["bgColors"][0]["values"] == [4311679104, 4311679104, 4311679104]
 
     script_result = pine_compat.run_script(source, BARS, input_overrides=overrides)
     assert script_result["plots"][0]["values"] == [2.0, 4.0, 6.0]
 
 
+def test_schema_versions_and_input_constraints_are_public():
+    assert pine_compat.ANALYSIS_SCHEMA_VERSION == 5
+    assert pine_compat.RUNTIME_SCHEMA_VERSION == 8
+    assert pine_compat.RENDER_METADATA_VERSION == 1
+
+    report = pine_compat.analyze_script(
+        '//@version=6\nindicator("input metadata")\n'
+        'length = input.int(3, "Length", minval=1, maxval=9, step=2, options=[1, 3, 5])\n'
+        'plot(close)\n'
+    )
+    assert report["inputs"][0] == {
+        "callSiteId": 1,
+        "name": "input.int",
+        "title": "Length",
+        "default": 3,
+        "min": 1,
+        "max": 9,
+        "step": 2,
+        "options": [1, 3, 5],
+    }
+
+
+def test_program_run_accepts_v4_legacy_input_overrides():
+    source = Path(
+        "tests/fixtures/legacy/v4/runtime/inputs_legacy.pine"
+    ).read_text(encoding="utf-8")
+    report = pine_compat.analyze_script(source)
+    input_ids = {
+        item["title"]: item["callSiteId"]
+        for item in report["inputs"]
+    }
+
+    assert report["executable"] is True
+    assert len(report["inputs"]) == 11
+    assert report["inputs"][0] == {
+        "callSiteId": 1,
+        "name": "input.int",
+        "title": "Length",
+        "default": 3,
+        "min": 1,
+        "max": 9,
+        "step": 1,
+        "options": [1, 3, 5],
+    }
+
+    result = pine_compat.compile_script(source).run(
+        BARS,
+        input_overrides={
+            input_ids["Length"]: 1,
+            input_ids["Scale"]: 2.0,
+            input_ids["Price"]: 1.0,
+        },
+    )
+    assert result["plots"][0]["values"] == [3.0, 5.0, 7.0]
+
+
 def test_program_run_accepts_generic_color_input_override_string():
     source = (
-        'indicator("generic color")\n'
+        '//@version=5\nindicator("generic color")\n'
         'shade = input(color.red, "Shade")\n'
         'plot(color.r(shade))\n'
     )
@@ -192,9 +464,105 @@ def test_program_run_accepts_generic_color_input_override_string():
     assert result["plots"][0]["values"] == [76.0, 76.0, 76.0]
 
 
+def test_generic_input_overrides_use_analyzed_value_kinds():
+    source = (
+        '//@version=5\nindicator("generic input overrides")\n'
+        'text_true = input("default", "Text true")\n'
+        'text_number = input("default", "Text number")\n'
+        'text_color = input("default", "Text color")\n'
+        'enabled = input(true, "Enabled")\n'
+        'count = input(1, "Count")\n'
+        'scale = input(1.0, "Scale")\n'
+        'shade = input(color.red, "Shade")\n'
+        'plot(text_true == "true" ? 1 : 0)\n'
+        'plot(text_number == "42" ? 1 : 0)\n'
+        'plot(text_color == "#00FF0080" ? 1 : 0)\n'
+        'plot(enabled ? 1 : 0)\n'
+        'plot(count)\n'
+        'plot(scale)\n'
+        'plot(color.g(shade))\n'
+        'plot(color.t(shade))\n'
+    )
+    report = pine_compat.analyze_script(source)
+    input_ids = {
+        item["title"]: item["callSiteId"]
+        for item in report["inputs"]
+    }
+    result = pine_compat.compile_script(source).run(
+        BARS,
+        input_overrides={
+            input_ids["Text true"]: "true",
+            input_ids["Text number"]: "42",
+            input_ids["Text color"]: "#00FF0080",
+            input_ids["Enabled"]: False,
+            input_ids["Count"]: 42,
+            input_ids["Scale"]: 2.5,
+            input_ids["Shade"]: 4311679104,
+        },
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [1.0, 1.0, 1.0],
+        [1.0, 1.0, 1.0],
+        [1.0, 1.0, 1.0],
+        [0.0, 0.0, 0.0],
+        [42.0, 42.0, 42.0],
+        [2.5, 2.5, 2.5],
+        [255.0, 255.0, 255.0],
+        [50.0, 50.0, 50.0],
+    ]
+
+
+def test_input_color_override_round_trips_public_numeric_encoding_and_rejects_invalid_values():
+    source = (
+        '//@version=5\nindicator("color override")\n'
+        'shade = input.color(color.red, "Shade")\n'
+        'plot(color.g(shade))\n'
+        'plot(color.t(shade))\n'
+        'bgcolor(shade)\n'
+    )
+    report = pine_compat.analyze_script(source)
+    call_site_id = report["inputs"][0]["callSiteId"]
+    program = pine_compat.compile_script(source)
+
+    result = program.run(BARS, input_overrides={call_site_id: 4311679104})
+    assert result["plots"][0]["values"] == [255.0, 255.0, 255.0]
+    assert result["plots"][1]["values"] == [50.0, 50.0, 50.0]
+    assert result["bgColors"][0]["values"] == [4311679104] * 3
+
+    for invalid in (-1, 4311744512, 1.5, True):
+        try:
+            program.run(BARS, input_overrides={call_site_id: invalid})
+        except ValueError as error:
+            assert "valid public color integer" in str(error)
+        else:
+            raise AssertionError(f"invalid public color {invalid!r} should fail")
+
+
+def test_program_run_rejects_normalized_duplicate_input_override_call_sites():
+    source = (
+        '//@version=5\nindicator("inputs")\n'
+        'length = input.int(2, "Length")\n'
+        'plot(length)\n'
+    )
+    report = pine_compat.analyze_script(source)
+    call_site_id = report["inputs"][0]["callSiteId"]
+    program = pine_compat.compile_script(source)
+
+    try:
+        program.run(
+            BARS,
+            input_overrides={call_site_id: 1, str(call_site_id): 2},
+        )
+    except ValueError as error:
+        assert f"duplicate input override for callSiteId {call_site_id}" in str(error)
+    else:
+        raise AssertionError("normalized duplicate input callSiteId should fail")
+
+
 def test_program_run_rejects_unknown_input_override_call_site():
     program = pine_compat.compile_script(
-        'indicator("inputs")\n'
+        '//@version=5\nindicator("inputs")\n'
         'length = input.int(2, "Length")\n'
         'plot(ta.sma(close, length))\n'
     )
@@ -208,10 +576,10 @@ def test_program_run_rejects_unknown_input_override_call_site():
 
 
 def test_compile_script_returns_program_with_run_method():
-    program = pine_compat.compile_script('indicator("demo")\nplot(close)\n')
+    program = pine_compat.compile_script('//@version=5\nindicator("demo")\nplot(close)\n')
     result = program.run(BARS)
 
-    assert result["schemaVersion"] == 7
+    assert result["schemaVersion"] == 8
     assert set(result) == RUNTIME_RESULT_KEYS
     assert result["labels"] == []
     assert result["lines"] == []
@@ -230,7 +598,7 @@ def test_run_script_rejects_non_finite_bar_values():
     ]
 
     try:
-        pine_compat.run_script('indicator("demo")\nplot(close)\n', bars)
+        pine_compat.run_script('//@version=5\nindicator("demo")\nplot(close)\n', bars)
     except ValueError as error:
         assert "bar `close` value must be finite" in str(error)
     else:
@@ -244,7 +612,7 @@ def test_run_script_rejects_duplicate_bar_times():
     ]
 
     try:
-        pine_compat.run_script('indicator("demo")\nplot(close)\n', bars)
+        pine_compat.run_script('//@version=5\nindicator("demo")\nplot(close)\n', bars)
     except ValueError as error:
         assert "duplicate bar time `0`" in str(error)
     else:
@@ -258,7 +626,7 @@ def test_run_script_rejects_unsorted_bar_times():
     ]
 
     try:
-        pine_compat.run_script('indicator("demo")\nplot(close)\n', bars)
+        pine_compat.run_script('//@version=5\nindicator("demo")\nplot(close)\n', bars)
     except ValueError as error:
         assert "bars are not sorted: `0` follows `1`" in str(error)
     else:
@@ -266,7 +634,7 @@ def test_run_script_rejects_unsorted_bar_times():
 
 
 def test_run_script_converts_non_finite_plot_values_to_none():
-    result = pine_compat.run_script('indicator("demo")\nplot(1.0 / 0.0)\n', BARS)
+    result = pine_compat.run_script('//@version=5\nindicator("demo")\nplot(1.0 / 0.0)\n', BARS)
 
     assert result["plots"][0]["values"] == [None, None, None]
 
@@ -370,6 +738,154 @@ def test_run_script_returns_ticker_fixture_contract():
 def test_run_script_returns_hline_fill_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/io.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_hline_fill.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v4_output_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v4/runtime/outputs_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v4_outputs.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v1_shared_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v1/runtime/shared_v1.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v1_shared.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v3_core_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v3/runtime/core_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v3_core.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/legacy/v3/runtime/core_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v2_core_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v2/runtime/core_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v2_core.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/legacy/v2/runtime/core_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v4_expression_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v4/runtime/expressions_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v4_expressions.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v4_input_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v4/runtime/inputs_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v4_inputs.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v4_strict_logical_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v4/runtime/logical_strict_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v4_logical_strict.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/legacy/v4/runtime/logical_strict_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v4_session_default_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v4/runtime/session_defaults_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v4_session_defaults.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/legacy/v4/runtime/session_weekend_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v4_security_same_context_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/legacy/v4/runtime/security_same_context_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_legacy_v4_security_same_context.json"
+        ).read_text()
+    )
 
     result = pine_compat.run_script(
         source,
@@ -2833,7 +3349,7 @@ def test_compile_script_rejects_deep_input_without_aborting_process():
     expression = "(" * 300 + "close" + ")" * 300
 
     try:
-        pine_compat.compile_script(f'indicator("deep")\nplot({expression})\n')
+        pine_compat.compile_script(f'//@version=5\nindicator("deep")\nplot({expression})\n')
     except ValueError as error:
         assert "E_PARSE_EXPR_DEPTH" in str(error)
     else:
@@ -2842,7 +3358,7 @@ def test_compile_script_rejects_deep_input_without_aborting_process():
 
 def test_run_script_returns_empty_strategy_contract_for_strategy_mode():
     result = pine_compat.run_script(
-        'strategy("demo")\nplot(close)\n',
+        '//@version=5\nstrategy("demo")\nplot(close)\n',
         BARS,
     )
 
@@ -2856,7 +3372,7 @@ def test_run_script_returns_empty_strategy_contract_for_strategy_mode():
 
 def test_run_script_returns_strategy_entry_contract():
     result = pine_compat.run_script(
-        'strategy("demo")\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nplot(close)\n',
+        '//@version=5\nstrategy("demo")\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nplot(close)\n',
         BARS,
     )
 
@@ -3920,7 +4436,7 @@ def test_run_script_returns_strategy_profit_state_fixture_contract():
 
 def test_run_script_returns_strategy_profit_summary_plots():
     result = pine_compat.run_script(
-        'strategy("demo")\nif bar_index == 0\n    strategy.entry("W", strategy.long, qty=1)\nif bar_index == 2\n    strategy.close("W")\nif bar_index == 3\n    strategy.entry("L", strategy.long, qty=1)\nif bar_index == 5\n    strategy.close("L")\nplot(strategy.netprofit)\nplot(strategy.grossprofit)\nplot(strategy.grossloss)\nplot(strategy.avg_trade)\nplot(strategy.avg_winning_trade)\nplot(strategy.avg_losing_trade)\n',
+        '//@version=5\nstrategy("demo")\nif bar_index == 0\n    strategy.entry("W", strategy.long, qty=1)\nif bar_index == 2\n    strategy.close("W")\nif bar_index == 3\n    strategy.entry("L", strategy.long, qty=1)\nif bar_index == 5\n    strategy.close("L")\nplot(strategy.netprofit)\nplot(strategy.grossprofit)\nplot(strategy.grossloss)\nplot(strategy.avg_trade)\nplot(strategy.avg_winning_trade)\nplot(strategy.avg_losing_trade)\n',
         fixture_bars("tests/fixtures/runtime/strategy_trade_outcome_counts_bars.csv"),
     )
 
@@ -6086,7 +6602,7 @@ def test_run_script_returns_strategy_exit_active_entry_attachment_contract():
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 7
+    assert result["schemaVersion"] == 8
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -6168,7 +6684,7 @@ def test_run_script_returns_strategy_exit_active_entry_profit_attachment_contrac
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 7
+    assert result["schemaVersion"] == 8
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -6232,7 +6748,7 @@ def test_run_script_returns_strategy_exit_active_entry_loss_attachment_contract(
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 7
+    assert result["schemaVersion"] == 8
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -6297,7 +6813,7 @@ def test_run_script_returns_strategy_exit_active_entry_trail_points_attachment_c
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 7
+    assert result["schemaVersion"] == 8
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -6361,7 +6877,7 @@ def test_run_script_returns_strategy_exit_active_entry_stop_profit_bracket_contr
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 7
+    assert result["schemaVersion"] == 8
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -6425,7 +6941,7 @@ def test_run_script_returns_strategy_exit_active_entry_loss_limit_bracket_contra
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 7
+    assert result["schemaVersion"] == 8
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -6489,7 +7005,7 @@ def test_run_script_returns_strategy_exit_active_entry_loss_profit_bracket_contr
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 7
+    assert result["schemaVersion"] == 8
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -6553,7 +7069,7 @@ def test_run_script_returns_strategy_exit_bracket_reservation_fixture_contract()
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 7
+    assert result["schemaVersion"] == 8
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -6721,7 +7237,7 @@ def test_run_script_returns_strategy_exit_trailing_reservation_fixture_contract(
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 7
+    assert result["schemaVersion"] == 8
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -7550,7 +8066,7 @@ def test_run_script_returns_omitted_trail_points_persistent_fixture_contract():
 
 def test_run_script_returns_strategy_runtime_diagnostics():
     result = pine_compat.run_script(
-        'strategy("demo")\nif bar_index == 0\n    strategy.entry("L", strategy.long, qty=close-close)\n',
+        '//@version=5\nstrategy("demo")\nif bar_index == 0\n    strategy.entry("L", strategy.long, qty=close-close)\n',
         BARS,
     )
 
@@ -7564,7 +8080,7 @@ def test_run_script_returns_strategy_runtime_diagnostics():
 
 def test_run_script_treats_strategy_exit_missing_entry_as_noop():
     result = pine_compat.run_script(
-        'strategy("exit")\nif bar_index == 0\n    strategy.exit("XL", "L", stop=low)\n',
+        '//@version=5\nstrategy("exit")\nif bar_index == 0\n    strategy.exit("XL", "L", stop=low)\n',
         BARS,
     )
 
@@ -7952,8 +8468,8 @@ def test_run_script_treats_strategy_exit_trailing_wrong_entry_as_noop():
 
 def test_analyze_script_accepts_library_sources_without_import_use():
     report = pine_compat.analyze_script(
-        'indicator("root")\nplot(close)\n',
-        library_sources={"user/lib/1": 'library("lib")\n'},
+        '//@version=5\nindicator("root")\nplot(close)\n',
+        library_sources={"user/lib/1": '//@version=5\nlibrary("lib")\n'},
     )
 
     assert report["executable"] is True
@@ -7964,7 +8480,7 @@ def test_compile_script_requires_import_alias_for_library_source():
     try:
         pine_compat.compile_script(
             'import user/lib/1\nindicator("root")\n',
-            library_sources={"user/lib/1": 'library("lib")\n'},
+            library_sources={"user/lib/1": '//@version=5\nlibrary("lib")\n'},
         )
     except ValueError as error:
         assert "E_IMPORT_ALIAS_REQUIRED" in str(error)
@@ -7974,10 +8490,10 @@ def test_compile_script_requires_import_alias_for_library_source():
 
 def test_run_script_accepts_imported_pure_function_subset():
     result = pine_compat.run_script(
-        'indicator("root")\nimport user/lib/1 as lib\nplot(lib.scale(close) + lib.offset)\n',
+        '//@version=5\nindicator("root")\nimport user/lib/1 as lib\nplot(lib.scale(close) + lib.offset)\n',
         BARS,
         library_sources={
-            "user/lib/1": 'library("lib")\nexport offset = 2\nexport scale(value) => value * offset\n'
+            "user/lib/1": '//@version=5\nlibrary("lib")\nexport offset = 2\nexport scale(value) => value * offset\n'
         },
     )
 
@@ -7987,8 +8503,8 @@ def test_run_script_accepts_imported_pure_function_subset():
 def test_compile_script_rejects_invalid_library_source_key():
     try:
         pine_compat.compile_script(
-            'indicator("root")\nplot(close)\n',
-            library_sources={"user/lib 1": 'library("lib")\n'},
+            '//@version=5\nindicator("root")\nplot(close)\n',
+            library_sources={"user/lib 1": '//@version=5\nlibrary("lib")\n'},
         )
     except ValueError as error:
         assert "invalid library source key `user/lib 1`" in str(error)
@@ -7998,19 +8514,19 @@ def test_compile_script_rejects_invalid_library_source_key():
 
 def test_run_script_compiles_and_executes():
     result = pine_compat.run_script(
-        'indicator("math")\nplot(math.max(close, 2))\n',
+        '//@version=5\nindicator("math")\nplot(math.max(close, 2))\n',
         BARS,
     )
 
-    assert result["schemaVersion"] == 7
+    assert result["schemaVersion"] == 8
     assert result["plots"][0]["values"] == [2, 2, 3]
 
 
 def test_run_script_accepts_library_sources_without_import_use():
     result = pine_compat.run_script(
-        'indicator("root")\nplot(close)\n',
+        '//@version=5\nindicator("root")\nplot(close)\n',
         BARS,
-        library_sources={"user/lib/1": 'library("lib")\n'},
+        library_sources={"user/lib/1": '//@version=5\nlibrary("lib")\n'},
     )
 
     assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
@@ -8018,7 +8534,7 @@ def test_run_script_accepts_library_sources_without_import_use():
 
 def test_run_script_returns_alertcondition_events():
     result = pine_compat.run_script(
-        'indicator("alerts")\nalertcondition(close > 1, "Above", "Close is above one")\n',
+        '//@version=5\nindicator("alerts")\nalertcondition(close > 1, "Above", "Close is above one")\n',
         BARS,
     )
 
@@ -8042,7 +8558,7 @@ def test_run_script_returns_alertcondition_events():
 
 def test_run_script_returns_alert_events():
     result = pine_compat.run_script(
-        'indicator("alerts")\nif bar_index == 1\n    alert("Reached")\n',
+        '//@version=5\nindicator("alerts")\nif bar_index == 1\n    alert("Reached")\n',
         BARS,
     )
 
@@ -8059,7 +8575,7 @@ def test_run_script_returns_alert_events():
 
 def test_run_script_returns_dynamic_alert_message_events():
     result = pine_compat.run_script(
-        'indicator("alerts")\nalert(str.tostring(close))\n',
+        '//@version=5\nindicator("alerts")\nalert(str.tostring(close))\n',
         BARS,
     )
 
@@ -8224,7 +8740,7 @@ def test_render_strategy_order_fill_running_alert_rejects_unknown_placeholder():
 
 def test_run_script_accepts_request_bars():
     result = pine_compat.run_script(
-        'indicator("request")\nplot(request.security("NYSE:IBM", timeframe.period, close))\n',
+        '//@version=5\nindicator("request")\nplot(request.security("NYSE:IBM", timeframe.period, close))\n',
         BARS,
         {
             "NYSE:IBM:1": [
@@ -9097,9 +9613,94 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][308]["values"] == [20.01, 21.01, 22.01, 23.01, 24.01]
 
 
+def test_run_script_legacy_v4_security_provider_matches_cli_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+        {
+            "NYSE:IBM:5": fixture_bars(
+                "tests/fixtures/legacy/v4/runtime/security_request_5m.csv"
+            )
+        },
+    )
+
+    assert result["plots"][0]["values"] == [None, None, 100.0, 100.0, 200.0]
+    assert result["diagnostics"] == []
+
+
+def test_run_script_legacy_v4_security_accepts_explicit_chart_context():
+    source = (
+        '//@version=4\nstudy("legacy chart context")\n'
+        'plot(security(syminfo.tickerid, "5", close))\n'
+    )
+    requested = fixture_bars(
+        "tests/fixtures/legacy/v4/runtime/security_request_5m.csv"
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+        {"TEST:5": requested},
+        chart_symbol="TEST",
+        chart_timeframe="1",
+    )
+
+    assert result["plots"][0]["values"] == [None, None, 100.0, 100.0, 200.0]
+
+    program = pine_compat.compile_script(source)
+    compiled_result = program.run(
+        fixture_bars("tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+        {"TEST:5": requested},
+        chart_symbol="TEST",
+        chart_timeframe="1",
+    )
+    assert compiled_result["plots"] == result["plots"]
+
+
+def test_python_chart_context_rejects_invalid_values():
+    source = '//@version=4\nstudy("chart context")\nplot(close)\n'
+
+    try:
+        pine_compat.run_script(source, BARS, chart_symbol=" ")
+    except ValueError as error:
+        assert str(error) == "chart_symbol must not be empty"
+    else:
+        raise AssertionError("empty chart symbol should fail")
+
+    try:
+        pine_compat.run_script(source, BARS, chart_timeframe="bad")
+    except ValueError as error:
+        assert str(error) == "unsupported request timeframe `bad`"
+    else:
+        raise AssertionError("invalid chart timeframe should fail")
+
+
+def test_run_script_legacy_v4_security_missing_provider_keeps_source_span():
+    source = (
+        ROOT / "tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine"
+    ).read_text()
+
+    try:
+        pine_compat.run_script(
+            source,
+            fixture_bars(
+                "tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"
+            ),
+        )
+    except ValueError as error:
+        assert str(error) == (
+            "legacy security at source span 52..84: missing request data for "
+            "symbol `NYSE:IBM` timeframe `5`"
+        )
+    else:
+        raise AssertionError("legacy security missing provider should fail")
+
+
 def test_run_script_reports_missing_request_bars():
     program = pine_compat.compile_script(
-        'indicator("request")\nplot(request.security("NYSE:IBM", timeframe.period, close))\n'
+        '//@version=5\nindicator("request")\nplot(request.security("NYSE:IBM", timeframe.period, close))\n'
     )
 
     try:
@@ -9112,7 +9713,7 @@ def test_run_script_reports_missing_request_bars():
 
 def test_run_script_returns_label_outputs():
     result = pine_compat.run_script(
-        'indicator("labels")\nif bar_index == 0\n    label_id = label.new(bar_index, high, "start")\nplot(close)\n',
+        '//@version=5\nindicator("labels")\nif bar_index == 0\n    label_id = label.new(bar_index, high, "start")\nplot(close)\n',
         BARS,
     )
 
@@ -9144,7 +9745,7 @@ def test_run_script_returns_label_outputs():
 
 def test_run_script_returns_label_text_formatting_outputs():
     result = pine_compat.run_script(
-        'indicator("label formatting")\nif bar_index == 1\n    label_id = label.new(bar_index, high, "start", text_formatting=text.format_bold)\n    label.set_text_formatting(label_id, text.format_bold + text.format_italic)\nlabel.set_text_formatting(na, text.format_italic)\nplot(close)\n',
+        '//@version=6\nindicator("label formatting")\nif bar_index == 1\n    label_id = label.new(bar_index, high, "start", text_formatting=text.format_bold)\n    label.set_text_formatting(label_id, text.format_bold + text.format_italic)\nlabel.set_text_formatting(na, text.format_italic)\nplot(close)\n',
         BARS,
     )
 
@@ -9155,7 +9756,7 @@ def test_run_script_returns_label_text_formatting_outputs():
 
 def test_run_script_returns_label_array_outputs():
     result = pine_compat.run_script(
-        'indicator("label array")\nvar labels = array.new_label()\nif bar_index == 0\n    id = label.new(bar_index, high, "start")\n    array.push(labels, id)\nif bar_index == 1\n    copied = array.copy(labels)\n    label.set_text(array.get(copied, 0), "array")\n    if array.includes(labels, array.first(labels))\n        from_array = labels.get(0)\n        from_array.set_color(color.green)\nplot(array.size(labels))\n',
+        '//@version=5\nindicator("label array")\nvar labels = array.new_label()\nif bar_index == 0\n    id = label.new(bar_index, high, "start")\n    array.push(labels, id)\nif bar_index == 1\n    copied = array.copy(labels)\n    label.set_text(array.get(copied, 0), "array")\n    if array.includes(labels, array.first(labels))\n        from_array = labels.get(0)\n        from_array.set_color(color.green)\nplot(array.size(labels))\n',
         BARS,
     )
 
@@ -9168,7 +9769,7 @@ def test_run_script_returns_label_array_outputs():
 
 def test_run_script_returns_line_outputs():
     result = pine_compat.run_script(
-        'indicator("lines")\nif bar_index == 1\n    line_id = line.new(bar_index, low, bar_index, high)\nplot(close)\n',
+        '//@version=5\nindicator("lines")\nif bar_index == 1\n    line_id = line.new(bar_index, low, bar_index, high)\nplot(close)\n',
         BARS,
     )
 
@@ -9196,7 +9797,7 @@ def test_run_script_returns_line_outputs():
 
 def test_run_script_returns_line_new_style_outputs():
     result = pine_compat.run_script(
-        'indicator("line new style")\nif bar_index == 1\n    line_id = line.new(x1=bar_index, y1=low, x2=bar_index + 1, y2=high, xloc=xloc.bar_index, extend=extend.right, color=color.green, style=line.style_dashed, width=2, force_overlay=false)\nplot(close)\n',
+        '//@version=5\nindicator("line new style")\nif bar_index == 1\n    line_id = line.new(x1=bar_index, y1=low, x2=bar_index + 1, y2=high, xloc=xloc.bar_index, extend=extend.right, color=color.green, style=line.style_dashed, width=2, force_overlay=false)\nplot(close)\n',
         BARS,
     )
 
@@ -9224,7 +9825,7 @@ def test_run_script_returns_line_new_style_outputs():
 
 def test_run_script_returns_line_set_xloc_outputs():
     result = pine_compat.run_script(
-        'indicator("line set xloc")\nif bar_index == 1\n    line_id = line.new(bar_index, low, bar_index + 1, high)\n    line.set_xloc(line_id, bar_index - 1, bar_index + 3, xloc.bar_index)\nline.set_xloc(na, bar_index, bar_index, xloc.bar_index)\nplot(close)\n',
+        '//@version=5\nindicator("line set xloc")\nif bar_index == 1\n    line_id = line.new(bar_index, low, bar_index + 1, high)\n    line.set_xloc(line_id, bar_index - 1, bar_index + 3, xloc.bar_index)\nline.set_xloc(na, bar_index, bar_index, xloc.bar_index)\nplot(close)\n',
         BARS,
     )
 
@@ -9265,7 +9866,7 @@ def test_run_script_returns_line_set_xloc_outputs():
 
 def test_run_script_returns_line_array_outputs():
     result = pine_compat.run_script(
-        'indicator("line array")\nvar lines = array.new_line()\nif bar_index == 0\n    id = line.new(bar_index, low, bar_index + 1, high)\n    array.push(lines, id)\nif bar_index == 1\n    copied = array.copy(lines)\n    line.set_color(array.get(copied, 0), color.green)\n    if array.includes(lines, array.first(lines))\n        from_array = lines.get(0)\n        from_array.set_width(2)\nplot(array.size(lines))\n',
+        '//@version=5\nindicator("line array")\nvar lines = array.new_line()\nif bar_index == 0\n    id = line.new(bar_index, low, bar_index + 1, high)\n    array.push(lines, id)\nif bar_index == 1\n    copied = array.copy(lines)\n    line.set_color(array.get(copied, 0), color.green)\n    if array.includes(lines, array.first(lines))\n        from_array = lines.get(0)\n        from_array.set_width(2)\nplot(array.size(lines))\n',
         BARS,
     )
 
@@ -9320,7 +9921,7 @@ def test_run_script_returns_line_array_outputs():
 
 def test_run_script_returns_line_getter_plot_values():
     result = pine_compat.run_script(
-        'indicator("line getters")\nvar line_id = line.new(bar_index, low, bar_index + 1, high)\nif bar_index == 1\n    line.set_x1(line_id, bar_index - 10)\n    line.set_x2(line_id, bar_index + 10)\n    line.set_y1(line_id, low - 10)\n    line.set_y2(line_id, high + 10)\nplot(line.get_x1(line_id))\nplot(line.get_y1(line_id))\nplot(line.get_x2(line_id))\nplot(line.get_y2(line_id))\nplot(line.get_price(line_id, bar_index + 5))\n',
+        '//@version=5\nindicator("line getters")\nvar line_id = line.new(bar_index, low, bar_index + 1, high)\nif bar_index == 1\n    line.set_x1(line_id, bar_index - 10)\n    line.set_x2(line_id, bar_index + 10)\n    line.set_y1(line_id, low - 10)\n    line.set_y2(line_id, high + 10)\nplot(line.get_x1(line_id))\nplot(line.get_y1(line_id))\nplot(line.get_x2(line_id))\nplot(line.get_y2(line_id))\nplot(line.get_price(line_id, bar_index + 5))\n',
         BARS,
     )
 
@@ -9333,7 +9934,7 @@ def test_run_script_returns_line_getter_plot_values():
 
 def test_run_script_returns_box_outputs():
     result = pine_compat.run_script(
-        'indicator("boxes")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index, low)\n    box.set_bgcolor(box_id, color.green)\nplot(close)\n',
+        '//@version=5\nindicator("boxes")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index, low)\n    box.set_bgcolor(box_id, color.green)\nplot(close)\n',
         BARS,
     )
 
@@ -9392,7 +9993,7 @@ def test_run_script_returns_box_outputs():
 
 def test_run_script_returns_box_set_xloc_outputs():
     result = pine_compat.run_script(
-        'indicator("box set xloc")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index + 1, low)\n    box.set_xloc(box_id, bar_index - 1, bar_index + 3, xloc.bar_index)\nbox.set_xloc(na, bar_index, bar_index + 1, xloc.bar_index)\nplot(close)\n',
+        '//@version=6\nindicator("box set xloc")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index + 1, low)\n    box.set_xloc(box_id, bar_index - 1, bar_index + 3, xloc.bar_index)\nbox.set_xloc(na, bar_index, bar_index + 1, xloc.bar_index)\nplot(close)\n',
         BARS,
     )
 
@@ -9451,7 +10052,7 @@ def test_run_script_returns_box_set_xloc_outputs():
 
 def test_run_script_accepts_drawing_object_method_syntax():
     result = pine_compat.run_script(
-        'indicator("drawing methods")\nvar label_id = label.new(bar_index, high, "start")\nvar line_id = line.new(bar_index, low, bar_index + 1, high)\nvar box_id = box.new(bar_index, high, bar_index + 1, low)\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    label_id.set_text("method")\n    label_id.set_xy(bar_index, close)\n    line_id.set_xy1(bar_index, low)\n    line_id.set_color(color.green)\n    box_id.set_lefttop(bar_index, high)\n    box_id.set_xloc(bar_index - 1, bar_index + 1, xloc.bar_index)\n    table_id.cell(0, 0, "A")\n    table_id.set_bgcolor(color.green)\nplot(str.length(label_id.get_text()))\nplot(line_id.get_x1())\nplot(box_id.get_right())\nplot(close)\n',
+        '//@version=6\nindicator("drawing methods")\nvar label_id = label.new(bar_index, high, "start")\nvar line_id = line.new(bar_index, low, bar_index + 1, high)\nvar box_id = box.new(bar_index, high, bar_index + 1, low)\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    label_id.set_text("method")\n    label_id.set_xy(bar_index, close)\n    line_id.set_xy1(bar_index, low)\n    line_id.set_color(color.green)\n    box_id.set_lefttop(bar_index, high)\n    box_id.set_xloc(bar_index - 1, bar_index + 1, xloc.bar_index)\n    table_id.cell(0, 0, "A")\n    table_id.set_bgcolor(color.green)\nplot(str.length(label_id.get_text()))\nplot(line_id.get_x1())\nplot(box_id.get_right())\nplot(close)\n',
         BARS,
     )
 
@@ -9463,7 +10064,7 @@ def test_run_script_accepts_drawing_object_method_syntax():
 
 def test_run_script_returns_box_new_style_outputs():
     result = pine_compat.run_script(
-        'indicator("box new style")\nif bar_index == 1\n    box_id = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text="styled", text_size=size.small, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)\nplot(close)\n',
+        '//@version=6\nindicator("box new style")\nif bar_index == 1\n    box_id = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text="styled", text_size=size.small, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)\nplot(close)\n',
         BARS,
     )
 
@@ -9500,7 +10101,7 @@ def test_run_script_returns_box_new_style_outputs():
 
 def test_run_script_returns_box_text_formatting_outputs():
     result = pine_compat.run_script(
-        'indicator("box formatting")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index, low)\n    box.set_text_formatting(box_id, text.format_bold + text.format_italic)\nbox.set_text_formatting(na, text.format_italic)\nplot(close)\n',
+        '//@version=6\nindicator("box formatting")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index, low)\n    box.set_text_formatting(box_id, text.format_bold + text.format_italic)\nbox.set_text_formatting(na, text.format_italic)\nplot(close)\n',
         BARS,
     )
 
@@ -9525,7 +10126,7 @@ def table_snapshots_without_empty_merges(tables):
 
 def test_run_script_returns_table_outputs():
     result = pine_compat.run_script(
-        'indicator("tables")\nif bar_index == 1\n    table_id = table.new(position.top_right, 2, 2)\n    table.cell(table_id, 0, 0, "A", bgcolor=color.green, text_color=color.white)\n    table.cell_set_text(table_id, 0, 0, "B")\n    table.cell_set_bgcolor(table_id, 0, 0, color.red)\n    table.cell_set_text_color(table_id, 0, 0, color.blue)\n    table.cell_set_width(table_id, 0, 0, 25)\n    table.cell_set_height(table_id, 0, 0, 40)\n    table.cell_set_text_size(table_id, 0, 0, size.small)\n    table.cell_set_text_halign(table_id, 0, 0, text.align_left)\n    table.cell_set_text_valign(table_id, 0, 0, text.align_top)\n    table.cell_set_text_wrap(table_id, 0, 0, text.wrap_auto)\n    table.set_position(table_id, position.bottom_right)\n    table.set_bgcolor(table_id, color.yellow)\n    table.set_frame_color(table_id, color.black)\n    table.set_frame_width(table_id, 3)\n    table.set_border_color(table_id, color.white)\n    table.set_border_width(table_id, 4)\nplot(close)\n',
+        '//@version=5\nindicator("tables")\nif bar_index == 1\n    table_id = table.new(position.top_right, 2, 2)\n    table.cell(table_id, 0, 0, "A", bgcolor=color.green, text_color=color.white)\n    table.cell_set_text(table_id, 0, 0, "B")\n    table.cell_set_bgcolor(table_id, 0, 0, color.red)\n    table.cell_set_text_color(table_id, 0, 0, color.blue)\n    table.cell_set_width(table_id, 0, 0, 25)\n    table.cell_set_height(table_id, 0, 0, 40)\n    table.cell_set_text_size(table_id, 0, 0, size.small)\n    table.cell_set_text_halign(table_id, 0, 0, text.align_left)\n    table.cell_set_text_valign(table_id, 0, 0, text.align_top)\n    table.cell_set_text_wrap(table_id, 0, 0, text.wrap_auto)\n    table.set_position(table_id, position.bottom_right)\n    table.set_bgcolor(table_id, color.yellow)\n    table.set_frame_color(table_id, color.black)\n    table.set_frame_width(table_id, 3)\n    table.set_border_color(table_id, color.white)\n    table.set_border_width(table_id, 4)\nplot(close)\n',
         BARS,
     )
 
@@ -9734,7 +10335,7 @@ def test_run_script_returns_table_outputs():
 
 def test_run_script_returns_table_delete_outputs():
     result = pine_compat.run_script(
-        'indicator("table delete")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A")\n    table.delete(table_id)\nif bar_index == 2\n    table.cell(table_id, 0, 0, "ignored")\n    table.delete(table_id)\ntable.delete(na)\nplot(close)\n',
+        '//@version=5\nindicator("table delete")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A")\n    table.delete(table_id)\nif bar_index == 2\n    table.cell(table_id, 0, 0, "ignored")\n    table.delete(table_id)\ntable.delete(na)\nplot(close)\n',
         BARS,
     )
 
@@ -9777,7 +10378,7 @@ def test_run_script_returns_table_delete_outputs():
 
 def test_run_script_returns_table_clear_outputs():
     result = pine_compat.run_script(
-        'indicator("table clear")\nvar table_id = table.new(position.top_right, 2, 2)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A")\n    table.cell(table_id, 1, 0, "B", bgcolor=color.green)\n    table.clear(table_id, 1, 0, 1, 0)\nif bar_index == 2\n    table.clear(table_id, 0, 0, 0, 0)\ntable.clear(na, 0, 0, 0, 0)\nplot(close)\n',
+        '//@version=5\nindicator("table clear")\nvar table_id = table.new(position.top_right, 2, 2)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A")\n    table.cell(table_id, 1, 0, "B", bgcolor=color.green)\n    table.clear(table_id, 1, 0, 1, 0)\nif bar_index == 2\n    table.clear(table_id, 0, 0, 0, 0)\ntable.clear(na, 0, 0, 0, 0)\nplot(close)\n',
         BARS,
     )
 
@@ -9868,7 +10469,7 @@ def test_run_script_returns_table_clear_outputs():
 
 def test_run_script_returns_table_merge_cell_outputs():
     result = pine_compat.run_script(
-        'indicator("table merge")\nvar table_id = table.new(position.top_right, 3, 2)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A")\n    table.merge_cells(table_id, 0, 0, 2, 0)\n    table.cell(table_id, 0, 1, "B")\n    table.merge_cells(table_id, 0, 1, 1, 1)\nif bar_index == 2\n    table.clear(table_id, 0, 1, 1, 1)\ntable.merge_cells(na, 0, 0, 0, 0)\nplot(close)\n',
+        '//@version=5\nindicator("table merge")\nvar table_id = table.new(position.top_right, 3, 2)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A")\n    table.merge_cells(table_id, 0, 0, 2, 0)\n    table.cell(table_id, 0, 1, "B")\n    table.merge_cells(table_id, 0, 1, 1, 1)\nif bar_index == 2\n    table.clear(table_id, 0, 1, 1, 1)\ntable.merge_cells(na, 0, 0, 0, 0)\nplot(close)\n',
         BARS,
     )
 
@@ -9888,7 +10489,7 @@ def test_run_script_returns_table_merge_cell_outputs():
 
 def test_run_script_returns_table_cell_tooltip_outputs():
     result = pine_compat.run_script(
-        'indicator("table tooltip")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", tooltip="initial")\n    table.cell_set_tooltip(table_id, 0, 0, "updated")\ntable.cell_set_tooltip(na, 0, 0, "noop")\nplot(close)\n',
+        '//@version=5\nindicator("table tooltip")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", tooltip="initial")\n    table.cell_set_tooltip(table_id, 0, 0, "updated")\ntable.cell_set_tooltip(na, 0, 0, "noop")\nplot(close)\n',
         BARS,
     )
 
@@ -9899,7 +10500,7 @@ def test_run_script_returns_table_cell_tooltip_outputs():
 
 def test_run_script_returns_table_cell_text_font_family_outputs():
     result = pine_compat.run_script(
-        'indicator("table font")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", text_font_family=font.family_monospace)\n    table.cell_set_text_font_family(table_id, 0, 0, font.family_default)\ntable.cell_set_text_font_family(na, 0, 0, font.family_monospace)\nplot(close)\n',
+        '//@version=5\nindicator("table font")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", text_font_family=font.family_monospace)\n    table.cell_set_text_font_family(table_id, 0, 0, font.family_default)\ntable.cell_set_text_font_family(na, 0, 0, font.family_monospace)\nplot(close)\n',
         BARS,
     )
 
@@ -9910,7 +10511,7 @@ def test_run_script_returns_table_cell_text_font_family_outputs():
 
 def test_run_script_returns_table_cell_text_formatting_outputs():
     result = pine_compat.run_script(
-        'indicator("table formatting")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", text_formatting=text.format_bold)\n    table.cell_set_text_formatting(table_id, 0, 0, text.format_bold + text.format_italic)\ntable.cell_set_text_formatting(na, 0, 0, text.format_italic)\nplot(close)\n',
+        '//@version=6\nindicator("table formatting")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", text_formatting=text.format_bold)\n    table.cell_set_text_formatting(table_id, 0, 0, text.format_bold + text.format_italic)\ntable.cell_set_text_formatting(na, 0, 0, text.format_italic)\nplot(close)\n',
         BARS,
     )
 
@@ -9921,7 +10522,7 @@ def test_run_script_returns_table_cell_text_formatting_outputs():
 
 def test_run_script_returns_plotchar_outputs():
     result = pine_compat.run_script(
-        'indicator("markers")\nplotchar(close > 2, char="x", color=color.green)\nplot(close)\n',
+        '//@version=5\nindicator("markers")\nplotchar(close > 2, char="x", color=color.green)\nplot(close)\n',
         BARS,
     )
 
@@ -9932,7 +10533,7 @@ def test_run_script_returns_plotchar_outputs():
 
 def test_run_script_returns_plotshape_outputs():
     result = pine_compat.run_script(
-        'indicator("shapes")\nplotshape(close > 2, style=shape.triangleup, location=location.belowbar, color=color.green, text="Buy", textcolor=color.white, size=size.small)\nplot(close)\n',
+        '//@version=5\nindicator("shapes")\nplotshape(close > 2, style=shape.triangleup, location=location.belowbar, color=color.green, text="Buy", textcolor=color.white, size=size.small)\nplot(close)\n',
         BARS,
     )
 
@@ -9973,7 +10574,7 @@ def test_run_script_returns_plotshape_outputs():
 
 def test_run_script_returns_plotarrow_outputs():
     result = pine_compat.run_script(
-        'indicator("arrows")\nplotarrow(close - 2, colorup=color.green, colordown=color.red, minheight=5, maxheight=20)\nplot(close)\n',
+        '//@version=5\nindicator("arrows")\nplotarrow(close - 2, colorup=color.green, colordown=color.red, minheight=5, maxheight=20)\nplot(close)\n',
         BARS,
     )
 
@@ -9986,7 +10587,7 @@ def test_run_script_returns_plotarrow_outputs():
 
 def test_run_script_returns_plotbar_outputs():
     result = pine_compat.run_script(
-        'indicator("bars")\nplotbar(open, high, low, close, color=color.green)\nplot(close)\n',
+        '//@version=5\nindicator("bars")\nplotbar(open, high, low, close, color=color.green)\nplot(close)\n',
         BARS,
     )
 
@@ -9999,7 +10600,7 @@ def test_run_script_returns_plotbar_outputs():
 
 def test_run_script_returns_plotcandle_outputs():
     result = pine_compat.run_script(
-        'indicator("candles")\nplotcandle(open, high, low, close, color=color.green, wickcolor=color.white, bordercolor=color.red)\nplot(close)\n',
+        '//@version=5\nindicator("candles")\nplotcandle(open, high, low, close, color=color.green, wickcolor=color.white, bordercolor=color.red)\nplot(close)\n',
         BARS,
     )
 

@@ -1,3 +1,4 @@
+//@version=5
 indicator("Profile dynamic series history parameterized pure UDF max_bars_back miss", max_bars_back=10)
 source(a, b) => a + b
 src = source(close, open)

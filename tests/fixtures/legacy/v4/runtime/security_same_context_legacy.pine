@@ -1,0 +1,3 @@
+//@version=4
+study("Legacy security same context")
+plot(security(syminfo.tickerid, timeframe.period, close + open), title="same")

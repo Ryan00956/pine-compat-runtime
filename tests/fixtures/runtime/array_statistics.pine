@@ -1,3 +1,4 @@
+//@version=5
 indicator("Array statistics fixture")
 ints = array.new_int()
 array.push(ints, 2)
