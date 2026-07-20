@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added the versioned Python `RealtimeSession` ABI. A compiled program can now
+  own a persistent native realtime runtime without leaking its HIR, seed a
+  complete historical batch with correct dataset-end semantics, replace a
+  forming bar with rollback/`varip` persistence, and commit the matching
+  confirmed bar. Lifecycle timestamps fail closed when they regress or skip an
+  unresolved forming bar.
 - Closed Stage 22g `strategy.risk.max_cons_loss_days`. A simple positive
   finite integer `count` of consecutive observed windows with negative
   realized closed-trade profit cancels pending orders, flattens, and
@@ -701,7 +707,6 @@
   Python, and WASM, bringing the host-parity manifest to 434 runtime snapshots.
   The two deterministic dedup reports share SHA-256
   `73b636ca17be48c1dbcaa330f41740f27dfdcf8ff00e924b0e9c057c27f4c56e`.
-
 ## 0.2.0 - 2026-07-20
 
 - Hardened the legacy front-end after the release-candidate audit. Legacy

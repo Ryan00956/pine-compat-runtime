@@ -22,11 +22,13 @@ run python3 -m unittest scripts/tests/test_profile_legacy_release.py
 run python3 scripts/check_host_parity.py
 run scripts/check_wasm_node.sh
 
-# Build into a fresh directory so wheels left by an earlier version cannot be
-# expanded into the same pip command and make the release gate fail for an
-# unrelated dependency-resolution conflict.
-wheel_output_dir=$(mktemp -d "${TMPDIR:-/tmp}/pine-python-wheel.XXXXXX")
-trap 'rm -rf "$wheel_output_dir"' EXIT
+# Build and install inside one disposable gate root. This keeps a release check
+# from replacing the caller's active pine_compat extension or package stamp.
+gate_root=$(mktemp -d "${TMPDIR:-/tmp}/pine-python-release-gate.XXXXXX")
+wheel_output_dir="$gate_root/wheels"
+wheel_test_venv="$gate_root/venv"
+mkdir -p "$wheel_output_dir"
+trap 'rm -rf "$gate_root"' EXIT
 trap 'exit 1' HUP INT TERM
 run maturin build --manifest-path crates/pine-python/Cargo.toml --out "$wheel_output_dir"
 set -- "$wheel_output_dir"/*.whl
@@ -35,5 +37,6 @@ if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
         "$wheel_output_dir" >&2
     exit 1
 fi
-run python3 -m pip install --force-reinstall "$1"
-run python3 -m pytest python/tests
+run python3 -m venv --system-site-packages "$wheel_test_venv"
+run "$wheel_test_venv/bin/python" -m pip install --no-deps --force-reinstall "$1"
+run "$wheel_test_venv/bin/python" -m pytest python/tests
