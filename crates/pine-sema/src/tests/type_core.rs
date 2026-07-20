@@ -1199,7 +1199,8 @@ plot(array.size(floor_values) + array.size(ceil_values) + array.size(trunc_value
 #[test]
 fn accepts_syminfo_metadata() {
     let analysis = analyze(
-        r#"indicator("syminfo")
+        r#"//@version=6
+indicator("syminfo")
 identity = syminfo.tickerid == "NASDAQ:AAPL" and syminfo.main_tickerid == "NASDAQ:AAPL" and syminfo.ticker == "AAPL" and syminfo.prefix == "NASDAQ"
 details = syminfo.description == "Apple Inc." and syminfo.type == "stock" and syminfo.currency == "USD" and syminfo.basecurrency == "USD"
 session = syminfo.session == "regular" and syminfo.timezone == "Etc/UTC" and syminfo.root == "AAPL" and syminfo.volumetype == "base"

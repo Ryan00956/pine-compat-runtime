@@ -1,7 +1,7 @@
 //@version=3
 study("shadowed v3 names")
 ema(source, length) => source
-red = color.blue
+red = blue
 n = 10
 interval = 2
 integer = "local"

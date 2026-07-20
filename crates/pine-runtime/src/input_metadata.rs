@@ -1,5 +1,6 @@
 use pine_ir::{
     HirCallArg, HirExpr, HirExprKind, HirLiteral, HirProgram, HirStmt, HirStmtKind, HirUnaryOp,
+    ValueKind,
 };
 
 use crate::PineValue;
@@ -8,6 +9,12 @@ use crate::PineValue;
 pub struct InputCall {
     pub call_site_id: u32,
     pub name: String,
+    /// The analyzer-resolved value kind returned by this input call.
+    ///
+    /// This is especially important for the generic legacy `input()` form:
+    /// hosts must parse overrides according to the resolved `defval` type
+    /// instead of guessing from a textual override.
+    pub value_kind: ValueKind,
     pub title: Option<String>,
     pub default_value: Option<PineValue>,
     pub min_value: Option<PineValue>,
@@ -101,6 +108,7 @@ fn collect_input_calls_from_expr(expr: &HirExpr, calls: &mut Vec<InputCall>) {
                 calls.push(InputCall {
                     call_site_id: call_site_id.0,
                     name: callee.clone(),
+                    value_kind: expr.pine_type.kind,
                     title: input_title(args),
                     default_value: input_arg_value(args, 0, "defval"),
                     min_value: matches!(

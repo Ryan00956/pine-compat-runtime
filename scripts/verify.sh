@@ -16,6 +16,19 @@ run python3 -m unittest scripts/tests/test_analyze_legacy_corpus.py
 run python3 -m unittest scripts/tests/test_profile_legacy_release.py
 run python3 scripts/check_host_parity.py
 run scripts/check_wasm_node.sh
-run maturin build --manifest-path crates/pine-python/Cargo.toml --out dist
-run python3 -m pip install --force-reinstall dist/*.whl
+
+# Build into a fresh directory so wheels left by an earlier version cannot be
+# expanded into the same pip command and make the release gate fail for an
+# unrelated dependency-resolution conflict.
+wheel_output_dir=$(mktemp -d "${TMPDIR:-/tmp}/pine-python-wheel.XXXXXX")
+trap 'rm -rf "$wheel_output_dir"' EXIT
+trap 'exit 1' HUP INT TERM
+run maturin build --manifest-path crates/pine-python/Cargo.toml --out "$wheel_output_dir"
+set -- "$wheel_output_dir"/*.whl
+if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
+    printf 'error: expected exactly one freshly built wheel in %s\n' \
+        "$wheel_output_dir" >&2
+    exit 1
+fi
+run python3 -m pip install --force-reinstall "$1"
 run python3 -m pytest python/tests

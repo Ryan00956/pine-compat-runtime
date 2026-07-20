@@ -1,5 +1,6 @@
 //! Historical runtime scaffolding.
 
+pub use pine_ir::ValueKind;
 use pine_ir::{CallSiteId, HirExpr, PersistenceKind, SeriesId, SymbolId, VarSlotId};
 
 mod algorithms;
@@ -78,7 +79,7 @@ pub use runtime::historical::{
 pub use runtime::realtime::RealtimeRuntime;
 pub use series::SeriesStore;
 pub use strategy::BrokerState;
-pub use value::{PineValue, encode_color_literal, encode_color_rgba};
+pub use value::{PineValue, encode_color_literal, encode_color_rgba, is_valid_public_color};
 
 use algorithms::numeric::finite_float_or_na;
 use algorithms::rolling_window::{

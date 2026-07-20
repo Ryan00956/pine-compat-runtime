@@ -1870,7 +1870,9 @@ sparse snapshots plus default 50/named 1-500 `max_boxes_count` oldest-active
 box eviction before new creation.
 The executable table subset covers
 `table.new` position/dimension creation with optional `bgcolor`,
-`frame_color`, `frame_width`, `border_color`, and `border_width` initialization
+`frame_color`, `frame_width`, `border_color`, and `border_width` initialization,
+plus accepted `force_overlay` syntax (without public-output propagation or pane
+routing),
 plus `table.cell` text/background/text-color/tooltip/font-family/text-formatting
 cell writes,
 `table.set_position` final-position mutations, including ordinary and
@@ -2017,7 +2019,8 @@ position value, including when called from ordinary and independent while-loop
 control-flow blocks, with table layout left to hosts. `table.new` optional `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialize only
 the table's final background-color, frame-color, frame-width, border-color, and
-border-width values.
+border-width values. `force_overlay` is accepted, but its value is not exposed
+in public output and pane routing remains unsupported.
 `table.delete` appends an `exists: false` table snapshot, including when called
 from ordinary and independent while-loop control-flow blocks. `table.clear` removes
 already populated cells in the inclusive rectangular range from `start_column`,

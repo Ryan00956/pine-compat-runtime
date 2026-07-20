@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 
-use pine_ir::HirProgram;
+use pine_ir::{HirProgram, ValueKind};
 use pine_runtime::{
-    Bar, ChartContext, InMemoryRequestDataProvider, InputOverrides, PUBLIC_RENDER_METADATA_VERSION,
-    PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue, RequestEnvironment, RequestKey, RequestTimeframe,
-    encode_color_literal, input_calls, run_historical_with_request_environment_and_input_overrides,
+    Bar, ChartContext, InMemoryRequestDataProvider, InputCall, InputOverrides,
+    PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue, RequestEnvironment,
+    RequestKey, RequestTimeframe, encode_color_literal, input_calls, is_valid_public_color,
+    run_historical_with_request_environment_and_input_overrides,
 };
 use pine_sema::{Analysis, AnalysisInput, PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_input};
 use pine_syntax::{Diagnostic, SourceFile, Span};
@@ -269,20 +270,24 @@ fn parse_input_overrides(
     let dict = input_overrides.cast::<PyDict>().map_err(|_| {
         PyValueError::new_err("input_overrides must be a dict mapping input callSiteId to values")
     })?;
-    let input_names = input_calls(hir)
+    let input_calls = input_calls(hir)
         .into_iter()
-        .map(|input| (input.call_site_id, input.name))
+        .map(|input| (input.call_site_id, input))
         .collect::<HashMap<_, _>>();
     let mut overrides = InputOverrides::new();
     for (key, value) in dict {
         let call_site_id = parse_input_override_key(&key)?;
-        let Some(input_name) = input_names.get(&call_site_id) else {
+        let Some(input_call) = input_calls.get(&call_site_id) else {
             return Err(PyValueError::new_err(format!(
                 "input_overrides contains unknown callSiteId {call_site_id}"
             )));
         };
-        let value = parse_input_override_value(input_name, &value)?;
-        overrides.insert(call_site_id, value);
+        let value = parse_input_override_value(input_call, &value)?;
+        if overrides.insert(call_site_id, value).is_some() {
+            return Err(PyValueError::new_err(format!(
+                "duplicate input override for callSiteId {call_site_id}"
+            )));
+        }
     }
     Ok(overrides)
 }
@@ -306,53 +311,50 @@ fn parse_input_override_key(key: &Bound<'_, PyAny>) -> PyResult<u32> {
     ))
 }
 
-fn parse_input_override_value(input_name: &str, value: &Bound<'_, PyAny>) -> PyResult<PineValue> {
-    match input_name {
-        "input" => parse_generic_input_override(value),
-        "input.int" | "input.time" => Ok(PineValue::Int(parse_int_override(input_name, value)?)),
+fn parse_input_override_value(input: &InputCall, value: &Bound<'_, PyAny>) -> PyResult<PineValue> {
+    match input.name.as_str() {
+        "input" => parse_generic_input_override(input.value_kind, value),
+        "input.int" | "input.time" => Ok(PineValue::Int(parse_int_override(&input.name, value)?)),
         "input.float" | "input.price" => {
-            Ok(PineValue::Float(parse_float_override(input_name, value)?))
+            Ok(PineValue::Float(parse_float_override(&input.name, value)?))
         }
         "input.bool" => Ok(PineValue::Bool(value.extract().map_err(|_| {
-            PyValueError::new_err(format!("{input_name} override must be a bool"))
+            PyValueError::new_err(format!("{} override must be a bool", input.name))
         })?)),
         "input.color" => Ok(PineValue::Color(parse_color_override(value)?)),
         "input.string" | "input.symbol" | "input.timeframe" | "input.session"
         | "input.text_area" => Ok(PineValue::String(value.extract().map_err(|_| {
-            PyValueError::new_err(format!("{input_name} override must be a string"))
+            PyValueError::new_err(format!("{} override must be a string", input.name))
         })?)),
         "input.source" => Err(PyValueError::new_err(
             "input.source overrides are not supported",
         )),
         _ => Err(PyValueError::new_err(format!(
-            "input_overrides cannot override unsupported input call {input_name}"
+            "input_overrides cannot override unsupported input call {}",
+            input.name
         ))),
     }
 }
 
-fn parse_generic_input_override(value: &Bound<'_, PyAny>) -> PyResult<PineValue> {
-    if let Ok(value) = value.extract::<bool>() {
-        return Ok(PineValue::Bool(value));
-    }
-    if let Ok(value) = value.extract::<i64>() {
-        return Ok(PineValue::Int(value));
-    }
-    if let Ok(value) = value.extract::<f64>() {
-        if value.is_finite() {
-            return Ok(PineValue::Float(value));
+fn parse_generic_input_override(kind: ValueKind, value: &Bound<'_, PyAny>) -> PyResult<PineValue> {
+    match kind {
+        ValueKind::Int => Ok(PineValue::Int(parse_int_override("input", value)?)),
+        ValueKind::Float => Ok(PineValue::Float(parse_float_override("input", value)?)),
+        ValueKind::Bool => {
+            Ok(PineValue::Bool(value.extract().map_err(|_| {
+                PyValueError::new_err("input override must be a bool")
+            })?))
         }
-        return Err(PyValueError::new_err("input override float must be finite"));
-    }
-    if let Ok(value) = value.extract::<String>() {
-        let trimmed = value.trim();
-        if trimmed.starts_with('#') || trimmed.starts_with("0x") || trimmed.starts_with("0X") {
-            return parse_color_u32(trimmed).map(PineValue::Color);
+        ValueKind::String => {
+            Ok(PineValue::String(value.extract().map_err(|_| {
+                PyValueError::new_err("input override must be a string")
+            })?))
         }
-        return Ok(PineValue::String(value));
+        ValueKind::Color => Ok(PineValue::Color(parse_color_override(value)?)),
+        _ => Err(PyValueError::new_err(format!(
+            "input_overrides cannot override generic input with resolved type {kind:?}"
+        ))),
     }
-    Err(PyValueError::new_err(
-        "input override value must be a bool, int, finite float, or string",
-    ))
 }
 
 fn parse_int_override(input_name: &str, value: &Bound<'_, PyAny>) -> PyResult<i64> {
@@ -385,53 +387,56 @@ fn parse_float_override(input_name: &str, value: &Bound<'_, PyAny>) -> PyResult<
 
 fn parse_color_override(value: &Bound<'_, PyAny>) -> PyResult<u64> {
     if value.is_instance_of::<PyBool>() {
-        return Err(PyValueError::new_err(
-            "input.color override must be a u32, 0xRRGGBB, or #RRGGBB value",
-        ));
+        return Err(color_override_error());
     }
-    if let Ok(value) = value.extract::<i64>() {
-        return u32::try_from(value).map(u64::from).map_err(|_| {
-            PyValueError::new_err("input.color override must be a u32, 0xRRGGBB, or #RRGGBB value")
-        });
+    if let Ok(value) = value.extract::<u64>() {
+        return valid_public_color(value);
     }
     if let Ok(value) = value.extract::<String>() {
-        return parse_color_u32(value.trim());
+        return parse_color_value(value.trim());
     }
-    Err(PyValueError::new_err(
-        "input.color override must be a u32, 0xRRGGBB, or #RRGGBB value",
-    ))
+    Err(color_override_error())
 }
 
-fn parse_color_u32(value: &str) -> PyResult<u64> {
+fn parse_color_value(value: &str) -> PyResult<u64> {
     let Some(value) = value.strip_prefix('#') else {
         let Some(value) = value
             .strip_prefix("0x")
             .or_else(|| value.strip_prefix("0X"))
         else {
-            return value.parse::<u32>().map(u64::from).map_err(|_| {
-                PyValueError::new_err(
-                    "input.color override must be a u32, 0xRRGGBB, or #RRGGBB value",
-                )
-            });
+            return value
+                .parse::<u64>()
+                .map_err(|_| color_override_error())
+                .and_then(valid_public_color);
         };
-        return u32::from_str_radix(value, 16)
-            .map(|color| encode_color_literal(color, value.len() == 8))
-            .map_err(|_| {
-                PyValueError::new_err(
-                    "input.color override must be a u32, 0xRRGGBB, or #RRGGBB value",
-                )
-            });
+        return parse_color_hex(value);
     };
+    parse_color_hex(value)
+}
+
+fn valid_public_color(value: u64) -> PyResult<u64> {
+    if is_valid_public_color(value) {
+        Ok(value)
+    } else {
+        Err(color_override_error())
+    }
+}
+
+fn parse_color_hex(value: &str) -> PyResult<u64> {
     if !matches!(value.len(), 6 | 8) {
         return Err(PyValueError::new_err(
-            "input.color override hex values must use #RRGGBB or #RRGGBBAA",
+            "input.color override hex values must use RRGGBB or RRGGBBAA digits",
         ));
     }
     u32::from_str_radix(value, 16)
         .map(|color| encode_color_literal(color, value.len() == 8))
-        .map_err(|_| {
-            PyValueError::new_err("input.color override must be a u32, 0xRRGGBB, or #RRGGBB value")
-        })
+        .map_err(|_| color_override_error())
+}
+
+fn color_override_error() -> PyErr {
+    PyValueError::new_err(
+        "input.color override must be a valid public color integer, 0xRRGGBB[AA], or #RRGGBB[AA] value",
+    )
 }
 
 fn parse_bar(item: &Bound<'_, PyAny>) -> PyResult<Bar> {

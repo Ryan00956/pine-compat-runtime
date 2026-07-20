@@ -512,7 +512,8 @@ plot(time_close("60", "0000-0230", "America/New_York") == 1615701600000 ? 1 : 0)
 fn runs_timeframe_helpers() {
     let source = SourceFile::new(
         "test.pine",
-        r#"indicator("timeframe helpers")
+        r#"//@version=6
+indicator("timeframe helpers")
 tf = input.timeframe("60", "TF")
 plot(timeframe.period == "1" ? 1 : 0)
 plot(timeframe.main_period == timeframe.period ? 1 : 0)

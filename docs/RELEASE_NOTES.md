@@ -2,6 +2,30 @@
 
 ## Unreleased
 
+## 0.2.0 - 2026-07-20
+
+- Hardened the legacy front-end after the release-candidate audit. Legacy
+  dialects now reject qualified APIs introduced by later Pine versions,
+  admission distinguishes a real built-in `study(...)` declaration from a
+  shadowing user function, pre-v3 ordinary built-ins reject keyword arguments
+  while historical annotation calls retain them, internal input-type markers
+  cannot be forged or used outside the `input(type=...)` selector, and positive
+  constant-expression history offsets participate correctly in the v1/v2
+  declaration graph. Pine v5 `table.new(..., force_overlay=...)` is also
+  accepted, while Pine v4 rejects both named and positional uses at analysis
+  time; public-output propagation and pane routing remain unsupported.
+- Corrected two state/time alignment bugs. Omitted-anchor `ta.vwap(source)`
+  tracks its default UTC-day bucket per callsite, so a conditionally executed
+  call starts or resets on its first execution in that bucket. Higher-timeframe
+  request alignment now uses calendar-month closes instead of fixed 30-day
+  durations, preventing `lookahead_off` from exposing 31-day monthly values
+  early or delaying 28/29-day values.
+- Closed input-override inconsistencies across CLI, Python, and WASM. Generic
+  `input()` values are parsed from their analyzed value kind instead of text
+  heuristics, normalized duplicate callsite ids fail consistently, and the
+  complete public numeric color representation—including bit-32 low-RGBA
+  encodings—can be passed back through `input.color` with range validation.
+
 - Closed the current pure-internal `ta.*` indicator surface by completing the
   remaining `ta.vwap` row. Variable and omitted-anchor call forms now reset on
   the runtime's UTC `1D` boundary, explicit anchors return `na` until their
@@ -34,10 +58,9 @@
   not advertised as full backwards compatibility.
 - Added a reusable legacy release profiler, deterministic retained-value
   ceilings, explicit dialect/cache isolation tests, and an independent 4096
-  declaration-edge adversarial test. All 14 emitted legacy diagnostic codes
-  remain documented, public analysis/runtime/matrix schemas remain 4/8/2, and
-  all committed legacy corpus/release sources are marked original. Subsequent
-  input-metadata hardening advances the public analysis schema to 5.
+  declaration-edge adversarial test. All 16 emitted legacy diagnostic codes
+  remain documented, public analysis/runtime/matrix schemas remain 5/8/2, and
+  all committed legacy corpus/release sources are marked original.
 - Closed legacy host integration with CLI-owned shared goldens across Python
   and WASM. Required runtime parity now includes implicit v1 and v4 input
   defaults; five complete analysis snapshots cover v1-v4 and a v2 graph error.

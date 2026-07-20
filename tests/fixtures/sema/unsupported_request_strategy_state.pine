@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 strategy("Strategy state request")
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.account_currency) == "USD" ? 1 : 0)
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.default_entry_qty(close)))

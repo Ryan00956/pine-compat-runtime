@@ -464,6 +464,102 @@ def test_program_run_accepts_generic_color_input_override_string():
     assert result["plots"][0]["values"] == [76.0, 76.0, 76.0]
 
 
+def test_generic_input_overrides_use_analyzed_value_kinds():
+    source = (
+        '//@version=5\nindicator("generic input overrides")\n'
+        'text_true = input("default", "Text true")\n'
+        'text_number = input("default", "Text number")\n'
+        'text_color = input("default", "Text color")\n'
+        'enabled = input(true, "Enabled")\n'
+        'count = input(1, "Count")\n'
+        'scale = input(1.0, "Scale")\n'
+        'shade = input(color.red, "Shade")\n'
+        'plot(text_true == "true" ? 1 : 0)\n'
+        'plot(text_number == "42" ? 1 : 0)\n'
+        'plot(text_color == "#00FF0080" ? 1 : 0)\n'
+        'plot(enabled ? 1 : 0)\n'
+        'plot(count)\n'
+        'plot(scale)\n'
+        'plot(color.g(shade))\n'
+        'plot(color.t(shade))\n'
+    )
+    report = pine_compat.analyze_script(source)
+    input_ids = {
+        item["title"]: item["callSiteId"]
+        for item in report["inputs"]
+    }
+    result = pine_compat.compile_script(source).run(
+        BARS,
+        input_overrides={
+            input_ids["Text true"]: "true",
+            input_ids["Text number"]: "42",
+            input_ids["Text color"]: "#00FF0080",
+            input_ids["Enabled"]: False,
+            input_ids["Count"]: 42,
+            input_ids["Scale"]: 2.5,
+            input_ids["Shade"]: 4311679104,
+        },
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [1.0, 1.0, 1.0],
+        [1.0, 1.0, 1.0],
+        [1.0, 1.0, 1.0],
+        [0.0, 0.0, 0.0],
+        [42.0, 42.0, 42.0],
+        [2.5, 2.5, 2.5],
+        [255.0, 255.0, 255.0],
+        [50.0, 50.0, 50.0],
+    ]
+
+
+def test_input_color_override_round_trips_public_numeric_encoding_and_rejects_invalid_values():
+    source = (
+        '//@version=5\nindicator("color override")\n'
+        'shade = input.color(color.red, "Shade")\n'
+        'plot(color.g(shade))\n'
+        'plot(color.t(shade))\n'
+        'bgcolor(shade)\n'
+    )
+    report = pine_compat.analyze_script(source)
+    call_site_id = report["inputs"][0]["callSiteId"]
+    program = pine_compat.compile_script(source)
+
+    result = program.run(BARS, input_overrides={call_site_id: 4311679104})
+    assert result["plots"][0]["values"] == [255.0, 255.0, 255.0]
+    assert result["plots"][1]["values"] == [50.0, 50.0, 50.0]
+    assert result["bgColors"][0]["values"] == [4311679104] * 3
+
+    for invalid in (-1, 4311744512, 1.5, True):
+        try:
+            program.run(BARS, input_overrides={call_site_id: invalid})
+        except ValueError as error:
+            assert "valid public color integer" in str(error)
+        else:
+            raise AssertionError(f"invalid public color {invalid!r} should fail")
+
+
+def test_program_run_rejects_normalized_duplicate_input_override_call_sites():
+    source = (
+        '//@version=5\nindicator("inputs")\n'
+        'length = input.int(2, "Length")\n'
+        'plot(length)\n'
+    )
+    report = pine_compat.analyze_script(source)
+    call_site_id = report["inputs"][0]["callSiteId"]
+    program = pine_compat.compile_script(source)
+
+    try:
+        program.run(
+            BARS,
+            input_overrides={call_site_id: 1, str(call_site_id): 2},
+        )
+    except ValueError as error:
+        assert f"duplicate input override for callSiteId {call_site_id}" in str(error)
+    else:
+        raise AssertionError("normalized duplicate input callSiteId should fail")
+
+
 def test_program_run_rejects_unknown_input_override_call_site():
     program = pine_compat.compile_script(
         '//@version=5\nindicator("inputs")\n'
@@ -9649,7 +9745,7 @@ def test_run_script_returns_label_outputs():
 
 def test_run_script_returns_label_text_formatting_outputs():
     result = pine_compat.run_script(
-        '//@version=5\nindicator("label formatting")\nif bar_index == 1\n    label_id = label.new(bar_index, high, "start", text_formatting=text.format_bold)\n    label.set_text_formatting(label_id, text.format_bold + text.format_italic)\nlabel.set_text_formatting(na, text.format_italic)\nplot(close)\n',
+        '//@version=6\nindicator("label formatting")\nif bar_index == 1\n    label_id = label.new(bar_index, high, "start", text_formatting=text.format_bold)\n    label.set_text_formatting(label_id, text.format_bold + text.format_italic)\nlabel.set_text_formatting(na, text.format_italic)\nplot(close)\n',
         BARS,
     )
 
@@ -9897,7 +9993,7 @@ def test_run_script_returns_box_outputs():
 
 def test_run_script_returns_box_set_xloc_outputs():
     result = pine_compat.run_script(
-        '//@version=5\nindicator("box set xloc")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index + 1, low)\n    box.set_xloc(box_id, bar_index - 1, bar_index + 3, xloc.bar_index)\nbox.set_xloc(na, bar_index, bar_index + 1, xloc.bar_index)\nplot(close)\n',
+        '//@version=6\nindicator("box set xloc")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index + 1, low)\n    box.set_xloc(box_id, bar_index - 1, bar_index + 3, xloc.bar_index)\nbox.set_xloc(na, bar_index, bar_index + 1, xloc.bar_index)\nplot(close)\n',
         BARS,
     )
 
@@ -9956,7 +10052,7 @@ def test_run_script_returns_box_set_xloc_outputs():
 
 def test_run_script_accepts_drawing_object_method_syntax():
     result = pine_compat.run_script(
-        '//@version=5\nindicator("drawing methods")\nvar label_id = label.new(bar_index, high, "start")\nvar line_id = line.new(bar_index, low, bar_index + 1, high)\nvar box_id = box.new(bar_index, high, bar_index + 1, low)\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    label_id.set_text("method")\n    label_id.set_xy(bar_index, close)\n    line_id.set_xy1(bar_index, low)\n    line_id.set_color(color.green)\n    box_id.set_lefttop(bar_index, high)\n    box_id.set_xloc(bar_index - 1, bar_index + 1, xloc.bar_index)\n    table_id.cell(0, 0, "A")\n    table_id.set_bgcolor(color.green)\nplot(str.length(label_id.get_text()))\nplot(line_id.get_x1())\nplot(box_id.get_right())\nplot(close)\n',
+        '//@version=6\nindicator("drawing methods")\nvar label_id = label.new(bar_index, high, "start")\nvar line_id = line.new(bar_index, low, bar_index + 1, high)\nvar box_id = box.new(bar_index, high, bar_index + 1, low)\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    label_id.set_text("method")\n    label_id.set_xy(bar_index, close)\n    line_id.set_xy1(bar_index, low)\n    line_id.set_color(color.green)\n    box_id.set_lefttop(bar_index, high)\n    box_id.set_xloc(bar_index - 1, bar_index + 1, xloc.bar_index)\n    table_id.cell(0, 0, "A")\n    table_id.set_bgcolor(color.green)\nplot(str.length(label_id.get_text()))\nplot(line_id.get_x1())\nplot(box_id.get_right())\nplot(close)\n',
         BARS,
     )
 
@@ -9968,7 +10064,7 @@ def test_run_script_accepts_drawing_object_method_syntax():
 
 def test_run_script_returns_box_new_style_outputs():
     result = pine_compat.run_script(
-        '//@version=5\nindicator("box new style")\nif bar_index == 1\n    box_id = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text="styled", text_size=size.small, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)\nplot(close)\n',
+        '//@version=6\nindicator("box new style")\nif bar_index == 1\n    box_id = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text="styled", text_size=size.small, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)\nplot(close)\n',
         BARS,
     )
 
@@ -10005,7 +10101,7 @@ def test_run_script_returns_box_new_style_outputs():
 
 def test_run_script_returns_box_text_formatting_outputs():
     result = pine_compat.run_script(
-        '//@version=5\nindicator("box formatting")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index, low)\n    box.set_text_formatting(box_id, text.format_bold + text.format_italic)\nbox.set_text_formatting(na, text.format_italic)\nplot(close)\n',
+        '//@version=6\nindicator("box formatting")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index, low)\n    box.set_text_formatting(box_id, text.format_bold + text.format_italic)\nbox.set_text_formatting(na, text.format_italic)\nplot(close)\n',
         BARS,
     )
 
@@ -10415,7 +10511,7 @@ def test_run_script_returns_table_cell_text_font_family_outputs():
 
 def test_run_script_returns_table_cell_text_formatting_outputs():
     result = pine_compat.run_script(
-        '//@version=5\nindicator("table formatting")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", text_formatting=text.format_bold)\n    table.cell_set_text_formatting(table_id, 0, 0, text.format_bold + text.format_italic)\ntable.cell_set_text_formatting(na, 0, 0, text.format_italic)\nplot(close)\n',
+        '//@version=6\nindicator("table formatting")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", text_formatting=text.format_bold)\n    table.cell_set_text_formatting(table_id, 0, 0, text.format_bold + text.format_italic)\ntable.cell_set_text_formatting(na, 0, 0, text.format_italic)\nplot(close)\n',
         BARS,
     )
 

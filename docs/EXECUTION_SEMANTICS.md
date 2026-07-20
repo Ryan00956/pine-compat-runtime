@@ -2234,7 +2234,8 @@ responsibility.
 right, and xloc snapshot values. Tables use deterministic ids,
 fixed positive
 dimensions, optional `table.new` background-color, frame-color, frame-width,
-border-color, and border-width initialization, and sparse cell snapshots for
+border-color, and border-width initialization, accepted `force_overlay` syntax
+without public-output propagation or pane routing, and sparse cell snapshots for
 text/background/text-color/width/height/text-size writes and final table-level
 mutations with `table.set_position` and
 `table.set_bgcolor`/`table.set_frame_color`/`table.set_frame_width`/
@@ -2403,7 +2404,8 @@ independent while-loop control-flow blocks. `table.new` optional
 `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialize the
 table's final background-color, frame-color, frame-width, border-color, and
-border-width values.
+border-width values. `force_overlay` is accepted, but its value is not exposed
+in public output and pane routing remains unsupported.
 `table.delete` appends an `exists: false` table snapshot, including when called
 from ordinary and independent while-loop control-flow blocks. `table.clear`
 removes already populated cells

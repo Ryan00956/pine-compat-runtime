@@ -48,6 +48,7 @@ impl Analyzer {
                 } else {
                     self.analyze_expr(expr);
                 }
+                self.reject_legacy_input_constant_expression(expr);
             }
             StmtKind::Import(_) => {
                 self.compatibility.supported.push(FeatureUse {
@@ -101,6 +102,7 @@ impl Analyzer {
                 else_branch,
             } => {
                 let condition_type = self.analyze_expr(condition);
+                self.reject_legacy_input_constant_expression(condition);
                 if let Some(condition_type) = condition_type {
                     self.expect_bool(condition_type, condition.span);
                 }
@@ -141,6 +143,11 @@ impl Analyzer {
                 let from_type = self.analyze_expr(from);
                 let to_type = self.analyze_expr(to);
                 let step_type = step.as_ref().and_then(|step| self.analyze_expr(step));
+                self.reject_legacy_input_constant_expression(from);
+                self.reject_legacy_input_constant_expression(to);
+                if let Some(step) = step {
+                    self.reject_legacy_input_constant_expression(step);
+                }
                 if let Some(from_type) = from_type {
                     self.expect_int(from_type, from.span);
                 }
@@ -187,9 +194,11 @@ impl Analyzer {
                 body,
             } => {
                 self.analyze_for_in_stmt(index.as_deref(), value, iterable, body, statement.span);
+                self.reject_legacy_input_constant_expression(iterable);
             }
             StmtKind::While { condition, body } => {
                 let condition_type = self.analyze_expr(condition);
+                self.reject_legacy_input_constant_expression(condition);
                 if let Some(condition_type) = condition_type {
                     self.expect_bool(condition_type, condition.span);
                 }
@@ -247,6 +256,8 @@ impl Analyzer {
             } => {
                 let diagnostic_start = self.diagnostics.len();
                 let value_type = self.analyze_expr(value).unwrap_or(UNKNOWN);
+                let invalid_legacy_input_constant =
+                    self.reject_legacy_input_constant_declaration(value);
                 let value_has_errors = self.diagnostics[diagnostic_start..]
                     .iter()
                     .any(|diagnostic| diagnostic.severity == Severity::Error);
@@ -490,13 +501,17 @@ impl Analyzer {
                 } else {
                     self.const_color_symbols.remove(&symbol.id);
                 }
-                self.symbol_init_exprs.insert(
-                    symbol.id,
-                    SourcedExpr {
-                        source_context_id: self.current_source_context_id(),
-                        expr: value.clone(),
-                    },
-                );
+                if invalid_legacy_input_constant {
+                    self.symbol_init_exprs.remove(&symbol.id);
+                } else {
+                    self.symbol_init_exprs.insert(
+                        symbol.id,
+                        SourcedExpr {
+                            source_context_id: self.current_source_context_id(),
+                            expr: value.clone(),
+                        },
+                    );
+                }
                 self.bind_symbol(name, statement.span, symbol);
             }
             StmtKind::Reassign { name, value } => {
@@ -515,6 +530,8 @@ impl Analyzer {
                     );
                 }
                 let value_type = self.analyze_expr(value);
+                let invalid_legacy_input_constant_reassignment = self
+                    .reject_legacy_input_constant_symbol_reassignment(name, value, statement.span);
                 let value_has_errors = self.diagnostics[diagnostic_start..]
                     .iter()
                     .any(|diagnostic| diagnostic.severity == Severity::Error);
@@ -697,7 +714,9 @@ impl Analyzer {
                                 );
                             }
                         }
-                        self.symbol_init_exprs.remove(&symbol.id);
+                        if !invalid_legacy_input_constant_reassignment {
+                            self.symbol_init_exprs.remove(&symbol.id);
+                        }
                         if assignment_is_valid && let Some(value) = const_int_value {
                             self.const_int_symbols.insert(symbol.id, value);
                         } else {
@@ -809,6 +828,7 @@ impl Analyzer {
                     self.unsupported("function_side_effect", reason, statement.span);
                 }
                 let value_type = self.analyze_expr(value);
+                self.reject_legacy_input_constant_reassignment(value);
                 if let Some(receiver_symbol) = target_receiver_symbol {
                     self.symbol_init_exprs.remove(&receiver_symbol.id);
                 }
@@ -850,6 +870,9 @@ impl Analyzer {
                 let array_type = self.analyze_expr(array);
                 let index_type = self.analyze_expr(index);
                 let value_type = self.analyze_expr(value);
+                self.reject_legacy_input_constant_expression(array);
+                self.reject_legacy_input_constant_expression(index);
+                self.reject_legacy_input_constant_reassignment(value);
 
                 if let Some(index_type) = index_type
                     && let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
@@ -930,8 +953,9 @@ impl Analyzer {
                     });
                 }
             }
-            StmtKind::TupleDecl { .. } => {
+            StmtKind::TupleDecl { value, .. } => {
                 self.analyze_tuple_decl(statement);
+                self.reject_legacy_input_constant_expression(value);
             }
             StmtKind::Unsupported { feature } => {
                 self.unsupported(feature, unsupported_syntax_reason(feature), statement.span);

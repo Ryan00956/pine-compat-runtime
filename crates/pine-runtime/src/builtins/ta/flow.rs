@@ -273,10 +273,13 @@ impl<'a> HistoricalRuntime<'a> {
             message: "ta.vwap missing source argument".to_owned(),
         })?;
         let source = self.eval_expr(source_arg)?;
-        let anchor = if let Some(arg) = vwap_arg(args, 1, "anchor") {
-            matches!(self.eval_expr(arg)?, PineValue::Bool(true))
+        let (anchor, default_anchor_bucket) = if let Some(arg) = vwap_arg(args, 1, "anchor") {
+            (matches!(self.eval_expr(arg)?, PineValue::Bool(true)), None)
         } else {
-            self.default_vwap_anchor()
+            (
+                false,
+                self.current_bar.map(|bar| bar.time.div_euclid(86_400_000)),
+            )
         };
         let stdev_mult = if let Some(arg) = vwap_arg(args, 2, "stdev_mult") {
             self.eval_expr(arg)?.as_f64()
@@ -287,14 +290,22 @@ impl<'a> HistoricalRuntime<'a> {
         let volume = self.current_builtin_f64("volume");
 
         let state = self.vwap_call_state.entry(call_site_id).or_default();
-        if anchor {
+        if let Some(bucket) = default_anchor_bucket {
+            if state.default_anchor_bucket() != Some(bucket) {
+                state.start_default_anchor_bucket(bucket);
+            }
+        } else if anchor {
             state.start();
         } else if !state.has_started() {
             return Ok(vwap_result_na(has_bands));
         }
 
         let (Some(source), Some(volume)) = (source, volume) else {
-            state.start();
+            if let Some(bucket) = default_anchor_bucket {
+                state.start_default_anchor_bucket(bucket);
+            } else {
+                state.start();
+            }
             return Ok(vwap_result_na(has_bands));
         };
         let weighted = source * volume;
@@ -304,7 +315,11 @@ impl<'a> HistoricalRuntime<'a> {
             || !weighted.is_finite()
             || !weighted_square.is_finite()
         {
-            state.start();
+            if let Some(bucket) = default_anchor_bucket {
+                state.start_default_anchor_bucket(bucket);
+            } else {
+                state.start();
+            }
             return Ok(vwap_result_na(has_bands));
         }
         state.weighted_sum += weighted;

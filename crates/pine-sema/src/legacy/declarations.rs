@@ -348,6 +348,19 @@ pub(crate) fn legacy_admission_failure(
 }
 
 fn declaration_calls(program: &Program) -> Vec<DeclarationCall<'_>> {
+    // Pine user functions are collected before call analysis and shadow an
+    // equally named built-in regardless of their textual order. Admission
+    // must apply the same rule; otherwise a UDF named `study` can make an
+    // arbitrary legacy source look like it contains a real script
+    // declaration.
+    let user_functions = program
+        .statements
+        .iter()
+        .filter_map(|statement| match &statement.kind {
+            StmtKind::Function { name, .. } => Some(name.as_str()),
+            _ => None,
+        })
+        .collect::<std::collections::HashSet<_>>();
     program
         .statements
         .iter()
@@ -368,6 +381,9 @@ fn declaration_calls(program: &Program) -> Vec<DeclarationCall<'_>> {
             let ExprKind::Identifier(name) = &callee.kind else {
                 return None;
             };
+            if user_functions.contains(name.as_str()) {
+                return None;
+            }
             matches!(name.as_str(), "study" | "indicator" | "strategy").then_some(DeclarationCall {
                 name,
                 span: callee.span,

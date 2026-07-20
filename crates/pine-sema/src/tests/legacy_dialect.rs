@@ -161,6 +161,22 @@ fn legacy_modern_or_missing_declarations_are_rejected_precisely() {
 }
 
 #[test]
+fn user_defined_study_call_does_not_satisfy_legacy_indicator_admission() {
+    let analysis =
+        analyze("//@version=4\nstudy(title) => title\nstudy(\"not a declaration\")\nplot(close)\n");
+
+    assert_eq!(
+        diagnostic_codes(&analysis),
+        vec!["E_LEGACY_INDICATOR_DECLARATION"]
+    );
+    assert_eq!(
+        analysis.compatibility.script_mode,
+        ScriptModeClassification::Missing
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn modern_v5_v6_modes_keep_existing_paths_and_reject_study_alias() {
     for version in [5, 6] {
         for declaration in ["indicator(\"modern\")", "strategy(\"modern\")"] {

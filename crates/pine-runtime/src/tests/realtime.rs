@@ -98,6 +98,59 @@ plot(ta.vwap(close))
 }
 
 #[test]
+fn realtime_rollback_restores_conditional_default_vwap_callsite_bucket() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("conditional realtime vwap")
+var float score = na
+if bar_index != 1
+    score := ta.vwap(close)
+plot(score)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let timed_bar = |time, close| Bar {
+        time,
+        open: close,
+        high: close,
+        low: close,
+        close,
+        volume: 1.0,
+    };
+    let mut runtime = RealtimeRuntime::new(&hir);
+
+    runtime
+        .update(BarUpdate::historical(timed_bar(0, 10.0)))
+        .expect("first historical update");
+    let skipped_boundary = runtime
+        .update(BarUpdate::forming(timed_bar(86_400_000, 20.0)))
+        .expect("skipped boundary update");
+    let skipped_boundary_replacement = runtime
+        .update(BarUpdate::forming(timed_bar(86_400_000, 25.0)))
+        .expect("skipped boundary replacement");
+    runtime
+        .update(BarUpdate::confirmed(timed_bar(86_400_000, 20.0)))
+        .expect("skipped boundary confirmation");
+    let resumed = runtime
+        .update(BarUpdate::forming(timed_bar(86_460_000, 30.0)))
+        .expect("resumed callsite update");
+    let resumed_replacement = runtime
+        .update(BarUpdate::forming(timed_bar(86_460_000, 40.0)))
+        .expect("resumed callsite replacement");
+
+    assert_values_close(&skipped_boundary.plots[0].values, &[10.0, 10.0]);
+    assert_values_close(&skipped_boundary_replacement.plots[0].values, &[10.0, 10.0]);
+    assert_values_close(&resumed.plots[0].values, &[10.0, 10.0, 30.0]);
+    assert_values_close(&resumed_replacement.plots[0].values, &[10.0, 10.0, 40.0]);
+}
+
+#[test]
 fn barstate_realtime_flags_track_update_kind() {
     let source = SourceFile::new(
         "test.pine",

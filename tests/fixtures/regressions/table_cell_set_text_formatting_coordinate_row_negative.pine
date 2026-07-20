@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Table cell set text formatting coordinate row negative")
 table_id = table.new(position.top_left, 2, 1)
 table.cell_set_text_formatting(table_id, 0, -1, text.format_bold)

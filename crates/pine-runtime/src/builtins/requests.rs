@@ -1,6 +1,7 @@
 use pine_ir::{CallSiteId, HirCallArg, HirExpr};
 
 use crate::builtins::args::call_arg_expr;
+use crate::builtins::time::calendar_timeframe_close;
 use crate::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -279,7 +280,7 @@ fn align_requested_value(
     merge: RequestMergePolicy,
     update_kind: BarUpdateKind,
 ) -> PineValue {
-    if requested_timeframe.seconds() == chart_timeframe.seconds() {
+    if requested_timeframe == chart_timeframe {
         let matched = match merge.gaps {
             RequestGaps::On => requested_values
                 .iter()
@@ -294,8 +295,7 @@ fn align_requested_value(
             .unwrap_or(PineValue::Na);
     }
 
-    let chart_close = current_time.saturating_add(chart_timeframe.seconds().saturating_mul(1000));
-    let requested_duration = requested_timeframe.seconds().saturating_mul(1000);
+    let chart_close = request_bar_nominal_close(current_time, chart_timeframe);
     let historical_lookahead =
         merge.lookahead == RequestLookahead::On && update_kind == BarUpdateKind::Historical;
     let matched = match (historical_lookahead, merge.gaps) {
@@ -308,15 +308,42 @@ fn align_requested_value(
             .last(),
         (false, RequestGaps::On) => requested_values
             .iter()
-            .find(|(time, _)| time.saturating_add(requested_duration) == chart_close),
+            .enumerate()
+            .find(|(index, _)| {
+                requested_bar_close(requested_values, *index, requested_timeframe) == chart_close
+            })
+            .map(|(_, value)| value),
         (false, RequestGaps::Off) => requested_values
             .iter()
-            .take_while(|(time, _)| time.saturating_add(requested_duration) <= chart_close)
-            .last(),
+            .enumerate()
+            .take_while(|(index, _)| {
+                requested_bar_close(requested_values, *index, requested_timeframe) <= chart_close
+            })
+            .last()
+            .map(|(_, value)| value),
     };
     matched
         .map(|(_, value)| value.clone())
         .unwrap_or(PineValue::Na)
+}
+
+fn request_bar_nominal_close(open_time: i64, timeframe: &RequestTimeframe) -> i64 {
+    calendar_timeframe_close(open_time, timeframe.value(), timeframe.seconds())
+        .unwrap_or_else(|| open_time.saturating_add(timeframe.seconds().saturating_mul(1000)))
+}
+
+fn requested_bar_close(
+    requested_values: &[(i64, PineValue)],
+    index: usize,
+    timeframe: &RequestTimeframe,
+) -> i64 {
+    let open_time = requested_values[index].0;
+    let nominal_close = request_bar_nominal_close(open_time, timeframe);
+    requested_values
+        .get(index + 1)
+        .map(|(next_open, _)| *next_open)
+        .filter(|next_open| *next_open > open_time)
+        .map_or(nominal_close, |next_open| nominal_close.min(next_open))
 }
 
 fn legacy_source_span(args: &[HirCallArg]) -> Option<(i64, i64)> {

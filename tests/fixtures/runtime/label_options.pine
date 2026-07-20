@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Label options")
 if bar_index == 0
     label_id = label.new(x=bar_index, y=high, text="start", xloc=xloc.bar_index, yloc=yloc.price, color=color.green, style=label.style_label_up, textcolor=color.white, size=12, tooltip="Tip")

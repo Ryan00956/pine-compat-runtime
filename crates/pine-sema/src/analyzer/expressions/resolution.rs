@@ -2,6 +2,16 @@ use crate::prelude::*;
 
 impl Analyzer {
     pub(crate) fn resolve_qualified_value(&mut self, name: &str, span: Span) -> Option<PineType> {
+        if let Some(min_version) = crate::PineDialect::qualified_builtin_min_version(name, false)
+            && self.legacy.dialect().version() < min_version
+        {
+            self.reject_unavailable_legacy_builtin(name, min_version, span);
+            return None;
+        }
+        self.resolve_qualified_value_canonical(name, span)
+    }
+
+    fn resolve_qualified_value_canonical(&mut self, name: &str, span: Span) -> Option<PineType> {
         if self.validate_strategy_state_variable(name, span) {
             return None;
         }
@@ -83,7 +93,7 @@ impl Analyzer {
                     .canonical_name
                     .expect("validated exact legacy alias has a canonical target");
                 let pine_type = self
-                    .resolve_qualified_value(canonical_name, span)
+                    .resolve_qualified_value_canonical(canonical_name, span)
                     .expect("validated exact legacy symbol target is registered");
                 let source_context_id = self.current_source_context_id();
                 self.legacy.record_value_translation(

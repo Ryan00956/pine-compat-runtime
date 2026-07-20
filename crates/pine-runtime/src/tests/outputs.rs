@@ -347,7 +347,8 @@ plot(close)
 fn collects_box_new_snapshots() {
     let source = SourceFile::new(
         "test.pine",
-        r#"indicator("boxes")
+        r#"//@version=6
+indicator("boxes")
 if bar_index == 1
     box.new(bar_index, high, bar_index, low)
 if bar_index == 2
@@ -460,7 +461,8 @@ plot(close)
 fn collects_box_mutation_snapshots() {
     let source = SourceFile::new(
         "test.pine",
-        r#"indicator("box mutation")
+        r#"//@version=6
+indicator("box mutation")
 id = box.new(bar_index, high, bar_index, low)
 box.set_left(id, 1)
 box.set_top(id, close + 1)
@@ -764,7 +766,8 @@ plot(close)
 fn collects_table_cell_snapshots() {
     let source = SourceFile::new(
         "test.pine",
-        r#"indicator("tables")
+        r#"//@version=6
+indicator("tables")
 var id = table.new(position.top_right, 2, 2)
 if bar_index == 1
     table.cell(id, 0, 0, "A")
@@ -915,12 +918,12 @@ plot(close)
 }
 
 #[test]
-fn collects_table_new_bgcolor_option() {
+fn collects_table_new_options_including_force_overlay() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("table new options")
 first = table.new(position.top_right, 2, 2)
-second = table.new(position.bottom_left, 1, 1, bgcolor=color.yellow, frame_color=color.black, frame_width=2, border_color=color.white, border_width=1)
+second = table.new(position.bottom_left, 1, 1, bgcolor=color.yellow, frame_color=color.black, frame_width=2, border_color=color.white, border_width=1, force_overlay=true)
 plot(close)
 "#,
     );
@@ -1106,7 +1109,8 @@ id = table.new(position.top_right, 2, 2)
 table.cell_set_text_font_family(id, 0, 0, font.family_monospace)
 plot(close)
 "#,
-        r#"indicator("missing table formatting cell")
+        r#"//@version=6
+indicator("missing table formatting cell")
 id = table.new(position.top_right, 2, 2)
 table.cell_set_text_formatting(id, 0, 0, text.format_bold)
 plot(close)
@@ -1169,7 +1173,8 @@ plot(close)
 fn collects_label_new_options() {
     let source = SourceFile::new(
         "test.pine",
-        r#"indicator("label options")
+        r#"//@version=6
+indicator("label options")
 label.new(x=bar_index, y=high, text="bar", xloc=xloc.bar_index, yloc=yloc.price, color=color.green, style=label.style_label_up, textcolor=color.white, size=12, tooltip="Tip")
 label.new(x=bar_index, y=low, text="styled", textalign=text.align_right, text_font_family=font.family_monospace, text_formatting=text.format_bold)
 plot(close)
@@ -1228,7 +1233,8 @@ plot(close)
 fn collects_label_mutation_snapshots() {
     let source = SourceFile::new(
         "test.pine",
-        r#"indicator("label mutation")
+        r#"//@version=6
+indicator("label mutation")
 id = label.new(bar_index, high, "start")
 label.set_x(id, 1)
 label.set_y(id, close + 1)

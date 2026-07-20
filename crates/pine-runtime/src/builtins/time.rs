@@ -199,6 +199,16 @@ fn timeframe_bucket_bounds(bucket: i64, timeframe: &str, seconds: i64) -> Option
     Some((open_time, close_time))
 }
 
+pub(crate) fn calendar_timeframe_close(
+    timestamp_ms: i64,
+    timeframe: &str,
+    seconds: i64,
+) -> Option<i64> {
+    calendar_timeframe_multiplier(timeframe, 'M')?;
+    let bucket = timeframe_change_bucket(timestamp_ms, timeframe, seconds)?;
+    timeframe_bucket_bounds(bucket, timeframe, seconds).map(|(_, close)| close)
+}
+
 fn calendar_month_start(month: i64) -> Option<i64> {
     let year = i32::try_from(month.div_euclid(12)).ok()?;
     let month = u32::try_from(month.rem_euclid(12).checked_add(1)?).ok()?;

@@ -112,11 +112,11 @@ fn run_profiled_json_with_options(options: &RunOptions) -> Result<String, String
     let bars = parse_bars_csv(&bars_text)?;
     let request_environment =
         request_environment_from_specs(&options.request_bars, options.chart_context.clone())?;
-    let input_names = input_calls(&hir)
+    let input_calls = input_calls(&hir)
         .into_iter()
-        .map(|input| (input.call_site_id, input.name))
+        .map(|input| (input.call_site_id, input))
         .collect::<HashMap<_, _>>();
-    let input_overrides = input_overrides_from_specs(&options.input_overrides, &input_names)?;
+    let input_overrides = input_overrides_from_specs(&options.input_overrides, &input_calls)?;
     let result = run_historical_profiled_with_request_environment_and_input_overrides(
         &hir,
         &bars,
@@ -157,11 +157,11 @@ fn run_result_with_options(options: &RunOptions) -> Result<RuntimeResult, String
     let bars = parse_bars_csv(&bars_text)?;
     let request_environment =
         request_environment_from_specs(&options.request_bars, options.chart_context.clone())?;
-    let input_names = input_calls(&hir)
+    let input_calls = input_calls(&hir)
         .into_iter()
-        .map(|input| (input.call_site_id, input.name))
+        .map(|input| (input.call_site_id, input))
         .collect::<HashMap<_, _>>();
-    let input_overrides = input_overrides_from_specs(&options.input_overrides, &input_names)?;
+    let input_overrides = input_overrides_from_specs(&options.input_overrides, &input_calls)?;
     run_historical_with_request_environment_and_input_overrides(
         &hir,
         &bars,

@@ -248,7 +248,7 @@ box.get_bottom(id: box-compatible) -> series float
 box.get_left(id: box-compatible) -> series int
 box.get_right(id: box-compatible) -> series int
 box.all -> simple array<box>
-table.new(position: const string, columns: int-compatible, rows: int-compatible, bgcolor?: color-compatible, frame_color?: color-compatible, frame_width?: int-compatible, border_color?: color-compatible, border_width?: int-compatible) -> series table
+table.new(position: const string, columns: int-compatible, rows: int-compatible, bgcolor?: color-compatible, frame_color?: color-compatible, frame_width?: int-compatible, border_color?: color-compatible, border_width?: int-compatible, force_overlay?: const bool) -> series table
 table.delete(id: table-compatible) -> void
 table.clear(id: table-compatible, start_column: int-compatible, start_row: int-compatible, end_column: int-compatible, end_row: int-compatible) -> void
 table.merge_cells(id: table-compatible, start_column: int-compatible, start_row: int-compatible, end_column: int-compatible, end_row: int-compatible) -> void

@@ -109,6 +109,28 @@ fn diagnostic_codes(analysis: &crate::Analysis) -> Vec<&str> {
         .collect()
 }
 
+fn assert_registered_value_namespace_versions(namespace: &str, expected: &[(&str, u16)]) {
+    let prefix = format!("{namespace}.");
+    let actual_names = pine_builtins::registered_value_names()
+        .filter(|name| name.starts_with(&prefix))
+        .collect::<std::collections::BTreeSet<_>>();
+    let expected_names = expected
+        .iter()
+        .map(|(name, _)| *name)
+        .collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(
+        actual_names, expected_names,
+        "registered `{namespace}` member set changed; classify every new member explicitly"
+    );
+    for (name, expected_version) in expected {
+        assert_eq!(
+            PineDialect::qualified_builtin_min_version(name, false),
+            Some(*expected_version),
+            "{name}"
+        );
+    }
+}
+
 fn top_level_call<'a>(analysis: &'a crate::Analysis, name: &str) -> &'a HirExpr {
     analysis
         .hir
@@ -436,6 +458,63 @@ fn v4_input_rejects_ambiguous_and_wrong_overloads_before_runtime() {
 }
 
 #[test]
+fn legacy_input_type_selectors_require_internal_provenance_and_cannot_leak() {
+    for type_expr in ["\"$legacy-input:integer\"", "forged_type"] {
+        let declaration = if type_expr == "forged_type" {
+            "forged_type = \"$legacy-input:integer\"\n"
+        } else {
+            ""
+        };
+        let analysis = analyze_production(&format!(
+            "//@version=4\nstudy(\"forged\")\n{declaration}length = input(3, \"Length\", type={type_expr})\nplot(close)\n"
+        ));
+        assert_eq!(diagnostic_codes(&analysis), vec!["E_LEGACY_INPUT_OVERLOAD"]);
+        assert!(analysis.hir.is_none());
+    }
+
+    for source in [
+        "//@version=4\nstudy(\"leak\")\nplot(close, title=input.integer)\n",
+        "//@version=4\nstudy(\"leak alias\")\nkind = input.integer\nplot(close, title=kind)\n",
+        "//@version=4\nstudy(\"leak concat\")\nplotchar(close, char=input.integer + \"\")\n",
+        "//@version=4\nstudy(\"leak ternary\")\nplot(close, title=true ? input.integer : \"safe\")\n",
+        "//@version=4\nstudy(\"leak transformed alias\")\nkind = input.integer + \"\"\nplot(close, title=kind)\n",
+        "//@version=4\nstudy(\"leak reassignment\")\nkind = \"\"\nkind := input.integer\nplot(close, title=kind)\n",
+        "//@version=4\nstudy(\"marker condition\")\nif input.integer == input.integer\n    plot(close)\n",
+        "//@version=4\nstudy(\"marker condition alias\")\nflag = input.integer == input.integer\nplot(flag ? close : open)\n",
+        "//@version=4\nstudy(\"udf marker condition\")\nchoose() =>\n    if input.integer == input.integer\n        1\n    else\n        2\nplot(choose())\n",
+        "//@version=4\nstudy(\"tuple marker\")\n[kind, n] = [input.integer, 1]\nplot(close, title=kind)\n",
+        "//@version=4\nstudy(\"reassigned marker alias\")\nkind = input.integer\nkind := \"safe\"\nalert(kind)\n",
+        "//@version=4\nstudy(\"conditionally reassigned marker alias\")\nkind = input.integer\nif close > open\n    kind := \"safe\"\nalert(kind)\n",
+        "//@version=4\nstudy(\"udf marker\")\nleak() => input.integer\nplot(close, title=leak())\n",
+        "//@version=4\nstudy(\"nested udf marker\")\nleak() =>\n    kind = input.integer\n    kind\nrelay() => leak()\nplot(close, title=relay())\n",
+    ] {
+        let analysis = analyze_production(source);
+        assert_eq!(
+            diagnostic_codes(&analysis),
+            vec!["E_LEGACY_INPUT_CONSTANT_CONTEXT"],
+            "{source}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    for source in [
+        "//@version=3\nstudy(\"input result\")\nlength = input(3, \"Length\", integer)\nfast = ema(close, length)\nslow = sma(close, length)\nplot(fast + slow)\n",
+        "//@version=4\nstudy(\"input result\")\nlength = input(3, \"Length\", input.integer)\nplot(sma(close, length))\n",
+        "//@version=4\nstudy(\"input result through udf\")\nlength = input(3, \"Length\", input.integer)\nreadLength() => length\nplot(sma(close, readLength()))\n",
+        "//@version=4\nstudy(\"reassigned input result\")\nlength = 1\nlength := input(3, \"Length\", input.integer)\nplot(sma(close, length))\n",
+    ] {
+        let analysis = analyze_production(source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+}
+
+#[test]
 fn v4_integer_input_accepts_float_metadata_without_widening_modern_input_int() {
     let legacy = analyze_production(
         "//@version=4\nstudy(\"bounds\")\nlength = input(1, \"Length\", input.integer, minval=1.0, maxval=5.0, step=1.0)\nplot(sma(close, length))\n",
@@ -730,7 +809,7 @@ fn exact_alias_applies_across_only_its_declared_version_range() {
         assert_eq!(analysis.compatibility.legacy_translations.len(), 1);
     }
 
-    let v4_symbol = analyze_legacy("//@version=4\nplot(str.length(tickerid))\n");
+    let v4_symbol = analyze_legacy("//@version=4\nplot(tickerid == \"\" ? 1 : 0)\n");
     assert_eq!(diagnostic_codes(&v4_symbol), vec!["E_UNKNOWN_SYMBOL"]);
     assert!(v4_symbol.compatibility.legacy_translations.is_empty());
 }
@@ -760,20 +839,22 @@ fn lexical_value_prevents_function_alias_fallback() {
 
 #[test]
 fn exact_symbol_alias_is_fallback_and_lowers_to_canonical_builtin() {
-    let source = "//@version=3\nplot(str.length(tickerid))\n";
+    let source = "//@version=3\nplot(tickerid == \"\" ? 1 : 0)\n";
     let analysis = analyze_legacy(source);
     assert!(
         analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
     );
-    let HirExprKind::Call { callee, args, .. } = &plot_arg(&analysis).kind else {
-        panic!("expected str.length call")
+    let HirExprKind::Ternary { condition, .. } = &plot_arg(&analysis).kind else {
+        panic!("expected ternary plot expression")
     };
-    assert_eq!(callee, "str.length");
+    let HirExprKind::Binary { left, .. } = &condition.kind else {
+        panic!("expected string comparison")
+    };
     assert!(matches!(
-        args.first().map(|arg| &arg.value.kind),
-        Some(HirExprKind::Builtin(name)) if name == "syminfo.tickerid"
+        &left.kind,
+        HirExprKind::Builtin(name) if name == "syminfo.tickerid"
     ));
     let translation = analysis
         .compatibility
@@ -787,7 +868,7 @@ fn exact_symbol_alias_is_fallback_and_lowers_to_canonical_builtin() {
 #[test]
 fn lexical_symbol_wins_over_symbol_alias() {
     let analysis =
-        analyze_legacy("//@version=3\ntickerid = \"local\"\nplot(str.length(tickerid))\n");
+        analyze_legacy("//@version=3\ntickerid = \"local\"\nplot(tickerid == \"local\" ? 1 : 0)\n");
     assert!(
         analysis.diagnostics.is_empty(),
         "{:?}",
@@ -824,18 +905,738 @@ fn modern_dialects_do_not_activate_legacy_aliases() {
 }
 
 #[test]
-fn canonical_name_in_legacy_source_is_not_reported_as_translation() {
+fn late_canonical_namespace_is_rejected_in_legacy_source() {
     let analysis = analyze_legacy("//@version=4\nplot(ta.sma(close, 2))\n");
-    assert!(
-        analysis.diagnostics.is_empty(),
-        "{:?}",
-        analysis.diagnostics
+    assert_eq!(
+        diagnostic_codes(&analysis),
+        vec!["E_LEGACY_VERSION_FEATURE"]
     );
     assert!(analysis.compatibility.legacy_translations.is_empty());
-    assert!(matches!(
-        &plot_arg(&analysis).kind,
-        HirExprKind::Call { callee, .. } if callee == "ta.sma"
-    ));
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn source_builtin_names_are_gated_by_legacy_dialect_before_registry_lookup() {
+    for source in [
+        "//@version=2\nstudy(\"no arrays\")\nvalues = array.new_float()\nplot(close)\n",
+        "//@version=2\nstudy(\"no ta namespace\")\nplot(ta.sma(close, 2))\n",
+        "//@version=3\nstudy(\"no color namespace\")\nplot(close, color=color.red)\n",
+        "//@version=4\nstudy(\"no ta namespace\")\nplot(ta.sma(close, 2))\n",
+    ] {
+        let analysis = analyze_production(source);
+        assert!(
+            diagnostic_codes(&analysis).contains(&"E_LEGACY_VERSION_FEATURE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    let v4_qualified_control = analyze_production(
+        "//@version=4\nstudy(\"v4 namespace\")\nplot(close, color=color.new(color.red, 10))\n",
+    );
+    assert!(
+        v4_qualified_control.diagnostics.is_empty(),
+        "{:?}",
+        v4_qualified_control.diagnostics
+    );
+    assert!(v4_qualified_control.hir.is_some());
+}
+
+#[test]
+fn qualified_builtin_version_inventory_covers_registered_namespaces() {
+    let missing_call_names = pine_builtins::PHASE_1_BUILTINS
+        .iter()
+        .map(|signature| signature.name)
+        .filter(|name| name.contains('.'))
+        .filter(|name| PineDialect::qualified_builtin_min_version(name, true).is_none())
+        .collect::<Vec<_>>();
+    assert!(
+        missing_call_names.is_empty(),
+        "unclassified registered qualified calls: {missing_call_names:?}"
+    );
+
+    let missing_value_names = pine_builtins::registered_value_names()
+        .filter(|name| name.contains('.'))
+        .filter(|name| PineDialect::qualified_builtin_min_version(name, false).is_none())
+        .collect::<std::collections::BTreeSet<_>>();
+    assert!(
+        missing_value_names.is_empty(),
+        "unclassified registered qualified values: {missing_value_names:?}"
+    );
+
+    for (name, is_call, expected) in [
+        ("barstate.isfirst", false, 1),
+        ("barstate.isconfirmed", false, 3),
+        ("barstate.islastconfirmedhistory", false, 4),
+        ("currency.USD", false, 1),
+        ("currency.BTC", false, 5),
+        ("strategy.long", false, 1),
+        ("strategy.opentrades.capital_held", false, 5),
+        ("strategy.closedtrades.first_index", false, 6),
+        ("strategy.account_currency", false, 5),
+        ("strategy.closedtrades.entry_price", true, 5),
+        ("strategy.convert_to_account", true, 5),
+        ("barmerge.gaps_on", false, 3),
+        ("location.abovebar", false, 1),
+        ("shape.circle", false, 1),
+        ("scale.left", false, 2),
+        ("size.normal", false, 3),
+        ("adjustment.none", false, 3),
+        ("session.regular", false, 3),
+        ("session.ismarket", false, 4),
+        ("session.isfirstbar_regular", false, 5),
+        ("alert.freq_all", false, 4),
+        ("array.new_float", true, 4),
+        ("array.first", true, 5),
+        ("box.set_xloc", true, 6),
+        ("label.set_text_formatting", true, 6),
+        ("box.set_text_formatting", true, 6),
+        ("table.cell_set_text_formatting", true, 6),
+        ("color.new", true, 4),
+        ("dayofweek.monday", false, 4),
+        ("display.all", false, 4),
+        ("display.pane", false, 5),
+        ("input.integer", false, 4),
+        ("order.ascending", false, 4),
+        ("position.top_left", false, 4),
+        ("syminfo.mintick", false, 3),
+        ("syminfo.tickerid", false, 4),
+        ("syminfo.country", false, 5),
+        ("syminfo.main_tickerid", false, 6),
+        ("timeframe.period", false, 4),
+        ("timeframe.isticks", false, 5),
+        ("timeframe.main_period", false, 6),
+        ("input.int", true, 5),
+        ("syminfo.prefix", true, 5),
+        ("timeframe.change", true, 5),
+        ("font.family_default", false, 5),
+        ("ta.sma", true, 5),
+        ("ta.rci", true, 6),
+        ("math.pi", false, 4),
+        ("text.align_left", false, 4),
+        ("text.wrap_auto", false, 5),
+        ("text.format_bold", false, 6),
+        ("currency.BDT", false, 6),
+    ] {
+        assert_eq!(
+            PineDialect::qualified_builtin_min_version(name, is_call),
+            Some(expected),
+            "{name}"
+        );
+    }
+
+    assert_registered_value_namespace_versions(
+        "barstate",
+        &[
+            ("barstate.isfirst", 1),
+            ("barstate.islast", 1),
+            ("barstate.islastconfirmedhistory", 4),
+            ("barstate.isnew", 1),
+            ("barstate.isconfirmed", 3),
+            ("barstate.ishistory", 1),
+            ("barstate.isrealtime", 1),
+        ],
+    );
+    assert_registered_value_namespace_versions(
+        "session",
+        &[
+            ("session.extended", 3),
+            ("session.regular", 3),
+            ("session.ismarket", 4),
+            ("session.ispremarket", 4),
+            ("session.ispostmarket", 4),
+            ("session.isfirstbar", 5),
+            ("session.islastbar", 5),
+            ("session.isfirstbar_regular", 5),
+            ("session.islastbar_regular", 5),
+        ],
+    );
+    assert_registered_value_namespace_versions(
+        "syminfo",
+        &[
+            ("syminfo.basecurrency", 4),
+            ("syminfo.currency", 4),
+            ("syminfo.description", 4),
+            ("syminfo.country", 5),
+            ("syminfo.industry", 5),
+            ("syminfo.main_tickerid", 6),
+            ("syminfo.prefix", 3),
+            ("syminfo.root", 3),
+            ("syminfo.session", 3),
+            ("syminfo.sector", 5),
+            ("syminfo.ticker", 4),
+            ("syminfo.tickerid", 4),
+            ("syminfo.timezone", 3),
+            ("syminfo.type", 4),
+            ("syminfo.volumetype", 5),
+            ("syminfo.mintick", 3),
+            ("syminfo.mincontract", 6),
+            ("syminfo.pointvalue", 3),
+            ("syminfo.minmove", 5),
+            ("syminfo.pricescale", 5),
+        ],
+    );
+    assert_registered_value_namespace_versions(
+        "timeframe",
+        &[
+            ("timeframe.period", 4),
+            ("timeframe.main_period", 6),
+            ("timeframe.isticks", 5),
+            ("timeframe.isseconds", 4),
+            ("timeframe.isminutes", 4),
+            ("timeframe.isintraday", 4),
+            ("timeframe.isdaily", 4),
+            ("timeframe.isweekly", 4),
+            ("timeframe.ismonthly", 4),
+            ("timeframe.isdwm", 4),
+            ("timeframe.multiplier", 4),
+        ],
+    );
+    assert_registered_value_namespace_versions(
+        "display",
+        &[
+            ("display.all", 4),
+            ("display.none", 4),
+            ("display.pane", 5),
+            ("display.price_scale", 5),
+            ("display.status_line", 5),
+            ("display.data_window", 5),
+        ],
+    );
+    assert_registered_value_namespace_versions(
+        "text",
+        &[
+            ("text.align_left", 4),
+            ("text.align_center", 4),
+            ("text.align_right", 4),
+            ("text.align_top", 4),
+            ("text.align_bottom", 4),
+            ("text.wrap_none", 5),
+            ("text.wrap_auto", 5),
+            ("text.format_none", 6),
+            ("text.format_bold", 6),
+            ("text.format_italic", 6),
+        ],
+    );
+    assert_registered_value_namespace_versions(
+        "math",
+        &[
+            ("math.e", 4),
+            ("math.pi", 4),
+            ("math.phi", 4),
+            ("math.rphi", 4),
+        ],
+    );
+    assert_registered_value_namespace_versions(
+        "currency",
+        &[
+            ("currency.AUD", 1),
+            ("currency.BDT", 6),
+            ("currency.BHD", 6),
+            ("currency.BRL", 6),
+            ("currency.BTC", 5),
+            ("currency.CAD", 1),
+            ("currency.CHF", 1),
+            ("currency.CLP", 6),
+            ("currency.CNY", 6),
+            ("currency.COP", 6),
+            ("currency.CZK", 6),
+            ("currency.DKK", 6),
+            ("currency.EGP", 6),
+            ("currency.ETH", 5),
+            ("currency.EUR", 1),
+            ("currency.GBP", 1),
+            ("currency.HKD", 1),
+            ("currency.HUF", 6),
+            ("currency.IDR", 6),
+            ("currency.ILS", 6),
+            ("currency.INR", 5),
+            ("currency.ISK", 6),
+            ("currency.JPY", 1),
+            ("currency.KES", 6),
+            ("currency.KRW", 5),
+            ("currency.KWD", 6),
+            ("currency.LKR", 6),
+            ("currency.MAD", 6),
+            ("currency.MXN", 6),
+            ("currency.MYR", 5),
+            ("currency.NGN", 6),
+            ("currency.NONE", 1),
+            ("currency.NOK", 1),
+            ("currency.NZD", 1),
+            ("currency.PEN", 6),
+            ("currency.PHP", 6),
+            ("currency.PKR", 6),
+            ("currency.PLN", 6),
+            ("currency.QAR", 6),
+            ("currency.RON", 6),
+            ("currency.RSD", 6),
+            ("currency.RUB", 1),
+            ("currency.SAR", 6),
+            ("currency.SEK", 1),
+            ("currency.SGD", 1),
+            ("currency.THB", 6),
+            ("currency.TND", 6),
+            ("currency.TRY", 1),
+            ("currency.TWD", 6),
+            ("currency.USD", 1),
+            ("currency.USDT", 5),
+            ("currency.VES", 6),
+            ("currency.VND", 6),
+            ("currency.ZAR", 1),
+        ],
+    );
+}
+
+#[test]
+fn mixed_qualified_namespace_versions_preserve_legacy_members_and_gate_later_ones() {
+    let v2 = analyze_production(
+        "//@version=2\nstudy(\"v2 qualified options\")\nlegacyOptions = location.abovebar == location.abovebar and shape.circle == shape.circle and scale.left == scale.left and currency.USD == currency.USD\nplot(legacyOptions ? close : open)\n",
+    );
+    assert!(v2.diagnostics.is_empty(), "{:?}", v2.diagnostics);
+    assert!(v2.hir.is_some());
+
+    let v3 = analyze_production(
+        "//@version=3\nstudy(\"v3 qualified options\")\nlegacyOptions = size.normal == size.normal and adjustment.none == adjustment.none and session.regular == session.regular and barstate.isconfirmed\nplot(legacyOptions ? syminfo.mintick : syminfo.pointvalue)\n",
+    );
+    assert!(v3.diagnostics.is_empty(), "{:?}", v3.diagnostics);
+    assert!(v3.hir.is_some());
+
+    for (version, name) in [
+        (2, "adjustment.none"),
+        (2, "size.normal"),
+        (2, "barstate.islastconfirmedhistory"),
+        (4, "session.isfirstbar_regular"),
+        (4, "syminfo.main_tickerid"),
+        (4, "syminfo.country"),
+        (4, "timeframe.main_period"),
+        (4, "currency.BTC"),
+        (4, "display.pane"),
+        (5, "syminfo.main_tickerid"),
+        (5, "syminfo.mincontract"),
+        (5, "timeframe.main_period"),
+        (5, "text.format_bold"),
+        (5, "currency.BDT"),
+        (5, "strategy.closedtrades.first_index"),
+    ] {
+        let declaration = if version <= 4 {
+            "study(\"late qualified value\")"
+        } else {
+            "indicator(\"late qualified value\")"
+        };
+        let analysis = analyze_production(&format!(
+            "//@version={version}\n{declaration}\nvalue = {name}\nplot(close)\n"
+        ));
+        assert_eq!(
+            diagnostic_codes(&analysis),
+            vec!["E_LEGACY_VERSION_FEATURE"],
+            "v{version} {name}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    let v4 = analyze_production(
+        "//@version=4\nstudy(\"v4 mixed namespaces\")\na = session.ismarket\nb = syminfo.tickerid\nc = timeframe.period\nd = display.all\ne = text.align_left\nf = math.pi\nplot(a ? close : open)\n",
+    );
+    assert!(v4.diagnostics.is_empty(), "{:?}", v4.diagnostics);
+    assert!(v4.hir.is_some());
+
+    let v5 = analyze_production(
+        "//@version=5\nstrategy(\"v5 mixed namespaces\")\na = session.isfirstbar_regular\nb = syminfo.country\nc = currency.BTC\nd = display.pane\ne = text.align_left\nf = timeframe.isticks\ng = strategy.opentrades.capital_held\nplot(a ? close : open)\n",
+    );
+    assert!(v5.diagnostics.is_empty(), "{:?}", v5.diagnostics);
+    assert!(v5.hir.is_some());
+
+    let v6 = analyze_production(
+        "//@version=6\nstrategy(\"v6 mixed namespaces\")\na = syminfo.main_tickerid\nb = syminfo.mincontract\nc = timeframe.main_period\nd = text.format_bold\ne = currency.BDT\nf = strategy.closedtrades.first_index\ng = ta.rci(close, 2)\nplot(close)\n",
+    );
+    assert!(v6.diagnostics.is_empty(), "{:?}", v6.diagnostics);
+    assert!(v6.hir.is_some());
+
+    let v5_box_set_xloc = analyze_production(
+        "//@version=5\nindicator(\"late box set_xloc\")\nbox.set_xloc(na, 0, 1, xloc.bar_index)\nplot(close)\n",
+    );
+    assert_eq!(
+        diagnostic_codes(&v5_box_set_xloc),
+        vec!["E_LEGACY_VERSION_FEATURE"]
+    );
+    assert!(v5_box_set_xloc.hir.is_none());
+
+    let v6_additions = analyze_production(
+        "//@version=6\nstrategy(\"v6 exact additions\")\nid = box.new(bar_index, high, bar_index + 1, low)\nbox.set_xloc(id, bar_index - 1, bar_index + 1, xloc.bar_index)\nplot(strategy.opentrades.capital_held + strategy.closedtrades.first_index)\n",
+    );
+    assert!(
+        v6_additions.diagnostics.is_empty(),
+        "{:?}",
+        v6_additions.diagnostics
+    );
+    assert!(v6_additions.hir.is_some());
+}
+
+#[test]
+fn drawing_v6_calls_and_parameters_do_not_leak_into_v5() {
+    for source in [
+        "//@version=5\nindicator(\"late label setter\")\nlabel.set_text_formatting(na, 1)\n",
+        "//@version=5\nindicator(\"late box setter\")\nbox.set_text_formatting(na, 1)\n",
+        "//@version=5\nindicator(\"late table setter\")\ntable.cell_set_text_formatting(na, 0, 0, 1)\n",
+        "//@version=5\nindicator(\"late box xloc\")\nbox.set_xloc(na, 0, 1, xloc.bar_index)\n",
+        "//@version=5\nindicator(\"late label method\")\nid = label.new(bar_index, high)\nid.set_text_formatting(1)\n",
+        "//@version=5\nindicator(\"late box method\")\nid = box.new(bar_index, high, bar_index + 1, low)\nid.set_text_formatting(1)\n",
+        "//@version=5\nindicator(\"late table method\")\nid = table.new(position.top_right, 1, 1)\nid.cell_set_text_formatting(0, 0, 1)\n",
+        "//@version=5\nindicator(\"late box xloc method\")\nid = box.new(bar_index, high, bar_index + 1, low)\nid.set_xloc(0, 1, xloc.bar_index)\n",
+        "//@version=5\nindicator(\"late label parameter\")\nlabel.new(bar_index, high, text_formatting=1)\n",
+        "//@version=5\nindicator(\"late box parameter\")\nbox.new(bar_index, high, bar_index + 1, low, text_formatting=1)\n",
+        "//@version=5\nindicator(\"late table parameter\")\nid = table.new(position.top_right, 1, 1)\ntable.cell(id, 0, 0, \"x\", text_formatting=1)\n",
+        "//@version=5\nindicator(\"late positional parameter\")\nlabel.new(bar_index, high, \"x\", xloc.bar_index, yloc.price, color.red, label.style_none, color.white, size.normal, text.align_left, \"\", font.family_default, false, 1)\n",
+        "//@version=5\nindicator(\"late integer size\")\nlabel.new(bar_index, high, size=12)\n",
+    ] {
+        let analysis = analyze_production(source);
+        assert_eq!(
+            diagnostic_codes(&analysis),
+            vec!["E_LEGACY_VERSION_FEATURE"],
+            "{source}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    let v6 = analyze_production(
+        "//@version=6\nindicator(\"v6 drawing additions\")\nlabel_id = label.new(bar_index, high, text_formatting=1, size=12)\nlabel_id.set_text_formatting(2)\nbox_id = box.new(bar_index, high, bar_index + 1, low, text_formatting=1, text_size=12)\nbox_id.set_text_formatting(2)\nbox_id.set_xloc(bar_index, bar_index + 1, xloc.bar_index)\ntable_id = table.new(position.top_right, 1, 1)\ntable.cell(table_id, 0, 0, \"x\", text_formatting=1, text_size=12)\ntable_id.cell_set_text_formatting(0, 0, 2)\nplot(close)\n",
+    );
+    assert!(v6.diagnostics.is_empty(), "{:?}", v6.diagnostics);
+    assert!(v6.hir.is_some());
+}
+
+#[test]
+fn drawing_v5_overloads_and_parameters_do_not_leak_into_v4() {
+    let named_cases = [
+        (
+            "label point overload",
+            "//@version=4\nlabel.new(point=na)\nplot(close)\n",
+        ),
+        (
+            "label text_font_family",
+            "//@version=4\nlabel.new(bar_index, high, text_font_family=\"font.family_default\")\nplot(close)\n",
+        ),
+        (
+            "label force_overlay",
+            "//@version=4\nlabel.new(bar_index, high, force_overlay=false)\nplot(close)\n",
+        ),
+        (
+            "line point overload",
+            "//@version=4\nline.new(first_point=na, second_point=na)\nplot(close)\n",
+        ),
+        (
+            "line force_overlay",
+            "//@version=4\nline.new(bar_index, low, bar_index + 1, high, force_overlay=false)\nplot(close)\n",
+        ),
+        (
+            "box point overload",
+            "//@version=4\nbox.new(top_left=na, bottom_right=na)\nplot(close)\n",
+        ),
+        (
+            "box text",
+            "//@version=4\nbox.new(bar_index, high, bar_index + 1, low, text=\"x\")\nplot(close)\n",
+        ),
+        (
+            "box text_size",
+            "//@version=4\nbox.new(bar_index, high, bar_index + 1, low, text_size=size.small)\nplot(close)\n",
+        ),
+        (
+            "box text_color",
+            "//@version=4\nbox.new(bar_index, high, bar_index + 1, low, text_color=color.white)\nplot(close)\n",
+        ),
+        (
+            "box text_halign",
+            "//@version=4\nbox.new(bar_index, high, bar_index + 1, low, text_halign=text.align_left)\nplot(close)\n",
+        ),
+        (
+            "box text_valign",
+            "//@version=4\nbox.new(bar_index, high, bar_index + 1, low, text_valign=text.align_top)\nplot(close)\n",
+        ),
+        (
+            "box text_wrap",
+            "//@version=4\nbox.new(bar_index, high, bar_index + 1, low, text_wrap=\"text.wrap_none\")\nplot(close)\n",
+        ),
+        (
+            "box text_font_family",
+            "//@version=4\nbox.new(bar_index, high, bar_index + 1, low, text_font_family=\"font.family_default\")\nplot(close)\n",
+        ),
+        (
+            "box force_overlay",
+            "//@version=4\nbox.new(bar_index, high, bar_index + 1, low, force_overlay=false)\nplot(close)\n",
+        ),
+        (
+            "table force_overlay",
+            "//@version=4\ntable.new(position.top_right, 1, 1, force_overlay=false)\nplot(close)\n",
+        ),
+        (
+            "table cell tooltip",
+            "//@version=4\nid = table.new(position.top_right, 1, 1)\ntable.cell(id, 0, 0, \"x\", tooltip=\"tip\")\nplot(close)\n",
+        ),
+        (
+            "table cell text_font_family",
+            "//@version=4\nid = table.new(position.top_right, 1, 1)\ntable.cell(id, 0, 0, \"x\", text_font_family=\"font.family_default\")\nplot(close)\n",
+        ),
+    ];
+    let positional_cases = [
+        (
+            "label point overload positional",
+            "//@version=4\nchart.point p = na\nlabel.new(p)\nplot(close)\n",
+        ),
+        (
+            "label text_font_family positional",
+            "//@version=4\nlabel.new(bar_index, high, \"x\", xloc.bar_index, yloc.price, color.blue, label.style_none, color.white, size.normal, text.align_left, \"tip\", \"font.family_default\")\nplot(close)\n",
+        ),
+        (
+            "line point overload positional",
+            "//@version=4\nchart.point p = na\nchart.point q = na\nline.new(p, q)\nplot(close)\n",
+        ),
+        (
+            "line force_overlay positional",
+            "//@version=4\nline.new(bar_index, low, bar_index + 1, high, xloc.bar_index, extend.none, color.blue, line.style_solid, 1, false)\nplot(close)\n",
+        ),
+        (
+            "box point overload positional",
+            "//@version=4\nchart.point p = na\nchart.point q = na\nbox.new(p, q)\nplot(close)\n",
+        ),
+        (
+            "box text positional",
+            "//@version=4\nbox.new(bar_index, high, bar_index + 1, low, color.blue, 1, line.style_solid, extend.none, xloc.bar_index, color.white, \"x\")\nplot(close)\n",
+        ),
+        (
+            "table force_overlay positional",
+            "//@version=4\ntable.new(position.top_right, 1, 1, color.black, color.black, 1, color.black, 1, false)\nplot(close)\n",
+        ),
+        (
+            "table cell tooltip positional",
+            "//@version=4\nid = table.new(position.top_right, 1, 1)\ntable.cell(id, 0, 0, \"x\", 0, 0, color.white, text.align_left, text.align_top, size.small, color.black, \"tip\")\nplot(close)\n",
+        ),
+    ];
+
+    for (case, source) in named_cases.into_iter().chain(positional_cases) {
+        let v4_source = source.replacen(
+            "//@version=4\n",
+            "//@version=4\nstudy(\"drawing v5 gate\")\n",
+            1,
+        );
+        let v4 = analyze_production(&v4_source);
+        assert_eq!(
+            diagnostic_codes(&v4),
+            vec!["E_LEGACY_VERSION_FEATURE"],
+            "{case}: {:?}",
+            v4.diagnostics
+        );
+        assert!(v4.hir.is_none(), "{case}");
+
+        let v5_source = source.replacen(
+            "//@version=4\n",
+            "//@version=5\nindicator(\"drawing v5 gate\")\n",
+            1,
+        );
+        let v5 = analyze_production(&v5_source);
+        assert!(v5.diagnostics.is_empty(), "{case}: {:?}", v5.diagnostics);
+        assert!(v5.hir.is_some(), "{case}");
+    }
+}
+
+#[test]
+fn strategy_introspection_namespace_starts_at_its_registered_version() {
+    for source in [
+        "//@version=4\nstudy(\"late strategy value\")\nvalue = strategy.account_currency\nplot(close)\n",
+        "//@version=4\nstudy(\"late strategy call\")\nstrategy.closedtrades.entry_price(0)\nplot(close)\n",
+    ] {
+        let analysis = analyze_catalog_without_admission(source);
+        assert_eq!(
+            diagnostic_codes(&analysis),
+            vec!["E_LEGACY_VERSION_FEATURE"],
+            "{source}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    let v5 = analyze_production(
+        "//@version=5\nstrategy(\"v5 strategy introspection\")\nconverted = strategy.convert_to_account(close)\nentry = strategy.closedtrades.entry_price(0)\nplot(converted + entry + strategy.avg_trade)\n",
+    );
+    assert!(v5.diagnostics.is_empty(), "{:?}", v5.diagnostics);
+    assert!(v5.hir.is_some());
+}
+
+#[test]
+fn builtin_method_syntax_starts_in_v5_without_moving_v4_namespace_calls() {
+    let direct = analyze_production(
+        "//@version=4\nstudy(\"direct drawing call\")\nlabel.set_x(na, bar_index)\nplot(close)\n",
+    );
+    assert!(direct.diagnostics.is_empty(), "{:?}", direct.diagnostics);
+    assert!(direct.hir.is_some());
+
+    let method = analyze_production(
+        "//@version=4\nstudy(\"drawing method\")\nid = label.new(bar_index, high)\nid.set_x(bar_index)\nplot(close)\n",
+    );
+    assert_eq!(diagnostic_codes(&method), vec!["E_LEGACY_VERSION_FEATURE"]);
+    assert!(method.hir.is_none());
+
+    let array_direct = analyze_production(
+        "//@version=4\nstudy(\"direct array call\")\nvalues = array.new_float()\narray.push(values, close)\nplot(array.size(values))\n",
+    );
+    assert!(
+        array_direct.diagnostics.is_empty(),
+        "{:?}",
+        array_direct.diagnostics
+    );
+    assert!(array_direct.hir.is_some());
+
+    let array_method = analyze_production(
+        "//@version=4\nstudy(\"array method\")\nvalues = array.new_float()\nvalues.push(close)\nplot(array.size(values))\n",
+    );
+    assert_eq!(
+        diagnostic_codes(&array_method),
+        vec!["E_LEGACY_VERSION_FEATURE"]
+    );
+    assert!(array_method.hir.is_none());
+
+    for source in [
+        "//@version=4\nstudy(\"array call-result method\")\nvalues = array.new_float()\nplot(array.copy(values).size())\n",
+        "//@version=4\nstudy(\"array call-result mutation\")\nvalues = array.new_float()\narray.copy(values).push(close)\nplot(close)\n",
+    ] {
+        let analysis = analyze_production(source);
+        assert_eq!(
+            diagnostic_codes(&analysis),
+            vec!["E_LEGACY_VERSION_FEATURE"],
+            "{source}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    let array_call_result_v5 = analyze_production(
+        "//@version=5\nindicator(\"array call-result methods\")\nvalues = array.new_float()\narray.copy(values).push(close)\nplot(array.copy(values).size())\n",
+    );
+    assert!(
+        array_call_result_v5.diagnostics.is_empty(),
+        "{:?}",
+        array_call_result_v5.diagnostics
+    );
+    assert!(array_call_result_v5.hir.is_some());
+}
+
+#[test]
+fn v3_requires_the_legacy_tickerid_alias_instead_of_the_v4_syminfo_spelling() {
+    let qualified = analyze_production(
+        "//@version=3\nstudy(\"qualified tickerid\")\nsyminfo.tickerid\nplot(close)\n",
+    );
+    assert_eq!(
+        diagnostic_codes(&qualified),
+        vec!["E_LEGACY_VERSION_FEATURE"]
+    );
+    assert!(qualified.hir.is_none());
+
+    let alias = analyze_production(
+        "//@version=3\nstudy(\"legacy tickerid\")\nvalue = tickerid\nplot(close)\n",
+    );
+    assert!(alias.diagnostics.is_empty(), "{:?}", alias.diagnostics);
+    assert!(alias.compatibility.legacy_translations.iter().any(|item| {
+        item.source_feature == "tickerid" && item.canonical_feature == "syminfo.tickerid"
+    }));
+    assert!(alias.hir.is_some());
+}
+
+#[test]
+fn pre_v3_named_arguments_are_limited_to_annotations() {
+    let annotation = analyze_production(
+        "//@version=2\nstudy(title=\"named annotations\")\nperiod = input(defval=\"D\", title=\"Timeframe\", type=resolution)\nplot(series=close, title=\"Close\")\nalertcondition(condition=close > open, title=\"Rise\", message=\"rise\")\nalertcondition(close < open, \"Fall\", \"fall\")\n",
+    );
+    assert!(
+        annotation.diagnostics.is_empty(),
+        "{:?}",
+        annotation.diagnostics
+    );
+    assert!(annotation.hir.is_some());
+
+    for source in [
+        "//@version=2\nstudy(\"named sma\")\nplot(sma(source=close, length=2))\n",
+        "//@version=2\nstudy(\"named security\")\nplot(security(symbol=\"NYSE:IBM\", resolution=\"5\", expression=close))\n",
+        "//@version=2\nstudy(\"named udf\")\npass(value) => value\nplot(pass(value=close))\n",
+    ] {
+        let analysis = analyze_production(source);
+        assert!(
+            diagnostic_codes(&analysis).contains(&"E_CALL_ARG_NAME"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    let shadowed_annotation = analyze_catalog_without_admission(
+        "//@version=2\nstudy(value) => value\nplot(study(value=close))\n",
+    );
+    assert!(
+        diagnostic_codes(&shadowed_annotation).contains(&"E_CALL_ARG_NAME"),
+        "{:?}",
+        shadowed_annotation.diagnostics
+    );
+    assert!(shadowed_annotation.diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == "E_CALL_ARG_NAME"
+            && diagnostic.message.contains("user-defined function `study`")
+    }));
+    assert!(shadowed_annotation.hir.is_none());
+
+    let shadowed_alertcondition = analyze_catalog_without_admission(
+        "//@version=2\nalertcondition(value) => value\nplot(alertcondition(value=close))\n",
+    );
+    assert!(
+        diagnostic_codes(&shadowed_alertcondition).contains(&"E_FUNCTION_NAME"),
+        "{:?}",
+        shadowed_alertcondition.diagnostics
+    );
+    assert!(shadowed_alertcondition.hir.is_none());
+
+    for source in [
+        "//@version=1\nstudy(\"v1 alertcondition\")\nalertcondition(close > open, \"Rise\", \"rise\")\n",
+        "//@version=1\nstudy(\"v1 named alertcondition\")\nalertcondition(condition=close > open, title=\"Rise\", message=\"rise\")\n",
+    ] {
+        let analysis = analyze_production(source);
+        assert_eq!(
+            diagnostic_codes(&analysis),
+            vec!["E_LEGACY_VERSION_FEATURE"]
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    let v3_control = analyze_production(
+        "//@version=3\nstudy(title=\"v3 named builtins\")\nlength = input(defval=3)\nplot(sma(source=close, length=length))\n",
+    );
+    assert!(
+        v3_control.diagnostics.is_empty(),
+        "{:?}",
+        v3_control.diagnostics
+    );
+    assert!(v3_control.hir.is_some());
+}
+
+#[test]
+fn legacy_udf_calls_require_positional_arguments_through_v4() {
+    for version in [1, 2, 3, 4] {
+        let analysis = analyze_production(&format!(
+            "//@version={version}\nstudy(\"named legacy udf\")\npass(value) => value\nplot(pass(value=close))\n"
+        ));
+        assert_eq!(diagnostic_codes(&analysis), vec!["E_CALL_ARG_NAME"]);
+        assert!(
+            analysis.diagnostics[0]
+                .message
+                .contains("user-defined function `pass`")
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    let modern = analyze_production(
+        "//@version=5\nindicator(\"named modern udf\")\npass(value) => value\nplot(pass(value=close))\n",
+    );
+    assert!(modern.diagnostics.is_empty(), "{:?}", modern.diagnostics);
+    assert!(modern.hir.is_some());
 }
 
 #[test]
@@ -1336,15 +2137,30 @@ plot(i + f + (b ? 1 : 0))
         );
     }
 
-    for source in [
-        include_str!("../../../../tests/fixtures/legacy/v3/unsupported/untyped_na_unresolved.pine"),
-        include_str!("../../../../tests/fixtures/legacy/v3/unsupported/untyped_na_collection.pine"),
-        include_str!("../../../../tests/fixtures/legacy/v3/unsupported/untyped_na_conflict.pine"),
+    for (source, expected) in [
+        (
+            include_str!(
+                "../../../../tests/fixtures/legacy/v3/unsupported/untyped_na_unresolved.pine"
+            ),
+            vec!["E_LEGACY_V3_NA_INFERENCE"],
+        ),
+        (
+            include_str!(
+                "../../../../tests/fixtures/legacy/v3/unsupported/untyped_na_collection.pine"
+            ),
+            vec!["E_LEGACY_VERSION_FEATURE", "E_LEGACY_V3_NA_INFERENCE"],
+        ),
+        (
+            include_str!(
+                "../../../../tests/fixtures/legacy/v3/unsupported/untyped_na_conflict.pine"
+            ),
+            vec!["E_LEGACY_V3_NA_INFERENCE"],
+        ),
     ] {
         let analysis = analyze_production(source);
         assert_eq!(
             diagnostic_codes(&analysis),
-            vec!["E_LEGACY_V3_NA_INFERENCE"],
+            expected,
             "{source}: {:?}",
             analysis.diagnostics
         );
@@ -1433,6 +2249,26 @@ fn v2_declaration_graph_preserves_symbol_identity_and_stable_current_order() {
     }
     assert!(hir_contains_call(hir, "float"));
     assert!(hir_contains_call(hir, "bool"));
+}
+
+#[test]
+fn v2_declaration_graph_treats_positive_const_expression_offsets_as_history() {
+    let analysis = analyze_production(
+        "//@version=2\nstudy(\"const history offset\")\nselfSeries = nz(selfSeries[1 + 0]) + close\nplot(selfSeries)\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(
+        analysis
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .any(|emulation| emulation.feature == "v2.self_reference")
+    );
 }
 
 #[test]

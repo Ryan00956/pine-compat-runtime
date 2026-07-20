@@ -319,6 +319,139 @@ bgcolor(shade)
 }
 
 #[test]
+fn generic_input_overrides_use_analyzed_value_kinds() {
+    let script = std::env::temp_dir().join(format!(
+        "pine-generic-input-overrides-{}-{}.pine",
+        std::process::id(),
+        line!()
+    ));
+    fs::write(
+        &script,
+        r##"//@version=5
+indicator("generic input overrides")
+text_true = input("default", "Text true")
+text_number = input("default", "Text number")
+text_color = input("default", "Text color")
+enabled = input(true, "Enabled")
+count = input(1, "Count")
+scale = input(1.0, "Scale")
+shade = input(color.red, "Shade")
+plot(text_true == "true" ? 1 : 0)
+plot(text_number == "42" ? 1 : 0)
+plot(text_color == "#00FF0080" ? 1 : 0)
+plot(enabled ? 1 : 0)
+plot(count)
+plot(scale)
+plot(color.g(shade))
+plot(color.t(shade))
+"##,
+    )
+    .expect("write generic input override script");
+    let input = analysis_input_from_paths(&script.to_string_lossy(), &[])
+        .expect("analysis input from script");
+    let analysis = analyze_input(&input);
+    let hir = analysis.hir.expect("generic input HIR");
+    let input_ids = input_calls(&hir)
+        .into_iter()
+        .filter_map(|input| input.title.map(|title| (title, input.call_site_id)))
+        .collect::<HashMap<_, _>>();
+    let options = RunOptions {
+        path: script.to_string_lossy().into_owned(),
+        bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        chart_context: ChartContext::default(),
+        profile: false,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: vec![
+            parse_input_override_spec(&format!("{}=true", input_ids["Text true"]))
+                .expect("string true override"),
+            parse_input_override_spec(&format!("{}=42", input_ids["Text number"]))
+                .expect("string numeric override"),
+            parse_input_override_spec(&format!("{}=#00FF0080", input_ids["Text color"]))
+                .expect("string color override"),
+            parse_input_override_spec(&format!("{}=false", input_ids["Enabled"]))
+                .expect("bool override"),
+            parse_input_override_spec(&format!("{}=42", input_ids["Count"])).expect("int override"),
+            parse_input_override_spec(&format!("{}=2.5", input_ids["Scale"]))
+                .expect("float override"),
+            parse_input_override_spec(&format!("{}=4311679104", input_ids["Shade"]))
+                .expect("public numeric color override"),
+        ],
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let output = run_json_with_options(&options).expect("generic input override output");
+    let output: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    for plot in &output["plots"].as_array().expect("plots")[0..3] {
+        assert_eq!(plot["values"], serde_json::json!([1, 1, 1, 1]));
+    }
+    assert_eq!(
+        output["plots"][3]["values"],
+        serde_json::json!([0, 0, 0, 0])
+    );
+    assert_eq!(
+        output["plots"][4]["values"],
+        serde_json::json!([42, 42, 42, 42])
+    );
+    assert_eq!(
+        output["plots"][5]["values"],
+        serde_json::json!([2.5, 2.5, 2.5, 2.5])
+    );
+    assert_eq!(
+        output["plots"][6]["values"],
+        serde_json::json!([255, 255, 255, 255])
+    );
+    assert_eq!(
+        output["plots"][7]["values"],
+        serde_json::json!([50, 50, 50, 50])
+    );
+    let _ = fs::remove_file(script);
+}
+
+#[test]
+fn input_overrides_reject_duplicate_ids_and_invalid_public_colors() {
+    let script = std::env::temp_dir().join(format!(
+        "pine-invalid-input-overrides-{}-{}.pine",
+        std::process::id(),
+        line!()
+    ));
+    fs::write(
+        &script,
+        "//@version=5\nindicator(\"inputs\")\nshade = input.color(color.red, \"Shade\")\nplot(color.r(shade))\n",
+    )
+    .expect("write invalid input override script");
+    let input = analysis_input_from_paths(&script.to_string_lossy(), &[])
+        .expect("analysis input from script");
+    let hir = analyze_input(&input).hir.expect("input HIR");
+    let calls = input_calls(&hir)
+        .into_iter()
+        .map(|input| (input.call_site_id, input))
+        .collect::<HashMap<_, _>>();
+    let call_site_id = *calls.keys().next().expect("input callSiteId");
+
+    let duplicate = vec![
+        parse_input_override_spec(&format!("{call_site_id}=1")).expect("first override"),
+        parse_input_override_spec(&format!("{call_site_id}=2")).expect("second override"),
+    ];
+    let error = input_overrides_from_specs(&duplicate, &calls)
+        .expect_err("duplicate input override should fail");
+    assert!(error.contains(&format!(
+        "duplicate input override for callSiteId {call_site_id}"
+    )));
+
+    let invalid = vec![
+        parse_input_override_spec(&format!("{call_site_id}=4311744512"))
+            .expect("invalid public color override"),
+    ];
+    let error = input_overrides_from_specs(&invalid, &calls)
+        .expect_err("out-of-range public color should fail");
+    assert!(error.contains("valid public color integer"));
+    let _ = fs::remove_file(script);
+}
+
+#[test]
 fn runs_v4_legacy_input_overrides_through_cli_host() {
     let path = workspace_path("tests/fixtures/legacy/v4/runtime/inputs_legacy.pine");
     let input = analysis_input_from_paths(&path, &[]).expect("analysis input from legacy script");

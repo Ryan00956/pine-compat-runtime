@@ -125,6 +125,17 @@ impl Analyzer {
             return None;
         };
 
+        if let Some(min_version) = crate::PineDialect::qualified_builtin_min_version(&name, true)
+            && self.legacy.dialect().version() < min_version
+        {
+            self.reject_unavailable_legacy_builtin(&name, min_version, callee.span);
+            return None;
+        }
+
+        if self.reject_legacy_named_call_args(&name, args, callee.span) {
+            return None;
+        }
+
         if name.starts_with("request.") {
             return self.analyze_request_call(&name, callee.span, args);
         }
@@ -138,6 +149,10 @@ impl Analyzer {
             .iter()
             .map(|arg| self.analyze_expr(&arg.value))
             .collect();
+
+        if self.reject_legacy_input_constant_leaks(&name, callee, args) {
+            return None;
+        }
 
         // Scope lookup is only needed for a name that can resolve through the
         // active legacy catalog. Keeping modern calls off this path also avoids
@@ -425,6 +440,9 @@ impl Analyzer {
         };
         if !is_array_kind(receiver_type.kind) {
             return None;
+        }
+        if self.reject_legacy_builtin_method_syntax("array call-result", method_name, callee.span) {
+            return Some(None);
         }
         let Some(builtin_name) = array_call_result_builtin_name(method_name) else {
             self.unsupported(
@@ -800,6 +818,16 @@ impl Analyzer {
             );
         }
         if let Some(builtin_name) = drawing_method_builtin_name(receiver_type.kind, method_name) {
+            if self.reject_legacy_builtin_method_syntax(receiver_name, method_name, callee.span) {
+                return MethodResolution::Resolved(None);
+            }
+            if let Some(min_version) =
+                crate::PineDialect::qualified_builtin_min_version(&builtin_name, true)
+                && self.legacy.dialect().version() < min_version
+            {
+                self.reject_unavailable_legacy_builtin(&builtin_name, min_version, callee.span);
+                return MethodResolution::Resolved(None);
+            }
             let signature = pine_builtins::get_phase_1_builtin(&builtin_name)
                 .expect("drawing method helper returned registered builtin");
             self.check_feature_name(&builtin_name, callee.span);
@@ -876,6 +904,12 @@ impl Analyzer {
                 )
                 .unwrap_or(None),
             );
+        }
+
+        if is_array_kind(receiver_type.kind)
+            && self.reject_legacy_builtin_method_syntax(receiver_name, method_name, callee.span)
+        {
+            return MethodResolution::Resolved(None);
         }
 
         let builtin_name =
@@ -957,6 +991,7 @@ impl Analyzer {
         args: &[CallArg],
         arg_types: &[Option<PineType>],
     ) {
+        self.validate_legacy_drawing_arg_versions(signature, args, arg_types);
         if is_time_function_overload(signature.name) {
             self.validate_time_function_args(signature, args, arg_types);
             return;

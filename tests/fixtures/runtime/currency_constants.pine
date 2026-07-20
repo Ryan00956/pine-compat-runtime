@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Currency constants")
 major = currency.USD == "USD" and currency.EUR == "EUR" and currency.JPY == "JPY" and currency.GBP == "GBP"
 cross = currency.AUD == "AUD" and currency.CAD == "CAD" and currency.CHF == "CHF"

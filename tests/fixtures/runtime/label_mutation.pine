@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Label mutation")
 var label_id = label.new(bar_index, high, "start")
 if bar_index == 0

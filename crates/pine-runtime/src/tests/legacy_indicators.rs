@@ -35,6 +35,26 @@ fn legacy_security_environment(bars: Vec<Bar>) -> RequestEnvironment {
     RequestEnvironment::new(ChartContext::default(), Arc::new(provider))
 }
 
+fn legacy_security_environment_with_timeframes(
+    requested_timeframe: &str,
+    chart_timeframe: &str,
+    bars: Vec<Bar>,
+) -> RequestEnvironment {
+    let key = RequestKey::new(
+        "NYSE:IBM",
+        RequestTimeframe::parse(requested_timeframe).expect("requested timeframe"),
+    );
+    let provider = InMemoryRequestDataProvider::from_streams([(key, bars)])
+        .expect("valid legacy security request bars");
+    RequestEnvironment::new(
+        ChartContext::new(
+            "NASDAQ:AAPL",
+            RequestTimeframe::parse(chart_timeframe).expect("chart timeframe"),
+        ),
+        Arc::new(provider),
+    )
+}
+
 fn legacy_security_profile_program(
     name: &str,
     gaps: &str,
@@ -280,6 +300,56 @@ fn legacy_security_gaps_on_preserves_versioned_mapping_boundaries() {
             PineValue::Float(200.0),
         ]
     );
+}
+
+#[test]
+fn legacy_v4_security_lookahead_off_confirms_monthly_values_at_calendar_close() {
+    let program = compile_fixture(
+        "legacy_monthly_security.pine",
+        "//@version=4\nstudy(\"legacy monthly security\")\nplot(security(\"NYSE:IBM\", \"M\", close, gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off))\n",
+    );
+    let environment = legacy_security_environment_with_timeframes(
+        "M",
+        "D",
+        vec![
+            timed_close(1_704_067_200_000, 100.0),
+            timed_close(1_706_745_600_000, 200.0),
+        ],
+    );
+    let chart = [
+        timed_close(1_706_486_400_000, 1.0),
+        timed_close(1_706_572_800_000, 2.0),
+        timed_close(1_706_659_200_000, 3.0),
+        timed_close(1_706_745_600_000, 4.0),
+    ];
+    let result = run_historical_with_request_environment(&program, &chart, environment)
+        .expect("legacy monthly security should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&result.plots[0].values[2..], &[100.0, 100.0]);
+}
+
+#[test]
+fn legacy_v4_security_does_not_treat_monthly_as_thirty_day_same_context() {
+    let program = compile_fixture(
+        "legacy_monthly_security_30d_chart.pine",
+        "//@version=4\nstudy(\"legacy monthly security on 30D\")\nplot(security(\"NYSE:IBM\", \"M\", close, gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off))\n",
+    );
+    let environment = legacy_security_environment_with_timeframes(
+        "M",
+        "30D",
+        vec![timed_close(1_704_067_200_000, 100.0)],
+    );
+    let chart = [
+        timed_close(1_704_067_200_000, 1.0),
+        timed_close(1_706_659_200_000, 2.0),
+    ];
+    let result = run_historical_with_request_environment(&program, &chart, environment)
+        .expect("legacy monthly security on 30D chart should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[100.0]);
 }
 
 #[test]

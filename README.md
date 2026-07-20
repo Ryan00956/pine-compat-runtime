@@ -42,7 +42,7 @@ application to a charting service.
 
 ## Quick Start
 
-Version `0.1.0` ships ready-to-install Python wheels for CPython 3.10+ on
+Version `0.2.0` ships ready-to-install Python wheels for CPython 3.10+ on
 glibc Linux x86-64 and Windows x86-64. See the
 [latest release](https://github.com/Ryan00956/pine-compat-runtime/releases/latest)
 for checksums and machine-readable release metadata.
@@ -51,13 +51,13 @@ Linux x86-64:
 
 ```bash
 python -m pip install \
-  "https://github.com/Ryan00956/pine-compat-runtime/releases/download/v0.1.0/pine_compat_runtime-0.1.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+  "https://github.com/Ryan00956/pine-compat-runtime/releases/download/v0.2.0/pine_compat_runtime-0.2.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
 ```
 
 Windows x86-64:
 
 ```powershell
-py -m pip install "https://github.com/Ryan00956/pine-compat-runtime/releases/download/v0.1.0/pine_compat_runtime-0.1.0-cp310-abi3-win_amd64.whl"
+py -m pip install "https://github.com/Ryan00956/pine-compat-runtime/releases/download/v0.2.0/pine_compat_runtime-0.2.0-cp310-abi3-win_amd64.whl"
 ```
 
 Then run an indicator directly from Python:
@@ -229,8 +229,8 @@ behavior.
 
 ## Honest Compatibility
 
-`0.1.0` is a usable first release, not a full drop-in implementation of every
-Pine feature. Important current boundaries include:
+`0.2.0` is a compatibility-focused second release, not a full drop-in
+implementation of every Pine feature. Important current boundaries include:
 
 - the strategy broker model is still a partial, primarily long-only subset;
 - `request.*` support is limited and all requested data must be supplied by the

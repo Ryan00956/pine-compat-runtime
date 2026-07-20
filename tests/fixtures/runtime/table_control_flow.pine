@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Table control flow")
 var table_id = table.new(position.top_right, 2, 2)
 var position_table = table.new(position.top_left, 1, 1)

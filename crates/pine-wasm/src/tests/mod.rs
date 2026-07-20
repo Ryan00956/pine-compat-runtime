@@ -481,6 +481,114 @@ plot(color.r(shade))
 }
 
 #[test]
+fn generic_input_overrides_use_analyzed_value_kinds() {
+    let source = r##"//@version=5
+indicator("generic input overrides")
+text_true = input("default", "Text true")
+text_number = input("default", "Text number")
+text_color = input("default", "Text color")
+enabled = input(true, "Enabled")
+count = input(1, "Count")
+scale = input(1.0, "Scale")
+shade = input(color.red, "Shade")
+plot(text_true == "true" ? 1 : 0)
+plot(text_number == "42" ? 1 : 0)
+plot(text_color == "#00FF0080" ? 1 : 0)
+plot(enabled ? 1 : 0)
+plot(count)
+plot(scale)
+plot(color.g(shade))
+plot(color.t(shade))
+"##;
+    let bars = "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n";
+    let input_ids = input_call_ids_by_title(source);
+    let overrides_json = input_overrides_json(&[
+        (input_ids["Text true"], serde_json::json!("true")),
+        (input_ids["Text number"], serde_json::json!("42")),
+        (input_ids["Text color"], serde_json::json!("#00FF0080")),
+        (input_ids["Enabled"], serde_json::json!(false)),
+        (input_ids["Count"], serde_json::json!(42)),
+        (input_ids["Scale"], serde_json::json!(2.5)),
+        (input_ids["Shade"], serde_json::json!(4311679104_u64)),
+    ]);
+
+    let output = run_script_csv_with_input_overrides(source, bars, &overrides_json)
+        .expect("generic input override output");
+    let output: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(
+        output["plots"]
+            .as_array()
+            .expect("plots")
+            .iter()
+            .map(|plot| plot["values"].clone())
+            .collect::<Vec<_>>(),
+        vec![
+            serde_json::json!([1, 1, 1]),
+            serde_json::json!([1, 1, 1]),
+            serde_json::json!([1, 1, 1]),
+            serde_json::json!([0, 0, 0]),
+            serde_json::json!([42, 42, 42]),
+            serde_json::json!([2.5, 2.5, 2.5]),
+            serde_json::json!([255, 255, 255]),
+            serde_json::json!([50, 50, 50]),
+        ]
+    );
+}
+
+#[test]
+fn input_color_override_round_trips_public_numeric_encoding_and_rejects_invalid_values() {
+    let source = r##"//@version=5
+indicator("color override")
+shade = input.color(color.red, "Shade")
+plot(color.g(shade))
+plot(color.t(shade))
+bgcolor(shade)
+"##;
+    let bars = "time,open,high,low,close,volume\n0,1,1,1,1,1\n";
+    let call_site_id = input_call_ids_by_title(source)["Shade"];
+    let overrides_json = input_overrides_json(&[(call_site_id, serde_json::json!(4311679104_u64))]);
+
+    let output = run_script_csv_with_input_overrides(source, bars, &overrides_json)
+        .expect("public numeric color override output");
+    let output: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(output["plots"][0]["values"], serde_json::json!([255]));
+    assert_eq!(output["plots"][1]["values"], serde_json::json!([50]));
+    assert_eq!(
+        output["bgColors"][0]["values"],
+        serde_json::json!([4311679104_u64])
+    );
+
+    for invalid in [
+        serde_json::json!(-1),
+        serde_json::json!(4311744512_u64),
+        serde_json::json!(1.5),
+        serde_json::json!(true),
+    ] {
+        let overrides_json = input_overrides_json(&[(call_site_id, invalid)]);
+        let message = run_script_csv_with_input_overrides_internal(source, bars, &overrides_json)
+            .expect_err("invalid public color override should fail");
+        assert!(message.contains("valid public color integer"));
+    }
+}
+
+#[test]
+fn input_overrides_reject_normalized_duplicate_call_site_ids() {
+    let source =
+        "//@version=5\nindicator(\"inputs\")\nlength = input.int(2, \"Length\")\nplot(length)\n";
+    let bars = "time,open,high,low,close,volume\n0,1,1,1,1,1\n";
+    let call_site_id = input_call_ids_by_title(source)["Length"];
+    let overrides_json = format!(r#"{{"{call_site_id}":1,"0{call_site_id}":2}}"#);
+
+    let message = run_script_csv_with_input_overrides_internal(source, bars, &overrides_json)
+        .expect_err("normalized duplicate input callSiteId should fail");
+
+    assert!(message.contains(&format!(
+        "duplicate input override for callSiteId {call_site_id}"
+    )));
+}
+
+#[test]
 fn input_overrides_report_unknown_call_site() {
     let message = run_script_csv_with_input_overrides_internal(
         "//@version=5\nindicator(\"inputs\")\nlength = input.int(2, \"Length\")\nplot(ta.sma(close, length))\n",

@@ -502,7 +502,7 @@ fn collect_expr_dependencies(
         }
         ExprKind::History { expr, offset } => {
             let is_positive_constant =
-                matches!(offset.kind, ExprKind::Literal(Literal::Int(value)) if value > 0);
+                crate::types::const_int_value(offset).is_some_and(|value| value > 0);
             collect_expr_dependencies(
                 expr,
                 names,
