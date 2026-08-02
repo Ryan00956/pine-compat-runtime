@@ -43,6 +43,7 @@ def row(
         "chart_bars_path": "bars.csv",
         "chart_symbol": "TEST",
         "chart_timeframe": "1",
+        "execution_times_path": "",
         "request_data_manifest": "",
         "reference_output_path": "",
         "license_class": "original",
@@ -89,6 +90,50 @@ class FakeRunner:
 
 
 class AnalyzeLegacyCorpusTests(unittest.TestCase):
+    def test_runtime_host_failures_have_stable_error_kinds(self) -> None:
+        self.assertEqual(
+            analyze_legacy_corpus.runtime_error_kind(
+                "runtime failed: missing request data for symbol `TEST` timeframe `D`"
+            ),
+            "missing_provider_data",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.runtime_error_kind(
+                "runtime failed: timenow requires an explicit execution timestamp for this script execution"
+            ),
+            "missing_execution_time",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.runtime_error_kind(
+                "runtime failed: execution timestamp count 1 does not match bar count 2"
+            ),
+            "execution_time_count_mismatch",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.runtime_error_kind(
+                "invalid execution timestamp `nope` on line 2"
+            ),
+            "invalid_execution_time_input",
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.runtime_error_kind("runtime failed: other"),
+            "runtime_or_host_error",
+        )
+
+    def test_detected_version_accepts_whitespace_around_equals_only(self) -> None:
+        self.assertEqual(
+            analyze_legacy_corpus.detected_version("//@version = 4\n"),
+            4,
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.detected_version("//@version\t=\t6\n"),
+            6,
+        )
+        self.assertEqual(
+            analyze_legacy_corpus.detected_version("// @version=6\n"),
+            1,
+        )
+
     def test_phase_one_diagnostics_have_actionable_categories(self) -> None:
         self.assertEqual(
             analyze_legacy_corpus.feature_category(
@@ -370,11 +415,89 @@ class AnalyzeLegacyCorpusTests(unittest.TestCase):
             self.assertIn("--chart-timeframe", run_command)
             self.assertEqual(run_command[run_command.index("--chart-timeframe") + 1], "1")
 
+    def test_execution_times_are_classified_and_forwarded_without_disclosure(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "legacy.pine").write_text(
+                '//@version=4\nstudy("clock")\nplot(timenow)\n',
+                encoding="utf-8",
+            )
+            (root / "bars.csv").write_text(
+                "time,open,high,low,close,volume\n0,1,1,1,1,1\n",
+                encoding="utf-8",
+            )
+            timestamp = "1700000000123"
+            (root / "execution-times.txt").write_text(
+                timestamp + "\n",
+                encoding="utf-8",
+            )
+            manifest_row = row("legacy", "legacy.pine")
+            manifest_row["execution_times_path"] = "execution-times.txt"
+            manifest = write_manifest(root, [manifest_row])
+            runner = FakeRunner()
+
+            report = analyze_legacy_corpus.build_report(
+                analyze_legacy_corpus.parse_manifest(manifest),
+                root=root,
+                manifest_path=manifest,
+                pine_compat=root / "pine-compat",
+                build_revision="test-revision",
+                command_runner=runner,
+            )
+
+            run_command = next(command for command in runner.commands if command[1] == "run")
+            self.assertEqual(
+                run_command[run_command.index("--execution-times") + 1],
+                str(root / "execution-times.txt"),
+            )
+            self.assertEqual(
+                report["items"][0]["inputAvailability"]["executionTimes"],
+                "passed",
+            )
+            self.assertFalse(report["privacy"]["timestampsIncluded"])
+            self.assertNotIn(timestamp, analyze_legacy_corpus.render_report(report))
+
+    def test_missing_execution_times_file_stops_before_runtime(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "legacy.pine").write_text(
+                '//@version=4\nstudy("clock")\nplot(timenow)\n',
+                encoding="utf-8",
+            )
+            (root / "bars.csv").write_text(
+                "time,open,high,low,close,volume\n0,1,1,1,1,1\n",
+                encoding="utf-8",
+            )
+            manifest_row = row("legacy", "legacy.pine")
+            manifest_row["execution_times_path"] = "missing-times.txt"
+            manifest = write_manifest(root, [manifest_row])
+            runner = FakeRunner()
+
+            report = analyze_legacy_corpus.build_report(
+                analyze_legacy_corpus.parse_manifest(manifest),
+                root=root,
+                manifest_path=manifest,
+                pine_compat=root / "pine-compat",
+                build_revision="test-revision",
+                command_runner=runner,
+            )
+
+            self.assertEqual(
+                report["items"][0]["inputAvailability"]["executionTimes"],
+                "missing_input",
+            )
+            self.assertEqual(
+                report["items"][0]["stages"]["historicalRun"]["status"],
+                "missing_input",
+            )
+            self.assertFalse(any(command[1] == "run" for command in runner.commands))
+
     def test_all_external_inputs_are_classified_before_compilation(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             manifest_row = row("legacy", "missing_source.pine")
             manifest_row["chart_bars_path"] = "missing_bars.csv"
+            manifest_row["execution_times_path"] = "missing_execution_times.txt"
             manifest_row["request_data_manifest"] = "missing_requests.json"
             manifest_row["reference_output_path"] = "missing_reference.json"
             manifest = write_manifest(root, [manifest_row])
@@ -394,6 +517,7 @@ class AnalyzeLegacyCorpusTests(unittest.TestCase):
                 {
                     "source": "missing_input",
                     "chartBars": "missing_input",
+                    "executionTimes": "missing_input",
                     "requestData": "missing_input",
                     "referenceOutput": "missing_input",
                 },
@@ -403,6 +527,7 @@ class AnalyzeLegacyCorpusTests(unittest.TestCase):
                 {
                     "source": 1,
                     "chartBars": 1,
+                    "executionTimes": 1,
                     "requestData": 1,
                     "referenceOutput": 1,
                 },
@@ -486,7 +611,7 @@ class AnalyzeLegacyCorpusTests(unittest.TestCase):
                 command_runner=FakeRunner(),
             )
 
-            self.assertEqual(report["schemaVersion"], 2)
+            self.assertEqual(report["schemaVersion"], 3)
             profile = report["summary"]["versions"]["4"]
             self.assertEqual(profile["historicalRun"]["eligibleSuccessRate"], 1.0)
             self.assertTrue(profile["stableBaseline"]["thresholdsMet"])

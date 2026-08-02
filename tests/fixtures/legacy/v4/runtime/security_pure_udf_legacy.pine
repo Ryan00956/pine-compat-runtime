@@ -1,0 +1,11 @@
+//@version=4
+study("Legacy security pure UDF")
+factor = input(2)
+source = input(close, "Source")
+offset(src, amount) => src + amount
+scale(src, multiplier) =>
+    adjusted = offset(src, 1)
+    normalized = int(multiplier)
+    adjusted * normalized
+requested = scale(source, factor)
+plot(security("NYSE:IBM", timeframe.period, requested))

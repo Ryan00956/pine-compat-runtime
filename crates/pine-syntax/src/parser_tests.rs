@@ -58,7 +58,7 @@ fn accepts_exact_version_directive_after_leading_comments_and_whitespace() {
 
 #[test]
 fn rejects_duplicate_version_directives_with_focused_diagnostic() {
-    let parsed = parse("//@version=5\n//@version=6\nindicator(\"Demo\")\n");
+    let parsed = parse("//@version=5\n//@version = 6\nindicator(\"Demo\")\n");
 
     assert_eq!(
         parsed
@@ -76,7 +76,7 @@ fn rejects_duplicate_version_directives_with_focused_diagnostic() {
 
 #[test]
 fn rejects_version_directive_after_source_statement() {
-    let parsed = parse("indicator(\"Demo\")\n//@version=6\n");
+    let parsed = parse("indicator(\"Demo\")\n//@version = 6\n");
 
     assert_eq!(
         parsed
@@ -90,23 +90,23 @@ fn rejects_version_directive_after_source_statement() {
 }
 
 #[test]
-fn keeps_existing_version_whitespace_policy() {
+fn accepts_whitespace_around_version_equals_but_not_after_comment_prefix() {
     for source in [
-        "// @version=6\nindicator(\"Demo\")\n",
         "//@version =6\nindicator(\"Demo\")\n",
+        "//@version\t=\t6\nindicator(\"Demo\")\n",
+        "//@version= 6  \nindicator(\"Demo\")\n",
     ] {
         let parsed = parse(source);
-
         assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
-        assert!(parsed.program.version.is_none());
+        assert_eq!(
+            parsed.program.version.map(|version| version.version),
+            Some(6)
+        );
     }
 
-    let parsed = parse("//@version= 6  \nindicator(\"Demo\")\n");
+    let parsed = parse("// @version=6\nindicator(\"Demo\")\n");
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
-    assert_eq!(
-        parsed.program.version.map(|version| version.version),
-        Some(6)
-    );
+    assert!(parsed.program.version.is_none());
 }
 
 #[test]

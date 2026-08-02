@@ -6,9 +6,17 @@ use pine_runtime::{
 };
 use serde_json::Value;
 
+#[cfg(test)]
 pub(crate) fn request_environment_from_json(
     request_bars_json: &str,
 ) -> Result<RequestEnvironment, String> {
+    request_environment_and_execution_times_from_json(request_bars_json)
+        .map(|(environment, _)| environment)
+}
+
+pub(crate) fn request_environment_and_execution_times_from_json(
+    request_bars_json: &str,
+) -> Result<(RequestEnvironment, Option<Vec<i64>>), String> {
     let value: Value = serde_json::from_str(request_bars_json).map_err(|err| {
         format!("request bars must be a JSON object mapping SYMBOL:TIMEFRAME to bar arrays: {err}")
     })?;
@@ -16,21 +24,49 @@ pub(crate) fn request_environment_from_json(
         "request bars must be a JSON object mapping SYMBOL:TIMEFRAME to bar arrays".to_owned()
     })?;
     let chart = parse_chart_context(object.get("$chart"))?;
+    let execution_times = parse_execution_times(object.get("$executionTimes"))?;
 
     let mut streams = Vec::with_capacity(object.len());
     for (key, bars) in deterministic_entries(object) {
-        if key == "$chart" {
+        if matches!(key.as_str(), "$chart" | "$executionTimes") {
             continue;
         }
         let request_key = parse_request_key(key)?;
         streams.push((request_key, parse_bars(key, bars)?));
     }
     if streams.is_empty() {
-        return Ok(RequestEnvironment::default().for_chart(chart));
+        return Ok((
+            RequestEnvironment::default().for_chart(chart),
+            execution_times,
+        ));
     }
     let provider =
         InMemoryRequestDataProvider::from_streams(streams).map_err(|err| err.to_string())?;
-    Ok(RequestEnvironment::new(chart, Arc::new(provider)))
+    Ok((
+        RequestEnvironment::new(chart, Arc::new(provider)),
+        execution_times,
+    ))
+}
+
+fn parse_execution_times(value: Option<&Value>) -> Result<Option<Vec<i64>>, String> {
+    let Some(value) = value else {
+        return Ok(None);
+    };
+    let values = value
+        .as_array()
+        .ok_or_else(|| "request host input `$executionTimes` must be an array".to_owned())?;
+    values
+        .iter()
+        .enumerate()
+        .map(|(index, value)| {
+            value.as_i64().ok_or_else(|| {
+                format!(
+                    "request host input `$executionTimes` value at index {index} must be an integer millisecond timestamp"
+                )
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()
+        .map(Some)
 }
 
 fn parse_chart_context(value: Option<&Value>) -> Result<ChartContext, String> {
@@ -188,6 +224,34 @@ mod tests {
 
         assert_eq!(environment.chart().symbol(), "TEST");
         assert_eq!(environment.chart().timeframe().value(), "5");
+    }
+
+    #[test]
+    fn request_host_input_parses_execution_times_without_creating_a_request_stream() {
+        let (environment, execution_times) = request_environment_and_execution_times_from_json(
+            r#"{"$executionTimes":[101,205,333]}"#,
+        )
+        .expect("execution time host input");
+
+        assert_eq!(execution_times, Some(vec![101, 205, 333]));
+        let message = environment
+            .provider()
+            .bars(&RequestKey::new("NYSE:IBM", RequestTimeframe::default()))
+            .expect_err("execution times do not create provider data")
+            .to_string();
+        assert!(message.contains("missing request data"));
+    }
+
+    #[test]
+    fn request_host_input_rejects_invalid_execution_times() {
+        assert_eq!(
+            request_bars_error(r#"{"$executionTimes":101}"#),
+            "request host input `$executionTimes` must be an array"
+        );
+        assert_eq!(
+            request_bars_error(r#"{"$executionTimes":[101,true]}"#),
+            "request host input `$executionTimes` value at index 1 must be an integer millisecond timestamp"
+        );
     }
 
     #[test]

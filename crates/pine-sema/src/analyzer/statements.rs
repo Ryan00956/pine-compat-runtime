@@ -880,7 +880,7 @@ impl Analyzer {
                     && let Some(diagnostic) = call_arg_accepts_type_expected_diagnostic(
                         "array.get",
                         "index",
-                        Accepts::SimpleIntCompatible,
+                        Accepts::IntCompatible,
                         index_type,
                         index.span,
                     )

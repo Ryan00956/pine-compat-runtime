@@ -1,0 +1,11 @@
+//@version=4
+study("Legacy v4 series output offsets")
+
+seriesOffset = bar_index % 3 - 1
+
+plot(close, title="Plot", color=color.blue, transp=0, offset=seriesOffset)
+plotchar(close > open, title="Char", char="X", color=color.green, transp=0, offset=seriesOffset)
+plotshape(close < open, title="Shape", style=shape.circle, color=color.red, transp=0, offset=seriesOffset)
+plotarrow(close - open, title="Arrow", colorup=color.green, colordown=color.red, transp=0, offset=seriesOffset)
+bgcolor(close >= open ? color.blue : color.red, title="Background", transp=0, offset=seriesOffset)
+barcolor(close >= open ? color.green : color.red, title="Bars", offset=seriesOffset)

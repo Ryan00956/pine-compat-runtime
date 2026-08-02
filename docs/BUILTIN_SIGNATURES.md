@@ -17,7 +17,10 @@ The canonical signatures below remain the runtime contract. Pine v1-v4
 indicator sources first pass through dialect-owned historical binders:
 
 - `study(...)` maps the documented per-version metadata subset to
-  `indicator(...)`;
+  `indicator(...)`; the exact Pine v4 `resolution=""` form inherits the host
+  chart context and is removed with an omitted or literal-bool
+  `resolution_gaps`, while non-empty or dynamic declaration timeframes remain
+  unsupported;
 - `input(...)`, `plot(...)`, `hline(...)`, marker/bar/candle outputs, fills,
   colors, and session-bearing calls use historical parameter roles and
   defaults before lowering to canonical calls;
@@ -36,15 +39,21 @@ indicator sources first pass through dialect-owned historical binders:
   const/input/simple symbol and resolution expressions plus immutable
   top-level scalar alias graphs in the requested expression; series aliases
   are recomputed in the requested context while const/input/simple
-  dependencies are captured from the chart context;
+  dependencies are captured from the chart context. In Pine v4, a request at
+  the direct top level of an inlined UDF may also depend on scalar parameters
+  and normal immutable scalar locals. An earlier three-positional-argument
+  legacy request is admitted in that local graph only when its symbol,
+  timeframe, gaps, and lookahead match the enclosing request exactly;
 - removed `rsi(x, y)` shapes are selected from analyzed types rather than
   argument spelling.
 
-These binders do not widen modern v5/v6 signatures. An ambiguous, forged, or
-unsupported historical shape emits the relevant `E_LEGACY_*` diagnostic
-instead of falling through to a similar modern overload. The exact supported
-surface is the `legacy.*` section of the compatibility matrix, not all built-ins
-that existed in a historical Pine release.
+The historical v1-v4 binders do not widen modern signatures. The separately
+documented v4/v5 series-output-offset compatibility rule is version-gated, and
+v6 remains strict. An ambiguous, forged, or unsupported historical shape emits
+the relevant `E_LEGACY_*` diagnostic instead of falling through to a similar
+modern overload. The exact supported surface is the `legacy.*` section of the
+compatibility matrix, not all built-ins that existed in a historical Pine
+release.
 
 For Pine v1-v3 outputs, the historical tables omit later `display` and
 `fillgaps` roles while retaining `transp` on plot/marker/arrow/fill/background
@@ -61,7 +70,10 @@ full Pine surface. In this document:
 - `series/simple numeric` means numeric values at any implemented qualifier up
   to `series`, including `const` and `input`.
 - `simple int` means `const`, `input`, or `simple` integers, and rejects
-  `series int`.
+  `series int`. The only versioned exception is v4/v5 `offset` on `plot`,
+  `plotchar`, `plotshape`, `plotarrow`, `bgcolor`, and `barcolor`: a series
+  integer is accepted and its final evaluated value applies to the complete
+  output. V3 and v6 retain the strict rule.
 - `const` parameters require literal/named-constant style values after current
   semantic analysis.
 - History offsets accept non-negative integer literals plus integer expressions
@@ -140,6 +152,7 @@ volume    -> series float
 time      -> series int
 time_close -> series int
 time_tradingday -> series int
+timenow -> series int
 last_bar_index -> series int
 last_bar_time -> series int
 year      -> series int
@@ -182,8 +195,8 @@ chart.point.now(price: numeric-compatible) -> series chart.point
 chart.point.from_index(index: int-compatible, price: numeric-compatible) -> series chart.point
 chart.point.from_time(time: int-compatible, price: numeric-compatible) -> series chart.point
 chart.point.copy(id: chart.point-compatible) -> series chart.point
-label.new(x: int-compatible, y: numeric-compatible, text?: string-compatible, xloc?: const string, yloc?: const string, color?: color-compatible, style?: const string, textcolor?: color-compatible, size?: string-or-int-compatible, textalign?: const string, tooltip?: string-compatible, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series label
-label.new(point: chart.point-compatible, text?: string-compatible, xloc?: const string, yloc?: const string, color?: color-compatible, style?: const string, textcolor?: color-compatible, size?: string-or-int-compatible, textalign?: const string, tooltip?: string-compatible, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series label
+label.new(x: int-compatible, y: numeric-compatible, text?: string-compatible, xloc?: const string, yloc?: const string, color?: color-compatible, style?: string-compatible, textcolor?: color-compatible, size?: string-or-int-compatible, textalign?: const string, tooltip?: string-compatible, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series label
+label.new(point: chart.point-compatible, text?: string-compatible, xloc?: const string, yloc?: const string, color?: color-compatible, style?: string-compatible, textcolor?: color-compatible, size?: string-or-int-compatible, textalign?: const string, tooltip?: string-compatible, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series label
 label.set_x(id: label-compatible, x: int-compatible) -> void
 label.set_xloc(id: label-compatible, x: int-compatible, xloc: const string) -> void
 label.set_y(id: label-compatible, y: numeric-compatible) -> void
@@ -193,7 +206,7 @@ label.set_yloc(id: label-compatible, yloc: const string) -> void
 label.set_text(id: label-compatible, text: string-compatible) -> void
 label.set_color(id: label-compatible, color: color-compatible) -> void
 label.set_textcolor(id: label-compatible, textcolor: color-compatible) -> void
-label.set_style(id: label-compatible, style: const string) -> void
+label.set_style(id: label-compatible, style: string-compatible) -> void
 label.set_size(id: label-compatible, size: string-or-int-compatible) -> void
 label.set_tooltip(id: label-compatible, tooltip: string-compatible) -> void
 label.set_textalign(id: label-compatible, textalign: const string) -> void
@@ -205,8 +218,8 @@ label.get_x(id: label-compatible) -> series int
 label.get_y(id: label-compatible) -> series float
 label.get_text(id: label-compatible) -> series string
 label.all -> simple array<label>
-line.new(x1: int-compatible, y1: numeric-compatible, x2: int-compatible, y2: numeric-compatible, xloc?: const string, extend?: const string, color?: color-compatible, style?: const string, width?: int-compatible, force_overlay?: const bool) -> series line
-line.new(first_point: chart.point-compatible, second_point: chart.point-compatible, xloc?: const string, extend?: const string, color?: color-compatible, style?: const string, width?: int-compatible, force_overlay?: const bool) -> series line
+line.new(x1: int-compatible, y1: numeric-compatible, x2: int-compatible, y2: numeric-compatible, xloc?: const string, extend?: string-compatible, color?: color-compatible, style?: string-compatible, width?: int-compatible, force_overlay?: const bool) -> series line
+line.new(first_point: chart.point-compatible, second_point: chart.point-compatible, xloc?: const string, extend?: string-compatible, color?: color-compatible, style?: string-compatible, width?: int-compatible, force_overlay?: const bool) -> series line
 line.set_x1(id: line-compatible, x: int-compatible) -> void
 line.set_first_point(id: line-compatible, point: chart.point-compatible) -> void
 line.set_y1(id: line-compatible, y: numeric-compatible) -> void
@@ -218,8 +231,8 @@ line.set_xy2(id: line-compatible, x: int-compatible, y: numeric-compatible) -> v
 line.set_xloc(id: line-compatible, x1: int-compatible, x2: int-compatible, xloc: const string) -> void
 line.set_color(id: line-compatible, color: color-compatible) -> void
 line.set_width(id: line-compatible, width: int-compatible) -> void
-line.set_style(id: line-compatible, style: const string) -> void
-line.set_extend(id: line-compatible, extend: const string) -> void
+line.set_style(id: line-compatible, style: string-compatible) -> void
+line.set_extend(id: line-compatible, extend: string-compatible) -> void
 line.delete(id: line-compatible) -> void
 line.copy(id: line-compatible) -> series line
 line.get_price(id: line-compatible, x: int-compatible) -> series float
@@ -304,6 +317,13 @@ chart timeframe and returns `time + 60000`.
 `time_tradingday` currently implements the fixed UTC single-day session subset:
 it returns 00:00 UTC for the current bar's UTC calendar day. Overnight sessions
 whose trading day differs from the bar opening date remain outside this subset.
+
+`timenow` is the explicit host-provided UNIX millisecond timestamp for the
+current script execution. Historical batch input must contain exactly one
+timestamp per bar; incremental and realtime hosts provide one with each
+execution. A reached read without a timestamp and any supplied batch/bar count
+mismatch fail closed. The runtime does not use the process wall clock or a bar
+timestamp as a fallback.
 
 `last_bar_index` and `last_bar_time` reference the last known loaded chart bar
 in the current dataset. `last_bar_index` is the zero-based index of that bar,
@@ -656,10 +676,14 @@ Historical Pine v1-v4 `security` keeps its separate versioned gaps/lookahead
 policy and widens only that legacy path to simple symbol/resolution expressions
 and immutable top-level scalar aliases. Requested series aliases are evaluated
 from their initializer graph on every requested bar. Const, input, and simple
-dependencies such as lengths are captured once from the outer script. Mutable
-or persistent aliases, block-local aliases, cycles, UDF requested expressions,
-and side effects remain rejected. This does not widen modern
-`request.security` source analysis.
+dependencies such as lengths are captured once from the outer script. The
+Pine v4-only direct-UDF subset also admits scalar parameters and normal
+immutable scalar locals for a `security` call at the function body's top
+level. An earlier three-positional-argument legacy request result can be a
+dependency only when its symbol, timeframe, gaps, and lookahead match the
+enclosing request exactly. Different selectors, control-flow-local requests,
+mutable or persistent aliases, cycles, recursion, and side effects remain
+rejected. This does not widen modern `request.security` source analysis.
 
 For modern `request.security`, lower timeframe requests, provider expression
 local variable aliases, UDF calls, stateful math calls such as `math.random`,
@@ -1374,8 +1398,8 @@ array.new<chart.point>(size?: simple integer-compatible, initial_value?: chart-p
 array.from(value, ...) -> simple inferred scalar-or-object-array
 array.size(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> simple int
 array.push(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible) -> void
-array.get(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple integer-compatible) -> series element
-array.set(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple integer-compatible, value: element-compatible) -> void
+array.get(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: int-compatible) -> series element
+array.set(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: int-compatible, value: element-compatible) -> void
 array.insert(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple integer-compatible, value: element-compatible) -> void
 array.pop(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> series element
 array.remove(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple integer-compatible) -> series element
@@ -1447,10 +1471,10 @@ matching typed-array consumers and rejected by mismatched ones.
 generic storage/read/mutation/search subset can carry `chart.point` and `polyline` values;
 `polyline.new` consumes these arrays as its point-list input and copies the
 values into runtime snapshots. Numeric, truth, sort, and join helpers still
-reject chart-point and polyline arrays. Array
-assignment and side-effect-free user-defined function
-parameters pass the array id; array mutation inside user-defined functions
-remains unsupported. `array.from` infers the array
+reject chart-point and polyline arrays. Array assignment and user-defined
+function parameters pass the array id. Pine v4 UDF bodies admit the exact
+namespace-call mutation subset `array.set`, `array.pop`, `array.unshift`, and
+`array.clear`; every other UDF array mutation remains unsupported. `array.from` infers the array
 kind from its arguments, requires at least one non-`na` supported typed value,
 allows `na` in otherwise typed arrays, and promotes mixed int/float arguments
 to a float array. `array.join` supports scalar typed arrays and the

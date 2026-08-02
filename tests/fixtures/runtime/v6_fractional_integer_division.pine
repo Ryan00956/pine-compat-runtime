@@ -1,0 +1,9 @@
+//@version=6
+indicator("Versioned integer division")
+constAlias = 5
+inputNum = input.int(2, title="Input divisor")
+plot(int(5 / 2), title="const literal")
+plot(int(constAlias / 2), title="const alias")
+plot(5 / inputNum, title="input int")
+plot(bar_index / 2, title="series int")
+plot(close[int(5 / 2)], title="history offset")

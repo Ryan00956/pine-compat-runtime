@@ -1706,7 +1706,7 @@ Recommended future slices:
 120. Every concrete row/column array, numeric eigenvalue array, and array-
     returning `matrix.mult` result additionally exposes terminal top-level
     `.set(index, value)`, including row/column/eigenvalue arrays reached after a
-    concrete matrix call result. It validates the simple-int-compatible index
+    concrete matrix call result. It validates the integer-compatible index
     and resolved scalar kind, replaces one fresh-array snapshot slot without
     changing length, returns `void`, and cannot continue; source matrices
     remain unchanged. Negative/`na`/empty/out-of-range, kind/arity, upstream-

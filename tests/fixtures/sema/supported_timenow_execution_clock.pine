@@ -1,0 +1,7 @@
+//@version=4
+study("Host-provided timenow")
+
+elapsed = timenow - time
+is_after_start = elapsed <= 60000
+is_before_end = elapsed > 0
+plot(is_after_start and is_before_end ? 1 : 0)

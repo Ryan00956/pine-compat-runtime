@@ -1654,7 +1654,7 @@ return/parameter flow remains deferred.
     UDF-body boundaries remain fixture-backed. No imported identity or public
     schema field is widened. Done.
 106. The same producer set additionally exposes terminal top-level
-    `.set(index, value)`. It accepts a simple-int-compatible index plus one
+    `.set(index, value)`. It accepts an integer-compatible index plus one
     element-compatible scalar/object/`chart.point` or concrete imported UDT
     value, replaces the positive or in-range negative slot without changing
     length, returns `void`, and cannot continue. Imported/local alias results

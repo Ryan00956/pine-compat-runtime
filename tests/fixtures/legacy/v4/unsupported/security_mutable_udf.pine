@@ -1,0 +1,7 @@
+//@version=4
+study("Legacy security mutable UDF")
+accumulate(src) =>
+    state = 0.0
+    state := nz(state[1]) + src
+    state
+plot(security("NYSE:IBM", timeframe.period, accumulate(close)))

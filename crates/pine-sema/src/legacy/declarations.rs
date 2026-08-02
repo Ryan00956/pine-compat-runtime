@@ -1,9 +1,10 @@
 use pine_syntax::{
-    CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Program, Span, Stmt, StmtKind,
+    CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Literal, Program, Span, Stmt, StmtKind,
     SwitchArmResult,
 };
 
 use super::dialect::PineDialect;
+use super::lowering::LegacyCallArgRewrite;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ScriptModeClassification {
@@ -47,7 +48,9 @@ struct DeclarationCall<'a> {
 #[derive(Debug, Clone)]
 pub(crate) struct BoundLegacyStudy {
     pub(crate) canonical_args: Vec<CallArg>,
-    pub(crate) canonical_arg_names: Vec<Option<&'static str>>,
+    pub(crate) canonical_arg_source_indices: Vec<usize>,
+    pub(crate) arg_rewrites: Vec<LegacyCallArgRewrite>,
+    pub(crate) chart_timeframe_inheritance_span: Option<Span>,
 }
 
 #[derive(Debug, Clone)]
@@ -131,11 +134,19 @@ pub(crate) fn bind_legacy_study_args(dialect: PineDialect, args: &[CallArg]) -> 
     };
     let version = dialect.version();
     let mut canonical_args = Vec::with_capacity(args.len());
-    let mut canonical_arg_names = Vec::with_capacity(args.len());
+    let mut canonical_arg_source_indices = Vec::with_capacity(args.len());
+    let mut arg_rewrites = vec![
+        LegacyCallArgRewrite {
+            keep: false,
+            canonical_name: None,
+        };
+        args.len()
+    ];
     let mut bound = vec![false; params.len()];
     let mut diagnostics = Vec::new();
     let mut saw_named = false;
-    let mut unsupported: Option<(StudyUnsupportedKind, Span)> = None;
+    let mut timeframe_args: Vec<(StudyParam, &CallArg)> = Vec::new();
+    let mut explicit_plot_zorder_span: Option<Span> = None;
 
     for (arg_index, arg) in args.iter().enumerate() {
         let param_index = if let Some(name) = arg.name.as_deref() {
@@ -191,17 +202,14 @@ pub(crate) fn bind_legacy_study_args(dialect: PineDialect, args: &[CallArg]) -> 
         bound[param_index] = true;
 
         if let Some(kind) = param.unsupported {
-            unsupported = Some(match unsupported {
-                Some((existing_kind, existing_span)) => {
-                    let kind = if existing_kind == StudyUnsupportedKind::Timeframe {
-                        existing_kind
-                    } else {
-                        kind
-                    };
-                    (kind, existing_span.merge(arg.span))
+            match kind {
+                StudyUnsupportedKind::Timeframe => timeframe_args.push((param, arg)),
+                StudyUnsupportedKind::ExplicitPlotZOrder => {
+                    explicit_plot_zorder_span = Some(
+                        explicit_plot_zorder_span.map_or(arg.span, |span| span.merge(arg.span)),
+                    );
                 }
-                None => (kind, arg.span),
-            });
+            }
             continue;
         }
 
@@ -211,7 +219,11 @@ pub(crate) fn bind_legacy_study_args(dialect: PineDialect, args: &[CallArg]) -> 
         let mut canonical_arg = arg.clone();
         canonical_arg.name = Some(canonical_name.to_owned());
         canonical_args.push(canonical_arg);
-        canonical_arg_names.push(Some(canonical_name));
+        canonical_arg_source_indices.push(arg_index);
+        arg_rewrites[arg_index] = LegacyCallArgRewrite {
+            keep: true,
+            canonical_name: Some(canonical_name),
+        };
     }
 
     if !bound[0] {
@@ -222,18 +234,52 @@ pub(crate) fn bind_legacy_study_args(dialect: PineDialect, args: &[CallArg]) -> 
         ));
     }
 
-    if let Some((kind, span)) = unsupported {
-        return LegacyStudyBinding::Unsupported(match kind {
-            StudyUnsupportedKind::Timeframe => LegacyStudyUnsupported {
+    let chart_timeframe_inheritance_span = if timeframe_args.is_empty() {
+        None
+    } else {
+        let resolution = timeframe_args
+            .iter()
+            .find(|(param, _)| param.source_name == "resolution")
+            .map(|(_, arg)| *arg);
+        let resolution_gaps = timeframe_args
+            .iter()
+            .find(|(param, _)| param.source_name == "resolution_gaps")
+            .map(|(_, arg)| *arg);
+        let inherits_chart_timeframe = resolution.is_some_and(|arg| {
+            matches!(&arg.value.kind, ExprKind::Literal(Literal::String(value)) if value.is_empty())
+        });
+        let has_supported_gap_value = resolution_gaps
+            .is_none_or(|arg| matches!(&arg.value.kind, ExprKind::Literal(Literal::Bool(_))));
+
+        if !inherits_chart_timeframe || !has_supported_gap_value {
+            let span = timeframe_args
+                .iter()
+                .skip(1)
+                .fold(timeframe_args[0].1.span, |span, (_, arg)| {
+                    span.merge(arg.span)
+                });
+            return LegacyStudyBinding::Unsupported(LegacyStudyUnsupported {
                 feature: "study.resolution",
-                reason: "Pine v4 resolution/resolution_gaps declaration semantics are deferred to the legacy security and timeframe phase",
+                reason: "only the exact Pine v4 chart-inherited study(resolution=\"\") subset is supported; non-empty or dynamic resolution requires a whole-program execution-timeframe coordinator, and resolution_gaps must be omitted or a literal bool in the inherited subset",
                 span,
-            },
-            StudyUnsupportedKind::ExplicitPlotZOrder => LegacyStudyUnsupported {
-                feature: "study.explicit_plot_zorder",
-                reason: "the current canonical indicator contract has no verified equivalent for Pine v4 explicit_plot_zorder",
-                span,
-            },
+            });
+        }
+
+        Some(
+            timeframe_args
+                .iter()
+                .skip(1)
+                .fold(timeframe_args[0].1.span, |span, (_, arg)| {
+                    span.merge(arg.span)
+                }),
+        )
+    };
+
+    if let Some(span) = explicit_plot_zorder_span {
+        return LegacyStudyBinding::Unsupported(LegacyStudyUnsupported {
+            feature: "study.explicit_plot_zorder",
+            reason: "the current canonical indicator contract has no verified equivalent for Pine v4 explicit_plot_zorder",
+            span,
         });
     }
     if !diagnostics.is_empty() {
@@ -242,7 +288,9 @@ pub(crate) fn bind_legacy_study_args(dialect: PineDialect, args: &[CallArg]) -> 
 
     LegacyStudyBinding::Bound(BoundLegacyStudy {
         canonical_args,
-        canonical_arg_names,
+        canonical_arg_source_indices,
+        arg_rewrites,
+        chart_timeframe_inheritance_span,
     })
 }
 

@@ -1,30 +1,30 @@
-id	source_path	declared_or_expected_version	chart_bars_path	chart_symbol	chart_timeframe	request_data_manifest	reference_output_path	license_class	expected_scope	notes
-control_invalid_call	tests/fixtures/legacy/control_invalid_call.pine	6	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	invalid_control	Deliberately invalid named argument control
-control_invalid_lex	tests/fixtures/legacy/control_invalid_lex.pine	6	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	invalid_control	Deliberately unterminated string control
-control_invalid_parse	tests/fixtures/legacy/control_invalid_parse.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	invalid_control	Deliberately malformed parser control
-control_invalid_symbol	tests/fixtures/legacy/control_invalid_symbol.pine	6	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	invalid_control	Deliberately unknown symbol control
-control_invalid_type	tests/fixtures/legacy/control_invalid_type.pine	6	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	invalid_control	Deliberately invalid plot type control
-control_modern_v6	tests/fixtures/legacy/control_modern_v6.pine	6	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	modern_indicator_control	Modern executable control
-excluded_strategy_v4	tests/fixtures/legacy/excluded_strategy_v4.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_strategy_excluded	Strategy exclusion control
-legacy_v1_sma	tests/fixtures/legacy/legacy_v1_sma.pine	1	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	Implicit v1 basic moving average
-legacy_v2_security_lookahead	tests/fixtures/legacy/legacy_v2_security_lookahead.pine	2	tests/fixtures/legacy/chart_1m.csv	TEST	1	tests/fixtures/legacy/request_data.json		original	legacy_indicator	v2 security default lookahead family
-legacy_v2_self_reference	tests/fixtures/legacy/legacy_v2_self_reference.pine	2	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	v2 self-referenced series family
-legacy_v3_color_helper	tests/fixtures/legacy/legacy_v3_color_helper.pine	3	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	Pre-v4 color helper and constant
-legacy_v3_hline_style	tests/fixtures/legacy/legacy_v3_hline_style.pine	3	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	Pre-v4 hline style constant
-legacy_v3_input_style	tests/fixtures/legacy/legacy_v3_input_style.pine	3	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	Pre-v4 input and plot style constants
-legacy_v3_macd	tests/fixtures/legacy/legacy_v3_macd.pine	3	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	Pre-v4 TA and colors
-legacy_v3_metadata	tests/fixtures/legacy/legacy_v3_metadata.pine	3	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	Pre-v4 bar and timeframe metadata
-legacy_v3_security	tests/fixtures/legacy/legacy_v3_security.pine	3	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	Pre-v4 security metadata aliases
-legacy_v3_untyped_na	tests/fixtures/legacy/legacy_v3_untyped_na.pine	3	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	v3 untyped na declaration family
-legacy_v4_bollinger	tests/fixtures/legacy/legacy_v4_bollinger.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	v4 tuple-returning TA alias
-legacy_v4_ema_cross	tests/fixtures/legacy/legacy_v4_ema_cross.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	v4 stateful TA aliases
-legacy_v4_iff	tests/fixtures/legacy/legacy_v4_iff.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	v4 strict iff evaluation
-legacy_v4_input_integer	tests/fixtures/legacy/legacy_v4_input_integer.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	v4 typed input overload
-legacy_v4_math_abs	tests/fixtures/legacy/legacy_v4_math_abs.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	v4 unqualified math alias
-legacy_v4_offset	tests/fixtures/legacy/legacy_v4_offset.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	v4 offset helper
-legacy_v4_plot_style	tests/fixtures/legacy/legacy_v4_plot_style.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	v4 primitive plot style input
-legacy_v4_rsi_overload	tests/fixtures/legacy/legacy_v4_rsi_overload.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	v4 removed RSI overload
-legacy_v4_security	tests/fixtures/legacy/legacy_v4_security.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1	tests/fixtures/legacy/request_data.json		original	legacy_indicator	v4 security MTF family
-legacy_v4_session	tests/fixtures/legacy/legacy_v4_session.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	v4 session-day default family
-legacy_v4_sma	tests/fixtures/legacy/legacy_v4_sma.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	v4 basic moving average
-legacy_v4_transp	tests/fixtures/legacy/legacy_v4_transp.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1			original	legacy_indicator	v4 output transparency
+id	source_path	declared_or_expected_version	chart_bars_path	chart_symbol	chart_timeframe	execution_times_path	request_data_manifest	reference_output_path	license_class	expected_scope	notes
+control_invalid_call	tests/fixtures/legacy/control_invalid_call.pine	6	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	invalid_control	Deliberately invalid named argument control
+control_invalid_lex	tests/fixtures/legacy/control_invalid_lex.pine	6	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	invalid_control	Deliberately unterminated string control
+control_invalid_parse	tests/fixtures/legacy/control_invalid_parse.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	invalid_control	Deliberately malformed parser control
+control_invalid_symbol	tests/fixtures/legacy/control_invalid_symbol.pine	6	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	invalid_control	Deliberately unknown symbol control
+control_invalid_type	tests/fixtures/legacy/control_invalid_type.pine	6	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	invalid_control	Deliberately invalid plot type control
+control_modern_v6	tests/fixtures/legacy/control_modern_v6.pine	6	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	modern_indicator_control	Modern executable control
+excluded_strategy_v4	tests/fixtures/legacy/excluded_strategy_v4.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_strategy_excluded	Strategy exclusion control
+legacy_v1_sma	tests/fixtures/legacy/legacy_v1_sma.pine	1	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	Implicit v1 basic moving average
+legacy_v2_security_lookahead	tests/fixtures/legacy/legacy_v2_security_lookahead.pine	2	tests/fixtures/legacy/chart_1m.csv	TEST	1		tests/fixtures/legacy/request_data.json		original	legacy_indicator	v2 security default lookahead family
+legacy_v2_self_reference	tests/fixtures/legacy/legacy_v2_self_reference.pine	2	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	v2 self-referenced series family
+legacy_v3_color_helper	tests/fixtures/legacy/legacy_v3_color_helper.pine	3	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	Pre-v4 color helper and constant
+legacy_v3_hline_style	tests/fixtures/legacy/legacy_v3_hline_style.pine	3	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	Pre-v4 hline style constant
+legacy_v3_input_style	tests/fixtures/legacy/legacy_v3_input_style.pine	3	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	Pre-v4 input and plot style constants
+legacy_v3_macd	tests/fixtures/legacy/legacy_v3_macd.pine	3	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	Pre-v4 TA and colors
+legacy_v3_metadata	tests/fixtures/legacy/legacy_v3_metadata.pine	3	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	Pre-v4 bar and timeframe metadata
+legacy_v3_security	tests/fixtures/legacy/legacy_v3_security.pine	3	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	Pre-v4 security metadata aliases
+legacy_v3_untyped_na	tests/fixtures/legacy/legacy_v3_untyped_na.pine	3	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	v3 untyped na declaration family
+legacy_v4_bollinger	tests/fixtures/legacy/legacy_v4_bollinger.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	v4 tuple-returning TA alias
+legacy_v4_ema_cross	tests/fixtures/legacy/legacy_v4_ema_cross.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	v4 stateful TA aliases
+legacy_v4_iff	tests/fixtures/legacy/legacy_v4_iff.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	v4 strict iff evaluation
+legacy_v4_input_integer	tests/fixtures/legacy/legacy_v4_input_integer.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	v4 typed input overload
+legacy_v4_math_abs	tests/fixtures/legacy/legacy_v4_math_abs.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	v4 unqualified math alias
+legacy_v4_offset	tests/fixtures/legacy/legacy_v4_offset.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	v4 offset helper
+legacy_v4_plot_style	tests/fixtures/legacy/legacy_v4_plot_style.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	v4 primitive plot style input
+legacy_v4_rsi_overload	tests/fixtures/legacy/legacy_v4_rsi_overload.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	v4 removed RSI overload
+legacy_v4_security	tests/fixtures/legacy/legacy_v4_security.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1		tests/fixtures/legacy/request_data.json		original	legacy_indicator	v4 security MTF family
+legacy_v4_session	tests/fixtures/legacy/legacy_v4_session.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	v4 session-day default family
+legacy_v4_sma	tests/fixtures/legacy/legacy_v4_sma.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	v4 basic moving average
+legacy_v4_transp	tests/fixtures/legacy/legacy_v4_transp.pine	4	tests/fixtures/legacy/chart_1m.csv	TEST	1				original	legacy_indicator	v4 output transparency

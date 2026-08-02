@@ -43,6 +43,24 @@ impl Analyzer {
                 },
             };
         }
+        if self.legacy_integer_division_exprs.contains(&key) {
+            if !self.record_lowering_node(expr.span) {
+                return None;
+            }
+            let pine_type = PineType::new(lowered.pine_type.qualifier, ValueKind::Int);
+            lowered = HirExpr {
+                series_id: self.series_id_for_type(pine_type),
+                pine_type,
+                kind: HirExprKind::Call {
+                    callee: "int".to_owned(),
+                    call_site_id: self.alloc_call_site(),
+                    args: vec![HirCallArg {
+                        name: None,
+                        value: lowered,
+                    }],
+                },
+            };
+        }
         Some(lowered)
     }
 }

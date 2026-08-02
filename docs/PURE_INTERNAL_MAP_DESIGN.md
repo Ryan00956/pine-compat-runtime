@@ -620,7 +620,7 @@ Recommended future slices:
 50. Every concrete scalar key/value snapshot additionally exposes terminal
     top-level `.set(index, value)`, including keys/values reached through
     supported built-in, copied, local/imported function, and local/imported
-    method map results. It validates the simple-int-compatible index and
+    method map results. It validates the integer-compatible index and
     resolved key/value scalar kind, replaces one fresh-snapshot slot without
     changing length, returns `void`, and cannot continue; source map entries
     and insertion order remain unchanged. Negative/`na`/empty/out-of-range,

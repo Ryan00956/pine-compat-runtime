@@ -1,0 +1,7 @@
+//@version=3
+study("v3 strict series output offsets")
+
+seriesOffset = close >= open ? 1 : -1
+
+plot(close, offset=seriesOffset)
+plotshape(close > open, offset=seriesOffset)

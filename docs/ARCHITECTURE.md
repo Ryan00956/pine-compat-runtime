@@ -115,9 +115,12 @@ signatures and merge constants, reuses the request-expression analyzer, and
 lowers accepted calls to inaccessible HIR dispatch names that encode gaps and
 lookahead policies. Hidden span arguments preserve the original full legacy
 call for provider failures. The modern `request.security` merge surface is not
-widened by this routing. Declaration-level `study(resolution=...)` remains a
-focused unsupported program-context feature rather than being approximated by
-wrapping the AST in a request call.
+widened by this routing. The exact Pine v4
+`study(resolution="")` form is erased during declaration lowering because it
+inherits the already-active host chart context; arbitrary argument order is
+preserved through per-source-argument keep/drop rewrites. Non-empty and dynamic
+declaration timeframes remain focused unsupported program-context features
+rather than being approximated by wrapping the AST in a request call.
 
 Phase 8 admits the fixture-backed v3 declaration/input/output surface and
 pre-v4 aliases, with a focused constraint pass for untyped `na`. Phase 9 admits
@@ -137,9 +140,9 @@ migration step.
 
 Phase 11 adds a release-evidence layer without adding another execution path.
 `tests/fixtures/legacy/release_profiles.tsv` owns the sorted v1-v4 release
-fixture registry, maturity, bar/request profile, realtime policy, provenance,
-and resource ceiling. The public runtime integration test loads that manifest
-and proves source-version selection, complete runtime-fixture coverage,
+fixture registry, maturity, bar/request/execution profile, realtime policy,
+provenance, and resource ceiling. The public runtime integration test loads
+that manifest and proves source-version selection, complete runtime-fixture coverage,
 historical/incremental/realtime behavior, MTF provider behavior, and bounded
 retained storage. `scripts/profile_legacy_release.py` measures the same rows
 through the CLI boundary. These are verification consumers of the semantic HIR
@@ -255,6 +258,14 @@ cargo run -p pine-cli -- run tests/fixtures/request/request_security_host.pine \
   --request-bars NYSE:IBM:1=tests/fixtures/request/ibm_1m.csv \
   --request-bars NYSE:IBM:5=tests/fixtures/request/ibm_5m.csv
 ```
+
+The same host boundary owns the execution clock used by `timenow`. Core
+runtime batch helpers accept an exact per-bar timestamp slice; incremental and
+realtime runtimes accept one timestamp with each execution. CLI reads it from
+`--execution-times`, Python accepts `execution_times`, and WASM uses the
+reserved `$executionTimes` array in request-host JSON. Missing reached reads or
+batch/bar count mismatches fail closed. No core or host adapter reads the
+process wall clock or substitutes a chart-bar timestamp.
 
 Provider-backed `request.security` expressions are evaluated in a separate
 requested-context `HistoricalRuntime` over the immutable provider bars, then

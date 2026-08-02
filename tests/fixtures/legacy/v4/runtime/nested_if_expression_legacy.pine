@@ -1,0 +1,14 @@
+//@version=4
+study("Legacy v4 nested if expression")
+
+selected = if close >= open
+    if volume >= 140
+        high
+    else if volume >= 120
+        close
+    else
+        low
+else
+    open
+
+plot(selected, title="nested if result")

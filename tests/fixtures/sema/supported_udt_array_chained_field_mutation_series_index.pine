@@ -1,5 +1,5 @@
-//@version=5
-indicator("Unsupported UDT array chained field mutation series index")
+//@version=6
+indicator("Supported UDT array chained field mutation series index")
 
 type Point
     float x

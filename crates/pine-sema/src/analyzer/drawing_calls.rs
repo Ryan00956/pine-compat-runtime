@@ -77,7 +77,7 @@ const LABEL_NEW_SCALAR_PARAMS: &[LabelNewParam] = &[
     label_param("xloc", Accepts::ConstString, true),
     label_param("yloc", Accepts::ConstString, true),
     label_param("color", Accepts::ColorCompatible, true),
-    label_param("style", Accepts::ConstString, true),
+    label_param("style", Accepts::StringCompatible, true),
     label_param("textcolor", Accepts::ColorCompatible, true),
     label_param("size", Accepts::StringOrIntCompatible, true),
     label_param("textalign", Accepts::ConstString, true),
@@ -93,7 +93,7 @@ const LABEL_NEW_POINT_PARAMS: &[LabelNewParam] = &[
     label_param("xloc", Accepts::ConstString, true),
     label_param("yloc", Accepts::ConstString, true),
     label_param("color", Accepts::ColorCompatible, true),
-    label_param("style", Accepts::ConstString, true),
+    label_param("style", Accepts::StringCompatible, true),
     label_param("textcolor", Accepts::ColorCompatible, true),
     label_param("size", Accepts::StringOrIntCompatible, true),
     label_param("textalign", Accepts::ConstString, true),
@@ -139,7 +139,7 @@ const LINE_NEW_SCALAR_PARAMS: &[LineNewParam] = &[
     },
     LineNewParam {
         name: "extend",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
     LineNewParam {
@@ -149,7 +149,7 @@ const LINE_NEW_SCALAR_PARAMS: &[LineNewParam] = &[
     },
     LineNewParam {
         name: "style",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
     LineNewParam {
@@ -182,7 +182,7 @@ const LINE_NEW_POINT_PARAMS: &[LineNewParam] = &[
     },
     LineNewParam {
         name: "extend",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
     LineNewParam {
@@ -192,7 +192,7 @@ const LINE_NEW_POINT_PARAMS: &[LineNewParam] = &[
     },
     LineNewParam {
         name: "style",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
     LineNewParam {
@@ -506,11 +506,17 @@ impl Analyzer {
                 self.diagnostics.push(diagnostic);
             }
         }
-        self.validate_label_new_string_arg(args, params, "xloc", LABEL_XLOCS);
-        self.validate_label_new_string_arg(args, params, "yloc", LABEL_YLOCS);
-        self.validate_label_new_string_arg(args, params, "style", LABEL_STYLES);
-        self.validate_label_new_string_arg(args, params, "textalign", TEXT_HALIGNS);
-        self.validate_label_new_string_arg(args, params, "text_font_family", TEXT_FONT_FAMILIES);
+        self.validate_label_new_string_arg(args, params, "xloc", LABEL_XLOCS, false);
+        self.validate_label_new_string_arg(args, params, "yloc", LABEL_YLOCS, false);
+        self.validate_label_new_string_arg(args, params, "style", LABEL_STYLES, true);
+        self.validate_label_new_string_arg(args, params, "textalign", TEXT_HALIGNS, false);
+        self.validate_label_new_string_arg(
+            args,
+            params,
+            "text_font_family",
+            TEXT_FONT_FAMILIES,
+            false,
+        );
         self.validate_label_new_text_size_arg(args, params);
         self.validate_label_new_text_formatting_arg(args, params);
     }
@@ -521,6 +527,7 @@ impl Analyzer {
         params: &[LabelNewParam],
         name: &str,
         supported: &[&str],
+        allow_proven_series: bool,
     ) {
         for (index, arg) in args.iter().enumerate() {
             let Some(param) = label_new_param(params, index, arg, &mut Vec::new()) else {
@@ -529,10 +536,18 @@ impl Analyzer {
             if param.name != name {
                 continue;
             }
-            let supported_value = self
-                .known_const_string_value(&arg.value)
-                .as_deref()
-                .is_some_and(|value| supported.contains(&value));
+            let supported_value = if allow_proven_series {
+                self.known_string_value_domain(&arg.value)
+                    .is_some_and(|values| {
+                        values
+                            .iter()
+                            .all(|value| supported.contains(&value.as_str()))
+                    })
+            } else {
+                self.known_const_string_value(&arg.value)
+                    .as_deref()
+                    .is_some_and(|value| supported.contains(&value))
+            };
             if !supported_value {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_VALUE",
@@ -644,9 +659,9 @@ impl Analyzer {
                 self.diagnostics.push(diagnostic);
             }
         }
-        self.validate_line_new_string_arg(args, params, "xloc", LINE_XLOCS);
-        self.validate_line_new_string_arg(args, params, "extend", LINE_EXTENDS);
-        self.validate_line_new_string_arg(args, params, "style", LINE_STYLES);
+        self.validate_line_new_string_arg(args, params, "xloc", LINE_XLOCS, false);
+        self.validate_line_new_string_arg(args, params, "extend", LINE_EXTENDS, true);
+        self.validate_line_new_string_arg(args, params, "style", LINE_STYLES, true);
     }
 
     fn validate_line_new_string_arg(
@@ -655,6 +670,7 @@ impl Analyzer {
         params: &[LineNewParam],
         name: &str,
         supported: &[&str],
+        allow_proven_series: bool,
     ) {
         for (index, arg) in args.iter().enumerate() {
             let Some(param) = line_new_param(params, index, arg, &mut Vec::new()) else {
@@ -663,10 +679,18 @@ impl Analyzer {
             if param.name != name {
                 continue;
             }
-            let supported_value = self
-                .known_const_string_value(&arg.value)
-                .as_deref()
-                .is_some_and(|value| supported.contains(&value));
+            let supported_value = if allow_proven_series {
+                self.known_string_value_domain(&arg.value)
+                    .is_some_and(|values| {
+                        values
+                            .iter()
+                            .all(|value| supported.contains(&value.as_str()))
+                    })
+            } else {
+                self.known_const_string_value(&arg.value)
+                    .as_deref()
+                    .is_some_and(|value| supported.contains(&value))
+            };
             if !supported_value {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_VALUE",

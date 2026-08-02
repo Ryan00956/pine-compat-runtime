@@ -1,0 +1,29 @@
+//@version=4
+study("Legacy v4 UDF final statements")
+
+final_decl(src) =>
+    result = src * 2
+
+final_reassign(src) =>
+    result = 0.0
+    result := src * 3
+
+final_if(flag, src) =>
+    if flag
+        result = src + 1
+    else
+        result = src - 1
+
+final_if_without_else(flag, src) =>
+    if flag
+        result = src
+
+persistent_reassign(src) =>
+    var float result = na
+    result := src
+
+plot(final_decl(close), title="declaration")
+plot(final_reassign(close), title="reassignment")
+plot(final_if(close >= open, close), title="if declarations")
+plot(nz(final_if_without_else(close >= open, close), -1), title="implicit na")
+plot(persistent_reassign(close), title="persistent reassignment")

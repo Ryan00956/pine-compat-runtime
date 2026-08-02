@@ -188,6 +188,7 @@ impl Analyzer {
         let program = HirProgram {
             language_version: self.compatibility.language_version,
             script_mode,
+            timenow_symbol: self.timenow_symbol,
             strategy_settings: self.strategy_settings,
             drawing_settings: self.drawing_settings,
             user_types: self.lower_user_types(),

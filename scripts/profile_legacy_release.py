@@ -25,6 +25,7 @@ MANIFEST_COLUMNS = (
     "source_path",
     "bars_profile",
     "request_profile",
+    "execution_profile",
     "realtime_policy",
     "license_class",
     "max_retained_values",
@@ -62,6 +63,7 @@ class ReleaseRow:
     source_path: str
     bars_profile: str
     request_profile: str
+    execution_profile: str
     realtime_policy: str
     license_class: str
     max_retained_values: int
@@ -85,6 +87,7 @@ def parse_manifest(path: Path) -> list[ReleaseRow]:
                 source_path=raw["source_path"],
                 bars_profile=raw["bars_profile"],
                 request_profile=raw["request_profile"],
+                execution_profile=raw["execution_profile"],
                 realtime_policy=raw["realtime_policy"],
                 license_class=raw["license_class"],
                 max_retained_values=int(raw["max_retained_values"]),
@@ -118,6 +121,11 @@ def request_arguments(row: ReleaseRow) -> list[str]:
             "--request-bars",
             "NYSE:IBM:5=tests/fixtures/legacy/v4/runtime/security_request_5m.csv",
         ]
+    if row.request_profile == "ibm_1":
+        return [
+            "--request-bars",
+            "NYSE:IBM:1=tests/fixtures/legacy/v4/runtime/security_chart_bars.csv",
+        ]
     if row.request_profile == "test_daily":
         return [
             "--chart-symbol",
@@ -128,6 +136,17 @@ def request_arguments(row: ReleaseRow) -> list[str]:
             "TEST:D=tests/fixtures/legacy/request_daily.csv",
         ]
     raise ValueError(f"unknown request profile {row.request_profile!r}")
+
+
+def execution_arguments(row: ReleaseRow) -> list[str]:
+    if row.execution_profile == "none":
+        return []
+    if row.execution_profile == "deterministic_clock":
+        return [
+            "--execution-times",
+            "tests/fixtures/legacy/timenow_execution_times.txt",
+        ]
+    raise ValueError(f"unknown execution profile {row.execution_profile!r}")
 
 
 def run_json(command: Sequence[str]) -> dict[str, object]:
@@ -162,6 +181,7 @@ def profile_fixture(binary: Path, row: ReleaseRow, iterations: int) -> dict[str,
         "--bars",
         str(bars_path(row)),
         *request_arguments(row),
+        *execution_arguments(row),
         "--profile",
     ]
     runtime = run_json(run_command)

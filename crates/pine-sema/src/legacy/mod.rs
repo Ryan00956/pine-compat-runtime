@@ -204,7 +204,8 @@ impl LegacyFrontEnd {
         source_context_id: SourceContextId,
         span: Span,
         rule: LegacyRule,
-        canonical_arg_names: Vec<Option<&'static str>>,
+        arg_rewrites: Vec<lowering::LegacyCallArgRewrite>,
+        chart_timeframe_inheritance_span: Option<Span>,
     ) {
         let canonical_name = rule
             .canonical_name
@@ -212,8 +213,11 @@ impl LegacyFrontEnd {
         self.lowering
             .record_call(source_context_id, span, canonical_name);
         self.lowering
-            .record_call_arg_names(source_context_id, span, canonical_arg_names);
+            .record_call_arg_rewrites(source_context_id, span, arg_rewrites);
         report::record_signature_translation(report, rule, span);
+        if let Some(span) = chart_timeframe_inheritance_span {
+            report::record_study_chart_timeframe_inheritance(report, span);
+        }
     }
 
     pub(crate) fn record_input_translation(

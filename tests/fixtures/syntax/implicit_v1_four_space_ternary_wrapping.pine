@@ -1,0 +1,9 @@
+study("Implicit v1 four-space ternary wrapping")
+suffix = close > open ? 1 :
+    close < open ? -1 :
+    0
+prefix = close > open
+    ? 10
+    : 20
+plot(suffix)
+plot(prefix)

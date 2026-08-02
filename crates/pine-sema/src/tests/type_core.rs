@@ -1433,6 +1433,31 @@ fn rejects_while_expression_without_final_result() {
 }
 
 #[test]
+fn accepts_nested_if_statement_as_if_expression_branch_result() {
+    let analysis = analyze(
+        "result = if close >= open\n    if volume > 0\n        high\n    else if close == open\n        close\n    else\n        low\nelse\n    open\nplot(result)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_nested_if_expression_branch_without_a_value() {
+    let analysis = analyze(
+        "value = 0\nresult = if close >= open\n    if volume > 0\n        value := 1\n    else\n        high\nelse\n    low\n",
+    );
+
+    assert_eq!(analysis.diagnostics.len(), 1, "{:?}", analysis.diagnostics);
+    assert_eq!(analysis.diagnostics[0].code, "E_BRANCH_RETURN");
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_while_expression_scalar_result() {
     let analysis = analyze("result = while close > open\n    close\nplot(result)\n");
 

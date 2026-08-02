@@ -1,0 +1,7 @@
+//@version = 4
+study("Spaced version annotation", max_bars_back=8)
+
+up = close > open
+plot(up ? close : open, title="Selected", color=color.red)
+plotshape(up, title="Up", style=shape.labelup, location=location.belowbar, color=color.green, textcolor=color.white, size=size.tiny)
+alertcondition(up, title="Up alert", message="Up")

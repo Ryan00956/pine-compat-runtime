@@ -1,0 +1,15 @@
+//@version=4
+study("Unsupported legacy v4 UDF reference side effects")
+
+var values = array.new_float()
+
+push_value(value) =>
+    array.push(values, value)
+    array.size(values)
+
+retitle(value) =>
+    marker = label.new(bar_index, value, "before")
+    label.set_text(marker, "after")
+    value
+
+plot(push_value(close) + retitle(close))

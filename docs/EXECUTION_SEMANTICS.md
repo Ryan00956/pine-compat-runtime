@@ -34,6 +34,29 @@ rollback, and later `varip` behavior. This should be a separate milestone.
 The first public releases should either reject realtime-only features or mark
 them as approximate.
 
+## Execution Clock
+
+`timenow` is the host-provided UNIX millisecond timestamp of the current
+script execution, not the current bar's opening or closing time. Historical
+batch execution accepts exactly one timestamp per bar. Incremental historical
+execution uses `append_bar_with_execution_time`, and realtime execution uses
+`update_with_execution_time`; the corresponding batch helpers accept an
+execution-time slice alongside bars and the other host inputs.
+
+The clock is explicit so a fixed program, bars, inputs, request streams, and
+execution timestamps always produce the same result. A supplied batch whose
+timestamp count differs from its bar count fails before any bar runs. If a
+reached expression reads `timenow` without an execution timestamp, that
+execution fails; scripts and branches that do not read it retain the ordinary
+clock-free APIs. The runtime never reads the process wall clock and never
+substitutes `time`, `time_close`, or `last_bar_time`.
+
+Each successful execution commits the current `timenow` value into ordinary
+series history. Repeated realtime forming updates roll back the current bar and
+recompute it with the newly supplied timestamp, just like other current-bar
+state. A replacement forming update can therefore observe a different
+`timenow` while `timenow[1]` continues to refer to the last committed bar.
+
 ## Legacy Indicator Expression Semantics
 
 Pine v1-v4 indicators use version-selected semantics where a current-language
@@ -98,8 +121,10 @@ historical batch run when appended incrementally and when handed to the
 realtime engine as historical bars. Ordinary v1-v4 rows must also survive a
 mutated forming update, replacement forming update, rollback, and final
 confirmation with a result equal to batch execution. All requested-data rows
-run through their declared chart/provider profile. Runtime profile storage is
-counted against the manifest ceiling.
+run through their declared chart/provider profile, and rows with an
+execution-clock profile supply the declared per-execution timestamps in every
+execution mode. Runtime profile storage is counted against the manifest
+ceiling.
 
 The sole deliberate equality exception is the experimental v2 historical
 `security` lookahead profile. Historical `lookahead_on` may repaint prior/final
@@ -902,9 +927,11 @@ and backing storage across bars, so mutations such as `array.push` or
 `values.push(...)` persist.
 Assigning an array to another variable copies the id, not the backing values;
 mutating either name mutates the same runtime-owned array. Passing an array to a
-user-defined function also passes the array id, so side-effect-free helpers can
-read the same backing values through parameters. Array mutation inside
-user-defined functions remains outside the executable subset. Top-level
+user-defined function also passes the array id, so helpers read the same
+backing values through parameters. Pine v4 UDF bodies additionally admit the
+exact namespace-call mutation subset `array.set`, `array.pop`,
+`array.unshift`, and `array.clear`; all other UDF collection mutation remains
+outside the executable subset. Top-level
 branches and loops mutate the same array id they can read after control flow
 continues. `array.copy` and `values.copy()` allocate a new array id initialized
 with the source array's current element values. For label-id, line-id, box-id,
@@ -1815,7 +1842,8 @@ reassigned to that copy retains the copied backing store across repeated forming
 updates without aliasing the source. A carried UDT `varip` value is cloned by
 value, and scalar field mutation writes the updated field vector back to the
 `varip` slot. Array mutation inside UDFs remains rejected by the existing
-function side-effect rules. Drawing object ids are rejected for `varip`:
+function side-effect rules except for the exact Pine v4 namespace-call subset
+`array.set/pop/unshift/clear`. Drawing object ids are rejected for `varip`:
 retaining only the id would be unsafe while label, line, box, and table object
 stores continue to roll back between forming updates. Tuples,
 non-constructor-inferred UDT `varip`, nested-field UDT `varip`, non-scalar
@@ -1895,10 +1923,10 @@ creation, `array.push`, `array.unshift`, `array.insert`, and `array.concat`
 beyond the limit return runtime errors.
 
 Read-only array operations are allowed inside inlined user-defined functions.
-The supported method-call syntax lowers to the same `array.*` runtime calls, so
-the same bounds, persistence, and UDF side-effect rules apply.
-Array mutation, including push/pop/shift/unshift/set/sort/reverse/clear, inside
-user-defined functions is rejected as a function side-effect boundary.
+The focused Pine v4 namespace-call subset `array.set`, `array.pop`,
+`array.unshift`, and `array.clear` also mutates the referenced backing id in
+source order. Method-call syntax and every other array mutation inside UDFs
+remain rejected as a function side-effect boundary.
 
 For maps, the stored value is a runtime-owned map id. The current runtime
 subset supports `map.new<K, V>()` for empty maps whose key and value templates
@@ -2445,9 +2473,11 @@ Drawing side effects are allowed in top-level control flow, including supported
 the confirmed runtime snapshot, so unconfirmed label, line, box, and table
 creation, mutation, deletion, and cell writes are rolled back when a new forming
 update arrives.
-Drawing side effects inside user-defined functions are rejected under the same
-side-effect boundary as output calls and array mutation until UDF object
-semantics are deliberately expanded.
+Pine v4 UDF bodies admit the exact namespace-call drawing subset `label.new`,
+`label.delete`, `line.new`, and `line.delete`; inlined calls write the ordinary
+runtime object stores and therefore share the same rollback behavior. Other
+drawing side effects inside UDFs remain rejected under the same boundary as
+global-only output calls.
 
 ## Request Data
 
@@ -2550,15 +2580,31 @@ relations are stable runtime errors; a legacy error begins with
 `legacy security at source span START..END:` across the host-specific error
 wrapper.
 
-`study(resolution=...)` is still rejected with one focused unsupported
-diagnostic. It requires a program-level execution coordinator for whole-script
-state, output alignment, gaps, realtime confirmation, provider identity, and
-cache ownership; treating it as a synthetic `request.security` expression
-would not preserve those semantics.
+For the focused Pine v4 direct-UDF subset, immutable declaration initializers
+inside the inlined function remain discoverable by their unique HIR symbols.
+When such a symbol is used by `security`, series parameters and locals are
+recomputed in the requested child runtime, while const/input/simple parameters
+and locals are captured from the reached outer call. A prior legacy request
+result is an admissible dependency only for the three-positional-argument form
+whose evaluated symbol/timeframe and encoded gaps/lookahead selector are
+identical to the enclosing request; it therefore becomes same-context when the
+dependency graph is evaluated. Different selectors, control-flow-local calls,
+mutable/persistent locals, recursion, and side effects are rejected before HIR.
+
+The exact Pine v4 `study(resolution="")` subset inherits the supplied chart
+symbol and timeframe. Its declaration-only `resolution` and literal-bool
+`resolution_gaps` arguments are removed before canonical `indicator` lowering,
+so the whole script executes directly on chart bars and no request stream is
+consulted. Batch, incremental, and realtime historical handoff are paired with
+a v6 canonical fixture. Non-empty or dynamic declaration timeframes remain one
+focused unsupported feature: they require a program-level coordinator for
+whole-script state, output alignment, gaps, realtime confirmation, provider
+identity, and cache ownership. Treating them as a synthetic
+`request.security` expression would not preserve those semantics.
 
 Lower-timeframe `request.security`/legacy `security`,
 `request.security_lower_tf`, modern non-default gaps/lookahead, advanced
-request families, provider local aliases, UDF calls,
+request families, modern provider local aliases and UDF calls,
 output/drawing/alert side effects, input declarations, and array mutation
 inside requested expressions remain unsupported.
 
@@ -2610,10 +2656,12 @@ Multi-statement function bodies execute local statements and return the final
 expression. Local declarations and reassignments inside function block bodies
 are scoped to the function callsite. A local declaration or loop counter can
 shadow a parameter without changing references that were already resolved to
-that parameter. Recursive functions, output side effects, drawing side effects,
-and alert side effects inside functions, global reassignment inside functions,
-and side-effecting calls as UDF arguments are rejected in the current
-executable subset.
+that parameter. Pine v4 UDF bodies may execute the focused
+reference-side-effect namespace subset `array.set/pop/unshift/clear`,
+`label.new/delete`, and `line.new/delete`. Recursive functions, global-only
+output side effects, alert side effects, all other collection/drawing side
+effects, global reassignment inside functions, and side-effecting calls as UDF
+arguments remain rejected.
 
 ## Series and History References
 

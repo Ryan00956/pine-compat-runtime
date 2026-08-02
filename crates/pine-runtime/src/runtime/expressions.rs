@@ -26,6 +26,14 @@ impl<'a> HistoricalRuntime<'a> {
     fn eval_expr_inner(&mut self, expr: &HirExpr) -> Result<PineValue, RuntimeError> {
         let value = match &expr.kind {
             HirExprKind::Literal(literal) => eval_literal(literal),
+            HirExprKind::Symbol(symbol) if self.program.timenow_symbol == Some(*symbol) => self
+                .current_execution_time
+                .map(PineValue::Int)
+                .ok_or_else(|| RuntimeError {
+                    message:
+                        "timenow requires an explicit execution timestamp for this script execution"
+                            .to_owned(),
+                })?,
             HirExprKind::Symbol(symbol) => self
                 .current_symbols
                 .get(symbol)

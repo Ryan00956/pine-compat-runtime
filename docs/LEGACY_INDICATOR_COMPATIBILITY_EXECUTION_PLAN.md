@@ -668,6 +668,7 @@ declared_or_expected_version
 chart_bars_path
 chart_symbol
 chart_timeframe
+execution_times_path
 request_data_manifest
 reference_output_path
 license_class

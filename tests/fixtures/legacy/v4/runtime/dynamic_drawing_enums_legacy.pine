@@ -1,0 +1,15 @@
+//@version=4
+study("v4 dynamic drawing enums", overlay=true)
+
+lineStyle = bar_index % 2 == 0 ? line.style_solid : line.style_dashed
+lineExtend = close >= open ? extend.right : extend.none
+labelStyle = close >= open ? label.style_labelup : label.style_labeldown
+
+lineId = line.new(bar_index, low, bar_index + 1, high, extend=lineExtend, style=lineStyle)
+line.set_style(lineId, lineStyle)
+line.set_extend(lineId, lineExtend)
+
+labelId = label.new(bar_index, high, "legacy", style=labelStyle)
+label.set_style(labelId, labelStyle)
+
+plot(close)

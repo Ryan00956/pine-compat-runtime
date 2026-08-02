@@ -371,7 +371,7 @@ fn legacy_security_accepts_immutable_global_alias_graphs_and_dynamic_simple_cont
 }
 
 #[test]
-fn legacy_security_keeps_mutable_aliases_and_udf_expressions_fail_closed() {
+fn legacy_security_accepts_pure_udfs_and_keeps_mutable_state_fail_closed() {
     let mutable = analyze_production(include_str!(
         "../../../../tests/fixtures/legacy/v1/unsupported/security_mutable_alias.pine"
     ));
@@ -384,10 +384,108 @@ fn legacy_security_keeps_mutable_aliases_and_udf_expressions_fail_closed() {
             .any(|item| item.feature == "security")
     );
 
-    let udf = analyze_production(
-        "//@version=4\nstudy(\"udf request expression\")\ncalculate() => sma(close, 2)\nplot(security(\"NYSE:IBM\", \"5\", calculate()))\n",
+    let pure_udf = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v4/runtime/security_pure_udf_legacy.pine"
+    ));
+    assert!(
+        pure_udf.diagnostics.is_empty(),
+        "{:?}",
+        pure_udf.diagnostics
     );
-    assert!(diagnostic_codes(&udf).contains(&"E_UNSUPPORTED_FEATURE"));
+    assert!(pure_udf.compatibility.unsupported.is_empty());
+
+    let mutable_udf = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v4/unsupported/security_mutable_udf.pine"
+    ));
+    assert!(diagnostic_codes(&mutable_udf).contains(&"E_UNSUPPORTED_FEATURE"));
+    assert!(
+        mutable_udf
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|item| item.feature == "security")
+    );
+
+    let modern_udf = analyze_production(
+        "//@version=6\nindicator(\"modern UDF request\")\ncalculate() => ta.sma(close, 2)\nplot(request.security(\"NYSE:IBM\", \"5\", calculate()))\n",
+    );
+    assert!(
+        modern_udf
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|item| item.feature == "request.security"),
+        "{:?}",
+        modern_udf.diagnostics
+    );
+}
+
+#[test]
+fn legacy_security_accepts_same_selector_udf_local_dependencies_only() {
+    let supported = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v4/runtime/security_udf_local_dependencies_legacy.pine"
+    ));
+    assert!(
+        supported.diagnostics.is_empty(),
+        "{:?}",
+        supported.diagnostics
+    );
+    assert!(supported.compatibility.unsupported.is_empty());
+    assert!(supported.hir.is_some());
+
+    let mismatched = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v4/unsupported/security_udf_local_dependency_mismatch.pine"
+    ));
+    assert!(diagnostic_codes(&mismatched).contains(&"E_UNSUPPORTED_FEATURE"));
+    assert!(
+        mismatched
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|item| item.feature == "security")
+    );
+
+    for source in [
+        "//@version=4\nstudy(\"different timeframe\")\nf(src) =>\n    earlier = security(\"NYSE:IBM\", \"15\", src)\n    security(\"NYSE:IBM\", \"5\", earlier)\nplot(f(close))\n",
+        "//@version=4\nstudy(\"different merge policy\")\nf(src) =>\n    earlier = security(\"NYSE:IBM\", \"5\", src, barmerge.gaps_on, barmerge.lookahead_off)\n    security(\"NYSE:IBM\", \"5\", earlier)\nplot(f(close))\n",
+        "//@version=4\nstudy(\"named nested request\")\nf(src) =>\n    earlier = security(symbol=\"NYSE:IBM\", resolution=\"5\", expression=src)\n    security(\"NYSE:IBM\", \"5\", earlier)\nplot(f(close))\n",
+    ] {
+        let analysis = analyze_production(source);
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|item| item.feature == "security"),
+            "{:?}",
+            analysis.diagnostics
+        );
+    }
+
+    let control_flow_local = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v4/unsupported/security_udf_control_flow_local.pine"
+    ));
+    assert!(diagnostic_codes(&control_flow_local).contains(&"E_UNSUPPORTED_FEATURE"));
+    assert!(
+        control_flow_local
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|item| item.feature == "security")
+    );
+
+    let modern = analyze_production(
+        "//@version=6\nindicator(\"modern local request\")\nrequested(src) =>\n    local = src + 1\n    request.security(\"NYSE:IBM\", \"5\", local)\nplot(requested(close))\n",
+    );
+    assert!(
+        modern
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|item| item.feature == "request.security"),
+        "{:?}",
+        modern.diagnostics
+    );
 }
 
 #[test]
@@ -664,7 +762,32 @@ fn modern_sources_reject_v4_input_type_constants() {
 }
 
 #[test]
-fn v4_study_timeframe_arguments_produce_one_focused_failure() {
+fn v4_study_empty_resolution_inherits_chart_timeframe() {
+    let source = "//@version=4\nstudy(\"Chart\", resolution=\"\", resolution_gaps=false, max_boxes_count=75)\nplot(close)\n";
+    let analysis = analyze_production(source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert_eq!(
+        analysis
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .filter(|emulation| emulation.feature == "study.resolution")
+            .count(),
+        1
+    );
+    let hir = analysis.hir.expect("chart-inherited resolution HIR");
+    assert_eq!(hir.drawing_settings.max_boxes_count, Some(75));
+    assert!(!format!("{hir:?}").contains("resolution"));
+}
+
+#[test]
+fn v4_study_nonempty_resolution_produces_one_focused_failure() {
     let analysis = analyze_production(
         "//@version=4\nstudy(\"MTF\", resolution=\"D\", resolution_gaps=true)\nplot(close)\n",
     );
@@ -677,6 +800,24 @@ fn v4_study_timeframe_arguments_produce_one_focused_failure() {
     );
     assert!(analysis.compatibility.legacy_translations.is_empty());
     assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn v4_study_dynamic_resolution_and_gaps_stay_fail_closed() {
+    for source in [
+        "//@version=4\nrequested = \"D\"\nstudy(\"MTF\", resolution=requested)\nplot(close)\n",
+        "//@version=4\ngapPolicy = true\nstudy(\"MTF\", resolution=\"\", resolution_gaps=gapPolicy)\nplot(close)\n",
+        "//@version=4\nstudy(\"MTF\", resolution_gaps=true)\nplot(close)\n",
+    ] {
+        let analysis = analyze_production(source);
+        assert_eq!(diagnostic_codes(&analysis), vec!["E_UNSUPPORTED_FEATURE"]);
+        assert_eq!(analysis.compatibility.unsupported.len(), 1);
+        assert_eq!(
+            analysis.compatibility.unsupported[0].feature,
+            "study.resolution"
+        );
+        assert!(analysis.hir.is_none());
+    }
 }
 
 #[test]
@@ -872,6 +1013,56 @@ fn production_aliases_still_yield_to_v4_user_functions_and_lexical_values() {
             .iter()
             .all(|translation| translation.source_feature != "sma")
     );
+}
+
+#[test]
+fn v3_v4_udf_calls_ignore_only_later_global_legacy_alias_collisions() {
+    let later_fixture = include_str!(
+        "../../../../tests/fixtures/legacy/v4/runtime/udf_source_order_builtin_aliases_legacy.pine"
+    );
+    let earlier_fixture = include_str!(
+        "../../../../tests/fixtures/legacy/v4/unsupported/udf_earlier_legacy_alias_shadow.pine"
+    );
+    for version in [3, 4] {
+        let later = analyze_production(&later_fixture.replacen(
+            "//@version=4",
+            &format!("//@version={version}"),
+            1,
+        ));
+        assert!(
+            later.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            later.diagnostics
+        );
+        assert!(later.hir.is_some());
+        assert_eq!(
+            later
+                .compatibility
+                .legacy_translations
+                .iter()
+                .filter(|translation| translation.source_feature == "rsi")
+                .count(),
+            2
+        );
+
+        let earlier = analyze_production(&earlier_fixture.replacen(
+            "//@version=4",
+            &format!("//@version={version}"),
+            1,
+        ));
+        assert!(
+            diagnostic_codes(&earlier).contains(&"E_UNKNOWN_FUNCTION"),
+            "v{version}: {:?}",
+            earlier.diagnostics
+        );
+        assert!(
+            earlier
+                .compatibility
+                .legacy_translations
+                .iter()
+                .all(|translation| translation.source_feature != "sma")
+        );
+    }
 }
 
 #[test]
@@ -1507,6 +1698,66 @@ fn exact_symbol_alias_is_fallback_and_lowers_to_canonical_builtin() {
 }
 
 #[test]
+fn v4_label_style_aliases_lower_to_canonical_dynamic_enums() {
+    let analysis = analyze_production(
+        "//@version=4\nstudy(\"legacy label styles\", overlay=true)\nupStyle = label.style_labelup\ndownStyle = label.style_labeldown\nstyle = close >= open ? upStyle : downStyle\nid = label.new(bar_index, high, \"legacy\", style=style)\nlabel.set_style(id, style)\nplot(close)\n",
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    for (source, canonical) in [
+        ("label.style_labelup", "label.style_label_up"),
+        ("label.style_labeldown", "label.style_label_down"),
+    ] {
+        assert!(
+            analysis
+                .compatibility
+                .legacy_translations
+                .iter()
+                .any(|translation| translation.source_feature == source
+                    && translation.canonical_feature == canonical
+                    && translation.kind == LegacyTranslationKind::SymbolAlias),
+            "missing translation {source} -> {canonical}: {:?}",
+            analysis.compatibility.legacy_translations
+        );
+    }
+
+    for version in [5, 6] {
+        let modern = analyze_production(&format!(
+            "//@version={version}\nindicator(\"modern label styles\")\nplot(label.style_labelup == label.style_labeldown ? close : open)\n"
+        ));
+        assert!(
+            !modern.diagnostics.is_empty()
+                && diagnostic_codes(&modern)
+                    .iter()
+                    .all(|code| *code == "E_UNSUPPORTED_FEATURE"),
+            "v{version}: {:?}",
+            modern.diagnostics
+        );
+        assert!(modern.hir.is_none());
+        assert!(modern.compatibility.legacy_translations.is_empty());
+    }
+}
+
+#[test]
+fn v4_string_input_options_bound_drawing_enum_values() {
+    let bounded = analyze_production(
+        "//@version=4\nstudy(\"bounded drawing input\")\nstyle = input(line.style_solid, \"Style\", input.string, false, [line.style_solid, line.style_dashed])\nline.new(bar_index, low, bar_index + 1, high, style=style)\nplot(close)\n",
+    );
+    assert!(bounded.diagnostics.is_empty(), "{:?}", bounded.diagnostics);
+    assert!(bounded.hir.is_some());
+
+    let unbounded = analyze_production(
+        "//@version=4\nstudy(\"unbounded drawing input\")\nstyle = input(line.style_solid, \"Style\", input.string)\nline.new(bar_index, low, bar_index + 1, high, style=style)\nplot(close)\n",
+    );
+    assert_eq!(diagnostic_codes(&unbounded), vec!["E_CALL_ARG_VALUE"]);
+    assert!(unbounded.hir.is_none());
+}
+
+#[test]
 fn lexical_symbol_wins_over_symbol_alias() {
     let analysis =
         analyze_legacy("//@version=3\ntickerid = \"local\"\nplot(tickerid == \"local\" ? 1 : 0)\n");
@@ -1530,6 +1781,36 @@ fn unsupported_known_and_unknown_calls_remain_distinct() {
     let unknown = analyze_legacy("//@version=4\nplot(mystery(close))\n");
     assert_eq!(diagnostic_codes(&unknown), vec!["E_UNKNOWN_FUNCTION"]);
     assert!(unknown.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn timenow_is_a_host_backed_series_int_in_legacy_and_modern_dialects() {
+    for (version, declaration) in [(4, "study"), (6, "indicator")] {
+        let source = format!(
+            "//@version={version}\n{declaration}(\"clock\")\nelapsed = timenow - time\ninside = elapsed <= 60000 and elapsed > 0\nplot(inside ? 1 : 0)\n"
+        );
+        let analysis = analyze_production(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.compatibility.unsupported.is_empty());
+        let hir = analysis
+            .hir
+            .expect("timenow should lower to executable HIR");
+        let symbol = hir.timenow_symbol.expect("timenow symbol metadata");
+        let symbol = hir
+            .symbols
+            .iter()
+            .find(|candidate| candidate.id == symbol)
+            .expect("lowered timenow symbol");
+        assert_eq!(symbol.name, "timenow");
+        assert_eq!(
+            symbol.pine_type,
+            pine_ir::PineType::new(pine_ir::Qualifier::Series, pine_ir::ValueKind::Int)
+        );
+    }
 }
 
 #[test]
@@ -2449,6 +2730,67 @@ barcolor(color.red, title="bars")
 }
 
 #[test]
+fn v4_v5_series_output_offsets_use_the_final_value_while_v3_v6_stay_strict() {
+    for (version, source) in [
+        (
+            4,
+            include_str!(
+                "../../../../tests/fixtures/legacy/v4/runtime/series_output_offset_legacy.pine"
+            ),
+        ),
+        (
+            5,
+            include_str!("../../../../tests/fixtures/runtime/v5_series_output_offset.pine"),
+        ),
+    ] {
+        let analysis = analyze_production(source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+        assert_eq!(
+            analysis
+                .compatibility
+                .legacy_emulations
+                .iter()
+                .filter(|emulation| {
+                    emulation.feature == format!("v{version}.series_output_offset")
+                })
+                .count(),
+            6
+        );
+    }
+
+    let v3 = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v3/unsupported/series_output_offset.pine"
+    ));
+    assert_eq!(
+        diagnostic_codes(&v3)
+            .into_iter()
+            .filter(|code| *code == "E_CALL_ARG_TYPE")
+            .count(),
+        2
+    );
+    assert!(v3.hir.is_none());
+    assert!(v3.compatibility.legacy_emulations.is_empty());
+
+    let v6 = analyze_production(include_str!(
+        "../../../../tests/fixtures/sema/unsupported_v6_series_output_offset.pine"
+    ));
+    assert_eq!(
+        diagnostic_codes(&v6)
+            .into_iter()
+            .filter(|code| *code == "E_CALL_ARG_TYPE")
+            .count(),
+        6
+    );
+    assert!(v6.hir.is_none());
+    assert!(v6.compatibility.legacy_emulations.is_empty());
+}
+
+#[test]
 fn v1_v3_output_binder_accepts_the_documented_pre_v4_signatures() {
     for version_header in ["", "//@version=2\n", "//@version=3\n"] {
         let source = format!(
@@ -3003,6 +3345,108 @@ fn v2_declaration_graph_treats_positive_const_expression_offsets_as_history() {
 }
 
 #[test]
+fn v1_v2_declaration_graph_keeps_source_order_input_prerequisites_outside_reordering() {
+    let implicit = include_str!(
+        "../../../../tests/fixtures/legacy/v1/runtime/graph_source_order_prerequisite_legacy.pine"
+    );
+    for source in [implicit.to_owned(), format!("//@version=2\n{implicit}")] {
+        let analysis = analyze_production(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let hir = analysis
+            .hir
+            .as_ref()
+            .expect("source-order prerequisite HIR");
+        let symbol_names = hir
+            .symbols
+            .iter()
+            .map(|symbol| (symbol.id, symbol.name.as_str()))
+            .collect::<std::collections::HashMap<_, _>>();
+        let declarations = hir
+            .statements
+            .iter()
+            .filter_map(|statement| match statement.kind {
+                HirStmtKind::Decl { symbol, .. } => symbol_names.get(&symbol).copied(),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        let length = declarations
+            .iter()
+            .position(|name| *name == "length")
+            .expect("length declaration");
+        let delta = declarations
+            .iter()
+            .position(|name| *name == "delta")
+            .expect("delta declaration");
+        let trend = declarations
+            .iter()
+            .position(|name| *name == "trend")
+            .expect("trend declaration");
+        let direction = declarations
+            .iter()
+            .position(|name| *name == "direction")
+            .expect("direction declaration");
+        assert!(
+            length < delta && delta < trend && trend < direction,
+            "{declarations:?}"
+        );
+        assert!(hir_contains_call(hir, "ta.rising"));
+        assert!(hir_contains_call(hir, "ta.falling"));
+    }
+
+    let barrier = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v2/unsupported/forward_reference_unsafe_initializer_barrier.pine"
+    ));
+    assert_eq!(
+        diagnostic_codes(&barrier),
+        vec!["E_LEGACY_FORWARD_REFERENCE_UNSAFE"]
+    );
+    assert!(barrier.hir.is_none());
+}
+
+#[test]
+fn rising_and_falling_aliases_are_exact_and_legacy_only() {
+    for version in 1..=4 {
+        let analysis = analyze_production(&format!(
+            "//@version={version}\nstudy(\"legacy trend aliases\")\nup = rising(close, 2)\ndown = falling(close, 2)\nplot(up ? 1 : down ? -1 : 0)\n"
+        ));
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            analysis.diagnostics
+        );
+        let hir = analysis.hir.as_ref().expect("legacy trend alias HIR");
+        for (source, canonical) in [("rising", "ta.rising"), ("falling", "ta.falling")] {
+            assert!(hir_contains_call(hir, canonical));
+            assert!(
+                analysis
+                    .compatibility
+                    .legacy_translations
+                    .iter()
+                    .any(|translation| translation.source_feature == source
+                        && translation.canonical_feature == canonical
+                        && translation.kind == LegacyTranslationKind::ExactAlias)
+            );
+        }
+    }
+
+    for version in 5..=6 {
+        let analysis = analyze_production(&format!(
+            "//@version={version}\nindicator(\"modern trend aliases\")\nplot(rising(close, 2) ? 1 : falling(close, 2) ? -1 : 0)\n"
+        ));
+        assert_eq!(
+            diagnostic_codes(&analysis),
+            vec!["E_UNKNOWN_FUNCTION", "E_UNKNOWN_FUNCTION"]
+        );
+        assert!(analysis.hir.is_none());
+        assert!(analysis.compatibility.legacy_translations.is_empty());
+    }
+}
+
+#[test]
 fn v2_declaration_graph_rejects_cycles_barriers_unsafe_calls_and_limits_once() {
     for (source, expected) in [
         (
@@ -3070,6 +3514,283 @@ fn v2_declaration_graph_enforces_the_edge_limit_independently() {
 }
 
 #[test]
+fn legacy_integer_division_is_truncated_across_the_complete_expression() {
+    for version in [1, 2, 3, 4] {
+        let source = include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/contextual_integer_division_legacy.pine"
+        )
+        .replacen("//@version=4", &format!("//@version={version}"), 1);
+        let analysis = analyze_production(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            analysis.diagnostics
+        );
+        assert_eq!(
+            analysis
+                .compatibility
+                .legacy_emulations
+                .iter()
+                .filter(|emulation| { emulation.feature == format!("v{version}.integer_division") })
+                .count(),
+            4
+        );
+        let hir = analysis.hir.as_ref().expect("legacy integer division HIR");
+        assert!(hir_contains_call(hir, "int"));
+        let ordinary_division = hir
+            .statements
+            .iter()
+            .filter_map(|statement| match &statement.kind {
+                HirStmtKind::Expr(HirExpr {
+                    kind: HirExprKind::Call { callee, args, .. },
+                    ..
+                }) if callee == "plot" => args.first().map(|arg| &arg.value),
+                _ => None,
+            })
+            .nth(2)
+            .expect("ordinary division plot");
+        assert_eq!(
+            ordinary_division.pine_type,
+            PineType::new(Qualifier::Input, ValueKind::Int)
+        );
+        assert!(matches!(
+            ordinary_division.kind,
+            HirExprKind::Call { ref callee, .. } if callee == "int"
+        ));
+    }
+}
+
+#[test]
+fn v5_integer_division_depends_on_const_qualifiers() {
+    let analysis = analyze_production(include_str!(
+        "../../../../tests/fixtures/runtime/v5_const_integer_division.pine"
+    ));
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .filter(|emulation| emulation.feature == "v5.integer_division")
+            .count(),
+        3
+    );
+
+    let hir = analysis.hir.as_ref().expect("v5 integer division HIR");
+    let plot_values = hir
+        .statements
+        .iter()
+        .filter_map(|statement| match &statement.kind {
+            HirStmtKind::Expr(HirExpr {
+                kind: HirExprKind::Call { callee, args, .. },
+                ..
+            }) if callee == "plot" => args.first().map(|arg| &arg.value),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(plot_values.len(), 5);
+    assert_eq!(
+        plot_values[0].pine_type,
+        PineType::new(Qualifier::Const, ValueKind::Int)
+    );
+    assert_eq!(plot_values[1].pine_type, plot_values[0].pine_type);
+    assert_eq!(
+        plot_values[2].pine_type,
+        PineType::new(Qualifier::Input, ValueKind::Float)
+    );
+    assert_eq!(
+        plot_values[3].pine_type,
+        PineType::new(Qualifier::Series, ValueKind::Float)
+    );
+    assert!(matches!(
+        plot_values[4].kind,
+        HirExprKind::History {
+            offset: HirHistoryOffset::Constant(2),
+            ..
+        }
+    ));
+
+    let const_udf = analyze_production(
+        "//@version=5\nindicator(\"v5 const UDF division\")\nhalf(value) => value / 2\nplot(half(5))\n",
+    );
+    assert!(
+        const_udf.diagnostics.is_empty(),
+        "{:?}",
+        const_udf.diagnostics
+    );
+    assert!(
+        const_udf
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .any(|emulation| emulation.feature == "v5.integer_division")
+    );
+
+    let input_udf = analyze_production(
+        "//@version=5\nindicator(\"v5 input UDF division\")\nvalue = input.int(5)\nhalf(argument) => argument / 2\nplot(half(value))\n",
+    );
+    assert!(
+        input_udf.diagnostics.is_empty(),
+        "{:?}",
+        input_udf.diagnostics
+    );
+    assert!(
+        input_udf
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .all(|emulation| emulation.feature != "v5.integer_division")
+    );
+
+    let input_history = analyze_production(
+        "//@version=5\nindicator(\"v5 input history division\")\ndivisor = input.int(2)\nplot(close[5 / divisor])\n",
+    );
+    assert_eq!(
+        diagnostic_codes(&input_history),
+        vec!["E_UNSUPPORTED_FEATURE"]
+    );
+    assert!(
+        input_history
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .all(|emulation| emulation.feature != "v5.integer_division")
+    );
+}
+
+#[test]
+fn integer_division_rejects_float_operands_and_nonconst_modern_qualifiers() {
+    let legacy_float = analyze_production(
+        "//@version=4\nstudy(\"float lengths\")\nlength=input(5)\nplot(wma(close, length / 2.0))\nplot(wma(close, 5.0))\n",
+    );
+    assert_eq!(
+        diagnostic_codes(&legacy_float),
+        vec!["E_CALL_ARG_TYPE", "E_CALL_ARG_TYPE"]
+    );
+    assert!(
+        legacy_float
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .all(|emulation| !emulation.feature.contains("integer_division"))
+    );
+
+    for version in [5, 6] {
+        let modern = analyze_production(&format!(
+            "//@version={version}\nindicator(\"modern division\")\nlength=input.int(5)\nplot(ta.wma(close, length / 2))\n"
+        ));
+        assert_eq!(
+            diagnostic_codes(&modern),
+            vec!["E_CALL_ARG_TYPE"],
+            "v{version}: {:?}",
+            modern.diagnostics
+        );
+        assert!(
+            modern
+                .compatibility
+                .legacy_emulations
+                .iter()
+                .all(|emulation| !emulation.feature.contains("integer_division"))
+        );
+    }
+}
+
+#[test]
+fn pre_v6_numeric_builtin_bool_arguments_lower_through_bool_casts() {
+    let v1 = analyze_production(
+        "//@version=1\nstudy(\"numeric bool call\")\nsignal=close-open\nplot(valuewhen(signal, close, 0))\n",
+    );
+    assert!(v1.diagnostics.is_empty(), "{:?}", v1.diagnostics);
+    assert_eq!(
+        v1.compatibility
+            .legacy_emulations
+            .iter()
+            .filter(|emulation| emulation.feature == "v1.numeric_to_bool")
+            .count(),
+        1
+    );
+    assert!(hir_contains_call(
+        v1.hir.as_ref().expect("v1 numeric bool HIR"),
+        "bool"
+    ));
+
+    for version in [2, 3, 4] {
+        let source = include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/numeric_bool_call_arguments_legacy.pine"
+        )
+        .replacen("//@version=4", &format!("//@version={version}"), 1);
+        let analysis = analyze_production(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            analysis.diagnostics
+        );
+        assert_eq!(
+            analysis
+                .compatibility
+                .legacy_emulations
+                .iter()
+                .filter(|emulation| { emulation.feature == format!("v{version}.numeric_to_bool") })
+                .count(),
+            2
+        );
+        assert!(hir_contains_call(
+            analysis.hir.as_ref().expect("legacy numeric bool HIR"),
+            "bool"
+        ));
+    }
+
+    let v5 = analyze_production(
+        "//@version=5\nindicator(\"numeric bool calls\")\nsignal=bar_index==2?na:close-open-1\nplot(ta.valuewhen(signal, close, 0))\nalertcondition(signal, \"Nonzero\", \"Nonzero\")\nplot(ta.alma(close, 9, 0.85, 6, input.int(1)))\n",
+    );
+    assert!(v5.diagnostics.is_empty(), "{:?}", v5.diagnostics);
+    assert_eq!(
+        v5.compatibility
+            .legacy_emulations
+            .iter()
+            .filter(|emulation| emulation.feature == "v5.numeric_to_bool")
+            .count(),
+        3
+    );
+    assert!(hir_contains_call(
+        v5.hir.as_ref().expect("v5 numeric bool HIR"),
+        "bool"
+    ));
+
+    let v5_series_for_simple = analyze_production(
+        "//@version=5\nindicator(\"series simple bool\")\nplot(ta.alma(close, 9, 0.85, 6, close))\n",
+    );
+    assert_eq!(
+        diagnostic_codes(&v5_series_for_simple),
+        vec!["E_CALL_ARG_TYPE"]
+    );
+    assert!(v5_series_for_simple.hir.is_none());
+}
+
+#[test]
+fn v6_keeps_numeric_builtin_bool_arguments_strict() {
+    let analysis = analyze_production(
+        "//@version=6\nindicator(\"numeric bool calls\")\nsignal=bar_index==2?na:close-open-1\nplot(ta.valuewhen(signal, close, 0))\nalertcondition(signal, \"Nonzero\", \"Nonzero\")\nplot(ta.alma(close, 9, 0.85, 6, input.int(1)))\n",
+    );
+    assert_eq!(
+        diagnostic_codes(&analysis),
+        vec!["E_CALL_ARG_TYPE", "E_CALL_ARG_TYPE", "E_CALL_ARG_TYPE"]
+    );
+    assert!(analysis.hir.is_none());
+    assert!(
+        analysis
+            .compatibility
+            .legacy_emulations
+            .iter()
+            .all(|emulation| emulation.feature != "v6.numeric_to_bool")
+    );
+}
+
+#[test]
 fn v2_bool_arithmetic_and_pre_v6_numeric_conditions_keep_version_boundaries() {
     let v2 = analyze_production(
         "//@version=2\nstudy(\"coercions\")\nb=close>open\nplot(b + true)\nplot((close-open) ? 1 : 0)\n",
@@ -3099,6 +3820,139 @@ fn v2_bool_arithmetic_and_pre_v6_numeric_conditions_keep_version_boundaries() {
     ));
     assert_eq!(diagnostic_codes(&v6), vec!["E_CONDITION_TYPE"]);
     assert!(v6.hir.is_none());
+}
+
+#[test]
+fn v1_v2_bool_numeric_comparisons_lower_through_float_casts() {
+    let legacy_fixture = include_str!(
+        "../../../../tests/fixtures/legacy/v2/runtime/bool_numeric_comparisons_legacy.pine"
+    );
+    for version in [1, 2] {
+        let analysis = analyze_production(&legacy_fixture.replacen(
+            "//@version=2",
+            &format!("//@version={version}"),
+            1,
+        ));
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(hir_contains_call(
+            analysis.hir.as_ref().expect("legacy comparison HIR"),
+            "float"
+        ));
+        assert_eq!(
+            analysis
+                .compatibility
+                .legacy_emulations
+                .iter()
+                .filter(|emulation| { emulation.feature == format!("v{version}.bool_arithmetic") })
+                .count(),
+            4
+        );
+    }
+
+    let v3 = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v3/unsupported/bool_numeric_comparison.pine"
+    ));
+    assert_eq!(
+        diagnostic_codes(&v3)
+            .into_iter()
+            .filter(|code| *code == "E_OPERATOR_TYPE")
+            .count(),
+        4
+    );
+    assert!(v3.hir.is_none());
+}
+
+#[test]
+fn v4_function_final_statements_and_reference_side_effects_are_supported() {
+    let legacy = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v4/runtime/udf_final_statements_legacy.pine"
+    ));
+    let canonical = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v4/runtime/udf_final_statements_canonical.pine"
+    ));
+
+    assert!(
+        legacy.diagnostics.is_empty(),
+        "v4: {:?}",
+        legacy.diagnostics
+    );
+    assert!(
+        canonical.diagnostics.is_empty(),
+        "v6: {:?}",
+        canonical.diagnostics
+    );
+    assert!(legacy.hir.is_some());
+    assert!(canonical.hir.is_some());
+
+    let legacy_source = include_str!(
+        "../../../../tests/fixtures/legacy/v4/runtime/udf_final_statements_legacy.pine"
+    );
+    for version in [5, 6] {
+        let current = analyze_production(
+            &legacy_source
+                .replacen("//@version=4", &format!("//@version={version}"), 1)
+                .replacen(
+                    "study(\"Legacy v4 UDF final statements\")",
+                    "indicator(\"Current UDF final statements\")",
+                    1,
+                ),
+        );
+        assert!(
+            current.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            current.diagnostics
+        );
+        assert!(current.hir.is_some(), "v{version}");
+    }
+
+    let side_effects = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v4/runtime/udf_reference_side_effects_legacy.pine"
+    ));
+    assert_eq!(
+        diagnostic_codes(&side_effects)
+            .iter()
+            .filter(|code| matches!(**code, "E_FUNCTION_RETURN" | "E_LOOP_RETURN"))
+            .count(),
+        0,
+        "{:?}",
+        side_effects.diagnostics
+    );
+    assert!(
+        side_effects.diagnostics.is_empty(),
+        "{:?}",
+        side_effects.diagnostics
+    );
+    assert!(side_effects.hir.is_some());
+
+    let canonical_side_effects = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v4/runtime/udf_reference_side_effects_canonical.pine"
+    ));
+    assert!(
+        canonical_side_effects.diagnostics.is_empty(),
+        "{:?}",
+        canonical_side_effects.diagnostics
+    );
+    assert!(canonical_side_effects.hir.is_some());
+
+    let focused_boundary = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v4/unsupported/udf_other_reference_side_effects.pine"
+    ));
+    assert_eq!(
+        focused_boundary
+            .compatibility
+            .unsupported
+            .iter()
+            .filter(|feature| feature.feature == "function_side_effect")
+            .count(),
+        2,
+        "{:?}",
+        focused_boundary.compatibility.unsupported
+    );
+    assert!(focused_boundary.hir.is_none());
 }
 
 #[test]

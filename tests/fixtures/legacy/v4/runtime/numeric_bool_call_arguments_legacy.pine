@@ -1,0 +1,5 @@
+//@version=4
+study("Legacy numeric bool call arguments")
+signal = bar_index == 2 ? na : close - open - 1
+plot(valuewhen(signal, close, 0))
+alertcondition(signal, title="Nonzero signal", message="Nonzero signal")

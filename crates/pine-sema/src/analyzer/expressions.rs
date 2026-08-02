@@ -4,12 +4,19 @@ use crate::prelude::*;
 mod legacy_conversions;
 mod resolution;
 mod type_queries;
+mod type_validation;
 
 #[derive(Debug, Clone)]
 struct ForInExprKinds {
     index_kind: Option<ValueKind>,
     value_kind: ValueKind,
     user_type_name: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct LoopReturnContext {
+    span: Span,
+    allow_void: bool,
 }
 
 fn for_in_expr_kinds(
@@ -299,22 +306,26 @@ impl Analyzer {
         self.assignment_qualifier_context.push(condition_qualifier);
         let (then_type, else_type) = match condition_value {
             Some(true) => {
-                let then_type = self.analyze_expr_branch_return(then_branch, "if", span, true);
+                let then_type =
+                    self.analyze_expr_branch_return(then_branch, "if", span, true, false);
                 let else_type = self.analyze_without_symbol_effects(|analyzer| {
-                    analyzer.analyze_expr_branch_return(else_branch, "if", span, true)
+                    analyzer.analyze_expr_branch_return(else_branch, "if", span, true, false)
                 });
                 (then_type, else_type)
             }
             Some(false) => {
                 let then_type = self.analyze_without_symbol_effects(|analyzer| {
-                    analyzer.analyze_expr_branch_return(then_branch, "if", span, true)
+                    analyzer.analyze_expr_branch_return(then_branch, "if", span, true, false)
                 });
-                let else_type = self.analyze_expr_branch_return(else_branch, "if", span, true);
+                let else_type =
+                    self.analyze_expr_branch_return(else_branch, "if", span, true, false);
                 (then_type, else_type)
             }
             None => {
-                let then_type = self.analyze_expr_branch_return(then_branch, "if", span, true);
-                let else_type = self.analyze_expr_branch_return(else_branch, "if", span, true);
+                let then_type =
+                    self.analyze_expr_branch_return(then_branch, "if", span, true, false);
+                let else_type =
+                    self.analyze_expr_branch_return(else_branch, "if", span, true, false);
                 (then_type, else_type)
             }
         };
@@ -375,6 +386,7 @@ impl Analyzer {
         keyword: &str,
         span: Span,
         allow_final_loop: bool,
+        allow_void: bool,
     ) -> Option<PineType> {
         let Some((last, prefix)) = branch.split_last() else {
             self.diagnostics.push(Diagnostic::error(
@@ -409,25 +421,45 @@ impl Analyzer {
                     pine_type
                 }
             }
+            StmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } if !else_branch.is_empty() => {
+                self.analyze_if_expr(condition, then_branch, else_branch, last.span)
+            }
             StmtKind::For {
                 counter,
                 from,
                 to,
                 step,
                 body,
-            } if allow_final_loop => {
-                self.analyze_for_expr(counter, from, to, step.as_ref(), body, last.span)
-            }
+            } if allow_final_loop => self.analyze_for_expr_with_void_return(
+                counter,
+                from,
+                to,
+                step.as_ref(),
+                body,
+                LoopReturnContext {
+                    span: last.span,
+                    allow_void,
+                },
+            ),
             StmtKind::ForIn {
                 index,
                 value,
                 iterable,
                 body,
-            } if allow_final_loop => {
-                self.analyze_for_in_expr(index.as_deref(), value, iterable, body, last.span)
-            }
+            } if allow_final_loop => self.analyze_for_in_expr_with_void_return(
+                index.as_deref(),
+                value,
+                iterable,
+                body,
+                last.span,
+                allow_void,
+            ),
             StmtKind::While { condition, body } if allow_final_loop => {
-                self.analyze_while_expr(condition, body, last.span)
+                self.analyze_while_expr_with_void_return(condition, body, last.span, allow_void)
             }
             _ => {
                 self.analyze_stmt(last);
@@ -445,17 +477,24 @@ impl Analyzer {
         pine_type
     }
 
-    fn analyze_loop_expr_body_return(&mut self, last: &Stmt, keyword: &str) -> Option<PineType> {
+    fn analyze_loop_expr_body_return(
+        &mut self,
+        last: &Stmt,
+        keyword: &str,
+        allow_void: bool,
+    ) -> Option<PineType> {
         match &last.kind {
             StmtKind::Expr(expr) => {
                 let pine_type = self.analyze_expr(expr);
-                if matches!(
-                    pine_type,
-                    Some(PineType {
-                        kind: ValueKind::Void,
-                        ..
-                    })
-                ) {
+                if !allow_void
+                    && matches!(
+                        pine_type,
+                        Some(PineType {
+                            kind: ValueKind::Void,
+                            ..
+                        })
+                    )
+                {
                     self.diagnostics.push(Diagnostic::error(
                         "E_LOOP_RETURN",
                         format!(
@@ -474,15 +513,32 @@ impl Analyzer {
                 to,
                 step,
                 body,
-            } => self.analyze_for_expr(counter, from, to, step.as_ref(), body, last.span),
+            } => self.analyze_for_expr_with_void_return(
+                counter,
+                from,
+                to,
+                step.as_ref(),
+                body,
+                LoopReturnContext {
+                    span: last.span,
+                    allow_void,
+                },
+            ),
             StmtKind::ForIn {
                 index,
                 value,
                 iterable,
                 body,
-            } => self.analyze_for_in_expr(index.as_deref(), value, iterable, body, last.span),
+            } => self.analyze_for_in_expr_with_void_return(
+                index.as_deref(),
+                value,
+                iterable,
+                body,
+                last.span,
+                allow_void,
+            ),
             StmtKind::While { condition, body } => {
-                self.analyze_while_expr(condition, body, last.span)
+                self.analyze_while_expr_with_void_return(condition, body, last.span, allow_void)
             }
             _ => {
                 self.analyze_stmt(last);
@@ -699,7 +755,8 @@ impl Analyzer {
             SwitchArmResult::Expr(expr) => self.analyze_expr(expr),
             SwitchArmResult::Block(statements) => {
                 self.block_depth += 1;
-                let result = self.analyze_expr_branch_return(statements, "switch", span, true);
+                let result =
+                    self.analyze_expr_branch_return(statements, "switch", span, true, false);
                 self.block_depth -= 1;
                 result
             }
@@ -836,6 +893,51 @@ impl Analyzer {
         body: &[Stmt],
         span: Span,
     ) -> Option<PineType> {
+        self.analyze_for_expr_with_void_return(
+            counter,
+            from,
+            to,
+            step,
+            body,
+            LoopReturnContext {
+                span,
+                allow_void: false,
+            },
+        )
+    }
+
+    pub(crate) fn analyze_function_for_return(
+        &mut self,
+        counter: &str,
+        from: &Expr,
+        to: &Expr,
+        step: Option<&Expr>,
+        body: &[Stmt],
+        span: Span,
+    ) -> Option<PineType> {
+        self.analyze_for_expr_with_void_return(
+            counter,
+            from,
+            to,
+            step,
+            body,
+            LoopReturnContext {
+                span,
+                allow_void: true,
+            },
+        )
+    }
+
+    fn analyze_for_expr_with_void_return(
+        &mut self,
+        counter: &str,
+        from: &Expr,
+        to: &Expr,
+        step: Option<&Expr>,
+        body: &[Stmt],
+        return_context: LoopReturnContext,
+    ) -> Option<PineType> {
+        let LoopReturnContext { span, allow_void } = return_context;
         let from_type = self.analyze_expr(from);
         let to_type = self.analyze_expr(to);
         let step_type = step.and_then(|step| self.analyze_expr(step));
@@ -876,7 +978,7 @@ impl Analyzer {
             for statement in prefix {
                 self.analyze_stmt(statement);
             }
-            self.analyze_loop_expr_body_return(last, "for")
+            self.analyze_loop_expr_body_return(last, "for", allow_void)
         } else {
             self.diagnostics.push(Diagnostic::error(
                 "E_LOOP_RETURN",
@@ -926,6 +1028,29 @@ impl Analyzer {
         iterable: &Expr,
         body: &[Stmt],
         span: Span,
+    ) -> Option<PineType> {
+        self.analyze_for_in_expr_with_void_return(index, value, iterable, body, span, false)
+    }
+
+    pub(crate) fn analyze_function_for_in_return(
+        &mut self,
+        index: Option<&str>,
+        value: &str,
+        iterable: &Expr,
+        body: &[Stmt],
+        span: Span,
+    ) -> Option<PineType> {
+        self.analyze_for_in_expr_with_void_return(index, value, iterable, body, span, true)
+    }
+
+    fn analyze_for_in_expr_with_void_return(
+        &mut self,
+        index: Option<&str>,
+        value: &str,
+        iterable: &Expr,
+        body: &[Stmt],
+        span: Span,
+        allow_void: bool,
     ) -> Option<PineType> {
         let Some(iterable_type) = self.analyze_expr(iterable) else {
             self.unsupported(
@@ -988,13 +1113,15 @@ impl Analyzer {
             match &last.kind {
                 StmtKind::Expr(expr) => {
                     let pine_type = self.analyze_expr(expr);
-                    if matches!(
-                        pine_type,
-                        Some(PineType {
-                            kind: ValueKind::Void,
-                            ..
-                        })
-                    ) {
+                    if !allow_void
+                        && matches!(
+                            pine_type,
+                            Some(PineType {
+                                kind: ValueKind::Void,
+                                ..
+                            })
+                        )
+                    {
                         self.diagnostics.push(Diagnostic::error(
                             "E_LOOP_RETURN",
                             "for...in expression body must end with a value-producing expression",
@@ -1029,15 +1156,32 @@ impl Analyzer {
                     to,
                     step,
                     body,
-                } => self.analyze_for_expr(counter, from, to, step.as_ref(), body, last.span),
+                } => self.analyze_for_expr_with_void_return(
+                    counter,
+                    from,
+                    to,
+                    step.as_ref(),
+                    body,
+                    LoopReturnContext {
+                        span: last.span,
+                        allow_void,
+                    },
+                ),
                 StmtKind::ForIn {
                     index,
                     value,
                     iterable,
                     body,
-                } => self.analyze_for_in_expr(index.as_deref(), value, iterable, body, last.span),
+                } => self.analyze_for_in_expr_with_void_return(
+                    index.as_deref(),
+                    value,
+                    iterable,
+                    body,
+                    last.span,
+                    allow_void,
+                ),
                 StmtKind::While { condition, body } => {
-                    self.analyze_while_expr(condition, body, last.span)
+                    self.analyze_while_expr_with_void_return(condition, body, last.span, allow_void)
                 }
                 _ => {
                     self.analyze_stmt(last);
@@ -1097,6 +1241,25 @@ impl Analyzer {
         body: &[Stmt],
         span: Span,
     ) -> Option<PineType> {
+        self.analyze_while_expr_with_void_return(condition, body, span, false)
+    }
+
+    pub(crate) fn analyze_function_while_return(
+        &mut self,
+        condition: &Expr,
+        body: &[Stmt],
+        span: Span,
+    ) -> Option<PineType> {
+        self.analyze_while_expr_with_void_return(condition, body, span, true)
+    }
+
+    fn analyze_while_expr_with_void_return(
+        &mut self,
+        condition: &Expr,
+        body: &[Stmt],
+        span: Span,
+        allow_void: bool,
+    ) -> Option<PineType> {
         let condition_type = self.analyze_expr(condition);
         if let Some(condition_type) = condition_type {
             self.expect_bool(condition_type, condition.span);
@@ -1111,7 +1274,8 @@ impl Analyzer {
         self.block_depth += 1;
         self.loop_depth += 1;
         self.assignment_qualifier_context.push(condition_qualifier);
-        let mut return_type = self.analyze_expr_branch_return(body, "while", span, true);
+        let mut return_type =
+            self.analyze_expr_branch_return(body, "while", span, true, allow_void);
         if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Map)
             && !self.mark_loop_map(span, body)
         {
@@ -1142,299 +1306,5 @@ impl Analyzer {
                 pine_type.kind,
             )
         })
-    }
-
-    pub(crate) fn validate_history_offset(&mut self, offset: &Expr, offset_type: Option<PineType>) {
-        if let Some(value) = self.known_history_offset_int_value(offset) {
-            if value < 0 {
-                self.unsupported(
-                    "negative_history_offset",
-                    "history offsets must be non-negative in the current supported subset",
-                    offset.span,
-                );
-            }
-            return;
-        }
-
-        let Some(offset_type) = offset_type else {
-            self.unsupported(
-                "dynamic_history_offset",
-                "dynamic history offsets require an integer expression in the current supported subset",
-                offset.span,
-            );
-            return;
-        };
-
-        if offset_type.kind == ValueKind::Int {
-            return;
-        }
-
-        let actual = pine_type_name(offset_type);
-        self.unsupported(
-            "dynamic_history_offset",
-            &format!(
-                "dynamic history offsets require an integer expression in the current supported subset; got {actual}"
-            ),
-            offset.span,
-        );
-    }
-
-    pub(crate) fn validate_assignment(
-        &mut self,
-        name: &str,
-        target_type: PineType,
-        value_type: PineType,
-        span: Span,
-    ) {
-        if !can_assign(target_type, value_type) {
-            self.diagnostics.push(Diagnostic::error(
-                "E_ASSIGN_TYPE",
-                format!(
-                    "cannot assign {} to `{}` of type {}",
-                    pine_type_name(value_type),
-                    name,
-                    pine_type_name(target_type)
-                ),
-                span,
-            ));
-        }
-    }
-
-    pub(crate) fn infer_unary(
-        &mut self,
-        op: UnaryOp,
-        expr_type: PineType,
-        span: Span,
-    ) -> Option<PineType> {
-        match op {
-            UnaryOp::Plus | UnaryOp::Minus if is_numeric(expr_type.kind) => Some(expr_type),
-            UnaryOp::Not if expr_type.kind == ValueKind::Bool => Some(expr_type),
-            _ => {
-                let expected = match op {
-                    UnaryOp::Plus | UnaryOp::Minus => "numeric",
-                    UnaryOp::Not => "bool",
-                };
-                self.unary_operator_error(op, expected, expr_type, span);
-                None
-            }
-        }
-    }
-
-    pub(crate) fn infer_binary(
-        &mut self,
-        op: BinaryOp,
-        left_type: PineType,
-        right_type: PineType,
-        span: Span,
-    ) -> Option<PineType> {
-        match op {
-            BinaryOp::Add => {
-                if left_type.kind == ValueKind::String && right_type.kind == ValueKind::String {
-                    Some(PineType::new(
-                        strongest_qualifier(left_type.qualifier, right_type.qualifier),
-                        ValueKind::String,
-                    ))
-                } else if is_numeric(left_type.kind) && is_numeric(right_type.kind) {
-                    Some(PineType::new(
-                        strongest_qualifier(left_type.qualifier, right_type.qualifier),
-                        numeric_result_kind(op, left_type.kind, right_type.kind),
-                    ))
-                } else {
-                    self.operator_error(
-                        op,
-                        "numeric or string operands",
-                        left_type,
-                        right_type,
-                        span,
-                    );
-                    None
-                }
-            }
-            BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div | BinaryOp::Mod => {
-                if is_numeric(left_type.kind) && is_numeric(right_type.kind) {
-                    Some(PineType::new(
-                        strongest_qualifier(left_type.qualifier, right_type.qualifier),
-                        numeric_result_kind(op, left_type.kind, right_type.kind),
-                    ))
-                } else {
-                    self.operator_error(op, "numeric operands", left_type, right_type, span);
-                    None
-                }
-            }
-            BinaryOp::Eq | BinaryOp::NotEq => {
-                if common_kind(left_type.kind, right_type.kind).is_some() {
-                    Some(PineType::new(
-                        strongest_qualifier(left_type.qualifier, right_type.qualifier),
-                        ValueKind::Bool,
-                    ))
-                } else {
-                    self.operator_error(op, "comparable operands", left_type, right_type, span);
-                    None
-                }
-            }
-            BinaryOp::Gt | BinaryOp::Gte | BinaryOp::Lt | BinaryOp::Lte => {
-                if is_numeric(left_type.kind) && is_numeric(right_type.kind) {
-                    Some(PineType::new(
-                        strongest_qualifier(left_type.qualifier, right_type.qualifier),
-                        ValueKind::Bool,
-                    ))
-                } else {
-                    self.operator_error(op, "numeric operands", left_type, right_type, span);
-                    None
-                }
-            }
-            BinaryOp::And | BinaryOp::Or => {
-                if left_type.kind == ValueKind::Bool && right_type.kind == ValueKind::Bool {
-                    Some(PineType::new(
-                        strongest_qualifier(left_type.qualifier, right_type.qualifier),
-                        ValueKind::Bool,
-                    ))
-                } else {
-                    self.operator_error(op, "bool operands", left_type, right_type, span);
-                    None
-                }
-            }
-        }
-    }
-
-    pub(crate) fn unary_operator_error(
-        &mut self,
-        op: UnaryOp,
-        expected: &str,
-        expr_type: PineType,
-        span: Span,
-    ) {
-        self.diagnostics.push(Diagnostic::error(
-            "E_OPERATOR_TYPE",
-            format!(
-                "operator `{}` expects {}, got {}",
-                unary_operator_label(op),
-                expected,
-                pine_type_name(expr_type)
-            ),
-            span,
-        ));
-    }
-
-    pub(crate) fn operator_error(
-        &mut self,
-        op: BinaryOp,
-        expected: &str,
-        left_type: PineType,
-        right_type: PineType,
-        span: Span,
-    ) {
-        self.diagnostics.push(Diagnostic::error(
-            "E_OPERATOR_TYPE",
-            format!(
-                "operator `{}` expects {}, got {} and {}",
-                binary_operator_label(op),
-                expected,
-                pine_type_name(left_type),
-                pine_type_name(right_type)
-            ),
-            span,
-        ));
-    }
-
-    pub(crate) fn expect_bool(&mut self, pine_type: PineType, span: Span) {
-        if pine_type.kind == ValueKind::Bool {
-            return;
-        }
-        if self.legacy.dialect() != PineDialect::V6
-            && matches!(
-                pine_type.kind,
-                ValueKind::Int | ValueKind::Float | ValueKind::Na
-            )
-        {
-            self.record_numeric_to_bool_coercion(span);
-        } else {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CONDITION_TYPE",
-                format!("condition must be bool, got {}", pine_type_name(pine_type)),
-                span,
-            ));
-        }
-    }
-
-    pub(crate) fn expect_int(&mut self, pine_type: PineType, span: Span) {
-        if pine_type.kind != ValueKind::Int {
-            self.diagnostics.push(Diagnostic::error(
-                "E_LOOP_RANGE_TYPE",
-                format!(
-                    "for loop range must be int, got {}",
-                    pine_type_name(pine_type)
-                ),
-                span,
-            ));
-        }
-    }
-
-    pub(crate) fn expect_non_zero_loop_step(&mut self, step: &Expr) {
-        if self.known_const_int_value(step) == Some(0) {
-            self.diagnostics.push(Diagnostic::error(
-                "E_LOOP_STEP",
-                "for loop step cannot be zero",
-                step.span,
-            ));
-        }
-    }
-
-    pub(crate) fn merge_branch_types(
-        &mut self,
-        condition_type: PineType,
-        then_type: PineType,
-        else_type: PineType,
-        condition_value: Option<bool>,
-        span: Span,
-    ) -> Option<PineType> {
-        let Some(kind) = common_kind(then_type.kind, else_type.kind) else {
-            self.diagnostics.push(Diagnostic::error(
-                "E_BRANCH_TYPE",
-                format!(
-                    "ternary branches have incompatible types {} and {}",
-                    value_kind_name(then_type.kind),
-                    value_kind_name(else_type.kind)
-                ),
-                span,
-            ));
-            return None;
-        };
-        let branch_qualifier = match condition_value {
-            Some(true) => then_type.qualifier,
-            Some(false) => else_type.qualifier,
-            None => strongest_qualifier(then_type.qualifier, else_type.qualifier),
-        };
-
-        Some(PineType::new(
-            strongest_qualifier(condition_type.qualifier, branch_qualifier),
-            kind,
-        ))
-    }
-}
-
-fn unary_operator_label(op: UnaryOp) -> &'static str {
-    match op {
-        UnaryOp::Plus => "+",
-        UnaryOp::Minus => "-",
-        UnaryOp::Not => "not",
-    }
-}
-
-fn binary_operator_label(op: BinaryOp) -> &'static str {
-    match op {
-        BinaryOp::Add => "+",
-        BinaryOp::Sub => "-",
-        BinaryOp::Mul => "*",
-        BinaryOp::Div => "/",
-        BinaryOp::Mod => "%",
-        BinaryOp::Eq => "==",
-        BinaryOp::NotEq => "!=",
-        BinaryOp::Gt => ">",
-        BinaryOp::Gte => ">=",
-        BinaryOp::Lt => "<",
-        BinaryOp::Lte => "<=",
-        BinaryOp::And => "and",
-        BinaryOp::Or => "or",
     }
 }

@@ -5,7 +5,9 @@ use pine_runtime::{
     RunningAlertConfig, RuntimeResult, input_calls, public_runtime_profiled_result_json,
     public_runtime_result_json,
     run_historical_profiled_with_request_environment_and_input_overrides,
+    run_historical_profiled_with_request_environment_and_input_overrides_and_execution_times,
     run_historical_with_request_environment_and_input_overrides,
+    run_historical_with_request_environment_and_input_overrides_and_execution_times,
 };
 use pine_sema::analyze_input;
 
@@ -28,6 +30,7 @@ pub(crate) fn run(args: Vec<String>) -> Result<(), String> {
 struct RunOptions {
     path: String,
     bars_path: String,
+    execution_times_path: Option<String>,
     chart_context: ChartContext,
     profile: bool,
     request_bars: Vec<RequestBarsSpec>,
@@ -117,12 +120,24 @@ fn run_profiled_json_with_options(options: &RunOptions) -> Result<String, String
         .map(|input| (input.call_site_id, input))
         .collect::<HashMap<_, _>>();
     let input_overrides = input_overrides_from_specs(&options.input_overrides, &input_calls)?;
-    let result = run_historical_profiled_with_request_environment_and_input_overrides(
-        &hir,
-        &bars,
-        request_environment,
-        input_overrides,
-    )
+    let execution_times = execution_times_from_path(options.execution_times_path.as_deref())?;
+    let result = match execution_times.as_deref() {
+        Some(execution_times) => {
+            run_historical_profiled_with_request_environment_and_input_overrides_and_execution_times(
+                &hir,
+                &bars,
+                request_environment,
+                input_overrides,
+                execution_times,
+            )
+        }
+        None => run_historical_profiled_with_request_environment_and_input_overrides(
+            &hir,
+            &bars,
+            request_environment,
+            input_overrides,
+        ),
+    }
     .map_err(|err| format!("runtime failed: {}", err.message))?;
     Ok(public_runtime_profiled_result_json(
         &result.result,
@@ -162,12 +177,24 @@ fn run_result_with_options(options: &RunOptions) -> Result<RuntimeResult, String
         .map(|input| (input.call_site_id, input))
         .collect::<HashMap<_, _>>();
     let input_overrides = input_overrides_from_specs(&options.input_overrides, &input_calls)?;
-    run_historical_with_request_environment_and_input_overrides(
-        &hir,
-        &bars,
-        request_environment,
-        input_overrides,
-    )
+    let execution_times = execution_times_from_path(options.execution_times_path.as_deref())?;
+    match execution_times.as_deref() {
+        Some(execution_times) => {
+            run_historical_with_request_environment_and_input_overrides_and_execution_times(
+                &hir,
+                &bars,
+                request_environment,
+                input_overrides,
+                execution_times,
+            )
+        }
+        None => run_historical_with_request_environment_and_input_overrides(
+            &hir,
+            &bars,
+            request_environment,
+            input_overrides,
+        ),
+    }
     .map_err(|err| format!("runtime failed: {}", err.message))
 }
 
@@ -216,6 +243,7 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
     let mut options = RunOptions {
         path: path.clone(),
         bars_path: String::new(),
+        execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
         request_bars: Vec::new(),
@@ -239,6 +267,16 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
                     return Err(usage());
                 };
                 options.bars_path = value.clone();
+            }
+            "--execution-times" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(usage());
+                };
+                if value.trim().is_empty() {
+                    return Err("execution times path must not be empty".to_owned());
+                }
+                options.execution_times_path = Some(value.clone());
             }
             "--profile" => {
                 options.profile = true;
@@ -390,6 +428,35 @@ fn parse_strategy_alert_index(value: &str) -> Result<usize, String> {
     value
         .parse()
         .map_err(|_| "strategy alert index must be a non-negative integer".to_owned())
+}
+
+fn execution_times_from_path(path: Option<&str>) -> Result<Option<Vec<i64>>, String> {
+    let Some(path) = path else {
+        return Ok(None);
+    };
+    let text = fs::read_to_string(path)
+        .map_err(|err| format!("failed to read execution times {path}: {err}"))?;
+    parse_execution_times(&text).map(Some)
+}
+
+fn parse_execution_times(text: &str) -> Result<Vec<i64>, String> {
+    let mut execution_times = Vec::new();
+    for (index, line) in text.lines().enumerate() {
+        let value = line.trim();
+        if value.is_empty()
+            || (index == 0 && matches!(value, "execution_time" | "execution_timestamp" | "timenow"))
+        {
+            continue;
+        }
+        let execution_time = value.parse::<i64>().map_err(|_| {
+            format!(
+                "invalid execution timestamp `{value}` on line {}: expected one integer millisecond timestamp per line",
+                index + 1
+            )
+        })?;
+        execution_times.push(execution_time);
+    }
+    Ok(execution_times)
 }
 
 fn parse_request_bars_spec(spec: &str) -> Result<RequestBarsSpec, String> {

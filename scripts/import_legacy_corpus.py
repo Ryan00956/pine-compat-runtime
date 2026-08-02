@@ -22,6 +22,10 @@ ROOT = Path(__file__).resolve().parents[1]
 CANONICAL_VERSION_RE = re.compile(
     r"(?m)^\ufeff?[ \t]*//@version=(?P<version>[1-9][0-9]*)[ \t]*\r?$"
 )
+SPACED_EQUALS_VERSION_RE = re.compile(
+    r"(?m)^\ufeff?[ \t]*//@version[ \t]*=[ \t]*"
+    r"(?P<version>[1-9][0-9]*)[ \t]*\r?$"
+)
 RELAXED_VERSION_RE = re.compile(
     r"(?m)^\ufeff?[ \t]*//[ \t]*@version[ \t]*=[ \t]*"
     r"(?P<version>[1-9][0-9]*)[ \t]*\r?$"
@@ -74,6 +78,10 @@ def classify_version(source: str) -> tuple[int, str]:
     if canonical is not None:
         version = int(canonical.group("version"))
         return version, "canonical"
+    spaced_equals = SPACED_EQUALS_VERSION_RE.search(source)
+    if spaced_equals is not None:
+        version = int(spaced_equals.group("version"))
+        return version, "compat_spaced_equals"
     relaxed = RELAXED_VERSION_RE.search(source)
     if relaxed is not None:
         version = int(relaxed.group("version"))
@@ -175,6 +183,7 @@ def manifest_row(source: ImportedSource) -> dict[str, str]:
         "chart_bars_path": "bars.csv",
         "chart_symbol": "TEST",
         "chart_timeframe": "1",
+        "execution_times_path": "",
         "request_data_manifest": "",
         "reference_output_path": "",
         "license_class": "private_user_authorized",

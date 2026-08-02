@@ -1,0 +1,9 @@
+study("v1 four-space ternary continuation")
+suffix = close > open ? high :
+    close < open ? low :
+    close
+prefix = close > open
+    ? high
+    : low
+plot(suffix)
+plot(prefix)

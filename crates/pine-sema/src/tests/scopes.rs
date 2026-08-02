@@ -396,6 +396,20 @@ fn accepts_block_body_function_final_if_expression_return() {
 }
 
 #[test]
+fn accepts_block_body_function_final_if_without_else_as_value_or_na() {
+    let analysis = analyze(
+        "choose(flag) =>\n    if flag\n        result = 1\nplot(nz(choose(close > open), 0))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_block_body_function_final_if_branch_block_return() {
     let analysis = analyze(
         "choose(src, flag) =>\n    if flag\n        v = src + 1\n        v\n    else\n        v = src + 10\n        v\nplot(choose(close, close > open))\n",
@@ -422,23 +436,69 @@ fn accepts_block_body_function_final_for_expression_return() {
 }
 
 #[test]
-fn rejects_block_body_function_without_final_expression() {
+fn accepts_block_body_function_final_declaration_return() {
     let analysis = analyze("double(x) =>\n    y = x * 2\nplot(double(close))\n");
 
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_block_body_function_final_reassignment_return() {
+    let analysis = analyze("double(x) =>\n    y = 0.0\n    y := x * 2\nplot(double(close))\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_block_body_function_final_if_branch_declaration_return() {
+    let analysis = analyze(
+        "choose(src, flag) =>\n    if flag\n        v = src + 1\n    else\n        src\nplot(choose(close, close > open))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn void_function_final_if_and_for_do_not_add_return_diagnostics() {
+    let analysis = analyze(
+        "values = array.new_int(1, 0)\nsetValue(v) =>\n    for i = 0 to 0\n        array.set(values, i, v)\nclearWhen(flag) =>\n    if flag\n        array.clear(values)\nsetValue(2)\nclearWhen(false)\nplot(array.size(values))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.iter().all(|diagnostic| !matches!(
+            diagnostic.code.as_str(),
+            "E_FUNCTION_RETURN" | "E_LOOP_RETURN"
+        )),
+        "{:?}",
+        analysis.diagnostics
+    );
     assert!(
         analysis
             .diagnostics
             .iter()
-            .any(|diagnostic| diagnostic.code == "E_FUNCTION_RETURN")
+            .any(|diagnostic| diagnostic.code == "E_UNSUPPORTED_FEATURE")
     );
     assert!(analysis.hir.is_none());
 }
 
 #[test]
-fn rejects_block_body_function_final_if_branch_without_final_expression() {
-    let analysis = analyze(
-        "choose(src, flag) =>\n    if flag\n        v = src + 1\n    else\n        src\nplot(choose(close, close > open))\n",
-    );
+fn rejects_block_body_function_without_returnable_statement() {
+    let analysis = analyze("bad() =>\n    continue\nbad()\n");
 
     assert!(
         analysis

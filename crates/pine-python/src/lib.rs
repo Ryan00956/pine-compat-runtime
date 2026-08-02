@@ -6,6 +6,7 @@ use pine_runtime::{
     PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue, RequestEnvironment,
     RequestKey, RequestTimeframe, encode_color_literal, input_calls, is_valid_public_color,
     run_historical_with_request_environment_and_input_overrides,
+    run_historical_with_request_environment_and_input_overrides_and_execution_times,
 };
 use pine_sema::{Analysis, AnalysisInput, PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_input};
 use pine_syntax::{Diagnostic, SourceFile, Span};
@@ -35,8 +36,10 @@ impl PyProgram {
         request_bars=None,
         input_overrides=None,
         chart_symbol=None,
-        chart_timeframe=None
+        chart_timeframe=None,
+        execution_times=None
     ))]
+    #[allow(clippy::too_many_arguments)]
     fn run(
         &self,
         py: Python<'_>,
@@ -45,17 +48,30 @@ impl PyProgram {
         input_overrides: Option<&Bound<'_, PyAny>>,
         chart_symbol: Option<&str>,
         chart_timeframe: Option<&str>,
+        execution_times: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Py<PyAny>> {
         let bars = parse_bars(bars)?;
         let request_environment =
             parse_request_environment(request_bars, chart_symbol, chart_timeframe)?;
         let input_overrides = parse_input_overrides(input_overrides, &self.hir)?;
-        let result = run_historical_with_request_environment_and_input_overrides(
-            &self.hir,
-            &bars,
-            request_environment,
-            input_overrides,
-        )
+        let execution_times = parse_execution_times(execution_times)?;
+        let result = match execution_times.as_deref() {
+            Some(execution_times) => {
+                run_historical_with_request_environment_and_input_overrides_and_execution_times(
+                    &self.hir,
+                    &bars,
+                    request_environment,
+                    input_overrides,
+                    execution_times,
+                )
+            }
+            None => run_historical_with_request_environment_and_input_overrides(
+                &self.hir,
+                &bars,
+                request_environment,
+                input_overrides,
+            ),
+        }
         .map_err(|err| PyValueError::new_err(err.message))?;
         runtime_result_to_py(py, &result)
     }
@@ -97,7 +113,8 @@ fn analyze_script(
     library_sources=None,
     input_overrides=None,
     chart_symbol=None,
-    chart_timeframe=None
+    chart_timeframe=None,
+    execution_times=None
 ))]
 #[allow(clippy::too_many_arguments)]
 fn run_script(
@@ -109,6 +126,7 @@ fn run_script(
     input_overrides: Option<&Bound<'_, PyAny>>,
     chart_symbol: Option<&str>,
     chart_timeframe: Option<&str>,
+    execution_times: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<Py<PyAny>> {
     let program = compile_script(source, library_sources)?;
     program.run(
@@ -118,6 +136,7 @@ fn run_script(
         input_overrides,
         chart_symbol,
         chart_timeframe,
+        execution_times,
     )
 }
 
@@ -149,6 +168,32 @@ fn parse_bars(bars: &Bound<'_, PyAny>) -> PyResult<Vec<Bar>> {
     }
     validate_bar_times(&parsed)?;
     Ok(parsed)
+}
+
+fn parse_execution_times(execution_times: Option<&Bound<'_, PyAny>>) -> PyResult<Option<Vec<i64>>> {
+    let Some(execution_times) = execution_times else {
+        return Ok(None);
+    };
+    let iterator = execution_times.try_iter().map_err(|_| {
+        PyValueError::new_err(
+            "execution_times must be a sequence of integer millisecond timestamps",
+        )
+    })?;
+    let mut parsed = Vec::new();
+    for (index, value) in iterator.enumerate() {
+        let value = value?;
+        if value.is_instance_of::<PyBool>() {
+            return Err(PyValueError::new_err(format!(
+                "execution_times[{index}] must be an integer millisecond timestamp"
+            )));
+        }
+        parsed.push(value.extract::<i64>().map_err(|_| {
+            PyValueError::new_err(format!(
+                "execution_times[{index}] must be an integer millisecond timestamp"
+            ))
+        })?);
+    }
+    Ok(Some(parsed))
 }
 
 fn validate_bar_times(bars: &[Bar]) -> PyResult<()> {

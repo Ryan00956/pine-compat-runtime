@@ -1,8 +1,15 @@
 use crate::prelude::*;
 
 const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) scalar expressions, pure tuple literals, and selected tuple expressions, plus provider-backed same-or-higher-timeframe scalar expressions, pure tuple literals, and selected tuple expressions, are supported; optional gaps/lookahead are limited to barmerge.gaps_off and barmerge.lookahead_off, while lower-timeframe requests, provider local aliases, and side-effecting requested expressions are not implemented";
-const LEGACY_SECURITY_UNSUPPORTED_REASON: &str = "legacy security supports same-context or host-provided same-or-higher-timeframe requests whose expression is in the request.security scalar/tuple subset, including immutable top-level scalar aliases and const/input/simple captures; lower-timeframe requests, block-local aliases, UDF calls, mutable captures, and side effects remain unsupported";
+const LEGACY_SECURITY_UNSUPPORTED_REASON: &str = "legacy security supports same-context or host-provided same-or-higher-timeframe requests whose expression is in the request.security scalar/tuple subset, including immutable top-level scalar aliases, const/input/simple captures, pure scalar UDF calls, and direct UDF-local immutable dependency graphs whose nested legacy requests use the same selector and merge policy; lower-timeframe requests, control-flow-local requests, different-selector nested requests, mutable or persistent UDF state, recursive UDFs, mutable captures, and side effects remain unsupported";
 const REQUEST_SECURITY_LOWER_TF_UNSUPPORTED_REASON: &str = "array-returning lower-timeframe request semantics and host output shape for request.security_lower_tf are not designed in the supported request runtime";
+
+#[derive(Debug, Clone)]
+struct LegacyProviderRequestContext {
+    symbol: Expr,
+    timeframe: Expr,
+    internal_callee: &'static str,
+}
 
 impl Analyzer {
     pub(crate) fn analyze_request_call(
@@ -58,8 +65,8 @@ impl Analyzer {
             span,
             args,
             &arg_types,
-            false,
             unsupported,
+            None,
             REQUEST_SECURITY_UNSUPPORTED_REASON,
         )
     }
@@ -73,12 +80,20 @@ impl Analyzer {
             feature: "security".to_owned(),
             span,
         });
+        let [symbol, timeframe, ..] = bound.canonical_args.as_slice() else {
+            return None;
+        };
+        let request_context = LegacyProviderRequestContext {
+            symbol: symbol.value.clone(),
+            timeframe: timeframe.value.clone(),
+            internal_callee: bound.internal_callee,
+        };
         self.analyze_request_security_core(
             span,
             &bound.canonical_args,
             &bound.canonical_arg_types,
-            true,
             false,
+            Some(&request_context),
             LEGACY_SECURITY_UNSUPPORTED_REASON,
         )
     }
@@ -88,10 +103,11 @@ impl Analyzer {
         span: Span,
         args: &[CallArg],
         arg_types: &[Option<PineType>],
-        legacy: bool,
         mut unsupported: bool,
+        legacy_request_context: Option<&LegacyProviderRequestContext>,
         unsupported_reason: &str,
     ) -> Option<PineType> {
+        let legacy = legacy_request_context.is_some();
         let signature = pine_builtins::get_phase_1_builtin("request.security")
             .expect("request.security signature must exist");
         self.validate_call_args(signature, args, arg_types);
@@ -151,13 +167,23 @@ impl Analyzer {
                 self.request_expression_is_same_context_value(&arg.value)
             } else if expression_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Tuple) {
                 if legacy {
-                    self.request_expression_is_legacy_provider_tuple_value(&arg.value)
+                    legacy_request_context.is_some_and(|request_context| {
+                        self.request_expression_is_legacy_provider_tuple_value(
+                            &arg.value,
+                            request_context,
+                        )
+                    })
                 } else {
                     self.request_expression_is_provider_tuple_value(&arg.value)
                 }
             } else if provider_symbol || provider_timeframe {
                 if legacy {
-                    self.request_expression_is_legacy_provider_scalar(&arg.value)
+                    legacy_request_context.is_some_and(|request_context| {
+                        self.request_expression_is_legacy_provider_scalar(
+                            &arg.value,
+                            request_context,
+                        )
+                    })
                 } else {
                     self.request_expression_is_provider_scalar(&arg.value)
                 }
@@ -325,11 +351,15 @@ impl Analyzer {
         }
     }
 
-    fn request_expression_is_legacy_provider_tuple_value(&self, expr: &Expr) -> bool {
+    fn request_expression_is_legacy_provider_tuple_value(
+        &self,
+        expr: &Expr,
+        request_context: &LegacyProviderRequestContext,
+    ) -> bool {
         match &expr.kind {
-            ExprKind::Tuple(items) => items
-                .iter()
-                .all(|item| self.request_expression_is_legacy_provider_scalar(item)),
+            ExprKind::Tuple(items) => items.iter().all(|item| {
+                self.request_expression_is_legacy_provider_scalar(item, request_context)
+            }),
             ExprKind::Call { callee, args } => {
                 let Some(name) = self.request_expression_call_name(callee) else {
                     return false;
@@ -337,17 +367,28 @@ impl Analyzer {
                 request_provider_tuple_call_is_supported(&name)
                     && args.iter().all(|arg| {
                         arg.name.is_none()
-                            && self.request_expression_is_legacy_provider_scalar(&arg.value)
+                            && self.request_expression_is_legacy_provider_scalar(
+                                &arg.value,
+                                request_context,
+                            )
                     })
             }
             _ => false,
         }
     }
 
-    fn request_expression_is_legacy_provider_scalar(&self, expr: &Expr) -> bool {
+    fn request_expression_is_legacy_provider_scalar(
+        &self,
+        expr: &Expr,
+        request_context: &LegacyProviderRequestContext,
+    ) -> bool {
         self.request_expression_is_legacy_provider_scalar_inner(
             expr,
             &mut std::collections::HashSet::new(),
+            &std::collections::HashSet::new(),
+            &mut Vec::new(),
+            request_context,
+            false,
         )
     }
 
@@ -355,10 +396,17 @@ impl Analyzer {
         &self,
         expr: &Expr,
         visiting: &mut std::collections::HashSet<SymbolId>,
+        local_names: &std::collections::HashSet<String>,
+        udf_stack: &mut Vec<String>,
+        request_context: &LegacyProviderRequestContext,
+        allow_nested_legacy_security: bool,
     ) -> bool {
         match &expr.kind {
             ExprKind::Literal(_) => true,
             ExprKind::Identifier(name) => {
+                if local_names.contains(name) {
+                    return true;
+                }
                 if is_request_provider_scalar_name(name) {
                     return true;
                 }
@@ -369,12 +417,22 @@ impl Analyzer {
                 else {
                     return false;
                 };
-                if !self.scope.symbol_is_global(symbol.id)
+                let global = self.scope.symbol_is_global(symbol.id);
+                let active_function_parameter = self
+                    .function_param_symbols
+                    .last()
+                    .is_some_and(|params| params.contains(&symbol.id));
+                let active_function_local =
+                    !global && !self.function_stack.is_empty() && self.block_depth == 0;
+                if (!global && !active_function_local)
                     || symbol.persistence != PersistenceKind::None
                     || self.request_reassigned_names.contains(name)
                     || !is_request_scalar_type(symbol.pine_type)
                 {
                     return false;
+                }
+                if active_function_parameter {
+                    return true;
                 }
                 if qualifier_at_most(symbol.pine_type.qualifier, Qualifier::Simple) {
                     return true;
@@ -387,6 +445,10 @@ impl Analyzer {
                         Some(analyzer.request_expression_is_legacy_provider_scalar_inner(
                             initializer,
                             visiting,
+                            &std::collections::HashSet::new(),
+                            udf_stack,
+                            request_context,
+                            active_function_local,
                         ))
                     })
                     .unwrap_or(false);
@@ -396,47 +458,161 @@ impl Analyzer {
             ExprKind::QualifiedName(_) => expr_name(expr)
                 .as_deref()
                 .is_some_and(is_request_provider_scalar_name),
-            ExprKind::Unary { expr, .. } => {
-                self.request_expression_is_legacy_provider_scalar_inner(expr, visiting)
-            }
+            ExprKind::Unary { expr, .. } => self
+                .request_expression_is_legacy_provider_scalar_inner(
+                    expr,
+                    visiting,
+                    local_names,
+                    udf_stack,
+                    request_context,
+                    allow_nested_legacy_security,
+                ),
             ExprKind::Binary { left, right, .. } => {
-                self.request_expression_is_legacy_provider_scalar_inner(left, visiting)
-                    && self.request_expression_is_legacy_provider_scalar_inner(right, visiting)
+                self.request_expression_is_legacy_provider_scalar_inner(
+                    left,
+                    visiting,
+                    local_names,
+                    udf_stack,
+                    request_context,
+                    allow_nested_legacy_security,
+                ) && self.request_expression_is_legacy_provider_scalar_inner(
+                    right,
+                    visiting,
+                    local_names,
+                    udf_stack,
+                    request_context,
+                    allow_nested_legacy_security,
+                )
             }
             ExprKind::Ternary {
                 condition,
                 then_expr,
                 else_expr,
             } => {
-                self.request_expression_is_legacy_provider_scalar_inner(condition, visiting)
-                    && self.request_expression_is_legacy_provider_scalar_inner(then_expr, visiting)
-                    && self.request_expression_is_legacy_provider_scalar_inner(else_expr, visiting)
+                self.request_expression_is_legacy_provider_scalar_inner(
+                    condition,
+                    visiting,
+                    local_names,
+                    udf_stack,
+                    request_context,
+                    allow_nested_legacy_security,
+                ) && self.request_expression_is_legacy_provider_scalar_inner(
+                    then_expr,
+                    visiting,
+                    local_names,
+                    udf_stack,
+                    request_context,
+                    allow_nested_legacy_security,
+                ) && self.request_expression_is_legacy_provider_scalar_inner(
+                    else_expr,
+                    visiting,
+                    local_names,
+                    udf_stack,
+                    request_context,
+                    allow_nested_legacy_security,
+                )
             }
             ExprKind::History { expr, offset } => {
-                self.request_expression_is_legacy_provider_scalar_inner(expr, visiting)
-                    && self.request_expression_is_legacy_provider_scalar_inner(offset, visiting)
+                self.request_expression_is_legacy_provider_scalar_inner(
+                    expr,
+                    visiting,
+                    local_names,
+                    udf_stack,
+                    request_context,
+                    allow_nested_legacy_security,
+                ) && self.request_expression_is_legacy_provider_scalar_inner(
+                    offset,
+                    visiting,
+                    local_names,
+                    udf_stack,
+                    request_context,
+                    allow_nested_legacy_security,
+                )
             }
             ExprKind::Call { callee, args } => {
+                let Some(source_name) = expr_name(callee) else {
+                    return false;
+                };
+                if matches!(callee.kind, ExprKind::Identifier(_))
+                    && self.functions.contains_key(&source_name)
+                {
+                    return self.request_legacy_provider_udf_call_is_supported(
+                        &source_name,
+                        args,
+                        visiting,
+                        local_names,
+                        udf_stack,
+                        request_context,
+                    );
+                }
                 let Some(name) = self.request_expression_call_name(callee) else {
                     return false;
                 };
-                request_scalar_call_is_supported(&name)
+                if allow_nested_legacy_security && name.starts_with("$legacy.security.") {
+                    return self.request_nested_legacy_security_is_supported(
+                        &name,
+                        args,
+                        visiting,
+                        local_names,
+                        udf_stack,
+                        request_context,
+                    );
+                }
+                if name == "input.source" {
+                    return args.first().is_some_and(|arg| {
+                        self.request_expression_is_legacy_provider_scalar_inner(
+                            &arg.value,
+                            visiting,
+                            local_names,
+                            udf_stack,
+                            request_context,
+                            allow_nested_legacy_security,
+                        )
+                    });
+                }
+                legacy_request_scalar_call_is_supported(&name)
                     && args.iter().all(|arg| {
                         arg.name.is_none()
                             && self.request_expression_is_legacy_provider_scalar_inner(
-                                &arg.value, visiting,
+                                &arg.value,
+                                visiting,
+                                local_names,
+                                udf_stack,
+                                request_context,
+                                allow_nested_legacy_security,
                             )
                     })
             }
             ExprKind::Switch { selector, arms } => {
                 selector.as_deref().is_none_or(|selector| {
-                    self.request_expression_is_legacy_provider_scalar_inner(selector, visiting)
+                    self.request_expression_is_legacy_provider_scalar_inner(
+                        selector,
+                        visiting,
+                        local_names,
+                        udf_stack,
+                        request_context,
+                        allow_nested_legacy_security,
+                    )
                 }) && arms.iter().all(|arm| {
                     arm.condition.as_ref().is_none_or(|condition| {
-                        self.request_expression_is_legacy_provider_scalar_inner(condition, visiting)
+                        self.request_expression_is_legacy_provider_scalar_inner(
+                            condition,
+                            visiting,
+                            local_names,
+                            udf_stack,
+                            request_context,
+                            allow_nested_legacy_security,
+                        )
                     }) && match &arm.result {
                         SwitchArmResult::Expr(result) => self
-                            .request_expression_is_legacy_provider_scalar_inner(result, visiting),
+                            .request_expression_is_legacy_provider_scalar_inner(
+                                result,
+                                visiting,
+                                local_names,
+                                udf_stack,
+                                request_context,
+                                allow_nested_legacy_security,
+                            ),
                         SwitchArmResult::Block(_) => false,
                     }
                 })
@@ -446,6 +622,149 @@ impl Analyzer {
             | ExprKind::For { .. }
             | ExprKind::ForIn { .. }
             | ExprKind::While { .. } => false,
+        }
+    }
+
+    fn request_legacy_provider_udf_call_is_supported(
+        &self,
+        name: &str,
+        args: &[CallArg],
+        visiting: &mut std::collections::HashSet<SymbolId>,
+        local_names: &std::collections::HashSet<String>,
+        udf_stack: &mut Vec<String>,
+        request_context: &LegacyProviderRequestContext,
+    ) -> bool {
+        if udf_stack.iter().any(|active| active == name) {
+            return false;
+        }
+        let Some(function) = self.functions.get(name).cloned() else {
+            return false;
+        };
+        if resolve_udf_arg_indices(&function.params, args).is_err()
+            || !args.iter().all(|arg| {
+                self.request_expression_is_legacy_provider_scalar_inner(
+                    &arg.value,
+                    visiting,
+                    local_names,
+                    udf_stack,
+                    request_context,
+                    false,
+                )
+            })
+        {
+            return false;
+        }
+
+        let mut function_locals: std::collections::HashSet<_> =
+            function.params.iter().cloned().collect();
+        udf_stack.push(name.to_owned());
+        let supported = self.with_source_context_ref(function.source_context_id, |analyzer| {
+            match &function.body {
+                FunctionBody::Expr(expr) => analyzer
+                    .request_expression_is_legacy_provider_scalar_inner(
+                        expr,
+                        visiting,
+                        &function_locals,
+                        udf_stack,
+                        request_context,
+                        false,
+                    ),
+                FunctionBody::Block(statements) => {
+                    let Some((last, prefix)) = statements.split_last() else {
+                        return false;
+                    };
+                    for statement in prefix {
+                        let StmtKind::Decl {
+                            mode, name, value, ..
+                        } = &statement.kind
+                        else {
+                            return false;
+                        };
+                        if *mode != pine_syntax::DeclMode::Normal
+                            || function_locals.contains(name)
+                            || !analyzer.request_expression_is_legacy_provider_scalar_inner(
+                                value,
+                                visiting,
+                                &function_locals,
+                                udf_stack,
+                                request_context,
+                                false,
+                            )
+                        {
+                            return false;
+                        }
+                        function_locals.insert(name.clone());
+                    }
+                    let StmtKind::Expr(result) = &last.kind else {
+                        return false;
+                    };
+                    analyzer.request_expression_is_legacy_provider_scalar_inner(
+                        result,
+                        visiting,
+                        &function_locals,
+                        udf_stack,
+                        request_context,
+                        false,
+                    )
+                }
+            }
+        });
+        udf_stack.pop();
+        supported
+    }
+
+    fn request_nested_legacy_security_is_supported(
+        &self,
+        internal_callee: &str,
+        args: &[CallArg],
+        visiting: &mut std::collections::HashSet<SymbolId>,
+        local_names: &std::collections::HashSet<String>,
+        udf_stack: &mut Vec<String>,
+        request_context: &LegacyProviderRequestContext,
+    ) -> bool {
+        let [symbol, timeframe, expression] = args else {
+            return false;
+        };
+        if args.iter().any(|arg| arg.name.is_some())
+            || internal_callee != request_context.internal_callee
+            || !self.request_selector_exprs_match(&symbol.value, &request_context.symbol)
+            || !self.request_selector_exprs_match(&timeframe.value, &request_context.timeframe)
+        {
+            return false;
+        }
+        self.request_expression_is_legacy_provider_scalar_inner(
+            &expression.value,
+            visiting,
+            local_names,
+            udf_stack,
+            request_context,
+            true,
+        )
+    }
+
+    fn request_selector_exprs_match(&self, left: &Expr, right: &Expr) -> bool {
+        if let (Some(left), Some(right)) = (
+            self.known_const_string_value(left),
+            self.known_const_string_value(right),
+        ) {
+            return left == right;
+        }
+        match (&left.kind, &right.kind) {
+            (ExprKind::Identifier(left_name), ExprKind::Identifier(right_name)) => {
+                let left = self
+                    .bindings
+                    .get(&self.binding_key(left_name, left.span))
+                    .map(|symbol| symbol.id);
+                let right = self
+                    .bindings
+                    .get(&self.binding_key(right_name, right.span))
+                    .map(|symbol| symbol.id);
+                matches!((left, right), (Some(left), Some(right)) if left == right)
+            }
+            (ExprKind::QualifiedName(_), ExprKind::QualifiedName(_)) => {
+                expr_name(left) == expr_name(right)
+            }
+            _ => false,
         }
     }
 
@@ -662,4 +981,8 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.crossover"
             | "ta.crossunder"
     )
+}
+
+fn legacy_request_scalar_call_is_supported(name: &str) -> bool {
+    request_scalar_call_is_supported(name) || name == "int"
 }

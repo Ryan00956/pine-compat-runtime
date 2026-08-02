@@ -2,12 +2,13 @@ use pine_ir::HirProgram;
 use pine_runtime::{
     Bar, InputOverrides, RequestEnvironment, public_runtime_result_json,
     run_historical_with_request_environment_and_input_overrides,
+    run_historical_with_request_environment_and_input_overrides_and_execution_times,
 };
 use wasm_bindgen::prelude::*;
 
 use crate::input_overrides::input_overrides_from_json;
 use crate::library_sources::analysis_input_with_libraries;
-use crate::request_bars::request_environment_from_json;
+use crate::request_bars::request_environment_and_execution_times_from_json;
 use crate::{analysis_input, compile_program};
 
 #[wasm_bindgen(js_name = Program)]
@@ -66,8 +67,13 @@ pub(crate) fn run_script_csv_with_request_bars_internal(
     request_bars_json: &str,
 ) -> Result<String, String> {
     let program = compile_program(analysis_input(source))?;
-    let request_environment = request_environment_from_json(request_bars_json)?;
-    program.run_csv_with_request_environment_internal(bars_csv, request_environment)
+    let (request_environment, execution_times) =
+        request_environment_and_execution_times_from_json(request_bars_json)?;
+    program.run_csv_with_request_environment_internal(
+        bars_csv,
+        request_environment,
+        execution_times.as_deref(),
+    )
 }
 
 #[wasm_bindgen(js_name = runScriptCsvWithRequestBarsAndInputOverrides)]
@@ -93,10 +99,12 @@ fn run_script_csv_with_request_bars_and_input_overrides_internal(
     input_overrides_json: &str,
 ) -> Result<String, String> {
     let program = compile_program(analysis_input(source))?;
-    let request_environment = request_environment_from_json(request_bars_json)?;
+    let (request_environment, execution_times) =
+        request_environment_and_execution_times_from_json(request_bars_json)?;
     program.run_csv_with_request_bars_and_input_overrides_internal(
         bars_csv,
         request_environment,
+        execution_times.as_deref(),
         input_overrides_json,
     )
 }
@@ -172,8 +180,13 @@ pub(crate) fn run_script_csv_with_libraries_and_request_bars_internal(
 ) -> Result<String, String> {
     let input = analysis_input_with_libraries(source, library_sources_json)?;
     let program = compile_program(input)?;
-    let request_environment = request_environment_from_json(request_bars_json)?;
-    program.run_csv_with_request_environment_internal(bars_csv, request_environment)
+    let (request_environment, execution_times) =
+        request_environment_and_execution_times_from_json(request_bars_json)?;
+    program.run_csv_with_request_environment_internal(
+        bars_csv,
+        request_environment,
+        execution_times.as_deref(),
+    )
 }
 
 #[wasm_bindgen(js_name = runScriptCsvWithLibrariesAndRequestBarsAndInputOverrides)]
@@ -203,10 +216,12 @@ fn run_script_csv_with_libraries_and_request_bars_and_input_overrides_internal(
 ) -> Result<String, String> {
     let input = analysis_input_with_libraries(source, library_sources_json)?;
     let program = compile_program(input)?;
-    let request_environment = request_environment_from_json(request_bars_json)?;
+    let (request_environment, execution_times) =
+        request_environment_and_execution_times_from_json(request_bars_json)?;
     program.run_csv_with_request_bars_and_input_overrides_internal(
         bars_csv,
         request_environment,
+        execution_times.as_deref(),
         input_overrides_json,
     )
 }
@@ -246,11 +261,13 @@ impl WasmProgram {
         request_bars_json: &str,
         input_overrides_json: &str,
     ) -> Result<String, JsValue> {
-        let request_environment = request_environment_from_json(request_bars_json)
-            .map_err(|err| JsValue::from_str(&err))?;
+        let (request_environment, execution_times) =
+            request_environment_and_execution_times_from_json(request_bars_json)
+                .map_err(|err| JsValue::from_str(&err))?;
         self.run_csv_with_request_bars_and_input_overrides_internal(
             bars_csv,
             request_environment,
+            execution_times.as_deref(),
             input_overrides_json,
         )
         .map_err(|err| JsValue::from_str(&err))
@@ -259,7 +276,11 @@ impl WasmProgram {
 
 impl WasmProgram {
     fn run_csv_internal(&self, bars_csv: &str) -> Result<String, String> {
-        self.run_csv_with_request_environment_internal(bars_csv, RequestEnvironment::default())
+        self.run_csv_with_request_environment_internal(
+            bars_csv,
+            RequestEnvironment::default(),
+            None,
+        )
     }
 
     fn run_csv_with_input_overrides_internal(
@@ -272,6 +293,7 @@ impl WasmProgram {
             bars_csv,
             RequestEnvironment::default(),
             input_overrides,
+            None,
         )
     }
 
@@ -280,14 +302,20 @@ impl WasmProgram {
         bars_csv: &str,
         request_bars_json: &str,
     ) -> Result<String, String> {
-        let request_environment = request_environment_from_json(request_bars_json)?;
-        self.run_csv_with_request_environment_internal(bars_csv, request_environment)
+        let (request_environment, execution_times) =
+            request_environment_and_execution_times_from_json(request_bars_json)?;
+        self.run_csv_with_request_environment_internal(
+            bars_csv,
+            request_environment,
+            execution_times.as_deref(),
+        )
     }
 
     fn run_csv_with_request_bars_and_input_overrides_internal(
         &self,
         bars_csv: &str,
         request_environment: RequestEnvironment,
+        execution_times: Option<&[i64]>,
         input_overrides_json: &str,
     ) -> Result<String, String> {
         let input_overrides = input_overrides_from_json(input_overrides_json, &self.hir)?;
@@ -295,6 +323,7 @@ impl WasmProgram {
             bars_csv,
             request_environment,
             input_overrides,
+            execution_times,
         )
     }
 
@@ -302,11 +331,13 @@ impl WasmProgram {
         &self,
         bars_csv: &str,
         request_environment: RequestEnvironment,
+        execution_times: Option<&[i64]>,
     ) -> Result<String, String> {
         self.run_csv_with_request_environment_and_input_overrides_internal(
             bars_csv,
             request_environment,
             InputOverrides::new(),
+            execution_times,
         )
     }
 
@@ -315,14 +346,26 @@ impl WasmProgram {
         bars_csv: &str,
         request_environment: RequestEnvironment,
         input_overrides: InputOverrides,
+        execution_times: Option<&[i64]>,
     ) -> Result<String, String> {
         let bars = parse_bars_csv(bars_csv)?;
-        let result = run_historical_with_request_environment_and_input_overrides(
-            &self.hir,
-            &bars,
-            request_environment,
-            input_overrides,
-        )
+        let result = match execution_times {
+            Some(execution_times) => {
+                run_historical_with_request_environment_and_input_overrides_and_execution_times(
+                    &self.hir,
+                    &bars,
+                    request_environment,
+                    input_overrides,
+                    execution_times,
+                )
+            }
+            None => run_historical_with_request_environment_and_input_overrides(
+                &self.hir,
+                &bars,
+                request_environment,
+                input_overrides,
+            ),
+        }
         .map_err(|err| format!("runtime failed: {}", err.message))?;
         Ok(public_runtime_result_json(&result))
     }

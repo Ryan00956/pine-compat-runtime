@@ -1,0 +1,13 @@
+//@version=4
+study("Typed unsupported tuple producer")
+
+typedUnsupportedTuple(tf) =>
+    localSource = close
+    requested = if localSource > open
+        security(syminfo.tickerid, tf, localSource)
+    else
+        na
+    [requested, requested > open]
+
+[value, rising] = typedUnsupportedTuple("240")
+plot(value + (rising ? 1 : 0))

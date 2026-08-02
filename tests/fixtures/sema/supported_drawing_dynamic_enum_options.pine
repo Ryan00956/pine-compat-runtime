@@ -1,0 +1,21 @@
+//@version=6
+indicator("Supported dynamic drawing enums", overlay=true)
+
+lineStyle = bar_index % 2 == 0 ? line.style_solid : line.style_dashed
+lineExtend = if close >= open
+    extend.right
+else
+    extend.none
+boundedLineStyle = input.string(line.style_solid, "Line style", options=[line.style_solid, line.style_dotted])
+labelStyle = switch
+    high > high[1] => label.style_label_up
+    => label.style_label_down
+
+lineId = line.new(bar_index, low, bar_index + 1, high, extend=lineExtend, style=lineStyle)
+line.set_style(lineId, boundedLineStyle)
+line.set_extend(lineId, lineExtend)
+
+labelId = label.new(bar_index, high, "dynamic", style=labelStyle)
+label.set_style(labelId, labelStyle)
+
+plot(close)

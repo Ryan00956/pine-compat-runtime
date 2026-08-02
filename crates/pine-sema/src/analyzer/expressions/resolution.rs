@@ -71,6 +71,16 @@ impl Analyzer {
             Some(symbol.pine_type)
         } else if let Some(resolution) = self.legacy.resolve_value(name) {
             self.resolve_legacy_value(name, span, resolution)
+        } else if name == "timenow" {
+            let pine_type = PineType::new(Qualifier::Series, ValueKind::Int);
+            let symbol = self.define_symbol(name, pine_type, None);
+            self.timenow_symbol = Some(symbol.id);
+            self.bind_symbol(name, span, symbol);
+            self.compatibility.supported.push(FeatureUse {
+                feature: name.to_owned(),
+                span,
+            });
+            Some(pine_type)
         } else {
             self.diagnostics.push(Diagnostic::error(
                 "E_UNKNOWN_SYMBOL",

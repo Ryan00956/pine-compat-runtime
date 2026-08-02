@@ -90,13 +90,18 @@ plot(first + last + array.size(values))
 }
 
 #[test]
-fn runs_array_get_with_computed_integer_index() {
+fn runs_array_get_set_with_series_integer_indexes() {
     let source = SourceFile::new(
         "test.pine",
-        r#"indicator("computed array index")
-values = array.from(10, 20, 30)
-k = 2
-plot(array.get(values, k - 1))
+        r#"//@version=6
+indicator("series array indexes")
+namespace_values = array.from(10.0, 20.0, 30.0)
+method_values = array.from(100.0, 200.0, 300.0)
+index = bar_index % 3
+array.set(namespace_values, index, close)
+method_values.set(index, close + 100)
+plot(array.get(namespace_values, index))
+plot(method_values.get(index))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -109,8 +114,9 @@ plot(array.get(values, k - 1))
     let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 1);
-    assert_values_close(&result.plots[0].values, &[20.0, 20.0, 20.0]);
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+    assert_values_close(&result.plots[1].values, &[101.0, 102.0, 103.0]);
 }
 
 #[test]

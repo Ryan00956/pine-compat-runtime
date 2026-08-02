@@ -6,14 +6,15 @@ use std::{
 };
 
 use pine_runtime::{
-    Bar, BarUpdate, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, RealtimeRuntime,
-    RequestEnvironment, RequestKey, RequestTimeframe, RuntimeProfile,
+    Bar, BarUpdate, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, InputOverrides,
+    RealtimeRuntime, RequestEnvironment, RequestKey, RequestTimeframe, RuntimeProfile,
     run_historical_profiled_with_request_environment,
+    run_historical_profiled_with_request_environment_and_input_overrides_and_execution_times,
 };
 use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
 
-const MANIFEST_HEADER: &str = "id\tversion\tmaturity\tcategory\tsource_path\tbars_profile\trequest_profile\trealtime_policy\tlicense_class\tmax_retained_values";
+const MANIFEST_HEADER: &str = "id\tversion\tmaturity\tcategory\tsource_path\tbars_profile\trequest_profile\texecution_profile\trealtime_policy\tlicense_class\tmax_retained_values";
 
 #[derive(Debug)]
 struct ReleaseFixture {
@@ -24,6 +25,7 @@ struct ReleaseFixture {
     source_path: String,
     bars_profile: String,
     request_profile: String,
+    execution_profile: String,
     realtime_policy: String,
     license_class: String,
     max_retained_values: usize,
@@ -43,7 +45,7 @@ fn release_fixtures() -> Vec<ReleaseFixture> {
         .enumerate()
         .map(|(index, line)| {
             let fields = line.split('\t').collect::<Vec<_>>();
-            assert_eq!(fields.len(), 10, "manifest line {}: {line}", index + 2);
+            assert_eq!(fields.len(), 11, "manifest line {}: {line}", index + 2);
             ReleaseFixture {
                 id: fields[0].to_owned(),
                 version: fields[1].parse().expect("numeric legacy version"),
@@ -52,9 +54,10 @@ fn release_fixtures() -> Vec<ReleaseFixture> {
                 source_path: fields[4].to_owned(),
                 bars_profile: fields[5].to_owned(),
                 request_profile: fields[6].to_owned(),
-                realtime_policy: fields[7].to_owned(),
-                license_class: fields[8].to_owned(),
-                max_retained_values: fields[9].parse().expect("numeric resource ceiling"),
+                execution_profile: fields[7].to_owned(),
+                realtime_policy: fields[8].to_owned(),
+                license_class: fields[9].to_owned(),
+                max_retained_values: fields[10].parse().expect("numeric resource ceiling"),
             }
         })
         .collect()
@@ -182,6 +185,18 @@ fn request_environment(profile: &str) -> RequestEnvironment {
                 .expect("valid IBM request stream");
             RequestEnvironment::new(ChartContext::default(), Arc::new(provider))
         }
+        "ibm_1" => {
+            let key = RequestKey::new(
+                "NYSE:IBM",
+                RequestTimeframe::parse("1").expect("one minute timeframe"),
+            );
+            let bars = load_csv_bars(
+                &workspace_root().join("tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+            );
+            let provider = InMemoryRequestDataProvider::from_streams([(key, bars)])
+                .expect("valid IBM request stream");
+            RequestEnvironment::new(ChartContext::default(), Arc::new(provider))
+        }
         "test_daily" => {
             let key = RequestKey::new(
                 "TEST",
@@ -200,6 +215,54 @@ fn request_environment(profile: &str) -> RequestEnvironment {
             )
         }
         other => panic!("unknown legacy request profile `{other}`"),
+    }
+}
+
+fn execution_times(profile: &str, bars: &[Bar]) -> Option<Vec<i64>> {
+    const DETERMINISTIC_CLOCK: &[i64] = &[
+        1_700_000_000_101,
+        1_700_000_060_205,
+        1_700_000_120_333,
+        1_700_000_180_499,
+        1_700_000_240_711,
+        1_700_000_300_977,
+        1_700_000_361_261,
+        1_700_000_421_577,
+        1_700_000_481_921,
+        1_700_000_542_299,
+    ];
+    match profile {
+        "none" => None,
+        "deterministic_clock" => {
+            assert!(
+                bars.len() <= DETERMINISTIC_CLOCK.len(),
+                "execution clock profile has too few timestamps"
+            );
+            Some(DETERMINISTIC_CLOCK[..bars.len()].to_vec())
+        }
+        other => panic!("unknown legacy execution profile `{other}`"),
+    }
+}
+
+fn append_historical(
+    runtime: &mut HistoricalRuntime<'_>,
+    bar: Bar,
+    execution_time: Option<i64>,
+) -> Result<(), pine_runtime::RuntimeError> {
+    match execution_time {
+        Some(execution_time) => runtime.append_bar_with_execution_time(bar, execution_time),
+        None => runtime.append_bar(bar),
+    }
+}
+
+fn update_realtime(
+    runtime: &mut RealtimeRuntime<'_>,
+    update: BarUpdate,
+    execution_time: Option<i64>,
+) -> Result<pine_runtime::RuntimeResult, pine_runtime::RuntimeError> {
+    match execution_time {
+        Some(execution_time) => runtime.update_with_execution_time(update, execution_time),
+        None => runtime.update(update),
     }
 }
 
@@ -271,7 +334,7 @@ fn collect_runtime_legacy_sources(dir: &Path, output: &mut BTreeSet<String>) {
 #[test]
 fn release_manifest_is_complete_versioned_and_source_licensed() {
     let fixtures = release_fixtures();
-    assert_eq!(fixtures.len(), 18);
+    assert_eq!(fixtures.len(), 36);
     let ids = fixtures.iter().map(|row| &row.id).collect::<BTreeSet<_>>();
     assert_eq!(ids.len(), fixtures.len(), "duplicate release fixture id");
     let paths = fixtures
@@ -318,6 +381,11 @@ fn release_manifest_is_complete_versioned_and_source_licensed() {
             "only v1/v2 historical lookahead profiles may diverge in realtime"
         );
         assert_eq!(row.license_class, "original", "{}", row.id);
+        assert_eq!(
+            row.execution_profile == "deterministic_clock",
+            row.id == "v4_timenow_execution_clock",
+            "only the timenow release fixture may require the execution clock profile"
+        );
         assert!(
             workspace_root().join(&row.source_path).is_file(),
             "{}",
@@ -360,10 +428,25 @@ fn every_release_fixture_matches_batch_incremental_realtime_and_resource_gates()
         let bars = fixture_bars(&row.bars_profile);
         assert!(!bars.is_empty(), "{}", row.id);
         let environment = request_environment(&row.request_profile);
+        let execution_times = execution_times(&row.execution_profile, &bars);
 
-        let profiled =
-            run_historical_profiled_with_request_environment(&program, &bars, environment.clone())
-                .unwrap_or_else(|error| panic!("{} batch: {error:?}", row.id));
+        let profiled = match execution_times.as_deref() {
+            Some(execution_times) => {
+                run_historical_profiled_with_request_environment_and_input_overrides_and_execution_times(
+                    &program,
+                    &bars,
+                    environment.clone(),
+                    InputOverrides::new(),
+                    execution_times,
+                )
+            }
+            None => run_historical_profiled_with_request_environment(
+                &program,
+                &bars,
+                environment.clone(),
+            ),
+        }
+        .unwrap_or_else(|error| panic!("{} batch: {error:?}", row.id));
         let batch = profiled.result;
         assert_eq!(profiled.profile.bars, bars.len(), "{}", row.id);
         assert!(
@@ -377,19 +460,25 @@ fn every_release_fixture_matches_batch_incremental_realtime_and_resource_gates()
 
         let mut incremental =
             HistoricalRuntime::with_request_environment(&program, environment.clone());
-        for bar in &bars {
-            incremental
-                .append_bar(*bar)
-                .unwrap_or_else(|error| panic!("{} incremental: {error:?}", row.id));
+        for (index, bar) in bars.iter().enumerate() {
+            append_historical(
+                &mut incremental,
+                *bar,
+                execution_times.as_ref().map(|values| values[index]),
+            )
+            .unwrap_or_else(|error| panic!("{} incremental: {error:?}", row.id));
         }
         assert_eq!(incremental.result(), batch, "{} incremental", row.id);
 
         let mut historical_realtime =
             RealtimeRuntime::with_request_environment(&program, environment.clone());
-        for bar in &bars {
-            historical_realtime
-                .update(BarUpdate::historical(*bar))
-                .unwrap_or_else(|error| panic!("{} realtime history: {error:?}", row.id));
+        for (index, bar) in bars.iter().enumerate() {
+            update_realtime(
+                &mut historical_realtime,
+                BarUpdate::historical(*bar),
+                execution_times.as_ref().map(|values| values[index]),
+            )
+            .unwrap_or_else(|error| panic!("{} realtime history: {error:?}", row.id));
         }
         assert_eq!(
             historical_realtime.confirmed_result(),
@@ -400,20 +489,35 @@ fn every_release_fixture_matches_batch_incremental_realtime_and_resource_gates()
 
         let (last, history) = bars.split_last().expect("nonempty fixture bars");
         let mut realtime = RealtimeRuntime::with_request_environment(&program, environment);
-        for bar in history {
-            realtime
-                .update(BarUpdate::historical(*bar))
-                .unwrap_or_else(|error| panic!("{} realtime prefix: {error:?}", row.id));
+        for (index, bar) in history.iter().enumerate() {
+            update_realtime(
+                &mut realtime,
+                BarUpdate::historical(*bar),
+                execution_times.as_ref().map(|values| values[index]),
+            )
+            .unwrap_or_else(|error| panic!("{} realtime prefix: {error:?}", row.id));
         }
-        realtime
-            .update(BarUpdate::forming(mutated_forming_bar(last)))
-            .unwrap_or_else(|error| panic!("{} first forming update: {error:?}", row.id));
-        realtime
-            .update(BarUpdate::forming(*last))
-            .unwrap_or_else(|error| panic!("{} replacement forming update: {error:?}", row.id));
-        let confirmed = realtime
-            .update(BarUpdate::confirmed(*last))
-            .unwrap_or_else(|error| panic!("{} confirmed update: {error:?}", row.id));
+        let confirmed_execution_time = execution_times
+            .as_ref()
+            .and_then(|values| values.last().copied());
+        update_realtime(
+            &mut realtime,
+            BarUpdate::forming(mutated_forming_bar(last)),
+            confirmed_execution_time.map(|value| value.saturating_sub(2)),
+        )
+        .unwrap_or_else(|error| panic!("{} first forming update: {error:?}", row.id));
+        update_realtime(
+            &mut realtime,
+            BarUpdate::forming(*last),
+            confirmed_execution_time.map(|value| value.saturating_sub(1)),
+        )
+        .unwrap_or_else(|error| panic!("{} replacement forming update: {error:?}", row.id));
+        let confirmed = update_realtime(
+            &mut realtime,
+            BarUpdate::confirmed(*last),
+            confirmed_execution_time,
+        )
+        .unwrap_or_else(|error| panic!("{} confirmed update: {error:?}", row.id));
         if row.realtime_policy == "parity" {
             assert_eq!(confirmed, batch, "{} forming rollback and confirm", row.id);
             assert_eq!(

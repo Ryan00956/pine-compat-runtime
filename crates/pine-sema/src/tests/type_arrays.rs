@@ -380,6 +380,43 @@ fn accepts_array_insert_remove_operations() {
 }
 
 #[test]
+fn accepts_series_integer_array_get_set_indexes() {
+    let analysis = analyze(
+        "//@version=6\nvalues = array.from(10.0, 20.0, 30.0)\nindex = bar_index % 3\narray.set(values, index, close)\nvalues.set(index, high)\narray.from(1.0, 2.0, 3.0).set(index, low)\ncall_result = array.from(4.0, 5.0, 6.0).get(index)\nplot(array.get(values, index) + values.get(index) + call_result)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_series_float_array_get_set_indexes() {
+    let analysis = analyze(
+        "//@version=6\nvalues = array.from(10.0, 20.0, 30.0)\narray.set(values, close, high)\nvalues.set(close, low)\nplot(array.get(values, close) + values.get(close))\n",
+    );
+
+    let messages = analysis
+        .diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.message.as_str())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        messages,
+        [
+            "`array.set` argument `index` expects integer-compatible, got series float",
+            "`array.set` argument `index` expects integer-compatible, got series float",
+            "`array.get` argument `index` expects integer-compatible, got series float",
+            "`array.get` argument `index` expects integer-compatible, got series float",
+        ]
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_array_fill_operations() {
     let analysis = analyze(
         "values = array.new_string(3, \"a\")\narray.fill(values, \"b\", 1, 3)\nints = array.new_int(2, 1)\nints.fill(2)\nplot(values.get(1) == \"b\" and ints.get(0) == 2 ? 1 : 0)\n",

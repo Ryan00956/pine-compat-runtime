@@ -96,7 +96,11 @@ impl Analyzer {
                     | BinaryOp::Div
                     | BinaryOp::Mod => Some(PineType::new(
                         strongest_qualifier(left_type.qualifier, right_type.qualifier),
-                        numeric_result_kind(*op, left_type.kind, right_type.kind),
+                        if self.uses_versioned_integer_division(*op, left_type, right_type) {
+                            ValueKind::Int
+                        } else {
+                            numeric_result_kind(*op, left_type.kind, right_type.kind)
+                        },
                     )),
                     BinaryOp::Eq
                     | BinaryOp::NotEq
@@ -377,6 +381,13 @@ impl Analyzer {
         let last = branch.last()?;
         match &last.kind {
             StmtKind::Expr(expr) => self.type_of_expr_with_params(expr, param_types),
+            StmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } if !else_branch.is_empty() => {
+                self.type_of_if_expr_with_params(condition, then_branch, else_branch, param_types)
+            }
             StmtKind::For {
                 from,
                 to,

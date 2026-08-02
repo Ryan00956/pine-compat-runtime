@@ -1,0 +1,7 @@
+//@version=4
+study("v4 earlier legacy alias shadow")
+
+sma = close
+calculate(source) => sma(source, 2)
+
+plot(calculate(close))

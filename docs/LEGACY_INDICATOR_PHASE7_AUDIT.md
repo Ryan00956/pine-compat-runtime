@@ -191,6 +191,45 @@ Persisted Phase 7 assets include:
 - `tests/fixtures/legacy/v4/runtime/security_request_5m.csv`;
 - `tests/snapshots/runtime_legacy_v4_security_same_context.json`.
 
+A later corpus-ranked follow-up adds
+`tests/fixtures/legacy/v4/runtime/security_pure_udf_legacy.pine` and the paired
+`tests/fixtures/legacy/v4/unsupported/security_mutable_udf.pine`. They cover
+nested pure requested UDFs, immutable UDF locals, legacy source-input defaults,
+and the retained mutable-state boundary.
+
+A subsequent integer-division follow-up adds
+`tests/fixtures/legacy/v4/runtime/contextual_integer_division_legacy.pine`.
+The initial implementation covered integer-compatible call parameters. The
+later corpus follow-up completes the documented Pine v1-v4 rule: every
+`int / int` expression produces an integer by discarding the fractional
+remainder, including ordinary values, aliases, history offsets, built-in calls,
+and untyped UDF arguments. A separate version-boundary follow-up adds
+`tests/fixtures/runtime/v5_const_integer_division.pine` and its explicit-v6
+rewrite: v5 truncates only when both operands are `const int`, while input,
+simple, or series integers preserve fractions.
+
+A later bool-call follow-up adds
+`tests/fixtures/legacy/v4/runtime/numeric_bool_call_arguments_legacy.pine`.
+It extends the existing Pine v1-v5 numeric-to-bool conversion to explicitly
+bool-compatible built-in parameters, preserves qualifier bounds, and keeps
+Pine v6 strict.
+
+A subsequent array-index follow-up adds
+`tests/fixtures/legacy/v4/runtime/array_series_index_legacy.pine`. It aligns
+`array.get` and `array.set` with their integer-compatible index contract,
+including a per-bar `series int` in Pine v4. Namespace and method calls use the
+same signatures; non-integer indexes remain analysis errors, and bounds remain
+runtime-checked.
+
+A subsequent drawing-enum follow-up adds
+`tests/fixtures/legacy/v4/runtime/dynamic_drawing_enums_legacy.pine`. It admits
+per-bar `line` style/extend and `label` style expressions only when their
+complete string domain is statically proven to contain supported enum values.
+Explicit string-input `options` bound that domain; unbounded inputs and any
+invalid branch remain analysis errors. Pine v4's
+`label.style_labelup` / `label.style_labeldown` spellings lower to the current
+underscored constants and remain unavailable in v5/v6.
+
 Semantic tests cover v1/v2 versus v3/v4 defaults, explicit bool and barmerge
 values, named/reordered arguments, invalid versioned signatures, dynamic merge
 rejection, user-function shadowing, request-expression reuse, canonical report
@@ -248,12 +287,25 @@ supply the Phase 7 incremental/realtime evidence.
 - Declaration-level `study(resolution=...)` remains fail-closed until the
   program-context contract above is implemented and fixture-backed.
 - Lower-timeframe scalar/array requests remain unsupported.
-- Requested UDFs, provider-local aliases, side effects, arrays, arbitrary
-  mutable expressions, and request families outside the current whitelist
-  remain unsupported.
+- Pure scalar requested UDFs with immutable local declarations are supported by
+  the later bounded follow-up. Persistent or reassigned UDF state, recursion,
+  provider-local aliases outside that lexical UDF subset, side effects, arrays,
+  arbitrary mutable expressions, and request families outside the current
+  whitelist remain unsupported.
 - Pine v1-v3 whole indicator declarations and their wider name/constant/type
   surfaces remain Phases 8 and 9, even though the shared security binder and
   runtime policies are versioned now.
+- Pine v1-v4 integer division applies only when both operands are integers and
+  then produces an integer by discarding the fractional remainder. Float
+  operands remain on their existing path. The separately fixture-backed v5
+  rule truncates only two `const int` operands; input, simple, or series
+  integers and all v6 integer divisions retain fractional results.
+- Pre-v6 numeric-to-bool call conversion applies only to explicitly
+  bool-compatible built-in parameters. Generic inferred collection element
+  types and unrelated argument families are not widened by that follow-up.
+- Series integer indexes are admitted only for `array.get` and `array.set` in
+  this follow-up. Other indexed array helpers retain their separately
+  fixture-backed qualifier contracts.
 - The legacy compatibility path remains indicator-only; legacy strategies are
   permanently out of scope.
 
@@ -262,11 +314,8 @@ supply the Phase 7 incremental/realtime evidence.
 Targeted semantic, runtime, CLI, Python-wheel, WASM, provider-validation,
 corpus, and host-projection tests passed. The complete `scripts/verify.sh`
 release gate then passed, including formatting, warning-free workspace Clippy,
-the entire Rust workspace, all 524 WASM tests, all 497 installed-wheel Python
-tests, the 295-file structural guard, ten corpus-analyzer tests, host parity over
-725 registered CLI runtime snapshots and 429 required Python/WASM golden
-assertions, and the generated Node WASM smoke test. The structural gate first
-identified that the general lowering orchestrator had crossed its 1,200-line
-split threshold; the new recorded-legacy-call dispatch was moved into the
-existing focused `lowering/legacy.rs` module, after which the complete gate
-passed.
+the entire Rust workspace, all 534 WASM tests, all 508 installed-wheel Python
+tests, the 300-file structural guard, corpus-analyzer tests, host parity over
+729 registered CLI runtime snapshots and 433 required runtime plus five
+required legacy-analysis Python/WASM golden assertions, and the generated Node
+WASM smoke test.

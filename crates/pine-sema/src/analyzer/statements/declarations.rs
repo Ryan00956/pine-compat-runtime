@@ -407,20 +407,32 @@ impl Analyzer {
         };
         let diagnostic_start = self.diagnostics.len();
         let analyzed_type = self.analyze_expr(value);
-        if analyzed_type.is_none()
-            || self.diagnostics[diagnostic_start..]
-                .iter()
-                .any(|diagnostic| diagnostic.severity == Severity::Error)
+        if analyzed_type.is_none() {
+            return;
+        }
+        let value_errors = self.diagnostics[diagnostic_start..]
+            .iter()
+            .filter(|diagnostic| diagnostic.severity == Severity::Error)
+            .collect::<Vec<_>>();
+        if value_errors
+            .iter()
+            .any(|diagnostic| diagnostic.code != "E_UNSUPPORTED_FEATURE")
         {
             return;
         }
+        // A typed unsupported producer may still establish tuple bindings for
+        // downstream diagnostics. Other errors can imply unstable or recursive
+        // result types, so they remain outside this recovery path.
+        let value_has_errors = !value_errors.is_empty();
 
         let Some(element_types) = self.tuple_element_types(value) else {
-            self.diagnostics.push(Diagnostic::error(
-                "E_TUPLE_TYPE",
-                "tuple assignment requires a tuple value",
-                value.span,
-            ));
+            if !value_has_errors {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_TUPLE_TYPE",
+                    "tuple assignment requires a tuple value",
+                    value.span,
+                ));
+            }
             return;
         };
 

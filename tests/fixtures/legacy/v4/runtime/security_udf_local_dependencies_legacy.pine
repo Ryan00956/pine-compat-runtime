@@ -1,0 +1,14 @@
+//@version=4
+study("Legacy security UDF local dependencies")
+
+requestedPair(src, length, tf) =>
+    requestedSource = security("NYSE:IBM", tf, src)
+    smoothedSource = ema(requestedSource, length)
+    first = security("NYSE:IBM", tf, ema(smoothedSource, length))
+    spread = first - requestedSource
+    second = security("NYSE:IBM", tf, sma(spread, length))
+    [first, second]
+
+[first, second] = requestedPair(close, 2, "5")
+plot(first, title="First")
+plot(second, title="Second")

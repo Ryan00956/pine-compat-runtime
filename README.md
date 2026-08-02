@@ -94,7 +94,7 @@ bounded strategy runtime.
 | --- | --- |
 | Language | fixture-backed v1-v6 declarations, series and history, bounded v1/v2 declaration graphs, `var`/partial `varip`, functions, tuples, `if`, `switch`, partial `for`/`while`, strings, UDTs, and host-provided pure library imports |
 | Indicators | Common `ta.*`, selected `math.*`/`str.*`, inputs, plots, colors, alerts, drawing objects, tables, typed collections, fixture-backed `request.security`, and the documented executable Pine v1-v4 legacy-indicator subsets including `security` |
-| Execution | Deterministic historical runs, guarded history, input overrides, incremental append, and realtime forming-bar rollback |
+| Execution | Deterministic historical runs, guarded history, input overrides, explicit `timenow` execution clocks, incremental append, and realtime forming-bar rollback |
 | Strategies | Partial long-only entries, orders, closes, cancellations, stop/limit/bracket/trailing exits, quantity reservations, positions, trades, and equity snapshots |
 | Outputs | Versioned plots, shapes, bars, candles, fills, labels, lines, line fills, polylines, boxes, tables, alerts, diagnostics, and strategy results |
 | Hosts | Rust workspace, `pine-compat` CLI, `pine_compat` Python module, and `wasm-bindgen` API |
@@ -161,6 +161,7 @@ Python can also inject deterministic requested bars and exact-key library
 sources:
 
 ```python
+execution_times = [1700000000101 + index for index in range(len(bars))]
 result = pine_compat.run_script(
     source,
     bars,
@@ -168,8 +169,12 @@ result = pine_compat.run_script(
     library_sources={"user/lib/1": library_source},
     chart_symbol="NASDAQ:AAPL",
     chart_timeframe="1",
+    execution_times=execution_times,
 )
 ```
+
+Pass one `execution_times` value per bar only when the script can reach
+`timenow`; the runtime does not infer it from bar timestamps or wall-clock time.
 
 Legacy indicators use their source version automatically; no host flag is
 needed. The same analysis schema reports the selected dialect and any
@@ -207,6 +212,7 @@ cargo run -p pine-cli -- analyze script.pine
 cargo run -p pine-cli -- analyze script.pine --format json
 
 cargo run -p pine-cli -- run script.pine --bars bars.csv \
+  --execution-times execution-times.txt \
   --chart-symbol NASDAQ:AAPL --chart-timeframe 1 \
   --request-bars NYSE:IBM:5=ibm-5m.csv \
   --library-source user/lib/1=lib.pine
@@ -222,6 +228,9 @@ injection. Build and exercise the real generated JavaScript module with:
 rustup target add wasm32-unknown-unknown
 scripts/check_wasm_node.sh
 ```
+
+For `timenow`, pass `{"$executionTimes":[...]}` in the request-host JSON used
+by a `*WithRequestBars` entry point, including compiled `Program` runs.
 
 See [Architecture](docs/ARCHITECTURE.md) for the host boundary and
 [Execution Semantics](docs/EXECUTION_SEMANTICS.md) for historical and realtime
@@ -242,8 +251,9 @@ implementation of every Pine feature. Important current boundaries include:
 - Pine v4/v3 legacy-indicator profiles are previews and Pine v2/v1 profiles are
   experimental because the authorized release corpus is small and has no
   external reference-output oracle;
-- legacy strategies, lower-timeframe legacy `security`, and unsupported
-  whole-program `study(resolution=...)` execution remain out of scope;
+- legacy strategies, lower-timeframe legacy `security`, and non-empty or
+  dynamic whole-program `study(resolution=...)` execution remain out of scope;
+  the exact Pine v4 `resolution=""` form inherits the host chart context;
 - unsupported syntax or semantics are rejected with diagnostics rather than
   guessed.
 

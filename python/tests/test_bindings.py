@@ -592,6 +592,38 @@ def test_compile_script_returns_program_with_run_method():
     assert result["diagnostics"] == []
 
 
+def test_timenow_uses_explicit_execution_times_in_function_and_program_apis():
+    source = '//@version=4\nstudy("clock")\nplot(timenow)\nplot(timenow - time)\n'
+
+    result = pine_compat.run_script(source, BARS, execution_times=[101, 202, 303])
+    assert result["plots"][0]["values"] == [101, 202, 303]
+    assert result["plots"][1]["values"] == [101, 201, 301]
+
+    program_result = pine_compat.compile_script(source).run(
+        BARS, execution_times=(401, 502, 603)
+    )
+    assert program_result["plots"][0]["values"] == [401, 502, 603]
+
+
+def test_timenow_python_host_input_fails_closed_when_missing_or_invalid():
+    source = '//@version=6\nindicator("clock")\nplot(timenow)\n'
+
+    for execution_times, expected in [
+        (None, "timenow requires an explicit execution timestamp"),
+        ([101], "execution timestamp count 1 does not match bar count 3"),
+        ([101, True, 303], "execution_times[1] must be an integer"),
+    ]:
+        try:
+            if execution_times is None:
+                pine_compat.run_script(source, BARS)
+            else:
+                pine_compat.run_script(source, BARS, execution_times=execution_times)
+        except ValueError as error:
+            assert expected in str(error)
+        else:
+            raise AssertionError(f"execution_times={execution_times!r} should fail")
+
+
 def test_run_script_rejects_non_finite_bar_values():
     bars = [
         {"time": 0, "open": 1.0, "high": 1.0, "low": 1.0, "close": math.nan, "volume": 1.0}

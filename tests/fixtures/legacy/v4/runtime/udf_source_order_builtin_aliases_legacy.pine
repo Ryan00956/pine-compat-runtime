@@ -1,0 +1,11 @@
+//@version=4
+study("v4 UDF source-order builtin aliases")
+
+smoothedRsi(source, length) =>
+    rsi = rsi(source, length)
+    sma(rsi, 2)
+
+rsi = rsi(close, 3)
+
+plot(smoothedRsi(close, 3), title="local RSI")
+plot(rsi, title="global RSI")

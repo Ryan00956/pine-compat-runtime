@@ -92,7 +92,7 @@ impl Analyzer {
                 self.validate_text_formatting_arg(signature, args, 13, "text_formatting");
             }
             "label.set_style" => {
-                self.validate_label_string_arg(signature, args, 1, "style", LABEL_STYLES);
+                self.validate_drawing_enum_string_arg(signature, args, 1, "style", LABEL_STYLES);
             }
             "label.set_size" => {
                 self.validate_text_size_arg(signature, args, 1, "size");
@@ -147,10 +147,10 @@ impl Analyzer {
                 self.validate_text_formatting_arg(signature, args, 18, "text_formatting");
             }
             "line.set_style" => {
-                self.validate_label_string_arg(signature, args, 1, "style", LINE_STYLES);
+                self.validate_drawing_enum_string_arg(signature, args, 1, "style", LINE_STYLES);
             }
             "line.set_extend" => {
-                self.validate_label_string_arg(signature, args, 1, "extend", LINE_EXTENDS);
+                self.validate_drawing_enum_string_arg(signature, args, 1, "extend", LINE_EXTENDS);
             }
             "line.set_xloc" => {
                 self.validate_label_string_arg(signature, args, 3, "xloc", LINE_XLOCS);
@@ -232,6 +232,41 @@ impl Analyzer {
                 self.validate_text_formatting_arg(signature, args, 3, "text_formatting");
             }
             _ => {}
+        }
+    }
+
+    fn validate_drawing_enum_string_arg(
+        &mut self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+        index: usize,
+        name: &str,
+        allowed: &[&str],
+    ) {
+        for (arg_index, arg) in args.iter().enumerate() {
+            let is_target = arg.name.as_deref() == Some(name)
+                || (arg.name.is_none()
+                    && signature
+                        .params
+                        .get(arg_index)
+                        .is_some_and(|param| param.name == name && index == arg_index));
+            if !is_target {
+                continue;
+            }
+            let supported_value = self
+                .known_string_value_domain(&arg.value)
+                .is_some_and(|values| values.iter().all(|value| allowed.contains(&value.as_str())));
+            if !supported_value {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    format!(
+                        "`{}` argument `{name}` only supports {}",
+                        signature.name,
+                        allowed.join(", ")
+                    ),
+                    arg.span,
+                ));
+            }
         }
     }
 

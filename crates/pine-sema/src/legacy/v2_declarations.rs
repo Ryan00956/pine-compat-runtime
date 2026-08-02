@@ -111,19 +111,26 @@ impl Analyzer {
             unsafe_initializers.push(unsafe_initializer);
         }
 
-        let mut active = HashSet::new();
+        let mut graph_nodes = HashSet::new();
+        let mut predeclared = HashSet::new();
         for (source, source_dependencies) in dependencies.iter().enumerate() {
             for dependency in source_dependencies {
                 if dependency.target >= source {
-                    active.insert(source);
-                    active.insert(dependency.target);
+                    graph_nodes.insert(source);
+                    graph_nodes.insert(dependency.target);
+                    predeclared.insert(dependency.target);
                 }
             }
         }
-        if active.is_empty() {
+        if graph_nodes.is_empty() {
             return false;
         }
 
+        // Earlier declarations needed only to infer a graph node remain ordinary
+        // source-order prerequisites. Keep them in the bounded inference closure,
+        // but do not predeclare them or subject their initializers to reordering
+        // restrictions when no graph edge can move them.
+        let mut active = graph_nodes.clone();
         let mut changed = true;
         while changed {
             changed = false;
@@ -157,9 +164,9 @@ impl Analyzer {
         }
 
         let graph_diagnostic_count = self.diagnostics.len();
-        let mut active_indices = active.iter().copied().collect::<Vec<_>>();
-        active_indices.sort_unstable();
-        for index in &active_indices {
+        let mut graph_indices = graph_nodes.iter().copied().collect::<Vec<_>>();
+        graph_indices.sort_unstable();
+        for index in &graph_indices {
             if let Some(unsafe_initializer) = &unsafe_initializers[*index] {
                 self.diagnostics.push(Diagnostic::error(
                     "E_LEGACY_REFERENCE_GRAPH_UNSAFE",
@@ -175,10 +182,14 @@ impl Analyzer {
             return true;
         }
 
+        let mut active_indices = active.iter().copied().collect::<Vec<_>>();
+        active_indices.sort_unstable();
+
         let Some(lowering_order) = build_lowering_order(
             program,
             &candidates,
             &dependencies,
+            &unsafe_initializers,
             &active,
             &mut self.diagnostics,
         ) else {
@@ -221,7 +232,9 @@ impl Analyzer {
             }
         }
 
-        for index in &active_indices {
+        let mut predeclared_indices = predeclared.iter().copied().collect::<Vec<_>>();
+        predeclared_indices.sort_unstable();
+        for index in &predeclared_indices {
             let candidate = &candidates[*index];
             let pine_type = inferred[candidate.name];
             if !is_legacy_graph_scalar(pine_type.kind) {
@@ -239,7 +252,7 @@ impl Analyzer {
             return true;
         }
 
-        for index in &active_indices {
+        for index in &predeclared_indices {
             let candidate = &candidates[*index];
             let symbol = self.define_symbol(candidate.name, inferred[candidate.name], None);
             self.legacy_v2_predeclared_symbols.insert(symbol.id);
@@ -247,7 +260,7 @@ impl Analyzer {
 
         let version = self.legacy.dialect().version();
         for (source, source_dependencies) in dependencies.iter().enumerate() {
-            if !active.contains(&source) {
+            if !graph_nodes.contains(&source) {
                 continue;
             }
             for dependency in source_dependencies {
@@ -547,6 +560,7 @@ fn build_lowering_order(
     program: &Program,
     candidates: &[Candidate<'_>],
     dependencies: &[Vec<Dependency>],
+    unsafe_initializers: &[Option<UnsafeInitializer>],
     active: &HashSet<usize>,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> Option<Vec<usize>> {
@@ -567,8 +581,11 @@ fn build_lowering_order(
             }
             let source_statement = candidates[source].statement_index;
             let target_statement = candidates[dependency.target].statement_index;
-            let same_segment = (source_statement..=target_statement)
-                .all(|statement| candidate_by_statement.contains_key(&statement));
+            let same_segment = (source_statement..=target_statement).all(|statement| {
+                candidate_by_statement
+                    .get(&statement)
+                    .is_some_and(|index| unsafe_initializers[*index].is_none())
+            });
             if !same_segment {
                 diagnostics.push(Diagnostic::error(
                     "E_LEGACY_FORWARD_REFERENCE_UNSAFE",

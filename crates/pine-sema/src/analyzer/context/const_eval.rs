@@ -1,5 +1,14 @@
 use super::*;
 use crate::constant_values::{ConstValue, eval_pure_const_call, exact_i64_from_numeric};
+use crate::legacy::PineDialect;
+
+const MAX_STRING_VALUE_DOMAIN_DEPTH: u32 = 64;
+const MAX_STRING_VALUE_DOMAIN_VALUES: usize = 64;
+
+#[derive(Default)]
+struct StringValueDomainEnv {
+    symbol_visiting: Vec<SymbolId>,
+}
 
 impl Analyzer {
     pub(crate) fn record_symbol_const_switch_key(
@@ -226,6 +235,13 @@ impl Analyzer {
             } => self
                 .known_history_offset_int_value_inner(left, env)?
                 .checked_mul(self.known_history_offset_int_value_inner(right, env)?),
+            pine_syntax::ExprKind::Binary {
+                op: pine_syntax::BinaryOp::Div,
+                left,
+                right,
+            } if self.legacy.dialect() <= PineDialect::V5 => self
+                .known_history_offset_int_value_inner(left, env)?
+                .checked_div(self.known_history_offset_int_value_inner(right, env)?),
             pine_syntax::ExprKind::Binary {
                 op: pine_syntax::BinaryOp::Mod,
                 left,
@@ -485,6 +501,13 @@ impl Analyzer {
                 .known_const_int_value(left)?
                 .checked_mul(self.known_const_int_value(right)?),
             pine_syntax::ExprKind::Binary {
+                op: pine_syntax::BinaryOp::Div,
+                left,
+                right,
+            } if self.legacy.dialect() <= PineDialect::V5 => self
+                .known_const_int_value(left)?
+                .checked_div(self.known_const_int_value(right)?),
+            pine_syntax::ExprKind::Binary {
                 op: pine_syntax::BinaryOp::Mod,
                 left,
                 right,
@@ -619,6 +642,142 @@ impl Analyzer {
             })
             .or_else(|| const_string_value(expr))
             .or_else(|| self.known_const_string_value_from_symbols(expr))
+    }
+
+    /// Returns every string that a drawing-enum expression can produce when
+    /// its domain is statically provable and bounded. Unlike constant folding,
+    /// this deliberately follows immutable initializers and joins dynamic
+    /// branches. Calls are fail-closed except for string inputs whose explicit
+    /// `options` tuple bounds every possible runtime value.
+    pub(crate) fn known_string_value_domain(
+        &self,
+        expr: &pine_syntax::Expr,
+    ) -> Option<Vec<String>> {
+        self.known_string_value_domain_inner(expr, &mut StringValueDomainEnv::default(), 0)
+    }
+
+    fn known_string_value_domain_inner(
+        &self,
+        expr: &pine_syntax::Expr,
+        env: &mut StringValueDomainEnv,
+        depth: u32,
+    ) -> Option<Vec<String>> {
+        if depth > MAX_STRING_VALUE_DOMAIN_DEPTH {
+            return None;
+        }
+        if let Some(value) = self.known_const_string_value(expr) {
+            return Some(vec![value]);
+        }
+
+        match &expr.kind {
+            pine_syntax::ExprKind::Identifier(name) => {
+                let symbol = self.const_lookup_symbol(name, expr.span)?;
+                if env.symbol_visiting.contains(&symbol.id) {
+                    return None;
+                }
+                env.symbol_visiting.push(symbol.id);
+                let domain = self.with_symbol_initializer(symbol.id, |analyzer, initializer| {
+                    analyzer.known_string_value_domain_inner(initializer, env, depth + 1)
+                });
+                env.symbol_visiting.pop();
+                domain
+            }
+            pine_syntax::ExprKind::Ternary {
+                then_expr,
+                else_expr,
+                ..
+            } => merge_string_value_domains(
+                self.known_string_value_domain_inner(then_expr, env, depth + 1)?,
+                self.known_string_value_domain_inner(else_expr, env, depth + 1)?,
+            ),
+            pine_syntax::ExprKind::If {
+                then_branch,
+                else_branch,
+                ..
+            } => merge_string_value_domains(
+                self.known_string_value_domain_branch(then_branch, env, depth + 1)?,
+                self.known_string_value_domain_branch(else_branch, env, depth + 1)?,
+            ),
+            pine_syntax::ExprKind::Switch { arms, .. } => {
+                self.known_string_value_domain_switch(arms, env, depth + 1)
+            }
+            pine_syntax::ExprKind::Call { callee, args } => {
+                self.known_string_input_value_domain(callee, args, env, depth + 1)
+            }
+            _ => None,
+        }
+    }
+
+    fn known_string_value_domain_branch(
+        &self,
+        statements: &[pine_syntax::Stmt],
+        env: &mut StringValueDomainEnv,
+        depth: u32,
+    ) -> Option<Vec<String>> {
+        match &statements.last()?.kind {
+            pine_syntax::StmtKind::Expr(expr) => {
+                self.known_string_value_domain_inner(expr, env, depth)
+            }
+            _ => None,
+        }
+    }
+
+    fn known_string_value_domain_switch(
+        &self,
+        arms: &[pine_syntax::SwitchArm],
+        env: &mut StringValueDomainEnv,
+        depth: u32,
+    ) -> Option<Vec<String>> {
+        let mut domain = Vec::new();
+        let mut has_default = false;
+        for arm in arms {
+            has_default |= arm.condition.is_none();
+            let arm_domain = match &arm.result {
+                pine_syntax::SwitchArmResult::Expr(expr) => {
+                    self.known_string_value_domain_inner(expr, env, depth)?
+                }
+                pine_syntax::SwitchArmResult::Block(statements) => {
+                    self.known_string_value_domain_branch(statements, env, depth)?
+                }
+            };
+            domain = merge_string_value_domains(domain, arm_domain)?;
+        }
+        (has_default && !domain.is_empty()).then_some(domain)
+    }
+
+    fn known_string_input_value_domain(
+        &self,
+        callee: &pine_syntax::Expr,
+        args: &[pine_syntax::CallArg],
+        env: &mut StringValueDomainEnv,
+        depth: u32,
+    ) -> Option<Vec<String>> {
+        let callee_name = const_call_name(callee)?;
+        if callee_name != "input" && callee_name != "input.string" {
+            return None;
+        }
+        let positional_options_index =
+            if callee_name == "input" && self.legacy.dialect().version() <= 4 {
+                4
+            } else {
+                2
+            };
+        let options = args.iter().enumerate().find_map(|(index, arg)| {
+            (arg.name.as_deref() == Some("options")
+                || (arg.name.is_none() && index == positional_options_index))
+                .then_some(&arg.value)
+        })?;
+        let pine_syntax::ExprKind::Tuple(values) = &options.kind else {
+            return None;
+        };
+        let mut domain = Vec::new();
+        for value in values {
+            domain = merge_string_value_domains(
+                domain,
+                self.known_string_value_domain_inner(value, env, depth)?,
+            )?;
+        }
+        (!domain.is_empty()).then_some(domain)
     }
 
     fn known_const_string_value_from_symbols(&self, expr: &pine_syntax::Expr) -> Option<String> {
@@ -1185,6 +1344,19 @@ impl Analyzer {
             _ => None,
         }
     }
+}
+
+fn merge_string_value_domains(mut left: Vec<String>, right: Vec<String>) -> Option<Vec<String>> {
+    for value in right {
+        if left.contains(&value) {
+            continue;
+        }
+        if left.len() == MAX_STRING_VALUE_DOMAIN_VALUES {
+            return None;
+        }
+        left.push(value);
+    }
+    Some(left)
 }
 
 fn const_call_name(callee: &pine_syntax::Expr) -> Option<String> {

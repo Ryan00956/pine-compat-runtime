@@ -32,10 +32,10 @@ improved over time, but codes should remain stable once published.
 - `E_PARSE_NAME`: invalid qualified name.
 - `E_PARSE_SWITCH`: invalid switch expression.
 - `E_PARSE_TYPE`: invalid user-defined type declaration.
-- `E_LANGUAGE_VERSION_DUPLICATE`: more than one exact `//@version=N`
-  directive was found.
-- `E_LANGUAGE_VERSION_PLACEMENT`: an exact version directive appeared after a
-  source statement instead of in the leading comment/directive region.
+- `E_LANGUAGE_VERSION_DUPLICATE`: more than one recognized `//@version=N`
+  directive, including the spaced-equals compatibility form, was found.
+- `E_LANGUAGE_VERSION_PLACEMENT`: a recognized version directive appeared
+  after a source statement instead of in the leading comment/directive region.
 
 ## Semantic Analysis
 
@@ -64,12 +64,15 @@ improved over time, but codes should remain stable once published.
   otherwise structurally invalid global declaration.
 - `E_LEGACY_REFERENCE_GRAPH_LIMIT`: an active Pine v1/v2 declaration graph
   exceeds 256 nodes or 4096 dependency edges.
-- `E_LEGACY_REFERENCE_GRAPH_UNSAFE`: an active Pine v1/v2 graph declaration
-  initializer contains a call, mutation, output, request, tuple, or complex
-  control flow outside the side-effect-free scalar subset.
+- `E_LEGACY_REFERENCE_GRAPH_UNSAFE`: a Pine v1/v2 declaration that actually
+  requires self/forward graph resolution has an initializer containing a call,
+  mutation, output, request, tuple, or complex control flow outside the
+  side-effect-free scalar subset. Earlier source-order prerequisites that are
+  neither predeclared nor reordered are checked by their ordinary analyzer
+  path instead.
 - `E_LEGACY_FORWARD_REFERENCE_UNSAFE`: a Pine v1/v2 current-bar forward
-  dependency crosses a non-declaration statement barrier and cannot be safely
-  reordered.
+  dependency crosses a non-declaration statement or unsafe-initializer barrier
+  and cannot be safely reordered.
 - `E_LEGACY_REFERENCE_CYCLE`: Pine v1/v2 current-bar declaration dependencies
   contain a cycle with no deterministic source-compatible evaluation order.
 - `E_LEGACY_REFERENCE_TYPE`: the bounded Pine v1/v2 declaration graph cannot
@@ -95,7 +98,8 @@ emitted by semantic/runtime source with this document. All 16 current legacy
 codes are listed here; Phase 11 adds no public diagnostic family and does not
 change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 - `E_ASSIGN_TYPE`: reassignment type mismatch.
-- `E_BRANCH_RETURN`: branch expression body does not end with an expression.
+- `E_BRANCH_RETURN`: an expression branch, including a recursively nested
+  conditional leaf, does not end with a value-producing expression.
 - `E_BRANCH_TYPE`: ternary branch type mismatch.
 - `E_CALL_ARG_DUPLICATE`: a built-in call argument was provided more than once.
 - `E_CALL_ARG_NAME`: unknown named argument.
@@ -127,8 +131,8 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
 - `E_FUNCTION_PARAM`: user-defined function parameter list is invalid.
 - `E_FUNCTION_PARAM_TYPE`: user-defined function parameter declares a type
   outside the supported subset.
-- `E_FUNCTION_RETURN`: user-defined function block does not end with an
-  expression.
+- `E_FUNCTION_RETURN`: user-defined function block does not end with a
+  value-producing or valid void-producing final statement.
 - `E_UDT_ASSIGN_TYPE`: reassignment changed a local user-defined type identity.
 - `E_UDT_CONSTRUCTOR_ARG`: user-defined type constructor arguments do not match
   declared fields.

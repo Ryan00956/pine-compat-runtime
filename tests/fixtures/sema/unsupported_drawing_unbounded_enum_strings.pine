@@ -1,0 +1,16 @@
+//@version=6
+indicator("Unsupported unbounded drawing enum strings", overlay=true)
+
+unboundedLineStyle = input.string("custom")
+partlyInvalidLineStyle = close >= open ? line.style_solid : "custom"
+partlyInvalidExtend = close >= open ? extend.right : "custom"
+partlyInvalidLabelStyle = close >= open ? label.style_label_up : "custom"
+
+lineId = line.new(bar_index, low, bar_index + 1, high, extend=partlyInvalidExtend, style=partlyInvalidLineStyle)
+line.set_style(lineId, unboundedLineStyle)
+line.set_extend(lineId, partlyInvalidExtend)
+
+labelId = label.new(bar_index, high, "invalid", style=partlyInvalidLabelStyle)
+label.set_style(labelId, partlyInvalidLabelStyle)
+
+plot(close)

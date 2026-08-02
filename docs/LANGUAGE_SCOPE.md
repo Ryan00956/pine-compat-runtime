@@ -5,8 +5,8 @@ more important than broad, incomplete support.
 
 ## Version Policy
 
-The parser recognizes the exact `//@version=N` form for the closed v1 through
-v6 range:
+The parser recognizes the standard `//@version=N` form for the closed v1
+through v6 range:
 
 ```pine
 //@version=1
@@ -19,12 +19,13 @@ v6 range:
 
 A missing directive selects v1 with origin `implicit`; it is not treated as the
 latest language. Leading comments, blank lines, and indentation before the
-directive are accepted. Whitespace after `=` and trailing whitespace retain
-the parser's existing acceptance, while `// @version=6` and
-`//@version =6` remain ordinary comments. A second exact directive or an exact
-directive after a source statement is rejected before ordinary semantic
-analysis. Versions outside v1-v6 and root/library version mismatches are also
-rejected before lowering.
+directive are accepted. Horizontal whitespace before or after `=` and trailing
+whitespace are accepted, including the corpus-proven `//@version = 4`
+spelling. The `//@version` prefix remains exact, so `// @version=6` is an
+ordinary comment. A second recognized directive or a recognized directive
+after a source statement is rejected before ordinary semantic analysis.
+Versions outside v1-v6 and root/library version mismatches are also rejected
+before lowering.
 
 The analyzer carries the validated dialect into HIR so the runtime can select
 version-specific behavior. For v1-v4, script-mode classification runs before
@@ -37,17 +38,45 @@ existing modern paths, and legacy-only declaration names are not activated for
 modern sources.
 
 The v1-v4 compatibility front-end uses version-ranged exact rules only after
-lexical/user resolution fails. Exact translations preserve their original span
-in `legacyTranslations` and lower to canonical HIR names. The implemented
-legacy subset includes the bounded v1/v2 scalar declaration graph, historical
-bool/numeric conversions, v3 untyped-`na` inference, v1-v4 `study()` and
-focused `input()` binding, the
+source-visible lexical/user resolution fails. From v3 onward, globals declared
+after a UDF body do not retroactively shadow fallback calls in that body;
+earlier lexical values and user functions retain precedence. Exact
+translations preserve their original span in `legacyTranslations` and lower to
+canonical HIR names. The implemented legacy subset includes the bounded v1/v2
+scalar declaration graph, historical bool/numeric arithmetic, comparison, and
+condition conversions, v3 untyped-`na` inference, v1-v4 `study()` and focused
+`input()` binding, the
 conformance-listed exact aliases, the initial ten output families with
-versioned transparency/style semantics, strict `iff`, structural `offset`, the
-type-directed legacy `rsi` overload, weekday session defaults, and pre-v6
-strict logical evaluation. Recognized multi-timeframe request forms that still
-need legacy execution semantics fail as supported-known work instead of
-silently selecting modern behavior.
+versioned transparency/style semantics, v4/v5 series output offsets whose final
+evaluated value applies to the complete rendered output, strict `iff`,
+structural history `offset`, the type-directed legacy `rsi` overload, weekday
+session defaults, and pre-v6 strict logical evaluation. Recognized
+multi-timeframe request forms that still need legacy execution semantics fail
+as supported-known work instead of silently selecting modern behavior.
+
+The v1/v2 graph distinguishes declarations that actually require
+self/forward predeclaration from earlier source-order inference prerequisites.
+A prior scalar `input()` may therefore feed a later self-history chain without
+moving the input call, while current-value forward edges remain forbidden from
+crossing input/request/output/mutation declarations. Unqualified `rising` and
+`falling` are exact v1-v4 aliases of `ta.rising` and `ta.falling`; v5/v6 require
+the namespace.
+
+`timenow` is a `series int` in every dialect and reads an explicit
+host-provided UNIX millisecond timestamp for the current script execution. A
+historical batch supplies exactly one timestamp per bar; incremental and
+realtime hosts supply one timestamp with each update. Missing input fails when
+execution reaches `timenow`, and a supplied batch with a count different from
+the bar count is rejected before execution. The deterministic core never reads
+the process wall clock or substitutes `time`/`last_bar_time`.
+
+Tuple declarations retain concrete destination element types for downstream
+semantic analysis when their initializer has a concrete tuple type and every
+initializer error is `E_UNSUPPORTED_FEATURE`. This suppresses
+failure-derived unknown-symbol and operator-type diagnostics without claiming
+execution support: the producer diagnostics remain and no HIR is emitted.
+Recursive producers and initializers with any other error do not enter this
+recovery path.
 
 The released indicator profiles are evidence-ranked independently from their
 individual conformance rows:
@@ -105,6 +134,11 @@ Expressions:
 - expressions outside parentheses may use legacy physical-line wrapping when
   each continuation is deeper than its local block and not indented to a
   multiple-of-four column
+- as a narrowly corpus-backed implicit-v1 exception, a top-level ternary may
+  continue on exactly four ASCII spaces when the physical boundary ends with
+  `?`/`:` or the next line begins with `?`/`:`; explicit v1-v6 sources, tabs,
+  local-block continuations, and ordinary multiple-of-four indentation retain
+  structural layout
 - comparison operators: `==`, `!=`, `>`, `>=`, `<`, `<=`
 - logical operators: `and`, `or`, `not`
 - ternary operator: `condition ? a : b`
@@ -229,6 +263,11 @@ outer variables with the same names; use reassignment syntax for scalar updates
 to existing variables. `var` declarations in local blocks initialize the first
 time their declaration site is reached, then preserve state across later
 executions.
+A value-producing `if` local block can end with a complete nested
+`if`/`else-if`/`else` statement. The selected nested leaf becomes the enclosing
+branch result, with analysis, type inference, and lowering applied recursively.
+Every reachable leaf must still end in a value-producing expression; a final
+reassignment or other non-value statement is rejected with `E_BRANCH_RETURN`.
 Switch statement-block arm declarations follow the same branch-local no-leak
 rule, and supported block arms may reassign already-visible outer variables.
 Expression-context block arms still need a final result expression.
@@ -297,11 +336,17 @@ range2(hi, lo) =>
     value * 2
 ```
 
-Named arguments are supported for user-defined functions. Block bodies must end
-with an expression. Recursive functions, output/drawing/alert side effects
-inside functions, global reassignment inside functions, and side-effecting
-calls as UDF arguments are rejected in the current executable subset. UDF
-arguments are evaluated once into callsite-local temporaries.
+Named arguments are supported for user-defined functions. A block body's final
+statement determines its result: an expression, local declaration, local
+reassignment, conditional, or loop can supply the return. A final conditional
+without `else` yields `na` when its condition is false; final loops may produce
+`void` when their body is side-effect-only. Pine v4 additionally admits the
+exact namespace-call subset `array.set/pop/unshift/clear`,
+`label.new/delete`, and `line.new/delete` inside UDF bodies. Recursive
+functions, all other collection/drawing side effects, output/alert side
+effects, global reassignment inside functions, and side-effecting calls as UDF
+arguments are rejected in the current executable subset. UDF arguments are
+evaluated once into callsite-local temporaries.
 
 ## Initial Built-Ins
 
@@ -358,6 +403,12 @@ Plotting:
 - `fill`
 - `bgcolor`
 - `barcolor`
+
+For Pine v4/v5 only, the `offset` argument of `plot`, `plotchar`, `plotshape`,
+`plotarrow`, `bgcolor`, and `barcolor` may be `series int`. The runtime retains
+the last evaluated offset as metadata for the complete output, matching the
+pre-v6 behavior. Pine v3 and v6 require a simple-or-weaker integer. This visual
+offset rule is independent from the `expr[offset]` history operator.
 
 Color namespace:
 
@@ -429,7 +480,15 @@ Request data:
   open/confirmation boundary, `gaps_off` carries the latest eligible value,
   and realtime updates use confirmed alignment. A reached lookahead-on call
   reports one non-error repaint warning per callsite. Missing streams retain
-  the original complete legacy call span.
+  the original complete legacy call span. In Pine v4, a request placed directly
+  in a UDF body may depend on scalar parameters and normal immutable scalar
+  locals. Series dependency initializers recompute in the isolated requested
+  runtime; const/input/simple dependencies are captured. A prior legacy
+  request may feed a later request only through the exact three-positional-
+  argument form with identical symbol, timeframe, gaps, and lookahead.
+  Different selectors, control-flow-local requests, reassignment, persistence,
+  recursion, and side effects remain unsupported, and the modern
+  `request.security` local-alias boundary is unchanged.
 
 ## Explicitly Unsupported in Phase 1
 
@@ -449,8 +508,10 @@ The analyzer should reject these with clear diagnostics:
 - `request.*` variants outside the narrow same-context and same-or-higher-timeframe
   provider-backed `request.security` subsets
 - legacy lower-timeframe `security`, requested expressions outside the same
-  provider-backed subset, and declaration-level `study(resolution=...)`; the
-  latter remains a precise unsupported program-context feature
+  provider-backed subset, and non-empty or dynamic declaration-level
+  `study(resolution=...)`; the exact empty-string chart-inherited subset is
+  supported, while all execution-timeframe-changing forms remain a precise
+  unsupported program-context feature
 - `request.security_lower_tf`; lower-timeframe array-returning request APIs need
   typed array return semantics and host output shapes before support is claimed
 - unsupported alert frequency values outside the claimed const-string

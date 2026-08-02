@@ -1,6 +1,6 @@
 use super::PineDialect;
 
-pub const LEGACY_TRANSLATOR_REVISION: u32 = 15;
+pub const LEGACY_TRANSLATOR_REVISION: u32 = 31;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum LegacyRuleKind {
@@ -267,6 +267,14 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         support: LegacyRuleSupport::Supported,
     },
     LegacyRule {
+        source_name: "falling",
+        canonical_name: Some("ta.falling"),
+        min_version: PineDialect::V1,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
         source_name: "fill",
         canonical_name: Some("fill"),
         min_version: PineDialect::V1,
@@ -510,6 +518,18 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         PineDialect::V1,
         PineDialect::V3,
     ),
+    exact_symbol(
+        "label.style_labeldown",
+        "label.style_label_down",
+        PineDialect::V4,
+        PineDialect::V4,
+    ),
+    exact_symbol(
+        "label.style_labelup",
+        "label.style_label_up",
+        PineDialect::V4,
+        PineDialect::V4,
+    ),
     exact_symbol("lime", "color.lime", PineDialect::V1, PineDialect::V3),
     exact_symbol("line", "plot.style_line", PineDialect::V1, PineDialect::V3),
     exact_symbol(
@@ -752,6 +772,14 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         PineDialect::V1,
         PineDialect::V3,
     ),
+    LegacyRule {
+        source_name: "rising",
+        canonical_name: Some("ta.rising"),
+        min_version: PineDialect::V1,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
+        support: LegacyRuleSupport::Supported,
+    },
     LegacyRule {
         source_name: "rma",
         canonical_name: Some("ta.rma"),

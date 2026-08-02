@@ -1,0 +1,9 @@
+//@version=3
+study("v3 strict bool numeric comparison")
+
+equalOne = (close > open) == 1
+notZero = 0 != (close > open)
+greaterThanZero = (close > open) > 0
+atMostOne = 1 >= (close > open)
+
+plot(close)

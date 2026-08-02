@@ -8638,6 +8638,52 @@ fn run_csv_with_request_bars_matches_direct_request_api() {
 }
 
 #[test]
+fn timenow_uses_reserved_execution_times_in_direct_and_compiled_wasm_apis() {
+    let source = "//@version=4\nstudy(\"clock\")\nplot(timenow)\nplot(timenow - time)\n";
+    let bars = "time,open,high,low,close,volume\n1,1,1,1,1,1\n2,1,1,1,1,1\n3,1,1,1,1,1\n";
+    let host_input = r#"{"$executionTimes":[101,202,303]}"#;
+
+    let direct = run_script_csv_with_request_bars(source, bars, host_input)
+        .expect("direct WASM execution clock input");
+    let parsed: serde_json::Value = serde_json::from_str(&direct).expect("strict JSON output");
+    assert_eq!(
+        parsed["plots"][0]["values"],
+        serde_json::json!([101, 202, 303])
+    );
+    assert_eq!(
+        parsed["plots"][1]["values"],
+        serde_json::json!([100, 200, 300])
+    );
+
+    let compiled = compile_script(source)
+        .expect("timenow source should compile")
+        .run_csv_with_request_bars(bars, host_input)
+        .expect("compiled WASM execution clock input");
+    assert_eq!(compiled, direct);
+}
+
+#[test]
+fn timenow_wasm_host_input_fails_closed_when_missing_or_misaligned() {
+    let source = "//@version=6\nindicator(\"clock\")\nplot(timenow)\n";
+    let bars = "time,open,high,low,close,volume\n1,1,1,1,1,1\n2,1,1,1,1,1\n";
+
+    let missing = run_script_csv_internal(source, bars)
+        .expect_err("missing WASM execution clock input should fail");
+    assert!(
+        missing.contains("timenow requires an explicit execution timestamp"),
+        "{missing}"
+    );
+
+    let mismatch =
+        run_script_csv_with_request_bars_internal(source, bars, r#"{"$executionTimes":[101]}"#)
+            .expect_err("misaligned WASM execution clock input should fail");
+    assert!(
+        mismatch.contains("execution timestamp count 1 does not match bar count 2"),
+        "{mismatch}"
+    );
+}
+
+#[test]
 fn run_csv_with_request_bars_reports_missing_request_key() {
     let program = compile_script(REQUEST_HOST_SOURCE).expect("request fixture should compile");
     let message = program

@@ -92,19 +92,19 @@ semantic.
 ## Legacy Indicator Release Profiles
 
 `tests/fixtures/legacy/release_profiles.tsv` is the release execution registry.
-It contains 12 complete legacy runtime fixtures and three additional MTF rows.
-Every row pins source version, maturity, bars/request environment, realtime
-policy, original-source provenance, and a retained-value ceiling. The runtime
-release test fails if a legacy runtime fixture is missing from the registry,
-if a row changes maturity or provenance unexpectedly, or if execution diverges
-across its required modes.
+It contains 33 complete legacy runtime fixtures and three additional MTF rows.
+Every row pins source version, maturity, bars/request/execution environment,
+realtime policy, original-source provenance, and a retained-value ceiling. The
+runtime release test fails if a legacy runtime fixture is missing from the
+registry, if a row changes maturity or provenance unexpectedly, or if
+execution diverges across its required modes.
 
 | Profile | Maturity | Eligible corpus | Release rows | Historical/incremental | Realtime policy |
 | --- | --- | ---: | ---: | --- | --- |
-| v4 | preview | 12 | 9 | exact parity | forming/rollback/confirmed parity |
+| v4 | preview | 12 | 24 | exact parity | forming/rollback/confirmed parity |
 | v3 | preview | 7 | 2 | exact parity | forming/rollback/confirmed parity |
-| v2 | experimental | 2 | 3 | exact parity | ordinary rows parity; lookahead row forbids future leakage |
-| implicit v1 | experimental | 1 | 1 | exact parity | forming/rollback/confirmed parity |
+| v2 | experimental | 2 | 4 | exact parity | ordinary rows parity; lookahead row forbids future leakage |
+| implicit v1 | experimental | 1 | 6 | exact parity | forming/rollback/confirmed parity |
 
 The fixed seed corpus has 22 eligible legacy indicators and six controls plus
 one excluded legacy strategy. It reaches 100% parse, analyze/lower, and
@@ -121,6 +121,10 @@ series/window/output values. Timing is observational and machine-dependent;
 the per-row resource ceiling is deterministic and release-gated. Corpus and
 release manifests require explicit license classes and source paths, and
 privacy-preserving corpus reports omit source text and source paths.
+Corpus report schema 3 also records `executionTimes` availability while
+omitting the execution-time path and timestamp values. A non-empty
+`execution_times_path` manifest field must resolve to a file before execution
+and is forwarded unchanged through CLI `--execution-times`.
 
 Legacy exact-alias conformance requires a paired source/canonical HIR or runtime
 comparison, an original-span translation record, a user-symbol collision
@@ -252,6 +256,13 @@ current timeframe metadata subset exposes `timeframe.period` and
 `timeframe.main_period` as the runtime's single chart timeframe string. Main
 timeframe declaration overrides and requested-context differences are not
 claimed until a separate fixture-backed slice designs that context model.
+The legacy Pine v4 request path has one narrower scoped exception: a
+`security` call directly in an inlined UDF body may rebuild a graph of scalar
+parameters and normal immutable scalar locals in the requested runtime. A
+prior three-positional-argument legacy request may be one dependency only when
+its symbol, timeframe, gaps, and lookahead match the enclosing request.
+Different selectors, control-flow-local calls, reassignment, persistence,
+recursion, and modern `request.security` local aliases remain rejected.
 `runtime.error(message)` is a fixture-backed internal execution outcome: it
 accepts string-compatible messages, may be called through a user-defined
 function or named argument, and stops at the first reached call with the exact
@@ -514,8 +525,9 @@ compatible value, inserts at a positive, in-range negative, or end position,
 returns `void`, and cannot continue. Explicit `na` indexes and upstream-`na`
 results are no-ops after value evaluation; ordinary bounds, identity, alias/
 live-window/fresh-snapshot, UDF, and parent-capacity behavior is preserved.
-Terminal `.set(index, value)` accepts the same index/value type contract but
-replaces one positive or in-range negative slot without changing length. It
+Terminal `.set(index, value)` accepts an integer-compatible index and the same
+element-compatible value contract, then replaces one positive or in-range
+negative slot without changing length. It
 returns `void` and cannot continue; explicit `na` indexes and upstream-`na`
 results no-op after value evaluation, while empty/out-of-range, identity,
 alias/live-window/fresh-snapshot, and UDF behavior remains unchanged.
@@ -1838,6 +1850,14 @@ independent while-loop control-flow blocks, and fixture-backed
 ordinary and independent while-loop control-flow reads, with sparse snapshots
 and default 50/named 1-500 `max_lines_count` eviction that appends deletion
 snapshots to the oldest active line before creating new ones.
+Label style and line style/extend parameters use a bounded dynamic-enum
+contract. Series/input strings are accepted only when immutable initializer
+provenance, complete conditional branches, or explicit string-input `options`
+show that every possible value is an official supported enum. Unbounded
+strings and domains containing any invalid value remain analysis errors.
+Pine v4 `label.style_labelup` and `label.style_labeldown` are translated to the
+current underscored constants before lowering; v5/v6 do not activate those
+legacy spellings.
 `line.get_price` uses bar-index x1/y1/x2/y2 interpolation and extrapolation and
 returns `na` for `na`, deleted, vertical, nonnumeric, or time-coordinate lines;
 timestamp interpolation remains unsupported. The executable box subset covers
@@ -2052,8 +2072,9 @@ text wrapping, tooltip display, font rendering, and bold/italic rendering
 remain host-specific;
 other table cell text rendering remains host-specific.
 Supported drawing creation, mutation, cloning, getter, and cell writes are covered under realtime rollback where state
-changes, and drawing side effects inside user-defined functions are rejected
-under the existing side-effect policy. Keep unsupported coordinate modes and advanced object
+changes. Pine v4 UDF bodies additionally admit the exact namespace-call subset
+`label.new/delete` and `line.new/delete`; every other drawing side effect inside
+user-defined functions remains rejected. Keep unsupported coordinate modes and advanced object
 methods out of the supported matrix until they have fixtures and public-output
 coverage. `linefill.new` and `linefill.set_color` are partial: they create
 runtime-owned linefill ids over supported line ids, emit sparse color snapshots,

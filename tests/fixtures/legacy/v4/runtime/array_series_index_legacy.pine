@@ -1,0 +1,6 @@
+//@version=4
+study("Legacy array series index")
+var values = array.new_float(3, na)
+index = bar_index % array.size(values)
+array.set(values, index, close)
+plot(array.get(values, index))

@@ -54,10 +54,7 @@ impl Analyzer {
         }
 
         let resolution = self.legacy.resolve_call(name);
-        let is_symbol_shadowed = self
-            .bound_symbol(name, callee_span)
-            .or_else(|| self.scope.resolve(name))
-            .is_some();
+        let is_symbol_shadowed = self.lexical_symbol_shadows_legacy_call(name, callee_span);
         let is_annotation = !is_symbol_shadowed
             && (name == "alertcondition"
                 || matches!(
@@ -357,10 +354,9 @@ impl Analyzer {
         }
 
         let is_symbol_shadowed = match &callee.kind {
-            ExprKind::Identifier(identifier) => self
-                .bound_symbol(identifier, callee.span)
-                .or_else(|| self.scope.resolve(identifier))
-                .is_some(),
+            ExprKind::Identifier(identifier) => {
+                self.lexical_symbol_shadows_legacy_call(identifier, callee.span)
+            }
             _ => false,
         };
         !is_symbol_shadowed

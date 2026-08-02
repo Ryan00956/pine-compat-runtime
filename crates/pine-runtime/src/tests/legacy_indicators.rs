@@ -55,6 +55,52 @@ fn legacy_security_environment_with_timeframes(
     )
 }
 
+fn chart_inherited_study_environment() -> RequestEnvironment {
+    RequestEnvironment::new(
+        ChartContext::new(
+            "TEST:CHART",
+            RequestTimeframe::parse("5").expect("five minute chart timeframe"),
+        ),
+        Arc::new(InMemoryRequestDataProvider::new()),
+    )
+}
+
+#[test]
+fn legacy_v4_timenow_matches_canonical_execution_clock_contract() {
+    let legacy = compile_fixture(
+        "timenow_execution_clock_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/timenow_execution_clock_legacy.pine"
+        ),
+    );
+    let canonical = compile_fixture(
+        "timenow_execution_clock_canonical.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/timenow_execution_clock_canonical.pine"
+        ),
+    );
+    let bars = [timed_close(0, 1.0), timed_close(60_000, 2.0)];
+    let execution_times = [1_700_000_000_101, 1_700_000_060_205];
+
+    let legacy_result = run_historical_with_execution_times(&legacy, &bars, &execution_times)
+        .expect("legacy timenow execution clock");
+    let canonical_result = run_historical_with_execution_times(&canonical, &bars, &execution_times)
+        .expect("canonical timenow execution clock");
+
+    assert_eq!(legacy_result, canonical_result);
+    assert_eq!(
+        legacy_result.plots[0].values,
+        vec![
+            PineValue::Int(1_700_000_000_101),
+            PineValue::Int(1_700_000_060_205)
+        ]
+    );
+    assert_eq!(
+        legacy_result.plots[2].values,
+        vec![PineValue::Na, PineValue::Int(1_700_000_000_101)]
+    );
+}
+
 fn legacy_security_profile_program(
     name: &str,
     gaps: &str,
@@ -69,6 +115,54 @@ fn legacy_security_profile_program(
     );
     program.language_version = Some(version);
     program
+}
+
+#[test]
+fn legacy_v4_empty_study_resolution_matches_chart_context_batch_incremental_and_realtime() {
+    let legacy = compile_fixture(
+        "study_empty_resolution_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/study_empty_resolution_legacy.pine"
+        ),
+    );
+    let canonical = compile_fixture(
+        "study_empty_resolution_canonical.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/study_empty_resolution_canonical.pine"
+        ),
+    );
+    assert_eq!(legacy.drawing_settings, canonical.drawing_settings);
+
+    let bars = [
+        timed_close(0, 10.0),
+        timed_close(300_000, 20.0),
+        timed_close(600_000, 30.0),
+    ];
+    let environment = chart_inherited_study_environment();
+    let expected = run_historical_with_request_environment(&canonical, &bars, environment.clone())
+        .expect("canonical chart-context run");
+    let batch = run_historical_with_request_environment(&legacy, &bars, environment.clone())
+        .expect("legacy chart-context run");
+    assert_eq!(batch, expected);
+    assert_eq!(batch.plots[0].values[0], PineValue::Na);
+    assert_values_close(&batch.plots[0].values[1..], &[15.0, 25.0]);
+    assert_values_close(&batch.plots[1].values, &[10.0, 20.0, 30.0]);
+
+    let mut incremental = HistoricalRuntime::with_request_environment(&legacy, environment.clone());
+    for bar in bars {
+        incremental
+            .append_bar(bar)
+            .expect("incremental chart-context bar");
+    }
+    assert_eq!(incremental.result(), batch);
+
+    let mut realtime = RealtimeRuntime::with_request_environment(&legacy, environment);
+    for bar in bars {
+        realtime
+            .update(BarUpdate::historical(bar))
+            .expect("realtime chart-context historical bar");
+    }
+    assert_eq!(realtime.confirmed_result(), batch);
 }
 
 fn legacy_v2_core_bars() -> [Bar; 6] {
@@ -193,6 +287,414 @@ fn implicit_v1_and_explicit_v2_shared_runtime_profile_match() {
 }
 
 #[test]
+fn implicit_v1_four_space_ternary_continuations_match_canonical_runtime() {
+    let legacy = compile_fixture(
+        "ternary_continuation_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v1/runtime/ternary_continuation_legacy.pine"
+        ),
+    );
+    let canonical = compile_fixture(
+        "ternary_continuation_canonical.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v1/runtime/ternary_continuation_canonical.pine"
+        ),
+    );
+    let bars = legacy_v2_core_bars();
+
+    let legacy_result =
+        run_historical(&legacy, &bars).expect("implicit v1 ternary continuation run");
+    let canonical_result =
+        run_historical(&canonical, &bars).expect("canonical ternary continuation run");
+
+    assert_eq!(legacy_result, canonical_result);
+    assert_values_close(
+        &legacy_result.plots[0].values,
+        &[12.0, 10.0, 14.0, 9.0, 10.0, 12.0],
+    );
+    assert_values_close(
+        &legacy_result.plots[1].values,
+        &[12.0, 10.0, 14.0, 9.0, 8.0, 12.0],
+    );
+}
+
+#[test]
+fn implicit_v1_graph_source_order_prerequisite_matches_canonical_runtime() {
+    let legacy = compile_fixture(
+        "graph_source_order_prerequisite_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v1/runtime/graph_source_order_prerequisite_legacy.pine"
+        ),
+    );
+    let canonical = compile_fixture(
+        "graph_source_order_prerequisite_canonical.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v1/runtime/graph_source_order_prerequisite_canonical.pine"
+        ),
+    );
+    let bars = legacy_v2_core_bars();
+
+    let legacy_result = run_historical(&legacy, &bars).expect("implicit v1 source-order graph run");
+    let canonical_result =
+        run_historical(&canonical, &bars).expect("canonical source-order graph run");
+
+    assert_eq!(legacy_result, canonical_result);
+    assert_values_close(
+        &legacy_result.plots[0].values,
+        &[0.0, 0.0, 1.0, -1.0, -1.0, 1.0],
+    );
+    assert_values_close(
+        &legacy_result.plots[1].values,
+        &[0.0, 0.0, 1.0, -1.0, 0.0, 1.0],
+    );
+}
+
+#[test]
+fn spaced_equals_version_annotation_matches_canonical_runtime() {
+    let legacy = compile_fixture(
+        "spaced_version_annotation_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/spaced_version_annotation_legacy.pine"
+        ),
+    );
+    let canonical = compile_fixture(
+        "spaced_version_annotation_canonical.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/spaced_version_annotation_canonical.pine"
+        ),
+    );
+    let bars = legacy_v2_core_bars();
+
+    let legacy_result = run_historical(&legacy, &bars).expect("spaced version annotation run");
+    let canonical_result =
+        run_historical(&canonical, &bars).expect("canonical version annotation run");
+
+    assert_eq!(legacy_result, canonical_result);
+    assert_values_close(
+        &legacy_result.plots[0].values,
+        &[11.0, 12.0, 13.0, 13.0, 10.0, 11.0],
+    );
+}
+
+#[test]
+fn nested_if_statement_returns_match_canonical_expression_results() {
+    let legacy = compile_fixture(
+        "nested_if_expression_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/nested_if_expression_legacy.pine"
+        ),
+    );
+    let canonical = compile_fixture(
+        "nested_if_expression_canonical.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/nested_if_expression_canonical.pine"
+        ),
+    );
+    let bars = legacy_v2_core_bars();
+
+    let legacy_result = run_historical(&legacy, &bars).expect("legacy nested if run");
+    let canonical_result = run_historical(&canonical, &bars).expect("canonical nested if run");
+
+    assert_eq!(legacy_result, canonical_result);
+    assert_values_close(
+        &legacy_result.plots[0].values,
+        &[9.0, 12.0, 13.0, 13.0, 12.0, 12.0],
+    );
+}
+
+#[test]
+fn legacy_v1_v2_bool_numeric_comparisons_match_explicit_float_casts() {
+    let legacy = compile_fixture(
+        "bool_numeric_comparisons_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v2/runtime/bool_numeric_comparisons_legacy.pine"
+        ),
+    );
+    let canonical = compile_fixture(
+        "bool_numeric_comparisons_canonical.pine",
+        "//@version=6\nindicator(\"canonical bool numeric comparisons\")\nup = close > open\nequalOne = float(up) == 1\nnotZero = 0 != float(up)\ngreaterThanZero = float(up) > 0\natMostOne = 1 >= float(up)\nplot(equalOne ? close : na, title=\"bool equals one\")\nplot(notZero ? close : na, title=\"zero differs from bool\")\nplot(greaterThanZero ? close : na, title=\"bool greater than zero\")\nplot(atMostOne ? close : na, title=\"one at least bool\")\n",
+    );
+    let bars = legacy_v2_core_bars();
+
+    let legacy_result = run_historical(&legacy, &bars).expect("legacy bool comparison run");
+    let canonical_result =
+        run_historical(&canonical, &bars).expect("canonical bool comparison run");
+
+    assert_eq!(legacy_result, canonical_result);
+    assert_eq!(
+        legacy_result.plots[0].values,
+        vec![
+            PineValue::Float(11.0),
+            PineValue::Na,
+            PineValue::Float(13.0),
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(11.0),
+        ]
+    );
+    assert_eq!(legacy_result.plots[1].values, legacy_result.plots[0].values);
+    assert_eq!(legacy_result.plots[2].values, legacy_result.plots[0].values);
+    assert_eq!(
+        legacy_result.plots[3].values,
+        vec![
+            PineValue::Float(11.0),
+            PineValue::Float(11.0),
+            PineValue::Float(13.0),
+            PineValue::Float(10.0),
+            PineValue::Float(10.0),
+            PineValue::Float(11.0),
+        ]
+    );
+}
+
+#[test]
+fn legacy_integer_division_applies_to_values_calls_and_history_offsets() {
+    let legacy = compile_fixture(
+        "contextual_integer_division_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/contextual_integer_division_legacy.pine"
+        ),
+    );
+    let canonical = compile_fixture(
+        "contextual_integer_division_canonical.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/contextual_integer_division_canonical.pine"
+        ),
+    );
+    let bars = [
+        timed_close(0, 1.0),
+        timed_close(60_000, 2.0),
+        timed_close(120_000, 3.0),
+    ];
+
+    let result = run_historical(&legacy, &bars).expect("legacy integer division run");
+    let canonical_result =
+        run_historical(&canonical, &bars).expect("canonical integer division run");
+
+    assert_eq!(result, canonical_result);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[5.0 / 3.0, 8.0 / 3.0]);
+    assert_eq!(result.plots[1].values, result.plots[0].values);
+    assert_values_close(&result.plots[2].values, &[2.0, 2.0, 2.0]);
+    assert_eq!(
+        result.plots[3].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Float(1.0)]
+    );
+    assert_eq!(result.plots[4].values, result.plots[3].values);
+}
+
+#[test]
+fn legacy_v4_udf_builtin_aliases_use_definition_source_order() {
+    let legacy = compile_fixture(
+        "udf_source_order_builtin_aliases_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/udf_source_order_builtin_aliases_legacy.pine"
+        ),
+    );
+    let canonical = compile_fixture(
+        "udf_source_order_builtin_aliases_canonical.pine",
+        "//@version=6\nindicator(\"canonical UDF source-order built-ins\")\nsmoothedRsi(source, length) =>\n    localRsi = ta.rsi(source, length)\n    ta.sma(localRsi, 2)\nglobalRsi = ta.rsi(close, 3)\nplot(smoothedRsi(close, 3), title=\"local RSI\")\nplot(globalRsi, title=\"global RSI\")\n",
+    );
+    let bars = legacy_v2_core_bars();
+
+    assert_eq!(
+        run_historical(&legacy, &bars).expect("legacy UDF source-order run"),
+        run_historical(&canonical, &bars).expect("canonical UDF source-order run")
+    );
+}
+
+#[test]
+fn legacy_v4_udf_final_statements_match_explicit_v6_returns() {
+    let legacy = compile_fixture(
+        "udf_final_statements_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/udf_final_statements_legacy.pine"
+        ),
+    );
+    let canonical = compile_fixture(
+        "udf_final_statements_canonical.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/udf_final_statements_canonical.pine"
+        ),
+    );
+    let bars = [
+        bar_ohlc(10.0, 12.0, 9.0, 11.0),
+        bar_ohlc(12.0, 13.0, 9.0, 10.0),
+        bar_ohlc(10.0, 15.0, 10.0, 14.0),
+        bar_ohlc(14.0, 16.0, 11.0, 12.0),
+    ];
+
+    let legacy_result = run_historical(&legacy, &bars).expect("legacy UDF final-statement run");
+    let canonical_result =
+        run_historical(&canonical, &bars).expect("canonical explicit-return run");
+
+    assert_eq!(legacy_result, canonical_result);
+    assert_values_close(&legacy_result.plots[0].values, &[22.0, 20.0, 28.0, 24.0]);
+    assert_values_close(&legacy_result.plots[1].values, &[33.0, 30.0, 42.0, 36.0]);
+    assert_values_close(&legacy_result.plots[2].values, &[12.0, 9.0, 15.0, 11.0]);
+    assert_values_close(&legacy_result.plots[3].values, &[11.0, -1.0, 14.0, -1.0]);
+    assert_values_close(&legacy_result.plots[4].values, &[11.0, 10.0, 14.0, 12.0]);
+}
+
+#[test]
+fn legacy_numeric_bool_call_arguments_use_pre_v6_truthiness() {
+    let program = compile_fixture(
+        "numeric_bool_call_arguments_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/numeric_bool_call_arguments_legacy.pine"
+        ),
+    );
+    let bars = legacy_v2_core_bars();
+
+    let result = run_historical(&program, &bars).expect("legacy numeric bool call run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(
+        &result.plots[0].values[1..],
+        &[11.0, 11.0, 10.0, 10.0, 11.0],
+    );
+}
+
+#[test]
+fn legacy_v4_array_get_set_accept_series_integer_indexes() {
+    let program = compile_fixture(
+        "array_series_index_legacy.pine",
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/array_series_index_legacy.pine"),
+    );
+    let bars = [
+        timed_close(0, 1.0),
+        timed_close(60_000, 2.0),
+        timed_close(120_000, 3.0),
+        timed_close(180_000, 4.0),
+    ];
+
+    let result = run_historical(&program, &bars).expect("legacy array series index run");
+
+    assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0, 4.0]);
+}
+
+#[test]
+fn legacy_v4_udf_reference_side_effects_match_explicit_canonical_execution() {
+    let legacy = compile_fixture(
+        "udf_reference_side_effects_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/udf_reference_side_effects_legacy.pine"
+        ),
+    );
+    let canonical = compile_fixture(
+        "udf_reference_side_effects_canonical.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/udf_reference_side_effects_canonical.pine"
+        ),
+    );
+    let bars = [
+        timed_close(0, 1.0),
+        timed_close(60_000, 2.0),
+        timed_close(120_000, 3.0),
+        timed_close(180_000, 4.0),
+    ];
+
+    let expected = run_historical(&canonical, &bars).expect("canonical reference effects");
+    let batch = run_historical(&legacy, &bars).expect("legacy reference effects");
+    assert_eq!(batch.plots.len(), 1);
+    assert_eq!(batch.plots[0].values, expected.plots[0].values);
+    assert_eq!(batch.plots[0].colors, expected.plots[0].colors);
+    assert_eq!(batch.plots[0].metadata, expected.plots[0].metadata);
+    assert_eq!(batch.lines, expected.lines);
+    assert_eq!(batch.labels, expected.labels);
+    assert_eq!(batch.diagnostics, expected.diagnostics);
+    assert_values_close(&batch.plots[0].values, &[1.0, 3.0, 6.0, 10.0]);
+    assert_eq!(batch.lines.len(), bars.len());
+    assert_eq!(batch.labels.len(), bars.len());
+    assert!(batch.lines.iter().all(|line| {
+        line.snapshots
+            .last()
+            .is_some_and(|snapshot| !snapshot.exists)
+    }));
+    assert!(batch.labels.iter().all(|label| {
+        label
+            .snapshots
+            .last()
+            .is_some_and(|snapshot| !snapshot.exists)
+    }));
+
+    let mut incremental = HistoricalRuntime::new(&legacy);
+    for bar in bars {
+        incremental
+            .append_bar(bar)
+            .expect("incremental legacy reference effects");
+    }
+    assert_eq!(incremental.result(), batch);
+
+    let mut realtime = RealtimeRuntime::new(&legacy);
+    for bar in bars {
+        realtime
+            .update(BarUpdate::historical(bar))
+            .expect("realtime legacy reference effects");
+    }
+    assert_eq!(realtime.confirmed_result(), batch);
+}
+
+#[test]
+fn legacy_v4_dynamic_drawing_enums_execute_with_canonical_styles() {
+    let program = compile_fixture(
+        "dynamic_drawing_enums_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/dynamic_drawing_enums_legacy.pine"
+        ),
+    );
+    let bars = [
+        bar_ohlc(1.0, 3.0, 0.0, 2.0),
+        bar_ohlc(3.0, 4.0, 1.0, 2.0),
+        bar_ohlc(2.0, 5.0, 1.0, 4.0),
+        bar_ohlc(5.0, 6.0, 0.0, 1.0),
+    ];
+
+    let result = run_historical(&program, &bars).expect("legacy dynamic drawing enum run");
+
+    assert_eq!(result.lines.len(), 4);
+    assert_eq!(result.labels.len(), 4);
+    for (index, line) in result.lines.iter().enumerate() {
+        let snapshot = line.snapshots.last().expect("final line snapshot");
+        assert_eq!(
+            snapshot.style,
+            PineValue::String(
+                if index % 2 == 0 {
+                    "line.style_solid"
+                } else {
+                    "line.style_dashed"
+                }
+                .to_owned()
+            )
+        );
+        assert_eq!(
+            snapshot.extend,
+            PineValue::String(
+                if matches!(index, 0 | 2) {
+                    "extend.right"
+                } else {
+                    "extend.none"
+                }
+                .to_owned()
+            )
+        );
+    }
+    for (index, label) in result.labels.iter().enumerate() {
+        assert_eq!(
+            label.snapshots.last().expect("final label snapshot").style,
+            PineValue::String(
+                if matches!(index, 0 | 2) {
+                    "label.style_label_up"
+                } else {
+                    "label.style_label_down"
+                }
+                .to_owned()
+            )
+        );
+    }
+}
+
+#[test]
 fn v4_legacy_security_same_context_matches_direct_expression() {
     let legacy = compile_fixture(
         "legacy_security_same_context.pine",
@@ -241,6 +743,90 @@ fn implicit_v1_security_recomputes_immutable_aliases_in_requested_context() {
     assert_eq!(result.plots[0].values[1], PineValue::Na);
     assert_eq!(result.plots[0].values[2], PineValue::Na);
     assert_values_close(&result.plots[0].values[3..], &[300.0, 300.0, 500.0]);
+}
+
+#[test]
+fn v4_legacy_security_recomputes_nested_pure_udfs_in_requested_context() {
+    let program = compile_fixture(
+        "security_pure_udf_legacy.pine",
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/security_pure_udf_legacy.pine"),
+    );
+    let environment = legacy_security_environment_with_timeframes(
+        "1",
+        "1",
+        vec![
+            timed_close(0, 10.0),
+            timed_close(60_000, 20.0),
+            timed_close(120_000, 30.0),
+        ],
+    );
+    let chart = [
+        timed_close(0, 1.0),
+        timed_close(60_000, 2.0),
+        timed_close(120_000, 3.0),
+    ];
+
+    let result = run_historical_with_request_environment(&program, &chart, environment)
+        .expect("legacy security pure UDF should run");
+
+    assert_values_close(&result.plots[0].values, &[22.0, 42.0, 62.0]);
+}
+
+#[test]
+fn v4_legacy_security_recomputes_udf_local_dependency_graph_in_requested_context() {
+    let legacy = compile_fixture(
+        "security_udf_local_dependencies_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/security_udf_local_dependencies_legacy.pine"
+        ),
+    );
+    let canonical = compile_fixture(
+        "security_udf_local_dependencies_canonical.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/security_udf_local_dependencies_canonical.pine"
+        ),
+    );
+    let environment = legacy_security_environment(vec![
+        timed_close(0, 100.0),
+        timed_close(300_000, 200.0),
+        timed_close(600_000, 300.0),
+    ]);
+    let chart = [
+        timed_close(0, 1.0),
+        timed_close(240_000, 3.0),
+        timed_close(300_000, 5.0),
+        timed_close(540_000, 7.0),
+        timed_close(600_000, 9.0),
+        timed_close(840_000, 11.0),
+    ];
+
+    let mut expected =
+        run_historical_with_request_environment(&canonical, &chart, environment.clone())
+            .expect("canonical local-dependency request run");
+    let batch = run_historical_with_request_environment(&legacy, &chart, environment.clone())
+        .expect("legacy local-dependency request run");
+    for (expected, actual) in expected.plots.iter_mut().zip(&batch.plots) {
+        expected.id = actual.id;
+    }
+    assert_eq!(batch, expected);
+    assert_ne!(batch.plots[0].values.last(), Some(&PineValue::Na));
+    assert_ne!(batch.plots[1].values.last(), Some(&PineValue::Na));
+
+    let mut incremental = HistoricalRuntime::with_request_environment(&legacy, environment.clone());
+    for bar in chart {
+        incremental
+            .append_bar(bar)
+            .expect("incremental local-dependency request bar");
+    }
+    assert_eq!(incremental.result(), batch);
+
+    let mut realtime = RealtimeRuntime::with_request_environment(&legacy, environment);
+    for bar in chart {
+        realtime
+            .update(BarUpdate::historical(bar))
+            .expect("realtime local-dependency historical bar");
+    }
+    assert_eq!(realtime.confirmed_result(), batch);
 }
 
 #[test]
@@ -766,6 +1352,31 @@ fn v4_input_fixture_preserves_metadata_callsites_and_overrides() {
 }
 
 #[test]
+fn v4_named_input_default_fixture_matches_canonical_historical_output() {
+    let legacy = compile_fixture(
+        "named_input_default_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/named_input_default_legacy.pine"
+        ),
+    );
+    let canonical = compile_fixture(
+        "named_input_default_canonical.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/named_input_default_canonical.pine"
+        ),
+    );
+    assert_eq!(input_calls(&legacy), input_calls(&canonical));
+
+    let bars = [bar_ohlc(10.0, 12.0, 9.0, 11.0)];
+    let legacy_result = run_historical(&legacy, &bars).expect("legacy named input default run");
+    let canonical_result =
+        run_historical(&canonical, &bars).expect("canonical named input default run");
+
+    assert_eq!(legacy_result, canonical_result);
+    assert_values_close(&legacy_result.plots[0].values, &[7.0]);
+}
+
+#[test]
 fn v4_output_fixture_matches_canonical_visual_data_and_metadata() {
     let legacy = compile_fixture(
         "outputs_legacy.pine",
@@ -818,6 +1429,46 @@ fn v4_output_fixture_matches_canonical_visual_data_and_metadata() {
         legacy_result.plot_chars[0].metadata.show_last,
         PineValue::Int(2)
     );
+}
+
+#[test]
+fn v4_v5_series_output_offsets_apply_the_final_value_to_complete_outputs() {
+    let v4 = compile_fixture(
+        "series_output_offset_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/series_output_offset_legacy.pine"
+        ),
+    );
+    let v5 = compile_fixture(
+        "v5_series_output_offset.pine",
+        include_str!("../../../../tests/fixtures/runtime/v5_series_output_offset.pine"),
+    );
+    let canonical = compile_fixture(
+        "series_output_offset_canonical.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/series_output_offset_canonical.pine"
+        ),
+    );
+    let bars = [
+        bar_ohlc(10.0, 12.0, 9.0, 11.0),
+        bar_ohlc(12.0, 13.0, 9.0, 10.0),
+        bar_ohlc(10.0, 15.0, 10.0, 14.0),
+        bar_ohlc(14.0, 16.0, 11.0, 12.0),
+    ];
+
+    let canonical_result =
+        run_historical(&canonical, &bars).expect("canonical final output offset run");
+    for (version, program) in [(4, &v4), (5, &v5)] {
+        let result = run_historical(program, &bars)
+            .unwrap_or_else(|error| panic!("v{version} series output offset run: {error:?}"));
+        assert_eq!(result, canonical_result, "v{version}");
+        assert_eq!(result.plots[0].metadata.offset, PineValue::Int(-1));
+        assert_eq!(result.plot_chars[0].metadata.offset, PineValue::Int(-1));
+        assert_eq!(result.plot_shapes[0].metadata.offset, PineValue::Int(-1));
+        assert_eq!(result.plot_arrows[0].metadata.offset, PineValue::Int(-1));
+        assert_eq!(result.bg_colors[0].metadata.offset, PineValue::Int(-1));
+        assert_eq!(result.bar_colors[0].metadata.offset, PineValue::Int(-1));
+    }
 }
 
 #[test]

@@ -1,0 +1,13 @@
+//@version=2
+study("Legacy v2 bool numeric comparisons")
+
+up = close > open
+equalOne = up == 1
+notZero = 0 != up
+greaterThanZero = up > 0
+atMostOne = 1 >= up
+
+plot(equalOne ? close : na, title="bool equals one")
+plot(notZero ? close : na, title="zero differs from bool")
+plot(greaterThanZero ? close : na, title="bool greater than zero")
+plot(atMostOne ? close : na, title="one at least bool")

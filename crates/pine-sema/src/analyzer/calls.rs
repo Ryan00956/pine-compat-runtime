@@ -25,23 +25,13 @@ pub(crate) use helpers::{
     is_array_mutation_builtin, is_array_mutation_method_call_name, is_map_mutation_builtin,
     is_map_mutation_method_call_name, is_output_or_declaration_builtin,
     is_ta_extreme_length_overload, is_ta_pivot_default_source_overload, is_ta_vwap_bands_call,
-    is_time_function_overload, is_timestamp_overload, local_udf_call_result_method_parts,
-    map_call_result_builtin_name, map_method_builtin_name, matrix_call_result_builtin_name,
-    method_call_parts, postfix_call_result_method_parts, receiver_call_arg,
+    is_time_function_overload, is_timestamp_overload, map_call_result_builtin_name,
+    map_method_builtin_name, matrix_call_result_builtin_name, method_call_parts,
+    param_index_for_arg, postfix_call_result_method_parts, receiver_call_arg,
+    unsupported_collection_mutation_udf_reason,
 };
 
 impl Analyzer {
-    pub(crate) fn local_udf_call_result_method_name<'a>(
-        &self,
-        callee: &'a Expr,
-        args: &'a [CallArg],
-    ) -> Option<&'a str> {
-        let (function_name, method_name) = local_udf_call_result_method_parts(callee, args)?;
-        self.functions
-            .contains_key(function_name)
-            .then_some(method_name)
-    }
-
     pub(crate) fn user_method_call_result_method_name<'a>(
         &self,
         callee: &'a Expr,
@@ -161,7 +151,7 @@ impl Analyzer {
         let is_shadowed_legacy_call = is_legacy_call
             && (self.functions.contains_key(&name)
                 || (matches!(callee.kind, ExprKind::Identifier(_))
-                    && self.scope.resolve(&name).is_some()));
+                    && self.lexical_symbol_shadows_legacy_call(&name, callee.span)));
         if is_legacy_call
             && !is_shadowed_legacy_call
             && let FocusedLegacyCallAnalysis::Analyzed(result) =
@@ -274,8 +264,8 @@ impl Analyzer {
             return self.analyze_udf_call(&name, callee.span, span, args, &arg_types);
         }
 
-        let is_shadowed_lexical_call =
-            matches!(callee.kind, ExprKind::Identifier(_)) && self.scope.resolve(&name).is_some();
+        let is_shadowed_lexical_call = matches!(callee.kind, ExprKind::Identifier(_))
+            && self.lexical_symbol_shadows_legacy_call(&name, callee.span);
         let legacy_resolution = if is_shadowed_lexical_call {
             None
         } else {
@@ -326,13 +316,19 @@ impl Analyzer {
                     .expect("validated focused declaration has a canonical target");
                 let signature = pine_builtins::get_phase_1_builtin(canonical_name)
                     .expect("validated focused declaration target is registered");
+                let canonical_arg_types = bound
+                    .canonical_arg_source_indices
+                    .iter()
+                    .map(|index| arg_types[*index])
+                    .collect::<Vec<_>>();
                 let source_context_id = self.current_source_context_id();
                 self.legacy.record_declaration_translation(
                     &mut self.compatibility,
                     source_context_id,
                     callee.span,
                     rule,
-                    bound.canonical_arg_names,
+                    bound.arg_rewrites,
+                    bound.chart_timeframe_inheritance_span,
                 );
                 return self.analyze_registered_builtin(
                     canonical_name,
@@ -340,7 +336,7 @@ impl Analyzer {
                     callee.span,
                     span,
                     &bound.canonical_args,
-                    &arg_types,
+                    &canonical_arg_types,
                 );
             }
             Some(crate::legacy::LegacyResolution::UnsupportedKnown(rule)) => {
@@ -393,14 +389,20 @@ impl Analyzer {
         self.validate_script_declaration_call(name, callee_span, args);
         self.validate_strategy_order_call(name, callee_span, args);
         self.validate_strategy_value_function_call(name, callee_span);
-        if self.function_depth > 0 && is_output_or_declaration_builtin(name) {
+        if self.function_depth > 0
+            && is_output_or_declaration_builtin(name)
+            && !self.allows_legacy_v4_udf_reference_side_effect(name)
+        {
             self.unsupported(
                 "function_side_effect",
                 "indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
                 callee_span,
             );
         }
-        if self.function_depth > 0 && is_array_mutation_builtin(name) {
+        if self.function_depth > 0
+            && is_array_mutation_builtin(name)
+            && !self.allows_legacy_v4_udf_reference_side_effect(name)
+        {
             self.unsupported(
                 "function_side_effect",
                 &unsupported_collection_mutation_udf_reason(name),
@@ -1135,6 +1137,20 @@ impl Analyzer {
                 continue;
             }
 
+            if self.v4_v5_series_output_offset_arg(
+                signature.name,
+                param.name,
+                &arg.value,
+                arg_type,
+                param.accepts,
+            ) {
+                continue;
+            }
+
+            if self.legacy_numeric_bool_arg(&arg.value, arg_type, param.accepts) {
+                continue;
+            }
+
             if !call_arg_accepts_type(signature, args, arg_types, param.accepts, arg_type) {
                 let diagnostic = call_arg_matrix_cross_param_expected_diagnostic(
                     signature,
@@ -1471,23 +1487,4 @@ fn arg_type_for_param_index(
             .then(|| arg_types.get(arg_index).copied().flatten())
             .flatten()
     })
-}
-
-fn param_index_for_arg(
-    signature: &BuiltinSignature,
-    arg_index: usize,
-    arg: &CallArg,
-) -> Option<usize> {
-    if let Some(name) = &arg.name {
-        return signature.params.iter().position(|param| param.name == name);
-    }
-    if arg_index < signature.params.len() {
-        Some(arg_index)
-    } else {
-        signature.variadic.then_some(signature.params.len() - 1)
-    }
-}
-
-fn unsupported_collection_mutation_udf_reason(operation: &str) -> String {
-    format!("collection mutation via `{operation}` is not supported inside user-defined functions")
 }

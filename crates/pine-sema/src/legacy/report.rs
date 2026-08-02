@@ -46,6 +46,17 @@ pub(crate) fn record_signature_translation(
     });
 }
 
+pub(crate) fn record_study_chart_timeframe_inheritance(
+    report: &mut CompatibilityReport,
+    span: Span,
+) {
+    report.legacy_emulations.push(LegacyEmulation {
+        feature: "study.resolution".to_owned(),
+        behavior: "Pine v4 study(resolution=\"\") inherits the host chart timeframe; resolution_gaps has no cross-timeframe mapping effect in this exact subset".to_owned(),
+        span,
+    });
+}
+
 pub(crate) fn record_constant_translation(
     report: &mut CompatibilityReport,
     rule: LegacyRule,

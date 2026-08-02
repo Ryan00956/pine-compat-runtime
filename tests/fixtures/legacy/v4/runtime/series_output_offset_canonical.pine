@@ -1,0 +1,9 @@
+//@version=6
+indicator("Canonical final-value output offsets")
+
+plot(close, title="Plot", color=color.blue, offset=-1)
+plotchar(close > open, title="Char", char="X", color=color.green, offset=-1)
+plotshape(close < open, title="Shape", style=shape.circle, color=color.red, offset=-1)
+plotarrow(close - open, title="Arrow", colorup=color.green, colordown=color.red, offset=-1)
+bgcolor(close >= open ? color.blue : color.red, title="Background", offset=-1)
+barcolor(close >= open ? color.green : color.red, title="Bars", offset=-1)

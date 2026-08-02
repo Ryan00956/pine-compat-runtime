@@ -5,15 +5,27 @@ use crate::prelude::*;
 use super::prepend_block_statements;
 
 fn function_branch_has_return(branch: &[Stmt]) -> bool {
-    branch.last().is_some_and(|statement| {
-        matches!(
-            statement.kind,
-            StmtKind::Expr(_)
-                | StmtKind::For { .. }
-                | StmtKind::ForIn { .. }
-                | StmtKind::While { .. }
-        )
-    })
+    branch.last().is_some_and(function_statement_has_return)
+}
+
+fn function_statement_has_return(statement: &Stmt) -> bool {
+    match &statement.kind {
+        StmtKind::Expr(_)
+        | StmtKind::Decl { .. }
+        | StmtKind::Reassign { .. }
+        | StmtKind::For { .. }
+        | StmtKind::ForIn { .. }
+        | StmtKind::While { .. } => true,
+        StmtKind::If {
+            then_branch,
+            else_branch,
+            ..
+        } => {
+            function_branch_has_return(then_branch)
+                && (else_branch.is_empty() || function_branch_has_return(else_branch))
+        }
+        _ => false,
+    }
 }
 
 fn for_statement_expr(
@@ -64,6 +76,22 @@ fn while_statement_expr(condition: &Expr, body: &[Stmt], span: Span) -> Expr {
     }
 }
 
+fn if_statement_expr(
+    condition: &Expr,
+    then_branch: &[Stmt],
+    else_branch: &[Stmt],
+    span: Span,
+) -> Expr {
+    Expr {
+        span,
+        kind: ExprKind::If {
+            condition: Box::new(condition.clone()),
+            then_branch: then_branch.to_vec(),
+            else_branch: else_branch.to_vec(),
+        },
+    }
+}
+
 fn final_loop_statement_expr(statement: &Stmt) -> Option<Expr> {
     match &statement.kind {
         StmtKind::For {
@@ -99,6 +127,22 @@ fn final_loop_statement_expr(statement: &Stmt) -> Option<Expr> {
     }
 }
 
+fn implicit_na_result_expr(analyzer: &Analyzer) -> HirExpr {
+    let symbol = analyzer
+        .scope
+        .all_symbols
+        .iter()
+        .find_map(|(name, symbol)| {
+            (name == "na" && symbol.pine_type.kind == ValueKind::Na).then_some(*symbol)
+        })
+        .expect("the analyzer always retains the built-in `na` symbol");
+    HirExpr {
+        pine_type: symbol.pine_type,
+        series_id: symbol.series_id,
+        kind: HirExprKind::Symbol(symbol.id),
+    }
+}
+
 impl Analyzer {
     pub(crate) fn lower_function_body(
         &mut self,
@@ -117,12 +161,21 @@ impl Analyzer {
                 let (last, prefix) = statements.split_last()?;
                 let result = match &last.kind {
                     StmtKind::Expr(result) => result,
+                    StmtKind::Decl { name, .. } | StmtKind::Reassign { name, .. } => {
+                        return self.lower_function_return_statement(
+                            prefix,
+                            last,
+                            name,
+                            param_exprs,
+                            param_types,
+                        );
+                    }
                     StmtKind::If {
                         condition,
                         then_branch,
                         else_branch,
                     } if function_branch_has_return(then_branch)
-                        && function_branch_has_return(else_branch) =>
+                        && (else_branch.is_empty() || function_branch_has_return(else_branch)) =>
                     {
                         return self.lower_function_if_return(
                             prefix,
@@ -178,6 +231,50 @@ impl Analyzer {
         }
     }
 
+    fn lower_function_return_statement(
+        &mut self,
+        prefix: &[Stmt],
+        last: &Stmt,
+        name: &str,
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
+        self.lower_symbol_overrides.push(HashMap::new());
+        let lowered_statements = prefix
+            .iter()
+            .map(|statement| self.lower_stmt_with_params(statement, param_exprs, param_types))
+            .collect::<Option<Vec<_>>>();
+        let result = lowered_statements.and_then(|mut statements| {
+            let (statement, result) =
+                self.lower_function_symbol_statement_result(last, name, param_exprs, param_types)?;
+            statements.push(statement);
+            Some(prepend_block_statements(statements, result))
+        });
+        self.lower_symbol_overrides.pop();
+        result
+    }
+
+    fn lower_function_symbol_statement_result(
+        &mut self,
+        statement: &Stmt,
+        name: &str,
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<(HirStmt, HirExpr)> {
+        let lowered = self.lower_stmt_with_params(statement, param_exprs, param_types)?;
+        let symbol = match &statement.kind {
+            StmtKind::Decl { .. } => self.lower_decl_symbol(name, statement.span)?,
+            StmtKind::Reassign { .. } => self.bound_symbol(name, statement.span)?,
+            _ => return None,
+        };
+        let result = HirExpr {
+            pine_type: symbol.pine_type,
+            series_id: symbol.series_id,
+            kind: HirExprKind::Symbol(symbol.id),
+        };
+        Some((lowered, result))
+    }
+
     fn lower_function_return_expr(
         &mut self,
         prefix: &[Stmt],
@@ -222,6 +319,14 @@ impl Analyzer {
         let expr;
         let result = match &last.kind {
             StmtKind::Expr(result) => result,
+            StmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } if !else_branch.is_empty() => {
+                expr = if_statement_expr(condition, then_branch, else_branch, last.span);
+                &expr
+            }
             StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => {
                 expr = final_loop_statement_expr(last)?;
                 &expr
@@ -283,14 +388,38 @@ impl Analyzer {
         param_types: &HashMap<String, PineType>,
     ) -> Option<HirExpr> {
         self.lower_symbol_overrides.push(HashMap::new());
+        let result = self.lower_function_if_return_in_scope(
+            prefix,
+            condition,
+            then_branch,
+            else_branch,
+            param_exprs,
+            param_types,
+        );
+        self.lower_symbol_overrides.pop();
+        result
+    }
+
+    fn lower_function_if_return_in_scope(
+        &mut self,
+        prefix: &[Stmt],
+        condition: &Expr,
+        then_branch: &[Stmt],
+        else_branch: &[Stmt],
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
         let lowered_statements = prefix
             .iter()
             .map(|statement| self.lower_stmt_with_params(statement, param_exprs, param_types))
             .collect::<Option<Vec<_>>>();
         let condition_expr = self.lower_expr_with_params(condition, param_exprs, param_types);
         let then_expr = self.lower_function_branch_return(then_branch, param_exprs, param_types);
-        let else_expr = self.lower_function_branch_return(else_branch, param_exprs, param_types);
-        self.lower_symbol_overrides.pop();
+        let else_expr = if else_branch.is_empty() {
+            Some(implicit_na_result_expr(self))
+        } else {
+            self.lower_function_branch_return(else_branch, param_exprs, param_types)
+        };
 
         let condition_expr = condition_expr?;
         let then_expr = then_expr?;
@@ -331,20 +460,47 @@ impl Analyzer {
         param_types: &HashMap<String, PineType>,
     ) -> Option<HirExpr> {
         let (last, prefix) = branch.split_last()?;
-        let lowered_statements = prefix
+        let mut lowered_statements = prefix
             .iter()
             .map(|statement| self.lower_stmt_with_params(statement, param_exprs, param_types))
             .collect::<Option<Vec<_>>>()?;
         let expr;
         let result = match &last.kind {
-            StmtKind::Expr(result) => result,
+            StmtKind::Expr(result) => {
+                self.lower_expr_with_params(result, param_exprs, param_types)?
+            }
+            StmtKind::Decl { name, .. } | StmtKind::Reassign { name, .. } => {
+                let (statement, result) = self.lower_function_symbol_statement_result(
+                    last,
+                    name,
+                    param_exprs,
+                    param_types,
+                )?;
+                lowered_statements.push(statement);
+                result
+            }
+            StmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } if function_branch_has_return(then_branch)
+                && (else_branch.is_empty() || function_branch_has_return(else_branch)) =>
+            {
+                self.lower_function_if_return_in_scope(
+                    &[],
+                    condition,
+                    then_branch,
+                    else_branch,
+                    param_exprs,
+                    param_types,
+                )?
+            }
             StmtKind::For { .. } | StmtKind::ForIn { .. } | StmtKind::While { .. } => {
                 expr = final_loop_statement_expr(last)?;
-                &expr
+                self.lower_expr_with_params(&expr, param_exprs, param_types)?
             }
             _ => return None,
         };
-        let result = self.lower_expr_with_params(result, param_exprs, param_types)?;
         if lowered_statements.is_empty() {
             Some(result)
         } else {

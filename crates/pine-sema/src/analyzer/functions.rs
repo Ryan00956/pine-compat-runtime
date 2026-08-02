@@ -193,15 +193,27 @@ fn switch_arm_result_contains_output_or_declaration_call(result: &SwitchArmResul
 }
 
 fn function_branch_has_return(branch: &[Stmt]) -> bool {
-    branch.last().is_some_and(|statement| {
-        matches!(
-            statement.kind,
-            StmtKind::Expr(_)
-                | StmtKind::For { .. }
-                | StmtKind::ForIn { .. }
-                | StmtKind::While { .. }
-        )
-    })
+    branch.last().is_some_and(function_statement_has_return)
+}
+
+fn function_statement_has_return(statement: &Stmt) -> bool {
+    match &statement.kind {
+        StmtKind::Expr(_)
+        | StmtKind::Decl { .. }
+        | StmtKind::Reassign { .. }
+        | StmtKind::For { .. }
+        | StmtKind::ForIn { .. }
+        | StmtKind::While { .. } => true,
+        StmtKind::If {
+            then_branch,
+            else_branch,
+            ..
+        } => {
+            function_branch_has_return(then_branch)
+                && (else_branch.is_empty() || function_branch_has_return(else_branch))
+        }
+        _ => false,
+    }
 }
 
 pub(crate) fn statement_contains_output_or_declaration_call(statement: &Stmt) -> bool {
@@ -443,7 +455,8 @@ impl Analyzer {
         let mut resolved_arg_map_infos = vec![None; function.params.len()];
         let mut resolved_arg_const_switch_keys = vec![None; function.params.len()];
         for (arg_index, param_index) in arg_indices.iter().copied().enumerate() {
-            resolved_arg_types[param_index] = arg_types.get(arg_index).copied().flatten();
+            let resolved_arg_type = arg_types.get(arg_index).copied().flatten();
+            resolved_arg_types[param_index] = resolved_arg_type;
             resolved_arg_user_types[param_index] = args
                 .get(arg_index)
                 .and_then(|arg| self.user_type_name_of_expr(&arg.value));
@@ -657,12 +670,15 @@ impl Analyzer {
                 }
                 match &last.kind {
                     StmtKind::Expr(expr) => self.analyze_expr(expr),
+                    StmtKind::Decl { name, .. } | StmtKind::Reassign { name, .. } => {
+                        self.analyze_function_symbol_statement_return(last, name)
+                    }
                     StmtKind::If {
                         condition,
                         then_branch,
                         else_branch,
                     } if function_branch_has_return(then_branch)
-                        && function_branch_has_return(else_branch) =>
+                        && (else_branch.is_empty() || function_branch_has_return(else_branch)) =>
                     {
                         self.analyze_function_if_return(
                             condition,
@@ -677,17 +693,28 @@ impl Analyzer {
                         to,
                         step,
                         body,
-                    } => self.analyze_for_expr(counter, from, to, step.as_ref(), body, last.span),
+                    } => self.analyze_function_for_return(
+                        counter,
+                        from,
+                        to,
+                        step.as_ref(),
+                        body,
+                        last.span,
+                    ),
                     StmtKind::ForIn {
                         index,
                         value,
                         iterable,
                         body,
-                    } => {
-                        self.analyze_for_in_expr(index.as_deref(), value, iterable, body, last.span)
-                    }
+                    } => self.analyze_function_for_in_return(
+                        index.as_deref(),
+                        value,
+                        iterable,
+                        body,
+                        last.span,
+                    ),
                     StmtKind::While { condition, body } => {
-                        self.analyze_while_expr(condition, body, last.span)
+                        self.analyze_function_while_return(condition, body, last.span)
                     }
                     _ => {
                         self.analyze_stmt(last);
@@ -701,6 +728,15 @@ impl Analyzer {
                 }
             }
         }
+    }
+
+    fn analyze_function_symbol_statement_return(
+        &mut self,
+        statement: &Stmt,
+        name: &str,
+    ) -> Option<PineType> {
+        self.analyze_stmt(statement);
+        self.scope.resolve(name).map(|symbol| symbol.pine_type)
     }
 
     fn analyze_function_if_return(
@@ -724,21 +760,33 @@ impl Analyzer {
         let (then_type, else_type) = match condition_value {
             Some(true) => {
                 let then_type = self.analyze_function_branch_return(then_branch);
-                let else_type = self.analyze_without_symbol_effects(|analyzer| {
-                    analyzer.analyze_function_branch_return(else_branch)
-                });
+                let else_type = if else_branch.is_empty() {
+                    Some(PineType::new(Qualifier::Const, ValueKind::Na))
+                } else {
+                    self.analyze_without_symbol_effects(|analyzer| {
+                        analyzer.analyze_function_branch_return(else_branch)
+                    })
+                };
                 (then_type, else_type)
             }
             Some(false) => {
                 let then_type = self.analyze_without_symbol_effects(|analyzer| {
                     analyzer.analyze_function_branch_return(then_branch)
                 });
-                let else_type = self.analyze_function_branch_return(else_branch);
+                let else_type = if else_branch.is_empty() {
+                    Some(PineType::new(Qualifier::Const, ValueKind::Na))
+                } else {
+                    self.analyze_function_branch_return(else_branch)
+                };
                 (then_type, else_type)
             }
             None => {
                 let then_type = self.analyze_function_branch_return(then_branch);
-                let else_type = self.analyze_function_branch_return(else_branch);
+                let else_type = if else_branch.is_empty() {
+                    Some(PineType::new(Qualifier::Const, ValueKind::Na))
+                } else {
+                    self.analyze_function_branch_return(else_branch)
+                };
                 (then_type, else_type)
             }
         };
@@ -790,21 +838,41 @@ impl Analyzer {
         }
         let pine_type = match &last.kind {
             StmtKind::Expr(expr) => self.analyze_expr(expr),
+            StmtKind::Decl { name, .. } | StmtKind::Reassign { name, .. } => {
+                self.analyze_function_symbol_statement_return(last, name)
+            }
+            StmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } if function_branch_has_return(then_branch)
+                && (else_branch.is_empty() || function_branch_has_return(else_branch)) =>
+            {
+                self.analyze_function_if_return(condition, then_branch, else_branch, last.span)
+            }
             StmtKind::For {
                 counter,
                 from,
                 to,
                 step,
                 body,
-            } => self.analyze_for_expr(counter, from, to, step.as_ref(), body, last.span),
+            } => {
+                self.analyze_function_for_return(counter, from, to, step.as_ref(), body, last.span)
+            }
             StmtKind::ForIn {
                 index,
                 value,
                 iterable,
                 body,
-            } => self.analyze_for_in_expr(index.as_deref(), value, iterable, body, last.span),
+            } => self.analyze_function_for_in_return(
+                index.as_deref(),
+                value,
+                iterable,
+                body,
+                last.span,
+            ),
             StmtKind::While { condition, body } => {
-                self.analyze_while_expr(condition, body, last.span)
+                self.analyze_function_while_return(condition, body, last.span)
             }
             _ => None,
         };

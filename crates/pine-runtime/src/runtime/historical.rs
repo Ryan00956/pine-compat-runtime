@@ -45,6 +45,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) current_bar_update_kind: BarUpdateKind,
     pub(crate) current_bar_is_new: bool,
     pub(crate) current_bar: Option<Bar>,
+    pub(crate) current_execution_time: Option<i64>,
     pub(crate) last_bar_index: Option<usize>,
     pub(crate) last_bar_time: Option<i64>,
     pub(crate) chart_visible_left_time: Option<i64>,
@@ -132,6 +133,14 @@ pub fn run_historical(program: &HirProgram, bars: &[Bar]) -> Result<RuntimeResul
     HistoricalRuntime::new(program).run(bars)
 }
 
+pub fn run_historical_with_execution_times(
+    program: &HirProgram,
+    bars: &[Bar],
+    execution_times: &[i64],
+) -> Result<RuntimeResult, RuntimeError> {
+    HistoricalRuntime::new(program).run_with_execution_times(bars, execution_times)
+}
+
 pub fn run_historical_with_request_environment(
     program: &HirProgram,
     bars: &[Bar],
@@ -162,11 +171,34 @@ pub fn run_historical_with_request_environment_and_input_overrides(
     .run(bars)
 }
 
+pub fn run_historical_with_request_environment_and_input_overrides_and_execution_times(
+    program: &HirProgram,
+    bars: &[Bar],
+    request_environment: RequestEnvironment,
+    input_overrides: InputOverrides,
+    execution_times: &[i64],
+) -> Result<RuntimeResult, RuntimeError> {
+    HistoricalRuntime::with_request_environment_and_input_overrides(
+        program,
+        request_environment,
+        input_overrides,
+    )
+    .run_with_execution_times(bars, execution_times)
+}
+
 pub fn run_historical_profiled(
     program: &HirProgram,
     bars: &[Bar],
 ) -> Result<RuntimeProfiledResult, RuntimeError> {
     HistoricalRuntime::new(program).run_profiled(bars)
+}
+
+pub fn run_historical_profiled_with_execution_times(
+    program: &HirProgram,
+    bars: &[Bar],
+    execution_times: &[i64],
+) -> Result<RuntimeProfiledResult, RuntimeError> {
+    HistoricalRuntime::new(program).run_profiled_with_execution_times(bars, execution_times)
 }
 
 pub fn run_historical_profiled_with_request_environment(
@@ -189,6 +221,21 @@ pub fn run_historical_profiled_with_request_environment_and_input_overrides(
         input_overrides,
     )
     .run_profiled(bars)
+}
+
+pub fn run_historical_profiled_with_request_environment_and_input_overrides_and_execution_times(
+    program: &HirProgram,
+    bars: &[Bar],
+    request_environment: RequestEnvironment,
+    input_overrides: InputOverrides,
+    execution_times: &[i64],
+) -> Result<RuntimeProfiledResult, RuntimeError> {
+    HistoricalRuntime::with_request_environment_and_input_overrides(
+        program,
+        request_environment,
+        input_overrides,
+    )
+    .run_profiled_with_execution_times(bars, execution_times)
 }
 
 impl<'a> HistoricalRuntime<'a> {
@@ -216,6 +263,7 @@ impl<'a> HistoricalRuntime<'a> {
             current_bar_update_kind: BarUpdateKind::Historical,
             current_bar_is_new: true,
             current_bar: None,
+            current_execution_time: None,
             last_bar_index: None,
             last_bar_time: None,
             chart_visible_left_time: None,
@@ -338,6 +386,16 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(self.result())
     }
 
+    pub(crate) fn run_with_execution_times(
+        mut self,
+        bars: &[Bar],
+        execution_times: &[i64],
+    ) -> Result<RuntimeResult, RuntimeError> {
+        self.append_bars_with_execution_times(bars, execution_times)?;
+
+        Ok(self.result())
+    }
+
     pub(crate) fn run_profiled(
         mut self,
         bars: &[Bar],
@@ -350,7 +408,45 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    pub(crate) fn run_profiled_with_execution_times(
+        mut self,
+        bars: &[Bar],
+        execution_times: &[i64],
+    ) -> Result<RuntimeProfiledResult, RuntimeError> {
+        self.append_bars_with_execution_times(bars, execution_times)?;
+
+        Ok(RuntimeProfiledResult {
+            result: self.result(),
+            profile: self.profile(),
+        })
+    }
+
     pub fn append_bars(&mut self, bars: &[Bar]) -> Result<(), RuntimeError> {
+        self.append_bars_inner(bars, None)
+    }
+
+    pub fn append_bars_with_execution_times(
+        &mut self,
+        bars: &[Bar],
+        execution_times: &[i64],
+    ) -> Result<(), RuntimeError> {
+        if bars.len() != execution_times.len() {
+            return Err(RuntimeError {
+                message: format!(
+                    "execution timestamp count {} does not match bar count {}",
+                    execution_times.len(),
+                    bars.len()
+                ),
+            });
+        }
+        self.append_bars_inner(bars, Some(execution_times))
+    }
+
+    fn append_bars_inner(
+        &mut self,
+        bars: &[Bar],
+        execution_times: Option<&[i64]>,
+    ) -> Result<(), RuntimeError> {
         let previous_historical_end = self.historical_end;
         self.historical_end = Some(self.bars + bars.len());
         if let Some(first) = bars.first() {
@@ -366,8 +462,13 @@ impl<'a> HistoricalRuntime<'a> {
             self.chart_visible_right_time = Some(last.time);
         }
         let result = (|| {
-            for bar in bars {
-                self.append_bar_with_kind(*bar, BarUpdateKind::Historical)?;
+            for (index, bar) in bars.iter().enumerate() {
+                self.append_bar_with_context(
+                    *bar,
+                    BarUpdateKind::Historical,
+                    true,
+                    execution_times.map(|times| times[index]),
+                )?;
             }
             Ok(())
         })();
@@ -379,12 +480,20 @@ impl<'a> HistoricalRuntime<'a> {
         self.append_bar_with_kind(bar, BarUpdateKind::Historical)
     }
 
+    pub fn append_bar_with_execution_time(
+        &mut self,
+        bar: Bar,
+        execution_time: i64,
+    ) -> Result<(), RuntimeError> {
+        self.append_bar_with_context(bar, BarUpdateKind::Historical, true, Some(execution_time))
+    }
+
     pub(crate) fn append_bar_with_kind(
         &mut self,
         bar: Bar,
         update_kind: BarUpdateKind,
     ) -> Result<(), RuntimeError> {
-        self.append_bar_with_context(bar, update_kind, true)
+        self.append_bar_with_context(bar, update_kind, true, None)
     }
 
     pub(crate) fn append_bar_with_context(
@@ -392,11 +501,13 @@ impl<'a> HistoricalRuntime<'a> {
         bar: Bar,
         update_kind: BarUpdateKind,
         is_new_bar: bool,
+        execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
         let bar_index = self.bars;
         self.current_bar_update_kind = update_kind;
         self.current_bar_is_new = is_new_bar;
         self.current_bar = Some(bar);
+        self.current_execution_time = execution_time;
         self.first_bar_close.get_or_insert(bar.close);
         self.chart_visible_left_time.get_or_insert(bar.time);
         if self.historical_end.is_none()
@@ -454,6 +565,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.current_bar_update_kind = BarUpdateKind::Historical;
         self.current_bar_is_new = true;
         self.current_bar = None;
+        self.current_execution_time = None;
         Ok(())
     }
 

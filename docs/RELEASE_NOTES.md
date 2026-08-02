@@ -19,6 +19,179 @@
   20/20 v4 scripts, while analyze/lower and historical execution remain 2/44;
   this is a parser improvement, not a broad compatibility claim. Comma-separated
   statements remain rejected in v5/v6, and strategies remain out of scope.
+- Traced the remaining corpus `series na` source/output diagnostics to their
+  producer failures instead of relaxing `plot` or `ta.*` argument typing.
+  Pine v1/v2 bool-versus-numeric comparisons now lower bool operands through
+  explicit canonical `float(...)` calls, while v3 stays strict. From v3 onward,
+  globals declared after a UDF body no longer retroactively hide historical
+  built-in calls in that body; earlier lexical collisions still win. Two
+  legacy scripts improve with no modern-control change, raising the R2 totals
+  to 29/44 analysis/lowering and 24/44 historical execution. The paired public
+  runtime fixtures also expand the bounded release registry to 25 rows.
+- Restored the historical v4/v5 `series int` output-offset behavior for
+  `plot`, `plotchar`, `plotshape`, `plotarrow`, `bgcolor`, and `barcolor`.
+  These versions apply the final evaluated offset to the complete rendered
+  output, while v3 and v6 remain strict and ordinary history offsets are
+  unchanged. Public runtime parity expands the bounded release registry to 26
+  rows.
+- Aligned UDF block results with Pine's final-statement semantics. Final local
+  declarations and reassignments now return their bound value, final
+  conditionals can return branch declarations, a missing `else` produces
+  `na`, and function-final side-effect loops can have a valid `void` result.
+  Collection and drawing mutation inside UDFs remain independently rejected.
+  The R2 corpus advances to 30/44 analysis/lowering and 25/44 historical
+  execution while losing 58 legacy diagnostics. Nineteen v5/v6 controls retain
+  their stage outcomes and lose 101 diagnostics net as the same current
+  language rule is applied. The public v4/v6 parity fixture expands the
+  bounded release registry to 27 rows.
+- Added a narrowly scoped parser compatibility path for two corpus-proven
+  implicit-v1 ternary layouts. At global scope only, exactly four ASCII spaces
+  can continue a no-directive ternary when `?` or `:` is adjacent to the
+  physical boundary; explicit v1-v6 sources, tabs, local blocks, ordinary
+  multiple-of-four indentation, and consumer typing remain strict. Both
+  previously blocked R2 indicators now parse, analyze/lower, and execute,
+  raising the unchanged corpus to 44/44 parse, 32/44 analysis/lowering, and
+  27/44 historical execution while removing 29 diagnostics. All 60 modern
+  controls remain item-identical, and the bounded release registry reaches 28
+  rows.
+- Refined the Pine v1/v2 declaration graph so an earlier scalar `input()`
+  needed only as a source-order inference prerequisite is not predeclared,
+  reordered, or rejected as an unsafe graph node. Actual self/forward nodes
+  remain side-effect-free, and current-value forward edges now also fail when
+  they would cross an unsafe-initializer declaration. Added the official
+  v1-v4 `rising` / `falling` aliases to `ta.rising` / `ta.falling`, with v5/v6
+  negative controls. The final implicit-v1 analysis blocker now analyzes,
+  lowers, and executes, raising R2 to 33/44 analysis/lowering and 28/44
+  historical execution; all 24 implicit-v1 samples analyze, and the bounded
+  release registry reaches 29 rows.
+- Classified `timenow` as a typed, known-unsupported `series int` value across
+  legacy and modern dialects. Pine defines it as the timestamp of each script
+  execution, so the deterministic core does not substitute `time`,
+  `last_bar_time`, or a process wall clock. Dependent arithmetic and comparison
+  expressions now remain type-correct and report only the execution-clock
+  boundary instead of cascading unknown-symbol and operator-type errors. The
+  unchanged R2 corpus retains 44/44 parse, 33/44 analysis/lowering, and 28/44
+  historical execution while eligible diagnostics fall from 157 to 155.
+- Preserved concrete tuple destination types when an initializer is rejected
+  exclusively by typed `E_UNSUPPORTED_FEATURE` diagnostics. This is semantic
+  error recovery only: the original unsupported diagnostics remain, HIR is
+  withheld, and recursive or otherwise erroneous producers do not enter the
+  recovery path. The remaining tuple-heavy R2 indicator therefore keeps its
+  seven bounded legacy-`security` errors while losing 78 unknown-symbol and 18
+  dependent operator-type cascades. Stage totals remain 44/44 parse, 33/44
+  analysis/lowering, and 28/44 historical execution; eligible diagnostics fall
+  from 155 to 59.
+- Recognized horizontal whitespace around the equals sign in version compiler
+  annotations such as `//@version = 4`, while keeping `// @version=6` as an
+  ordinary comment. The corpus-proven v4 spelling no longer falls back to
+  implicit v1, eliminating fourteen false cross-version diagnostics and one
+  false call-shape diagnostic. The affected indicator now parses, analyzes,
+  lowers, and runs historically, raising R2 to 34/44 analysis/lowering and
+  29/44 historical execution while eligible diagnostics fall from 59 to 44.
+  Public v4/v6 runtime parity expands the bounded release registry to 30 rows.
+- Allowed a value-producing `if` local block to use a complete nested
+  `if`/`else-if`/`else` statement as its final result. Semantic analysis, type
+  queries, and lowering now recurse through every nested branch, while a leaf
+  ending in a non-value statement still reports `E_BRANCH_RETURN`. The last
+  two branch-return diagnostics disappear from one R2 v4 indicator, raising
+  analysis/lowering to 35/44 while historical execution remains 29/44 at an
+  independent runtime/host boundary. All 60 modern controls remain
+  item-identical, eligible diagnostics are now the 42 known-unsupported
+  records only, and the public v4/v6 parity fixture expands the bounded release
+  registry to 31 rows.
+- Corrected runtime default evaluation for named `input` calls. The runtime now
+  resolves the canonical `defval` parameter by name instead of assuming the
+  first source argument is the value, while preserving input overrides and the
+  positional fallback. A v4 call with `title` before `defval` now executes
+  identically to its v6 rewrite, advancing R2 historical execution from 29/44
+  to 30/44 with unchanged analysis and diagnostic totals. The public parity
+  pair expands the bounded release registry to 32 rows.
+- Completed Pine v1-v4 integer-division semantics across the whole expression
+  instead of only at integer-compatible call boundaries. Integer operands now
+  produce an integer result with the fractional remainder discarded through
+  aliases, history offsets, built-in calls, and untyped UDF arguments; float
+  operands are unchanged. The existing release profile now has an explicit v6
+  parity fixture, and translator revision 26 prevents semantic-cache reuse
+  across the corrected type and lowering contract.
+- Added Pine v5's qualifier-dependent integer-division rule. Two `const int`
+  operands now produce an integer result and explicit canonical `int(...)`
+  lowering, including constant aliases, UDF inference, and constant history
+  offsets; any input, simple, or series integer operand still preserves the
+  fractional result, and v6 remains fractional. The v5/v6 runtime pair is
+  identical, R2 legacy and modern-control items remain unchanged, and
+  translator revision 27 isolates cached semantics.
+- Added the exact Pine v4 chart-inherited declaration subset
+  `study(resolution="")`. The binder removes that no-op timeframe selector and
+  an omitted or literal-bool `resolution_gaps` before canonical lowering while
+  preserving later named metadata arguments. The script continues to use the
+  host chart symbol and timeframe without provider lookup; non-empty and
+  dynamic resolution remain fail-closed behind the whole-program execution
+  boundary. A v4/v6 pair verifies batch, incremental, and realtime historical
+  parity. All three matching R2 indicators now analyze, lower, and run, moving
+  totals from 36/44 to 39/44 analysis/lowering and from 31/44 to 34/44
+  historical execution with all 60 modern controls unchanged. The release
+  registry reaches 33 profiles and translator revision 28 isolates the new
+  declaration semantics.
+- Added the focused Pine v4 UDF reference-side-effect subset used by the R2
+  corpus: namespace calls to `array.set`, `array.pop`, `array.unshift`,
+  `array.clear`, `label.new`, `label.delete`, `line.new`, and `line.delete` now
+  execute in source order inside inlined function bodies. A v4 fixture and an
+  explicitly expanded v6 rewrite verify shared array references, drawing
+  create/delete snapshots, void final loop/conditional calls, and historical,
+  incremental, and realtime historical parity. Broader collection/drawing
+  mutations, method syntax, global-only outputs, and side-effecting UDF
+  arguments remain fail-closed. Three R2 indicators now analyze, lower, and
+  run, leaving only one `timenow` script and one tuple-heavy legacy-`security`
+  script at analysis; all 60 modern controls remain unchanged. The release
+  registry reaches 34 profiles and translator revision 29 prevents stale
+  semantic-cache reuse.
+- Added the focused Pine v4 UDF-local legacy-`security` dependency subset.
+  Requests written directly in a function body may now consume scalar
+  parameters and normal immutable scalar locals; series dependencies recompute
+  in the isolated requested runtime, while const/input/simple dependencies are
+  captured. An earlier three-positional-argument legacy request result is
+  admitted only when symbol, timeframe, gaps, and lookahead exactly match the
+  enclosing request. A provider-backed v4/v6 fixture verifies nested dependency
+  values plus historical, incremental, and realtime historical parity, while a
+  different-symbol fixture and modern-UDF control remain rejected. The final
+  tuple-heavy R2 analysis blocker now analyzes and lowers, moving totals from
+  42/44 to 43/44; its historical run correctly becomes the sixth
+  `missing_provider_data` failure because the private manifest supplies no
+  request stream. The seven legacy-security diagnostics disappear, leaving
+  only one `timenow` diagnostic, all 60 modern controls remain item-identical,
+  the release registry reaches 35 profiles, and translator revision 30
+  prevents stale semantic-cache reuse.
+- Added deterministic `timenow` execution-clock support across Rust historical
+  batch/incremental and realtime execution, CLI `--execution-times`, Python
+  `execution_times`, and WASM request-host JSON `$executionTimes`. Hosts supply
+  one UNIX millisecond timestamp per execution; batch count mismatches and
+  reached reads without a timestamp fail closed, with no bar-time or process
+  wall-clock fallback. Realtime forming replacements roll back and recompute
+  the current value while preserving committed history. A v4/v6 fixture pair
+  and the 36th release profile cover batch, incremental, forming replacement,
+  rollback, confirmation, all three public adapters, and profiled execution.
+  The unchanged R2 manifest now reaches 44/44 analysis/lowering with zero
+  eligible diagnostics; historical success remains 37/44 because it supplies
+  neither the six requested-data streams nor the one execution clock. The two
+  deterministic reports share SHA-256
+  `742fa06684acf5882e51a14899b9d879fa32d8758d3c765684db9a2dbb0a5e52`.
+  Two already-failing v6 controls lose four `timenow` diagnostics without a
+  stage-status change, and translator revision 31 prevents stale semantic-cache
+  reuse.
+- Bumped the legacy-corpus report and tool contract to schema/version 3 and
+  added the optional `execution_times_path` manifest input. The analyzer
+  preflights that file, forwards it through CLI `--execution-times`, and reports
+  only `executionTimes` availability; timestamp values and paths remain absent
+  from the privacy-preserving report. Missing files stop as `missing_input`,
+  while malformed data and count mismatches retain distinct runtime/host error
+  kinds. Supplying a deterministic clock to the one R2 `timenow` indicator
+  moves historical execution from 37/44 to 38/44, leaving exactly six
+  `missing_provider_data` failures and zero eligible diagnostics. The two
+  schema-3 reports share SHA-256
+  `d7e4024eae1a7cfce88b086e4d7b4ea7880bdfe682345a9151cb96a2da1d80c6`;
+  exactly one stage map changes, all diagnostics and all 60 control stage maps
+  stay unchanged, and no compiler/runtime semantic or translator revision
+  changes in this measurement-only slice.
 
 ## 0.2.0 - 2026-07-20
 
@@ -110,9 +283,10 @@
   realtime alignment, one repaint warning per lookahead-on callsite, and
   original source spans in provider failures. CLI, Python, and WASM can all
   supply chart identity plus requested streams; modern `request.security`
-  remains restricted to its existing default merge surface, and
-  `study(resolution=...)` remains precisely unsupported pending a whole-program
-  execution coordinator.
+  remains restricted to its existing default merge surface. Non-empty and
+  dynamic `study(resolution=...)` values remain precisely unsupported pending
+  a whole-program execution coordinator; the later empty-string slice inherits
+  the chart context without entering this provider path.
 - Added result-faithful Pine v4 expression/default compatibility. Historical
   `iff` now evaluates condition/result1/result2 once in parameter order,
   `offset` lowers to native guarded history, and `rsi(x, y)` selects the length

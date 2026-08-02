@@ -1,5 +1,6 @@
 use pine_ir::{CallSiteId, HirCallArg};
 
+use crate::builtins::args::call_arg_expr;
 use crate::*;
 
 pub(crate) fn eval_static_builtin_value(name: &str) -> PineValue {
@@ -72,7 +73,12 @@ impl<'a> HistoricalRuntime<'a> {
         if let Some(value) = self.input_overrides.get(call_site_id) {
             return Ok(value.clone());
         }
-        self.eval_expr(&args[0].value)
+        let Some(defval) = call_arg_expr(args, 0, "defval") else {
+            return Err(RuntimeError {
+                message: "internal input call is missing argument `defval`".to_owned(),
+            });
+        };
+        self.eval_expr(defval)
     }
 
     pub(crate) fn eval_na(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {

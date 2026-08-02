@@ -11,6 +11,7 @@ mod builtins_ta_conditionals;
 mod builtins_ta_extremes;
 mod builtins_ta_flow;
 mod builtins_time;
+mod execution_clock;
 mod imports;
 mod legacy_indicators;
 mod matrices;
@@ -24,6 +25,7 @@ mod runtime_core;
 mod runtime_history;
 mod strategy;
 mod user_types;
+mod versioned_arithmetic;
 
 use super::*;
 

@@ -42,6 +42,40 @@ fn missing_directive_selects_executable_implicit_v1_profile() {
 }
 
 #[test]
+fn four_space_ternary_continuation_is_limited_to_implicit_v1_source_origin() {
+    let implicit = analyze(include_str!(
+        "../../../../tests/fixtures/legacy/v1/runtime/ternary_continuation_legacy.pine"
+    ));
+    assert!(
+        implicit.diagnostics.is_empty(),
+        "{:?}",
+        implicit.diagnostics
+    );
+    assert_eq!(
+        implicit.compatibility.language_version_origin,
+        VersionOrigin::ImplicitV1
+    );
+    assert!(implicit.hir.is_some());
+
+    for version in 1..=6 {
+        let declaration = if version <= 4 {
+            "study(\"explicit boundary\")"
+        } else {
+            "indicator(\"explicit boundary\")"
+        };
+        let explicit = analyze(&format!(
+            "//@version={version}\n{declaration}\nvalue = close > open ? 1 :\n    0\nplot(value)\n"
+        ));
+        assert!(
+            diagnostic_codes(&explicit).contains(&"E_PARSE_EXPR"),
+            "v{version}: {:?}",
+            explicit.diagnostics
+        );
+        assert!(explicit.hir.is_none(), "v{version}");
+    }
+}
+
+#[test]
 fn explicit_v1_through_v6_report_closed_dialects() {
     for version in 1..=6 {
         let declaration = if version <= 4 {
@@ -71,6 +105,32 @@ fn explicit_v1_through_v6_report_closed_dialects() {
             analysis.hir.as_ref().and_then(|hir| hir.language_version),
             Some(version)
         );
+    }
+}
+
+#[test]
+fn spaced_equals_version_annotations_report_explicit_dialects() {
+    for version in 1..=6 {
+        let declaration = if version <= 4 {
+            "study(\"spaced version\")"
+        } else {
+            "indicator(\"spaced version\")"
+        };
+        let analysis = analyze(&format!(
+            "//@version \t= {version}\n{declaration}\nplot(close)\n"
+        ));
+
+        assert_eq!(analysis.compatibility.language_version, Some(version));
+        assert_eq!(
+            analysis.compatibility.language_version_origin,
+            VersionOrigin::ExplicitDirective
+        );
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "v{version}: {:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some(), "v{version}");
     }
 }
 

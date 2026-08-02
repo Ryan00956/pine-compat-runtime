@@ -1,0 +1,21 @@
+//@version=6
+indicator("Canonical UDF reference side effects", max_lines_count=20, max_labels_count=20)
+
+var values = array.new<float>(1, 0.0)
+
+if barstate.isfirst
+    for index = 0 to 0
+        array.set(values, index, 0.0)
+if false
+    array.clear(values)
+
+array.unshift(values, close)
+previous = array.pop(values)
+array.set(values, 0, close + previous)
+scratch = array.new<float>(1, close)
+array.clear(scratch)
+marker = label.new(bar_index, close, "transient")
+label.delete(marker)
+segment = line.new(bar_index - 1, previous, bar_index, close)
+line.delete(segment)
+plot(array.get(values, 0))

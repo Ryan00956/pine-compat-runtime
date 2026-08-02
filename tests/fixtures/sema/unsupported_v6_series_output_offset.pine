@@ -1,0 +1,11 @@
+//@version=6
+indicator("Pine v6 strict series output offsets")
+
+seriesOffset = bar_index % 3 - 1
+
+plot(close, offset=seriesOffset)
+plotchar(close > open, offset=seriesOffset)
+plotshape(close < open, offset=seriesOffset)
+plotarrow(close - open, offset=seriesOffset)
+bgcolor(color.blue, offset=seriesOffset)
+barcolor(color.red, offset=seriesOffset)

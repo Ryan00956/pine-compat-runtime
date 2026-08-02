@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Unsupported array.stdev Biased")
 values = array.new_int(2, 1)
 plot(array.stdev(values, close))

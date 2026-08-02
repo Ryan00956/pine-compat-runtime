@@ -1,10 +1,81 @@
 use crate::prelude::*;
 
+impl Analyzer {
+    pub(crate) fn local_udf_call_result_method_name<'a>(
+        &self,
+        callee: &'a Expr,
+        args: &'a [CallArg],
+    ) -> Option<&'a str> {
+        let (function_name, method_name) = local_udf_call_result_method_parts(callee, args)?;
+        self.functions
+            .contains_key(function_name)
+            .then_some(method_name)
+    }
+
+    pub(super) fn allows_legacy_v4_udf_reference_side_effect(&self, name: &str) -> bool {
+        if self.legacy.dialect() != crate::PineDialect::V4 {
+            return false;
+        }
+
+        matches!(
+            name,
+            "array.set"
+                | "array.pop"
+                | "array.unshift"
+                | "array.clear"
+                | "label.new"
+                | "label.delete"
+                | "line.new"
+                | "line.delete"
+        )
+    }
+
+    pub(super) fn lexical_symbol_shadows_legacy_call(&self, name: &str, span: Span) -> bool {
+        let current_symbol = self.scope.resolve(name);
+        let symbol = self
+            .bound_symbol(name, span)
+            .filter(|bound| current_symbol.is_some_and(|current| current.id == bound.id))
+            .or(current_symbol);
+        let Some(symbol) = symbol else {
+            return false;
+        };
+
+        // Pine v1/v2 admit forward references. From v3 onward, a declaration
+        // only shadows a legacy call after its own source position. This
+        // matters when a UDF body is analyzed at a later call site: globals
+        // declared after that body must not retroactively hide its built-ins.
+        if self.legacy.dialect() <= crate::PineDialect::V2 {
+            return true;
+        }
+        self.symbol_init_exprs
+            .get(&symbol.id)
+            .is_none_or(|initializer| {
+                initializer.source_context_id != self.current_source_context_id()
+                    || initializer.expr.span.start <= span.start
+            })
+    }
+}
+
 pub(crate) fn expr_name(expr: &Expr) -> Option<String> {
     match &expr.kind {
         ExprKind::Identifier(name) => Some(name.clone()),
         ExprKind::QualifiedName(parts) => Some(parts.join(".")),
         _ => None,
+    }
+}
+
+pub(crate) fn param_index_for_arg(
+    signature: &BuiltinSignature,
+    arg_index: usize,
+    arg: &CallArg,
+) -> Option<usize> {
+    if let Some(name) = &arg.name {
+        return signature.params.iter().position(|param| param.name == name);
+    }
+    if arg_index < signature.params.len() {
+        Some(arg_index)
+    } else {
+        signature.variadic.then_some(signature.params.len() - 1)
     }
 }
 
@@ -670,6 +741,10 @@ pub(crate) fn is_ta_vwap_bands_call(name: &str, args: &[CallArg]) -> bool {
         && args.iter().enumerate().any(|(index, arg)| {
             arg.name.as_deref() == Some("stdev_mult") || (index >= 2 && arg.name.is_none())
         })
+}
+
+pub(crate) fn unsupported_collection_mutation_udf_reason(operation: &str) -> String {
+    format!("collection mutation via `{operation}` is not supported inside user-defined functions")
 }
 
 #[cfg(test)]

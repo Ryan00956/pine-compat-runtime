@@ -15,8 +15,8 @@ from pathlib import Path
 from typing import Callable, Iterable, Mapping, Sequence
 
 
-SCHEMA_VERSION = 2
-TOOL_VERSION = 2
+SCHEMA_VERSION = 3
+TOOL_VERSION = 3
 ROOT = Path(__file__).resolve().parents[1]
 
 STABLE_MIN_ELIGIBLE_SCRIPTS = 50
@@ -32,6 +32,7 @@ REQUIRED_COLUMNS = (
     "chart_bars_path",
     "chart_symbol",
     "chart_timeframe",
+    "execution_times_path",
     "request_data_manifest",
     "reference_output_path",
     "license_class",
@@ -67,7 +68,9 @@ DIAGNOSTIC_RE = re.compile(
     r"^(?P<code>[EW]_[A-Z0-9_]+):(?P<severity>[A-Za-z]+):"
     r"(?P<line>[0-9]+):(?P<column>[0-9]+): (?P<message>.*)$"
 )
-VERSION_RE = re.compile(r"(?m)^\s*//@version=(?P<version>[0-9]+)\s*$")
+VERSION_RE = re.compile(
+    r"(?m)^[ \t]*//@version[ \t]*=[ \t]*(?P<version>[0-9]+)[ \t]*\r?$"
+)
 DECLARATION_RE = re.compile(r"(?m)^\s*(?P<mode>study|indicator|strategy)\s*\(")
 
 KNOWN_LEGACY_FEATURES = {
@@ -229,6 +232,7 @@ class CorpusRow:
     chart_bars_path: str
     chart_symbol: str
     chart_timeframe: str
+    execution_times_path: str
     request_data_manifest: str
     reference_output_path: str
     license_class: str
@@ -333,6 +337,7 @@ def parse_manifest(path: Path) -> list[CorpusRow]:
                 chart_bars_path=raw["chart_bars_path"].strip(),
                 chart_symbol=raw["chart_symbol"].strip(),
                 chart_timeframe=raw["chart_timeframe"].strip(),
+                execution_times_path=raw["execution_times_path"].strip(),
                 request_data_manifest=raw["request_data_manifest"].strip(),
                 reference_output_path=raw["reference_output_path"].strip(),
                 license_class=license_class,
@@ -565,6 +570,18 @@ def compare_reference_output(path: Path, runtime_output: object) -> str:
     return STAGE_PASSED if expected == runtime_output else STAGE_FAILED
 
 
+def runtime_error_kind(stderr: str) -> str:
+    if "missing request data" in stderr:
+        return "missing_provider_data"
+    if "timenow requires an explicit execution timestamp" in stderr:
+        return "missing_execution_time"
+    if "execution timestamp count" in stderr and "does not match bar count" in stderr:
+        return "execution_time_count_mismatch"
+    if "invalid execution timestamp" in stderr:
+        return "invalid_execution_time_input"
+    return "runtime_or_host_error"
+
+
 def _base_item(row: CorpusRow) -> dict[str, object]:
     return {
         "id": row.item_id,
@@ -592,6 +609,7 @@ def analyze_item(
     inputs = {
         "source": optional_file_status(root, row.source_path),
         "chartBars": optional_file_status(root, row.chart_bars_path),
+        "executionTimes": optional_file_status(root, row.execution_times_path),
         "requestData": provider_status,
         "referenceOutput": optional_file_status(root, row.reference_output_path),
     }
@@ -699,6 +717,12 @@ def analyze_item(
         stages["realtimeRun"] = stage(STAGE_NOT_RUN)
         stages["outputCompared"] = stage(STAGE_NOT_RUN)
         return item
+    if inputs["executionTimes"] == STAGE_MISSING_INPUT:
+        stages["historicalRun"] = stage(STAGE_MISSING_INPUT)
+        stages["incrementalRun"] = stage(STAGE_NOT_RUN)
+        stages["realtimeRun"] = stage(STAGE_NOT_RUN)
+        stages["outputCompared"] = stage(STAGE_NOT_RUN)
+        return item
 
     run_command = [
         str(pine_compat),
@@ -711,6 +735,13 @@ def analyze_item(
         run_command.extend(("--chart-symbol", row.chart_symbol))
     if row.chart_timeframe:
         run_command.extend(("--chart-timeframe", row.chart_timeframe))
+    if row.execution_times_path:
+        run_command.extend(
+            (
+                "--execution-times",
+                str(resolve_path(root, row.execution_times_path)),
+            )
+        )
     for spec in provider_specs:
         run_command.extend(("--request-bars", spec))
     executed = command_runner(run_command, root)
@@ -731,11 +762,7 @@ def analyze_item(
         else:
             stages["historicalRun"] = stage(STAGE_PASSED, returnCode=0)
     else:
-        error_kind = (
-            "missing_provider_data"
-            if "missing request data" in executed.stderr
-            else "runtime_or_host_error"
-        )
+        error_kind = runtime_error_kind(executed.stderr)
         stages["historicalRun"] = stage(
             STAGE_FAILED,
             returnCode=executed.returncode,
@@ -1049,11 +1076,23 @@ def _summary(items: list[dict[str, object]]) -> dict[str, object]:
                 status: input_availability_counts[name][status]
                 for status in (STAGE_PASSED, "not_supplied", STAGE_MISSING_INPUT)
             }
-            for name in ("source", "chartBars", "requestData", "referenceOutput")
+            for name in (
+                "source",
+                "chartBars",
+                "executionTimes",
+                "requestData",
+                "referenceOutput",
+            )
         },
         "missingInputCounts": {
             name: input_availability_counts[name][STAGE_MISSING_INPUT]
-            for name in ("source", "chartBars", "requestData", "referenceOutput")
+            for name in (
+                "source",
+                "chartBars",
+                "executionTimes",
+                "requestData",
+                "referenceOutput",
+            )
         },
         "topFailureClusters": top_clusters[:20],
     }

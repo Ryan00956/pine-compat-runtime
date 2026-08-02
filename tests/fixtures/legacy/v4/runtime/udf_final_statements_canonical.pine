@@ -1,0 +1,30 @@
+//@version=6
+indicator("Canonical UDF final statements")
+
+final_decl(float src) =>
+    float result = src * 2
+    result
+
+final_reassign(float src) =>
+    float result = 0.0
+    result := src * 3
+    result
+
+final_if(bool flag, float src) =>
+    float result = flag ? src + 1 : src - 1
+    result
+
+final_if_without_else(bool flag, float src) =>
+    float result = flag ? src : na
+    result
+
+persistent_reassign(float src) =>
+    var float result = na
+    result := src
+    result
+
+plot(final_decl(close), title="declaration")
+plot(final_reassign(close), title="reassignment")
+plot(final_if(close >= open, close), title="if declarations")
+plot(nz(final_if_without_else(close >= open, close), -1), title="implicit na")
+plot(persistent_reassign(close), title="persistent reassignment")

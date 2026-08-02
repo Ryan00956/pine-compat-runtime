@@ -2041,7 +2041,7 @@ snapshots leave sources unchanged. Explicit `na` indexes and upstream-`na`
 results remain no-ops after value evaluation; bounds, kind/identity, arity,
 capacity, and UDF-body boundaries stay closed and fixture-backed.
 Item 116 adds terminal top-level `.set(index, value)` across the same producer
-and derived-array continuation set. It accepts a simple-int-compatible index
+and derived-array continuation set. It accepts an integer-compatible index
 plus one element-compatible scalar, drawing-id, `chart.point`, same-local UDT,
 or same-imported UDT value, replaces the resolved positive or in-range negative
 slot without changing length, returns `void`, and cannot continue. Alias

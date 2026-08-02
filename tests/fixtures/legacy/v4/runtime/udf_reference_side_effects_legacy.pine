@@ -1,0 +1,29 @@
+//@version=4
+study("Legacy v4 UDF reference side effects", max_lines_count=20, max_labels_count=20)
+
+var values = array.new_float(1, 0.0)
+
+set_initial(value) =>
+    for index = 0 to 0
+        array.set(values, index, value)
+
+clear_when(flag) =>
+    if flag
+        array.clear(values)
+
+advance(value) =>
+    array.unshift(values, value)
+    previous = array.pop(values)
+    array.set(values, 0, value + previous)
+    scratch = array.new_float(1, value)
+    array.clear(scratch)
+    marker = label.new(bar_index, value, "transient")
+    label.delete(marker)
+    segment = line.new(bar_index - 1, previous, bar_index, value)
+    line.delete(segment)
+    array.get(values, 0)
+
+if barstate.isfirst
+    set_initial(0.0)
+clear_when(false)
+plot(advance(close))

@@ -1,0 +1,11 @@
+//@version=6
+indicator("Unsupported nested if branch return")
+
+value = 0
+result = if close >= open
+    if volume > 0
+        value := 1
+    else
+        high
+else
+    low

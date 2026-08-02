@@ -50,7 +50,10 @@ Current inference:
 - user-defined functions are typed from the inlined body with callsite argument
   types; expression and block UDF returns preserve fixture-backed `input` and
   `simple` scalar qualifiers through `SimpleInt`/simple-string built-in
-  arguments, including final `if` branches, final loop returns, and final `if`
+  arguments. A block's final local declaration or reassignment returns the
+  bound value, and a final `if` without `else` joins the reached result with
+  implicit `const na`; this preserves the selected expression's value kind and
+  strongest applicable qualifier. Coverage includes final `if` branches, final loop returns, and final `if`
   branches whose selected branch itself ends in a final `for`, `for...in`, or
   `while` return, plus final selector-form `switch` returns when the selector is
   supplied by a const bool/int/float/string/color callsite argument, including
@@ -94,8 +97,13 @@ Important current rules:
 - Exact type checks allow weaker qualifiers to flow into stronger targets.
 - `series` targets accept weaker same-kind values.
 - `int` may widen to `float`; `float` does not narrow to `int`.
-- `SimpleInt` accepts `const`, `input`, or `simple` integers and rejects
-  `series int`.
+- `SimpleInt` accepts `const`, `input`, or `simple` integers and normally
+  rejects `series int`. The one versioned call-boundary exception is the
+  `offset` parameter on `plot`, `plotchar`, `plotshape`, `plotarrow`,
+  `bgcolor`, and `barcolor` in Pine v4/v5: those versions accept a
+  `series int` and the runtime applies its final evaluated value to the whole
+  rendered output. Pine v3 and v6 remain strict, and this exception does not
+  affect history-reference offsets.
 - `IntCompatible` accepts integer values at any implemented qualifier; current
   fixture-backed uses include dynamic history offsets, time bars-back
   arguments, `math.sum`, `ta.sma`,
@@ -224,6 +232,25 @@ argument type diagnostics for `label.new`, `line.new`, and `box.new` now use
 the same expected/got acceptor helper, including `string/int-compatible` and
 `chart.point-compatible` labels, while keeping their dedicated drawing option
 validators.
+The separately fixture-backed drawing enum correction models `label.new`
+style, `label.set_style`, `line.new` style/extend, `line.set_style`, and
+`line.set_extend` as string-compatible. A bounded static value-domain analysis
+follows immutable aliases and joins ternary/if/switch branches; string inputs
+are admitted only when an explicit `options` tuple proves every possible value
+is a supported drawing enum. Unknown or partly invalid domains remain
+`E_CALL_ARG_VALUE` errors, and other drawing string parameters retain their
+existing qualifier bounds.
+
+The corpus `na`-origin audit keeps call acceptors strict. Ten apparent
+`series na` source/output argument failures split into four producer classes:
+v1 bool-versus-numeric comparison failure, an independent legacy continuation
+parse failure, final-declaration UDF returns, and a v4 UDF call whose historical
+built-in was incorrectly hidden by a later global declaration. Each corrected
+producer now has independent fixture coverage: v1/v2 comparisons explicitly
+convert the bool operand to `float`, v3/v4 fallback-call shadowing respects
+declaration source order, and final UDF declarations/reassignments return their
+bound value. No consumer infers a numeric type from an otherwise unresolved
+`na`.
 
 The scalar const-value path is also shared rather than duplicated across
 qualifier and history consumers. Its explicit `int`, `float`, `math.min`,
@@ -284,8 +311,9 @@ expected label. The same helper also backs same-local UDT
 diagnostics so the fixture-backed simple-int bound reports the expected
 qualifier rather than only the rejected actual type.
 UDT array chained field mutation index diagnostics also use the helper, so the
-fixture-backed `array.get` index bound reports the same simple-int expectation
-as normal array reads. Generic array receiver acceptors for plain, numeric,
+fixture-backed `array.get` index bound reports the same integer-compatible
+expectation as normal array reads. Generic array receiver acceptors for plain,
+numeric,
 numeric/bool, numeric/string, and scalar arrays also use the helper, so
 fixture-backed `array.concat`, `array.sort`, `array.sort_indices`,
 `array.every`, `array.some`, `array.variance`, and `array.stdev` receiver

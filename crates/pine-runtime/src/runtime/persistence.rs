@@ -131,6 +131,7 @@ mod tests {
         let program = Box::leak(Box::new(HirProgram {
             language_version: None,
             script_mode: ScriptMode::Indicator,
+            timenow_symbol: None,
             strategy_settings: StrategySettings::default(),
             drawing_settings: DrawingSettings::default(),
             user_types: Vec::new(),

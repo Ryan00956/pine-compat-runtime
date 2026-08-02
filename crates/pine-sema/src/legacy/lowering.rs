@@ -43,28 +43,6 @@ impl LegacyLoweringPlan {
         }
     }
 
-    pub(crate) fn record_call_arg_names(
-        &mut self,
-        source_context_id: SourceContextId,
-        span: Span,
-        names: Vec<Option<&'static str>>,
-    ) {
-        self.call_arg_rewrites.insert(
-            LegacyUseKey {
-                source_context_id,
-                span_start: span.start,
-                span_end: span.end,
-            },
-            names
-                .into_iter()
-                .map(|canonical_name| LegacyCallArgRewrite {
-                    keep: true,
-                    canonical_name,
-                })
-                .collect(),
-        );
-    }
-
     pub(crate) fn record_call_arg_rewrites(
         &mut self,
         source_context_id: SourceContextId,

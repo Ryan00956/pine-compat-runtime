@@ -1,0 +1,7 @@
+//@version=6
+indicator("Canonical security UDF local dependencies")
+
+first = request.security("NYSE:IBM", "5", ta.ema(ta.ema(close, 2), 2))
+second = request.security("NYSE:IBM", "5", ta.sma(ta.ema(ta.ema(close, 2), 2) - close, 2))
+plot(first, title="First")
+plot(second, title="Second")

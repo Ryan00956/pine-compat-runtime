@@ -87,6 +87,7 @@ struct Lexer<'a> {
     indent_stack: Vec<usize>,
     paren_depth: usize,
     structured_layout_paren_depth: Option<usize>,
+    saw_version_directive: bool,
 }
 
 impl<'a> Lexer<'a> {
@@ -101,6 +102,7 @@ impl<'a> Lexer<'a> {
             indent_stack: vec![0],
             paren_depth: 0,
             structured_layout_paren_depth: None,
+            saw_version_directive: false,
         }
     }
 
@@ -194,11 +196,15 @@ impl<'a> Lexer<'a> {
         let bytes = self.text.as_bytes();
         let mut next = self.pos + 1;
         let mut indent = 0_usize;
+        let mut only_spaces = true;
 
         while let Some(byte) = bytes.get(next) {
             match byte {
                 b' ' => indent += 1,
-                b'\t' => indent += 4,
+                b'\t' => {
+                    indent += 4;
+                    only_spaces = false;
+                }
                 _ => break,
             }
             next += 1;
@@ -208,7 +214,41 @@ impl<'a> Lexer<'a> {
             .indent_stack
             .last()
             .expect("indent stack always contains root indent");
-        indent > current_indent && !indent.is_multiple_of(4)
+        (indent > current_indent && !indent.is_multiple_of(4))
+            || self.starts_implicit_v1_four_space_ternary_wrap(
+                bytes,
+                next,
+                indent,
+                current_indent,
+                only_spaces,
+            )
+    }
+
+    fn starts_implicit_v1_four_space_ternary_wrap(
+        &self,
+        bytes: &[u8],
+        next: usize,
+        indent: usize,
+        current_indent: usize,
+        only_spaces: bool,
+    ) -> bool {
+        // Some published no-directive v1 scripts use a four-space top-level
+        // ternary wrap even though that column ordinarily starts a local block.
+        // Ternary punctuation makes the two corpus-backed shapes unambiguous;
+        // explicit versions and every other multiple-of-four layout stay strict.
+        if self.saw_version_directive || current_indent != 0 || indent != 4 || !only_spaces {
+            return false;
+        }
+
+        let previous_is_ternary_boundary = self
+            .tokens
+            .last()
+            .is_some_and(|token| matches!(token.kind, TokenKind::Question | TokenKind::Colon));
+        let next_is_ternary_boundary = bytes
+            .get(next)
+            .is_some_and(|byte| matches!(byte, b'?' | b':'));
+
+        previous_is_ternary_boundary || next_is_ternary_boundary
     }
 
     fn single(&mut self, kind: TokenKind) {
@@ -603,17 +643,21 @@ impl<'a> Lexer<'a> {
             .map_or(self.text.len(), |offset| start + offset);
         let line = &self.text[start..line_end];
 
-        if let Some(raw_version) = line.strip_prefix("//@version=") {
-            match raw_version.trim().parse::<u16>() {
-                Ok(version) => self.tokens.push(Token {
-                    kind: TokenKind::VersionDirective(version),
-                    span: Span::new(start, line_end),
-                }),
-                Err(_) => self.diagnostics.push(Diagnostic::error(
-                    "E_LEX_VERSION",
-                    "invalid version directive",
-                    Span::new(start, line_end),
-                )),
+        if let Some(raw_version) = line.strip_prefix("//@version") {
+            let raw_version = raw_version.trim_start_matches([' ', '\t']);
+            if let Some(raw_version) = raw_version.strip_prefix('=') {
+                self.saw_version_directive = true;
+                match raw_version.trim().parse::<u16>() {
+                    Ok(version) => self.tokens.push(Token {
+                        kind: TokenKind::VersionDirective(version),
+                        span: Span::new(start, line_end),
+                    }),
+                    Err(_) => self.diagnostics.push(Diagnostic::error(
+                        "E_LEX_VERSION",
+                        "invalid version directive",
+                        Span::new(start, line_end),
+                    )),
+                }
             }
         }
 
@@ -754,6 +798,23 @@ mod tests {
                 TokenKind::Identifier("overlay".to_owned()),
                 TokenKind::Eq,
                 TokenKind::True,
+                TokenKind::RParen,
+                TokenKind::Newline,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn lexes_version_with_whitespace_around_equals() {
+        assert_eq!(
+            kinds("//@version \t= 4\nstudy(\"Legacy\")\n"),
+            vec![
+                TokenKind::VersionDirective(4),
+                TokenKind::Newline,
+                TokenKind::Identifier("study".to_owned()),
+                TokenKind::LParen,
+                TokenKind::String("Legacy".to_owned()),
                 TokenKind::RParen,
                 TokenKind::Newline,
                 TokenKind::Eof,
@@ -1303,6 +1364,91 @@ mod tests {
                 TokenKind::Identifier("high".to_owned()),
                 TokenKind::Newline,
                 TokenKind::Dedent,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn suppresses_root_four_space_ternary_layout_only_for_implicit_v1() {
+        assert_eq!(
+            kinds(concat!(
+                "suffix = close > open ? 1 :\n",
+                "    close < open ? -1 :\n",
+                "    0\n",
+                "prefix = close > open\n",
+                "    ? 10\n",
+                "    : 20\n",
+            )),
+            vec![
+                TokenKind::Identifier("suffix".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Identifier("close".to_owned()),
+                TokenKind::Gt,
+                TokenKind::Identifier("open".to_owned()),
+                TokenKind::Question,
+                TokenKind::Int(1),
+                TokenKind::Colon,
+                TokenKind::Identifier("close".to_owned()),
+                TokenKind::Lt,
+                TokenKind::Identifier("open".to_owned()),
+                TokenKind::Question,
+                TokenKind::Minus,
+                TokenKind::Int(1),
+                TokenKind::Colon,
+                TokenKind::Int(0),
+                TokenKind::Newline,
+                TokenKind::Identifier("prefix".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Identifier("close".to_owned()),
+                TokenKind::Gt,
+                TokenKind::Identifier("open".to_owned()),
+                TokenKind::Question,
+                TokenKind::Int(10),
+                TokenKind::Colon,
+                TokenKind::Int(20),
+                TokenKind::Newline,
+                TokenKind::Eof,
+            ]
+        );
+
+        let explicit = kinds(concat!(
+            "//@version=1\n",
+            "value = close > open ? 1 :\n",
+            "    0\n",
+        ));
+        assert!(explicit.contains(&TokenKind::Indent));
+        assert!(explicit.contains(&TokenKind::Dedent));
+
+        let tab_indented = kinds("value = close > open ? 1 :\n\t0\n");
+        assert!(tab_indented.contains(&TokenKind::Indent));
+        assert!(tab_indented.contains(&TokenKind::Dedent));
+    }
+
+    #[test]
+    fn implicit_v1_four_space_exception_does_not_consume_real_blocks() {
+        assert_eq!(
+            kinds(concat!(
+                "if close > open\n",
+                "    value = 1\n",
+                "after = 2\n",
+            )),
+            vec![
+                TokenKind::If,
+                TokenKind::Identifier("close".to_owned()),
+                TokenKind::Gt,
+                TokenKind::Identifier("open".to_owned()),
+                TokenKind::Newline,
+                TokenKind::Indent,
+                TokenKind::Identifier("value".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Int(1),
+                TokenKind::Newline,
+                TokenKind::Dedent,
+                TokenKind::Identifier("after".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Int(2),
+                TokenKind::Newline,
                 TokenKind::Eof,
             ]
         );

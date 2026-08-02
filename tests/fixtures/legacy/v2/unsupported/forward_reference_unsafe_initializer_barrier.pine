@@ -1,0 +1,6 @@
+//@version=2
+study("v2 unsafe initializer reorder barrier")
+first = later + 1
+setting = input(2)
+later = close
+plot(first + setting)

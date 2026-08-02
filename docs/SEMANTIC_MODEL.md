@@ -30,21 +30,59 @@ Pine v1-v4 compatibility is selected from the validated source version before
 ordinary semantic analysis. A missing directive is implicit v1. The legacy
 front-end admits only indicator-mode `study(...)` in the documented subset;
 `strategy(...)` and `strategy.*` stop before broker-capable HIR. User and
-lexical symbols always resolve before version-ranged fallback names.
+lexical symbols visible at the call's source position resolve before
+version-ranged fallback names. Pine v1/v2 retain their separately bounded
+forward-reference rules; from v3 onward, a later global declaration does not
+retroactively shadow a fallback call inside an earlier UDF body.
+
+Before semantic selection, the lexer has one source-origin compatibility
+exception for published no-directive v1 indicators: at global scope, exactly
+four ASCII spaces are treated as layout-free only when a physical line break is
+adjacent to ternary `?` or `:` punctuation. This recognizes both suffix-operator
+and prefix-operator ternary wrapping without turning ordinary four-space
+indentation into a continuation. Any explicit version directive, tab
+indentation, local-block shape, or non-ternary multiple-of-four wrap retains
+structural layout and the ordinary parse failure.
 
 Accepted historical calls are bound by dialect and lower to canonical HIR.
 Exact aliases become canonical built-in names, v1/v2 removed scalar
-conversions become explicit `float`/`bool` calls, `offset` becomes a history
-node, and the v1/v2 self/forward declaration subset becomes ordinary symbols
-in a bounded topological order. Result-affecting decisions are recorded as
-legacy translations or emulations with original spans. The runtime therefore
-does not evaluate rewritten source or maintain a second legacy AST.
+conversions—including bool arithmetic and bool-versus-numeric
+comparisons—become explicit `float`/`bool` calls, `offset` becomes a history
+node, and the v1/v2 self/forward declaration subset becomes ordinary symbols in
+a bounded topological order. Result-affecting decisions are recorded as legacy
+translations or emulations with original spans. The runtime therefore does not
+evaluate rewritten source or maintain a second legacy AST.
 
-The v1/v2 declaration graph is capped at 256 active nodes and 4096 edges and
-admits only side-effect-free scalar initializers. Pine v3 untyped `na` infers
-one later stable scalar type in the focused subset. Pine v4 historical
-input/output and overload roles are bound before canonical validation. Shapes
-outside these rules fail with focused diagnostics and produce no HIR.
+The v1/v2 declaration graph is capped at 256 active nodes and 4096 edges.
+Symbols that require self/forward resolution are predeclared only when needed
+and admit only side-effect-free scalar initializers. An earlier declaration
+used solely as a source-order scalar-inference prerequisite remains an ordinary
+declaration, so a preceding `input()` can feed a later self-history chain
+without being predeclared or moved. Current-bar forward reordering cannot cross
+such an input, request, output, mutation, or other unsafe-initializer barrier.
+Pine v3 untyped `na` infers one later stable scalar type in the focused subset.
+Pine v4 historical input/output and overload roles are bound before canonical
+validation. Shapes outside these rules fail with focused diagnostics and
+produce no HIR.
+
+Pine v4/v5 output calls have one explicit qualifier exception: `plot`,
+`plotchar`, `plotshape`, `plotarrow`, `bgcolor`, and `barcolor` may receive a
+`series int` `offset`. The HIR retains the series expression, and output
+metadata is overwritten on each execution so the final evaluated offset
+applies to the complete rendered output. Pine v3 and v6 keep the canonical
+simple-int boundary. History-reference offsets use their separate guarded
+history model and are unaffected.
+
+Legacy `security` dependency admission is also versioned rather than a general
+scope relaxation. Pine v4 requests written directly in an inlined UDF body may
+use scalar parameters and normal immutable scalar locals. Lowered declaration
+initializers retain unique symbols; the request runtime reconstructs that
+admitted graph, recomputes series nodes in the requested context, and captures
+const/input/simple nodes. A prior three-positional-argument legacy request can
+appear in the graph only when its symbol, timeframe, gaps, and lookahead match
+the enclosing request. Control-flow-local requests, different selectors,
+reassignment, persistence, recursion, and modern provider-local aliases do not
+enter this path.
 
 ## Script Declarations
 
@@ -371,7 +409,10 @@ Initial coercion rules:
 - `int` can promote to `float`.
 - `float` must not silently narrow to `int`.
 - Arithmetic on `int` and `float` returns `float` when either side is `float`.
-- Division returns `float`.
+- Division is versioned: Pine v1-v4 `int / int` returns `int`; Pine v5 does so
+  only when both operands are `const int`; Pine v5 input/simple/series integer
+  division and every Pine v6 integer division return `float`. Truncating forms
+  lower through an explicit canonical `int(...)` conversion.
 - Modulo requires numeric operands and should follow the selected Pine version's
   documented behavior.
 
@@ -1667,9 +1708,9 @@ array can contain at most 100,000 elements; creation, push, unshift, insert, or
 concat operations beyond that limit fail at runtime.
 
 User-defined functions may receive supported arrays and use read-only
-operations such as `array.size` and `array.get`. Array mutation inside
-user-defined functions is rejected until function side-effect semantics are
-broader.
+operations such as `array.size` and `array.get`. Pine v4 UDF bodies also admit
+the exact namespace-call subset `array.set`, `array.pop`, `array.unshift`, and
+`array.clear`; every other collection mutation inside a UDF remains rejected.
 
 The current map subset supports runtime-owned empty map ids through
 `map.new<K, V>()` where both template types are one of `int`, `float`, `bool`,
@@ -2030,6 +2071,10 @@ enclosing loop.
 Loop expressions are supported for scalar and tuple declaration values when the
 body ends with an expression. The expression determines the loop result type;
 bodies that do not end with an expression are rejected with `E_LOOP_RETURN`.
+When a loop is itself the final statement of a user-defined function, a
+side-effect-only final body expression is also a valid `void` result. This
+function-return exception does not make ordinary value-context loop expressions
+accept `void`.
 
 ## Reassignment
 
@@ -2083,9 +2128,10 @@ The lowering stage should assign callsite ids before runtime execution.
 
 User-defined functions are supported by lowering each callsite inline.
 Expression bodies lower directly as expressions. Multi-statement block bodies
-lower as block expressions that execute local statements and return the final
-expression. Positional and named arguments are resolved to the declared
-parameter list before semantic analysis of the function body.
+lower as block expressions that execute local statements and return the value
+of the final expression, local declaration, local reassignment, conditional,
+or loop. Positional and named arguments are resolved to the declared parameter
+list before semantic analysis of the function body.
 
 Current rules:
 
@@ -2106,5 +2152,6 @@ Current rules:
 - Reject output side effects inside functions.
 - Reject global reassignment inside functions.
 - Reject side-effecting calls as UDF arguments.
-
-Function block bodies must end with an expression.
+- Treat a missing final-conditional `else` as `na`, and allow `void` only when
+  it is the valid result of a function-final side-effect structure; ordinary
+  value-context loops remain strict.

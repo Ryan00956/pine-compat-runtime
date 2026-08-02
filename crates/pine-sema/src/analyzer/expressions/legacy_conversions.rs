@@ -1,6 +1,114 @@
 use super::*;
 
 impl Analyzer {
+    pub(crate) fn v4_v5_series_output_offset_arg(
+        &mut self,
+        call_name: &str,
+        param_name: &str,
+        expr: &Expr,
+        actual_type: PineType,
+        accepts: Accepts,
+    ) -> bool {
+        if !matches!(self.legacy.dialect(), PineDialect::V4 | PineDialect::V5)
+            || param_name != "offset"
+            || accepts != Accepts::SimpleIntCompatible
+            || actual_type != PineType::new(Qualifier::Series, ValueKind::Int)
+            || !matches!(
+                call_name,
+                "plot" | "plotchar" | "plotshape" | "plotarrow" | "bgcolor" | "barcolor"
+            )
+        {
+            return false;
+        }
+
+        if self
+            .v4_v5_series_output_offset_exprs
+            .insert(self.expr_key(expr.span))
+        {
+            let version = self.legacy.dialect().version();
+            self.compatibility
+                .legacy_emulations
+                .push(crate::compatibility::LegacyEmulation {
+                    feature: format!("v{version}.series_output_offset"),
+                    behavior: format!(
+                        "Pine v{version} output offsets accept a series int and apply its final evaluated value to the complete rendered output"
+                    ),
+                    span: expr.span,
+                });
+        }
+        true
+    }
+
+    pub(crate) fn legacy_numeric_bool_arg(
+        &mut self,
+        expr: &Expr,
+        actual_type: PineType,
+        accepts: Accepts,
+    ) -> bool {
+        if self.legacy.dialect() == PineDialect::V6
+            || !matches!(
+                accepts,
+                Accepts::BoolCompatible | Accepts::SimpleBoolCompatible
+            )
+            || !matches!(
+                actual_type.kind,
+                ValueKind::Int | ValueKind::Float | ValueKind::Na
+            )
+        {
+            return false;
+        }
+
+        let coerced_type = PineType::new(actual_type.qualifier, ValueKind::Bool);
+        if !accepts_type(accepts, coerced_type) {
+            return false;
+        }
+        let key = self.expr_key(expr.span);
+        if !self.legacy_numeric_to_bool_exprs.contains(&key) {
+            self.record_numeric_to_bool_coercion(expr.span);
+        }
+        true
+    }
+
+    pub(super) fn uses_versioned_integer_division(
+        &self,
+        op: BinaryOp,
+        left_type: PineType,
+        right_type: PineType,
+    ) -> bool {
+        op == BinaryOp::Div
+            && left_type.kind == ValueKind::Int
+            && right_type.kind == ValueKind::Int
+            && (self.legacy.dialect() <= PineDialect::V4
+                || (self.legacy.dialect() == PineDialect::V5
+                    && left_type.qualifier == Qualifier::Const
+                    && right_type.qualifier == Qualifier::Const))
+    }
+
+    fn record_versioned_integer_division(&mut self, span: Span, qualifier: Qualifier) -> PineType {
+        if self
+            .legacy_integer_division_exprs
+            .insert(self.expr_key(span))
+        {
+            let version = self.legacy.dialect().version();
+            let behavior = if self.legacy.dialect() == PineDialect::V5 {
+                "Pine v5 division of two const int values produces an int and discards the fractional remainder"
+                    .to_owned()
+            } else {
+                format!(
+                    "Pine v{version} division of two int values produces an int and discards the fractional remainder"
+                )
+            };
+            self.compatibility
+                .legacy_emulations
+                .push(crate::compatibility::LegacyEmulation {
+                    feature: format!("v{version}.integer_division"),
+                    behavior,
+                    span,
+                });
+        }
+        PineType::new(qualifier, ValueKind::Int)
+    }
+
     pub(super) fn infer_unary_with_legacy(
         &mut self,
         op: UnaryOp,
@@ -45,9 +153,24 @@ impl Analyzer {
         span: Span,
     ) -> Option<PineType> {
         let dialect = self.legacy.dialect();
+        if self.uses_versioned_integer_division(op, left_type, right_type) {
+            return Some(self.record_versioned_integer_division(
+                span,
+                strongest_qualifier(left_type.qualifier, right_type.qualifier),
+            ));
+        }
         let arithmetic = matches!(
             op,
             BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div | BinaryOp::Mod
+        );
+        let comparison = matches!(
+            op,
+            BinaryOp::Eq
+                | BinaryOp::NotEq
+                | BinaryOp::Gt
+                | BinaryOp::Gte
+                | BinaryOp::Lt
+                | BinaryOp::Lte
         );
         let legacy_numeric_kind = |kind| {
             matches!(
@@ -70,6 +193,24 @@ impl Analyzer {
             let result = PineType::new(
                 strongest_qualifier(left_type.qualifier, right_type.qualifier),
                 ValueKind::Float,
+            );
+            self.expr_types.insert(self.expr_key(span), result);
+            return Some(result);
+        }
+        if matches!(dialect, PineDialect::V1 | PineDialect::V2)
+            && comparison
+            && ((left_type.kind == ValueKind::Bool && is_numeric(right_type.kind))
+                || (right_type.kind == ValueKind::Bool && is_numeric(left_type.kind)))
+        {
+            if left_type.kind == ValueKind::Bool {
+                self.record_bool_to_float_coercion(left_span);
+            }
+            if right_type.kind == ValueKind::Bool {
+                self.record_bool_to_float_coercion(right_span);
+            }
+            let result = PineType::new(
+                strongest_qualifier(left_type.qualifier, right_type.qualifier),
+                ValueKind::Bool,
             );
             self.expr_types.insert(self.expr_key(span), result);
             return Some(result);

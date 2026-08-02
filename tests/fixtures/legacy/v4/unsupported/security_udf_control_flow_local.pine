@@ -1,0 +1,11 @@
+//@version=4
+study("Unsupported security UDF control-flow local")
+
+requestedValue(src, tf) =>
+    selected = if src > 0
+        security("NYSE:IBM", tf, src)
+    else
+        na
+    selected
+
+plot(requestedValue(close, "5"))

@@ -1,0 +1,10 @@
+//@version=6
+indicator("Canonical named input default")
+
+timezone = input.string(
+    title="Timezone",
+    options=["UTC", "America/New_York"],
+    group="Context",
+    defval="America/New_York")
+
+plot(hour(1609504496000, timezone), title="localized hour")

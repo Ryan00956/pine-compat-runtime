@@ -75,6 +75,16 @@ fn rejects_multiple_of_four_legacy_line_wrapping_indentation() {
 }
 
 #[test]
+fn parses_implicit_v1_four_space_ternary_wrapping_fixture() {
+    let (_, parsed) =
+        parse_fixture("tests/fixtures/syntax/implicit_v1_four_space_ternary_wrapping.pine");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    assert!(parsed.program.version.is_none());
+    assert_eq!(parsed.program.statements.len(), 5);
+}
+
+#[test]
 fn reports_unterminated_single_quoted_string_fixture_and_recovers() {
     let (_, parsed) = parse_fixture("tests/fixtures/syntax/unterminated_single_quoted_string.pine");
 

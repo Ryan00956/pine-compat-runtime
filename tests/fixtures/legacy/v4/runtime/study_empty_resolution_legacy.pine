@@ -1,0 +1,6 @@
+//@version=4
+study("Chart-inherited resolution", overlay=false, resolution="", resolution_gaps=false, max_boxes_count=75)
+average = sma(close, 2)
+chartContext = timeframe.period == "5" and syminfo.tickerid == "TEST:CHART"
+plot(average)
+plot(chartContext ? close : 0)

@@ -32,10 +32,26 @@ impl<'a> RealtimeRuntime<'a> {
     }
 
     pub fn update(&mut self, update: BarUpdate) -> Result<RuntimeResult, RuntimeError> {
+        self.update_inner(update, None)
+    }
+
+    pub fn update_with_execution_time(
+        &mut self,
+        update: BarUpdate,
+        execution_time: i64,
+    ) -> Result<RuntimeResult, RuntimeError> {
+        self.update_inner(update, Some(execution_time))
+    }
+
+    fn update_inner(
+        &mut self,
+        update: BarUpdate,
+        execution_time: Option<i64>,
+    ) -> Result<RuntimeResult, RuntimeError> {
         match update.kind {
             BarUpdateKind::Historical => {
                 let mut runtime = self.confirmed.clone();
-                runtime.append_bar_with_kind(update.bar, update.kind)?;
+                runtime.append_bar_with_context(update.bar, update.kind, true, execution_time)?;
                 self.confirmed = runtime;
                 self.forming = None;
                 Ok(self.confirmed.result())
@@ -46,7 +62,12 @@ impl<'a> RealtimeRuntime<'a> {
                 if let Some(previous_forming) = &self.forming {
                     runtime.seed_intrabar_persistence_from(previous_forming);
                 }
-                runtime.append_bar_with_context(update.bar, update.kind, is_new_bar)?;
+                runtime.append_bar_with_context(
+                    update.bar,
+                    update.kind,
+                    is_new_bar,
+                    execution_time,
+                )?;
                 self.confirmed = runtime;
                 self.forming = None;
                 Ok(self.confirmed.result())
@@ -57,7 +78,12 @@ impl<'a> RealtimeRuntime<'a> {
                 if let Some(previous_forming) = &self.forming {
                     runtime.seed_intrabar_persistence_from(previous_forming);
                 }
-                runtime.append_bar_with_context(update.bar, update.kind, is_new_bar)?;
+                runtime.append_bar_with_context(
+                    update.bar,
+                    update.kind,
+                    is_new_bar,
+                    execution_time,
+                )?;
                 let result = runtime.result();
                 self.forming = Some(runtime);
                 Ok(result)

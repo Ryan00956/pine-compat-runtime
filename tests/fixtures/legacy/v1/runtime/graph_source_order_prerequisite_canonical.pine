@@ -1,0 +1,9 @@
+//@version=6
+indicator("Implicit v1 graph source-order prerequisite")
+length = input.int(2)
+delta = close - close[length]
+trend = 0
+trend := delta > 0 ? 1 : delta < 0 ? -1 : nz(trend[1])
+direction = ta.rising(close, length) ? 1 : ta.falling(close, length) ? -1 : 0
+plot(trend, title="trend")
+plot(direction, title="direction")

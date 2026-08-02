@@ -52,6 +52,8 @@ pub struct DrawingSettings {
 pub struct HirProgram {
     pub language_version: Option<u16>,
     pub script_mode: ScriptMode,
+    /// Symbol bound to Pine's host-provided `timenow` execution clock, when used.
+    pub timenow_symbol: Option<SymbolId>,
     pub strategy_settings: StrategySettings,
     pub drawing_settings: DrawingSettings,
     pub user_types: Vec<HirUserTypeInfo>,

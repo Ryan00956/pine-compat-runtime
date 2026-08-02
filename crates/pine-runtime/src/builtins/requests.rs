@@ -212,14 +212,26 @@ impl<'a> HistoricalRuntime<'a> {
         expression: &HirExpr,
         requested_environment: RequestEnvironment,
     ) -> Result<Vec<(i64, PineValue)>, RuntimeError> {
-        let captures = request_capture_values(self.program, expression, &self.current_symbols);
+        let program = self.program;
+        let dependency_initializers = request_dependency_initializers(program);
+        let captures = request_capture_values(
+            program,
+            expression,
+            &self.current_symbols,
+            &dependency_initializers,
+        );
         let mut runtime =
-            HistoricalRuntime::with_request_environment(self.program, requested_environment);
+            HistoricalRuntime::with_request_environment(program, requested_environment);
         let mut values = Vec::with_capacity(requested_bars.len());
         for bar in requested_bars {
             values.push((
                 bar.time,
-                runtime.eval_requested_bar_expression(*bar, expression, &captures)?,
+                runtime.eval_requested_bar_expression(
+                    *bar,
+                    expression,
+                    &captures,
+                    &dependency_initializers,
+                )?,
             ));
         }
         self.legacy_security_repaint_warnings
@@ -232,6 +244,7 @@ impl<'a> HistoricalRuntime<'a> {
         bar: Bar,
         expression: &HirExpr,
         captures: &HashMap<SymbolId, PineValue>,
+        dependency_initializers: &HashMap<SymbolId, &HirExpr>,
     ) -> Result<PineValue, RuntimeError> {
         let bar_index = self.bars;
         self.current_bar_update_kind = BarUpdateKind::Historical;
@@ -246,7 +259,11 @@ impl<'a> HistoricalRuntime<'a> {
                 .iter()
                 .map(|(symbol, value)| (*symbol, value.clone())),
         );
-        self.eval_requested_expression_dependencies(expression, &mut HashSet::new())?;
+        self.eval_requested_expression_dependencies(
+            expression,
+            &mut HashSet::new(),
+            dependency_initializers,
+        )?;
 
         let value = self.eval_expr(expression)?;
         self.commit_current_series()?;
@@ -262,11 +279,12 @@ impl<'a> HistoricalRuntime<'a> {
         &mut self,
         expression: &HirExpr,
         visiting: &mut HashSet<SymbolId>,
+        dependency_initializers: &HashMap<SymbolId, &HirExpr>,
     ) -> Result<(), RuntimeError> {
         let mut symbols = Vec::new();
         collect_hir_expr_symbols(expression, &mut symbols);
         for symbol in symbols {
-            self.eval_requested_symbol_dependency(symbol, visiting)?;
+            self.eval_requested_symbol_dependency(symbol, visiting, dependency_initializers)?;
         }
         Ok(())
     }
@@ -275,6 +293,7 @@ impl<'a> HistoricalRuntime<'a> {
         &mut self,
         symbol: SymbolId,
         visiting: &mut HashSet<SymbolId>,
+        dependency_initializers: &HashMap<SymbolId, &HirExpr>,
     ) -> Result<(), RuntimeError> {
         if self.current_symbols.contains_key(&symbol) {
             return Ok(());
@@ -307,15 +326,21 @@ impl<'a> HistoricalRuntime<'a> {
                 ),
             });
         }
-        let initializer = top_level_decl_initializer(self.program, symbol)
+        let initializer = dependency_initializers
+            .get(&symbol)
+            .copied()
             .cloned()
             .ok_or_else(|| RuntimeError {
                 message: format!(
-                    "request.security expression symbol {} is not an immutable top-level alias",
+                    "request.security expression symbol {} is not an immutable admitted dependency",
                     symbol.0
                 ),
             })?;
-        self.eval_requested_expression_dependencies(&initializer, visiting)?;
+        self.eval_requested_expression_dependencies(
+            &initializer,
+            visiting,
+            dependency_initializers,
+        )?;
         let value = self.eval_expr(&initializer)?;
         self.set_symbol_value(symbol, value);
         visiting.remove(&symbol);
@@ -327,9 +352,16 @@ fn request_capture_values(
     program: &pine_ir::HirProgram,
     expression: &HirExpr,
     current_symbols: &HashMap<SymbolId, PineValue>,
+    dependency_initializers: &HashMap<SymbolId, &HirExpr>,
 ) -> HashMap<SymbolId, PineValue> {
     let mut candidates = HashSet::new();
-    collect_request_capture_symbols(program, expression, &mut HashSet::new(), &mut candidates);
+    collect_request_capture_symbols(
+        program,
+        expression,
+        &mut HashSet::new(),
+        &mut candidates,
+        dependency_initializers,
+    );
     candidates
         .into_iter()
         .filter_map(|symbol| {
@@ -346,6 +378,7 @@ fn collect_request_capture_symbols(
     expression: &HirExpr,
     visited: &mut HashSet<SymbolId>,
     captures: &mut HashSet<SymbolId>,
+    dependency_initializers: &HashMap<SymbolId, &HirExpr>,
 ) {
     let mut symbols = Vec::new();
     collect_hir_expr_symbols(expression, &mut symbols);
@@ -361,57 +394,132 @@ fn collect_request_capture_symbols(
         else {
             continue;
         };
-        let Some(initializer) = top_level_decl_initializer(program, symbol) else {
+        let Some(initializer) = dependency_initializers.get(&symbol).copied() else {
             continue;
         };
         if pine_type.qualifier == Qualifier::Series {
-            collect_request_capture_symbols(program, initializer, visited, captures);
+            collect_request_capture_symbols(
+                program,
+                initializer,
+                visited,
+                captures,
+                dependency_initializers,
+            );
         } else {
             captures.insert(symbol);
         }
     }
 }
 
-fn top_level_decl_initializer(program: &pine_ir::HirProgram, symbol: SymbolId) -> Option<&HirExpr> {
-    program
-        .statements
-        .iter()
-        .find_map(|statement| match &statement.kind {
-            HirStmtKind::Decl {
-                symbol: declared,
-                value,
-            } if *declared == symbol => Some(value),
-            _ => None,
-        })
+fn request_dependency_initializers(program: &pine_ir::HirProgram) -> HashMap<SymbolId, &HirExpr> {
+    let mut initializers = HashMap::new();
+    collect_request_stmt_initializers(&program.statements, &mut initializers);
+    initializers
 }
 
-fn collect_hir_expr_symbols(expression: &HirExpr, symbols: &mut Vec<SymbolId>) {
+fn collect_request_stmt_initializers<'a>(
+    statements: &'a [HirStmt],
+    initializers: &mut HashMap<SymbolId, &'a HirExpr>,
+) {
+    for statement in statements {
+        match &statement.kind {
+            HirStmtKind::Expr(expr) => collect_request_expr_initializers(expr, initializers),
+            HirStmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => {
+                collect_request_expr_initializers(condition, initializers);
+                collect_request_stmt_initializers(then_branch, initializers);
+                collect_request_stmt_initializers(else_branch, initializers);
+            }
+            HirStmtKind::Switch { selector, arms } => {
+                if let Some(selector) = selector {
+                    collect_request_expr_initializers(selector, initializers);
+                }
+                for arm in arms {
+                    if let Some(condition) = &arm.condition {
+                        collect_request_expr_initializers(condition, initializers);
+                    }
+                    collect_request_stmt_initializers(&arm.body, initializers);
+                }
+            }
+            HirStmtKind::For {
+                from,
+                to,
+                step,
+                body,
+                ..
+            } => {
+                collect_request_expr_initializers(from, initializers);
+                collect_request_expr_initializers(to, initializers);
+                if let Some(step) = step {
+                    collect_request_expr_initializers(step, initializers);
+                }
+                collect_request_stmt_initializers(body, initializers);
+            }
+            HirStmtKind::ForIn { iterable, body, .. } => {
+                collect_request_expr_initializers(iterable, initializers);
+                collect_request_stmt_initializers(body, initializers);
+            }
+            HirStmtKind::While { condition, body } => {
+                collect_request_expr_initializers(condition, initializers);
+                collect_request_stmt_initializers(body, initializers);
+            }
+            HirStmtKind::Decl { symbol, value } => {
+                initializers.insert(*symbol, value);
+                collect_request_expr_initializers(value, initializers);
+            }
+            HirStmtKind::Reassign { value, .. } | HirStmtKind::FieldReassign { value, .. } => {
+                collect_request_expr_initializers(value, initializers);
+            }
+            HirStmtKind::ArrayFieldReassign {
+                array,
+                index,
+                value,
+                ..
+            } => {
+                collect_request_expr_initializers(array, initializers);
+                collect_request_expr_initializers(index, initializers);
+                collect_request_expr_initializers(value, initializers);
+            }
+            HirStmtKind::TupleDecl { value, .. } => {
+                collect_request_expr_initializers(value, initializers);
+            }
+            HirStmtKind::Break | HirStmtKind::Continue => {}
+        }
+    }
+}
+
+fn collect_request_expr_initializers<'a>(
+    expression: &'a HirExpr,
+    initializers: &mut HashMap<SymbolId, &'a HirExpr>,
+) {
     match &expression.kind {
-        HirExprKind::Literal(_) | HirExprKind::Builtin(_) => {}
-        HirExprKind::Symbol(symbol) => symbols.push(*symbol),
-        HirExprKind::Unary { expr, .. } => collect_hir_expr_symbols(expr, symbols),
+        HirExprKind::Literal(_) | HirExprKind::Builtin(_) | HirExprKind::Symbol(_) => {}
+        HirExprKind::Unary { expr, .. } => collect_request_expr_initializers(expr, initializers),
         HirExprKind::Binary { left, right, .. } => {
-            collect_hir_expr_symbols(left, symbols);
-            collect_hir_expr_symbols(right, symbols);
+            collect_request_expr_initializers(left, initializers);
+            collect_request_expr_initializers(right, initializers);
         }
         HirExprKind::Ternary {
             condition,
             then_expr,
             else_expr,
         } => {
-            collect_hir_expr_symbols(condition, symbols);
-            collect_hir_expr_symbols(then_expr, symbols);
-            collect_hir_expr_symbols(else_expr, symbols);
+            collect_request_expr_initializers(condition, initializers);
+            collect_request_expr_initializers(then_expr, initializers);
+            collect_request_expr_initializers(else_expr, initializers);
         }
         HirExprKind::Switch { selector, arms } => {
             if let Some(selector) = selector {
-                collect_hir_expr_symbols(selector, symbols);
+                collect_request_expr_initializers(selector, initializers);
             }
             for arm in arms {
                 if let Some(condition) = &arm.condition {
-                    collect_hir_expr_symbols(condition, symbols);
+                    collect_request_expr_initializers(condition, initializers);
                 }
-                collect_hir_expr_symbols(&arm.result, symbols);
+                collect_request_expr_initializers(&arm.result, initializers);
             }
         }
         HirExprKind::For {
@@ -422,13 +530,13 @@ fn collect_hir_expr_symbols(expression: &HirExpr, symbols: &mut Vec<SymbolId>) {
             result,
             ..
         } => {
-            collect_hir_expr_symbols(from, symbols);
-            collect_hir_expr_symbols(to, symbols);
+            collect_request_expr_initializers(from, initializers);
+            collect_request_expr_initializers(to, initializers);
             if let Some(step) = step {
-                collect_hir_expr_symbols(step, symbols);
+                collect_request_expr_initializers(step, initializers);
             }
-            collect_hir_stmt_symbols(statements, symbols);
-            collect_hir_expr_symbols(result, symbols);
+            collect_request_stmt_initializers(statements, initializers);
+            collect_request_expr_initializers(result, initializers);
         }
         HirExprKind::ForIn {
             iterable,
@@ -436,103 +544,242 @@ fn collect_hir_expr_symbols(expression: &HirExpr, symbols: &mut Vec<SymbolId>) {
             result,
             ..
         } => {
-            collect_hir_expr_symbols(iterable, symbols);
-            collect_hir_stmt_symbols(statements, symbols);
-            collect_hir_expr_symbols(result, symbols);
+            collect_request_expr_initializers(iterable, initializers);
+            collect_request_stmt_initializers(statements, initializers);
+            collect_request_expr_initializers(result, initializers);
         }
         HirExprKind::While {
             condition,
             statements,
             result,
         } => {
-            collect_hir_expr_symbols(condition, symbols);
-            collect_hir_stmt_symbols(statements, symbols);
-            collect_hir_expr_symbols(result, symbols);
+            collect_request_expr_initializers(condition, initializers);
+            collect_request_stmt_initializers(statements, initializers);
+            collect_request_expr_initializers(result, initializers);
         }
         HirExprKind::Tuple(items) => {
             for item in items {
-                collect_hir_expr_symbols(item, symbols);
+                collect_request_expr_initializers(item, initializers);
             }
         }
         HirExprKind::UserTypeConstruct { fields, .. } => {
             for field in fields {
-                collect_hir_expr_symbols(field, symbols);
+                collect_request_expr_initializers(field, initializers);
             }
         }
         HirExprKind::UserTypeArrayConstruct { elements, .. } => {
             for element in elements {
-                collect_hir_expr_symbols(element, symbols);
+                collect_request_expr_initializers(element, initializers);
             }
         }
-        HirExprKind::FieldAccess { value, .. } => collect_hir_expr_symbols(value, symbols),
+        HirExprKind::FieldAccess { value, .. } => {
+            collect_request_expr_initializers(value, initializers);
+        }
         HirExprKind::Block { statements, result } => {
-            collect_hir_stmt_symbols(statements, symbols);
-            collect_hir_expr_symbols(result, symbols);
+            collect_request_stmt_initializers(statements, initializers);
+            collect_request_expr_initializers(result, initializers);
         }
         HirExprKind::Call { args, .. } => {
             for arg in args {
-                collect_hir_expr_symbols(&arg.value, symbols);
+                collect_request_expr_initializers(&arg.value, initializers);
             }
         }
         HirExprKind::History { expr, offset } => {
-            collect_hir_expr_symbols(expr, symbols);
+            collect_request_expr_initializers(expr, initializers);
             if let HirHistoryOffset::Dynamic(offset) = offset {
-                collect_hir_expr_symbols(offset, symbols);
+                collect_request_expr_initializers(offset, initializers);
             }
         }
     }
 }
 
-fn collect_hir_stmt_symbols(statements: &[HirStmt], symbols: &mut Vec<SymbolId>) {
+fn collect_hir_expr_symbols(expression: &HirExpr, symbols: &mut Vec<SymbolId>) {
+    collect_hir_expr_symbols_inner(expression, symbols, &mut HashSet::new());
+}
+
+fn collect_hir_expr_symbols_inner(
+    expression: &HirExpr,
+    symbols: &mut Vec<SymbolId>,
+    bound: &mut HashSet<SymbolId>,
+) {
+    match &expression.kind {
+        HirExprKind::Literal(_) | HirExprKind::Builtin(_) => {}
+        HirExprKind::Symbol(symbol) => {
+            if !bound.contains(symbol) {
+                symbols.push(*symbol);
+            }
+        }
+        HirExprKind::Unary { expr, .. } => collect_hir_expr_symbols_inner(expr, symbols, bound),
+        HirExprKind::Binary { left, right, .. } => {
+            collect_hir_expr_symbols_inner(left, symbols, bound);
+            collect_hir_expr_symbols_inner(right, symbols, bound);
+        }
+        HirExprKind::Ternary {
+            condition,
+            then_expr,
+            else_expr,
+        } => {
+            collect_hir_expr_symbols_inner(condition, symbols, bound);
+            collect_hir_expr_symbols_inner(then_expr, symbols, bound);
+            collect_hir_expr_symbols_inner(else_expr, symbols, bound);
+        }
+        HirExprKind::Switch { selector, arms } => {
+            if let Some(selector) = selector {
+                collect_hir_expr_symbols_inner(selector, symbols, bound);
+            }
+            for arm in arms {
+                if let Some(condition) = &arm.condition {
+                    collect_hir_expr_symbols_inner(condition, symbols, bound);
+                }
+                collect_hir_expr_symbols_inner(&arm.result, symbols, bound);
+            }
+        }
+        HirExprKind::For {
+            counter,
+            from,
+            to,
+            step,
+            statements,
+            result,
+            ..
+        } => {
+            collect_hir_expr_symbols_inner(from, symbols, bound);
+            collect_hir_expr_symbols_inner(to, symbols, bound);
+            if let Some(step) = step {
+                collect_hir_expr_symbols_inner(step, symbols, bound);
+            }
+            bound.insert(*counter);
+            collect_hir_stmt_symbols(statements, symbols, bound);
+            collect_hir_expr_symbols_inner(result, symbols, bound);
+        }
+        HirExprKind::ForIn {
+            index,
+            value,
+            iterable,
+            statements,
+            result,
+            ..
+        } => {
+            collect_hir_expr_symbols_inner(iterable, symbols, bound);
+            if let Some(index) = index {
+                bound.insert(*index);
+            }
+            bound.insert(*value);
+            collect_hir_stmt_symbols(statements, symbols, bound);
+            collect_hir_expr_symbols_inner(result, symbols, bound);
+        }
+        HirExprKind::While {
+            condition,
+            statements,
+            result,
+        } => {
+            collect_hir_expr_symbols_inner(condition, symbols, bound);
+            collect_hir_stmt_symbols(statements, symbols, bound);
+            collect_hir_expr_symbols_inner(result, symbols, bound);
+        }
+        HirExprKind::Tuple(items) => {
+            for item in items {
+                collect_hir_expr_symbols_inner(item, symbols, bound);
+            }
+        }
+        HirExprKind::UserTypeConstruct { fields, .. } => {
+            for field in fields {
+                collect_hir_expr_symbols_inner(field, symbols, bound);
+            }
+        }
+        HirExprKind::UserTypeArrayConstruct { elements, .. } => {
+            for element in elements {
+                collect_hir_expr_symbols_inner(element, symbols, bound);
+            }
+        }
+        HirExprKind::FieldAccess { value, .. } => {
+            collect_hir_expr_symbols_inner(value, symbols, bound)
+        }
+        HirExprKind::Block { statements, result } => {
+            collect_hir_stmt_symbols(statements, symbols, bound);
+            collect_hir_expr_symbols_inner(result, symbols, bound);
+        }
+        HirExprKind::Call { args, .. } => {
+            for arg in args {
+                collect_hir_expr_symbols_inner(&arg.value, symbols, bound);
+            }
+        }
+        HirExprKind::History { expr, offset } => {
+            collect_hir_expr_symbols_inner(expr, symbols, bound);
+            if let HirHistoryOffset::Dynamic(offset) = offset {
+                collect_hir_expr_symbols_inner(offset, symbols, bound);
+            }
+        }
+    }
+}
+
+fn collect_hir_stmt_symbols(
+    statements: &[HirStmt],
+    symbols: &mut Vec<SymbolId>,
+    bound: &mut HashSet<SymbolId>,
+) {
     for statement in statements {
         match &statement.kind {
-            HirStmtKind::Expr(expr) => collect_hir_expr_symbols(expr, symbols),
+            HirStmtKind::Expr(expr) => collect_hir_expr_symbols_inner(expr, symbols, bound),
             HirStmtKind::If {
                 condition,
                 then_branch,
                 else_branch,
             } => {
-                collect_hir_expr_symbols(condition, symbols);
-                collect_hir_stmt_symbols(then_branch, symbols);
-                collect_hir_stmt_symbols(else_branch, symbols);
+                collect_hir_expr_symbols_inner(condition, symbols, bound);
+                collect_hir_stmt_symbols(then_branch, symbols, bound);
+                collect_hir_stmt_symbols(else_branch, symbols, bound);
             }
             HirStmtKind::Switch { selector, arms } => {
                 if let Some(selector) = selector {
-                    collect_hir_expr_symbols(selector, symbols);
+                    collect_hir_expr_symbols_inner(selector, symbols, bound);
                 }
                 for arm in arms {
                     if let Some(condition) = &arm.condition {
-                        collect_hir_expr_symbols(condition, symbols);
+                        collect_hir_expr_symbols_inner(condition, symbols, bound);
                     }
-                    collect_hir_stmt_symbols(&arm.body, symbols);
+                    collect_hir_stmt_symbols(&arm.body, symbols, bound);
                 }
             }
             HirStmtKind::For {
+                counter,
                 from,
                 to,
                 step,
                 body,
                 ..
             } => {
-                collect_hir_expr_symbols(from, symbols);
-                collect_hir_expr_symbols(to, symbols);
+                collect_hir_expr_symbols_inner(from, symbols, bound);
+                collect_hir_expr_symbols_inner(to, symbols, bound);
                 if let Some(step) = step {
-                    collect_hir_expr_symbols(step, symbols);
+                    collect_hir_expr_symbols_inner(step, symbols, bound);
                 }
-                collect_hir_stmt_symbols(body, symbols);
+                bound.insert(*counter);
+                collect_hir_stmt_symbols(body, symbols, bound);
             }
-            HirStmtKind::ForIn { iterable, body, .. } => {
-                collect_hir_expr_symbols(iterable, symbols);
-                collect_hir_stmt_symbols(body, symbols);
+            HirStmtKind::ForIn {
+                index,
+                value,
+                iterable,
+                body,
+            } => {
+                collect_hir_expr_symbols_inner(iterable, symbols, bound);
+                if let Some(index) = index {
+                    bound.insert(*index);
+                }
+                bound.insert(*value);
+                collect_hir_stmt_symbols(body, symbols, bound);
             }
             HirStmtKind::While { condition, body } => {
-                collect_hir_expr_symbols(condition, symbols);
-                collect_hir_stmt_symbols(body, symbols);
+                collect_hir_expr_symbols_inner(condition, symbols, bound);
+                collect_hir_stmt_symbols(body, symbols, bound);
             }
-            HirStmtKind::Decl { value, .. }
-            | HirStmtKind::Reassign { value, .. }
-            | HirStmtKind::FieldReassign { value, .. } => {
-                collect_hir_expr_symbols(value, symbols);
+            HirStmtKind::Decl { symbol, value } => {
+                collect_hir_expr_symbols_inner(value, symbols, bound);
+                bound.insert(*symbol);
+            }
+            HirStmtKind::Reassign { value, .. } | HirStmtKind::FieldReassign { value, .. } => {
+                collect_hir_expr_symbols_inner(value, symbols, bound);
             }
             HirStmtKind::ArrayFieldReassign {
                 array,
@@ -540,11 +787,17 @@ fn collect_hir_stmt_symbols(statements: &[HirStmt], symbols: &mut Vec<SymbolId>)
                 value,
                 ..
             } => {
-                collect_hir_expr_symbols(array, symbols);
-                collect_hir_expr_symbols(index, symbols);
-                collect_hir_expr_symbols(value, symbols);
+                collect_hir_expr_symbols_inner(array, symbols, bound);
+                collect_hir_expr_symbols_inner(index, symbols, bound);
+                collect_hir_expr_symbols_inner(value, symbols, bound);
             }
-            HirStmtKind::TupleDecl { value, .. } => collect_hir_expr_symbols(value, symbols),
+            HirStmtKind::TupleDecl {
+                symbols: declared,
+                value,
+            } => {
+                collect_hir_expr_symbols_inner(value, symbols, bound);
+                bound.extend(declared.iter().copied());
+            }
             HirStmtKind::Break | HirStmtKind::Continue => {}
         }
     }

@@ -43,6 +43,14 @@ fn reports_unsupported_request_fixture() {
 }
 
 #[test]
+fn reports_nested_if_expression_branch_without_a_value() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_nested_if_branch_return.pine",
+        &["if expression branches must end with a value-producing expression"],
+    );
+}
+
+#[test]
 fn reports_unsupported_request_lower_tf_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_request_lower_tf.pine",
@@ -489,6 +497,28 @@ fn reports_unsupported_time_globals_simple_int_qualifier_fixture() {
             "`plot` argument `offset` expects simple integer-compatible, got series int",
             "`plot` argument `offset` expects simple integer-compatible, got series int",
         ],
+    );
+}
+
+#[test]
+fn accepts_timenow_as_a_host_backed_series_int_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_timenow_execution_clock.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .hir
+            .expect("timenow fixture should lower")
+            .timenow_symbol
+            .is_some()
     );
 }
 
@@ -1431,17 +1461,26 @@ fn accepts_supported_output_na_simple_int_params_fixture() {
 }
 
 #[test]
-fn reports_unsupported_output_series_simple_int_params_fixture() {
-    assert_diagnostic_messages(
+fn reports_unsupported_output_series_non_offset_simple_int_params_fixture() {
+    assert_exact_diagnostic_messages(
         "tests/fixtures/sema/unsupported_output_series_simple_int_params.pine",
         &[
-            "`plot` argument `offset` expects simple integer-compatible, got series int",
             "`plot` argument `precision` expects simple integer-compatible, got series int",
+            "`plotarrow` argument `minheight` expects simple integer-compatible, got series int",
+            "`plotarrow` argument `maxheight` expects simple integer-compatible, got series int",
+        ],
+    );
+}
+
+#[test]
+fn reports_unsupported_v6_series_output_offset_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_v6_series_output_offset.pine",
+        &[
+            "`plot` argument `offset` expects simple integer-compatible, got series int",
             "`plotchar` argument `offset` expects simple integer-compatible, got series int",
             "`plotshape` argument `offset` expects simple integer-compatible, got series int",
             "`plotarrow` argument `offset` expects simple integer-compatible, got series int",
-            "`plotarrow` argument `minheight` expects simple integer-compatible, got series int",
-            "`plotarrow` argument `maxheight` expects simple integer-compatible, got series int",
             "`bgcolor` argument `offset` expects simple integer-compatible, got series int",
             "`barcolor` argument `offset` expects simple integer-compatible, got series int",
         ],
@@ -3535,15 +3574,14 @@ fn reports_unsupported_udt_array_chained_field_mutation_udf_fixture() {
 fn reports_unsupported_udt_array_chained_field_mutation_index_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_udt_array_chained_field_mutation_index.pine",
-        &["`array.get` argument `index` expects simple integer-compatible, got const string"],
+        &["`array.get` argument `index` expects integer-compatible, got const string"],
     );
 }
 
 #[test]
-fn reports_unsupported_udt_array_chained_field_mutation_series_index_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_udt_array_chained_field_mutation_series_index.pine",
-        &["`array.get` argument `index` expects simple integer-compatible, got series int"],
+fn accepts_supported_udt_array_chained_field_mutation_series_index_fixture() {
+    assert_valid_fixture(
+        "tests/fixtures/sema/supported_udt_array_chained_field_mutation_series_index.pine",
     );
 }
 
@@ -5355,6 +5393,26 @@ fn accepts_supported_drawing_all_return_qualifier_fixture() {
 }
 
 #[test]
+fn accepts_supported_drawing_dynamic_enum_options_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_drawing_dynamic_enum_options.pine");
+}
+
+#[test]
+fn rejects_unbounded_drawing_enum_strings_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_drawing_unbounded_enum_strings.pine",
+        &[
+            "`line.new` argument `extend` only supports",
+            "`line.new` argument `style` only supports",
+            "`line.set_style` argument `style` only supports",
+            "`line.set_extend` argument `extend` only supports",
+            "`label.new` argument `style` only supports",
+            "`label.set_style` argument `style` only supports",
+        ],
+    );
+}
+
+#[test]
 fn reports_unsupported_drawing_all_return_qualifier_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_drawing_all_return_qualifier.pine",
@@ -5382,7 +5440,6 @@ fn reports_unsupported_label_new_modes_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_label_new_type_options.pine",
         &[
-            "`label.new` argument `style` expects const string, got series string",
             "`label.new` argument `size` expects string/int-compatible, got series float",
             "`label.new` argument `point` expects chart.point-compatible, got series float",
         ],
@@ -5399,10 +5456,7 @@ fn reports_unsupported_line_new_modes_fixture() {
     }
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_line_new_type_options.pine",
-        &[
-            "`line.new` argument `style` expects const string, got series string",
-            "`line.new` argument `width` expects integer-compatible, got series float",
-        ],
+        &["`line.new` argument `width` expects integer-compatible, got series float"],
     );
 }
 
@@ -6856,6 +6910,34 @@ fn reports_recursive_tuple_declarations_without_overflowing() {
 }
 
 #[test]
+fn recovers_tuple_bindings_from_typed_unsupported_producers() {
+    let path = "tests/fixtures/sema/unsupported_tuple_typed_producer_recovery.pine";
+    let path = workspace_fixture(path);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert_eq!(
+        analysis.diagnostics.len(),
+        1,
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert_eq!(analysis.diagnostics[0].code, "E_UNSUPPORTED_FEATURE");
+    assert!(
+        analysis.diagnostics[0].message.contains("security")
+            && analysis.diagnostics[0]
+                .message
+                .contains("control-flow-local requests"),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_supported_user_type_array_param_for_in_fixture() {
     assert_valid_fixture("tests/fixtures/sema/supported_user_type_array_param_for_in.pine");
 }
@@ -6880,7 +6962,7 @@ fn reports_unsupported_local_user_type_array_call_result_chaining_fixture() {
     assert_diagnostic_messages(
         path,
         &[
-            "`array.get` argument `index` expects simple integer-compatible, got const string",
+            "`array.get` argument `index` expects integer-compatible, got const string",
             "`array.includes` argument `value` expects UDT `First`, got `Second`",
             "`array.includes` expects at most 2 argument(s), got 3",
             "`array.indexof` argument `value` expects UDT `First`, got `Second`",
@@ -7037,7 +7119,7 @@ fn reports_unsupported_local_user_type_array_call_result_chaining_fixture() {
             "`array.insert` argument `index` expects simple integer-compatible, got const string",
             "`array.insert` argument `value` expects UDT `First`, got `Second`",
             "`array.insert` expects at most 3 argument(s), got 4",
-            "`array.set` argument `index` expects simple integer-compatible, got const string",
+            "`array.set` argument `index` expects integer-compatible, got const string",
             "`array.set` argument `value` expects UDT `First`, got `Second`",
             "`array.set` expects at most 3 argument(s), got 4",
             "`array.fill` argument `value` expects UDT `First`, got `Second`",
@@ -7072,7 +7154,7 @@ fn reports_unsupported_builtin_namespace_array_call_result_reads_fixture() {
     assert_exact_diagnostic_messages(
         path,
         &[
-            "`array.get` argument `index` expects simple integer-compatible, got const string",
+            "`array.get` argument `index` expects integer-compatible, got const string",
             "`array.push` argument `value` expects string-compatible, got const int",
             "`array.push` expects at least 2 argument(s), got 1",
             "`array.push` expects at most 2 argument(s), got 3",
@@ -7083,7 +7165,7 @@ fn reports_unsupported_builtin_namespace_array_call_result_reads_fixture() {
             "`array.insert` argument `value` expects string-compatible, got const int",
             "`array.insert` expects at least 3 argument(s), got 2",
             "`array.insert` expects at most 3 argument(s), got 4",
-            "`array.set` argument `index` expects simple integer-compatible, got const string",
+            "`array.set` argument `index` expects integer-compatible, got const string",
             "`array.set` argument `value` expects string-compatible, got const int",
             "`array.set` expects at least 3 argument(s), got 2",
             "`array.set` expects at most 3 argument(s), got 4",
@@ -7097,17 +7179,17 @@ fn reports_unsupported_builtin_namespace_array_call_result_reads_fixture() {
             "`array.sort` argument `id` expects numeric/string array, got simple array<bool>",
             "`array.sort` argument `order` expects const string, got series float",
             "`array.sort` expects at most 2 argument(s), got 3",
-            "`array.get` argument `index` expects simple integer-compatible, got const string",
+            "`array.get` argument `index` expects integer-compatible, got const string",
             "`matrix.row` argument `row` expects simple int, got const string",
             "`matrix.col` argument `column` expects simple int, got const string",
-            "`array.get` argument `index` expects simple integer-compatible, got const string",
-            "`array.get` argument `index` expects simple integer-compatible, got const string",
-            "`array.get` argument `index` expects simple integer-compatible, got const string",
-            "`array.get` argument `index` expects simple integer-compatible, got const string",
+            "`array.get` argument `index` expects integer-compatible, got const string",
+            "`array.get` argument `index` expects integer-compatible, got const string",
+            "`array.get` argument `index` expects integer-compatible, got const string",
+            "`array.get` argument `index` expects integer-compatible, got const string",
             "`array.remove` argument `index` expects simple integer-compatible, got const string",
             "`array.remove` expects at least 2 argument(s), got 1",
             "`array.remove` expects at most 2 argument(s), got 3",
-            "`array.get` argument `index` expects simple integer-compatible, got const string",
+            "`array.get` argument `index` expects integer-compatible, got const string",
             "`array.includes` argument `value` expects string-compatible, got const int",
             "`array.includes` argument `value` expects numeric-compatible, got const string",
             "`array.includes` argument `value` expects numeric-compatible, got const string",
@@ -7986,7 +8068,7 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
     assert_diagnostic_messages(
         path,
         &[
-            "`array.get` argument `index` expects simple integer-compatible, got const string",
+            "`array.get` argument `index` expects integer-compatible, got const string",
             "`array.transform` is not supported: direct array call-result methods currently support only `.size()`, `.get()`, `.first()`, `.last()`, `.copy()`, `.slice()`, `.concat()`, `.includes()`, `.every()`, `.some()`, `.indexof()`, `.lastindexof()`, `.binary_search()`, `.binary_search_leftmost()`, `.binary_search_rightmost()`, `.abs()`, `.min()`, `.max()`, `.sum()`, `.avg()`, `.range()`, `.median()`, `.mode()`, `.percentile_nearest_rank()`, `.percentile_linear_interpolation()`, `.percentrank()`, `.covariance()`, `.standardize()`, `.variance()`, `.stdev()`, `.sort_indices()`, `.join()`, `.clear()`, `.reverse()`, `.pop()`, `.shift()`, `.remove()`, `.push()`, `.unshift()`, `.insert()`, `.set()`, `.fill()`, and `.sort()`; bind the result or use the namespace helper",
             "`array.slice` argument `index_from` expects simple integer-compatible, got const string",
             "`array.slice` argument `index_to` expects simple integer-compatible, got const string",
@@ -8012,7 +8094,7 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
             "`array.insert` argument `value` expects UDT `First`, got `Second`",
             "`array.insert` expects at least 3 argument(s), got 2",
             "`array.insert` expects at most 3 argument(s), got 4",
-            "`array.set` argument `index` expects simple integer-compatible, got const string",
+            "`array.set` argument `index` expects integer-compatible, got const string",
             "`array.set` argument `value` expects integer-compatible, got const string",
             "`array.set` argument `value` expects UDT `First`, got `Second`",
             "`array.set` expects at least 3 argument(s), got 2",
@@ -8680,7 +8762,7 @@ fn reports_unsupported_array_set_value_method_fixture() {
 fn reports_unsupported_array_set_index_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_set_index.pine",
-        &["`array.set` argument `index` expects simple integer-compatible, got const string"],
+        &["`array.set` argument `index` expects integer-compatible, got const string"],
     );
 }
 
@@ -8688,7 +8770,7 @@ fn reports_unsupported_array_set_index_fixture() {
 fn reports_unsupported_array_set_index_method_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_set_index_method.pine",
-        &["`array.set` argument `index` expects simple integer-compatible, got const string"],
+        &["`array.set` argument `index` expects integer-compatible, got const string"],
     );
 }
 
@@ -8712,7 +8794,7 @@ fn reports_unsupported_array_set_mixed_udt_method_fixture() {
 fn reports_unsupported_array_get_index_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_get_index.pine",
-        &["`array.get` argument `index` expects simple integer-compatible, got const string"],
+        &["`array.get` argument `index` expects integer-compatible, got const string"],
     );
 }
 
@@ -8725,7 +8807,7 @@ fn accepts_supported_array_na_simple_int_params_fixture() {
 fn reports_unsupported_array_get_index_method_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_get_index_method.pine",
-        &["`array.get` argument `index` expects simple integer-compatible, got const string"],
+        &["`array.get` argument `index` expects integer-compatible, got const string"],
     );
 }
 
@@ -14633,7 +14715,7 @@ fn reports_unsupported_imported_user_type_array_call_result_chaining_fixture() {
             "`array.insert` argument `index` expects simple integer-compatible, got const string",
             "`array.insert` argument `value` expects UDT `lib.First`, got `lib.Second`",
             "`array.insert` expects at most 3 argument(s), got 4",
-            "`array.set` argument `index` expects simple integer-compatible, got const string",
+            "`array.set` argument `index` expects integer-compatible, got const string",
             "`array.set` argument `value` expects UDT `lib.First`, got `lib.Second`",
             "`array.set` expects at most 3 argument(s), got 4",
             "`array.fill` argument `value` expects UDT `lib.First`, got `lib.Second`",

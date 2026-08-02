@@ -358,7 +358,38 @@ const ARRAY_FILL_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
-const ARRAY_INDEX_PARAMS: &[BuiltinParam] = &[
+const ARRAY_GET_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::Array,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "index",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+];
+
+const ARRAY_SET_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::Array,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "index",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "value",
+        accepts: Accepts::Any,
+        optional: false,
+    },
+];
+
+const ARRAY_SIMPLE_INDEX_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
         accepts: Accepts::Array,
@@ -371,7 +402,7 @@ const ARRAY_INDEX_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
-const ARRAY_SET_PARAMS: &[BuiltinParam] = &[
+const ARRAY_INSERT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
         accepts: Accepts::Array,
@@ -498,7 +529,7 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "array.get",
         phase: BuiltinPhase::Phase1Core,
-        params: ARRAY_INDEX_PARAMS,
+        params: ARRAY_GET_PARAMS,
         returns: ReturnSpec::ArrayElement(0),
         variadic: false,
     },
@@ -512,7 +543,7 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "array.insert",
         phase: BuiltinPhase::Phase1Core,
-        params: ARRAY_SET_PARAMS,
+        params: ARRAY_INSERT_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },
@@ -526,7 +557,7 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "array.remove",
         phase: BuiltinPhase::Phase1Core,
-        params: ARRAY_INDEX_PARAMS,
+        params: ARRAY_SIMPLE_INDEX_PARAMS,
         returns: ReturnSpec::ArrayElement(0),
         variadic: false,
     },

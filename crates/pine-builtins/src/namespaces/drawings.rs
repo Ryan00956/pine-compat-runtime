@@ -45,7 +45,7 @@ const LABEL_NEW_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "style",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -91,7 +91,7 @@ const LABEL_NEW_POINT_PARAMS: &[BuiltinParam] = &[
     param("xloc", Accepts::ConstString, true),
     param("yloc", Accepts::ConstString, true),
     param("color", Accepts::ColorCompatible, true),
-    param("style", Accepts::ConstString, true),
+    param("style", Accepts::StringCompatible, true),
     param("textcolor", Accepts::ColorCompatible, true),
     param("size", Accepts::StringOrIntCompatible, true),
     param("textalign", Accepts::ConstString, true),
@@ -228,7 +228,7 @@ const LABEL_SET_STYLE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "style",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: false,
     },
 ];
@@ -344,7 +344,7 @@ const LINE_NEW_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "extend",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -354,7 +354,7 @@ const LINE_NEW_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "style",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -373,9 +373,9 @@ const LINE_NEW_POINT_PARAMS: &[BuiltinParam] = &[
     param("first_point", Accepts::ChartPointCompatible, false),
     param("second_point", Accepts::ChartPointCompatible, false),
     param("xloc", Accepts::ConstString, true),
-    param("extend", Accepts::ConstString, true),
+    param("extend", Accepts::StringCompatible, true),
     param("color", Accepts::ColorCompatible, true),
-    param("style", Accepts::ConstString, true),
+    param("style", Accepts::StringCompatible, true),
     param("width", Accepts::IntCompatible, true),
     param("force_overlay", Accepts::ConstBool, true),
 ];
@@ -579,7 +579,7 @@ const LINE_SET_STYLE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "style",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: false,
     },
 ];
@@ -592,7 +592,7 @@ const LINE_SET_EXTEND_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "extend",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: false,
     },
 ];

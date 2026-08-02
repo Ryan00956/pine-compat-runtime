@@ -313,6 +313,28 @@ plot(enabled and mode == "SMA" ? ta.sma(close, length) * scale : open, color=col
 }
 
 #[test]
+fn input_defaults_follow_named_parameters_instead_of_source_order() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("named input defaults")
+mode = input.string(title="Mode", options=["SMA", "EMA"], defval="SMA")
+plot(mode == "SMA" ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_values_close(&result.plots[0].values, &[1.0]);
+}
+
+#[test]
 fn runs_input_metadata_parameters() {
     let source = SourceFile::new(
         "test.pine",

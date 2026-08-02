@@ -24,9 +24,13 @@ class ImportLegacyCorpusTests(unittest.TestCase):
             noncanonical = (
                 b'// @version = 6\r\nindicator("modern")\r\nplot(close)\r\n'
             )
+            spaced = (
+                b'//@version = 4\r\nstudy("spaced")\r\nplot(close)\r\n'
+            )
             (source_dir / "Named v4").write_bytes(v4)
             (source_dir / "Named implicit").write_bytes(implicit)
             (source_dir / "Named modern").write_bytes(noncanonical)
+            (source_dir / "Named spaced").write_bytes(spaced)
             bars = root / "bars.csv"
             bars.write_text(
                 "time,open,high,low,close,volume\n0,1,1,1,1,1\n",
@@ -70,6 +74,10 @@ class ImportLegacyCorpusTests(unittest.TestCase):
             self.assertEqual(
                 by_name["Named modern"]["version_directive"],
                 "noncanonical_runtime_detects_v1",
+            )
+            self.assertEqual(
+                by_name["Named spaced"]["version_directive"],
+                "compat_spaced_equals",
             )
             copied = {
                 row["source_sha256"]: (
