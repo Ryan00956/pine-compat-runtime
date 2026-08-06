@@ -9,6 +9,16 @@ fn workspace_path(path: &str) -> String {
         .to_string()
 }
 
+fn assert_snapshot(name: &str, actual: &str) {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .join("tests/snapshots")
+        .join(name);
+    let expected = std::fs::read_to_string(&path)
+        .unwrap_or_else(|error| panic!("failed to read {}: {error}", path.display()));
+    assert_eq!(actual.trim_end(), expected.trim_end(), "{name} changed");
+}
+
 #[test]
 fn parses_request_bars_spec_with_exchange_prefixed_symbol() {
     let spec = parse_request_bars_spec("NASDAQ:AAPL:1=request.csv")
@@ -301,6 +311,16 @@ fn runs_timenow_with_explicit_execution_times_in_normal_and_profile_modes() {
     let output = run_json_with_options(&options).expect("CLI timenow output");
     assert!(output.contains("\"values\":[101,202,303,404]"));
     assert!(output.contains("\"values\":[100,200,300,400]"));
+    assert_eq!(
+        run_json_with_options_in_mode(&options, ExecutionMode::Incremental)
+            .expect("incremental CLI timenow output"),
+        output
+    );
+    assert_eq!(
+        run_json_with_options_in_mode(&options, ExecutionMode::RealtimeHistory)
+            .expect("realtime-history CLI timenow output"),
+        output
+    );
 
     let profile_options = RunOptions {
         profile: true,
@@ -412,6 +432,17 @@ bgcolor(shade)
     };
 
     let output = run_json_with_options(&options).expect("input override output");
+
+    assert_eq!(
+        run_json_with_options_in_mode(&options, ExecutionMode::Incremental)
+            .expect("incremental input override output"),
+        output
+    );
+    assert_eq!(
+        run_json_with_options_in_mode(&options, ExecutionMode::RealtimeHistory)
+            .expect("realtime-history input override output"),
+        output
+    );
 
     assert!(output.contains("\"values\":[2,4,6,8]"));
     assert!(output.contains("\"values\":[0,0,0,0]"));
@@ -1536,6 +1567,16 @@ fn runs_request_bars_integration_fixture() {
     };
 
     let output = run_json_with_options(&options).expect("request integration fixture");
+    assert_eq!(
+        run_json_with_options_in_mode(&options, ExecutionMode::Incremental)
+            .expect("incremental request integration fixture"),
+        output
+    );
+    assert_eq!(
+        run_json_with_options_in_mode(&options, ExecutionMode::RealtimeHistory)
+            .expect("realtime-history request integration fixture"),
+        output
+    );
 
     assert!(output.contains("\"values\":[30,32,34,36,38]"));
     assert!(output.contains("\"values\":[null,null,100,100,200]"));
@@ -2065,6 +2106,17 @@ fn runs_legacy_v4_security_provider_fixture() {
     };
 
     let output = run_json_with_options(&options).expect("legacy security CLI fixture");
+    assert_snapshot("runtime_legacy_v4_security_provider.json", &output);
+    assert_eq!(
+        run_json_with_options_in_mode(&options, ExecutionMode::Incremental)
+            .expect("incremental legacy security CLI fixture"),
+        output
+    );
+    assert_eq!(
+        run_json_with_options_in_mode(&options, ExecutionMode::RealtimeHistory)
+            .expect("realtime-history legacy security CLI fixture"),
+        output
+    );
     assert!(output.contains(r#""values":[null,null,100,100,200]"#));
     assert!(output.contains(r#""diagnostics":[]"#));
 }

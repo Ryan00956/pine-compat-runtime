@@ -1650,25 +1650,133 @@ diagnostics, failures, or missing inputs. The corpus report's generic
 CSV is not the runtime's full JSON reference-output contract; the separate
 comparison above does not mislabel that schema boundary.
 
+### Thirty-second execution-mode parity slice
+
+The remaining VuManChu differences were replayed independently before making
+another runtime change. The runtime's complete 242-point Stochastic bullish
+fractal series matches its conditional UDF-local history model point for point.
+Over the comparison window, replaying that same model from TradingView's
+exported Stoch K values yields 122 candidates, while the exported divergence
+column contains a strict 99-point subset. Nested-call scope sharing, direct
+bar history, and skipped-call padding do not reproduce that subset. Because
+the private intake was explicitly collected from mixed, unversioned community
+copies and the CSV does not identify the exact source revision, the 20 residual
+differences are retained as unpaired-reference evidence instead of being used
+to weaken or special-case UDF history semantics.
+
+The CLI now exposes `run-incremental` and `run-realtime-history` alongside the
+existing batch `run`. Both reuse the same source, chart bars, chart context,
+library sources, request streams, input overrides, and optional execution-time
+stream. Incremental mode appends one bar at a time through
+`HistoricalRuntime`; realtime-history mode hands each bar through
+`RealtimeRuntime` as a historical update. They return the unchanged public
+runtime JSON shape, and `--profile` remains available for direct resource
+inspection. Realtime construction now also accepts input overrides, so the
+three modes have the same host-input boundary.
+
+`scripts/analyze_legacy_corpus.py` runs both additional modes after a successful
+batch execution and requires complete parsed JSON equality with the batch
+result. Invalid JSON, runtime failure, and `result_mismatch` remain distinct
+stage evidence. On the unchanged 104-source corpus, all 44 eligible legacy
+indicators pass batch, incremental, and realtime-history execution, including
+all six provider-backed indicators and the explicit-execution-time item. No
+eligible diagnostic, failure, or missing input is introduced.
+
+The corpus was measured twice with
+`buildRevision=corpus-r2-execution-modes-slice-32`. The final reports are
+`report-execution-modes-32-final-a.json` and
+`report-execution-modes-32-final-b.json`; their matching SHA-256 is
+`1a0d778bf6f17b99c5389b917f5ceb86c3675e8f49f496a2577ee3fbb509cd5e`.
+Report schema remains 3 because the incremental and realtime stage fields
+already existed; this slice turns their 44 eligible statuses from `not_run`
+into strict parity results without exposing source text, paths, provider bars,
+or execution timestamps.
+
+### Thirty-third provider-cache and resource slice
+
+`RuntimeProfile` now accounts for provider-result storage instead of omitting
+it from retained-value evidence. The public profiled JSON exposes only four
+aggregate fields: request-cache entry count, distinct requested-context count,
+cached value count, and cached value capacity. It does not expose symbols,
+timeframes, call-site ids, provider bars, or cached values. Cached value count
+is now included in both Rust and CLI release retained-value gates.
+
+The corpus analyzer moves to report/tool schema 4 and runs all three execution
+modes with `--profile`. It removes the profile object before comparing runtime
+results or supplied references, then requires batch, incremental, and
+realtime-history profiles to agree on bar count, retained values, maximum
+series depth, and all request-cache counts. Provider-backed rows must populate
+at least one cache context, entry, and value; every audited row must remain
+below the pinned one-million-value corpus ceiling. `invalid_profile`,
+`profile_mismatch`, `request_cache_missing`, `request_cache_invalid`, and
+`retained_value_ceiling_exceeded` remain explicit failure kinds.
+
+All 44 eligible indicators pass the new resource audit. The six real-provider
+rows populate their caches in all three modes. Five indicators contain more
+cache entries than requested contexts, exercising call-site isolation over the
+same symbol/timeframe context. Across eligible rows, the observed maxima are
+6 requested contexts, 40 call-site cache entries, 69,942 cached provider
+values, 2,880 series-history depth, and 185,153 total retained values. The
+largest total is 18.5% of the fixed corpus ceiling.
+
+The corpus was measured twice with
+`buildRevision=corpus-r2-resource-cache-slice-33`. The final reports are
+`report-resource-cache-33-final-a.json` and
+`report-resource-cache-33-final-b.json`; their matching SHA-256 is
+`795fb210c4027ba9ff2faf8c317f719f450a8cd95650902971166754bbe0bcdb`.
+
+### Thirty-fourth v4 deduplication and release-evidence slice
+
+The private v4 selection is now measured against the committed public seed
+instead of being added to it blindly. `scripts/audit_legacy_corpus_dedup.py`
+uses three ordered, version-aware match levels: exact source bytes; UTF-8 text
+with newlines and trailing whitespace normalized; and a comment/trivia-free
+token stream whose fingerprint includes the expected Pine version. The token
+level preserves identifiers, literals, strings, and punctuation. It does not
+rename symbols, fold constants, rewrite APIs, or claim equivalence between two
+different token streams.
+
+The report contains only manifest hashes, one-way SHA-256 fingerprints, token
+counts, public ids, and opaque private ids. Source text, paths, original titles,
+and filenames remain absent. No exact, normalized, or token-equivalent match
+exists between the 12 public v4 seeds and the 20 private v4 selections. Both
+sets are internally unique at the token level, so all 20 private scripts are a
+real contribution and the combined deduplicated count is 32. The provisional
+50-script stable-profile floor is not reached; 18 additional unique eligible
+v4 scripts are still required.
+
+Release evidence was tightened at the same boundary. All 36 versioned release
+fixtures now require batch, incremental, realtime-history, and forming-update
+rollback/confirmation profiles to agree on bar count, retained values, maximum
+series depth, and request-cache entry/context/value counts. Every mode stays
+under its fixture ceiling, and external-provider profiles must populate their
+cache. The existing external-provider CLI integration is now a required golden
+contract shared by Python and WASM, raising the required runtime host-parity
+set from 433 to 434 snapshots without adding a host-specific execution path.
+
+The corpus was measured twice with
+`buildRevision=corpus-r2-dedup-host-release-slice-34`. The final reports are
+`report-dedup-host-release-34-final-a.json` and
+`report-dedup-host-release-34-final-b.json`; their matching SHA-256 is
+`73b636ca17be48c1dbcaa330f41740f27dfdcf8ff00e924b0e9c057c27f4c56e`.
+
 ## Next Selection
 
 The next implementation slice should still be measured over this corpus and
 should not add strategy behavior. The ranked order is now:
 
-1. isolate the remaining 20 VuManChu bullish-divergence mismatches by nested
-   conditional-UDF call instance without weakening history alignment or
-   special-casing that script;
-2. exercise incremental and realtime handoff, provider cache isolation, and
-   retained-resource bounds over the real request streams now that historical
-   execution is closed;
+1. acquire or author at least 18 additional unique eligible v4 indicators and
+   pass them through the same version-aware audit before claiming the
+   50-script stable-profile floor;
+2. require a source-revision-paired export before using the remaining 20
+   VuManChu differences to drive interpreter semantics;
 3. preserve the now-zero eligible diagnostic, legacy-security, branch-return,
    dynamic-history-offset, unknown-symbol, and operator-type clusters while
    resolving any next producer; do not weaken structured block layout, graph
    side-effect barriers, or modern call typing.
 
-The v4 selection checkpoint originally required 30 total samples; this private
-intake contributes 20, while the public seed contains 12. Counts must not be
-blindly summed until duplicate content across the two manifests is checked.
-Stable evidence still requires at least 50 eligible scripts per profile and the
-separate incremental, realtime, provider, resource, cache, host-parity, and
-release audits.
+The v4 selection checkpoint originally required 30 total samples. The audited
+32 unique sources clear that checkpoint, but stable evidence still requires at
+least 50 deduplicated eligible scripts per profile. Host-parity and release
+resource audits are now closed for the current evidence set; they must remain
+green as new sources are added.

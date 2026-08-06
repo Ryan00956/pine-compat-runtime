@@ -6434,6 +6434,10 @@ fn request_security_caches_requested_context_values_by_callsite() {
         .append_bar(timed_bar(60_000, 7.0))
         .expect("second bar should run");
     assert_eq!(runtime.request_cache.len(), 1);
+    let profile = runtime.profile();
+    assert_eq!(profile.request_cache_entries, 1);
+    assert_eq!(profile.request_cache_contexts, 1);
+    assert_eq!(profile.request_cache_values, 3);
 }
 
 #[test]
@@ -6481,6 +6485,10 @@ fn request_security_cache_isolates_same_context_different_callsite_expressions()
     let result = runtime.result();
 
     assert_eq!(runtime.request_cache.len(), 2);
+    let profile = runtime.profile();
+    assert_eq!(profile.request_cache_entries, 2);
+    assert_eq!(profile.request_cache_contexts, 1);
+    assert_eq!(profile.request_cache_values, 4);
     assert_values_close(&result.plots[0].values, &[10.0, 11.0]);
     assert_values_close(&result.plots[1].values, &[20.0, 21.0]);
 }

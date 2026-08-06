@@ -644,6 +644,18 @@ impl<'a> HistoricalRuntime<'a> {
 
     #[must_use]
     pub fn profile(&self) -> RuntimeProfile {
+        let request_cache_contexts = self
+            .request_cache
+            .keys()
+            .map(RequestCacheKey::context)
+            .collect::<HashSet<_>>()
+            .len();
+        let request_cache_values = self.request_cache.values().map(Vec::len).sum::<usize>();
+        let request_cache_value_capacity = self
+            .request_cache
+            .values()
+            .map(Vec::capacity)
+            .sum::<usize>();
         let series_buffers = self.series_store.buffers.len();
         let series_values = self
             .series_store
@@ -885,6 +897,10 @@ impl<'a> HistoricalRuntime<'a> {
             history_dynamic_retention_misses: self.history_dynamic_retention_misses,
             history_dynamic_retention_max_missed_offset: self
                 .history_dynamic_retention_max_missed_offset,
+            request_cache_entries: self.request_cache.len(),
+            request_cache_contexts,
+            request_cache_values,
+            request_cache_value_capacity,
             symbol_slots: self.current_symbols.len(),
             symbol_capacity: self.current_symbols.capacity(),
             current_series_slots: self.current_series.len(),

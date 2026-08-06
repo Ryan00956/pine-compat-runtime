@@ -121,10 +121,18 @@ series/window/output values. Timing is observational and machine-dependent;
 the per-row resource ceiling is deterministic and release-gated. Corpus and
 release manifests require explicit license classes and source paths, and
 privacy-preserving corpus reports omit source text and source paths.
-Corpus report schema 3 also records `executionTimes` availability while
-omitting the execution-time path and timestamp values. A non-empty
+Corpus report schema 4 also records `executionTimes` availability and
+three-mode aggregate resource/cache evidence while omitting execution-time
+paths, timestamp values, request keys, and provider values. A non-empty
 `execution_times_path` manifest field must resolve to a file before execution
 and is forwarded unchanged through CLI `--execution-times`.
+
+The public v4 seed count remains 12 in the maturity table. A separate
+version-aware, privacy-preserving dedup audit proves that the 20 authorized
+private v4 selections do not duplicate those seeds at the exact, normalized,
+or token-equivalent levels, producing 32 countable v4 samples. This is still
+below the 50-script stable gate and does not move private sources into the
+committed conformance registry.
 
 Legacy exact-alias conformance requires a paired source/canonical HIR or runtime
 comparison, an original-span translation record, a user-symbol collision

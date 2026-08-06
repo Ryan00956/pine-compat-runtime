@@ -228,6 +228,43 @@
   regressions cover all three paths, R2 remains 44/44 historically executable,
   and the two deterministic reports share SHA-256
   `75f673c858bd0b68b9121ca018f429ac8dd709eaf78f77c0bde4818b67cabcfb`.
+- Added explicit CLI `run-incremental` and `run-realtime-history` execution
+  paths with the same chart context, provider streams, input overrides, and
+  execution timestamps as batch `run`. The corpus analyzer now executes both
+  modes after every successful batch run and requires complete runtime-JSON
+  equality, with invalid JSON, runtime failure, and `result_mismatch` retained
+  as separate evidence. All 44 eligible R2 indicators pass batch, incremental,
+  and realtime-history parity, including the six provider-backed scripts and
+  the deterministic `timenow` item; diagnostics and missing inputs remain zero.
+  The remaining 20 VuManChu differences are not used to change UDF semantics:
+  independent replay matches the runtime's conditional-call history exactly,
+  while the unversioned TradingView export is only a strict subset and is not
+  paired to the mixed-version source intake. The two deterministic reports
+  share SHA-256
+  `1a0d778bf6f17b99c5389b917f5ceb86c3675e8f49f496a2577ee3fbb509cd5e`.
+- Added request-cache storage to `RuntimeProfile` and retained-value gates.
+  Profiled JSON exposes aggregate entry, requested-context, value, and capacity
+  counts without disclosing request keys or provider data. Corpus report/tool
+  schema 4 profiles batch, incremental, and realtime-history in the existing
+  three runs, strips profile metadata before output comparison, and requires
+  resource/cache equality plus a one-million-value ceiling. All 44 eligible R2
+  indicators pass; the six provider-backed rows populate caches in every mode,
+  five exercise multiple call sites in one requested context, and the observed
+  maximum is 185,153 retained values with 40 cache entries across six contexts.
+  The two deterministic reports share SHA-256
+  `795fb210c4027ba9ff2faf8c317f719f450a8cd95650902971166754bbe0bcdb`.
+- Added a privacy-preserving, version-aware cross-manifest dedup audit. It
+  compares exact bytes, normalized UTF-8 text, and comment/trivia-free token
+  streams without treating renamed or rewritten programs as equivalent. The
+  12 public v4 seeds and 20 private v4 selections have no cross-manifest match,
+  producing 32 independently countable scripts and leaving 18 to the
+  provisional stable-profile floor. Release fixtures now require retained and
+  request-cache resource equality across batch, incremental, realtime-history,
+  and realtime rollback/confirmation; provider-backed profiles must populate
+  cache evidence. The external-provider runtime golden is required across CLI,
+  Python, and WASM, bringing the host-parity manifest to 434 runtime snapshots.
+  The two deterministic dedup reports share SHA-256
+  `73b636ca17be48c1dbcaa330f41740f27dfdcf8ff00e924b0e9c057c27f4c56e`.
 
 ## 0.2.0 - 2026-07-20
 

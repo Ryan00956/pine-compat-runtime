@@ -26,6 +26,7 @@ class LegacyReleaseProfileTests(unittest.TestCase):
         self.assertEqual(
             retained_values(
                 {
+                    "requestCacheValues": 11,
                     "seriesValues": 3,
                     "rollingWindowValues": 5,
                     "plotValues": 7,
@@ -33,7 +34,7 @@ class LegacyReleaseProfileTests(unittest.TestCase):
                     "unknownFutureField": 999,
                 }
             ),
-            15,
+            26,
         )
 
 

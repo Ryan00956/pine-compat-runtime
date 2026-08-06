@@ -1,9 +1,9 @@
 use std::{collections::HashMap, fs, sync::Arc};
 
 use pine_runtime::{
-    ChartContext, InMemoryRequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe,
-    RunningAlertConfig, RuntimeResult, input_calls, public_runtime_profiled_result_json,
-    public_runtime_result_json,
+    BarUpdate, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, RealtimeRuntime,
+    RequestEnvironment, RequestKey, RequestTimeframe, RunningAlertConfig, RuntimeProfile,
+    RuntimeResult, input_calls, public_runtime_profiled_result_json, public_runtime_result_json,
     run_historical_profiled_with_request_environment_and_input_overrides,
     run_historical_profiled_with_request_environment_and_input_overrides_and_execution_times,
     run_historical_with_request_environment_and_input_overrides,
@@ -24,6 +24,23 @@ use input_overrides::{InputOverrideSpec, input_overrides_from_specs, parse_input
 pub(crate) fn run(args: Vec<String>) -> Result<(), String> {
     let options = parse_options(&args)?;
     run_with_options(&options)
+}
+
+pub(crate) fn run_incremental(args: Vec<String>) -> Result<(), String> {
+    let options = parse_options(&args)?;
+    run_with_options_in_mode(&options, ExecutionMode::Incremental)
+}
+
+pub(crate) fn run_realtime_history(args: Vec<String>) -> Result<(), String> {
+    let options = parse_options(&args)?;
+    run_with_options_in_mode(&options, ExecutionMode::RealtimeHistory)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ExecutionMode {
+    Batch,
+    Incremental,
+    RealtimeHistory,
 }
 
 #[derive(Debug)]
@@ -59,36 +76,69 @@ struct RequestBarsSpec {
 }
 
 fn run_with_options(options: &RunOptions) -> Result<(), String> {
-    println!("{}", run_output_with_options(options)?);
+    run_with_options_in_mode(options, ExecutionMode::Batch)
+}
+
+fn run_with_options_in_mode(
+    options: &RunOptions,
+    execution_mode: ExecutionMode,
+) -> Result<(), String> {
+    println!(
+        "{}",
+        run_output_with_options_in_mode(options, execution_mode)?
+    );
     Ok(())
 }
 
+#[cfg(test)]
 fn run_output_with_options(options: &RunOptions) -> Result<String, String> {
+    run_output_with_options_in_mode(options, ExecutionMode::Batch)
+}
+
+fn run_output_with_options_in_mode(
+    options: &RunOptions,
+    execution_mode: ExecutionMode,
+) -> Result<String, String> {
     if options.profile
         && (options.strategy_alert_template.is_some() || options.strategy_running_alert.is_some())
     {
         return Err("strategy alert rendering cannot be combined with --profile".to_owned());
     }
     if let Some(template) = &options.strategy_alert_template {
-        let result = run_result_with_options(options)?;
+        let result = run_result_with_options_in_mode(options, execution_mode)?;
         return render_strategy_alert_template(&result, template);
     }
     if let Some(running_alert) = &options.strategy_running_alert {
-        let result = run_result_with_options(options)?;
+        let result = run_result_with_options_in_mode(options, execution_mode)?;
         return render_strategy_running_alert(&result, running_alert);
     }
-    run_json_with_options(options)
+    run_json_with_options_in_mode(options, execution_mode)
 }
 
+#[cfg(test)]
 fn run_json_with_options(options: &RunOptions) -> Result<String, String> {
+    run_json_with_options_in_mode(options, ExecutionMode::Batch)
+}
+
+fn run_json_with_options_in_mode(
+    options: &RunOptions,
+    execution_mode: ExecutionMode,
+) -> Result<String, String> {
     if options.profile {
-        return run_profiled_json_with_options(options);
+        return run_profiled_json_with_options_in_mode(options, execution_mode);
     }
-    let result = run_result_with_options(options)?;
+    let result = run_result_with_options_in_mode(options, execution_mode)?;
     Ok(public_runtime_result_json(&result))
 }
 
-fn run_profiled_json_with_options(options: &RunOptions) -> Result<String, String> {
+fn run_profiled_json_with_options_in_mode(
+    options: &RunOptions,
+    execution_mode: ExecutionMode,
+) -> Result<String, String> {
+    if execution_mode != ExecutionMode::Batch {
+        let (result, profile) = run_non_batch_with_options(options, execution_mode)?;
+        return Ok(public_runtime_profiled_result_json(&result, &profile));
+    }
     let input = analysis_input_from_paths(&options.path, &options.library_sources)?;
     let source = input.root().clone();
     let analysis = analyze_input(&input);
@@ -145,7 +195,13 @@ fn run_profiled_json_with_options(options: &RunOptions) -> Result<String, String
     ))
 }
 
-fn run_result_with_options(options: &RunOptions) -> Result<RuntimeResult, String> {
+fn run_result_with_options_in_mode(
+    options: &RunOptions,
+    execution_mode: ExecutionMode,
+) -> Result<RuntimeResult, String> {
+    if execution_mode != ExecutionMode::Batch {
+        return run_non_batch_with_options(options, execution_mode).map(|(result, _)| result);
+    }
     let input = analysis_input_from_paths(&options.path, &options.library_sources)?;
     let source = input.root().clone();
     let analysis = analyze_input(&input);
@@ -196,6 +252,90 @@ fn run_result_with_options(options: &RunOptions) -> Result<RuntimeResult, String
         ),
     }
     .map_err(|err| format!("runtime failed: {}", err.message))
+}
+
+fn run_non_batch_with_options(
+    options: &RunOptions,
+    execution_mode: ExecutionMode,
+) -> Result<(RuntimeResult, RuntimeProfile), String> {
+    debug_assert_ne!(execution_mode, ExecutionMode::Batch);
+    let input = analysis_input_from_paths(&options.path, &options.library_sources)?;
+    let source = input.root().clone();
+    let analysis = analyze_input(&input);
+    if !analysis.diagnostics.is_empty() {
+        for diagnostic in analysis.diagnostics {
+            let line_col = source.line_col(diagnostic.span.start);
+            eprintln!(
+                "{}:{:?}:{}:{}: {}",
+                diagnostic.code,
+                diagnostic.severity,
+                line_col.line,
+                line_col.column,
+                diagnostic.message
+            );
+        }
+        return Err("analysis failed".to_owned());
+    }
+    let Some(hir) = analysis.hir else {
+        return Err("analysis did not produce executable HIR".to_owned());
+    };
+
+    let bars_text = fs::read_to_string(&options.bars_path)
+        .map_err(|err| format!("failed to read {}: {err}", options.bars_path))?;
+    let bars = parse_bars_csv(&bars_text)?;
+    let request_environment =
+        request_environment_from_specs(&options.request_bars, options.chart_context.clone())?;
+    let input_calls = input_calls(&hir)
+        .into_iter()
+        .map(|input| (input.call_site_id, input))
+        .collect::<HashMap<_, _>>();
+    let input_overrides = input_overrides_from_specs(&options.input_overrides, &input_calls)?;
+    let execution_times = execution_times_from_path(options.execution_times_path.as_deref())?;
+
+    if let Some(execution_times) = &execution_times
+        && execution_times.len() != bars.len()
+    {
+        return Err(format!(
+            "runtime failed: execution timestamp count {} does not match bar count {}",
+            execution_times.len(),
+            bars.len()
+        ));
+    }
+
+    match execution_mode {
+        ExecutionMode::Batch => unreachable!("batch execution uses the batch runtime path"),
+        ExecutionMode::Incremental => {
+            let mut runtime = HistoricalRuntime::with_request_environment_and_input_overrides(
+                &hir,
+                request_environment,
+                input_overrides,
+            );
+            match execution_times.as_deref() {
+                Some(execution_times) => {
+                    runtime.append_bars_with_execution_times(&bars, execution_times)
+                }
+                None => runtime.append_bars(&bars),
+            }
+            .map_err(|err| format!("runtime failed: {}", err.message))?;
+            Ok((runtime.result(), runtime.profile()))
+        }
+        ExecutionMode::RealtimeHistory => {
+            let mut runtime = RealtimeRuntime::with_request_environment_and_input_overrides(
+                &hir,
+                request_environment,
+                input_overrides,
+            );
+            for (index, bar) in bars.iter().copied().enumerate() {
+                match execution_times.as_ref().map(|values| values[index]) {
+                    Some(execution_time) => runtime
+                        .update_with_execution_time(BarUpdate::historical(bar), execution_time),
+                    None => runtime.update(BarUpdate::historical(bar)),
+                }
+                .map_err(|err| format!("runtime failed: {}", err.message))?;
+            }
+            Ok((runtime.confirmed_result(), runtime.confirmed_profile()))
+        }
+    }
 }
 
 fn render_strategy_alert_template(

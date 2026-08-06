@@ -8555,6 +8555,7 @@ fn legacy_v4_security_provider_runs_through_direct_wasm_api() {
         }"#,
     )
     .expect("legacy v4 request fixture should run through direct WASM API");
+    assert_snapshot("runtime_legacy_v4_security_provider.json", &output);
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
     assert_eq!(

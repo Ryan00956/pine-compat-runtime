@@ -24,6 +24,22 @@ impl<'a> RealtimeRuntime<'a> {
     }
 
     #[must_use]
+    pub fn with_request_environment_and_input_overrides(
+        program: &'a HirProgram,
+        request_environment: RequestEnvironment,
+        input_overrides: InputOverrides,
+    ) -> Self {
+        Self {
+            confirmed: HistoricalRuntime::with_request_environment_and_input_overrides(
+                program,
+                request_environment,
+                input_overrides,
+            ),
+            forming: None,
+        }
+    }
+
+    #[must_use]
     pub fn request_environment(&self) -> &RequestEnvironment {
         self.forming
             .as_ref()

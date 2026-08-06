@@ -31,6 +31,7 @@ MANIFEST_COLUMNS = (
     "max_retained_values",
 )
 RETAINED_PROFILE_FIELDS = (
+    "requestCacheValues",
     "seriesValues",
     "rollingWindowValues",
     "valuewhenStateValues",

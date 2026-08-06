@@ -267,7 +267,8 @@ fn update_realtime(
 }
 
 fn retained_values(profile: &RuntimeProfile) -> usize {
-    profile.series_values
+    profile.request_cache_values
+        + profile.series_values
         + profile.rolling_window_values
         + profile.valuewhen_state_values
         + profile.array_values
@@ -287,6 +288,70 @@ fn retained_values(profile: &RuntimeProfile) -> usize {
         + profile.polyline_points
         + profile.box_snapshots
         + profile.table_cells
+}
+
+fn assert_release_profile(
+    row: &ReleaseFixture,
+    mode: &str,
+    profile: &RuntimeProfile,
+    batch: Option<&RuntimeProfile>,
+) {
+    let retained = retained_values(profile);
+    assert!(
+        retained <= row.max_retained_values,
+        "{} {mode} retained {retained} values above ceiling {}: {:?}",
+        row.id,
+        row.max_retained_values,
+        profile
+    );
+    assert!(
+        profile.request_cache_entries >= profile.request_cache_contexts,
+        "{} {mode} has fewer request-cache entries than contexts: {:?}",
+        row.id,
+        profile
+    );
+    if matches!(
+        row.request_profile.as_str(),
+        "ibm_5" | "ibm_1" | "test_daily"
+    ) {
+        assert!(
+            profile.request_cache_entries > 0
+                && profile.request_cache_contexts > 0
+                && profile.request_cache_values > 0,
+            "{} {mode} omitted provider-backed request-cache resources: {:?}",
+            row.id,
+            profile
+        );
+    }
+    if let Some(batch) = batch {
+        assert_eq!(profile.bars, batch.bars, "{} {mode} bars", row.id);
+        assert_eq!(
+            profile.max_series_depth, batch.max_series_depth,
+            "{} {mode} max series depth",
+            row.id
+        );
+        assert_eq!(
+            retained,
+            retained_values(batch),
+            "{} {mode} retained values",
+            row.id
+        );
+        assert_eq!(
+            profile.request_cache_entries, batch.request_cache_entries,
+            "{} {mode} request-cache entries",
+            row.id
+        );
+        assert_eq!(
+            profile.request_cache_contexts, batch.request_cache_contexts,
+            "{} {mode} request-cache contexts",
+            row.id
+        );
+        assert_eq!(
+            profile.request_cache_values, batch.request_cache_values,
+            "{} {mode} request-cache values",
+            row.id
+        );
+    }
 }
 
 fn mutated_forming_bar(bar: &Bar) -> Bar {
@@ -449,14 +514,7 @@ fn every_release_fixture_matches_batch_incremental_realtime_and_resource_gates()
         .unwrap_or_else(|error| panic!("{} batch: {error:?}", row.id));
         let batch = profiled.result;
         assert_eq!(profiled.profile.bars, bars.len(), "{}", row.id);
-        assert!(
-            retained_values(&profiled.profile) <= row.max_retained_values,
-            "{} retained {} values above ceiling {}: {:?}",
-            row.id,
-            retained_values(&profiled.profile),
-            row.max_retained_values,
-            profiled.profile
-        );
+        assert_release_profile(&row, "batch", &profiled.profile, None);
 
         let mut incremental =
             HistoricalRuntime::with_request_environment(&program, environment.clone());
@@ -469,6 +527,12 @@ fn every_release_fixture_matches_batch_incremental_realtime_and_resource_gates()
             .unwrap_or_else(|error| panic!("{} incremental: {error:?}", row.id));
         }
         assert_eq!(incremental.result(), batch, "{} incremental", row.id);
+        assert_release_profile(
+            &row,
+            "incremental",
+            &incremental.profile(),
+            Some(&profiled.profile),
+        );
 
         let mut historical_realtime =
             RealtimeRuntime::with_request_environment(&program, environment.clone());
@@ -485,6 +549,12 @@ fn every_release_fixture_matches_batch_incremental_realtime_and_resource_gates()
             batch,
             "{} realtime historical handoff",
             row.id
+        );
+        assert_release_profile(
+            &row,
+            "realtime history",
+            &historical_realtime.confirmed_profile(),
+            Some(&profiled.profile),
         );
 
         let (last, history) = bars.split_last().expect("nonempty fixture bars");
@@ -544,5 +614,11 @@ fn every_release_fixture_matches_batch_incremental_realtime_and_resource_gates()
                 row.id
             );
         }
+        assert_release_profile(
+            &row,
+            "realtime rollback/confirm",
+            &realtime.confirmed_profile(),
+            Some(&profiled.profile),
+        );
     }
 }

@@ -540,6 +540,10 @@ fn formats_profiled_result_json() {
         history_has_dynamic_offsets: true,
         history_dynamic_retention_misses: 4,
         history_dynamic_retention_max_missed_offset: Some(7),
+        request_cache_entries: 2,
+        request_cache_contexts: 1,
+        request_cache_values: 6,
+        request_cache_value_capacity: 8,
         symbol_slots: 10,
         symbol_capacity: 14,
         current_series_slots: 0,
@@ -637,6 +641,9 @@ fn formats_profiled_result_json() {
     assert!(output.contains(r#""historyMaxBarsBack":null"#));
     assert!(output.contains(r#""historyHasDynamicOffsets":true"#));
     assert!(output.contains(history_retention));
+    assert!(output.contains(r#""requestCacheEntries":2"#));
+    assert!(output.contains(r#""requestCacheContexts":1"#));
+    assert!(output.contains(r#""requestCacheValues":6"#));
     assert!(output.contains(r#""arrayValues":2"#));
     assert!(output.contains(r#""matrixSlots":1"#));
     assert!(output.contains(r#""matrixCells":6"#));

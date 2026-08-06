@@ -9658,7 +9658,11 @@ def test_run_script_legacy_v4_security_provider_matches_cli_contract():
             )
         },
     )
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v4_security_provider.json").read_text()
+    )
 
+    assert result == expected
     assert result["plots"][0]["values"] == [None, None, 100.0, 100.0, 200.0]
     assert result["diagnostics"] == []
 

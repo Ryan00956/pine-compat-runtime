@@ -145,8 +145,20 @@ provenance, and resource ceiling. The public runtime integration test loads
 that manifest and proves source-version selection, complete runtime-fixture coverage,
 historical/incremental/realtime behavior, MTF provider behavior, and bounded
 retained storage. `scripts/profile_legacy_release.py` measures the same rows
-through the CLI boundary. These are verification consumers of the semantic HIR
-and runtime, not a second translator or host-specific compatibility switch.
+through the CLI boundary. Provider-result cache values are part of retained
+storage, and profiled output exposes aggregate cache entry, requested-context,
+value, and capacity counts without exposing request keys or cached data. These
+are verification consumers of the semantic HIR and runtime, not a second
+translator or host-specific compatibility switch.
+
+Cross-corpus progress is counted by
+`scripts/audit_legacy_corpus_dedup.py`. Exact bytes, normalized text, and a
+version-bound trivia-free token stream form increasingly tolerant fingerprints;
+the last level is intentionally token equivalence, not arbitrary semantic
+equivalence. Reports omit source content, paths, and titles. Release profiles
+compare aggregate retained/cache resources across batch, incremental,
+realtime-history, and rollback/confirmation, while provider-backed CLI,
+Python, and WASM output remains one shared golden contract.
 
 The semantic compile cache includes `LEGACY_TRANSLATOR_REVISION` in every key.
 Catalog or translation-semantics changes increment that revision so cached

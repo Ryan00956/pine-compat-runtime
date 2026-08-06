@@ -27,9 +27,9 @@ cargo build -p pine-cli
 python3 scripts/analyze_legacy_corpus.py --output /tmp/legacy-corpus.json
 ```
 
-Corpus report schema 3 retains schema 2's profile-level `stableBaseline`
-measurements and failure-cluster prevalence, and adds privacy-preserving
-`executionTimes` input availability. The optional manifest
+Corpus report schema 4 retains schema 3's privacy-preserving `executionTimes`
+input availability and adds three-mode resource and provider-cache evidence.
+The optional manifest
 `execution_times_path` is forwarded to CLI `--execution-times`; reports expose
 only whether the file was supplied, passed preflight, or was missing, never its
 path or timestamp values. `eligibleSuccessRate` always uses every eligible
@@ -43,6 +43,21 @@ assessment.
 Passing `stableBaseline.thresholdsMet` is not a stable release claim. The
 release registry must still prove incremental, realtime, provider, resource,
 cache, and host-parity behavior.
+
+Before combining a private v4 selection with the 12 committed public v4 seeds,
+run the version-aware dedup audit. Its JSON contains one-way fingerprints and
+opaque private ids, not source text, paths, or titles:
+
+```text
+python3 scripts/audit_legacy_corpus_dedup.py \
+  --candidate-manifest /absolute/path/to/corpus-r2.tsv \
+  --build-revision corpus-r2-dedup \
+  --output /absolute/path/to/corpus-r2-dedup.json
+```
+
+Exact, normalized-text, and token-equivalent matches are reported separately.
+The token fingerprint removes comments and trivia but remains version-bound;
+it does not claim that differently written programs are semantically equal.
 
 For a private or user-authorized R2 corpus, keep sources outside the repository
 and point the analyzer at an external root:

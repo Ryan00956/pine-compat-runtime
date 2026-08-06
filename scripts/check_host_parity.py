@@ -18,6 +18,7 @@ ANALYSIS_FIXTURE_FILE = ROOT / "crates/pine-cli/src/analysis_snapshots.rs"
 ANALYSIS_REQUIRED_MANIFEST = ROOT / "scripts/legacy_analysis_parity_required.txt"
 WASM_TESTS = ROOT / "crates/pine-wasm/src/tests/mod.rs"
 PYTHON_TESTS = ROOT / "python/tests/test_bindings.py"
+CLI_DIRECT_RUNTIME_TESTS = ROOT / "crates/pine-cli/src/commands/run/tests.rs"
 
 # A registered CLI runtime snapshot should never silently remain single-host.
 # Keep exceptions explicit and reasoned; the normal state is an empty mapping.
@@ -349,6 +350,9 @@ def parity_errors(
 def main() -> int:
     fixtures = runtime_snapshot_fixtures()
     registered_names = [fixture.snapshot for fixture in fixtures]
+    registered_names.extend(
+        sorted(wasm_snapshot_assertions(CLI_DIRECT_RUNTIME_TESTS.read_text()))
+    )
     registered = set(registered_names)
     required_names, errors = parse_required_manifest(REQUIRED_MANIFEST.read_text())
     required = set(required_names)

@@ -13,6 +13,7 @@ run python3 scripts/check_structure.py
 run python3 -m unittest scripts/tests/test_check_host_parity.py
 run python3 -m unittest scripts/tests/test_build_wheel_manifest.py
 run python3 -m unittest scripts/tests/test_analyze_legacy_corpus.py
+run python3 -m unittest scripts/tests/test_audit_legacy_corpus_dedup.py
 run python3 -m unittest scripts/tests/test_import_legacy_corpus.py
 run python3 -m unittest scripts/tests/test_compare_tradingview_outputs.py
 run python3 -m unittest scripts/tests/test_normalize_tradingview_bars.py

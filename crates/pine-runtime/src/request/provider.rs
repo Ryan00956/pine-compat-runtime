@@ -52,6 +52,11 @@ impl RequestCacheKey {
             timeframe: timeframe.into(),
         }
     }
+
+    #[must_use]
+    pub(crate) fn context(&self) -> (&str, &str) {
+        (&self.symbol, &self.timeframe)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

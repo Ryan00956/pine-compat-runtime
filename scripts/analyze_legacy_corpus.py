@@ -15,8 +15,8 @@ from pathlib import Path
 from typing import Callable, Iterable, Mapping, Sequence
 
 
-SCHEMA_VERSION = 3
-TOOL_VERSION = 3
+SCHEMA_VERSION = 4
+TOOL_VERSION = 4
 ROOT = Path(__file__).resolve().parents[1]
 
 STABLE_MIN_ELIGIBLE_SCRIPTS = 50
@@ -24,6 +24,31 @@ STABLE_MIN_PARSE_RATE = 0.95
 STABLE_MIN_ANALYZE_LOWER_RATE = 0.85
 STABLE_MIN_HISTORICAL_RUN_RATE = 0.80
 FAILURE_CLUSTER_DISPOSITION_SHARE = 0.02
+CORPUS_RETAINED_VALUE_CEILING = 1_000_000
+
+RETAINED_PROFILE_FIELDS = (
+    "requestCacheValues",
+    "seriesValues",
+    "rollingWindowValues",
+    "valuewhenStateValues",
+    "arrayValues",
+    "matrixCells",
+    "plotValues",
+    "plotCharValues",
+    "plotShapeValues",
+    "plotArrowValues",
+    "plotBarValues",
+    "plotCandleValues",
+    "bgColorValues",
+    "barColorValues",
+    "labelSnapshots",
+    "lineSnapshots",
+    "lineFillSnapshots",
+    "polylineSnapshots",
+    "polylinePoints",
+    "boxSnapshots",
+    "tableCells",
+)
 
 REQUIRED_COLUMNS = (
     "id",
@@ -582,6 +607,91 @@ def runtime_error_kind(stderr: str) -> str:
     return "runtime_or_host_error"
 
 
+def _profile_count(profile: Mapping[str, object], field: str) -> int:
+    value = profile.get(field, 0)
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError(f"profile field {field} must be a non-negative integer")
+    return value
+
+
+def runtime_resource_snapshot(profile: Mapping[str, object]) -> dict[str, int]:
+    for field in (
+        "bars",
+        "maxSeriesDepth",
+        "requestCacheEntries",
+        "requestCacheContexts",
+        "requestCacheValues",
+    ):
+        if field not in profile:
+            raise ValueError(f"profile omitted required field {field}")
+    return {
+        "bars": _profile_count(profile, "bars"),
+        "retainedValues": sum(
+            _profile_count(profile, field) for field in RETAINED_PROFILE_FIELDS
+        ),
+        "maxSeriesDepth": _profile_count(profile, "maxSeriesDepth"),
+        "requestCacheEntries": _profile_count(profile, "requestCacheEntries"),
+        "requestCacheContexts": _profile_count(profile, "requestCacheContexts"),
+        "requestCacheValues": _profile_count(profile, "requestCacheValues"),
+    }
+
+
+def parse_profiled_runtime_output(
+    stdout: str,
+) -> tuple[dict[str, object] | None, dict[str, int] | None, str | None]:
+    try:
+        parsed = json.loads(stdout)
+    except json.JSONDecodeError:
+        return None, None, "invalid_json"
+    if not isinstance(parsed, dict):
+        return None, None, "invalid_json"
+    profile = parsed.pop("profile", None)
+    if not isinstance(profile, dict):
+        return None, None, "invalid_profile"
+    try:
+        resources = runtime_resource_snapshot(profile)
+    except ValueError:
+        return None, None, "invalid_profile"
+    return parsed, resources, None
+
+
+def resource_audit_status(
+    resources: Mapping[str, Mapping[str, int]],
+    *,
+    provider_supplied: bool,
+) -> dict[str, object]:
+    expected_modes = ("batch", "incremental", "realtimeHistory")
+    if any(mode not in resources for mode in expected_modes):
+        return stage(STAGE_NOT_RUN)
+    snapshots = [resources[mode] for mode in expected_modes]
+    comparable_fields = (
+        "bars",
+        "retainedValues",
+        "maxSeriesDepth",
+        "requestCacheEntries",
+        "requestCacheContexts",
+        "requestCacheValues",
+    )
+    if any(
+        snapshot[field] != snapshots[0][field]
+        for snapshot in snapshots[1:]
+        for field in comparable_fields
+    ):
+        return stage(STAGE_FAILED, errorKind="profile_mismatch")
+    baseline = snapshots[0]
+    if baseline["retainedValues"] > CORPUS_RETAINED_VALUE_CEILING:
+        return stage(STAGE_FAILED, errorKind="retained_value_ceiling_exceeded")
+    if baseline["requestCacheEntries"] < baseline["requestCacheContexts"]:
+        return stage(STAGE_FAILED, errorKind="request_cache_invalid")
+    if provider_supplied and (
+        baseline["requestCacheEntries"] == 0
+        or baseline["requestCacheContexts"] == 0
+        or baseline["requestCacheValues"] == 0
+    ):
+        return stage(STAGE_FAILED, errorKind="request_cache_missing")
+    return stage(STAGE_PASSED)
+
+
 def _base_item(row: CorpusRow) -> dict[str, object]:
     return {
         "id": row.item_id,
@@ -592,6 +702,10 @@ def _base_item(row: CorpusRow) -> dict[str, object]:
         "chartContext": {
             "symbolProvided": bool(row.chart_symbol),
             "timeframeProvided": bool(row.chart_timeframe),
+        },
+        "runtimeResources": {
+            "retainedValueCeiling": CORPUS_RETAINED_VALUE_CEILING,
+            "modes": {},
         },
     }
 
@@ -630,6 +744,7 @@ def analyze_item(
             "historicalRun",
             "incrementalRun",
             "realtimeRun",
+            "resourceAudit",
             "outputCompared",
         ):
             stages[name] = stage(STAGE_NOT_RUN)
@@ -650,6 +765,7 @@ def analyze_item(
             "historicalRun",
             "incrementalRun",
             "realtimeRun",
+            "resourceAudit",
             "outputCompared",
         ):
             stages[name] = stage(STAGE_NOT_RUN)
@@ -679,6 +795,7 @@ def analyze_item(
             "historicalRun",
             "incrementalRun",
             "realtimeRun",
+            "resourceAudit",
             "outputCompared",
         ):
             stages[name] = stage(STAGE_EXCLUDED)
@@ -701,6 +818,7 @@ def analyze_item(
         stages["historicalRun"] = stage(STAGE_NOT_RUN)
         stages["incrementalRun"] = stage(STAGE_NOT_RUN)
         stages["realtimeRun"] = stage(STAGE_NOT_RUN)
+        stages["resourceAudit"] = stage(STAGE_NOT_RUN)
         stages["outputCompared"] = stage(STAGE_NOT_RUN)
         return item
 
@@ -708,6 +826,7 @@ def analyze_item(
         stages["historicalRun"] = stage(STAGE_MISSING_INPUT)
         stages["incrementalRun"] = stage(STAGE_NOT_RUN)
         stages["realtimeRun"] = stage(STAGE_NOT_RUN)
+        stages["resourceAudit"] = stage(STAGE_NOT_RUN)
         stages["outputCompared"] = stage(STAGE_NOT_RUN)
         return item
     chart_bars_path = resolve_path(root, row.chart_bars_path)
@@ -715,12 +834,14 @@ def analyze_item(
         stages["historicalRun"] = stage(STAGE_MISSING_INPUT)
         stages["incrementalRun"] = stage(STAGE_NOT_RUN)
         stages["realtimeRun"] = stage(STAGE_NOT_RUN)
+        stages["resourceAudit"] = stage(STAGE_NOT_RUN)
         stages["outputCompared"] = stage(STAGE_NOT_RUN)
         return item
     if inputs["executionTimes"] == STAGE_MISSING_INPUT:
         stages["historicalRun"] = stage(STAGE_MISSING_INPUT)
         stages["incrementalRun"] = stage(STAGE_NOT_RUN)
         stages["realtimeRun"] = stage(STAGE_NOT_RUN)
+        stages["resourceAudit"] = stage(STAGE_NOT_RUN)
         stages["outputCompared"] = stage(STAGE_NOT_RUN)
         return item
 
@@ -744,6 +865,7 @@ def analyze_item(
         )
     for spec in provider_specs:
         run_command.extend(("--request-bars", spec))
+    run_command.append("--profile")
     executed = command_runner(run_command, root)
     runtime_diagnostics = parse_diagnostics(executed.stdout, executed.stderr)
     if runtime_diagnostics:
@@ -751,15 +873,25 @@ def analyze_item(
             record.as_dict("run") for record in runtime_diagnostics
         )
 
-    runtime_output: object | None = None
+    runtime_output: dict[str, object] | None = None
+    resources_by_mode: dict[str, dict[str, int]] = {}
+    item["runtimeResources"] = {
+        "retainedValueCeiling": CORPUS_RETAINED_VALUE_CEILING,
+        "modes": resources_by_mode,
+    }
     if executed.returncode == 0:
-        try:
-            runtime_output = json.loads(executed.stdout)
-        except json.JSONDecodeError:
+        runtime_output, batch_resources, parse_error = parse_profiled_runtime_output(
+            executed.stdout
+        )
+        if parse_error is not None:
             stages["historicalRun"] = stage(
-                STAGE_FAILED, returnCode=executed.returncode, errorKind="invalid_json"
+                STAGE_FAILED,
+                returnCode=executed.returncode,
+                errorKind=parse_error,
             )
         else:
+            assert batch_resources is not None
+            resources_by_mode["batch"] = batch_resources
             stages["historicalRun"] = stage(STAGE_PASSED, returnCode=0)
     else:
         error_kind = runtime_error_kind(executed.stderr)
@@ -769,8 +901,68 @@ def analyze_item(
             errorKind=error_kind,
         )
 
-    stages["incrementalRun"] = stage(STAGE_NOT_RUN)
-    stages["realtimeRun"] = stage(STAGE_NOT_RUN)
+    if runtime_output is None:
+        stages["incrementalRun"] = stage(STAGE_NOT_RUN)
+        stages["realtimeRun"] = stage(STAGE_NOT_RUN)
+        stages["resourceAudit"] = stage(STAGE_NOT_RUN)
+    else:
+        for command_name, stage_name, diagnostic_stage, resource_mode in (
+            (
+                "run-incremental",
+                "incrementalRun",
+                "incremental",
+                "incremental",
+            ),
+            (
+                "run-realtime-history",
+                "realtimeRun",
+                "realtime",
+                "realtimeHistory",
+            ),
+        ):
+            mode_command = list(run_command)
+            mode_command[1] = command_name
+            mode_execution = command_runner(mode_command, root)
+            mode_diagnostics = parse_diagnostics(
+                mode_execution.stdout, mode_execution.stderr
+            )
+            if mode_diagnostics:
+                item["diagnostics"].extend(
+                    record.as_dict(diagnostic_stage)
+                    for record in mode_diagnostics
+                )
+            if mode_execution.returncode != 0:
+                stages[stage_name] = stage(
+                    STAGE_FAILED,
+                    returnCode=mode_execution.returncode,
+                    errorKind=runtime_error_kind(mode_execution.stderr),
+                )
+                continue
+            mode_output, mode_resources, parse_error = parse_profiled_runtime_output(
+                mode_execution.stdout
+            )
+            if parse_error is not None:
+                stages[stage_name] = stage(
+                    STAGE_FAILED,
+                    returnCode=0,
+                    errorKind=parse_error,
+                )
+                continue
+            assert mode_output is not None
+            assert mode_resources is not None
+            if mode_output != runtime_output:
+                stages[stage_name] = stage(
+                    STAGE_FAILED,
+                    returnCode=0,
+                    errorKind="result_mismatch",
+                )
+                continue
+            resources_by_mode[resource_mode] = mode_resources
+            stages[stage_name] = stage(STAGE_PASSED, returnCode=0)
+        stages["resourceAudit"] = resource_audit_status(
+            resources_by_mode,
+            provider_supplied=provider_status == STAGE_PASSED,
+        )
     if runtime_output is None or inputs["referenceOutput"] == "not_supplied":
         stages["outputCompared"] = stage(STAGE_NOT_RUN)
     elif inputs["referenceOutput"] == STAGE_MISSING_INPUT:
@@ -916,6 +1108,56 @@ def _stable_baseline_gate(
     }
 
 
+def _runtime_resource_summary(
+    items: Sequence[Mapping[str, object]],
+) -> dict[str, object]:
+    passed = [
+        item
+        for item in items
+        if item["stages"]["resourceAudit"]["status"] == STAGE_PASSED  # type: ignore[index]
+    ]
+    batch_profiles = [
+        item["runtimeResources"]["modes"]["batch"]  # type: ignore[index]
+        for item in passed
+    ]
+    provider_backed = [
+        item
+        for item in passed
+        if item["inputAvailability"]["requestData"] == STAGE_PASSED  # type: ignore[index]
+    ]
+    return {
+        "retainedValueCeiling": CORPUS_RETAINED_VALUE_CEILING,
+        "audited": len(passed),
+        "providerBackedAudited": len(provider_backed),
+        "maxRetainedValues": max(
+            (int(profile["retainedValues"]) for profile in batch_profiles),
+            default=0,
+        ),
+        "maxSeriesDepth": max(
+            (int(profile["maxSeriesDepth"]) for profile in batch_profiles),
+            default=0,
+        ),
+        "maxRequestCacheEntries": max(
+            (int(profile["requestCacheEntries"]) for profile in batch_profiles),
+            default=0,
+        ),
+        "maxRequestCacheContexts": max(
+            (int(profile["requestCacheContexts"]) for profile in batch_profiles),
+            default=0,
+        ),
+        "maxRequestCacheValues": max(
+            (int(profile["requestCacheValues"]) for profile in batch_profiles),
+            default=0,
+        ),
+        "itemsWithMultipleCallsitesPerContext": sum(
+            int(profile["requestCacheEntries"])
+            > int(profile["requestCacheContexts"])
+            for profile in batch_profiles
+        ),
+        "allEligiblePassed": len(passed) == len(items),
+    }
+
+
 def _summary(items: list[dict[str, object]]) -> dict[str, object]:
     eligible = [item for item in items if item["classifiedScope"] == ELIGIBLE_SCOPE]
     controls = [item for item in items if item["classifiedScope"] in CONTROL_SCOPES]
@@ -932,6 +1174,7 @@ def _summary(items: list[dict[str, object]]) -> dict[str, object]:
             "historicalRun",
             "incrementalRun",
             "realtimeRun",
+            "resourceAudit",
             "outputCompared",
         )
     }
@@ -1044,6 +1287,7 @@ def _summary(items: list[dict[str, object]]) -> dict[str, object]:
             "parse": _metric(selected, "parse"),
             "analyze": _metric(selected, "analyze"),
             "historicalRun": _metric(selected, "historicalRun"),
+            "resourceAudit": _metric(selected, "resourceAudit"),
             "stableBaseline": _stable_baseline_gate(
                 selected, version, top_clusters
             ),
@@ -1060,6 +1304,7 @@ def _summary(items: list[dict[str, object]]) -> dict[str, object]:
             item.get("scopeMatchesExpected") is False for item in items
         ),
         "stages": stages,
+        "runtimeResources": _runtime_resource_summary(eligible),
         "versions": versions,
         "unknownDiagnosticCount": unknown_count,
         "knownUnsupportedDiagnosticCount": unsupported_count,

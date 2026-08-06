@@ -81,10 +81,22 @@ class FakeRunner:
                 stdout="diagnostics: 0\nsupported: 1, unsupported: 0\n",
                 stderr="",
             )
+        provider_backed = "--request-bars" in rendered
+        profile = {
+            "bars": 1,
+            "maxSeriesDepth": 1,
+            "requestCacheEntries": 1 if provider_backed else 0,
+            "requestCacheContexts": 1 if provider_backed else 0,
+            "requestCacheValues": 2 if provider_backed else 0,
+            "plotValues": 1,
+        }
         return subprocess.CompletedProcess(
             rendered,
             0,
-            stdout='{"schemaVersion":8,"plots":[]}\n',
+            stdout=json.dumps(
+                {"schemaVersion": 8, "plots": [], "profile": profile}
+            )
+            + "\n",
             stderr="",
         )
 
@@ -415,6 +427,166 @@ class AnalyzeLegacyCorpusTests(unittest.TestCase):
             self.assertIn("--chart-timeframe", run_command)
             self.assertEqual(run_command[run_command.index("--chart-timeframe") + 1], "1")
 
+    def test_runtime_modes_are_compared_with_the_historical_result(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "legacy.pine").write_text(
+                '//@version=4\nstudy("modes")\nplot(close)\n',
+                encoding="utf-8",
+            )
+            (root / "bars.csv").write_text(
+                "time,open,high,low,close,volume\n0,1,1,1,1,1\n",
+                encoding="utf-8",
+            )
+            manifest = write_manifest(root, [row("legacy", "legacy.pine")])
+            runner = FakeRunner()
+
+            report = analyze_legacy_corpus.build_report(
+                analyze_legacy_corpus.parse_manifest(manifest),
+                root=root,
+                manifest_path=manifest,
+                pine_compat=root / "pine-compat",
+                build_revision="test-revision",
+                command_runner=runner,
+            )
+
+            self.assertEqual(
+                [
+                    command[1]
+                    for command in runner.commands
+                    if command[1] != "analyze"
+                ],
+                ["run", "run-incremental", "run-realtime-history"],
+            )
+            stages = report["items"][0]["stages"]
+            self.assertEqual(stages["historicalRun"]["status"], "passed")
+            self.assertEqual(stages["incrementalRun"]["status"], "passed")
+            self.assertEqual(stages["realtimeRun"]["status"], "passed")
+            self.assertEqual(stages["resourceAudit"]["status"], "passed")
+            resources = report["items"][0]["runtimeResources"]
+            self.assertEqual(resources["modes"]["batch"]["retainedValues"], 1)
+            self.assertEqual(
+                resources["modes"]["realtimeHistory"],
+                resources["modes"]["batch"],
+            )
+            self.assertTrue(
+                report["summary"]["runtimeResources"]["allEligiblePassed"]
+            )
+
+    def test_resource_audit_rejects_cache_and_ceiling_regressions(self) -> None:
+        snapshot = {
+            "bars": 10,
+            "retainedValues": 20,
+            "maxSeriesDepth": 4,
+            "requestCacheEntries": 2,
+            "requestCacheContexts": 1,
+            "requestCacheValues": 8,
+        }
+        resources = {
+            "batch": snapshot,
+            "incremental": dict(snapshot),
+            "realtimeHistory": dict(snapshot),
+        }
+        self.assertEqual(
+            analyze_legacy_corpus.resource_audit_status(
+                resources, provider_supplied=True
+            )["status"],
+            "passed",
+        )
+
+        resources["incremental"]["requestCacheEntries"] = 1
+        mismatch = analyze_legacy_corpus.resource_audit_status(
+            resources, provider_supplied=True
+        )
+        self.assertEqual(mismatch["errorKind"], "profile_mismatch")
+
+        missing_cache = {
+            mode: {
+                **snapshot,
+                "requestCacheEntries": 0,
+                "requestCacheContexts": 0,
+                "requestCacheValues": 0,
+            }
+            for mode in resources
+        }
+        missing = analyze_legacy_corpus.resource_audit_status(
+            missing_cache, provider_supplied=True
+        )
+        self.assertEqual(missing["errorKind"], "request_cache_missing")
+
+        over_ceiling = {
+            mode: {
+                **snapshot,
+                "retainedValues": (
+                    analyze_legacy_corpus.CORPUS_RETAINED_VALUE_CEILING + 1
+                ),
+            }
+            for mode in resources
+        }
+        ceiling = analyze_legacy_corpus.resource_audit_status(
+            over_ceiling, provider_supplied=False
+        )
+        self.assertEqual(ceiling["errorKind"], "retained_value_ceiling_exceeded")
+
+    def test_runtime_mode_result_mismatch_is_a_stable_failure(self) -> None:
+        class MismatchRunner(FakeRunner):
+            def __call__(
+                self, command: list[str] | tuple[str, ...], root: Path
+            ) -> subprocess.CompletedProcess[str]:
+                result = super().__call__(command, root)
+                if command[1] == "run-incremental":
+                    profile = {
+                        "bars": 1,
+                        "maxSeriesDepth": 1,
+                        "requestCacheEntries": 0,
+                        "requestCacheContexts": 0,
+                        "requestCacheValues": 0,
+                        "plotValues": 1,
+                    }
+                    return subprocess.CompletedProcess(
+                        command,
+                        0,
+                        stdout=json.dumps(
+                            {
+                                "schemaVersion": 8,
+                                "plots": [{"id": 1}],
+                                "profile": profile,
+                            }
+                        )
+                        + "\n",
+                        stderr="",
+                    )
+                return result
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "legacy.pine").write_text(
+                '//@version=4\nstudy("mismatch")\nplot(close)\n',
+                encoding="utf-8",
+            )
+            (root / "bars.csv").write_text(
+                "time,open,high,low,close,volume\n0,1,1,1,1,1\n",
+                encoding="utf-8",
+            )
+            manifest = write_manifest(root, [row("legacy", "legacy.pine")])
+
+            report = analyze_legacy_corpus.build_report(
+                analyze_legacy_corpus.parse_manifest(manifest),
+                root=root,
+                manifest_path=manifest,
+                pine_compat=root / "pine-compat",
+                build_revision="test-revision",
+                command_runner=MismatchRunner(),
+            )
+
+            incremental = report["items"][0]["stages"]["incrementalRun"]
+            self.assertEqual(incremental["status"], "failed")
+            self.assertEqual(incremental["errorKind"], "result_mismatch")
+            self.assertEqual(
+                report["items"][0]["stages"]["realtimeRun"]["status"],
+                "passed",
+            )
+
     def test_execution_times_are_classified_and_forwarded_without_disclosure(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -611,7 +783,7 @@ class AnalyzeLegacyCorpusTests(unittest.TestCase):
                 command_runner=FakeRunner(),
             )
 
-            self.assertEqual(report["schemaVersion"], 3)
+            self.assertEqual(report["schemaVersion"], 4)
             profile = report["summary"]["versions"]["4"]
             self.assertEqual(profile["historicalRun"]["eligibleSuccessRate"], 1.0)
             self.assertTrue(profile["stableBaseline"]["thresholdsMet"])
