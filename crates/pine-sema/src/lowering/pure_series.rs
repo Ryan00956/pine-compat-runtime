@@ -16,6 +16,19 @@ pub(super) fn pure_expr_series_key(analyzer: &Analyzer, expr: &Expr) -> Option<S
     pure_expr_series_key_with_params(analyzer, expr, &HashMap::new(), true, &mut Vec::new())
 }
 
+pub(super) fn pure_expr_series_id(
+    analyzer: &mut Analyzer,
+    expr: &Expr,
+) -> Option<pine_ir::SeriesId> {
+    let key = pure_expr_series_key(analyzer, expr)?;
+    if let Some(series_id) = analyzer.pure_expr_series_ids.get(&key).copied() {
+        return Some(series_id);
+    }
+    let series_id = analyzer.alloc_series();
+    analyzer.pure_expr_series_ids.insert(key, series_id);
+    Some(series_id)
+}
+
 pub(super) fn pure_udf_call_series_key(
     analyzer: &Analyzer,
     name: &str,

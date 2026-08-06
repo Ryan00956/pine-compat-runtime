@@ -333,6 +333,69 @@ plot(close[length])
 }
 
 #[test]
+fn retains_history_of_legacy_input_values_used_as_series() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"study("legacy input value history")
+level = input(20)
+plot(level[1])
+"#,
+    );
+    let analysis = pine_sema::analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Na, PineValue::Int(20), PineValue::Int(20)]
+    );
+}
+
+#[test]
+fn conditional_nested_udf_history_advances_on_function_execution() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=4
+study("conditional UDF parameter history")
+is_top(src) => src[4] < src[2] and src[3] < src[2] and src[2] > src[1] and src[2] > src[0]
+is_bottom(src) => src[4] > src[2] and src[3] > src[2] and src[2] < src[1] and src[2] < src[0]
+fractal(src) => is_top(src) ? 1 : is_bottom(src) ? -1 : 0
+plot(fractal(close))
+"#,
+    );
+    let analysis = pine_sema::analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = [3.0, 4.0, 5.0, 4.0, 0.0, 2.0, 1.0, 2.0, 3.0].map(bar);
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(1),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(-1),
+        ]
+    );
+}
+
+#[test]
 fn reads_previous_array_instance_history() {
     let source = SourceFile::new(
         "test.pine",

@@ -70,7 +70,7 @@ fn assert_series_max_bars_back_miss_fixture(path: &str) {
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -336,7 +336,7 @@ fn dynamic_history_profile_fixture_reports_effective_series_max_bars_back_diagno
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -369,7 +369,7 @@ fn dynamic_history_profile_fixture_reports_expression_source_series_max_bars_bac
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -402,7 +402,7 @@ fn dynamic_history_profile_fixture_reports_alias_expression_series_max_bars_back
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -435,7 +435,7 @@ fn dynamic_history_profile_fixture_reports_ternary_expression_series_max_bars_ba
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -469,7 +469,7 @@ fn dynamic_history_profile_fixture_reports_qualified_builtin_ternary_series_max_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -502,7 +502,7 @@ fn dynamic_history_profile_fixture_reports_udt_field_expression_series_max_bars_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -536,7 +536,7 @@ fn dynamic_history_profile_fixture_reports_nested_udt_field_expression_series_ma
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -570,7 +570,7 @@ fn dynamic_history_profile_fixture_reports_imported_udt_field_expression_series_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -604,7 +604,7 @@ fn dynamic_history_profile_fixture_reports_imported_nested_udt_field_expression_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -637,7 +637,7 @@ fn dynamic_history_profile_fixture_reports_pure_math_call_series_max_bars_back_d
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -670,7 +670,7 @@ fn dynamic_history_profile_fixture_reports_named_pure_math_call_series_max_bars_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -704,7 +704,7 @@ fn dynamic_history_profile_fixture_reports_named_variadic_math_call_series_max_b
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -738,7 +738,7 @@ fn dynamic_history_profile_fixture_reports_mixed_named_variadic_math_call_series
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -771,7 +771,7 @@ fn dynamic_history_profile_fixture_reports_nz_call_series_max_bars_back_diagnost
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -805,7 +805,7 @@ fn dynamic_history_profile_fixture_reports_named_reordered_nz_call_series_max_ba
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -839,7 +839,7 @@ fn dynamic_history_profile_fixture_reports_parameterized_pure_udf_call_series_ma
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -873,7 +873,7 @@ fn dynamic_history_profile_fixture_reports_block_local_pure_udf_call_series_max_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -907,7 +907,7 @@ fn dynamic_history_profile_fixture_reports_typed_block_local_pure_udf_call_serie
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -941,7 +941,7 @@ fn dynamic_history_profile_fixture_reports_pure_expr_prefix_udf_call_series_max_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -975,7 +975,7 @@ fn dynamic_history_profile_fixture_reports_pure_udf_udt_arg_field_series_max_bar
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1009,7 +1009,7 @@ fn dynamic_history_profile_fixture_reports_pure_udf_direct_udt_arg_expr_series_m
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1043,7 +1043,7 @@ fn dynamic_history_profile_fixture_reports_pure_udf_named_direct_udt_arg_expr_se
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1077,7 +1077,7 @@ fn dynamic_history_profile_fixture_reports_pure_udf_nested_udt_arg_field_series_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1111,7 +1111,7 @@ fn dynamic_history_profile_fixture_reports_pure_udf_imported_nested_udt_arg_fiel
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1145,7 +1145,7 @@ fn dynamic_history_profile_fixture_reports_pure_udf_imported_direct_nested_udt_a
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1179,7 +1179,7 @@ fn dynamic_history_profile_fixture_reports_pure_udf_imported_named_direct_nested
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1213,7 +1213,7 @@ fn dynamic_history_profile_fixture_reports_pure_udf_nested_udt_field_alias_serie
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1247,7 +1247,7 @@ fn dynamic_history_profile_fixture_reports_nested_pure_udf_nested_udt_arg_field_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1281,7 +1281,7 @@ fn dynamic_history_profile_fixture_reports_nested_pure_udf_direct_nested_udt_arg
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1315,7 +1315,7 @@ fn dynamic_history_profile_fixture_reports_nested_pure_udf_imported_direct_neste
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1349,7 +1349,7 @@ fn dynamic_history_profile_fixture_reports_nested_pure_udf_named_direct_nested_u
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1383,7 +1383,7 @@ fn dynamic_history_profile_fixture_reports_nested_pure_udf_imported_named_direct
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1416,7 +1416,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_call_series_max_bars
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1450,7 +1450,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_receiver_field_serie
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1484,7 +1484,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_receiver_alias_field
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1518,7 +1518,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_nested_receiver_fiel
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1552,7 +1552,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_nested_receiver_fiel
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1586,7 +1586,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_imported_receiver_fi
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1620,7 +1620,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_imported_alias_quali
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1654,7 +1654,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_imported_alias_quali
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1688,7 +1688,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_imported_alias_quali
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1722,7 +1722,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_imported_alias_quali
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1756,7 +1756,7 @@ fn dynamic_history_profile_fixture_reports_nested_pure_user_method_imported_alia
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1790,7 +1790,7 @@ fn dynamic_history_profile_fixture_reports_nested_pure_user_method_imported_alia
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1824,7 +1824,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_imported_alias_quali
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1858,7 +1858,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_imported_alias_quali
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1892,7 +1892,7 @@ fn dynamic_history_profile_fixture_reports_nested_pure_user_method_imported_alia
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1926,7 +1926,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_imported_nested_rece
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1960,7 +1960,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_imported_nested_rece
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -1994,7 +1994,7 @@ fn dynamic_history_profile_fixture_reports_nested_pure_user_method_receiver_fiel
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2028,7 +2028,7 @@ fn dynamic_history_profile_fixture_reports_nested_pure_user_method_imported_rece
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2062,7 +2062,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_udt_arg_field_series
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2096,7 +2096,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_named_udt_arg_field_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2130,7 +2130,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_named_direct_udt_arg
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2164,7 +2164,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_nested_udt_arg_field
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2198,7 +2198,7 @@ fn dynamic_history_profile_fixture_reports_nested_pure_user_method_udt_arg_field
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2232,7 +2232,7 @@ fn dynamic_history_profile_fixture_reports_pure_user_method_imported_udt_arg_fie
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2266,7 +2266,7 @@ fn dynamic_history_profile_fixture_reports_nested_pure_user_method_imported_udt_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2299,7 +2299,7 @@ fn dynamic_history_profile_fixture_reports_nested_pure_udf_call_series_max_bars_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2333,7 +2333,7 @@ fn dynamic_history_profile_fixture_reports_nested_pure_user_method_named_direct_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2367,7 +2367,7 @@ fn dynamic_history_profile_fixture_reports_nested_pure_user_method_imported_name
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2400,7 +2400,7 @@ fn dynamic_history_profile_fixture_reports_numeric_cast_series_max_bars_back_dia
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2433,7 +2433,7 @@ fn dynamic_history_profile_fixture_reports_array_set_block_arg_series_max_bars_b
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2467,7 +2467,7 @@ fn dynamic_history_profile_fixture_reports_array_set_index_block_arg_series_max_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2500,7 +2500,7 @@ fn dynamic_history_profile_fixture_reports_matrix_set_block_arg_series_max_bars_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2534,7 +2534,7 @@ fn dynamic_history_profile_fixture_reports_matrix_set_row_block_arg_series_max_b
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2568,7 +2568,7 @@ fn dynamic_history_profile_fixture_reports_matrix_set_column_block_arg_series_ma
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2601,7 +2601,7 @@ fn dynamic_history_profile_fixture_reports_while_statement_series_max_bars_back_
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2634,7 +2634,7 @@ fn dynamic_history_profile_fixture_reports_for_statement_series_max_bars_back_di
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,
@@ -2667,7 +2667,7 @@ fn dynamic_history_profile_fixture_reports_for_in_statement_series_max_bars_back
         profiled.profile.history_dynamic_retention_max_missed_offset,
         Some(3)
     );
-    assert_eq!(profiled.profile.max_series_depth, 10);
+    assert_eq!(profiled.profile.max_series_depth, 2);
     assert_eq!(profiled.result.diagnostics.len(), 1);
     assert_eq!(
         profiled.result.diagnostics[0].code,

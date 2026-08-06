@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use pine_ir::{HirProgram, SeriesId};
 
@@ -11,7 +11,9 @@ pub enum HistoryRetentionMode {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SeriesRetention {
-    static_depths: Option<HashMap<SeriesId, usize>>,
+    static_depths: HashMap<SeriesId, usize>,
+    dynamic_series: HashSet<SeriesId>,
+    has_dynamic_offsets: bool,
     max_bars_back: Option<usize>,
     series_max_bars_back: HashMap<SeriesId, usize>,
 }
@@ -23,44 +25,37 @@ impl SeriesRetention {
             .iter()
             .map(|value| (value.series_id, value.max_bars_back as usize))
             .collect();
-        if program.history.has_dynamic_offsets {
-            return Self {
-                static_depths: None,
-                max_bars_back: program.max_bars_back.map(|value| value as usize),
-                series_max_bars_back,
-            };
-        }
-
         Self {
-            static_depths: Some(
-                program
-                    .series_history
-                    .iter()
-                    .map(|requirement| {
-                        (
-                            requirement.series_id,
-                            requirement.max_constant_offset as usize,
-                        )
-                    })
-                    .collect(),
-            ),
+            static_depths: program
+                .series_history
+                .iter()
+                .map(|requirement| {
+                    (
+                        requirement.series_id,
+                        requirement.max_constant_offset as usize,
+                    )
+                })
+                .collect(),
+            dynamic_series: program
+                .series_history
+                .iter()
+                .filter(|requirement| requirement.has_dynamic_offsets)
+                .map(|requirement| requirement.series_id)
+                .collect(),
+            has_dynamic_offsets: program.history.has_dynamic_offsets,
             max_bars_back: program.max_bars_back.map(|value| value as usize),
             series_max_bars_back,
         }
     }
 
     pub(crate) fn max_depth_for(&self, series_id: SeriesId) -> Option<usize> {
-        let base_depth = match (&self.static_depths, self.max_bars_back) {
-            (Some(depths), Some(max_bars_back)) => Some(
-                depths
-                    .get(&series_id)
-                    .copied()
-                    .unwrap_or(0)
-                    .min(max_bars_back),
-            ),
-            (Some(depths), None) => Some(depths.get(&series_id).copied().unwrap_or(0)),
-            (None, Some(max_bars_back)) => Some(max_bars_back),
-            (None, None) => None,
+        let base_depth = if self.dynamic_series.contains(&series_id) {
+            self.max_bars_back
+        } else {
+            let static_depth = self.static_depths.get(&series_id).copied().unwrap_or(0);
+            Some(self.max_bars_back.map_or(static_depth, |max_bars_back| {
+                static_depth.min(max_bars_back)
+            }))
         };
         match (
             base_depth,
@@ -77,10 +72,10 @@ impl SeriesRetention {
     pub(crate) fn mode(&self) -> HistoryRetentionMode {
         if self.max_bars_back.is_some() || !self.series_max_bars_back.is_empty() {
             HistoryRetentionMode::MaxBarsBack
-        } else if self.static_depths.is_some() {
-            HistoryRetentionMode::StaticTrimmed
-        } else {
+        } else if self.has_dynamic_offsets {
             HistoryRetentionMode::DynamicFull
+        } else {
+            HistoryRetentionMode::StaticTrimmed
         }
     }
 }

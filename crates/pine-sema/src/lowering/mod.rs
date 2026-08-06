@@ -1159,24 +1159,31 @@ impl Analyzer {
                 .canonical_value_name(self.current_source_context_id(), expr.span)
             {
                 if let Some(symbol) = self.scope.resolve(canonical_name) {
-                    return symbol.series_id;
+                    if symbol.series_id.is_some() {
+                        return symbol.series_id;
+                    }
+                } else if pine_type.qualifier != Qualifier::Series {
+                    return None;
                 }
-                return (pine_type.qualifier == Qualifier::Series).then(|| self.alloc_series());
-            }
-            return self
+            } else if let Some(series_id) = self
                 .bound_symbol(name, expr.span)
-                .and_then(|symbol| symbol.series_id);
+                .and_then(|symbol| symbol.series_id)
+            {
+                return Some(series_id);
+            } else if pine_type.qualifier != Qualifier::Series {
+                return None;
+            }
+
+            if let Some(series_id) = pure_series::pure_expr_series_id(self, expr) {
+                return Some(series_id);
+            }
+            return Some(self.alloc_series());
         }
 
         if pine_type.qualifier == Qualifier::Series
             && !is_collection_kind(pine_type.kind)
-            && let Some(key) = self.pure_expr_series_key(expr)
+            && let Some(series_id) = pure_series::pure_expr_series_id(self, expr)
         {
-            if let Some(series_id) = self.pure_expr_series_ids.get(&key).copied() {
-                return Some(series_id);
-            }
-            let series_id = self.alloc_series();
-            self.pure_expr_series_ids.insert(key, series_id);
             return Some(series_id);
         }
 

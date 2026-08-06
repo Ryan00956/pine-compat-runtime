@@ -156,6 +156,52 @@ plot(tool.read(bar_index % 3))
 }
 
 #[test]
+fn dynamic_history_retains_full_depth_only_for_indexed_series() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("per-series dynamic history")
+offset = bar_index % 3
+plot(close[offset])
+plot(open[1])
+plot(high)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+
+    let series_id = |name: &str| {
+        hir.symbols
+            .iter()
+            .find(|symbol| symbol.name == name)
+            .and_then(|symbol| symbol.series_id)
+            .unwrap_or_else(|| panic!("{name} should have a series id"))
+    };
+    let close_series = series_id("close");
+    let open_series = series_id("open");
+    let high_series = series_id("high");
+
+    let mut runtime = HistoricalRuntime::new(&hir);
+    for value in 1..=10 {
+        runtime
+            .append_bar(bar(f64::from(value)))
+            .expect("incremental append");
+    }
+
+    assert_eq!(runtime.series_store.len(close_series), 10);
+    assert_eq!(runtime.series_store.len(open_series), 1);
+    assert_eq!(runtime.series_store.len(high_series), 0);
+    assert_eq!(
+        runtime.series_retention.mode(),
+        HistoryRetentionMode::DynamicFull
+    );
+}
+
+#[test]
 fn pure_const_call_series_bound_only_limits_declared_series() {
     let source = SourceFile::new(
         "test.pine",

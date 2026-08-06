@@ -506,6 +506,32 @@ fn request_security_evaluates_provider_arithmetic_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_alias_with_na_fallback() {
+    let program = compile_program(
+        "//@version=1\nstudy(\"request provider na alias\")\ncandidate = close > open ? close : na\nplot(security(tickerid, '5', candidate))\n",
+    );
+    let key = RequestKey::new(
+        "NASDAQ:AAPL",
+        RequestTimeframe::parse("5").expect("five minute timeframe"),
+    );
+    let provider = InMemoryRequestDataProvider::from_streams([(
+        key,
+        vec![
+            timed_ohlcv(0, 10.0, 12.0, 8.0, 9.0, 1.0),
+            timed_ohlcv(300_000, 10.0, 12.0, 8.0, 11.0, 1.0),
+        ],
+    )])
+    .expect("valid request bars");
+    let environment = RequestEnvironment::new(ChartContext::default(), Arc::new(provider));
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(240_000, 1.0), timed_bar(540_000, 2.0)])
+        .expect("provider alias with an na fallback should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[11.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_math_extremes_in_requested_context() {
     let program = compile_program(
         "indicator(\"request math extremes\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, math.max(close, open) - math.min(close, open)))\n",
@@ -6408,6 +6434,28 @@ fn request_security_caches_requested_context_values_by_callsite() {
         .append_bar(timed_bar(60_000, 7.0))
         .expect("second bar should run");
     assert_eq!(runtime.request_cache.len(), 1);
+}
+
+#[test]
+fn request_security_commits_only_series_reached_in_requested_context() {
+    let mut source =
+        String::from("indicator(\"request reached series\")\noffset = bar_index % 2\n");
+    for index in 0..350 {
+        source.push_str(&format!("unused_{index} = close[offset]\n"));
+    }
+    source.push_str("plot(request.security(\"NYSE:IBM\", \"5\", close))\n");
+    let program = compile_program(&source);
+    assert!(program.history.has_dynamic_offsets);
+    let provider_bars = (0..3_000)
+        .map(|index| timed_bar(i64::from(index) * 300_000, f64::from(index)))
+        .collect();
+    let environment = external_symbol_environment_with_timeframe("NYSE:IBM", "5", provider_bars);
+
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(899_999_000, 1.0)])
+        .expect("unrelated chart series should not consume requested-context history");
+
+    assert_values_close(&result.plots[0].values, &[2_999.0]);
 }
 
 #[test]

@@ -346,8 +346,9 @@ impl<'a> HistoricalRuntime<'a> {
             });
         }
 
-        for raw_series_id in 0..self.program.next_series_id {
-            let series_id = SeriesId(raw_series_id);
+        let mut series_ids: Vec<_> = self.current_series.keys().copied().collect();
+        series_ids.sort_unstable();
+        for series_id in series_ids {
             let max_depth = self.series_retention.max_depth_for(series_id);
             let value = self
                 .current_series
@@ -364,15 +365,17 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub(crate) fn projected_series_values_after_commit(&self) -> usize {
-        let mut total = 0usize;
-        for raw_series_id in 0..self.program.next_series_id {
-            let series_id = SeriesId(raw_series_id);
-            let next_len = self.series_store.len(series_id).saturating_add(1);
+        let mut total = self.series_store.values_len();
+        for series_id in self.current_series.keys().copied() {
+            let current_len = self.series_store.len(series_id);
+            let next_len = current_len.saturating_add(1);
             let retained_len = self
                 .series_retention
                 .max_depth_for(series_id)
                 .map_or(next_len, |max_depth| next_len.min(max_depth));
-            total = total.saturating_add(retained_len);
+            total = total
+                .saturating_sub(current_len)
+                .saturating_add(retained_len);
         }
         total
     }

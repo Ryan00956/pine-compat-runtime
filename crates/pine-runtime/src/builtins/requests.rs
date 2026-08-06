@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use pine_ir::{
     CallSiteId, HirCallArg, HirExpr, HirExprKind, HirHistoryOffset, HirStmt, HirStmtKind,
-    Qualifier, SymbolId,
+    Qualifier, SymbolId, ValueKind,
 };
 
 use crate::builtins::args::call_arg_expr;
@@ -310,6 +310,9 @@ impl<'a> HistoricalRuntime<'a> {
                     symbol.0
                 ),
             })?;
+        if pine_type.kind == ValueKind::Na {
+            return Ok(());
+        }
         if pine_type.qualifier != Qualifier::Series {
             return Err(RuntimeError {
                 message: format!(

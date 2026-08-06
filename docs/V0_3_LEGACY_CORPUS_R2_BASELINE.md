@@ -1530,17 +1530,137 @@ All 60 modern-control stage maps and diagnostic arrays are unchanged. This
 slice changes measurement plumbing and private host input only, so translator
 revision 31 and the 36-row release registry remain unchanged.
 
+### Thirtieth TradingView request-data slice
+
+The same 104-source intake was measured twice with
+`buildRevision=corpus-r2-tv-request-data-slice-30`. The final reports are
+`report-tv-request-data-30-final-a.json` and
+`report-tv-request-data-30-final-b.json`; their matching SHA-256 is
+`4723ffafca2748626cedd988094aeb114a44fee6e73366c32264f5130879fbdb`.
+
+| Corpus metric | Twenty-ninth clock-input slice | Thirtieth request-data slice | Change |
+| --- | ---: | ---: | ---: |
+| Parse passes | 44/44 | 44/44 | 0 |
+| Analyze/lower passes | 44/44 | 44/44 | 0 |
+| Historical-run passes | 38/44 | 44/44 | +6 |
+| Historical missing-provider failures | 6 | 0 | -6 |
+| Supplied request-data manifests | 0 | 6 | +6 |
+| Eligible diagnostic records | 0 | 0 | 0 |
+| Known-unsupported records | 0 | 0 | 0 |
+| Unknown-symbol records | 0 | 0 | 0 |
+| Operator-type records | 0 | 0 | 0 |
+
+`scripts/normalize_tradingview_bars.py` converts authorized TradingView chart
+exports into the runtime's exact six-column OHLCV input. It selects required
+columns case-insensitively, ignores combined indicator-output columns, converts
+Unix seconds to milliseconds, and rejects missing columns, non-finite values,
+invalid OHLC relationships, duplicate timestamps, and unsorted timestamps.
+The private request-data directory contains twelve normalized streams: spot
+1/30/60/240/720-minute, daily, weekly, monthly, and yearly data plus
+Heikin-Ashi 1/60/240-minute data. The six per-item manifests expose only the
+symbol/timeframe keys actually requested by each source.
+
+Running those streams found a real interpreter defect in the Pivot item. The
+requested-context dependency walker saw the intrinsic `na` symbol through an
+immutable series alias and rejected it as an uninitialized non-series capture.
+The runtime now recognizes the typed `na` sentinel as intrinsic in the child
+context while retaining the existing failure for genuinely missing scalar
+captures. A public provider-backed implicit-v1 regression covers an immutable
+alias whose fallback is `na`; all request-runtime tests continue to pass.
+
+All six previously blocked indicators now execute historically, including
+normal and Heikin-Ashi selectors and fixed minute/day/week/month/year
+timeframes. Request-data availability is `passed` for six items and
+`not_supplied` for the other 38 eligible items; there are no missing inputs,
+runtime failures, diagnostics, or failure clusters. This is an execution
+closure, not an external value-parity claim. The combined 1-minute TradingView
+output covers August 4-6, while the 30/240/720-minute and Heikin-Ashi request
+streams end on August 2. They are intentionally not paired as an oracle, and
+no bars are fabricated or forward-filled across that non-overlapping window.
+The compiler and translator revision remain unchanged, as does the 36-row
+release registry.
+
+### Thirty-first TradingView output-parity slice
+
+The normal 30/240/720-minute and Heikin-Ashi 1/60/240-minute exports were
+refreshed through August 6 and normalized without changing the private
+manifest keys. They now overlap the combined August 4-6 one-minute chart, so
+the six previously execution-only indicators can be compared against their
+actual TradingView output columns without mixing timestamps or synthesizing
+provider bars.
+
+`scripts/compare_tradingview_outputs.py` consumes runtime JSON and a combined
+TradingView chart CSV. It maps duplicate or unnamed columns by source output
+order, applies each output's display offset, handles TradingView's numeric zero
+for an inactive `plotshape`, and reports per-output mismatch evidence. A
+warmup prefix can be excluded when the exported chart omits the state used to
+initialize recursive averages; a trailing live bar can likewise be excluded
+when the combined chart and provider stream were captured at different times.
+For example:
+
+```text
+target/debug/pine-compat run <script.pine> --bars <chart-bars.csv> ... |
+  python3 scripts/compare_tradingview_outputs.py \
+    - <combined-chart.csv> --column-start <index> \
+    --skip-bars 1500 --drop-last-bars 1
+```
+
+Using the identical completed-bar window from indexes 1500 through 2878 gives
+1,379 compared bars per output:
+
+| Indicator | Output columns | Mismatched values | Result |
+| --- | ---: | ---: | --- |
+| CM Pivot Points | 40 | 0 | exact on compared window |
+| Scalping PullBack Tool | 15 | 0 | exact on compared window |
+| VDUB Binary Pro | 18 | 0 | exact on compared window |
+| CM Stochastic MTF | 11 | 0 | exact on compared window |
+| CM Ultimate RSI MTF | 7 | 0 | exact on compared window |
+| VuManChu B Divergences | 34 | 20 | residual sparse divergence mismatch |
+
+This is 20 mismatches over 172,375 aligned output/bar positions. All remaining
+VuManChu differences are confined to the second WT, RSI, and Stochastic
+bullish-divergence columns. They remain explicit evidence for a later nested
+conditional-UDF call-instance audit; neither the comparator nor the runtime
+hides them with a tolerance or output-specific exception. The final Scalping
+bar is excluded because the later Heikin-Ashi provider capture has different
+high/close values for that live bar; the preceding completed bars agree.
+
+The comparison exposed three independent runtime defects. First, any dynamic
+history offset previously forced every program series to retain full history,
+causing the largest script to exceed the one-million-value guard. Retention is
+now full only for series individually marked dynamic. The resource-profile
+fixtures with a per-series depth of 2 consequently peak at 2 rather than the
+script-wide depth 10 previously retained by unrelated values, while their
+output and `W_HISTORY_MAX_BARS_BACK` evidence remain unchanged. Second, series that were
+not reached in a conditional execution were padded with `na`; only reached
+series now advance their history, which preserves Pine's UDF-local execution
+history and reduces the VuManChu tail mismatch from 134 to 34 on the 500-bar
+warmup window. Third, a scalar legacy input used as `level[1]` had no series
+identity and always returned `na`; lowering now assigns and reuses one. That
+last fix closes both strict stochastic signal columns exactly after warmup.
+
+The unchanged 104-source corpus was measured twice with
+`buildRevision=corpus-r2-tv-output-parity-slice-31`. The final reports are
+`report-tv-output-parity-31-final-a.json` and
+`report-tv-output-parity-31-final-b.json`; their matching SHA-256 is
+`75f673c858bd0b68b9121ca018f429ac8dd709eaf78f77c0bde4818b67cabcfb`.
+Parse, analysis/lowering, and historical execution remain 44/44 with no
+diagnostics, failures, or missing inputs. The corpus report's generic
+`referenceOutput` stage remains not supplied because a positional TradingView
+CSV is not the runtime's full JSON reference-output contract; the separate
+comparison above does not mislabel that schema boundary.
+
 ## Next Selection
 
-The next implementation slice should still be measured over this unchanged
-manifest and should not add strategy behavior. The ranked order is now:
+The next implementation slice should still be measured over this corpus and
+should not add strategy behavior. The ranked order is now:
 
-1. treat all six lowered-but-not-executing scripts as request-data setup work;
-   add only authorized symbol/timeframe streams matching each call and do not
-   reuse chart bars or fabricate market data to raise the historical-run count;
-2. add reference-output comparison only when authorized or independently
-   generated oracles become available; the current manifest supplies none, so
-   successful execution alone is not an external value-parity claim;
+1. isolate the remaining 20 VuManChu bullish-divergence mismatches by nested
+   conditional-UDF call instance without weakening history alignment or
+   special-casing that script;
+2. exercise incremental and realtime handoff, provider cache isolation, and
+   retained-resource bounds over the real request streams now that historical
+   execution is closed;
 3. preserve the now-zero eligible diagnostic, legacy-security, branch-return,
    dynamic-history-offset, unknown-symbol, and operator-type clusters while
    resolving any next producer; do not weaken structured block layout, graph

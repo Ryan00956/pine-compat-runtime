@@ -192,6 +192,42 @@
   exactly one stage map changes, all diagnostics and all 60 control stage maps
   stay unchanged, and no compiler/runtime semantic or translator revision
   changes in this measurement-only slice.
+- Added a deterministic TradingView chart-data normalizer that selects the
+  case-insensitive OHLCV columns from plain or combined indicator exports,
+  converts Unix seconds to runtime milliseconds, and rejects missing,
+  non-finite, invalid-OHLC, duplicate, or unsorted bars. Twelve authorized
+  spot and Heikin-Ashi streams now supply the exact requests used by the six
+  remaining R2 indicators. Real provider execution exposed and fixed one
+  requested-context bug: the intrinsic `na` symbol was incorrectly treated as
+  an uninitialized scalar capture when reached through an immutable legacy
+  alias. A public provider-backed regression covers that path. R2 historical
+  execution rises from 38/44 to 44/44, all six `missing_provider_data`
+  failures disappear, and eligible diagnostics remain zero. The two
+  deterministic reports share SHA-256
+  `4723ffafca2748626cedd988094aeb114a44fee6e73366c32264f5130879fbdb`.
+  No external value-parity claim is made because the newer combined 1-minute
+  outputs do not overlap all six supplied request streams.
+- Added a positional TradingView-output comparator for combined chart CSVs.
+  It orders runtime `plot`/`plotshape`/`plotarrow`/`plotchar` outputs by source
+  id, applies display offsets, treats the numeric zero exported for a false
+  `plotshape` as absent, and supports warmup and live-bar exclusions. Refreshed
+  private request streams now overlap the August 4-6 one-minute chart. Five of
+  six selected indicators match all 91 compared output columns over the final
+  1,379 completed bars; VuManChu retains 20 sparse mismatches across three
+  bullish-divergence columns, so full external parity is not claimed.
+- Fixed three runtime defects exposed by those real outputs. Dynamic history
+  retains full depth only for the series that actually uses a dynamic offset,
+  preventing large scripts from retaining every intermediate series. Existing
+  per-series `max_bars_back(..., 2)` profile fixtures now peak at depth 2
+  instead of inheriting the script-wide depth 10 through unrelated series,
+  while preserving their output and retention-miss diagnostics. Series
+  history advances only for expressions reached on the current execution,
+  preserving conditional UDF-local history while visual outputs remain
+  chart-aligned. A scalar legacy `input` promoted by `value[1]` now receives a
+  stable reusable series identity instead of reading `na` forever. Public
+  regressions cover all three paths, R2 remains 44/44 historically executable,
+  and the two deterministic reports share SHA-256
+  `75f673c858bd0b68b9121ca018f429ac8dd709eaf78f77c0bde4818b67cabcfb`.
 
 ## 0.2.0 - 2026-07-20
 
