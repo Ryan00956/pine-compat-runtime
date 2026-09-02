@@ -3,10 +3,10 @@
 **Run Pine-style indicators and strategies on your own market data — locally,
 deterministically, and from the host you already use.**
 
-[![Latest release](https://img.shields.io/github/v/release/Ryan00956/pine-compat-runtime?display_name=tag&sort=semver)](https://github.com/Ryan00956/pine-compat-runtime/releases/latest)
-[![CI](https://github.com/Ryan00956/pine-compat-runtime/actions/workflows/ci.yml/badge.svg)](https://github.com/Ryan00956/pine-compat-runtime/actions/workflows/ci.yml)
-[![Wheels](https://github.com/Ryan00956/pine-compat-runtime/actions/workflows/wheels.yml/badge.svg)](https://github.com/Ryan00956/pine-compat-runtime/actions/workflows/wheels.yml)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://github.com/Ryan00956/pine-compat-runtime/releases/latest)
+[![Latest release](https://img.shields.io/github/v/release/helenananaa/pine-compat-runtime?display_name=tag&sort=semver)](https://github.com/helenananaa/pine-compat-runtime/releases/latest)
+[![CI](https://github.com/helenananaa/pine-compat-runtime/actions/workflows/ci.yml/badge.svg)](https://github.com/helenananaa/pine-compat-runtime/actions/workflows/ci.yml)
+[![Wheels](https://github.com/helenananaa/pine-compat-runtime/actions/workflows/wheels.yml/badge.svg)](https://github.com/helenananaa/pine-compat-runtime/actions/workflows/wheels.yml)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://github.com/helenananaa/pine-compat-runtime/releases/latest)
 [![Rust 1.95+](https://img.shields.io/badge/Rust-1.95%2B-000000?logo=rust&logoColor=white)](Cargo.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -44,20 +44,20 @@ application to a charting service.
 
 Version `0.2.0` ships ready-to-install Python wheels for CPython 3.10+ on
 glibc Linux x86-64 and Windows x86-64. See the
-[latest release](https://github.com/Ryan00956/pine-compat-runtime/releases/latest)
+[latest release](https://github.com/helenananaa/pine-compat-runtime/releases/latest)
 for checksums and machine-readable release metadata.
 
 Linux x86-64:
 
 ```bash
 python -m pip install \
-  "https://github.com/Ryan00956/pine-compat-runtime/releases/download/v0.2.0/pine_compat_runtime-0.2.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+  "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.2.0/pine_compat_runtime-0.2.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
 ```
 
 Windows x86-64:
 
 ```powershell
-py -m pip install "https://github.com/Ryan00956/pine-compat-runtime/releases/download/v0.2.0/pine_compat_runtime-0.2.0-cp310-abi3-win_amd64.whl"
+py -m pip install "https://github.com/helenananaa/pine-compat-runtime/releases/download/v0.2.0/pine_compat_runtime-0.2.0-cp310-abi3-win_amd64.whl"
 ```
 
 Then run an indicator directly from Python:
@@ -303,7 +303,7 @@ The workspace requires Rust 1.95+. Python bindings require Python 3.10+ and
 `maturin`.
 
 ```bash
-git clone https://github.com/Ryan00956/pine-compat-runtime.git
+git clone https://github.com/helenananaa/pine-compat-runtime.git
 cd pine-compat-runtime
 cargo build --workspace
 ```
