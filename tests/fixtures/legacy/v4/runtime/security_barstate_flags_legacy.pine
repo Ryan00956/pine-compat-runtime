@@ -1,0 +1,6 @@
+//@version=4
+study("Legacy security barstate flags")
+first() => security("NYSE:IBM", timeframe.period, barstate.isfirst ? 1 : 0)
+lastHist() => security("NYSE:IBM", timeframe.period, barstate.islastconfirmedhistory ? 1 : 0)
+plot(first(), "isfirst")
+plot(lastHist(), "islastconfirmedhistory")

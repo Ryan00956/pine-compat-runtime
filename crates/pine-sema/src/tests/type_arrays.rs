@@ -417,6 +417,41 @@ fn rejects_series_float_array_get_set_indexes() {
 }
 
 #[test]
+fn accepts_series_integer_array_insert_indexes() {
+    let analysis = analyze(
+        "//@version=6\nvalues = array.from(10.0, 20.0, 30.0)\nindex = bar_index % 3\narray.insert(values, index, close)\nvalues.insert(index, high)\narray.from(1.0, 2.0, 3.0).insert(index, low)\nplot(array.get(values, index) + values.get(index))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_series_float_array_insert_indexes() {
+    let analysis = analyze(
+        "//@version=6\nvalues = array.from(10.0, 20.0, 30.0)\narray.insert(values, close, high)\nvalues.insert(close, low)\nplot(close)\n",
+    );
+
+    let messages = analysis
+        .diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.message.as_str())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        messages,
+        [
+            "`array.insert` argument `index` expects integer-compatible, got series float",
+            "`array.insert` argument `index` expects integer-compatible, got series float",
+        ]
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_array_fill_operations() {
     let analysis = analyze(
         "values = array.new_string(3, \"a\")\narray.fill(values, \"b\", 1, 3)\nints = array.new_int(2, 1)\nints.fill(2)\nplot(values.get(1) == \"b\" and ints.get(0) == 2 ? 1 : 0)\n",

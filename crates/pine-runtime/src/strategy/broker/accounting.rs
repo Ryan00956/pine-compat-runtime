@@ -1,5 +1,5 @@
 use super::BrokerState;
-use super::ledger::OpenTrade;
+use super::ledger::{OpenTrade, TradeDirection};
 use crate::{PineValue, StrategyEquitySnapshot, StrategyTrade};
 
 fn normalize_zero(value: f64) -> f64 {
@@ -54,7 +54,7 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn open_profit(&self, close: f64) -> f64 {
-        if self.position_size > 0.0 {
+        if self.position_size != 0.0 {
             normalize_zero((close - self.avg_price) * self.position_size)
         } else {
             0.0
@@ -77,34 +77,81 @@ impl BrokerState {
         if !has_active_margin {
             return None;
         }
-        if self.position_size <= 0.0 {
+        if self.position_size == 0.0 {
             return Some(0.0);
-        }
-        if !self.margin_long.is_active() {
-            return None;
         }
         if !close.is_finite() {
             return None;
         }
-        Some(normalize_zero(
-            self.position_size * close * self.margin_long.value_percent / 100.0,
-        ))
+        if self.position_size > 0.0 {
+            return self.margin_required_for_position(close);
+        }
+        self.margin_required_for_position(close).or(Some(0.0))
+    }
+
+    #[must_use]
+    fn margin_ratio_for_direction(&self, direction: TradeDirection) -> Option<f64> {
+        let setting = match direction {
+            TradeDirection::Long => self.margin_long,
+            TradeDirection::Short => self.margin_short,
+        };
+        if !setting.is_active() {
+            return None;
+        }
+        let ratio = setting.value_percent / 100.0;
+        ratio.is_finite().then_some(ratio)
+    }
+
+    #[must_use]
+    pub(crate) fn margin_required_for_position(&self, price: f64) -> Option<f64> {
+        if self.position_size == 0.0 {
+            return if self.margin_long.is_active() || self.margin_short.is_active() {
+                Some(0.0)
+            } else {
+                None
+            };
+        }
+        if !price.is_finite() {
+            return None;
+        }
+        let direction = if self.position_size > 0.0 {
+            TradeDirection::Long
+        } else {
+            TradeDirection::Short
+        };
+        let ratio = self.margin_ratio_for_direction(direction)?;
+        Some(normalize_zero(self.position_size.abs() * price * ratio))
     }
 
     #[must_use]
     pub(crate) fn margin_liquidation_price(&self) -> Option<f64> {
-        if self.position_size <= 0.0 || !self.margin_long.is_active() {
+        if self.position_size > 0.0 {
+            if !self.margin_long.is_active() {
+                return None;
+            }
+            let margin_ratio = self.margin_long.value_percent / 100.0;
+            if !margin_ratio.is_finite() || margin_ratio <= 0.0 {
+                return None;
+            }
+            let denominator = self.position_size * (1.0 - margin_ratio);
+            if !denominator.is_finite() || denominator == 0.0 {
+                return None;
+            }
+            let price = -self.cash / denominator;
+            return price.is_finite().then(|| normalize_zero(price));
+        }
+        if self.position_size >= 0.0 || !self.margin_short.is_active() {
             return None;
         }
-        let margin_ratio = self.margin_long.value_percent / 100.0;
+        let margin_ratio = self.margin_short.value_percent / 100.0;
         if !margin_ratio.is_finite() || margin_ratio <= 0.0 {
             return None;
         }
-        let denominator = self.position_size * (1.0 - margin_ratio);
+        let denominator = self.position_size.abs() * (1.0 + margin_ratio);
         if !denominator.is_finite() || denominator == 0.0 {
             return None;
         }
-        let price = -self.cash / denominator;
+        let price = self.cash / denominator;
         if price.is_finite() {
             Some(normalize_zero(price))
         } else {
@@ -114,10 +161,19 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn can_afford_long_entry(&self, qty: f64, fill_price: f64) -> bool {
-        if !self.margin_long.is_active() {
+        let Some(ratio) = self.margin_ratio_for_direction(TradeDirection::Long) else {
             return true;
-        }
-        let required_margin = qty * fill_price * self.margin_long.value_percent / 100.0;
+        };
+        let required_margin = qty * fill_price * ratio;
+        required_margin.is_finite() && self.equity_value(fill_price) >= required_margin
+    }
+
+    #[must_use]
+    pub(crate) fn can_afford_short_entry(&self, qty: f64, fill_price: f64) -> bool {
+        let Some(ratio) = self.margin_ratio_for_direction(TradeDirection::Short) else {
+            return true;
+        };
+        let required_margin = qty * fill_price * ratio;
         required_margin.is_finite() && self.equity_value(fill_price) >= required_margin
     }
 
@@ -271,6 +327,7 @@ impl BrokerState {
     #[must_use]
     pub(crate) fn max_contracts_held_all(&self) -> f64 {
         self.max_contracts_held_long()
+            .max(self.max_contracts_held_short())
     }
 
     #[must_use]
@@ -280,7 +337,7 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn max_contracts_held_short(&self) -> f64 {
-        0.0
+        normalize_zero(self.max_contracts_held_short)
     }
 
     #[must_use]
@@ -450,13 +507,17 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn open_trade_size(&self, trade_num: i64) -> Option<f64> {
-        self.open_trade_at(trade_num).map(|trade| trade.quantity)
+        self.open_trade_at(trade_num)
+            .map(|trade| trade.direction.signed_quantity(trade.quantity))
     }
 
     #[must_use]
     pub(crate) fn open_trade_profit(&self, trade_num: i64, close: f64) -> Option<f64> {
-        self.open_trade_at(trade_num)
-            .map(|trade| normalize_zero((close - trade.entry_price) * trade.quantity))
+        self.open_trade_at(trade_num).map(|trade| {
+            normalize_zero(
+                (close - trade.entry_price) * trade.direction.signed_quantity(trade.quantity),
+            )
+        })
     }
 
     #[must_use]
@@ -583,7 +644,7 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn position_avg_price_value(&self) -> PineValue {
-        if self.position_size > 0.0 {
+        if self.position_size != 0.0 {
             PineValue::Float(self.avg_price)
         } else {
             PineValue::Na
@@ -592,7 +653,7 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn position_entry_name_value(&self) -> PineValue {
-        if self.position_size <= 0.0 {
+        if self.position_size == 0.0 {
             return PineValue::Na;
         }
         self.position_entry_name

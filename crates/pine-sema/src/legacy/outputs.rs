@@ -47,6 +47,7 @@ struct StyleArgument<'a> {
     arg_type: Option<PineType>,
     const_string: Option<&'a str>,
     const_int: Option<i64>,
+    string_domain: Option<&'a [String]>,
     styles: &'static [&'static str],
     span: Span,
 }
@@ -479,6 +480,7 @@ pub(crate) fn bind_legacy_output_args(
     arg_types: &[Option<PineType>],
     const_strings: &[Option<String>],
     const_ints: &[Option<i64>],
+    string_domains: &[Option<Vec<String>>],
 ) -> LegacyOutputBinding {
     let version = dialect.version();
     let params = match params_for_call(dialect, name, args, arg_types) {
@@ -587,6 +589,7 @@ pub(crate) fn bind_legacy_output_args(
                     arg_type,
                     const_string: const_strings.get(arg_index).and_then(Option::as_deref),
                     const_int: const_ints.get(arg_index).copied().flatten(),
+                    string_domain: string_domains.get(arg_index).and_then(Option::as_deref),
                     styles: PLOT_STYLES,
                     span: arg.value.span,
                 },
@@ -602,6 +605,7 @@ pub(crate) fn bind_legacy_output_args(
                     arg_type,
                     const_string: const_strings.get(arg_index).and_then(Option::as_deref),
                     const_int: const_ints.get(arg_index).copied().flatten(),
+                    string_domain: string_domains.get(arg_index).and_then(Option::as_deref),
                     styles: HLINE_STYLES,
                     span: arg.value.span,
                 },
@@ -684,23 +688,34 @@ fn validate_style(
             })
         }
         Some(pine_type) if pine_type.kind == ValueKind::String => {
-            argument.const_string.is_some_and(|value| {
+            if let Some(value) = argument.const_string {
                 if argument.styles.contains(&value) {
-                    return true;
+                    true
+                } else if let Some(canonical_style) =
+                    contextual_legacy_style(value, argument.styles)
+                {
+                    *emulates_numeric_style = true;
+                    style_value_rewrites.push((argument.span, canonical_style));
+                    true
+                } else {
+                    false
                 }
-                let Some(canonical_style) = contextual_legacy_style(value, argument.styles) else {
-                    return false;
-                };
-                *emulates_numeric_style = true;
-                style_value_rewrites.push((argument.span, canonical_style));
-                true
-            })
+            } else {
+                argument.string_domain.is_some_and(|values| {
+                    values
+                        .iter()
+                        .all(|value| argument.styles.contains(&value.as_str()))
+                })
+            }
         }
         _ => false,
     };
     if !valid {
         diagnostics.push(output_error(
-            format!("Pine v{} `{}` argument `{}` must be a documented style constant or an input integer in the supported style range", argument.version, argument.call_name, argument.param_name),
+            format!(
+                "Pine v{} `{}` argument `{}` must be a documented style constant, a proven style-enum string domain, or an input integer in the supported style range",
+                argument.version, argument.call_name, argument.param_name
+            ),
             argument.span,
         ));
     }

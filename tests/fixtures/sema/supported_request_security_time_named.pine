@@ -1,0 +1,4 @@
+//@version=6
+indicator("Supported request named time")
+plot(request.security(syminfo.tickerid, timeframe.period, time("D", bars_back=0)))
+plot(request.security("NYSE:IBM", timeframe.period, time(timeframe="D")))

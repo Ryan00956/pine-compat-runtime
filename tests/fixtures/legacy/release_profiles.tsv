@@ -12,6 +12,7 @@ v2_shared	2	experimental	runtime	tests/fixtures/legacy/v2/runtime/shared_v2.pine
 v3_core	3	preview	runtime	tests/fixtures/legacy/v3/runtime/core_legacy.pine	v3_core	none	none	parity	original	4096
 v3_security_same_context	3	preview	mtf	tests/fixtures/legacy/legacy_v3_security.pine	legacy_chart	test_chart	none	parity	original	4096
 v4_aliases	4	preview	runtime	tests/fixtures/legacy/v4/runtime/aliases_legacy.pine	default	none	none	parity	original	4096
+v4_array_insert_series_index	4	preview	runtime	tests/fixtures/legacy/v4/runtime/array_insert_series_index_legacy.pine	default	none	none	parity	original	4096
 v4_array_series_index	4	preview	runtime	tests/fixtures/legacy/v4/runtime/array_series_index_legacy.pine	default	none	none	parity	original	4096
 v4_contextual_integer_division	4	preview	runtime	tests/fixtures/legacy/v4/runtime/contextual_integer_division_legacy.pine	default	none	none	parity	original	4096
 v4_contextual_numeric_bool_calls	4	preview	runtime	tests/fixtures/legacy/v4/runtime/numeric_bool_call_arguments_legacy.pine	default	none	none	parity	original	4096
@@ -22,10 +23,16 @@ v4_logical_strict	4	preview	runtime	tests/fixtures/legacy/v4/runtime/logical_str
 v4_named_input_default	4	preview	runtime	tests/fixtures/legacy/v4/runtime/named_input_default_legacy.pine	default	none	none	parity	original	4096
 v4_nested_if_expression	4	preview	runtime	tests/fixtures/legacy/v4/runtime/nested_if_expression_legacy.pine	default	none	none	parity	original	4096
 v4_outputs	4	preview	runtime	tests/fixtures/legacy/v4/runtime/outputs_legacy.pine	default	none	none	parity	original	4096
+v4_plot_dynamic_style	4	preview	runtime	tests/fixtures/legacy/v4/runtime/plot_dynamic_style_legacy.pine	default	none	none	parity	original	4096
+v4_plotshape_hline_dynamic_style	4	preview	runtime	tests/fixtures/legacy/v4/runtime/plotshape_hline_dynamic_style_legacy.pine	default	none	none	parity	original	4096
+v4_security_barstate_flags	4	preview	runtime	tests/fixtures/legacy/v4/runtime/security_barstate_flags_legacy.pine	security_chart	ibm_1	none	parity	original	4096
+v4_security_barstate_islast	4	preview	runtime	tests/fixtures/legacy/v4/runtime/security_barstate_islast_legacy.pine	security_chart	ibm_1	none	parity	original	4096
 v4_security_daily	4	preview	mtf	tests/fixtures/legacy/legacy_v4_security.pine	legacy_chart	test_daily	none	parity	original	4096
 v4_security_provider	4	preview	runtime	tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine	security_chart	ibm_5	none	parity	original	4096
 v4_security_pure_udf	4	preview	runtime	tests/fixtures/legacy/v4/runtime/security_pure_udf_legacy.pine	security_chart	ibm_1	none	parity	original	4096
 v4_security_same_context	4	preview	runtime	tests/fixtures/legacy/v4/runtime/security_same_context_legacy.pine	default	none	none	parity	original	4096
+v4_security_time_alias	4	preview	runtime	tests/fixtures/legacy/v4/runtime/security_time_alias_legacy.pine	default	none	none	parity	original	4096
+v4_security_time_close	4	preview	runtime	tests/fixtures/legacy/v4/runtime/security_time_close_legacy.pine	default	none	none	parity	original	4096
 v4_security_udf_local_dependencies	4	preview	runtime	tests/fixtures/legacy/v4/runtime/security_udf_local_dependencies_legacy.pine	security_chart	ibm_5	none	parity	original	4096
 v4_series_output_offset	4	preview	runtime	tests/fixtures/legacy/v4/runtime/series_output_offset_legacy.pine	default	none	none	parity	original	4096
 v4_session_defaults	4	preview	runtime	tests/fixtures/legacy/v4/runtime/session_defaults_legacy.pine	session_weekend	none	none	parity	original	4096
@@ -33,5 +40,6 @@ v4_spaced_version_annotation	4	preview	runtime	tests/fixtures/legacy/v4/runtime/
 v4_study_empty_resolution	4	preview	runtime	tests/fixtures/legacy/v4/runtime/study_empty_resolution_legacy.pine	default	none	none	parity	original	4096
 v4_timenow_execution_clock	4	preview	runtime	tests/fixtures/legacy/v4/runtime/timenow_execution_clock_legacy.pine	default	none	deterministic_clock	parity	original	4096
 v4_udf_final_statements	4	preview	runtime	tests/fixtures/legacy/v4/runtime/udf_final_statements_legacy.pine	default	none	none	parity	original	4096
+v4_udf_line_setters	4	preview	runtime	tests/fixtures/legacy/v4/runtime/udf_line_setters_legacy.pine	default	none	none	parity	original	4096
 v4_udf_reference_side_effects	4	preview	runtime	tests/fixtures/legacy/v4/runtime/udf_reference_side_effects_legacy.pine	default	none	none	parity	original	4096
 v4_udf_source_order_builtin_aliases	4	preview	runtime	tests/fixtures/legacy/v4/runtime/udf_source_order_builtin_aliases_legacy.pine	default	none	none	parity	original	4096

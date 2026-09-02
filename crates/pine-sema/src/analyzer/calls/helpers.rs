@@ -26,6 +26,8 @@ impl Analyzer {
                 | "label.new"
                 | "label.delete"
                 | "line.new"
+                | "line.set_x2"
+                | "line.set_extend"
                 | "line.delete"
         )
     }

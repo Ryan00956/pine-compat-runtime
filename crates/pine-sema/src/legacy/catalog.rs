@@ -1,6 +1,6 @@
 use super::PineDialect;
 
-pub const LEGACY_TRANSLATOR_REVISION: u32 = 31;
+pub const LEGACY_TRANSLATOR_REVISION: u32 = 33;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum LegacyRuleKind {
@@ -352,6 +352,14 @@ pub const LEGACY_RULES: &[LegacyRule] = &[
         min_version: PineDialect::V4,
         max_version: PineDialect::V4,
         kind: LegacyRuleKind::FocusedOutput,
+        support: LegacyRuleSupport::Supported,
+    },
+    LegacyRule {
+        source_name: "hma",
+        canonical_name: Some("ta.hma"),
+        min_version: PineDialect::V4,
+        max_version: PineDialect::V4,
+        kind: LegacyRuleKind::ExactFunctionAlias,
         support: LegacyRuleSupport::Supported,
     },
     LegacyRule {

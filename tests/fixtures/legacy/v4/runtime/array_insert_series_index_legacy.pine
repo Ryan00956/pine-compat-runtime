@@ -1,0 +1,9 @@
+//@version=4
+study("Legacy array insert series index")
+values = array.new_float()
+array.push(values, 10.0)
+array.push(values, 20.0)
+array.push(values, 30.0)
+index = bar_index % array.size(values)
+array.insert(values, index, close)
+plot(array.get(values, index))

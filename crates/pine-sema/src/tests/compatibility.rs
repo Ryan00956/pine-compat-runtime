@@ -704,6 +704,139 @@ fn accepts_provider_backed_same_timeframe_request_security_ta_variable() {
 }
 
 #[test]
+fn accepts_request_security_time_function_calls() {
+    let analysis = analyze(
+        "day_open = time(\"D\")\nplot(request.security(syminfo.tickerid, timeframe.period, time(\"D\")))\nplot(request.security(\"NYSE:IBM\", timeframe.period, time(\"D\")))\nplot(request.security(syminfo.tickerid, timeframe.period, day_open))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_legacy_security_time_function_alias_graph() {
+    let analysis = analyze(
+        "//@version=4\nstudy(\"legacy time alias\")\ndayOpen = time(\"D\")\nnewDay = dayOpen != dayOpen[1]\ndayClose = valuewhen(newDay, close, 0)\nplot(security(\"NYSE:IBM\", \"60\", dayOpen))\nplot(security(\"NYSE:IBM\", \"60\", dayClose))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_request_security_time_close_function_calls() {
+    let analysis = analyze(
+        "plot(request.security(syminfo.tickerid, timeframe.period, time_close(\"D\")))\nplot(request.security(\"NYSE:IBM\", timeframe.period, time_close(\"D\")))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_request_security_named_time_function_arguments() {
+    let analysis = analyze(
+        "plot(request.security(syminfo.tickerid, timeframe.period, time(\"D\", bars_back=0)))\nplot(request.security(\"NYSE:IBM\", timeframe.period, time(timeframe=\"D\")))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_request_security_named_sma_arguments() {
+    let analysis = analyze(
+        "plot(request.security(syminfo.tickerid, timeframe.period, ta.sma(source=close, length=14)))\n",
+    );
+
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(
+        analysis.compatibility.unsupported[0].feature,
+        "request.security"
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_modern_provider_request_security_time_alias() {
+    let analysis = analyze(
+        "day_open = time(\"D\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, day_open))\n",
+    );
+
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(
+        analysis.compatibility.unsupported[0].feature,
+        "request.security"
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn accepts_request_security_barstate_islast() {
+    let analysis = analyze(
+        "plot(request.security(syminfo.tickerid, timeframe.period, barstate.islast ? 1 : 0))\nplot(request.security(\"NYSE:IBM\", timeframe.period, barstate.islast ? 1 : 0))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_legacy_security_udf_barstate_islast() {
+    let analysis = analyze(
+        "//@version=4\nstudy(\"udf islast\")\nflag() => security(\"NYSE:IBM\", timeframe.period, barstate.islast ? 1 : 0)\nplot(flag())\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_request_security_provider_barstate_isfirst() {
+    let analysis = analyze(
+        "plot(request.security(\"NYSE:IBM\", timeframe.period, barstate.isfirst ? 1 : 0))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_same_context_request_security_tuple_ta_call() {
     let analysis = analyze(
         "[macd, signal, hist] = request.security(syminfo.tickerid, timeframe.period, ta.macd(close, 2, 3, 2))\nplot(macd + signal + hist)\n",

@@ -1,0 +1,10 @@
+//@version=6
+indicator("Array insert series index")
+namespace_values = array.from(10.0, 20.0, 30.0)
+method_values = array.from(100.0, 200.0, 300.0)
+index = bar_index % 3
+array.insert(namespace_values, index, close)
+method_values.insert(index, close + 100)
+plot(array.get(namespace_values, index), "namespace")
+plot(method_values.get(index), "method")
+plot(array.size(namespace_values), "size")

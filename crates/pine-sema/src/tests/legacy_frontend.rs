@@ -277,6 +277,7 @@ fn production_v4_study_and_first_alias_batch_match_canonical_hir() {
             ("obv", "ta.obv", LegacyTranslationKind::SymbolAlias),
             ("vwap", "ta.vwap", LegacyTranslationKind::SymbolAlias),
             ("vwap", "ta.vwap", LegacyTranslationKind::SignatureReshape),
+            ("hma", "ta.hma", LegacyTranslationKind::ExactAlias),
             ("round", "math.round", LegacyTranslationKind::ExactAlias),
             ("rma", "ta.rma", LegacyTranslationKind::ExactAlias),
             ("wma", "ta.wma", LegacyTranslationKind::ExactAlias),
@@ -1574,6 +1575,7 @@ fn modern_sources_reject_every_production_legacy_alias() {
             "stdev(close, 2)",
             "vwma(close, 2)",
             "wma(close, 2)",
+            "hma(close, 4)",
             "max(close, open)",
             "min(close, open)",
             "abs(close)",
@@ -1623,6 +1625,19 @@ fn modern_sources_reject_every_production_legacy_alias() {
         );
         assert!(analysis.compatibility.legacy_translations.is_empty());
     }
+}
+
+#[test]
+fn hma_alias_is_pine_v4_only() {
+    let v4 = analyze_production("//@version=4\nstudy(\"legacy hma\")\nplot(hma(close, 4))\n");
+    assert!(v4.diagnostics.is_empty(), "{:?}", v4.diagnostics);
+    assert!(hir_contains_call(
+        v4.hir.as_ref().expect("legacy hma HIR"),
+        "ta.hma"
+    ));
+
+    let v3 = analyze_production("//@version=3\nstudy(\"legacy hma\")\nplot(hma(close, 4))\n");
+    assert_eq!(diagnostic_codes(&v3), vec!["E_UNKNOWN_FUNCTION"]);
 }
 
 #[test]
@@ -1755,6 +1770,49 @@ fn v4_string_input_options_bound_drawing_enum_values() {
     );
     assert_eq!(diagnostic_codes(&unbounded), vec!["E_CALL_ARG_VALUE"]);
     assert!(unbounded.hir.is_none());
+}
+
+#[test]
+fn v4_plot_style_accepts_proven_string_domains() {
+    let ternary = analyze_production(
+        "//@version=4\nstudy(\"dynamic plot style\")\nstyle = bar_index % 2 == 0 ? plot.style_line : plot.style_histogram\nplot(close, style=style)\n",
+    );
+    assert!(ternary.diagnostics.is_empty(), "{:?}", ternary.diagnostics);
+    assert!(ternary.hir.is_some());
+
+    let bounded = analyze_production(
+        "//@version=4\nstudy(\"bounded plot style\")\nstyle = input(plot.style_line, \"Style\", input.string, false, [plot.style_line, plot.style_histogram])\nplot(close, style=style)\n",
+    );
+    assert!(bounded.diagnostics.is_empty(), "{:?}", bounded.diagnostics);
+    assert!(bounded.hir.is_some());
+
+    let unbounded = analyze_production(
+        "//@version=4\nstudy(\"unbounded plot style\")\nstyle = input(plot.style_line, \"Style\", input.string)\nplot(close, style=style)\n",
+    );
+    assert_eq!(
+        diagnostic_codes(&unbounded),
+        vec!["E_LEGACY_OUTPUT_ARGUMENT"]
+    );
+    assert!(unbounded.hir.is_none());
+
+    let series_int = analyze_production(
+        "//@version=4\nstudy(\"series int plot style\")\nplot(close, style=bar_index)\n",
+    );
+    assert_eq!(
+        diagnostic_codes(&series_int),
+        vec!["E_LEGACY_OUTPUT_ARGUMENT"]
+    );
+    assert!(series_int.hir.is_none());
+
+    let hline_domain = analyze_production(
+        "//@version=4\nstudy(\"dynamic hline style\")\nstyle = close > open ? hline.style_solid : hline.style_dotted\nhline(1, linestyle=style)\nplot(close)\n",
+    );
+    assert!(
+        hline_domain.diagnostics.is_empty(),
+        "{:?}",
+        hline_domain.diagnostics
+    );
+    assert!(hline_domain.hir.is_some());
 }
 
 #[test]
@@ -3938,6 +3996,59 @@ fn v4_function_final_statements_and_reference_side_effects_are_supported() {
     );
     assert!(canonical_side_effects.hir.is_some());
 
+    let line_setters_source =
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/udf_line_setters_legacy.pine");
+    let line_setters = analyze_production(line_setters_source);
+    assert!(
+        line_setters.diagnostics.is_empty(),
+        "{:?}",
+        line_setters.diagnostics
+    );
+    assert!(line_setters.hir.is_some());
+
+    let canonical_line_setters = analyze_production(include_str!(
+        "../../../../tests/fixtures/legacy/v4/runtime/udf_line_setters_canonical.pine"
+    ));
+    assert!(
+        canonical_line_setters.diagnostics.is_empty(),
+        "{:?}",
+        canonical_line_setters.diagnostics
+    );
+    assert!(canonical_line_setters.hir.is_some());
+
+    let v3_line_setters =
+        analyze_production(&line_setters_source.replacen("//@version=4", "//@version=3", 1));
+    assert!(
+        !v3_line_setters.compatibility.unsupported.is_empty(),
+        "{:?}",
+        v3_line_setters.diagnostics
+    );
+    assert!(v3_line_setters.hir.is_none());
+
+    for version in [5, 6] {
+        let modern = analyze_production(
+            &line_setters_source
+                .replacen("//@version=4", &format!("//@version={version}"), 1)
+                .replacen(
+                    "study(\"Legacy v4 UDF line setters\"",
+                    "indicator(\"Current UDF line setters\"",
+                    1,
+                ),
+        );
+        assert_eq!(
+            modern
+                .compatibility
+                .unsupported
+                .iter()
+                .filter(|feature| feature.feature == "function_side_effect")
+                .count(),
+            3,
+            "v{version}: {:?}",
+            modern.compatibility.unsupported
+        );
+        assert!(modern.hir.is_none(), "v{version}");
+    }
+
     let focused_boundary = analyze_production(include_str!(
         "../../../../tests/fixtures/legacy/v4/unsupported/udf_other_reference_side_effects.pine"
     ));
@@ -3948,7 +4059,7 @@ fn v4_function_final_statements_and_reference_side_effects_are_supported() {
             .iter()
             .filter(|feature| feature.feature == "function_side_effect")
             .count(),
-        2,
+        3,
         "{:?}",
         focused_boundary.compatibility.unsupported
     );

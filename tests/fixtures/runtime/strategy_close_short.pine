@@ -1,0 +1,9 @@
+//@version=5
+strategy("Close short strategy", overlay=true)
+if bar_index == 1
+    strategy.entry("S", strategy.short, qty=2)
+if bar_index == 3
+    strategy.close("S")
+plot(strategy.position_size)
+plot(strategy.netprofit)
+plot(strategy.closedtrades.size(0))

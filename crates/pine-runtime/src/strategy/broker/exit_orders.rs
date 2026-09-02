@@ -72,6 +72,9 @@ impl BrokerState {
         mintick: f64,
         bar_index: usize,
     ) {
+        if self.position_size < 0.0 {
+            return;
+        }
         let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
             return;
         };
@@ -118,13 +121,18 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
-        if self.position_size <= 0.0 && self.has_pending_entry(&from_entry) {
+        if self.position_size == 0.0 && self.has_pending_entry(&from_entry) {
+            if self.has_pending_short_entry(&from_entry) {
+                return;
+            }
             self.place_deferred_relative_profit_exit(
                 id, from_entry, ticks, mintick, quantity, bar_index,
             );
             return;
         }
-        if self.reject_entry_relative_exit_for_pending_entry(&from_entry) {
+        if self.position_size >= 0.0
+            && self.reject_entry_relative_exit_for_pending_entry(&from_entry)
+        {
             return;
         }
         let Some(limit_price) =
@@ -246,6 +254,9 @@ impl BrokerState {
         mintick: f64,
         bar_index: usize,
     ) {
+        if self.position_size < 0.0 {
+            return;
+        }
         let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
             return;
         };
@@ -292,13 +303,18 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
-        if self.position_size <= 0.0 && self.has_pending_entry(&from_entry) {
+        if self.position_size == 0.0 && self.has_pending_entry(&from_entry) {
+            if self.has_pending_short_entry(&from_entry) {
+                return;
+            }
             self.place_deferred_relative_loss_exit(
                 id, from_entry, ticks, mintick, quantity, bar_index,
             );
             return;
         }
-        if self.reject_entry_relative_exit_for_pending_entry(&from_entry) {
+        if self.position_size >= 0.0
+            && self.reject_entry_relative_exit_for_pending_entry(&from_entry)
+        {
             return;
         }
         let Some(stop_price) =
@@ -468,6 +484,9 @@ impl BrokerState {
         mintick: f64,
         bar_index: usize,
     ) {
+        if self.position_size < 0.0 {
+            return;
+        }
         let Some(activation_price_offset) = self.exit_tick_price_offset(activation_ticks, mintick)
         else {
             return;
@@ -564,13 +583,18 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
-        if self.position_size <= 0.0 && self.has_pending_entry(&from_entry) {
+        if self.position_size == 0.0 && self.has_pending_entry(&from_entry) {
+            if self.has_pending_short_entry(&from_entry) {
+                return;
+            }
             self.place_deferred_relative_trail_points_exit(
                 id, from_entry, spec, quantity, bar_index,
             );
             return;
         }
-        if self.reject_entry_relative_exit_for_pending_entry(&from_entry) {
+        if self.position_size >= 0.0
+            && self.reject_entry_relative_exit_for_pending_entry(&from_entry)
+        {
             return;
         }
         let Some(activation_price) = self.exit_trail_points_activation_price_for_entry(

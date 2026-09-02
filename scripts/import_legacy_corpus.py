@@ -14,7 +14,7 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
-from analyze_legacy_corpus import REQUIRED_COLUMNS
+from analyze_legacy_corpus import LICENSE_CLASSES, REQUIRED_COLUMNS
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -120,7 +120,20 @@ def corpus_scope(source: ImportedSource) -> str:
     return "modern_indicator_control"
 
 
-def discover_sources(source_dir: Path) -> list[ImportedSource]:
+def validate_id_prefix(id_prefix: str) -> str:
+    normalized = id_prefix.strip()
+    if not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", normalized):
+        raise CorpusImportError(
+            "id prefix must contain only lowercase ASCII letters, digits, and "
+            "single or internal hyphens"
+        )
+    return normalized
+
+
+def discover_sources(
+    source_dir: Path, *, id_prefix: str = "tv-r2"
+) -> list[ImportedSource]:
+    id_prefix = validate_id_prefix(id_prefix)
     if not source_dir.is_dir():
         raise CorpusImportError(f"source directory does not exist: {source_dir}")
 
@@ -146,7 +159,7 @@ def discover_sources(source_dir: Path) -> list[ImportedSource]:
                 f"{relative_path} and {hashes[source_sha256]}"
             )
         hashes[source_sha256] = relative_path
-        item_id = f"tv-r2-{source_sha256[:16]}"
+        item_id = f"{id_prefix}-{source_sha256[:16]}"
         if item_id in ids:
             raise CorpusImportError(
                 f"opaque id collision: {relative_path} and {ids[item_id]}"
@@ -170,7 +183,9 @@ def discover_sources(source_dir: Path) -> list[ImportedSource]:
     return sorted(imported, key=lambda source: source.item_id)
 
 
-def manifest_row(source: ImportedSource) -> dict[str, str]:
+def manifest_row(
+    source: ImportedSource, *, license_class: str = "private_user_authorized"
+) -> dict[str, str]:
     note = source.version_directive
     if source.declaration_mode == "strategy":
         note += "; strategy excluded by indicator-only scope"
@@ -186,7 +201,7 @@ def manifest_row(source: ImportedSource) -> dict[str, str]:
         "execution_times_path": "",
         "request_data_manifest": "",
         "reference_output_path": "",
-        "license_class": "private_user_authorized",
+        "license_class": license_class,
         "expected_scope": corpus_scope(source),
         "notes": note,
     }
@@ -222,6 +237,10 @@ def write_import(
     *,
     output_dir: Path,
     chart_bars: Path,
+    license_class: str = "private_user_authorized",
+    source_origin: str = "",
+    source_revision: str = "",
+    license_id: str = "",
 ) -> None:
     if output_dir.exists():
         raise CorpusImportError(
@@ -229,6 +248,14 @@ def write_import(
         )
     if not chart_bars.is_file():
         raise CorpusImportError(f"chart bars file does not exist: {chart_bars}")
+    if license_class not in LICENSE_CLASSES:
+        raise CorpusImportError(f"unknown license class: {license_class}")
+    if license_class == "permissive" and not all(
+        value.strip() for value in (source_origin, source_revision, license_id)
+    ):
+        raise CorpusImportError(
+            "permissive imports require source origin, source revision, and license id"
+        )
 
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     staging_dir = Path(
@@ -245,7 +272,10 @@ def write_import(
         write_tsv(
             staging_dir / "corpus.tsv",
             REQUIRED_COLUMNS,
-            [manifest_row(source) for source in sources],
+            [
+                manifest_row(source, license_class=license_class)
+                for source in sources
+            ],
         )
         write_tsv(
             staging_dir / "source-map.tsv",
@@ -266,6 +296,16 @@ def write_import(
                 str(version): count for version, count in sorted(version_counts.items())
             },
         }
+        if any(
+            value.strip()
+            for value in (source_origin, source_revision, license_id)
+        ):
+            summary["provenance"] = {
+                "licenseClass": license_class,
+                "licenseId": license_id.strip(),
+                "sourceOrigin": source_origin.strip(),
+                "sourceRevision": source_revision.strip(),
+            }
         (staging_dir / "intake-summary.json").write_text(
             json.dumps(summary, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
@@ -285,17 +325,32 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=ROOT / "tests/fixtures/legacy/chart_1m.csv",
     )
+    parser.add_argument("--id-prefix", default="tv-r2")
+    parser.add_argument(
+        "--license-class",
+        choices=sorted(LICENSE_CLASSES),
+        default="private_user_authorized",
+    )
+    parser.add_argument("--source-origin", default="")
+    parser.add_argument("--source-revision", default="")
+    parser.add_argument("--license-id", default="")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     try:
-        sources = discover_sources(args.source_dir.resolve())
+        sources = discover_sources(
+            args.source_dir.resolve(), id_prefix=args.id_prefix
+        )
         write_import(
             sources,
             output_dir=args.output_dir.resolve(),
             chart_bars=args.chart_bars.resolve(),
+            license_class=args.license_class,
+            source_origin=args.source_origin,
+            source_revision=args.source_revision,
+            license_id=args.license_id,
         )
     except (CorpusImportError, OSError) as exc:
         raise SystemExit(f"legacy corpus import error: {exc}") from exc

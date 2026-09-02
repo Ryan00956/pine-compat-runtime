@@ -241,23 +241,31 @@ impl Analyzer {
     }
 
     pub(crate) fn validate_strategy_entry_args(&mut self, args: &[CallArg]) {
-        for (index, arg) in args.iter().enumerate() {
-            let Some(name) = arg.name.as_deref().or_else(|| {
+        fn strategy_entry_arg_name(index: usize, arg: &CallArg) -> Option<&str> {
+            arg.name.as_deref().or_else(|| {
                 ["id", "direction", "qty", "limit", "stop"]
                     .get(index)
                     .copied()
-            }) else {
+            })
+        }
+        let direction = args.iter().enumerate().find_map(|(index, arg)| {
+            (strategy_entry_arg_name(index, arg) == Some("direction"))
+                .then(|| self.known_const_string_value(&arg.value))
+                .flatten()
+        });
+        for (index, arg) in args.iter().enumerate() {
+            let Some(name) = strategy_entry_arg_name(index, arg) else {
                 continue;
             };
             match name {
                 "direction" => {
-                    let Some(direction) = self.known_const_string_value(&arg.value) else {
+                    let Some(direction) = direction.as_deref() else {
                         continue;
                     };
-                    if direction != "strategy.long" {
+                    if !matches!(direction, "strategy.long" | "strategy.short") {
                         self.diagnostics.push(Diagnostic::error(
                             "E_CALL_ARG_VALUE",
-                            "`strategy.entry` argument `direction` only supports strategy.long",
+                            "`strategy.entry` argument `direction` only supports strategy.long or strategy.short",
                             arg.span,
                         ));
                     }
@@ -353,7 +361,7 @@ impl Analyzer {
                     if !matches!(direction.as_str(), "strategy.long" | "strategy.short") {
                         self.diagnostics.push(Diagnostic::error(
                             "E_CALL_ARG_VALUE",
-                            "`strategy.order` argument `direction` only supports strategy.long or reduce-only strategy.short",
+                            "`strategy.order` argument `direction` only supports strategy.long or strategy.short",
                             arg.span,
                         ));
                     }
@@ -370,13 +378,6 @@ impl Analyzer {
                     }
                 }
                 "limit" => {
-                    if direction.as_deref() == Some("strategy.short") {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_NAME",
-                            "`strategy.order` argument `limit` is only supported for strategy.long",
-                            arg.span,
-                        ));
-                    }
                     if let Some(limit) = self.known_const_numeric_value(&arg.value)
                         && (!limit.is_finite() || limit <= 0.0)
                     {
@@ -388,13 +389,6 @@ impl Analyzer {
                     }
                 }
                 "stop" => {
-                    if direction.as_deref() == Some("strategy.short") {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_NAME",
-                            "`strategy.order` argument `stop` is only supported for strategy.long",
-                            arg.span,
-                        ));
-                    }
                     if let Some(stop) = self.known_const_numeric_value(&arg.value)
                         && (!stop.is_finite() || stop <= 0.0)
                     {
@@ -409,7 +403,7 @@ impl Analyzer {
                     self.diagnostics.push(Diagnostic::error(
                             "E_CALL_ARG_NAME",
                             format!(
-                            "`strategy.order` argument `{name}` is outside the supported market/limit/stop/stop-limit-long subset"
+                            "`strategy.order` argument `{name}` is outside the supported market/limit/stop/stop-limit subset"
                         ),
                             arg.span,
                         ));

@@ -49,6 +49,40 @@ const BOX_BORDER_STYLES: &[&str] = &["line.style_solid", "line.style_dotted", "l
 
 const LINE_EXTENDS: &[&str] = &["extend.none", "extend.right", "extend.left", "extend.both"];
 
+const PLOT_STYLES: &[&str] = &[
+    "plot.style_line",
+    "plot.style_stepline",
+    "plot.style_stepline_diamond",
+    "plot.style_histogram",
+    "plot.style_cross",
+    "plot.style_area",
+    "plot.style_columns",
+    "plot.style_circles",
+    "plot.style_linebr",
+    "plot.style_areabr",
+];
+
+const PLOTSHAPE_STYLES: &[&str] = &[
+    "shape.xcross",
+    "shape.cross",
+    "shape.circle",
+    "shape.triangleup",
+    "shape.triangledown",
+    "shape.flag",
+    "shape.arrowup",
+    "shape.arrowdown",
+    "shape.square",
+    "shape.diamond",
+    "shape.labelup",
+    "shape.labeldown",
+];
+
+const HLINE_STYLES: &[&str] = &[
+    "hline.style_solid",
+    "hline.style_dotted",
+    "hline.style_dashed",
+];
+
 const TEXT_HALIGNS: &[&str] = &["text.align_left", "text.align_center", "text.align_right"];
 
 const TEXT_VALIGNS: &[&str] = &["text.align_top", "text.align_center", "text.align_bottom"];
@@ -230,6 +264,27 @@ impl Analyzer {
             }
             "table.cell_set_text_formatting" => {
                 self.validate_text_formatting_arg(signature, args, 3, "text_formatting");
+            }
+            "plot" if self.legacy.dialect().version() >= 5 => {
+                self.validate_drawing_enum_string_arg(signature, args, 4, "style", PLOT_STYLES);
+            }
+            "plotshape" => {
+                self.validate_drawing_enum_string_arg(
+                    signature,
+                    args,
+                    2,
+                    "style",
+                    PLOTSHAPE_STYLES,
+                );
+            }
+            "hline" if self.legacy.dialect().version() >= 5 => {
+                self.validate_drawing_enum_string_arg(
+                    signature,
+                    args,
+                    3,
+                    "linestyle",
+                    HLINE_STYLES,
+                );
             }
             _ => {}
         }

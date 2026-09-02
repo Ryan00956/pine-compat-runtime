@@ -46,19 +46,30 @@ Implemented and fixture-backed:
   cash-per-contract, cash-per-order, and percent commission, fixed-tick
   slippage, fixed-tick limit verification, finite non-negative
   `margin_long`/`margin_short` declaration parsing, the current long-only active
-  `margin_long` subset, positive integer `pyramiding`, and fixture-backed
-  `close_entries_rule="FIFO"` plus id-specific long-only
+  `margin_long` subset, Stage 15a short `margin_short` capital held and
+  affordability, positive integer `pyramiding`, and fixture-backed
+  `close_entries_rule="FIFO"` plus id-specific long and short
   `close_entries_rule="ANY"`.
 - `strategy.entry(id, strategy.long, qty=...)` and supported configured default
   quantities, including the Stage 13 fixture-backed long-only `pyramiding`
   subset and same-tick long price-based entry exceptions.
-- `strategy.close(id)` as a full close of matching long entries, plus
+- Stage 14c fixture-backed market `strategy.entry(id, strategy.short, qty=...)`
+  while flat or already short, with signed position size and
+  `strategy.max_contracts_held_short` tracking. Opposite-side market entries
+  reverse in Stage 14e; short limit entries landed in Stage 14j; short stop
+  entries landed in Stage 14k; short stop-limit entries landed in Stage 14l.
+- Stage 14f-14i fixture-backed single-trigger `strategy.exit` `stop`/`limit`/
+  `profit`/`loss` covers, one-downside/one-upside brackets, and trailing stops
+  against matching short entries, with inverted triggers, tick conversion, and
+  inverted trailing activation/ratchet, short-exit slippage, and signed
+  closed-trade quantity.
+- `strategy.close(id)` as a full close of matching long or short entries, plus
   fixed-`qty` and `qty_percent` partial closes where `qty` wins when both
   quantity forms are supplied, with supported `comment`, `alert_message`, and
   `disable_alert` metadata.
-- `strategy.close_all()` flattening all open long ledger entries in the current
-  supported long-only multi-entry subset, with supported `comment`,
-  `alert_message`, and `disable_alert` metadata.
+- `strategy.close_all()` flattening all open long or short ledger entries in the
+  current multi-entry subset, with supported `comment`, `alert_message`, and
+  `disable_alert` metadata.
 - Public strategy output with `orders`, `trades`, `position`, `equity`,
   `alerts`, and `diagnostics`.
 - Read-only state/count variables:
@@ -142,14 +153,16 @@ cash-per-order, and percent commission modes, fixed-tick slippage, fixed-tick
 limit verification through `backtest_fill_limits_assumption`, and finite
 non-negative `margin_long`/`margin_short` declaration parsing. Active
 `margin_long` also drives the current long-only capital-held, affordability, and
-forced-liquidation subset. This remains declaration-property compatibility for a
-single long-only broker, not a full broker-settings model.
+forced-liquidation subset. Active `margin_short` drives short capital-held,
+short-entry affordability, and short forced liquidation at `bar.high`. This
+remains declaration-property compatibility for a
+single-currency broker, not a full broker-settings model.
 
 Missing internal behavior:
 
 - `pyramiding` behavior beyond the current fixture-backed long-only subset
 - broader `close_entries_rule="ANY"` behavior beyond the fixture-backed
-  id-specific long-only close/exit allocation subset
+  id-specific long and short close/exit allocation subset
 - `calc_on_order_fills`
 - `calc_on_every_tick`
 - `process_orders_on_close`
@@ -158,7 +171,7 @@ Missing internal behavior:
   `strategy.commission.cash_per_order`, and `strategy.commission.percent`
 - fill models beyond fixed-tick slippage and fixed-tick limit verification on
   supported long fills
-- runtime behavior for `margin_short`
+- symbol tick rounding for `strategy.margin_liquidation_price`
 - `risk_free_rate`
 - `use_bar_magnifier`
 - `fill_orders_on_standard_ohlc`
@@ -209,12 +222,17 @@ stop-limit entries, with explicit positive quantity, configured fixed default
 quantity, supported cash default quantity, or supported percent-of-equity
 default quantity. Stage 13 adds a fixture-backed long-only `pyramiding` subset
 with multiple open long ledger entries and selected same-tick price-based entry
-exceptions.
+exceptions. Stage 14c/14e add market short entries and reversals. Stage 14j
+adds short limit entries while flat or already short. Stage 14k adds short
+stop entries while flat or already short. Stage 14l adds short stop-limit
+entries while flat or already short. Stage 14m adds short limit
+`strategy.order` fills while flat or already short. Stage 14n adds short stop
+`strategy.order` fills while flat or already short. Stage 14o adds short
+stop-limit `strategy.order` fills while flat or already short.
 
 Missing internal behavior:
 
-- short entries;
-- automatic reversal when an opposite entry is placed;
+- automatic reversal for price-based opposite entries;
 - pyramiding behavior beyond the current fixture-backed long-only multi-entry
   subset;
 - entry metadata behavior beyond the supported `comment`, `alert_message`, and
@@ -231,17 +249,18 @@ metadata/default-sizing/risk interaction or wait for a short/reversal design.
 
 ### 4. Market Close Commands
 
-Current state: `strategy.close(id)` closes matching long ledger entries at the
-current bar close and cancels matching pending exits when the close fully
+Current state: `strategy.close(id)` closes matching long or short ledger entries
+at the current bar close and cancels matching pending exits when the close fully
 flattens that entry. `strategy.close(id, qty=...)` and
 `strategy.close(id, qty_percent=...)` can partially close the matching current
-long position while keeping matching pending exits alive; `qty` wins when both
-quantity forms are supplied. `strategy.close_all()` closes all open long ledger
+long or short position while keeping matching pending exits alive; `qty` wins
+when both quantity forms are supplied. Short closes record signed quantity and
+cover PnL. `strategy.close_all()` closes all open long or short ledger
 entries without requiring an entry id. Both close commands accept supported
 `comment`, `alert_message`, and `disable_alert` metadata; closed-trade comment
 helpers and supported order-fill alert payloads are fixture-backed for that
 metadata. `close_entries_rule="FIFO"` is fixture-backed as the explicit default,
-and `close_entries_rule="ANY"` is fixture-backed for id-specific long-only
+and `close_entries_rule="ANY"` is fixture-backed for id-specific long and short
 `strategy.close(id)` and `strategy.exit(..., from_entry=id)`, including
 same-entry-id partial exit allocation in stable ledger order.
 
@@ -251,15 +270,15 @@ Missing internal behavior:
 - close behavior beyond the current fixture-backed long-only multi-entry
   allocation subset;
 - broader `close_entries_rule="ANY"` allocation rules beyond the current
-  id-specific long-only close/exit subset.
+  id-specific long and short close/exit subset.
 
 Gap size: medium to large.
 
 Best first slice: full `strategy.close_all()`, partial `strategy.close()`, close
-metadata, explicit FIFO, and the first id-specific long-only `"ANY"` allocation
-subset are already closed. Do not continue market-close work until
-`immediately` or broader non-default close-entry ordering has a separate
-execution/allocation design.
+metadata, explicit FIFO, and id-specific long and short `"ANY"` allocation
+are already closed. Do not continue market-close work until `immediately` or
+omitted-`from_entry` `"ANY"` allocation has a separate execution/allocation
+design.
 
 ### 5. Generic Orders And Cancellation
 
@@ -267,8 +286,9 @@ Current state: `strategy.order` is partial. The fixture-backed subset supports
 explicit-quantity market-long add/increase orders, limit-long add/increase
 orders through the supported long limit timing model, stop-long add/increase
 orders through the supported long stop timing model, stop-limit-long
-add/increase orders through the supported long stop-limit timing model, and
-reduce-only market-short orders that shrink existing long exposure without
+add/increase orders through the supported long stop-limit timing model,
+limit/stop/stop-limit-short add/increase orders while flat or already short,
+and reduce-only market-short orders that shrink existing long exposure without
 opening shorts. The supported subset also accepts `comment`, `alert_message`,
 and `disable_alert` metadata; long fills retain entry comments, reduce-only
 short fills retain exit comments, and supported fill payloads are exposed under
@@ -280,7 +300,6 @@ Missing internal behavior:
 
 - full `strategy.order()` as a generic long/short order that can open, reduce,
   reverse, or close positions across both sides;
-- short exposure, reversal, and short price-based generic orders;
 - generic-order-specific cancellation/OCA behavior beyond the current shared
   pending-entry cancellation subset.
 
@@ -480,14 +499,16 @@ without expanding public output. Stage 7 Slice 35 adds
 no-margin subset, returning `na`. Strategy Internal Margin Slice M2 adds the
 current long-only explicit-`margin_long` subset, where `capital_held` returns
 `0.0` while flat and current open long market value times `margin_long / 100`
-while open. Other namespace functions are unsupported.
+while open. Stage 15a adds the explicit-`margin_short` subset, where open short
+exposure returns absolute short market value times `margin_short / 100`. Other
+namespace functions are unsupported.
 
 Missing internal behavior:
 
 - `strategy.closedtrades.*()` fields beyond the supported price/id/bar-index,
   time, commission, size, profit, runup, and drawdown subset;
 - `strategy.opentrades.capital_held` behavior beyond the current long-only
-  explicit-`margin_long` subset;
+  explicit-`margin_long` and short explicit-`margin_short` subset;
 - open-trade and closed-trade records with enough retained metadata.
 
 Gap size: large.
@@ -565,16 +586,24 @@ emission, and failure reporting are implemented through explicit host APIs.
 
 1. Keep the Stage 13 long-only multi-entry ledger subset stable with fixture and
    host-parity coverage.
-2. Prefer narrow diagnostics, accounting, metadata, or built-in coverage slices
-   that preserve the current public runtime schema.
+2. Stage 14a-14o closed the short/reversal boundary lock, side-aware ledger,
+   market short entry, short close/close_all, market entry reversal, short
+   single-trigger, bracket, and trailing `strategy.exit` covers, short
+   limit/stop/stop-limit `strategy.entry` fills, and short limit/stop/stop-limit
+   `strategy.order` fills. Stage 15a closed short `margin_short` capital held
+   and affordability. Stage 15b closed short forced liquidation. Stage 15c
+   closed short `strategy.margin_liquidation_price`. Stage 16a closed
+   id-specific `close_entries_rule="ANY"` allocation for shorts. Stage 16b
+   closed same-entry-id partial `"ANY"` allocation for shorts. The next
+   strategy capability slice should pick remaining information variables or a
+   separately designed omitted-`from_entry` `"ANY"` path.
 3. Use `docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md` before widening
    margin/account behavior.
 4. Keep strategy order-fill alert metadata and public `strategy.alerts` stable
    before adding placeholder rendering or external delivery.
-5. Defer short exposure, reversals, generic `strategy.order()`, custom OCA
-   behavior, public pending-order records, and broader non-default close-entry
-   ordering until a new broker-model design explicitly covers their state
-   transitions.
+5. Defer generic `strategy.order()` netting, custom OCA behavior, public
+   pending-order records, and broader non-default close-entry ordering until the
+   matching later broker-model slice covers their state transitions.
 
 ## Completion Gates For Any Slice
 

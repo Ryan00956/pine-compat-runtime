@@ -574,6 +574,53 @@ fn legacy_v4_array_get_set_accept_series_integer_indexes() {
 }
 
 #[test]
+fn legacy_v4_array_insert_accepts_series_integer_indexes() {
+    let program = compile_fixture(
+        "array_insert_series_index_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/array_insert_series_index_legacy.pine"
+        ),
+    );
+    let bars = [
+        timed_close(0, 1.0),
+        timed_close(60_000, 2.0),
+        timed_close(120_000, 3.0),
+        timed_close(180_000, 4.0),
+    ];
+
+    let result = run_historical(&program, &bars).expect("legacy array insert series index run");
+
+    assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0, 4.0]);
+}
+
+#[test]
+fn legacy_v4_security_time_alias_executes_same_context_time_function() {
+    let program = compile_fixture(
+        "security_time_alias_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/security_time_alias_legacy.pine"
+        ),
+    );
+    let bars = [
+        timed_close(1_704_067_200_000, 1.0),
+        timed_close(1_704_070_800_000, 2.0),
+        timed_close(1_704_153_600_000, 3.0),
+    ];
+    let expected = run_historical(
+        &compile_fixture(
+            "time_alias_oracle.pine",
+            "//@version=4\nstudy(\"oracle\")\ndayOpen = time(\"D\")\nnewDay = dayOpen != dayOpen[1]\nplot(dayOpen)\nplot(valuewhen(newDay, close, 0))\n",
+        ),
+        &bars,
+    )
+    .expect("legacy time alias oracle");
+    let result = run_historical(&program, &bars).expect("legacy security time alias run");
+
+    assert_eq!(result.plots[0].values, expected.plots[0].values);
+    assert_eq!(result.plots[1].values, expected.plots[1].values);
+}
+
+#[test]
 fn legacy_v4_udf_reference_side_effects_match_explicit_canonical_execution() {
     let legacy = compile_fixture(
         "udf_reference_side_effects_legacy.pine",
@@ -633,6 +680,124 @@ fn legacy_v4_udf_reference_side_effects_match_explicit_canonical_execution() {
             .expect("realtime legacy reference effects");
     }
     assert_eq!(realtime.confirmed_result(), batch);
+}
+
+#[test]
+fn legacy_v4_udf_line_setters_match_explicit_canonical_execution_and_rollback() {
+    let legacy = compile_fixture(
+        "udf_line_setters_legacy.pine",
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/udf_line_setters_legacy.pine"),
+    );
+    let canonical = compile_fixture(
+        "udf_line_setters_canonical.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/udf_line_setters_canonical.pine"
+        ),
+    );
+    let bars = [
+        timed_close(0, 1.0),
+        timed_close(60_000, 2.0),
+        timed_close(120_000, 3.0),
+        timed_close(180_000, 4.0),
+    ];
+
+    let expected = run_historical(&canonical, &bars).expect("canonical line setters");
+    let batch = run_historical(&legacy, &bars).expect("legacy line setters");
+    assert_eq!(batch.plots[0].values, expected.plots[0].values);
+    assert_eq!(batch.lines, expected.lines);
+    assert_values_close(&batch.plots[0].values, &[1.0, 2.0, 3.0, 4.0]);
+    let final_snapshot = batch.lines[0].snapshots.last().expect("line snapshot");
+    assert_eq!(final_snapshot.x2, PineValue::Int(5));
+    assert_eq!(
+        final_snapshot.extend,
+        PineValue::String("extend.none".to_owned())
+    );
+
+    let mut incremental = HistoricalRuntime::new(&legacy);
+    for bar in bars {
+        incremental
+            .append_bar(bar)
+            .expect("incremental line setter");
+    }
+    assert_eq!(incremental.result(), batch);
+
+    let mut realtime = RealtimeRuntime::new(&legacy);
+    for bar in &bars[..3] {
+        realtime
+            .update(BarUpdate::historical(*bar))
+            .expect("historical line setter prefix");
+    }
+    let mut mutated = bars[3];
+    mutated.open = 40.0;
+    mutated.high = 40.0;
+    mutated.low = 40.0;
+    mutated.close = 40.0;
+    realtime
+        .update(BarUpdate::forming(mutated))
+        .expect("mutated forming line setter");
+    realtime
+        .update(BarUpdate::forming(bars[3]))
+        .expect("replacement forming line setter");
+    realtime
+        .update(BarUpdate::confirmed(bars[3]))
+        .expect("confirmed line setter");
+    assert_eq!(realtime.confirmed_result(), batch);
+}
+
+#[test]
+fn legacy_v4_dynamic_plot_style_uses_the_final_evaluated_enum() {
+    let program = compile_fixture(
+        "plot_dynamic_style_legacy.pine",
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/plot_dynamic_style_legacy.pine"),
+    );
+    let bars = [
+        timed_close(0, 1.0),
+        timed_close(60_000, 2.0),
+        timed_close(120_000, 3.0),
+        timed_close(180_000, 4.0),
+    ];
+
+    let result = run_historical(&program, &bars).expect("legacy dynamic plot style run");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0, 4.0]);
+    assert_eq!(
+        result.plots[0].style,
+        PineValue::String("plot.style_histogram".to_owned())
+    );
+    assert_eq!(
+        result.plots[1].style,
+        PineValue::String("plot.style_line".to_owned())
+    );
+}
+
+#[test]
+fn legacy_v4_dynamic_plotshape_and_hline_style_use_enums() {
+    let program = compile_fixture(
+        "plotshape_hline_dynamic_style_legacy.pine",
+        include_str!(
+            "../../../../tests/fixtures/legacy/v4/runtime/plotshape_hline_dynamic_style_legacy.pine"
+        ),
+    );
+    let bars = [
+        timed_close(0, 1.0),
+        timed_close(60_000, 2.0),
+        timed_close(120_000, 3.0),
+        timed_close(180_000, 4.0),
+    ];
+
+    let result =
+        run_historical(&program, &bars).expect("legacy dynamic plotshape and hline style run");
+
+    assert_eq!(result.plot_shapes.len(), 1);
+    assert_eq!(
+        result.plot_shapes[0].styles.last().cloned(),
+        Some(PineValue::String("shape.cross".to_owned()))
+    );
+    assert_eq!(
+        result.hlines[0].style,
+        PineValue::String("hline.style_dotted".to_owned())
+    );
 }
 
 #[test]

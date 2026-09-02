@@ -1,0 +1,8 @@
+//@version=5
+strategy("Short entry strategy", overlay=true)
+if bar_index == 1
+    strategy.entry("S", strategy.short, qty=2)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+plot(strategy.max_contracts_held_short)
+plot(strategy.max_contracts_held_all)

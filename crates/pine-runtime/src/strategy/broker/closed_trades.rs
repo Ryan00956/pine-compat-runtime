@@ -9,7 +9,7 @@ fn normalize_zero(value: f64) -> f64 {
 }
 
 fn closed_trade_profit_percent(entry_price: f64, qty: f64, profit: f64) -> f64 {
-    let denominator = entry_price * qty;
+    let denominator = entry_price * qty.abs();
     if !profit.is_finite() || !denominator.is_finite() || denominator <= 0.0 {
         return 0.0;
     }
@@ -91,8 +91,8 @@ impl BrokerState {
                 fill.qty,
                 fill.profit,
             ),
-            max_runup: self.current_open_trade_max_runup_for_quantity(fill.qty),
-            max_drawdown: self.current_open_trade_max_drawdown_for_quantity(fill.qty),
+            max_runup: self.current_open_trade_max_runup_for_quantity(fill.qty.abs()),
+            max_drawdown: self.current_open_trade_max_drawdown_for_quantity(fill.qty.abs()),
             entry_comment: fill.entry_fill.entry_metadata.comment.clone(),
             exit_comment: fill.close_metadata.comment.clone(),
             close_metadata: fill.close_metadata,
@@ -100,14 +100,19 @@ impl BrokerState {
     }
 
     pub(super) fn record_open_long_legacy_state(&mut self, trade: &OpenTrade) {
-        if self.position_size <= 0.0 {
+        if self.position_size == 0.0 {
             self.position_entry_name = Some(trade.id.clone());
         }
-        self.position_size = trade.quantity;
-        self.max_contracts_held_long = self.max_contracts_held_long.max(trade.quantity);
+        let signed_size = trade.direction.signed_quantity(trade.quantity);
+        self.position_size = signed_size;
+        if signed_size > 0.0 {
+            self.max_contracts_held_long = self.max_contracts_held_long.max(signed_size);
+        } else if signed_size < 0.0 {
+            self.max_contracts_held_short = self.max_contracts_held_short.max(-signed_size);
+        }
         self.avg_price = trade.entry_price;
         self.open_entry_commission = trade.entry_commission;
-        self.cash -= trade.quantity * trade.entry_price + trade.entry_commission;
+        self.cash -= signed_size * trade.entry_price + trade.entry_commission;
         self.entry_id = Some(trade.id.clone());
         self.entry_bar_index = Some(trade.entry_bar_index);
         self.entry_time = Some(trade.entry_time);

@@ -78,6 +78,40 @@ fn reports_unsupported_request_math_calls_fixture() {
 }
 
 #[test]
+fn accepts_supported_request_security_time_function_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_request_security_time_function.pine");
+}
+
+#[test]
+fn accepts_supported_request_security_time_close_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_request_security_time_close.pine");
+}
+
+#[test]
+fn reports_unsupported_request_security_named_sma_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_request_security_named_sma.pine",
+        "request.security",
+        "same-context request.security",
+    );
+}
+
+#[test]
+fn accepts_supported_request_security_time_named_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_request_security_time_named.pine");
+}
+
+#[test]
+fn accepts_supported_request_security_barstate_islast_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_request_security_barstate_islast.pine");
+}
+
+#[test]
+fn accepts_supported_request_security_barstate_isfirst_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_request_security_barstate_isfirst.pine");
+}
+
+#[test]
 fn reports_unsupported_request_security_symbol_qualifier_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_request_security_symbol_qualifier.pine",
@@ -4446,8 +4480,7 @@ fn reports_unsupported_strategy_order_fixture() {
         &[
             "explicit positive qty",
             "strategy.long",
-            "only supported for strategy.long",
-            "market/limit/stop/stop-limit-long subset",
+            "market/limit/stop/stop-limit subset",
             "oca_name",
             "oca_type",
         ],
@@ -4674,6 +4707,11 @@ fn accepts_supported_strategy_entry_fixture() {
         "tests/fixtures/sema/supported_strategy_entry_stop_limit.pine",
         "tests/fixtures/sema/supported_strategy_entry_named_const_numeric.pine",
         "tests/fixtures/sema/supported_strategy_entry_named_const_direction.pine",
+        "tests/fixtures/sema/supported_strategy_entry_short.pine",
+        "tests/fixtures/sema/supported_strategy_entry_named_const_short_direction.pine",
+        "tests/fixtures/sema/supported_strategy_entry_limit_short.pine",
+        "tests/fixtures/sema/supported_strategy_entry_stop_short.pine",
+        "tests/fixtures/sema/supported_strategy_entry_stop_limit_short.pine",
     ] {
         let path = workspace_fixture(fixture);
         let text = fs::read_to_string(&path).expect("fixture should be readable");
@@ -4748,22 +4786,6 @@ fn reports_strategy_entry_indicator_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_entry_indicator.pine",
         "E_STRATEGY_MODE",
-    );
-}
-
-#[test]
-fn reports_strategy_entry_short_fixture() {
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_strategy_entry_short.pine",
-        "E_CALL_ARG_VALUE",
-    );
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_strategy_entry_named_const_short_direction.pine",
-        "E_CALL_ARG_VALUE",
-    );
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_strategy_entry_short.pine",
-        &["strategy.long"],
     );
 }
 
@@ -5395,6 +5417,35 @@ fn accepts_supported_drawing_all_return_qualifier_fixture() {
 #[test]
 fn accepts_supported_drawing_dynamic_enum_options_fixture() {
     assert_valid_fixture("tests/fixtures/sema/supported_drawing_dynamic_enum_options.pine");
+}
+
+#[test]
+fn accepts_supported_plot_dynamic_style_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_plot_dynamic_style.pine");
+}
+
+#[test]
+fn accepts_supported_plotshape_hline_dynamic_style_fixture() {
+    assert_valid_fixture("tests/fixtures/sema/supported_plotshape_hline_dynamic_style.pine");
+}
+
+#[test]
+fn rejects_unbounded_plotshape_hline_style_strings_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_plotshape_hline_unbounded_style.pine",
+        &[
+            "`plotshape` argument `style` only supports",
+            "`hline` argument `linestyle` only supports",
+        ],
+    );
+}
+
+#[test]
+fn rejects_unbounded_plot_style_strings_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_plot_unbounded_style.pine",
+        &["`plot` argument `style` only supports"],
+    );
 }
 
 #[test]
@@ -7116,7 +7167,7 @@ fn reports_unsupported_local_user_type_array_call_result_chaining_fixture() {
             "`array.push` expects at most 2 argument(s), got 3",
             "`array.unshift` argument `value` expects UDT `First`, got `Second`",
             "`array.unshift` expects at most 2 argument(s), got 3",
-            "`array.insert` argument `index` expects simple integer-compatible, got const string",
+            "`array.insert` argument `index` expects integer-compatible, got const string",
             "`array.insert` argument `value` expects UDT `First`, got `Second`",
             "`array.insert` expects at most 3 argument(s), got 4",
             "`array.set` argument `index` expects integer-compatible, got const string",
@@ -7161,7 +7212,7 @@ fn reports_unsupported_builtin_namespace_array_call_result_reads_fixture() {
             "`array.unshift` argument `value` expects string-compatible, got const int",
             "`array.unshift` expects at least 2 argument(s), got 1",
             "`array.unshift` expects at most 2 argument(s), got 3",
-            "`array.insert` argument `index` expects simple integer-compatible, got const string",
+            "`array.insert` argument `index` expects integer-compatible, got const string",
             "`array.insert` argument `value` expects string-compatible, got const int",
             "`array.insert` expects at least 3 argument(s), got 2",
             "`array.insert` expects at most 3 argument(s), got 4",
@@ -8089,7 +8140,7 @@ fn reports_unsupported_builtin_array_call_result_reads_fixture() {
             "`array.unshift` argument `value` expects UDT `First`, got `Second`",
             "`array.unshift` expects at least 2 argument(s), got 1",
             "`array.unshift` expects at most 2 argument(s), got 3",
-            "`array.insert` argument `index` expects simple integer-compatible, got const string",
+            "`array.insert` argument `index` expects integer-compatible, got const string",
             "`array.insert` argument `value` expects integer-compatible, got const string",
             "`array.insert` argument `value` expects UDT `First`, got `Second`",
             "`array.insert` expects at least 3 argument(s), got 2",
@@ -8714,7 +8765,7 @@ fn reports_unsupported_array_insert_value_method_fixture() {
 fn reports_unsupported_array_insert_index_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_insert_index.pine",
-        &["`array.insert` argument `index` expects simple integer-compatible, got const string"],
+        &["`array.insert` argument `index` expects integer-compatible, got const string"],
     );
 }
 
@@ -8722,7 +8773,7 @@ fn reports_unsupported_array_insert_index_fixture() {
 fn reports_unsupported_array_insert_index_method_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_insert_index_method.pine",
-        &["`array.insert` argument `index` expects simple integer-compatible, got const string"],
+        &["`array.insert` argument `index` expects integer-compatible, got const string"],
     );
 }
 
@@ -14712,7 +14763,7 @@ fn reports_unsupported_imported_user_type_array_call_result_chaining_fixture() {
             "`array.push` expects at most 2 argument(s), got 3",
             "`array.unshift` argument `value` expects UDT `lib.First`, got `lib.Second`",
             "`array.unshift` expects at most 2 argument(s), got 3",
-            "`array.insert` argument `index` expects simple integer-compatible, got const string",
+            "`array.insert` argument `index` expects integer-compatible, got const string",
             "`array.insert` argument `value` expects UDT `lib.First`, got `lib.Second`",
             "`array.insert` expects at most 3 argument(s), got 4",
             "`array.set` argument `index` expects integer-compatible, got const string",

@@ -1,15 +1,32 @@
 use super::{
     BrokerState, StrategyOrderFillAlertEvent, StrategyOrderMetadata,
     closed_trades::{AllocatedEntryFill, ClosedTradeFill},
-    ledger::TradeAllocation,
+    ledger::{TradeAllocation, TradeDirection},
 };
 use crate::RuntimeDiagnostic;
 
 impl BrokerState {
-    pub(crate) fn close_all_long(&mut self, bar_index: usize, time: i64, price: f64) {
-        if self.position_size <= 0.0 {
-            return;
+    pub(super) fn active_close_direction(&self) -> Option<TradeDirection> {
+        if self.position_size > 0.0 {
+            Some(TradeDirection::Long)
+        } else if self.position_size < 0.0 {
+            Some(TradeDirection::Short)
+        } else {
+            None
         }
+    }
+
+    pub(super) fn exit_fill_price(&self, direction: TradeDirection, price: f64) -> f64 {
+        match direction {
+            TradeDirection::Long => self.long_exit_fill_price(price),
+            TradeDirection::Short => self.short_exit_fill_price(price),
+        }
+    }
+
+    pub(crate) fn close_all_long(&mut self, bar_index: usize, time: i64, price: f64) {
+        let Some(direction) = self.active_close_direction() else {
+            return;
+        };
         if !price.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_PRICE".to_owned(),
@@ -18,7 +35,7 @@ impl BrokerState {
             return;
         }
 
-        let price = self.long_exit_fill_price(price);
+        let price = self.exit_fill_price(direction, price);
         if !price.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_PRICE".to_owned(),
@@ -27,8 +44,8 @@ impl BrokerState {
             return;
         }
 
-        let qty = self.position_size;
-        let allocations = self.trade_ledger.allocate_exit_fifo(None, qty);
+        let qty = self.position_size.abs();
+        let allocations = self.allocate_close_rule_exit_for_direction(direction, None, qty);
         if allocations.is_empty() {
             return;
         }
@@ -38,7 +55,8 @@ impl BrokerState {
         for allocation in &allocations {
             let allocated_exit_commission = exit_commission * (allocation.quantity / qty);
             let commission = allocation.entry_commission + allocated_exit_commission;
-            let profit = (price - allocation.entry_price) * allocation.quantity - commission;
+            let signed_qty = direction.signed_quantity(allocation.quantity);
+            let profit = (price - allocation.entry_price) * signed_qty - commission;
             self.record_closed_trade_fill(ClosedTradeFill {
                 entry_id: allocation.entry_id.clone(),
                 exit_id: allocation.entry_id.clone(),
@@ -52,7 +70,7 @@ impl BrokerState {
                 exit_bar_index: bar_index,
                 exit_time: time,
                 exit_price: price,
-                qty: allocation.quantity,
+                qty: signed_qty,
                 profit,
                 commission,
                 close_metadata: metadata.clone(),
@@ -73,7 +91,7 @@ impl BrokerState {
             );
         }
 
-        self.cash += qty * price - exit_commission;
+        self.cash += direction.signed_quantity(qty) * price - exit_commission;
         self.order_book.exits_mut().clear_all();
         self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
         self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
@@ -105,8 +123,13 @@ impl BrokerState {
         price: f64,
         qty_percent: f64,
     ) {
-        let matching_position_size = self.trade_ledger.open_quantity_for_entry(&id);
-        if self.position_size <= 0.0 || matching_position_size <= 0.0 {
+        let Some(direction) = self.active_close_direction() else {
+            return;
+        };
+        let matching_position_size = self
+            .trade_ledger
+            .open_quantity_for_entry_direction(direction, &id);
+        if matching_position_size <= 0.0 {
             return;
         }
         if !qty_percent.is_finite() || qty_percent <= 0.0 {
@@ -237,8 +260,13 @@ impl BrokerState {
         price: f64,
         requested_qty: Option<f64>,
     ) {
-        let matching_position_size = self.trade_ledger.open_quantity_for_entry(&id);
-        if self.position_size <= 0.0 || matching_position_size <= 0.0 {
+        let Some(direction) = self.active_close_direction() else {
+            return;
+        };
+        let matching_position_size = self
+            .trade_ledger
+            .open_quantity_for_entry_direction(direction, &id);
+        if matching_position_size <= 0.0 {
             return;
         }
         if let Some(requested_qty) = requested_qty
@@ -258,7 +286,7 @@ impl BrokerState {
             return;
         }
 
-        let price = self.long_exit_fill_price(price);
+        let price = self.exit_fill_price(direction, price);
         if !price.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_PRICE".to_owned(),
@@ -270,7 +298,7 @@ impl BrokerState {
         let qty = requested_qty.map_or(matching_position_size, |qty| {
             qty.min(matching_position_size)
         });
-        let allocations = self.allocate_close_rule_exit(Some(&id), qty);
+        let allocations = self.allocate_close_rule_exit_for_direction(direction, Some(&id), qty);
         let entry_fill = AllocatedEntryFill::from_allocations(
             &allocations,
             self.avg_price,
@@ -280,7 +308,8 @@ impl BrokerState {
         );
         let exit_commission = self.exit_commission_for_fill(qty, price);
         let commission = entry_fill.entry_commission + exit_commission;
-        let profit = (price - entry_fill.entry_price) * qty - commission;
+        let signed_qty = direction.signed_quantity(qty);
+        let profit = (price - entry_fill.entry_price) * signed_qty - commission;
         let closed_entry_commission = entry_fill.entry_commission;
         let metadata = self.take_next_close_metadata();
         self.record_closed_trade_fill(ClosedTradeFill {
@@ -290,7 +319,7 @@ impl BrokerState {
             exit_bar_index: bar_index,
             exit_time: time,
             exit_price: price,
-            qty,
+            qty: signed_qty,
             profit,
             commission,
             close_metadata: metadata.clone(),
@@ -310,8 +339,8 @@ impl BrokerState {
             },
         );
 
-        self.cash += qty * price - exit_commission;
-        if qty >= self.position_size {
+        self.cash += signed_qty * price - exit_commission;
+        if qty >= self.position_size.abs() {
             self.cancel_exit_for_entry(&id);
             self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
             self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
@@ -330,18 +359,21 @@ impl BrokerState {
         self.record_position_snapshot(bar_index);
     }
 
-    pub(super) fn allocate_close_rule_exit(
+    pub(super) fn allocate_close_rule_exit_for_direction(
         &self,
+        direction: TradeDirection,
         from_entry: Option<&str>,
         requested_quantity: f64,
     ) -> Vec<TradeAllocation> {
         match (self.close_entries_rule, from_entry) {
             (pine_ir::StrategyCloseEntriesRule::Any, Some(entry_id)) => self
                 .trade_ledger
-                .allocate_exit_any_for_entry(entry_id, requested_quantity),
-            _ => self
-                .trade_ledger
-                .allocate_exit_fifo(from_entry, requested_quantity),
+                .allocate_exit_any_for_entry_direction(direction, entry_id, requested_quantity),
+            _ => self.trade_ledger.allocate_exit_fifo_for_direction(
+                direction,
+                from_entry,
+                requested_quantity,
+            ),
         }
     }
 }

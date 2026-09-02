@@ -1,0 +1,3 @@
+//@version=6
+indicator("Supported request barstate isfirst")
+plot(request.security("NYSE:IBM", timeframe.period, barstate.isfirst ? 1 : 0))

@@ -688,6 +688,28 @@ fn run_script_csv_returns_plotshape_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_plot_dynamic_style_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/plot_dynamic_style.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("dynamic plot style fixture should run");
+
+    assert_snapshot("runtime_plot_dynamic_style.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_plotshape_hline_dynamic_style_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/plotshape_hline_dynamic_style.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("dynamic plotshape and hline style fixture should run");
+
+    assert_snapshot("runtime_plotshape_hline_dynamic_style.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_plotarrow_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/plotarrow.pine"),
@@ -809,6 +831,17 @@ fn run_script_csv_returns_legacy_v2_core_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_legacy_v4_aliases_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/aliases_legacy.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("legacy v4 aliases fixture should run");
+
+    assert_snapshot("runtime_legacy_v4_aliases.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_legacy_v4_expression_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/legacy/v4/runtime/expressions_legacy.pine"),
@@ -863,6 +896,17 @@ fn run_script_csv_returns_legacy_v4_security_same_context_contract() {
     .expect("legacy v4 same-context security fixture should run");
 
     assert_snapshot("runtime_legacy_v4_security_same_context.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_legacy_v4_udf_line_setters_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/legacy/v4/runtime/udf_line_setters_legacy.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("legacy v4 UDF line setter fixture should run");
+
+    assert_snapshot("runtime_legacy_v4_udf_line_setters.json", &output);
 }
 
 #[test]
@@ -1177,6 +1221,17 @@ fn run_script_csv_returns_array_insert_remove_fixture_contract() {
     .expect("array insert remove fixture should run");
 
     assert_snapshot("runtime_array_insert_remove.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_array_insert_series_index_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/array_insert_series_index.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("array insert series index fixture should run");
+
+    assert_snapshot("runtime_array_insert_series_index.json", &output);
 }
 
 #[test]
@@ -2100,6 +2155,28 @@ fn run_script_csv_returns_user_type_varip_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_request_security_barstate_flags_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/request_security_barstate_flags.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("request.security barstate flags fixture should run");
+
+    assert_snapshot("runtime_request_security_barstate_flags.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_request_security_barstate_islast_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/request_security_barstate_islast.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("request.security barstate.islast fixture should run");
+
+    assert_snapshot("runtime_request_security_barstate_islast.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_request_security_same_context_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/request_security_same_context.pine"),
@@ -2108,6 +2185,28 @@ fn run_script_csv_returns_request_security_same_context_fixture_contract() {
     .expect("request.security same-context fixture should run");
 
     assert_snapshot("runtime_request_security_same_context.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_request_security_time_function_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/request_security_time_function.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("request.security time function fixture should run");
+
+    assert_snapshot("runtime_request_security_time_function.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_request_security_time_close_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/request_security_time_close.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("request.security time_close fixture should run");
+
+    assert_snapshot("runtime_request_security_time_close.json", &output);
 }
 
 #[test]
@@ -3686,6 +3785,50 @@ fn runs_strategy_entry_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_entry_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy short entry script should run");
+
+    assert_snapshot("runtime_strategy_entry_short.json", &output);
+}
+
+#[test]
+fn runs_strategy_entry_short_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy short entry fixture should run");
+
+    assert_snapshot("runtime_strategy_entry_short.json", &output);
+}
+
+#[test]
+fn runs_strategy_entry_short_reverses_long_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_short_reverses_long.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy short reversal script should run");
+
+    assert_snapshot("runtime_strategy_entry_short_reverses_long.json", &output);
+}
+
+#[test]
+fn runs_strategy_entry_long_reverses_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_long_reverses_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy long reversal script should run");
+
+    assert_snapshot("runtime_strategy_entry_long_reverses_short.json", &output);
+}
+
+#[test]
 fn runs_strategy_entry_limit_from_csv_to_strategy_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_entry_limit.pine"),
@@ -3694,6 +3837,50 @@ fn runs_strategy_entry_limit_from_csv_to_strategy_json() {
     .expect("strategy limit entry script should run");
 
     assert_snapshot("runtime_strategy_entry_limit.json", &output);
+}
+
+#[test]
+fn runs_strategy_entry_limit_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_limit_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy short limit entry script should run");
+
+    assert_snapshot("runtime_strategy_entry_limit_short.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_limit_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_limit_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy short limit order script should run");
+
+    assert_snapshot("runtime_strategy_order_limit_short.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_stop_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_stop_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_stop_short_bars.csv"),
+    )
+    .expect("strategy short stop order script should run");
+
+    assert_snapshot("runtime_strategy_order_stop_short.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_stop_limit_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_stop_limit_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_stop_limit_short_bars.csv"),
+    )
+    .expect("strategy short stop-limit order script should run");
+
+    assert_snapshot("runtime_strategy_order_stop_limit_short.json", &output);
 }
 
 #[test]
@@ -3708,6 +3895,17 @@ fn runs_strategy_entry_stop_from_csv_to_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_entry_stop_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_stop_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_stop_short_bars.csv"),
+    )
+    .expect("strategy short stop entry script should run");
+
+    assert_snapshot("runtime_strategy_entry_stop_short.json", &output);
+}
+
+#[test]
 fn runs_strategy_entry_stop_limit_from_csv_to_strategy_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_entry_stop_limit.pine"),
@@ -3716,6 +3914,17 @@ fn runs_strategy_entry_stop_limit_from_csv_to_strategy_json() {
     .expect("strategy stop-limit entry script should run");
 
     assert_snapshot("runtime_strategy_entry_stop_limit.json", &output);
+}
+
+#[test]
+fn runs_strategy_entry_stop_limit_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_stop_limit_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_stop_limit_short_bars.csv"),
+    )
+    .expect("strategy short stop-limit entry script should run");
+
+    assert_snapshot("runtime_strategy_entry_stop_limit_short.json", &output);
 }
 
 #[test]
@@ -4270,6 +4479,17 @@ fn runs_strategy_margin_capital_held_from_csv_to_json() {
 }
 
 #[test]
+fn runs_strategy_margin_capital_held_short_from_csv_to_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_margin_capital_held_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy short margin capital held script should run");
+
+    assert_snapshot("runtime_strategy_margin_capital_held_short.json", &output);
+}
+
+#[test]
 fn runs_strategy_margin_entry_affordability_from_csv_to_json() {
     let output = run_script_csv(
         include_str!(
@@ -4283,6 +4503,22 @@ fn runs_strategy_margin_entry_affordability_from_csv_to_json() {
 }
 
 #[test]
+fn runs_strategy_margin_entry_affordability_short_from_csv_to_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_margin_entry_affordability_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy short margin entry affordability script should run");
+
+    assert_snapshot(
+        "runtime_strategy_margin_entry_affordability_short.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_margin_call_from_csv_to_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_margin_call_long.pine"),
@@ -4291,6 +4527,17 @@ fn runs_strategy_margin_call_from_csv_to_json() {
     .expect("strategy margin call script should run");
 
     assert_snapshot("runtime_strategy_margin_call_long.json", &output);
+}
+
+#[test]
+fn runs_strategy_margin_call_short_from_csv_to_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_margin_call_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_margin_call_short_bars.csv"),
+    )
+    .expect("strategy short margin call script should run");
+
+    assert_snapshot("runtime_strategy_margin_call_short.json", &output);
 }
 
 #[test]
@@ -4357,6 +4604,70 @@ fn runs_strategy_close_fixture_contract() {
     .expect("strategy close fixture should run");
 
     assert_snapshot("runtime_strategy_close.json", &output);
+}
+
+#[test]
+fn runs_strategy_close_short_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_close_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy close short script should run");
+
+    assert_snapshot("runtime_strategy_close_short.json", &output);
+}
+
+#[test]
+fn runs_strategy_close_entries_rule_any_close_short_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_close_entries_rule_any_close_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy ANY close short script should run");
+
+    assert_snapshot(
+        "runtime_strategy_close_entries_rule_any_close_short.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_close_entries_rule_any_exit_from_entry_short_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short_bars.csv"
+        ),
+    )
+    .expect("strategy ANY exit from entry short script should run");
+
+    assert_snapshot(
+        "runtime_strategy_close_entries_rule_any_exit_from_entry_short.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_close_entries_rule_any_exit_same_id_partial_short_from_csv_to_public_strategy_json()
+ {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_close_entries_rule_any_exit_same_id_partial_short.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short_bars.csv"
+        ),
+    )
+    .expect("strategy ANY same-id partial short exit script should run");
+
+    assert_snapshot(
+        "runtime_strategy_close_entries_rule_any_exit_same_id_partial_short.json",
+        &output,
+    );
 }
 
 #[test]
@@ -4431,6 +4742,17 @@ fn runs_strategy_close_all_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_close_all_short_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_close_all_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy close_all short script should run");
+
+    assert_snapshot("runtime_strategy_close_all_short.json", &output);
+}
+
+#[test]
 fn runs_strategy_close_exit_fixture_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_close_exit.pine"),
@@ -4461,6 +4783,17 @@ fn runs_strategy_exit_stop_from_csv_to_trade_json() {
     .expect("strategy exit stop script should run");
 
     assert_snapshot("runtime_strategy_exit_stop.json", &output);
+}
+
+#[test]
+fn runs_strategy_exit_stop_short_from_csv_to_trade_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_stop_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit stop short script should run");
+
+    assert_snapshot("runtime_strategy_exit_stop_short.json", &output);
 }
 
 #[test]
@@ -4552,6 +4885,17 @@ fn runs_strategy_exit_limit_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_exit_limit_short_from_csv_to_trade_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_limit_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit limit short script should run");
+
+    assert_snapshot("runtime_strategy_exit_limit_short.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_limit_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_limit.pine"),
@@ -4574,6 +4918,17 @@ fn runs_strategy_exit_profit_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_exit_profit_short_from_csv_to_trade_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_profit_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_profit_short_bars.csv"),
+    )
+    .expect("strategy exit profit short script should run");
+
+    assert_snapshot("runtime_strategy_exit_profit_short.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_loss_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_loss.pine"),
@@ -4582,6 +4937,17 @@ fn runs_strategy_exit_loss_from_csv_to_trade_json() {
     .expect("strategy exit loss script should run");
 
     assert_snapshot("runtime_strategy_exit_loss.json", &output);
+}
+
+#[test]
+fn runs_strategy_exit_loss_short_from_csv_to_trade_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_loss_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit loss short script should run");
+
+    assert_snapshot("runtime_strategy_exit_loss_short.json", &output);
 }
 
 #[test]
@@ -4772,6 +5138,22 @@ fn runs_strategy_exit_bracket_stop_limit_limit_fill_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_bracket_stop_limit_limit_fill_short_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_bracket_stop_limit_limit_fill_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit short stop-limit bracket limit-fill fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_bracket_stop_limit_limit_fill_short.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_bracket_stop_limit_stop_fill_fixture_contract() {
     let output = run_script_csv(
         include_str!(
@@ -4788,6 +5170,22 @@ fn runs_strategy_exit_bracket_stop_limit_stop_fill_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_bracket_stop_limit_stop_fill_short_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_bracket_stop_limit_stop_fill_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit short stop-limit bracket stop-fill fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_bracket_stop_limit_stop_fill_short.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_trailing_fixture_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_trail_price_fill.pine"),
@@ -4799,6 +5197,19 @@ fn runs_strategy_exit_trailing_fixture_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_exit_trail_price_fill_short_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_trail_price_fill_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_trailing_short_bars.csv"),
+    )
+    .expect("strategy exit short trail_price fill fixture should run");
+
+    assert_snapshot("runtime_strategy_exit_trail_price_fill_short.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_trail_points_fill_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_trail_points_fill.pine"),
@@ -4807,6 +5218,22 @@ fn runs_strategy_exit_trail_points_fill_fixture_contract() {
     .expect("strategy exit trail_points fill fixture should run");
 
     assert_snapshot("runtime_strategy_exit_trail_points_fill.json", &output);
+}
+
+#[test]
+fn runs_strategy_exit_trail_points_fill_short_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_trail_points_fill_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_trailing_short_bars.csv"),
+    )
+    .expect("strategy exit short trail_points fill fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_trail_points_fill_short.json",
+        &output,
+    );
 }
 
 #[test]

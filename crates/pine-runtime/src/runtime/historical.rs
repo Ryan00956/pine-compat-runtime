@@ -534,9 +534,17 @@ impl<'a> HistoricalRuntime<'a> {
             self.strategy_broker
                 .fill_pending_stop_limit_long_entries(bar_index, bar.time, bar.high, bar.low);
             self.strategy_broker
+                .fill_pending_limit_short_entries(bar_index, bar.time, bar.high);
+            self.strategy_broker
+                .fill_pending_stop_short_entries(bar_index, bar.time, bar.low);
+            self.strategy_broker
+                .fill_pending_stop_limit_short_entries(bar_index, bar.time, bar.high, bar.low);
+            self.strategy_broker
                 .update_open_trade_extremes(bar.high, bar.low);
             self.strategy_broker
                 .evaluate_margin_call_long(bar_index, bar.time, bar.low);
+            self.strategy_broker
+                .evaluate_margin_call_short(bar_index, bar.time, bar.high);
         }
         self.set_builtin_symbols(&bar, bar_index)?;
 
@@ -1018,7 +1026,15 @@ impl<'a> HistoricalRuntime<'a> {
         editable: PineValue,
         display: PineValue,
     ) {
-        if self.hlines.iter().all(|hline| hline.id != id) {
+        if let Some(hline) = self.hlines.iter_mut().find(|hline| hline.id == id) {
+            hline.price = price;
+            hline.title = title;
+            hline.color = color;
+            hline.style = style;
+            hline.linewidth = linewidth;
+            hline.editable = editable;
+            hline.display = display;
+        } else {
             self.hlines.push(HLineOutput {
                 id,
                 price,

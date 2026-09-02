@@ -222,6 +222,7 @@ impl<'a> HistoricalRuntime<'a> {
         );
         let mut runtime =
             HistoricalRuntime::with_request_environment(program, requested_environment);
+        runtime.historical_end = Some(requested_bars.len());
         let mut values = Vec::with_capacity(requested_bars.len());
         for bar in requested_bars {
             values.push((

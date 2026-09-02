@@ -176,6 +176,248 @@ plot(close)
 }
 
 #[test]
+fn strategy_entry_opens_short_position_at_next_bar_open() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("short entry")
+if bar_index == 1
+    strategy.entry("S", strategy.short, qty=2)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+plot(strategy.max_contracts_held_short)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = [
+        Bar {
+            time: 10,
+            open: 1.0,
+            high: 1.0,
+            low: 1.0,
+            close: 1.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 20,
+            open: 2.0,
+            high: 2.0,
+            low: 2.0,
+            close: 2.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 30,
+            open: 3.0,
+            high: 3.0,
+            low: 3.0,
+            close: 3.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "S");
+    assert_eq!(strategy.orders[0].bar_index, 2);
+    assert_eq!(strategy.orders[0].time, 30);
+    assert_eq!(strategy.orders[0].direction, "strategy.short");
+    assert_eq!(strategy.orders[0].qty, 2.0);
+    assert_eq!(strategy.orders[0].price, 3.0);
+    assert_eq!(strategy.position.len(), 1);
+    assert_eq!(strategy.position[0].bar_index, 2);
+    assert_eq!(strategy.position[0].size, -2.0);
+    assert_eq!(strategy.position[0].avg_price, Some(3.0));
+    assert_eq!(strategy.equity[2].cash, 100_006.0);
+    assert_eq!(strategy.equity[2].market_value, -6.0);
+    assert_eq!(strategy.equity[2].equity, 100_000.0);
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(-2.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Float(3.0)]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+        ]
+    );
+}
+
+#[test]
+fn strategy_close_short_records_signed_qty_and_cover_pnl() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("close short")
+if bar_index == 1
+    strategy.entry("S", strategy.short, qty=2)
+if bar_index == 2
+    strategy.close("S")
+plot(strategy.position_size)
+plot(strategy.netprofit)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = [
+        Bar {
+            time: 10,
+            open: 1.0,
+            high: 1.0,
+            low: 1.0,
+            close: 1.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 20,
+            open: 2.0,
+            high: 2.0,
+            low: 2.0,
+            close: 2.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 30,
+            open: 3.0,
+            high: 3.0,
+            low: 3.0,
+            close: 4.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].id, "S");
+    assert_eq!(strategy.trades[0].entry_price, 3.0);
+    assert_eq!(strategy.trades[0].exit_price, 4.0);
+    assert_eq!(strategy.trades[0].qty, -2.0);
+    assert_eq!(strategy.trades[0].profit, -2.0);
+    assert_eq!(
+        strategy.position.last().map(|position| position.size),
+        Some(0.0)
+    );
+    assert_eq!(strategy.equity[2].cash, 99_998.0);
+    assert_eq!(strategy.equity[2].net_profit, -2.0);
+}
+
+#[test]
+fn strategy_entry_short_reverses_long_at_next_bar_open() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("short reverses long")
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 2
+    strategy.entry("S", strategy.short, qty=1)
+plot(strategy.position_size)
+plot(strategy.netprofit)
+plot(strategy.max_contracts_held_short)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = [
+        Bar {
+            time: 10,
+            open: 1.0,
+            high: 1.0,
+            low: 1.0,
+            close: 1.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 20,
+            open: 2.0,
+            high: 2.0,
+            low: 2.0,
+            close: 2.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 30,
+            open: 3.0,
+            high: 3.0,
+            low: 3.0,
+            close: 3.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 40,
+            open: 4.0,
+            high: 4.0,
+            low: 4.0,
+            close: 4.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[0].direction, "strategy.long");
+    assert_eq!(strategy.orders[0].qty, 2.0);
+    assert_eq!(strategy.orders[0].price, 3.0);
+    assert_eq!(strategy.orders[1].direction, "strategy.short");
+    assert_eq!(strategy.orders[1].qty, 1.0);
+    assert_eq!(strategy.orders[1].price, 4.0);
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].id, "L");
+    assert_eq!(strategy.trades[0].qty, 2.0);
+    assert_eq!(strategy.trades[0].entry_price, 3.0);
+    assert_eq!(strategy.trades[0].exit_price, 4.0);
+    assert_eq!(strategy.trades[0].profit, 2.0);
+    assert_eq!(
+        strategy.position.last().map(|position| position.size),
+        Some(-1.0)
+    );
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(-1.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+        ]
+    );
+}
+
+#[test]
 fn strategy_entry_limit_fills_on_later_low_crossing_bar() {
     let source = SourceFile::new(
         "strategy.pine",
@@ -225,6 +467,168 @@ plot(strategy.position_avg_price)
     assert_eq!(
         result.plots[1].values,
         vec![PineValue::Na, PineValue::Na, PineValue::Float(2.0),]
+    );
+    assert!(strategy.diagnostics.is_empty());
+}
+
+#[test]
+fn strategy_entry_limit_short_fills_on_later_high_crossing_bar() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("entry limit short")
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=2, limit=2)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(1.0, 1.0, 1.0, 1.0),
+            bar_ohlc(1.5, 1.5, 1.5, 1.5),
+            bar_ohlc(2.0, 2.0, 2.0, 2.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "S");
+    assert_eq!(strategy.orders[0].bar_index, 2);
+    assert_eq!(strategy.orders[0].direction, "strategy.short");
+    assert_eq!(strategy.orders[0].qty, 2.0);
+    assert_eq!(strategy.orders[0].price, 2.0);
+    assert_eq!(strategy.position.len(), 1);
+    assert_eq!(strategy.position[0].bar_index, 2);
+    assert_eq!(strategy.position[0].size, -2.0);
+    assert_eq!(strategy.position[0].avg_price, Some(2.0));
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(-2.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Float(2.0),]
+    );
+    assert!(strategy.diagnostics.is_empty());
+}
+
+#[test]
+fn strategy_entry_stop_short_fills_on_later_low_crossing_bar() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("entry stop short")
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=2, stop=2)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(4.0, 4.0, 4.0, 4.0),
+            bar_ohlc(3.0, 3.0, 3.0, 3.0),
+            bar_ohlc(2.0, 2.0, 2.0, 2.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "S");
+    assert_eq!(strategy.orders[0].bar_index, 2);
+    assert_eq!(strategy.orders[0].direction, "strategy.short");
+    assert_eq!(strategy.orders[0].qty, 2.0);
+    assert_eq!(strategy.orders[0].price, 2.0);
+    assert_eq!(strategy.position.len(), 1);
+    assert_eq!(strategy.position[0].bar_index, 2);
+    assert_eq!(strategy.position[0].size, -2.0);
+    assert_eq!(strategy.position[0].avg_price, Some(2.0));
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(-2.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Float(2.0),]
+    );
+    assert!(strategy.diagnostics.is_empty());
+}
+
+#[test]
+fn strategy_entry_stop_limit_short_activates_then_fills_on_later_high_crossing_bar() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("entry stop limit short")
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=2, stop=2, limit=3)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(4.0, 4.0, 4.0, 4.0),
+            bar_ohlc(2.0, 2.0, 2.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.5, 3.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "S");
+    assert_eq!(strategy.orders[0].bar_index, 2);
+    assert_eq!(strategy.orders[0].direction, "strategy.short");
+    assert_eq!(strategy.orders[0].qty, 2.0);
+    assert_eq!(strategy.orders[0].price, 3.0);
+    assert_eq!(strategy.position.len(), 1);
+    assert_eq!(strategy.position[0].bar_index, 2);
+    assert_eq!(strategy.position[0].size, -2.0);
+    assert_eq!(strategy.position[0].avg_price, Some(3.0));
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(-2.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Float(3.0),]
     );
     assert!(strategy.diagnostics.is_empty());
 }
@@ -978,6 +1382,210 @@ fn strategy_order_limit_long_adds_to_existing_long_without_pyramiding() {
             PineValue::Na,
             PineValue::Float(11.0),
             PineValue::Float(29.0 / 3.0),
+        ]
+    );
+}
+
+#[test]
+fn strategy_order_stop_limit_short_adds_to_existing_short_without_pyramiding() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("order stop limit short", pyramiding=1)
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=1)
+if bar_index == 1
+    strategy.order("O", strategy.short, qty=2, stop=2, limit=3)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(4.0, 4.0, 4.0, 4.0),
+            bar_ohlc(3.0, 3.0, 3.0, 3.0),
+            bar_ohlc(2.0, 2.0, 2.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.5, 3.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[0].id, "S");
+    assert_eq!(strategy.orders[0].direction, "strategy.short");
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].qty, 1.0);
+    assert_eq!(strategy.orders[0].price, 3.0);
+    assert_eq!(strategy.orders[1].id, "O");
+    assert_eq!(strategy.orders[1].direction, "strategy.short");
+    assert_eq!(strategy.orders[1].bar_index, 3);
+    assert_eq!(strategy.orders[1].qty, 2.0);
+    assert_eq!(strategy.orders[1].price, 3.0);
+    assert_eq!(strategy.position.len(), 2);
+    assert_eq!(strategy.position[0].size, -1.0);
+    assert_eq!(strategy.position[0].avg_price, Some(3.0));
+    assert_eq!(strategy.position[1].size, -3.0);
+    assert_eq!(strategy.position[1].avg_price, Some(3.0));
+    assert!(strategy.trades.is_empty());
+    assert!(strategy.diagnostics.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(-1.0),
+            PineValue::Float(-1.0),
+            PineValue::Float(-3.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(3.0),
+            PineValue::Float(3.0),
+            PineValue::Float(3.0),
+        ]
+    );
+}
+
+#[test]
+fn strategy_order_stop_short_adds_to_existing_short_without_pyramiding() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("order stop short")
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=1)
+if bar_index == 1
+    strategy.order("O", strategy.short, qty=2, stop=2)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(4.0, 4.0, 4.0, 4.0),
+            bar_ohlc(3.0, 3.0, 3.0, 3.0),
+            bar_ohlc(2.0, 2.0, 2.0, 2.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[0].id, "S");
+    assert_eq!(strategy.orders[0].direction, "strategy.short");
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].qty, 1.0);
+    assert_eq!(strategy.orders[0].price, 3.0);
+    assert_eq!(strategy.orders[1].id, "O");
+    assert_eq!(strategy.orders[1].direction, "strategy.short");
+    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].qty, 2.0);
+    assert_eq!(strategy.orders[1].price, 2.0);
+    assert_eq!(strategy.position.len(), 2);
+    assert_eq!(strategy.position[0].size, -1.0);
+    assert_eq!(strategy.position[0].avg_price, Some(3.0));
+    assert_eq!(strategy.position[1].size, -3.0);
+    assert_eq!(strategy.position[1].avg_price, Some(7.0 / 3.0));
+    assert!(strategy.trades.is_empty());
+    assert!(strategy.diagnostics.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(-1.0),
+            PineValue::Float(-3.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(3.0),
+            PineValue::Float(7.0 / 3.0),
+        ]
+    );
+}
+
+#[test]
+fn strategy_order_limit_short_adds_to_existing_short_without_pyramiding() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("order limit short")
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=1)
+if bar_index == 1
+    strategy.order("O", strategy.short, qty=2, limit=3)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(1.0, 1.0, 1.0, 1.0),
+            bar_ohlc(2.0, 2.0, 2.0, 2.0),
+            bar_ohlc(3.0, 3.0, 3.0, 3.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[0].id, "S");
+    assert_eq!(strategy.orders[0].direction, "strategy.short");
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].qty, 1.0);
+    assert_eq!(strategy.orders[0].price, 2.0);
+    assert_eq!(strategy.orders[1].id, "O");
+    assert_eq!(strategy.orders[1].direction, "strategy.short");
+    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].qty, 2.0);
+    assert_eq!(strategy.orders[1].price, 3.0);
+    assert_eq!(strategy.position.len(), 2);
+    assert_eq!(strategy.position[0].size, -1.0);
+    assert_eq!(strategy.position[0].avg_price, Some(2.0));
+    assert_eq!(strategy.position[1].size, -3.0);
+    assert_eq!(strategy.position[1].avg_price, Some(8.0 / 3.0));
+    assert!(strategy.trades.is_empty());
+    assert!(strategy.diagnostics.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(-1.0),
+            PineValue::Float(-3.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(2.0),
+            PineValue::Float(8.0 / 3.0),
         ]
     );
 }
@@ -2001,6 +2609,125 @@ fn strategy_close_entries_rule_any_uses_entry_id_allocation() {
 }
 
 #[test]
+fn strategy_close_entries_rule_any_uses_short_entry_id_allocation() {
+    let close_source = SourceFile::new(
+        "strategy_close_entries_rule_any_close_short.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_close_entries_rule_any_close_short.pine"
+        ),
+    );
+    let close_analysis = analyze_source(&close_source);
+    assert!(
+        close_analysis.diagnostics.is_empty(),
+        "{:?}",
+        close_analysis.diagnostics
+    );
+    assert_eq!(
+        close_analysis
+            .hir
+            .as_ref()
+            .unwrap()
+            .strategy_settings
+            .close_entries_rule,
+        pine_ir::StrategyCloseEntriesRule::Any
+    );
+
+    let close_result = run_historical(
+        &close_analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    )
+    .expect("runtime result");
+    let close_strategy = close_result.strategy.expect("strategy output");
+
+    assert_eq!(close_strategy.trades.len(), 1);
+    assert_eq!(close_strategy.trades[0].id, "target");
+    assert_eq!(close_strategy.trades[0].exit_id, "target");
+    assert_eq!(close_strategy.trades[0].entry_price, 3.0);
+    assert_eq!(close_strategy.trades[0].exit_price, 3.0);
+    assert_eq!(close_strategy.trades[0].qty, -2.0);
+    assert_eq!(close_strategy.trades[0].profit, 0.0);
+    assert_eq!(close_strategy.position.last().unwrap().size, -1.0);
+    assert!(close_strategy.diagnostics.is_empty());
+    assert_eq!(
+        close_result.plots[0].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(1),
+            PineValue::Int(1),
+        ]
+    );
+    assert_eq!(
+        close_result.plots[1].values.last(),
+        Some(&PineValue::Int(1))
+    );
+    assert_eq!(
+        close_result.plots[2].values.last(),
+        Some(&PineValue::Float(-1.0))
+    );
+
+    let exit_source = SourceFile::new(
+        "strategy_close_entries_rule_any_exit_from_entry_short.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short.pine"
+        ),
+    );
+    let exit_analysis = analyze_source(&exit_source);
+    assert!(
+        exit_analysis.diagnostics.is_empty(),
+        "{:?}",
+        exit_analysis.diagnostics
+    );
+    assert_eq!(
+        exit_analysis
+            .hir
+            .as_ref()
+            .unwrap()
+            .strategy_settings
+            .close_entries_rule,
+        pine_ir::StrategyCloseEntriesRule::Any
+    );
+
+    let exit_result = run_historical(
+        &exit_analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(1.0, 1.0, 1.0, 1.0),
+            bar_ohlc(2.0, 2.0, 2.0, 2.0),
+            bar_ohlc(4.0, 4.0, 4.0, 4.0),
+            bar_ohlc(3.0, 3.0, 3.0, 3.0),
+            bar_ohlc(3.0, 3.0, 3.0, 3.0),
+        ],
+    )
+    .expect("runtime result");
+    let exit_strategy = exit_result.strategy.expect("strategy output");
+
+    assert_eq!(exit_strategy.trades.len(), 1);
+    assert_eq!(exit_strategy.trades[0].id, "target");
+    assert_eq!(exit_strategy.trades[0].exit_id, "XT");
+    assert_eq!(exit_strategy.trades[0].entry_price, 4.0);
+    assert_eq!(exit_strategy.trades[0].exit_price, 3.0);
+    assert_eq!(exit_strategy.trades[0].qty, -2.0);
+    assert_eq!(exit_strategy.trades[0].profit, 2.0);
+    assert_eq!(exit_strategy.position.last().unwrap().size, -1.0);
+    assert!(exit_strategy.diagnostics.is_empty());
+    assert_eq!(
+        exit_result.plots[0].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(1),
+        ]
+    );
+    assert_eq!(exit_result.plots[1].values.last(), Some(&PineValue::Int(1)));
+    assert_eq!(
+        exit_result.plots[2].values.last(),
+        Some(&PineValue::Float(-1.0))
+    );
+}
+
+#[test]
 fn strategy_close_entries_rule_any_partial_exit_same_id_preserves_ledger_order() {
     let source = SourceFile::new(
         "strategy_close_entries_rule_any_exit_same_id_partial.pine",
@@ -2062,6 +2789,76 @@ fn strategy_close_entries_rule_any_partial_exit_same_id_preserves_ledger_order()
     assert_eq!(result.plots[1].values.last(), Some(&PineValue::Int(1)));
     assert_eq!(result.plots[2].values.last(), Some(&PineValue::Int(1)));
     assert_eq!(result.plots[3].values.last(), Some(&PineValue::Float(2.5)));
+}
+
+#[test]
+fn strategy_close_entries_rule_any_partial_exit_same_short_id_preserves_ledger_order() {
+    let source = SourceFile::new(
+        "strategy_close_entries_rule_any_exit_same_id_partial_short.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_close_entries_rule_any_exit_same_id_partial_short.pine"
+        ),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis
+            .hir
+            .as_ref()
+            .unwrap()
+            .strategy_settings
+            .close_entries_rule,
+        pine_ir::StrategyCloseEntriesRule::Any
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(1.0, 1.0, 1.0, 1.0),
+            bar_ohlc(2.0, 2.0, 2.0, 2.0),
+            bar_ohlc(4.0, 4.0, 4.0, 4.0),
+            bar_ohlc(3.0, 3.0, 3.0, 3.0),
+            bar_ohlc(3.0, 3.0, 3.0, 3.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.trades.len(), 2);
+    assert_eq!(strategy.trades[0].id, "S");
+    assert_eq!(strategy.trades[0].exit_id, "XS");
+    assert_eq!(strategy.trades[0].entry_bar_index, 1);
+    assert_eq!(strategy.trades[0].entry_price, 2.0);
+    assert_eq!(strategy.trades[0].exit_price, 3.0);
+    assert_eq!(strategy.trades[0].qty, -1.0);
+    assert_eq!(strategy.trades[0].profit, -1.0);
+    assert_eq!(strategy.trades[1].id, "S");
+    assert_eq!(strategy.trades[1].exit_id, "XS");
+    assert_eq!(strategy.trades[1].entry_bar_index, 2);
+    assert_eq!(strategy.trades[1].entry_price, 4.0);
+    assert_eq!(strategy.trades[1].exit_price, 3.0);
+    assert_eq!(strategy.trades[1].qty, -0.5);
+    assert_eq!(strategy.trades[1].profit, 0.5);
+    assert_eq!(strategy.position.last().unwrap().size, -2.5);
+    assert_eq!(strategy.position.last().unwrap().avg_price, Some(4.0));
+    assert!(strategy.diagnostics.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(2),
+        ]
+    );
+    assert_eq!(result.plots[1].values.last(), Some(&PineValue::Int(1)));
+    assert_eq!(result.plots[2].values.last(), Some(&PineValue::Int(1)));
+    assert_eq!(result.plots[3].values.last(), Some(&PineValue::Float(-2.5)));
 }
 
 #[test]
@@ -6470,6 +7267,68 @@ if bar_index == 0
 }
 
 #[test]
+fn strategy_exit_stop_short_covers_on_later_high_crossing_bar() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit short")
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=2)
+    strategy.exit("XS", "S", stop=12)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = [
+        Bar {
+            time: 10,
+            open: 10.0,
+            high: 10.0,
+            low: 10.0,
+            close: 10.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 20,
+            open: 11.0,
+            high: 11.0,
+            low: 11.0,
+            close: 11.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 30,
+            open: 12.0,
+            high: 13.0,
+            low: 12.0,
+            close: 12.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].id, "XS");
+    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].direction, "strategy.exit");
+    assert_eq!(strategy.orders[1].qty, 2.0);
+    assert_eq!(strategy.orders[1].price, 12.0);
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].id, "S");
+    assert_eq!(strategy.trades[0].qty, -2.0);
+    assert_eq!(strategy.trades[0].entry_price, 11.0);
+    assert_eq!(strategy.trades[0].exit_price, 12.0);
+    assert_eq!(strategy.trades[0].profit, -2.0);
+    assert_eq!(strategy.position.last().unwrap().size, 0.0);
+    assert!(strategy.diagnostics.is_empty());
+}
+
+#[test]
 fn strategy_exit_qty_single_trigger_forms_dispatch_partial_quantity() {
     for (name, exit_call, high, low, expected_price) in [
         (
@@ -7031,6 +7890,167 @@ if bar_index == 1
     assert_eq!(strategy.trades[0].id, "L");
     assert_eq!(strategy.trades[0].exit_price, 9.0);
     assert_eq!(strategy.trades[0].profit, -2.0);
+    assert!(strategy.diagnostics.is_empty());
+}
+
+#[test]
+fn strategy_exit_profit_ticks_short_cover_below_entry() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit short profit")
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=2)
+if bar_index == 1
+    strategy.exit("XP", "S", profit=100)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(10.0, 10.0, 9.0, 10.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].id, "XP");
+    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].direction, "strategy.exit");
+    assert_eq!(strategy.orders[1].price, 9.0);
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].id, "S");
+    assert_eq!(strategy.trades[0].qty, -2.0);
+    assert_eq!(strategy.trades[0].exit_price, 9.0);
+    assert_eq!(strategy.trades[0].profit, 2.0);
+    assert!(strategy.diagnostics.is_empty());
+}
+
+#[test]
+fn strategy_exit_loss_ticks_short_cover_above_entry() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit short loss")
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=2)
+if bar_index == 1
+    strategy.exit("XL", "S", loss=100)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(10.0, 11.0, 10.0, 10.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].id, "XL");
+    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].direction, "strategy.exit");
+    assert_eq!(strategy.orders[1].price, 11.0);
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].id, "S");
+    assert_eq!(strategy.trades[0].qty, -2.0);
+    assert_eq!(strategy.trades[0].exit_price, 11.0);
+    assert_eq!(strategy.trades[0].profit, -2.0);
+    assert!(strategy.diagnostics.is_empty());
+}
+
+#[test]
+fn strategy_exit_bracket_stop_limit_short_stop_covers_on_later_high() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit short bracket")
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=2)
+    strategy.exit("XB", "S", stop=12, limit=1)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(11.0, 11.0, 11.0, 11.0),
+            bar_ohlc(12.0, 13.0, 12.0, 12.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].id, "XB");
+    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].price, 12.0);
+    assert_eq!(strategy.trades[0].qty, -2.0);
+    assert_eq!(strategy.trades[0].exit_price, 12.0);
+    assert_eq!(strategy.trades[0].profit, -2.0);
+    assert!(strategy.diagnostics.is_empty());
+}
+
+#[test]
+fn strategy_exit_trail_price_short_activates_then_covers() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit short trail")
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=2)
+    strategy.exit("XT", "S", trail_price=9.5, trail_offset=50)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(9.5, 9.6, 9.0, 9.2),
+            bar_ohlc(9.2, 9.6, 9.1, 9.3),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].id, "XT");
+    assert_eq!(strategy.orders[1].bar_index, 3);
+    assert_eq!(strategy.orders[1].price, 9.5);
+    assert_eq!(strategy.trades[0].qty, -2.0);
+    assert_eq!(strategy.trades[0].exit_price, 9.5);
+    assert_eq!(strategy.trades[0].profit, 1.0);
     assert!(strategy.diagnostics.is_empty());
 }
 
@@ -8770,6 +9790,206 @@ plot(na(strategy.position_entry_name) ? na : strategy.position_entry_name == "A"
             PineValue::Na,
             PineValue::Na,
             PineValue::Int(2),
+        ]
+    );
+}
+
+#[test]
+fn strategy_margin_call_short_partially_covers_on_later_high() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("margin call short", initial_capital=340, margin_short=50)
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=100)
+plot(strategy.position_size)
+plot(strategy.opentrades.capital_held)
+plot(strategy.closedtrades)
+plot(strategy.margin_liquidation_price)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(4.0, 4.0, 4.0, 4.0),
+            bar_ohlc(4.0, 5.0, 4.0, 5.0),
+            bar_ohlc(5.0, 5.0, 5.0, 5.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[0].id, "S");
+    assert_eq!(strategy.orders[0].direction, "strategy.short");
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].qty, 100.0);
+    assert_eq!(strategy.orders[0].price, 4.0);
+    assert_eq!(strategy.orders[1].id, "Margin Call");
+    assert_eq!(strategy.orders[1].direction, "strategy.long");
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].qty, 16.0);
+    assert_eq!(strategy.orders[1].price, 5.0);
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].id, "S");
+    assert_eq!(strategy.trades[0].exit_id, "Margin Call");
+    assert_eq!(strategy.trades[0].qty, -16.0);
+    assert_eq!(strategy.trades[0].profit, -16.0);
+    assert_eq!(strategy.position.len(), 2);
+    assert_eq!(strategy.position[0].size, -100.0);
+    assert_eq!(strategy.position[1].size, -84.0);
+    assert_eq!(strategy.position[1].avg_price, Some(4.0));
+    assert!(strategy.diagnostics.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(-84.0),
+            PineValue::Float(-84.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(210.0),
+            PineValue::Float(210.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![PineValue::Int(0), PineValue::Int(1), PineValue::Int(1),]
+    );
+    match result.plots[3].values.as_slice() {
+        [
+            PineValue::Na,
+            PineValue::Float(after_call),
+            PineValue::Float(later),
+        ] => {
+            assert!((after_call - 660.0 / 126.0).abs() < 1e-10);
+            assert!((later - 660.0 / 126.0).abs() < 1e-10);
+        }
+        other => panic!("unexpected liquidation-price plots: {other:?}"),
+    }
+}
+
+#[test]
+fn strategy_capital_held_history_reads_follow_short_margin_state() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("margin capital held short", margin_short=50)
+identity(value) => value
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=2)
+if bar_index == 3
+    strategy.close("S")
+plot(strategy.opentrades.capital_held)
+independent_capital_held = strategy.opentrades.capital_held * 0
+capital_held_i = 0
+while capital_held_i < 1
+    independent_capital_held := strategy.opentrades.capital_held
+    capital_held_i := capital_held_i + 1
+plot(independent_capital_held)
+plot(identity(strategy.opentrades.capital_held))
+plot(strategy.opentrades.capital_held[1])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    )
+    .expect("runtime result");
+
+    let current_values = vec![
+        PineValue::Float(0.0),
+        PineValue::Float(2.0),
+        PineValue::Float(3.0),
+        PineValue::Float(0.0),
+    ];
+    assert_eq!(result.plots[0].values, current_values);
+    assert_eq!(result.plots[1].values, current_values);
+    assert_eq!(result.plots[2].values, current_values);
+    assert_eq!(
+        result.plots[3].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(3.0),
+        ]
+    );
+}
+
+#[test]
+fn strategy_margin_entry_affordability_short_rejects_then_accepts_covered_fill() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("margin affordability short", initial_capital=4, margin_short=100)
+if bar_index == 0
+    strategy.entry("too-big-market", strategy.short, qty=3)
+if bar_index == 1
+    strategy.entry("too-big-stop", strategy.short, qty=2, stop=3)
+if bar_index == 2
+    strategy.entry("covered-market", strategy.short, qty=1)
+plot(strategy.position_size)
+plot(strategy.opentrades.capital_held)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "covered-market");
+    assert_eq!(strategy.orders[0].direction, "strategy.short");
+    assert_eq!(strategy.orders[0].bar_index, 3);
+    assert_eq!(strategy.orders[0].qty, 1.0);
+    assert_eq!(strategy.orders[0].price, 4.0);
+    assert_eq!(strategy.position.len(), 1);
+    assert_eq!(strategy.position[0].size, -1.0);
+    assert_eq!(strategy.position[0].avg_price, Some(4.0));
+    assert_eq!(strategy.diagnostics.len(), 2);
+    assert_eq!(strategy.diagnostics[0].code, "E_STRATEGY_MARGIN");
+    assert_eq!(strategy.diagnostics[1].code, "E_STRATEGY_MARGIN");
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(-1.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(4.0),
         ]
     );
 }

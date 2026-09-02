@@ -1,6 +1,9 @@
 # Strategy Internal Margin Account Model Plan
 
 Status: closed for the long-only margin account subset through Slice M5.
+Stage 15a closed short capital held and short-entry affordability. Stage 15b
+closed short forced liquidation. Stage 15c closed short
+`strategy.margin_liquidation_price`.
 
 This plan defines the margin/account-model direction after Strategy Internal
 Stage 7 Slice 35. It exists because the remaining `capital_held` and margin

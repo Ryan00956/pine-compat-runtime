@@ -133,7 +133,9 @@ report for prioritization.
 
 ## Track 2: Baseline And Failure Ranking
 
-Corpus report schema 2 provides two planning views:
+Corpus report schema 5 provides two planning views plus explicit execution
+evidence for batch, incremental, realtime-history, and forming
+rollback/confirmation:
 
 - `eligibleSuccessRate` uses every eligible script as the denominator, so an
   upstream failure or missing required input cannot disappear from a later
@@ -184,7 +186,8 @@ A profile can be considered for stable only when:
 - analyze/lower succeeds for at least 85% of all eligible scripts;
 - historical execution succeeds for at least 80% of all eligible scripts;
 - every executed fixture passes incremental parity;
-- every claimed realtime/request profile passes its specific gate;
+- every claimed realtime/request profile passes its specific gate, including
+  forming replacement rollback before confirmation;
 - every supplied reference output passes;
 - no crash, panic, hang, scope mismatch, or silent unsupported execution occurs;
 - every unknown failure cluster affecting at least 2% of eligible scripts is
@@ -212,8 +215,21 @@ scripts/verify.sh
 
 ## Immediate Next Decision
 
-The repository does not yet contain authorized R2 sources, so no new behavior
-slice is selected by this plan. The next input is an intake batch that brings the
-v4 corpus toward 30 scripts. Once its deterministic pre-code report exists, the
-largest copy-paste-blocking failure cluster becomes the first `v0.3.0` behavior
-slice.
+The corrected permissive R3 intake recorded in
+`docs/V0_3_LEGACY_CORPUS_R3_PERMISSIVE_BASELINE.md` raises the deduplicated v4
+corpus from 32 to 51 standalone eligible indicators and clears the provisional
+size, parse, analyze/lower, and historical-run thresholds. The first ranked
+slice adds the exact Pine v4 `hma` alias and moves one additional script through
+all measured execution modes and CLI/Python/WASM host parity.
+
+The schema-5 release audit is complete for the frozen local evidence boundary:
+all 47 executable scripts match across batch, incremental, realtime-history,
+and mutated/replaced/confirmed forming execution, all missing-input counts are
+zero, and provider-backed resource/cache profiles pass. The bounded v4 UDF
+`line.set_x2` / `line.set_extend` slice is closed with exact version controls,
+release coverage, and CLI/Python/WASM parity. The smallest remaining local
+shape is v4 bool/numeric comparison, but it stays fail-closed pending
+source-revision-paired output evidence. The three broader legacy-security
+shapes likewise stay fail-closed until their requested-expression graphs are
+minimized and exact provider streams are provisioned. Additional v4 intake is
+no longer a release-threshold blocker.

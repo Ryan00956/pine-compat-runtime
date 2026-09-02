@@ -170,6 +170,57 @@ barcolor(close > open ? color.green : color.red, title="Bars", offset=0, editabl
 }
 
 #[test]
+fn accepts_dynamic_plot_style_enum_domain() {
+    let analysis = analyze(
+        r#"style = bar_index % 2 == 0 ? plot.style_line : plot.style_histogram
+plot(close, style=style)
+"#,
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_dynamic_plotshape_and_hline_style_enum_domain() {
+    let analysis = analyze(
+        r#"shapeStyle = bar_index % 2 == 0 ? shape.circle : shape.cross
+lineStyle = close >= open ? hline.style_solid : hline.style_dotted
+plotshape(true, style=shapeStyle)
+hline(1, linestyle=lineStyle)
+plot(close)
+"#,
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_unbounded_plot_style_strings() {
+    let analysis = analyze(
+        r#"style = input.string("custom")
+plot(close, style=style)
+"#,
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_VALUE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_indicator_scale_metadata_parameter() {
     let analysis = analyze(
         r#"indicator("Scale metadata", overlay=true, scale=scale.right)

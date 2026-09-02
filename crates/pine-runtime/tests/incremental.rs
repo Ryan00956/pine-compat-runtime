@@ -20,6 +20,9 @@ fn runtime_fixtures_match_incremental_append_execution() {
     let strategy_exit_loss_bars = load_bars(&workspace_fixture(
         "tests/fixtures/runtime/strategy_exit_loss_bars.csv",
     ));
+    let strategy_exit_profit_short_bars = load_bars(&workspace_fixture(
+        "tests/fixtures/runtime/strategy_exit_profit_short_bars.csv",
+    ));
     let strategy_exit_profit_loss_interactions_bars = load_bars(&workspace_fixture(
         "tests/fixtures/runtime/strategy_exit_profit_loss_interactions_bars.csv",
     ));
@@ -37,6 +40,21 @@ fn runtime_fixtures_match_incremental_append_execution() {
     ));
     let trailing_bars = load_bars(&workspace_fixture(
         "tests/fixtures/runtime/strategy_exit_trailing_bars.csv",
+    ));
+    let trailing_short_bars = load_bars(&workspace_fixture(
+        "tests/fixtures/runtime/strategy_exit_trailing_short_bars.csv",
+    ));
+    let strategy_entry_stop_short_bars = load_bars(&workspace_fixture(
+        "tests/fixtures/runtime/strategy_entry_stop_short_bars.csv",
+    ));
+    let strategy_entry_stop_limit_short_bars = load_bars(&workspace_fixture(
+        "tests/fixtures/runtime/strategy_entry_stop_limit_short_bars.csv",
+    ));
+    let strategy_margin_call_short_bars = load_bars(&workspace_fixture(
+        "tests/fixtures/runtime/strategy_margin_call_short_bars.csv",
+    ));
+    let strategy_close_entries_rule_any_exit_from_entry_short_bars = load_bars(&workspace_fixture(
+        "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short_bars.csv",
     ));
     let reservation_trailing_bars = load_bars(&workspace_fixture(
         "tests/fixtures/runtime/strategy_exit_reservation_trailing_bars.csv",
@@ -99,6 +117,7 @@ fn runtime_fixtures_match_incremental_append_execution() {
         let hir = analysis.hir.expect("runtime fixture should lower to HIR");
         let bars = match path.file_name().and_then(|name| name.to_str()) {
             Some("strategy_exit_loss.pine") => &strategy_exit_loss_bars,
+            Some("strategy_exit_profit_short.pine") => &strategy_exit_profit_short_bars,
             Some("strategy_exit_profit_loss_interactions.pine") => {
                 &strategy_exit_profit_loss_interactions_bars
             }
@@ -112,6 +131,18 @@ fn runtime_fixtures_match_incremental_append_execution() {
                 &strategy_exit_bracket_replacement_bars
             }
             Some("strategy_exit_bracket_both_hit.pine") => &strategy_exit_bracket_both_hit_bars,
+            Some("strategy_entry_stop_short.pine") | Some("strategy_order_stop_short.pine") => {
+                &strategy_entry_stop_short_bars
+            }
+            Some("strategy_entry_stop_limit_short.pine")
+            | Some("strategy_order_stop_limit_short.pine") => &strategy_entry_stop_limit_short_bars,
+            Some("strategy_margin_call_short.pine") => &strategy_margin_call_short_bars,
+            Some("strategy_close_entries_rule_any_exit_from_entry_short.pine")
+            | Some("strategy_close_entries_rule_any_exit_same_id_partial_short.pine") => {
+                &strategy_close_entries_rule_any_exit_from_entry_short_bars
+            }
+            Some("strategy_exit_trail_price_fill_short.pine") => &trailing_short_bars,
+            Some("strategy_exit_trail_points_fill_short.pine") => &trailing_short_bars,
             Some("strategy_exit_active_entry_trail_points_attachment.pine") => &trailing_bars,
             Some("strategy_exit_active_entry_stop_profit_bracket.pine") => &trailing_bars,
             Some("strategy_exit_active_entry_loss_limit_bracket.pine") => &trailing_bars,

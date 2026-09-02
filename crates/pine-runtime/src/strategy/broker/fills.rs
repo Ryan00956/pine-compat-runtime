@@ -1,6 +1,7 @@
 use super::{
     BrokerState, StrategyExitMetadata, StrategyOrderFillAlertEvent, StrategyOrderMetadata,
     closed_trades::{AllocatedEntryFill, ClosedTradeFill},
+    ledger::TradeDirection,
     pending_exits::{PendingExit, PendingExitTrigger},
 };
 use crate::{RuntimeDiagnostic, StrategyOrderEvent};
@@ -63,7 +64,7 @@ impl BrokerState {
         self.position.push(crate::StrategyPositionSnapshot {
             bar_index,
             size: self.position_size,
-            avg_price: (self.position_size > 0.0).then_some(self.avg_price),
+            avg_price: (self.position_size != 0.0).then_some(self.avg_price),
         });
     }
 
@@ -195,6 +196,98 @@ impl BrokerState {
         self.record_position_snapshot(bar_index);
     }
 
+    pub(crate) fn evaluate_margin_call_short(
+        &mut self,
+        bar_index: usize,
+        time: i64,
+        current_price: f64,
+    ) {
+        if self.position_size >= 0.0
+            || !self.margin_short.is_active()
+            || !current_price.is_finite()
+            || current_price <= 0.0
+        {
+            return;
+        }
+        let margin_ratio = self.margin_short.value_percent / 100.0;
+        if !margin_ratio.is_finite() || margin_ratio <= 0.0 {
+            return;
+        }
+        let Some(margin_required) = self.margin_required_for_position(current_price) else {
+            return;
+        };
+        let available_funds = self.equity_value(current_price) - margin_required;
+        if !available_funds.is_finite() || available_funds >= 0.0 {
+            return;
+        }
+        let cover_amount = (available_funds / margin_ratio / current_price).trunc();
+        let qty = (cover_amount * 4.0).abs().min(self.position_size.abs());
+        if !qty.is_finite() || qty <= 0.0 {
+            return;
+        }
+
+        let entry_id = self
+            .entry_id
+            .clone()
+            .unwrap_or_else(|| "Margin Call".to_owned());
+        let exit_id = "Margin Call".to_owned();
+        let allocations =
+            self.trade_ledger
+                .allocate_exit_fifo_for_direction(TradeDirection::Short, None, qty);
+        let entry_fill = AllocatedEntryFill::from_allocations(
+            &allocations,
+            self.avg_price,
+            self.entry_bar_index.unwrap_or(bar_index),
+            self.entry_time.unwrap_or(time),
+            self.entry_commission_for_closed_quantity(qty),
+        );
+        let exit_commission = self.exit_commission_for_fill(qty, current_price);
+        let commission = entry_fill.entry_commission + exit_commission;
+        let signed_qty = TradeDirection::Short.signed_quantity(qty);
+        let profit = (current_price - entry_fill.entry_price) * signed_qty - commission;
+        let closed_entry_commission = entry_fill.entry_commission;
+
+        self.order_book.exits_mut().clear_for_entry(&entry_id);
+        self.record_order_event(
+            exit_id.clone(),
+            bar_index,
+            time,
+            "strategy.long",
+            qty,
+            current_price,
+        );
+        self.record_closed_trade_fill(ClosedTradeFill {
+            entry_id,
+            exit_id,
+            entry_fill,
+            exit_bar_index: bar_index,
+            exit_time: time,
+            exit_price: current_price,
+            qty: signed_qty,
+            profit,
+            commission,
+            close_metadata: StrategyOrderMetadata::default(),
+        });
+
+        self.cash += signed_qty * current_price - exit_commission;
+        if qty >= self.position_size.abs() {
+            self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
+            self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
+            self.clear_open_long_legacy_state();
+            self.apply_trade_allocations_and_sync_position(&allocations);
+            if allocations.is_empty() {
+                self.trade_ledger.clear_open_trade();
+                self.sync_aggregate_position_from_ledger();
+            }
+            self.record_position_snapshot(bar_index);
+            return;
+        }
+
+        self.open_entry_commission -= closed_entry_commission;
+        self.apply_trade_allocations_and_sync_position(&allocations);
+        self.record_position_snapshot(bar_index);
+    }
+
     pub(super) fn fill_pending_exit(
         &mut self,
         pending_exit: PendingExit,
@@ -202,7 +295,10 @@ impl BrokerState {
         time: i64,
         exit_price: f64,
     ) {
-        let qty = pending_exit.reserved_quantity.min(self.position_size);
+        let Some(direction) = self.active_close_direction() else {
+            return;
+        };
+        let qty = pending_exit.reserved_quantity.min(self.position_size.abs());
         if !qty.is_finite() || qty <= 0.0 {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_EXIT_QTY".to_owned(),
@@ -211,7 +307,7 @@ impl BrokerState {
             return;
         }
         let raw_exit_price = exit_price;
-        let exit_price = self.long_exit_fill_price(raw_exit_price);
+        let exit_price = self.exit_fill_price(direction, raw_exit_price);
         if !exit_price.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_PRICE".to_owned(),
@@ -230,7 +326,7 @@ impl BrokerState {
             } else {
                 Some(pending_exit.from_entry.as_str())
             };
-            self.allocate_close_rule_exit(from_entry_filter, qty)
+            self.allocate_close_rule_exit_for_direction(direction, from_entry_filter, qty)
         };
         let exit_commission = self.exit_commission_for_fill(qty, exit_price);
         let exit_id = pending_exit.id;
@@ -243,7 +339,8 @@ impl BrokerState {
                 self.entry_commission_for_closed_quantity(qty),
             );
             let commission = entry_fill.entry_commission + exit_commission;
-            let profit = (exit_price - entry_fill.entry_price) * qty - commission;
+            let signed_qty = direction.signed_quantity(qty);
+            let profit = (exit_price - entry_fill.entry_price) * signed_qty - commission;
             let entry_commission = entry_fill.entry_commission;
 
             self.record_order_event(
@@ -277,7 +374,7 @@ impl BrokerState {
                 exit_bar_index: bar_index,
                 exit_time: time,
                 exit_price,
-                qty,
+                qty: signed_qty,
                 profit,
                 commission,
                 close_metadata: StrategyOrderMetadata {
@@ -298,8 +395,8 @@ impl BrokerState {
                     entry_metadata: allocation.entry_metadata.clone(),
                 };
                 let commission = allocation.entry_commission + allocated_exit_commission;
-                let profit =
-                    (exit_price - allocation.entry_price) * allocation.quantity - commission;
+                let signed_qty = direction.signed_quantity(allocation.quantity);
+                let profit = (exit_price - allocation.entry_price) * signed_qty - commission;
 
                 self.record_order_event(
                     exit_id.clone(),
@@ -331,7 +428,7 @@ impl BrokerState {
                     exit_bar_index: bar_index,
                     exit_time: time,
                     exit_price,
-                    qty: allocation.quantity,
+                    qty: signed_qty,
                     profit,
                     commission,
                     close_metadata: StrategyOrderMetadata {
@@ -344,8 +441,8 @@ impl BrokerState {
             closed_entry_commission
         };
 
-        self.cash += qty * exit_price - exit_commission;
-        if qty >= self.position_size {
+        self.cash += direction.signed_quantity(qty) * exit_price - exit_commission;
+        if qty >= self.position_size.abs() {
             self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
             self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
             self.clear_open_long_legacy_state();

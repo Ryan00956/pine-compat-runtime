@@ -1,0 +1,5 @@
+//@version=6
+indicator("Request time function")
+inline_open = request.security(syminfo.tickerid, timeframe.period, time("D"))
+plot(inline_open, "inline")
+plot(time("D"), "direct")

@@ -132,6 +132,7 @@ impl BrokerState {
             max_drawdown: 0.0,
             max_drawdown_percent: 0.0,
             max_contracts_held_long: 0.0,
+            max_contracts_held_short: 0.0,
             orders: Vec::new(),
             order_fill_alerts: Vec::new(),
             trades: Vec::new(),
@@ -201,14 +202,25 @@ impl BrokerState {
     }
 
     pub(super) fn entry_commission_for_closed_quantity(&self, qty: f64) -> f64 {
-        if qty >= self.position_size {
+        let open_qty = self.position_size.abs();
+        if !qty.is_finite() || qty <= 0.0 || open_qty <= 0.0 {
+            0.0
+        } else if qty >= open_qty {
             self.open_entry_commission
         } else {
-            self.open_entry_commission * (qty / self.position_size)
+            self.open_entry_commission * (qty / open_qty)
         }
     }
 
     pub(super) fn long_entry_fill_price(&self, price: f64) -> f64 {
+        price + self.slippage_price_offset
+    }
+
+    pub(super) fn short_entry_fill_price(&self, price: f64) -> f64 {
+        price - self.slippage_price_offset
+    }
+
+    pub(super) fn short_exit_fill_price(&self, price: f64) -> f64 {
         price + self.slippage_price_offset
     }
 

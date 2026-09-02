@@ -532,6 +532,203 @@ fn request_security_evaluates_provider_alias_with_na_fallback() {
 }
 
 #[test]
+fn request_security_same_context_time_function_matches_direct_call() {
+    let bars = [
+        timed_bar(1_704_067_200_000, 1.0),
+        timed_bar(1_704_070_800_000, 2.0),
+        timed_bar(1_704_153_600_000, 3.0),
+    ];
+    let direct = run_historical(
+        &compile_program("indicator(\"direct time\")\nplot(time(\"D\"))\n"),
+        &bars,
+    )
+    .expect("direct time(\"D\") should run");
+    let requested = run_historical(
+        &compile_program(
+            "indicator(\"request time\")\nplot(request.security(syminfo.tickerid, timeframe.period, time(\"D\")))\n",
+        ),
+        &bars,
+    )
+    .expect("same-context time(\"D\") request should run");
+
+    assert_eq!(requested.plots[0].values, direct.plots[0].values);
+    assert_ne!(requested.plots[0].values[0], requested.plots[0].values[2]);
+}
+
+#[test]
+fn request_security_evaluates_provider_time_function_in_requested_context() {
+    let bars = [
+        timed_bar(1_704_067_200_000, 20.0),
+        timed_bar(1_704_070_800_000, 21.0),
+        timed_bar(1_704_153_600_000, 22.0),
+    ];
+    let expected = run_historical(
+        &compile_program("indicator(\"provider time oracle\")\nplot(time(\"D\"))\n"),
+        &bars,
+    )
+    .expect("provider-bar time(\"D\") oracle should run");
+    let environment = external_symbol_environment("NYSE:IBM", bars.to_vec());
+    let result = HistoricalRuntime::with_request_environment(
+        &compile_program(
+            "indicator(\"request provider time\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, time(\"D\")))\n",
+        ),
+        environment,
+    )
+    .run(&bars)
+    .expect("provider time(\"D\") request should run");
+
+    assert_eq!(result.plots[0].values, expected.plots[0].values);
+}
+
+#[test]
+fn legacy_security_recomputes_time_function_alias_in_requested_context() {
+    let bars = [
+        timed_bar(1_704_067_200_000, 20.0),
+        timed_bar(1_704_070_800_000, 21.0),
+        timed_bar(1_704_153_600_000, 22.0),
+    ];
+    let expected = run_historical(
+        &compile_program(
+            "//@version=4\nstudy(\"time alias oracle\")\ndayOpen = time(\"D\")\nnewDay = dayOpen != dayOpen[1]\nplot(dayOpen)\nplot(valuewhen(newDay, close, 0))\n",
+        ),
+        &bars,
+    )
+    .expect("legacy time alias oracle should run");
+    let environment = external_symbol_environment("NYSE:IBM", bars.to_vec());
+    let result = HistoricalRuntime::with_request_environment(
+        &compile_program(
+            "//@version=4\nstudy(\"legacy time alias\")\ndayOpen = time(\"D\")\nnewDay = dayOpen != dayOpen[1]\ndayClose = valuewhen(newDay, close, 0)\nplot(security(\"NYSE:IBM\", timeframe.period, dayOpen))\nplot(security(\"NYSE:IBM\", timeframe.period, dayClose))\n",
+        ),
+        environment,
+    )
+    .run(&bars)
+    .expect("legacy time alias request should run");
+
+    assert_eq!(result.plots[0].values, expected.plots[0].values);
+    assert_eq!(result.plots[1].values, expected.plots[1].values);
+}
+
+#[test]
+fn request_security_same_context_barstate_islast_matches_direct_flag() {
+    let bars = [
+        timed_bar(0, 1.0),
+        timed_bar(60_000, 2.0),
+        timed_bar(120_000, 3.0),
+    ];
+    let direct = run_historical(
+        &compile_program("indicator(\"direct islast\")\nplot(barstate.islast ? 1 : 0)\n"),
+        &bars,
+    )
+    .expect("direct barstate.islast should run");
+    let requested = run_historical(
+        &compile_program(
+            "indicator(\"request islast\")\nplot(request.security(syminfo.tickerid, timeframe.period, barstate.islast ? 1 : 0))\n",
+        ),
+        &bars,
+    )
+    .expect("same-context barstate.islast request should run");
+
+    assert_eq!(requested.plots[0].values, direct.plots[0].values);
+    assert_values_close(&requested.plots[0].values, &[0.0, 0.0, 1.0]);
+}
+
+#[test]
+fn request_security_evaluates_provider_barstate_islastconfirmedhistory_in_requested_context() {
+    let requested_bars = [
+        timed_bar(0, 20.0),
+        timed_bar(60_000, 21.0),
+        timed_bar(120_000, 22.0),
+    ];
+    let chart_bars = [
+        timed_bar(0, 1.0),
+        timed_bar(60_000, 2.0),
+        timed_bar(120_000, 3.0),
+        timed_bar(180_000, 4.0),
+    ];
+    let environment = external_symbol_environment("NYSE:IBM", requested_bars.to_vec());
+    let result = HistoricalRuntime::with_request_environment(
+        &compile_program(
+            "indicator(\"request provider last history\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, barstate.islastconfirmedhistory ? 1 : 0))\n",
+        ),
+        environment,
+    )
+    .run(&chart_bars)
+    .expect("provider barstate.islastconfirmedhistory request should run");
+
+    assert_values_close(&result.plots[0].values, &[0.0, 0.0, 1.0, 1.0]);
+}
+
+#[test]
+fn request_security_same_context_time_close_matches_direct_call() {
+    let bars = [
+        timed_bar(0, 1.0),
+        timed_bar(60_000, 2.0),
+        timed_bar(120_000, 3.0),
+        timed_bar(180_000, 4.0),
+    ];
+    let direct = run_historical(
+        &compile_program("indicator(\"direct time_close\")\nplot(time_close(\"D\"))\n"),
+        &bars,
+    )
+    .expect("direct time_close should run");
+    let requested = run_historical(
+        &compile_program(
+            "indicator(\"request time_close\")\nplot(request.security(syminfo.tickerid, timeframe.period, time_close(\"D\")))\nplot(request.security(syminfo.tickerid, timeframe.period, time(\"D\", bars_back=0)))\n",
+        ),
+        &bars,
+    )
+    .expect("same-context time_close request should run");
+
+    assert_eq!(requested.plots[0].values, direct.plots[0].values);
+}
+
+#[test]
+fn request_security_evaluates_provider_barstate_islast_in_requested_context() {
+    let requested_bars = [
+        timed_bar(0, 20.0),
+        timed_bar(60_000, 21.0),
+        timed_bar(120_000, 22.0),
+    ];
+    let chart_bars = [
+        timed_bar(0, 1.0),
+        timed_bar(60_000, 2.0),
+        timed_bar(120_000, 3.0),
+        timed_bar(180_000, 4.0),
+    ];
+    let environment = external_symbol_environment("NYSE:IBM", requested_bars.to_vec());
+    let result = HistoricalRuntime::with_request_environment(
+        &compile_program(
+            "indicator(\"request provider islast\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, barstate.islast ? 1 : 0))\n",
+        ),
+        environment,
+    )
+    .run(&chart_bars)
+    .expect("provider barstate.islast request should run");
+
+    assert_values_close(&result.plots[0].values, &[0.0, 0.0, 1.0, 1.0]);
+}
+
+#[test]
+fn legacy_security_udf_barstate_islast_uses_requested_series_end() {
+    let requested_bars = [
+        timed_bar(0, 20.0),
+        timed_bar(60_000, 21.0),
+        timed_bar(120_000, 22.0),
+    ];
+    let environment = external_symbol_environment("NYSE:IBM", requested_bars.to_vec());
+    let result = HistoricalRuntime::with_request_environment(
+        &compile_program(
+            "//@version=4\nstudy(\"udf islast\")\nflag() => security(\"NYSE:IBM\", timeframe.period, barstate.islast ? 1 : 0)\nplot(flag())\n",
+        ),
+        environment,
+    )
+    .run(&requested_bars)
+    .expect("legacy UDF barstate.islast request should run");
+
+    assert_values_close(&result.plots[0].values, &[0.0, 0.0, 1.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_math_extremes_in_requested_context() {
     let program = compile_program(
         "indicator(\"request math extremes\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, math.max(close, open) - math.min(close, open)))\n",

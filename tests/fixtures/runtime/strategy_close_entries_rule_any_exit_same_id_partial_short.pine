@@ -1,0 +1,14 @@
+//@version=5
+strategy("Close entries rule ANY same id partial exit short", pyramiding=2, close_entries_rule="ANY")
+
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=1)
+if bar_index == 1
+    strategy.entry("S", strategy.short, qty=3)
+if bar_index == 2
+    strategy.exit("XS", from_entry="S", limit=3, qty=1.5)
+
+plot(strategy.closedtrades)
+plot(strategy.closedtrades.entry_id(0) == "S" ? 1 : 0)
+plot(strategy.closedtrades.entry_id(1) == "S" ? 1 : 0)
+plot(strategy.position_size)

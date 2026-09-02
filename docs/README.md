@@ -71,6 +71,9 @@ cargo run -p pine-cli -- matrix --format json
 - [v0.3 Legacy Corpus R2 Readiness Baseline](V0_3_LEGACY_CORPUS_R2_BASELINE.md):
   private authorized-corpus intake, corpus-selected syntax measurements,
   failure ranking, and the next indicator-only decision boundary.
+- [v0.3 Legacy Corpus R3 Permissive Baseline](V0_3_LEGACY_CORPUS_R3_PERMISSIVE_BASELINE.md):
+  commit-pinned public permissive intake, 51-indicator v4 floor, and
+  privacy-preserving local evidence boundary.
 - [Legacy Indicator Phase 0 Baseline](LEGACY_INDICATOR_PHASE0_BASELINE.md):
   reproducible seed-corpus composition, stage rates, input availability, and
   ranked legacy failure clusters before compiler changes.
@@ -119,6 +122,16 @@ cargo run -p pine-cli -- matrix --format json
   experimental declaration, conversion, lookahead, and evidence boundary.
 - [Strategy Internal Gap Audit](STRATEGY_INTERNAL_GAP_AUDIT.md): current
   long-only strategy baseline and deferred broker-model work.
+- [Strategy Internal Stage 14 Short/Reversal Plan](STRATEGY_INTERNAL_STAGE14_SHORT_REVERSAL_PLAN.md):
+  boundary lock, side-aware ledger, market short entries, short closes, market
+  entry reversals, and short stop/limit/profit/loss/bracket/trailing
+  `strategy.exit` covers.
+- [Strategy Internal Stage 15 Short Margin Plan](STRATEGY_INTERNAL_STAGE15_MARGIN_SHORT_PLAN.md):
+  short `margin_short` capital held, short-entry affordability, short forced
+  liquidation, and short `strategy.margin_liquidation_price`.
+- [Strategy Internal Stage 16 Close-Entries-Rule Plan](STRATEGY_INTERNAL_STAGE16_CLOSE_ENTRIES_RULE_PLAN.md):
+  id-specific and same-entry-id partial `close_entries_rule="ANY"` allocation for
+  shorts.
 - [Next Language Expansion Playbook](NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md):
   process for selecting a language slice.
 

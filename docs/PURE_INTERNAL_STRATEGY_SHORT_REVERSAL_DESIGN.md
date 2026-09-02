@@ -173,18 +173,28 @@ Keep these variants unsupported until separately designed and fixture-backed:
 
 ## Suggested Slice Order
 
-1. Boundary lock: assert current `strategy.short` entry rejection, generic
-   `strategy.order()` rejection, and long-only max-short state behavior.
-2. Internal model audit: identify broker, ledger, pending-entry, pending-exit,
-   and public mirror fields that must become side-aware.
-3. Market short entry runtime: accept one explicit-quantity market short entry
-   without reversal, with aggregate position and max-held-short fixtures.
-4. Short close-all or close-by-id subset: close the first supported short
-   exposure and prove realized PnL.
-5. Automatic reversal: close current opposite exposure and open the requested
-   side under one deterministic historical-bar rule.
-6. Host parity and conformance synchronization after the positive subset is
-   fixture-backed.
+1. Boundary lock: closed as Stage 14a in
+   `docs/STRATEGY_INTERNAL_STAGE14_BOUNDARY_AUDIT.md`.
+2. Internal model: closed as Stage 14b in
+   `docs/STRATEGY_INTERNAL_STAGE14_SIDE_AWARE_LEDGER_AUDIT.md`. Open trades now
+   store `TradeDirection`, net position is signed, and current close/exit
+   allocation stays long-only.
+3. Market short entry runtime: closed as Stage 14c in
+   `docs/STRATEGY_INTERNAL_STAGE14_MARKET_SHORT_ENTRY_AUDIT.md`.
+4. Short close-all or close-by-id subset: closed as Stage 14d in
+   `docs/STRATEGY_INTERNAL_STAGE14_SHORT_CLOSE_AUDIT.md`.
+5. Automatic reversal: closed as Stage 14e in
+   `docs/STRATEGY_INTERNAL_STAGE14_REVERSAL_AUDIT.md`.
+6. Short stop/limit `strategy.exit`: closed as Stage 14f in
+   `docs/STRATEGY_INTERNAL_STAGE14_SHORT_EXIT_AUDIT.md`.
+7. Short profit/loss ticks: closed as Stage 14g in
+   `docs/STRATEGY_INTERNAL_STAGE14_SHORT_EXIT_TICKS_AUDIT.md`.
+8. Short brackets: closed as Stage 14h in
+   `docs/STRATEGY_INTERNAL_STAGE14_SHORT_EXIT_BRACKET_AUDIT.md`.
+9. Short trailing: closed as Stage 14i in
+   `docs/STRATEGY_INTERNAL_STAGE14_SHORT_EXIT_TRAILING_AUDIT.md`.
+10. Host parity and conformance synchronization after the positive subset is
+    fixture-backed.
 
 Each behavior slice must update `tests/fixtures/conformance.tsv`,
 `tests/snapshots/matrix.json` if matrix output changes, public host snapshots

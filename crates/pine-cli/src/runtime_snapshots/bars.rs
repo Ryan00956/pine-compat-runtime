@@ -140,6 +140,23 @@ pub(crate) fn runtime_fixture_bars_csv(fixture: &str) -> Option<&'static str> {
         "tests/fixtures/runtime/percentrank_edge_cases.pine" => Some(include_str!(
             "../../../../tests/fixtures/runtime/percentrank_edge_cases_bars.csv"
         )),
+        "tests/fixtures/runtime/strategy_entry_stop_short.pine"
+        | "tests/fixtures/runtime/strategy_order_stop_short.pine" => Some(include_str!(
+            "../../../../tests/fixtures/runtime/strategy_entry_stop_short_bars.csv"
+        )),
+        "tests/fixtures/runtime/strategy_entry_stop_limit_short.pine"
+        | "tests/fixtures/runtime/strategy_order_stop_limit_short.pine" => Some(include_str!(
+            "../../../../tests/fixtures/runtime/strategy_entry_stop_limit_short_bars.csv"
+        )),
+        "tests/fixtures/runtime/strategy_margin_call_short.pine" => Some(include_str!(
+            "../../../../tests/fixtures/runtime/strategy_margin_call_short_bars.csv"
+        )),
+        "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short.pine"
+        | "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_same_id_partial_short.pine" => {
+            Some(include_str!(
+                "../../../../tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short_bars.csv"
+            ))
+        }
         _ => None,
     }
 }

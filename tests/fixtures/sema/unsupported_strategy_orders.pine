@@ -2,7 +2,4 @@
 strategy("Unsupported strategy orders")
 strategy.order("MissingShortQty", strategy.short)
 strategy.order("BadDirection", "sideways", qty=1)
-strategy.order("ShortLimit", strategy.short, qty=1, limit=close)
-strategy.order("ShortStop", strategy.short, qty=1, stop=close)
-strategy.order("ShortStopLimit", strategy.short, qty=1, limit=close, stop=close)
 strategy.order("Oca", strategy.long, qty=1, oca_name="grp", oca_type=strategy.oca.cancel)

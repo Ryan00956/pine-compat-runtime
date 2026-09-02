@@ -1,0 +1,16 @@
+//@version=5
+strategy("Margin capital held short", margin_short=50)
+identity(value) => value
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=2)
+if bar_index == 3
+    strategy.close("S")
+plot(strategy.opentrades.capital_held)
+independent_capital_held = strategy.opentrades.capital_held * 0
+capital_held_i = 0
+while capital_held_i < 1
+    independent_capital_held := strategy.opentrades.capital_held
+    capital_held_i := capital_held_i + 1
+plot(independent_capital_held)
+plot(identity(strategy.opentrades.capital_held))
+plot(strategy.opentrades.capital_held[1])

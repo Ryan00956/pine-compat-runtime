@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported request time function")
+inline_open = request.security(syminfo.tickerid, timeframe.period, time("D"))
+provider_open = request.security("NYSE:IBM", timeframe.period, time("D"))
+plot(inline_open)
+plot(provider_open)

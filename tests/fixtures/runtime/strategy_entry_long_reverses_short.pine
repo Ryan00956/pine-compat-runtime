@@ -1,0 +1,10 @@
+//@version=5
+strategy("Long entry reverses short", overlay=true)
+if bar_index == 1
+    strategy.entry("S", strategy.short, qty=2)
+if bar_index == 2
+    strategy.entry("L", strategy.long, qty=1)
+plot(strategy.position_size)
+plot(strategy.netprofit)
+plot(strategy.max_contracts_held_long)
+plot(strategy.max_contracts_held_short)

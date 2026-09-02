@@ -47,8 +47,9 @@ Good next slices:
 Keep out of scope until separately designed:
 
 - Short exposure, reversals, and `strategy.order` forms beyond the
-  fixture-backed long market/limit/stop/stop-limit add-or-increase subset and
-  explicit-quantity reduce-only market-short subset.
+  fixture-backed long market/limit/stop/stop-limit add-or-increase subset,
+  explicit-quantity reduce-only market-short subset, and short
+  limit/stop/stop-limit add-or-increase subset.
 - Pyramiding behavior beyond the current fixture-backed long-only multi-entry
   ledger subset, including short/reversal netting and richer close-entry rules.
 - Custom OCA behavior, unsupported margin/account behavior, and rich order
@@ -61,13 +62,11 @@ Keep out of scope until separately designed:
   store, diagnostic emission, and failure-reporting model from
   `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` is implemented.
 
-Recommended first slice: do not reopen broad broker foundations immediately
-after Stage 13. Prefer either a narrow no-op/diagnostics/accounting slice that
-keeps the public schema unchanged, or move to a small built-in coverage slice
-from a real fixture gap. Do not add short exposure, reversals, generic
-`strategy.order()` beyond the current fixture-backed subset, custom OCA, public
-pending-order fields, or any conformance widening without runtime behavior and
-host-parity evidence in the same slice.
+Stage 16b closed same-entry-id partial `close_entries_rule="ANY"` allocation
+for shorts. Recommended next slice: remaining strategy information variables
+or a separately designed omitted-`from_entry` `"ANY"` path. Do not add custom
+OCA, public pending-order fields, or any conformance widening without runtime
+behavior and host-parity evidence in the same slice.
 
 Closed maintenance slice:
 

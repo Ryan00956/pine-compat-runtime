@@ -1577,6 +1577,76 @@ barcolor(close > open ? color.green : color.red, title="Bars", offset=0, editabl
 }
 
 #[test]
+fn plot_style_uses_the_final_evaluated_enum() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("dynamic plot style")
+style = bar_index % 2 == 0 ? plot.style_line : plot.style_histogram
+plot(close, title="dynamic", style=style)
+plot(close, title="line", style=plot.style_line)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_eq!(
+        result.plots[0].style,
+        PineValue::String("plot.style_histogram".to_owned())
+    );
+    assert_eq!(
+        result.plots[1].style,
+        PineValue::String("plot.style_line".to_owned())
+    );
+}
+
+#[test]
+fn plotshape_and_hline_style_use_dynamic_enums() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("dynamic plotshape hline")
+shapeStyle = bar_index % 2 == 0 ? shape.circle : shape.cross
+lineStyle = bar_index % 2 == 0 ? hline.style_solid : hline.style_dotted
+plotshape(true, title="dynamic", style=shapeStyle)
+hline(1, title="dynamic", linestyle=lineStyle)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plot_shapes.len(), 1);
+    assert_eq!(
+        result.plot_shapes[0].styles,
+        vec![
+            PineValue::String("shape.circle".to_owned()),
+            PineValue::String("shape.cross".to_owned()),
+            PineValue::String("shape.circle".to_owned()),
+            PineValue::String("shape.cross".to_owned()),
+        ]
+    );
+    assert_eq!(result.hlines.len(), 1);
+    assert_eq!(
+        result.hlines[0].style,
+        PineValue::String("hline.style_dotted".to_owned())
+    );
+}
+
+#[test]
 fn collects_bgcolor_and_barcolor_series() {
     let source = SourceFile::new(
         "test.pine",

@@ -1,0 +1,10 @@
+//@version=6
+indicator("Canonical UDF line setters", overlay=true, max_lines_count=10)
+
+var line segment = na
+if barstate.isfirst
+    segment := line.new(bar_index, open, bar_index + 1, close, extend=extend.right)
+line.set_x2(segment, bar_index + 2)
+line.set_extend(segment, extend.none)
+
+plot(close)

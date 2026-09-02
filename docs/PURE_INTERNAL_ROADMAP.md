@@ -1409,8 +1409,10 @@ prove deterministic state transitions.
 
 Current baseline:
 
-- long-only broker with Stage 13 fixture-backed multi-entry ledger and positive
-  integer `pyramiding` subset;
+- long-only broker with Stage 13 fixture-backed multi-entry ledger, Stage 14a-14i
+  side-aware short/reversal model including market short entries, short
+  close/exit stop/limit/profit/loss/brackets/trailing, and market reversals, and
+  positive integer `pyramiding` subset;
 - supported long market, limit, stop, and stop-limit entries;
 - supported `strategy.close`, `strategy.close_all`, `strategy.cancel`, and
   `strategy.cancel_all` subsets;
@@ -1421,24 +1423,23 @@ Current baseline:
 - supported cash-per-contract, cash-per-order, and percent commission modes,
   fixed-tick slippage, fixed-tick limit verification, cash default sizing,
   percent-of-equity default sizing, explicit `close_entries_rule="FIFO"`,
-  fixture-backed id-specific long-only `close_entries_rule="ANY"`, and selected
+  fixture-backed id-specific long and short `close_entries_rule="ANY"`, and selected
   long-margin behavior.
 
 Remaining internal work:
 
-- short exposure;
-- automatic long/short reversal;
 - `strategy.order()` behavior beyond the fixture-backed long
-  market/limit/stop/stop-limit add-or-increase subset and explicit-quantity
-  reduce-only market-short subset;
+  market/limit/stop/stop-limit add-or-increase subset, explicit-quantity
+  reduce-only market-short subset, and short limit/stop/stop-limit
+  add-or-increase subset;
 - broader `close_entries_rule="ANY"` behavior beyond fixture-backed
-  id-specific long-only close/exit allocation;
+  id-specific long and short close/exit allocation;
 - custom OCA behavior across order families;
 - `process_orders_on_close`, `calc_on_order_fills`, `calc_on_every_tick`, and bar
   magnifier style timing;
-- `margin_short`, richer account constraints, currency conversion, broader
-  short-side, rounded, and currency-aware `strategy.margin_liquidation_price`
-  behavior;
+- richer account constraints, currency conversion,
+  broader short-side, rounded, and currency-aware
+  `strategy.margin_liquidation_price` behavior;
 - remaining strategy information variables and trade namespace fields;
 - `strategy.risk.*` rules after broker/account foundations are stronger.
 
@@ -1451,13 +1452,14 @@ Non-goals:
 
 Good next slice:
 
-- a narrow no-op, diagnostic, accounting, or script-visible field slice that keeps
-  the current public strategy result shape unchanged. Short/reversal and generic
-  order work should start with a design gate, not an implementation patch.
+- remaining strategy information variables, or a separately designed generic
+  `strategy.order()` netting slice. Keep the public strategy result shape
+  unchanged unless a slice designs a schema change.
 
 The strategy short/reversal design gate is closed in
-`docs/PURE_INTERNAL_STRATEGY_SHORT_REVERSAL_DESIGN.md`. Use it before any
-positive `strategy.short` entry, short exposure, or automatic reversal support.
+`docs/PURE_INTERNAL_STRATEGY_SHORT_REVERSAL_DESIGN.md`. Stage 14a/14b closed the
+boundary lock and side-aware ledger. Use the design gate before any positive
+`strategy.short` entry, short exposure, or automatic reversal support.
 
 The generic strategy order design gate is closed in
 `docs/PURE_INTERNAL_STRATEGY_ORDER_DESIGN.md`. Use it before any positive

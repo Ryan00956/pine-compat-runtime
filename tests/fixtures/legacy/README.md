@@ -70,6 +70,54 @@ python3 scripts/analyze_legacy_corpus.py \
   --output /absolute/path/to/corpus-r2-pre-code.json
 ```
 
+The importer defaults to private user-authorized intake. For a corpus sourced
+from a permissively licensed repository, record the immutable upstream origin,
+revision, and SPDX-style license id instead of reusing that private label:
+
+```text
+python3 scripts/import_legacy_corpus.py \
+  --source-dir /absolute/path/to/selected-sources \
+  --output-dir /absolute/path/to/corpus-r3 \
+  --id-prefix gh-v4-r3 \
+  --license-class permissive \
+  --source-origin https://github.com/owner/repository \
+  --source-revision <full-commit-sha> \
+  --license-id MIT
+```
+
+Permissive imports fail before writing unless all three provenance fields are
+present. The public report still exposes only `licenseClass`; the ignored local
+`intake-summary.json` owns the upstream URL, revision, and license id.
+
+When one R3 selection spans several independently imported repositories, merge
+their manifests without losing the individual file roots:
+
+```text
+python3 scripts/merge_legacy_corpus_manifests.py \
+  --manifest /absolute/path/to/first/corpus.tsv \
+  --root /absolute/path/to/first/root \
+  --manifest /absolute/path/to/second/corpus.tsv \
+  --root /absolute/path/to/second/root \
+  --exclude-id audited-non-standalone-id \
+  --expected-version 4 \
+  --expected-scope legacy_indicator \
+  --output /absolute/path/to/combined-v4.tsv
+```
+
+When any explicit `--root` is needed, supply one root for every manifest in the
+same order. Without `--root`, each manifest defaults to its own parent. The
+merger converts only file-input columns to absolute paths, sorts opaque ids,
+rejects collisions, and never copies source text into its output.
+For rows with request data, it also writes deterministic JSON sidecars under
+`<output>.request-data/`; nested CSV paths are made absolute so independently
+rooted corpora remain executable after the merge. Sidecar ids are constrained
+to filename-safe opaque ids, and existing sidecar directories are never
+overwritten.
+`--exclude-id` is repeatable and fails on unknown ids; use it only when intake
+evidence shows that an upstream file is incomplete or requires an unavailable
+preprocessor/dependency, never merely because the interpreter rejects valid
+Pine semantics.
+
 The committed, redacted Phase 0 result is recorded in
 `docs/LEGACY_INDICATOR_PHASE0_BASELINE.md`.
 
@@ -152,11 +200,48 @@ The following array-index slice adds
 general array contract. Modern namespace and method forms share the same
 integer-compatible signature, while float and string indexes remain rejected.
 
+The later insert-index slice adds
+`v4/runtime/array_insert_series_index_legacy.pine` plus
+`tests/fixtures/runtime/array_insert_series_index.pine`. It extends the same
+integer-compatible index contract to `array.insert()` / `.insert()`, so a
+per-bar `series int` index inserts before that slot. `array.remove` remains
+simple-int-only, and non-int insert indexes stay rejected.
+
+The following request-expression slice adds
+`v4/runtime/security_time_alias_legacy.pine` plus
+`tests/fixtures/runtime/request_security_time_function.pine`. It admits
+positional `time(timeframe)` calls, so a v4 top-level `time("D")` alias and a
+`valuewhen` graph that depends on that alias can be requested. `time_close()`
+and named `time()` arguments remain rejected.
+
+The later barstate slice adds
+`v4/runtime/security_barstate_islast_legacy.pine` plus
+`tests/fixtures/runtime/request_security_barstate_islast.pine`. Provider and
+legacy UDF-local `security` expressions may read `barstate.islast` against the
+requested stream. Other `barstate.*` flags remain provider-rejected.
+
 The subsequent drawing-enum slice adds
 `v4/runtime/dynamic_drawing_enums_legacy.pine`. It proves that supported
 `line` style/extend and `label` style values can vary by bar, including the
 historical v4 `label.style_labelup` / `label.style_labeldown` spellings.
 Static enum-domain checks keep unbounded strings and invalid branches rejected.
+
+The later plot-style slice adds
+`v4/runtime/plot_dynamic_style_legacy.pine` plus
+`tests/fixtures/runtime/plot_dynamic_style.pine`. It admits `plot()` style
+values whose proven domain is a documented `plot.style_*` enum, including
+per-bar ternaries. The emitted plot metadata keeps the last evaluated style.
+Unbounded strings and series integer ordinals remain rejected.
+
+The following request and output-enum slices add
+`v4/runtime/security_time_close_legacy.pine`,
+`v4/runtime/security_barstate_flags_legacy.pine`, and
+`v4/runtime/plotshape_hline_dynamic_style_legacy.pine`. Requested expressions
+may call `time_close()`, pass documented named `time()` / `time_close()`
+arguments, and read the remaining `barstate.*` flags against the requested
+stream. `plotshape` style and `hline` linestyle follow the same proven enum
+domain as `plot` style. Named arguments on other requested calls stay
+rejected.
 
 The following `na`-origin slice adds
 `v2/runtime/bool_numeric_comparisons_legacy.pine` and
@@ -185,11 +270,13 @@ conditional without `else` returns `na` on the missing path.
 The following reference-side-effect slice adds
 `v4/runtime/udf_reference_side_effects_legacy.pine` and an explicitly expanded
 v6 rewrite. Pine v4 UDFs may use the corpus-backed namespace calls
-`array.set/pop/unshift/clear`, `label.new/delete`, and `line.new/delete`,
-including final side-effect-only conditionals and loops. The paired runtime
-fixture covers historical, incremental, and realtime historical handoff;
-`v4/unsupported/udf_other_reference_side_effects.pine` keeps all other
-collection and drawing mutations fail-closed.
+`array.set/pop/unshift/clear`, `label.new/delete`, `line.new/delete`, and the
+separately corpus-proven `line.set_x2/set_extend` pair, including final
+side-effect-only conditionals and loops. The paired runtime fixtures cover
+historical, incremental, realtime historical, forming replacement, rollback,
+and confirmation; `v4/unsupported/udf_other_reference_side_effects.pine` keeps
+`array.push`, `label.set_text`, `line.set_x1`, and all other collection or
+drawing mutations fail-closed.
 
 The following parser slice adds
 `v1/runtime/ternary_continuation_legacy.pine` and a single-line v6 rewrite.

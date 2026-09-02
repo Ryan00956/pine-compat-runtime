@@ -1,0 +1,6 @@
+//@version=6
+indicator("Unsupported unbounded plot style")
+unbounded = input.string("custom")
+partlyInvalid = close >= open ? plot.style_line : "custom"
+plot(close, style=unbounded)
+plot(open, style=partlyInvalid)

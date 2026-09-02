@@ -9,20 +9,53 @@ const STRATEGY_EXECUTION_TIMING_BOUNDARY_FIXTURES: &[&str] =
 const STRATEGY_RISK_BOUNDARY_FIXTURES: &[&str] =
     &["tests/fixtures/sema/unsupported_strategy_order_and_trade_namespaces.pine"];
 
-const STRATEGY_ENTRY_SHORT_REVERSAL_BOUNDARY_FIXTURES: &[&str] =
-    &["tests/fixtures/sema/unsupported_strategy_entry_short.pine"];
+const STRATEGY_ENTRY_SHORT_POSITIVE_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/strategy_entry_short.pine",
+    "tests/fixtures/runtime/strategy_entry_short_reverses_long.pine",
+    "tests/fixtures/runtime/strategy_entry_long_reverses_short.pine",
+    "tests/fixtures/runtime/strategy_entry_limit_short.pine",
+    "tests/fixtures/runtime/strategy_entry_stop_short.pine",
+    "tests/fixtures/runtime/strategy_entry_stop_limit_short.pine",
+    "tests/fixtures/sema/supported_strategy_entry_short.pine",
+    "tests/fixtures/sema/supported_strategy_entry_named_const_short_direction.pine",
+    "tests/fixtures/sema/supported_strategy_entry_limit_short.pine",
+    "tests/fixtures/sema/supported_strategy_entry_stop_short.pine",
+    "tests/fixtures/sema/supported_strategy_entry_stop_limit_short.pine",
+];
+
+const STRATEGY_EXIT_SHORT_POSITIVE_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/strategy_exit_stop_short.pine",
+    "tests/fixtures/runtime/strategy_exit_limit_short.pine",
+    "tests/fixtures/runtime/strategy_exit_profit_short.pine",
+    "tests/fixtures/runtime/strategy_exit_loss_short.pine",
+    "tests/fixtures/runtime/strategy_exit_bracket_stop_limit_stop_fill_short.pine",
+    "tests/fixtures/runtime/strategy_exit_bracket_stop_limit_limit_fill_short.pine",
+    "tests/fixtures/runtime/strategy_exit_trail_price_fill_short.pine",
+    "tests/fixtures/runtime/strategy_exit_trail_points_fill_short.pine",
+];
+
+const STRATEGY_MAX_CONTRACTS_HELD_SHORT_BOUNDARY_FIXTURES: &[&str] = &[
+    "tests/fixtures/runtime/strategy_position_state.pine",
+    "tests/fixtures/runtime/strategy_entry_short.pine",
+];
 
 const STRATEGY_ORDER_SHORT_REVERSAL_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/strategy_order_reduce_long.pine",
     "tests/fixtures/runtime/strategy_order_short_flat_noop.pine",
+    "tests/fixtures/runtime/strategy_order_limit_short.pine",
+    "tests/fixtures/runtime/strategy_order_stop_short.pine",
+    "tests/fixtures/runtime/strategy_order_stop_limit_short.pine",
     "tests/fixtures/sema/unsupported_strategy_orders.pine",
 ];
 
 const STRATEGY_ORDER_SUPPORTED_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/strategy_order_market_long.pine",
     "tests/fixtures/runtime/strategy_order_limit_long.pine",
+    "tests/fixtures/runtime/strategy_order_limit_short.pine",
     "tests/fixtures/runtime/strategy_order_stop_long.pine",
+    "tests/fixtures/runtime/strategy_order_stop_short.pine",
     "tests/fixtures/runtime/strategy_order_stop_limit_long.pine",
+    "tests/fixtures/runtime/strategy_order_stop_limit_short.pine",
     "tests/fixtures/runtime/strategy_order_reduce_long.pine",
     "tests/fixtures/runtime/strategy_order_short_flat_noop.pine",
     "tests/fixtures/runtime/strategy_order_metadata.pine",
@@ -48,6 +81,7 @@ const STRATEGY_CANCEL_ALL_BOUNDARY_FIXTURES: &[&str] = &[
 
 const STRATEGY_CLOSE_ALL_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/strategy_close_all.pine",
+    "tests/fixtures/runtime/strategy_close_all_short.pine",
     "tests/fixtures/runtime/strategy_close_all_exit.pine",
     "tests/fixtures/runtime/strategy_close_metadata.pine",
     "tests/fixtures/sema/supported_strategy_close_all.pine",
@@ -58,6 +92,7 @@ const STRATEGY_CLOSE_ALL_BOUNDARY_FIXTURES: &[&str] = &[
 
 const STRATEGY_CLOSE_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/strategy_close.pine",
+    "tests/fixtures/runtime/strategy_close_short.pine",
     "tests/fixtures/runtime/strategy_close_noop.pine",
     "tests/fixtures/runtime/strategy_close_exit.pine",
     "tests/fixtures/runtime/strategy_close_qty_partial.pine",
@@ -74,13 +109,18 @@ const STRATEGY_MARGIN_ACCOUNT_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/supported_strategy_margin_declaration.pine",
     "tests/fixtures/sema/unsupported_strategy_margin_declaration.pine",
     "tests/fixtures/runtime/strategy_margin_capital_held_long.pine",
+    "tests/fixtures/runtime/strategy_margin_capital_held_short.pine",
     "tests/fixtures/runtime/strategy_margin_entry_affordability_long.pine",
+    "tests/fixtures/runtime/strategy_margin_entry_affordability_short.pine",
     "tests/fixtures/runtime/strategy_margin_call_long.pine",
+    "tests/fixtures/runtime/strategy_margin_call_short.pine",
 ];
 
 const STRATEGY_MARGIN_STATE_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/strategy_margin_capital_held_long.pine",
+    "tests/fixtures/runtime/strategy_margin_capital_held_short.pine",
     "tests/fixtures/runtime/strategy_margin_call_long.pine",
+    "tests/fixtures/runtime/strategy_margin_call_short.pine",
 ];
 
 const STRATEGY_CLOSE_ENTRIES_RULE_BOUNDARY_FIXTURES: &[&str] = &[
@@ -90,8 +130,11 @@ const STRATEGY_CLOSE_ENTRIES_RULE_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/runtime/strategy_close_entries_rule_fifo.pine",
     "tests/fixtures/runtime/strategy_close_entries_rule_fifo_close_all.pine",
     "tests/fixtures/runtime/strategy_close_entries_rule_any_close.pine",
+    "tests/fixtures/runtime/strategy_close_entries_rule_any_close_short.pine",
     "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry.pine",
+    "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short.pine",
     "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_same_id_partial.pine",
+    "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_same_id_partial_short.pine",
 ];
 
 pub(super) fn validate_entry(
@@ -107,6 +150,11 @@ pub(super) fn validate_entry(
     validate_strategy_close_all_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_strategy_cancel_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_strategy_short_reversal_boundary_fixture_paths(line_number, feature, fixtures)?;
+    validate_strategy_max_contracts_held_short_boundary_fixture_paths(
+        line_number,
+        feature,
+        fixtures,
+    )?;
     validate_strategy_margin_account_boundary_fixture_paths(line_number, feature, fixtures)?;
     validate_strategy_close_entries_rule_boundary_fixture_paths(line_number, feature, fixtures)?;
 
@@ -191,7 +239,7 @@ fn validate_strategy_order_supported_boundary_fixture_paths(
     for fixture in STRATEGY_ORDER_SUPPORTED_BOUNDARY_FIXTURES {
         if !fixtures.contains(fixture) {
             return Err(format!(
-                "line {line_number}: `{feature}` must reference `{fixture}` while strategy.order support remains limited to the fixture-backed explicit-qty market/limit/stop/stop-limit long plus reduce-only market-short subset"
+                "line {line_number}: `{feature}` must reference `{fixture}` while strategy.order support remains limited to the fixture-backed explicit-qty market/limit/stop/stop-limit long, limit/stop/stop-limit-short add-or-increase, and reduce-only market-short subset"
             ));
         }
     }
@@ -266,17 +314,38 @@ fn validate_strategy_short_reversal_boundary_fixture_paths(
     feature: &str,
     fixtures: &[&str],
 ) -> Result<(), String> {
-    let required: &[&str] = match feature {
-        "strategy constants" | "strategy.entry" => STRATEGY_ENTRY_SHORT_REVERSAL_BOUNDARY_FIXTURES,
-        "strategy.order" => STRATEGY_ORDER_SHORT_REVERSAL_BOUNDARY_FIXTURES,
-        "strategy.*" => &["tests/fixtures/sema/unsupported_strategy_orders.pine"],
+    let required: Vec<&str> = match feature {
+        "strategy.entry" => STRATEGY_ENTRY_SHORT_POSITIVE_FIXTURES.to_vec(),
+        "strategy.order" => STRATEGY_ORDER_SHORT_REVERSAL_BOUNDARY_FIXTURES.to_vec(),
+        "strategy.exit" => STRATEGY_EXIT_SHORT_POSITIVE_FIXTURES.to_vec(),
+        "strategy.*" => vec!["tests/fixtures/sema/unsupported_strategy_orders.pine"],
         _ => return Ok(()),
     };
 
     for fixture in required {
+        if !fixtures.contains(&fixture) {
+            return Err(format!(
+                "line {line_number}: `{feature}` must reference `{fixture}` while short exposure and automatic reversal remain unsupported outside the fixture-backed market, limit, stop, and stop-limit strategy.entry short, limit/stop/stop-limit strategy.order short, short stop/limit/profit/loss/bracket/trailing strategy.exit, and reduce-only market strategy.order subset"
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+fn validate_strategy_max_contracts_held_short_boundary_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if feature != "strategy.max_contracts_held_short" {
+        return Ok(());
+    }
+
+    for fixture in STRATEGY_MAX_CONTRACTS_HELD_SHORT_BOUNDARY_FIXTURES {
         if !fixtures.contains(fixture) {
             return Err(format!(
-                "line {line_number}: `{feature}` must reference `{fixture}` while short exposure and automatic reversal remain unsupported outside the fixture-backed reduce-only strategy.order subset"
+                "line {line_number}: `{feature}` must reference `{fixture}` while strategy.max_contracts_held_short remains 0.0 in the long-only subset"
             ));
         }
     }
@@ -294,16 +363,17 @@ fn validate_strategy_margin_account_boundary_fixture_paths(
         "strategy.opentrades.*" | "strategy.opentrades.capital_held" => {
             STRATEGY_MARGIN_STATE_BOUNDARY_FIXTURES
         }
-        "strategy.margin_liquidation_price" => {
-            &["tests/fixtures/runtime/strategy_margin_call_long.pine"]
-        }
+        "strategy.margin_liquidation_price" => &[
+            "tests/fixtures/runtime/strategy_margin_call_long.pine",
+            "tests/fixtures/runtime/strategy_margin_call_short.pine",
+        ],
         _ => return Ok(()),
     };
 
     for fixture in required {
         if !fixtures.contains(fixture) {
             return Err(format!(
-                "line {line_number}: `{feature}` must reference `{fixture}` while strategy margin/account support remains limited to the fixture-backed long-only subset"
+                "line {line_number}: `{feature}` must reference `{fixture}` while strategy margin/account support remains limited to the fixture-backed long-only plus short capital-held/affordability/forced-liquidation/liquidation-price subset"
             ));
         }
     }
@@ -327,7 +397,7 @@ fn validate_strategy_close_entries_rule_boundary_fixture_paths(
     for fixture in required {
         if !fixtures.contains(fixture) {
             return Err(format!(
-                "line {line_number}: `{feature}` must reference `{fixture}` while close_entries_rule support remains limited to FIFO plus fixture-backed id-specific long-only ANY close/exit allocation"
+                "line {line_number}: `{feature}` must reference `{fixture}` while close_entries_rule support remains limited to FIFO plus fixture-backed id-specific long and short ANY close/exit allocation"
             ));
         }
     }
@@ -630,25 +700,59 @@ mod tests {
     }
 
     #[test]
-    fn rejects_strategy_entry_row_without_short_reversal_boundary_fixture_set() {
-        let missing = "tests/fixtures/sema/unsupported_strategy_entry_short.pine";
+    fn rejects_max_contracts_held_short_row_without_long_only_zero_fixture() {
+        let missing = "tests/fixtures/runtime/strategy_position_state.pine";
+        let tsv = "feature\tstatus\tnotes\tfixtures\nstrategy.max_contracts_held_short\tpartial\tremains 0.0 because short entries are unsupported\ttests/fixtures/sema/supported_strategy_position_state.pine;tests/fixtures/sema/unsupported_strategy_state_indicator.pine\n";
+        let error = try_conformance_entries_from_tsv(tsv)
+            .expect_err("missing long-only max_contracts_held_short fixture should fail");
+
+        assert!(error.contains(missing));
+    }
+
+    #[test]
+    fn rejects_strategy_entry_row_without_market_short_runtime_fixture() {
+        let missing = "tests/fixtures/runtime/strategy_entry_short.pine";
         let mut fixtures = vec![
             "tests/fixtures/runtime/strategy_entry.pine",
             "tests/fixtures/sema/unsupported_strategy_entry_qty.pine",
         ];
         fixtures.extend(
-            STRATEGY_ENTRY_SHORT_REVERSAL_BOUNDARY_FIXTURES
+            STRATEGY_ENTRY_SHORT_POSITIVE_FIXTURES
                 .iter()
                 .copied()
                 .filter(|fixture| *fixture != missing),
         );
 
         let tsv = format!(
-            "feature\tstatus\tnotes\tfixtures\nstrategy.entry\tpartial\tstrategy.short entries and automatic reversal remain unsupported while long entries are fixture-backed\t{}\n",
+            "feature\tstatus\tnotes\tfixtures\nstrategy.entry\tpartial\tmarket strategy.short entries are fixture-backed while reversal remains unsupported\t{}\n",
             fixtures.join(";")
         );
         let error = try_conformance_entries_from_tsv(&tsv)
-            .expect_err("missing strategy short/reversal boundary fixture should fail");
+            .expect_err("missing market short strategy.entry runtime fixture should fail");
+
+        assert!(error.contains(missing));
+    }
+
+    #[test]
+    fn rejects_strategy_entry_row_without_stop_limit_short_runtime_fixture() {
+        let missing = "tests/fixtures/runtime/strategy_entry_stop_limit_short.pine";
+        let mut fixtures = vec![
+            "tests/fixtures/runtime/strategy_entry.pine",
+            "tests/fixtures/sema/unsupported_strategy_entry_qty.pine",
+        ];
+        fixtures.extend(
+            STRATEGY_ENTRY_SHORT_POSITIVE_FIXTURES
+                .iter()
+                .copied()
+                .filter(|fixture| *fixture != missing),
+        );
+
+        let tsv = format!(
+            "feature\tstatus\tnotes\tfixtures\nstrategy.entry\tpartial\tstop-limit strategy.short entries are fixture-backed\t{}\n",
+            fixtures.join(";")
+        );
+        let error = try_conformance_entries_from_tsv(&tsv)
+            .expect_err("missing stop-limit short strategy.entry runtime fixture should fail");
 
         assert!(error.contains(missing));
     }

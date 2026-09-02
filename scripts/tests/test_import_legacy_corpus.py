@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -120,6 +121,90 @@ class ImportLegacyCorpusTests(unittest.TestCase):
             import_legacy_corpus.corpus_scope(invalid),
             "invalid_control",
         )
+
+    def test_permissive_import_records_provenance_and_custom_id_prefix(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            source_dir = root / "input"
+            source_dir.mkdir()
+            (source_dir / "licensed.pine").write_text(
+                "//@version=4\nstudy(\"licensed\")\nplot(close)\n",
+                encoding="utf-8",
+            )
+            bars = root / "bars.csv"
+            bars.write_text(
+                "time,open,high,low,close,volume\n0,1,1,1,1,1\n",
+                encoding="utf-8",
+            )
+            output_dir = root / "corpus"
+
+            sources = import_legacy_corpus.discover_sources(
+                source_dir, id_prefix="gh-v4-r3"
+            )
+            import_legacy_corpus.write_import(
+                sources,
+                output_dir=output_dir,
+                chart_bars=bars,
+                license_class="permissive",
+                source_origin="https://github.com/example/repository",
+                source_revision="0123456789abcdef",
+                license_id="MIT",
+            )
+
+            with (output_dir / "corpus.tsv").open(
+                newline="", encoding="utf-8"
+            ) as handle:
+                manifest = list(csv.DictReader(handle, delimiter="\t"))
+            summary = json.loads(
+                (output_dir / "intake-summary.json").read_text(encoding="utf-8")
+            )
+
+            self.assertTrue(manifest[0]["id"].startswith("gh-v4-r3-"))
+            self.assertEqual(manifest[0]["license_class"], "permissive")
+            self.assertEqual(
+                summary["provenance"],
+                {
+                    "licenseClass": "permissive",
+                    "licenseId": "MIT",
+                    "sourceOrigin": "https://github.com/example/repository",
+                    "sourceRevision": "0123456789abcdef",
+                },
+            )
+
+    def test_permissive_import_requires_complete_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            bars = root / "bars.csv"
+            bars.write_text("bars", encoding="utf-8")
+
+            with self.assertRaisesRegex(
+                import_legacy_corpus.CorpusImportError,
+                "permissive imports require",
+            ):
+                import_legacy_corpus.write_import(
+                    [],
+                    output_dir=root / "corpus",
+                    chart_bars=bars,
+                    license_class="permissive",
+                    source_origin="https://github.com/example/repository",
+                    source_revision="",
+                    license_id="MIT",
+                )
+
+    def test_invalid_id_prefix_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_dir = Path(temp_dir)
+            (source_dir / "source.pine").write_text(
+                "//@version=4\nstudy(\"source\")\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                import_legacy_corpus.CorpusImportError, "id prefix"
+            ):
+                import_legacy_corpus.discover_sources(
+                    source_dir, id_prefix="GitHub/R3"
+                )
 
     def test_existing_output_is_never_overwritten(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

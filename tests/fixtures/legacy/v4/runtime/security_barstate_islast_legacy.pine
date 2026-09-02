@@ -1,0 +1,4 @@
+//@version=4
+study("Legacy security barstate islast")
+flag() => security("NYSE:IBM", timeframe.period, barstate.islast ? 1 : 0)
+plot(flag())

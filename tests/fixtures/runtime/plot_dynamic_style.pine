@@ -1,0 +1,5 @@
+//@version=6
+indicator("Dynamic plot style")
+style = bar_index % 2 == 0 ? plot.style_line : plot.style_histogram
+plot(close, title="dynamic", style=style)
+plot(close, title="line", style=plot.style_line)

@@ -25,7 +25,7 @@ const PLOT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "style",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -189,7 +189,7 @@ const PLOTSHAPE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "style",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
     BuiltinParam {
@@ -426,7 +426,7 @@ const HLINE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "linestyle",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
     BuiltinParam {

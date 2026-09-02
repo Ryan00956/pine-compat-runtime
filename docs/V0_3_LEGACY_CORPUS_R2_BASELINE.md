@@ -1780,3 +1780,8 @@ The v4 selection checkpoint originally required 30 total samples. The audited
 least 50 deduplicated eligible scripts per profile. Host-parity and release
 resource audits are now closed for the current evidence set; they must remain
 green as new sources are added.
+
+This R2 next-selection checkpoint is superseded by the permissive R3 baseline
+in `docs/V0_3_LEGACY_CORPUS_R3_PERMISSIVE_BASELINE.md`, which records 51
+pairwise-deduplicated standalone v4 indicators and the corpus-ranked `hma` and
+v4 UDF line-setter slices.

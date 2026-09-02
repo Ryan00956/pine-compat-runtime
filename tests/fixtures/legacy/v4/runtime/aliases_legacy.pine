@@ -39,6 +39,7 @@ true_range_call = tr(true)
 balance_volume = obv
 vwap_value = vwap
 vwap_call = vwap(close)
+hull = hma(close, 4)
 plot(basis)
 plot(upper)
 plot(lower)
@@ -83,3 +84,4 @@ plot(crossed ? 1 : 0)
 plot(round(close))
 plot(rma(close, 3))
 plot(wma(close, 3))
+plot(hull)

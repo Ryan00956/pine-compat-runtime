@@ -1,0 +1,6 @@
+//@version=6
+indicator("Supported request barstate islast")
+same_context = request.security(syminfo.tickerid, timeframe.period, barstate.islast ? 1 : 0)
+provider = request.security("NYSE:IBM", timeframe.period, barstate.islast ? 1 : 0)
+plot(same_context)
+plot(provider)

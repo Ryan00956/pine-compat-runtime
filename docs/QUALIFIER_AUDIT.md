@@ -104,6 +104,12 @@ Important current rules:
   `series int` and the runtime applies its final evaluated value to the whole
   rendered output. Pine v3 and v6 remain strict, and this exception does not
   affect history-reference offsets.
+- `plot` `style` is `StringCompatible` plus a proven `plot.style_*` domain.
+  Series and input strings are accepted only when every statically joined
+  runtime value is a documented plot-style enum; the public metadata field
+  still records the last evaluated value. Unbounded strings stay rejected.
+  `plotshape` `style` and `hline` `linestyle` use the same `StringCompatible`
+  plus proven-domain rule.
 - `IntCompatible` accepts integer values at any implemented qualifier; current
   fixture-backed uses include dynamic history offsets, time bars-back
   arguments, `math.sum`, `ta.sma`,

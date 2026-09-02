@@ -193,4 +193,16 @@ pub(crate) const STRATEGY_PYRAMIDING_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapsho
         "runtime_strategy_pyramiding_exit_same_id.json",
         "tests/fixtures/runtime/strategy_pyramiding_exit_same_id.pine",
     ),
+    (
+        "runtime_strategy_close_entries_rule_any_close_short.json",
+        "tests/fixtures/runtime/strategy_close_entries_rule_any_close_short.pine",
+    ),
+    (
+        "runtime_strategy_close_entries_rule_any_exit_from_entry_short.json",
+        "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short.pine",
+    ),
+    (
+        "runtime_strategy_close_entries_rule_any_exit_same_id_partial_short.json",
+        "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_same_id_partial_short.pine",
+    ),
 ];

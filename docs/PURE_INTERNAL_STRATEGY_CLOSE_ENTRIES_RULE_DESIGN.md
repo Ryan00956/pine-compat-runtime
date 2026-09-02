@@ -1,7 +1,7 @@
 # Pure Internal Strategy Close Entries Rule Design Gate
 
 Status: active reference. The first public `"ANY"` slice now accepts
-`close_entries_rule="FIFO"` and fixture-backed id-specific long-only
+`close_entries_rule="FIFO"` and fixture-backed id-specific long and short
 `close_entries_rule="ANY"` allocation for `strategy.close(id)` and
 `strategy.exit(..., from_entry=id)`; broader `"ANY"` allocation behavior remains
 deferred.
@@ -19,7 +19,7 @@ ledgers, or host-owned Strategy Tester presentation.
 The current strategy declaration supports a narrow broker-settings subset.
 `close_entries_rule="FIFO"` is supported as an explicit default FIFO allocation
 setting, and `close_entries_rule="ANY"` is supported for fixture-backed
-id-specific long-only close and exit allocation:
+id-specific long and short close and exit allocation:
 
 ```pine
 //@version=5
@@ -56,8 +56,17 @@ Current evidence:
   and `crates/pine-runtime/src/tests/strategy.rs::strategy_close_entries_rule_any_uses_entry_id_allocation`
   plus
   `crates/pine-runtime/src/tests/strategy.rs::strategy_close_entries_rule_any_partial_exit_same_id_preserves_ledger_order`
-  prove the first id-specific long-only `"ANY"` close/exit subset, including
+  prove the first id-specific long `"ANY"` close/exit subset, including
   same-entry-id partial exit allocation in stable ledger order.
+- `tests/fixtures/runtime/strategy_close_entries_rule_any_close_short.pine`,
+  `tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short.pine`,
+  and
+  `crates/pine-runtime/src/tests/strategy.rs::strategy_close_entries_rule_any_uses_short_entry_id_allocation`
+  prove the first id-specific short `"ANY"` close/exit subset.
+- `tests/fixtures/runtime/strategy_close_entries_rule_any_exit_same_id_partial_short.pine`
+  and
+  `crates/pine-runtime/src/tests/strategy.rs::strategy_close_entries_rule_any_partial_exit_same_short_id_preserves_ledger_order`
+  prove same-entry-id partial short `"ANY"` allocation in stable ledger order.
 - `docs/STRATEGY_INTERNAL_GAP_AUDIT.md` records close-entry ordering as larger
   broker-model work.
 - `docs/STRATEGY_INTERNAL_STAGE13_MULTI_ENTRY_LEDGER_PLAN.md` documents the
@@ -79,7 +88,11 @@ Current evidence:
   decision point. Internal broker tests cover the `"ANY"` path:
   `close_entries_rule_any_internal_close_uses_exact_entry_id_allocation`,
   `close_entries_rule_any_internal_exit_from_entry_uses_exact_entry_id_allocation`,
-  and `close_entries_rule_any_internal_omitted_exit_stays_fifo`.
+  `close_entries_rule_any_internal_omitted_exit_stays_fifo`,
+  `close_entries_rule_any_internal_close_uses_exact_short_entry_id_allocation`,
+  `close_entries_rule_any_internal_exit_from_entry_uses_exact_short_entry_id_allocation`,
+  and
+  `close_entries_rule_any_internal_partial_exit_same_short_id_preserves_ledger_order`.
 
 ## Target Shape
 
@@ -100,8 +113,8 @@ allocation setting explicit:
 - preserve the current public strategy JSON shape.
 
 `close_entries_rule="ANY"` is accepted only for the fixture-backed
-entry-id-specific close and exit allocation subset across current and pending
-long ledger entries.
+entry-id-specific close and exit allocation subset across current long and
+short ledger entries.
 
 ## Analyzer Policy
 

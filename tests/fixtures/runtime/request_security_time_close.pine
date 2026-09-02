@@ -1,0 +1,6 @@
+//@version=6
+indicator("Request time_close and named time")
+plot(request.security(syminfo.tickerid, timeframe.period, time_close("D")), "close")
+plot(time_close("D"), "direct_close")
+plot(request.security(syminfo.tickerid, timeframe.period, time("D", bars_back=0)), "named")
+plot(time("D"), "direct_open")

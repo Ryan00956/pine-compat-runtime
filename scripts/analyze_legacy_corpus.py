@@ -15,8 +15,8 @@ from pathlib import Path
 from typing import Callable, Iterable, Mapping, Sequence
 
 
-SCHEMA_VERSION = 4
-TOOL_VERSION = 4
+SCHEMA_VERSION = 5
+TOOL_VERSION = 5
 ROOT = Path(__file__).resolve().parents[1]
 
 STABLE_MIN_ELIGIBLE_SCRIPTS = 50
@@ -660,7 +660,12 @@ def resource_audit_status(
     *,
     provider_supplied: bool,
 ) -> dict[str, object]:
-    expected_modes = ("batch", "incremental", "realtimeHistory")
+    expected_modes = (
+        "batch",
+        "incremental",
+        "realtimeHistory",
+        "realtimeForming",
+    )
     if any(mode not in resources for mode in expected_modes):
         return stage(STAGE_NOT_RUN)
     snapshots = [resources[mode] for mode in expected_modes]
@@ -744,6 +749,7 @@ def analyze_item(
             "historicalRun",
             "incrementalRun",
             "realtimeRun",
+            "formingRun",
             "resourceAudit",
             "outputCompared",
         ):
@@ -765,6 +771,7 @@ def analyze_item(
             "historicalRun",
             "incrementalRun",
             "realtimeRun",
+            "formingRun",
             "resourceAudit",
             "outputCompared",
         ):
@@ -795,6 +802,7 @@ def analyze_item(
             "historicalRun",
             "incrementalRun",
             "realtimeRun",
+            "formingRun",
             "resourceAudit",
             "outputCompared",
         ):
@@ -818,6 +826,7 @@ def analyze_item(
         stages["historicalRun"] = stage(STAGE_NOT_RUN)
         stages["incrementalRun"] = stage(STAGE_NOT_RUN)
         stages["realtimeRun"] = stage(STAGE_NOT_RUN)
+        stages["formingRun"] = stage(STAGE_NOT_RUN)
         stages["resourceAudit"] = stage(STAGE_NOT_RUN)
         stages["outputCompared"] = stage(STAGE_NOT_RUN)
         return item
@@ -826,6 +835,7 @@ def analyze_item(
         stages["historicalRun"] = stage(STAGE_MISSING_INPUT)
         stages["incrementalRun"] = stage(STAGE_NOT_RUN)
         stages["realtimeRun"] = stage(STAGE_NOT_RUN)
+        stages["formingRun"] = stage(STAGE_NOT_RUN)
         stages["resourceAudit"] = stage(STAGE_NOT_RUN)
         stages["outputCompared"] = stage(STAGE_NOT_RUN)
         return item
@@ -834,6 +844,7 @@ def analyze_item(
         stages["historicalRun"] = stage(STAGE_MISSING_INPUT)
         stages["incrementalRun"] = stage(STAGE_NOT_RUN)
         stages["realtimeRun"] = stage(STAGE_NOT_RUN)
+        stages["formingRun"] = stage(STAGE_NOT_RUN)
         stages["resourceAudit"] = stage(STAGE_NOT_RUN)
         stages["outputCompared"] = stage(STAGE_NOT_RUN)
         return item
@@ -841,6 +852,7 @@ def analyze_item(
         stages["historicalRun"] = stage(STAGE_MISSING_INPUT)
         stages["incrementalRun"] = stage(STAGE_NOT_RUN)
         stages["realtimeRun"] = stage(STAGE_NOT_RUN)
+        stages["formingRun"] = stage(STAGE_NOT_RUN)
         stages["resourceAudit"] = stage(STAGE_NOT_RUN)
         stages["outputCompared"] = stage(STAGE_NOT_RUN)
         return item
@@ -904,6 +916,7 @@ def analyze_item(
     if runtime_output is None:
         stages["incrementalRun"] = stage(STAGE_NOT_RUN)
         stages["realtimeRun"] = stage(STAGE_NOT_RUN)
+        stages["formingRun"] = stage(STAGE_NOT_RUN)
         stages["resourceAudit"] = stage(STAGE_NOT_RUN)
     else:
         for command_name, stage_name, diagnostic_stage, resource_mode in (
@@ -918,6 +931,12 @@ def analyze_item(
                 "realtimeRun",
                 "realtime",
                 "realtimeHistory",
+            ),
+            (
+                "run-realtime-forming",
+                "formingRun",
+                "forming",
+                "realtimeForming",
             ),
         ):
             mode_command = list(run_command)
@@ -1174,6 +1193,7 @@ def _summary(items: list[dict[str, object]]) -> dict[str, object]:
             "historicalRun",
             "incrementalRun",
             "realtimeRun",
+            "formingRun",
             "resourceAudit",
             "outputCompared",
         )
@@ -1287,6 +1307,9 @@ def _summary(items: list[dict[str, object]]) -> dict[str, object]:
             "parse": _metric(selected, "parse"),
             "analyze": _metric(selected, "analyze"),
             "historicalRun": _metric(selected, "historicalRun"),
+            "incrementalRun": _metric(selected, "incrementalRun"),
+            "realtimeRun": _metric(selected, "realtimeRun"),
+            "formingRun": _metric(selected, "formingRun"),
             "resourceAudit": _metric(selected, "resourceAudit"),
             "stableBaseline": _stable_baseline_gate(
                 selected, version, top_clusters

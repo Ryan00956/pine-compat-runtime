@@ -12,4 +12,9 @@ retitle(value) =>
     label.set_text(marker, "after")
     value
 
-plot(push_value(close) + retitle(close))
+retarget(value) =>
+    segment = line.new(bar_index, value, bar_index + 1, value)
+    line.set_x1(segment, bar_index - 1)
+    value
+
+plot(push_value(close) + retitle(close) + retarget(close))

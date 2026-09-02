@@ -1070,6 +1070,9 @@ fn runtime_fixture_bars_csv(fixture: &str) -> &'static str {
         "tests/fixtures/runtime/strategy_exit_loss.pine" => {
             include_str!("../../../tests/fixtures/runtime/strategy_exit_loss_bars.csv")
         }
+        "tests/fixtures/runtime/strategy_exit_profit_short.pine" => {
+            include_str!("../../../tests/fixtures/runtime/strategy_exit_profit_short_bars.csv")
+        }
         "tests/fixtures/runtime/strategy_trade_outcome_counts.pine" => {
             include_str!("../../../tests/fixtures/runtime/strategy_trade_outcome_counts_bars.csv")
         }
@@ -1131,6 +1134,10 @@ fn runtime_fixture_bars_csv(fixture: &str) -> &'static str {
         | "tests/fixtures/runtime/strategy_exit_qty_percent_trailing_partial.pine" => {
             include_str!("../../../tests/fixtures/runtime/strategy_exit_trailing_bars.csv")
         }
+        "tests/fixtures/runtime/strategy_exit_trail_price_fill_short.pine"
+        | "tests/fixtures/runtime/strategy_exit_trail_points_fill_short.pine" => {
+            include_str!("../../../tests/fixtures/runtime/strategy_exit_trailing_short_bars.csv")
+        }
         "tests/fixtures/runtime/strategy_exit_qty_precedence_trailing.pine" => {
             include_str!(
                 "../../../tests/fixtures/runtime/strategy_exit_qty_precedence_trailing_bars.csv"
@@ -1169,6 +1176,16 @@ fn runtime_fixture_bars_csv(fixture: &str) -> &'static str {
         }
         "tests/fixtures/runtime/strategy_margin_call_long.pine" => {
             include_str!("../../../tests/fixtures/runtime/strategy_margin_call_long_bars.csv")
+        }
+        "tests/fixtures/runtime/strategy_margin_call_short.pine" => {
+            include_str!("../../../tests/fixtures/runtime/strategy_margin_call_short_bars.csv")
+        }
+        "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short.pine"
+        | "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_same_id_partial_short.pine" =>
+        {
+            include_str!(
+                "../../../tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short_bars.csv"
+            )
         }
         "tests/fixtures/runtime/strategy_pyramiding_exit_from_entry.pine" => include_str!(
             "../../../tests/fixtures/runtime/strategy_pyramiding_exit_from_entry_bars.csv"

@@ -1,0 +1,7 @@
+//@version=5
+strategy("Profit exit short strategy", overlay=true)
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=2)
+if bar_index == 1
+    strategy.exit("XP", "S", profit=100)
+plot(strategy.position_size)

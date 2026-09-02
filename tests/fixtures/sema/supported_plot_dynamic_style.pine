@@ -1,0 +1,15 @@
+//@version=6
+indicator("Supported dynamic plot style")
+ternaryStyle = bar_index % 2 == 0 ? plot.style_line : plot.style_histogram
+ifStyle = if close >= open
+    plot.style_columns
+else
+    plot.style_circles
+switchStyle = switch
+    high > high[1] => plot.style_area
+    => plot.style_stepline
+boundedStyle = input.string(plot.style_line, "Style", options=[plot.style_line, plot.style_histogram, plot.style_stepline_diamond])
+plot(close, style=ternaryStyle)
+plot(open, style=ifStyle)
+plot(high, style=switchStyle)
+plot(low, style=boundedStyle)

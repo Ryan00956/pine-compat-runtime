@@ -1,0 +1,17 @@
+//@version=5
+strategy("Close all short strategy")
+
+if bar_index == 0
+    strategy.close_all()
+    strategy.entry("S", strategy.short, qty=2)
+
+if bar_index == 2
+    strategy.close_all()
+
+if bar_index == 3
+    strategy.close_all()
+
+plot(strategy.position_size)
+plot(strategy.closedtrades)
+plot(strategy.opentrades)
+plot(strategy.netprofit)

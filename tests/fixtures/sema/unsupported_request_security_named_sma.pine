@@ -1,0 +1,3 @@
+//@version=6
+indicator("Unsupported request named sma")
+plot(request.security(syminfo.tickerid, timeframe.period, ta.sma(source=close, length=14)))

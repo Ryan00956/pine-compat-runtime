@@ -1,0 +1,4 @@
+//@version=6
+indicator("Supported request time_close")
+plot(request.security(syminfo.tickerid, timeframe.period, time_close("D")))
+plot(request.security("NYSE:IBM", timeframe.period, time_close("D")))

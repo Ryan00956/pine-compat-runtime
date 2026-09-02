@@ -1,0 +1,9 @@
+//@version=6
+indicator("Supported dynamic plotshape and hline style")
+shapeStyle = bar_index % 2 == 0 ? shape.circle : shape.cross
+lineStyle = close >= open ? hline.style_solid : hline.style_dotted
+boundedShape = input.string(shape.circle, "Shape", options=[shape.circle, shape.cross])
+plotshape(true, style=shapeStyle)
+plotshape(false, style=boundedShape)
+hline(1, linestyle=lineStyle)
+plot(close)

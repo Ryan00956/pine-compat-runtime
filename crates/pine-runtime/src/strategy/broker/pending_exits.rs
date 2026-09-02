@@ -1,4 +1,5 @@
 use super::StrategyExitMetadata;
+use super::ledger::TradeDirection;
 
 #[derive(Debug, Clone, PartialEq)]
 pub(super) enum PendingExitTrigger {
@@ -84,7 +85,7 @@ pub(super) enum PendingTrailingActivation {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub(super) enum PendingTrailingState {
     Inactive,
     Active { stop_price: f64 },
@@ -106,9 +107,19 @@ impl PendingTrailingActivation {
 }
 
 impl PendingTrailingExit {
+    #[cfg(test)]
     pub(super) fn evaluate_update(&self, high: f64, low: f64) -> PendingTrailingUpdate {
-        match self.state {
-            PendingTrailingState::Inactive => {
+        self.evaluate_update_for(TradeDirection::Long, high, low)
+    }
+
+    pub(super) fn evaluate_update_for(
+        &self,
+        direction: TradeDirection,
+        high: f64,
+        low: f64,
+    ) -> PendingTrailingUpdate {
+        match (direction, self.state) {
+            (TradeDirection::Long, PendingTrailingState::Inactive) => {
                 if high >= self.spec.activation.price() {
                     return PendingTrailingUpdate::Persist(Self {
                         spec: self.spec.clone(),
@@ -119,7 +130,7 @@ impl PendingTrailingExit {
                 }
                 PendingTrailingUpdate::NoChange
             }
-            PendingTrailingState::Active { stop_price } => {
+            (TradeDirection::Long, PendingTrailingState::Active { stop_price }) => {
                 if low <= stop_price {
                     return PendingTrailingUpdate::Candidate(PendingExitTouch {
                         exit_price: stop_price,
@@ -129,6 +140,37 @@ impl PendingTrailingExit {
 
                 let next_stop = high - self.spec.offset_price_distance;
                 if next_stop > stop_price {
+                    PendingTrailingUpdate::Persist(Self {
+                        spec: self.spec.clone(),
+                        state: PendingTrailingState::Active {
+                            stop_price: next_stop,
+                        },
+                    })
+                } else {
+                    PendingTrailingUpdate::NoChange
+                }
+            }
+            (TradeDirection::Short, PendingTrailingState::Inactive) => {
+                if low <= self.spec.activation.price() {
+                    return PendingTrailingUpdate::Persist(Self {
+                        spec: self.spec.clone(),
+                        state: PendingTrailingState::Active {
+                            stop_price: low + self.spec.offset_price_distance,
+                        },
+                    });
+                }
+                PendingTrailingUpdate::NoChange
+            }
+            (TradeDirection::Short, PendingTrailingState::Active { stop_price }) => {
+                if high >= stop_price {
+                    return PendingTrailingUpdate::Candidate(PendingExitTouch {
+                        exit_price: stop_price,
+                        side: PendingExitSide::Stop,
+                    });
+                }
+
+                let next_stop = low + self.spec.offset_price_distance;
+                if next_stop < stop_price {
                     PendingTrailingUpdate::Persist(Self {
                         spec: self.spec.clone(),
                         state: PendingTrailingState::Active {
@@ -189,24 +231,37 @@ impl PendingExitTrigger {
         matches!(self, Self::Trailing(_))
     }
 
+    #[cfg(test)]
     pub(super) fn touched_candidate(
         &self,
         high: f64,
         low: f64,
         limit_verification_offset: f64,
     ) -> Option<PendingExitTouch> {
-        match self {
-            Self::Stop(price) if low <= *price => Some(PendingExitTouch {
+        self.touched_candidate_for(TradeDirection::Long, high, low, limit_verification_offset)
+    }
+
+    pub(super) fn touched_candidate_for(
+        &self,
+        direction: TradeDirection,
+        high: f64,
+        low: f64,
+        limit_verification_offset: f64,
+    ) -> Option<PendingExitTouch> {
+        match (direction, self) {
+            (TradeDirection::Long, Self::Stop(price)) if low <= *price => Some(PendingExitTouch {
                 exit_price: *price,
                 side: PendingExitSide::Stop,
             }),
-            Self::Limit(price) if high >= *price + limit_verification_offset => {
+            (TradeDirection::Long, Self::Limit(price))
+                if high >= *price + limit_verification_offset =>
+            {
                 Some(PendingExitTouch {
                     exit_price: *price,
                     side: PendingExitSide::Limit,
                 })
             }
-            Self::Bracket { downside, upside } => {
+            (TradeDirection::Long, Self::Bracket { downside, upside }) => {
                 if low <= *downside {
                     Some(PendingExitTouch {
                         exit_price: *downside,
@@ -221,7 +276,36 @@ impl PendingExitTrigger {
                     None
                 }
             }
-            Self::Trailing(_) | Self::Stop(_) | Self::Limit(_) => None,
+            (TradeDirection::Short, Self::Stop(price)) if high >= *price => {
+                Some(PendingExitTouch {
+                    exit_price: *price,
+                    side: PendingExitSide::Stop,
+                })
+            }
+            (TradeDirection::Short, Self::Limit(price))
+                if low <= *price - limit_verification_offset =>
+            {
+                Some(PendingExitTouch {
+                    exit_price: *price,
+                    side: PendingExitSide::Limit,
+                })
+            }
+            (TradeDirection::Short, Self::Bracket { downside, upside }) => {
+                if high >= *downside {
+                    Some(PendingExitTouch {
+                        exit_price: *downside,
+                        side: PendingExitSide::Stop,
+                    })
+                } else if low <= *upside - limit_verification_offset {
+                    Some(PendingExitTouch {
+                        exit_price: *upside,
+                        side: PendingExitSide::Limit,
+                    })
+                } else {
+                    None
+                }
+            }
+            _ => None,
         }
     }
 }
@@ -271,6 +355,13 @@ pub(super) struct PendingExit {
     pub(super) multiple_reservation: bool,
     pub(super) last_update_bar_index: usize,
     pub(super) metadata: StrategyExitMetadata,
+}
+
+impl PendingExit {
+    #[allow(dead_code)]
+    pub(super) fn trade_direction(&self) -> super::ledger::TradeDirection {
+        super::ledger::TradeDirection::Long
+    }
 }
 
 #[allow(dead_code)]

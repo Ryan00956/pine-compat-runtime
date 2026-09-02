@@ -105,6 +105,7 @@ impl LegacyFrontEnd {
         arg_types: &[Option<PineType>],
         const_strings: &[Option<String>],
         const_ints: &[Option<i64>],
+        string_domains: &[Option<Vec<String>>],
     ) -> LegacyOutputBinding {
         outputs::bind_legacy_output_args(
             self.dialect,
@@ -113,6 +114,7 @@ impl LegacyFrontEnd {
             arg_types,
             const_strings,
             const_ints,
+            string_domains,
         )
     }
 

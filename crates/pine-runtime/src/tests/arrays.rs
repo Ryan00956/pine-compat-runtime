@@ -120,6 +120,94 @@ plot(method_values.get(index))
 }
 
 #[test]
+fn runs_array_insert_with_series_integer_indexes() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=6
+indicator("series array insert indexes")
+namespace_values = array.from(10.0, 20.0, 30.0)
+method_values = array.from(100.0, 200.0, 300.0)
+index = bar_index % 3
+array.insert(namespace_values, index, close)
+method_values.insert(index, close + 100)
+plot(array.get(namespace_values, index))
+plot(method_values.get(index))
+plot(array.size(namespace_values))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&hir, &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+    assert_values_close(&result.plots[1].values, &[101.0, 102.0, 103.0]);
+    assert_values_close(&result.plots[2].values, &[4.0, 4.0, 4.0]);
+
+    let mut incremental = HistoricalRuntime::new(&hir);
+    for bar in &bars {
+        incremental
+            .append_bar(*bar)
+            .expect("incremental insert bar");
+    }
+    assert_eq!(incremental.result(), result);
+}
+
+#[test]
+fn realtime_rollback_restores_series_index_array_insert() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"//@version=6
+indicator("series array insert rollback")
+var values = array.from(1.0, 2.0, 3.0)
+index = bar_index % array.size(values)
+array.insert(values, index, close)
+plot(array.size(values))
+plot(array.get(values, index))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let mut runtime = RealtimeRuntime::new(&hir);
+
+    let historical = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update");
+    assert_values_close(&historical.plots[0].values, &[4.0]);
+    assert_values_close(&historical.plots[1].values, &[1.0]);
+
+    let forming = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update");
+    assert_values_close(&forming.plots[0].values, &[4.0, 5.0]);
+    assert_values_close(&forming.plots[1].values, &[1.0, 2.0]);
+
+    let rolled_back = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update");
+    assert_values_close(&rolled_back.plots[0].values, &[4.0, 5.0]);
+    assert_values_close(&rolled_back.plots[1].values, &[1.0, 3.0]);
+
+    let confirmed = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update");
+    assert_values_close(&confirmed.plots[0].values, &[4.0, 5.0]);
+    assert_values_close(&confirmed.plots[1].values, &[1.0, 4.0]);
+}
+
+#[test]
 fn runs_int_array_method_calls() {
     let source = SourceFile::new(
         "test.pine",

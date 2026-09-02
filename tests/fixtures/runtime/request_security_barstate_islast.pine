@@ -1,0 +1,5 @@
+//@version=6
+indicator("Request barstate islast")
+same_context = request.security(syminfo.tickerid, timeframe.period, barstate.islast ? 1 : 0)
+plot(same_context, "requested")
+plot(barstate.islast ? 1 : 0, "direct")

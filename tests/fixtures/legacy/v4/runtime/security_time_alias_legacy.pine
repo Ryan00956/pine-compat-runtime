@@ -1,0 +1,7 @@
+//@version=4
+study("Legacy security time alias")
+dayOpen = time("D")
+newDay = dayOpen != dayOpen[1]
+dayClose = valuewhen(newDay, close, 0)
+plot(security(syminfo.tickerid, timeframe.period, dayOpen), title="dayOpen")
+plot(security(syminfo.tickerid, timeframe.period, dayClose), title="dayClose")

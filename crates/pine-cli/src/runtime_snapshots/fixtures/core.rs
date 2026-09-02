@@ -62,6 +62,14 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/plotshape.pine",
     ),
     (
+        "runtime_plot_dynamic_style.json",
+        "tests/fixtures/runtime/plot_dynamic_style.pine",
+    ),
+    (
+        "runtime_plotshape_hline_dynamic_style.json",
+        "tests/fixtures/runtime/plotshape_hline_dynamic_style.pine",
+    ),
+    (
         "runtime_plotarrow.json",
         "tests/fixtures/runtime/plotarrow.pine",
     ),
@@ -117,6 +125,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/legacy/v3/runtime/core_legacy.pine",
     ),
     (
+        "runtime_legacy_v4_aliases.json",
+        "tests/fixtures/legacy/v4/runtime/aliases_legacy.pine",
+    ),
+    (
         "runtime_legacy_v4_expressions.json",
         "tests/fixtures/legacy/v4/runtime/expressions_legacy.pine",
     ),
@@ -139,6 +151,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     (
         "runtime_legacy_v4_security_same_context.json",
         "tests/fixtures/legacy/v4/runtime/security_same_context_legacy.pine",
+    ),
+    (
+        "runtime_legacy_v4_udf_line_setters.json",
+        "tests/fixtures/legacy/v4/runtime/udf_line_setters_legacy.pine",
     ),
     (
         "runtime_line_wrapped_strings.json",

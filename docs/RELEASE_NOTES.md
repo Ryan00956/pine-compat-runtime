@@ -2,6 +2,228 @@
 
 ## Unreleased
 
+- Closed Stage 16b same-entry-id partial `close_entries_rule="ANY"` allocation
+  for shorts. A partial `strategy.exit(..., from_entry=id, qty=...)` covers
+  matching short ledger entries that share that id in stable open-trade order.
+  CLI/Python/WASM host parity covers
+  `runtime_strategy_close_entries_rule_any_exit_same_id_partial_short.json`.
+- Closed Stage 16a id-specific `close_entries_rule="ANY"` allocation for shorts.
+  `strategy.close(id)` and `strategy.exit(..., from_entry=id)` close or cover
+  matching short ledger entries by exact id before other open shorts.
+  Omitted-`from_entry` exits and `strategy.close_all()` stay FIFO.
+  CLI/Python/WASM host parity covers
+  `runtime_strategy_close_entries_rule_any_close_short.json` and
+  `runtime_strategy_close_entries_rule_any_exit_from_entry_short.json`.
+- Closed Stage 15c short `strategy.margin_liquidation_price`. Open shorts with
+  explicit active `margin_short` return the broker price where equity equals
+  required short margin, including after a short forced liquidation. The value
+  is `na` while flat or without active short margin. CLI/Python/WASM host
+  parity covers the updated `runtime_strategy_margin_call_short.json`.
+- Closed Stage 15b short `margin_short` forced liquidation. Open shorts with
+  explicit active `margin_short` are force-liquidated on a historical bar when
+  available funds are negative at `bar.high`. Cover quantity uses the documented
+  four-times-cover algorithm with whole-unit truncation, the public order
+  direction is `strategy.long`, and closed-trade quantity is signed negative.
+  Short `strategy.margin_liquidation_price` stays unsupported. CLI/Python/WASM
+  host parity covers `runtime_strategy_margin_call_short.json`.
+- Closed Stage 15a short `margin_short` capital held and affordability.
+  Explicit active `margin_short` makes `strategy.opentrades.capital_held` return
+  absolute short market value times `margin_short / 100` while a supported short
+  position is open, and rejects unaffordable short market, limit, stop, and
+  stop-limit fills at the actual fill price with `E_STRATEGY_MARGIN`. Short
+  forced liquidation stays unsupported. CLI/Python/WASM host parity covers
+  `runtime_strategy_margin_capital_held_short.json` and
+  `runtime_strategy_margin_entry_affordability_short.json`.
+- Closed Stage 14o short `strategy.order` stop-limit fills.
+  `strategy.order(..., strategy.short, qty=..., stop=price, limit=price)` places
+  a pending short stop-limit that bypasses the `strategy.entry()` pyramiding
+  limit, never fills on the creation bar, activates on a later historical bar
+  when `low <= stop` without filling that bar, and fills at the limit price on
+  a subsequent historical bar when `high >= limit` or above the configured
+  verification offset. It opens or increases short exposure while flat or
+  already short and is a no-op while net long. Market `strategy.order(...,
+  strategy.short)` stays reduce-only. CLI/Python/WASM host parity covers
+  `runtime_strategy_order_stop_limit_short.json`.
+- Closed Stage 14n short `strategy.order` stop fills.
+  `strategy.order(..., strategy.short, qty=..., stop=price)` places a pending
+  short stop that bypasses the `strategy.entry()` pyramiding limit, never fills
+  on the creation bar, and fills at the stop price on a later historical bar
+  when `low <= stop`. It opens or increases short exposure while flat or already
+  short and is a no-op while net long. Short stop-limit orders stay rejected.
+  CLI/Python/WASM host parity covers `runtime_strategy_order_stop_short.json`.
+- Closed Stage 14m short `strategy.order` limit fills.
+  `strategy.order(..., strategy.short, qty=..., limit=price)` places a pending
+  short limit that bypasses the `strategy.entry()` pyramiding limit, never fills
+  on the creation bar, and fills at the limit price on a later historical bar
+  when `high >= limit` or above the configured verification offset. It opens or
+  increases short exposure while flat or already short and is a no-op while net
+  long. Market `strategy.order(..., strategy.short)` stays reduce-only. Short
+  stop/stop-limit orders stay rejected. CLI/Python/WASM host parity covers
+  `runtime_strategy_order_limit_short.json`.
+- Closed Stage 14l short `strategy.entry` stop-limit fills.
+  `strategy.entry(..., strategy.short, qty=..., stop=price, limit=price)`
+  places a pending short stop-limit while flat or already short, activates on a
+  later historical bar when `low <= stop` without filling that bar, and fills
+  at the limit price on a subsequent historical bar when `high >= limit` or
+  above the configured verification offset. It does not reverse a net long.
+  CLI/Python/WASM host parity covers
+  `runtime_strategy_entry_stop_limit_short.json`.
+- Closed Stage 14k short `strategy.entry` stop fills. `strategy.entry(...,
+  strategy.short, qty=..., stop=price)` places a pending short stop while flat
+  or already short, never fills on the creation bar, and fills at the stop
+  price on a later historical bar when `low <= stop`. It does not reverse a
+  net long. Short stop-limit entries stay rejected. CLI/Python/WASM host
+  parity covers `runtime_strategy_entry_stop_short.json`.
+- Closed Stage 14j short `strategy.entry` limit fills. `strategy.entry(...,
+  strategy.short, qty=..., limit=price)` places a pending short limit while
+  flat or already short, never fills on the creation bar, and fills at the
+  limit price on a later historical bar when `high >= limit` or above the
+  configured verification offset. It does not reverse a net long. Short
+  stop/stop-limit entries stay rejected. CLI/Python/WASM host parity covers
+  `runtime_strategy_entry_limit_short.json`.
+- Closed Stage 14i short `strategy.exit` trailing stops. Matching
+  `trail_price + trail_offset` and `trail_points + trail_offset` activate when
+  `low <= activation`, set the active stop to `low + offset`, ratchet downward
+  only, and cover when `high >= active_stop`. CLI/Python/WASM host parity covers
+  `runtime_strategy_exit_trail_price_fill_short.json` and
+  `runtime_strategy_exit_trail_points_fill_short.json`.
+- Closed Stage 14h short `strategy.exit` brackets. Matching `stop+limit`,
+  `stop+profit`, `loss+limit`, and `loss+profit` covers use a higher stop/loss
+  leg and a lower limit/profit leg. Same-bar both-touch prefers the stop/loss
+  leg. Trailing stops landed in Stage 14i. CLI/Python/WASM host parity covers
+  `runtime_strategy_exit_bracket_stop_limit_stop_fill_short.json` and
+  `runtime_strategy_exit_bracket_stop_limit_limit_fill_short.json`.
+- Closed Stage 14g short `strategy.exit` profit/loss ticks. Matching
+  `profit=ticks` converts to a cover limit below the short entry price, and
+  `loss=ticks` converts to a cover stop above it. Brackets landed in Stage 14h.
+  Trailing stops stay long-only. CLI/Python/WASM host parity covers
+  `runtime_strategy_exit_profit_short.json` and
+  `runtime_strategy_exit_loss_short.json`.
+- Closed Stage 14f short `strategy.exit` stop/limit covers. Matching
+  `strategy.exit(..., stop=price)` and `limit=price` now flatten market short
+  exposure on a later historical bar: stop when `high >= stop`, limit when
+  `low <= limit` minus verification offset. Cover fills use short-exit slippage
+  and signed closed-trade quantity. Profit/loss ticks landed in Stage 14g and
+  brackets in Stage 14h. Trailing stops stay long-only. CLI/Python/WASM host
+  parity covers `runtime_strategy_exit_stop_short.json` and
+  `runtime_strategy_exit_limit_short.json`.
+- Closed Stage 14e market `strategy.entry` reversals. An opposite-direction
+  market entry first flattens the current net position at the reverse fill
+  price, then opens the requested quantity on the new side. Public output keeps
+  two records: closed opposite trades plus a new entry order. Short
+  limit/stop entries stay rejected, and `strategy.exit` still does not flatten
+  shorts.
+  CLI/Python/WASM host parity covers
+  `runtime_strategy_entry_short_reverses_long.json` and
+  `runtime_strategy_entry_long_reverses_short.json`.
+- Closed Stage 14d short closes. `strategy.close(id)` and `strategy.close_all()`
+  now flatten market short exposure at the current bar close, including partial
+  `qty` / `qty_percent`. Closed-trade quantity is signed negative and cover PnL
+  uses `(exit - entry) * signed_qty`. `strategy.exit` still does not flatten
+  shorts. CLI/Python/WASM host parity covers `runtime_strategy_close_short.json`
+  and `runtime_strategy_close_all_short.json`.
+- Closed Stage 14c market short entries without reversal.
+  `strategy.entry(..., strategy.short, qty=...)` now places a next-bar-open
+  market short while flat or already short. Position size is negative, cash
+  credits the short proceeds, and `strategy.max_contracts_held_short` tracks
+  the filled short quantity. Short limit/stop entries stay rejected.
+  CLI/Python/WASM host parity covers `runtime_strategy_entry_short.json`.
+- Closed Stage 14a/14b of the strategy short/reversal foundation. Internally the
+  trade ledger stores `TradeDirection`, derives signed net position and
+  side-specific average price, and keeps current close/exit allocation
+  long-only until a later short-close slice.
+- Closed the remaining non-TradingView request and output-enum slices. Requested
+  expressions now admit `time_close(timeframe)`, documented named `time()` /
+  `time_close()` arguments, and the rest of the `barstate.*` flags, evaluated
+  against the requested stream. `plotshape()` `style` and `hline()` `linestyle`
+  use the same proven enum-domain rule as `plot()` `style`; plotshape emits
+  per-bar styles and hline keeps the last evaluated linestyle. Named arguments
+  on other requested calls stay fail-closed. Three runtime goldens, three
+  release profiles, and CLI/Python/WASM host parity raise the required runtime
+  snapshot set to 443.
+- Extended `plot()` `style` from const string to string-compatible values whose
+  statically proven domain is a subset of the documented `plot.style_*` enums.
+  Ternaries, complete `if`/`switch` branches, and explicit `input.string`
+  options now analyze, lower, and execute; the public plot JSON still stores
+  one style field and uses the last evaluated enum, matching series `offset`
+  metadata. Pine v1-v4 keep style constants and input integer ordinals, and
+  now share the same proven string-domain path. Unbounded strings, mixed
+  invalid branches, series integer ordinals, `plotshape`/`hline` styles, and
+  other output enums stay fail-closed. A v6 runtime fixture, the 41st release
+  profile, and CLI/Python/WASM host parity raise the required runtime snapshot
+  set to 440.
+- Admitted `barstate.islast` into provider-backed `request.security` and
+  legacy `security` requested expressions, including Pine v4 UDF-local
+  requests. Requested-context evaluation now pins `historical_end` to the
+  requested stream so `islast` is true only on that stream's last bar, then
+  aligned with `gaps_off` forward-fill. Other `barstate.*` flags stay
+  fail-closed for provider requests. A v6 same-context fixture, the 40th
+  release profile, and CLI/Python/WASM host parity raise the required runtime
+  snapshot set to 439.
+- Admitted positional `time(timeframe)` calls into the request-expression
+  subset used by same-context and provider-backed `request.security` plus
+  legacy `security`. Pine v4 top-level immutable aliases of `time("D")` and
+  `valuewhen` graphs that depend on them now recompute in the isolated
+  requested context. Named `time()` arguments and `time_close()` stay
+  fail-closed, and modern provider requests still reject user aliases. A v6
+  same-context fixture, the 39th release profile, and CLI/Python/WASM host
+  parity raise the required runtime snapshot set to 438.
+- Extended `array.insert` / `.insert()` to the same integer-compatible index
+  contract as `array.get` and `array.set`. Per-bar `series int` indexes now
+  analyze, lower, and execute in namespace and method forms, including a v6
+  runtime fixture, the 38th release profile, historical/incremental equality,
+  forming-bar rollback of `var` insertions, and CLI/Python/WASM host parity
+  that raises the required runtime snapshot set to 437.
+  Non-int indexes stay rejected. This closes the independent climbermel
+  `array.insert` series-index blocker without widening `array.remove` or
+  request expressions.
+- Added the corpus-ranked Pine v4 UDF drawing-side-effect slice for exactly
+  `line.set_x2()` and `line.set_extend()`. Paired fixtures and v3/v5/v6 negative
+  controls preserve the dialect boundary, while historical, incremental,
+  realtime-history, and forming rollback tests prove value, drawing, and
+  resource parity. Translator revision 33, the 37th release profile, and a new
+  CLI/Python/WASM golden raise the required runtime host-parity set to 436. The
+  51-item R3 corpus now passes 47/51 analysis/lowering and all four execution
+  modes for every executable source. Four provider-backed rows pass cache and
+  retained-value audits with zero missing inputs; two byte-identical reports
+  share SHA-256
+  `4bd1d568ef87793b3a9fe40649585a0873e9fea755407b2f8c79e8281cd4dc83`.
+- Extended the legacy-corpus importer for correctly classified permissive
+  intake. Callers may choose a content-derived id prefix and `permissive`
+  license class only when they also record an immutable upstream URL, commit
+  revision, and license id in the ignored local intake summary; the analyzer's
+  privacy-preserving report continues to expose only the license class. A new
+  manifest merger combines independently rooted intake parts, makes their file
+  inputs absolute, rebases nested request CSV paths into deterministic sidecar
+  manifests, filters by version/scope, sorts filename-safe opaque ids, and
+  rejects id collisions or sidecar overwrites without copying source text.
+- Added the corpus-ranked Pine v4 `hma(source, length)` exact alias to the
+  existing `ta.hma` implementation. The translation is v4-only, increments the
+  legacy translator revision, preserves canonical callsite state, and is
+  covered by paired HIR/runtime fixtures plus v3/v5/v6 negative controls.
+- Closed the provisional v4 stable-size evidence intake with 19 additional
+  standalone permissively licensed indicators from commit-pinned public
+  repositories. Pairwise byte/normalized/token audits establish 51 unique v4
+  indicators across the public seed, private R2, and permissive R3 selections.
+  Source-validity filtering explicitly excludes one unfinished color-variable
+  source, three unexpanded repository imports, and one four-`TODO`
+  customization template. The frozen boundary clears the provisional corpus
+  floor without making a stable-profile or external-output-parity claim.
+- Added CLI `run-realtime-forming` and corpus report/tool schema 5. The mode
+  pushes a mutated final forming bar, replaces it with the original value, and
+  confirms the original bar; its public output and retained resource/cache
+  profile must equal batch execution. The corrected 51-item R3 boundary passes
+  51/51 parse and 46/51 analysis/lowering, with all 46 executable scripts
+  passing batch, incremental, realtime-history, realtime-forming, and resource
+  audits. Request-manifest rebasing removes three false `missing_input`
+  classifications, all three supplied provider rows populate cache evidence,
+  and no missing inputs remain. Two reports share SHA-256
+  `a78e8081e60f66d967d68b0f22e01871a8723ca5961cd7d61822d674e165764a`.
+  The v4 alias fixture is also required across CLI, Python, and WASM, bringing
+  the host-parity gate to 435 runtime snapshots. Five blockers remained at
+  this historical checkpoint and were
+  explicitly classified; no broad legacy-`security` semantics were added
+  without matching provider and output evidence.
 - Opened the post-`v0.2.0` indicator-only `v0.3.0` execution track around an
   expanded authorized legacy corpus rather than unranked feature additions.
   Corpus report schema 2 now measures stage success over the complete eligible

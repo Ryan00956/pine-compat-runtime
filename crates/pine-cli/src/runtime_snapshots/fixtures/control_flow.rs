@@ -305,8 +305,24 @@ pub(crate) const CONTROL_FLOW_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixtur
         "tests/fixtures/runtime/user_type_varip.pine",
     ),
     (
+        "runtime_request_security_barstate_flags.json",
+        "tests/fixtures/runtime/request_security_barstate_flags.pine",
+    ),
+    (
+        "runtime_request_security_barstate_islast.json",
+        "tests/fixtures/runtime/request_security_barstate_islast.pine",
+    ),
+    (
         "runtime_request_security_same_context.json",
         "tests/fixtures/runtime/request_security_same_context.pine",
+    ),
+    (
+        "runtime_request_security_time_function.json",
+        "tests/fixtures/runtime/request_security_time_function.pine",
+    ),
+    (
+        "runtime_request_security_time_close.json",
+        "tests/fixtures/runtime/request_security_time_close.pine",
     ),
     (
         "runtime_user_types.json",

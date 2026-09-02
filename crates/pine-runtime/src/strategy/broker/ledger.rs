@@ -1,8 +1,19 @@
 use super::StrategyOrderMetadata;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub(super) enum TradeDirection {
+    #[default]
     Long,
+    Short,
+}
+
+impl TradeDirection {
+    pub(super) fn signed_quantity(self, quantity: f64) -> f64 {
+        match self {
+            Self::Long => quantity,
+            Self::Short => -quantity,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -43,6 +54,7 @@ pub(super) struct TradeAllocation {
     pub(super) trade_index: usize,
     pub(super) trade_key: u64,
     pub(super) entry_id: String,
+    pub(super) direction: TradeDirection,
     pub(super) entry_price: f64,
     pub(super) entry_bar_index: usize,
     pub(super) entry_time: i64,
@@ -64,8 +76,23 @@ impl TradeLedger {
         self.append_long(trade);
     }
 
+    pub(super) fn open_short(&mut self, trade: OpenTrade) {
+        self.open_trades.clear();
+        self.append_short(trade);
+    }
+
     #[allow(dead_code)]
     pub(super) fn append_long(&mut self, mut trade: OpenTrade) {
+        trade.direction = TradeDirection::Long;
+        self.append_trade(trade);
+    }
+
+    pub(super) fn append_short(&mut self, mut trade: OpenTrade) {
+        trade.direction = TradeDirection::Short;
+        self.append_trade(trade);
+    }
+
+    fn append_trade(&mut self, mut trade: OpenTrade) {
         trade.key = self.next_trade_key;
         self.next_trade_key = self.next_trade_key.saturating_add(1);
         self.open_trades.push(trade);
@@ -99,6 +126,15 @@ impl TradeLedger {
         from_entry: Option<&str>,
         requested_quantity: f64,
     ) -> Vec<TradeAllocation> {
+        self.allocate_exit_fifo_for_direction(TradeDirection::Long, from_entry, requested_quantity)
+    }
+
+    pub(super) fn allocate_exit_fifo_for_direction(
+        &self,
+        direction: TradeDirection,
+        from_entry: Option<&str>,
+        requested_quantity: f64,
+    ) -> Vec<TradeAllocation> {
         if !requested_quantity.is_finite() || requested_quantity <= 0.0 {
             return Vec::new();
         }
@@ -106,6 +142,9 @@ impl TradeLedger {
         let mut remaining = requested_quantity;
         let mut allocations = Vec::new();
         for (trade_index, trade) in self.open_trades.iter().enumerate() {
+            if trade.direction != direction {
+                continue;
+            }
             if from_entry.is_some_and(|entry_id| trade.id != entry_id) {
                 continue;
             }
@@ -129,6 +168,19 @@ impl TradeLedger {
         entry_id: &str,
         requested_quantity: f64,
     ) -> Vec<TradeAllocation> {
+        self.allocate_exit_any_for_entry_direction(
+            TradeDirection::Long,
+            entry_id,
+            requested_quantity,
+        )
+    }
+
+    pub(super) fn allocate_exit_any_for_entry_direction(
+        &self,
+        direction: TradeDirection,
+        entry_id: &str,
+        requested_quantity: f64,
+    ) -> Vec<TradeAllocation> {
         if !requested_quantity.is_finite() || requested_quantity <= 0.0 {
             return Vec::new();
         }
@@ -136,6 +188,9 @@ impl TradeLedger {
         let mut remaining = requested_quantity;
         let mut allocations = Vec::new();
         for (trade_index, trade) in self.open_trades.iter().enumerate() {
+            if trade.direction != direction {
+                continue;
+            }
             if trade.id != entry_id {
                 continue;
             }
@@ -213,6 +268,7 @@ impl TradeLedger {
             trade_index,
             trade_key: trade.key,
             entry_id: trade.id.clone(),
+            direction: trade.direction,
             entry_price: trade.entry_price,
             entry_bar_index: trade.entry_bar_index,
             entry_time: trade.entry_time,
@@ -223,20 +279,37 @@ impl TradeLedger {
     }
 
     fn rebuild_net_position(&mut self) {
-        let signed_size: f64 = self.open_trades.iter().map(|trade| trade.quantity).sum();
-        if signed_size <= 0.0 {
+        let signed_size: f64 = self
+            .open_trades
+            .iter()
+            .map(|trade| trade.direction.signed_quantity(trade.quantity))
+            .sum();
+        if !signed_size.is_finite() || signed_size == 0.0 {
             self.net_position = NetPosition::default();
             return;
         }
 
-        let weighted_entry_value: f64 = self
-            .open_trades
-            .iter()
-            .map(|trade| trade.quantity * trade.entry_price)
-            .sum();
+        let net_side = if signed_size > 0.0 {
+            TradeDirection::Long
+        } else {
+            TradeDirection::Short
+        };
+        let mut weighted_entry_value = 0.0;
+        let mut side_quantity = 0.0;
+        for trade in &self.open_trades {
+            if trade.direction != net_side {
+                continue;
+            }
+            weighted_entry_value += trade.quantity * trade.entry_price;
+            side_quantity += trade.quantity;
+        }
+        if !side_quantity.is_finite() || side_quantity <= 0.0 {
+            self.net_position = NetPosition::default();
+            return;
+        }
         self.net_position = NetPosition {
             signed_size,
-            avg_price: weighted_entry_value / signed_size,
+            avg_price: weighted_entry_value / side_quantity,
         };
     }
 
@@ -261,7 +334,7 @@ impl TradeLedger {
 
     #[cfg(test)]
     pub(super) fn append_open_trade_for_test(&mut self, trade: OpenTrade) {
-        self.append_long(trade);
+        self.append_trade(trade);
     }
 
     pub(super) fn net_position(&self) -> NetPosition {
@@ -272,10 +345,19 @@ impl TradeLedger {
         self.open_trades.len()
     }
 
+    #[cfg(test)]
     pub(super) fn open_quantity_for_entry(&self, entry_id: &str) -> f64 {
+        self.open_quantity_for_entry_direction(TradeDirection::Long, entry_id)
+    }
+
+    pub(super) fn open_quantity_for_entry_direction(
+        &self,
+        direction: TradeDirection,
+        entry_id: &str,
+    ) -> f64 {
         self.open_trades
             .iter()
-            .filter(|trade| trade.id == entry_id)
+            .filter(|trade| trade.direction == direction && trade.id == entry_id)
             .map(|trade| trade.quantity)
             .sum()
     }

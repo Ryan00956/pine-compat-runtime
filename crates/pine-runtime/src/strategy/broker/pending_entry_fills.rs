@@ -19,6 +19,25 @@ impl BrokerState {
             return;
         };
         if pending_entry.direction == PendingEntryDirection::Short {
+            if pending_entry.enforce_pyramiding {
+                let entry_id = pending_entry.id;
+                let filled = self.entry_short_internal(
+                    EntryFill {
+                        id: entry_id.clone(),
+                        bar_index,
+                        time,
+                        price: fill_price,
+                        qty: pending_entry.quantity,
+                        metadata: pending_entry.metadata,
+                    },
+                    EntryPyramidingMode::EnforceLimit,
+                );
+                if !filled {
+                    self.order_book.exits_mut().clear_for_entry(&entry_id);
+                }
+                self.order_book.entries_mut().clear_all();
+                return;
+            }
             self.reduce_long_with_short_order(
                 pending_entry.id,
                 bar_index,
@@ -27,11 +46,6 @@ impl BrokerState {
                 pending_entry.quantity,
                 pending_entry.metadata,
             );
-            self.order_book.entries_mut().clear_all();
-            return;
-        }
-
-        if pending_entry.enforce_pyramiding && !self.can_open_long_entry() {
             self.order_book.entries_mut().clear_all();
             return;
         }
@@ -83,7 +97,9 @@ impl BrokerState {
             {
                 return;
             }
-            self.order_book.entries_mut().clear_all();
+            self.order_book
+                .entries_mut()
+                .clear_direction(PendingEntryDirection::Long);
             return;
         }
         let pending_entries = self.order_book.entries_mut().take_all_eligible_limit_long(
@@ -147,7 +163,9 @@ impl BrokerState {
             {
                 return;
             }
-            self.order_book.entries_mut().clear_all();
+            self.order_book
+                .entries_mut()
+                .clear_direction(PendingEntryDirection::Long);
             return;
         }
         let pending_entries = self
@@ -211,7 +229,9 @@ impl BrokerState {
             {
                 return;
             }
-            self.order_book.entries_mut().clear_all();
+            self.order_book
+                .entries_mut()
+                .clear_direction(PendingEntryDirection::Long);
             return;
         }
         self.order_book
@@ -240,6 +260,210 @@ impl BrokerState {
                 EntryPyramidingMode::BypassLimit
             };
             let filled = self.entry_long_internal(
+                EntryFill {
+                    id: entry_id.clone(),
+                    bar_index,
+                    time,
+                    price: limit_price,
+                    qty: pending_entry.quantity,
+                    metadata: pending_entry.metadata,
+                },
+                pyramiding_mode,
+            );
+            if filled {
+                if pending_entry.enforce_pyramiding {
+                    self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
+                    self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
+                }
+            } else {
+                self.order_book.exits_mut().clear_for_entry(&entry_id);
+            }
+        }
+        self.order_book.entries_mut().clear_all();
+    }
+
+    pub(crate) fn fill_pending_limit_short_entries(
+        &mut self,
+        bar_index: usize,
+        time: i64,
+        high: f64,
+    ) {
+        if !self.can_open_short_entry()
+            && !self
+                .order_book
+                .entries()
+                .has_limit_short_bypassing_pyramiding()
+        {
+            if self
+                .order_book
+                .entries()
+                .has_price_based_short_bypassing_pyramiding()
+            {
+                return;
+            }
+            self.order_book
+                .entries_mut()
+                .clear_direction(PendingEntryDirection::Short);
+            return;
+        }
+        let pending_entries = self.order_book.entries_mut().take_all_eligible_limit_short(
+            bar_index,
+            high,
+            self.limit_verification_price_offset,
+        );
+        if pending_entries.is_empty() {
+            return;
+        }
+
+        for pending_entry in pending_entries {
+            let PendingEntryKind::Limit { price } = pending_entry.kind else {
+                continue;
+            };
+            let entry_id = pending_entry.id;
+            let pyramiding_mode = if pending_entry.enforce_pyramiding {
+                EntryPyramidingMode::SameTickPriceException
+            } else {
+                EntryPyramidingMode::BypassLimit
+            };
+            let filled = self.entry_short_internal(
+                EntryFill {
+                    id: entry_id.clone(),
+                    bar_index,
+                    time,
+                    price,
+                    qty: pending_entry.quantity,
+                    metadata: pending_entry.metadata,
+                },
+                pyramiding_mode,
+            );
+            if filled {
+                if pending_entry.enforce_pyramiding {
+                    self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
+                    self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
+                }
+            } else {
+                self.order_book.exits_mut().clear_for_entry(&entry_id);
+            }
+        }
+        self.order_book.entries_mut().clear_all();
+    }
+
+    pub(crate) fn fill_pending_stop_short_entries(
+        &mut self,
+        bar_index: usize,
+        time: i64,
+        low: f64,
+    ) {
+        if !self.can_open_short_entry()
+            && !self
+                .order_book
+                .entries()
+                .has_stop_short_bypassing_pyramiding()
+        {
+            if self
+                .order_book
+                .entries()
+                .has_price_based_short_bypassing_pyramiding()
+            {
+                return;
+            }
+            self.order_book
+                .entries_mut()
+                .clear_direction(PendingEntryDirection::Short);
+            return;
+        }
+        let pending_entries = self
+            .order_book
+            .entries_mut()
+            .take_all_eligible_stop_short(bar_index, low);
+        if pending_entries.is_empty() {
+            return;
+        }
+
+        for pending_entry in pending_entries {
+            let PendingEntryKind::Stop { price } = pending_entry.kind else {
+                continue;
+            };
+            let entry_id = pending_entry.id;
+            let pyramiding_mode = if pending_entry.enforce_pyramiding {
+                EntryPyramidingMode::SameTickPriceException
+            } else {
+                EntryPyramidingMode::BypassLimit
+            };
+            let filled = self.entry_short_internal(
+                EntryFill {
+                    id: entry_id.clone(),
+                    bar_index,
+                    time,
+                    price,
+                    qty: pending_entry.quantity,
+                    metadata: pending_entry.metadata,
+                },
+                pyramiding_mode,
+            );
+            if filled {
+                if pending_entry.enforce_pyramiding {
+                    self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
+                    self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
+                }
+            } else {
+                self.order_book.exits_mut().clear_for_entry(&entry_id);
+            }
+        }
+        self.order_book.entries_mut().clear_all();
+    }
+
+    pub(crate) fn fill_pending_stop_limit_short_entries(
+        &mut self,
+        bar_index: usize,
+        time: i64,
+        high: f64,
+        low: f64,
+    ) {
+        if !self.can_open_short_entry()
+            && !self
+                .order_book
+                .entries()
+                .has_stop_limit_short_bypassing_pyramiding()
+        {
+            if self
+                .order_book
+                .entries()
+                .has_price_based_short_bypassing_pyramiding()
+            {
+                return;
+            }
+            self.order_book
+                .entries_mut()
+                .clear_direction(PendingEntryDirection::Short);
+            return;
+        }
+        self.order_book
+            .entries_mut()
+            .activate_stop_limit_short_entries(bar_index, low);
+        let pending_entries = self
+            .order_book
+            .entries_mut()
+            .take_all_eligible_stop_limit_short(
+                bar_index,
+                high,
+                self.limit_verification_price_offset,
+            );
+        if pending_entries.is_empty() {
+            return;
+        }
+
+        for pending_entry in pending_entries {
+            let PendingEntryKind::StopLimit { limit_price, .. } = pending_entry.kind else {
+                continue;
+            };
+            let entry_id = pending_entry.id;
+            let pyramiding_mode = if pending_entry.enforce_pyramiding {
+                EntryPyramidingMode::SameTickPriceException
+            } else {
+                EntryPyramidingMode::BypassLimit
+            };
+            let filled = self.entry_short_internal(
                 EntryFill {
                     id: entry_id.clone(),
                     bar_index,

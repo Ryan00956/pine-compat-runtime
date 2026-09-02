@@ -75,7 +75,17 @@ full Pine surface. In this document:
   integer is accepted and its final evaluated value applies to the complete
   output. V3 and v6 retain the strict rule.
 - `const` parameters require literal/named-constant style values after current
-  semantic analysis.
+  semantic analysis. `plot` `style` is the documented exception: it accepts a
+  string-compatible argument only when every statically proven runtime value is
+  a supported `plot.style_*` enum, including complete ternaries, `if`/`switch`
+  branches, and explicit `input.string` options. Unbounded or partly invalid
+  strings remain analysis errors. The public plot JSON still stores one style
+  field, overwritten on each execution so the final evaluated enum applies to
+  the complete output. `plotshape` `style` and `hline` `linestyle` use the same
+  proven-domain rule; plotshape emits a per-bar style series, while hline keeps
+  one last-evaluated linestyle field. Pine v1-v4 keep their documented
+  style-constant and input-integer ordinal paths and now share the same proven
+  string-domain admission.
 - History offsets accept non-negative integer literals plus integer expressions
   at any implemented qualifier, including `series int`; non-integer offsets are
   rejected.
@@ -369,7 +379,10 @@ barstate.isrealtime -> series bool
 `barstate.isfirst` is `true` only when `bar_index == 0`.
 `barstate.islast` is `true` on the last known bar in finite historical batch
 execution and on current realtime updates. Open-ended `append_bar` historical
-updates treat the appended bar as the latest known bar.
+updates treat the appended bar as the latest known bar. In provider-backed
+`request.security` and legacy `security` expressions it is `true` only on the
+last bar of the requested stream; later chart bars may forward-fill that value
+under `gaps_off`.
 `barstate.islastconfirmedhistory` is `true` on the last known confirmed
 historical bar in finite historical batch execution. Open-ended `append_bar`
 historical updates treat the appended historical bar as the current last
@@ -648,7 +661,8 @@ The current executable subset has two forms:
   `request.security(syminfo.tickerid, timeframe, expression)` evaluate
   side-effect-free expressions over host-provided same-or-higher-timeframe bars.
   The supported provider expression subset includes direct OHLCV/time sources,
-  pure arithmetic and ternaries, history references, `na`, `nz`, selected
+  pure arithmetic and ternaries, history references, `na`, `nz`, positional
+  `time(timeframe)` calls, `barstate.islast`, selected
   stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
   `ta.cum`, `ta.sma`, `ta.ema`, `ta.dema`, `ta.tema`, `ta.rma`, `ta.rsi`,
   `ta.accdist`, `ta.iii`, `ta.nvi`, `ta.obv`, `ta.pvi`, `ta.pvt`, `ta.wvad`, `ta.tsi`, `ta.cmo`, `ta.cci`, `ta.cog`, `ta.bop`, `ta.ao`, `ta.max`, `ta.min`, `ta.mfi`, `ta.stoch`, `ta.wpr`, `ta.sar`, `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`, `ta.highestbars`, `ta.lowestbars`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`,
@@ -921,8 +935,12 @@ account-model slices. The current runtime uses explicit active `margin_long`
 for long-only `strategy.opentrades.capital_held` and supported long-entry
 affordability checks at the actual fill price. It also supports the first
 long-only forced-liquidation subset using `bar.low` and whole-unit truncation.
-Short margin behavior, symbol precision rounding, and margin liquidation price
-remain unsupported.
+Explicit active `margin_short` drives short `strategy.opentrades.capital_held`
+and supported short-entry affordability checks at the actual fill price while
+flat or already short. Short forced liquidation uses `bar.high` and whole-unit
+truncation. `strategy.margin_liquidation_price` also solves the short-margin
+crossing price for active `margin_short` positions. Symbol precision rounding
+remains unsupported.
 `strategy(..., pyramiding=N)` accepts positive integer const values and limits
 same-direction long `strategy.entry()` market entries to that many open trades
 for the current position. The default remains `1`. Fixture-backed market-long
@@ -933,7 +951,15 @@ pyramiding limit. Fixture-backed limit-long
 `strategy.order(id, strategy.long, qty=..., limit=price)` fills through the
 supported long limit timing model and also bypasses the `strategy.entry()`
 pyramiding limit; omitted long `qty` uses the configured default quantity at
-placement time. Fixture-backed stop-long
+placement time. Fixture-backed limit-short
+`strategy.order(id, strategy.short, qty=..., limit=price)` fills through the
+supported short limit timing model and also bypasses the `strategy.entry()`
+pyramiding limit while flat or already short; it is a no-op while net long, and
+explicit positive `qty` is required. Fixture-backed stop-short
+`strategy.order(id, strategy.short, qty=..., stop=price)` fills through the
+supported short stop timing model and also bypasses the `strategy.entry()`
+pyramiding limit while flat or already short; it is a no-op while net long, and
+explicit positive `qty` is required. Fixture-backed stop-long
 `strategy.order(id, strategy.long, qty=..., stop=price)` fills through the
 supported long stop timing model and also bypasses the `strategy.entry()`
 pyramiding limit; omitted long `qty` uses the configured default quantity at
@@ -941,13 +967,17 @@ placement time. Fixture-backed stop-limit-long
 `strategy.order(id, strategy.long, qty=..., stop=stop_price, limit=limit_price)`
 uses the supported long stop-limit activation and fill timing model and also
 bypasses the `strategy.entry()` pyramiding limit; omitted long `qty` uses the
-configured default quantity at placement time. Fixture-backed reduce-only market
+configured default quantity at placement time. Fixture-backed stop-limit-short
+`strategy.order(id, strategy.short, qty=..., stop=stop_price, limit=limit_price)`
+uses the supported short stop-limit activation and fill timing model and also
+bypasses the `strategy.entry()` pyramiding limit while flat or already short; it
+is a no-op while net long, and explicit positive `qty` is required.
+Fixture-backed reduce-only market
 `strategy.order(id, strategy.short, qty=...)` can reduce an existing long
 position on the next historical bar open and clamps oversized quantities without
 opening short exposure; while flat, it is a no-op. Omitted `qty` remains
-unsupported for `strategy.short`. Short exposure, reversals, short price-based
-orders, OCA behavior, same-tick price-based entry exceptions, and broader
-multi-entry exit/reporting
+unsupported for `strategy.short`. Reversals, OCA behavior, same-tick
+price-based entry exceptions, and broader multi-entry exit/reporting
 semantics remain unsupported unless fixture-backed.
 The supported `strategy.order()` subset accepts `comment`, `alert_message`,
 and `disable_alert` metadata; long fills retain entry comments and reduce-only
@@ -965,8 +995,12 @@ Both positional declaration slots remain outside the current subset.
 `strategy.close(id)` can close a requested pyramided long entry id; multi-entry
 `strategy.close_all()` can flatten all accepted open long entries. Fixture-backed
 absolute stop/limit `strategy.exit` calls can target a requested open pyramided
-long entry id, and supported single-trigger and bracket `profit`/`loss` exits
-convert from that matched entry price. Supported trailing `trail_points` exits
+long entry id or a matching market short entry. Supported single-trigger
+`profit`/`loss` exits convert from that matched long or short entry price
+(short profit below the entry, short loss above it). Short `stop+limit`,
+`stop+profit`, `loss+limit`, and `loss+profit` brackets use that same inverted
+stop/limit geometry. Short trailing `trail_price`/`trail_points` activate on
+`low`, ratchet downward, and fill on `high`. Supported trailing `trail_points` exits
 also convert activation from that matched entry price. A supported exit matching
 multiple open trades with the same entry id emits one exit order and one closed
 trade per matched ledger allocation. Fixture-backed omitted-`from_entry`
@@ -1052,8 +1086,9 @@ value, or `na` before the first losing closed trade.
 `strategy.max_contracts_held_all`, `strategy.max_contracts_held_long`, and
 `strategy.max_contracts_held_short` are read-only strategy-mode series floats
 for the maximum contracts/shares/lots/units held over the whole trading range;
-in the current long-only subset, `all` and `long` track the maximum filled
-long-entry quantity and `short` remains `0`.
+in the current subset, `long` tracks the maximum filled long-entry quantity,
+`short` tracks the maximum filled market short-entry quantity, and `all` is
+the max of those two values.
 `strategy.max_runup` is a read-only strategy-mode series float that returns the
 maximum intrabar equity run-up amount over the current supported long-only
 trading interval, using the supported entry equity, the minimum equity before
@@ -1144,13 +1179,18 @@ flat-state open-trade reads, and non-positive or non-finite entry values return
 current no-margin subset returns `na`; with explicit active `margin_long`, the
 current long-only subset returns current open long market value multiplied by
 `margin_long / 100`, including after the current long-only forced-liquidation
-subset reduces the open position. Short margin behavior remains unsupported.
+subset reduces the open position. With explicit active `margin_short`, open
+short exposure returns absolute short market value multiplied by
+`margin_short / 100`, including after the current short forced-liquidation
+subset reduces the open position.
 `strategy.margin_liquidation_price` is a read-only strategy-mode series float
-that returns the current long-only broker price where supported equity equals
-required long margin for an active `margin_long` position. It returns `na`
-without active long margin, while flat, or when the long margin denominator is
-unattainable, such as `margin_long=100`. Symbol tick rounding, short margin,
-and public margin-specific schema expansion remain unsupported.
+that returns the current broker price where supported equity equals required
+margin for an active `margin_long` long position or an active `margin_short`
+short position. It returns `na` without an active margin setting for the
+current exposure, while flat, or when the long margin denominator is
+unattainable, such as `margin_long=100`. Full short margin remains solvable.
+Symbol tick rounding and public margin-specific schema expansion remain
+unsupported.
 `trade_num` is a zero-based integer index; missing, negative, out-of-range, or
 non-integer indexes return `na`. Closed- and open-trade `entry_id` return the
 retained entry id. Closed-trade `exit_id` returns the retained close or exit id.
@@ -1216,13 +1256,13 @@ alertcondition(condition: bool-compatible, title: const string, message: const s
 alert(message: string-compatible, freq?: const string)
   -> void
 
-plot(series: series/simple numeric, title?: const string, color?: color-compatible, linewidth?: input/const int, style?: const string, trackprice?: const bool, histbase?: input/const numeric, offset?: simple integer-compatible, join?: const bool, editable?: const bool, show_last?: input/const int, display?: const string, format?: const string, precision?: simple integer-compatible, force_overlay?: const bool)
+plot(series: series/simple numeric, title?: const string, color?: color-compatible, linewidth?: input/const int, style?: string-compatible, trackprice?: const bool, histbase?: input/const numeric, offset?: simple integer-compatible, join?: const bool, editable?: const bool, show_last?: input/const int, display?: const string, format?: const string, precision?: simple integer-compatible, force_overlay?: const bool)
   -> plot
 
 plotchar(series: series/simple numeric-or-bool, title?: const string, char?: const string, color?: color-compatible, location?: const string, offset?: simple integer-compatible, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: input/const int, display?: const string)
   -> void
 
-plotshape(series: series/simple numeric-or-bool, title?: const string, style?: const string, location?: const string, color?: color-compatible, offset?: simple integer-compatible, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: input/const int, display?: const string, force_overlay?: const bool)
+plotshape(series: series/simple numeric-or-bool, title?: const string, style?: string-compatible, location?: const string, color?: color-compatible, offset?: simple integer-compatible, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: input/const int, display?: const string, force_overlay?: const bool)
   -> void
 
 plotarrow(series: series/simple numeric, title?: const string, colorup?: color-compatible, colordown?: color-compatible, offset?: simple integer-compatible, minheight?: simple integer-compatible, maxheight?: simple integer-compatible, editable?: const bool, show_last?: input/const int, display?: const string, force_overlay?: const bool)
@@ -1234,7 +1274,7 @@ plotbar(open: series/simple numeric, high: series/simple numeric, low: series/si
 plotcandle(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, wickcolor?: color-compatible, editable?: const bool, show_last?: input/const int, bordercolor?: color-compatible, display?: const string)
   -> void
 
-hline(price: input/const numeric, title?: const string, color?: input/const color, linestyle?: const string, linewidth?: input/const int, editable?: const bool, display?: const string)
+hline(price: input/const numeric, title?: const string, color?: input/const color, linestyle?: string-compatible, linewidth?: input/const int, editable?: const bool, display?: const string)
   -> hline
 
 fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, title?: const string, editable?: const bool, show_last?: input/const int, fillgaps?: const bool, display?: const string)
@@ -1341,8 +1381,11 @@ Supported direct strategy constants include `strategy.long`, `strategy.short`,
 `strategy.oca.cancel`, `strategy.oca.none`, `strategy.oca.reduce`,
 `strategy.commission.cash_per_contract`,
 `strategy.commission.cash_per_order`, and `strategy.commission.percent` as
-string values. `strategy.entry` execution remains long-only; `strategy.short`
-entries remain unsupported, and OCA order behavior remains unsupported.
+string values. `strategy.entry` execution supports `strategy.long`, market
+`strategy.short`, limit `strategy.short`, stop `strategy.short`, and stop-limit
+`strategy.short`, including
+market reversals that flatten opposite exposure then open the requested
+quantity; OCA order behavior remains unsupported.
 
 ## Utility
 
@@ -1400,7 +1443,7 @@ array.size(id: float-array|int-array|bool-array|string-array|color-array|label-a
 array.push(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, value: element-compatible) -> void
 array.get(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: int-compatible) -> series element
 array.set(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: int-compatible, value: element-compatible) -> void
-array.insert(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple integer-compatible, value: element-compatible) -> void
+array.insert(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: int-compatible, value: element-compatible) -> void
 array.pop(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> series element
 array.remove(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array, index: simple integer-compatible) -> series element
 array.shift(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|polyline-array|box-array|table-array|chart-point-array) -> series element
@@ -1483,10 +1526,11 @@ fixture-backed same-local scalar-tree UDT array subset, while
 linefill, drawing-id, chart-point, and UDT arrays remain outside the
 `str.tostring(array)` subset. Separately, `str.tostring` accepts the supported
 float/int/bool/string matrix families but not color matrices. Array
-size/index/range parameters are simple
+constructor size parameters and fill/slice range bounds are simple
 integer-compatible: explicit `na` size returns `na`, read-style `na` indexes or
 slice bounds return `na`, and mutation-style `na` indexes or fill bounds are
-no-ops. Linefill arrays are supported for generic
+no-ops. `array.get`, `array.set`, and `array.insert` indexes are
+integer-compatible, including `series int`. Linefill arrays are supported for generic
 object-array storage and search, chart-point arrays are supported for generic
 point-list storage and search, and `polyline.all` exposes a read-only snapshot
 polyline id array. General polyline array construction and mutation remain

@@ -1,0 +1,7 @@
+//@version=6
+indicator("Unsupported unbounded plotshape and hline style")
+unboundedShape = input.string("custom")
+partlyInvalidLine = close >= open ? hline.style_solid : "custom"
+plotshape(true, style=unboundedShape)
+hline(1, linestyle=partlyInvalidLine)
+plot(close)

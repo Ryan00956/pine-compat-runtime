@@ -111,6 +111,10 @@ pub(crate) const ARRAY_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/array_insert_remove.pine",
     ),
     (
+        "runtime_array_insert_series_index.json",
+        "tests/fixtures/runtime/array_insert_series_index.pine",
+    ),
+    (
         "runtime_array_fill.json",
         "tests/fixtures/runtime/array_fill.pine",
     ),

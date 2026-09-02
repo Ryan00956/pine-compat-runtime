@@ -73,6 +73,16 @@ applies to the complete rendered output. Pine v3 and v6 keep the canonical
 simple-int boundary. History-reference offsets use their separate guarded
 history model and are unaffected.
 
+`plot` `style` uses the drawing-enum domain proof rather than a const-string
+bound. Immutable aliases, complete conditional branches, and explicit
+`input.string` options are accepted when every value is a supported
+`plot.style_*` constant; unbounded strings remain errors. The HIR keeps the
+series expression, and the single public `style` field is overwritten on each
+bar so the last evaluated enum is the rendered metadata. `plotshape` `style`
+and `hline` `linestyle` follow the same proof; plotshape records a per-bar
+style series. Pine v1-v4 still accept documented style constants and input
+integer ordinals.
+
 Legacy `security` dependency admission is also versioned rather than a general
 scope relaxation. Pine v4 requests written directly in an inlined UDF body may
 use scalar parameters and normal immutable scalar locals. Lowered declaration
@@ -136,14 +146,30 @@ next historical bar open before script statements on that fill bar.
 emits no public order while pending, never fills on its creation bar, and fills
 at the limit price before script statements on a later historical bar when
 `low <= limit`, or below the configured verified limit threshold.
+`strategy.entry(..., strategy.short, limit=price)` creates an internal pending
+short limit entry while flat or already short, emits no public order while
+pending, never fills on its creation bar, and fills at the limit price before
+script statements on a later historical bar when `high >= limit`, or above the
+configured verified limit threshold.
 `strategy.entry(..., stop=price)` creates an internal pending
 long stop entry, emits no public order while pending, never fills on its
 creation bar, and fills at the stop price before script statements on a later
-historical bar when `high >= stop`. `strategy.entry(..., stop=price,
+historical bar when `high >= stop`.
+`strategy.entry(..., strategy.short, stop=price)` creates an internal pending
+short stop entry while flat or already short, emits no public order while
+pending, never fills on its creation bar, and fills at the stop price before
+script statements on a later historical bar when `low <= stop`.
+`strategy.entry(..., stop=price,
 limit=price)` creates an internal pending long stop-limit entry, activates an
 internal limit order before script statements on a later historical bar when
 `high >= stop`, does not fill on that activation bar, and fills at the limit
 price before script statements on a later historical bar when `low <= limit`.
+`strategy.entry(..., strategy.short, stop=price, limit=price)` creates an
+internal pending short stop-limit entry while flat or already short, activates
+an internal limit order before script statements on a later historical bar when
+`low <= stop`, does not fill on that activation bar, and fills at the limit
+price before script statements on a later historical bar when `high >= limit`,
+or above the configured verified limit threshold.
 Same-calculation absolute `strategy.exit` attachment may target the active
 pending market, limit, stop, or stop-limit entry id.
 `strategy.close(id)` closes the full matching long position at the current bar
@@ -167,7 +193,14 @@ expose public pending-order or cancellation records.
 `strategy.exit(id, from_entry, limit=price)`,
 `strategy.exit(id, from_entry, profit=ticks)`, and
 `strategy.exit(id, from_entry, loss=ticks)` support the current long-only
-full-position single-trigger exit subset. Phase R also supports exactly one
+full-position single-trigger exit subset. Stage 14f also supports market-short
+single-trigger `stop=price` and `limit=price` covers against a matching open or
+pending short entry; short stop fills when `high >= stop`, short limit fills
+when `low <= limit` minus the configured verification offset, and Stage 14g
+converts short `profit`/`loss` ticks from the matching short entry price.
+Stage 14h supports short `stop+limit`, `stop+profit`, `loss+limit`, and
+`loss+profit` brackets. Stage 14i supports short `trail_price`/`trail_points`
+trailing covers that activate on `low`, ratchet downward, and fill on `high`. Phase R also supports exactly one
 downside leg plus one upside leg in a single bracket:
 `stop + limit`, `stop + profit`, `loss + limit`, and `loss + profit`. Supported
 single-trigger, bracket, and trailing exits with explicit fixed `qty` or
@@ -269,8 +302,9 @@ denominator; the losing variant returns positive loss percentages.
 `strategy.max_contracts_held_all`, `strategy.max_contracts_held_long`, and
 `strategy.max_contracts_held_short` report the maximum
 contracts/shares/lots/units held over the whole trading range. In the current
-long-only subset, `all` and `long` track the maximum supported filled long
-entry quantity, while `short` stays `0` because short entries are unsupported.
+subset, `long` tracks the maximum filled long-entry quantity, `short` tracks
+the maximum filled market short-entry quantity, and `all` is the max of those
+two values.
 `strategy.grossloss` is a read-only strategy-mode
 `series float` that sums realized closed-trade losses as positive values;
 winning, flat, and current open trades do not change it. `strategy.avg_trade`
@@ -357,7 +391,12 @@ flat and current open long market value times `margin_long / 100` while open.
 The same active `margin_long` setting also constrains supported long entry
 fills at their actual fill price and supports the first long-only forced
 liquidation subset. After a margin call, `capital_held` reflects the remaining
-open long position. Short margin behavior remains unsupported.
+open long position. Explicit active `margin_short` returns absolute short
+market value times `margin_short / 100` while a supported short position is
+open and constrains supported short entry fills at their actual fill price.
+Short forced liquidation uses `bar.high` and updates `capital_held` for the
+remaining short. `strategy.margin_liquidation_price` returns the solved short
+margin crossing price for active `margin_short` exposure.
 Phase M and
 Phase N keep pending-order records, partial fill fields, and exit reason fields
 outside the public output model, and Phases R, S, U, V, W, X, and Y keep that
@@ -1644,7 +1683,9 @@ place, and returns the first array id. Its immediate postfix reader is
 non-mutating, but the concat producer remains a mutation and is rejected inside
 UDFs. `array.get`, `array.set`, `array.insert`,
 and `array.remove`
-support negative indexes from the array end. `array.insert` inserts before a
+support negative indexes from the array end. `array.get`, `array.set`, and
+`array.insert` accept integer-compatible indexes, including `series int`, in
+namespace and method forms. `array.insert` inserts before a
 valid index, appends when the positive index equals the current size, and
 raises a runtime error for out-of-bounds indexes. `array.remove` removes and
 returns a valid indexed element, or raises a runtime error when the index is

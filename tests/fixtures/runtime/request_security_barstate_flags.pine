@@ -1,0 +1,8 @@
+//@version=6
+indicator("Request barstate flags")
+plot(request.security(syminfo.tickerid, timeframe.period, barstate.isfirst ? 1 : 0), "isfirst")
+plot(request.security(syminfo.tickerid, timeframe.period, barstate.isnew ? 1 : 0), "isnew")
+plot(request.security(syminfo.tickerid, timeframe.period, barstate.isconfirmed ? 1 : 0), "isconfirmed")
+plot(request.security(syminfo.tickerid, timeframe.period, barstate.ishistory ? 1 : 0), "ishistory")
+plot(request.security(syminfo.tickerid, timeframe.period, barstate.isrealtime ? 1 : 0), "isrealtime")
+plot(request.security(syminfo.tickerid, timeframe.period, barstate.islastconfirmedhistory ? 1 : 0), "islastconfirmedhistory")

@@ -306,7 +306,7 @@ impl Analyzer {
                 };
                 (request_scalar_call_is_supported(&name) || request_tuple_call_is_supported(&name))
                     && args.iter().all(|arg| {
-                        arg.name.is_none()
+                        request_call_argument_is_admitted(&name, arg)
                             && self.request_expression_is_same_context_value(&arg.value)
                     })
             }
@@ -572,7 +572,7 @@ impl Analyzer {
                 }
                 legacy_request_scalar_call_is_supported(&name)
                     && args.iter().all(|arg| {
-                        arg.name.is_none()
+                        request_call_argument_is_admitted(&name, arg)
                             && self.request_expression_is_legacy_provider_scalar_inner(
                                 &arg.value,
                                 visiting,
@@ -798,7 +798,8 @@ impl Analyzer {
                 };
                 request_scalar_call_is_supported(&name)
                     && args.iter().all(|arg| {
-                        arg.name.is_none() && self.request_expression_is_provider_scalar(&arg.value)
+                        request_call_argument_is_admitted(&name, arg)
+                            && self.request_expression_is_provider_scalar(&arg.value)
                     })
             }
             ExprKind::Switch { selector, arms } => {
@@ -883,6 +884,13 @@ fn is_request_provider_scalar_name(name: &str) -> bool {
             | "close"
             | "volume"
             | "time"
+            | "barstate.isfirst"
+            | "barstate.islast"
+            | "barstate.islastconfirmedhistory"
+            | "barstate.isnew"
+            | "barstate.isconfirmed"
+            | "barstate.ishistory"
+            | "barstate.isrealtime"
             | "ta.accdist"
             | "ta.iii"
             | "ta.nvi"
@@ -897,6 +905,8 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
     matches!(
         name,
         "na" | "nz"
+            | "time"
+            | "time_close"
             | "math.abs"
             | "math.max"
             | "math.min"
@@ -985,4 +995,15 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
 
 fn legacy_request_scalar_call_is_supported(name: &str) -> bool {
     request_scalar_call_is_supported(name) || name == "int"
+}
+
+fn request_call_argument_is_admitted(callee: &str, arg: &CallArg) -> bool {
+    match arg.name.as_deref() {
+        None => true,
+        Some(name) if matches!(callee, "time" | "time_close") => matches!(
+            name,
+            "timeframe" | "session" | "timezone" | "bars_back" | "timeframe_bars_back"
+        ),
+        Some(_) => false,
+    }
 }

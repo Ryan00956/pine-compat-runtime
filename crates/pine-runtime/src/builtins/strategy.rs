@@ -151,7 +151,9 @@ impl<'a> HistoricalRuntime<'a> {
             _ => return Ok(PineValue::Void),
         };
         let direction = self.eval_expr(direction_expr)?;
-        if direction != PineValue::String("strategy.long".to_owned()) {
+        let is_long = direction == PineValue::String("strategy.long".to_owned());
+        let is_short = direction == PineValue::String("strategy.short".to_owned());
+        if !is_long && !is_short {
             return Ok(PineValue::Void);
         }
         let qty_expr = args
@@ -180,6 +182,36 @@ impl<'a> HistoricalRuntime<'a> {
                 .default_entry_qty(equity, bar.close)
                 .unwrap_or(f64::NAN)
         };
+        if is_short {
+            if let (Some(limit_expr), Some(stop_expr)) = (limit_expr, stop_expr) {
+                let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
+                let stop = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
+                self.strategy_broker
+                    .place_pending_stop_limit_short_entry_with_metadata(
+                        id, qty, stop, limit, self.bars, metadata,
+                    );
+                return Ok(PineValue::Void);
+            }
+            if let Some(stop_expr) = stop_expr {
+                let stop = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
+                self.strategy_broker
+                    .place_pending_stop_short_entry_with_metadata(
+                        id, qty, stop, self.bars, metadata,
+                    );
+                return Ok(PineValue::Void);
+            }
+            if let Some(limit_expr) = limit_expr {
+                let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
+                self.strategy_broker
+                    .place_pending_limit_short_entry_with_metadata(
+                        id, qty, limit, self.bars, metadata,
+                    );
+                return Ok(PineValue::Void);
+            }
+            self.strategy_broker
+                .place_pending_market_short_entry_with_metadata(id, qty, self.bars, metadata);
+            return Ok(PineValue::Void);
+        }
         if let (Some(limit_expr), Some(stop_expr)) = (limit_expr, stop_expr) {
             let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
             let stop = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
@@ -275,12 +307,26 @@ impl<'a> HistoricalRuntime<'a> {
                     .strategy_broker
                     .place_pending_market_long_order_with_metadata(id, qty, self.bars, metadata),
             },
-            PineValue::String(value)
-                if value == "strategy.short" && limit.is_none() && stop.is_none() =>
-            {
-                self.strategy_broker
-                    .place_pending_market_short_order_with_metadata(id, qty, self.bars, metadata);
-            }
+            PineValue::String(value) if value == "strategy.short" => match (limit, stop) {
+                (Some(limit), Some(stop)) => self
+                    .strategy_broker
+                    .place_pending_stop_limit_short_order_with_metadata(
+                        id, qty, stop, limit, self.bars, metadata,
+                    ),
+                (Some(limit), None) => self
+                    .strategy_broker
+                    .place_pending_limit_short_order_with_metadata(
+                        id, qty, limit, self.bars, metadata,
+                    ),
+                (None, Some(stop)) => self
+                    .strategy_broker
+                    .place_pending_stop_short_order_with_metadata(
+                        id, qty, stop, self.bars, metadata,
+                    ),
+                (None, None) => self
+                    .strategy_broker
+                    .place_pending_market_short_order_with_metadata(id, qty, self.bars, metadata),
+            },
             _ => {}
         }
         Ok(PineValue::Void)

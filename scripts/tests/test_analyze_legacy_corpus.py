@@ -456,17 +456,27 @@ class AnalyzeLegacyCorpusTests(unittest.TestCase):
                     for command in runner.commands
                     if command[1] != "analyze"
                 ],
-                ["run", "run-incremental", "run-realtime-history"],
+                [
+                    "run",
+                    "run-incremental",
+                    "run-realtime-history",
+                    "run-realtime-forming",
+                ],
             )
             stages = report["items"][0]["stages"]
             self.assertEqual(stages["historicalRun"]["status"], "passed")
             self.assertEqual(stages["incrementalRun"]["status"], "passed")
             self.assertEqual(stages["realtimeRun"]["status"], "passed")
+            self.assertEqual(stages["formingRun"]["status"], "passed")
             self.assertEqual(stages["resourceAudit"]["status"], "passed")
             resources = report["items"][0]["runtimeResources"]
             self.assertEqual(resources["modes"]["batch"]["retainedValues"], 1)
             self.assertEqual(
                 resources["modes"]["realtimeHistory"],
+                resources["modes"]["batch"],
+            )
+            self.assertEqual(
+                resources["modes"]["realtimeForming"],
                 resources["modes"]["batch"],
             )
             self.assertTrue(
@@ -486,6 +496,7 @@ class AnalyzeLegacyCorpusTests(unittest.TestCase):
             "batch": snapshot,
             "incremental": dict(snapshot),
             "realtimeHistory": dict(snapshot),
+            "realtimeForming": dict(snapshot),
         }
         self.assertEqual(
             analyze_legacy_corpus.resource_audit_status(
@@ -584,6 +595,10 @@ class AnalyzeLegacyCorpusTests(unittest.TestCase):
             self.assertEqual(incremental["errorKind"], "result_mismatch")
             self.assertEqual(
                 report["items"][0]["stages"]["realtimeRun"]["status"],
+                "passed",
+            )
+            self.assertEqual(
+                report["items"][0]["stages"]["formingRun"]["status"],
                 "passed",
             )
 
@@ -783,7 +798,7 @@ class AnalyzeLegacyCorpusTests(unittest.TestCase):
                 command_runner=FakeRunner(),
             )
 
-            self.assertEqual(report["schemaVersion"], 4)
+            self.assertEqual(report["schemaVersion"], 5)
             profile = report["summary"]["versions"]["4"]
             self.assertEqual(profile["historicalRun"]["eligibleSuccessRate"], 1.0)
             self.assertTrue(profile["stableBaseline"]["thresholdsMet"])

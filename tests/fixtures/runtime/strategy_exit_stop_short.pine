@@ -1,0 +1,6 @@
+//@version=5
+strategy("Stop exit short strategy", overlay=true)
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=2)
+    strategy.exit("XS", "S", stop=2.5)
+plot(strategy.position_size)

@@ -1,0 +1,7 @@
+//@version=4
+study("v4 dynamic plotshape and hline style")
+shapeStyle = bar_index % 2 == 0 ? shape.circle : shape.cross
+lineStyle = bar_index % 2 == 0 ? hline.style_solid : hline.style_dotted
+plotshape(true, title="dynamic", style=shapeStyle)
+hline(1, title="dynamic", linestyle=lineStyle)
+plot(close)

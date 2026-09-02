@@ -198,32 +198,47 @@ Slice M3 also checks supported long entry affordability at the actual fill
 price. Stage 7 Margin Slice M5 implements the first long-only forced
 liquidation subset using `bar.low`, the documented available-funds algorithm,
 and whole-unit truncation. `strategy.margin_liquidation_price` returns the
-current long-only price where supported equity equals required long margin for
-an active `margin_long` position, or `na` without active long margin, while
-flat, or when the long-margin denominator is unattainable. Short margin
-behavior, symbol tick rounding for the liquidation price, and margin-specific
-public schema expansion remain unsupported.
+price where supported equity equals required margin for an active `margin_long`
+long position or an active `margin_short` short position, or `na` without an
+active margin setting for the current exposure, while flat, or when the
+long-margin denominator is unattainable. Symbol tick rounding for the
+liquidation price and margin-specific public schema expansion remain
+unsupported.
 `strategy(..., close_entries_rule="FIFO")` is accepted as an explicit default
 FIFO close-entry allocation setting. `strategy(..., close_entries_rule="ANY")`
 is stored in internal strategy settings and is fixture-backed for the current
-long-only id-specific `strategy.close(id)` and
-`strategy.exit(..., from_entry=id)` allocation subset. Omitted-`from_entry`
-exits and `strategy.close_all()` keep the existing FIFO allocation path.
+id-specific long and short `strategy.close(id)` and
+`strategy.exit(..., from_entry=id)` allocation subset, including same-entry-id
+partial exits in stable ledger order. Omitted-`from_entry` exits and
+`strategy.close_all()` keep the existing FIFO allocation path.
 
 The current entry subset is `strategy.entry(id, strategy.long, qty=...)`,
 `strategy.entry(id, strategy.long)` when a fixed default quantity is configured,
-`strategy.entry(..., limit=price)` for long limit entries, and
-`strategy.entry(..., stop=price)` for long stop entries. Supplying both `stop`
-and `limit` creates a long stop-limit entry. Market entries fill at the next
+`strategy.entry(..., limit=price)` for long limit entries,
+`strategy.entry(id, strategy.short, qty=..., limit=price)` for short limit
+entries while flat or already short,
+`strategy.entry(..., stop=price)` for long stop entries, and
+`strategy.entry(id, strategy.short, qty=..., stop=price)` for short stop
+entries while flat or already short. Supplying both `stop`
+and `limit` creates a long or short stop-limit entry matching the direction.
+Market entries fill at the next
 historical bar open. Limit and stop entries never fill on their creation bar;
-limit entries fill at the limit price before script statements on a later
+long limit entries fill at the limit price before script statements on a later
 historical bar when `low <= limit`, or below the configured verified limit
-threshold, and stop entries fill at the stop price before script statements on
-a later historical bar when `high >= stop`.
-Stop-limit entries activate before script statements on a later historical bar
-when `high >= stop`, do not fill on that activation bar, and fill at the limit
-price before script statements on a later historical bar when `low <= limit`,
-or below the configured verified limit threshold.
+threshold, short limit entries fill at the limit price before script statements
+on a later historical bar when `high >= limit`, or above the configured
+verified limit threshold, long stop entries fill at the stop price before
+script statements on a later historical bar when `high >= stop`, and short
+stop entries fill at the stop price before script statements on a later
+historical bar when `low <= stop`.
+Long stop-limit entries activate before script statements on a later historical
+bar when `high >= stop`, do not fill on that activation bar, and fill at the
+limit price before script statements on a later historical bar when
+`low <= limit`, or below the configured verified limit threshold. Short
+stop-limit entries activate before script statements on a later historical bar
+when `low <= stop`, do not fill on that activation bar, and fill at the limit
+price before script statements on a later historical bar when `high >= limit`,
+or above the configured verified limit threshold.
 Pending entries emit no public order while pending. Only one net long position
 is supported; repeated entry calls while a position is open are ignored under
 the current no-pyramiding rule. Explicit `qty` overrides the declaration
@@ -294,8 +309,8 @@ indicator use, requested-context use, and mutation remain unsupported. An
 explicit `currency.NONE` declaration is accepted; other currency settings and
 cross-currency conversion remain unsupported. The same-currency conversion
 helpers follow the identity behavior described above.
-In the current long-only subset,
-`strategy.position_size` is `0` when flat and positive while long.
+`strategy.position_size` is `0` when flat, positive while long, and negative
+while short.
 `strategy.position_avg_price` is `na` when flat and the current average entry
 price while long. `strategy.position_entry_name` is `na` while flat and holds
 the entry order ID that initially opened the current continuous net position.
@@ -420,8 +435,9 @@ list and are script-observable only through ordinary series outputs; they do
 not add public runtime JSON, Python, or WASM fields. Stage 7 Slice 34 adds
 `strategy.max_contracts_held_all`, `strategy.max_contracts_held_long`, and
 `strategy.max_contracts_held_short` under the same public-output contract; in
-the current long-only subset, `all` and `long` track the maximum filled long
-entry quantity and `short` remains `0`. Closed/open trade namespace
+the current subset, `long` tracks the maximum filled long-entry quantity,
+`short` tracks the maximum filled market short-entry quantity, and `all` is
+the max of those two values. Closed/open trade namespace
 functions read the current trade lists with a zero-based integer `trade_num`;
 missing, negative, out-of-range, or non-integer indexes return `na`.
 Stage 7 Slice 6 adds `strategy.opentrades.entry_price(trade_num)` for the
@@ -468,13 +484,20 @@ or `0.0` while flat. Stage 7 Margin Slice M3 applies the same active
 `margin_long` account model to supported long entry affordability at the actual
 fill price. Stage 7 Margin Slice M5 applies the long-only forced-liquidation
 subset, so `capital_held` reflects the remaining open long position after a
-margin call. Short margin behavior remains unsupported.
-`strategy.margin_liquidation_price` uses the same supported long-only margin
-account model. It solves the current broker equation
+margin call. Stage 15a applies explicit active `margin_short` to short
+`capital_held` and supported short-entry affordability at the actual fill
+price. Stage 15b force-liquidates underwater shorts at `bar.high` using the
+documented four-times-cover algorithm, so `capital_held` reflects the remaining
+open short position after a margin call. Stage 15c exposes
+`strategy.margin_liquidation_price` for active short margin as
+`cash / (abs(position_size) * (1 + margin_short / 100))`.
+`strategy.margin_liquidation_price` uses the supported long and short margin
+account models. For longs it solves
 `equity_value(price) == position_size * price * margin_long / 100` and returns
 `na` without active long margin, while flat, or for the unattainable
-`margin_long=100` divisor. It does not round to `syminfo.mintick` yet and does
-not expose a public margin schema field.
+`margin_long=100` divisor. For shorts it returns `na` without active short
+margin or while flat. It does not round to `syminfo.mintick` yet and does not
+expose a public margin schema field.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Fixture-backed market-long
@@ -486,6 +509,18 @@ pyramiding limit. Fixture-backed limit-long
 supported long limit timing model, fill at the verified limit price on a later
 historical bar, and also bypass the `strategy.entry()` pyramiding limit;
 omitted long `qty` uses the configured default quantity at placement time.
+Fixture-backed limit-short
+`strategy.order(id, strategy.short, qty=..., limit=price)` orders use the
+supported short limit timing model, fill at the verified limit price on a later
+historical bar when `high >= limit`, open or increase short exposure while
+flat or already short without using the `strategy.entry()` pyramiding limit,
+and are a no-op while net long. Explicit positive `qty` is required.
+Fixture-backed stop-short
+`strategy.order(id, strategy.short, qty=..., stop=price)` orders use the
+supported short stop timing model, fill at the stop price on a later historical
+bar when `low <= stop`, open or increase short exposure while flat or already
+short without using the `strategy.entry()` pyramiding limit, and are a no-op
+while net long. Explicit positive `qty` is required.
 Fixture-backed stop-long
 `strategy.order(id, strategy.long, qty=..., stop=price)` orders use the
 supported long stop timing model, fill at the stop price on a later historical
@@ -498,6 +533,14 @@ historical bar when `high >= stop`, and the limit fill can occur only on a
 subsequent historical bar when `low <= limit` or below the configured verified
 limit threshold. They also bypass the `strategy.entry()` pyramiding limit;
 omitted long `qty` uses the configured default quantity at placement time.
+Fixture-backed stop-limit-short
+`strategy.order(id, strategy.short, qty=..., stop=stop_price, limit=limit_price)`
+orders use the supported short stop-limit model: activation occurs on a later
+historical bar when `low <= stop`, and the limit fill can occur only on a
+subsequent historical bar when `high >= limit` or above the configured verified
+limit threshold. They open or increase short exposure while flat or already
+short without using the `strategy.entry()` pyramiding limit, and are a no-op
+while net long. Explicit positive `qty` is required.
 Fixture-backed reduce-only market
 `strategy.order(id, strategy.short, qty=...)` orders can reduce an existing long
 position on the next historical bar open, recording a `strategy.short` order
@@ -507,12 +550,12 @@ The supported `strategy.order()` subset accepts
 `comment`, `alert_message`, and `disable_alert` metadata. Supported long order
 fills retain entry comments, reduce-only short fills retain exit comments, and
 supported order-fill alert payloads are exposed under `strategy.alerts`; the
-metadata does not widen unsupported order shapes. Short entries,
+metadata does not widen unsupported order shapes.
 `strategy.exit` variants beyond the
 supported single-trigger, one-downside/one-upside bracket, trailing-stop,
 fixed-quantity, percent-quantity, explicit single-trigger or bracket/trailing
 reservation subset, `strategy.cancel(id)`, and `strategy.cancel_all()`,
-reversal/OCA `strategy.order` forms, short exposure, short price-based orders,
+reversal/OCA `strategy.order` forms,
 rich order families, strategy reporting helpers beyond the supported
 position/profit/equity/count/run-up/drawdown/buy-and-hold return variables,
 requested-context strategy state, strategy state mutation, and realtime
@@ -520,7 +563,18 @@ strategy handoff remain unsupported until later strategy-maintenance slices
 define and fixture those semantics. Phase M
 adds narrow stop-only `strategy.exit(id, from_entry, stop=price)` and limit-only
 `strategy.exit(id, from_entry, limit=price)` subsets for the current
-one-net-long broker. Phase N adds profit-only
+one-net-long broker. Stage 14f extends those absolute stop/limit exits to
+matching market short entries: a short stop fills when `high >= stop`, a short
+limit fills when `low <= limit` minus the configured verification offset, and
+cover fills use short-exit slippage with signed closed-trade quantity.
+Stage 14g converts short `profit=ticks` to a limit below the matching short
+entry price and short `loss=ticks` to a stop above it. Stage 14h accepts the
+same four one-downside/one-upside brackets on matching shorts; the stop/loss
+leg fills on `high >= stop`, the limit/profit leg fills on
+`low <= limit` minus verification offset, and both-touch prefers stop/loss.
+Stage 14i trailing shorts activate when `low <= activation`, persist
+`low + offset` as the active stop without filling that bar, ratchet that stop
+downward only, and fill later when `high >= active_stop`. Phase N adds profit-only
 `strategy.exit(id, from_entry, profit=ticks)` and loss-only
 `strategy.exit(id, from_entry, loss=ticks)` helpers. Phase R adds the first
 bracket subset: exactly one downside leg plus one upside leg, covering
@@ -1853,6 +1907,8 @@ explicitly designed.
 
 Array bounds are stable in the current subset: `array.get`, `array.set`,
 `array.insert`, and `array.remove` support negative indexes from the array end.
+`array.get`, `array.set`, and `array.insert` also accept per-bar `series int`
+indexes.
 Indexes outside the current positive or negative bounds are runtime errors.
 Positive `array.insert` at `size` appends; greater-than-size insert indexes are
 runtime errors.
@@ -2788,6 +2844,10 @@ rendering metadata:
 
 Accepted metadata such as `offset`, `show_last`, `display`, `force_overlay`,
 and `editable` does not yet transform, filter, or annotate these output series.
+`plot` `style` is evaluated each bar and stored as a single metadata field; the
+final evaluated documented enum is the value hosts see. Per-bar style series
+are not emitted. `plotshape` `style` is a per-bar series. `hline` `linestyle`
+uses the same last-evaluated metadata rule as `plot` `style`.
 `linefill.new` creates runtime-owned linefill ids over supported line ids,
 emits sparse color snapshots, and replaces the previous linefill for the same
 line pair. `linefill.set_color` appends sparse color mutation snapshots for

@@ -695,6 +695,36 @@ def test_run_script_returns_plotshape_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_plot_dynamic_style_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/plot_dynamic_style.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_plot_dynamic_style.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_plotshape_hline_dynamic_style_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/plotshape_hline_dynamic_style.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_plotshape_hline_dynamic_style.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_plotarrow_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/plotarrow.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_plotarrow.json").read_text())
@@ -843,6 +873,22 @@ def test_run_script_returns_legacy_v2_core_contract():
     assert result == expected
 
 
+def test_run_script_returns_legacy_v4_aliases_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v4/runtime/aliases_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_legacy_v4_aliases.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_legacy_v4_expression_contract():
     source = (
         ROOT / "tests/fixtures/legacy/v4/runtime/expressions_legacy.pine"
@@ -916,6 +962,24 @@ def test_run_script_returns_legacy_v4_security_same_context_contract():
         (
             ROOT
             / "tests/snapshots/runtime_legacy_v4_security_same_context.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_legacy_v4_udf_line_setters_contract():
+    source = (
+        ROOT / "tests/fixtures/legacy/v4/runtime/udf_line_setters_legacy.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_legacy_v4_udf_line_setters.json"
         ).read_text()
     )
 
@@ -1244,6 +1308,20 @@ def test_run_script_returns_array_insert_remove_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/array_insert_remove.pine").read_text()
     expected = json.loads(
         (ROOT / "tests/snapshots/runtime_array_insert_remove.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_array_insert_series_index_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/array_insert_series_index.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_array_insert_series_index.json").read_text()
     )
 
     result = pine_compat.run_script(
@@ -2176,12 +2254,76 @@ def test_run_script_returns_user_type_varip_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_request_security_barstate_flags_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/request_security_barstate_flags.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_request_security_barstate_flags.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_request_security_barstate_islast_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/request_security_barstate_islast.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_request_security_barstate_islast.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_request_security_same_context_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/request_security_same_context.pine"
     ).read_text()
     expected = json.loads(
         (ROOT / "tests/snapshots/runtime_request_security_same_context.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_request_security_time_function_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/request_security_time_function.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_request_security_time_function.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_request_security_time_close_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/request_security_time_close.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_request_security_time_close.json").read_text()
     )
 
     result = pine_compat.run_script(
@@ -3454,6 +3596,108 @@ def test_run_script_returns_strategy_entry_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_strategy_entry_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_entry_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_entry_short_reverses_long_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_entry_short_reverses_long.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry_short_reverses_long.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_entry_long_reverses_short_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_entry_long_reverses_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry_long_reverses_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_stop_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_stop_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_stop_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_entry_stop_short_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_stop_limit_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_stop_limit_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_stop_limit_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_entry_stop_limit_short_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_limit_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_limit_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_limit_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_entry_limit_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_entry_limit_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry_limit_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_entry_limit_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_entry_limit.pine").read_text()
     result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
@@ -3479,6 +3723,20 @@ def test_run_script_returns_strategy_entry_limit_contract():
     assert "limit" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_entry_stop_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_entry_stop_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry_stop_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_entry_stop_short_bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_entry_stop_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_entry_stop.pine").read_text()
     result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
@@ -3502,6 +3760,20 @@ def test_run_script_returns_strategy_entry_stop_contract():
     ]
     assert "pending" not in result["strategy"]
     assert "stop" not in result["strategy"]
+
+
+def test_run_script_returns_strategy_entry_stop_limit_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_entry_stop_limit_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry_stop_limit_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_entry_stop_limit_short_bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_strategy_entry_stop_limit_contract():
@@ -4776,12 +5048,42 @@ def test_run_script_returns_margin_capital_held_plot():
     assert result == expected
 
 
+def test_run_script_returns_margin_capital_held_short_plot():
+    source = (ROOT / "tests/fixtures/runtime/strategy_margin_capital_held_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_margin_capital_held_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_margin_entry_affordability_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_margin_entry_affordability_long.pine"
     ).read_text()
     expected = json.loads(
         (ROOT / "tests/snapshots/runtime_strategy_margin_entry_affordability.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_margin_entry_affordability_short_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_margin_entry_affordability_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_margin_entry_affordability_short.json").read_text()
     )
 
     result = pine_compat.run_script(
@@ -4801,6 +5103,20 @@ def test_run_script_returns_margin_call_contract():
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/runtime/strategy_margin_call_long_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_margin_call_short_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_margin_call_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_margin_call_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_margin_call_short_bars.csv"),
     )
 
     assert result == expected
@@ -4874,6 +5190,82 @@ def test_run_script_returns_strategy_close_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_strategy_close_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_close_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_close_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_close_entries_rule_any_close_short_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_close_entries_rule_any_close_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_close_entries_rule_any_close_short.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_close_entries_rule_any_exit_from_entry_short_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_close_entries_rule_any_exit_from_entry_short.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short_bars.csv"
+        ),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_close_entries_rule_any_exit_same_id_partial_short_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_same_id_partial_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_close_entries_rule_any_exit_same_id_partial_short.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_close_entries_rule_any_exit_from_entry_short_bars.csv"
+        ),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_close_qty_partial_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_close_qty_partial.pine").read_text()
     expected = json.loads(
@@ -4925,6 +5317,20 @@ def test_run_script_returns_strategy_close_qty_percent_precedence_contract():
 def test_run_script_returns_strategy_close_all_trade_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_close_all.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_strategy_close_all.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_close_all_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_close_all_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_close_all_short.json").read_text()
+    )
 
     result = pine_compat.run_script(
         source,
@@ -5064,6 +5470,20 @@ def test_run_script_returns_strategy_exit_stop_trade_contract():
     assert result == expected
 
 
+def test_run_script_returns_strategy_exit_stop_short_trade_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_exit_stop_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_exit_stop_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_exit_stop_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_exit_stop.pine").read_text()
     expected = json.loads(
@@ -5082,6 +5502,20 @@ def test_run_script_returns_strategy_exit_limit_trade_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_exit_limit.pine").read_text()
     expected = json.loads(
         (ROOT / "tests/snapshots/runtime_strategy_exit_limit.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_exit_limit_short_trade_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_exit_limit_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_exit_limit_short.json").read_text()
     )
 
     result = pine_compat.run_script(
@@ -5120,6 +5554,20 @@ def test_run_script_returns_strategy_exit_profit_trade_contract():
     assert result == expected
 
 
+def test_run_script_returns_strategy_exit_profit_short_trade_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_exit_profit_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_exit_profit_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_exit_profit_short_bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_exit_loss_trade_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_exit_loss.pine").read_text()
     expected = json.loads(
@@ -5129,6 +5577,20 @@ def test_run_script_returns_strategy_exit_loss_trade_contract():
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/runtime/strategy_exit_loss_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_exit_loss_short_trade_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_exit_loss_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_exit_loss_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
     )
 
     assert result == expected
@@ -5377,6 +5839,26 @@ def test_run_script_returns_strategy_exit_bracket_stop_limit_limit_fill_fixture_
     assert result == expected
 
 
+def test_run_script_returns_strategy_exit_bracket_stop_limit_limit_fill_short_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_exit_bracket_stop_limit_limit_fill_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_exit_bracket_stop_limit_limit_fill_short.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_exit_bracket_stop_limit_stop_fill_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_exit_bracket_stop_limit_stop_fill.pine"
@@ -5385,6 +5867,26 @@ def test_run_script_returns_strategy_exit_bracket_stop_limit_stop_fill_fixture_c
         (
             ROOT
             / "tests/snapshots/runtime_strategy_exit_bracket_stop_limit_stop_fill.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_exit_bracket_stop_limit_stop_fill_short_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_exit_bracket_stop_limit_stop_fill_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_exit_bracket_stop_limit_stop_fill_short.json"
         ).read_text()
     )
 
@@ -5410,6 +5912,22 @@ def test_run_script_returns_strategy_exit_trailing_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_strategy_exit_trail_price_fill_short_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_exit_trail_price_fill_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_exit_trail_price_fill_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_exit_trailing_short_bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_exit_trail_points_fill_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_exit_trail_points_fill.pine"
@@ -5423,6 +5941,24 @@ def test_run_script_returns_strategy_exit_trail_points_fill_fixture_contract():
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/runtime/strategy_exit_trailing_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_exit_trail_points_fill_short_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_exit_trail_points_fill_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_exit_trail_points_fill_short.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_exit_trailing_short_bars.csv"),
     )
 
     assert result == expected

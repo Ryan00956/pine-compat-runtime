@@ -1,5 +1,5 @@
 //@version=5
-strategy("Unsupported strategy entry named const short direction")
+strategy("Supported strategy entry named const short direction")
 dir_base = strategy.short
 dir = dir_base
 strategy.entry("S", dir, qty=1)

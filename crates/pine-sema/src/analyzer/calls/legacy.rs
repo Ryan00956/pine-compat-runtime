@@ -899,12 +899,17 @@ impl Analyzer {
             .iter()
             .map(|arg| self.known_const_int_value(&arg.value))
             .collect::<Vec<_>>();
+        let string_domains = args
+            .iter()
+            .map(|arg| self.known_string_value_domain(&arg.value))
+            .collect::<Vec<_>>();
         let bound = match self.legacy.bind_legacy_output_args(
             name,
             args,
             arg_types,
             &const_strings,
             &const_ints,
+            &string_domains,
         ) {
             crate::legacy::LegacyOutputBinding::Bound(bound) => bound,
             crate::legacy::LegacyOutputBinding::Invalid(diagnostics) => {

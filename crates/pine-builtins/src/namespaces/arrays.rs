@@ -410,7 +410,7 @@ const ARRAY_INSERT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "index",
-        accepts: Accepts::SimpleIntCompatible,
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
     BuiltinParam {

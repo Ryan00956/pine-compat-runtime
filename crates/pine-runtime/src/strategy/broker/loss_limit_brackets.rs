@@ -71,6 +71,9 @@ impl BrokerState {
         spec: LossLimitBracketSpec,
         bar_index: usize,
     ) {
+        if self.position_size < 0.0 {
+            return;
+        }
         if !spec.limit_price.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_EXIT_PRICE".to_owned(),
@@ -155,13 +158,18 @@ impl BrokerState {
             });
             return;
         }
-        if self.position_size <= 0.0 && self.has_pending_entry(&from_entry) {
+        if self.position_size == 0.0 && self.has_pending_entry(&from_entry) {
+            if self.has_pending_short_entry(&from_entry) {
+                return;
+            }
             self.place_deferred_relative_loss_limit_bracket(
                 id, from_entry, spec, quantity, bar_index,
             );
             return;
         }
-        if self.reject_entry_relative_exit_for_pending_entry(&from_entry) {
+        if self.position_size >= 0.0
+            && self.reject_entry_relative_exit_for_pending_entry(&from_entry)
+        {
             return;
         }
         let Some(downside) =

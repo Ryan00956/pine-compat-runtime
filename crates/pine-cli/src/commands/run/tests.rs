@@ -321,6 +321,11 @@ fn runs_timenow_with_explicit_execution_times_in_normal_and_profile_modes() {
             .expect("realtime-history CLI timenow output"),
         output
     );
+    assert_eq!(
+        run_json_with_options_in_mode(&options, ExecutionMode::RealtimeForming)
+            .expect("realtime-forming CLI timenow output"),
+        output
+    );
 
     let profile_options = RunOptions {
         profile: true,
@@ -329,6 +334,30 @@ fn runs_timenow_with_explicit_execution_times_in_normal_and_profile_modes() {
     let profile = run_json_with_options(&profile_options).expect("profiled CLI timenow output");
     assert!(profile.contains("\"values\":[101,202,303,404]"));
     assert!(profile.contains("\"bars\":4"));
+    let forming_profile =
+        run_json_with_options_in_mode(&profile_options, ExecutionMode::RealtimeForming)
+            .expect("profiled realtime-forming CLI timenow output");
+    let mut batch_json: serde_json::Value =
+        serde_json::from_str(&profile).expect("batch profile JSON");
+    let mut forming_json: serde_json::Value =
+        serde_json::from_str(&forming_profile).expect("forming profile JSON");
+    assert_eq!(
+        forming_json["profile"]["bars"],
+        batch_json["profile"]["bars"]
+    );
+    assert_eq!(
+        forming_json["profile"]["plotValues"],
+        batch_json["profile"]["plotValues"]
+    );
+    batch_json
+        .as_object_mut()
+        .expect("batch object")
+        .remove("profile");
+    forming_json
+        .as_object_mut()
+        .expect("forming object")
+        .remove("profile");
+    assert_eq!(forming_json, batch_json);
 
     let _ = fs::remove_file(script);
     let _ = fs::remove_file(execution_times);
@@ -441,6 +470,11 @@ bgcolor(shade)
     assert_eq!(
         run_json_with_options_in_mode(&options, ExecutionMode::RealtimeHistory)
             .expect("realtime-history input override output"),
+        output
+    );
+    assert_eq!(
+        run_json_with_options_in_mode(&options, ExecutionMode::RealtimeForming)
+            .expect("realtime-forming input override output"),
         output
     );
 

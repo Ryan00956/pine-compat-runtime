@@ -47,8 +47,10 @@ scalar declaration graph, historical bool/numeric arithmetic, comparison, and
 condition conversions, v3 untyped-`na` inference, v1-v4 `study()` and focused
 `input()` binding, the
 conformance-listed exact aliases, the initial ten output families with
-versioned transparency/style semantics, v4/v5 series output offsets whose final
-evaluated value applies to the complete rendered output, strict `iff`,
+versioned transparency/style semantics, proven `plot()` style-enum domains
+whose last evaluated value is the emitted metadata, v4/v5 series output
+offsets whose final evaluated value applies to the complete rendered output,
+strict `iff`,
 structural history `offset`, the type-directed legacy `rsi` overload, weekday
 session defaults, and pre-v6 strict logical evaluation. Recognized
 multi-timeframe request forms that still need legacy execution semantics fail
@@ -180,13 +182,30 @@ Phase 1 executable subset:
 - `strategy.entry(id, strategy.long, qty=...)` in strategy-mode scripts only,
   filled through the supported historical broker model for long market entries
   up to the configured `pyramiding` limit
+- `strategy.entry(id, strategy.short, qty=...)` in strategy-mode scripts only,
+  filled as a next-bar-open market short while flat or already short, or as a
+  reversal that first flattens an opposite long at the reverse fill price then
+  opens the requested short quantity
+- `strategy.entry(id, strategy.short, qty=..., limit=price)` in strategy-mode
+  scripts only, filled at the limit price on a later historical bar when
+  `high >= limit` or above the configured verified limit threshold while flat
+  or already short
+- `strategy.entry(id, strategy.short, qty=..., stop=price)` in strategy-mode
+  scripts only, filled at the stop price on a later historical bar when
+  `low <= stop` while flat or already short
+- `strategy.entry(id, strategy.short, qty=..., stop=price, limit=price)` in
+  strategy-mode scripts only, activated on a later historical bar when
+  `low <= stop` and filled at the limit price on a subsequent historical bar
+  when `high >= limit` or above the configured verified limit threshold while
+  flat or already short
 - `strategy.entry(id, strategy.long)` in strategy-mode scripts only when the
   declaration configures the supported fixed default quantity subset; explicit
   `qty` continues to override the declaration default
 - `strategy.close(id)`, `strategy.close(id, qty=...)`, and
   `strategy.close(id, qty_percent=...)` in strategy-mode scripts only, closing
-  all or part of the matching long position at the current bar close and
-  recording closed trades; fixed `qty` wins over `qty_percent`
+  all or part of the matching long or short position at the current bar close and
+  recording closed trades; short closes record signed quantity and cover PnL;
+  fixed `qty` wins over `qty_percent`
 - strategy equity snapshots with per-bar `cash`, `marketValue`, `equity`, and
   `netProfit` for the supported long-only subset
 - `strategy.position_size` and `strategy.position_avg_price` in strategy-mode
@@ -227,7 +246,8 @@ Phase 1 executable subset:
   `array.new_table`, official `array.new<type>` syntax for those scalar and
   drawing-object element types, `array.new<chart.point>`,
   `array.from`, `array.push`, `array.get`, `array.set`, `array.size`, `array.pop`,
-  `array.insert`, `array.remove`, `array.shift`, `array.unshift`,
+  `array.insert` with integer-compatible indexes including `series int`,
+  `array.remove`, `array.shift`, `array.unshift`,
   `array.fill`, `array.first`, `array.last`, `array.copy`, `array.slice`,
   `array.concat`, `array.includes`, `array.every`, `array.some`,
   `array.indexof`, `array.lastindexof`, numeric `array.binary_search*`,
@@ -410,6 +430,13 @@ the last evaluated offset as metadata for the complete output, matching the
 pre-v6 behavior. Pine v3 and v6 require a simple-or-weaker integer. This visual
 offset rule is independent from the `expr[offset]` history operator.
 
+`plot` `style` accepts a string-compatible expression when the analyzer can
+prove every runtime value is a documented `plot.style_*` enum. Unbounded
+strings, mixed invalid branches, and series integer ordinals stay rejected.
+The emitted plot metadata keeps one style field and uses the last evaluated
+value for the complete output. `plotshape` `style` and `hline` `linestyle`
+use the same proven-domain rule; plotshape emits per-bar styles.
+
 Color namespace:
 
 - common named colors
@@ -440,7 +467,8 @@ Request data:
   same-or-higher-timeframe bars. The provider expression subset includes
   requested-context `syminfo.tickerid`/`timeframe.period`, direct OHLCV/time
   sources, pure arithmetic and ternaries, history references, `na`,
-  `nz`, selected stateless `math.*` calls, fixed-mintick
+  `nz`, `time(timeframe)` and `time_close(timeframe)` function calls including
+  documented named arguments, `barstate.isfirst`/`islast`/`islastconfirmedhistory`/`isnew`/`isconfirmed`/`ishistory`/`isrealtime`, selected stateless `math.*` calls, fixed-mintick
   `math.round_to_mintick`, `math.sum`, `ta.cum`, `ta.sma`, `ta.ema`,
   `ta.dema`, `ta.tema`, `ta.rma`, `ta.rsi`, `ta.tsi`, `ta.cmo`, `ta.cci`,
   `ta.cog`, `ta.bop`, `ta.ao`, `ta.accdist`, `ta.iii`, `ta.nvi`, `ta.obv`, `ta.pvi`, `ta.pvt`, `ta.wvad`, `ta.max`, `ta.min`, `ta.mfi`,
@@ -453,7 +481,8 @@ Request data:
   `ta.percentrank`, `ta.stdev`, `ta.variance`, `ta.wma`, `ta.vwma`,
   `ta.swma`, `ta.hma`, `ta.alma`, `ta.linreg`, `ta.falling`, `ta.barssince`,
   `ta.valuewhen`, `ta.cross`, `ta.crossover`, and `ta.crossunder`; local variable aliases, the
-  `ta.tr` variable form and stateful math
+  `ta.tr` variable form, named arguments on other requested calls, session
+  boundary flags, and stateful math
   calls such as `math.random` are not part of this subset.
   Requested-context rolling callsite state is isolated from chart state.
   Provider-backed tuple literals whose elements are in the supported scalar
@@ -497,7 +526,7 @@ The analyzer should reject these with clear diagnostics:
 - strategy order functions and reporting helpers outside the narrow
   `strategy.entry`, `strategy.order`, `strategy.close`, `strategy.close_all`,
   `strategy.cancel`, `strategy.cancel_all`, and `strategy.exit` subsets,
-  including short exposure, reversals, short price-based orders, OCA,
+  including generic `strategy.order` netting, OCA,
   same-side or 3+ trigger exits, invalid trailing combinations, partial
   `strategy.close_all()`, pyramiding behavior beyond the fixture-backed
   long-only subset, broker settings beyond the supported declaration subset,
@@ -545,7 +574,8 @@ The analyzer should reject these with clear diagnostics:
 - general multi-symbol or multi-timeframe data loading outside the documented
   `request.security` provider subset
 - broker emulation and order execution outside the fixture-backed long-only
-  strategy subset
+  subset plus market `strategy.short` entries, short closes, and market
+  `strategy.entry` reversals
 - `varip` drawing ids, tuple `varip`, and value families outside the
   fixture-backed scalar, chart-point, scalar-array, scalar-map, scalar-matrix,
   and scalar-tree UDT/UDT-array subsets

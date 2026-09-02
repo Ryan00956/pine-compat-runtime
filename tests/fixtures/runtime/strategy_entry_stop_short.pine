@@ -1,0 +1,8 @@
+//@version=5
+strategy("Stop short entry strategy", overlay=true)
+
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=2, stop=2)
+
+plot(strategy.position_size)
+plot(strategy.position_avg_price)

@@ -36,11 +36,17 @@ pub(crate) fn run_realtime_history(args: Vec<String>) -> Result<(), String> {
     run_with_options_in_mode(&options, ExecutionMode::RealtimeHistory)
 }
 
+pub(crate) fn run_realtime_forming(args: Vec<String>) -> Result<(), String> {
+    let options = parse_options(&args)?;
+    run_with_options_in_mode(&options, ExecutionMode::RealtimeForming)
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ExecutionMode {
     Batch,
     Incremental,
     RealtimeHistory,
+    RealtimeForming,
 }
 
 #[derive(Debug)]
@@ -330,6 +336,55 @@ fn run_non_batch_with_options(
                     Some(execution_time) => runtime
                         .update_with_execution_time(BarUpdate::historical(bar), execution_time),
                     None => runtime.update(BarUpdate::historical(bar)),
+                }
+                .map_err(|err| format!("runtime failed: {}", err.message))?;
+            }
+            Ok((runtime.confirmed_result(), runtime.confirmed_profile()))
+        }
+        ExecutionMode::RealtimeForming => {
+            let (last, history) = bars.split_last().ok_or_else(|| {
+                "runtime failed: realtime forming requires at least one bar".to_owned()
+            })?;
+            let mut runtime = RealtimeRuntime::with_request_environment_and_input_overrides(
+                &hir,
+                request_environment,
+                input_overrides,
+            );
+            for (index, bar) in history.iter().copied().enumerate() {
+                match execution_times.as_ref().map(|values| values[index]) {
+                    Some(execution_time) => runtime
+                        .update_with_execution_time(BarUpdate::historical(bar), execution_time),
+                    None => runtime.update(BarUpdate::historical(bar)),
+                }
+                .map_err(|err| format!("runtime failed: {}", err.message))?;
+            }
+            let confirmed_execution_time = execution_times
+                .as_ref()
+                .and_then(|values| values.last().copied());
+            let mutated = pine_runtime::Bar {
+                time: last.time,
+                open: last.open + 3.0,
+                high: last.high + 9.0,
+                low: last.low - 7.0,
+                close: last.close + 5.0,
+                volume: last.volume + 11.0,
+            };
+            for (update, execution_time) in [
+                (
+                    BarUpdate::forming(mutated),
+                    confirmed_execution_time.map(|value| value.saturating_sub(2)),
+                ),
+                (
+                    BarUpdate::forming(*last),
+                    confirmed_execution_time.map(|value| value.saturating_sub(1)),
+                ),
+                (BarUpdate::confirmed(*last), confirmed_execution_time),
+            ] {
+                match execution_time {
+                    Some(execution_time) => {
+                        runtime.update_with_execution_time(update, execution_time)
+                    }
+                    None => runtime.update(update),
                 }
                 .map_err(|err| format!("runtime failed: {}", err.message))?;
             }

@@ -24,9 +24,9 @@ use pine_ir::{StrategyCloseEntriesRule, StrategyCommission, StrategyMarginSettin
 
 #[cfg(test)]
 use ledger::NetPosition;
-use ledger::TradeLedger;
 #[cfg(test)]
-use ledger::{OpenTrade, TradeAllocation, TradeDirection};
+use ledger::{OpenTrade, TradeAllocation};
+use ledger::{TradeDirection, TradeLedger};
 pub(crate) use loss_limit_brackets::LossLimitBracketSpec;
 pub(crate) use loss_profit_brackets::LossProfitBracketSpec;
 use order_book::OrderBook;
@@ -76,6 +76,7 @@ pub struct BrokerState {
     max_drawdown: f64,
     max_drawdown_percent: f64,
     max_contracts_held_long: f64,
+    max_contracts_held_short: f64,
     orders: Vec<StrategyOrderEvent>,
     order_fill_alerts: Vec<StrategyOrderFillAlertEvent>,
     trades: Vec<StrategyTrade>,
@@ -113,7 +114,11 @@ impl BrokerState {
     }
 
     fn can_open_long_entry(&self) -> bool {
-        self.trade_ledger.open_count() < self.pyramiding_limit
+        self.position_size >= 0.0 && self.trade_ledger.open_count() < self.pyramiding_limit
+    }
+
+    fn can_open_short_entry(&self) -> bool {
+        self.position_size <= 0.0 && self.trade_ledger.open_count() < self.pyramiding_limit
     }
 
     pub(crate) fn cancel_exit_for_entry(&mut self, entry_id: &str) {
@@ -150,7 +155,7 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
-        if !self.can_open_long_entry() {
+        if self.position_size >= 0.0 && !self.can_open_long_entry() {
             return;
         }
         self.order_book
@@ -229,6 +234,42 @@ impl BrokerState {
     }
 
     #[allow(dead_code)]
+    pub(crate) fn place_pending_market_short_entry(
+        &mut self,
+        id: String,
+        qty: f64,
+        created_bar_index: usize,
+    ) {
+        self.place_pending_market_short_entry_with_metadata(
+            id,
+            qty,
+            created_bar_index,
+            StrategyOrderMetadata::default(),
+        );
+    }
+
+    pub(crate) fn place_pending_market_short_entry_with_metadata(
+        &mut self,
+        id: String,
+        qty: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+    ) {
+        if self.position_size <= 0.0 && !self.can_open_short_entry() {
+            return;
+        }
+        self.order_book
+            .entries_mut()
+            .place_market_short_with_metadata(
+                id,
+                qty,
+                created_bar_index,
+                metadata,
+                &mut self.diagnostics,
+            );
+    }
+
+    #[allow(dead_code)]
     pub(crate) fn place_pending_limit_long_entry(
         &mut self,
         id: String,
@@ -269,6 +310,132 @@ impl BrokerState {
     }
 
     #[allow(dead_code)]
+    pub(crate) fn place_pending_limit_short_entry(
+        &mut self,
+        id: String,
+        qty: f64,
+        limit: f64,
+        created_bar_index: usize,
+    ) {
+        self.place_pending_limit_short_entry_with_metadata(
+            id,
+            qty,
+            limit,
+            created_bar_index,
+            StrategyOrderMetadata::default(),
+        );
+    }
+
+    pub(crate) fn place_pending_limit_short_entry_with_metadata(
+        &mut self,
+        id: String,
+        qty: f64,
+        limit: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+    ) {
+        if !self.can_open_short_entry() {
+            return;
+        }
+        self.order_book
+            .entries_mut()
+            .place_limit_short_with_metadata(
+                id,
+                qty,
+                limit,
+                created_bar_index,
+                metadata,
+                &mut self.diagnostics,
+            );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_pending_stop_short_entry(
+        &mut self,
+        id: String,
+        qty: f64,
+        stop: f64,
+        created_bar_index: usize,
+    ) {
+        self.place_pending_stop_short_entry_with_metadata(
+            id,
+            qty,
+            stop,
+            created_bar_index,
+            StrategyOrderMetadata::default(),
+        );
+    }
+
+    pub(crate) fn place_pending_stop_short_entry_with_metadata(
+        &mut self,
+        id: String,
+        qty: f64,
+        stop: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+    ) {
+        if !self.can_open_short_entry() {
+            return;
+        }
+        self.order_book
+            .entries_mut()
+            .place_stop_short_with_metadata(
+                id,
+                qty,
+                stop,
+                created_bar_index,
+                metadata,
+                &mut self.diagnostics,
+            );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_pending_stop_limit_short_entry(
+        &mut self,
+        id: String,
+        qty: f64,
+        stop: f64,
+        limit: f64,
+        created_bar_index: usize,
+    ) {
+        self.place_pending_stop_limit_short_entry_with_metadata(
+            id,
+            qty,
+            stop,
+            limit,
+            created_bar_index,
+            StrategyOrderMetadata::default(),
+        );
+    }
+
+    pub(crate) fn place_pending_stop_limit_short_entry_with_metadata(
+        &mut self,
+        id: String,
+        qty: f64,
+        stop: f64,
+        limit: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+    ) {
+        if !self.can_open_short_entry() {
+            return;
+        }
+        self.order_book
+            .entries_mut()
+            .place_stop_limit_short_with_metadata(
+                StopLimitEntryPlacement {
+                    id,
+                    quantity: qty,
+                    stop_price: stop,
+                    limit_price: limit,
+                    created_bar_index,
+                    metadata,
+                },
+                &mut self.diagnostics,
+            );
+    }
+
+    #[allow(dead_code)]
     pub(crate) fn place_pending_limit_long_order(
         &mut self,
         id: String,
@@ -296,6 +463,46 @@ impl BrokerState {
         self.order_book
             .entries_mut()
             .place_limit_long_without_pyramiding_with_metadata(
+                id,
+                qty,
+                limit,
+                created_bar_index,
+                metadata,
+                &mut self.diagnostics,
+            );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_pending_limit_short_order(
+        &mut self,
+        id: String,
+        qty: f64,
+        limit: f64,
+        created_bar_index: usize,
+    ) {
+        self.place_pending_limit_short_order_with_metadata(
+            id,
+            qty,
+            limit,
+            created_bar_index,
+            StrategyOrderMetadata::default(),
+        );
+    }
+
+    pub(crate) fn place_pending_limit_short_order_with_metadata(
+        &mut self,
+        id: String,
+        qty: f64,
+        limit: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+    ) {
+        if self.position_size > 0.0 {
+            return;
+        }
+        self.order_book
+            .entries_mut()
+            .place_limit_short_without_pyramiding_with_metadata(
                 id,
                 qty,
                 limit,
@@ -371,6 +578,46 @@ impl BrokerState {
         self.order_book
             .entries_mut()
             .place_stop_long_without_pyramiding_with_metadata(
+                id,
+                qty,
+                stop,
+                created_bar_index,
+                metadata,
+                &mut self.diagnostics,
+            );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_pending_stop_short_order(
+        &mut self,
+        id: String,
+        qty: f64,
+        stop: f64,
+        created_bar_index: usize,
+    ) {
+        self.place_pending_stop_short_order_with_metadata(
+            id,
+            qty,
+            stop,
+            created_bar_index,
+            StrategyOrderMetadata::default(),
+        );
+    }
+
+    pub(crate) fn place_pending_stop_short_order_with_metadata(
+        &mut self,
+        id: String,
+        qty: f64,
+        stop: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+    ) {
+        if self.position_size > 0.0 {
+            return;
+        }
+        self.order_book
+            .entries_mut()
+            .place_stop_short_without_pyramiding_with_metadata(
                 id,
                 qty,
                 stop,
@@ -470,6 +717,52 @@ impl BrokerState {
     }
 
     #[allow(dead_code)]
+    pub(crate) fn place_pending_stop_limit_short_order(
+        &mut self,
+        id: String,
+        qty: f64,
+        stop: f64,
+        limit: f64,
+        created_bar_index: usize,
+    ) {
+        self.place_pending_stop_limit_short_order_with_metadata(
+            id,
+            qty,
+            stop,
+            limit,
+            created_bar_index,
+            StrategyOrderMetadata::default(),
+        );
+    }
+
+    pub(crate) fn place_pending_stop_limit_short_order_with_metadata(
+        &mut self,
+        id: String,
+        qty: f64,
+        stop: f64,
+        limit: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+    ) {
+        if self.position_size > 0.0 {
+            return;
+        }
+        self.order_book
+            .entries_mut()
+            .place_stop_limit_short_without_pyramiding_with_metadata(
+                StopLimitEntryPlacement {
+                    id,
+                    quantity: qty,
+                    stop_price: stop,
+                    limit_price: limit,
+                    created_bar_index,
+                    metadata,
+                },
+                &mut self.diagnostics,
+            );
+    }
+
+    #[allow(dead_code)]
     fn pending_entry_count(&self) -> usize {
         self.order_book.entries().count()
     }
@@ -478,11 +771,24 @@ impl BrokerState {
         self.order_book.entries().quantity_for_id(id).is_some()
     }
 
+    fn has_pending_short_entry(&self, id: &str) -> bool {
+        self.order_book
+            .entries()
+            .find_by_id(id)
+            .is_some_and(|pending_entry| {
+                pending_entry.direction == pending_entries::PendingEntryDirection::Short
+            })
+    }
+
     fn open_position_size_for_entry(&self, id: &str) -> f64 {
         if id.is_empty() {
-            return self.position_size;
+            return self.position_size.abs();
         }
-        self.trade_ledger.open_quantity_for_entry(id)
+        let Some(direction) = self.active_close_direction() else {
+            return 0.0;
+        };
+        self.trade_ledger
+            .open_quantity_for_entry_direction(direction, id)
     }
 
     fn last_open_trade_key_and_price_for_entry(&self, id: &str) -> Option<(u64, f64)> {
@@ -503,9 +809,6 @@ impl BrokerState {
     }
 
     fn has_open_position_for_entry(&self, id: &str) -> bool {
-        if id.is_empty() {
-            return self.position_size > 0.0;
-        }
         self.open_position_size_for_entry(id) > 0.0
     }
 
@@ -584,9 +887,9 @@ impl BrokerState {
         if pending_exit.last_update_bar_index >= bar_index {
             return;
         }
-        if self.position_size <= 0.0 || !self.has_open_position_for_entry(&pending_exit.from_entry)
+        if self.position_size == 0.0 || !self.has_open_position_for_entry(&pending_exit.from_entry)
         {
-            if self.position_size <= 0.0 && self.has_pending_entry(&pending_exit.from_entry) {
+            if self.position_size == 0.0 && self.has_pending_entry(&pending_exit.from_entry) {
                 return;
             }
             self.order_book
@@ -594,21 +897,13 @@ impl BrokerState {
                 .clear_for_entry(&pending_exit.from_entry);
             return;
         }
-        let triggered_price = match &mut pending_exit.trigger {
-            PendingExitTrigger::Stop(price) if low <= *price => Some(*price),
-            PendingExitTrigger::Limit(price) if self.long_limit_exit_is_verified(*price, high) => {
-                Some(*price)
-            }
-            PendingExitTrigger::Bracket { downside, upside } => {
-                if low <= *downside {
-                    Some(*downside)
-                } else if self.long_limit_exit_is_verified(*upside, high) {
-                    Some(*upside)
-                } else {
-                    None
-                }
-            }
-            PendingExitTrigger::Trailing(trailing) => match trailing.evaluate_update(high, low) {
+        let Some(direction) = self.active_close_direction() else {
+            return;
+        };
+        let triggered_price = if let PendingExitTrigger::Trailing(trailing) =
+            &mut pending_exit.trigger
+        {
+            match trailing.evaluate_update_for(direction, high, low) {
                 PendingTrailingUpdate::NoChange => return,
                 PendingTrailingUpdate::Persist(updated_trailing) => {
                     pending_exit.trigger = PendingExitTrigger::Trailing(updated_trailing);
@@ -616,13 +911,36 @@ impl BrokerState {
                     return;
                 }
                 PendingTrailingUpdate::Candidate(touch) => Some(touch.exit_price),
-            },
-            _ => None,
+            }
+        } else if direction == TradeDirection::Short {
+            pending_exit
+                .trigger
+                .touched_candidate_for(direction, high, low, self.limit_verification_price_offset)
+                .map(|touch| touch.exit_price)
+        } else {
+            match &pending_exit.trigger {
+                PendingExitTrigger::Stop(price) if low <= *price => Some(*price),
+                PendingExitTrigger::Limit(price)
+                    if self.long_limit_exit_is_verified(*price, high) =>
+                {
+                    Some(*price)
+                }
+                PendingExitTrigger::Bracket { downside, upside } => {
+                    if low <= *downside {
+                        Some(*downside)
+                    } else if self.long_limit_exit_is_verified(*upside, high) {
+                        Some(*upside)
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            }
         };
         if let Some(exit_price) = triggered_price {
             let from_entry = pending_exit.from_entry.clone();
             self.fill_pending_exit(pending_exit, bar_index, time, exit_price);
-            if self.position_size <= 0.0 {
+            if self.position_size == 0.0 {
                 self.order_book.exits_mut().clear_all();
             } else {
                 self.order_book.exits_mut().clear_for_entry(&from_entry);
@@ -641,29 +959,30 @@ impl BrokerState {
         if pending_exits.is_empty() {
             return;
         }
-        if self.position_size <= 0.0 {
-            if self.position_size <= 0.0 {
-                let attached_pending_entry_ids: Vec<String> = pending_exits
-                    .iter()
-                    .filter(|pending_exit| self.has_pending_entry(&pending_exit.from_entry))
-                    .map(|pending_exit| pending_exit.from_entry.clone())
-                    .collect();
-                if !attached_pending_entry_ids.is_empty() {
-                    for pending_exit in pending_exits {
-                        if !attached_pending_entry_ids
-                            .iter()
-                            .any(|entry_id| entry_id == &pending_exit.from_entry)
-                        {
-                            self.order_book
-                                .exits_mut()
-                                .clear_for_entry(&pending_exit.from_entry);
-                        }
+        if self.position_size == 0.0 {
+            let attached_pending_entry_ids: Vec<String> = pending_exits
+                .iter()
+                .filter(|pending_exit| self.has_pending_entry(&pending_exit.from_entry))
+                .map(|pending_exit| pending_exit.from_entry.clone())
+                .collect();
+            if !attached_pending_entry_ids.is_empty() {
+                for pending_exit in pending_exits {
+                    if !attached_pending_entry_ids
+                        .iter()
+                        .any(|entry_id| entry_id == &pending_exit.from_entry)
+                    {
+                        self.order_book
+                            .exits_mut()
+                            .clear_for_entry(&pending_exit.from_entry);
                     }
-                    return;
                 }
+                return;
             }
             return;
         }
+        let Some(direction) = self.active_close_direction() else {
+            return;
+        };
 
         let mut touched_candidates = Vec::new();
         let mut state_updates = Vec::new();
@@ -680,7 +999,7 @@ impl BrokerState {
 
             match pending_exit.trigger.clone() {
                 PendingExitTrigger::Trailing(trailing) => {
-                    match trailing.evaluate_update(high, low) {
+                    match trailing.evaluate_update_for(direction, high, low) {
                         PendingTrailingUpdate::NoChange => {}
                         PendingTrailingUpdate::Persist(updated_trailing) => {
                             let mut updated_pending_exit = pending_exit;
@@ -694,7 +1013,8 @@ impl BrokerState {
                     }
                 }
                 _ => {
-                    if let Some(touch) = pending_exit.trigger.touched_candidate(
+                    if let Some(touch) = pending_exit.trigger.touched_candidate_for(
+                        direction,
                         high,
                         low,
                         self.limit_verification_price_offset,
@@ -729,7 +1049,7 @@ impl BrokerState {
             if side != winning_side {
                 continue;
             }
-            if self.position_size <= 0.0 {
+            if self.position_size == 0.0 {
                 break;
             }
             if !self.has_open_position_for_entry(&pending_exit.from_entry) {
@@ -746,7 +1066,7 @@ impl BrokerState {
             self.fill_pending_exit(pending_exit, bar_index, time, exit_price);
         }
 
-        if self.position_size <= 0.0 {
+        if self.position_size == 0.0 {
             self.order_book.exits_mut().clear_all();
         } else {
             for updated_pending_exit in state_updates {

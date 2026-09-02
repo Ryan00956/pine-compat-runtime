@@ -1,4 +1,5 @@
 use super::StrategyOrderMetadata;
+use super::ledger::TradeDirection;
 use crate::RuntimeDiagnostic;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -32,6 +33,16 @@ pub(super) struct PendingEntry {
     pub(super) created_bar_index: usize,
     pub(super) metadata: StrategyOrderMetadata,
     pub(super) enforce_pyramiding: bool,
+}
+
+impl PendingEntry {
+    #[allow(dead_code)]
+    pub(super) fn trade_direction(&self) -> TradeDirection {
+        match self.direction {
+            PendingEntryDirection::Long => TradeDirection::Long,
+            PendingEntryDirection::Short => TradeDirection::Short,
+        }
+    }
 }
 
 pub(super) struct StopLimitEntryPlacement {
@@ -78,7 +89,6 @@ impl PendingEntryBook {
         self.entries.iter()
     }
 
-    #[allow(dead_code)]
     pub(super) fn find_by_id(&self, id: &str) -> Option<&PendingEntry> {
         self.entries
             .iter()
@@ -117,6 +127,43 @@ impl PendingEntryBook {
     pub(super) fn has_price_based_long_bypassing_pyramiding(&self) -> bool {
         self.entries.iter().any(|pending_entry| {
             pending_entry.direction == PendingEntryDirection::Long
+                && matches!(
+                    pending_entry.kind,
+                    PendingEntryKind::Limit { .. }
+                        | PendingEntryKind::Stop { .. }
+                        | PendingEntryKind::StopLimit { .. }
+                )
+                && !pending_entry.enforce_pyramiding
+        })
+    }
+
+    pub(super) fn has_limit_short_bypassing_pyramiding(&self) -> bool {
+        self.entries.iter().any(|pending_entry| {
+            pending_entry.direction == PendingEntryDirection::Short
+                && matches!(pending_entry.kind, PendingEntryKind::Limit { .. })
+                && !pending_entry.enforce_pyramiding
+        })
+    }
+
+    pub(super) fn has_stop_short_bypassing_pyramiding(&self) -> bool {
+        self.entries.iter().any(|pending_entry| {
+            pending_entry.direction == PendingEntryDirection::Short
+                && matches!(pending_entry.kind, PendingEntryKind::Stop { .. })
+                && !pending_entry.enforce_pyramiding
+        })
+    }
+
+    pub(super) fn has_stop_limit_short_bypassing_pyramiding(&self) -> bool {
+        self.entries.iter().any(|pending_entry| {
+            pending_entry.direction == PendingEntryDirection::Short
+                && matches!(pending_entry.kind, PendingEntryKind::StopLimit { .. })
+                && !pending_entry.enforce_pyramiding
+        })
+    }
+
+    pub(super) fn has_price_based_short_bypassing_pyramiding(&self) -> bool {
+        self.entries.iter().any(|pending_entry| {
+            pending_entry.direction == PendingEntryDirection::Short
                 && matches!(
                     pending_entry.kind,
                     PendingEntryKind::Limit { .. }
@@ -183,6 +230,28 @@ impl PendingEntryBook {
         eligible
     }
 
+    pub(super) fn take_all_eligible_limit_short(
+        &mut self,
+        bar_index: usize,
+        high: f64,
+        verification_offset: f64,
+    ) -> Vec<PendingEntry> {
+        let mut eligible = Vec::new();
+        let mut index = 0;
+        while index < self.entries.len() {
+            let pending_entry = &self.entries[index];
+            let is_eligible = pending_entry.direction == PendingEntryDirection::Short
+                && matches!(pending_entry.kind, PendingEntryKind::Limit { price } if high >= price + verification_offset)
+                && pending_entry.created_bar_index < bar_index;
+            if is_eligible {
+                eligible.push(self.entries.remove(index));
+            } else {
+                index += 1;
+            }
+        }
+        eligible
+    }
+
     #[allow(dead_code)]
     pub(super) fn take_first_eligible_stop_long(
         &mut self,
@@ -218,6 +287,27 @@ impl PendingEntryBook {
         eligible
     }
 
+    pub(super) fn take_all_eligible_stop_short(
+        &mut self,
+        bar_index: usize,
+        low: f64,
+    ) -> Vec<PendingEntry> {
+        let mut eligible = Vec::new();
+        let mut index = 0;
+        while index < self.entries.len() {
+            let pending_entry = &self.entries[index];
+            let is_eligible = pending_entry.direction == PendingEntryDirection::Short
+                && matches!(pending_entry.kind, PendingEntryKind::Stop { price } if low <= price)
+                && pending_entry.created_bar_index < bar_index;
+            if is_eligible {
+                eligible.push(self.entries.remove(index));
+            } else {
+                index += 1;
+            }
+        }
+        eligible
+    }
+
     pub(super) fn activate_stop_limit_long_entries(&mut self, bar_index: usize, high: f64) {
         for pending_entry in &mut self.entries {
             if pending_entry.direction != PendingEntryDirection::Long
@@ -234,6 +324,27 @@ impl PendingEntryBook {
                 continue;
             };
             if activated_bar_index.is_none() && high >= *stop_price {
+                *activated_bar_index = Some(bar_index);
+            }
+        }
+    }
+
+    pub(super) fn activate_stop_limit_short_entries(&mut self, bar_index: usize, low: f64) {
+        for pending_entry in &mut self.entries {
+            if pending_entry.direction != PendingEntryDirection::Short
+                || pending_entry.created_bar_index >= bar_index
+            {
+                continue;
+            }
+            let PendingEntryKind::StopLimit {
+                stop_price,
+                activated_bar_index,
+                ..
+            } = &mut pending_entry.kind
+            else {
+                continue;
+            };
+            if activated_bar_index.is_none() && low <= *stop_price {
                 *activated_bar_index = Some(bar_index);
             }
         }
@@ -267,9 +378,42 @@ impl PendingEntryBook {
         eligible
     }
 
+    pub(super) fn take_all_eligible_stop_limit_short(
+        &mut self,
+        bar_index: usize,
+        high: f64,
+        verification_offset: f64,
+    ) -> Vec<PendingEntry> {
+        let mut eligible = Vec::new();
+        let mut index = 0;
+        while index < self.entries.len() {
+            let pending_entry = &self.entries[index];
+            let is_eligible = pending_entry.direction == PendingEntryDirection::Short
+                && matches!(
+                    pending_entry.kind,
+                    PendingEntryKind::StopLimit {
+                        limit_price,
+                        activated_bar_index: Some(activated_bar_index),
+                        ..
+                    } if activated_bar_index < bar_index && high >= limit_price + verification_offset
+                );
+            if is_eligible {
+                eligible.push(self.entries.remove(index));
+            } else {
+                index += 1;
+            }
+        }
+        eligible
+    }
+
     #[allow(dead_code)]
     pub(super) fn clear_all(&mut self) {
         self.entries.clear();
+    }
+
+    pub(super) fn clear_direction(&mut self, direction: PendingEntryDirection) {
+        self.entries
+            .retain(|pending_entry| pending_entry.direction != direction);
     }
 
     #[allow(dead_code)]
@@ -333,6 +477,28 @@ impl PendingEntryBook {
         );
     }
 
+    pub(super) fn place_market_short_with_metadata(
+        &mut self,
+        id: String,
+        quantity: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+        diagnostics: &mut Vec<RuntimeDiagnostic>,
+    ) {
+        self.place_long(
+            LongEntryPlacement {
+                id,
+                direction: PendingEntryDirection::Short,
+                kind: PendingEntryKind::Market,
+                quantity,
+                created_bar_index,
+                metadata,
+                enforce_pyramiding: true,
+            },
+            diagnostics,
+        );
+    }
+
     pub(super) fn place_market_short_order(
         &mut self,
         id: String,
@@ -380,6 +546,66 @@ impl PendingEntryBook {
                 created_bar_index,
                 metadata,
                 enforce_pyramiding: true,
+            },
+            diagnostics,
+        );
+    }
+
+    pub(super) fn place_limit_short_with_metadata(
+        &mut self,
+        id: String,
+        quantity: f64,
+        price: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+        diagnostics: &mut Vec<RuntimeDiagnostic>,
+    ) {
+        if !price.is_finite() || price <= 0.0 {
+            diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_PRICE".to_owned(),
+                message: "`strategy.entry` limit price must be positive".to_owned(),
+            });
+            return;
+        }
+        self.place_long(
+            LongEntryPlacement {
+                id,
+                direction: PendingEntryDirection::Short,
+                kind: PendingEntryKind::Limit { price },
+                quantity,
+                created_bar_index,
+                metadata,
+                enforce_pyramiding: true,
+            },
+            diagnostics,
+        );
+    }
+
+    pub(super) fn place_limit_short_without_pyramiding_with_metadata(
+        &mut self,
+        id: String,
+        quantity: f64,
+        price: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+        diagnostics: &mut Vec<RuntimeDiagnostic>,
+    ) {
+        if !price.is_finite() || price <= 0.0 {
+            diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_PRICE".to_owned(),
+                message: "`strategy.order` limit price must be positive".to_owned(),
+            });
+            return;
+        }
+        self.place_long(
+            LongEntryPlacement {
+                id,
+                direction: PendingEntryDirection::Short,
+                kind: PendingEntryKind::Limit { price },
+                quantity,
+                created_bar_index,
+                metadata,
+                enforce_pyramiding: false,
             },
             diagnostics,
         );
@@ -440,6 +666,66 @@ impl PendingEntryBook {
                 created_bar_index,
                 metadata,
                 enforce_pyramiding: true,
+            },
+            diagnostics,
+        );
+    }
+
+    pub(super) fn place_stop_short_with_metadata(
+        &mut self,
+        id: String,
+        quantity: f64,
+        price: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+        diagnostics: &mut Vec<RuntimeDiagnostic>,
+    ) {
+        if !price.is_finite() || price <= 0.0 {
+            diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_PRICE".to_owned(),
+                message: "`strategy.entry` stop price must be positive".to_owned(),
+            });
+            return;
+        }
+        self.place_long(
+            LongEntryPlacement {
+                id,
+                direction: PendingEntryDirection::Short,
+                kind: PendingEntryKind::Stop { price },
+                quantity,
+                created_bar_index,
+                metadata,
+                enforce_pyramiding: true,
+            },
+            diagnostics,
+        );
+    }
+
+    pub(super) fn place_stop_short_without_pyramiding_with_metadata(
+        &mut self,
+        id: String,
+        quantity: f64,
+        price: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+        diagnostics: &mut Vec<RuntimeDiagnostic>,
+    ) {
+        if !price.is_finite() || price <= 0.0 {
+            diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_PRICE".to_owned(),
+                message: "`strategy.order` stop price must be positive".to_owned(),
+            });
+            return;
+        }
+        self.place_long(
+            LongEntryPlacement {
+                id,
+                direction: PendingEntryDirection::Short,
+                kind: PendingEntryKind::Stop { price },
+                quantity,
+                created_bar_index,
+                metadata,
+                enforce_pyramiding: false,
             },
             diagnostics,
         );
@@ -509,6 +795,40 @@ impl PendingEntryBook {
         );
     }
 
+    pub(super) fn place_stop_limit_short_with_metadata(
+        &mut self,
+        placement: StopLimitEntryPlacement,
+        diagnostics: &mut Vec<RuntimeDiagnostic>,
+    ) {
+        if !placement.stop_price.is_finite()
+            || placement.stop_price <= 0.0
+            || !placement.limit_price.is_finite()
+            || placement.limit_price <= 0.0
+        {
+            diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_PRICE".to_owned(),
+                message: "`strategy.entry` stop-limit prices must be positive".to_owned(),
+            });
+            return;
+        }
+        self.place_long(
+            LongEntryPlacement {
+                id: placement.id,
+                direction: PendingEntryDirection::Short,
+                kind: PendingEntryKind::StopLimit {
+                    stop_price: placement.stop_price,
+                    limit_price: placement.limit_price,
+                    activated_bar_index: None,
+                },
+                quantity: placement.quantity,
+                created_bar_index: placement.created_bar_index,
+                metadata: placement.metadata,
+                enforce_pyramiding: true,
+            },
+            diagnostics,
+        );
+    }
+
     pub(super) fn place_stop_limit_long_without_pyramiding_with_metadata(
         &mut self,
         placement: StopLimitEntryPlacement,
@@ -529,6 +849,40 @@ impl PendingEntryBook {
             LongEntryPlacement {
                 id: placement.id,
                 direction: PendingEntryDirection::Long,
+                kind: PendingEntryKind::StopLimit {
+                    stop_price: placement.stop_price,
+                    limit_price: placement.limit_price,
+                    activated_bar_index: None,
+                },
+                quantity: placement.quantity,
+                created_bar_index: placement.created_bar_index,
+                metadata: placement.metadata,
+                enforce_pyramiding: false,
+            },
+            diagnostics,
+        );
+    }
+
+    pub(super) fn place_stop_limit_short_without_pyramiding_with_metadata(
+        &mut self,
+        placement: StopLimitEntryPlacement,
+        diagnostics: &mut Vec<RuntimeDiagnostic>,
+    ) {
+        if !placement.stop_price.is_finite()
+            || placement.stop_price <= 0.0
+            || !placement.limit_price.is_finite()
+            || placement.limit_price <= 0.0
+        {
+            diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_PRICE".to_owned(),
+                message: "`strategy.order` stop-limit prices must be positive".to_owned(),
+            });
+            return;
+        }
+        self.place_long(
+            LongEntryPlacement {
+                id: placement.id,
+                direction: PendingEntryDirection::Short,
                 kind: PendingEntryKind::StopLimit {
                     stop_price: placement.stop_price,
                     limit_price: placement.limit_price,

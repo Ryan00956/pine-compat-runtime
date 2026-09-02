@@ -482,6 +482,126 @@ Out of scope:
   public pending-order/open-trade ledgers, realtime recalculation, and strategy
   order-fill alert delivery.
 
+## Stage 14: Short Exposure And Reversal Foundation
+
+Status: 14a-14o closed. Later slices are not started. See
+`docs/STRATEGY_INTERNAL_STAGE14_SHORT_REVERSAL_PLAN.md`,
+`docs/STRATEGY_INTERNAL_STAGE14_BOUNDARY_AUDIT.md`, and
+`docs/STRATEGY_INTERNAL_STAGE14_SIDE_AWARE_LEDGER_AUDIT.md`.
+
+Goal: freeze the current short/reversal rejection boundary, then make the
+internal broker side-aware before any positive `strategy.short` entry.
+
+Closed subset:
+
+- 14a locks short price-based `strategy.order()` rejection and the long-only
+  `strategy.max_contracts_held_short == 0` reporting path, including reduce-only
+  market-short orders.
+- 14b stores `TradeDirection` on open trades, derives signed net position and
+  side-specific average price, keeps current close/exit allocation long-only,
+  and reports pending-exit exposure as long without changing public output.
+- 14c accepts market `strategy.entry(..., strategy.short)` while flat or
+  already short, with signed public position size, short max-held tracking, and
+  no-op opposite-side entries. See
+  `docs/STRATEGY_INTERNAL_STAGE14_MARKET_SHORT_ENTRY_AUDIT.md`.
+
+- 14d closes market short exposure with `strategy.close` /
+  `strategy.close_all`, signed closed-trade quantity, and cover PnL. See
+  `docs/STRATEGY_INTERNAL_STAGE14_SHORT_CLOSE_AUDIT.md`.
+
+- 14e market `strategy.entry` reversals flatten opposite exposure then open the
+  requested quantity. See `docs/STRATEGY_INTERNAL_STAGE14_REVERSAL_AUDIT.md`.
+
+- 14f single-trigger `strategy.exit` stop/limit covers matching short entries.
+  See `docs/STRATEGY_INTERNAL_STAGE14_SHORT_EXIT_AUDIT.md`.
+
+- 14g single-trigger `strategy.exit` profit/loss ticks cover matching short
+  entries. See `docs/STRATEGY_INTERNAL_STAGE14_SHORT_EXIT_TICKS_AUDIT.md`.
+
+- 14h one-downside/one-upside `strategy.exit` brackets cover matching short
+  entries. See `docs/STRATEGY_INTERNAL_STAGE14_SHORT_EXIT_BRACKET_AUDIT.md`.
+
+- 14i trailing `strategy.exit` covers matching short entries. See
+  `docs/STRATEGY_INTERNAL_STAGE14_SHORT_EXIT_TRAILING_AUDIT.md`.
+
+- 14j short `strategy.entry` limit fills while flat or already short. See
+  `docs/STRATEGY_INTERNAL_STAGE14_SHORT_ENTRY_LIMIT_AUDIT.md`.
+
+- 14k short `strategy.entry` stop fills while flat or already short. See
+  `docs/STRATEGY_INTERNAL_STAGE14_SHORT_ENTRY_STOP_AUDIT.md`.
+
+- 14l short `strategy.entry` stop-limit fills while flat or already short. See
+  `docs/STRATEGY_INTERNAL_STAGE14_SHORT_ENTRY_STOP_LIMIT_AUDIT.md`.
+
+- 14m short `strategy.order` limit fills while flat or already short. See
+  `docs/STRATEGY_INTERNAL_STAGE14_SHORT_ORDER_LIMIT_AUDIT.md`.
+
+- 14n short `strategy.order` stop fills while flat or already short. See
+  `docs/STRATEGY_INTERNAL_STAGE14_SHORT_ORDER_STOP_AUDIT.md`.
+
+- 14o short `strategy.order` stop-limit fills while flat or already short. See
+  `docs/STRATEGY_INTERNAL_STAGE14_SHORT_ORDER_STOP_LIMIT_AUDIT.md`.
+
+Remaining Stage 14 subset:
+
+- none. Stage 15a closed short `margin_short` capital held and affordability.
+
+Out of scope:
+
+- v1-v4 strategy sources;
+- short stop-limit `strategy.order()` in the first positive slice (closed in
+  14o);
+- custom OCA, `strategy.risk.*`, execution
+  timing flags, and public pending-order schema expansion.
+
+## Stage 15: Short Margin Account Model
+
+Status: 15a-15c closed. See
+`docs/STRATEGY_INTERNAL_STAGE15_MARGIN_SHORT_PLAN.md` and
+`docs/PURE_INTERNAL_STRATEGY_MARGIN_SHORT_ACCOUNT_DESIGN.md`.
+
+Goal: apply stored `margin_short` to the current short-entry subset without
+changing the public strategy schema.
+
+Closed subset:
+
+- 15a short `strategy.opentrades.capital_held` and short-entry affordability.
+  See `docs/STRATEGY_INTERNAL_STAGE15_MARGIN_SHORT_CAPITAL_HELD_AUDIT.md`.
+
+- 15b short forced liquidation at `bar.high`. See
+  `docs/STRATEGY_INTERNAL_STAGE15_MARGIN_SHORT_LIQUIDATION_AUDIT.md`.
+
+- 15c short `strategy.margin_liquidation_price`. See
+  `docs/STRATEGY_INTERNAL_STAGE15_MARGIN_SHORT_LIQUIDATION_PRICE_AUDIT.md`.
+
+Remaining Stage 15 subset:
+
+- none. Symbol precision rounding and currency conversion remain later work.
+
+Out of scope:
+
+- v1-v4 strategy sources;
+- symbol precision rounding, currency conversion, custom OCA, `strategy.risk.*`,
+  execution timing flags, and public account schema expansion.
+
+## Stage 16: Close-Entries-Rule Expansion
+
+Status: 16a-16b closed. See
+`docs/STRATEGY_INTERNAL_STAGE16_CLOSE_ENTRIES_RULE_PLAN.md`.
+
+Closed subset:
+
+- 16a id-specific `close_entries_rule="ANY"` allocation for shorts. See
+  `docs/STRATEGY_INTERNAL_STAGE16_CLOSE_ENTRIES_RULE_ANY_SHORT_AUDIT.md`.
+
+- 16b same-entry-id partial `"ANY"` allocation for shorts. See
+  `docs/STRATEGY_INTERNAL_STAGE16_CLOSE_ENTRIES_RULE_ANY_SHORT_PARTIAL_AUDIT.md`.
+
+Remaining Stage 16 subset:
+
+- omitted-`from_entry` `"ANY"` allocation;
+- `strategy.close_all()` non-FIFO ordering.
+
 ## Shared Completion Gates
 
 Every stage or slice must close with:

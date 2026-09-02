@@ -1,5 +1,6 @@
 use super::{
     BrokerState, StrategyExitMetadata,
+    ledger::TradeDirection,
     pending_exits::{
         ExitQuantityRequest, PendingExit, PendingExitQuantity, PendingExitReservationFamily,
         PendingExitTrigger,
@@ -8,13 +9,21 @@ use super::{
 use crate::RuntimeDiagnostic;
 
 impl BrokerState {
+    fn exit_tick_signed_offset(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
+        let price_offset = self.exit_tick_price_offset(ticks, mintick)?;
+        Some(match self.active_close_direction() {
+            Some(TradeDirection::Short) => -price_offset,
+            _ => price_offset,
+        })
+    }
+
     pub(crate) fn exit_profit_price_from_ticks(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
-        self.exit_tick_price_offset(ticks, mintick)
+        self.exit_tick_signed_offset(ticks, mintick)
             .map(|price_offset| self.avg_price + price_offset)
     }
 
     pub(crate) fn exit_loss_price_from_ticks(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
-        self.exit_tick_price_offset(ticks, mintick)
+        self.exit_tick_signed_offset(ticks, mintick)
             .map(|price_offset| self.avg_price - price_offset)
     }
 
@@ -27,7 +36,7 @@ impl BrokerState {
         let base_price = self
             .first_open_entry_price_for_entry(from_entry)
             .unwrap_or(self.avg_price);
-        self.exit_tick_price_offset(ticks, mintick)
+        self.exit_tick_signed_offset(ticks, mintick)
             .map(|price_offset| base_price + price_offset)
     }
 
@@ -40,7 +49,7 @@ impl BrokerState {
         let base_price = self
             .first_open_entry_price_for_entry(from_entry)
             .unwrap_or(self.avg_price);
-        self.exit_tick_price_offset(ticks, mintick)
+        self.exit_tick_signed_offset(ticks, mintick)
             .map(|price_offset| base_price - price_offset)
     }
 
@@ -53,7 +62,7 @@ impl BrokerState {
         let base_price = self
             .first_open_entry_price_for_entry(from_entry)
             .unwrap_or(self.avg_price);
-        self.exit_tick_price_offset(ticks, mintick)
+        self.exit_tick_signed_offset(ticks, mintick)
             .map(|price_offset| base_price + price_offset)
     }
 
@@ -98,8 +107,19 @@ impl BrokerState {
             });
             return;
         }
+        if self.position_size < 0.0
+            && !matches!(
+                trigger,
+                PendingExitTrigger::Stop(_)
+                    | PendingExitTrigger::Limit(_)
+                    | PendingExitTrigger::Bracket { .. }
+                    | PendingExitTrigger::Trailing(_)
+            )
+        {
+            return;
+        }
         let open_entry_position_size = self.open_position_size_for_entry(&from_entry);
-        let target_position_size = if self.position_size > 0.0 && open_entry_position_size > 0.0 {
+        let target_position_size = if self.position_size != 0.0 && open_entry_position_size > 0.0 {
             open_entry_position_size
         } else if let Some(pending_entry_quantity) =
             self.order_book.entries().quantity_for_id(&from_entry)
