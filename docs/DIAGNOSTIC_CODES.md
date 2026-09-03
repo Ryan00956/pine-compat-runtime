@@ -233,3 +233,15 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
   and positive.
 - `E_STRATEGY_EXIT_TICKS`: `strategy.exit` tick distance is not finite and
   positive.
+- `E_MAGNIFIER_DUPLICATE_CHART_BAR`: host magnifier input repeats the same
+  chart bar index.
+- `E_MAGNIFIER_DUPLICATE_TICK`: host magnifier ticks for a chart bar repeat a
+  timestamp.
+- `E_MAGNIFIER_UNSORTED_TICKS`: host magnifier ticks for a chart bar are not
+  strictly increasing in time.
+- `E_MAGNIFIER_MAX_INTRABARS`: host magnifier input exceeds 200000
+  lower-timeframe bars.
+- `W_MAGNIFIER_FALLBACK`: magnifier data is absent for a chart bar, so the
+  runtime uses that bar's standard OHLC path.
+- `W_MAGNIFIER_GAP`: magnifier data has a gap at a chart bar, so the runtime
+  uses that bar's standard OHLC path.

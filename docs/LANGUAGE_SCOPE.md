@@ -178,7 +178,18 @@ Phase 1 executable subset:
   output, positive const numeric `initial_capital`, and Phase L fixed default
   quantity settings through `default_qty_type=strategy.fixed` plus positive
   const numeric `default_qty_value`, plus positive integer const `pyramiding`
-  for the accepted same-direction long market-entry subset
+  for the accepted same-direction long market-entry subset; const bool
+  `calc_on_order_fills` re-executes the script after historical fills and can
+  fill later Stage 18 price ticks on the same bar; historical execution remains
+  one script pass per bar when that flag is false, with internal scheduler
+  bar/tick/pass identity, profile pass counts, and a bounded extra-pass
+  guardrail; forming-bar realtime updates restore the confirmed broker
+  checkpoint so abandoned intrabar orders, cancellations, activations, fills,
+  and alerts do not leak; const bool `calc_on_every_tick` executes strategy
+  code on each host-provided forming update with `var` rollback and `varip`
+  persistence and does not change historical bars; host-owned bar-magnifier
+  lower-timeframe input is keyed by chart bar with explicit standard-OHLC
+  fallback; `use_bar_magnifier` stays rejected
 - `strategy.entry(id, strategy.long, qty=...)` in strategy-mode scripts only,
   filled through the supported historical broker model for long market entries
   up to the configured `pyramiding` limit
@@ -189,28 +200,91 @@ Phase 1 executable subset:
 - `strategy.entry(id, strategy.short, qty=..., limit=price)` in strategy-mode
   scripts only, filled at the limit price on a later historical bar when
   `high >= limit` or above the configured verified limit threshold while flat
-  or already short
+  or already short, or as a reversal that first flattens an opposite long then
+  opens the requested short quantity
 - `strategy.entry(id, strategy.short, qty=..., stop=price)` in strategy-mode
   scripts only, filled at the stop price on a later historical bar when
-  `low <= stop` while flat or already short
+  `low <= stop` while flat or already short, or as a reversal that first
+  flattens an opposite long then opens the requested short quantity
 - `strategy.entry(id, strategy.short, qty=..., stop=price, limit=price)` in
   strategy-mode scripts only, activated on a later historical bar when
   `low <= stop` and filled at the limit price on a subsequent historical bar
   when `high >= limit` or above the configured verified limit threshold while
-  flat or already short
+  flat or already short, or as a reversal that first flattens an opposite long
+  then opens the requested short quantity
+- price-based long `strategy.entry` limit, stop, and stop-limit reversals in
+  strategy-mode scripts that first flatten an opposite short then open the
+  requested long quantity; pyramiding applies to the new side, not the flatten
+  quantity
+- `strategy.risk.allow_entry_in(strategy.direction.all|long|short)` in
+  strategy-mode scripts only; allowed `strategy.entry` directions keep current
+  open, add, and reversal behavior; a disallowed opposite `strategy.entry`
+  against an open allowed position flattens without opening prohibited
+  exposure; a disallowed opposite `strategy.entry` while flat is a no-op;
+  last call wins; pending opposite `strategy.entry` intents are cancelled
+  while flat or converted to market close-only against an open allowed
+  position; `strategy.order` is not bound by this rule
+- `strategy.risk.max_position_size(contracts)` in strategy-mode scripts only
+  with simple positive finite numeric contracts; `strategy.entry` quantity is
+  reduced so post-fill exposure does not exceed the limit; an entry that cannot
+  fit a positive quantity is a no-op; reversal flattens then opens at most the
+  limit on the new side; pyramiding may add until the size limit;
+  `strategy.order` is not bound by this rule
+- `strategy.risk.max_drawdown(value, type)` in strategy-mode scripts only with
+  simple positive finite numeric value and `strategy.cash` or
+  `strategy.percent_of_equity`; when the peak-equity drawdown including open
+  adverse excursion reaches the threshold, the broker cancels pending orders,
+  flattens through a risk-owned market close, and permanently blocks later
+  `strategy.entry` and `strategy.order` actions
+- host-neutral intraday risk windows keyed by UTC day from bar time when the
+  chart timeframe is at or below 1D, and by bar time when the timeframe is
+  higher than 1D; missing bars start a new window; non-positive timeframes fail
+  closed to the UTC-day key; this runtime has no session calendar
+- `strategy.risk.max_intraday_loss(value, type)` in strategy-mode scripts only
+  with simple positive finite numeric value and `strategy.cash` or
+  `strategy.percent_of_equity`; loss is measured from maximum window equity
+  including open adverse excursion; on trigger the broker cancels pending
+  orders, flattens, and blocks later trades until the next intraday window
+- `strategy.risk.max_intraday_filled_orders(count)` in strategy-mode scripts
+  only with a simple positive finite integer count; each public filled order
+  in the current window increments the count; on reaching the limit the broker
+  cancels pending orders, flattens, and blocks later trades until the next
+  window
+- `strategy.risk.max_cons_loss_days(count)` in strategy-mode scripts only with
+  a simple positive finite integer count; each completed window with negative
+  realized closed-trade profit counts as a loss day; a profitable or no-trade
+  window resets the streak; after `count` consecutive observed loss windows
+  the broker cancels pending orders, flattens, and permanently blocks later
+  trades
 - `strategy.entry(id, strategy.long)` in strategy-mode scripts only when the
   declaration configures the supported fixed default quantity subset; explicit
   `qty` continues to override the declaration default
+- same-id `strategy.order` replacement of pending market, limit, stop, and
+  stop-limit generic orders in the same direction; opposite-direction same-id
+  replacement cancels the old intent then places the new one;
+  `strategy.cancel(id)` clears matching pending generic orders, pending
+  exits, deferred relative exits, and pending closes, including when those
+  families share a public id; generic-order reductions allocate FIFO, or id-specific ANY when
+  `close_entries_rule` is ANY and the order id matches an open entry;
+  const/simple `oca_name` with explicit `strategy.oca.none` keeps grouped
+  `strategy.order` intents independent; `strategy.oca.cancel` cancels
+  still-pending same-group generic-order peers after a fill;
+  `strategy.oca.reduce` reduces same-group peer remaining quantity by the
+  filled quantity and removes peers reduced to zero; const/simple
+  `strategy.exit` `oca_name` maps onto that implicit reduce reservation model
 - `strategy.close(id)`, `strategy.close(id, qty=...)`, and
   `strategy.close(id, qty_percent=...)` in strategy-mode scripts only, closing
-  all or part of the matching long or short position at the current bar close and
+  all or part of the matching long or short position at the next historical bar
+  open, or at the current bar close when const/simple `immediately=true`, and
   recording closed trades; short closes record signed quantity and cover PnL;
-  fixed `qty` wins over `qty_percent`
+  fixed `qty` wins over `qty_percent`; series or non-bool `immediately` remains
+  unsupported
 - strategy equity snapshots with per-bar `cash`, `marketValue`, `equity`, and
   `netProfit` for the supported long-only subset
 - `strategy.position_size` and `strategy.position_avg_price` in strategy-mode
-  historical scripts only, as read-only series floats that update immediately
-  after supported entry/close calls; average price is `na` when flat
+  historical scripts only, as read-only series floats that update after
+  supported entry fills and after next-bar close fills; average price is `na`
+  when flat
 - `strategy.openprofit`, `strategy.netprofit`, and `strategy.equity` in
   strategy-mode historical scripts only, as read-only series floats for the
   long-only broker subset; open profit uses current close mark-to-market,
@@ -526,14 +600,21 @@ The analyzer should reject these with clear diagnostics:
 - strategy order functions and reporting helpers outside the narrow
   `strategy.entry`, `strategy.order`, `strategy.close`, `strategy.close_all`,
   `strategy.cancel`, `strategy.cancel_all`, and `strategy.exit` subsets,
-  including generic `strategy.order` netting, OCA,
+  including series `oca_name`,
   same-side or 3+ trigger exits, invalid trailing combinations, partial
   `strategy.close_all()`, pyramiding behavior beyond the fixture-backed
   long-only subset, broker settings beyond the supported declaration subset,
   and sizing modes beyond the fixture-backed fixed, cash, and percent-of-equity
   default entry subset,
   `strategy.*` variables beyond the supported position/profit/equity/count
-  state subset, mutable strategy state, and requested-context strategy state
+  state subset, mutable strategy state, and requested-context strategy state,
+  `use_bar_magnifier`,
+  `fill_orders_on_standard_ohlc`, and remaining `strategy.risk.*` broker
+  directives other than fixture-backed `strategy.risk.allow_entry_in`,
+  `strategy.risk.max_position_size`, `strategy.risk.max_drawdown`,
+  `strategy.risk.max_intraday_loss`,
+  `strategy.risk.max_intraday_filled_orders`, and
+  `strategy.risk.max_cons_loss_days`
 - `request.*` variants outside the narrow same-context and same-or-higher-timeframe
   provider-backed `request.security` subsets
 - legacy lower-timeframe `security`, requested expressions outside the same
@@ -574,8 +655,8 @@ The analyzer should reject these with clear diagnostics:
 - general multi-symbol or multi-timeframe data loading outside the documented
   `request.security` provider subset
 - broker emulation and order execution outside the fixture-backed long-only
-  subset plus market `strategy.short` entries, short closes, and market
-  `strategy.entry` reversals
+  subset plus market `strategy.short` entries, short closes, and market,
+  limit, stop, and stop-limit `strategy.entry` reversals
 - `varip` drawing ids, tuple `varip`, and value families outside the
   fixture-backed scalar, chart-point, scalar-array, scalar-map, scalar-matrix,
   and scalar-tree UDT/UDT-array subsets

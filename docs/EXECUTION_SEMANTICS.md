@@ -173,7 +173,7 @@ supported; non-positive or non-finite prices return `na` in the price-dependent
 modes, as does non-positive or non-finite equity in percent mode. Indicator and
 requested-context use are rejected, and the helper does not expand public
 strategy JSON. Contracts, margin constraints beyond the current explicit-margin
-long-only subset, cross-currency conversion, symbol precision rounding, and
+long and short subsets, cross-currency conversion, symbol precision rounding, and
 lot-step constraints remain unsupported.
 `strategy(..., commission_type=strategy.commission.cash_per_contract,
 commission_value=N)` accepts a finite non-negative const numeric
@@ -249,20 +249,24 @@ selection.
 Supported `strategy.exit` calls use the pending-exit model described below.
 Same-calculation absolute `strategy.exit` attachment may target a matching
 active pending entry id and remains internal until that entry fills.
-`strategy.cancel(id)` cancels matching internal pending entry ids and matching
-pending exit ids in the supported order subset. Unknown, already-filled, and
-already-cancelled ids are no-op. Cancellation records no public order, trade, or
-pending-order output.
-`strategy.cancel_all()` cancels all currently supported internal pending entries
-and pending exits. It is a no-op when no supported pending order exists and
+`strategy.cancel(id)` searches pending entries, generic orders, exits,
+deferred relative exits, and pending closes through one order-book lookup and
+cancels every matching public id, including when those families share an id.
+Unknown, already-filled, and already-cancelled ids are no-op. Cancellation
 records no public order, trade, or pending-order output.
+`strategy.cancel_all()` clears all currently supported pending entries, generic
+orders, exits, reservations, deferred relative exits, pending closes,
+stop-limit activation, and OCA membership exactly once. It is a no-op when no
+supported pending order exists and records no public order, trade, or
+pending-order output.
 
-`strategy.close(id)` closes the full matching long position at the current bar
-close. `strategy.close(id, qty=...)` and
+`strategy.close(id)` places a market close that fills the matching long
+position at the next historical bar open. `strategy.close(id, qty=...)` and
 `strategy.close(id, qty_percent=...)` can close part of the matching long
-position; fixed `qty` wins when both quantity forms are present. Fixed and
+position; quantity policy is stored at placement and resolved at fill, and
+fixed `qty` wins when both quantity forms are present. Fixed and
 percent quantities must be finite and positive, oversized quantities clamp to
-the current matching position size, and invalid quantities leave position,
+the matching position size at fill, and invalid quantities leave position,
 pending exit, and trade state unchanged while emitting a strategy diagnostic.
 Configured slippage worsens the supported long close fill price after trigger
 selection. A close records a closed trade with entry/exit bar indexes,
@@ -270,9 +274,10 @@ entry/exit times, entry/exit prices, quantity, and net realized profit after
 supported commission when configured. Partial closes append a remaining
 position snapshot at the same average price and keep matching pending exits;
 full closes append a flat position snapshot with `size = 0` and
-`avgPrice = null` and cancel matching pending exits. If no position is open, the
-id does not match the open entry, or the position has already been closed, the
-close call is a no-op.
+`avgPrice = null` and cancel matching pending exits. If no position is open at
+fill time, the id does not match an open entry, or the position has already been
+closed, the close is a no-op. Script-visible state on the signal bar remains
+pre-fill.
 
 After each historical bar, strategy mode appends an equity snapshot with
 `barIndex`, `cash`, `marketValue`, `equity`, and `netProfit`. Open long
@@ -365,9 +370,104 @@ this slice. `strategy.wintrades`,
 `strategy.losstrades`, and
 `strategy.eventrades` count closed trades whose realized profit is positive,
 negative, or zero. `strategy.opentrades` is `1` while the supported long
-position is open and `0` when flat. Supported `strategy.entry` and
-`strategy.close` calls mutate broker state immediately, so later statements on
-the same bar see the updated strategy state values. Pending `strategy.exit`
+position is open and `0` when flat. Supported market `strategy.entry` fills at the next historical bar open before
+script statements on that fill bar. Supported `strategy.close` and
+`strategy.close_all` calls place market close orders that fill at the next
+historical bar open, so later statements on the signal bar still see the
+pre-fill strategy state. Const/simple `immediately=true` fills that close at
+the current bar close through the scheduler current-tick market phase after the
+command is placed, so later statements on the same bar see the filled close.
+Series or non-bool `immediately` remains rejected.
+Const bool `process_orders_on_close=true` fills eligible market
+`strategy.entry`, `strategy.order`, `strategy.close`, and `strategy.close_all`
+intents at the creation bar close after script statements, so script-visible
+state on that bar remains pre-fill while public trades and equity include the
+fill. `immediately=true` still fills during the close command. Const bool
+`calc_on_order_fills=true` re-executes strategy statements after a historical
+fill, refreshes live `strategy.*` state for that extra pass, and can fill
+price-based entries placed on that pass on later Stage 18 ticks of the same
+bar. Series history, plots, and `ta.*` state are restored to the bar-start
+checkpoint before each extra pass so they do not consume an extra bar;
+`var` persists across extra passes. Extra passes are bounded by the internal
+recalculation-pass guardrail. Const bool `calc_on_every_tick=true` executes strategy statements on each
+host-provided forming update, using the 21c confirmed-checkpoint replay:
+`var` rolls back from confirmed state, `varip` persists across forming
+updates, and abandoned forming orders, fills, alerts, plots, and drawings
+do not leak into the confirmed result. Default `calc_on_every_tick=false`
+does not execute strategy code on forming updates; the confirmed update
+runs the bar once. Historical bars are unchanged by this setting because
+they have no host-provided realtime ticks.
+Bar magnifier lower-timeframe data is a host-owned input keyed by chart bar
+index. Validated intrabar series become host ticks for the existing Stage 18
+fill-step path; they do not add a second broker. Absence or a gap at a chart
+bar falls back explicitly to that chart bar's standard OHLC path.
+Duplicate chart-bar keys, duplicate tick timestamps, unsorted timestamps, and
+more than 200000 lower-timeframe bars fail closed. `use_bar_magnifier` stays
+rejected until fill wiring and CLI/Python/WASM input parity are approved.
+Internal broker state keeps `StrategyRiskRules` configuration separate from
+`StrategyRiskState` tripped/window state, with hooks before order admission,
+after fill, at intraday-window reset, and before forced close.
+Intraday windows are keyed from host-neutral bar timestamps and the chart
+timeframe already available to the runtime: UTC day of `time` when the chart
+timeframe is at or below 1D, and the bar timestamp itself when the timeframe
+is higher than 1D so one chart bar is one window. Non-positive timeframes fail
+closed to the UTC-day key. This runtime has no session calendar. A new window
+zeros the filled-order count, seeds a finite equity baseline, and clears
+window-scoped trips while permanent `max_drawdown` stops remain. Same-window
+bars keep the baseline and counters; a missing-bar gap starts a new window.
+`strategy.risk.allow_entry_in` accepts documented `strategy.direction.*`
+constants and rewrites later `strategy.entry` admission: allowed directions
+keep current open, add, and reversal behavior; a disallowed opposite entry
+against an open allowed position flattens without opening prohibited
+exposure; a disallowed opposite entry while flat is a no-op; last call wins;
+pending opposite `strategy.entry` intents are cancelled while flat or
+converted to market close-only against an open allowed position.
+`strategy.order` is not bound by this rule.
+`strategy.risk.max_position_size` accepts simple positive finite numeric
+contracts and clamps later `strategy.entry` quantity so projected post-fill
+exposure does not exceed the limit. Remaining room of zero is a no-op.
+Opposite `strategy.entry` reversal flattens first, then opens at most the
+limit on the new side. Pending `strategy.entry` quantities are reduced when
+the rule is recorded or when they fill. `strategy.order` is not bound by
+this rule.
+`strategy.risk.max_drawdown` accepts simple positive finite numeric `value`
+with required `strategy.cash` or `strategy.percent_of_equity`. Cash compares
+peak-equity drawdown amount, including open adverse excursion from bar
+high/low. Percent compares that amount to maximum equity and also trips when
+equity is non-positive. Evaluation runs after historical fills, after trade
+extremes, after margin evaluation, and after post-script fills. On trigger
+the broker cancels all pending orders, flattens through a risk-owned market
+close at the evaluation mark, and permanently sets blocked order placement.
+Intraday-window reset keeps that tripped stop.
+`strategy.risk.max_intraday_loss` accepts simple positive finite numeric
+`value` with required `strategy.cash` or `strategy.percent_of_equity`. Loss is
+maximum window equity minus mark-to-market equity, including open adverse
+excursion. Percent also trips when equity is non-positive. On trigger the
+broker cancels pending orders, flattens, and blocks later trades until the
+next intraday window.
+`strategy.risk.max_intraday_filled_orders` accepts a simple positive finite
+integer count. Each public filled order in the window increments the counter.
+On reaching the limit the broker cancels pending orders, flattens after the
+committed fill, and blocks later trades until the next window.
+`strategy.risk.max_cons_loss_days` accepts a simple positive finite integer
+count. Each completed window with negative realized closed-trade profit counts
+as a loss day. A profitable or no-trade window resets the streak; a missing-bar
+gap does not insert a no-trade window. After `count` consecutive observed loss
+windows the broker cancels pending orders, flattens leftover exposure at the
+new window's bar open, and permanently blocks later trades. Remaining
+undocumented `strategy.risk.*` calls stay rejected.
+Forming-bar realtime updates with `calc_on_every_tick=true` re-execute from
+the last confirmed checkpoint.
+After seeding `varip` from the previous forming update, the runtime restores
+the confirmed broker checkpoint (order book, OCA, reservations, ledger, cash,
+fill alerts, and script alerts) and commits broker plus output state only on
+the confirmed update. Abandoned forming placements, cancellations, stop-limit
+activations, fills, and alerts do not leak into the confirmed result.
+Historical price-based fills on a bar run through a deterministic fill-path:
+market closes and entries at open, then long limit/stop/stop-limit families,
+then short limit/stop/stop-limit families. Same-tick pyramiding batches stay
+inside one family. Limit and stop entries that are both eligible on the same
+bar fill in that family order rather than cancelling later families. Pending `strategy.exit`
 fills are evaluated after script statements on a historical bar, so script
 reads observe the count changes on the next bar while public strategy output
 and equity include the fill on the triggering bar. These variables can be used
@@ -512,15 +612,13 @@ omitted long `qty` uses the configured default quantity at placement time.
 Fixture-backed limit-short
 `strategy.order(id, strategy.short, qty=..., limit=price)` orders use the
 supported short limit timing model, fill at the verified limit price on a later
-historical bar when `high >= limit`, open or increase short exposure while
-flat or already short without using the `strategy.entry()` pyramiding limit,
-and are a no-op while net long. Explicit positive `qty` is required.
+historical bar when `high >= limit`, and apply signed netting without using the
+`strategy.entry()` pyramiding limit. Explicit positive `qty` is required.
 Fixture-backed stop-short
 `strategy.order(id, strategy.short, qty=..., stop=price)` orders use the
 supported short stop timing model, fill at the stop price on a later historical
 bar when `low <= stop`, open or increase short exposure while flat or already
-short without using the `strategy.entry()` pyramiding limit, and are a no-op
-while net long. Explicit positive `qty` is required.
+short without using the `strategy.entry()` pyramiding limit, and apply signed netting after stop trigger selection. Explicit positive `qty` is required.
 Fixture-backed stop-long
 `strategy.order(id, strategy.long, qty=..., stop=price)` orders use the
 supported long stop timing model, fill at the stop price on a later historical
@@ -539,23 +637,50 @@ orders use the supported short stop-limit model: activation occurs on a later
 historical bar when `low <= stop`, and the limit fill can occur only on a
 subsequent historical bar when `high >= limit` or above the configured verified
 limit threshold. They open or increase short exposure while flat or already
-short without using the `strategy.entry()` pyramiding limit, and are a no-op
-while net long. Explicit positive `qty` is required.
-Fixture-backed reduce-only market
-`strategy.order(id, strategy.short, qty=...)` orders can reduce an existing long
-position on the next historical bar open, recording a `strategy.short` order
-event and clamping oversized quantities without opening short exposure; while
-flat, they are no-ops. Omitted `qty` remains unsupported for `strategy.short`.
+short without using the `strategy.entry()` pyramiding limit, and apply signed
+netting after stop activation and a later limit fill. Explicit positive `qty`
+is required.
+Fixture-backed market
+`strategy.order(id, strategy.long, qty=...)` and
+`strategy.order(id, strategy.short, qty=...)` orders apply signed netting on the
+next historical bar open, independent of the `strategy.entry()` pyramiding
+limit. Filled signed quantity `D` against position `P` yields target `P+D`:
+flat-to-side, same-side increase, opposite partial reduction, exact flatten, or
+cross-zero remainder open. Public order quantity is `|D|`. Close quantity is
+`min(|P|,|D|)` when `D` opposes `P`. Long orders use long-entry slippage; short
+orders use short-entry slippage. An unaffordable open remainder rejects the
+whole fill. Limit generic orders reuse that signed netting after later-bar
+trigger selection at the verified limit price. Stop generic orders reuse that
+signed netting after stop trigger selection. Stop-limit generic orders reuse it
+after activation on a later bar and a subsequent limit fill. Price-based
+`strategy.entry()` limit, stop, and stop-limit reversals flatten opposite
+exposure then open the requested quantity; pyramiding applies to the new side,
+not the flatten quantity. Same-id generic-order replacement updates pending
+market, limit, stop, and stop-limit `strategy.order` intents of the same
+direction; opposite-direction same-id replacement cancels the old intent then
+places the new one. `strategy.cancel(id)` clears matching pending generic
+orders, pending exits, deferred relative exits, and pending closes, including
+when those families share a public id. Generic-order reductions allocate FIFO, or
+id-specific ANY when `close_entries_rule` is ANY and the order id matches an
+open entry; unmatched ANY stays FIFO. Const/simple `oca_name` with explicit
+`strategy.oca.none` keeps grouped `strategy.order` intents independent.
+`strategy.oca.cancel` cancels still-pending same-group generic-order peers
+after a fill, in internal creation order, and leaves unrelated groups in
+place. `strategy.oca.reduce` reduces same-group peer remaining quantity by
+the filled quantity and removes peers reduced to zero. Const/simple
+`strategy.exit` `oca_name` maps onto that implicit reduce reservation model:
+grouped exits share overlapping quantity, and a fill reduces same-group peers.
+Omitted `qty` remains unsupported for `strategy.short`.
 The supported `strategy.order()` subset accepts
 `comment`, `alert_message`, and `disable_alert` metadata. Supported long order
-fills retain entry comments, reduce-only short fills retain exit comments, and
-supported order-fill alert payloads are exposed under `strategy.alerts`; the
-metadata does not widen unsupported order shapes.
+fills retain entry comments, short reduction/flatten/cross-zero fills retain
+exit comments, and supported order-fill alert payloads are exposed under
+`strategy.alerts`; the metadata does not widen unsupported order shapes.
 `strategy.exit` variants beyond the
 supported single-trigger, one-downside/one-upside bracket, trailing-stop,
 fixed-quantity, percent-quantity, explicit single-trigger or bracket/trailing
 reservation subset, `strategy.cancel(id)`, and `strategy.cancel_all()`,
-reversal/OCA `strategy.order` forms,
+series `oca_name` `strategy.order` and `strategy.exit` forms,
 rich order families, strategy reporting helpers beyond the supported
 position/profit/equity/count/run-up/drawdown/buy-and-hold return variables,
 requested-context strategy state, strategy state mutation, and realtime

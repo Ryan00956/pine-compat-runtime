@@ -769,20 +769,32 @@ ohlc4 = (open + high + low + close) / 4
 ```text
 indicator(title: const string, shorttitle?: const string, overlay?: const bool, format?: const string, precision?: const int, scale?: const string, max_bars_back?: const int, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset, ...)
   -> void
-strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, currency?: const string, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, close_entries_rule?: const string, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset)
+strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, currency?: const string, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, close_entries_rule?: const string, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset, process_orders_on_close?: const bool, calc_on_order_fills?: const bool, calc_on_every_tick?: const bool)
   -> void
 max_bars_back(source: series numeric, num: const int)
   -> void
 strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
 -> void
-strategy.order(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: string-compatible, oca_type?: string-compatible, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
+strategy.order(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, oca_name?: simple string, oca_type?: simple string strategy.oca.none or strategy.oca.cancel subset, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
 -> void
-strategy.close(id: simple string, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
+strategy.close(id: simple string, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, immediately?: simple bool)
 -> void
-strategy.close_all(comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible) -> void
+strategy.close_all(comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible, immediately?: simple bool) -> void
 strategy.cancel(id: simple string) -> void
 strategy.cancel_all() -> void
-strategy.exit(id: simple string, from_entry?: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, comment_profit?: string-compatible, comment_loss?: string-compatible, comment_trailing?: string-compatible, alert_message?: string-compatible, alert_profit?: string-compatible, alert_loss?: string-compatible, alert_trailing?: string-compatible, disable_alert?: bool-compatible)
+strategy.exit(id: simple string, from_entry?: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric, qty_percent?: series/simple numeric, oca_name?: simple string, comment?: string-compatible, comment_profit?: string-compatible, comment_loss?: string-compatible, comment_trailing?: string-compatible, alert_message?: string-compatible, alert_profit?: string-compatible, alert_loss?: string-compatible, alert_trailing?: string-compatible, disable_alert?: bool-compatible)
+  -> void
+strategy.risk.allow_entry_in(value: simple string strategy.direction.all, strategy.direction.long, or strategy.direction.short)
+  -> void
+strategy.risk.max_position_size(contracts: simple numeric)
+  -> void
+strategy.risk.max_drawdown(value: simple numeric, type: simple string strategy.cash or strategy.percent_of_equity, alert_message?: simple string)
+  -> void
+strategy.risk.max_intraday_loss(value: simple numeric, type: simple string strategy.cash or strategy.percent_of_equity, alert_message?: simple string)
+  -> void
+strategy.risk.max_intraday_filled_orders(count: simple numeric, alert_message?: simple string)
+  -> void
+strategy.risk.max_cons_loss_days(count: simple numeric, alert_message?: simple string)
   -> void
 strategy.convert_to_account(value: series/simple numeric) -> series float
 strategy.convert_to_symbol(value: series/simple numeric) -> series float
@@ -899,6 +911,14 @@ Both positional declaration slots remain outside the current subset.
 `strategy(...)` defaults `default_qty_type` to `strategy.fixed` and
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
 use the configured or default fixed quantity.
+`strategy(..., calc_on_order_fills=true)` accepts const bool and re-executes
+strategy statements after historical fills so later Stage 18 price ticks on
+the same bar can fill orders placed on that extra pass. Series or non-bool
+values stay rejected.
+`strategy(..., calc_on_every_tick=true)` accepts const bool and executes
+strategy statements on each host-provided forming update with `var` rollback
+and `varip` persistence. It does not change historical bars. Series or
+non-bool values stay rejected.
 `default_qty_type=strategy.cash` is also supported for positive const numeric
 `default_qty_value`; omitted supported entry `qty` resolves once at placement
 time as cash divided by the current close under the current
@@ -954,12 +974,12 @@ pyramiding limit; omitted long `qty` uses the configured default quantity at
 placement time. Fixture-backed limit-short
 `strategy.order(id, strategy.short, qty=..., limit=price)` fills through the
 supported short limit timing model and also bypasses the `strategy.entry()`
-pyramiding limit while flat or already short; it is a no-op while net long, and
+pyramiding limit and applies signed netting after later-bar trigger selection;
 explicit positive `qty` is required. Fixture-backed stop-short
 `strategy.order(id, strategy.short, qty=..., stop=price)` fills through the
 supported short stop timing model and also bypasses the `strategy.entry()`
-pyramiding limit while flat or already short; it is a no-op while net long, and
-explicit positive `qty` is required. Fixture-backed stop-long
+pyramiding limit while flat or already short and applies signed netting after
+stop trigger selection; explicit positive `qty` is required. Fixture-backed stop-long
 `strategy.order(id, strategy.long, qty=..., stop=price)` fills through the
 supported long stop timing model and also bypasses the `strategy.entry()`
 pyramiding limit; omitted long `qty` uses the configured default quantity at
@@ -971,18 +991,25 @@ configured default quantity at placement time. Fixture-backed stop-limit-short
 `strategy.order(id, strategy.short, qty=..., stop=stop_price, limit=limit_price)`
 uses the supported short stop-limit activation and fill timing model and also
 bypasses the `strategy.entry()` pyramiding limit while flat or already short; it
-is a no-op while net long, and explicit positive `qty` is required.
-Fixture-backed reduce-only market
-`strategy.order(id, strategy.short, qty=...)` can reduce an existing long
-position on the next historical bar open and clamps oversized quantities without
-opening short exposure; while flat, it is a no-op. Omitted `qty` remains
-unsupported for `strategy.short`. Reversals, OCA behavior, same-tick
+applies signed netting after stop activation and a later limit fill, and
+explicit positive `qty` is required.
+Fixture-backed market
+`strategy.order(id, strategy.long, qty=...)` and
+`strategy.order(id, strategy.short, qty=...)` apply signed netting on the next
+historical bar open, independent of the `strategy.entry()` pyramiding limit.
+Filled signed quantity `D` against position `P` yields target `P+D`. Public
+order quantity is `|D|`. Limit generic orders reuse that signed netting after
+limit trigger selection. Stop and stop-limit generic orders reuse that signed
+netting after trigger selection or activation plus later limit fill.
+Price-based `strategy.entry()` reversal remains unsupported. Omitted
+`qty` remains unsupported for `strategy.short`. OCA behavior, same-tick
 price-based entry exceptions, and broader multi-entry exit/reporting
 semantics remain unsupported unless fixture-backed.
 The supported `strategy.order()` subset accepts `comment`, `alert_message`,
-and `disable_alert` metadata; long fills retain entry comments and reduce-only
-short fills retain exit comments for script-visible trade comment helpers, while
-supported fill payloads are exposed in `strategy.alerts`.
+and `disable_alert` metadata; long fills retain entry comments and short
+reduction, flatten, and cross-zero fills retain exit comments for script-visible
+trade comment helpers, while supported fill payloads are exposed in
+`strategy.alerts`.
 `strategy(..., max_labels_count=N)` accepts named const integer values from
 1 through 500 and stores them in HIR for label runtime eviction.
 `strategy(..., max_boxes_count=N)` accepts named const integer values from
@@ -1114,19 +1141,24 @@ that activation bar, then fill at the limit price on a later historical bar
 where `low <= limit`, or below the configured verified limit threshold. These
 entry forms do not expose public pending-order records while pending.
 `strategy.close` supports full close, fixed `qty` partial close, and
-`qty_percent` partial close for the current matching long entry id at the current
-bar close. Fixed `qty` and `qty_percent` must be finite and positive;
-`qty_percent` resolves against the current matching position size, and fixed
-`qty` wins when both quantity forms are provided. Oversized quantities clamp to
-the current matching position size, remaining long position state stays open at
-the same average price, and matching pending exits are cancelled only when the
-close fully flattens the entry. `comment`, `alert_message`, and
-`disable_alert` arguments are stored internally on closed-trade metrics without
-external alert-delivery or public JSON effect. `immediately`, partial
-`strategy.close_all()`, and multi-entry close allocation remain unsupported.
-`strategy.close_all()` closes the current supported long position at the current
-bar close and is a no-op while flat; its `comment`, `alert_message`, and
-`disable_alert` arguments have the same internal-only metadata boundary.
+`qty_percent` partial close for the current matching long entry id at the next
+historical bar open. Fixed `qty` and `qty_percent` must be finite and positive;
+`qty_percent` is stored at placement and resolves against the matching position
+size at fill, and fixed `qty` wins when both quantity forms are provided.
+Oversized quantities clamp to the matching position size at fill, remaining long
+position state stays open at the same average price, and matching pending exits
+are cancelled only when the close fully flattens the entry. `comment`,
+`alert_message`, and `disable_alert` arguments are stored internally on
+closed-trade metrics without external alert-delivery or public JSON effect.
+Const/simple bool `immediately=true` fills the close at the current bar close
+through the scheduler current-tick market phase so later same-bar statements
+see the fill; `immediately=false` or omitted keeps next-bar-open fills. Series
+or non-bool `immediately`, partial `strategy.close_all()`, and multi-entry close
+allocation remain unsupported. `strategy.close_all()` closes the current
+supported long position at the next historical bar open, or at the current bar
+close when const/simple `immediately=true`, and is a no-op while flat; its
+`comment`, `alert_message`, and `disable_alert` arguments have the same
+internal-only metadata boundary.
 `strategy.cancel(id)` cancels matching internal pending entry ids and matching
 internal pending exit ids in the current supported order subset. Unknown,
 already-filled, and already-cancelled ids are no-op. Cancellation emits no
@@ -1377,6 +1409,8 @@ conversion are not implemented; the default and explicit `currency.NONE`
 `strategy.account_currency` reads and same-currency strategy conversions are
 supported as described above.
 Supported direct strategy constants include `strategy.long`, `strategy.short`,
+`strategy.direction.all`, `strategy.direction.long`,
+`strategy.direction.short`,
 `strategy.fixed`, `strategy.cash`, `strategy.percent_of_equity`,
 `strategy.oca.cancel`, `strategy.oca.none`, `strategy.oca.reduce`,
 `strategy.commission.cash_per_contract`,
@@ -1385,7 +1419,27 @@ string values. `strategy.entry` execution supports `strategy.long`, market
 `strategy.short`, limit `strategy.short`, stop `strategy.short`, and stop-limit
 `strategy.short`, including
 market reversals that flatten opposite exposure then open the requested
-quantity; OCA order behavior remains unsupported.
+quantity unless `strategy.risk.allow_entry_in` forbids the new side;
+`strategy.order` accepts const/simple `oca_name` with
+`strategy.oca.none`, `strategy.oca.cancel`, or `strategy.oca.reduce`.
+`strategy.exit` accepts const/simple `oca_name` as implicit
+`strategy.oca.reduce` grouping. Series `oca_name` remains unsupported.
+`strategy.risk.allow_entry_in` accepts const/simple
+`strategy.direction.all`, `strategy.direction.long`, or
+`strategy.direction.short`. `strategy.risk.max_position_size` accepts simple
+positive finite numeric `contracts` and reduces `strategy.entry` quantity so
+post-fill exposure does not exceed the limit. `strategy.risk.max_drawdown`
+accepts simple positive finite numeric `value` with `strategy.cash` or
+`strategy.percent_of_equity` and optional simple `alert_message`. On trigger
+it cancels pending orders, flattens, and permanently blocks later trades.
+Intraday risk windows use the UTC day of bar time when the chart timeframe is
+at or below 1D, and the bar timestamp when the timeframe is higher than 1D.
+`strategy.risk.max_intraday_loss` accepts the same cash/percent pair as
+`max_drawdown` and stops trading until the next window. `strategy.risk.max_intraday_filled_orders`
+accepts a simple positive integer count of public fills in that window.
+`strategy.risk.max_cons_loss_days` accepts a simple positive integer count of
+consecutive observed loss windows and permanently stops later trades.
+Other `strategy.risk.*` calls remain unsupported.
 
 ## Utility
 

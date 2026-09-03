@@ -95,7 +95,7 @@ bounded strategy runtime.
 | Language | fixture-backed v1-v6 declarations, series and history, bounded v1/v2 declaration graphs, `var`/partial `varip`, functions, tuples, `if`, `switch`, partial `for`/`while`, strings, UDTs, and host-provided pure library imports |
 | Indicators | Common `ta.*`, selected `math.*`/`str.*`, inputs, plots, colors, alerts, drawing objects, tables, typed collections, fixture-backed `request.security`, and the documented executable Pine v1-v4 legacy-indicator subsets including `security` |
 | Execution | Deterministic historical runs, guarded history, input overrides, explicit `timenow` execution clocks, incremental append, and realtime forming-bar rollback |
-| Strategies | Partial long-only entries, orders, closes, cancellations, stop/limit/bracket/trailing exits, quantity reservations, positions, trades, and equity snapshots |
+| Strategies | Partial side-aware long and short entries, orders, closes, cancellations, stop/limit/bracket/trailing exits, quantity reservations, positions, trades, and equity snapshots |
 | Outputs | Versioned plots, shapes, bars, candles, fills, labels, lines, line fills, polylines, boxes, tables, alerts, diagnostics, and strategy results |
 | Hosts | Rust workspace, `pine-compat` CLI, `pine_compat` Python module, and `wasm-bindgen` API |
 
@@ -241,7 +241,7 @@ behavior.
 `0.2.0` is a compatibility-focused second release, not a full drop-in
 implementation of every Pine feature. Important current boundaries include:
 
-- the strategy broker model is still a partial, primarily long-only subset;
+- the strategy broker model is still a partial side-aware long/short subset;
 - `request.*` support is limited and all requested data must be supplied by the
   host;
 - library resolution is exact-key and host-provided — there is no remote
