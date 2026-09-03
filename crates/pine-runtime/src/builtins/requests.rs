@@ -212,16 +212,14 @@ impl<'a> HistoricalRuntime<'a> {
         expression: &HirExpr,
         requested_environment: RequestEnvironment,
     ) -> Result<Vec<(i64, PineValue)>, RuntimeError> {
-        let program = self.program;
-        let dependency_initializers = request_dependency_initializers(program);
+        let dependency_initializers = request_dependency_initializers(&self.program);
         let captures = request_capture_values(
-            program,
+            &self.program,
             expression,
             &self.current_symbols,
             &dependency_initializers,
         );
-        let mut runtime =
-            HistoricalRuntime::with_request_environment(program, requested_environment);
+        let mut runtime = self.fork_with_request_environment(requested_environment);
         runtime.historical_end = Some(requested_bars.len());
         let mut values = Vec::with_capacity(requested_bars.len());
         for bar in requested_bars {
