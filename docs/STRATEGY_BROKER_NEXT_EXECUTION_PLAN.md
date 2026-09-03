@@ -685,8 +685,18 @@ Unfinished from the original acceptance criteria:
 
 #### 18g. True OHLC Path And Cross-Family Candidate Ordering
 
-Status: not started. This is the first executable follow-up after integration
-of the current Stage 17-22 worktree.
+Status: blocked after Slice 18g.0 on 2026-09-03. See
+`docs/STRATEGY_INTERNAL_STAGE18_TRUE_OHLC_PATH_AUDIT.md`. Official closer-to-high
+and closer-to-low path rules are locked. Equal-distance selection, same-price
+entry-versus-exit rank, same-price exit-versus-margin rank, and same-bar
+stop-limit post-activation eligibility cannot be established without guessing.
+Do not start 18g.1+ until a lawful source-free TradingView order/trade export
+answers those questions.
+
+Use the
+[detailed Stage 18g execution plan](STRATEGY_INTERNAL_STAGE18G_TRUE_OHLC_PATH_EXECUTION_PLAN.md)
+for the step-by-step implementation and verification procedure after the
+18g.0 block lifts.
 
 Goal:
 
