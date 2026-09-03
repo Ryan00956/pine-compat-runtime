@@ -73,12 +73,12 @@ const STRATEGY_ORDER_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "oca_name",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::SimpleString,
         optional: true,
     },
     BuiltinParam {
         name: "oca_type",
-        accepts: Accepts::StringCompatible,
+        accepts: Accepts::SimpleString,
         optional: true,
     },
     BuiltinParam {
@@ -129,6 +129,11 @@ const STRATEGY_CLOSE_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::BoolCompatible,
         optional: true,
     },
+    BuiltinParam {
+        name: "immediately",
+        accepts: Accepts::SimpleBool,
+        optional: true,
+    },
 ];
 
 const STRATEGY_CLOSE_ALL_PARAMS: &[BuiltinParam] = &[
@@ -145,6 +150,11 @@ const STRATEGY_CLOSE_ALL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "disable_alert",
         accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "immediately",
+        accepts: Accepts::SimpleBool,
         optional: true,
     },
 ];
@@ -214,6 +224,11 @@ const STRATEGY_EXIT_PARAMS: &[BuiltinParam] = &[
         optional: true,
     },
     BuiltinParam {
+        name: "oca_name",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
+    BuiltinParam {
         name: "comment",
         accepts: Accepts::StringCompatible,
         optional: true,
@@ -277,6 +292,80 @@ const STRATEGY_CURRENCY_CONVERSION_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     accepts: Accepts::SeriesOrSimpleNumeric,
     optional: false,
 }];
+
+const STRATEGY_RISK_ALLOW_ENTRY_IN_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "value",
+    accepts: Accepts::SimpleString,
+    optional: false,
+}];
+
+const STRATEGY_RISK_MAX_POSITION_SIZE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "contracts",
+    accepts: Accepts::SimpleNumeric,
+    optional: false,
+}];
+
+const STRATEGY_RISK_MAX_DRAWDOWN_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "value",
+        accepts: Accepts::SimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "type",
+        accepts: Accepts::SimpleString,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "alert_message",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
+];
+
+const STRATEGY_RISK_MAX_INTRADAY_LOSS_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "value",
+        accepts: Accepts::SimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "type",
+        accepts: Accepts::SimpleString,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "alert_message",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
+];
+
+const STRATEGY_RISK_MAX_INTRADAY_FILLED_ORDERS_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "count",
+        accepts: Accepts::SimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "alert_message",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
+];
+
+const STRATEGY_RISK_MAX_CONS_LOSS_DAYS_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "count",
+        accepts: Accepts::SimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "alert_message",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
+];
 
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
@@ -346,6 +435,48 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "strategy.exit",
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_EXIT_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.risk.max_drawdown",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_RISK_MAX_DRAWDOWN_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.risk.max_intraday_loss",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_RISK_MAX_INTRADAY_LOSS_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.risk.max_intraday_filled_orders",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_RISK_MAX_INTRADAY_FILLED_ORDERS_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.risk.max_cons_loss_days",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_RISK_MAX_CONS_LOSS_DAYS_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.risk.max_position_size",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_RISK_MAX_POSITION_SIZE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.risk.allow_entry_in",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_RISK_ALLOW_ENTRY_IN_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

@@ -1,0 +1,8 @@
+//@version=5
+strategy("OCA none grouped orders stay independent")
+if bar_index == 1
+    strategy.order("A", strategy.long, qty=1, limit=3, oca_name="g", oca_type=strategy.oca.none)
+    strategy.order("B", strategy.long, qty=1, limit=3, oca_name="g", oca_type=strategy.oca.none)
+plot(strategy.position_size)
+plot(strategy.opentrades)
+plot(strategy.closedtrades)

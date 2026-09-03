@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported strategy risk max_drawdown unknown type")
+strategy.risk.max_drawdown(10, strategy.fixed)

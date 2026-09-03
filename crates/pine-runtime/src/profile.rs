@@ -106,4 +106,8 @@ pub struct RuntimeProfile {
     pub table_capacity: usize,
     pub table_snapshot_capacity: usize,
     pub table_cell_capacity: usize,
+    pub strategy_script_passes: usize,
+    pub strategy_recalculation_passes: usize,
+    pub strategy_max_passes_on_bar: usize,
+    pub strategy_max_recalculation_passes: usize,
 }

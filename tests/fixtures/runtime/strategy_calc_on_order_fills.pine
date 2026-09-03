@@ -1,0 +1,10 @@
+//@version=5
+strategy("Calc on order fills extra limit", calc_on_order_fills=true, pyramiding=2)
+
+if bar_index == 0
+    strategy.entry("A", strategy.long, qty=1)
+if strategy.position_size > 0
+    strategy.entry("B", strategy.long, qty=1, limit=2)
+
+plot(strategy.position_size)
+plot(strategy.opentrades)

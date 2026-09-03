@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported strategy risk allow_entry_in indicator")
+strategy.risk.allow_entry_in(strategy.direction.long)

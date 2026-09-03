@@ -1,0 +1,7 @@
+//@version=5
+strategy("Allow long rejects flat short")
+strategy.risk.allow_entry_in(strategy.direction.long)
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=1)
+plot(strategy.position_size)
+plot(strategy.max_contracts_held_short)

@@ -3626,6 +3626,205 @@ def test_run_script_returns_strategy_entry_short_reverses_long_fixture_contract(
     assert result == expected
 
 
+
+def test_run_script_returns_strategy_entry_limit_reverses_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_entry_limit_reverses_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry_limit_reverses_short.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_entry_limit_reverses_long_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_entry_limit_reverses_long.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry_limit_reverses_long.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_entry_limit_reverses_short_qty_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_entry_limit_reverses_short_qty.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry_limit_reverses_short_qty.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_entry_stop_reverses_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_entry_stop_reverses_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry_stop_reverses_short.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_entry_stop_reverses_long_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_entry_stop_reverses_long.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry_stop_reverses_long.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_entry_stop_limit_reverses_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_entry_stop_limit_reverses_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry_stop_limit_reverses_short.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_entry_stop_limit_reverses_long_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_entry_stop_limit_reverses_long.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry_stop_limit_reverses_long.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_replace_limit_with_stop_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_replace_limit_with_stop.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_replace_limit_with_stop.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_replace_long_with_short_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_replace_long_with_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_replace_long_with_short.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_cancel_shared_id_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_cancel_shared_id.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_cancel_shared_id.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_reduce_fifo_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_reduce_fifo.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_reduce_fifo.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_oca_cancel_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_oca_cancel.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_oca_cancel.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_oca_reduce_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_oca_reduce.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_oca_reduce.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_oca_reduce_zero_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_oca_reduce_zero.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_oca_reduce_zero.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_oca_none_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_oca_none.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_oca_none.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_reduce_any_matching_id_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_reduce_any_matching_id.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_reduce_any_matching_id.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
 def test_run_script_returns_strategy_entry_long_reverses_short_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_entry_long_reverses_short.pine"
@@ -3674,6 +3873,335 @@ def test_run_script_returns_strategy_order_limit_short_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_order_limit_short.pine").read_text()
     expected = json.loads(
         (ROOT / "tests/snapshots/runtime_strategy_order_limit_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_limit_long_against_short_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_limit_long_against_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_order_limit_long_against_short.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_limit_short_against_long_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_limit_short_against_long.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_order_limit_short_against_long.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_limit_long_flatten_short_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_limit_long_flatten_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_order_limit_long_flatten_short.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_limit_short_flatten_long_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_limit_short_flatten_long.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_order_limit_short_flatten_long.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_limit_long_reduce_short_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_limit_long_reduce_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_order_limit_long_reduce_short.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_limit_short_reduce_long_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_limit_short_reduce_long.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_order_limit_short_reduce_long.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+
+def test_run_script_returns_strategy_order_stop_long_against_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_stop_long_against_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_stop_long_against_short.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_stop_short_against_long_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_stop_short_against_long.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_stop_short_against_long.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_stop_long_flatten_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_stop_long_flatten_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_stop_long_flatten_short.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_stop_short_reduce_long_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_stop_short_reduce_long.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_stop_short_reduce_long.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_stop_limit_long_against_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_stop_limit_long_against_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_stop_limit_long_against_short.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_stop_limit_short_against_long_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_stop_limit_short_against_long.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_stop_limit_short_against_long.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_stop_limit_long_flatten_short_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_stop_limit_long_flatten_short.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_stop_limit_long_flatten_short.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_stop_limit_short_reduce_long_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_order_stop_limit_short_reduce_long.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_stop_limit_short_reduce_long.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+def test_run_script_returns_strategy_order_short_flat_noop_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_short_flat_noop.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_order_short_flat_noop.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_market_short_increase_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_market_short_increase.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_order_market_short_increase.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_long_flatten_short_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_long_flatten_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_order_long_flatten_short.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_long_reduce_short_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_long_reduce_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_order_long_reduce_short.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_short_flatten_long_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_short_flatten_long.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_order_short_flatten_long.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_long_against_short_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_long_against_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_order_long_against_short.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_order_short_oversized_against_long_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_order_short_oversized_against_long.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_order_short_oversized_against_long.json"
+        ).read_text()
     )
 
     result = pine_compat.run_script(
@@ -3840,13 +4368,13 @@ def test_run_script_returns_strategy_pyramiding_contract():
 
 def test_run_script_returns_strategy_pyramiding_close_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_pyramiding_close.pine").read_text()
-    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"))
 
     assert [plot["values"] for plot in result["plots"][:4]] == [
-        [0, 1, 1, 0],
-        [0.0, 1.0, 3.0, 0.0],
-        [None, 2.0, 3.0, None],
-        [0, 0, 1, 2],
+        [0, 1, 2, 1, 0],
+        [0.0, 1.0, 4.0, 3.0, 0.0],
+        [None, 2.0, 2.75, 3.0, None],
+        [0, 0, 0, 1, 2],
     ]
     assert result["strategy"]["orders"] == [
         {
@@ -3870,13 +4398,75 @@ def test_run_script_returns_strategy_pyramiding_close_contract():
         {
             "id": "L1",
             "entryBarIndex": 1,
-            "exitBarIndex": 2,
+            "exitBarIndex": 3,
             "entryTime": 2,
-            "exitTime": 3,
+            "exitTime": 4,
             "entryPrice": 2.0,
-            "exitPrice": 3.0,
+            "exitPrice": 4.0,
             "qty": 1.0,
-            "profit": 1.0,
+            "profit": 2.0,
+        },
+        {
+            "id": "L2",
+            "entryBarIndex": 2,
+            "exitBarIndex": 4,
+            "entryTime": 3,
+            "exitTime": 5,
+            "entryPrice": 3.0,
+            "exitPrice": 5.0,
+            "qty": 3.0,
+            "profit": 6.0,
+        },
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 1.0, "avgPrice": 2.0},
+        {"barIndex": 2, "size": 4.0, "avgPrice": 2.75},
+        {"barIndex": 3, "size": 3.0, "avgPrice": 3.0},
+        {"barIndex": 4, "size": 0.0, "avgPrice": None},
+    ]
+    assert result["strategy"]["diagnostics"] == []
+    assert "pending" not in result["strategy"]
+    assert "closedTrades" not in result["strategy"]
+
+
+def test_run_script_returns_strategy_pyramiding_close_all_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_pyramiding_close_all.pine").read_text()
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"))
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0, 1, 2, 0, 0],
+        [0.0, 1.0, 4.0, 0.0, 0.0],
+        [0, 0, 0, 2, 2],
+    ]
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L1",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 1.0,
+            "price": 2.0,
+        },
+        {
+            "id": "L2",
+            "barIndex": 2,
+            "time": 3,
+            "direction": "strategy.long",
+            "qty": 3.0,
+            "price": 3.0,
+        },
+    ]
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L1",
+            "entryBarIndex": 1,
+            "exitBarIndex": 3,
+            "entryTime": 2,
+            "exitTime": 4,
+            "entryPrice": 2.0,
+            "exitPrice": 4.0,
+            "qty": 1.0,
+            "profit": 2.0,
         },
         {
             "id": "L2",
@@ -3893,69 +4483,7 @@ def test_run_script_returns_strategy_pyramiding_close_contract():
     assert result["strategy"]["position"] == [
         {"barIndex": 1, "size": 1.0, "avgPrice": 2.0},
         {"barIndex": 2, "size": 4.0, "avgPrice": 2.75},
-        {"barIndex": 2, "size": 3.0, "avgPrice": 3.0},
         {"barIndex": 3, "size": 0.0, "avgPrice": None},
-    ]
-    assert result["strategy"]["diagnostics"] == []
-    assert "pending" not in result["strategy"]
-    assert "closedTrades" not in result["strategy"]
-
-
-def test_run_script_returns_strategy_pyramiding_close_all_contract():
-    source = (ROOT / "tests/fixtures/runtime/strategy_pyramiding_close_all.pine").read_text()
-    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
-
-    assert [plot["values"] for plot in result["plots"]] == [
-        [0, 1, 0, 0],
-        [0.0, 1.0, 0.0, 0.0],
-        [0, 0, 2, 2],
-    ]
-    assert result["strategy"]["orders"] == [
-        {
-            "id": "L1",
-            "barIndex": 1,
-            "time": 2,
-            "direction": "strategy.long",
-            "qty": 1.0,
-            "price": 2.0,
-        },
-        {
-            "id": "L2",
-            "barIndex": 2,
-            "time": 3,
-            "direction": "strategy.long",
-            "qty": 3.0,
-            "price": 3.0,
-        },
-    ]
-    assert result["strategy"]["trades"] == [
-        {
-            "id": "L1",
-            "entryBarIndex": 1,
-            "exitBarIndex": 2,
-            "entryTime": 2,
-            "exitTime": 3,
-            "entryPrice": 2.0,
-            "exitPrice": 3.0,
-            "qty": 1.0,
-            "profit": 1.0,
-        },
-        {
-            "id": "L2",
-            "entryBarIndex": 2,
-            "exitBarIndex": 2,
-            "entryTime": 3,
-            "exitTime": 3,
-            "entryPrice": 3.0,
-            "exitPrice": 3.0,
-            "qty": 3.0,
-            "profit": 0.0,
-        },
-    ]
-    assert result["strategy"]["position"] == [
-        {"barIndex": 1, "size": 1.0, "avgPrice": 2.0},
-        {"barIndex": 2, "size": 4.0, "avgPrice": 2.75},
-        {"barIndex": 2, "size": 0.0, "avgPrice": None},
     ]
     assert result["strategy"]["diagnostics"] == []
     assert "pending" not in result["strategy"]
@@ -4676,7 +5204,7 @@ def test_run_script_returns_strategy_position_state_plots():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -4690,7 +5218,7 @@ def test_run_script_returns_strategy_position_state_fixture_contract():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -4704,7 +5232,7 @@ def test_run_script_returns_strategy_equity_fixture_contract():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -4718,7 +5246,7 @@ def test_run_script_returns_strategy_profit_state_plots():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -4732,7 +5260,7 @@ def test_run_script_returns_strategy_profit_state_fixture_contract():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -4745,12 +5273,12 @@ def test_run_script_returns_strategy_profit_summary_plots():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 0.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0],
-        [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-        [0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 2.0, 2.0, 2.0],
-        [None, None, 1.0, 1.0, 1.0, -0.5, -0.5, -0.5, -0.5],
-        [None, None, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-        [None, None, None, None, None, 2.0, 2.0, 2.0, 2.0],
+        [0.0, 0.0, 0.0, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0],
+        [0.0, 0.0, 0.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+        [None, None, None, 2.0, 2.0, 2.0, 0.5, 0.5, 0.5],
+        [None, None, None, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0],
+        [None, None, None, None, None, None, 1.0, 1.0, 1.0],
     ]
 
 
@@ -4764,7 +5292,7 @@ def test_run_script_returns_strategy_variable_interaction_plots():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -4780,7 +5308,7 @@ def test_run_script_returns_strategy_variable_interactions_fixture_contract():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -4794,7 +5322,7 @@ def test_run_script_returns_strategy_trade_count_plots():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -4808,7 +5336,7 @@ def test_run_script_returns_strategy_trade_count_fixture_plots():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -4836,7 +5364,7 @@ def test_run_script_returns_strategy_closedtrades_field_plots():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -4848,16 +5376,16 @@ def test_run_script_returns_strategy_cash_per_contract_commission_plots():
     ).read_text()
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, 1.0, None, None],
-        [None, None, 2.0, 2.0],
-        [0.0, 0.0, 0.0, 0.0],
-        [100000.0, 99999.0, 100000.0, 100000.0],
+        [None, 1.0, 1.0, None, None],
+        [None, None, None, 2.0, 2.0],
+        [0.0, 0.0, 0.0, 2.0, 2.0],
+        [100000.0, 99999.0, 100001.0, 100002.0, 100002.0],
     ]
-    assert result["strategy"]["trades"][0]["profit"] == 0.0
+    assert result["strategy"]["trades"][0]["profit"] == 2.0
     assert result["strategy"]["equity"][1]["cash"] == 99995.0
     assert result["strategy"]["equity"][1]["equity"] == 99999.0
 
@@ -4868,16 +5396,16 @@ def test_run_script_returns_strategy_cash_per_order_commission_plots():
     ).read_text()
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, 1.5, None, None],
-        [None, None, 3.0, 3.0],
-        [0.0, 0.0, -1.0, -1.0],
-        [100000.0, 99998.5, 99999.0, 99999.0],
+        [None, 1.5, 1.5, None, None],
+        [None, None, None, 3.0, 3.0],
+        [0.0, 0.0, 0.0, 1.0, 1.0],
+        [100000.0, 99998.5, 100000.5, 100001.0, 100001.0],
     ]
-    assert result["strategy"]["trades"][0]["profit"] == -1.0
+    assert result["strategy"]["trades"][0]["profit"] == 1.0
     assert result["strategy"]["equity"][1]["cash"] == 99994.5
     assert result["strategy"]["equity"][1]["equity"] == 99998.5
 
@@ -4886,16 +5414,16 @@ def test_run_script_returns_strategy_percent_commission_plots():
     source = (ROOT / "tests/fixtures/runtime/strategy_commission_percent.pine").read_text()
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, 0.4, None, None],
-        [None, None, 1.0, 1.0],
-        [0.0, 0.0, 1.0, 1.0],
-        [100000.0, 99999.6, 100001.0, 100001.0],
+        [None, 0.4, 0.4, None, None],
+        [None, None, None, 1.2000000000000002, 1.2000000000000002],
+        [0.0, 0.0, 0.0, 2.8, 2.8],
+        [100000.0, 99999.6, 100001.6, 100002.8, 100002.8],
     ]
-    assert result["strategy"]["trades"][0]["profit"] == 1.0
+    assert result["strategy"]["trades"][0]["profit"] == 2.8
     assert result["strategy"]["equity"][1]["cash"] == 99995.6
     assert result["strategy"]["equity"][1]["equity"] == 99999.6
 
@@ -4904,19 +5432,19 @@ def test_run_script_returns_strategy_slippage_plots():
     source = (ROOT / "tests/fixtures/runtime/strategy_slippage.pine").read_text()
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, None, 3.0, 3.0],
-        [None, None, 2.0, 2.0],
-        [None, None, -2.0, -2.0],
-        [100000.0, 99998.0, 99998.0, 99998.0],
+        [None, None, None, 3.0, 3.0],
+        [None, None, None, 3.0, 3.0],
+        [None, None, None, 0.0, 0.0],
+        [100000.0, 99998.0, 100000.0, 100000.0, 100000.0],
     ]
     assert result["strategy"]["orders"][0]["price"] == 3.0
     assert result["strategy"]["trades"][0]["entryPrice"] == 3.0
-    assert result["strategy"]["trades"][0]["exitPrice"] == 2.0
-    assert result["strategy"]["trades"][0]["profit"] == -2.0
+    assert result["strategy"]["trades"][0]["exitPrice"] == 3.0
+    assert result["strategy"]["trades"][0]["profit"] == 0.0
 
 
 def test_run_script_returns_strategy_exit_slippage_plots():
@@ -5042,7 +5570,7 @@ def test_run_script_returns_margin_capital_held_plot():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -5056,7 +5584,7 @@ def test_run_script_returns_margin_capital_held_short_plot():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -5172,7 +5700,7 @@ def test_run_script_returns_strategy_close_trade_contract():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -5184,7 +5712,7 @@ def test_run_script_returns_strategy_close_fixture_contract():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -5198,7 +5726,7 @@ def test_run_script_returns_strategy_close_short_fixture_contract():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -5216,7 +5744,7 @@ def test_run_script_returns_strategy_close_entries_rule_any_close_short_fixture_
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -5274,7 +5802,7 @@ def test_run_script_returns_strategy_close_qty_partial_contract():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -5290,7 +5818,7 @@ def test_run_script_returns_strategy_close_qty_full_clamp_contract():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -5308,7 +5836,7 @@ def test_run_script_returns_strategy_close_qty_percent_precedence_contract():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -5320,7 +5848,7 @@ def test_run_script_returns_strategy_close_all_trade_contract():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -5334,7 +5862,7 @@ def test_run_script_returns_strategy_close_all_short_fixture_contract():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -5362,7 +5890,608 @@ def test_run_script_returns_strategy_close_all_exit_contract():
 
     result = pine_compat.run_script(
         source,
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_close_immediately_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_close_immediately.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_close_immediately.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
         fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_close_all_immediately_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_close_all_immediately.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_close_all_immediately.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_close_immediately_false_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_close_immediately_false.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_close_immediately_false.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_close_immediately_qty_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_close_immediately_qty.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_close_immediately_qty.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_close_immediately_short_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_close_immediately_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_close_immediately_short.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_fill_path_limit_stop_collision_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_fill_path_limit_stop_collision.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_fill_path_limit_stop_collision.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_process_orders_on_close_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_process_orders_on_close.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_process_orders_on_close.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_process_orders_on_close_close_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_process_orders_on_close_close.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_process_orders_on_close_close.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_process_orders_on_close_immediately_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_process_orders_on_close_immediately.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_process_orders_on_close_immediately.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_calc_on_every_tick_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_calc_on_every_tick.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_calc_on_every_tick.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_calc_on_order_fills_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_calc_on_order_fills.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_calc_on_order_fills.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_calc_on_order_fills_false_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_calc_on_order_fills_false.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_calc_on_order_fills_false.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_calc_on_order_fills_exit_avg_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_calc_on_order_fills_exit_avg.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_calc_on_order_fills_exit_avg.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_allow_entry_in_long_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_risk_allow_entry_in_long.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_risk_allow_entry_in_long.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_allow_entry_in_short_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_risk_allow_entry_in_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_risk_allow_entry_in_short.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_allow_entry_in_long_flat_noop_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_risk_allow_entry_in_long_flat_noop.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_risk_allow_entry_in_long_flat_noop.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_allow_entry_in_order_unaffected_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_risk_allow_entry_in_order_unaffected.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_risk_allow_entry_in_order_unaffected.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_allow_entry_in_repeated_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_risk_allow_entry_in_repeated.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_risk_allow_entry_in_repeated.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_max_position_size_reduces_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_risk_max_position_size_reduces.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_risk_max_position_size_reduces.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_max_position_size_full_noop_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_risk_max_position_size_full_noop.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_risk_max_position_size_full_noop.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_max_position_size_reversal_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_risk_max_position_size_reversal.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_risk_max_position_size_reversal.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_max_position_size_order_unaffected_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_risk_max_position_size_order_unaffected.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_risk_max_position_size_order_unaffected.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_max_position_size_pyramiding_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_risk_max_position_size_pyramiding.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_risk_max_position_size_pyramiding.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_max_position_size_limit_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_risk_max_position_size_limit.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_risk_max_position_size_limit.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_max_drawdown_cash_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_risk_max_drawdown_cash.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_risk_max_drawdown_cash.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_risk_max_drawdown_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_max_drawdown_percent_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_risk_max_drawdown_percent.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_risk_max_drawdown_percent.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_risk_max_drawdown_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_max_drawdown_blocks_order_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_risk_max_drawdown_blocks_order.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_risk_max_drawdown_blocks_order.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_risk_max_drawdown_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_max_intraday_filled_orders_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_risk_max_intraday_filled_orders.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_risk_max_intraday_filled_orders.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_max_intraday_filled_orders_reset_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_risk_max_intraday_filled_orders_reset.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_risk_max_intraday_filled_orders_reset.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_risk_max_intraday_filled_orders_reset_bars.csv"
+        ),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_max_intraday_loss_cash_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_risk_max_intraday_loss_cash.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_risk_max_intraday_loss_cash.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_risk_max_drawdown_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_max_intraday_loss_percent_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_risk_max_intraday_loss_percent.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_risk_max_intraday_loss_percent.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_risk_max_drawdown_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_max_cons_loss_days_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_risk_max_cons_loss_days.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_risk_max_cons_loss_days.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_risk_max_cons_loss_days_bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_risk_max_cons_loss_days_no_trade_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_risk_max_cons_loss_days_no_trade.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_risk_max_cons_loss_days_no_trade.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_risk_max_cons_loss_days_no_trade_bars.csv"
+        ),
     )
 
     assert result == expected
@@ -5453,6 +6582,50 @@ def test_run_script_returns_strategy_cancel_all_noop_contract():
         fixture_bars("tests/fixtures/runtime/bars.csv"),
     )
 
+    assert result == expected
+
+
+def test_run_script_returns_strategy_cancel_shared_id_entry_exit_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_cancel_shared_id_entry_exit.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_cancel_shared_id_entry_exit.json"
+        ).read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_cancel_shared_id_close_exit_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_cancel_shared_id_close_exit.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_cancel_shared_id_close_exit.json"
+        ).read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_cancel_all_families_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_cancel_all_families.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_cancel_all_families.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
     assert result == expected
 
 
@@ -6175,6 +7348,32 @@ def test_run_script_returns_strategy_exit_reservation_qty_clamp_fixture_contract
     assert result == expected
 
 
+def test_run_script_returns_strategy_exit_oca_reduce_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_exit_oca_reduce.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_exit_oca_reduce.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_exit_oca_reduce_bracket_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_exit_oca_reduce_bracket.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_exit_oca_reduce_bracket.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+    assert result == expected
+
+
 def test_run_script_returns_strategy_exit_reservation_qty_stop_multi_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_exit_reservation_qty_stop_multi.pine"
@@ -6853,7 +8052,7 @@ def test_run_script_returns_strategy_exit_qty_state_fixture_contract():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -7063,7 +8262,7 @@ def test_run_script_returns_strategy_exit_qty_percent_state_fixture_contract():
 
     result = pine_compat.run_script(
         source,
-        fixture_bars("tests/fixtures/runtime/bars.csv"),
+        fixture_bars("tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
 
     assert result == expected
@@ -11276,26 +12475,26 @@ def test_strategy_remaining_host_golden_parity():
     actual = {
         snapshot: _runtime_fixture_result(source, bars)
         for snapshot, source, bars in [
-            ("runtime_strategy_close_noop.json", "strategy_close_noop.pine", "bars.csv"),
+            ("runtime_strategy_close_noop.json", "strategy_close_noop.pine", "strategy_next_tick_close_bars.csv"),
             (
                 "runtime_strategy_closedtrades_fields_pyramiding.json",
                 "strategy_closedtrades_fields_pyramiding.pine",
-                "bars.csv",
+                "strategy_next_tick_close_bars.csv",
             ),
             (
                 "runtime_strategy_commission_cash_per_contract.json",
                 "strategy_commission_cash_per_contract.pine",
-                "bars.csv",
+                "strategy_next_tick_close_bars.csv",
             ),
             (
                 "runtime_strategy_commission_cash_per_order.json",
                 "strategy_commission_cash_per_order.pine",
-                "bars.csv",
+                "strategy_next_tick_close_bars.csv",
             ),
             (
                 "runtime_strategy_commission_percent.json",
                 "strategy_commission_percent.pine",
-                "bars.csv",
+                "strategy_next_tick_close_bars.csv",
             ),
             ("runtime_strategy_empty.json", "strategy_no_order.pine", "bars.csv"),
             (
@@ -11381,12 +12580,12 @@ def test_strategy_remaining_host_golden_parity():
             (
                 "runtime_strategy_pyramiding_close.json",
                 "strategy_pyramiding_close.pine",
-                "bars.csv",
+                "strategy_next_tick_close_bars.csv",
             ),
             (
                 "runtime_strategy_pyramiding_close_all.json",
                 "strategy_pyramiding_close_all.pine",
-                "bars.csv",
+                "strategy_next_tick_close_bars.csv",
             ),
             (
                 "runtime_strategy_pyramiding_exit_bracket_from_entry.json",
@@ -11416,7 +12615,7 @@ def test_strategy_remaining_host_golden_parity():
             (
                 "runtime_strategy_slippage.json",
                 "strategy_slippage.pine",
-                "bars.csv",
+                "strategy_next_tick_close_bars.csv",
             ),
         ]
     }

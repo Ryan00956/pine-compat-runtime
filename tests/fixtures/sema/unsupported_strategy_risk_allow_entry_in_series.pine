@@ -1,0 +1,4 @@
+//@version=5
+strategy("Unsupported strategy risk allow_entry_in series")
+value = close > open ? "strategy.direction.long" : "strategy.direction.short"
+strategy.risk.allow_entry_in(value)

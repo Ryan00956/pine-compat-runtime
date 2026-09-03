@@ -17,6 +17,15 @@ impl Default for BrokerState {
 
 impl BrokerState {
     #[must_use]
+    pub(crate) fn snapshot(&self) -> Self {
+        self.clone()
+    }
+
+    pub(crate) fn restore(&mut self, snapshot: Self) {
+        *self = snapshot;
+    }
+
+    #[must_use]
     pub fn new(initial_capital: f64) -> Self {
         Self::new_with_commission(initial_capital, None)
     }
@@ -116,6 +125,7 @@ impl BrokerState {
             avg_price: 0.0,
             next_close_metadata: StrategyOrderMetadata::default(),
             next_exit_metadata: StrategyExitMetadata::default(),
+            next_exit_oca_name: None,
             entry_id: None,
             position_entry_name: None,
             entry_bar_index: None,
@@ -142,6 +152,8 @@ impl BrokerState {
             diagnostics: Vec::new(),
             order_book: OrderBook::new(),
             trade_ledger: TradeLedger::default(),
+            risk_rules: super::risk::StrategyRiskRules::default(),
+            risk_state: super::risk::StrategyRiskState::default(),
         }
     }
 
@@ -151,6 +163,13 @@ impl BrokerState {
         close_entries_rule: StrategyCloseEntriesRule,
     ) -> Self {
         self.close_entries_rule = close_entries_rule;
+        self
+    }
+
+    pub(crate) fn with_calc_on_order_fills(mut self, calc_on_order_fills: bool) -> Self {
+        self.order_book
+            .entries_mut()
+            .set_allow_same_bar_price_fills(calc_on_order_fills);
         self
     }
 
@@ -184,6 +203,14 @@ impl BrokerState {
 
     pub(super) fn take_next_exit_metadata(&mut self) -> StrategyExitMetadata {
         std::mem::take(&mut self.next_exit_metadata)
+    }
+
+    pub(crate) fn set_next_exit_oca_name(&mut self, name: Option<String>) {
+        self.next_exit_oca_name = name.filter(|name| !name.is_empty());
+    }
+
+    pub(super) fn current_exit_oca_name(&self) -> Option<&str> {
+        self.next_exit_oca_name.as_deref()
     }
 
     pub(crate) fn with_next_close_metadata<T>(
@@ -230,6 +257,10 @@ impl BrokerState {
 
     pub(super) fn long_limit_exit_is_verified(&self, limit_price: f64, high: f64) -> bool {
         high >= limit_price + self.limit_verification_price_offset
+    }
+
+    pub(crate) fn public_order_event_count(&self) -> usize {
+        self.orders.len()
     }
 
     #[must_use]

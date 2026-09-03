@@ -13,7 +13,14 @@ pub(crate) const MATRIX_UNSUPPORTED_REASON: &str =
 pub(crate) const STRATEGY_UNSUPPORTED_REASON: &str = "strategy order functions beyond the supported strategy.entry/strategy.order market/limit/stop/stop-limit-long and reduce-only-short subset, strategy.close/strategy.close_all/strategy.cancel/strategy.cancel_all/strategy.exit subset, broker emulation settings, and rich backtesting features are not implemented";
 pub(crate) const STRATEGY_RISK_UNSUPPORTED_REASON: &str = "strategy.risk broker risk rules are not implemented; broker emulation must support deterministic order admission, pending-order cancellation, account thresholds, and rule state before risk directives can be accepted";
 pub(crate) fn unsupported_strategy_reason(name: &str) -> Option<&'static str> {
-    if name.starts_with("strategy.risk.") {
+    if name.starts_with("strategy.risk.")
+        && name != "strategy.risk.allow_entry_in"
+        && name != "strategy.risk.max_position_size"
+        && name != "strategy.risk.max_drawdown"
+        && name != "strategy.risk.max_intraday_loss"
+        && name != "strategy.risk.max_intraday_filled_orders"
+        && name != "strategy.risk.max_cons_loss_days"
+    {
         return Some(STRATEGY_RISK_UNSUPPORTED_REASON);
     }
     if name == "strategy" || name.starts_with("strategy.") {

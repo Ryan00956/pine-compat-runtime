@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported strategy order oca reduce")
+strategy.order("A", strategy.long, qty=1, oca_name="g", oca_type=strategy.oca.reduce)

@@ -7,3 +7,4 @@ pub(crate) mod history;
 pub(crate) mod persistence;
 pub(crate) mod realtime;
 pub(crate) mod statements;
+pub(crate) mod strategy_scheduler;

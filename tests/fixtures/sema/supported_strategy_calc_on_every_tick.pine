@@ -1,0 +1,5 @@
+//@version=5
+strategy("Supported calc_on_every_tick", calc_on_every_tick=true)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+plot(close)

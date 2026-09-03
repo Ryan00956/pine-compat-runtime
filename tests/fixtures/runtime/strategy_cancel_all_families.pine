@@ -1,0 +1,14 @@
+//@version=5
+strategy("Cancel all pending families")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
+    strategy.order("A", strategy.long, qty=1, limit=3, oca_name="g", oca_type=strategy.oca.reduce)
+    strategy.order("B", strategy.long, qty=1, stop=5, limit=4, oca_name="g", oca_type=strategy.oca.reduce)
+    strategy.exit("XL", "L", stop=3, qty=1)
+    strategy.exit("XP", "L", limit=4, qty=1)
+    strategy.close("L")
+    strategy.cancel_all()
+plot(strategy.position_size)
+plot(strategy.opentrades)
+plot(strategy.closedtrades)

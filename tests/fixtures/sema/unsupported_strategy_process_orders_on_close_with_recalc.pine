@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported process_orders_on_close with magnifier", process_orders_on_close=true, calc_on_order_fills=true, use_bar_magnifier=true)
+plot(close)

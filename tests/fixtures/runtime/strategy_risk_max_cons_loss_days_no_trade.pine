@@ -1,0 +1,10 @@
+//@version=5
+strategy("Max consecutive loss days no-trade reset", pyramiding=3)
+strategy.risk.max_cons_loss_days(2)
+if bar_index == 0 or bar_index == 4
+    strategy.entry("L", strategy.long, qty=1)
+if bar_index == 1 or bar_index == 5
+    strategy.close("L", immediately=true)
+if bar_index == 6
+    strategy.entry("X", strategy.long, qty=1)
+plot(strategy.position_size)

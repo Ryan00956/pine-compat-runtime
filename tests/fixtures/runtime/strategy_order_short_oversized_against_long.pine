@@ -1,0 +1,9 @@
+//@version=5
+strategy("Market short order crosses zero against long")
+if bar_index == 0
+    strategy.entry("E", strategy.long, qty=1)
+if bar_index == 1
+    strategy.order("R", strategy.short, qty=3)
+plot(strategy.position_size)
+plot(strategy.closedtrades)
+plot(strategy.opentrades)

@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported strategy risk max_drawdown indicator")
+strategy.risk.max_drawdown(10, strategy.cash)

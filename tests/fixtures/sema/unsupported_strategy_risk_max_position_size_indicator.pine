@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported strategy risk max_position_size indicator")
+strategy.risk.max_position_size(1)

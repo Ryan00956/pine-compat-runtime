@@ -1,0 +1,8 @@
+//@version=5
+strategy("Generic order same-id limit replaced by stop")
+if bar_index == 1
+    strategy.order("O", strategy.long, qty=1, limit=3)
+    strategy.order("O", strategy.long, qty=1, stop=3)
+plot(strategy.position_size)
+plot(strategy.closedtrades)
+plot(strategy.opentrades)

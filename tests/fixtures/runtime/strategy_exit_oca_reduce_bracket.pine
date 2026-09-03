@@ -1,0 +1,10 @@
+//@version=5
+strategy("Exit OCA reduce with bracket peer")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
+    strategy.exit("BR", "L", stop=0.5, limit=3, oca_name="g")
+    strategy.exit("X", "L", stop=3, qty=1, oca_name="g")
+plot(strategy.position_size)
+plot(strategy.closedtrades)
+plot(strategy.opentrades)

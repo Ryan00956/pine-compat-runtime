@@ -1,0 +1,10 @@
+//@version=5
+strategy("Max intraday filled orders", pyramiding=3)
+strategy.risk.max_intraday_filled_orders(1)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+if bar_index == 2
+    strategy.entry("X", strategy.long, qty=1)
+if bar_index == 3
+    strategy.order("O", strategy.long, qty=1)
+plot(strategy.position_size)

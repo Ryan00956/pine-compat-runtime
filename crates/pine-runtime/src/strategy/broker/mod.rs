@@ -8,17 +8,27 @@ mod exit_orders;
 mod exit_placement;
 mod exit_price_orders;
 mod exits;
+mod fill_apply;
+mod fill_transition;
 mod fills;
 mod ledger;
 mod loss_limit_brackets;
 mod loss_profit_brackets;
+mod oca;
 mod order_book;
+mod pending_closes;
 mod pending_entries;
 mod pending_entry_fills;
 mod pending_exits;
+mod risk;
 mod state;
 mod stop_profit_brackets;
 mod types;
+
+#[cfg(test)]
+mod netting_matrix_tests;
+#[cfg(test)]
+mod oca_storage_tests;
 
 use pine_ir::{StrategyCloseEntriesRule, StrategyCommission, StrategyMarginSetting};
 
@@ -30,6 +40,7 @@ use ledger::{TradeDirection, TradeLedger};
 pub(crate) use loss_limit_brackets::LossLimitBracketSpec;
 pub(crate) use loss_profit_brackets::LossProfitBracketSpec;
 use order_book::OrderBook;
+pub(crate) use pending_closes::PendingCloseQuantity;
 use pending_entries::StopLimitEntryPlacement;
 use pending_exits::{
     PendingExit, PendingExitQuantity, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate,
@@ -60,6 +71,7 @@ pub struct BrokerState {
     avg_price: f64,
     next_close_metadata: StrategyOrderMetadata,
     next_exit_metadata: StrategyExitMetadata,
+    next_exit_oca_name: Option<String>,
     entry_id: Option<String>,
     position_entry_name: Option<String>,
     entry_bar_index: Option<usize>,
@@ -86,6 +98,8 @@ pub struct BrokerState {
     diagnostics: Vec<RuntimeDiagnostic>,
     order_book: OrderBook,
     trade_ledger: TradeLedger,
+    risk_rules: risk::StrategyRiskRules,
+    risk_state: risk::StrategyRiskState,
 }
 
 impl BrokerState {
@@ -121,8 +135,24 @@ impl BrokerState {
         self.position_size <= 0.0 && self.trade_ledger.open_count() < self.pyramiding_limit
     }
 
+    fn can_place_long_entry(&self) -> bool {
+        self.position_size < 0.0 || self.can_open_long_entry()
+    }
+
+    fn can_place_short_entry(&self) -> bool {
+        self.position_size > 0.0 || self.can_open_short_entry()
+    }
+
+    fn same_side_long_entry_blocked(&self) -> bool {
+        self.position_size >= 0.0 && !self.can_open_long_entry()
+    }
+
+    fn same_side_short_entry_blocked(&self) -> bool {
+        self.position_size <= 0.0 && !self.can_open_short_entry()
+    }
+
     pub(crate) fn cancel_exit_for_entry(&mut self, entry_id: &str) {
-        self.order_book.exits_mut().clear_for_entry(entry_id);
+        self.order_book.clear_exits_for_entry(entry_id);
     }
 
     pub(crate) fn cancel_pending_order(&mut self, id: &str) {
@@ -131,6 +161,50 @@ impl BrokerState {
 
     pub(crate) fn cancel_all_pending_orders(&mut self) {
         self.order_book.clear_all();
+    }
+
+    fn blocked_trade_action(&self) -> bool {
+        self.check_risk_before_order() != risk::RiskAdmission::Allow
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn place_price_based_strategy_entry(
+        &mut self,
+        direction: pending_entries::PendingEntryDirection,
+        kind: pending_entries::PendingEntryKind,
+        id: String,
+        qty: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+        place_requested: impl FnOnce(&mut Self, String, f64, usize, StrategyOrderMetadata),
+    ) {
+        match self.gate_strategy_entry(direction, kind) {
+            None => {}
+            Some(pending_entries::PendingEntryKind::Market) => match direction {
+                pending_entries::PendingEntryDirection::Long => {
+                    self.place_pending_market_long_entry_with_metadata(
+                        id,
+                        qty,
+                        created_bar_index,
+                        metadata,
+                    );
+                }
+                pending_entries::PendingEntryDirection::Short => {
+                    self.place_pending_market_short_entry_with_metadata(
+                        id,
+                        qty,
+                        created_bar_index,
+                        metadata,
+                    );
+                }
+            },
+            Some(_) => {
+                let Some(qty) = self.clamp_strategy_entry_qty(direction, qty) else {
+                    return;
+                };
+                place_requested(self, id, qty, created_bar_index, metadata);
+            }
+        }
     }
 
     #[allow(dead_code)]
@@ -155,6 +229,20 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
+        if self
+            .gate_strategy_entry(
+                pending_entries::PendingEntryDirection::Long,
+                pending_entries::PendingEntryKind::Market,
+            )
+            .is_none()
+        {
+            return;
+        }
+        let Some(qty) =
+            self.clamp_strategy_entry_qty(pending_entries::PendingEntryDirection::Long, qty)
+        else {
+            return;
+        };
         if self.position_size >= 0.0 && !self.can_open_long_entry() {
             return;
         }
@@ -191,6 +279,9 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
+        if self.blocked_trade_action() {
+            return;
+        }
         self.order_book
             .entries_mut()
             .place_market_long_without_pyramiding_with_metadata(
@@ -224,6 +315,9 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
+        if self.blocked_trade_action() {
+            return;
+        }
         self.order_book.entries_mut().place_market_short_order(
             id,
             qty,
@@ -255,6 +349,20 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
+        if self
+            .gate_strategy_entry(
+                pending_entries::PendingEntryDirection::Short,
+                pending_entries::PendingEntryKind::Market,
+            )
+            .is_none()
+        {
+            return;
+        }
+        let Some(qty) =
+            self.clamp_strategy_entry_qty(pending_entries::PendingEntryDirection::Short, qty)
+        else {
+            return;
+        };
         if self.position_size <= 0.0 && !self.can_open_short_entry() {
             return;
         }
@@ -294,19 +402,29 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
-        if !self.can_open_long_entry() {
-            return;
-        }
-        self.order_book
-            .entries_mut()
-            .place_limit_long_with_metadata(
-                id,
-                qty,
-                limit,
-                created_bar_index,
-                metadata,
-                &mut self.diagnostics,
-            );
+        self.place_price_based_strategy_entry(
+            pending_entries::PendingEntryDirection::Long,
+            pending_entries::PendingEntryKind::Limit { price: limit },
+            id,
+            qty,
+            created_bar_index,
+            metadata,
+            |this, id, qty, created_bar_index, metadata| {
+                if !this.can_place_long_entry() {
+                    return;
+                }
+                this.order_book
+                    .entries_mut()
+                    .place_limit_long_with_metadata(
+                        id,
+                        qty,
+                        limit,
+                        created_bar_index,
+                        metadata,
+                        &mut this.diagnostics,
+                    );
+            },
+        );
     }
 
     #[allow(dead_code)]
@@ -334,19 +452,29 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
-        if !self.can_open_short_entry() {
-            return;
-        }
-        self.order_book
-            .entries_mut()
-            .place_limit_short_with_metadata(
-                id,
-                qty,
-                limit,
-                created_bar_index,
-                metadata,
-                &mut self.diagnostics,
-            );
+        self.place_price_based_strategy_entry(
+            pending_entries::PendingEntryDirection::Short,
+            pending_entries::PendingEntryKind::Limit { price: limit },
+            id,
+            qty,
+            created_bar_index,
+            metadata,
+            |this, id, qty, created_bar_index, metadata| {
+                if !this.can_place_short_entry() {
+                    return;
+                }
+                this.order_book
+                    .entries_mut()
+                    .place_limit_short_with_metadata(
+                        id,
+                        qty,
+                        limit,
+                        created_bar_index,
+                        metadata,
+                        &mut this.diagnostics,
+                    );
+            },
+        );
     }
 
     #[allow(dead_code)]
@@ -374,19 +502,29 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
-        if !self.can_open_short_entry() {
-            return;
-        }
-        self.order_book
-            .entries_mut()
-            .place_stop_short_with_metadata(
-                id,
-                qty,
-                stop,
-                created_bar_index,
-                metadata,
-                &mut self.diagnostics,
-            );
+        self.place_price_based_strategy_entry(
+            pending_entries::PendingEntryDirection::Short,
+            pending_entries::PendingEntryKind::Stop { price: stop },
+            id,
+            qty,
+            created_bar_index,
+            metadata,
+            |this, id, qty, created_bar_index, metadata| {
+                if !this.can_place_short_entry() {
+                    return;
+                }
+                this.order_book
+                    .entries_mut()
+                    .place_stop_short_with_metadata(
+                        id,
+                        qty,
+                        stop,
+                        created_bar_index,
+                        metadata,
+                        &mut this.diagnostics,
+                    );
+            },
+        );
     }
 
     #[allow(dead_code)]
@@ -417,22 +555,36 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
-        if !self.can_open_short_entry() {
-            return;
-        }
-        self.order_book
-            .entries_mut()
-            .place_stop_limit_short_with_metadata(
-                StopLimitEntryPlacement {
-                    id,
-                    quantity: qty,
-                    stop_price: stop,
-                    limit_price: limit,
-                    created_bar_index,
-                    metadata,
-                },
-                &mut self.diagnostics,
-            );
+        self.place_price_based_strategy_entry(
+            pending_entries::PendingEntryDirection::Short,
+            pending_entries::PendingEntryKind::StopLimit {
+                stop_price: stop,
+                limit_price: limit,
+                activated_bar_index: None,
+            },
+            id,
+            qty,
+            created_bar_index,
+            metadata,
+            |this, id, qty, created_bar_index, metadata| {
+                if !this.can_place_short_entry() {
+                    return;
+                }
+                this.order_book
+                    .entries_mut()
+                    .place_stop_limit_short_with_metadata(
+                        StopLimitEntryPlacement {
+                            id,
+                            quantity: qty,
+                            stop_price: stop,
+                            limit_price: limit,
+                            created_bar_index,
+                            metadata,
+                        },
+                        &mut this.diagnostics,
+                    );
+            },
+        );
     }
 
     #[allow(dead_code)]
@@ -460,6 +612,9 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
+        if self.blocked_trade_action() {
+            return;
+        }
         self.order_book
             .entries_mut()
             .place_limit_long_without_pyramiding_with_metadata(
@@ -497,7 +652,7 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
-        if self.position_size > 0.0 {
+        if self.blocked_trade_action() {
             return;
         }
         self.order_book
@@ -537,16 +692,26 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
-        if !self.can_open_long_entry() {
-            return;
-        }
-        self.order_book.entries_mut().place_stop_long_with_metadata(
+        self.place_price_based_strategy_entry(
+            pending_entries::PendingEntryDirection::Long,
+            pending_entries::PendingEntryKind::Stop { price: stop },
             id,
             qty,
-            stop,
             created_bar_index,
             metadata,
-            &mut self.diagnostics,
+            |this, id, qty, created_bar_index, metadata| {
+                if !this.can_place_long_entry() {
+                    return;
+                }
+                this.order_book.entries_mut().place_stop_long_with_metadata(
+                    id,
+                    qty,
+                    stop,
+                    created_bar_index,
+                    metadata,
+                    &mut this.diagnostics,
+                );
+            },
         );
     }
 
@@ -575,6 +740,9 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
+        if self.blocked_trade_action() {
+            return;
+        }
         self.order_book
             .entries_mut()
             .place_stop_long_without_pyramiding_with_metadata(
@@ -612,7 +780,7 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
-        if self.position_size > 0.0 {
+        if self.blocked_trade_action() {
             return;
         }
         self.order_book
@@ -655,22 +823,36 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
-        if !self.can_open_long_entry() {
-            return;
-        }
-        self.order_book
-            .entries_mut()
-            .place_stop_limit_long_with_metadata(
-                StopLimitEntryPlacement {
-                    id,
-                    quantity: qty,
-                    stop_price: stop,
-                    limit_price: limit,
-                    created_bar_index,
-                    metadata,
-                },
-                &mut self.diagnostics,
-            );
+        self.place_price_based_strategy_entry(
+            pending_entries::PendingEntryDirection::Long,
+            pending_entries::PendingEntryKind::StopLimit {
+                stop_price: stop,
+                limit_price: limit,
+                activated_bar_index: None,
+            },
+            id,
+            qty,
+            created_bar_index,
+            metadata,
+            |this, id, qty, created_bar_index, metadata| {
+                if !this.can_place_long_entry() {
+                    return;
+                }
+                this.order_book
+                    .entries_mut()
+                    .place_stop_limit_long_with_metadata(
+                        StopLimitEntryPlacement {
+                            id,
+                            quantity: qty,
+                            stop_price: stop,
+                            limit_price: limit,
+                            created_bar_index,
+                            metadata,
+                        },
+                        &mut this.diagnostics,
+                    );
+            },
+        );
     }
 
     #[allow(dead_code)]
@@ -701,6 +883,9 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
+        if self.blocked_trade_action() {
+            return;
+        }
         self.order_book
             .entries_mut()
             .place_stop_limit_long_without_pyramiding_with_metadata(
@@ -744,7 +929,7 @@ impl BrokerState {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
     ) {
-        if self.position_size > 0.0 {
+        if self.blocked_trade_action() {
             return;
         }
         self.order_book
@@ -939,7 +1124,16 @@ impl BrokerState {
         };
         if let Some(exit_price) = triggered_price {
             let from_entry = pending_exit.from_entry.clone();
+            let exit_id = pending_exit.id.clone();
+            let target_trade_key = pending_exit.target_trade_key;
+            let filled_qty = pending_exit.reserved_quantity.min(self.position_size.abs());
             self.fill_pending_exit(pending_exit, bar_index, time, exit_price);
+            self.order_book.apply_oca_after_exit_fill(
+                &exit_id,
+                &from_entry,
+                target_trade_key,
+                filled_qty,
+            );
             if self.position_size == 0.0 {
                 self.order_book.exits_mut().clear_all();
             } else {
@@ -1045,7 +1239,7 @@ impl BrokerState {
         };
 
         let mut filled_identities = Vec::new();
-        for (pending_exit, exit_price, side) in touched_candidates {
+        for (mut pending_exit, exit_price, side) in touched_candidates {
             if side != winning_side {
                 continue;
             }
@@ -1058,12 +1252,30 @@ impl BrokerState {
                     .clear_for_entry(&pending_exit.from_entry);
                 continue;
             }
-            filled_identities.push((
-                pending_exit.id.clone(),
-                pending_exit.from_entry.clone(),
-                pending_exit.target_trade_key,
-            ));
+            let exit_id = pending_exit.id.clone();
+            let from_entry = pending_exit.from_entry.clone();
+            let target_trade_key = pending_exit.target_trade_key;
+            if let Some(current) = self.order_book.exits().find_by_identity_and_key(
+                &exit_id,
+                &from_entry,
+                target_trade_key,
+            ) {
+                if current.reserved_quantity <= 0.0 {
+                    continue;
+                }
+                pending_exit.reserved_quantity = current.reserved_quantity;
+            } else {
+                continue;
+            }
+            filled_identities.push((exit_id.clone(), from_entry.clone(), target_trade_key));
+            let filled_qty = pending_exit.reserved_quantity.min(self.position_size.abs());
             self.fill_pending_exit(pending_exit, bar_index, time, exit_price);
+            self.order_book.apply_oca_after_exit_fill(
+                &exit_id,
+                &from_entry,
+                target_trade_key,
+                filled_qty,
+            );
         }
 
         if self.position_size == 0.0 {
@@ -1081,5 +1293,17 @@ impl BrokerState {
     }
 }
 
+#[cfg(test)]
+mod fill_origin_characterization_tests;
+#[cfg(test)]
+mod ledger_invariant_tests;
+#[cfg(test)]
+mod pending_close_tests;
+#[cfg(test)]
+mod pending_entry_origin_tests;
+#[cfg(test)]
+mod risk_storage_tests;
+#[cfg(test)]
+mod snapshot_tests;
 #[cfg(test)]
 mod tests;

@@ -1,0 +1,8 @@
+//@version=5
+strategy("Market short order flattens long")
+if bar_index == 0
+    strategy.entry("E", strategy.long, qty=2)
+if bar_index == 1
+    strategy.order("R", strategy.short, qty=2)
+plot(strategy.position_size)
+plot(strategy.closedtrades)

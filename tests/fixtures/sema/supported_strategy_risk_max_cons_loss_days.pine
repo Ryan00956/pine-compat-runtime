@@ -1,0 +1,7 @@
+//@version=5
+strategy("Supported strategy risk max_cons_loss_days")
+limit = 2
+strategy.risk.max_cons_loss_days(2)
+strategy.risk.max_cons_loss_days(limit)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)

@@ -1,0 +1,9 @@
+//@version=5
+strategy("OCA cancel cancels peer after fill")
+if bar_index == 1
+    strategy.order("A", strategy.long, qty=1, limit=3, oca_name="g", oca_type=strategy.oca.cancel)
+    strategy.order("B", strategy.long, qty=1, limit=3, oca_name="g", oca_type=strategy.oca.cancel)
+    strategy.order("C", strategy.long, qty=1, limit=3, oca_name="other", oca_type=strategy.oca.cancel)
+plot(strategy.position_size)
+plot(strategy.opentrades)
+plot(strategy.closedtrades)

@@ -278,15 +278,14 @@ impl TradeLedger {
         }
     }
 
-    fn rebuild_net_position(&mut self) {
+    pub(super) fn computed_net_position(&self) -> NetPosition {
         let signed_size: f64 = self
             .open_trades
             .iter()
             .map(|trade| trade.direction.signed_quantity(trade.quantity))
             .sum();
         if !signed_size.is_finite() || signed_size == 0.0 {
-            self.net_position = NetPosition::default();
-            return;
+            return NetPosition::default();
         }
 
         let net_side = if signed_size > 0.0 {
@@ -304,13 +303,16 @@ impl TradeLedger {
             side_quantity += trade.quantity;
         }
         if !side_quantity.is_finite() || side_quantity <= 0.0 {
-            self.net_position = NetPosition::default();
-            return;
+            return NetPosition::default();
         }
-        self.net_position = NetPosition {
+        NetPosition {
             signed_size,
             avg_price: weighted_entry_value / side_quantity,
-        };
+        }
+    }
+
+    fn rebuild_net_position(&mut self) {
+        self.net_position = self.computed_net_position();
     }
 
     #[cfg(test)]

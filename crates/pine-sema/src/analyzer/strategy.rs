@@ -90,6 +90,8 @@ enum StrategyExitArgFamily {
     Quantity,
     PercentQuantity,
     Metadata,
+    OcaName,
+    #[allow(dead_code)]
     UnsupportedOption,
 }
 
@@ -108,7 +110,7 @@ fn strategy_exit_arg_family(name: &str) -> Option<StrategyExitArgFamily> {
         | "alert_profit" | "alert_loss" | "alert_trailing" | "disable_alert" => {
             Some(StrategyExitArgFamily::Metadata)
         }
-        "oca_name" => Some(StrategyExitArgFamily::UnsupportedOption),
+        "oca_name" => Some(StrategyExitArgFamily::OcaName),
         _ => None,
     }
 }
@@ -186,6 +188,12 @@ impl Analyzer {
                 | "strategy.cancel"
                 | "strategy.cancel_all"
                 | "strategy.exit"
+                | "strategy.risk.allow_entry_in"
+                | "strategy.risk.max_position_size"
+                | "strategy.risk.max_drawdown"
+                | "strategy.risk.max_intraday_loss"
+                | "strategy.risk.max_intraday_filled_orders"
+                | "strategy.risk.max_cons_loss_days"
         ) {
             return;
         }
@@ -206,6 +214,18 @@ impl Analyzer {
             self.validate_strategy_close_args(args);
         } else if name == "strategy.exit" {
             self.validate_strategy_exit_args(args);
+        } else if name == "strategy.risk.allow_entry_in" {
+            self.validate_strategy_risk_allow_entry_in_args(args);
+        } else if name == "strategy.risk.max_position_size" {
+            self.validate_strategy_risk_max_position_size_args(args);
+        } else if name == "strategy.risk.max_drawdown" {
+            self.validate_strategy_risk_max_drawdown_args(args);
+        } else if name == "strategy.risk.max_intraday_loss" {
+            self.validate_strategy_risk_max_intraday_loss_args(args);
+        } else if name == "strategy.risk.max_intraday_filled_orders" {
+            self.validate_strategy_risk_max_intraday_filled_orders_args(args);
+        } else if name == "strategy.risk.max_cons_loss_days" {
+            self.validate_strategy_risk_max_cons_loss_days_args(args);
         }
     }
 
@@ -308,6 +328,205 @@ impl Analyzer {
         }
     }
 
+    pub(crate) fn validate_strategy_risk_allow_entry_in_args(&mut self, args: &[CallArg]) {
+        fn arg_name(index: usize, arg: &CallArg) -> Option<&str> {
+            arg.name
+                .as_deref()
+                .or_else(|| ["value"].get(index).copied())
+        }
+        for (index, arg) in args.iter().enumerate() {
+            if arg_name(index, arg) != Some("value") {
+                continue;
+            }
+            let Some(value) = self.known_const_string_value(&arg.value) else {
+                continue;
+            };
+            if !matches!(
+                value.as_str(),
+                "strategy.direction.all" | "strategy.direction.long" | "strategy.direction.short"
+            ) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    "`strategy.risk.allow_entry_in` argument `value` only supports strategy.direction.all, strategy.direction.long, or strategy.direction.short",
+                    arg.span,
+                ));
+            }
+        }
+    }
+
+    pub(crate) fn validate_strategy_risk_max_drawdown_args(&mut self, args: &[CallArg]) {
+        fn arg_name(index: usize, arg: &CallArg) -> Option<&str> {
+            arg.name
+                .as_deref()
+                .or_else(|| ["value", "type", "alert_message"].get(index).copied())
+        }
+        let kind = args.iter().enumerate().find_map(|(index, arg)| {
+            (arg_name(index, arg) == Some("type"))
+                .then(|| self.known_const_string_value(&arg.value))
+                .flatten()
+        });
+        for (index, arg) in args.iter().enumerate() {
+            let Some(name) = arg_name(index, arg) else {
+                continue;
+            };
+            match name {
+                "value" => {
+                    if let Some(value) = self.known_const_numeric_value(&arg.value) {
+                        if !value.is_finite() || value <= 0.0 {
+                            self.diagnostics.push(Diagnostic::error(
+                                "E_CALL_ARG_VALUE",
+                                "`strategy.risk.max_drawdown` argument `value` must be finite and positive",
+                                arg.span,
+                            ));
+                        } else if kind.as_deref() == Some("strategy.percent_of_equity")
+                            && value > 100.0
+                        {
+                            self.diagnostics.push(Diagnostic::error(
+                                "E_CALL_ARG_VALUE",
+                                "`strategy.risk.max_drawdown` percent `value` must be at most 100",
+                                arg.span,
+                            ));
+                        }
+                    }
+                }
+                "type" => match kind.as_deref() {
+                    Some("strategy.cash" | "strategy.percent_of_equity") => {}
+                    Some(_) => {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy.risk.max_drawdown` argument `type` only supports strategy.cash or strategy.percent_of_equity",
+                            arg.span,
+                        ));
+                    }
+                    None => {}
+                },
+                "alert_message" => {}
+                _ => {}
+            }
+        }
+    }
+
+    pub(crate) fn validate_strategy_risk_max_intraday_loss_args(&mut self, args: &[CallArg]) {
+        fn arg_name(index: usize, arg: &CallArg) -> Option<&str> {
+            arg.name
+                .as_deref()
+                .or_else(|| ["value", "type", "alert_message"].get(index).copied())
+        }
+        let kind = args.iter().enumerate().find_map(|(index, arg)| {
+            (arg_name(index, arg) == Some("type"))
+                .then(|| self.known_const_string_value(&arg.value))
+                .flatten()
+        });
+        for (index, arg) in args.iter().enumerate() {
+            let Some(name) = arg_name(index, arg) else {
+                continue;
+            };
+            match name {
+                "value" => {
+                    if let Some(value) = self.known_const_numeric_value(&arg.value) {
+                        if !value.is_finite() || value <= 0.0 {
+                            self.diagnostics.push(Diagnostic::error(
+                                "E_CALL_ARG_VALUE",
+                                "`strategy.risk.max_intraday_loss` argument `value` must be finite and positive",
+                                arg.span,
+                            ));
+                        } else if kind.as_deref() == Some("strategy.percent_of_equity")
+                            && value > 100.0
+                        {
+                            self.diagnostics.push(Diagnostic::error(
+                                "E_CALL_ARG_VALUE",
+                                "`strategy.risk.max_intraday_loss` percent `value` must be at most 100",
+                                arg.span,
+                            ));
+                        }
+                    }
+                }
+                "type" => match kind.as_deref() {
+                    Some("strategy.cash" | "strategy.percent_of_equity") => {}
+                    Some(_) => {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy.risk.max_intraday_loss` argument `type` only supports strategy.cash or strategy.percent_of_equity",
+                            arg.span,
+                        ));
+                    }
+                    None => {}
+                },
+                "alert_message" => {}
+                _ => {}
+            }
+        }
+    }
+
+    pub(crate) fn validate_strategy_risk_max_cons_loss_days_args(&mut self, args: &[CallArg]) {
+        fn arg_name(index: usize, arg: &CallArg) -> Option<&str> {
+            arg.name
+                .as_deref()
+                .or_else(|| ["count", "alert_message"].get(index).copied())
+        }
+        for (index, arg) in args.iter().enumerate() {
+            if arg_name(index, arg) != Some("count") {
+                continue;
+            }
+            if let Some(count) = self.known_const_numeric_value(&arg.value)
+                && (!count.is_finite() || count <= 0.0 || count != count.trunc())
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    "`strategy.risk.max_cons_loss_days` argument `count` must be a finite positive integer",
+                    arg.span,
+                ));
+            }
+        }
+    }
+
+    pub(crate) fn validate_strategy_risk_max_intraday_filled_orders_args(
+        &mut self,
+        args: &[CallArg],
+    ) {
+        fn arg_name(index: usize, arg: &CallArg) -> Option<&str> {
+            arg.name
+                .as_deref()
+                .or_else(|| ["count", "alert_message"].get(index).copied())
+        }
+        for (index, arg) in args.iter().enumerate() {
+            if arg_name(index, arg) != Some("count") {
+                continue;
+            }
+            if let Some(count) = self.known_const_numeric_value(&arg.value)
+                && (!count.is_finite() || count <= 0.0 || count != count.trunc())
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    "`strategy.risk.max_intraday_filled_orders` argument `count` must be a finite positive integer",
+                    arg.span,
+                ));
+            }
+        }
+    }
+
+    pub(crate) fn validate_strategy_risk_max_position_size_args(&mut self, args: &[CallArg]) {
+        fn arg_name(index: usize, arg: &CallArg) -> Option<&str> {
+            arg.name
+                .as_deref()
+                .or_else(|| ["contracts"].get(index).copied())
+        }
+        for (index, arg) in args.iter().enumerate() {
+            if arg_name(index, arg) != Some("contracts") {
+                continue;
+            }
+            if let Some(contracts) = self.known_const_numeric_value(&arg.value)
+                && (!contracts.is_finite() || contracts <= 0.0)
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    "`strategy.risk.max_position_size` argument `contracts` must be finite and positive",
+                    arg.span,
+                ));
+            }
+        }
+    }
+
     pub(crate) fn validate_strategy_order_args(&mut self, args: &[CallArg]) {
         fn strategy_order_arg_name(index: usize, arg: &CallArg) -> Option<&str> {
             arg.name.as_deref().or_else(|| {
@@ -399,15 +618,17 @@ impl Analyzer {
                         ));
                     }
                 }
-                "oca_name" | "oca_type" => {
-                    self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_NAME",
-                            format!(
-                            "`strategy.order` argument `{name}` is outside the supported market/limit/stop/stop-limit subset"
-                        ),
+                "oca_name" => {}
+                "oca_type" => match self.known_const_string_value(&arg.value).as_deref() {
+                    Some("strategy.oca.none" | "strategy.oca.cancel" | "strategy.oca.reduce") => {}
+                    _ => {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy.order` argument `oca_type` only supports strategy.oca.none, strategy.oca.cancel, or strategy.oca.reduce",
                             arg.span,
                         ));
-                }
+                    }
+                },
                 "comment" | "alert_message" | "disable_alert" => {}
                 _ => {}
             }
@@ -498,7 +719,7 @@ impl Analyzer {
                 }
                 StrategyExitArgFamily::TrailingOffset => has_trail_offset = true,
                 StrategyExitArgFamily::Quantity | StrategyExitArgFamily::PercentQuantity => {}
-                StrategyExitArgFamily::Metadata => {}
+                StrategyExitArgFamily::Metadata | StrategyExitArgFamily::OcaName => {}
                 StrategyExitArgFamily::UnsupportedOption => {
                     has_unsupported_arg = true;
                     self.diagnostics.push(Diagnostic::error(

@@ -81,6 +81,14 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    pub(super) fn eval_strategy_immediately_arg(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+    ) -> Result<bool, RuntimeError> {
+        self.eval_optional_bool_arg(args, index, "immediately")
+    }
+
     fn eval_optional_bool_arg(
         &mut self,
         args: &[HirCallArg],

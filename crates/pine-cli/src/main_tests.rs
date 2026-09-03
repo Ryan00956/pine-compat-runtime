@@ -627,6 +627,10 @@ fn formats_profiled_result_json() {
         table_capacity: 0,
         table_snapshot_capacity: 0,
         table_cell_capacity: 0,
+        strategy_script_passes: 3,
+        strategy_recalculation_passes: 0,
+        strategy_max_passes_on_bar: 1,
+        strategy_max_recalculation_passes: 1000,
     };
     let output = public_runtime_profiled_result_json(&result, &profile);
     let expected_prefix = format!(r#"{{"schemaVersion":{},"#, PUBLIC_RUNTIME_SCHEMA_VERSION);
@@ -664,6 +668,10 @@ fn formats_profiled_result_json() {
     assert!(output.contains(r#""boxSnapshots":0"#));
     assert!(output.contains(r#""tables":0"#));
     assert!(output.contains(r#""tableCells":0"#));
+    assert!(output.contains(r#""strategyScriptPasses":3"#));
+    assert!(output.contains(r#""strategyRecalculationPasses":0"#));
+    assert!(output.contains(r#""strategyMaxPassesOnBar":1"#));
+    assert!(output.contains(r#""strategyMaxRecalculationPasses":1000"#));
 }
 
 #[test]

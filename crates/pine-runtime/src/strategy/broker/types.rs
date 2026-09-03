@@ -1,3 +1,60 @@
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(super) struct InternalOrderKey(pub(super) u64);
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(super) enum OcaType {
+    None,
+    Cancel,
+    Reduce,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub(super) struct OcaGroupKey {
+    pub(super) name: String,
+    pub(super) oca_type: OcaType,
+}
+
+impl OcaGroupKey {
+    #[allow(dead_code)]
+    pub(super) fn new(name: impl Into<String>, oca_type: OcaType) -> Self {
+        Self {
+            name: name.into(),
+            oca_type,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, PartialEq)]
+pub(super) struct OcaPeerEffects {
+    pub(super) cancelled: Vec<InternalOrderKey>,
+    pub(super) reduced: std::collections::HashMap<InternalOrderKey, f64>,
+    pub(super) reduce_taken: Vec<InternalOrderKey>,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub(super) enum OcaMember {
+    Order(InternalOrderKey),
+    Exit {
+        id: String,
+        from_entry: String,
+        target_trade_key: Option<u64>,
+    },
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum StrategyCommandOrigin {
+    Entry,
+    Order,
+    Exit,
+    Close,
+    CloseAll,
+    MarginCall,
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct StrategyOrderMetadata {
     pub(crate) comment: Option<String>,
@@ -44,6 +101,7 @@ pub(super) struct EntryFill {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum EntryPyramidingMode {
     EnforceLimit,
+    #[allow(dead_code)]
     BypassLimit,
     SameTickPriceException,
 }

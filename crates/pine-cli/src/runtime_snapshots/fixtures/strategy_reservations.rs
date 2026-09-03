@@ -2,6 +2,14 @@ use super::RuntimeSnapshotFixture;
 
 pub(crate) const STRATEGY_RESERVATION_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     (
+        "runtime_strategy_exit_oca_reduce.json",
+        "tests/fixtures/runtime/strategy_exit_oca_reduce.pine",
+    ),
+    (
+        "runtime_strategy_exit_oca_reduce_bracket.json",
+        "tests/fixtures/runtime/strategy_exit_oca_reduce_bracket.pine",
+    ),
+    (
         "runtime_strategy_exit_reservation_qty_stop_multi.json",
         "tests/fixtures/runtime/strategy_exit_reservation_qty_stop_multi.pine",
     ),

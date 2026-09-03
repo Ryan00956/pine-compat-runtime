@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported strategy risk max_cons_loss_days fraction")
+strategy.risk.max_cons_loss_days(1.5)

@@ -141,7 +141,7 @@ impl BrokerState {
                 last_update_bar_index: bar_index,
                 metadata,
             });
-        self.order_book.exits_mut().replace_all_many(pending_exits);
+        self.replace_all_exits_and_assign_oca(pending_exits);
     }
 
     fn place_exit_bracket_stop_profit_ticks_quantity(

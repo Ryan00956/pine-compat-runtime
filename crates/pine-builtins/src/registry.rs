@@ -159,6 +159,95 @@ mod tests {
         );
         assert_eq!(signature.params[19].name, "currency");
         assert_eq!(signature.params[19].accepts, crate::Accepts::ConstString);
+        assert_eq!(signature.params[20].name, "process_orders_on_close");
+        assert_eq!(signature.params[20].accepts, crate::Accepts::ConstBool);
+        assert!(signature.params[20].optional);
+        assert_eq!(signature.params[21].name, "calc_on_order_fills");
+        assert_eq!(signature.params[21].accepts, crate::Accepts::ConstBool);
+        assert!(signature.params[21].optional);
+        assert_eq!(signature.params[22].name, "calc_on_every_tick");
+        assert_eq!(signature.params[22].accepts, crate::Accepts::ConstBool);
+        assert!(signature.params[22].optional);
+        assert!(!signature.variadic);
+    }
+
+    #[test]
+    fn registers_strategy_risk_max_drawdown_signature() {
+        let signature = get_phase_1_builtin("strategy.risk.max_drawdown")
+            .expect("strategy.risk.max_drawdown signature");
+        assert_eq!(signature.params.len(), 3);
+        assert_eq!(signature.params[0].name, "value");
+        assert_eq!(signature.params[0].accepts, crate::Accepts::SimpleNumeric);
+        assert!(!signature.params[0].optional);
+        assert_eq!(signature.params[1].name, "type");
+        assert_eq!(signature.params[1].accepts, crate::Accepts::SimpleString);
+        assert!(!signature.params[1].optional);
+        assert_eq!(signature.params[2].name, "alert_message");
+        assert!(signature.params[2].optional);
+        assert!(!signature.variadic);
+    }
+
+    #[test]
+    fn registers_strategy_risk_max_intraday_loss_signature() {
+        let signature = get_phase_1_builtin("strategy.risk.max_intraday_loss")
+            .expect("strategy.risk.max_intraday_loss signature");
+        assert_eq!(signature.params.len(), 3);
+        assert_eq!(signature.params[0].name, "value");
+        assert_eq!(signature.params[0].accepts, crate::Accepts::SimpleNumeric);
+        assert!(!signature.params[0].optional);
+        assert_eq!(signature.params[1].name, "type");
+        assert_eq!(signature.params[1].accepts, crate::Accepts::SimpleString);
+        assert!(!signature.params[1].optional);
+        assert_eq!(signature.params[2].name, "alert_message");
+        assert!(signature.params[2].optional);
+        assert!(!signature.variadic);
+    }
+
+    #[test]
+    fn registers_strategy_risk_max_cons_loss_days_signature() {
+        let signature = get_phase_1_builtin("strategy.risk.max_cons_loss_days")
+            .expect("strategy.risk.max_cons_loss_days signature");
+        assert_eq!(signature.params.len(), 2);
+        assert_eq!(signature.params[0].name, "count");
+        assert_eq!(signature.params[0].accepts, crate::Accepts::SimpleNumeric);
+        assert!(!signature.params[0].optional);
+        assert_eq!(signature.params[1].name, "alert_message");
+        assert!(signature.params[1].optional);
+        assert!(!signature.variadic);
+    }
+
+    #[test]
+    fn registers_strategy_risk_max_intraday_filled_orders_signature() {
+        let signature = get_phase_1_builtin("strategy.risk.max_intraday_filled_orders")
+            .expect("strategy.risk.max_intraday_filled_orders signature");
+        assert_eq!(signature.params.len(), 2);
+        assert_eq!(signature.params[0].name, "count");
+        assert_eq!(signature.params[0].accepts, crate::Accepts::SimpleNumeric);
+        assert!(!signature.params[0].optional);
+        assert_eq!(signature.params[1].name, "alert_message");
+        assert!(signature.params[1].optional);
+        assert!(!signature.variadic);
+    }
+
+    #[test]
+    fn registers_strategy_risk_max_position_size_signature() {
+        let signature = get_phase_1_builtin("strategy.risk.max_position_size")
+            .expect("strategy.risk.max_position_size signature");
+        assert_eq!(signature.params.len(), 1);
+        assert_eq!(signature.params[0].name, "contracts");
+        assert_eq!(signature.params[0].accepts, crate::Accepts::SimpleNumeric);
+        assert!(!signature.params[0].optional);
+        assert!(!signature.variadic);
+    }
+
+    #[test]
+    fn registers_strategy_risk_allow_entry_in_signature() {
+        let signature = get_phase_1_builtin("strategy.risk.allow_entry_in")
+            .expect("strategy.risk.allow_entry_in signature");
+        assert_eq!(signature.params.len(), 1);
+        assert_eq!(signature.params[0].name, "value");
+        assert_eq!(signature.params[0].accepts, crate::Accepts::SimpleString);
+        assert!(!signature.params[0].optional);
         assert!(!signature.variadic);
     }
 
@@ -249,6 +338,9 @@ mod tests {
         assert_eq!(signature.params[5].name, "disable_alert");
         assert_eq!(signature.params[5].accepts, crate::Accepts::BoolCompatible);
         assert!(signature.params[5].optional);
+        assert_eq!(signature.params[6].name, "immediately");
+        assert_eq!(signature.params[6].accepts, crate::Accepts::SimpleBool);
+        assert!(signature.params[6].optional);
         assert!(!signature.variadic);
     }
 
@@ -271,6 +363,9 @@ mod tests {
         assert_eq!(signature.params[2].name, "disable_alert");
         assert_eq!(signature.params[2].accepts, crate::Accepts::BoolCompatible);
         assert!(signature.params[2].optional);
+        assert_eq!(signature.params[3].name, "immediately");
+        assert_eq!(signature.params[3].accepts, crate::Accepts::SimpleBool);
+        assert!(signature.params[3].optional);
         assert!(!signature.variadic);
     }
 
@@ -307,7 +402,7 @@ mod tests {
     #[test]
     fn registers_strategy_exit_signature() {
         let signature = get_phase_1_builtin("strategy.exit").expect("strategy.exit signature");
-        assert_eq!(signature.params.len(), 20);
+        assert_eq!(signature.params.len(), 21);
         assert_eq!(signature.params[0].name, "id");
         assert_eq!(signature.params[1].name, "from_entry");
         assert!(signature.params[1].optional);
@@ -365,6 +460,9 @@ mod tests {
             signature.params[10].accepts,
             crate::Accepts::SeriesOrSimpleNumeric
         );
+        assert_eq!(signature.params[11].name, "oca_name");
+        assert!(signature.params[11].optional);
+        assert_eq!(signature.params[11].accepts, crate::Accepts::SimpleString);
         for (index, name) in [
             "comment",
             "comment_profit",
@@ -378,14 +476,14 @@ mod tests {
         .into_iter()
         .enumerate()
         {
-            let param = &signature.params[11 + index];
+            let param = &signature.params[12 + index];
             assert_eq!(param.name, name);
             assert!(param.optional);
             assert_eq!(param.accepts, crate::Accepts::StringCompatible);
         }
-        assert_eq!(signature.params[19].name, "disable_alert");
-        assert!(signature.params[19].optional);
-        assert_eq!(signature.params[19].accepts, crate::Accepts::BoolCompatible);
+        assert_eq!(signature.params[20].name, "disable_alert");
+        assert!(signature.params[20].optional);
+        assert_eq!(signature.params[20].accepts, crate::Accepts::BoolCompatible);
         assert!(!signature.variadic);
     }
 

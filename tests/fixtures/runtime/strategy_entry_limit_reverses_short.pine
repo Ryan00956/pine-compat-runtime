@@ -1,0 +1,9 @@
+//@version=5
+strategy("Limit entry reverses short")
+if bar_index == 0
+    strategy.entry("S", strategy.short, qty=1)
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=1, limit=3)
+plot(strategy.position_size)
+plot(strategy.closedtrades)
+plot(strategy.opentrades)

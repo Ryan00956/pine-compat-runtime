@@ -1,0 +1,5 @@
+//@version=5
+strategy("Supported strategy exit oca name")
+grp = "g"
+strategy.exit("XL", "L", stop=low, oca_name="g")
+strategy.exit("XP", "L", limit=high, qty=1, oca_name=grp)

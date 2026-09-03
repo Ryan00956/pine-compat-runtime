@@ -41,6 +41,9 @@ impl Analyzer {
                     "max_lines_count",
                     "max_polylines_count",
                     "currency",
+                    "process_orders_on_close",
+                    "calc_on_order_fills",
+                    "calc_on_every_tick",
                 ]
                 .get(index)
                 .copied()
@@ -269,6 +272,21 @@ impl Analyzer {
                 }
                 "max_polylines_count" => {
                     self.validate_named_drawing_count_arg("strategy", name, 100, arg);
+                }
+                "process_orders_on_close" => {
+                    if let Some(value) = self.known_const_bool_value(&arg.value) {
+                        self.strategy_settings.process_orders_on_close = value;
+                    }
+                }
+                "calc_on_order_fills" => {
+                    if let Some(value) = self.known_const_bool_value(&arg.value) {
+                        self.strategy_settings.calc_on_order_fills = value;
+                    }
+                }
+                "calc_on_every_tick" => {
+                    if let Some(value) = self.known_const_bool_value(&arg.value) {
+                        self.strategy_settings.calc_on_every_tick = value;
+                    }
                 }
                 _ => {}
             }

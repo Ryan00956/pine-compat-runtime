@@ -37,6 +37,20 @@ impl InputOverrides {
 }
 
 #[derive(Clone)]
+struct StrategyEvalCheckpoint {
+    rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
+    rsi_state: HashMap<CallSiteId, RsiState>,
+    macd_state: HashMap<CallSiteId, MacdState>,
+    call_state: HashMap<CallSiteId, PineValue>,
+    valuewhen_state: HashMap<CallSiteId, VecDeque<PineValue>>,
+    vwap_call_state: HashMap<CallSiteId, VwapState>,
+    pivot_point_state: HashMap<CallSiteId, PivotPointState>,
+    random_state: HashMap<CallSiteId, u64>,
+    current_symbols: HashMap<SymbolId, PineValue>,
+    current_series: HashMap<SeriesId, PineValue>,
+}
+
+#[derive(Clone)]
 pub struct HistoricalRuntime<'a> {
     pub(crate) program: &'a HirProgram,
     pub(crate) input_overrides: InputOverrides,
@@ -121,6 +135,10 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) alerts: Vec<AlertEvent>,
     pub(crate) alert_once_per_bar_calls: HashSet<CallSiteId>,
     pub(crate) strategy_broker: BrokerState,
+    pub(crate) strategy_scheduler: super::strategy_scheduler::StrategySchedulerState,
+    strategy_eval_checkpoint: Option<StrategyEvalCheckpoint>,
+    #[cfg(test)]
+    pub(crate) strategy_phase_trace: Vec<crate::runtime::strategy_scheduler::StrategyBarPhase>,
     pub(crate) next_label_id: u32,
     pub(crate) next_line_id: u32,
     pub(crate) next_line_fill_id: u32,
@@ -347,7 +365,12 @@ impl<'a> HistoricalRuntime<'a> {
                 program.strategy_settings.margin_short,
                 program.strategy_settings.pyramiding_limit,
             )
-            .with_close_entries_rule(program.strategy_settings.close_entries_rule),
+            .with_close_entries_rule(program.strategy_settings.close_entries_rule)
+            .with_calc_on_order_fills(program.strategy_settings.calc_on_order_fills),
+            strategy_scheduler: super::strategy_scheduler::StrategySchedulerState::new(),
+            strategy_eval_checkpoint: None,
+            #[cfg(test)]
+            strategy_phase_trace: Vec::new(),
             next_label_id: 1,
             next_line_id: 1,
             next_line_fill_id: 1,
@@ -525,47 +548,41 @@ impl<'a> HistoricalRuntime<'a> {
         self.current_series.clear();
         self.alert_once_per_bar_calls.clear();
         if self.program.script_mode == ScriptMode::Strategy {
-            self.strategy_broker
-                .fill_pending_market_long_entries(bar_index, bar.time, bar.open);
-            self.strategy_broker
-                .fill_pending_limit_long_entries(bar_index, bar.time, bar.low);
-            self.strategy_broker
-                .fill_pending_stop_long_entries(bar_index, bar.time, bar.high);
-            self.strategy_broker
-                .fill_pending_stop_limit_long_entries(bar_index, bar.time, bar.high, bar.low);
-            self.strategy_broker
-                .fill_pending_limit_short_entries(bar_index, bar.time, bar.high);
-            self.strategy_broker
-                .fill_pending_stop_short_entries(bar_index, bar.time, bar.low);
-            self.strategy_broker
-                .fill_pending_stop_limit_short_entries(bar_index, bar.time, bar.high, bar.low);
-            self.strategy_broker
-                .update_open_trade_extremes(bar.high, bar.low);
-            self.strategy_broker
-                .evaluate_margin_call_long(bar_index, bar.time, bar.low);
-            self.strategy_broker
-                .evaluate_margin_call_short(bar_index, bar.time, bar.high);
+            self.strategy_scheduler.begin_bar(bar_index);
         }
         self.set_builtin_symbols(&bar, bar_index)?;
-
-        for statement in &self.program.statements {
-            match self.eval_stmt(statement) {
-                Ok(StmtControl::None) => {}
-                Ok(StmtControl::Break | StmtControl::Continue) => {
-                    return Err(RuntimeError::escaped_loop_control());
+        if self.program.script_mode == ScriptMode::Strategy {
+            self.snapshot_strategy_eval_checkpoint();
+        }
+        self.run_pre_script_strategy_phases(bar_index, bar)?;
+        if self.program.script_mode == ScriptMode::Strategy {
+            self.trace_strategy_phase(
+                crate::runtime::strategy_scheduler::StrategyBarPhase::BuiltinRefresh,
+            );
+            let filled = self.run_strategy_script_pass()?;
+            self.recalculate_after_fill(filled)?;
+        } else {
+            for statement in &self.program.statements {
+                match self.eval_stmt(statement) {
+                    Ok(StmtControl::None) => {}
+                    Ok(StmtControl::Break | StmtControl::Continue) => {
+                        return Err(RuntimeError::escaped_loop_control());
+                    }
+                    Err(error) if error.loop_control().is_some() => {
+                        return Err(RuntimeError::escaped_loop_control());
+                    }
+                    Err(error) => return Err(error),
                 }
-                Err(error) if error.loop_control().is_some() => {
-                    return Err(RuntimeError::escaped_loop_control());
-                }
-                Err(error) => return Err(error),
             }
         }
 
+        self.run_post_script_strategy_phases(bar_index, bar)?;
         if self.program.script_mode == ScriptMode::Strategy {
-            self.strategy_broker
-                .evaluate_pending_exits(bar_index, bar.time, bar.high, bar.low);
-            self.strategy_broker.record_equity(bar_index, bar.close);
+            self.trace_strategy_phase(
+                crate::runtime::strategy_scheduler::StrategyBarPhase::OutputCommit,
+            );
         }
+        self.strategy_eval_checkpoint = None;
         self.finalize_series_outputs();
         self.commit_current_series()?;
         self.previous_bar_time = Some(bar.time);
@@ -992,7 +1009,104 @@ impl<'a> HistoricalRuntime<'a> {
             table_capacity: self.tables.capacity(),
             table_snapshot_capacity,
             table_cell_capacity,
+            strategy_script_passes: if self.program.script_mode == ScriptMode::Strategy {
+                self.strategy_scheduler.script_passes()
+            } else {
+                0
+            },
+            strategy_recalculation_passes: if self.program.script_mode == ScriptMode::Strategy {
+                self.strategy_scheduler.recalculation_passes()
+            } else {
+                0
+            },
+            strategy_max_passes_on_bar: if self.program.script_mode == ScriptMode::Strategy {
+                self.strategy_scheduler.max_passes_on_bar() as usize
+            } else {
+                0
+            },
+            strategy_max_recalculation_passes: if self.program.script_mode == ScriptMode::Strategy {
+                self.strategy_scheduler.max_recalculation_passes() as usize
+            } else {
+                0
+            },
         }
+    }
+
+    fn snapshot_strategy_eval_checkpoint(&mut self) {
+        self.strategy_eval_checkpoint = Some(StrategyEvalCheckpoint {
+            rolling_windows: self.rolling_windows.clone(),
+            rsi_state: self.rsi_state.clone(),
+            macd_state: self.macd_state.clone(),
+            call_state: self.call_state.clone(),
+            valuewhen_state: self.valuewhen_state.clone(),
+            vwap_call_state: self.vwap_call_state.clone(),
+            pivot_point_state: self.pivot_point_state.clone(),
+            random_state: self.random_state.clone(),
+            current_symbols: self.current_symbols.clone(),
+            current_series: self.current_series.clone(),
+        });
+    }
+
+    fn restore_strategy_eval_checkpoint(&mut self) {
+        let Some(checkpoint) = self.strategy_eval_checkpoint.as_ref() else {
+            return;
+        };
+        self.rolling_windows.clone_from(&checkpoint.rolling_windows);
+        self.rsi_state.clone_from(&checkpoint.rsi_state);
+        self.macd_state.clone_from(&checkpoint.macd_state);
+        self.call_state.clone_from(&checkpoint.call_state);
+        self.valuewhen_state.clone_from(&checkpoint.valuewhen_state);
+        self.vwap_call_state.clone_from(&checkpoint.vwap_call_state);
+        self.pivot_point_state
+            .clone_from(&checkpoint.pivot_point_state);
+        self.random_state.clone_from(&checkpoint.random_state);
+        self.current_symbols.clone_from(&checkpoint.current_symbols);
+        self.current_series.clone_from(&checkpoint.current_series);
+    }
+
+    fn run_strategy_script_pass(&mut self) -> Result<bool, RuntimeError> {
+        let before = self.strategy_broker.public_order_event_count();
+        self.restore_strategy_eval_checkpoint();
+        self.strategy_scheduler.begin_script_pass()?;
+        self.trace_strategy_phase(
+            crate::runtime::strategy_scheduler::StrategyBarPhase::ScriptStatements,
+        );
+        for statement in &self.program.statements {
+            match self.eval_stmt(statement) {
+                Ok(StmtControl::None) => {}
+                Ok(StmtControl::Break | StmtControl::Continue) => {
+                    return Err(RuntimeError::escaped_loop_control());
+                }
+                Err(error) if error.loop_control().is_some() => {
+                    return Err(RuntimeError::escaped_loop_control());
+                }
+                Err(error) => return Err(error),
+            }
+        }
+        Ok(self.strategy_broker.public_order_event_count() > before)
+    }
+
+    pub(crate) fn recalculate_after_fill(&mut self, mut filled: bool) -> Result<(), RuntimeError> {
+        if !self.program.strategy_settings.calc_on_order_fills {
+            return Ok(());
+        }
+        while filled {
+            filled = self.run_strategy_script_pass()?;
+        }
+        Ok(())
+    }
+
+    pub(crate) fn snapshot_strategy_broker(&self) -> BrokerState {
+        self.strategy_broker.snapshot()
+    }
+
+    pub(crate) fn restore_strategy_broker(&mut self, snapshot: BrokerState) {
+        self.strategy_broker.restore(snapshot);
+    }
+
+    pub(crate) fn restore_strategy_checkpoint(&mut self, confirmed: &Self) {
+        self.restore_strategy_broker(confirmed.snapshot_strategy_broker());
+        self.alerts.clone_from(&confirmed.alerts);
     }
 
     pub(crate) fn finalize_series_outputs(&mut self) {
