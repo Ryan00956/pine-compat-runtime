@@ -2,10 +2,125 @@ use super::{
     BrokerState, StrategyOrderFillAlertEvent, StrategyOrderMetadata,
     closed_trades::{AllocatedEntryFill, ClosedTradeFill},
     ledger::{TradeAllocation, TradeDirection},
+    pending_closes::{PendingClose, PendingCloseKind, PendingCloseQuantity},
+    types::StrategyCommandOrigin,
 };
 use crate::RuntimeDiagnostic;
 
 impl BrokerState {
+    pub(crate) fn place_pending_close(
+        &mut self,
+        id: String,
+        quantity: PendingCloseQuantity,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+    ) {
+        self.place_pending_close_with_immediately(id, quantity, created_bar_index, metadata, false);
+    }
+
+    pub(crate) fn place_pending_close_with_immediately(
+        &mut self,
+        id: String,
+        quantity: PendingCloseQuantity,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+        immediately: bool,
+    ) {
+        self.order_book.closes_mut().place(PendingClose {
+            key: super::types::InternalOrderKey(0),
+            origin: StrategyCommandOrigin::Close,
+            kind: PendingCloseKind::Close { id },
+            quantity,
+            created_bar_index,
+            immediately,
+            metadata,
+        });
+    }
+
+    pub(crate) fn fill_pending_market_closes(
+        &mut self,
+        bar_index: usize,
+        time: i64,
+        fill_price: f64,
+    ) {
+        let pending_closes = self.order_book.closes_mut().take_eligible(bar_index);
+        self.apply_pending_market_closes(pending_closes, bar_index, time, fill_price);
+    }
+
+    pub(crate) fn fill_same_bar_market_closes(
+        &mut self,
+        bar_index: usize,
+        time: i64,
+        fill_price: f64,
+    ) {
+        let pending_closes = self.order_book.closes_mut().take_same_bar(bar_index);
+        self.apply_pending_market_closes(pending_closes, bar_index, time, fill_price);
+    }
+
+    pub(crate) fn fill_immediate_market_closes(
+        &mut self,
+        bar_index: usize,
+        time: i64,
+        fill_price: f64,
+    ) {
+        let pending_closes = self.order_book.closes_mut().take_immediate();
+        self.apply_pending_market_closes(pending_closes, bar_index, time, fill_price);
+    }
+
+    fn apply_pending_market_closes(
+        &mut self,
+        pending_closes: Vec<PendingClose>,
+        bar_index: usize,
+        time: i64,
+        fill_price: f64,
+    ) {
+        for pending in pending_closes {
+            self.with_next_close_metadata(pending.metadata, |broker| match pending.kind {
+                PendingCloseKind::Close { id } => match pending.quantity {
+                    PendingCloseQuantity::Full => {
+                        broker.close_long(id, bar_index, time, fill_price);
+                    }
+                    PendingCloseQuantity::Qty(qty) => {
+                        broker.close_long_qty(id, bar_index, time, fill_price, qty);
+                    }
+                    PendingCloseQuantity::QtyPercent(qty_percent) => {
+                        broker.close_long_qty_percent(id, bar_index, time, fill_price, qty_percent);
+                    }
+                },
+                PendingCloseKind::CloseAll => {
+                    broker.close_all_position(bar_index, time, fill_price);
+                }
+            });
+        }
+    }
+
+    pub(crate) fn place_pending_close_all(
+        &mut self,
+        quantity: PendingCloseQuantity,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+    ) {
+        self.place_pending_close_all_with_immediately(quantity, created_bar_index, metadata, false);
+    }
+
+    pub(crate) fn place_pending_close_all_with_immediately(
+        &mut self,
+        quantity: PendingCloseQuantity,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+        immediately: bool,
+    ) {
+        self.order_book.closes_mut().place(PendingClose {
+            key: super::types::InternalOrderKey(0),
+            origin: StrategyCommandOrigin::CloseAll,
+            kind: PendingCloseKind::CloseAll,
+            quantity,
+            created_bar_index,
+            immediately,
+            metadata,
+        });
+    }
+
     pub(super) fn active_close_direction(&self) -> Option<TradeDirection> {
         if self.position_size > 0.0 {
             Some(TradeDirection::Long)
@@ -23,7 +138,7 @@ impl BrokerState {
         }
     }
 
-    pub(crate) fn close_all_long(&mut self, bar_index: usize, time: i64, price: f64) {
+    pub(crate) fn close_all_position(&mut self, bar_index: usize, time: i64, price: f64) {
         let Some(direction) = self.active_close_direction() else {
             return;
         };
@@ -91,13 +206,14 @@ impl BrokerState {
             );
         }
 
-        self.cash += direction.signed_quantity(qty) * price - exit_commission;
         self.order_book.exits_mut().clear_all();
-        self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
-        self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
-        self.clear_open_long_legacy_state();
-        self.apply_trade_allocations_and_sync_position(&allocations);
-        self.record_position_snapshot(bar_index);
+        self.apply_reduction_cash_and_position(
+            direction.signed_quantity(qty) * price - exit_commission,
+            &allocations,
+            qty,
+            0.0,
+            bar_index,
+        );
     }
 
     pub(crate) fn close_long(&mut self, id: String, bar_index: usize, time: i64, price: f64) {
@@ -151,6 +267,7 @@ impl BrokerState {
         self.close_long_quantity(id, bar_index, time, price, Some(qty));
     }
 
+    #[allow(dead_code)]
     pub(crate) fn reduce_long_with_short_order(
         &mut self,
         id: String,
@@ -236,20 +353,16 @@ impl BrokerState {
             });
         }
 
-        self.cash += qty * price - exit_commission;
         if qty >= self.position_size {
             self.order_book.exits_mut().clear_all();
-            self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
-            self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
-            self.clear_open_long_legacy_state();
-            self.apply_trade_allocations_and_sync_position(&allocations);
-            self.record_position_snapshot(bar_index);
-            return;
         }
-
-        self.open_entry_commission -= closed_entry_commission;
-        self.apply_trade_allocations_and_sync_position(&allocations);
-        self.record_position_snapshot(bar_index);
+        self.apply_reduction_cash_and_position(
+            qty * price - exit_commission,
+            &allocations,
+            qty,
+            closed_entry_commission,
+            bar_index,
+        );
     }
 
     fn close_long_quantity(
@@ -339,24 +452,16 @@ impl BrokerState {
             },
         );
 
-        self.cash += signed_qty * price - exit_commission;
         if qty >= self.position_size.abs() {
             self.cancel_exit_for_entry(&id);
-            self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
-            self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
-            self.clear_open_long_legacy_state();
-            self.apply_trade_allocations_and_sync_position(&allocations);
-            if allocations.is_empty() {
-                self.trade_ledger.clear_open_trade();
-                self.sync_aggregate_position_from_ledger();
-            }
-            self.record_position_snapshot(bar_index);
-            return;
         }
-
-        self.open_entry_commission -= closed_entry_commission;
-        self.apply_trade_allocations_and_sync_position(&allocations);
-        self.record_position_snapshot(bar_index);
+        self.apply_reduction_cash_and_position(
+            signed_qty * price - exit_commission,
+            &allocations,
+            qty,
+            closed_entry_commission,
+            bar_index,
+        );
     }
 
     pub(super) fn allocate_close_rule_exit_for_direction(
@@ -375,5 +480,25 @@ impl BrokerState {
                 requested_quantity,
             ),
         }
+    }
+
+    pub(super) fn allocate_generic_order_close(
+        &self,
+        direction: TradeDirection,
+        order_id: &str,
+        requested_quantity: f64,
+    ) -> Vec<TradeAllocation> {
+        if self.close_entries_rule == pine_ir::StrategyCloseEntriesRule::Any {
+            let matching = self.trade_ledger.allocate_exit_any_for_entry_direction(
+                direction,
+                order_id,
+                requested_quantity,
+            );
+            if !matching.is_empty() {
+                return matching;
+            }
+        }
+        self.trade_ledger
+            .allocate_exit_fifo_for_direction(direction, None, requested_quantity)
     }
 }

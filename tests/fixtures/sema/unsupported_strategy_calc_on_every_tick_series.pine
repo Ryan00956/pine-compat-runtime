@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported series calc_on_every_tick", calc_on_every_tick=close > open)
+plot(close)

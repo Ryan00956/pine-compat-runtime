@@ -5,6 +5,7 @@ use super::pending_exits::{
     PendingExitTrigger, PendingTrailingActivation, PendingTrailingExit, PendingTrailingSpec,
     PendingTrailingState, PendingTrailingUpdate, TrailPointsExitSpec, TrailPriceExitSpec,
 };
+use super::types::{InternalOrderKey, StrategyCommandOrigin};
 use super::*;
 
 fn pending_entry_count(broker: &BrokerState) -> usize {
@@ -273,7 +274,7 @@ fn stage14_reduce_only_short_order_does_not_open_short_exposure() {
     assert_eq!(pending_entry.direction, PendingEntryDirection::Short);
     assert_eq!(pending_entry.trade_direction(), TradeDirection::Short);
 
-    broker.fill_pending_market_long_entries(2, 20, 110.0);
+    broker.fill_pending_market_entries(2, 20, 110.0);
 
     assert_eq!(broker.position_size, 1.0);
     assert_eq!(
@@ -400,7 +401,7 @@ fn stage14e_market_long_entry_reverses_short() {
 fn stage14c_pending_market_short_entry_fills_next_bar() {
     let mut broker = BrokerState::new(100_000.0);
     broker.place_pending_market_short_entry("S".to_owned(), 2.0, 1);
-    broker.fill_pending_market_long_entries(2, 20, 3.0);
+    broker.fill_pending_market_entries(2, 20, 3.0);
 
     assert_eq!(broker.position_size, -2.0);
     assert_eq!(broker.orders[0].id, "S");
@@ -447,16 +448,16 @@ fn stage14j_pending_limit_short_entry_fills_on_later_high_crossing_bar() {
 }
 
 #[test]
-fn stage14j_pending_limit_short_entry_is_noop_while_net_long() {
+fn stage14j_pending_limit_short_entry_reverses_while_net_long() {
     let mut broker = BrokerState::new(100_000.0);
     assert!(broker.entry_long("L".to_owned(), 0, 10, 100.0, 1.0));
     broker.place_pending_limit_short_entry("S".to_owned(), 2.0, 110.0, 1);
     broker.fill_pending_limit_short_entries(2, 20, 120.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
-    assert_eq!(broker.position_size, 1.0);
-    assert_eq!(broker.orders.len(), 1);
-    assert_eq!(broker.orders[0].direction, "strategy.long");
+    assert_eq!(broker.position_size, -2.0);
+    assert_eq!(broker.closed_trade_count(), 1);
+    assert_eq!(broker.orders.last().map(|order| order.qty), Some(2.0));
 }
 
 #[test]
@@ -524,16 +525,16 @@ fn stage14k_pending_stop_short_entry_fills_on_later_low_crossing_bar() {
 }
 
 #[test]
-fn stage14k_pending_stop_short_entry_is_noop_while_net_long() {
+fn stage14k_pending_stop_short_entry_reverses_while_net_long() {
     let mut broker = BrokerState::new(100_000.0);
     assert!(broker.entry_long("L".to_owned(), 0, 10, 100.0, 1.0));
     broker.place_pending_stop_short_entry("S".to_owned(), 2.0, 90.0, 1);
     broker.fill_pending_stop_short_entries(2, 20, 80.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
-    assert_eq!(broker.position_size, 1.0);
-    assert_eq!(broker.orders.len(), 1);
-    assert_eq!(broker.orders[0].direction, "strategy.long");
+    assert_eq!(broker.position_size, -2.0);
+    assert_eq!(broker.closed_trade_count(), 1);
+    assert_eq!(broker.orders.last().map(|order| order.qty), Some(2.0));
 }
 
 #[test]
@@ -625,16 +626,18 @@ fn stage14l_pending_stop_limit_short_entry_fills_after_activation_on_later_high(
 }
 
 #[test]
-fn stage14l_pending_stop_limit_short_entry_is_noop_while_net_long() {
+fn stage14l_pending_stop_limit_short_entry_reverses_while_net_long() {
     let mut broker = BrokerState::new(100_000.0);
     assert!(broker.entry_long("L".to_owned(), 0, 10, 100.0, 1.0));
     broker.place_pending_stop_limit_short_entry("S".to_owned(), 2.0, 90.0, 95.0, 1);
-    broker.fill_pending_stop_limit_short_entries(2, 20, 96.0, 89.0);
+    broker.fill_pending_stop_limit_short_entries(2, 20, 91.0, 89.0);
+    assert_eq!(broker.position_size, 1.0);
+    broker.fill_pending_stop_limit_short_entries(3, 30, 95.0, 94.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
-    assert_eq!(broker.position_size, 1.0);
-    assert_eq!(broker.orders.len(), 1);
-    assert_eq!(broker.orders[0].direction, "strategy.long");
+    assert_eq!(broker.position_size, -2.0);
+    assert_eq!(broker.closed_trade_count(), 1);
+    assert_eq!(broker.orders.last().map(|order| order.qty), Some(2.0));
 }
 
 #[test]
@@ -751,16 +754,17 @@ fn stage14m_pending_limit_short_order_adds_to_short_without_pyramiding() {
 }
 
 #[test]
-fn stage14m_pending_limit_short_order_is_noop_while_net_long() {
+fn stage14m_pending_limit_short_order_nets_while_net_long() {
     let mut broker = BrokerState::new(100_000.0);
     assert!(broker.entry_long("L".to_owned(), 0, 10, 100.0, 1.0));
     broker.place_pending_limit_short_order("O".to_owned(), 2.0, 110.0, 1);
     broker.fill_pending_limit_short_entries(2, 20, 120.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
-    assert_eq!(broker.position_size, 1.0);
-    assert_eq!(broker.orders.len(), 1);
-    assert_eq!(broker.orders[0].direction, "strategy.long");
+    assert_eq!(broker.position_size, -1.0);
+    assert_eq!(broker.closed_trade_count(), 1);
+    assert_eq!(broker.orders.last().map(|order| order.qty), Some(2.0));
+    assert_eq!(broker.orders.last().map(|order| order.price), Some(110.0));
 }
 
 #[test]
@@ -824,16 +828,17 @@ fn stage14n_pending_stop_short_order_adds_to_short_without_pyramiding() {
 }
 
 #[test]
-fn stage14n_pending_stop_short_order_is_noop_while_net_long() {
+fn stage14n_pending_stop_short_order_nets_while_net_long() {
     let mut broker = BrokerState::new(100_000.0);
     assert!(broker.entry_long("L".to_owned(), 0, 10, 100.0, 1.0));
     broker.place_pending_stop_short_order("O".to_owned(), 2.0, 90.0, 1);
     broker.fill_pending_stop_short_entries(2, 20, 80.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
-    assert_eq!(broker.position_size, 1.0);
-    assert_eq!(broker.orders.len(), 1);
-    assert_eq!(broker.orders[0].direction, "strategy.long");
+    assert_eq!(broker.position_size, -1.0);
+    assert_eq!(broker.closed_trade_count(), 1);
+    assert_eq!(broker.orders.last().map(|order| order.qty), Some(2.0));
+    assert_eq!(broker.orders.last().map(|order| order.price), Some(90.0));
 }
 
 #[test]
@@ -923,16 +928,19 @@ fn stage14o_pending_stop_limit_short_order_adds_to_short_without_pyramiding() {
 }
 
 #[test]
-fn stage14o_pending_stop_limit_short_order_is_noop_while_net_long() {
+fn stage14o_pending_stop_limit_short_order_nets_while_net_long() {
     let mut broker = BrokerState::new(100_000.0);
     assert!(broker.entry_long("L".to_owned(), 0, 10, 100.0, 1.0));
     broker.place_pending_stop_limit_short_order("O".to_owned(), 2.0, 90.0, 95.0, 1);
-    broker.fill_pending_stop_limit_short_entries(2, 20, 96.0, 89.0);
+    broker.fill_pending_stop_limit_short_entries(2, 20, 91.0, 89.0);
+    assert_eq!(broker.position_size, 1.0);
+    broker.fill_pending_stop_limit_short_entries(3, 30, 95.0, 94.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
-    assert_eq!(broker.position_size, 1.0);
-    assert_eq!(broker.orders.len(), 1);
-    assert_eq!(broker.orders[0].direction, "strategy.long");
+    assert_eq!(broker.position_size, -1.0);
+    assert_eq!(broker.closed_trade_count(), 1);
+    assert_eq!(broker.orders.last().map(|order| order.qty), Some(2.0));
+    assert_eq!(broker.orders.last().map(|order| order.price), Some(95.0));
 }
 
 #[test]
@@ -988,7 +996,7 @@ fn stage14e_pending_market_short_entry_reverses_long_on_fill() {
     let mut broker = BrokerState::new(100_000.0);
     assert!(broker.entry_long("L".to_owned(), 0, 10, 100.0, 2.0));
     broker.place_pending_market_short_entry("S".to_owned(), 1.0, 1);
-    broker.fill_pending_market_long_entries(2, 20, 110.0);
+    broker.fill_pending_market_entries(2, 20, 110.0);
 
     assert_eq!(broker.position_size, -1.0);
     assert_eq!(broker.trades.len(), 1);
@@ -1290,7 +1298,7 @@ fn stage14d_close_short_realizes_positive_cover_profit() {
 fn stage14d_close_all_short_realizes_negative_cover_loss() {
     let mut broker = BrokerState::new(100_000.0);
     assert!(broker.entry_short("S".to_owned(), 1, 10, 100.0, 2.0));
-    broker.close_all_long(2, 20, 110.0);
+    broker.close_all_position(2, 20, 110.0);
 
     assert_eq!(broker.position_size, 0.0);
     assert_eq!(broker.trades.len(), 1);
@@ -2610,6 +2618,8 @@ fn pending_market_entry_records_internal_order_without_public_fill() {
         broker.order_book.entries().current().cloned(),
         Some(PendingEntry {
             id: "L".to_owned(),
+            key: InternalOrderKey(0),
+            origin: StrategyCommandOrigin::Entry,
             direction: PendingEntryDirection::Long,
             kind: PendingEntryKind::Market,
             quantity: 2.0,
@@ -2638,6 +2648,8 @@ fn pending_market_entry_replaces_same_id_without_public_fill() {
         broker.order_book.entries().current().cloned(),
         Some(PendingEntry {
             id: "L".to_owned(),
+            key: InternalOrderKey(0),
+            origin: StrategyCommandOrigin::Entry,
             direction: PendingEntryDirection::Long,
             kind: PendingEntryKind::Market,
             quantity: 3.0,
@@ -2673,7 +2685,7 @@ fn pending_market_entry_metadata_survives_until_fill_without_public_output() {
     );
     assert!(broker.orders.is_empty());
 
-    broker.fill_pending_market_long_entries(1, 20, 101.0);
+    broker.fill_pending_market_entries(1, 20, 101.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(
@@ -2791,7 +2803,7 @@ fn pending_market_entry_does_not_fill_on_creation_bar() {
     let mut broker = BrokerState::new(100_000.0);
 
     broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
-    broker.fill_pending_market_long_entries(0, 10, 100.0);
+    broker.fill_pending_market_entries(0, 10, 100.0);
 
     assert_eq!(pending_entry_count(&broker), 1);
     assert!(broker.orders.is_empty());
@@ -2805,7 +2817,7 @@ fn pending_market_entry_fills_on_later_bar_price() {
     let mut broker = BrokerState::new(100_000.0);
 
     broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
-    broker.fill_pending_market_long_entries(1, 20, 101.0);
+    broker.fill_pending_market_entries(1, 20, 101.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(broker.orders.len(), 1);
@@ -2828,7 +2840,7 @@ fn pending_market_order_bypasses_entry_pyramiding_limit_for_same_side_long() {
     assert!(broker.entry_long("E".to_owned(), 0, 10, 100.0, 1.0));
 
     broker.place_pending_market_long_order("O".to_owned(), 2.0, 1);
-    broker.fill_pending_market_long_entries(2, 20, 110.0);
+    broker.fill_pending_market_entries(2, 20, 110.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(broker.orders.len(), 2);
@@ -2843,22 +2855,34 @@ fn pending_market_order_bypasses_entry_pyramiding_limit_for_same_side_long() {
 }
 
 #[test]
-fn pending_market_short_order_reduces_long_without_reversal() {
+fn pending_market_short_order_clears_exits_when_flattening() {
+    let mut broker = BrokerState::new(100_000.0);
+    assert!(broker.entry_long("E".to_owned(), 0, 10, 100.0, 1.0));
+    broker.place_exit_stop("XL".to_owned(), "E".to_owned(), 95.0, 0);
+    assert!(broker.order_book.exits().count() > 0);
+    broker.place_pending_market_short_order("R".to_owned(), 1.0, 1);
+    broker.fill_pending_market_entries(2, 20, 110.0);
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(broker.order_book.exits().count(), 0);
+}
+
+#[test]
+fn pending_market_short_order_crosses_zero_with_full_order_quantity() {
     let mut broker = BrokerState::new(100_000.0);
     assert!(broker.entry_long("E".to_owned(), 0, 10, 100.0, 1.0));
 
     broker.place_pending_market_short_order("R".to_owned(), 3.0, 1);
-    broker.fill_pending_market_long_entries(2, 20, 110.0);
+    broker.fill_pending_market_entries(2, 20, 110.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(broker.orders.len(), 2);
     assert_eq!(broker.orders[1].id, "R");
     assert_eq!(broker.orders[1].bar_index, 2);
     assert_eq!(broker.orders[1].direction, "strategy.short");
-    assert_eq!(broker.orders[1].qty, 1.0);
+    assert_eq!(broker.orders[1].qty, 3.0);
     assert_eq!(broker.orders[1].price, 110.0);
-    assert_eq!(broker.position_size, 0.0);
-    assert_eq!(broker.open_trade_count(), 0);
+    assert_eq!(broker.position_size, -2.0);
+    assert_eq!(broker.open_trade_count(), 1);
     assert_eq!(broker.closed_trade_count(), 1);
     assert_eq!(broker.trades[0].id, "E");
     assert_eq!(broker.trades[0].exit_id, "R");
@@ -2874,7 +2898,7 @@ fn pending_market_short_order_metadata_records_reduce_alert_and_exit_comment() {
     let metadata = order_metadata("reduce", false);
 
     broker.place_pending_market_short_order_with_metadata("R".to_owned(), 3.0, 1, metadata);
-    broker.fill_pending_market_long_entries(2, 20, 110.0);
+    broker.fill_pending_market_entries(2, 20, 110.0);
 
     assert_eq!(broker.closed_trade_count(), 1);
     assert_eq!(broker.closed_trade_exit_comment(0), Some("reduce comment"));
@@ -2885,9 +2909,9 @@ fn pending_market_short_order_metadata_records_reduce_alert_and_exit_comment() {
             bar_index: 2,
             time: 20,
             direction: "strategy.short".to_owned(),
-            qty: 1.0,
+            qty: 3.0,
             price: 110.0,
-            entry_id: None,
+            entry_id: Some("R".to_owned()),
             exit_id: Some("R".to_owned()),
             message: "reduce alert".to_owned(),
         }]
@@ -3059,7 +3083,7 @@ fn margin_rejected_pending_entry_clears_attached_exits() {
     broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
 
     assert_eq!(pending_exit_count(&broker), 1);
-    broker.fill_pending_market_long_entries(1, 20, 100.0);
+    broker.fill_pending_market_entries(1, 20, 100.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(pending_exit_count(&broker), 0);
@@ -3273,7 +3297,7 @@ fn pending_market_entry_fill_uses_first_eligible_entry_and_clears_rest() {
 
     broker.place_pending_market_long_entry("L1".to_owned(), 1.0, 0);
     broker.place_pending_market_long_entry("L2".to_owned(), 3.0, 0);
-    broker.fill_pending_market_long_entries(1, 20, 101.0);
+    broker.fill_pending_market_entries(1, 20, 101.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(broker.orders.len(), 1);
@@ -3290,7 +3314,7 @@ fn pending_market_entry_fill_clears_book_when_position_is_already_open() {
     broker.place_pending_market_long_entry("L".to_owned(), 1.0, 0);
     broker.entry_long("E".to_owned(), 0, 10, 100.0, 2.0);
 
-    broker.fill_pending_market_long_entries(1, 20, 101.0);
+    broker.fill_pending_market_entries(1, 20, 101.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(broker.orders.len(), 1);
@@ -3690,7 +3714,7 @@ fn omitted_profit_template_clears_when_replaced_by_absolute_all_entry_exit() {
     assert_eq!(deferred_relative_exit_count(&broker), 0);
 
     broker.place_pending_market_long_entry("L2".to_owned(), 3.0, 3);
-    broker.fill_pending_market_long_entries(4, 40, 105.0);
+    broker.fill_pending_market_entries(4, 40, 105.0);
 
     assert_eq!(pending_exit_count(&broker), 1);
     let pending_exit = broker.pending_exit().unwrap();
@@ -3731,7 +3755,7 @@ fn omitted_loss_template_replaces_profit_template_for_later_entry() {
     );
 
     broker.place_pending_market_long_entry("L2".to_owned(), 3.0, 3);
-    broker.fill_pending_market_long_entries(4, 40, 105.0);
+    broker.fill_pending_market_entries(4, 40, 105.0);
 
     assert!(broker.pending_exit_by_identity("XP", "L2").is_none());
     let pending_exit = broker.pending_exit_by_identity("XL", "L2").unwrap();
@@ -3785,7 +3809,7 @@ fn omitted_future_relative_exit_resolves_with_open_trade_key_scope() {
     assert_eq!(deferred_relative_exit_count(&broker), 1);
 
     broker.place_pending_market_long_entry("L".to_owned(), 2.0, 1);
-    broker.fill_pending_market_long_entries(2, 20, 100.0);
+    broker.fill_pending_market_entries(2, 20, 100.0);
 
     let pending_exit = broker
         .pending_exit_by_identity_and_key("XP", "L", Some(0))
@@ -3868,7 +3892,7 @@ fn pending_market_entry_resolves_stop_profit_bracket_attachment_after_fill() {
 
     assert_eq!(pending_exit_count(&broker), 0);
     assert_eq!(deferred_relative_exit_count(&broker), 1);
-    broker.fill_pending_market_long_entries(1, 20, 100.0);
+    broker.fill_pending_market_entries(1, 20, 100.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(deferred_relative_exit_count(&broker), 0);
@@ -3921,7 +3945,7 @@ fn pending_market_entry_resolves_loss_limit_bracket_attachment_after_fill() {
 
     assert_eq!(pending_exit_count(&broker), 0);
     assert_eq!(deferred_relative_exit_count(&broker), 1);
-    broker.fill_pending_market_long_entries(1, 20, 100.0);
+    broker.fill_pending_market_entries(1, 20, 100.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(deferred_relative_exit_count(&broker), 0);
@@ -3974,7 +3998,7 @@ fn pending_market_entry_resolves_loss_profit_bracket_attachment_after_fill() {
 
     assert_eq!(pending_exit_count(&broker), 0);
     assert_eq!(deferred_relative_exit_count(&broker), 1);
-    broker.fill_pending_market_long_entries(1, 20, 100.0);
+    broker.fill_pending_market_entries(1, 20, 100.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(deferred_relative_exit_count(&broker), 0);
@@ -4044,7 +4068,7 @@ fn pending_market_entry_resolves_profit_attachment_after_fill() {
     broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
     broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 10.0, 0.5, 0);
 
-    broker.fill_pending_market_long_entries(1, 20, 100.0);
+    broker.fill_pending_market_entries(1, 20, 100.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(deferred_relative_exit_count(&broker), 0);
@@ -4083,7 +4107,7 @@ fn pending_market_entry_resolves_loss_attachment_after_fill() {
     broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
     broker.place_exit_loss_ticks("XL".to_owned(), "L".to_owned(), 10.0, 0.5, 0);
 
-    broker.fill_pending_market_long_entries(1, 20, 100.0);
+    broker.fill_pending_market_entries(1, 20, 100.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(deferred_relative_exit_count(&broker), 0);
@@ -4122,7 +4146,7 @@ fn pending_market_entry_resolves_trail_points_attachment_after_fill() {
     broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
     broker.place_exit_trail_points("XT".to_owned(), "L".to_owned(), 10.0, 4.0, 0.5, 0);
 
-    broker.fill_pending_market_long_entries(1, 20, 100.0);
+    broker.fill_pending_market_entries(1, 20, 100.0);
 
     assert_eq!(pending_entry_count(&broker), 0);
     assert_eq!(deferred_relative_exit_count(&broker), 0);
@@ -5381,7 +5405,7 @@ fn close_all_metadata_is_recorded_for_each_internal_closed_trade_metric() {
     let metadata = close_metadata("close all");
 
     broker.with_next_close_metadata(metadata.clone(), |broker| {
-        broker.close_all_long(2, 30, 120.0);
+        broker.close_all_position(2, 30, 120.0);
     });
 
     assert_eq!(broker.trades.len(), 2);
@@ -5473,7 +5497,7 @@ fn close_metadata_records_internal_order_fill_alerts() {
     let metadata = order_metadata("close all", false);
 
     close_all_broker.with_next_close_metadata(metadata, |broker| {
-        broker.close_all_long(2, 30, 120.0);
+        broker.close_all_position(2, 30, 120.0);
     });
 
     assert_eq!(

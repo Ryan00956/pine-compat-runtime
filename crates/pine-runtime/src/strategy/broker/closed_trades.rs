@@ -72,6 +72,7 @@ pub(super) struct ClosedTradeFill {
 
 impl BrokerState {
     pub(super) fn record_closed_trade_fill(&mut self, fill: ClosedTradeFill) {
+        self.record_window_realized_pnl(fill.profit);
         self.trades.push(StrategyTrade {
             id: fill.entry_id,
             exit_id: fill.exit_id,
@@ -112,7 +113,6 @@ impl BrokerState {
         }
         self.avg_price = trade.entry_price;
         self.open_entry_commission = trade.entry_commission;
-        self.cash -= signed_size * trade.entry_price + trade.entry_commission;
         self.entry_id = Some(trade.id.clone());
         self.entry_bar_index = Some(trade.entry_bar_index);
         self.entry_time = Some(trade.entry_time);

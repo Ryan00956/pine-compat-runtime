@@ -144,19 +144,24 @@ impl BrokerState {
             ) => Some(PendingExitReservationFamily::Trailing),
             _ => None,
         };
-        let released_identity =
-            multiple_reservation_family.map(|_| (id.as_str(), from_entry.as_str()));
-        let other_exits_are_supported_reservations = multiple_reservation_family.is_some()
+        let oca_group = self.placing_exit_oca_group();
+        let released_identity = Some((id.as_str(), from_entry.as_str()));
+        let share_oca_group = oca_group
+            .as_ref()
+            .is_some_and(|group| self.has_same_exit_oca_group_peer(released_identity, group));
+        let keep_existing_peers = multiple_reservation_family.is_some() || share_oca_group;
+        let other_exits_are_supported_reservations = keep_existing_peers
             && self
                 .order_book
                 .exits()
                 .other_exits_are_supported_reservations(&from_entry, released_identity);
-        let available_quantity = if other_exits_are_supported_reservations {
-            self.order_book.exits_mut().available_unreserved_quantity(
-                target_position_size,
+        let available_quantity = if other_exits_are_supported_reservations || share_oca_group {
+            let reserved = self.reserved_quantity_excluding_oca_group(
                 &from_entry,
                 released_identity,
-            )
+                oca_group.as_ref(),
+            );
+            (target_position_size - reserved).max(0.0)
         } else {
             target_position_size
         };
@@ -195,7 +200,9 @@ impl BrokerState {
             last_update_bar_index: bar_index,
             metadata,
         };
-        if multiple_reservation_family.is_some() && other_exits_are_supported_reservations {
+        let exit_id = pending_exit.id.clone();
+        let exit_from = pending_exit.from_entry.clone();
+        if (keep_existing_peers && other_exits_are_supported_reservations) || share_oca_group {
             self.order_book.exits_mut().replace_or_append(pending_exit);
         } else {
             if pending_exit.from_entry.is_empty()
@@ -207,6 +214,7 @@ impl BrokerState {
             }
             self.order_book.exits_mut().replace_all(pending_exit);
         }
+        self.assign_placed_exit_oca(&exit_id, &exit_from);
     }
 
     pub(super) fn resolve_exit_quantity_request_for_available(

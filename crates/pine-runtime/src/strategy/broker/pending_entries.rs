@@ -1,5 +1,6 @@
 use super::StrategyOrderMetadata;
 use super::ledger::TradeDirection;
+use super::types::{InternalOrderKey, StrategyCommandOrigin};
 use crate::RuntimeDiagnostic;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -27,6 +28,8 @@ pub(super) enum PendingEntryKind {
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct PendingEntry {
     pub(super) id: String,
+    pub(super) key: InternalOrderKey,
+    pub(super) origin: StrategyCommandOrigin,
     pub(super) direction: PendingEntryDirection,
     pub(super) kind: PendingEntryKind,
     pub(super) quantity: f64,
@@ -42,6 +45,15 @@ impl PendingEntry {
             PendingEntryDirection::Long => TradeDirection::Long,
             PendingEntryDirection::Short => TradeDirection::Short,
         }
+    }
+
+    pub(super) fn enforce_pyramiding(&self) -> bool {
+        matches!(self.origin, StrategyCommandOrigin::Entry)
+    }
+
+    #[allow(dead_code)]
+    pub(super) fn creation_sequence(&self) -> u64 {
+        self.key.0
     }
 }
 
@@ -61,17 +73,28 @@ struct LongEntryPlacement {
     quantity: f64,
     created_bar_index: usize,
     metadata: StrategyOrderMetadata,
-    enforce_pyramiding: bool,
+    origin: StrategyCommandOrigin,
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub(super) struct PendingEntryBook {
     entries: Vec<PendingEntry>,
+    next_creation_sequence: u64,
+    allow_same_bar_price_fills: bool,
 }
 
 impl PendingEntryBook {
     pub(super) fn new() -> Self {
         Self::default()
+    }
+
+    pub(super) fn set_allow_same_bar_price_fills(&mut self, allow_same_bar_price_fills: bool) {
+        self.allow_same_bar_price_fills = allow_same_bar_price_fills;
+    }
+
+    fn price_created_eligible(&self, created_bar_index: usize, bar_index: usize) -> bool {
+        created_bar_index < bar_index
+            || (self.allow_same_bar_price_fills && created_bar_index == bar_index)
     }
 
     #[allow(dead_code)]
@@ -95,6 +118,21 @@ impl PendingEntryBook {
             .find(|pending_entry| pending_entry.id == id)
     }
 
+    pub(super) fn remove_by_key(
+        &mut self,
+        key: super::types::InternalOrderKey,
+    ) -> Option<PendingEntry> {
+        let position = self.entries.iter().position(|pending| pending.key == key)?;
+        Some(self.entries.remove(position))
+    }
+
+    pub(super) fn find_mut_by_key(
+        &mut self,
+        key: super::types::InternalOrderKey,
+    ) -> Option<&mut PendingEntry> {
+        self.entries.iter_mut().find(|pending| pending.key == key)
+    }
+
     pub(super) fn quantity_for_id(&self, id: &str) -> Option<f64> {
         self.find_by_id(id)
             .map(|pending_entry| pending_entry.quantity)
@@ -104,7 +142,7 @@ impl PendingEntryBook {
         self.entries.iter().any(|pending_entry| {
             pending_entry.direction == PendingEntryDirection::Long
                 && matches!(pending_entry.kind, PendingEntryKind::Limit { .. })
-                && !pending_entry.enforce_pyramiding
+                && !pending_entry.enforce_pyramiding()
         })
     }
 
@@ -112,7 +150,7 @@ impl PendingEntryBook {
         self.entries.iter().any(|pending_entry| {
             pending_entry.direction == PendingEntryDirection::Long
                 && matches!(pending_entry.kind, PendingEntryKind::Stop { .. })
-                && !pending_entry.enforce_pyramiding
+                && !pending_entry.enforce_pyramiding()
         })
     }
 
@@ -120,7 +158,7 @@ impl PendingEntryBook {
         self.entries.iter().any(|pending_entry| {
             pending_entry.direction == PendingEntryDirection::Long
                 && matches!(pending_entry.kind, PendingEntryKind::StopLimit { .. })
-                && !pending_entry.enforce_pyramiding
+                && !pending_entry.enforce_pyramiding()
         })
     }
 
@@ -133,7 +171,7 @@ impl PendingEntryBook {
                         | PendingEntryKind::Stop { .. }
                         | PendingEntryKind::StopLimit { .. }
                 )
-                && !pending_entry.enforce_pyramiding
+                && !pending_entry.enforce_pyramiding()
         })
     }
 
@@ -141,7 +179,7 @@ impl PendingEntryBook {
         self.entries.iter().any(|pending_entry| {
             pending_entry.direction == PendingEntryDirection::Short
                 && matches!(pending_entry.kind, PendingEntryKind::Limit { .. })
-                && !pending_entry.enforce_pyramiding
+                && !pending_entry.enforce_pyramiding()
         })
     }
 
@@ -149,7 +187,7 @@ impl PendingEntryBook {
         self.entries.iter().any(|pending_entry| {
             pending_entry.direction == PendingEntryDirection::Short
                 && matches!(pending_entry.kind, PendingEntryKind::Stop { .. })
-                && !pending_entry.enforce_pyramiding
+                && !pending_entry.enforce_pyramiding()
         })
     }
 
@@ -157,7 +195,7 @@ impl PendingEntryBook {
         self.entries.iter().any(|pending_entry| {
             pending_entry.direction == PendingEntryDirection::Short
                 && matches!(pending_entry.kind, PendingEntryKind::StopLimit { .. })
-                && !pending_entry.enforce_pyramiding
+                && !pending_entry.enforce_pyramiding()
         })
     }
 
@@ -170,7 +208,7 @@ impl PendingEntryBook {
                         | PendingEntryKind::Stop { .. }
                         | PendingEntryKind::StopLimit { .. }
                 )
-                && !pending_entry.enforce_pyramiding
+                && !pending_entry.enforce_pyramiding()
         })
     }
 
@@ -193,6 +231,17 @@ impl PendingEntryBook {
         Some(self.entries.remove(position))
     }
 
+    pub(super) fn take_first_same_bar_market(&mut self, bar_index: usize) -> Option<PendingEntry> {
+        let position = self.entries.iter().position(|pending_entry| {
+            matches!(
+                pending_entry.direction,
+                PendingEntryDirection::Long | PendingEntryDirection::Short
+            ) && pending_entry.kind == PendingEntryKind::Market
+                && pending_entry.created_bar_index == bar_index
+        })?;
+        Some(self.entries.remove(position))
+    }
+
     #[allow(dead_code)]
     pub(super) fn take_first_eligible_limit_long(
         &mut self,
@@ -203,7 +252,7 @@ impl PendingEntryBook {
         let position = self.entries.iter().position(|pending_entry| {
             pending_entry.direction == PendingEntryDirection::Long
                 && matches!(pending_entry.kind, PendingEntryKind::Limit { price } if low <= price - verification_offset)
-                && pending_entry.created_bar_index < bar_index
+                && self.price_created_eligible(pending_entry.created_bar_index, bar_index)
         })?;
         Some(self.entries.remove(position))
     }
@@ -220,7 +269,7 @@ impl PendingEntryBook {
             let pending_entry = &self.entries[index];
             let is_eligible = pending_entry.direction == PendingEntryDirection::Long
                 && matches!(pending_entry.kind, PendingEntryKind::Limit { price } if low <= price - verification_offset)
-                && pending_entry.created_bar_index < bar_index;
+                && self.price_created_eligible(pending_entry.created_bar_index, bar_index);
             if is_eligible {
                 eligible.push(self.entries.remove(index));
             } else {
@@ -242,7 +291,7 @@ impl PendingEntryBook {
             let pending_entry = &self.entries[index];
             let is_eligible = pending_entry.direction == PendingEntryDirection::Short
                 && matches!(pending_entry.kind, PendingEntryKind::Limit { price } if high >= price + verification_offset)
-                && pending_entry.created_bar_index < bar_index;
+                && self.price_created_eligible(pending_entry.created_bar_index, bar_index);
             if is_eligible {
                 eligible.push(self.entries.remove(index));
             } else {
@@ -261,7 +310,7 @@ impl PendingEntryBook {
         let position = self.entries.iter().position(|pending_entry| {
             pending_entry.direction == PendingEntryDirection::Long
                 && matches!(pending_entry.kind, PendingEntryKind::Stop { price } if high >= price)
-                && pending_entry.created_bar_index < bar_index
+                && self.price_created_eligible(pending_entry.created_bar_index, bar_index)
         })?;
         Some(self.entries.remove(position))
     }
@@ -277,7 +326,7 @@ impl PendingEntryBook {
             let pending_entry = &self.entries[index];
             let is_eligible = pending_entry.direction == PendingEntryDirection::Long
                 && matches!(pending_entry.kind, PendingEntryKind::Stop { price } if high >= price)
-                && pending_entry.created_bar_index < bar_index;
+                && self.price_created_eligible(pending_entry.created_bar_index, bar_index);
             if is_eligible {
                 eligible.push(self.entries.remove(index));
             } else {
@@ -298,7 +347,7 @@ impl PendingEntryBook {
             let pending_entry = &self.entries[index];
             let is_eligible = pending_entry.direction == PendingEntryDirection::Short
                 && matches!(pending_entry.kind, PendingEntryKind::Stop { price } if low <= price)
-                && pending_entry.created_bar_index < bar_index;
+                && self.price_created_eligible(pending_entry.created_bar_index, bar_index);
             if is_eligible {
                 eligible.push(self.entries.remove(index));
             } else {
@@ -309,9 +358,11 @@ impl PendingEntryBook {
     }
 
     pub(super) fn activate_stop_limit_long_entries(&mut self, bar_index: usize, high: f64) {
+        let allow_same_bar = self.allow_same_bar_price_fills;
         for pending_entry in &mut self.entries {
             if pending_entry.direction != PendingEntryDirection::Long
-                || pending_entry.created_bar_index >= bar_index
+                || !(pending_entry.created_bar_index < bar_index
+                    || (allow_same_bar && pending_entry.created_bar_index == bar_index))
             {
                 continue;
             }
@@ -330,9 +381,11 @@ impl PendingEntryBook {
     }
 
     pub(super) fn activate_stop_limit_short_entries(&mut self, bar_index: usize, low: f64) {
+        let allow_same_bar = self.allow_same_bar_price_fills;
         for pending_entry in &mut self.entries {
             if pending_entry.direction != PendingEntryDirection::Short
-                || pending_entry.created_bar_index >= bar_index
+                || !(pending_entry.created_bar_index < bar_index
+                    || (allow_same_bar && pending_entry.created_bar_index == bar_index))
             {
                 continue;
             }
@@ -449,7 +502,7 @@ impl PendingEntryBook {
                 quantity,
                 created_bar_index,
                 metadata,
-                enforce_pyramiding: true,
+                origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
         );
@@ -471,7 +524,7 @@ impl PendingEntryBook {
                 quantity,
                 created_bar_index,
                 metadata,
-                enforce_pyramiding: false,
+                origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
         );
@@ -493,7 +546,7 @@ impl PendingEntryBook {
                 quantity,
                 created_bar_index,
                 metadata,
-                enforce_pyramiding: true,
+                origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
         );
@@ -515,7 +568,7 @@ impl PendingEntryBook {
                 quantity,
                 created_bar_index,
                 metadata,
-                enforce_pyramiding: false,
+                origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
         );
@@ -545,7 +598,7 @@ impl PendingEntryBook {
                 quantity,
                 created_bar_index,
                 metadata,
-                enforce_pyramiding: true,
+                origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
         );
@@ -575,7 +628,7 @@ impl PendingEntryBook {
                 quantity,
                 created_bar_index,
                 metadata,
-                enforce_pyramiding: true,
+                origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
         );
@@ -605,7 +658,7 @@ impl PendingEntryBook {
                 quantity,
                 created_bar_index,
                 metadata,
-                enforce_pyramiding: false,
+                origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
         );
@@ -635,7 +688,7 @@ impl PendingEntryBook {
                 quantity,
                 created_bar_index,
                 metadata,
-                enforce_pyramiding: false,
+                origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
         );
@@ -665,7 +718,7 @@ impl PendingEntryBook {
                 quantity,
                 created_bar_index,
                 metadata,
-                enforce_pyramiding: true,
+                origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
         );
@@ -695,7 +748,7 @@ impl PendingEntryBook {
                 quantity,
                 created_bar_index,
                 metadata,
-                enforce_pyramiding: true,
+                origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
         );
@@ -725,7 +778,7 @@ impl PendingEntryBook {
                 quantity,
                 created_bar_index,
                 metadata,
-                enforce_pyramiding: false,
+                origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
         );
@@ -755,7 +808,7 @@ impl PendingEntryBook {
                 quantity,
                 created_bar_index,
                 metadata,
-                enforce_pyramiding: false,
+                origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
         );
@@ -789,7 +842,7 @@ impl PendingEntryBook {
                 quantity: placement.quantity,
                 created_bar_index: placement.created_bar_index,
                 metadata: placement.metadata,
-                enforce_pyramiding: true,
+                origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
         );
@@ -823,7 +876,7 @@ impl PendingEntryBook {
                 quantity: placement.quantity,
                 created_bar_index: placement.created_bar_index,
                 metadata: placement.metadata,
-                enforce_pyramiding: true,
+                origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
         );
@@ -857,7 +910,7 @@ impl PendingEntryBook {
                 quantity: placement.quantity,
                 created_bar_index: placement.created_bar_index,
                 metadata: placement.metadata,
-                enforce_pyramiding: false,
+                origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
         );
@@ -891,7 +944,7 @@ impl PendingEntryBook {
                 quantity: placement.quantity,
                 created_bar_index: placement.created_bar_index,
                 metadata: placement.metadata,
-                enforce_pyramiding: false,
+                origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
         );
@@ -909,14 +962,32 @@ impl PendingEntryBook {
             });
             return;
         }
+        if self.entries.iter().any(|existing| {
+            existing.id == placement.id && existing.direction != placement.direction
+        }) {
+            self.entries.retain(|existing| existing.id != placement.id);
+        }
+        let key = if let Some(existing) = self
+            .entries
+            .iter()
+            .find(|existing| existing.id == placement.id)
+        {
+            existing.key
+        } else {
+            let key = InternalOrderKey(self.next_creation_sequence);
+            self.next_creation_sequence = self.next_creation_sequence.wrapping_add(1);
+            key
+        };
         let pending_entry = PendingEntry {
             id: placement.id,
+            key,
+            origin: placement.origin,
             direction: placement.direction,
             kind: placement.kind,
             quantity: placement.quantity,
             created_bar_index: placement.created_bar_index,
             metadata: placement.metadata,
-            enforce_pyramiding: placement.enforce_pyramiding,
+            enforce_pyramiding: matches!(placement.origin, StrategyCommandOrigin::Entry),
         };
         if let Some(existing) = self
             .entries

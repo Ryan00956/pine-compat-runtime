@@ -1,3 +1,3 @@
 //@version=5
-strategy("Unsupported strategy declaration properties", calc_on_order_fills=true, calc_on_every_tick=true, process_orders_on_close=true, currency="USD", risk_free_rate=0.02, use_bar_magnifier=true, fill_orders_on_standard_ohlc=true)
+strategy("Unsupported strategy declaration properties", currency="USD", risk_free_rate=0.02, use_bar_magnifier=true, fill_orders_on_standard_ohlc=true)
 plot(close)

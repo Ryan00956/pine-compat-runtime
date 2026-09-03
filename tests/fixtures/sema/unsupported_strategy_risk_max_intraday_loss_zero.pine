@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported strategy risk max_intraday_loss zero")
+strategy.risk.max_intraday_loss(0, strategy.cash)

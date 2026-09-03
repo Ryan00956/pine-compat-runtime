@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported series calc_on_order_fills", calc_on_order_fills=close > open)
+plot(close)

@@ -1,0 +1,10 @@
+//@version=5
+strategy("Process orders on close immediately", process_orders_on_close=true)
+
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 2
+    strategy.close("L", immediately=true)
+
+plot(strategy.position_size)
+plot(strategy.closedtrades)

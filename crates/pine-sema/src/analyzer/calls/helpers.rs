@@ -667,6 +667,12 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "strategy.cancel"
             | "strategy.cancel_all"
             | "strategy.exit"
+            | "strategy.risk.allow_entry_in"
+            | "strategy.risk.max_position_size"
+            | "strategy.risk.max_drawdown"
+            | "strategy.risk.max_intraday_loss"
+            | "strategy.risk.max_intraday_filled_orders"
+            | "strategy.risk.max_cons_loss_days"
     ) || name == "input"
         || name.starts_with("input.")
 }

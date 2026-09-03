@@ -192,7 +192,7 @@ expose public pending-order or cancellation records.
 `strategy.exit(id, from_entry, stop=price)`,
 `strategy.exit(id, from_entry, limit=price)`,
 `strategy.exit(id, from_entry, profit=ticks)`, and
-`strategy.exit(id, from_entry, loss=ticks)` support the current long-only
+`strategy.exit(id, from_entry, loss=ticks)` support the current long
 full-position single-trigger exit subset. Stage 14f also supports market-short
 single-trigger `stop=price` and `limit=price` covers against a matching open or
 pending short entry; short stop fills when `high >= stop`, short limit fills
@@ -223,7 +223,7 @@ touched on the same eligible historical bar, the downside stop/loss leg fills
 first. Profit and loss use positive tick distances converted from
 `strategy.position_avg_price` with the fixed default `syminfo.mintick`. Phase S
 also supports exactly two
-trailing forms for the current long-only broker: `trail_price + trail_offset`
+trailing forms for the current side-aware broker: `trail_price + trail_offset`
 and `trail_points + trail_offset`. `trail_price` is an explicit activation
 price, `trail_points` converts once from `strategy.position_avg_price`, and
 `trail_offset` converts once to a fixed price distance using the same fixed

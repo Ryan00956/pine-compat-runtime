@@ -22,6 +22,34 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
         "tests/fixtures/runtime/strategy_entry_long_reverses_short.pine",
     ),
     (
+        "runtime_strategy_entry_limit_reverses_short.json",
+        "tests/fixtures/runtime/strategy_entry_limit_reverses_short.pine",
+    ),
+    (
+        "runtime_strategy_entry_limit_reverses_long.json",
+        "tests/fixtures/runtime/strategy_entry_limit_reverses_long.pine",
+    ),
+    (
+        "runtime_strategy_entry_limit_reverses_short_qty.json",
+        "tests/fixtures/runtime/strategy_entry_limit_reverses_short_qty.pine",
+    ),
+    (
+        "runtime_strategy_entry_stop_reverses_short.json",
+        "tests/fixtures/runtime/strategy_entry_stop_reverses_short.pine",
+    ),
+    (
+        "runtime_strategy_entry_stop_reverses_long.json",
+        "tests/fixtures/runtime/strategy_entry_stop_reverses_long.pine",
+    ),
+    (
+        "runtime_strategy_entry_stop_limit_reverses_short.json",
+        "tests/fixtures/runtime/strategy_entry_stop_limit_reverses_short.pine",
+    ),
+    (
+        "runtime_strategy_entry_stop_limit_reverses_long.json",
+        "tests/fixtures/runtime/strategy_entry_stop_limit_reverses_long.pine",
+    ),
+    (
         "runtime_strategy_entry_metadata.json",
         "tests/fixtures/runtime/strategy_entry_metadata.pine",
     ),
@@ -86,8 +114,64 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
         "tests/fixtures/runtime/strategy_order_limit_short.pine",
     ),
     (
+        "runtime_strategy_order_limit_long_against_short.json",
+        "tests/fixtures/runtime/strategy_order_limit_long_against_short.pine",
+    ),
+    (
+        "runtime_strategy_order_limit_short_against_long.json",
+        "tests/fixtures/runtime/strategy_order_limit_short_against_long.pine",
+    ),
+    (
+        "runtime_strategy_order_limit_long_flatten_short.json",
+        "tests/fixtures/runtime/strategy_order_limit_long_flatten_short.pine",
+    ),
+    (
+        "runtime_strategy_order_limit_short_flatten_long.json",
+        "tests/fixtures/runtime/strategy_order_limit_short_flatten_long.pine",
+    ),
+    (
+        "runtime_strategy_order_limit_long_reduce_short.json",
+        "tests/fixtures/runtime/strategy_order_limit_long_reduce_short.pine",
+    ),
+    (
+        "runtime_strategy_order_limit_short_reduce_long.json",
+        "tests/fixtures/runtime/strategy_order_limit_short_reduce_long.pine",
+    ),
+    (
         "runtime_strategy_order_stop_short.json",
         "tests/fixtures/runtime/strategy_order_stop_short.pine",
+    ),
+    (
+        "runtime_strategy_order_stop_long_against_short.json",
+        "tests/fixtures/runtime/strategy_order_stop_long_against_short.pine",
+    ),
+    (
+        "runtime_strategy_order_stop_short_against_long.json",
+        "tests/fixtures/runtime/strategy_order_stop_short_against_long.pine",
+    ),
+    (
+        "runtime_strategy_order_stop_long_flatten_short.json",
+        "tests/fixtures/runtime/strategy_order_stop_long_flatten_short.pine",
+    ),
+    (
+        "runtime_strategy_order_stop_short_reduce_long.json",
+        "tests/fixtures/runtime/strategy_order_stop_short_reduce_long.pine",
+    ),
+    (
+        "runtime_strategy_order_stop_limit_long_against_short.json",
+        "tests/fixtures/runtime/strategy_order_stop_limit_long_against_short.pine",
+    ),
+    (
+        "runtime_strategy_order_stop_limit_short_against_long.json",
+        "tests/fixtures/runtime/strategy_order_stop_limit_short_against_long.pine",
+    ),
+    (
+        "runtime_strategy_order_stop_limit_long_flatten_short.json",
+        "tests/fixtures/runtime/strategy_order_stop_limit_long_flatten_short.pine",
+    ),
+    (
+        "runtime_strategy_order_stop_limit_short_reduce_long.json",
+        "tests/fixtures/runtime/strategy_order_stop_limit_short_reduce_long.pine",
     ),
     (
         "runtime_strategy_order_stop_limit_short.json",
@@ -100,6 +184,70 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
     (
         "runtime_strategy_order_stop_limit_default_quantity.json",
         "tests/fixtures/runtime/strategy_order_stop_limit_default_quantity.pine",
+    ),
+    (
+        "runtime_strategy_order_short_flat_noop.json",
+        "tests/fixtures/runtime/strategy_order_short_flat_noop.pine",
+    ),
+    (
+        "runtime_strategy_order_market_short_increase.json",
+        "tests/fixtures/runtime/strategy_order_market_short_increase.pine",
+    ),
+    (
+        "runtime_strategy_order_long_flatten_short.json",
+        "tests/fixtures/runtime/strategy_order_long_flatten_short.pine",
+    ),
+    (
+        "runtime_strategy_order_long_reduce_short.json",
+        "tests/fixtures/runtime/strategy_order_long_reduce_short.pine",
+    ),
+    (
+        "runtime_strategy_order_short_flatten_long.json",
+        "tests/fixtures/runtime/strategy_order_short_flatten_long.pine",
+    ),
+    (
+        "runtime_strategy_order_long_against_short.json",
+        "tests/fixtures/runtime/strategy_order_long_against_short.pine",
+    ),
+    (
+        "runtime_strategy_order_short_oversized_against_long.json",
+        "tests/fixtures/runtime/strategy_order_short_oversized_against_long.pine",
+    ),
+    (
+        "runtime_strategy_order_replace_limit_with_stop.json",
+        "tests/fixtures/runtime/strategy_order_replace_limit_with_stop.pine",
+    ),
+    (
+        "runtime_strategy_order_replace_long_with_short.json",
+        "tests/fixtures/runtime/strategy_order_replace_long_with_short.pine",
+    ),
+    (
+        "runtime_strategy_order_cancel_shared_id.json",
+        "tests/fixtures/runtime/strategy_order_cancel_shared_id.pine",
+    ),
+    (
+        "runtime_strategy_order_reduce_fifo.json",
+        "tests/fixtures/runtime/strategy_order_reduce_fifo.pine",
+    ),
+    (
+        "runtime_strategy_order_reduce_any_matching_id.json",
+        "tests/fixtures/runtime/strategy_order_reduce_any_matching_id.pine",
+    ),
+    (
+        "runtime_strategy_order_oca_none.json",
+        "tests/fixtures/runtime/strategy_order_oca_none.pine",
+    ),
+    (
+        "runtime_strategy_order_oca_cancel.json",
+        "tests/fixtures/runtime/strategy_order_oca_cancel.pine",
+    ),
+    (
+        "runtime_strategy_order_oca_reduce.json",
+        "tests/fixtures/runtime/strategy_order_oca_reduce.pine",
+    ),
+    (
+        "runtime_strategy_order_oca_reduce_zero.json",
+        "tests/fixtures/runtime/strategy_order_oca_reduce_zero.pine",
     ),
     (
         "runtime_strategy_constants.json",
@@ -170,6 +318,138 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
         "tests/fixtures/runtime/strategy_close_all_exit.pine",
     ),
     (
+        "runtime_strategy_close_immediately.json",
+        "tests/fixtures/runtime/strategy_close_immediately.pine",
+    ),
+    (
+        "runtime_strategy_close_all_immediately.json",
+        "tests/fixtures/runtime/strategy_close_all_immediately.pine",
+    ),
+    (
+        "runtime_strategy_close_immediately_false.json",
+        "tests/fixtures/runtime/strategy_close_immediately_false.pine",
+    ),
+    (
+        "runtime_strategy_close_immediately_qty.json",
+        "tests/fixtures/runtime/strategy_close_immediately_qty.pine",
+    ),
+    (
+        "runtime_strategy_close_immediately_short.json",
+        "tests/fixtures/runtime/strategy_close_immediately_short.pine",
+    ),
+    (
+        "runtime_strategy_process_orders_on_close.json",
+        "tests/fixtures/runtime/strategy_process_orders_on_close.pine",
+    ),
+    (
+        "runtime_strategy_process_orders_on_close_close.json",
+        "tests/fixtures/runtime/strategy_process_orders_on_close_close.pine",
+    ),
+    (
+        "runtime_strategy_process_orders_on_close_immediately.json",
+        "tests/fixtures/runtime/strategy_process_orders_on_close_immediately.pine",
+    ),
+    (
+        "runtime_strategy_calc_on_every_tick.json",
+        "tests/fixtures/runtime/strategy_calc_on_every_tick.pine",
+    ),
+    (
+        "runtime_strategy_calc_on_order_fills.json",
+        "tests/fixtures/runtime/strategy_calc_on_order_fills.pine",
+    ),
+    (
+        "runtime_strategy_calc_on_order_fills_false.json",
+        "tests/fixtures/runtime/strategy_calc_on_order_fills_false.pine",
+    ),
+    (
+        "runtime_strategy_calc_on_order_fills_exit_avg.json",
+        "tests/fixtures/runtime/strategy_calc_on_order_fills_exit_avg.pine",
+    ),
+    (
+        "runtime_strategy_fill_path_limit_stop_collision.json",
+        "tests/fixtures/runtime/strategy_fill_path_limit_stop_collision.pine",
+    ),
+    (
+        "runtime_strategy_risk_allow_entry_in_long.json",
+        "tests/fixtures/runtime/strategy_risk_allow_entry_in_long.pine",
+    ),
+    (
+        "runtime_strategy_risk_allow_entry_in_short.json",
+        "tests/fixtures/runtime/strategy_risk_allow_entry_in_short.pine",
+    ),
+    (
+        "runtime_strategy_risk_allow_entry_in_long_flat_noop.json",
+        "tests/fixtures/runtime/strategy_risk_allow_entry_in_long_flat_noop.pine",
+    ),
+    (
+        "runtime_strategy_risk_allow_entry_in_order_unaffected.json",
+        "tests/fixtures/runtime/strategy_risk_allow_entry_in_order_unaffected.pine",
+    ),
+    (
+        "runtime_strategy_risk_allow_entry_in_repeated.json",
+        "tests/fixtures/runtime/strategy_risk_allow_entry_in_repeated.pine",
+    ),
+    (
+        "runtime_strategy_risk_max_position_size_reduces.json",
+        "tests/fixtures/runtime/strategy_risk_max_position_size_reduces.pine",
+    ),
+    (
+        "runtime_strategy_risk_max_position_size_full_noop.json",
+        "tests/fixtures/runtime/strategy_risk_max_position_size_full_noop.pine",
+    ),
+    (
+        "runtime_strategy_risk_max_position_size_reversal.json",
+        "tests/fixtures/runtime/strategy_risk_max_position_size_reversal.pine",
+    ),
+    (
+        "runtime_strategy_risk_max_position_size_order_unaffected.json",
+        "tests/fixtures/runtime/strategy_risk_max_position_size_order_unaffected.pine",
+    ),
+    (
+        "runtime_strategy_risk_max_position_size_pyramiding.json",
+        "tests/fixtures/runtime/strategy_risk_max_position_size_pyramiding.pine",
+    ),
+    (
+        "runtime_strategy_risk_max_position_size_limit.json",
+        "tests/fixtures/runtime/strategy_risk_max_position_size_limit.pine",
+    ),
+    (
+        "runtime_strategy_risk_max_drawdown_cash.json",
+        "tests/fixtures/runtime/strategy_risk_max_drawdown_cash.pine",
+    ),
+    (
+        "runtime_strategy_risk_max_drawdown_percent.json",
+        "tests/fixtures/runtime/strategy_risk_max_drawdown_percent.pine",
+    ),
+    (
+        "runtime_strategy_risk_max_drawdown_blocks_order.json",
+        "tests/fixtures/runtime/strategy_risk_max_drawdown_blocks_order.pine",
+    ),
+    (
+        "runtime_strategy_risk_max_intraday_filled_orders.json",
+        "tests/fixtures/runtime/strategy_risk_max_intraday_filled_orders.pine",
+    ),
+    (
+        "runtime_strategy_risk_max_intraday_filled_orders_reset.json",
+        "tests/fixtures/runtime/strategy_risk_max_intraday_filled_orders_reset.pine",
+    ),
+    (
+        "runtime_strategy_risk_max_intraday_loss_cash.json",
+        "tests/fixtures/runtime/strategy_risk_max_intraday_loss_cash.pine",
+    ),
+    (
+        "runtime_strategy_risk_max_intraday_loss_percent.json",
+        "tests/fixtures/runtime/strategy_risk_max_intraday_loss_percent.pine",
+    ),
+    (
+        "runtime_strategy_risk_max_cons_loss_days.json",
+        "tests/fixtures/runtime/strategy_risk_max_cons_loss_days.pine",
+    ),
+    (
+        "runtime_strategy_risk_max_cons_loss_days_no_trade.json",
+        "tests/fixtures/runtime/strategy_risk_max_cons_loss_days_no_trade.pine",
+    ),
+    (
         "runtime_strategy_cancel_entry.json",
         "tests/fixtures/runtime/strategy_cancel_entry.pine",
     ),
@@ -192,6 +472,18 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
     (
         "runtime_strategy_cancel_all_noop.json",
         "tests/fixtures/runtime/strategy_cancel_all_noop.pine",
+    ),
+    (
+        "runtime_strategy_cancel_shared_id_entry_exit.json",
+        "tests/fixtures/runtime/strategy_cancel_shared_id_entry_exit.pine",
+    ),
+    (
+        "runtime_strategy_cancel_shared_id_close_exit.json",
+        "tests/fixtures/runtime/strategy_cancel_shared_id_close_exit.pine",
+    ),
+    (
+        "runtime_strategy_cancel_all_families.json",
+        "tests/fixtures/runtime/strategy_cancel_all_families.pine",
     ),
     (
         "runtime_strategy_exit_stop.json",

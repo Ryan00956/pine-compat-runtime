@@ -56,7 +56,19 @@ impl<'a> HistoricalRuntime<'a> {
             "strategy.close_all" => self.eval_strategy_close_all(args),
             "strategy.cancel" => self.eval_strategy_cancel(args),
             "strategy.cancel_all" => self.eval_strategy_cancel_all(),
-            "strategy.exit" => self.eval_strategy_exit(args),
+            "strategy.exit" => {
+                let result = self.eval_strategy_exit(args);
+                self.strategy_broker.set_next_exit_oca_name(None);
+                result
+            }
+            "strategy.risk.allow_entry_in" => self.eval_strategy_risk_allow_entry_in(args),
+            "strategy.risk.max_position_size" => self.eval_strategy_risk_max_position_size(args),
+            "strategy.risk.max_drawdown" => self.eval_strategy_risk_max_drawdown(args),
+            "strategy.risk.max_intraday_loss" => self.eval_strategy_risk_max_intraday_loss(args),
+            "strategy.risk.max_intraday_filled_orders" => {
+                self.eval_strategy_risk_max_intraday_filled_orders(args)
+            }
+            "strategy.risk.max_cons_loss_days" => self.eval_strategy_risk_max_cons_loss_days(args),
             "strategy.closedtrades.entry_price"
             | "strategy.closedtrades.entry_comment"
             | "strategy.closedtrades.entry_id"
@@ -131,6 +143,134 @@ impl<'a> HistoricalRuntime<'a> {
             .strategy_settings
             .default_entry_qty(equity, fill_price)
             .map_or(PineValue::Na, PineValue::Float))
+    }
+
+    fn eval_strategy_risk_allow_entry_in(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(value_expr) = call_arg_expr(args, 0, "value") else {
+            return Ok(PineValue::Void);
+        };
+        let PineValue::String(value) = self.eval_expr(value_expr)? else {
+            return Ok(PineValue::Void);
+        };
+        self.strategy_broker.set_allow_entry_in(&value);
+        Ok(PineValue::Void)
+    }
+
+    fn eval_strategy_risk_max_drawdown(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(value_expr) = call_arg_expr(args, 0, "value") else {
+            return Ok(PineValue::Void);
+        };
+        let Some(type_expr) = call_arg_expr(args, 1, "type") else {
+            return Ok(PineValue::Void);
+        };
+        let Some(value) = self.eval_expr(value_expr)?.as_f64() else {
+            return Ok(PineValue::Void);
+        };
+        let PineValue::String(type_name) = self.eval_expr(type_expr)? else {
+            return Ok(PineValue::Void);
+        };
+        let alert_message = match call_arg_expr(args, 2, "alert_message") {
+            Some(expr) => match self.eval_expr(expr)? {
+                PineValue::String(message) => Some(message),
+                _ => None,
+            },
+            None => None,
+        };
+        self.strategy_broker
+            .set_max_drawdown(value, &type_name, alert_message);
+        Ok(PineValue::Void)
+    }
+
+    fn eval_strategy_risk_max_intraday_loss(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(value_expr) = call_arg_expr(args, 0, "value") else {
+            return Ok(PineValue::Void);
+        };
+        let Some(type_expr) = call_arg_expr(args, 1, "type") else {
+            return Ok(PineValue::Void);
+        };
+        let Some(value) = self.eval_expr(value_expr)?.as_f64() else {
+            return Ok(PineValue::Void);
+        };
+        let PineValue::String(type_name) = self.eval_expr(type_expr)? else {
+            return Ok(PineValue::Void);
+        };
+        let alert_message = match call_arg_expr(args, 2, "alert_message") {
+            Some(expr) => match self.eval_expr(expr)? {
+                PineValue::String(message) => Some(message),
+                _ => None,
+            },
+            None => None,
+        };
+        self.strategy_broker
+            .set_max_intraday_loss(value, &type_name, alert_message);
+        Ok(PineValue::Void)
+    }
+
+    fn eval_strategy_risk_max_intraday_filled_orders(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(count_expr) = call_arg_expr(args, 0, "count") else {
+            return Ok(PineValue::Void);
+        };
+        let Some(count) = self.eval_expr(count_expr)?.as_f64() else {
+            return Ok(PineValue::Void);
+        };
+        let alert_message = match call_arg_expr(args, 1, "alert_message") {
+            Some(expr) => match self.eval_expr(expr)? {
+                PineValue::String(message) => Some(message),
+                _ => None,
+            },
+            None => None,
+        };
+        self.strategy_broker
+            .set_max_intraday_filled_orders(count, alert_message);
+        Ok(PineValue::Void)
+    }
+
+    fn eval_strategy_risk_max_cons_loss_days(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(count_expr) = call_arg_expr(args, 0, "count") else {
+            return Ok(PineValue::Void);
+        };
+        let Some(count) = self.eval_expr(count_expr)?.as_f64() else {
+            return Ok(PineValue::Void);
+        };
+        let alert_message = match call_arg_expr(args, 1, "alert_message") {
+            Some(expr) => match self.eval_expr(expr)? {
+                PineValue::String(message) => Some(message),
+                _ => None,
+            },
+            None => None,
+        };
+        self.strategy_broker
+            .set_max_cons_loss_days(count, alert_message);
+        Ok(PineValue::Void)
+    }
+
+    fn eval_strategy_risk_max_position_size(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(contracts_expr) = call_arg_expr(args, 0, "contracts") else {
+            return Ok(PineValue::Void);
+        };
+        let Some(contracts) = self.eval_expr(contracts_expr)?.as_f64() else {
+            return Ok(PineValue::Void);
+        };
+        self.strategy_broker.set_max_position_size(contracts);
+        Ok(PineValue::Void)
     }
 
     fn eval_strategy_entry(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -286,6 +426,21 @@ impl<'a> HistoricalRuntime<'a> {
             None => None,
         };
         let metadata = self.eval_strategy_order_metadata(args)?;
+        let oca_name = match optional_order_arg_expr(5, "oca_name") {
+            Some(expr) => match self.eval_expr(expr)? {
+                PineValue::String(value) => Some(value),
+                _ => None,
+            },
+            None => None,
+        };
+        let oca_type = match optional_order_arg_expr(6, "oca_type") {
+            Some(expr) => match self.eval_expr(expr)? {
+                PineValue::String(value) => Some(value),
+                _ => None,
+            },
+            None => None,
+        };
+        let oca_id = id.clone();
         match direction {
             PineValue::String(value) if value == "strategy.long" => match (limit, stop) {
                 (Some(limit), Some(stop)) => self
@@ -329,6 +484,10 @@ impl<'a> HistoricalRuntime<'a> {
             },
             _ => {}
         }
+        if let Some(name) = oca_name {
+            self.strategy_broker
+                .assign_pending_order_oca_named(&oca_id, name, oca_type.as_deref());
+        }
         Ok(PineValue::Void)
     }
 
@@ -355,42 +514,75 @@ impl<'a> HistoricalRuntime<'a> {
             .map(|arg| &arg.value);
         let metadata = self.eval_strategy_close_metadata(args, 3)?;
 
-        if let Some(qty_expr) = qty_expr {
+        let quantity = if let Some(qty_expr) = qty_expr {
             let qty = self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN);
-            self.strategy_broker
-                .with_next_close_metadata(metadata, |broker| {
-                    broker.close_long_qty(id, self.bars, bar.time, bar.close, qty)
-                });
+            if !qty.is_finite() || qty <= 0.0 {
+                self.strategy_broker
+                    .with_next_close_metadata(metadata, |broker| {
+                        broker.close_long_qty(id, self.bars, bar.time, bar.close, qty)
+                    });
+                return Ok(PineValue::Void);
+            }
+            crate::strategy::PendingCloseQuantity::Qty(qty)
         } else if let Some(qty_percent_expr) = qty_percent_expr {
             let qty_percent = self
                 .eval_expr(qty_percent_expr)?
                 .as_f64()
                 .unwrap_or(f64::NAN);
+            if !qty_percent.is_finite() || qty_percent <= 0.0 {
+                self.strategy_broker
+                    .with_next_close_metadata(metadata, |broker| {
+                        broker.close_long_qty_percent(
+                            id,
+                            self.bars,
+                            bar.time,
+                            bar.close,
+                            qty_percent,
+                        )
+                    });
+                return Ok(PineValue::Void);
+            }
+            crate::strategy::PendingCloseQuantity::QtyPercent(qty_percent)
+        } else {
+            crate::strategy::PendingCloseQuantity::Full
+        };
+        let immediately = self.eval_strategy_immediately_arg(args, 6)?;
+        if immediately {
             self.strategy_broker
-                .with_next_close_metadata(metadata, |broker| {
-                    broker.close_long_qty_percent(id, self.bars, bar.time, bar.close, qty_percent)
-                });
+                .place_pending_close_with_immediately(id, quantity, self.bars, metadata, true);
+            self.fill_current_tick_market_closes();
         } else {
             self.strategy_broker
-                .with_next_close_metadata(metadata, |broker| {
-                    broker.close_long(id, self.bars, bar.time, bar.close)
-                });
+                .place_pending_close(id, quantity, self.bars, metadata);
         }
         Ok(PineValue::Void)
     }
 
     fn eval_strategy_close_all(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
-        let Some(bar) = self.current_bar else {
+        let Some(_bar) = self.current_bar else {
             return Err(RuntimeError {
                 message: "`strategy.close_all` requires an active bar".to_owned(),
             });
         };
         let metadata = self.eval_strategy_close_metadata(args, 0)?;
+        let immediately = self.eval_strategy_immediately_arg(args, 3)?;
 
-        self.strategy_broker
-            .with_next_close_metadata(metadata, |broker| {
-                broker.close_all_long(self.bars, bar.time, bar.close)
-            });
+        if immediately {
+            self.strategy_broker
+                .place_pending_close_all_with_immediately(
+                    crate::strategy::PendingCloseQuantity::Full,
+                    self.bars,
+                    metadata,
+                    true,
+                );
+            self.fill_current_tick_market_closes();
+        } else {
+            self.strategy_broker.place_pending_close_all(
+                crate::strategy::PendingCloseQuantity::Full,
+                self.bars,
+                metadata,
+            );
+        }
         Ok(PineValue::Void)
     }
 
@@ -476,6 +668,18 @@ impl<'a> HistoricalRuntime<'a> {
             .find(|arg| arg.name.as_deref() == Some("qty_percent"))
             .map(|arg| &arg.value);
         let metadata = self.eval_strategy_exit_metadata(args)?;
+        let oca_name = args
+            .iter()
+            .find(|arg| arg.name.as_deref() == Some("oca_name"))
+            .map(|arg| &arg.value);
+        let oca_name = match oca_name {
+            Some(expr) => match self.eval_expr(expr)? {
+                PineValue::String(value) if !value.is_empty() => Some(value),
+                _ => None,
+            },
+            None => None,
+        };
+        self.strategy_broker.set_next_exit_oca_name(oca_name);
 
         let id = match self.eval_expr(id_expr)? {
             PineValue::String(value) => value,

@@ -2,6 +2,220 @@
 
 ## Unreleased
 
+- Closed Stage 22g `strategy.risk.max_cons_loss_days`. A simple positive
+  finite integer `count` of consecutive observed windows with negative
+  realized closed-trade profit cancels pending orders, flattens, and
+  permanently blocks later `strategy.entry` and `strategy.order` actions.
+  A profitable or no-trade window resets the streak; missing-bar gaps do
+  not insert a no-trade window. Zero, negative, non-integer, and series
+  counts stay rejected. Undocumented `strategy.risk.*` names stay rejected.
+  Public `StrategyResult` is unchanged.
+- Closed Stage 22f `strategy.risk.max_intraday_loss` and
+  `strategy.risk.max_intraday_filled_orders`. Loss compares cash or percent of
+  maximum window equity, including open adverse excursion, and percent also
+  trips when equity is non-positive. Filled-order counting uses public fills
+  in the current window. On trigger the broker cancels pending orders,
+  flattens, and blocks later `strategy.entry` and `strategy.order` actions
+  until the next intraday window. Zero, negative, non-integer count, percent
+  over 100, series, and unknown type values stay rejected. Remaining
+  `strategy.risk.*` calls stay rejected. Public `StrategyResult` is unchanged.
+- Closed Stage 22e intraday boundary foundation. Host-neutral window keys use
+  the UTC day of bar time when the chart timeframe is at or below 1D, and the
+  bar timestamp when the timeframe is higher than 1D. A new window zeros the
+  filled-order count, seeds a finite equity baseline, and clears window-scoped
+  trips while permanent `max_drawdown` stops remain. Same-window bars keep the
+  baseline and counters; missing-bar gaps start a new window. Non-positive
+  timeframes fail closed to the UTC-day key. This runtime has no session
+  calendar. `strategy.risk.max_intraday_loss` and
+  `strategy.risk.max_intraday_filled_orders` stay rejected. Public
+  `StrategyResult` is unchanged.
+- Closed Stage 22d `strategy.risk.max_drawdown`. Simple positive finite
+  `value` with required `strategy.cash` or `strategy.percent_of_equity`
+  trips from peak-equity drawdown, including open adverse excursion.
+  Percent also trips when equity is non-positive. On trigger the broker
+  cancels pending orders, flattens through a risk-owned market close, and
+  permanently blocks later `strategy.entry` and `strategy.order` actions.
+  UTC-day reset keeps the stop. Zero, negative, percent over 100, series,
+  and unknown type values stay rejected. Other `strategy.risk.*` calls stay
+  rejected. Public `StrategyResult` is unchanged.
+- Closed Stage 22c `strategy.risk.max_position_size`. Simple positive finite
+  `contracts` reduce later `strategy.entry` quantity so post-fill exposure
+  does not exceed the limit. Remaining room of zero is a no-op. Reversal
+  flattens then opens at most the limit on the new side. Pyramiding may add
+  until the size limit. Pending `strategy.entry` quantities are reduced when
+  the rule is recorded. `strategy.order` is not bound by this rule. Zero,
+  negative, non-finite, and series contracts stay rejected. Other
+  `strategy.risk.*` calls stay rejected. Public `StrategyResult` is unchanged.
+- Closed Stage 22b `strategy.risk.allow_entry_in`. Documented
+  `strategy.direction.all`, `strategy.direction.long`, and
+  `strategy.direction.short` constants are accepted. Allowed `strategy.entry`
+  directions keep current open, add, and reversal behavior. A disallowed
+  opposite `strategy.entry` against an open allowed position flattens without
+  opening prohibited exposure; a disallowed opposite entry while flat is a
+  no-op. Last call wins. Pending opposite `strategy.entry` intents are
+  cancelled while flat or converted to market close-only against an open
+  allowed position. `strategy.order` is not bound by this rule. Other
+  `strategy.risk.*` calls stay rejected. Public `StrategyResult` is unchanged.
+- Closed Stage 22a risk configuration and triggered-state skeleton. Broker
+  state stores `StrategyRiskRules` separately from `StrategyRiskState`, with
+  admission, after-fill, UTC-day reset, and forced-close hooks. Clone/rollback
+  preserves configured and tripped state. Every `strategy.risk.*` call stays
+  rejected. Public `StrategyResult` is unchanged.
+- Closed Stage 21e bar magnifier host contract. Lower-timeframe bars are a
+  host-owned input keyed by chart bar. Absence and gaps fall back to the
+  standard OHLC path. Duplicate ticks, unsorted timestamps, duplicate chart-bar
+  keys, and more than 200000 intrabars fail closed. The scheduler tick sequence
+  is reused; no second broker path. `use_bar_magnifier` stays rejected.
+  CLI/Python/WASM input parity waits on this host-neutral schema. Public
+  `StrategyResult` is unchanged.
+- Closed Stage 21d `calc_on_every_tick`. Const bool `calc_on_every_tick=true`
+  executes strategy code on each host-provided forming update, rolling `var`
+  back from the confirmed checkpoint and keeping `varip` across forming
+  updates. Abandoned forming events do not leak into confirmed output.
+  Historical bars are unchanged. Series `calc_on_every_tick` stays rejected.
+  Public `StrategyResult` is unchanged.
+- Closed Stage 21c realtime broker rollback. Forming updates re-execute from
+  the last confirmed checkpoint and restore order book, OCA, reservations,
+  ledger, cash, and alerts after `varip` seeding. Abandoned forming
+  placements, cancellations, activations, fills, and alerts do not leak into
+  confirmed output. `calc_on_every_tick` stays rejected. Public
+  `StrategyResult` is unchanged.
+- Closed Stage 21b historical `calc_on_order_fills`. Const bool
+  `calc_on_order_fills=true` re-executes strategy code after historical fills,
+  refreshes `strategy.*` state, and can fill later Stage 18 price ticks on the
+  same bar. Series `calc_on_order_fills` and `calc_on_every_tick` stay
+  rejected. Extra passes are bounded. Public `StrategyResult` is unchanged.
+- Closed Stage 21a execution-pass identity and guardrails. The strategy
+  scheduler tracks bar, fill-path tick, and pass identity, counts script
+  passes on internal runtime profiles, and rejects extra passes above a
+  configurable internal recalculation-pass limit. Broker state can snapshot
+  and restore with forming-bar rollback. `calc_on_order_fills` and
+  `calc_on_every_tick` stay rejected. Public `StrategyResult` is unchanged;
+  profile JSON adds pass-count fields.
+- Closed Stage 20f unified cancellation. `strategy.cancel(id)` searches pending
+  entries, generic orders, exits, deferred relative exits, and pending closes
+  through one order-book lookup, including shared public ids.
+  `strategy.cancel_all()` clears those families plus reservations, stop-limit
+  activation, and OCA membership exactly once. Public JSON shape is unchanged.
+- Closed Stage 20e exit OCA naming. Const/simple `strategy.exit` `oca_name`
+  maps onto the implicit `strategy.oca.reduce` reservation model: grouped
+  exits share overlapping quantity, and a fill reduces same-group peers
+  including brackets, trailing, fixed qty, percent qty, replacement, and
+  different open-trade keys. Series `oca_name` stays rejected. Public JSON
+  shape is unchanged.
+- Closed Stage 20d `strategy.oca.reduce` for `strategy.order`. After a generic
+  order fills, same-group peers reduce remaining quantity by the filled
+  quantity and are removed when reduced to zero. Same-bar remaining candidates
+  use the reduced quantity before filling. Unrelated groups stay independent.
+  `strategy.exit` `oca_name` stays rejected. Public JSON shape is unchanged.
+- Closed Stage 20c `strategy.oca.cancel` for `strategy.order`. After a generic
+  order fills, still-pending same-group peers are cancelled in creation order.
+  Unrelated groups and `strategy.oca.none` peers stay independent.
+  `strategy.oca.reduce` stays rejected. Public JSON shape is unchanged.
+- Closed Stage 20b explicit `strategy.oca.none` for `strategy.order`. Const/simple
+  `oca_name` with `oca_type=strategy.oca.none` (or omitted type) stores a group
+  and leaves grouped pending orders independent. `strategy.oca.cancel` and
+  `strategy.oca.reduce` stay rejected. Public JSON shape is unchanged.
+- Closed Stage 20a OCA storage and group identity. Pending intents can carry an
+  internal OCA group key of name plus type. The same name with different OCA
+  types is two groups. `oca_name` and `oca_type` stay semantically rejected.
+  Public JSON shape is unchanged.
+- Closed Stage 19f generic-order replacement, cancellation, and close-rule
+  interaction. Same-id `strategy.order` replacement updates pending
+  market/limit/stop/stop-limit intents of the same direction; opposite-direction
+  same-id replacement cancels the old intent then places the new one.
+  `strategy.cancel(id)` clears matching pending generic orders and pending
+  exits. Generic-order reductions allocate FIFO, or id-specific ANY when the
+  order id matches an open entry; unmatched ANY stays FIFO. Omitted `qty` for
+  `strategy.short` stays unsupported. Public JSON shape is unchanged.
+- Closed Stage 19e price-based `strategy.entry()` reversal. Opposite-side
+  limit, stop, and stop-limit entries flatten existing exposure then open the
+  requested quantity. Pyramiding applies to the new side, not the flatten
+  quantity. Active-entry exit attachments for the flattened side are cleared.
+  Replacement, cancellation collisions, and close-rule interaction stay later
+  in Stage 19. Public JSON shape is unchanged.
+- Closed Stage 19d stop and stop-limit generic-order signed netting. After stop
+  trigger selection, and after stop-limit activation plus a later limit fill,
+  `strategy.order` stop/stop-limit long and short fills reuse Stage 19b signed
+  netting. Activation persists across bars; cancel before fill still removes
+  the intent without state mutation. Price-based `strategy.entry()` reversal
+  stays later in Stage 19. Public JSON shape is unchanged.
+- Closed Stage 19c limit generic-order signed netting. After limit trigger
+  selection and fill-price verification, `strategy.order` limit long and short
+  fills reuse Stage 19b signed netting: partial reduce, flatten, and cross-zero
+  in both directions. Cancellation before fill still removes the intent without
+  state mutation. Stop/stop-limit opposite-side netting and price-based
+  `strategy.entry()` reversal stay later in Stage 19. Public JSON shape is
+  unchanged.
+- Closed Stage 19b market generic-order signed netting.
+  `strategy.order(..., strategy.long)` and `strategy.order(..., strategy.short)`
+  market fills now apply `target = P + D` in flat, long, and short states:
+  same-side increase, opposite partial reduce, exact flatten, and cross-zero
+  remainder open. Public order quantity is `|D|`. Generic orders stay independent
+  of `pyramiding`. Limit/stop/stop-limit opposite-side netting and price-based
+  `strategy.entry()` reversal stay later in Stage 19. Public JSON shape is
+  unchanged.
+- Closed Stage 19a generic-order netting matrix and fail-closed opposite-side
+  order/entry fixtures. Cross-zero netting is calculated and stays unrouted.
+  Public strategy output and conformance are unchanged.
+- Added the Stage 18f deterministic historical scheduler foundation.
+  Pre-script and bar-close market fills run through ordered family steps.
+  Same-bar limit and stop entries can both fill in family order; later price
+  families are no longer cleared when an earlier family fills. Closeout review
+  keeps Stage 18 partial: direction-selected OHLC walking, cross-family
+  entry/exit/margin candidate ordering, same-price stable-key ties, and
+  path-correct stop-limit sequencing remain in Stage 18g. Public JSON shape is
+  unchanged.
+- Closed Stage 18e historical `process_orders_on_close`. Const bool
+  `process_orders_on_close=true` fills eligible market entry, generic order,
+  close, and close-all intents at the creation bar close after script
+  statements. `immediately=true` still fills during the close command.
+  `calc_on_order_fills`, `calc_on_every_tick`, `use_bar_magnifier`, and
+  `fill_orders_on_standard_ohlc` stay rejected. Public JSON shape is unchanged.
+- Closed Stage 18d `immediately` for close commands. Const/simple bool
+  `immediately=true` on supported `strategy.close()` / `strategy.close_all()`
+  fills at the current bar close through the scheduler current-tick market
+  phase, so later same-bar statements see the fill. Omitted or false keeps the
+  Stage 18c next-bar-open fill. Series and non-bool `immediately` stay
+  rejected. Public JSON shape is unchanged.
+- Closed Stage 18c default next-tick close. `strategy.close()` and
+  `strategy.close_all()` no longer fill on the signal bar; they become market
+  orders filled at the next historical bar open. Script-visible position on the
+  signal bar stays pre-fill. Public JSON shape is unchanged. Callers comparing
+  historical fill bar indexes must treat this as a one-time migration.
+- Closed Stage 18b pending market-close storage. Close/close-all intents can
+  be stored, replaced, cancelled, and rolled back privately. Production close
+  fills next-tick after Stage 18c.
+- Closed Stage 18a historical broker scheduler characterization. Strategy bars
+  now run entry fills, extremes, margin, script, exits, and equity through one
+  scheduler facade with a test-only phase trace. Fill timing is unchanged.
+- Closed Stage 17 unified order and fill kernel. Pending records store command
+  origin and stable internal keys; same-side opens and reductions share one
+  cash/position applier; `TradeLedger` is the position authority. Public
+  strategy output is unchanged. Close timing stays current-bar until Stage 18.
+- Closed Stage 17f reduction routing. Reduce-only orders, close/close-all,
+  pending exits, and margin-call fills apply cash and ledger updates through
+  one shared reduction applier. Public strategy output is unchanged.
+- Closed Stage 17e same-side open routing. Flat and same-side entry/order
+  fills apply cash from one shared transition applier. Public strategy output
+  is unchanged.
+- Closed Stage 17d ledger/aggregate invariant checks. Debug builds assert
+  signed size and weighted average price recomputed from `TradeLedger` after
+  position sync. No supported fill path diverged. Public strategy output is
+  unchanged.
+- Closed Stage 17c fill request/transition skeleton. Same-side addition and
+  reduce-only fills can be calculated from an immutable position snapshot
+  without public JSON. Cross-zero netting is computed but remains unrouted.
+  Production fill paths are unchanged.
+- Closed Stage 17b explicit strategy command origin and stable internal pending
+  entry keys. Pending market, limit, stop, and stop-limit entry/order records
+  store `Entry` versus `Order` origin and keep their creation sequence across
+  same-id replacement. Public strategy output is unchanged.
+- Closed Stage 17a strategy broker baseline lock. Characterization tests cover
+  the currently distinct fill-origin families (same-side market entry, market
+  entry reversal, same-side and reduce-only market generic orders, price-based
+  entry and generic order, full/partial close, exit fill, and margin-call fill)
+  without changing public strategy output, conformance rows, or snapshots.
 - Closed Stage 16b same-entry-id partial `close_entries_rule="ANY"` allocation
   for shorts. A partial `strategy.exit(..., from_entry=id, qty=...)` covers
   matching short ledger entries that share that id in stable open-trade order.

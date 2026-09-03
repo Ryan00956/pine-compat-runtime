@@ -101,7 +101,11 @@ pub(super) fn profile_json(profile: &RuntimeProfile) -> String {
             "\"tableCells\":{},",
             "\"tableCapacity\":{},",
             "\"tableSnapshotCapacity\":{},",
-            "\"tableCellCapacity\":{}",
+            "\"tableCellCapacity\":{},",
+            "\"strategyScriptPasses\":{},",
+            "\"strategyRecalculationPasses\":{},",
+            "\"strategyMaxPassesOnBar\":{},",
+            "\"strategyMaxRecalculationPasses\":{}",
             "}}"
         ),
         profile.bars,
@@ -201,7 +205,11 @@ pub(super) fn profile_json(profile: &RuntimeProfile) -> String {
         profile.table_cells,
         profile.table_capacity,
         profile.table_snapshot_capacity,
-        profile.table_cell_capacity
+        profile.table_cell_capacity,
+        profile.strategy_script_passes,
+        profile.strategy_recalculation_passes,
+        profile.strategy_max_passes_on_bar,
+        profile.strategy_max_recalculation_passes
     )
 }
 

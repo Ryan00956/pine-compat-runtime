@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported strategy risk max_position_size zero")
+strategy.risk.max_position_size(0)

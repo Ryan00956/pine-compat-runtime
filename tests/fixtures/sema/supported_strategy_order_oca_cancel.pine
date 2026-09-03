@@ -1,0 +1,6 @@
+//@version=5
+strategy("Supported strategy order oca cancel")
+grp = "g"
+cancel_type = strategy.oca.cancel
+strategy.order("A", strategy.long, qty=1, oca_name="g", oca_type=strategy.oca.cancel)
+strategy.order("B", strategy.long, qty=1, limit=close, oca_name=grp, oca_type=cancel_type)

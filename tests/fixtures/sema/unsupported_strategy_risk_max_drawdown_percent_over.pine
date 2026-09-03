@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported strategy risk max_drawdown percent over")
+strategy.risk.max_drawdown(150, strategy.percent_of_equity)

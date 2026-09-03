@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported series process_orders_on_close", process_orders_on_close=close > open)
+plot(close)

@@ -1,0 +1,5 @@
+//@version=5
+strategy("Unsupported strategy.close immediately type")
+strategy.entry("L", strategy.long, qty=1)
+strategy.close("L", immediately=1)
+strategy.close_all(immediately="true")

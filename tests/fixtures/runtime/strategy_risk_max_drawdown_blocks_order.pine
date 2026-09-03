@@ -1,0 +1,8 @@
+//@version=5
+strategy("Max drawdown blocks strategy.order", initial_capital=1000)
+strategy.risk.max_drawdown(40, strategy.cash)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=10)
+if bar_index == 3
+    strategy.order("O", strategy.long, qty=1)
+plot(strategy.position_size)

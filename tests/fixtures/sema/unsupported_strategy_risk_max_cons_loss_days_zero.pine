@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported strategy risk max_cons_loss_days zero")
+strategy.risk.max_cons_loss_days(0)

@@ -83,8 +83,9 @@ The interpreter already has a broad fixture-backed subset:
 - local scalar-field user-defined types and pure local methods;
 - many pure `ta.*`, `math.*`, `str.*`, time, timeframe, session, color, and
   symbol helpers;
-- long-only strategy runtime with a fixture-backed Stage 13 multi-entry ledger
-  and `pyramiding` subset.
+- side-aware strategy runtime through Stage 16, including fixture-backed
+  multi-entry, short/reversal, short-margin, and id-specific
+  `close_entries_rule="ANY"` subsets.
 
 The remaining work is mostly about closing large semantic families, not creating
 the first executable runtime.
@@ -1409,57 +1410,69 @@ prove deterministic state transitions.
 
 Current baseline:
 
-- long-only broker with Stage 13 fixture-backed multi-entry ledger, Stage 14a-14i
-  side-aware short/reversal model including market short entries, short
-  close/exit stop/limit/profit/loss/brackets/trailing, and market reversals, and
-  positive integer `pyramiding` subset;
+- Stage 13 fixture-backed multi-entry ledger and positive integer `pyramiding`
+  subset;
+- Stage 14a-14i side-aware short/reversal model including market short entries,
+  short close/exit stop/limit/profit/loss/brackets/trailing, and market
+  reversals;
+- Stage 15 long/short margin, affordability, forced-liquidation, and
+  liquidation-price subsets;
+- Stage 16 id-specific long and short `close_entries_rule="ANY"` allocation;
+- Stage 17 shared fill-transition kernel and ledger invariant checks;
+- Stage 18a-18e next-tick closes, `immediately`,
+  `process_orders_on_close`, and scheduler phases;
+- Stage 18f deterministic family-step ordering, with true OHLC path selection
+  still deferred to Stage 18g;
+- Stage 19 generic-order signed netting and price-based entry reversal;
+- Stage 20 fixture-backed OCA and unified cancellation subsets;
+- Stage 21 bounded recalculation and realtime rollback/tick execution;
+- Stage 22 fixture-backed broker-enforced risk-rule subsets;
 - supported long market, limit, stop, and stop-limit entries;
 - supported `strategy.close`, `strategy.close_all`, `strategy.cancel`, and
   `strategy.cancel_all` subsets;
 - broad supported `strategy.exit` subset across single triggers, brackets,
-  trailing exits, partial quantities, reservations, omitted-quantity replacement,
-  and long-only multi-entry allocation;
+  trailing exits, partial quantities, reservations, omitted-quantity
+  replacement, and documented long/short multi-entry allocation;
 - script-visible strategy variables and trade namespace subsets;
 - supported cash-per-contract, cash-per-order, and percent commission modes,
   fixed-tick slippage, fixed-tick limit verification, cash default sizing,
   percent-of-equity default sizing, explicit `close_entries_rule="FIFO"`,
-  fixture-backed id-specific long and short `close_entries_rule="ANY"`, and selected
-  long-margin behavior.
+  fixture-backed id-specific long and short `close_entries_rule="ANY"`, and
+  selected long/short margin behavior.
 
 Remaining internal work:
 
-- `strategy.order()` behavior beyond the fixture-backed long
-  market/limit/stop/stop-limit add-or-increase subset, explicit-quantity
-  reduce-only market-short subset, and short limit/stop/stop-limit
-  add-or-increase subset;
-- broader `close_entries_rule="ANY"` behavior beyond fixture-backed
-  id-specific long and short close/exit allocation;
-- custom OCA behavior across order families;
-- `process_orders_on_close`, `calc_on_order_fills`, `calc_on_every_tick`, and bar
-  magnifier style timing;
+- Stage 18g high-first/low-first OHLC walking and shared entry/order/exit/margin
+  candidate ordering;
+- bar-magnifier fill wiring and public host input parity after Stage 18g;
+- mixed entry/order/exit OCA groups and series OCA names;
+- omitted-quantity and other generic-order forms beyond the fixture-backed
+  subset;
+- instrument-session-aware intraday and loss-day boundaries;
 - richer account constraints, currency conversion,
   broader short-side, rounded, and currency-aware
   `strategy.margin_liquidation_price` behavior;
 - remaining strategy information variables and trade namespace fields;
-- `strategy.risk.*` rules after broker/account foundations are stronger.
+- additional risk rules only when separately documented and fixture-backed.
 
 Non-goals:
 
-- reopening broad broker foundations immediately after Stage 13;
+- Pine v1-v4 strategy compatibility or broader source-version expansion while
+  the active broker plan is in progress;
 - accepting new `strategy()` properties as inert no-ops;
 - public pending-order, reservation, or open-trade ledgers before a schema design;
 - real broker connectivity.
 
 Good next slice:
 
-- remaining strategy information variables, or a separately designed generic
-  `strategy.order()` netting slice. Keep the public strategy result shape
-  unchanged unless a slice designs a schema change.
+- Stage 18g true OHLC-path and cross-family candidate ordering from
+  `docs/STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md`. Keep the public strategy result
+  shape unchanged.
 
 The strategy short/reversal design gate is closed in
 `docs/PURE_INTERNAL_STRATEGY_SHORT_REVERSAL_DESIGN.md`. Stage 14a/14b closed the
-boundary lock and side-aware ledger. Use the design gate before any positive
-`strategy.short` entry, short exposure, or automatic reversal support.
+boundary lock and side-aware ledger, and Stage 14 later closed the documented
+short/reversal subset. Use the design as the boundary record when extending it.
 
 The generic strategy order design gate is closed in
 `docs/PURE_INTERNAL_STRATEGY_ORDER_DESIGN.md`. Use it before any positive
@@ -1480,10 +1493,10 @@ positive `process_orders_on_close`, `calc_on_order_fills`,
 `calc_on_every_tick`, bar magnifier, or standard-OHLC fill timing support.
 
 The strategy margin-short/account design gate is closed in
-`docs/PURE_INTERNAL_STRATEGY_MARGIN_SHORT_ACCOUNT_DESIGN.md`. Use it before any
-positive `margin_short` runtime behavior, broader/short/rounded/currency-aware
-`strategy.margin_liquidation_price`, symbol precision rounding, or
-currency-conversion account behavior.
+`docs/PURE_INTERNAL_STRATEGY_MARGIN_SHORT_ACCOUNT_DESIGN.md`. Stage 15 closed
+the documented `margin_short` subset. Use the design before broader rounded or
+currency-aware liquidation-price, symbol-precision, or currency-conversion
+behavior.
 
 The strategy risk-rule design gate is closed in
 `docs/PURE_INTERNAL_STRATEGY_RISK_DESIGN.md`. Use it before any positive
@@ -1533,15 +1546,16 @@ Good next slice:
 
 ## Recommended Order
 
-1. Small pure built-in or diagnostic slices from real fixture gaps.
-2. Type/qualifier/history hardening that unlocks multiple later built-ins.
-3. Collection design gates for map, matrix, UDT arrays, generic declarations,
-   and iteration before runtime support.
-4. UDT/import identity design before imported UDTs or imported methods.
-5. Conservative strategy maintenance slices that preserve public output shape.
-6. Large strategy broker work only after a fresh design gate for short/reversal,
-   generic order, OCA, or account-model behavior.
-7. Runtime guardrail work whenever a new semantic family would otherwise grow
+While strategy completion is the selected direction:
+
+1. Integrate and review the current Stage 17-22 worktree.
+2. Stage 18g true OHLC-path and cross-family candidate ordering.
+3. Bar Magnifier fill wiring on the shared scheduler path.
+4. Mixed-family OCA and instrument-session semantics through separate slices.
+5. Strategy reporting/account gaps selected from executable fixtures.
+6. Other pure-internal work only when it is a prerequisite or regression fix
+   for the active strategy slice.
+7. Runtime guardrails whenever a new semantic family would otherwise grow
    state or execution cost without visibility.
 
 Avoid opening request, drawing, alert delivery, or host-integration work from this

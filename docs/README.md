@@ -15,7 +15,9 @@ plan is not mistaken for a current compatibility claim.
 3. [Task Breakdown](TASK_BREAKDOWN.md),
    [Next Internal Capability Plan](NEXT_INTERNAL_CAPABILITY_PLAN.md), and
    [Long-Term Execution Plan](LONG_TERM_EXECUTION_PLAN.md) track current
-   maintenance and future work.
+   maintenance and future work. The
+   [Strategy Broker Next Execution Plan](STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md)
+   is the active slice order when strategy work is selected.
 4. Phase plans, phase audits, design gates, and historical review documents
    record how a slice was designed or closed. They remain useful evidence, but
    their roadmap wording does not override the conformance matrix.
@@ -61,6 +63,12 @@ cargo run -p pine-cli -- matrix --format json
   remaining broad backlog.
 - [Pure Internal Roadmap](PURE_INTERNAL_ROADMAP.md): interpreter-internal design
   directions.
+- [Strategy Broker Next Execution Plan](STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md):
+  Stage 17-22 implementation record and active Stage 18g OHLC-path follow-up
+  while source-version expansion is paused.
+- [Strategy Broker Stage 17-22 Integration Audit](STRATEGY_BROKER_STAGE17_22_INTEGRATION_AUDIT.md):
+  recovered worktree scope, commit boundary, final verification, Stage 18f
+  correction, and remaining compatibility limits.
 - [Legacy Indicator Compatibility Execution Plan](LEGACY_INDICATOR_COMPATIBILITY_EXECUTION_PLAN.md):
   indicator-only v1-v4 compatibility, corpus measurement, versioned lowering,
   execution phases, and release gates; legacy strategies are explicitly out of
@@ -120,8 +128,9 @@ cargo run -p pine-cli -- matrix --format json
   preview evidence and known boundaries.
 - [Legacy v2/v1 Profile Closeout](LEGACY_INDICATOR_V2_V1_PROFILE_CLOSEOUT.md):
   experimental declaration, conversion, lookahead, and evidence boundary.
-- [Strategy Internal Gap Audit](STRATEGY_INTERNAL_GAP_AUDIT.md): current
-  long-only strategy baseline and deferred broker-model work.
+- [Strategy Internal Gap Audit](STRATEGY_INTERNAL_GAP_AUDIT.md): historical
+  strategy gap inventory; use the active broker plan below for current
+  priorities and stage boundaries.
 - [Strategy Internal Stage 14 Short/Reversal Plan](STRATEGY_INTERNAL_STAGE14_SHORT_REVERSAL_PLAN.md):
   boundary lock, side-aware ledger, market short entries, short closes, market
   entry reversals, and short stop/limit/profit/loss/bracket/trailing
@@ -132,6 +141,10 @@ cargo run -p pine-cli -- matrix --format json
 - [Strategy Internal Stage 16 Close-Entries-Rule Plan](STRATEGY_INTERNAL_STAGE16_CLOSE_ENTRIES_RULE_PLAN.md):
   id-specific and same-entry-id partial `close_entries_rule="ANY"` allocation for
   shorts.
+- [Strategy Broker Next Execution Plan](STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md):
+  Stage 17-22 record for the unified fill kernel, historical order timing,
+  generic netting, OCA, recalculation, and broker-enforced risk rules; Stage
+  18g remains active for true OHLC-path ordering.
 - [Next Language Expansion Playbook](NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md):
   process for selecting a language slice.
 

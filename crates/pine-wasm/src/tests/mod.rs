@@ -3862,6 +3862,307 @@ fn runs_strategy_order_limit_short_from_csv_to_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_order_limit_long_against_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_limit_long_against_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy limit long order cross-zero should run");
+
+    assert_snapshot(
+        "runtime_strategy_order_limit_long_against_short.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_limit_short_against_long_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_limit_short_against_long.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy limit short order cross-zero should run");
+
+    assert_snapshot(
+        "runtime_strategy_order_limit_short_against_long.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_limit_long_flatten_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_limit_long_flatten_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy limit long flatten short should run");
+
+    assert_snapshot(
+        "runtime_strategy_order_limit_long_flatten_short.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_limit_short_flatten_long_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_limit_short_flatten_long.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy limit short flatten long should run");
+
+    assert_snapshot(
+        "runtime_strategy_order_limit_short_flatten_long.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_limit_long_reduce_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_limit_long_reduce_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy limit long reduce short should run");
+
+    assert_snapshot(
+        "runtime_strategy_order_limit_long_reduce_short.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_limit_short_reduce_long_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_limit_short_reduce_long.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy limit short reduce long should run");
+
+    assert_snapshot(
+        "runtime_strategy_order_limit_short_reduce_long.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_stop_long_against_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_stop_long_against_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy stop long order cross-zero should run");
+    assert_snapshot(
+        "runtime_strategy_order_stop_long_against_short.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_stop_short_against_long_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_stop_short_against_long.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy stop short order cross-zero should run");
+    assert_snapshot(
+        "runtime_strategy_order_stop_short_against_long.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_stop_long_flatten_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_stop_long_flatten_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy stop long flatten short should run");
+    assert_snapshot(
+        "runtime_strategy_order_stop_long_flatten_short.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_stop_short_reduce_long_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_stop_short_reduce_long.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy stop short reduce long should run");
+    assert_snapshot(
+        "runtime_strategy_order_stop_short_reduce_long.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_stop_limit_long_against_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_stop_limit_long_against_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy stop-limit long order cross-zero should run");
+    assert_snapshot(
+        "runtime_strategy_order_stop_limit_long_against_short.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_stop_limit_short_against_long_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_stop_limit_short_against_long.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy stop-limit short order cross-zero should run");
+    assert_snapshot(
+        "runtime_strategy_order_stop_limit_short_against_long.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_stop_limit_long_flatten_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_stop_limit_long_flatten_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy stop-limit long flatten short should run");
+    assert_snapshot(
+        "runtime_strategy_order_stop_limit_long_flatten_short.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_stop_limit_short_reduce_long_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_stop_limit_short_reduce_long.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy stop-limit short reduce long should run");
+    assert_snapshot(
+        "runtime_strategy_order_stop_limit_short_reduce_long.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_entry_limit_reverses_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_limit_reverses_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy limit entry reverse short should run");
+    assert_snapshot("runtime_strategy_entry_limit_reverses_short.json", &output);
+}
+
+#[test]
+fn runs_strategy_entry_limit_reverses_long_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_limit_reverses_long.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy limit entry reverse long should run");
+    assert_snapshot("runtime_strategy_entry_limit_reverses_long.json", &output);
+}
+
+#[test]
+fn runs_strategy_entry_limit_reverses_short_qty_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_entry_limit_reverses_short_qty.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy limit entry reverse short qty should run");
+    assert_snapshot(
+        "runtime_strategy_entry_limit_reverses_short_qty.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_entry_stop_reverses_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_stop_reverses_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy stop entry reverse short should run");
+    assert_snapshot("runtime_strategy_entry_stop_reverses_short.json", &output);
+}
+
+#[test]
+fn runs_strategy_entry_stop_reverses_long_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_stop_reverses_long.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy stop entry reverse long should run");
+    assert_snapshot("runtime_strategy_entry_stop_reverses_long.json", &output);
+}
+
+#[test]
+fn runs_strategy_entry_stop_limit_reverses_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_entry_stop_limit_reverses_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy stop-limit entry reverse short should run");
+    assert_snapshot(
+        "runtime_strategy_entry_stop_limit_reverses_short.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_entry_stop_limit_reverses_long_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_entry_stop_limit_reverses_long.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy stop-limit entry reverse long should run");
+    assert_snapshot(
+        "runtime_strategy_entry_stop_limit_reverses_long.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_order_stop_short_from_csv_to_strategy_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_order_stop_short.pine"),
@@ -3881,6 +4182,195 @@ fn runs_strategy_order_stop_limit_short_from_csv_to_strategy_json() {
     .expect("strategy short stop-limit order script should run");
 
     assert_snapshot("runtime_strategy_order_stop_limit_short.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_oca_cancel_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_oca_cancel.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy order oca cancel should run");
+    assert_snapshot("runtime_strategy_order_oca_cancel.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_oca_reduce_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_oca_reduce.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy order oca reduce should run");
+    assert_snapshot("runtime_strategy_order_oca_reduce.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_oca_reduce_zero_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_oca_reduce_zero.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy order oca reduce zero should run");
+    assert_snapshot("runtime_strategy_order_oca_reduce_zero.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_oca_none_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_oca_none.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy order oca none should run");
+    assert_snapshot("runtime_strategy_order_oca_none.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_replace_limit_with_stop_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_replace_limit_with_stop.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy order replace limit with stop should run");
+    assert_snapshot(
+        "runtime_strategy_order_replace_limit_with_stop.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_replace_long_with_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_replace_long_with_short.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy order replace long with short should run");
+    assert_snapshot(
+        "runtime_strategy_order_replace_long_with_short.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_cancel_shared_id_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_cancel_shared_id.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy order cancel shared id should run");
+    assert_snapshot("runtime_strategy_order_cancel_shared_id.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_reduce_fifo_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_reduce_fifo.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy order FIFO reduce should run");
+    assert_snapshot("runtime_strategy_order_reduce_fifo.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_reduce_any_matching_id_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_reduce_any_matching_id.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy order ANY matching reduce should run");
+    assert_snapshot(
+        "runtime_strategy_order_reduce_any_matching_id.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_order_short_flat_noop_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_short_flat_noop.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy market short order while flat should run");
+
+    assert_snapshot("runtime_strategy_order_short_flat_noop.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_market_short_increase_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_market_short_increase.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy market short order increase should run");
+
+    assert_snapshot("runtime_strategy_order_market_short_increase.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_long_flatten_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_long_flatten_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy market long flatten short should run");
+
+    assert_snapshot("runtime_strategy_order_long_flatten_short.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_long_reduce_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_long_reduce_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy market long reduce short should run");
+
+    assert_snapshot("runtime_strategy_order_long_reduce_short.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_short_flatten_long_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_short_flatten_long.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy market short flatten long should run");
+
+    assert_snapshot("runtime_strategy_order_short_flatten_long.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_long_against_short_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_order_long_against_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy market long order cross-zero should run");
+
+    assert_snapshot("runtime_strategy_order_long_against_short.json", &output);
+}
+
+#[test]
+fn runs_strategy_order_short_oversized_against_long_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_order_short_oversized_against_long.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy market short order cross-zero should run");
+
+    assert_snapshot(
+        "runtime_strategy_order_short_oversized_against_long.json",
+        &output,
+    );
 }
 
 #[test]
@@ -3942,7 +4432,7 @@ fn runs_strategy_pyramiding_from_csv_to_public_strategy_json() {
 fn runs_strategy_pyramiding_close_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_pyramiding_close.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy pyramiding close fixture should run");
 
@@ -3953,7 +4443,7 @@ fn runs_strategy_pyramiding_close_from_csv_to_public_strategy_json() {
 fn runs_strategy_pyramiding_close_all_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_pyramiding_close_all.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy pyramiding close_all fixture should run");
 
@@ -4227,7 +4717,7 @@ fn runs_strategy_commission_cash_per_contract_fixture_contract() {
         include_str!(
             "../../../../tests/fixtures/runtime/strategy_commission_cash_per_contract.pine"
         ),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy cash-per-contract commission fixture should run");
 
@@ -4241,7 +4731,7 @@ fn runs_strategy_commission_cash_per_contract_fixture_contract() {
 fn runs_strategy_commission_cash_per_order_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_commission_cash_per_order.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy cash-per-order commission fixture should run");
 
@@ -4252,7 +4742,7 @@ fn runs_strategy_commission_cash_per_order_fixture_contract() {
 fn runs_strategy_commission_percent_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_commission_percent.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy percent commission fixture should run");
 
@@ -4263,7 +4753,7 @@ fn runs_strategy_commission_percent_fixture_contract() {
 fn runs_strategy_slippage_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_slippage.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy slippage fixture should run");
 
@@ -4307,7 +4797,7 @@ fn runs_strategy_limit_verification_exit_fixture_contract() {
 fn runs_strategy_position_state_from_csv_to_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_position_state.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy position state script should run");
 
@@ -4318,7 +4808,7 @@ fn runs_strategy_position_state_from_csv_to_json() {
 fn runs_strategy_position_state_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_position_state.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy position state fixture should run");
 
@@ -4329,7 +4819,7 @@ fn runs_strategy_position_state_fixture_contract() {
 fn runs_strategy_equity_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_equity.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy equity fixture should run");
 
@@ -4340,7 +4830,7 @@ fn runs_strategy_equity_fixture_contract() {
 fn runs_strategy_profit_state_from_csv_to_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_profit_state.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy profit state script should run");
 
@@ -4351,7 +4841,7 @@ fn runs_strategy_profit_state_from_csv_to_json() {
 fn runs_strategy_profit_state_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_profit_state.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy profit state fixture should run");
 
@@ -4362,7 +4852,7 @@ fn runs_strategy_profit_state_fixture_contract() {
 fn runs_strategy_variable_interactions_from_csv_to_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_variable_interactions.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy variable interaction script should run");
 
@@ -4373,7 +4863,7 @@ fn runs_strategy_variable_interactions_from_csv_to_json() {
 fn runs_strategy_variable_interactions_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_variable_interactions.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy variable interactions fixture should run");
 
@@ -4384,7 +4874,7 @@ fn runs_strategy_variable_interactions_fixture_contract() {
 fn runs_strategy_trade_counts_from_csv_to_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_trade_counts.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy trade count script should run");
 
@@ -4395,7 +4885,7 @@ fn runs_strategy_trade_counts_from_csv_to_json() {
 fn runs_strategy_trade_counts_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_trade_counts.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy trade count fixture should run");
 
@@ -4417,7 +4907,7 @@ fn runs_strategy_exit_trade_counts_fixture_contract() {
 fn runs_strategy_closedtrades_fields_from_csv_to_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_closedtrades_fields.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy closed trade fields script should run");
 
@@ -4430,7 +4920,7 @@ fn runs_strategy_closedtrades_fields_pyramiding_from_csv_to_json() {
         include_str!(
             "../../../../tests/fixtures/runtime/strategy_closedtrades_fields_pyramiding.pine"
         ),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy closed trade fields pyramiding script should run");
 
@@ -4471,7 +4961,7 @@ fn runs_strategy_opentrades_fields_pyramiding_from_csv_to_json() {
 fn runs_strategy_margin_capital_held_from_csv_to_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_margin_capital_held_long.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy margin capital held script should run");
 
@@ -4482,7 +4972,7 @@ fn runs_strategy_margin_capital_held_from_csv_to_json() {
 fn runs_strategy_margin_capital_held_short_from_csv_to_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_margin_capital_held_short.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy short margin capital held script should run");
 
@@ -4588,7 +5078,7 @@ fn runs_strategy_profit_percent_state_fixture_contract() {
 fn runs_strategy_close_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_close.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy close script should run");
 
@@ -4599,7 +5089,7 @@ fn runs_strategy_close_from_csv_to_trade_json() {
 fn runs_strategy_close_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_close.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy close fixture should run");
 
@@ -4610,7 +5100,7 @@ fn runs_strategy_close_fixture_contract() {
 fn runs_strategy_close_short_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_close_short.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy close short script should run");
 
@@ -4623,7 +5113,7 @@ fn runs_strategy_close_entries_rule_any_close_short_from_csv_to_public_strategy_
         include_str!(
             "../../../../tests/fixtures/runtime/strategy_close_entries_rule_any_close_short.pine"
         ),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy ANY close short script should run");
 
@@ -4674,7 +5164,7 @@ fn runs_strategy_close_entries_rule_any_exit_same_id_partial_short_from_csv_to_p
 fn runs_strategy_close_noop_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_close_noop.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy close no-op fixture should run");
 
@@ -4685,7 +5175,7 @@ fn runs_strategy_close_noop_fixture_contract() {
 fn runs_strategy_close_qty_partial_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_close_qty_partial.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy close qty partial fixture should run");
 
@@ -4696,7 +5186,7 @@ fn runs_strategy_close_qty_partial_from_csv_to_trade_json() {
 fn runs_strategy_close_qty_full_clamp_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_close_qty_full_clamp.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy close qty full clamp fixture should run");
 
@@ -4709,7 +5199,7 @@ fn runs_strategy_close_qty_percent_precedence_from_csv_to_trade_json() {
         include_str!(
             "../../../../tests/fixtures/runtime/strategy_close_qty_percent_precedence.pine"
         ),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy close qty_percent precedence fixture should run");
 
@@ -4723,7 +5213,7 @@ fn runs_strategy_close_qty_percent_precedence_from_csv_to_trade_json() {
 fn runs_strategy_close_all_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_close_all.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy close_all script should run");
 
@@ -4734,7 +5224,7 @@ fn runs_strategy_close_all_from_csv_to_trade_json() {
 fn runs_strategy_close_all_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_close_all.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy close_all fixture should run");
 
@@ -4745,7 +5235,7 @@ fn runs_strategy_close_all_fixture_contract() {
 fn runs_strategy_close_all_short_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_close_all_short.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy close_all short script should run");
 
@@ -4767,11 +5257,473 @@ fn runs_strategy_close_exit_fixture_from_csv_to_public_strategy_json() {
 fn runs_strategy_close_all_exit_fixture_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_close_all_exit.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy close_all exit fixture should run");
 
     assert_snapshot("runtime_strategy_close_all_exit.json", &output);
+}
+
+#[test]
+fn runs_strategy_close_immediately_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_close_immediately.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy close immediately fixture should run");
+
+    assert_snapshot("runtime_strategy_close_immediately.json", &output);
+}
+
+#[test]
+fn runs_strategy_close_all_immediately_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_close_all_immediately.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy close_all immediately fixture should run");
+
+    assert_snapshot("runtime_strategy_close_all_immediately.json", &output);
+}
+
+#[test]
+fn runs_strategy_close_immediately_false_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_close_immediately_false.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy close immediately false fixture should run");
+
+    assert_snapshot("runtime_strategy_close_immediately_false.json", &output);
+}
+
+#[test]
+fn runs_strategy_close_immediately_qty_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_close_immediately_qty.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy close immediately qty fixture should run");
+
+    assert_snapshot("runtime_strategy_close_immediately_qty.json", &output);
+}
+
+#[test]
+fn runs_strategy_close_immediately_short_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_close_immediately_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy close immediately short fixture should run");
+
+    assert_snapshot("runtime_strategy_close_immediately_short.json", &output);
+}
+
+#[test]
+fn runs_strategy_fill_path_limit_stop_collision_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_limit_stop_collision.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy fill-path collision fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_fill_path_limit_stop_collision.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_process_orders_on_close_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_process_orders_on_close.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy process_orders_on_close fixture should run");
+
+    assert_snapshot("runtime_strategy_process_orders_on_close.json", &output);
+}
+
+#[test]
+fn runs_strategy_process_orders_on_close_close_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_process_orders_on_close_close.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy process_orders_on_close close fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_process_orders_on_close_close.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_process_orders_on_close_immediately_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_process_orders_on_close_immediately.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy process_orders_on_close immediately fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_process_orders_on_close_immediately.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_calc_on_every_tick_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_calc_on_every_tick.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy calc_on_every_tick fixture should run");
+
+    assert_snapshot("runtime_strategy_calc_on_every_tick.json", &output);
+}
+
+#[test]
+fn runs_strategy_calc_on_order_fills_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_calc_on_order_fills.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy calc_on_order_fills fixture should run");
+
+    assert_snapshot("runtime_strategy_calc_on_order_fills.json", &output);
+}
+
+#[test]
+fn runs_strategy_calc_on_order_fills_false_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_calc_on_order_fills_false.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy calc_on_order_fills false fixture should run");
+
+    assert_snapshot("runtime_strategy_calc_on_order_fills_false.json", &output);
+}
+
+#[test]
+fn runs_strategy_calc_on_order_fills_exit_avg_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_calc_on_order_fills_exit_avg.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy calc_on_order_fills exit avg fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_calc_on_order_fills_exit_avg.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_risk_allow_entry_in_long_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_risk_allow_entry_in_long.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy risk allow_entry_in long fixture should run");
+
+    assert_snapshot("runtime_strategy_risk_allow_entry_in_long.json", &output);
+}
+
+#[test]
+fn runs_strategy_risk_allow_entry_in_short_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_risk_allow_entry_in_short.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy risk allow_entry_in short fixture should run");
+
+    assert_snapshot("runtime_strategy_risk_allow_entry_in_short.json", &output);
+}
+
+#[test]
+fn runs_strategy_risk_allow_entry_in_long_flat_noop_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_allow_entry_in_long_flat_noop.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy risk allow_entry_in long flat noop fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_risk_allow_entry_in_long_flat_noop.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_risk_allow_entry_in_order_unaffected_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_allow_entry_in_order_unaffected.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy risk allow_entry_in order unaffected fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_risk_allow_entry_in_order_unaffected.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_risk_allow_entry_in_repeated_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_allow_entry_in_repeated.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy risk allow_entry_in repeated fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_risk_allow_entry_in_repeated.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_risk_max_position_size_reduces_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_max_position_size_reduces.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy risk max_position_size reduces fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_risk_max_position_size_reduces.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_risk_max_position_size_full_noop_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_max_position_size_full_noop.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy risk max_position_size full noop fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_risk_max_position_size_full_noop.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_risk_max_position_size_reversal_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_max_position_size_reversal.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy risk max_position_size reversal fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_risk_max_position_size_reversal.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_risk_max_position_size_order_unaffected_fixture_from_csv_to_public_strategy_json()
+{
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_max_position_size_order_unaffected.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy risk max_position_size order unaffected fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_risk_max_position_size_order_unaffected.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_risk_max_position_size_pyramiding_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_max_position_size_pyramiding.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy risk max_position_size pyramiding fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_risk_max_position_size_pyramiding.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_risk_max_position_size_limit_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_max_position_size_limit.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy risk max_position_size limit fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_risk_max_position_size_limit.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_risk_max_drawdown_cash_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_risk_max_drawdown_cash.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_risk_max_drawdown_bars.csv"),
+    )
+    .expect("strategy risk max_drawdown cash fixture should run");
+
+    assert_snapshot("runtime_strategy_risk_max_drawdown_cash.json", &output);
+}
+
+#[test]
+fn runs_strategy_risk_max_drawdown_percent_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_risk_max_drawdown_percent.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_risk_max_drawdown_bars.csv"),
+    )
+    .expect("strategy risk max_drawdown percent fixture should run");
+
+    assert_snapshot("runtime_strategy_risk_max_drawdown_percent.json", &output);
+}
+
+#[test]
+fn runs_strategy_risk_max_drawdown_blocks_order_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_max_drawdown_blocks_order.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/strategy_risk_max_drawdown_bars.csv"),
+    )
+    .expect("strategy risk max_drawdown blocks order fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_risk_max_drawdown_blocks_order.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_risk_max_intraday_filled_orders_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_max_intraday_filled_orders.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy risk max_intraday_filled_orders fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_risk_max_intraday_filled_orders.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_risk_max_intraday_filled_orders_reset_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_max_intraday_filled_orders_reset.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_max_intraday_filled_orders_reset_bars.csv"
+        ),
+    )
+    .expect("strategy risk max_intraday_filled_orders reset fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_risk_max_intraday_filled_orders_reset.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_risk_max_intraday_loss_cash_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_max_intraday_loss_cash.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/strategy_risk_max_drawdown_bars.csv"),
+    )
+    .expect("strategy risk max_intraday_loss cash fixture should run");
+
+    assert_snapshot("runtime_strategy_risk_max_intraday_loss_cash.json", &output);
+}
+
+#[test]
+fn runs_strategy_risk_max_intraday_loss_percent_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_max_intraday_loss_percent.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/strategy_risk_max_drawdown_bars.csv"),
+    )
+    .expect("strategy risk max_intraday_loss percent fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_risk_max_intraday_loss_percent.json",
+        &output,
+    );
+}
+
+#[test]
+fn runs_strategy_risk_max_cons_loss_days_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_risk_max_cons_loss_days.pine"),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_max_cons_loss_days_bars.csv"
+        ),
+    )
+    .expect("strategy risk max_cons_loss_days fixture should run");
+
+    assert_snapshot("runtime_strategy_risk_max_cons_loss_days.json", &output);
+}
+
+#[test]
+fn runs_strategy_risk_max_cons_loss_days_no_trade_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_max_cons_loss_days_no_trade.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_risk_max_cons_loss_days_no_trade_bars.csv"
+        ),
+    )
+    .expect("strategy risk max_cons_loss_days no-trade fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_risk_max_cons_loss_days_no_trade.json",
+        &output,
+    );
 }
 
 #[test]
@@ -4871,6 +5823,40 @@ fn runs_strategy_cancel_all_noop_fixture_from_csv_to_public_strategy_json() {
     .expect("strategy cancel all noop script should run");
 
     assert_snapshot("runtime_strategy_cancel_all_noop.json", &output);
+}
+
+#[test]
+fn runs_strategy_cancel_shared_id_entry_exit_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_cancel_shared_id_entry_exit.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy cancel shared id entry exit should run");
+    assert_snapshot("runtime_strategy_cancel_shared_id_entry_exit.json", &output);
+}
+
+#[test]
+fn runs_strategy_cancel_shared_id_close_exit_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_cancel_shared_id_close_exit.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy cancel shared id close exit should run");
+    assert_snapshot("runtime_strategy_cancel_shared_id_close_exit.json", &output);
+}
+
+#[test]
+fn runs_strategy_cancel_all_families_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_cancel_all_families.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy cancel all families should run");
+    assert_snapshot("runtime_strategy_cancel_all_families.json", &output);
 }
 
 #[test]
@@ -5387,6 +6373,26 @@ fn runs_strategy_exit_reservation_qty_clamp_fixture_contract() {
     .expect("strategy exit reservation qty clamp fixture should run");
 
     assert_snapshot("runtime_strategy_exit_reservation_qty_clamp.json", &output);
+}
+
+#[test]
+fn runs_strategy_exit_oca_reduce_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_oca_reduce.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit oca reduce should run");
+    assert_snapshot("runtime_strategy_exit_oca_reduce.json", &output);
+}
+
+#[test]
+fn runs_strategy_exit_oca_reduce_bracket_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_oca_reduce_bracket.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit oca reduce bracket should run");
+    assert_snapshot("runtime_strategy_exit_oca_reduce_bracket.json", &output);
 }
 
 #[test]
@@ -5947,7 +6953,7 @@ fn runs_strategy_exit_qty_replacement_fixture_contract() {
 fn runs_strategy_exit_qty_state_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_qty_state.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy exit qty state fixture should run");
 
@@ -6115,7 +7121,7 @@ fn runs_strategy_exit_qty_percent_replacement_fixture_contract() {
 fn runs_strategy_exit_qty_percent_state_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_qty_percent_state.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_next_tick_close_bars.csv"),
     )
     .expect("strategy exit qty percent state fixture should run");
 

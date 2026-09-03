@@ -1,0 +1,11 @@
+//@version=5
+strategy("Generic order ANY matching id reduces that entry", pyramiding=2, close_entries_rule="ANY")
+if bar_index == 0
+    strategy.entry("A", strategy.long, qty=1)
+if bar_index == 1
+    strategy.entry("B", strategy.long, qty=1)
+if bar_index == 2
+    strategy.order("B", strategy.short, qty=1)
+plot(strategy.position_size)
+plot(strategy.closedtrades)
+plot(strategy.opentrades)

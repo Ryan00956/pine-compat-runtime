@@ -1,0 +1,9 @@
+//@version=5
+strategy("Supported strategy risk max_intraday_loss")
+limit = 10
+kind = strategy.percent_of_equity
+strategy.risk.max_intraday_loss(10, strategy.percent_of_equity)
+strategy.risk.max_intraday_loss(limit, kind)
+strategy.risk.max_intraday_loss(50, strategy.cash)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)

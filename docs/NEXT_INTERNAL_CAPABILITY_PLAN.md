@@ -1,7 +1,8 @@
 # Next Internal Capability Plan
 
-Status: active planning document, refreshed on 2026-07-18 after the Stage 13
-strategy baseline, imported UDT array expansion, and host-parity hardening.
+Status: active planning document, refreshed on 2026-09-03 after the Stage 17-22
+integration review. Strategy broker accuracy remains the selected direction
+while further source-version expansion is paused.
 
 This document groups the next interpreter-internal work into seven large task
 directions. It does not claim new compatibility. A task becomes supported only
@@ -21,52 +22,61 @@ conformance metadata, snapshots, docs, and release verification are complete.
 
 ## Direction 1: Strategy Maintenance
 
-Goal: make the existing basic long-only strategy subset more useful without
-turning it into a full broker simulator.
+Goal: improve the accuracy and maintainability of the completed side-aware
+broker subset without widening unsupported behavior ahead of executable
+evidence.
 
-Current Stage 13 baseline: the runtime now has a fixture-backed long-only
-multi-entry ledger subset for configured `pyramiding`, same-tick long
-price-based entry exceptions, selected `strategy.close`/`strategy.close_all`
-allocation, and a broad supported `strategy.exit` subset across explicit
-`from_entry`, omitted-`from_entry`, current same-entry-id, and same-entry-id
-future-entry persistence cases. Public strategy JSON still intentionally hides
-pending orders, reservation ledgers, exit reasons, OCA state, trailing state,
-and trade-key internals.
+Current Stage 17-22 baseline:
 
-Good next slices:
+- one shared fill-transition path with ledger/aggregate invariant checks;
+- next-tick market closes, close-command `immediately`, and historical
+  `process_orders_on_close`;
+- long/short generic-order signed netting and price-based entry reversal;
+- fixture-backed OCA none/cancel/reduce subsets and unified cancellation;
+- bounded `calc_on_order_fills`, realtime rollback, and
+  `calc_on_every_tick`;
+- fixture-backed entry-direction, position-size, drawdown, intraday, and
+  consecutive-loss-day risk rules.
 
-- More fixture-backed strategy state variables or count helpers.
-- Narrow order/trade accounting improvements that keep the current public output
-  shape.
-- Clearer diagnostics for still-unsupported order, account, and exit forms.
-- Small host-neutral strategy metadata/accounting checks that preserve the
-  current public output shape. Strategy order metadata, public `strategy.alerts`,
-  and explicit `{{strategy.order.alert_message}}` host rendering are already
-  closed for the fixture-backed subset.
+Stage 18 remains partial. The scheduler uses deterministic order-family steps,
+but it does not yet select a high-first/low-first OHLC path or order entry,
+generic-order, exit, and margin candidates together on each path leg.
 
-Keep out of scope until separately designed:
+Active stage order:
 
-- Short exposure, reversals, and `strategy.order` forms beyond the
-  fixture-backed long market/limit/stop/stop-limit add-or-increase subset,
-  explicit-quantity reduce-only market-short subset, and short
-  limit/stop/stop-limit add-or-increase subset.
-- Pyramiding behavior beyond the current fixture-backed long-only multi-entry
-  ledger subset, including short/reversal netting and richer close-entry rules.
-- Custom OCA behavior, unsupported margin/account behavior, and rich order
-  types.
+1. Integrate and review the current Stage 17-22 worktree without losing its
+   executable evidence.
+2. Execute Stage 18g true OHLC-path and cross-family candidate ordering.
+3. Wire the existing bar-magnifier host contract into the completed 18g path
+   before accepting `use_bar_magnifier=true`.
+4. Expand mixed entry/order/exit OCA groups only through a dedicated slice.
+5. Add an instrument-session calendar before claiming exchange-session risk
+   parity.
+6. Select later reporting, account, or order-family work from real fixture
+   gaps.
+
+The step-by-step source of truth is
+`docs/STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md`.
+
+Keep out of scope until separately designed and fixture-backed:
+
+- Bar Magnifier fill wiring and public host inputs before Stage 18g closes.
+- Mixed entry/order/exit OCA groups and series `oca_name`.
+- Omitted `qty` for unsupported `strategy.short` order forms.
+- Currency conversion, symbol precision, and richer account constraints.
 - Arbitrary future binding for unmatched `from_entry` ids.
 - Public pending-order, reservation, remaining-quantity, or exit-reason records.
-- Realtime strategy handoff and intrabar path reconstruction.
 - External strategy alert delivery before the host-owned restart-safe durable
   attempt-store, executable retry scheduling, concrete authentication secret
   store, diagnostic emission, and failure-reporting model from
   `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` is implemented.
 
-Stage 16b closed same-entry-id partial `close_entries_rule="ANY"` allocation
-for shorts. Recommended next slice: remaining strategy information variables
-or a separately designed omitted-`from_entry` `"ANY"` path. Do not add custom
-OCA, public pending-order fields, or any conformance widening without runtime
-behavior and host-parity evidence in the same slice.
+Recommended next slice after integrating the current worktree: Stage 18g true
+OHLC-path and cross-family candidate ordering. Omitted `from_entry` allocation
+remains FIFO and `strategy.close_all()` remains independent of
+`close_entries_rule`. Do not add public pending-order fields or widen
+conformance without runtime behavior and host-parity evidence in the same
+slice.
 
 Closed maintenance slice:
 
@@ -259,16 +269,14 @@ does not require external delivery or host scheduling.
 
 ## Recommended Order
 
-1. Built-in coverage selected from real fixture gaps, unless a narrow
-   post-Stage-13 strategy maintenance issue already has a clear contract.
-2. Strategy maintenance limited to diagnostics, accounting, or metadata that
-   preserves the public schema.
-3. Arrays and collections for already-supported scalar element types.
-4. User-defined type and method maintenance.
-5. Request support for one deterministic host-data case.
-6. Drawing object method maintenance.
-7. Alert policy maintenance.
+1. Integrate and review the current Stage 17-22 worktree.
+2. Strategy Stage 18g true OHLC-path ordering.
+3. Bar Magnifier fill wiring on the shared scheduler path.
+4. Mixed-family OCA and instrument-session semantics through separate slices.
+5. Strategy reporting/account gaps selected from executable fixtures.
+6. Built-in, collection, UDT, request, drawing, and alert maintenance only when
+   it is a prerequisite for the active strategy slice or fixes a regression.
 
-This order keeps the runtime useful for ordinary indicator execution and the
-current basic strategy subset while postponing work that needs new public
-contracts, chart rendering, remote data, or external delivery systems.
+This order applies while strategy completion is the selected project direction.
+It does not make later stages supported early: each stage still closes only
+through its fixtures, conformance evidence, audit, host parity, and full gate.

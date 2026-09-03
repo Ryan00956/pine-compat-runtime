@@ -1,0 +1,10 @@
+//@version=5
+strategy("Allow entry in last call wins")
+strategy.risk.allow_entry_in(strategy.direction.all)
+strategy.risk.allow_entry_in(strategy.direction.long)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
+    strategy.entry("S", strategy.short, qty=1)
+plot(strategy.position_size)
+plot(strategy.max_contracts_held_short)

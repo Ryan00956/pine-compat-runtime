@@ -431,6 +431,33 @@ impl PendingExitBook {
         })
     }
 
+    pub(super) fn find_mut_by_identity_and_key(
+        &mut self,
+        id: &str,
+        from_entry: &str,
+        target_trade_key: Option<u64>,
+    ) -> Option<&mut PendingExit> {
+        self.exits.iter_mut().find(|pending_exit| {
+            pending_exit.id == id
+                && pending_exit.from_entry == from_entry
+                && pending_exit.target_trade_key == target_trade_key
+        })
+    }
+
+    pub(super) fn remove_by_identity_and_key(
+        &mut self,
+        id: &str,
+        from_entry: &str,
+        target_trade_key: Option<u64>,
+    ) -> Option<PendingExit> {
+        let position = self.exits.iter().position(|pending_exit| {
+            pending_exit.id == id
+                && pending_exit.from_entry == from_entry
+                && pending_exit.target_trade_key == target_trade_key
+        })?;
+        Some(self.exits.remove(position))
+    }
+
     #[allow(dead_code)]
     pub(super) fn find_deferred_relative_by_identity(
         &self,

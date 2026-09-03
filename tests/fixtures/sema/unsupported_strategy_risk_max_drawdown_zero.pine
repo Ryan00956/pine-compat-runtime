@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported strategy risk max_drawdown zero")
+strategy.risk.max_drawdown(0, strategy.cash)

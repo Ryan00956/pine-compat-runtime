@@ -1,0 +1,4 @@
+//@version=5
+strategy("Supported process_orders_on_close", process_orders_on_close=true)
+strategy.entry("L", strategy.long, qty=1)
+strategy.close("L")

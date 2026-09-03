@@ -85,6 +85,7 @@ impl BrokerState {
             qty,
             price,
         });
+        self.check_risk_after_fill(bar_index, time, price);
     }
 
     pub(super) fn record_order_fill_alert_from_order_metadata(
@@ -118,6 +119,7 @@ impl BrokerState {
         time: i64,
         current_price: f64,
     ) {
+        let _ = self.check_risk_before_forced_close();
         if self.position_size <= 0.0 || !self.margin_long.is_active() || !current_price.is_finite()
         {
             return;
@@ -177,23 +179,13 @@ impl BrokerState {
             close_metadata: StrategyOrderMetadata::default(),
         });
 
-        self.cash += qty * current_price - exit_commission;
-        if qty >= self.position_size {
-            self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
-            self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
-            self.clear_open_long_legacy_state();
-            self.apply_trade_allocations_and_sync_position(&allocations);
-            if allocations.is_empty() {
-                self.trade_ledger.clear_open_trade();
-                self.sync_aggregate_position_from_ledger();
-            }
-            self.record_position_snapshot(bar_index);
-            return;
-        }
-
-        self.open_entry_commission -= closed_entry_commission;
-        self.apply_trade_allocations_and_sync_position(&allocations);
-        self.record_position_snapshot(bar_index);
+        self.apply_reduction_cash_and_position(
+            qty * current_price - exit_commission,
+            &allocations,
+            qty,
+            closed_entry_commission,
+            bar_index,
+        );
     }
 
     pub(crate) fn evaluate_margin_call_short(
@@ -202,6 +194,7 @@ impl BrokerState {
         time: i64,
         current_price: f64,
     ) {
+        let _ = self.check_risk_before_forced_close();
         if self.position_size >= 0.0
             || !self.margin_short.is_active()
             || !current_price.is_finite()
@@ -269,23 +262,13 @@ impl BrokerState {
             close_metadata: StrategyOrderMetadata::default(),
         });
 
-        self.cash += signed_qty * current_price - exit_commission;
-        if qty >= self.position_size.abs() {
-            self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
-            self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
-            self.clear_open_long_legacy_state();
-            self.apply_trade_allocations_and_sync_position(&allocations);
-            if allocations.is_empty() {
-                self.trade_ledger.clear_open_trade();
-                self.sync_aggregate_position_from_ledger();
-            }
-            self.record_position_snapshot(bar_index);
-            return;
-        }
-
-        self.open_entry_commission -= closed_entry_commission;
-        self.apply_trade_allocations_and_sync_position(&allocations);
-        self.record_position_snapshot(bar_index);
+        self.apply_reduction_cash_and_position(
+            signed_qty * current_price - exit_commission,
+            &allocations,
+            qty,
+            closed_entry_commission,
+            bar_index,
+        );
     }
 
     pub(super) fn fill_pending_exit(
@@ -441,22 +424,12 @@ impl BrokerState {
             closed_entry_commission
         };
 
-        self.cash += direction.signed_quantity(qty) * exit_price - exit_commission;
-        if qty >= self.position_size.abs() {
-            self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
-            self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
-            self.clear_open_long_legacy_state();
-            self.apply_trade_allocations_and_sync_position(&allocations);
-            if allocations.is_empty() {
-                self.trade_ledger.clear_open_trade();
-                self.sync_aggregate_position_from_ledger();
-            }
-            self.record_position_snapshot(bar_index);
-            return;
-        }
-
-        self.open_entry_commission -= closed_entry_commission;
-        self.apply_trade_allocations_and_sync_position(&allocations);
-        self.record_position_snapshot(bar_index);
+        self.apply_reduction_cash_and_position(
+            direction.signed_quantity(qty) * exit_price - exit_commission,
+            &allocations,
+            qty,
+            closed_entry_commission,
+            bar_index,
+        );
     }
 }

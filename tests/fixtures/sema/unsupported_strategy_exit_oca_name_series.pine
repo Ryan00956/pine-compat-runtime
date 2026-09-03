@@ -1,0 +1,4 @@
+//@version=5
+strategy("Unsupported strategy exit series oca name")
+name = close > open ? "g" : "h"
+strategy.exit("XL", "L", stop=low, oca_name=name)

@@ -597,10 +597,69 @@ Closed subset:
 - 16b same-entry-id partial `"ANY"` allocation for shorts. See
   `docs/STRATEGY_INTERNAL_STAGE16_CLOSE_ENTRIES_RULE_ANY_SHORT_PARTIAL_AUDIT.md`.
 
-Remaining Stage 16 subset:
+Remaining Stage 16 subset: none.
 
-- omitted-`from_entry` `"ANY"` allocation;
-- `strategy.close_all()` non-FIFO ordering.
+Per `docs/PURE_INTERNAL_STRATEGY_CLOSE_ENTRIES_RULE_DESIGN.md`, an omitted
+`from_entry` continues to allocate FIFO, and `strategy.close_all()` ignores
+`close_entries_rule`. Those behaviors are deliberate boundaries, not unfinished
+Stage 16 slices.
+
+## Stage 17: Unified Order And Fill Kernel
+
+Status: closed on 2026-09-02. See
+`docs/STRATEGY_INTERNAL_STAGE17_UNIFIED_FILL_AUDIT.md`. Execute later stages
+from `docs/STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md`.
+
+Goal: introduce explicit command origin, stable internal order identity, a
+single fill-transition applier, and ledger-authoritative position state without
+changing public behavior.
+
+## Stage 18: Historical Execution Timing
+
+Status: partial. Slices 18a-18e are closed. Slice 18f delivered deterministic
+family ordering but retained the planned OHLC-path and cross-family candidate
+gaps. Execute Stage 18g from
+`docs/STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md`.
+
+Goal: move eligibility and fill ordering into a broker scheduler, then implement
+default next-tick market closes, `immediately`, and
+`process_orders_on_close` with deterministic historical bar ordering.
+
+## Stage 19: Generic Netting And Price-Based Reversal
+
+Status: closed on 2026-09-03. Execute later stages from
+`docs/STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md`. See
+`docs/STRATEGY_INTERNAL_STAGE19F_REPLACEMENT_CANCEL_CLOSE_RULE_AUDIT.md`.
+
+Goal: complete signed `strategy.order()` netting and route price-based
+`strategy.entry()` reversal through the shared fill transition.
+
+## Stage 20: OCA, Cancellation, And Replacement
+
+Status: closed on 2026-09-03. Execute later stages from
+`docs/STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md`. See
+`docs/STRATEGY_INTERNAL_STAGE20F_UNIFIED_CANCELLATION_AUDIT.md`.
+
+Goal: unify cancellation ownership and implement deterministic OCA none,
+cancel, and reduce behavior across supported order families.
+
+## Stage 21: Recalculation And Realtime Scheduling
+
+Status: closed on 2026-09-03. Execute later stages from
+`docs/STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md`. See
+`docs/STRATEGY_INTERNAL_STAGE21E_BAR_MAGNIFIER_HOST_CONTRACT_AUDIT.md`.
+
+Goal: add bounded `calc_on_order_fills`, realtime `calc_on_every_tick`, rollback
+of abandoned forming-bar broker state, and only then any separately proven
+intrabar-path work.
+
+## Stage 22: Broker-Enforced Risk Rules
+
+Status: closed on 2026-09-03. See
+`docs/STRATEGY_INTERNAL_STAGE22G_CONS_LOSS_DAYS_AUDIT.md`.
+
+Goal: implement risk configuration and broker enforcement one rule family at a
+time, with deterministic session/day boundaries and no inert acceptance.
 
 ## Shared Completion Gates
 

@@ -61,6 +61,9 @@ pub struct StrategySettings {
     pub margin_long: StrategyMarginSetting,
     pub margin_short: StrategyMarginSetting,
     pub close_entries_rule: StrategyCloseEntriesRule,
+    pub process_orders_on_close: bool,
+    pub calc_on_order_fills: bool,
+    pub calc_on_every_tick: bool,
 }
 
 impl Default for StrategySettings {
@@ -75,6 +78,9 @@ impl Default for StrategySettings {
             margin_long: StrategyMarginSetting::default(),
             margin_short: StrategyMarginSetting::default(),
             close_entries_rule: StrategyCloseEntriesRule::Fifo,
+            process_orders_on_close: false,
+            calc_on_order_fills: false,
+            calc_on_every_tick: false,
         }
     }
 }

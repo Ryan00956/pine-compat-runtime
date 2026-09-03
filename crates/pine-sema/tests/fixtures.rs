@@ -4270,14 +4270,103 @@ fn reports_unsupported_strategy_declaration_properties_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_declaration_properties.pine",
         &[
-            "calc_on_order_fills",
-            "calc_on_every_tick",
-            "process_orders_on_close",
             "currency",
             "risk_free_rate",
             "use_bar_magnifier",
             "fill_orders_on_standard_ohlc",
         ],
+    );
+}
+
+#[test]
+fn accepts_supported_strategy_process_orders_on_close_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_strategy_process_orders_on_close.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    assert!(hir.strategy_settings.process_orders_on_close);
+}
+
+#[test]
+fn reports_strategy_process_orders_on_close_series_rejected() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_process_orders_on_close_series.pine",
+        &["argument `process_orders_on_close` expects const bool"],
+    );
+}
+
+#[test]
+fn reports_strategy_process_orders_on_close_keeps_recalc_flags_rejected() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_process_orders_on_close_with_recalc.pine",
+        &["use_bar_magnifier"],
+    );
+}
+
+#[test]
+fn accepts_supported_strategy_calc_on_every_tick_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_calc_on_every_tick.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    assert!(hir.strategy_settings.calc_on_every_tick);
+}
+
+#[test]
+fn reports_strategy_calc_on_every_tick_series_rejected() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_calc_on_every_tick_series.pine",
+        &["argument `calc_on_every_tick` expects const bool"],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_use_bar_magnifier_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier.pine",
+        &["use_bar_magnifier"],
+    );
+}
+
+#[test]
+fn accepts_supported_strategy_calc_on_order_fills_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_calc_on_order_fills.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    assert!(hir.strategy_settings.calc_on_order_fills);
+}
+
+#[test]
+fn reports_strategy_calc_on_order_fills_series_rejected() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_calc_on_order_fills_series.pine",
+        &["argument `calc_on_order_fills` expects const bool"],
     );
 }
 
@@ -4480,10 +4569,17 @@ fn reports_unsupported_strategy_order_fixture() {
         &[
             "explicit positive qty",
             "strategy.long",
-            "market/limit/stop/stop-limit subset",
-            "oca_name",
             "oca_type",
+            "strategy.oca.cancel",
         ],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_order_oca_series_name_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_order_oca_series_name.pine",
+        &["oca_name"],
     );
 }
 
@@ -4579,8 +4675,8 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
             "E_CALL_ARITY",
         ),
         (
-            "tests/fixtures/sema/unsupported_strategy_exit_oca_name.pine",
-            "E_CALL_ARG_NAME",
+            "tests/fixtures/sema/unsupported_strategy_exit_oca_name_series.pine",
+            "E_CALL_ARG_TYPE",
         ),
         (
             "tests/fixtures/sema/unsupported_strategy_order_metadata_types.pine",
@@ -4588,7 +4684,11 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
         ),
         (
             "tests/fixtures/sema/unsupported_strategy_close_immediately.pine",
-            "E_CALL_ARG_NAME",
+            "E_CALL_ARG_TYPE",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_close_immediately_type.pine",
+            "E_CALL_ARG_TYPE",
         ),
         (
             "tests/fixtures/sema/unsupported_strategy_exit_function_side_effect.pine",
@@ -4652,6 +4752,7 @@ fn accepts_supported_strategy_exit_fixtures() {
         "tests/fixtures/sema/supported_strategy_exit_qty_and_qty_percent_stop.pine",
         "tests/fixtures/sema/supported_strategy_exit_qty_and_qty_percent_bracket.pine",
         "tests/fixtures/sema/supported_strategy_exit_qty_and_qty_percent_trailing.pine",
+        "tests/fixtures/sema/supported_strategy_exit_oca_name.pine",
         "tests/fixtures/sema/supported_strategy_order_metadata.pine",
     ] {
         let path = workspace_fixture(fixture);
@@ -4742,6 +4843,9 @@ fn accepts_supported_strategy_order_fixture() {
         "tests/fixtures/sema/supported_strategy_order.pine",
         "tests/fixtures/sema/supported_strategy_order_named_const_numeric.pine",
         "tests/fixtures/sema/supported_strategy_order_named_const_direction.pine",
+        "tests/fixtures/sema/supported_strategy_order_oca_none.pine",
+        "tests/fixtures/sema/supported_strategy_order_oca_cancel.pine",
+        "tests/fixtures/sema/supported_strategy_order_oca_reduce.pine",
     ] {
         let path = workspace_fixture(fixture);
         let text = fs::read_to_string(&path).expect("fixture should be readable");
@@ -4866,16 +4970,6 @@ fn reports_unsupported_strategy_close_partial_quantity_fixture() {
         path.display(),
         analysis.diagnostics
     );
-    let name = "immediately";
-    assert!(
-        analysis.diagnostics.iter().any(|diagnostic| {
-            diagnostic.code == "E_CALL_ARG_NAME" && diagnostic.message.contains(name)
-        }),
-        "{} diagnostics should reject strategy.close argument `{}`: {:?}",
-        path.display(),
-        name,
-        analysis.diagnostics
-    );
     assert!(analysis.hir.is_none());
 }
 
@@ -4900,11 +4994,42 @@ fn reports_strategy_order_metadata_type_guardrails() {
 }
 
 #[test]
-fn reports_strategy_close_immediately_remains_unsupported() {
+fn reports_strategy_close_series_immediately_rejected() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_close_immediately.pine",
-        &["immediately"],
+        &[
+            "argument `immediately` expects simple bool, got series bool",
+            "argument `immediately` expects simple bool, got series bool",
+        ],
     );
+}
+
+#[test]
+fn reports_strategy_close_immediately_type_rejected() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_close_immediately_type.pine",
+        &[
+            "argument `immediately` expects simple bool",
+            "argument `immediately` expects simple bool",
+        ],
+    );
+}
+
+#[test]
+fn accepts_supported_strategy_close_immediately_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_close_immediately.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -5218,16 +5343,359 @@ fn reports_unknown_strategy_variable_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_risk_allow_entry_in_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_risk_allow_entry_in.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "strategy.risk.allow_entry_in")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_allow_entry_in_unknown_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_allow_entry_in_unknown.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_allow_entry_in_series_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_risk_allow_entry_in_series.pine",
+        &["simple string"],
+    );
+}
+
+#[test]
+fn accepts_supported_strategy_risk_max_position_size_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_strategy_risk_max_position_size.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "strategy.risk.max_position_size")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_position_size_zero_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_position_size_zero.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_position_size_negative_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_position_size_negative.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_position_size_series_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_position_size_series.pine",
+        &["simple"],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_position_size_indicator_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_position_size_indicator.pine",
+        "E_STRATEGY_MODE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_allow_entry_in_indicator_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_allow_entry_in_indicator.pine",
+        "E_STRATEGY_MODE",
+    );
+}
+
+#[test]
 fn reports_unsupported_strategy_order_and_trade_namespace_fixture() {
     assert_strategy_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy_order_and_trade_namespaces.pine",
-        &[
-            "strategy.risk.allow_entry_in",
-            "strategy.risk.max_drawdown",
-            "strategy.risk.max_intraday_loss",
-            "strategy.risk.max_position_size",
-            "strategy.risk.max_intraday_filled_orders",
-        ],
+        &["strategy.risk.not_a_rule"],
+    );
+}
+
+#[test]
+fn accepts_supported_strategy_risk_max_drawdown_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_risk_max_drawdown.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "strategy.risk.max_drawdown")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_drawdown_zero_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_drawdown_zero.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_drawdown_percent_over_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_drawdown_percent_over.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_drawdown_unknown_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_drawdown_unknown_type.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_drawdown_series_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_drawdown_series.pine",
+        &["simple"],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_drawdown_indicator_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_drawdown_indicator.pine",
+        "E_STRATEGY_MODE",
+    );
+}
+
+#[test]
+fn accepts_supported_strategy_risk_max_intraday_loss_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_strategy_risk_max_intraday_loss.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "strategy.risk.max_intraday_loss")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_intraday_loss_zero_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_loss_zero.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_intraday_loss_percent_over_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_loss_percent_over.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_intraday_loss_unknown_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_loss_unknown_type.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_intraday_loss_series_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_loss_series.pine",
+        &["simple"],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_intraday_loss_indicator_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_loss_indicator.pine",
+        "E_STRATEGY_MODE",
+    );
+}
+
+#[test]
+fn accepts_supported_strategy_risk_max_intraday_filled_orders_fixture() {
+    let path = workspace_fixture(
+        "tests/fixtures/sema/supported_strategy_risk_max_intraday_filled_orders.pine",
+    );
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| { supported.feature == "strategy.risk.max_intraday_filled_orders" })
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_intraday_filled_orders_zero_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_filled_orders_zero.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_intraday_filled_orders_fraction_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_filled_orders_fraction.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_intraday_filled_orders_series_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_filled_orders_series.pine",
+        &["simple"],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_intraday_filled_orders_indicator_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_intraday_filled_orders_indicator.pine",
+        "E_STRATEGY_MODE",
+    );
+}
+
+#[test]
+fn accepts_supported_strategy_risk_max_cons_loss_days_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_strategy_risk_max_cons_loss_days.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "strategy.risk.max_cons_loss_days")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_cons_loss_days_zero_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_cons_loss_days_zero.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_cons_loss_days_fraction_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_cons_loss_days_fraction.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_cons_loss_days_series_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_cons_loss_days_series.pine",
+        &["simple"],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_risk_max_cons_loss_days_indicator_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_risk_max_cons_loss_days_indicator.pine",
+        "E_STRATEGY_MODE",
     );
 }
 

@@ -1,0 +1,8 @@
+//@version=5
+strategy("OCA reduce removes peer reduced to zero")
+if bar_index == 1
+    strategy.order("A", strategy.long, qty=2, limit=3, oca_name="g", oca_type=strategy.oca.reduce)
+    strategy.order("B", strategy.long, qty=1, limit=3, oca_name="g", oca_type=strategy.oca.reduce)
+plot(strategy.position_size)
+plot(strategy.opentrades)
+plot(strategy.closedtrades)
