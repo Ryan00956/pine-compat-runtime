@@ -397,7 +397,7 @@ impl HistoricalRuntime<'_> {
             if index > 0
                 && let Some(gap) = MagnifierHostGap::between(&hosts[index - 1].bar, &host.bar)
             {
-                self.observe_host_open_gap(chart_bar_index, chart_time, host, gap);
+                self.observe_host_open_gap(chart_bar_index, chart_time, host, gap)?;
             }
             self.walk_one_host_bar(chart_bar_index, chart_time, host)?;
         }
@@ -411,7 +411,7 @@ impl HistoricalRuntime<'_> {
         chart_time: i64,
         host: &MagnifierHostBar,
         gap: MagnifierHostGap,
-    ) {
+    ) -> Result<(), RuntimeError> {
         self.strategy_scheduler.set_host_path_cursor(
             host.host_bar_index,
             StrategyPathPhase::HostOpen,
@@ -426,6 +426,41 @@ impl HistoricalRuntime<'_> {
             gap.next_open,
         );
         self.observe_path_mark(chart_bar_index, chart_time, gap.next_open);
+        let long_blocked = self.strategy_broker.same_side_long_entry_blocked();
+        let short_blocked = self.strategy_broker.same_side_short_entry_blocked();
+        let tick = EntryPathTick {
+            bar_index: chart_bar_index,
+            time: chart_time,
+            leg: crate::runtime::strategy_path::PathLeg::point(gap.next_open),
+            path_kind: crate::runtime::strategy_path::HistoricalPathKind::OpenHighLowClose,
+            mark: gap.next_open,
+            long_blocked_at_path_start: long_blocked,
+            short_blocked_at_path_start: short_blocked,
+        };
+        let mut steps = 0_u32;
+        loop {
+            steps += 1;
+            if steps > 10_000 {
+                return Err(RuntimeError {
+                    message: format!(
+                        "strategy path event loop made no progress: bar {} host {} gap",
+                        chart_bar_index, host.host_bar_index
+                    ),
+                });
+            }
+            let Some(outcome) = self.strategy_broker.take_next_gap_event(tick, gap) else {
+                break;
+            };
+            if let PathEventOutcome::Filled { fill_price, .. } = outcome {
+                self.strategy_broker.flatten_if_risk_blocked(
+                    chart_bar_index,
+                    chart_time,
+                    fill_price,
+                );
+                self.recalculate_after_fill(true)?;
+            }
+        }
+        Ok(())
     }
 
     fn walk_one_host_bar(

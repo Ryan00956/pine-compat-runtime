@@ -322,3 +322,112 @@ plot(close)
         runtime.strategy_path_trace
     );
 }
+
+#[test]
+fn magnifier_gap_fills_stop_at_next_open_not_requested_price() {
+    let program = enabled_strategy(
+        r#"
+strategy("gap stop", pyramiding=2, initial_capital=100000)
+if bar_index == 0
+    strategy.entry("STP", strategy.long, qty=1, stop=10.5)
+plot(close)
+"#,
+    );
+    let input = magnifier_input_from_groups(vec![
+        group(0, vec![timed_bar(1_000, 10.0)]),
+        group(
+            1,
+            vec![
+                ohlc(2_000, 10.0, 10.2, 9.9, 10.1),
+                ohlc(2_300, 11.0, 11.2, 10.8, 11.1),
+            ],
+        ),
+    ])
+    .expect("valid");
+    let result = HistoricalRuntime::new(&program)
+        .with_magnifier_input(input)
+        .run(&[timed_bar(1_000, 10.0), ohlc(2_000, 10.0, 12.0, 8.0, 11.0)])
+        .expect("run");
+    let strategy = result.strategy.expect("strategy");
+    let fill = strategy
+        .orders
+        .iter()
+        .find(|order| order.id == "STP")
+        .expect("stop fill");
+    assert_eq!(fill.bar_index, 1);
+    assert!((fill.price - 11.0).abs() < 1e-10, "{fill:?}");
+    assert_eq!(fill.time, 2_000);
+}
+
+#[test]
+fn magnifier_same_chart_bar_entry_and_exit_uses_chart_bar_index() {
+    let program = enabled_strategy(
+        r#"
+strategy("same bar", initial_capital=100000)
+if bar_index == 0
+    strategy.entry("EN", strategy.long, qty=1, stop=10.5)
+    strategy.exit("EX", "EN", limit=11.5)
+plot(close)
+"#,
+    );
+    let input = magnifier_input_from_groups(vec![
+        group(0, vec![timed_bar(1_000, 10.0)]),
+        group(
+            1,
+            vec![
+                ohlc(2_000, 10.0, 10.4, 9.8, 10.2),
+                ohlc(2_300, 10.2, 10.8, 10.1, 10.6),
+                ohlc(2_600, 10.6, 11.8, 10.5, 11.0),
+            ],
+        ),
+    ])
+    .expect("valid");
+    let result = HistoricalRuntime::new(&program)
+        .with_magnifier_input(input)
+        .run(&[timed_bar(1_000, 10.0), ohlc(2_000, 10.0, 12.0, 8.0, 11.0)])
+        .expect("run");
+    let strategy = result.strategy.expect("strategy");
+    let ids: Vec<_> = strategy
+        .orders
+        .iter()
+        .map(|order| order.id.as_str())
+        .collect();
+    assert!(ids.contains(&"EN"), "{ids:?}");
+    assert!(ids.contains(&"EX"), "{ids:?}");
+    assert!(
+        strategy.orders.iter().all(|order| order.bar_index == 1),
+        "{:?}",
+        strategy.orders
+    );
+}
+
+#[test]
+fn magnifier_false_setting_matches_standard_ohlc_baseline() {
+    let source = r#"
+strategy("baseline", initial_capital=100000)
+if bar_index == 0
+    strategy.entry("EN", strategy.long, qty=1, stop=10.5)
+plot(close)
+"#;
+    let file = SourceFile::new("baseline.pine", source);
+    let analysis = analyze_source(&file);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.expect("HIR");
+    assert!(!program.strategy_settings.use_bar_magnifier);
+    let bars = [timed_bar(1_000, 10.0), ohlc(2_000, 10.0, 12.0, 8.0, 11.0)];
+    let baseline = HistoricalRuntime::new(&program)
+        .run(&bars)
+        .expect("baseline");
+    let input =
+        magnifier_input_from_groups(vec![group(1, vec![ohlc(2_000, 10.0, 10.1, 9.9, 10.0)])])
+            .expect("valid");
+    let with_input = HistoricalRuntime::new(&program)
+        .with_magnifier_input(input)
+        .run(&bars)
+        .expect("inert");
+    assert_eq!(baseline, with_input);
+}

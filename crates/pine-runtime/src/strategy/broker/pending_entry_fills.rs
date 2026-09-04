@@ -5,7 +5,7 @@ use super::{
     pending_exits::{PendingExitTrigger, PendingTrailingState},
     types::{EntryFill, EntryPyramidingMode, InternalOrderKey, OcaPeerEffects},
 };
-use crate::runtime::strategy_path::{HistoricalPathKind, PathLeg};
+use crate::runtime::strategy_path::{HistoricalPathKind, MagnifierHostGap, PathLeg};
 use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -40,6 +40,18 @@ impl PathEventOutcome {
 }
 
 impl BrokerState {
+    pub(crate) fn take_next_gap_event(
+        &mut self,
+        tick: EntryPathTick,
+        gap: MagnifierHostGap,
+    ) -> Option<PathEventOutcome> {
+        let winner = self
+            .collect_gap_candidates(tick.bar_index, gap, self.event_generation)
+            .into_iter()
+            .find(|candidate| candidate.observed_generation == self.event_generation)?;
+        Some(self.apply_entry_path_candidate(&winner, tick))
+    }
+
     pub(crate) fn take_next_entry_path_event(
         &mut self,
         tick: EntryPathTick,

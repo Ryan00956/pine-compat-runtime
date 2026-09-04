@@ -4,7 +4,7 @@ use super::BrokerState;
 use super::pending_entries::{PendingEntry, PendingEntryDirection, PendingEntryKind};
 use super::pending_exits::{PendingExit, PendingExitTrigger, PendingTrailingState};
 use super::types::{InternalOrderKey, StrategyCommandOrigin};
-use crate::runtime::strategy_path::{HistoricalPathKind, PathLeg};
+use crate::runtime::strategy_path::{HistoricalPathKind, MagnifierHostGap, PathLeg};
 use crate::strategy::broker::ledger::TradeDirection;
 use std::cmp::Ordering;
 
@@ -177,6 +177,87 @@ impl BrokerState {
             candidates.push(candidate);
         }
         candidates.sort_by(|left, right| cmp_candidates(left, right, Some(leg)));
+        candidates
+    }
+
+    pub(super) fn collect_gap_candidates(
+        &self,
+        bar_index: usize,
+        gap: MagnifierHostGap,
+        generation: u64,
+    ) -> Vec<BrokerCandidate> {
+        let mut candidates = Vec::new();
+        let fill = gap.next_open;
+        for pending in self.order_book.entries().iter() {
+            if !self
+                .order_book
+                .entries()
+                .price_created_eligible(pending.created_bar_index, bar_index)
+            {
+                continue;
+            }
+            match &pending.kind {
+                PendingEntryKind::Limit { price } | PendingEntryKind::Stop { price }
+                    if gap.crosses(*price) =>
+                {
+                    candidates.push(entry_fill_candidate(
+                        pending,
+                        BrokerCandidatePhase::PathLeg,
+                        0,
+                        fill,
+                        fill,
+                        generation,
+                    ));
+                }
+                PendingEntryKind::StopLimit {
+                    stop_price,
+                    limit_price,
+                    activated_bar_index,
+                } => {
+                    if activated_bar_index.is_none() && gap.crosses(*stop_price) {
+                        candidates.push(BrokerCandidate {
+                            event_kind: BrokerCandidateEvent::StopLimitActivation,
+                            phase: BrokerCandidatePhase::PathLeg,
+                            path_leg: 0,
+                            crossing_price: fill,
+                            fill_price_or_mark: fill,
+                            creation_sequence: pending.key.0,
+                            stable_order_key: pending.key,
+                            observed_generation: generation,
+                            origin: pending.origin,
+                            public_id: pending.id.clone(),
+                        });
+                    } else if activated_bar_index.is_some() && gap.crosses(*limit_price) {
+                        candidates.push(entry_fill_candidate(
+                            pending,
+                            BrokerCandidatePhase::PathLeg,
+                            0,
+                            fill,
+                            fill,
+                            generation,
+                        ));
+                    }
+                }
+                _ => {}
+            }
+        }
+        let direction = if self.position_size < 0.0 {
+            TradeDirection::Short
+        } else {
+            TradeDirection::Long
+        };
+        for pending in self.order_book.exits().iter() {
+            if pending.last_update_bar_index >= bar_index {
+                continue;
+            }
+            if !self.has_open_position_for_entry(&pending.from_entry) {
+                continue;
+            }
+            if gap_exit_crosses(pending, direction, gap) {
+                candidates.push(exit_fill_candidate(pending, 0, fill, fill, generation));
+            }
+        }
+        candidates.sort_by(|left, right| cmp_candidates(left, right, None));
         candidates
     }
 
@@ -597,4 +678,21 @@ fn exit_leg_candidates(
         }
     }
     out
+}
+
+fn gap_exit_crosses(
+    pending: &PendingExit,
+    _direction: TradeDirection,
+    gap: MagnifierHostGap,
+) -> bool {
+    match &pending.trigger {
+        PendingExitTrigger::Stop(price) | PendingExitTrigger::Limit(price) => gap.crosses(*price),
+        PendingExitTrigger::Bracket { downside, upside } => {
+            gap.crosses(*downside) || gap.crosses(*upside)
+        }
+        PendingExitTrigger::Trailing(trailing) => match trailing.state {
+            PendingTrailingState::Inactive => gap.crosses(trailing.spec.activation.price()),
+            PendingTrailingState::Active { stop_price } => gap.crosses(stop_price),
+        },
+    }
 }

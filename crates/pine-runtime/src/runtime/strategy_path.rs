@@ -44,6 +44,15 @@ pub(crate) struct PathLeg {
 }
 
 impl PathLeg {
+    pub(crate) fn point(price: f64) -> Self {
+        let point = PathPoint {
+            index: 0,
+            kind: PathPointKind::Open,
+            price,
+        };
+        Self::new(0, point, point)
+    }
+
     fn new(index: u8, from: PathPoint, to: PathPoint) -> Self {
         let direction = match from.price.total_cmp(&to.price) {
             Ordering::Less => PathLegDirection::Rising,
@@ -292,7 +301,6 @@ impl MagnifierHostGap {
     /// Trigger is crossed only in the open gap, exclusive of both endpoints.
     /// Endpoint prices belong to the previous close or next open path point.
     #[must_use]
-    #[allow(dead_code)]
     pub(crate) fn crosses(self, price: f64) -> bool {
         if !price.is_finite() {
             return false;
