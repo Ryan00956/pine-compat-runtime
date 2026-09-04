@@ -154,6 +154,7 @@ impl BrokerState {
             trade_ledger: TradeLedger::default(),
             risk_rules: super::risk::StrategyRiskRules::default(),
             risk_state: super::risk::StrategyRiskState::default(),
+            event_generation: 0,
         }
     }
 
@@ -255,6 +256,7 @@ impl BrokerState {
         price - self.slippage_price_offset
     }
 
+    #[allow(dead_code)]
     pub(super) fn long_limit_exit_is_verified(&self, limit_price: f64, high: f64) -> bool {
         high >= limit_price + self.limit_verification_price_offset
     }

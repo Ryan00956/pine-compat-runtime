@@ -4,6 +4,7 @@ use super::{
         DeferredBracketLeg, DeferredRelativeExit, DeferredRelativeExitTrigger, ExitQuantityRequest,
         PendingExit, PendingExitQuantity, PendingExitTrigger,
     },
+    types::InternalOrderKey,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -95,6 +96,7 @@ impl BrokerState {
                 continue;
             };
             pending_exits.push(PendingExit {
+                key: InternalOrderKey(0),
                 id: id.clone(),
                 from_entry: open_trade.id.clone(),
                 target_trade_key: Some(open_trade.key),

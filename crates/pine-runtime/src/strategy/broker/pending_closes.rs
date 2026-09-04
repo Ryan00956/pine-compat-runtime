@@ -38,7 +38,6 @@ impl PendingClose {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub(super) struct PendingCloseBook {
     closes: Vec<PendingClose>,
-    next_creation_sequence: u64,
 }
 
 impl PendingCloseBook {
@@ -61,7 +60,11 @@ impl PendingCloseBook {
         })
     }
 
-    pub(super) fn place(&mut self, mut pending: PendingClose) {
+    pub(super) fn place(
+        &mut self,
+        mut pending: PendingClose,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
+    ) {
         let existing_key = match &pending.kind {
             PendingCloseKind::Close { id } => self
                 .closes
@@ -74,11 +77,7 @@ impl PendingCloseBook {
                 .find(|existing| matches!(existing.kind, PendingCloseKind::CloseAll))
                 .map(|existing| existing.key),
         };
-        let key = existing_key.unwrap_or_else(|| {
-            let key = InternalOrderKey(self.next_creation_sequence);
-            self.next_creation_sequence = self.next_creation_sequence.wrapping_add(1);
-            key
-        });
+        let key = existing_key.unwrap_or_else(allocate);
         pending.key = key;
         match &pending.kind {
             PendingCloseKind::Close { id } => {

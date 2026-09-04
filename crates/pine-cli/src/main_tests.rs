@@ -743,10 +743,10 @@ fn strategy_exit_trailing_fixture_has_single_exit_order_and_trade() {
     );
     assert_eq!(output.matches(r#""trades":[{"#).count(), 1);
     assert!(output.contains(
-            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XT","barIndex":3,"time":4,"direction":"strategy.exit","qty":2,"price":3.5}]"#
+            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XT","barIndex":1,"time":2,"direction":"strategy.exit","qty":2,"price":2.5}]"#
         ));
     assert!(output.contains(
-            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":3,"entryTime":2,"exitTime":4,"entryPrice":2,"exitPrice":3.5,"qty":2,"profit":3}]"#
+            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":2.5,"qty":2,"profit":1}]"#
         ));
 }
 
@@ -825,13 +825,13 @@ fn strategy_exit_reservation_fixture_has_host_stable_shape() {
         2
     );
     assert!(output.contains(
-            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XS","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.5,"price":2.5},{"id":"XL","barIndex":2,"time":3,"direction":"strategy.exit","qty":1.5,"price":1.5}]"#
+            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XS","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.5,"price":2.5},{"id":"XL","barIndex":1,"time":2,"direction":"strategy.exit","qty":1.5,"price":1.5}]"#
         ));
     assert!(output.contains(
-            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":2.5,"qty":0.5,"profit":0.25},{"id":"L","entryBarIndex":1,"exitBarIndex":2,"entryTime":2,"exitTime":3,"entryPrice":2,"exitPrice":1.5,"qty":1.5,"profit":-0.75}]"#
+            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":2.5,"qty":0.5,"profit":0.25},{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":1.5,"qty":1.5,"profit":-0.75}]"#
         ));
     assert!(output.contains(
-            r#""position":[{"barIndex":1,"size":2,"avgPrice":2},{"barIndex":1,"size":1.5,"avgPrice":2},{"barIndex":2,"size":0,"avgPrice":null}]"#
+            r#""position":[{"barIndex":1,"size":2,"avgPrice":2},{"barIndex":1,"size":1.5,"avgPrice":2},{"barIndex":1,"size":0,"avgPrice":null}]"#
         ));
     assert!(output.contains(r#""strategy":{"orders":"#));
     assert!(output.contains(r#""equity":["#));
@@ -1103,6 +1103,31 @@ fn runtime_fixture_bars_csv(fixture: &str) -> &'static str {
         "tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_limit_entries.pine" => {
             include_str!(
                 "../../../tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_limit_entries_bars.csv"
+            )
+        }
+        "tests/fixtures/runtime/strategy_fill_path_high_first_long.pine" => {
+            include_str!(
+                "../../../tests/fixtures/runtime/strategy_fill_path_high_first_long_bars.csv"
+            )
+        }
+        "tests/fixtures/runtime/strategy_fill_path_low_first_short.pine" => {
+            include_str!(
+                "../../../tests/fixtures/runtime/strategy_fill_path_low_first_short_bars.csv"
+            )
+        }
+        "tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar.pine" => {
+            include_str!(
+                "../../../tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar_bars.csv"
+            )
+        }
+        "tests/fixtures/runtime/strategy_fill_path_stop_limit_long.pine" => {
+            include_str!(
+                "../../../tests/fixtures/runtime/strategy_fill_path_stop_limit_long_bars.csv"
+            )
+        }
+        "tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long.pine" => {
+            include_str!(
+                "../../../tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long_bars.csv"
             )
         }
         "tests/fixtures/runtime/strategy_exit_bracket_loss_profit_loss_fill.pine" => {

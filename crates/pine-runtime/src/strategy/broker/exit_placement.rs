@@ -5,6 +5,7 @@ use super::{
         ExitQuantityRequest, PendingExit, PendingExitQuantity, PendingExitReservationFamily,
         PendingExitTrigger,
     },
+    types::InternalOrderKey,
 };
 use crate::RuntimeDiagnostic;
 
@@ -190,6 +191,7 @@ impl BrokerState {
         }
 
         let pending_exit = PendingExit {
+            key: InternalOrderKey(0),
             id,
             from_entry,
             target_trade_key: None,
@@ -203,7 +205,7 @@ impl BrokerState {
         let exit_id = pending_exit.id.clone();
         let exit_from = pending_exit.from_entry.clone();
         if (keep_existing_peers && other_exits_are_supported_reservations) || share_oca_group {
-            self.order_book.exits_mut().replace_or_append(pending_exit);
+            self.order_book.replace_or_append_exit(pending_exit);
         } else {
             if pending_exit.from_entry.is_empty()
                 && pending_exit.quantity == PendingExitQuantity::Full
@@ -212,7 +214,7 @@ impl BrokerState {
                     .exits_mut()
                     .clear_all_entry_deferred_relative();
             }
-            self.order_book.exits_mut().replace_all(pending_exit);
+            self.order_book.replace_all_exit(pending_exit);
         }
         self.assign_placed_exit_oca(&exit_id, &exit_from);
     }

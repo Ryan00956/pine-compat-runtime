@@ -79,10 +79,10 @@ struct LongEntryPlacement {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub(super) struct PendingEntryBook {
     entries: Vec<PendingEntry>,
-    next_creation_sequence: u64,
     allow_same_bar_price_fills: bool,
 }
 
+#[allow(clippy::too_many_arguments)]
 impl PendingEntryBook {
     pub(super) fn new() -> Self {
         Self::default()
@@ -92,7 +92,11 @@ impl PendingEntryBook {
         self.allow_same_bar_price_fills = allow_same_bar_price_fills;
     }
 
-    fn price_created_eligible(&self, created_bar_index: usize, bar_index: usize) -> bool {
+    pub(super) fn price_created_eligible(
+        &self,
+        created_bar_index: usize,
+        bar_index: usize,
+    ) -> bool {
         created_bar_index < bar_index
             || (self.allow_same_bar_price_fills && created_bar_index == bar_index)
     }
@@ -476,6 +480,7 @@ impl PendingEntryBook {
         quantity: f64,
         created_bar_index: usize,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         self.place_market_long_with_metadata(
             id,
@@ -483,6 +488,7 @@ impl PendingEntryBook {
             created_bar_index,
             StrategyOrderMetadata::default(),
             diagnostics,
+            allocate,
         );
     }
 
@@ -493,6 +499,7 @@ impl PendingEntryBook {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         self.place_long(
             LongEntryPlacement {
@@ -505,6 +512,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -515,6 +523,7 @@ impl PendingEntryBook {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         self.place_long(
             LongEntryPlacement {
@@ -527,6 +536,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -537,6 +547,7 @@ impl PendingEntryBook {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         self.place_long(
             LongEntryPlacement {
@@ -549,6 +560,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -559,6 +571,7 @@ impl PendingEntryBook {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         self.place_long(
             LongEntryPlacement {
@@ -571,6 +584,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -582,6 +596,7 @@ impl PendingEntryBook {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         if !price.is_finite() || price <= 0.0 {
             diagnostics.push(RuntimeDiagnostic {
@@ -601,6 +616,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -612,6 +628,7 @@ impl PendingEntryBook {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         if !price.is_finite() || price <= 0.0 {
             diagnostics.push(RuntimeDiagnostic {
@@ -631,6 +648,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -642,6 +660,7 @@ impl PendingEntryBook {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         if !price.is_finite() || price <= 0.0 {
             diagnostics.push(RuntimeDiagnostic {
@@ -661,6 +680,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -672,6 +692,7 @@ impl PendingEntryBook {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         if !price.is_finite() || price <= 0.0 {
             diagnostics.push(RuntimeDiagnostic {
@@ -691,6 +712,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -702,6 +724,7 @@ impl PendingEntryBook {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         if !price.is_finite() || price <= 0.0 {
             diagnostics.push(RuntimeDiagnostic {
@@ -721,6 +744,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -732,6 +756,7 @@ impl PendingEntryBook {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         if !price.is_finite() || price <= 0.0 {
             diagnostics.push(RuntimeDiagnostic {
@@ -751,6 +776,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -762,6 +788,7 @@ impl PendingEntryBook {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         if !price.is_finite() || price <= 0.0 {
             diagnostics.push(RuntimeDiagnostic {
@@ -781,6 +808,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -792,6 +820,7 @@ impl PendingEntryBook {
         created_bar_index: usize,
         metadata: StrategyOrderMetadata,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         if !price.is_finite() || price <= 0.0 {
             diagnostics.push(RuntimeDiagnostic {
@@ -811,6 +840,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -818,6 +848,7 @@ impl PendingEntryBook {
         &mut self,
         placement: StopLimitEntryPlacement,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         if !placement.stop_price.is_finite()
             || placement.stop_price <= 0.0
@@ -845,6 +876,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -852,6 +884,7 @@ impl PendingEntryBook {
         &mut self,
         placement: StopLimitEntryPlacement,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         if !placement.stop_price.is_finite()
             || placement.stop_price <= 0.0
@@ -879,6 +912,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Entry,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -886,6 +920,7 @@ impl PendingEntryBook {
         &mut self,
         placement: StopLimitEntryPlacement,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         if !placement.stop_price.is_finite()
             || placement.stop_price <= 0.0
@@ -913,6 +948,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -920,6 +956,7 @@ impl PendingEntryBook {
         &mut self,
         placement: StopLimitEntryPlacement,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         if !placement.stop_price.is_finite()
             || placement.stop_price <= 0.0
@@ -947,6 +984,7 @@ impl PendingEntryBook {
                 origin: StrategyCommandOrigin::Order,
             },
             diagnostics,
+            allocate,
         );
     }
 
@@ -954,6 +992,7 @@ impl PendingEntryBook {
         &mut self,
         placement: LongEntryPlacement,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
+        allocate: &mut dyn FnMut() -> InternalOrderKey,
     ) {
         if !placement.quantity.is_finite() || placement.quantity <= 0.0 {
             diagnostics.push(RuntimeDiagnostic {
@@ -974,9 +1013,7 @@ impl PendingEntryBook {
         {
             existing.key
         } else {
-            let key = InternalOrderKey(self.next_creation_sequence);
-            self.next_creation_sequence = self.next_creation_sequence.wrapping_add(1);
-            key
+            allocate()
         };
         let pending_entry = PendingEntry {
             id: placement.id,

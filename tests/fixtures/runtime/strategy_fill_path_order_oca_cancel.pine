@@ -1,0 +1,6 @@
+//@version=5
+strategy("Fill path order oca cancel", overlay=false, pyramiding=2, initial_capital=100000)
+
+if bar_index == 0
+    strategy.order("LIM", strategy.long, qty=1, limit=8.2, oca_name="g", oca_type=strategy.oca.cancel)
+    strategy.order("STP", strategy.long, qty=1, stop=10.8, oca_name="g", oca_type=strategy.oca.cancel)

@@ -682,11 +682,11 @@ plot(strategy.closedtrades)
     assert_eq!(strategy.trades[0].profit, -1.0);
     assert_eq!(
         result.plots[0].values,
-        vec![PineValue::Float(0.0), PineValue::Float(2.0),]
+        vec![PineValue::Float(0.0), PineValue::Float(0.0),]
     );
     assert_eq!(
         result.plots[1].values,
-        vec![PineValue::Int(0), PineValue::Int(0),]
+        vec![PineValue::Int(0), PineValue::Int(1),]
     );
     assert!(strategy.diagnostics.is_empty());
 }
@@ -884,11 +884,11 @@ plot(strategy.closedtrades)
     assert_eq!(strategy.trades[0].profit, 1.0);
     assert_eq!(
         result.plots[0].values,
-        vec![PineValue::Float(0.0), PineValue::Float(2.0),]
+        vec![PineValue::Float(0.0), PineValue::Float(0.0),]
     );
     assert_eq!(
         result.plots[1].values,
-        vec![PineValue::Int(0), PineValue::Int(0),]
+        vec![PineValue::Int(0), PineValue::Int(1),]
     );
     assert!(strategy.diagnostics.is_empty());
 }
@@ -1091,25 +1091,25 @@ plot(strategy.position_avg_price)
 
     assert_eq!(strategy.orders.len(), 1);
     assert_eq!(strategy.orders[0].id, "L");
-    assert_eq!(strategy.orders[0].bar_index, 2);
+    assert_eq!(strategy.orders[0].bar_index, 1);
     assert_eq!(strategy.orders[0].direction, "strategy.long");
     assert_eq!(strategy.orders[0].qty, 2.0);
     assert_eq!(strategy.orders[0].price, 2.0);
     assert_eq!(strategy.position.len(), 1);
-    assert_eq!(strategy.position[0].bar_index, 2);
+    assert_eq!(strategy.position[0].bar_index, 1);
     assert_eq!(strategy.position[0].size, 2.0);
     assert_eq!(strategy.position[0].avg_price, Some(2.0));
     assert_eq!(
         result.plots[0].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Float(2.0),
             PineValue::Float(2.0),
         ]
     );
     assert_eq!(
         result.plots[1].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Float(2.0),]
+        vec![PineValue::Na, PineValue::Float(2.0), PineValue::Float(2.0),]
     );
     assert!(strategy.diagnostics.is_empty());
 }
@@ -1149,12 +1149,12 @@ plot(strategy.position_avg_price)
     assert_eq!(strategy.orders.len(), 2);
     assert_eq!(strategy.orders[0].id, "L1");
     assert_eq!(strategy.orders[0].direction, "strategy.long");
-    assert_eq!(strategy.orders[0].bar_index, 2);
+    assert_eq!(strategy.orders[0].bar_index, 1);
     assert_eq!(strategy.orders[0].qty, 1.0);
     assert_eq!(strategy.orders[0].price, 10.0);
     assert_eq!(strategy.orders[1].id, "L2");
     assert_eq!(strategy.orders[1].direction, "strategy.long");
-    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].bar_index, 1);
     assert_eq!(strategy.orders[1].qty, 3.0);
     assert_eq!(strategy.orders[1].price, 10.0);
     assert_eq!(strategy.position.last().unwrap().size, 4.0);
@@ -1164,7 +1164,7 @@ plot(strategy.position_avg_price)
         result.plots[0].values,
         vec![
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
             PineValue::Int(2),
             PineValue::Int(2),
         ]
@@ -1173,7 +1173,7 @@ plot(strategy.position_avg_price)
         result.plots[1].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Float(4.0),
             PineValue::Float(4.0),
             PineValue::Float(4.0),
         ]
@@ -1182,7 +1182,7 @@ plot(strategy.position_avg_price)
         result.plots[2].values,
         vec![
             PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(10.0),
             PineValue::Float(10.0),
             PineValue::Float(10.0),
         ]
@@ -1221,7 +1221,7 @@ plot(strategy.closedtrades)
 
     assert_eq!(strategy.orders.len(), 2);
     assert_eq!(strategy.orders[0].id, "L");
-    assert_eq!(strategy.orders[0].bar_index, 2);
+    assert_eq!(strategy.orders[0].bar_index, 1);
     assert_eq!(strategy.orders[0].price, 2.0);
     assert_eq!(strategy.orders[1].id, "XL");
     assert_eq!(strategy.orders[1].bar_index, 2);
@@ -1236,13 +1236,13 @@ plot(strategy.closedtrades)
         result.plots[0].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
             PineValue::Float(2.0),
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
         result.plots[1].values,
-        vec![PineValue::Int(0), PineValue::Int(0), PineValue::Int(0),]
+        vec![PineValue::Int(0), PineValue::Int(0), PineValue::Int(1),]
     );
     assert!(strategy.diagnostics.is_empty());
 }
@@ -1391,11 +1391,12 @@ fn strategy_exit_oca_reduce_lets_stop_cover_grouped_limit() {
         strategy.position.last().map(|snapshot| snapshot.size),
         Some(0.0)
     );
-    assert_eq!(strategy.orders.len(), 2);
-    assert_eq!(strategy.orders[1].id, "SL");
-    assert_eq!(strategy.orders[1].qty, 2.0);
-    assert!(!strategy.orders.iter().any(|order| order.id == "TP"));
-    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.orders.len(), 3);
+    assert_eq!(strategy.orders[1].id, "TP");
+    assert_eq!(strategy.orders[1].qty, 1.0);
+    assert_eq!(strategy.orders[2].id, "SL");
+    assert_eq!(strategy.orders[2].qty, 1.0);
+    assert_eq!(strategy.trades.len(), 2);
 }
 
 #[test]
@@ -1408,8 +1409,10 @@ fn strategy_exit_oca_reduce_bracket_keeps_reduced_peer() {
         strategy.position.last().map(|snapshot| snapshot.size),
         Some(0.0)
     );
-    assert!(strategy.orders.iter().any(|order| order.id == "X"));
-    assert!(strategy.orders.iter().any(|order| order.id == "BR"));
+    assert!(
+        strategy.orders.iter().any(|order| order.id == "BR"),
+        "same-price bracket limit is created before the stop peer and fills first"
+    );
 }
 
 #[test]
@@ -3079,7 +3082,7 @@ fn strategy_close_entries_rule_fifo_preserves_default_allocation_order() {
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -3193,7 +3196,7 @@ fn strategy_close_entries_rule_any_uses_entry_id_allocation() {
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(1),
             PineValue::Int(1),
         ]
     );
@@ -3312,7 +3315,7 @@ fn strategy_close_entries_rule_any_uses_short_entry_id_allocation() {
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(1),
             PineValue::Int(1),
         ]
     );
@@ -3378,7 +3381,7 @@ fn strategy_close_entries_rule_any_partial_exit_same_id_preserves_ledger_order()
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -3448,7 +3451,7 @@ fn strategy_close_entries_rule_any_partial_exit_same_short_id_preserves_ledger_o
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -3514,7 +3517,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(1),
             PineValue::Int(1),
         ]
     );
@@ -3524,7 +3527,7 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(3.0),
             PineValue::Float(3.0),
         ]
     );
@@ -3534,7 +3537,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(1),
             PineValue::Int(1),
         ]
     );
@@ -3606,7 +3609,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -3616,7 +3619,7 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -3626,7 +3629,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -3690,7 +3693,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(1),
             PineValue::Int(1),
         ]
     );
@@ -3700,7 +3703,7 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(3.0),
             PineValue::Float(3.0),
         ]
     );
@@ -3710,7 +3713,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(1),
             PineValue::Int(1),
         ]
     );
@@ -3774,7 +3777,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(1),
             PineValue::Int(1),
         ]
     );
@@ -3784,7 +3787,7 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(3.0),
             PineValue::Float(3.0),
         ]
     );
@@ -3794,7 +3797,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(1),
             PineValue::Int(1),
         ]
     );
@@ -3862,7 +3865,7 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(2),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(1),
             PineValue::Int(1),
         ]
     );
@@ -3873,7 +3876,7 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(4.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(3.0),
             PineValue::Float(3.0),
         ]
     );
@@ -3884,7 +3887,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(1),
             PineValue::Int(1),
         ]
     );
@@ -3952,7 +3955,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -3962,7 +3965,7 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -3972,7 +3975,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -4045,7 +4048,7 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -4056,7 +4059,7 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -4067,7 +4070,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -4135,8 +4138,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -4146,8 +4149,8 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -4157,8 +4160,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -4226,8 +4229,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -4237,8 +4240,8 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -4248,8 +4251,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -4326,8 +4329,8 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -4338,8 +4341,8 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -4350,8 +4353,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -4428,8 +4431,8 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -4440,8 +4443,8 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -4452,8 +4455,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -4521,8 +4524,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -4532,8 +4535,8 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -4543,8 +4546,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -4612,8 +4615,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -4623,8 +4626,8 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -4634,8 +4637,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -4712,8 +4715,8 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -4724,8 +4727,8 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -4736,8 +4739,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -4814,8 +4817,8 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -4826,8 +4829,8 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -4838,8 +4841,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -4914,8 +4917,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -4925,8 +4928,8 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -4936,8 +4939,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -5012,8 +5015,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -5023,8 +5026,8 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -5034,8 +5037,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -5112,8 +5115,8 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -5124,8 +5127,8 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -5136,8 +5139,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -5214,8 +5217,8 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -5226,8 +5229,8 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -5238,8 +5241,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -5314,8 +5317,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -5325,8 +5328,8 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(1.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -5336,8 +5339,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -5412,8 +5415,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -5423,8 +5426,8 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(1.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -5434,8 +5437,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -5512,8 +5515,8 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -5524,8 +5527,8 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(1.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -5536,8 +5539,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -5614,8 +5617,8 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -5626,8 +5629,8 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(1.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -5638,8 +5641,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -5714,8 +5717,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -5725,8 +5728,8 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -5736,8 +5739,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -5812,8 +5815,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -5823,8 +5826,8 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -5834,8 +5837,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -5912,8 +5915,8 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -5924,8 +5927,8 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -5936,8 +5939,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -6014,8 +6017,8 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
             PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -6026,8 +6029,8 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
             PineValue::Float(3.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -6038,8 +6041,8 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
             PineValue::Int(1),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -6107,7 +6110,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -6117,7 +6120,7 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -6127,7 +6130,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -6195,7 +6198,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -6205,7 +6208,7 @@ plot(strategy.closedtrades)
             PineValue::Float(0.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -6215,7 +6218,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -6284,7 +6287,7 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -6295,7 +6298,7 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -6306,7 +6309,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -6375,7 +6378,7 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -6386,7 +6389,7 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
@@ -6397,7 +6400,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
             PineValue::Int(2),
         ]
     );
@@ -6472,7 +6475,7 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(2),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(0),
         ]
     );
     assert_eq!(
@@ -6482,7 +6485,7 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(4.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
@@ -6492,7 +6495,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
         ]
     );
 }
@@ -6566,7 +6569,7 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(2),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(0),
         ]
     );
     assert_eq!(
@@ -6576,7 +6579,7 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(4.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
@@ -6586,7 +6589,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
         ]
     );
 }
@@ -6659,7 +6662,7 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(2),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(0),
         ]
     );
     assert_eq!(
@@ -6669,7 +6672,7 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(4.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
@@ -6679,7 +6682,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
         ]
     );
 }
@@ -6752,7 +6755,7 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(2),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(0),
         ]
     );
     assert_eq!(
@@ -6762,7 +6765,7 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(4.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
@@ -6772,7 +6775,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
         ]
     );
 }
@@ -6846,7 +6849,7 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(2),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(0),
         ]
     );
     assert_eq!(
@@ -6856,7 +6859,7 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(4.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
@@ -6866,7 +6869,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
         ]
     );
 }
@@ -6940,7 +6943,7 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(2),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(0),
         ]
     );
     assert_eq!(
@@ -6950,7 +6953,7 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(4.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
@@ -6960,7 +6963,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
         ]
     );
 }
@@ -7033,7 +7036,7 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(2),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(0),
         ]
     );
     assert_eq!(
@@ -7043,7 +7046,7 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(4.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
@@ -7053,7 +7056,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
         ]
     );
 }
@@ -7126,7 +7129,7 @@ plot(strategy.closedtrades)
             PineValue::Int(1),
             PineValue::Int(2),
             PineValue::Int(2),
-            PineValue::Int(2),
+            PineValue::Int(0),
         ]
     );
     assert_eq!(
@@ -7136,7 +7139,7 @@ plot(strategy.closedtrades)
             PineValue::Float(1.0),
             PineValue::Float(4.0),
             PineValue::Float(4.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
@@ -7146,7 +7149,7 @@ plot(strategy.closedtrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
         ]
     );
 }
@@ -8446,7 +8449,7 @@ if bar_index == 1
             time: 20,
             open: 10.0,
             high: 10.0,
-            low: 8.0,
+            low: 9.5,
             close: 10.0,
             volume: 1.0,
         },
@@ -9199,7 +9202,6 @@ if bar_index == 1
             bar_ohlc(100.0, 100.0, 100.0, 100.0),
             bar_ohlc(100.0, 102.0, 101.75, 102.0),
             bar_ohlc(102.0, 102.0, 101.0, 101.25),
-            bar_ohlc(101.25, 101.25, 101.0, 101.0),
         ],
     )
     .expect("runtime result");
@@ -9207,7 +9209,7 @@ if bar_index == 1
 
     assert_eq!(strategy.orders.len(), 2);
     assert_eq!(strategy.orders[1].id, "TQ");
-    assert_eq!(strategy.orders[1].bar_index, 3);
+    assert_eq!(strategy.orders[1].bar_index, 2);
     assert_eq!(strategy.orders[1].qty, 0.5);
     assert_eq!(strategy.orders[1].price, 101.5);
     assert_eq!(strategy.trades.len(), 1);
@@ -9241,7 +9243,6 @@ if bar_index == 1
             bar_ohlc(100.0, 100.0, 100.0, 100.0),
             bar_ohlc(100.0, 102.0, 101.75, 102.0),
             bar_ohlc(102.0, 102.0, 101.0, 101.25),
-            bar_ohlc(101.25, 101.25, 101.0, 101.0),
         ],
     )
     .expect("runtime result");
@@ -9249,7 +9250,7 @@ if bar_index == 1
 
     assert_eq!(strategy.orders.len(), 2);
     assert_eq!(strategy.orders[1].id, "TP");
-    assert_eq!(strategy.orders[1].bar_index, 3);
+    assert_eq!(strategy.orders[1].bar_index, 2);
     assert_eq!(strategy.orders[1].qty, 0.5);
     assert_eq!(strategy.orders[1].price, 101.5);
     assert_eq!(strategy.trades.len(), 1);
@@ -9282,7 +9283,6 @@ if bar_index == 1
             bar_ohlc(100.0, 100.0, 100.0, 100.0),
             bar_ohlc(100.0, 102.0, 101.75, 102.0),
             bar_ohlc(102.0, 102.0, 101.0, 101.25),
-            bar_ohlc(101.25, 101.25, 101.0, 101.0),
         ],
     )
     .expect("runtime result");
@@ -9290,7 +9290,7 @@ if bar_index == 1
 
     assert_eq!(strategy.orders.len(), 2);
     assert_eq!(strategy.orders[1].id, "TQP");
-    assert_eq!(strategy.orders[1].bar_index, 3);
+    assert_eq!(strategy.orders[1].bar_index, 2);
     assert_eq!(strategy.orders[1].qty, 0.75);
     assert_eq!(strategy.orders[1].price, 101.5);
     assert_eq!(strategy.trades.len(), 1);
@@ -10058,7 +10058,7 @@ plot(strategy.equity)
         vec![
             PineValue::Na,
             PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(2.0),
             PineValue::Float(2.0),
         ]
     );
@@ -10067,7 +10067,7 @@ plot(strategy.equity)
         vec![
             PineValue::Na,
             PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(-2.0),
             PineValue::Float(-2.0),
         ]
     );
@@ -10076,7 +10076,7 @@ plot(strategy.equity)
         vec![
             PineValue::Float(100_000.0),
             PineValue::Float(99_998.0),
-            PineValue::Float(100_000.0),
+            PineValue::Float(99_998.0),
             PineValue::Float(99_998.0),
         ]
     );
@@ -10224,7 +10224,7 @@ plot(strategy.closedtrades.profit(0))
         vec![
             PineValue::Na,
             PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(12.0),
             PineValue::Float(12.0),
         ]
     );
@@ -10233,7 +10233,7 @@ plot(strategy.closedtrades.profit(0))
         vec![
             PineValue::Na,
             PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(2.0),
             PineValue::Float(2.0),
         ]
     );
@@ -11433,7 +11433,7 @@ plot(strategy.closedtrades.exit_id(0) == "XL" ? 1 : 0)
 
     assert_eq!(
         result.plots[0].values,
-        vec![PineValue::Int(0), PineValue::Int(0), PineValue::Int(1)]
+        vec![PineValue::Int(0), PineValue::Int(1), PineValue::Int(1)]
     );
     assert_eq!(strategy.trades.len(), 1);
     assert_eq!(strategy.trades[0].id, "L");
@@ -12163,7 +12163,7 @@ plot(strategy.closedtrades.first_index[1])
         vec![
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(1),
             PineValue::Int(1),
         ]
     );
@@ -12172,7 +12172,7 @@ plot(strategy.closedtrades.first_index[1])
         vec![
             PineValue::Int(0),
             PineValue::Int(1),
-            PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
         ]
     );
@@ -12182,7 +12182,7 @@ plot(strategy.closedtrades.first_index[1])
             PineValue::Na,
             PineValue::Int(0),
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(1),
         ]
     );
     assert_eq!(
@@ -12191,7 +12191,7 @@ plot(strategy.closedtrades.first_index[1])
             PineValue::Na,
             PineValue::Int(0),
             PineValue::Int(1),
-            PineValue::Int(1),
+            PineValue::Int(0),
         ]
     );
     assert_eq!(result.plots[4].values, vec![PineValue::Int(0); 4]);
@@ -12669,12 +12669,493 @@ fn historical_fill_path_orders_open_then_long_price_then_short_price() {
     assert!(StopLimitShort < SameBarMarketClosesAtClose);
 }
 
+fn fill_path_order_ids(strategy: &crate::StrategyResult) -> Vec<&str> {
+    strategy
+        .orders
+        .iter()
+        .map(|order| order.id.as_str())
+        .collect()
+}
+
+fn run_fill_path_fixture(name: &str, source: &str, bars: &[Bar]) -> crate::StrategyResult {
+    let source = SourceFile::new(name, source);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{name} diagnostics: {:?}",
+        analysis.diagnostics
+    );
+    run_historical(&analysis.hir.expect("HIR"), bars)
+        .unwrap_or_else(|error| panic!("{name} runtime: {error:?}"))
+        .strategy
+        .unwrap_or_else(|| panic!("{name} missing strategy output"))
+}
+
 #[test]
 fn strategy_same_bar_limit_and_stop_fill_limit_family_first() {
-    let source = SourceFile::new(
+    let strategy = run_fill_path_fixture(
         "strategy_fill_path_limit_stop_collision.pine",
         include_str!(
             "../../../../tests/fixtures/runtime/strategy_fill_path_limit_stop_collision.pine"
+        ),
+        &[bar(1.0), bar_ohlc(2.0, 3.0, 1.0, 2.0), bar(3.0), bar(4.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["LIM", "STP"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[1].bar_index, 1);
+}
+
+#[test]
+fn strategy_fill_path_high_first_long_fills_stop_then_limit() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_high_first_long.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_high_first_long.pine"),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["STP", "LIM"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 10.8);
+    assert_eq!(strategy.orders[0].direction, "strategy.long");
+    assert_eq!(strategy.orders[0].qty, 1.0);
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].price, 8.2);
+    assert_eq!(strategy.orders[1].direction, "strategy.long");
+    assert_eq!(strategy.orders[1].qty, 1.0);
+    assert_eq!(strategy.position.last().unwrap().size, 2.0);
+}
+
+#[test]
+fn strategy_fill_path_low_first_long_fills_limit_then_stop() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_low_first_long.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_low_first_long.pine"),
+        &[bar(10.0), bar_ohlc(10.0, 13.0, 8.0, 11.0), bar(11.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["LIM", "STP"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 8.2);
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].price, 10.8);
+    assert_eq!(strategy.position.last().unwrap().size, 2.0);
+}
+
+#[test]
+fn strategy_fill_path_high_first_short_fills_limit_then_stop() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_high_first_short.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_high_first_short.pine"),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["LIM", "STP"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 10.8);
+    assert_eq!(strategy.orders[0].direction, "strategy.short");
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].price, 8.2);
+    assert_eq!(strategy.orders[1].direction, "strategy.short");
+    assert_eq!(strategy.position.last().unwrap().size, -2.0);
+}
+
+#[test]
+fn strategy_fill_path_low_first_short_fills_stop_then_limit() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_low_first_short.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_low_first_short.pine"),
+        &[bar(10.0), bar_ohlc(10.0, 13.0, 8.0, 11.0), bar(11.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["STP", "LIM"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 8.2);
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].price, 10.8);
+    assert_eq!(strategy.position.last().unwrap().size, -2.0);
+}
+
+#[test]
+fn strategy_fill_path_same_price_uses_creation_order_not_family_rank() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_same_price_creation_order.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_same_price_creation_order.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["LIM", "STP"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 10.8);
+    assert_eq!(strategy.orders[0].direction, "strategy.short");
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].price, 10.8);
+    assert_eq!(strategy.orders[1].direction, "strategy.long");
+    assert_eq!(strategy.position.last().unwrap().size, 1.0);
+}
+
+#[test]
+fn strategy_fill_path_order_oca_cancel_does_not_fill_stale_peer() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_order_oca_cancel.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_order_oca_cancel.pine"),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["STP"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 10.8);
+    assert_eq!(strategy.position.last().unwrap().size, 1.0);
+}
+
+#[test]
+fn strategy_fill_path_stop_limit_long_fills_same_bar_after_high_first_activation() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_stop_limit_long.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_stop_limit_long.pine"),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["SL"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 8.2);
+    assert_eq!(strategy.orders[0].qty, 1.0);
+    assert_eq!(strategy.position.last().unwrap().size, 1.0);
+}
+
+#[test]
+fn strategy_fill_path_stop_limit_short_does_not_fill_same_bar() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_stop_limit_short.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_stop_limit_short.pine"),
+        &[
+            bar(10.0),
+            bar_ohlc(10.0, 13.0, 8.0, 11.0),
+            bar_ohlc(10.8, 10.8, 10.8, 10.8),
+        ],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["SL"]);
+    assert_eq!(strategy.orders[0].bar_index, 2);
+    assert_eq!(strategy.orders[0].price, 10.8);
+    assert_eq!(strategy.position.last().unwrap().size, -1.0);
+}
+
+#[test]
+fn strategy_fill_path_entry_then_exit_same_bar() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_entry_then_exit_same_bar.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["EN", "EX"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 10.8);
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].price, 8.5);
+    assert_eq!(strategy.position.last().unwrap().size, 0.0);
+}
+
+#[test]
+fn strategy_fill_path_exit_then_entry_same_bar() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_exit_then_entry_same_bar.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_exit_then_entry_same_bar.pine"
+        ),
+        &[bar(10.0), bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["EN", "EX", "NX"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 10.0);
+    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].price, 10.8);
+    assert_eq!(strategy.orders[2].bar_index, 2);
+    assert_eq!(strategy.orders[2].price, 8.2);
+    assert_eq!(strategy.position.last().unwrap().size, 1.0);
+}
+
+#[test]
+fn strategy_fill_path_bracket_high_first_takes_limit_before_stop() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_bracket_high_first.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_bracket_high_first.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["EN", "BR"]);
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].price, 10.8);
+    assert_eq!(strategy.position.last().unwrap().size, 0.0);
+}
+
+#[test]
+fn strategy_fill_path_bracket_low_first_takes_stop_before_limit() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_bracket_low_first.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_bracket_low_first.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 13.0, 8.0, 11.0), bar(11.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["EN", "BR"]);
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].price, 8.5);
+    assert_eq!(strategy.position.last().unwrap().size, 0.0);
+}
+
+#[test]
+fn strategy_fill_path_bracket_short_high_first_takes_stop() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_bracket_short_high_first.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_bracket_short_high_first.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["EN", "BR"]);
+    assert_eq!(strategy.orders[1].price, 10.8);
+    assert_eq!(strategy.position.last().unwrap().size, 0.0);
+}
+
+#[test]
+fn strategy_fill_path_bracket_short_low_first_takes_limit() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_bracket_short_low_first.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_bracket_short_low_first.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 13.0, 8.0, 11.0), bar(11.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["EN", "BR"]);
+    assert_eq!(strategy.orders[1].price, 8.2);
+    assert_eq!(strategy.position.last().unwrap().size, 0.0);
+}
+
+#[test]
+fn strategy_fill_path_trailing_activation_then_fill() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_trailing_activation_then_fill.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_trailing_activation_then_fill.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["EN", "TR"]);
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.position.last().unwrap().size, 0.0);
+}
+
+#[test]
+fn strategy_fill_path_trailing_no_future_extreme() {
+    let high_first = run_fill_path_fixture(
+        "strategy_fill_path_trailing_no_future_extreme.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_trailing_no_future_extreme.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 12.0, 8.0, 9.0), bar(9.0)],
+    );
+    let low_first = run_fill_path_fixture(
+        "strategy_fill_path_trailing_no_future_extreme.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_trailing_no_future_extreme.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 13.0, 8.0, 11.0), bar(11.0)],
+    );
+    assert_eq!(fill_path_order_ids(&high_first), vec!["EN", "TR"]);
+    assert_eq!(fill_path_order_ids(&low_first), vec!["EN", "TR"]);
+    assert_ne!(high_first.orders[1].price, low_first.orders[1].price);
+}
+
+#[test]
+fn strategy_fill_path_exit_oca_reduce_updates_peer_once() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_exit_oca_reduce.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_exit_oca_reduce.pine"),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["EN", "TP", "SL"]);
+    assert_eq!(strategy.orders[1].price, 10.8);
+    assert_eq!(strategy.orders[1].qty, 1.0);
+    assert_eq!(strategy.orders[2].price, 8.2);
+    assert_eq!(strategy.orders[2].qty, 1.0);
+    assert_eq!(strategy.position.last().unwrap().size, 0.0);
+}
+
+#[test]
+fn strategy_fill_path_partial_exit_reservation() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_partial_exit_reservation.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_partial_exit_reservation.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["EN", "EX"]);
+    assert_eq!(strategy.orders[1].qty, 1.0);
+    assert_eq!(strategy.orders[1].price, 8.2);
+    assert_eq!(strategy.position.last().unwrap().size, 1.0);
+}
+
+#[test]
+fn strategy_fill_path_exit_before_margin_long() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_exit_before_margin_long.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0)],
+    );
+    let ids = fill_path_order_ids(&strategy);
+    assert_eq!(ids[0], "EN");
+    let exit = ids.iter().position(|id| *id == "EX").expect("user exit");
+    let margin = ids
+        .iter()
+        .position(|id| *id == "Margin Call")
+        .expect("margin");
+    assert!(
+        exit < margin,
+        "sample-locked user exit before margin: {ids:?}"
+    );
+    assert_eq!(strategy.orders[exit].price, 8.5);
+}
+
+#[test]
+fn strategy_fill_path_margin_before_exit_long() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_margin_before_exit_long.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_margin_before_exit_long.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 13.0, 8.0, 11.0)],
+    );
+    let ids = fill_path_order_ids(&strategy);
+    assert_eq!(ids[0], "EN");
+    assert!(
+        ids.contains(&"Margin Call"),
+        "low-first path should liquidate before the later profit exit: {ids:?}"
+    );
+    if let Some(exit) = ids.iter().position(|id| *id == "EX") {
+        let margin = ids.iter().position(|id| *id == "Margin Call").unwrap();
+        assert!(margin < exit, "{ids:?}");
+    }
+}
+
+#[test]
+fn strategy_fill_path_exit_before_margin_short() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_exit_before_margin_short.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_exit_before_margin_short.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0)],
+    );
+    let ids = fill_path_order_ids(&strategy);
+    assert_eq!(ids[0], "EN");
+    let exit = ids.iter().position(|id| *id == "EX").expect("user exit");
+    let margin = ids
+        .iter()
+        .position(|id| *id == "Margin Call")
+        .expect("margin");
+    assert!(exit < margin, "{ids:?}");
+}
+
+#[test]
+fn strategy_fill_path_margin_before_exit_short() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_margin_before_exit_short.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_margin_before_exit_short.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0)],
+    );
+    let ids = fill_path_order_ids(&strategy);
+    assert_eq!(ids[0], "EN");
+    assert!(ids.contains(&"Margin Call"), "{ids:?}");
+    if let Some(exit) = ids.iter().position(|id| *id == "EX") {
+        let margin = ids.iter().position(|id| *id == "Margin Call").unwrap();
+        assert!(margin < exit, "{ids:?}");
+    }
+}
+
+fn run_fill_path_runtime(name: &str, source: &str, bars: &[Bar]) -> crate::RuntimeResult {
+    let source = SourceFile::new(name, source);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{name} diagnostics: {:?}",
+        analysis.diagnostics
+    );
+    run_historical(&analysis.hir.expect("HIR"), bars)
+        .unwrap_or_else(|error| panic!("{name} runtime: {error:?}"))
+}
+
+#[test]
+fn strategy_fill_path_drawdown_intrabar_ordering() {
+    let source = include_str!(
+        "../../../../tests/fixtures/runtime/strategy_fill_path_drawdown_intrabar_ordering.pine"
+    );
+    let high_first = run_fill_path_runtime(
+        "strategy_fill_path_drawdown_intrabar_ordering.pine",
+        source,
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0)],
+    );
+    let low_first = run_fill_path_runtime(
+        "strategy_fill_path_drawdown_intrabar_ordering.pine",
+        source,
+        &[bar(10.0), bar_ohlc(10.0, 13.0, 8.0, 11.0)],
+    );
+    let high_strategy = high_first.strategy.as_ref().expect("strategy");
+    let low_strategy = low_first.strategy.as_ref().expect("strategy");
+    assert_eq!(fill_path_order_ids(high_strategy), vec!["EN"]);
+    assert_eq!(fill_path_order_ids(low_strategy), vec!["EN"]);
+    let high_runup = high_first.plots[0].values[1].as_f64().expect("runup");
+    let low_runup = low_first.plots[0].values[1].as_f64().expect("runup");
+    let high_drawdown = high_first.plots[1].values[1].as_f64().expect("drawdown");
+    assert!(high_runup > 0.0, "{high_runup}");
+    assert!(high_drawdown > 0.0, "{high_drawdown}");
+    assert!(low_runup > high_runup, "{low_runup} vs {high_runup}");
+}
+
+#[test]
+fn strategy_fill_path_margin_invalidates_entry() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_margin_invalidates_entry.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_margin_invalidates_entry.pine"
+        ),
+        &[bar(10.0), bar(10.0), bar_ohlc(10.0, 13.0, 8.0, 11.0)],
+    );
+    let ids = fill_path_order_ids(&strategy);
+    assert_eq!(ids[0], "EN");
+    assert!(ids.contains(&"Margin Call"), "{ids:?}");
+    assert!(
+        !ids.contains(&"NX"),
+        "margin must invalidate the stale stop entry: {ids:?}"
+    );
+}
+
+#[test]
+fn strategy_fill_path_calc_on_order_fills_resume() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_calc_on_order_fills_resume.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_calc_on_order_fills_resume.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["A", "B"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 10.8);
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].price, 8.2);
+    assert_eq!(strategy.position.last().unwrap().size, 2.0);
+}
+
+#[test]
+fn strategy_fill_path_calc_on_order_fills_guard() {
+    use crate::runtime::historical::HistoricalRuntime;
+
+    let source = SourceFile::new(
+        "strategy_fill_path_calc_on_order_fills_guard.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_calc_on_order_fills_guard.pine"
         ),
     );
     let analysis = analyze_source(&source);
@@ -12683,22 +13164,19 @@ fn strategy_same_bar_limit_and_stop_fill_limit_family_first() {
         "{:?}",
         analysis.diagnostics
     );
-    let result = run_historical(
-        &analysis.hir.expect("HIR"),
-        &[bar(1.0), bar_ohlc(2.0, 3.0, 1.0, 2.0), bar(3.0), bar(4.0)],
-    )
-    .expect("runtime result");
-    let strategy = result.strategy.expect("strategy output");
-    assert_eq!(
-        strategy
-            .orders
-            .iter()
-            .map(|order| order.id.as_str())
-            .collect::<Vec<_>>(),
-        vec!["LIM", "STP"]
+    let hir = analysis.hir.expect("HIR");
+    let mut runtime = HistoricalRuntime::new(&hir);
+    runtime.strategy_scheduler.set_max_recalculation_passes(1);
+    let error = runtime
+        .append_bars(&[bar(10.0), bar(11.0)])
+        .expect_err("self-triggering fills must hit the pass guard");
+    assert!(
+        error
+            .message
+            .contains("strategy recalculation pass limit exceeded"),
+        "{}",
+        error.message
     );
-    assert_eq!(strategy.orders[0].bar_index, 1);
-    assert_eq!(strategy.orders[1].bar_index, 1);
 }
 
 fn expected_strategy_bar_phases() -> Vec<crate::runtime::strategy_scheduler::StrategyBarPhase> {
@@ -13759,6 +14237,123 @@ plot(close)
             .orders
             .len(),
         1
+    );
+}
+
+#[test]
+fn strategy_fill_path_realtime_stop_limit_rollback() {
+    let hir = analyze_source(&SourceFile::new(
+        "strategy_fill_path_realtime_stop_limit_rollback.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_realtime_stop_limit_rollback.pine"
+        ),
+    ))
+    .hir
+    .expect("HIR");
+    let mut runtime = RealtimeRuntime::new(&hir);
+    runtime
+        .update(BarUpdate::historical(bar(10.0)))
+        .expect("place");
+    let forming_fill = runtime
+        .update(BarUpdate::forming(bar_ohlc(10.0, 11.0, 8.0, 9.0)))
+        .expect("forming fill");
+    assert_eq!(
+        forming_fill.strategy.expect("strategy").orders.len(),
+        1,
+        "high-first forming bar should fill the activated long stop-limit"
+    );
+    runtime
+        .update(BarUpdate::forming(bar(10.0)))
+        .expect("replacement forming");
+    runtime
+        .update(BarUpdate::confirmed(bar(10.0)))
+        .expect("confirmed abandons fill");
+    assert!(
+        runtime
+            .confirmed_result()
+            .strategy
+            .expect("strategy")
+            .orders
+            .is_empty()
+    );
+}
+
+#[test]
+fn strategy_fill_path_realtime_trailing_rollback() {
+    let hir = analyze_source(&SourceFile::new(
+        "strategy_fill_path_realtime_trailing_rollback.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_realtime_trailing_rollback.pine"
+        ),
+    ))
+    .hir
+    .expect("HIR");
+    let mut runtime = RealtimeRuntime::new(&hir);
+    runtime
+        .update(BarUpdate::historical(bar(10.0)))
+        .expect("place");
+    let forming = runtime
+        .update(BarUpdate::forming(bar_ohlc(10.0, 11.0, 8.0, 9.0)))
+        .expect("forming trail");
+    assert!(
+        forming
+            .strategy
+            .expect("strategy")
+            .orders
+            .iter()
+            .any(|order| order.id == "EN")
+    );
+    runtime
+        .update(BarUpdate::forming(bar(10.0)))
+        .expect("replacement forming");
+    runtime
+        .update(BarUpdate::confirmed(bar(10.0)))
+        .expect("confirmed");
+    let confirmed = runtime.confirmed_result().strategy.expect("strategy");
+    assert_eq!(confirmed.orders.len(), 1);
+    assert_eq!(confirmed.orders[0].id, "EN");
+    assert!(confirmed.trades.is_empty());
+}
+
+#[test]
+fn strategy_fill_path_realtime_margin_rollback() {
+    let hir = analyze_source(&SourceFile::new(
+        "strategy_fill_path_realtime_margin_rollback.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_realtime_margin_rollback.pine"
+        ),
+    ))
+    .hir
+    .expect("HIR");
+    let mut runtime = RealtimeRuntime::new(&hir);
+    runtime
+        .update(BarUpdate::historical(bar(10.0)))
+        .expect("place");
+    let forming = runtime
+        .update(BarUpdate::forming(bar_ohlc(10.0, 11.0, 8.0, 9.0)))
+        .expect("forming margin");
+    assert!(
+        forming
+            .strategy
+            .expect("strategy")
+            .orders
+            .iter()
+            .any(|order| order.id == "Margin Call")
+    );
+    runtime
+        .update(BarUpdate::forming(bar(10.0)))
+        .expect("replacement forming");
+    runtime
+        .update(BarUpdate::confirmed(bar(10.0)))
+        .expect("confirmed");
+    let confirmed = runtime.confirmed_result().strategy.expect("strategy");
+    assert_eq!(confirmed.orders.len(), 1);
+    assert_eq!(confirmed.orders[0].id, "EN");
+    assert!(
+        !confirmed
+            .orders
+            .iter()
+            .any(|order| order.id == "Margin Call")
     );
 }
 

@@ -1,0 +1,7 @@
+//@version=5
+strategy("Fill path calc on order fills guard", overlay=false, calc_on_order_fills=true, pyramiding=5, initial_capital=100000)
+
+if bar_index == 0
+    strategy.entry("A", strategy.long, qty=1)
+if strategy.position_size > 0
+    strategy.entry("N", strategy.long, qty=1, limit=close)

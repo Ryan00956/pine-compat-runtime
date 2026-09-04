@@ -64,8 +64,15 @@ cargo run -p pine-cli -- matrix --format json
 - [Pure Internal Roadmap](PURE_INTERNAL_ROADMAP.md): interpreter-internal design
   directions.
 - [Strategy Broker Next Execution Plan](STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md):
-  Stage 17-22 implementation record and active Stage 18g OHLC-path follow-up
-  while source-version expansion is paused.
+  Stage 17-22 implementation record. Stage 18g true OHLC path execution is
+  closed; Bar Magnifier fill wiring remains deferred.
+- [Strategy Stage 18g True OHLC Path Execution Plan](STRATEGY_INTERNAL_STAGE18G_TRUE_OHLC_PATH_EXECUTION_PLAN.md):
+  step-by-step reference lock, path model, candidate ordering, broker identity,
+  fill integration, rollback, fixture matrix, and closeout gates for Stage 18g.
+- [Strategy Stage 18g True OHLC Path Audit](STRATEGY_INTERNAL_STAGE18_TRUE_OHLC_PATH_AUDIT.md):
+  official review, Tester evidence, sample-level A/C/D locks, B1
+  `UNVERIFIED_INTERNAL_ORDER` amendment, implemented path, fixtures, snapshot
+  allowlist, and Stage 18g closeout.
 - [Strategy Broker Stage 17-22 Integration Audit](STRATEGY_BROKER_STAGE17_22_INTEGRATION_AUDIT.md):
   recovered worktree scope, commit boundary, final verification, Stage 18f
   correction, and remaining compatibility limits.

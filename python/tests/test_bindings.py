@@ -4500,9 +4500,9 @@ def test_run_script_returns_strategy_pyramiding_exit_from_entry_contract():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [0, 1, 2, 2, 1],
-        [0.0, 1.0, 4.0, 4.0, 3.0],
-        [0, 0, 0, 0, 1],
+        [0, 1, 2, 1, 1],
+        [0.0, 1.0, 4.0, 3.0, 3.0],
+        [0, 0, 0, 1, 1],
     ]
     assert result["strategy"]["orders"] == [
         {
@@ -4565,9 +4565,9 @@ def test_run_script_returns_strategy_pyramiding_exit_profit_from_entry_contract(
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [0, 1, 2, 2, 1],
-        [0.0, 1.0, 4.0, 4.0, 3.0],
-        [0, 0, 0, 0, 1],
+        [0, 1, 2, 1, 1],
+        [0.0, 1.0, 4.0, 3.0, 3.0],
+        [0, 0, 0, 1, 1],
     ]
     assert result["strategy"]["orders"] == [
         {
@@ -4628,9 +4628,9 @@ def test_run_script_returns_strategy_pyramiding_exit_same_id_contract():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [0, 1, 2, 2, 0],
-        [0.0, 1.0, 4.0, 4.0, 0.0],
-        [0, 0, 0, 0, 2],
+        [0, 1, 2, 0, 0],
+        [0.0, 1.0, 4.0, 0.0, 0.0],
+        [0, 0, 0, 2, 2],
     ]
     assert result["strategy"]["orders"] == [
         {
@@ -4712,9 +4712,9 @@ def test_run_script_returns_strategy_pyramiding_exit_bracket_from_entry_contract
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [0, 1, 2, 2, 1],
-        [0.0, 1.0, 4.0, 4.0, 3.0],
-        [0, 0, 0, 0, 1],
+        [0, 1, 2, 1, 1],
+        [0.0, 1.0, 4.0, 3.0, 3.0],
+        [0, 0, 0, 1, 1],
     ]
     assert result["strategy"]["orders"] == [
         {
@@ -4778,9 +4778,9 @@ def test_run_script_returns_strategy_pyramiding_exit_trail_points_from_entry_con
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [0, 1, 2, 2, 2, 1],
-        [0.0, 1.0, 4.0, 4.0, 4.0, 3.0],
-        [0, 0, 0, 0, 0, 1],
+        [0, 1, 2, 2, 1, 1],
+        [0.0, 1.0, 4.0, 4.0, 3.0, 3.0],
+        [0, 0, 0, 0, 1, 1],
     ]
     assert result["strategy"]["orders"] == [
         {
@@ -4976,31 +4976,31 @@ def test_run_script_returns_same_tick_stop_limit_entries_contract():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [0, 0, 2, 2],
-        [0.0, 0.0, 4.0, 4.0],
-        [None, None, 10.0, 10.0],
+        [0, 2, 2, 2],
+        [0.0, 4.0, 4.0, 4.0],
+        [None, 10.0, 10.0, 10.0],
     ]
     assert result["strategy"]["orders"] == [
         {
             "id": "L1",
-            "barIndex": 2,
-            "time": 3,
+            "barIndex": 1,
+            "time": 2,
             "direction": "strategy.long",
             "qty": 1.0,
             "price": 10.0,
         },
         {
             "id": "L2",
-            "barIndex": 2,
-            "time": 3,
+            "barIndex": 1,
+            "time": 2,
             "direction": "strategy.long",
             "qty": 3.0,
             "price": 10.0,
         },
     ]
     assert result["strategy"]["position"] == [
-        {"barIndex": 2, "size": 1.0, "avgPrice": 10.0},
-        {"barIndex": 2, "size": 4.0, "avgPrice": 10.0},
+        {"barIndex": 1, "size": 1.0, "avgPrice": 10.0},
+        {"barIndex": 1, "size": 4.0, "avgPrice": 10.0},
     ]
     assert result["strategy"]["diagnostics"] == []
     assert "pending" not in result["strategy"]
@@ -5455,9 +5455,9 @@ def test_run_script_returns_strategy_exit_slippage_plots():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, None, None, 2.0],
-        [None, None, None, -2.0],
-        [100000.0, 99998.0, 100000.0, 99998.0],
+        [None, None, 2.0, 2.0],
+        [None, None, -2.0, -2.0],
+        [100000.0, 99998.0, 99998.0, 99998.0],
     ]
     assert result["strategy"]["orders"][0]["price"] == 3.0
     assert result["strategy"]["orders"][1]["price"] == 2.0
@@ -5523,8 +5523,8 @@ def test_run_script_returns_strategy_limit_verification_exit_plots():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, None, None, None],
-        [None, None, None, None],
+        [None, None, None, 3.0],
+        [None, None, None, 2.0],
     ]
     assert result["strategy"]["orders"] == [
         {
@@ -5989,6 +5989,84 @@ def test_run_script_returns_strategy_fill_path_limit_stop_collision_contract():
         fixture_bars("tests/fixtures/runtime/bars.csv"),
     )
 
+    assert result == expected
+
+
+def test_run_script_returns_strategy_fill_path_high_first_long_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_fill_path_high_first_long.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_fill_path_high_first_long.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_fill_path_high_first_long_bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_fill_path_low_first_short_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_fill_path_low_first_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_fill_path_low_first_short.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_fill_path_low_first_short_bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_fill_path_entry_then_exit_same_bar_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_fill_path_entry_then_exit_same_bar.json"
+        ).read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar_bars.csv"
+        ),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_fill_path_stop_limit_long_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_fill_path_stop_limit_long.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_fill_path_stop_limit_long.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_fill_path_stop_limit_long_bars.csv"),
+    )
+    assert result == expected
+
+
+def test_run_script_returns_strategy_fill_path_exit_before_margin_long_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_fill_path_exit_before_margin_long.json"
+        ).read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long_bars.csv"
+        ),
+    )
     assert result == expected
 
 
@@ -8407,8 +8485,8 @@ def test_run_script_returns_strategy_exit_active_entry_attachment_contract():
         {"barIndex": 1, "size": 0.0, "avgPrice": None},
     ]
     assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 2.0, 0.0, 0.0],
-        [0.0, 0.0, 1.0, 1.0],
+        [0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 1.0, 1.0],
     ]
     assert result["diagnostics"] == []
     assert result["strategy"]["diagnostics"] == []
@@ -8489,8 +8567,8 @@ def test_run_script_returns_strategy_exit_active_entry_profit_attachment_contrac
         {"barIndex": 2, "size": 0.0, "avgPrice": None},
     ]
     assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 2.0, 2.0, 0.0],
-        [0.0, 0.0, 0.0, 1.0],
+        [0.0, 2.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 1.0],
     ]
     assert result["diagnostics"] == []
     assert result["strategy"]["diagnostics"] == []
@@ -8520,41 +8598,20 @@ def test_run_script_returns_strategy_exit_active_entry_loss_attachment_contract(
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 1,
-            "time": 2,
+            "barIndex": 2,
+            "time": 3,
             "direction": "strategy.long",
             "qty": 2.0,
             "price": 3.0,
         },
-        {
-            "id": "XL",
-            "barIndex": 1,
-            "time": 2,
-            "direction": "strategy.exit",
-            "qty": 2.0,
-            "price": 2.0,
-        },
     ]
-    assert result["strategy"]["trades"] == [
-        {
-            "id": "L",
-            "entryBarIndex": 1,
-            "exitBarIndex": 1,
-            "entryTime": 2,
-            "exitTime": 2,
-            "entryPrice": 3.0,
-            "exitPrice": 2.0,
-            "qty": 2.0,
-            "profit": -2.0,
-        },
-    ]
+    assert result["strategy"]["trades"] == []
     assert result["strategy"]["position"] == [
-        {"barIndex": 1, "size": 2.0, "avgPrice": 3.0},
-        {"barIndex": 1, "size": 0.0, "avgPrice": None},
+        {"barIndex": 2, "size": 2.0, "avgPrice": 3.0},
     ]
     assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 2.0, 0.0, 0.0],
-        [0.0, 0.0, 1.0, 1.0],
+        [0.0, 0.0, 2.0, 2.0],
+        [0.0, 0.0, 0.0, 0.0],
     ]
     assert result["diagnostics"] == []
     assert result["strategy"]["diagnostics"] == []
@@ -8593,33 +8650,33 @@ def test_run_script_returns_strategy_exit_active_entry_trail_points_attachment_c
         },
         {
             "id": "XT",
-            "barIndex": 3,
-            "time": 4,
+            "barIndex": 1,
+            "time": 2,
             "direction": "strategy.exit",
             "qty": 2.0,
-            "price": 3.5,
+            "price": 2.5,
         },
     ]
     assert result["strategy"]["trades"] == [
         {
             "id": "L",
             "entryBarIndex": 1,
-            "exitBarIndex": 3,
+            "exitBarIndex": 1,
             "entryTime": 2,
-            "exitTime": 4,
+            "exitTime": 2,
             "entryPrice": 2.0,
-            "exitPrice": 3.5,
+            "exitPrice": 2.5,
             "qty": 2.0,
-            "profit": 3.0,
+            "profit": 1.0,
         },
     ]
     assert result["strategy"]["position"] == [
         {"barIndex": 1, "size": 2.0, "avgPrice": 2.0},
-        {"barIndex": 3, "size": 0.0, "avgPrice": None},
+        {"barIndex": 1, "size": 0.0, "avgPrice": None},
     ]
     assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 2.0, 2.0, 2.0],
         [0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 1.0, 1.0],
     ]
     assert result["diagnostics"] == []
     assert result["strategy"]["diagnostics"] == []
@@ -8682,8 +8739,8 @@ def test_run_script_returns_strategy_exit_active_entry_stop_profit_bracket_contr
         {"barIndex": 2, "size": 0.0, "avgPrice": None},
     ]
     assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 2.0, 2.0, 0.0],
-        [0.0, 0.0, 0.0, 1.0],
+        [0.0, 2.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 1.0],
     ]
     assert result["diagnostics"] == []
     assert result["strategy"]["diagnostics"] == []
@@ -8746,8 +8803,8 @@ def test_run_script_returns_strategy_exit_active_entry_loss_limit_bracket_contra
         {"barIndex": 2, "size": 0.0, "avgPrice": None},
     ]
     assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 2.0, 2.0, 0.0],
-        [0.0, 0.0, 0.0, 1.0],
+        [0.0, 2.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 1.0],
     ]
     assert result["diagnostics"] == []
     assert result["strategy"]["diagnostics"] == []
@@ -8810,8 +8867,8 @@ def test_run_script_returns_strategy_exit_active_entry_loss_profit_bracket_contr
         {"barIndex": 2, "size": 0.0, "avgPrice": None},
     ]
     assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 2.0, 2.0, 0.0],
-        [0.0, 0.0, 0.0, 1.0],
+        [0.0, 2.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 1.0],
     ]
     assert result["diagnostics"] == []
     assert result["strategy"]["diagnostics"] == []
@@ -8897,8 +8954,8 @@ def test_run_script_returns_strategy_exit_bracket_reservation_fixture_contract()
         {"barIndex": 2, "size": 0.5, "avgPrice": 2.0},
     ]
     assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 2.0, 1.5, 0.5],
-        [0.0, 0.0, 0.0, 1.0],
+        [0.0, 1.5, 0.5, 0.5],
+        [0.0, 0.0, 1.0, 1.0],
     ]
     assert result["diagnostics"] == []
     assert result["strategy"]["diagnostics"] == []
@@ -9065,8 +9122,8 @@ def test_run_script_returns_strategy_exit_trailing_reservation_fixture_contract(
         {"barIndex": 4, "size": 0.0, "avgPrice": None},
     ]
     assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 2.0, 2.0, 2.0, 1.25],
-        [0.0, 0.0, 0.0, 0.0, 0.375],
+        [0.0, 2.0, 2.0, 1.25, 0.0],
+        [0.0, 0.0, 0.0, 0.375, 0.7499999999999998],
     ]
     assert result["diagnostics"] == []
     assert result["strategy"]["diagnostics"] == []

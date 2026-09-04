@@ -73,7 +73,7 @@ impl BrokerState {
 
     pub(super) fn replace_all_exits_and_assign_oca(&mut self, pending_exits: Vec<PendingExit>) {
         let id = pending_exits.first().map(|pending| pending.id.clone());
-        self.order_book.exits_mut().replace_all_many(pending_exits);
+        self.order_book.replace_all_exits(pending_exits);
         if let Some(id) = id {
             self.assign_placed_exits_oca(&id);
         }

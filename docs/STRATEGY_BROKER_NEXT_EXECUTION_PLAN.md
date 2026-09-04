@@ -1,8 +1,7 @@
 # Strategy Broker Next Execution Plan
 
-Status: Stages 17 and 19-22 closed on 2026-09-03. Stage 18a-18e are closed;
-Stage 18f delivered a deterministic family-ordered scheduler but did not meet
-the planned OHLC-path acceptance criteria. Stage 18g is the active follow-up.
+Status: Stages 17, 18, and 19-22 closed. Stage 18g true OHLC path execution
+closed on 2026-09-04. Bar Magnifier fill wiring remains deferred.
 Created on 2026-09-02 after Strategy Internal Stages 14-16 closed the
 fixture-backed short, reversal, short-margin, and id-specific
 `close_entries_rule="ANY"` subsets.
@@ -528,9 +527,9 @@ Stage 17 completion gate:
 
 ## Stage 18: Historical Order Timing And Close Scheduling
 
-Status: partial. Slices 18a-18e are closed. Slice 18f delivered the scheduler
-foundation on 2026-09-02 but retained family-based price ordering; Stage 18g
-must close the original OHLC-path requirement before Stage 18 is complete.
+Status: closed on 2026-09-04. Slices 18a-18e, 18f scheduler identity, and 18g
+true OHLC path execution are complete. See
+`docs/STRATEGY_INTERNAL_STAGE18_TRUE_OHLC_PATH_AUDIT.md`.
 
 ### Stage 18 Goal
 
@@ -685,8 +684,17 @@ Unfinished from the original acceptance criteria:
 
 #### 18g. True OHLC Path And Cross-Family Candidate Ordering
 
-Status: not started. This is the first executable follow-up after integration
-of the current Stage 17-22 worktree.
+Status: Slice 18g.1 authorized on 2026-09-03 under the B1 amendment in
+`docs/STRATEGY_INTERNAL_STAGE18_TRUE_OHLC_PATH_AUDIT.md`. Official closer-to-high
+and closer-to-low path rules are locked. Equal-distance is sample-locked OLHC.
+B1 same-direction same-price entry/exit is `UNVERIFIED_INTERNAL_ORDER` (runtime
+creation sequence/key only; no global entry/exit type rank; no atomicity
+inference from missing callbacks). A/C/D stay sample-level ADAUSDT conclusions
+and must not be re-run or generalized.
+
+Use the
+[detailed Stage 18g execution plan](STRATEGY_INTERNAL_STAGE18G_TRUE_OHLC_PATH_EXECUTION_PLAN.md)
+for the step-by-step implementation and verification procedure.
 
 Goal:
 
@@ -737,7 +745,10 @@ Stop conditions:
 - stop if the change requires a public schema expansion without a separate
   schema plan.
 
-Stage 18 completion gate:
+Stage 18 completion gate: closed on 2026-09-04 after Stage 18g. See
+`docs/STRATEGY_INTERNAL_STAGE18_TRUE_OHLC_PATH_AUDIT.md`.
+
+Prior acceptance criteria, retained as the closed record:
 
 - Stage 18 is not complete until 18g meets the acceptance criteria above;
 - the scheduler owns all historical broker phases;
@@ -1308,6 +1319,7 @@ The Stage 17-22 program is complete only when:
 - conformance, snapshots, docs, release notes, and stage audits agree;
 - the final `scripts/verify.sh` run passes without snapshot-update mode.
 
-Current closeout note: all criteria except the full Stage 18 OHLC path and
-cross-family candidate ordering are closed. Passing the repository gate proves
-the documented current subset; it does not close Stage 18g.
+Current closeout note: Stage 18g true OHLC path execution closed on
+2026-09-04. Passing the repository gate proves the documented current subset.
+Bar Magnifier fill wiring and the deferred inter-bar gap rewrite remain
+outside this closeout.

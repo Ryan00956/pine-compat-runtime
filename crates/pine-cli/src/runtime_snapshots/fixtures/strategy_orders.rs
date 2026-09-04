@@ -370,6 +370,26 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
         "tests/fixtures/runtime/strategy_fill_path_limit_stop_collision.pine",
     ),
     (
+        "runtime_strategy_fill_path_high_first_long.json",
+        "tests/fixtures/runtime/strategy_fill_path_high_first_long.pine",
+    ),
+    (
+        "runtime_strategy_fill_path_low_first_short.json",
+        "tests/fixtures/runtime/strategy_fill_path_low_first_short.pine",
+    ),
+    (
+        "runtime_strategy_fill_path_entry_then_exit_same_bar.json",
+        "tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar.pine",
+    ),
+    (
+        "runtime_strategy_fill_path_stop_limit_long.json",
+        "tests/fixtures/runtime/strategy_fill_path_stop_limit_long.pine",
+    ),
+    (
+        "runtime_strategy_fill_path_exit_before_margin_long.json",
+        "tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long.pine",
+    ),
+    (
         "runtime_strategy_risk_allow_entry_in_long.json",
         "tests/fixtures/runtime/strategy_risk_allow_entry_in_long.pine",
     ),

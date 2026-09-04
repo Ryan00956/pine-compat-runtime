@@ -10,6 +10,7 @@ pub(super) struct OrderBook {
     exits: PendingExitBook,
     closes: PendingCloseBook,
     oca_membership: HashMap<OcaMember, OcaGroupKey>,
+    next_order_sequence: u64,
 }
 
 impl OrderBook {
@@ -19,7 +20,88 @@ impl OrderBook {
             exits: PendingExitBook::new(),
             closes: PendingCloseBook::new(),
             oca_membership: HashMap::new(),
+            next_order_sequence: 0,
         }
+    }
+
+    pub(super) fn allocate_key(&mut self) -> InternalOrderKey {
+        let key = InternalOrderKey(self.next_order_sequence);
+        self.next_order_sequence = self.next_order_sequence.wrapping_add(1);
+        key
+    }
+
+    #[cfg(test)]
+    pub(super) fn next_order_sequence(&self) -> u64 {
+        self.next_order_sequence
+    }
+
+    pub(super) fn with_entry_allocator<R>(
+        &mut self,
+        f: impl FnOnce(&mut PendingEntryBook, &mut dyn FnMut() -> InternalOrderKey) -> R,
+    ) -> R {
+        let OrderBook {
+            entries,
+            next_order_sequence,
+            ..
+        } = self;
+        let mut allocate = || {
+            let key = InternalOrderKey(*next_order_sequence);
+            *next_order_sequence = next_order_sequence.wrapping_add(1);
+            key
+        };
+        f(entries, &mut allocate)
+    }
+
+    pub(super) fn with_close_allocator<R>(
+        &mut self,
+        f: impl FnOnce(&mut PendingCloseBook, &mut dyn FnMut() -> InternalOrderKey) -> R,
+    ) -> R {
+        let OrderBook {
+            closes,
+            next_order_sequence,
+            ..
+        } = self;
+        let mut allocate = || {
+            let key = InternalOrderKey(*next_order_sequence);
+            *next_order_sequence = next_order_sequence.wrapping_add(1);
+            key
+        };
+        f(closes, &mut allocate)
+    }
+
+    pub(super) fn assign_exit_key(&mut self, pending_exit: &mut super::pending_exits::PendingExit) {
+        if let Some(existing) = self.exits.find_by_identity_and_key(
+            &pending_exit.id,
+            &pending_exit.from_entry,
+            pending_exit.target_trade_key,
+        ) {
+            pending_exit.key = existing.key;
+        } else {
+            pending_exit.key = self.allocate_key();
+        }
+    }
+
+    pub(super) fn replace_or_append_exit(
+        &mut self,
+        mut pending_exit: super::pending_exits::PendingExit,
+    ) {
+        self.assign_exit_key(&mut pending_exit);
+        self.exits.replace_or_append(pending_exit);
+    }
+
+    pub(super) fn replace_all_exit(&mut self, mut pending_exit: super::pending_exits::PendingExit) {
+        self.assign_exit_key(&mut pending_exit);
+        self.exits.replace_all(pending_exit);
+    }
+
+    pub(super) fn replace_all_exits(
+        &mut self,
+        mut pending_exits: Vec<super::pending_exits::PendingExit>,
+    ) {
+        for pending_exit in &mut pending_exits {
+            self.assign_exit_key(pending_exit);
+        }
+        self.exits.replace_all_many(pending_exits);
     }
 
     pub(super) fn entries(&self) -> &PendingEntryBook {
