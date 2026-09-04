@@ -154,6 +154,7 @@ impl BrokerState {
             trade_ledger: TradeLedger::default(),
             risk_rules: super::risk::StrategyRiskRules::default(),
             risk_state: super::risk::StrategyRiskState::default(),
+            event_generation: 0,
         }
     }
 

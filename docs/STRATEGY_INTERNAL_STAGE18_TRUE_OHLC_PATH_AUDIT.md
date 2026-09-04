@@ -316,7 +316,13 @@ next-open filling is locked, but it is not part of the intrabar walk.
 
 Implemented path builder: Slice 18g.1 pure `HistoricalPath` (not wired into
 the production scheduler). Equal-distance uses the sample-locked OLHC rule.
-Candidate comparator: not implemented. No B1 entry/exit type rank.
+Candidate collection: Slice 18g.3 read-only `BrokerCandidate` enumeration
+over market-open and path legs. Collection does not mutate broker state.
+Comparator uses phase, path leg, crossing order, sample-locked user-before-margin
+at the same mark, then creation sequence and stable key. No global
+entry-before-exit or long-before-short type rank. Stop-limit activation and
+trailing activation/ratchet are distinct from fills. The family-order
+scheduler is still the production dispatcher.
 Internal identity: Slice 18g.2 broker-wide `OrderBook` sequence allocates
 `InternalOrderKey` for pending entries, generic orders, closes, and exits.
 Replacement keeps the original key; cancel+replace does not reuse keys;

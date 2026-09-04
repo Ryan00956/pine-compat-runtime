@@ -91,7 +91,11 @@ impl PendingEntryBook {
         self.allow_same_bar_price_fills = allow_same_bar_price_fills;
     }
 
-    fn price_created_eligible(&self, created_bar_index: usize, bar_index: usize) -> bool {
+    pub(super) fn price_created_eligible(
+        &self,
+        created_bar_index: usize,
+        bar_index: usize,
+    ) -> bool {
         created_bar_index < bar_index
             || (self.allow_same_bar_price_fills && created_bar_index == bar_index)
     }

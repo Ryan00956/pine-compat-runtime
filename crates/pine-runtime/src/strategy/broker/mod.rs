@@ -1,5 +1,6 @@
 mod accounting;
 mod all_entry_relative_exits;
+mod candidates;
 mod close_orders;
 mod closed_trades;
 mod deferred_relative_exits;
@@ -100,6 +101,7 @@ pub struct BrokerState {
     trade_ledger: TradeLedger,
     risk_rules: risk::StrategyRiskRules,
     risk_state: risk::StrategyRiskState,
+    event_generation: u64,
 }
 
 impl BrokerState {
@@ -1325,6 +1327,8 @@ impl BrokerState {
     }
 }
 
+#[cfg(test)]
+mod candidate_tests;
 #[cfg(test)]
 mod fill_origin_characterization_tests;
 #[cfg(test)]
