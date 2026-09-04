@@ -1145,6 +1145,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     pub(crate) fn restore_strategy_checkpoint(&mut self, confirmed: &Self) {
         self.restore_strategy_broker(confirmed.snapshot_strategy_broker());
+        self.strategy_scheduler = confirmed.strategy_scheduler.clone();
         self.alerts.clone_from(&confirmed.alerts);
     }
 

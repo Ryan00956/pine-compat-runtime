@@ -13131,6 +13131,54 @@ fn strategy_fill_path_margin_invalidates_entry() {
     );
 }
 
+#[test]
+fn strategy_fill_path_calc_on_order_fills_resume() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_calc_on_order_fills_resume.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_calc_on_order_fills_resume.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["A", "B"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 10.8);
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].price, 8.2);
+    assert_eq!(strategy.position.last().unwrap().size, 2.0);
+}
+
+#[test]
+fn strategy_fill_path_calc_on_order_fills_guard() {
+    use crate::runtime::historical::HistoricalRuntime;
+
+    let source = SourceFile::new(
+        "strategy_fill_path_calc_on_order_fills_guard.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_calc_on_order_fills_guard.pine"
+        ),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let mut runtime = HistoricalRuntime::new(&hir);
+    runtime.strategy_scheduler.set_max_recalculation_passes(1);
+    let error = runtime
+        .append_bars(&[bar(10.0), bar(11.0)])
+        .expect_err("self-triggering fills must hit the pass guard");
+    assert!(
+        error
+            .message
+            .contains("strategy recalculation pass limit exceeded"),
+        "{}",
+        error.message
+    );
+}
+
 fn expected_strategy_bar_phases() -> Vec<crate::runtime::strategy_scheduler::StrategyBarPhase> {
     use crate::runtime::strategy_scheduler::StrategyBarPhase::*;
     vec![
@@ -14189,6 +14237,123 @@ plot(close)
             .orders
             .len(),
         1
+    );
+}
+
+#[test]
+fn strategy_fill_path_realtime_stop_limit_rollback() {
+    let hir = analyze_source(&SourceFile::new(
+        "strategy_fill_path_realtime_stop_limit_rollback.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_realtime_stop_limit_rollback.pine"
+        ),
+    ))
+    .hir
+    .expect("HIR");
+    let mut runtime = RealtimeRuntime::new(&hir);
+    runtime
+        .update(BarUpdate::historical(bar(10.0)))
+        .expect("place");
+    let forming_fill = runtime
+        .update(BarUpdate::forming(bar_ohlc(10.0, 11.0, 8.0, 9.0)))
+        .expect("forming fill");
+    assert_eq!(
+        forming_fill.strategy.expect("strategy").orders.len(),
+        1,
+        "high-first forming bar should fill the activated long stop-limit"
+    );
+    runtime
+        .update(BarUpdate::forming(bar(10.0)))
+        .expect("replacement forming");
+    runtime
+        .update(BarUpdate::confirmed(bar(10.0)))
+        .expect("confirmed abandons fill");
+    assert!(
+        runtime
+            .confirmed_result()
+            .strategy
+            .expect("strategy")
+            .orders
+            .is_empty()
+    );
+}
+
+#[test]
+fn strategy_fill_path_realtime_trailing_rollback() {
+    let hir = analyze_source(&SourceFile::new(
+        "strategy_fill_path_realtime_trailing_rollback.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_realtime_trailing_rollback.pine"
+        ),
+    ))
+    .hir
+    .expect("HIR");
+    let mut runtime = RealtimeRuntime::new(&hir);
+    runtime
+        .update(BarUpdate::historical(bar(10.0)))
+        .expect("place");
+    let forming = runtime
+        .update(BarUpdate::forming(bar_ohlc(10.0, 11.0, 8.0, 9.0)))
+        .expect("forming trail");
+    assert!(
+        forming
+            .strategy
+            .expect("strategy")
+            .orders
+            .iter()
+            .any(|order| order.id == "EN")
+    );
+    runtime
+        .update(BarUpdate::forming(bar(10.0)))
+        .expect("replacement forming");
+    runtime
+        .update(BarUpdate::confirmed(bar(10.0)))
+        .expect("confirmed");
+    let confirmed = runtime.confirmed_result().strategy.expect("strategy");
+    assert_eq!(confirmed.orders.len(), 1);
+    assert_eq!(confirmed.orders[0].id, "EN");
+    assert!(confirmed.trades.is_empty());
+}
+
+#[test]
+fn strategy_fill_path_realtime_margin_rollback() {
+    let hir = analyze_source(&SourceFile::new(
+        "strategy_fill_path_realtime_margin_rollback.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_realtime_margin_rollback.pine"
+        ),
+    ))
+    .hir
+    .expect("HIR");
+    let mut runtime = RealtimeRuntime::new(&hir);
+    runtime
+        .update(BarUpdate::historical(bar(10.0)))
+        .expect("place");
+    let forming = runtime
+        .update(BarUpdate::forming(bar_ohlc(10.0, 11.0, 8.0, 9.0)))
+        .expect("forming margin");
+    assert!(
+        forming
+            .strategy
+            .expect("strategy")
+            .orders
+            .iter()
+            .any(|order| order.id == "Margin Call")
+    );
+    runtime
+        .update(BarUpdate::forming(bar(10.0)))
+        .expect("replacement forming");
+    runtime
+        .update(BarUpdate::confirmed(bar(10.0)))
+        .expect("confirmed");
+    let confirmed = runtime.confirmed_result().strategy.expect("strategy");
+    assert_eq!(confirmed.orders.len(), 1);
+    assert_eq!(confirmed.orders[0].id, "EN");
+    assert!(
+        !confirmed
+            .orders
+            .iter()
+            .any(|order| order.id == "Margin Call")
     );
 }
 
