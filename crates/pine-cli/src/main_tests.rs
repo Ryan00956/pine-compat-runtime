@@ -1105,6 +1105,31 @@ fn runtime_fixture_bars_csv(fixture: &str) -> &'static str {
                 "../../../tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_limit_entries_bars.csv"
             )
         }
+        "tests/fixtures/runtime/strategy_fill_path_high_first_long.pine" => {
+            include_str!(
+                "../../../tests/fixtures/runtime/strategy_fill_path_high_first_long_bars.csv"
+            )
+        }
+        "tests/fixtures/runtime/strategy_fill_path_low_first_short.pine" => {
+            include_str!(
+                "../../../tests/fixtures/runtime/strategy_fill_path_low_first_short_bars.csv"
+            )
+        }
+        "tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar.pine" => {
+            include_str!(
+                "../../../tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar_bars.csv"
+            )
+        }
+        "tests/fixtures/runtime/strategy_fill_path_stop_limit_long.pine" => {
+            include_str!(
+                "../../../tests/fixtures/runtime/strategy_fill_path_stop_limit_long_bars.csv"
+            )
+        }
+        "tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long.pine" => {
+            include_str!(
+                "../../../tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long_bars.csv"
+            )
+        }
         "tests/fixtures/runtime/strategy_exit_bracket_loss_profit_loss_fill.pine" => {
             include_str!(
                 "../../../tests/fixtures/runtime/strategy_exit_bracket_loss_profit_loss_bars.csv"

@@ -5335,6 +5335,70 @@ fn runs_strategy_fill_path_limit_stop_collision_fixture_from_csv_to_public_strat
     );
 }
 
+fn assert_fill_path_snapshot(snapshot: &str, source: &str, bars: &str) {
+    let output = run_script_csv(source, bars).expect("strategy fill-path fixture should run");
+    assert_snapshot(snapshot, &output);
+}
+
+#[test]
+fn runs_strategy_fill_path_high_first_long_from_csv_to_public_strategy_json() {
+    assert_fill_path_snapshot(
+        "runtime_strategy_fill_path_high_first_long.json",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_high_first_long.pine"),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_high_first_long_bars.csv"
+        ),
+    );
+}
+
+#[test]
+fn runs_strategy_fill_path_low_first_short_from_csv_to_public_strategy_json() {
+    assert_fill_path_snapshot(
+        "runtime_strategy_fill_path_low_first_short.json",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_low_first_short.pine"),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_low_first_short_bars.csv"
+        ),
+    );
+}
+
+#[test]
+fn runs_strategy_fill_path_entry_then_exit_same_bar_from_csv_to_public_strategy_json() {
+    assert_fill_path_snapshot(
+        "runtime_strategy_fill_path_entry_then_exit_same_bar.json",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar_bars.csv"
+        ),
+    );
+}
+
+#[test]
+fn runs_strategy_fill_path_stop_limit_long_from_csv_to_public_strategy_json() {
+    assert_fill_path_snapshot(
+        "runtime_strategy_fill_path_stop_limit_long.json",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_stop_limit_long.pine"),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_stop_limit_long_bars.csv"
+        ),
+    );
+}
+
+#[test]
+fn runs_strategy_fill_path_exit_before_margin_long_from_csv_to_public_strategy_json() {
+    assert_fill_path_snapshot(
+        "runtime_strategy_fill_path_exit_before_margin_long.json",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long_bars.csv"
+        ),
+    );
+}
+
 #[test]
 fn runs_strategy_process_orders_on_close_fixture_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
