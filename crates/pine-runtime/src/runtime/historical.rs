@@ -75,6 +75,7 @@ struct StrategyEvalCheckpoint {
 pub struct HistoricalRuntime<'a> {
     pub(crate) program: RuntimeProgram<'a>,
     pub(crate) input_overrides: InputOverrides,
+    pub(crate) magnifier_input: MagnifierInput,
     pub(crate) bars: usize,
     pub(crate) historical_end: Option<usize>,
     pub(crate) current_bar_update_kind: BarUpdateKind,
@@ -318,6 +319,7 @@ impl<'a> HistoricalRuntime<'a> {
         Self {
             program,
             input_overrides: InputOverrides::new(),
+            magnifier_input: MagnifierInput::new(),
             bars: 0,
             historical_end: None,
             current_bar_update_kind: BarUpdateKind::Historical,
@@ -433,6 +435,17 @@ impl<'a> HistoricalRuntime<'a> {
         &self.request_environment
     }
 
+    #[must_use]
+    pub fn with_magnifier_input(mut self, input: MagnifierInput) -> Self {
+        self.magnifier_input = input;
+        self
+    }
+
+    #[must_use]
+    pub fn magnifier_input(&self) -> &MagnifierInput {
+        &self.magnifier_input
+    }
+
     pub(crate) fn fork_with_request_environment(
         &self,
         request_environment: RequestEnvironment,
@@ -507,6 +520,11 @@ impl<'a> HistoricalRuntime<'a> {
         bars: &[Bar],
         execution_times: Option<&[i64]>,
     ) -> Result<(), RuntimeError> {
+        if self.bars == 0 {
+            self.magnifier_input
+                .validate_chart_bar_range(bars.len())
+                .map_err(|error| error.runtime_error())?;
+        }
         let previous_historical_end = self.historical_end;
         self.historical_end = Some(self.bars + bars.len());
         if let Some(first) = bars.first() {
@@ -564,6 +582,14 @@ impl<'a> HistoricalRuntime<'a> {
         execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
         let bar_index = self.bars;
+        if update_kind == BarUpdateKind::Forming
+            && self.magnifier_input.bars_for_chart_bar(bar_index).is_some()
+        {
+            return Err(MagnifierInputError::FormingBar {
+                chart_bar_index: bar_index,
+            }
+            .runtime_error());
+        }
         self.current_bar_update_kind = update_kind;
         self.current_bar_is_new = is_new_bar;
         self.current_bar = Some(bar);

@@ -22,9 +22,10 @@ pub use bar::{Bar, BarUpdate, BarUpdateKind};
 pub use error::RuntimeError;
 pub use input_metadata::{InputCall, input_calls};
 pub use magnifier::{
-    MAX_MAGNIFIER_INTRABARS, MagnifierChartBarInput, MagnifierFallback, MagnifierHostTicks,
-    MagnifierInput, MagnifierInputError, MagnifierTickSource, magnifier_absence_diagnostic,
-    magnifier_gap_diagnostic, magnifier_host_ticks, magnifier_input_from_groups,
+    MAGNIFIER_SCHEMA_VERSION, MAX_MAGNIFIER_INTRABARS, MagnifierChartBarInput, MagnifierFallback,
+    MagnifierHostTicks, MagnifierInput, MagnifierInputError, MagnifierTickSource,
+    magnifier_absence_diagnostic, magnifier_gap_diagnostic, magnifier_host_ticks,
+    magnifier_input_from_groups, magnifier_input_from_v1,
 };
 pub use output::alerts::AlertEvent;
 pub use output::delivery::{

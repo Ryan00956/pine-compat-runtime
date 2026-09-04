@@ -2016,6 +2016,48 @@ fn legacy_v4_outputs_roll_back_forming_visual_state_without_stale_values() {
     assert_eq!(runtime.confirmed_result(), result);
 }
 
+#[test]
+fn realtime_forming_does_not_consume_historical_magnifier_input() {
+    use pine_runtime::{MagnifierChartBarInput, magnifier_input_from_groups};
+
+    let source = SourceFile::new(
+        "magnifier-realtime.pine",
+        r#"//@version=6
+indicator("Magnifier realtime")
+plot(close)
+"#
+        .to_owned(),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let input = magnifier_input_from_groups(vec![MagnifierChartBarInput {
+        chart_bar_index: 0,
+        bars: vec![Bar {
+            time: 1,
+            open: 9.0,
+            high: 9.0,
+            low: 9.0,
+            close: 9.0,
+            volume: 1.0,
+        }],
+    }])
+    .expect("valid");
+    let mut runtime = RealtimeRuntime::from_program(hir).with_magnifier_input(input);
+    runtime
+        .seed_historical(&[bar(1.0)])
+        .expect("historical seed");
+    let forming = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming must ignore historical magnifier");
+    assert_values(&forming.plots[0].values, &[1.0, 2.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
+}
+
 fn runtime_for_fixture(path: &str) -> RealtimeRuntime<'static> {
     let hir = hir_for_fixture(path);
     RealtimeRuntime::from_program(hir)

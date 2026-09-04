@@ -47,6 +47,17 @@ impl<'a> RealtimeRuntime<'a> {
             .request_environment()
     }
 
+    #[must_use]
+    pub fn with_magnifier_input(mut self, input: crate::MagnifierInput) -> Self {
+        self.confirmed = self.confirmed.with_magnifier_input(input);
+        self
+    }
+
+    #[must_use]
+    pub fn magnifier_input(&self) -> &crate::MagnifierInput {
+        self.confirmed.magnifier_input()
+    }
+
     pub fn update(&mut self, update: BarUpdate) -> Result<RuntimeResult, RuntimeError> {
         self.update_inner(update, None)
     }
