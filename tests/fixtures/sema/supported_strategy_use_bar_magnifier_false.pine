@@ -1,0 +1,3 @@
+//@version=5
+strategy("Supported use_bar_magnifier false", use_bar_magnifier=false)
+plot(close)

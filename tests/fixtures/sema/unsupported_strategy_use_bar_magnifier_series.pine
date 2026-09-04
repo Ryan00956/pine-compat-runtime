@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported series use_bar_magnifier", use_bar_magnifier=close > open)
+plot(close)

@@ -44,6 +44,7 @@ impl Analyzer {
                     "process_orders_on_close",
                     "calc_on_order_fills",
                     "calc_on_every_tick",
+                    "use_bar_magnifier",
                 ]
                 .get(index)
                 .copied()
@@ -286,6 +287,30 @@ impl Analyzer {
                 "calc_on_every_tick" => {
                     if let Some(value) = self.known_const_bool_value(&arg.value) {
                         self.strategy_settings.calc_on_every_tick = value;
+                    }
+                }
+                "use_bar_magnifier" => {
+                    if arg.name.is_none() {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_NAME",
+                            "`strategy` argument `use_bar_magnifier` must be named in the current subset",
+                            arg.span,
+                        ));
+                        continue;
+                    }
+                    if self.legacy.dialect().version() < 5 {
+                        self.reject_unavailable_legacy_builtin("use_bar_magnifier", 5, arg.span);
+                        continue;
+                    }
+                    if let Some(value) = self.known_const_bool_value(&arg.value) {
+                        self.strategy_settings.use_bar_magnifier = value;
+                        if value {
+                            self.unsupported(
+                                "use_bar_magnifier",
+                                "historical lower-timeframe fill wiring is not implemented",
+                                arg.span,
+                            );
+                        }
                     }
                 }
                 _ => {}

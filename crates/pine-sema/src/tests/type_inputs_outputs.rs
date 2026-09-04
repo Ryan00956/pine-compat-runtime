@@ -2499,6 +2499,19 @@ strategy("Demo", initial_capital=capital, default_qty_type=strategy.cash, defaul
 }
 
 #[test]
+fn omitted_strategy_use_bar_magnifier_defaults_false() {
+    let analysis = analyze("strategy(\"Demo\")\nplot(close)\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    assert!(!hir.strategy_settings.use_bar_magnifier);
+}
+
+#[test]
 fn accepts_strategy_string_metadata_ternary_constant() {
     let analysis =
         analyze("strategy(\"Demo\", close_entries_rule=(1 + 1 == 2) ? \"ANY\" : \"FIFO\")\n");

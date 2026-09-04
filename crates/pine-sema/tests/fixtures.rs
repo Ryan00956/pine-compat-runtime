@@ -4346,6 +4346,101 @@ fn reports_unsupported_strategy_use_bar_magnifier_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_use_bar_magnifier_false_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_strategy_use_bar_magnifier_false.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    assert!(!hir.strategy_settings.use_bar_magnifier);
+}
+
+#[test]
+fn accepts_supported_strategy_use_bar_magnifier_false_v6_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_strategy_use_bar_magnifier_false_v6.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    assert!(!hir.strategy_settings.use_bar_magnifier);
+}
+
+#[test]
+fn accepts_supported_strategy_use_bar_magnifier_false_const_fixture() {
+    let path = workspace_fixture(
+        "tests/fixtures/sema/supported_strategy_use_bar_magnifier_false_const.pine",
+    );
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    assert!(!hir.strategy_settings.use_bar_magnifier);
+}
+
+#[test]
+fn reports_strategy_use_bar_magnifier_series_rejected() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier_series.pine",
+        &["argument `use_bar_magnifier` expects const bool"],
+    );
+}
+
+#[test]
+fn reports_strategy_use_bar_magnifier_numeric_rejected() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier_numeric.pine",
+        &["argument `use_bar_magnifier` expects const bool"],
+    );
+}
+
+#[test]
+fn reports_strategy_use_bar_magnifier_string_rejected() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier_string.pine",
+        &["argument `use_bar_magnifier` expects const bool"],
+    );
+}
+
+#[test]
+fn reports_strategy_use_bar_magnifier_positional_rejected() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier_positional.pine",
+        &["argument `use_bar_magnifier` must be named"],
+    );
+}
+
+#[test]
+fn reports_strategy_use_bar_magnifier_unsupported_version() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier_v4.pine",
+        &["legacy", "strategy"],
+    );
+}
+
+#[test]
 fn accepts_supported_strategy_calc_on_order_fills_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/supported_strategy_calc_on_order_fills.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
