@@ -55,6 +55,7 @@ impl BrokerState {
                         | BrokerCandidateEvent::ExitFill
                         | BrokerCandidateEvent::TrailingActivation
                         | BrokerCandidateEvent::TrailingRatchet
+                        | BrokerCandidateEvent::MarginCall
                 ) && candidate.observed_generation == self.event_generation
                     && tick
                         .leg
@@ -87,6 +88,7 @@ impl BrokerState {
                 }
             }
             BrokerCandidateEvent::ExitFill => self.apply_exit_path_candidate(candidate, tick),
+            BrokerCandidateEvent::MarginCall => self.apply_margin_path_candidate(candidate, tick),
             BrokerCandidateEvent::EntryOrOrderFill => {
                 let Some(pending) = self
                     .order_book
@@ -221,6 +223,33 @@ impl BrokerState {
             PathEventOutcome::Filled {
                 mark: candidate.crossing_price,
                 fill_price: candidate.fill_price_or_mark,
+            }
+        } else {
+            PathEventOutcome::Ignored {
+                mark: candidate.crossing_price,
+            }
+        }
+    }
+
+    fn apply_margin_path_candidate(
+        &mut self,
+        candidate: &BrokerCandidate,
+        tick: EntryPathTick,
+    ) -> PathEventOutcome {
+        let before = self.public_order_event_count();
+        let mark = candidate.fill_price_or_mark;
+        if self.position_size > 0.0 {
+            self.evaluate_margin_call_long(tick.bar_index, tick.time, mark);
+        } else if self.position_size < 0.0 {
+            self.evaluate_margin_call_short(tick.bar_index, tick.time, mark);
+        }
+        self.debug_assert_ledger_aggregates();
+        self.bump_event_generation();
+        if self.public_order_event_count() > before {
+            self.order_book.entries_mut().clear_all();
+            PathEventOutcome::Filled {
+                mark: candidate.crossing_price,
+                fill_price: mark,
             }
         } else {
             PathEventOutcome::Ignored {

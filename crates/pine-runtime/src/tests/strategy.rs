@@ -12993,6 +12993,144 @@ fn strategy_fill_path_partial_exit_reservation() {
     assert_eq!(strategy.position.last().unwrap().size, 1.0);
 }
 
+#[test]
+fn strategy_fill_path_exit_before_margin_long() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_exit_before_margin_long.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0)],
+    );
+    let ids = fill_path_order_ids(&strategy);
+    assert_eq!(ids[0], "EN");
+    let exit = ids.iter().position(|id| *id == "EX").expect("user exit");
+    let margin = ids
+        .iter()
+        .position(|id| *id == "Margin Call")
+        .expect("margin");
+    assert!(
+        exit < margin,
+        "sample-locked user exit before margin: {ids:?}"
+    );
+    assert_eq!(strategy.orders[exit].price, 8.5);
+}
+
+#[test]
+fn strategy_fill_path_margin_before_exit_long() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_margin_before_exit_long.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_margin_before_exit_long.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 13.0, 8.0, 11.0)],
+    );
+    let ids = fill_path_order_ids(&strategy);
+    assert_eq!(ids[0], "EN");
+    assert!(
+        ids.contains(&"Margin Call"),
+        "low-first path should liquidate before the later profit exit: {ids:?}"
+    );
+    if let Some(exit) = ids.iter().position(|id| *id == "EX") {
+        let margin = ids.iter().position(|id| *id == "Margin Call").unwrap();
+        assert!(margin < exit, "{ids:?}");
+    }
+}
+
+#[test]
+fn strategy_fill_path_exit_before_margin_short() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_exit_before_margin_short.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_exit_before_margin_short.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0)],
+    );
+    let ids = fill_path_order_ids(&strategy);
+    assert_eq!(ids[0], "EN");
+    let exit = ids.iter().position(|id| *id == "EX").expect("user exit");
+    let margin = ids
+        .iter()
+        .position(|id| *id == "Margin Call")
+        .expect("margin");
+    assert!(exit < margin, "{ids:?}");
+}
+
+#[test]
+fn strategy_fill_path_margin_before_exit_short() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_margin_before_exit_short.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_margin_before_exit_short.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0)],
+    );
+    let ids = fill_path_order_ids(&strategy);
+    assert_eq!(ids[0], "EN");
+    assert!(ids.contains(&"Margin Call"), "{ids:?}");
+    if let Some(exit) = ids.iter().position(|id| *id == "EX") {
+        let margin = ids.iter().position(|id| *id == "Margin Call").unwrap();
+        assert!(margin < exit, "{ids:?}");
+    }
+}
+
+fn run_fill_path_runtime(name: &str, source: &str, bars: &[Bar]) -> crate::RuntimeResult {
+    let source = SourceFile::new(name, source);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{name} diagnostics: {:?}",
+        analysis.diagnostics
+    );
+    run_historical(&analysis.hir.expect("HIR"), bars)
+        .unwrap_or_else(|error| panic!("{name} runtime: {error:?}"))
+}
+
+#[test]
+fn strategy_fill_path_drawdown_intrabar_ordering() {
+    let source = include_str!(
+        "../../../../tests/fixtures/runtime/strategy_fill_path_drawdown_intrabar_ordering.pine"
+    );
+    let high_first = run_fill_path_runtime(
+        "strategy_fill_path_drawdown_intrabar_ordering.pine",
+        source,
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0)],
+    );
+    let low_first = run_fill_path_runtime(
+        "strategy_fill_path_drawdown_intrabar_ordering.pine",
+        source,
+        &[bar(10.0), bar_ohlc(10.0, 13.0, 8.0, 11.0)],
+    );
+    let high_strategy = high_first.strategy.as_ref().expect("strategy");
+    let low_strategy = low_first.strategy.as_ref().expect("strategy");
+    assert_eq!(fill_path_order_ids(high_strategy), vec!["EN"]);
+    assert_eq!(fill_path_order_ids(low_strategy), vec!["EN"]);
+    let high_runup = high_first.plots[0].values[1].as_f64().expect("runup");
+    let low_runup = low_first.plots[0].values[1].as_f64().expect("runup");
+    let high_drawdown = high_first.plots[1].values[1].as_f64().expect("drawdown");
+    assert!(high_runup > 0.0, "{high_runup}");
+    assert!(high_drawdown > 0.0, "{high_drawdown}");
+    assert!(low_runup > high_runup, "{low_runup} vs {high_runup}");
+}
+
+#[test]
+fn strategy_fill_path_margin_invalidates_entry() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_margin_invalidates_entry.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_margin_invalidates_entry.pine"
+        ),
+        &[bar(10.0), bar(10.0), bar_ohlc(10.0, 13.0, 8.0, 11.0)],
+    );
+    let ids = fill_path_order_ids(&strategy);
+    assert_eq!(ids[0], "EN");
+    assert!(ids.contains(&"Margin Call"), "{ids:?}");
+    assert!(
+        !ids.contains(&"NX"),
+        "margin must invalidate the stale stop entry: {ids:?}"
+    );
+}
+
 fn expected_strategy_bar_phases() -> Vec<crate::runtime::strategy_scheduler::StrategyBarPhase> {
     use crate::runtime::strategy_scheduler::StrategyBarPhase::*;
     vec![

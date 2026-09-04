@@ -1,0 +1,6 @@
+//@version=5
+strategy("Fill path margin before exit short", overlay=false, initial_capital=120, margin_short=25)
+
+if bar_index == 0
+    strategy.entry("EN", strategy.short, qty=40)
+    strategy.exit("EX", "EN", limit=8.2)

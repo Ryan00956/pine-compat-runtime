@@ -1,0 +1,7 @@
+//@version=5
+strategy("Fill path drawdown intrabar ordering", overlay=false, initial_capital=100000)
+
+if bar_index == 0
+    strategy.entry("EN", strategy.long, qty=1)
+plot(strategy.max_runup)
+plot(strategy.max_drawdown)

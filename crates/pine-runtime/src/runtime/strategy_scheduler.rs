@@ -270,33 +270,8 @@ impl HistoricalRuntime<'_> {
             self.recalculate_after_fill(filled)?;
         }
         self.walk_entry_price_path(bar_index, bar)?;
-        self.strategy_broker
-            .evaluate_risk_equity_stops(bar_index, bar.time, bar.open);
         self.trace_strategy_phase(StrategyBarPhase::TradeExtremes);
-        self.strategy_broker
-            .update_open_trade_extremes(bar.high, bar.low);
-        let adverse = if self.strategy_broker.position_size() > 0.0 {
-            bar.low
-        } else if self.strategy_broker.position_size() < 0.0 {
-            bar.high
-        } else {
-            bar.close
-        };
-        self.strategy_broker
-            .evaluate_risk_equity_stops(bar_index, bar.time, adverse);
         self.trace_strategy_phase(StrategyBarPhase::MarginCall);
-        let before_margin = self.strategy_broker.public_order_event_count();
-        self.strategy_broker
-            .evaluate_margin_call_long(bar_index, bar.time, bar.low);
-        self.strategy_broker
-            .evaluate_margin_call_short(bar_index, bar.time, bar.high);
-        self.strategy_broker
-            .flatten_if_risk_blocked(bar_index, bar.time, adverse);
-        self.recalculate_after_fill(
-            self.strategy_broker.public_order_event_count() > before_margin,
-        )?;
-        self.strategy_broker
-            .evaluate_risk_equity_stops(bar_index, bar.time, adverse);
         Ok(())
     }
 
@@ -355,6 +330,23 @@ impl HistoricalRuntime<'_> {
 
     fn walk_entry_price_path(&mut self, bar_index: usize, bar: Bar) -> Result<(), RuntimeError> {
         let Some(path) = HistoricalPath::from_validated_bar(&bar) else {
+            self.strategy_broker
+                .update_open_trade_extremes(bar.high, bar.low);
+            let adverse = if self.strategy_broker.position_size() > 0.0 {
+                bar.low
+            } else if self.strategy_broker.position_size() < 0.0 {
+                bar.high
+            } else {
+                bar.close
+            };
+            self.strategy_broker
+                .evaluate_risk_equity_stops(bar_index, bar.time, adverse);
+            self.strategy_broker
+                .evaluate_margin_call_long(bar_index, bar.time, bar.low);
+            self.strategy_broker
+                .evaluate_margin_call_short(bar_index, bar.time, bar.high);
+            self.strategy_broker
+                .flatten_if_risk_blocked(bar_index, bar.time, adverse);
             return Ok(());
         };
         self.strategy_scheduler
@@ -364,6 +356,7 @@ impl HistoricalRuntime<'_> {
         for leg in path.legs() {
             let mut mark = leg.from.price;
             self.strategy_scheduler.set_path_cursor(leg.index, mark);
+            self.observe_path_mark(bar_index, bar.time, mark);
             let mut steps = 0_u32;
             loop {
                 steps += 1;
@@ -389,10 +382,12 @@ impl HistoricalRuntime<'_> {
                 else {
                     mark = leg.to.price;
                     self.strategy_scheduler.set_path_cursor(leg.index, mark);
+                    self.observe_path_mark(bar_index, bar.time, mark);
                     break;
                 };
                 mark = outcome.mark();
                 self.strategy_scheduler.set_path_cursor(leg.index, mark);
+                self.observe_path_mark(bar_index, bar.time, mark);
                 if let PathEventOutcome::Filled { fill_price, .. } = outcome {
                     self.strategy_broker
                         .flatten_if_risk_blocked(bar_index, bar.time, fill_price);
@@ -402,6 +397,12 @@ impl HistoricalRuntime<'_> {
         }
         self.strategy_scheduler.clear_path_cursor();
         Ok(())
+    }
+
+    fn observe_path_mark(&mut self, bar_index: usize, time: i64, mark: f64) {
+        self.strategy_broker.update_open_trade_extremes(mark, mark);
+        self.strategy_broker
+            .evaluate_risk_equity_stops(bar_index, time, mark);
     }
 
     pub(crate) fn fill_current_tick_market_closes(&mut self) {
