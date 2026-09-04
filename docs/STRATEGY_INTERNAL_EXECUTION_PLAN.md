@@ -616,10 +616,9 @@ changing public behavior.
 
 ## Stage 18: Historical Execution Timing
 
-Status: partial. Slices 18a-18e are closed. Slice 18f delivered deterministic
-family ordering but retained the planned OHLC-path and cross-family candidate
-gaps. Execute Stage 18g from
-`docs/STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md`.
+Status: closed. Slices 18a-18e, 18f scheduler identity, and 18g true OHLC path
+execution are complete. See
+`docs/STRATEGY_INTERNAL_STAGE18_TRUE_OHLC_PATH_AUDIT.md`.
 
 Goal: move eligibility and fill ordering into a broker scheduler, then implement
 default next-tick market closes, `immediately`, and

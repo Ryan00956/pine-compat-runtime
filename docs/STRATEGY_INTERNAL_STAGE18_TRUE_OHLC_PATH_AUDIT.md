@@ -1,18 +1,15 @@
 # Strategy Internal Stage 18g True OHLC Path Audit
 
-Status: Slice 18g.0 reference lock plus B1 contract amendment recorded on
-2026-09-03. Slice 18g.1 path primitives are authorized under that amendment.
-Family-order production fills remain active until a later slice. This is not
-Stage 18g closeout.
-
-This document is a reference-lock, evidence index, and contract-amendment
-record. It does not claim new public strategy support. Support claims still
-come from `tests/fixtures/conformance.tsv`, committed fixtures and snapshots,
-host parity, and a passing `scripts/verify.sh` run.
+Status: Stage 18g closed on 2026-09-04 after slices 18g.0-18g.8. This document
+is the reference lock, evidence index, implementation record, snapshot
+allowlist, and closeout. Support claims still come from
+`tests/fixtures/conformance.tsv`, committed fixtures and snapshots, host
+parity, and a passing `scripts/verify.sh` run.
 
 Starting commit: `1e9ac6af6d585fb76c39674b627f68292878a542` (`main`).
 Working branch: `codex/strategy-stage18g-ohlc-path`.
 18g.0 docs commit: `f2f9338a06b72516aaedcba9e451e750c2fbcf75`.
+18g.7 last behavior commit: `b1902e5ec88f787367085cbb70d2a34adf2b155a`.
 
 ## Official Review
 
@@ -281,29 +278,291 @@ Bar 0 close is 10. Bar 4 opens at 14. Official rule: fill GAP at the next
 open (14), not at 11. Deferred from the intrabar rewrite; keep the existing
 runtime gap behavior unless a dedicated later slice re-audits it.
 
-## Current Runtime Boundary (Unchanged)
+## Slice Commits
 
-`HistoricalFillStep::pre_script_path()` still orders long limit, long stop,
-long stop-limit, short limit, short stop, and short stop-limit. Pending exits
-still fill after script statements. Margin still runs as a whole-bar phase
-after entries. Long stop-limit activation sets `activated_bar_index` when
-`high >= stop`; the limit is eligible only when
-`activated_bar_index < bar_index`. Public JSON still omits internal order
-keys.
+| Slice | Commit | Subject |
+| --- | --- | --- |
+| 18g.0 | `f2f9338a06b72516aaedcba9e451e750c2fbcf75` | docs(strategy): record Stage 18g.0 reference lock and unresolved-rule block |
+| 18g.1 | `759038cbe37ebbc1cb366d95d0208670305632d8` | refactor(strategy): add historical OHLC path primitives |
+| 18g.2 | `f6ac67a65559347913a051c5fa4e8b141c01ad73` | refactor(strategy): unify pending order creation identity |
+| 18g.3 | `46ea057f5d67338ecac60ed2eb2a8ee8efd507d9` | refactor(strategy): collect broker events without mutation |
+| 18g.4 | `3bcd5bae4c68b2db04d9eb63e5d549c7215e6cd7` | feat(strategy): order entry fills along historical OHLC paths |
+| 18g.5 | `9f606e3133bf8ed40ea5d80688c65113db3fd2f1` | feat(strategy): integrate exits with historical OHLC paths |
+| 18g.6 | `f55ce5a67fdd44ce52b0d8ff5b90dd26fa11c325` | feat(strategy): evaluate margin events on historical OHLC paths |
+| 18g.7 | `b1902e5ec88f787367085cbb70d2a34adf2b155a` | test(strategy): close OHLC path recalculation and rollback gaps |
+| 18g.8 goldens | `f0121c06bd90e0c39df3eeed639eb3624fc8694b` | test(strategy): publish Stage 18g OHLC path goldens |
+| 18g.8 clippy | `d6f27e85a0c4592d2f7aae42720e59adbd2806e1` | refactor(strategy): satisfy clippy on OHLC path helpers |
+| 18g.8 matrix | `e082b2a6c1458d9e6112306933e8a0b60b983b8e` | test(strategy): align CLI host-shape and matrix goldens |
+| 18g.8 host parity | `72d3a8d85a9d69ba1ee36c4a35d3c5f9add21e73` | test(strategy): register fill-path host parity assertions |
+| 18g.8 python | `d96039c87fde274647b9fd042da715628cf65692` | test(strategy): align Python plot contracts with path fills |
 
-Baseline recorded on 2026-09-03 from this worktree:
+18g.8 documentation closeout follows these evidence commits.
 
-- `cargo fmt --check` exit 0
-- `cargo clippy --workspace --all-targets -- -D warnings` exit 0
-- `cargo test -p pine-runtime strategy -- --test-threads=1` exit 0
-- `cargo test -p pine-runtime magnifier -- --test-threads=1` exit 0
-- `cargo test -p pine-cli runtime_outputs_match_golden_snapshots` exit 0
-- `cargo test -p pine-cli matrix_output_matches_golden_snapshot` exit 0
-- `python3 scripts/check_host_parity.py` exit 0
-- `scripts/verify.sh` exit 0 (623 Python tests in the release-gate venv)
+## Implemented Path And Comparator
 
-Frozen pre-stage snapshot set: 319 `tests/snapshots/runtime_strategy_*.json`
-files. Slice 18g.0 does not change any of them.
+`HistoricalPath::from_ohlc` selects open-high-low-close when the open is
+closer to the high than to the low, otherwise open-low-high-close, including
+the sample-locked equal-distance ADAUSDT analogue. `from_validated_bar`
+clamps an out-of-range open into high/low so invalid-but-accepted bars can
+still walk; it does not expand the range to a close outside high/low.
+
+Production pre-script ticks are market closes at open, market entries at
+open, then `HistoricalFillStep::IntrabarPath`. The scheduler stores a path
+cursor and resumes it after OCA effects and bounded `calc_on_order_fills`
+passes.
+
+Read-only `BrokerCandidate` collection ranks by phase, path leg, crossing
+order on that leg, user fills before a same-mark margin call, then creation
+sequence and stable internal key. There is no global entry-before-exit or
+long-before-short type rank. Stop-limit activation and trailing
+activation/ratchet are distinct from fills.
+
+One broker-wide `OrderBook` sequence allocates `InternalOrderKey` for
+pending entries, generic orders, closes, and exits. Same-id replacement
+keeps the key; cancel+replace does not reuse it. Public JSON omits the key.
+
+High-first long stop-limit orders may fill on the same bar after activation
+(sample-locked). Short and low-first stop-limit fills stay fail-closed until
+a later bar. Trailing activation uses the first visited mark already through
+activation; ratchet uses only visited extremes. Exits and margin calls share
+the same pre-script path. Successful margin fills clear pending entries.
+Invalid historical paths fall back to whole-bar extremes/margin/risk.
+Forming realtime rollback restores the scheduler path cursor with the
+confirmed broker checkpoint.
+
+## Added Fixtures
+
+Path-direction, identity, collision, stop-limit, exit, trailing, margin,
+recalculation, and realtime fixtures:
+
+- `strategy_fill_path_high_first_long.pine`
+- `strategy_fill_path_low_first_long.pine`
+- `strategy_fill_path_high_first_short.pine`
+- `strategy_fill_path_low_first_short.pine`
+- `strategy_fill_path_same_price_creation_order.pine`
+- `strategy_fill_path_order_oca_cancel.pine`
+- `strategy_fill_path_stop_limit_long.pine`
+- `strategy_fill_path_stop_limit_short.pine`
+- `strategy_fill_path_entry_then_exit_same_bar.pine`
+- `strategy_fill_path_exit_then_entry_same_bar.pine`
+- `strategy_fill_path_bracket_high_first.pine`
+- `strategy_fill_path_bracket_low_first.pine`
+- `strategy_fill_path_bracket_short_high_first.pine`
+- `strategy_fill_path_bracket_short_low_first.pine`
+- `strategy_fill_path_trailing_activation_then_fill.pine`
+- `strategy_fill_path_trailing_no_future_extreme.pine`
+- `strategy_fill_path_exit_oca_reduce.pine`
+- `strategy_fill_path_partial_exit_reservation.pine`
+- `strategy_fill_path_exit_before_margin_long.pine`
+- `strategy_fill_path_margin_before_exit_long.pine`
+- `strategy_fill_path_exit_before_margin_short.pine`
+- `strategy_fill_path_margin_before_exit_short.pine`
+- `strategy_fill_path_drawdown_intrabar_ordering.pine`
+- `strategy_fill_path_margin_invalidates_entry.pine`
+- `strategy_fill_path_calc_on_order_fills_resume.pine`
+- `strategy_fill_path_calc_on_order_fills_guard.pine`
+- `strategy_fill_path_realtime_stop_limit_rollback.pine`
+- `strategy_fill_path_realtime_trailing_rollback.pine`
+- `strategy_fill_path_realtime_margin_rollback.pine`
+
+Host-parity bars and goldens for the required 18g.8 subset:
+
+- `strategy_fill_path_high_first_long_bars.csv`
+- `strategy_fill_path_low_first_short_bars.csv`
+- `strategy_fill_path_entry_then_exit_same_bar_bars.csv`
+- `strategy_fill_path_stop_limit_long_bars.csv`
+- `strategy_fill_path_exit_before_margin_long_bars.csv`
+
+CLI, Python, and WASM assert those five public strategy JSON goldens. Public
+`StrategyResult` remains `schemaVersion` 8 and `renderMetadataVersion` 1.
+
+## Intentionally Changed Snapshots
+
+Cause classes:
+
+- script-visible plots and trade counts now observe pre-script path exits on
+  the fill bar rather than the next bar;
+- same-price OCA uses creation order rather than a downside-first family
+  rank;
+- high-first long stop-limit same-bar fill moves
+  `runtime_strategy_pyramiding_limit_same_tick_stop_limit_entries.json`
+  fills from bar 2 to bar 1.
+
+New goldens:
+
+- `runtime_strategy_fill_path_high_first_long.json`
+- `runtime_strategy_fill_path_low_first_short.json`
+- `runtime_strategy_fill_path_entry_then_exit_same_bar.json`
+- `runtime_strategy_fill_path_stop_limit_long.json`
+- `runtime_strategy_fill_path_exit_before_margin_long.json`
+
+Updated existing goldens (155 files, all `runtime_strategy_*`):
+
+`runtime_strategy_close_entries_rule_any_exit_from_entry_short.json`,
+`runtime_strategy_close_entries_rule_any_exit_same_id_partial_short.json`,
+`runtime_strategy_exit_active_entry_attachment.json`,
+`runtime_strategy_exit_active_entry_loss_attachment.json`,
+`runtime_strategy_exit_active_entry_loss_limit_bracket.json`,
+`runtime_strategy_exit_active_entry_loss_profit_bracket.json`,
+`runtime_strategy_exit_active_entry_profit_attachment.json`,
+`runtime_strategy_exit_active_entry_stop_profit_bracket.json`,
+`runtime_strategy_exit_active_entry_trail_points_attachment.json`,
+`runtime_strategy_exit_bracket_both_hit.json`,
+`runtime_strategy_exit_bracket_creation_bar.json`,
+`runtime_strategy_exit_bracket_interactions.json`,
+`runtime_strategy_exit_bracket_invalid_leg.json`,
+`runtime_strategy_exit_bracket_loss_profit_loss_fill.json`,
+`runtime_strategy_exit_bracket_loss_profit_profit_fill.json`,
+`runtime_strategy_exit_bracket_mixed_pairs.json`,
+`runtime_strategy_exit_bracket_repeated.json`,
+`runtime_strategy_exit_bracket_replacement.json`,
+`runtime_strategy_exit_bracket_state.json`,
+`runtime_strategy_exit_bracket_stop_limit_limit_fill.json`,
+`runtime_strategy_exit_bracket_stop_limit_limit_fill_short.json`,
+`runtime_strategy_exit_bracket_stop_limit_stop_fill.json`,
+`runtime_strategy_exit_bracket_stop_limit_stop_fill_short.json`,
+`runtime_strategy_exit_interactions.json`,
+`runtime_strategy_exit_limit.json`,
+`runtime_strategy_exit_limit_short.json`,
+`runtime_strategy_exit_loss.json`,
+`runtime_strategy_exit_loss_short.json`,
+`runtime_strategy_exit_metadata.json`,
+`runtime_strategy_exit_oca_reduce.json`,
+`runtime_strategy_exit_oca_reduce_bracket.json`,
+`runtime_strategy_exit_omitted_bracket_replacement.json`,
+`runtime_strategy_exit_omitted_replaces_reservations.json`,
+`runtime_strategy_exit_omitted_single_replacement.json`,
+`runtime_strategy_exit_omitted_trailing_replacement.json`,
+`runtime_strategy_exit_profit.json`,
+`runtime_strategy_exit_profit_loss_interactions.json`,
+`runtime_strategy_exit_profit_short.json`,
+`runtime_strategy_exit_qty_bracket_partial.json`,
+`runtime_strategy_exit_qty_full_clamp.json`,
+`runtime_strategy_exit_qty_limit_partial.json`,
+`runtime_strategy_exit_qty_percent_bracket_partial.json`,
+`runtime_strategy_exit_qty_percent_full.json`,
+`runtime_strategy_exit_qty_percent_full_clamp.json`,
+`runtime_strategy_exit_qty_percent_limit_partial.json`,
+`runtime_strategy_exit_qty_percent_repeated.json`,
+`runtime_strategy_exit_qty_percent_replacement.json`,
+`runtime_strategy_exit_qty_percent_state.json`,
+`runtime_strategy_exit_qty_percent_stop_partial.json`,
+`runtime_strategy_exit_qty_percent_trailing_partial.json`,
+`runtime_strategy_exit_qty_precedence_bracket.json`,
+`runtime_strategy_exit_qty_precedence_stop.json`,
+`runtime_strategy_exit_qty_precedence_trailing.json`,
+`runtime_strategy_exit_qty_repeated.json`,
+`runtime_strategy_exit_qty_replacement.json`,
+`runtime_strategy_exit_qty_state.json`,
+`runtime_strategy_exit_qty_stop_partial.json`,
+`runtime_strategy_exit_qty_trailing_partial.json`,
+`runtime_strategy_exit_reservation_bracket_host_parity.json`,
+`runtime_strategy_exit_reservation_bracket_single_downside_precedence.json`,
+`runtime_strategy_exit_reservation_bracket_single_replacement.json`,
+`runtime_strategy_exit_reservation_bracket_single_upside_order.json`,
+`runtime_strategy_exit_reservation_bracket_state.json`,
+`runtime_strategy_exit_reservation_interactions.json`,
+`runtime_strategy_exit_reservation_mixed_side_precedence.json`,
+`runtime_strategy_exit_reservation_qty_bracket_clamp.json`,
+`runtime_strategy_exit_reservation_qty_bracket_replacement.json`,
+`runtime_strategy_exit_reservation_qty_bracket_stop_limit_downside_multi.json`,
+`runtime_strategy_exit_reservation_qty_bracket_stop_limit_upside_multi.json`,
+`runtime_strategy_exit_reservation_qty_clamp.json`,
+`runtime_strategy_exit_reservation_qty_limit_multi.json`,
+`runtime_strategy_exit_reservation_qty_mixed_bracket_multi.json`,
+`runtime_strategy_exit_reservation_qty_mixed_stop_multi.json`,
+`runtime_strategy_exit_reservation_qty_mixed_trailing_multi.json`,
+`runtime_strategy_exit_reservation_qty_percent_bracket_clamp.json`,
+`runtime_strategy_exit_reservation_qty_percent_bracket_multi.json`,
+`runtime_strategy_exit_reservation_qty_percent_bracket_replacement.json`,
+`runtime_strategy_exit_reservation_qty_percent_clamp.json`,
+`runtime_strategy_exit_reservation_qty_percent_replacement.json`,
+`runtime_strategy_exit_reservation_qty_percent_stop_multi.json`,
+`runtime_strategy_exit_reservation_qty_percent_trailing_clamp.json`,
+`runtime_strategy_exit_reservation_qty_percent_trailing_multi.json`,
+`runtime_strategy_exit_reservation_qty_percent_trailing_replacement.json`,
+`runtime_strategy_exit_reservation_qty_replacement.json`,
+`runtime_strategy_exit_reservation_qty_stop_multi.json`,
+`runtime_strategy_exit_reservation_qty_trailing_clamp.json`,
+`runtime_strategy_exit_reservation_qty_trailing_points_multi.json`,
+`runtime_strategy_exit_reservation_qty_trailing_price_multi.json`,
+`runtime_strategy_exit_reservation_qty_trailing_replacement.json`,
+`runtime_strategy_exit_reservation_state.json`,
+`runtime_strategy_exit_reservation_trailing_activation_mixed_fill.json`,
+`runtime_strategy_exit_reservation_trailing_bracket_downside_order.json`,
+`runtime_strategy_exit_reservation_trailing_host_parity.json`,
+`runtime_strategy_exit_reservation_trailing_mixed_side_precedence.json`,
+`runtime_strategy_exit_reservation_trailing_mixed_state.json`,
+`runtime_strategy_exit_reservation_trailing_replacement_mixed.json`,
+`runtime_strategy_exit_reservation_trailing_single_downside_order.json`,
+`runtime_strategy_exit_reservation_trailing_state.json`,
+`runtime_strategy_exit_slippage.json`,
+`runtime_strategy_exit_stop.json`,
+`runtime_strategy_exit_stop_short.json`,
+`runtime_strategy_exit_trade_counts.json`,
+`runtime_strategy_exit_trail_points_fill.json`,
+`runtime_strategy_exit_trail_points_fill_short.json`,
+`runtime_strategy_exit_trail_price_fill.json`,
+`runtime_strategy_exit_trail_price_fill_short.json`,
+`runtime_strategy_exit_trailing_activation_bar.json`,
+`runtime_strategy_exit_trailing_close_cancel.json`,
+`runtime_strategy_exit_trailing_interactions.json`,
+`runtime_strategy_exit_trailing_invalid.json`,
+`runtime_strategy_exit_trailing_ratchet.json`,
+`runtime_strategy_exit_trailing_repeated.json`,
+`runtime_strategy_exit_trailing_replacement.json`,
+`runtime_strategy_exit_trailing_state.json`,
+`runtime_strategy_limit_verification_exit.json`,
+`runtime_strategy_pyramiding_exit_bracket_from_entry.json`,
+`runtime_strategy_pyramiding_exit_from_entry.json`,
+`runtime_strategy_pyramiding_exit_omitted_from_entry_current.json`,
+`runtime_strategy_pyramiding_exit_omitted_from_entry_persistent.json`,
+`runtime_strategy_pyramiding_exit_omitted_loss_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_loss_limit_bracket_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_loss_limit_bracket_persistent_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_loss_limit_bracket_persistent_same_id.json`,
+`runtime_strategy_pyramiding_exit_omitted_loss_limit_bracket_same_id.json`,
+`runtime_strategy_pyramiding_exit_omitted_loss_persistent_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_loss_persistent_same_id.json`,
+`runtime_strategy_pyramiding_exit_omitted_loss_profit_bracket_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_loss_profit_bracket_persistent_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_loss_profit_bracket_persistent_same_id.json`,
+`runtime_strategy_pyramiding_exit_omitted_loss_profit_bracket_same_id.json`,
+`runtime_strategy_pyramiding_exit_omitted_loss_same_id.json`,
+`runtime_strategy_pyramiding_exit_omitted_profit_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_profit_persistent_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_profit_persistent_same_id.json`,
+`runtime_strategy_pyramiding_exit_omitted_profit_same_id.json`,
+`runtime_strategy_pyramiding_exit_omitted_stop_limit_bracket_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_stop_limit_bracket_persistent_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_stop_limit_bracket_persistent_same_id.json`,
+`runtime_strategy_pyramiding_exit_omitted_stop_limit_bracket_same_id.json`,
+`runtime_strategy_pyramiding_exit_omitted_stop_profit_bracket_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_stop_profit_bracket_persistent_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_stop_profit_bracket_persistent_same_id.json`,
+`runtime_strategy_pyramiding_exit_omitted_stop_profit_bracket_same_id.json`,
+`runtime_strategy_pyramiding_exit_omitted_trail_points_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_trail_points_persistent_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_trail_points_persistent_same_id.json`,
+`runtime_strategy_pyramiding_exit_omitted_trail_points_same_id.json`,
+`runtime_strategy_pyramiding_exit_omitted_trail_price_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_trail_price_persistent_from_entries.json`,
+`runtime_strategy_pyramiding_exit_omitted_trail_price_persistent_same_id.json`,
+`runtime_strategy_pyramiding_exit_omitted_trail_price_same_id.json`,
+`runtime_strategy_pyramiding_exit_profit_from_entry.json`,
+`runtime_strategy_pyramiding_exit_same_id.json`,
+`runtime_strategy_pyramiding_exit_trail_points_from_entry.json`,
+`runtime_strategy_pyramiding_limit_same_tick_stop_limit_entries.json`.
+
+`tests/snapshots/matrix.json` notes and fixtures changed only for
+`strategy.entry` and `strategy.order`. No indicator, analysis, or other
+non-strategy snapshot changed.
+
+## Schema Versions
+
+Unchanged: public runtime `schemaVersion` 8, `renderMetadataVersion` 1. No
+public pending-order, reservation, remaining-quantity, or internal-key
+fields.
 
 ## Remaining Bar Magnifier And Gap Boundaries
 
@@ -311,24 +570,21 @@ Bar Magnifier remains out of Stage 18g. The Stage 21e host contract can later
 feed a different OHLC tick sequence into the same event loop; it must not
 create a second broker. Inter-bar gap fills stay confirmed-deferred: official
 next-open filling is locked, but it is not part of the intrabar walk.
+Short/low-first same-bar stop-limit and a global entry-versus-exit type rank
+stay unverified. Mixed-family OCA and instrument-session calendars stay out
+of this stage.
 
-## Closeout Fields (Not Yet Applicable)
+## Final Verification
 
-Implemented path builder: Slice 18g.1 pure `HistoricalPath` (not wired into
-the production scheduler). Equal-distance uses the sample-locked OLHC rule.
-Candidate collection: Slice 18g.3 read-only `BrokerCandidate` enumeration
-over market-open and path legs. Collection does not mutate broker state.
-Comparator uses phase, path leg, crossing order, sample-locked user-before-margin
-at the same mark, then creation sequence and stable key. No global
-entry-before-exit or long-before-short type rank. Stop-limit activation and
-trailing activation/ratchet are distinct from fills. The family-order
-scheduler is still the production dispatcher.
-Internal identity: Slice 18g.2 broker-wide `OrderBook` sequence allocates
-`InternalOrderKey` for pending entries, generic orders, closes, and exits.
-Replacement keeps the original key; cancel+replace does not reuse keys;
-expanded per-trade exits are ledger-ordered; snapshot/restore/forming
-rollback continue from the saved next key. Public JSON still omits the key.
-Added fixtures: none.
-Intentionally changed snapshots: none.
-Schema versions: unchanged.
-Stage 18g closed: no.
+Recorded after the 18g.8 evidence commits. `scripts/verify.sh` ran without
+`UPDATE_SNAPSHOTS`.
+
+- `scripts/verify.sh` exit code: 0
+- `cargo fmt --check` and `cargo clippy --workspace --all-targets -- -D warnings` passed
+- `cargo test --workspace` passed, including pine-runtime lib 1669, pine-cli 221, and pine-wasm 653
+- `python3 scripts/check_structure.py` passed (311 production Rust source files)
+- `python3 scripts/check_host_parity.py` passed (844 registered CLI runtime snapshots; 548 required runtime and 5 required legacy-analysis Python/WASM golden assertions)
+- `scripts/check_wasm_node.sh` passed
+- release-gate venv pytest: 628 passed
+- public runtime `schemaVersion` 8 / `renderMetadataVersion` 1 unchanged
+- Stage 18g closed: yes

@@ -222,23 +222,34 @@ entries while flat or already short,
 entries while flat or already short. Supplying both `stop`
 and `limit` creates a long or short stop-limit entry matching the direction.
 Market entries fill at the next
-historical bar open. Limit and stop entries never fill on their creation bar;
-long limit entries fill at the limit price before script statements on a later
-historical bar when `low <= limit`, or below the configured verified limit
-threshold, short limit entries fill at the limit price before script statements
-on a later historical bar when `high >= limit`, or above the configured
-verified limit threshold, long stop entries fill at the stop price before
-script statements on a later historical bar when `high >= stop`, and short
-stop entries fill at the stop price before script statements on a later
-historical bar when `low <= stop`.
-Long stop-limit entries activate before script statements on a later historical
-bar when `high >= stop`, do not fill on that activation bar, and fill at the
-limit price before script statements on a later historical bar when
-`low <= limit`, or below the configured verified limit threshold. Short
-stop-limit entries activate before script statements on a later historical bar
-when `low <= stop`, do not fill on that activation bar, and fill at the limit
-price before script statements on a later historical bar when `high >= limit`,
-or above the configured verified limit threshold.
+historical bar open. Limit and stop entries never fill on their creation bar.
+On a later historical bar, supported price-based entries, generic orders,
+exits, and margin calls walk the bar's inferred path before script statements:
+open, high, low, close when the open is closer to the high than to the low;
+otherwise open, low, high, close, including equal-distance bars under the
+sample-locked ADAUSDT analogue. Events are collected without mutating broker
+state and applied one winner at a time. Ranking uses scheduler phase, path
+leg, crossing order on that leg, user fills before a same-mark margin call,
+then creation sequence and a stable internal key. There is no global
+entry-before-exit or long-before-short type rank. Same-price ties use that
+creation-sequence/key order only; that is this runtime's determinism contract,
+not a TradingView private-order claim.
+Long limit entries fill at the limit price when the path visits a price at or
+below the limit, or below the configured verified limit threshold. Short limit
+entries fill at the limit price when the path visits a price at or above the
+limit, or above the configured verified limit threshold. Long stop entries
+fill at the stop price when the path visits a price at or above the stop.
+Short stop entries fill at the stop price when the path visits a price at or
+below the stop.
+Long stop-limit entries activate when the path visits a price at or above the
+stop. On a high-first bar they may fill at the limit on the same bar after
+activation when the path later visits a price at or below the limit, or below
+the configured verified limit threshold. Short and low-first stop-limit fills
+stay fail-closed until a later bar: short stop-limit entries activate when the
+path visits a price at or below the stop and fill at the limit on a later
+historical bar when the path visits a price at or above the limit, or above
+the configured verified limit threshold. Trailing activation, ratchet, and
+fill use only visited path marks.
 Pending entries emit no public order while pending. Only one net long position
 is supported; repeated entry calls while a position is open are ignored under
 the current no-pyramiding rule. Explicit `qty` overrides the declaration
@@ -384,9 +395,10 @@ intents at the creation bar close after script statements, so script-visible
 state on that bar remains pre-fill while public trades and equity include the
 fill. `immediately=true` still fills during the close command. Const bool
 `calc_on_order_fills=true` re-executes strategy statements after a historical
-fill, refreshes live `strategy.*` state for that extra pass, and can fill
-price-based entries placed on that pass on later Stage 18 ticks of the same
-bar. Series history, plots, and `ta.*` state are restored to the bar-start
+fill, refreshes live `strategy.*` state for that extra pass, resumes the
+current bar's remaining path from the fill mark rather than restarting at
+open, and can fill price-based entries placed on that pass on later ticks of
+the same bar. Series history, plots, and `ta.*` state are restored to the bar-start
 checkpoint before each extra pass so they do not consume an extra bar;
 `var` persists across extra passes. Extra passes are bounded by the internal
 recalculation-pass guardrail. Const bool `calc_on_every_tick=true` executes strategy statements on each
@@ -464,13 +476,14 @@ fill alerts, and script alerts) and commits broker plus output state only on
 the confirmed update. Abandoned forming placements, cancellations, stop-limit
 activations, fills, and alerts do not leak into the confirmed result.
 Historical price-based fills on a bar run through a deterministic fill-path:
-market closes and entries at open, then long limit/stop/stop-limit families,
-then short limit/stop/stop-limit families. Same-tick pyramiding batches stay
-inside one family. Limit and stop entries that are both eligible on the same
-bar fill in that family order rather than cancelling later families. Pending `strategy.exit`
-fills are evaluated after script statements on a historical bar, so script
-reads observe the count changes on the next bar while public strategy output
-and equity include the fill on the triggering bar. These variables can be used
+market closes and entries at open, then the selected open-high-low-close or
+open-low-high-close walk. Same-tick pyramiding still fills every eligible
+order at the same path mark. Limit and stop entries that are both eligible on
+the same bar fill in path-crossing order, then creation sequence, rather than
+a long-then-short family rank. Pending `strategy.exit`
+fills are evaluated on that same pre-script path, so script reads observe the
+count changes on the fill bar while public strategy output and equity include
+the fill on the triggering bar. These variables can be used
 in the same already-supported expression contexts as other series values,
 including branches, switches, loops, pure UDF arguments, and constant history
 references. Their history follows the normal per-expression series history
@@ -626,20 +639,21 @@ bar, and also bypass the `strategy.entry()` pyramiding limit; omitted long
 `qty` uses the configured default quantity at placement time.
 Fixture-backed stop-limit-long
 `strategy.order(id, strategy.long, qty=..., stop=stop_price, limit=limit_price)`
-orders use the supported long stop-limit model: activation occurs on a later
-historical bar when `high >= stop`, and the limit fill can occur only on a
-subsequent historical bar when `low <= limit` or below the configured verified
-limit threshold. They also bypass the `strategy.entry()` pyramiding limit;
-omitted long `qty` uses the configured default quantity at placement time.
+orders use the supported long stop-limit model: activation occurs when the
+path visits a price at or above the stop, and a high-first bar may fill the
+limit on the same bar after activation when the path visits a price at or
+below the limit or below the configured verified limit threshold. They also
+bypass the `strategy.entry()` pyramiding limit; omitted long `qty` uses the
+configured default quantity at placement time.
 Fixture-backed stop-limit-short
 `strategy.order(id, strategy.short, qty=..., stop=stop_price, limit=limit_price)`
-orders use the supported short stop-limit model: activation occurs on a later
-historical bar when `low <= stop`, and the limit fill can occur only on a
-subsequent historical bar when `high >= limit` or above the configured verified
-limit threshold. They open or increase short exposure while flat or already
-short without using the `strategy.entry()` pyramiding limit, and apply signed
-netting after stop activation and a later limit fill. Explicit positive `qty`
-is required.
+orders use the supported short stop-limit model: activation occurs when the
+path visits a price at or below the stop, and the limit fill stays fail-closed
+until a later historical bar when the path visits a price at or above the
+limit or above the configured verified limit threshold. They open or increase
+short exposure while flat or already short without using the `strategy.entry()`
+pyramiding limit, and apply signed netting after stop activation and a later
+limit fill. Explicit positive `qty` is required.
 Fixture-backed market
 `strategy.order(id, strategy.long, qty=...)` and
 `strategy.order(id, strategy.short, qty=...)` orders apply signed netting on the

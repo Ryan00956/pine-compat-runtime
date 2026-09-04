@@ -1,18 +1,17 @@
 # Strategy Internal Stage 18g True OHLC Path Execution Plan
 
-Status: Slice 18g.1 authorized on 2026-09-03 under the B1 contract
-amendment in `docs/STRATEGY_INTERNAL_STAGE18_TRUE_OHLC_PATH_AUDIT.md`.
+Status: closed on 2026-09-04 after slices 18g.0-18g.8. See
+`docs/STRATEGY_INTERNAL_STAGE18_TRUE_OHLC_PATH_AUDIT.md`.
 Stage 18a-18e are closed. Stage 18f established a deterministic family-ordered
-scheduler but did not implement a true historical OHLC walk. Official
-high-first and low-first path rules are locked. Equal-distance is sample-locked
-to open-low-high-close on the recorded ADAUSDT analogue. Same-direction
-same-price entry/exit is `UNVERIFIED_INTERNAL_ORDER`: this runtime may use
-creation sequence and a stable internal key for determinism only; that is not
-a TradingView private-order claim and must not become a global
+scheduler; Stage 18g replaced that family rank with a true historical OHLC
+walk. Official high-first and low-first path rules are locked. Equal-distance
+is sample-locked to open-low-high-close on the recorded ADAUSDT analogue.
+Same-direction same-price entry/exit is `UNVERIFIED_INTERNAL_ORDER`: this
+runtime uses creation sequence and a stable internal key for determinism only;
+that is not a TradingView private-order claim and must not become a global
 entry-before-exit or exit-before-entry type rank. Missing intermediate
 callbacks must not be read as proven emulator atomicity. A/C/D stay
-sample-level and must not be re-run or generalized. The production family-order
-dispatcher stays active until a later slice replaces it.
+sample-level and must not be re-run or generalized.
 
 B1 evidence index (SHA-256): package
 `506903bb331af76624d4402494babd3c4878905fd82ba438a08c94f4ad7d8725`,
@@ -1106,34 +1105,34 @@ behavior. Keep the boundary explicit and split a smaller prerequisite.
 
 Stage 18g and Stage 18 are closed only when every item is true:
 
-- [ ] Current official path behavior and all ambiguity dispositions are
+- [x] Current official path behavior and all ambiguity dispositions are
       recorded.
-- [ ] Standard historical bars select a tested high-first or low-first path.
-- [ ] Equal-distance behavior is evidence-backed or explicitly blocks closure.
-- [ ] Entry, generic-order, exit, and margin events share one deterministic
+- [x] Standard historical bars select a tested high-first or low-first path.
+- [x] Equal-distance behavior is evidence-backed or explicitly blocks closure.
+- [x] Entry, generic-order, exit, and margin events share one deterministic
       path comparator.
-- [ ] Candidate collection is read-only and covered by non-mutation tests.
-- [ ] One broker-wide creation sequence provides cross-family stable identity.
-- [ ] Same-id replacement retains identity and later new orders do not reuse
+- [x] Candidate collection is read-only and covered by non-mutation tests.
+- [x] One broker-wide creation sequence provides cross-family stable identity.
+- [x] Same-id replacement retains identity and later new orders do not reuse
       keys.
-- [ ] Same-price ties use documented creation-sequence/key ordering.
-- [ ] Stop-limit activation and fill follow the selected path and locked timing
+- [x] Same-price ties use documented creation-sequence/key ordering.
+- [x] Stop-limit activation and fill follow the selected path and locked timing
       rule.
-- [ ] Trailing activation, ratchet, and fill never observe an unvisited extreme.
-- [ ] OCA and reservation effects invalidate peers before re-collection.
-- [ ] Margin/risk state advances at path-local marks.
-- [ ] `calc_on_order_fills` resumes from the current path point and remains
+- [x] Trailing activation, ratchet, and fill never observe an unvisited extreme.
+- [x] OCA and reservation effects invalidate peers before re-collection.
+- [x] Margin/risk state advances at path-local marks.
+- [x] `calc_on_order_fills` resumes from the current path point and remains
       bounded.
-- [ ] Historical and incremental outputs are item-identical.
-- [ ] Realtime forming replacement rolls back all new broker/path state.
-- [ ] Representative changed outputs match through CLI, Python, and WASM.
-- [ ] Public strategy JSON and host API schema versions are unchanged.
-- [ ] Every intentional snapshot change is named in the closeout audit.
-- [ ] Indicator and unrelated snapshots are unchanged.
-- [ ] Conformance, execution semantics, release notes, active plans, and audit
+- [x] Historical and incremental outputs are item-identical.
+- [x] Realtime forming replacement rolls back all new broker/path state.
+- [x] Representative changed outputs match through CLI, Python, and WASM.
+- [x] Public strategy JSON and host API schema versions are unchanged.
+- [x] Every intentional snapshot change is named in the closeout audit.
+- [x] Indicator and unrelated snapshots are unchanged.
+- [x] Conformance, execution semantics, release notes, active plans, and audit
       agree.
-- [ ] `git diff --check` passes.
-- [ ] `scripts/verify.sh` passes without snapshot-update mode.
+- [x] `git diff --check` passes.
+- [x] `scripts/verify.sh` passes without snapshot-update mode.
 
 ## Post-Stage Handoff
 

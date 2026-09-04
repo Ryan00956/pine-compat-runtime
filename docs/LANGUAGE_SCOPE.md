@@ -179,17 +179,18 @@ Phase 1 executable subset:
   quantity settings through `default_qty_type=strategy.fixed` plus positive
   const numeric `default_qty_value`, plus positive integer const `pyramiding`
   for the accepted same-direction long market-entry subset; const bool
-  `calc_on_order_fills` re-executes the script after historical fills and can
-  fill later Stage 18 price ticks on the same bar; historical execution remains
-  one script pass per bar when that flag is false, with internal scheduler
-  bar/tick/pass identity, profile pass counts, and a bounded extra-pass
-  guardrail; forming-bar realtime updates restore the confirmed broker
-  checkpoint so abandoned intrabar orders, cancellations, activations, fills,
-  and alerts do not leak; const bool `calc_on_every_tick` executes strategy
-  code on each host-provided forming update with `var` rollback and `varip`
-  persistence and does not change historical bars; host-owned bar-magnifier
-  lower-timeframe input is keyed by chart bar with explicit standard-OHLC
-  fallback; `use_bar_magnifier` stays rejected
+  `calc_on_order_fills` re-executes the script after historical fills, resumes
+  the current bar's remaining open-high-low-close or open-low-high-close path
+  from the fill mark, and can fill later price ticks on the same bar;
+  historical execution remains one script pass per bar when that flag is false,
+  with internal scheduler bar/tick/pass identity, profile pass counts, and a
+  bounded extra-pass guardrail; forming-bar realtime updates restore the
+  confirmed broker checkpoint so abandoned intrabar orders, cancellations,
+  activations, fills, and alerts do not leak; const bool `calc_on_every_tick`
+  executes strategy code on each host-provided forming update with `var`
+  rollback and `varip` persistence and does not change historical bars;
+  host-owned bar-magnifier lower-timeframe input is keyed by chart bar with
+  explicit standard-OHLC fallback; `use_bar_magnifier` stays rejected
 - `strategy.entry(id, strategy.long, qty=...)` in strategy-mode scripts only,
   filled through the supported historical broker model for long market entries
   up to the configured `pyramiding` limit
@@ -207,9 +208,10 @@ Phase 1 executable subset:
   `low <= stop` while flat or already short, or as a reversal that first
   flattens an opposite long then opens the requested short quantity
 - `strategy.entry(id, strategy.short, qty=..., stop=price, limit=price)` in
-  strategy-mode scripts only, activated on a later historical bar when
-  `low <= stop` and filled at the limit price on a subsequent historical bar
-  when `high >= limit` or above the configured verified limit threshold while
+  strategy-mode scripts only, activated when the selected historical path
+  visits a price at or below the stop; short and low-first stop-limit fills
+  stay fail-closed until a later historical bar when the path visits a price
+  at or above the limit or above the configured verified limit threshold while
   flat or already short, or as a reversal that first flattens an opposite long
   then opens the requested short quantity
 - price-based long `strategy.entry` limit, stop, and stop-limit reversals in

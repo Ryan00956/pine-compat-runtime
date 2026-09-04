@@ -38,16 +38,14 @@ Current Stage 17-22 baseline:
 - fixture-backed entry-direction, position-size, drawdown, intraday, and
   consecutive-loss-day risk rules.
 
-Stage 18 remains partial. The scheduler uses deterministic order-family steps,
-but it does not yet select a high-first/low-first OHLC path or order entry,
-generic-order, exit, and margin candidates together on each path leg.
+Stage 18g is closed. Historical price entries, generic orders, exits, and
+margin calls share one OHLC-path event loop. Remaining strategy work is Bar
+Magnifier fill wiring, mixed-family OCA, session calendars, and deferred
+inter-bar gap rewrite.
 
 Active stage order:
 
-1. Integrate and review the current Stage 17-22 worktree without losing its
-   executable evidence.
-2. Execute Stage 18g true OHLC-path and cross-family candidate ordering.
-3. Wire the existing bar-magnifier host contract into the completed 18g path
+1. Wire the existing bar-magnifier host contract into the completed 18g path
    before accepting `use_bar_magnifier=true`.
 4. Expand mixed entry/order/exit OCA groups only through a dedicated slice.
 5. Add an instrument-session calendar before claiming exchange-session risk
@@ -60,7 +58,7 @@ The step-by-step source of truth is
 
 Keep out of scope until separately designed and fixture-backed:
 
-- Bar Magnifier fill wiring and public host inputs before Stage 18g closes.
+- Bar Magnifier fill wiring and public host inputs.
 - Mixed entry/order/exit OCA groups and series `oca_name`.
 - Omitted `qty` for unsupported `strategy.short` order forms.
 - Currency conversion, symbol precision, and richer account constraints.
@@ -71,8 +69,8 @@ Keep out of scope until separately designed and fixture-backed:
   store, diagnostic emission, and failure-reporting model from
   `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` is implemented.
 
-Recommended next slice after integrating the current worktree: Stage 18g true
-OHLC-path and cross-family candidate ordering. Omitted `from_entry` allocation
+Recommended next slice: wire the existing bar-magnifier host contract into the
+closed Stage 18g path. Omitted `from_entry` allocation
 remains FIFO and `strategy.close_all()` remains independent of
 `close_entries_rule`. Do not add public pending-order fields or widen
 conformance without runtime behavior and host-parity evidence in the same

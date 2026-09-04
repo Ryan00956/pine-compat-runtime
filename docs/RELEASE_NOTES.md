@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Closed Stage 18g true historical OHLC path execution. Supported price
+  entries, generic orders, exits, and margin calls walk open-high-low-close or
+  open-low-high-close instead of a long-then-short family rank. Equal-distance
+  bars use the sample-locked open-low-high-close path. High-first long
+  stop-limit orders may fill after same-bar activation; short and low-first
+  stop-limit fills stay fail-closed until a later bar. Same-price user exit
+  versus margin is sample-locked user-then-margin. `calc_on_order_fills`
+  resumes from the current path mark. Public `StrategyResult` schema versions
+  are unchanged. Bar Magnifier fill wiring and inter-bar gap rewrite remain
+  deferred.
 - Added the versioned Python `RealtimeSession` ABI. A compiled program can now
   own a persistent native realtime runtime without leaking its HIR, seed a
   complete historical batch with correct dataset-end semantics, replace a
