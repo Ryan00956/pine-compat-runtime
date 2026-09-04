@@ -419,18 +419,25 @@ order, trade, and alert `bar_index` and `time` stay chart-bar scoped; the
 public event timestamp is the chart-bar time. The first tradable open of a
 covered chart bar is that group's first lower-bar open. A gap between one
 lower bar's close and the next lower bar's open is a point event at the next
-open, not a tradable close-to-open segment. `calc_on_order_fills` extra
-passes resume from the unconsumed lower-bar/path cursor and do not replay
-consumed marks. Missing groups emit `W_MAGNIFIER_FALLBACK` and empty groups
-emit `W_MAGNIFIER_GAP`, both falling back to that chart bar's standard OHLC
-path. Invalid host input fails closed before bar-zero execution with
+open, not a tradable close-to-open segment. Price orders are therefore tested
+for direction-aware marketability at that open; a stop-limit cannot reuse a
+pre-activation gap price, and trailing activation/ratchet transitions occur
+before any later stop fill. `calc_on_order_fills` extra passes resume from the
+unconsumed lower-bar/path cursor and do not replay consumed marks. Missing
+groups emit `W_MAGNIFIER_FALLBACK` and empty groups emit `W_MAGNIFIER_GAP`, both
+falling back to that chart bar's standard OHLC path. Invalid host input fails
+closed before bar-zero execution with
 `E_MAGNIFIER_DUPLICATE_CHART_BAR`, `E_MAGNIFIER_DUPLICATE_TICK`,
 `E_MAGNIFIER_UNSORTED_TICKS`, `E_MAGNIFIER_MAX_INTRABARS`,
 `E_MAGNIFIER_INVALID_BAR`, `E_MAGNIFIER_CHART_BAR_RANGE`,
-`E_MAGNIFIER_SCHEMA_VERSION`, `E_MAGNIFIER_MALFORMED`, or
-`E_MAGNIFIER_FORMING_BAR`. Setting false or omitted leaves supplied magnifier
-input inert. Forming/live realtime bars never consume historical magnifier
-groups. `calc_on_every_history_tick` remains unimplemented and rejected.
+`E_MAGNIFIER_CHART_BAR_COUNT_REQUIRED`, `E_MAGNIFIER_SCHEMA_VERSION`,
+`E_MAGNIFIER_MALFORMED`, or `E_MAGNIFIER_FORMING_BAR`. Complete-slice batch
+APIs derive the range automatically. One-bar incremental and realtime-history
+callers with non-empty magnifier input must call
+`prepare_magnifier_chart_bar_count` before bar zero. Setting false or omitted
+leaves supplied magnifier input inert. Forming/live realtime bars never consume
+historical magnifier groups. `calc_on_every_history_tick` remains unimplemented
+and rejected.
 `fill_orders_on_standard_ohlc` remains unsupported. Public RuntimeResult
 schemaVersion stays 8. Python `REALTIME_SESSION_SCHEMA_VERSION` stays 1, with
 optional seed-only `magnifier_bars`.

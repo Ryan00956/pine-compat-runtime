@@ -50,6 +50,7 @@ const STRATEGY_BAR_MAGNIFIER_BOUNDARY_FIXTURES: &[&str] = &[
     "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier_positional.pine",
     "tests/fixtures/runtime/strategy_use_bar_magnifier_fallback.pine",
     "tests/fixtures/runtime/strategy_use_bar_magnifier_false.pine",
+    "tests/fixtures/runtime/strategy_use_bar_magnifier_gap.pine",
 ];
 
 const STRATEGY_RISK_BOUNDARY_FIXTURES: &[&str] =

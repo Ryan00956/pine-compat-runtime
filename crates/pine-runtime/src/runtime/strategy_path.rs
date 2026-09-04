@@ -298,8 +298,7 @@ impl MagnifierHostGap {
         }
     }
 
-    /// Trigger is crossed only in the open gap, exclusive of both endpoints.
-    /// Endpoint prices belong to the previous close or next open path point.
+    #[cfg(test)]
     #[must_use]
     pub(crate) fn crosses(self, price: f64) -> bool {
         if !price.is_finite() {

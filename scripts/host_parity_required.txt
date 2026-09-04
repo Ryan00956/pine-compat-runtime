@@ -517,6 +517,7 @@ runtime_strategy_trade_counts.json
 runtime_strategy_trade_outcome_counts.json
 runtime_strategy_use_bar_magnifier_fallback.json
 runtime_strategy_use_bar_magnifier_false.json
+runtime_strategy_use_bar_magnifier_gap.json
 runtime_strategy_variable_interactions.json
 runtime_strings.json
 runtime_supertrend.json

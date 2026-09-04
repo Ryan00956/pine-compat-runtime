@@ -139,6 +139,122 @@ fn realtime_runtime_rejects_magnifier_group_for_forming_bar() {
     );
 }
 
+#[test]
+fn streaming_historical_requires_complete_range_preflight_before_bar_zero() {
+    let program = indicator_program();
+    let input = magnifier_input_from_groups(vec![group(1, vec![timed_bar(2, 2.0)])])
+        .expect("valid sparse future group");
+    let mut runtime = HistoricalRuntime::new(&program).with_magnifier_input(input.clone());
+    let error = runtime
+        .append_bar(timed_bar(1, 1.0))
+        .expect_err("streaming must declare its complete range");
+    assert!(
+        error
+            .message
+            .contains("E_MAGNIFIER_CHART_BAR_COUNT_REQUIRED"),
+        "{}",
+        error.message
+    );
+    assert!(
+        runtime.result().plots.is_empty(),
+        "bar zero must not execute"
+    );
+
+    let mut prepared = HistoricalRuntime::new(&program).with_magnifier_input(input);
+    prepared
+        .prepare_magnifier_chart_bar_count(2)
+        .expect("preflight");
+    prepared.append_bar(timed_bar(1, 1.0)).expect("bar zero");
+    prepared.append_bar(timed_bar(2, 2.0)).expect("bar one");
+    assert_eq!(prepared.result().plots[0].values.len(), 2);
+}
+
+#[test]
+fn streaming_preflight_rejects_out_of_range_group_before_bar_zero() {
+    let program = indicator_program();
+    let input = magnifier_input_from_groups(vec![group(2, vec![timed_bar(3, 3.0)])])
+        .expect("structurally valid");
+    let mut runtime = HistoricalRuntime::new(&program).with_magnifier_input(input);
+    let error = runtime
+        .prepare_magnifier_chart_bar_count(2)
+        .expect_err("out of range");
+    assert!(
+        error.message.contains("E_MAGNIFIER_CHART_BAR_RANGE"),
+        "{}",
+        error.message
+    );
+    assert!(
+        runtime.result().plots.is_empty(),
+        "bar zero must not execute"
+    );
+}
+
+#[test]
+fn realtime_historical_stream_requires_complete_range_preflight() {
+    let program = indicator_program();
+    let input = magnifier_input_from_groups(vec![group(1, vec![timed_bar(2, 2.0)])])
+        .expect("valid sparse future group");
+    let mut runtime = RealtimeRuntime::new(&program).with_magnifier_input(input);
+    let error = runtime
+        .update(BarUpdate::historical(timed_bar(1, 1.0)))
+        .expect_err("preflight required");
+    assert!(
+        error
+            .message
+            .contains("E_MAGNIFIER_CHART_BAR_COUNT_REQUIRED"),
+        "{}",
+        error.message
+    );
+    runtime
+        .prepare_magnifier_chart_bar_count(2)
+        .expect("preflight");
+    runtime
+        .update(BarUpdate::historical(timed_bar(1, 1.0)))
+        .expect("bar zero");
+    runtime
+        .update(BarUpdate::historical(timed_bar(2, 2.0)))
+        .expect("bar one");
+    assert_eq!(runtime.confirmed_result().plots[0].values.len(), 2);
+}
+
+#[test]
+fn strategy_forming_early_return_still_rejects_magnifier_group() {
+    let program = enabled_strategy(
+        r#"
+strategy("forming rejection", use_bar_magnifier=true)
+plot(close)
+"#,
+    );
+    assert!(!program.strategy_settings.calc_on_every_tick);
+    let input =
+        magnifier_input_from_groups(vec![group(0, vec![timed_bar(1, 9.0)])]).expect("valid");
+    let error = RealtimeRuntime::new(&program)
+        .with_magnifier_input(input)
+        .update(BarUpdate::forming(timed_bar(1, 1.0)))
+        .expect_err("forming slot");
+    assert!(
+        error.message.contains("E_MAGNIFIER_FORMING_BAR"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn realtime_confirmed_bar_never_consumes_magnifier_group() {
+    let program = indicator_program();
+    let input =
+        magnifier_input_from_groups(vec![group(0, vec![timed_bar(1, 9.0)])]).expect("valid");
+    let error = RealtimeRuntime::new(&program)
+        .with_magnifier_input(input)
+        .update(BarUpdate::confirmed(timed_bar(1, 1.0)))
+        .expect_err("live confirmed slot");
+    assert!(
+        error.message.contains("E_MAGNIFIER_FORMING_BAR"),
+        "{}",
+        error.message
+    );
+}
+
 fn enabled_strategy(source: &str) -> pine_ir::HirProgram {
     let file = SourceFile::new("magnifier-enabled.pine", source);
     let analysis = analyze_source(&file);
@@ -442,6 +558,77 @@ plot(close)
     assert_eq!(fill.bar_index, 1);
     assert!((fill.price - 11.0).abs() < 1e-10, "{fill:?}");
     assert_eq!(fill.time, 2_000);
+}
+
+#[test]
+fn magnifier_gap_stop_limit_does_not_fill_above_its_limit() {
+    let program = enabled_strategy(
+        r#"
+strategy("gap stop-limit", initial_capital=100000, use_bar_magnifier=true)
+if bar_index == 0
+    strategy.entry("SL", strategy.long, qty=1, stop=10.5, limit=10.2)
+plot(strategy.position_size)
+"#,
+    );
+    let input = magnifier_input_from_groups(vec![
+        group(0, vec![timed_bar(1_000, 10.0)]),
+        group(
+            1,
+            vec![
+                ohlc(2_000, 10.0, 10.2, 9.9, 10.1),
+                ohlc(2_300, 11.0, 11.2, 10.8, 11.1),
+            ],
+        ),
+    ])
+    .expect("valid");
+    let strategy = HistoricalRuntime::new(&program)
+        .with_magnifier_input(input)
+        .run(&[timed_bar(1_000, 10.0), ohlc(2_000, 10.0, 12.0, 8.0, 11.0)])
+        .expect("run")
+        .strategy
+        .expect("strategy");
+    assert!(strategy.orders.is_empty(), "{:?}", strategy.orders);
+    assert!(strategy.position.is_empty(), "{:?}", strategy.position);
+}
+
+#[test]
+fn magnifier_gap_activates_trailing_exit_before_later_path_events() {
+    let program = enabled_strategy(
+        r#"
+strategy("gap trailing activation", initial_capital=100000, use_bar_magnifier=true)
+if bar_index == 0
+    strategy.entry("EN", strategy.long, qty=1)
+    strategy.exit("TR", "EN", trail_price=10.5, trail_offset=50)
+plot(strategy.position_size)
+"#,
+    );
+    let input = magnifier_input_from_groups(vec![
+        group(0, vec![timed_bar(1_000, 10.0)]),
+        group(
+            1,
+            vec![
+                ohlc(2_000, 10.0, 10.2, 9.9, 10.1),
+                ohlc(2_300, 11.0, 11.2, 10.9, 11.1),
+            ],
+        ),
+    ])
+    .expect("valid");
+    let strategy = HistoricalRuntime::new(&program)
+        .with_magnifier_input(input)
+        .run(&[timed_bar(1_000, 10.0), ohlc(2_000, 10.0, 12.0, 8.0, 11.0)])
+        .expect("run")
+        .strategy
+        .expect("strategy");
+    let ids: Vec<_> = strategy
+        .orders
+        .iter()
+        .map(|order| order.id.as_str())
+        .collect();
+    assert_eq!(ids, vec!["EN"], "{ids:?}");
+    assert_eq!(
+        strategy.position.last().map(|position| position.size),
+        Some(1.0)
+    );
 }
 
 #[test]

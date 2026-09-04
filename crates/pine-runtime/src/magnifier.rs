@@ -119,6 +119,7 @@ pub enum MagnifierInputError {
         chart_bar_index: usize,
         chart_bar_count: usize,
     },
+    ChartBarCountRequired,
     UnsupportedSchemaVersion {
         version: u32,
     },
@@ -169,6 +170,10 @@ impl fmt::Display for MagnifierInputError {
                 formatter,
                 "magnifier input chart bar {chart_bar_index} is outside the supplied chart range 0..{chart_bar_count}"
             ),
+            Self::ChartBarCountRequired => write!(
+                formatter,
+                "magnifier chart-bar count must be prepared before streaming historical execution"
+            ),
             Self::UnsupportedSchemaVersion { version } => write!(
                 formatter,
                 "magnifier input schemaVersion {version} is unsupported; expected {MAGNIFIER_SCHEMA_VERSION}"
@@ -191,6 +196,7 @@ impl MagnifierInputError {
             Self::TooManyIntrabars { .. } => "E_MAGNIFIER_MAX_INTRABARS",
             Self::InvalidBar { .. } => "E_MAGNIFIER_INVALID_BAR",
             Self::ChartBarOutOfRange { .. } => "E_MAGNIFIER_CHART_BAR_RANGE",
+            Self::ChartBarCountRequired => "E_MAGNIFIER_CHART_BAR_COUNT_REQUIRED",
             Self::UnsupportedSchemaVersion { .. } => "E_MAGNIFIER_SCHEMA_VERSION",
             Self::FormingBar { .. } => "E_MAGNIFIER_FORMING_BAR",
         };

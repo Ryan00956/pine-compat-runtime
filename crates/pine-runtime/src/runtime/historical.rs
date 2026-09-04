@@ -76,6 +76,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) program: RuntimeProgram<'a>,
     pub(crate) input_overrides: InputOverrides,
     pub(crate) magnifier_input: MagnifierInput,
+    pub(crate) magnifier_chart_bar_count: Option<usize>,
     pub(crate) bars: usize,
     pub(crate) historical_end: Option<usize>,
     pub(crate) current_bar_update_kind: BarUpdateKind,
@@ -323,6 +324,7 @@ impl<'a> HistoricalRuntime<'a> {
             program,
             input_overrides: InputOverrides::new(),
             magnifier_input: MagnifierInput::new(),
+            magnifier_chart_bar_count: None,
             bars: 0,
             historical_end: None,
             current_bar_update_kind: BarUpdateKind::Historical,
@@ -444,12 +446,32 @@ impl<'a> HistoricalRuntime<'a> {
     #[must_use]
     pub fn with_magnifier_input(mut self, input: MagnifierInput) -> Self {
         self.magnifier_input = input;
+        self.magnifier_chart_bar_count = None;
         self
     }
 
     #[must_use]
     pub fn magnifier_input(&self) -> &MagnifierInput {
         &self.magnifier_input
+    }
+
+    /// Validate the complete chart range before using the one-bar streaming API.
+    ///
+    /// Batch APIs derive this value from their complete input slice. Streaming
+    /// callers must provide it before bar zero so sparse future groups can be
+    /// distinguished from out-of-range input without inspecting partial chunks.
+    pub fn prepare_magnifier_chart_bar_count(
+        &mut self,
+        chart_bar_count: usize,
+    ) -> Result<(), RuntimeError> {
+        if self.bars != 0 {
+            return Err(MagnifierInputError::ChartBarCountRequired.runtime_error());
+        }
+        self.magnifier_input
+            .validate_chart_bar_range(chart_bar_count)
+            .map_err(|error| error.runtime_error())?;
+        self.magnifier_chart_bar_count = Some(chart_bar_count);
+        Ok(())
     }
 
     pub(crate) fn push_magnifier_diagnostic(&mut self, diagnostic: RuntimeDiagnostic) {
@@ -536,10 +558,8 @@ impl<'a> HistoricalRuntime<'a> {
         bars: &[Bar],
         execution_times: Option<&[i64]>,
     ) -> Result<(), RuntimeError> {
-        if self.bars == 0 {
-            self.magnifier_input
-                .validate_chart_bar_range(bars.len())
-                .map_err(|error| error.runtime_error())?;
+        if self.bars == 0 && self.magnifier_chart_bar_count.is_none() {
+            self.prepare_magnifier_chart_bar_count(bars.len())?;
         }
         let previous_historical_end = self.historical_end;
         self.historical_end = Some(self.bars + bars.len());
@@ -598,6 +618,13 @@ impl<'a> HistoricalRuntime<'a> {
         execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
         let bar_index = self.bars;
+        if update_kind == BarUpdateKind::Historical
+            && bar_index == 0
+            && !self.magnifier_input.is_empty()
+            && self.magnifier_chart_bar_count.is_none()
+        {
+            return Err(MagnifierInputError::ChartBarCountRequired.runtime_error());
+        }
         if update_kind == BarUpdateKind::Forming
             && self.magnifier_input.bars_for_chart_bar(bar_index).is_some()
         {

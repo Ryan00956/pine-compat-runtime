@@ -5488,16 +5488,17 @@ fn runs_strategy_use_bar_magnifier_false_fixture_from_csv_to_public_strategy_jso
 
 #[test]
 fn run_csv_with_request_bars_uses_magnifier_lower_bars_for_strategy_fills() {
-    let source = r#"//@version=6
-strategy("Bar magnifier gap", overlay=false, use_bar_magnifier=true, initial_capital=100000, pyramiding=2)
-if bar_index == 0
-    strategy.entry("STP", strategy.long, qty=1, stop=10.5)
-plot(strategy.position_size)
-"#;
-    let bars = "time,open,high,low,close,volume\n1000,10,10,10,10,1\n2000,10,12,8,11,1\n";
-    let host_input = r#"{"$magnifier":{"schemaVersion":1,"chartBars":[{"chartBarIndex":0,"bars":[{"time":1000,"open":10,"high":10,"low":10,"close":10,"volume":1}]},{"chartBarIndex":1,"bars":[{"time":2000,"open":10,"high":10.2,"low":9.9,"close":10.1,"volume":1},{"time":2300,"open":11,"high":11.2,"low":10.8,"close":11.1,"volume":1}]}]}}"#;
-    let output = run_script_csv_with_request_bars(source, bars, host_input)
+    let source =
+        include_str!("../../../../tests/fixtures/runtime/strategy_use_bar_magnifier_gap.pine");
+    let bars =
+        include_str!("../../../../tests/fixtures/runtime/strategy_use_bar_magnifier_gap_bars.csv");
+    let host_input = format!(
+        r#"{{"$magnifier":{}}}"#,
+        include_str!("../../../../tests/fixtures/runtime/strategy_use_bar_magnifier_gap.json")
+    );
+    let output = run_script_csv_with_request_bars(source, bars, &host_input)
         .expect("strategy magnifier envelope should run");
+    assert_snapshot("runtime_strategy_use_bar_magnifier_gap.json", &output);
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
     assert_eq!(parsed["strategy"]["orders"][0]["id"], "STP");
     assert_eq!(parsed["strategy"]["orders"][0]["barIndex"], 1);

@@ -329,6 +329,9 @@ fn run_non_batch_with_options(
             if let Some(magnifier) = magnifier.clone() {
                 runtime = runtime.with_magnifier_input(magnifier);
             }
+            runtime
+                .prepare_magnifier_chart_bar_count(bars.len())
+                .map_err(|err| format!("runtime failed: {}", err.message))?;
             for (index, bar) in bars.iter().copied().enumerate() {
                 match execution_times.as_ref().map(|values| values[index]) {
                     Some(execution_time) => runtime
@@ -351,6 +354,9 @@ fn run_non_batch_with_options(
             if let Some(magnifier) = magnifier {
                 runtime = runtime.with_magnifier_input(magnifier);
             }
+            runtime
+                .prepare_magnifier_chart_bar_count(history.len())
+                .map_err(|err| format!("runtime failed: {}", err.message))?;
             for (index, bar) in history.iter().copied().enumerate() {
                 match execution_times.as_ref().map(|values| values[index]) {
                     Some(execution_time) => runtime

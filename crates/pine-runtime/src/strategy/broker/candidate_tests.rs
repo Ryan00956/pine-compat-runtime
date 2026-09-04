@@ -8,7 +8,7 @@ use super::pending_exits::{
 };
 use super::types::{InternalOrderKey, StrategyCommandOrigin};
 use super::*;
-use crate::runtime::strategy_path::HistoricalPath;
+use crate::runtime::strategy_path::{HistoricalPath, HistoricalPathKind, MagnifierHostGap};
 use pine_ir::StrategyMarginSetting;
 
 fn falling_leg() -> crate::runtime::strategy_path::PathLeg {
@@ -281,6 +281,103 @@ fn trailing_activation_is_not_a_fill() {
     assert!(!candidates.iter().any(|candidate| {
         candidate.public_id == "TR" && candidate.event_kind == BrokerCandidateEvent::ExitFill
     }));
+}
+
+#[test]
+fn gap_open_activates_trailing_without_filling_it() {
+    let mut broker = BrokerState::new(100_000.0);
+    assert!(broker.entry_long("L".to_owned(), 0, 10, 10.0, 1.0));
+    broker.order_book.replace_or_append_exit(PendingExit {
+        key: InternalOrderKey(0),
+        id: "TR".to_owned(),
+        from_entry: "L".to_owned(),
+        target_trade_key: None,
+        trigger: PendingExitTrigger::Trailing(PendingTrailingExit {
+            spec: PendingTrailingSpec {
+                activation: PendingTrailingActivation::Price(10.5),
+                offset_price_distance: 0.5,
+            },
+            state: PendingTrailingState::Inactive,
+        }),
+        quantity: PendingExitQuantity::Full,
+        reserved_quantity: 1.0,
+        multiple_reservation: false,
+        last_update_bar_index: 0,
+        metadata: StrategyExitMetadata::default(),
+    });
+    let gap = MagnifierHostGap {
+        previous_close: 10.0,
+        next_open: 11.0,
+    };
+    let candidates = broker.collect_gap_candidates(1, gap, broker.event_generation());
+    assert_eq!(candidates.len(), 1);
+    assert_eq!(
+        candidates[0].event_kind,
+        BrokerCandidateEvent::TrailingActivation
+    );
+
+    let tick = super::EntryPathTick {
+        bar_index: 1,
+        time: 10,
+        leg: crate::runtime::strategy_path::PathLeg::point(gap.next_open),
+        path_kind: HistoricalPathKind::OpenHighLowClose,
+        mark: gap.next_open,
+        long_blocked_at_path_start: false,
+        short_blocked_at_path_start: false,
+    };
+    let outcome = broker.take_next_gap_event(tick, gap).expect("activation");
+    assert!(!outcome.is_fill());
+    assert!(broker.take_next_gap_event(tick, gap).is_none());
+}
+
+#[test]
+fn stop_limit_gap_does_not_reuse_pre_activation_prices() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.place_pending_stop_limit_long_entry("SL".to_owned(), 1.0, 10.5, 10.2, 0);
+    let gap = MagnifierHostGap {
+        previous_close: 10.0,
+        next_open: 11.0,
+    };
+    let tick = super::EntryPathTick {
+        bar_index: 1,
+        time: 10,
+        leg: crate::runtime::strategy_path::PathLeg::point(gap.next_open),
+        path_kind: HistoricalPathKind::OpenHighLowClose,
+        mark: gap.next_open,
+        long_blocked_at_path_start: false,
+        short_blocked_at_path_start: false,
+    };
+
+    let outcome = broker.take_next_gap_event(tick, gap).expect("activation");
+    assert!(!outcome.is_fill());
+    assert!(broker.take_next_gap_event(tick, gap).is_none());
+    assert_eq!(broker.position_size(), 0.0);
+}
+
+#[test]
+fn stop_limit_gap_fills_at_open_only_when_limit_is_marketable() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.place_pending_stop_limit_long_entry("SL".to_owned(), 1.0, 10.5, 11.5, 0);
+    let gap = MagnifierHostGap {
+        previous_close: 10.0,
+        next_open: 11.0,
+    };
+    let outcome = broker
+        .take_next_gap_event(
+            super::EntryPathTick {
+                bar_index: 1,
+                time: 10,
+                leg: crate::runtime::strategy_path::PathLeg::point(gap.next_open),
+                path_kind: HistoricalPathKind::OpenHighLowClose,
+                mark: gap.next_open,
+                long_blocked_at_path_start: false,
+                short_blocked_at_path_start: false,
+            },
+            gap,
+        )
+        .expect("fill");
+    assert!(outcome.is_fill());
+    assert_eq!(broker.position_size(), 1.0);
 }
 
 #[test]

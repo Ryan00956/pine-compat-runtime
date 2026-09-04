@@ -444,6 +444,9 @@ plot(close)
     batch_runtime.append_bars(&bars).expect("batch");
     let batch = batch_runtime.result();
     let mut incremental = HistoricalRuntime::new(&program).with_magnifier_input(input);
+    incremental
+        .prepare_magnifier_chart_bar_count(bars.len())
+        .expect("magnifier preflight");
     for bar in &bars {
         incremental.append_bar(*bar).expect("append");
     }

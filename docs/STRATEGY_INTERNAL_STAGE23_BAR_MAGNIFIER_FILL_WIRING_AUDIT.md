@@ -1,6 +1,7 @@
 # Strategy Internal Stage 23 Bar Magnifier Fill Wiring Audit
 
-Status: closed on 2026-09-04 after `scripts/verify.sh`. Named const bool
+Status: closed on 2026-09-04 after correction verification and
+`scripts/verify.sh`. Named const bool
 `use_bar_magnifier` is accepted for v5/v6 historical fill wiring. Host-owned
 MagnifierInputV1 lower-timeframe groups walk the existing Stage 18g path and
 unified broker selector. Public RuntimeResult schemaVersion remains 8.
@@ -33,7 +34,10 @@ Behavior lock: `docs/STRATEGY_INTERNAL_STAGE23_BAR_MAGNIFIER_BEHAVIOR_AUDIT.md`.
   internal cursor state only.
 - The first tradable open of a covered chart bar is the first lower-bar open.
   A gap between one lower bar's close and the next lower bar's open is a
-  point event at the next open, not a tradable close-to-open segment.
+  point event at the next open, not a tradable close-to-open segment. Entry
+  and exit price orders use direction-aware open marketability. Stop-limit
+  activation cannot reuse pre-activation gap prices, and inactive trailing
+  exits emit activation before later ratchet or stop-fill events.
 - `calc_on_order_fills` extra passes resume from the unconsumed
   `{host_bar_index, path_phase, leg_index, mark}` cursor and do not replay
   consumed marks. Exits created on that extra pass may fill later unconsumed
@@ -49,8 +53,10 @@ Behavior lock: `docs/STRATEGY_INTERNAL_STAGE23_BAR_MAGNIFIER_BEHAVIOR_AUDIT.md`.
   `E_MAGNIFIER_DUPLICATE_CHART_BAR`, `E_MAGNIFIER_DUPLICATE_TICK`,
   `E_MAGNIFIER_UNSORTED_TICKS`, `E_MAGNIFIER_MAX_INTRABARS`,
   `E_MAGNIFIER_INVALID_BAR`, `E_MAGNIFIER_CHART_BAR_RANGE`,
-  `E_MAGNIFIER_SCHEMA_VERSION`, `E_MAGNIFIER_MALFORMED`,
-  `E_MAGNIFIER_FORMING_BAR`.
+  `E_MAGNIFIER_CHART_BAR_COUNT_REQUIRED`, `E_MAGNIFIER_SCHEMA_VERSION`,
+  `E_MAGNIFIER_MALFORMED`, `E_MAGNIFIER_FORMING_BAR`. Batch calls derive the
+  complete range; one-bar incremental and realtime-history callers preflight
+  the complete count before bar zero.
 - Setting false or omitted leaves supplied magnifier input inert. Indicator
   scripts ignore the input for strategy fills.
 - Forming/live realtime bars never consume historical magnifier groups.
@@ -62,21 +68,25 @@ Behavior lock: `docs/STRATEGY_INTERNAL_STAGE23_BAR_MAGNIFIER_BEHAVIOR_AUDIT.md`.
 
 - `runtime_strategy_use_bar_magnifier_fallback.json`
 - `runtime_strategy_use_bar_magnifier_false.json`
+- `runtime_strategy_use_bar_magnifier_gap.json`
 - `matrix.json` (named const bool `use_bar_magnifier` accepted; fallback and
   false fixtures registered)
 
-The fallback golden keeps standard-OHLC fills and records one
+The gap golden uses one committed Pine source, chart CSV, MagnifierInputV1
+manifest, and expected RuntimeResult across CLI, Python, and WASM. It proves a
+lower-bar gap fill at the next open (`11.0`) against the standard-OHLC fill at
+the stop (`10.5`), with public `barIndex` 1 and public `time` 2000. The
+fallback golden keeps standard-OHLC fills and records one
 `W_MAGNIFIER_FALLBACK` diagnostic per chart bar. The false golden matches
-those fills with empty diagnostics. CLI, Python, and WASM also prove a
-lower-bar gap fill at the next open (`11.0`) against the standard-OHLC fill
-at the stop (`10.5`), with public `barIndex` 1 and public `time` 2000.
+those fills with empty diagnostics.
 
 ## Incremental / Realtime
 
 `magnifier_batch_matches_incremental_append` and
 `magnifier_historical_realtime_replay_matches_batch` compare the same
-entry/exit fixture. Forming updates do not consume historical magnifier
-input (`E_MAGNIFIER_FORMING_BAR` for a forming-slot group;
+entry/exit fixture. Streaming modes validate the complete chart range before
+bar zero. Forming and live-confirmed updates do not consume historical
+magnifier input (`E_MAGNIFIER_FORMING_BAR` for a live-slot group;
 `realtime_forming_does_not_consume_historical_magnifier_input`). Python
 RealtimeSession keeps ABI version 1 and accepts optional seed-only
 `magnifier_bars`.
@@ -100,9 +110,13 @@ RealtimeSession keeps ABI version 1 and accepts optional seed-only
 - `tests/fixtures/sema/supported_strategy_use_bar_magnifier_v6.pine`
 - `tests/fixtures/runtime/strategy_use_bar_magnifier_fallback.pine`
 - `tests/fixtures/runtime/strategy_use_bar_magnifier_false.pine`
+- `tests/fixtures/runtime/strategy_use_bar_magnifier_gap.pine`
+- `tests/fixtures/runtime/strategy_use_bar_magnifier_gap_bars.csv`
+- `tests/fixtures/runtime/strategy_use_bar_magnifier_gap.json`
 - `tests/fixtures/conformance.tsv`
 - `tests/snapshots/runtime_strategy_use_bar_magnifier_fallback.json`
 - `tests/snapshots/runtime_strategy_use_bar_magnifier_false.json`
+- `tests/snapshots/runtime_strategy_use_bar_magnifier_gap.json`
 - `tests/snapshots/matrix.json`
 - `docs/EXECUTION_SEMANTICS.md`
 - `docs/LANGUAGE_SCOPE.md`
@@ -121,9 +135,10 @@ Focused 23.7/23.8 evidence, saved under `{SCRATCH}` when present:
 
 - `cargo test -p pine-sema use_bar_magnifier`: 11 passed
 - `cargo test -p pine-sema accepts_strategy_process_orders_on_close_with_bar_magnifier`: 1 passed
-- `cargo test -p pine-runtime magnifier -- --test-threads=1`: 28 passed, then
-  21 `magnifier_*` HistoricalRuntime tests after first-open / resume /
-  stop-limit / trailing / OCA / risk / margin fixtures
+- `cargo test -p pine-runtime magnifier -- --test-threads=1`: 40 library
+  tests plus 1 incremental, 2 owned-realtime, and 2 realtime integration tests
+- `cargo test -p pine-runtime strategy::broker::candidate_tests`: 15 passed,
+  including ordered gap activation and marketability regressions
 - `cargo test -p pine-runtime --lib calc_on_order_fills -- --test-threads=1`:
   8 passed after same-chart-bar post-fill exits became eligible under
   `calc_on_order_fills`
@@ -138,16 +153,17 @@ Focused 23.7/23.8 evidence, saved under `{SCRATCH}` when present:
 - `cargo fmt --check`: clean
 - `cargo clippy --workspace --all-targets -- -D warnings`: clean
 - `python3 scripts/check_structure.py`: 311 production files
-- `python3 scripts/check_host_parity.py`: 846 registered CLI runtime
-  snapshots; 550 required runtime goldens
+- `python3 scripts/check_host_parity.py`: 847 registered CLI runtime
+  snapshots; 551 required runtime goldens
 - `git diff --check`: clean
 
 Close-out:
 
-`scripts/verify.sh` EXIT:0. Workspace tests include pine-runtime lib 1693,
+`scripts/verify.sh` EXIT:0. Workspace tests include pine-runtime lib 1710,
 pine-sema 1229+2227, pine-cli 223, pine-wasm 657. Python 632 passed. Host
-parity 846 registered CLI runtime snapshots and 550 required runtime
-goldens. WASM Node smoke passed. Log: `{SCRATCH}/stage23-verify.sh.log`.
+parity 847 registered CLI runtime snapshots and 551 required runtime
+goldens. WASM Node smoke passed. The correction run produced no release
+artifact.
 
 ## Remaining Exclusions
 

@@ -1,6 +1,6 @@
 # Strategy Internal Stage 23 Bar Magnifier Fill Wiring Execution Plan
 
-Status: planned; not started.
+Status: closed on 2026-09-04; correction verification completed before handoff.
 
 Prepared: 2026-09-04.
 
@@ -30,16 +30,17 @@ for a chart bar:
 7. invalid host input fails closed with stable diagnostics; and
 8. the public strategy result schema remains unchanged.
 
-The stage is complete only when the syntax, runtime behavior, host adapters,
-fixtures, snapshots, parity evidence, and full repository gate close together.
-Until then, "use_bar_magnifier" remains semantically rejected.
+The stage was considered complete only after syntax, runtime behavior, host
+adapters, fixtures, snapshots, parity evidence, and the full repository gate
+closed together. The implementation kept `use_bar_magnifier=true`
+semantically rejected until its final enablement slice.
 
 ## 2. Why this is the next development target
 
-Stage 18g closed the chart-bar OHLC path model. The repository also already has
-a validated internal Bar Magnifier host contract in
-"crates/pine-runtime/src/magnifier.rs". The missing work is the connection
-between those two completed pieces.
+At the planning baseline, Stage 18g had closed the chart-bar OHLC path model and
+the repository already had a validated internal Bar Magnifier host contract in
+"crates/pine-runtime/src/magnifier.rs". Stage 23 supplied the then-missing
+connection between those two pieces.
 
 That connection is the smallest dependency-complete strategy slice because it:
 
@@ -1258,41 +1259,41 @@ request and a separate release-readiness review.
 
 Stage 23 is done only when every item below is true:
 
-- [ ] Section 9 behavior questions are locked in writing.
-- [ ] "use_bar_magnifier" is a typed v5/v6 named const-bool setting.
-- [ ] positional and unsupported-version behavior is explicit.
-- [ ] true remains rejected until the final enablement slice.
-- [ ] one canonical MagnifierInputV1 schema is shared by all hosts.
-- [ ] complete input validation occurs before execution.
-- [ ] HistoricalRuntime owns immutable magnifier input.
-- [ ] RealtimeRuntime applies it only to historical execution.
-- [ ] the scheduler cursor includes lower-bar identity.
-- [ ] each lower bar uses the existing Stage 18g HistoricalPath.
-- [ ] lower-bar gaps are point events under a locked rule.
-- [ ] all broker families use the existing unified candidate selector.
-- [ ] one fill occurs per arbitration cycle.
-- [ ] "calc_on_order_fills" resumes from the exact remaining cursor.
-- [ ] script-visible chart context remains chart-scoped.
-- [ ] public event timestamp semantics are documented and tested.
-- [ ] missing and empty coverage fall back deterministically.
-- [ ] batch, incremental, and historical realtime results agree.
-- [ ] live/forming realtime behavior is unchanged.
-- [ ] CLI accepts the versioned manifest.
-- [ ] Python accepts the canonical structure.
-- [ ] Python RealtimeSession ABI handling is explicit.
-- [ ] WASM extends the existing request-host envelope without combinatorial API
+- [x] Section 9 behavior questions are locked in writing.
+- [x] "use_bar_magnifier" is a typed v5/v6 named const-bool setting.
+- [x] positional and unsupported-version behavior is explicit.
+- [x] true remained rejected until the final enablement slice.
+- [x] one canonical MagnifierInputV1 schema is shared by all hosts.
+- [x] complete input validation occurs before execution.
+- [x] HistoricalRuntime owns immutable magnifier input.
+- [x] RealtimeRuntime applies it only to historical execution.
+- [x] the scheduler cursor includes lower-bar identity.
+- [x] each lower bar uses the existing Stage 18g HistoricalPath.
+- [x] lower-bar gaps are point events under a locked rule.
+- [x] all broker families use the existing unified candidate selector.
+- [x] one fill occurs per arbitration cycle.
+- [x] "calc_on_order_fills" resumes from the exact remaining cursor.
+- [x] script-visible chart context remains chart-scoped.
+- [x] public event timestamp semantics are documented and tested.
+- [x] missing and empty coverage fall back deterministically.
+- [x] batch, incremental, and historical realtime results agree.
+- [x] live/forming realtime behavior is unchanged.
+- [x] CLI accepts the versioned manifest.
+- [x] Python accepts the canonical structure.
+- [x] Python RealtimeSession ABI handling is explicit.
+- [x] WASM extends the existing request-host envelope without combinatorial API
       growth.
-- [ ] old host calls remain compatible.
-- [ ] valid, fallback, invalid, and collision fixtures exist.
-- [ ] host parity includes the required Stage 23 fixtures.
-- [ ] matrix claims are evidence-backed.
-- [ ] public RuntimeResult and StrategyResult schemas are unchanged, or an
+- [x] old host calls remain compatible.
+- [x] valid, fallback, invalid, and collision fixtures exist.
+- [x] host parity includes the required Stage 23 fixtures.
+- [x] matrix claims are evidence-backed.
+- [x] public RuntimeResult and StrategyResult schemas are unchanged, or an
       explicitly approved schema plan supersedes this invariant.
-- [ ] all focused gates pass.
-- [ ] "scripts/verify.sh" passes.
-- [ ] the final diff contains no release or unrelated files.
-- [ ] a closed Stage 23 audit records the actual evidence.
-- [ ] the roadmap names mixed-family OCA as the next target.
+- [x] all focused gates pass.
+- [x] "scripts/verify.sh" passes.
+- [x] the final diff contains no release or unrelated files.
+- [x] a closed Stage 23 audit records the actual evidence.
+- [x] the roadmap names mixed-family OCA as the next target.
 
 ## 25. Handoff after Stage 23
 
