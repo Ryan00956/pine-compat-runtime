@@ -14,6 +14,7 @@ mod builtins_time;
 mod execution_clock;
 mod imports;
 mod legacy_indicators;
+mod magnifier;
 mod matrices;
 mod methods;
 mod outputs;

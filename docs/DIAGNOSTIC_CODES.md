@@ -241,6 +241,17 @@ change the current analysis `schemaVersion: 5` or runtime `schemaVersion: 8`.
   strictly increasing in time.
 - `E_MAGNIFIER_MAX_INTRABARS`: host magnifier input exceeds 200000
   lower-timeframe bars.
+- `E_MAGNIFIER_INVALID_BAR`: a magnifier lower-timeframe bar is not a finite
+  OHLC bar.
+- `E_MAGNIFIER_CHART_BAR_RANGE`: a magnifier group index is outside the
+  supplied chart-bar range.
+- `E_MAGNIFIER_CHART_BAR_COUNT_REQUIRED`: one-bar incremental or
+  realtime-history execution received non-empty magnifier input without a
+  complete chart-bar-count preflight before bar zero.
+- `E_MAGNIFIER_SCHEMA_VERSION`: magnifier host input schemaVersion is not 1.
+- `E_MAGNIFIER_MALFORMED`: magnifier host JSON cannot be decoded.
+- `E_MAGNIFIER_FORMING_BAR`: magnifier input targets a live/forming or
+  live-confirmed realtime bar.
 - `W_MAGNIFIER_FALLBACK`: magnifier data is absent for a chart bar, so the
   runtime uses that bar's standard OHLC path.
 - `W_MAGNIFIER_GAP`: magnifier data has a gap at a chart bar, so the runtime

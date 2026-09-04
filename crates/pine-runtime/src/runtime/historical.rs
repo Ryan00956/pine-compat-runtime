@@ -75,6 +75,8 @@ struct StrategyEvalCheckpoint {
 pub struct HistoricalRuntime<'a> {
     pub(crate) program: RuntimeProgram<'a>,
     pub(crate) input_overrides: InputOverrides,
+    pub(crate) magnifier_input: MagnifierInput,
+    pub(crate) magnifier_chart_bar_count: Option<usize>,
     pub(crate) bars: usize,
     pub(crate) historical_end: Option<usize>,
     pub(crate) current_bar_update_kind: BarUpdateKind,
@@ -158,8 +160,11 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) strategy_broker: BrokerState,
     pub(crate) strategy_scheduler: super::strategy_scheduler::StrategySchedulerState,
     strategy_eval_checkpoint: Option<StrategyEvalCheckpoint>,
+    magnifier_diagnostics: Vec<RuntimeDiagnostic>,
     #[cfg(test)]
     pub(crate) strategy_phase_trace: Vec<crate::runtime::strategy_scheduler::StrategyBarPhase>,
+    #[cfg(test)]
+    pub(crate) strategy_path_trace: Vec<crate::runtime::strategy_scheduler::StrategyPathTraceEntry>,
     pub(crate) next_label_id: u32,
     pub(crate) next_line_id: u32,
     pub(crate) next_line_fill_id: u32,
@@ -318,6 +323,8 @@ impl<'a> HistoricalRuntime<'a> {
         Self {
             program,
             input_overrides: InputOverrides::new(),
+            magnifier_input: MagnifierInput::new(),
+            magnifier_chart_bar_count: None,
             bars: 0,
             historical_end: None,
             current_bar_update_kind: BarUpdateKind::Historical,
@@ -399,8 +406,11 @@ impl<'a> HistoricalRuntime<'a> {
             strategy_broker,
             strategy_scheduler: super::strategy_scheduler::StrategySchedulerState::new(),
             strategy_eval_checkpoint: None,
+            magnifier_diagnostics: Vec::new(),
             #[cfg(test)]
             strategy_phase_trace: Vec::new(),
+            #[cfg(test)]
+            strategy_path_trace: Vec::new(),
             next_label_id: 1,
             next_line_id: 1,
             next_line_fill_id: 1,
@@ -431,6 +441,47 @@ impl<'a> HistoricalRuntime<'a> {
     #[must_use]
     pub fn request_environment(&self) -> &RequestEnvironment {
         &self.request_environment
+    }
+
+    #[must_use]
+    pub fn with_magnifier_input(mut self, input: MagnifierInput) -> Self {
+        self.magnifier_input = input;
+        self.magnifier_chart_bar_count = None;
+        self
+    }
+
+    #[must_use]
+    pub fn magnifier_input(&self) -> &MagnifierInput {
+        &self.magnifier_input
+    }
+
+    /// Validate the complete chart range before using the one-bar streaming API.
+    ///
+    /// Batch APIs derive this value from their complete input slice. Streaming
+    /// callers must provide it before bar zero so sparse future groups can be
+    /// distinguished from out-of-range input without inspecting partial chunks.
+    pub fn prepare_magnifier_chart_bar_count(
+        &mut self,
+        chart_bar_count: usize,
+    ) -> Result<(), RuntimeError> {
+        if self.bars != 0 {
+            return Err(MagnifierInputError::ChartBarCountRequired.runtime_error());
+        }
+        self.magnifier_input
+            .validate_chart_bar_range(chart_bar_count)
+            .map_err(|error| error.runtime_error())?;
+        self.magnifier_chart_bar_count = Some(chart_bar_count);
+        Ok(())
+    }
+
+    pub(crate) fn push_magnifier_diagnostic(&mut self, diagnostic: RuntimeDiagnostic) {
+        if !self
+            .magnifier_diagnostics
+            .iter()
+            .any(|existing| existing == &diagnostic)
+        {
+            self.magnifier_diagnostics.push(diagnostic);
+        }
     }
 
     pub(crate) fn fork_with_request_environment(
@@ -507,6 +558,9 @@ impl<'a> HistoricalRuntime<'a> {
         bars: &[Bar],
         execution_times: Option<&[i64]>,
     ) -> Result<(), RuntimeError> {
+        if self.bars == 0 && self.magnifier_chart_bar_count.is_none() {
+            self.prepare_magnifier_chart_bar_count(bars.len())?;
+        }
         let previous_historical_end = self.historical_end;
         self.historical_end = Some(self.bars + bars.len());
         if let Some(first) = bars.first() {
@@ -564,6 +618,21 @@ impl<'a> HistoricalRuntime<'a> {
         execution_time: Option<i64>,
     ) -> Result<(), RuntimeError> {
         let bar_index = self.bars;
+        if update_kind == BarUpdateKind::Historical
+            && bar_index == 0
+            && !self.magnifier_input.is_empty()
+            && self.magnifier_chart_bar_count.is_none()
+        {
+            return Err(MagnifierInputError::ChartBarCountRequired.runtime_error());
+        }
+        if update_kind == BarUpdateKind::Forming
+            && self.magnifier_input.bars_for_chart_bar(bar_index).is_some()
+        {
+            return Err(MagnifierInputError::FormingBar {
+                chart_bar_index: bar_index,
+            }
+            .runtime_error());
+        }
         self.current_bar_update_kind = update_kind;
         self.current_bar_is_new = is_new_bar;
         self.current_bar = Some(bar);
@@ -659,7 +728,8 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn runtime_diagnostics(&self) -> Vec<RuntimeDiagnostic> {
-        let mut diagnostics = self
+        let mut diagnostics = self.magnifier_diagnostics.clone();
+        let mut lookahead = self
             .legacy_security_repaint_warnings
             .iter()
             .map(|(callsite, (start, end))| {
@@ -674,11 +744,8 @@ impl<'a> HistoricalRuntime<'a> {
                 )
             })
             .collect::<Vec<_>>();
-        diagnostics.sort_by_key(|(callsite, _)| *callsite);
-        let mut diagnostics = diagnostics
-            .into_iter()
-            .map(|(_, diagnostic)| diagnostic)
-            .collect::<Vec<_>>();
+        lookahead.sort_by_key(|(callsite, _)| *callsite);
+        diagnostics.extend(lookahead.into_iter().map(|(_, diagnostic)| diagnostic));
 
         if self.history_dynamic_retention_misses == 0 {
             return diagnostics;

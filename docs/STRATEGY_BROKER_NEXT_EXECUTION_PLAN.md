@@ -1,7 +1,12 @@
 # Strategy Broker Next Execution Plan
 
-Status: Stages 17, 18, and 19-22 closed. Stage 18g true OHLC path execution
-closed on 2026-09-04. Bar Magnifier fill wiring remains deferred.
+Status: Stages 17, 18, 19-22, and 23 closed. Stage 18g true OHLC path
+execution closed on 2026-09-04. Stage 23 Bar Magnifier fill wiring closed on
+2026-09-04. Mixed-family OCA is the next strategy target. The Stage 23
+[execution plan](STRATEGY_INTERNAL_STAGE23_BAR_MAGNIFIER_FILL_WIRING_EXECUTION_PLAN.md)
+and
+[closed audit](STRATEGY_INTERNAL_STAGE23_BAR_MAGNIFIER_FILL_WIRING_AUDIT.md)
+are the historical record.
 Created on 2026-09-02 after Strategy Internal Stages 14-16 closed the
 fixture-backed short, reversal, short-margin, and id-specific
 `close_entries_rule="ANY"` subsets.
@@ -1319,7 +1324,8 @@ The Stage 17-22 program is complete only when:
 - conformance, snapshots, docs, release notes, and stage audits agree;
 - the final `scripts/verify.sh` run passes without snapshot-update mode.
 
-Current closeout note: Stage 18g true OHLC path execution closed on
-2026-09-04. Passing the repository gate proves the documented current subset.
-Bar Magnifier fill wiring and the deferred inter-bar gap rewrite remain
-outside this closeout.
+Current closeout note: Stage 23 Bar Magnifier fill wiring closed on
+2026-09-04. Named const bool `use_bar_magnifier` walks host-owned
+lower-timeframe bars through the closed Stage 18g path. Mixed-family OCA is
+the next strategy target. Session calendars and the deferred general
+inter-bar gap rewrite remain outside this closeout.

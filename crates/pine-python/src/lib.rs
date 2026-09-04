@@ -2,11 +2,10 @@ use std::collections::HashMap;
 
 use pine_ir::{HirProgram, ValueKind};
 use pine_runtime::{
-    Bar, ChartContext, InMemoryRequestDataProvider, InputCall, InputOverrides,
-    PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue, RequestEnvironment,
-    RequestKey, RequestTimeframe, encode_color_literal, input_calls, is_valid_public_color,
-    run_historical_with_request_environment_and_input_overrides,
-    run_historical_with_request_environment_and_input_overrides_and_execution_times,
+    Bar, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, InputCall, InputOverrides,
+    MagnifierInput, PUBLIC_RENDER_METADATA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue,
+    RequestEnvironment, RequestKey, RequestTimeframe, encode_color_literal, input_calls,
+    is_valid_public_color, magnifier_input_from_json,
 };
 use pine_sema::{Analysis, AnalysisInput, PUBLIC_ANALYSIS_SCHEMA_VERSION, analyze_input};
 use pine_syntax::{Diagnostic, SourceFile, Span};
@@ -39,7 +38,8 @@ impl PyProgram {
         input_overrides=None,
         chart_symbol=None,
         chart_timeframe=None,
-        execution_times=None
+        execution_times=None,
+        magnifier_bars=None
     ))]
     #[allow(clippy::too_many_arguments)]
     fn run(
@@ -51,53 +51,57 @@ impl PyProgram {
         chart_symbol: Option<&str>,
         chart_timeframe: Option<&str>,
         execution_times: Option<&Bound<'_, PyAny>>,
+        magnifier_bars: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Py<PyAny>> {
         let bars = parse_bars(bars)?;
         let request_environment =
             parse_request_environment(request_bars, chart_symbol, chart_timeframe)?;
         let input_overrides = parse_input_overrides(input_overrides, &self.hir)?;
         let execution_times = parse_execution_times(execution_times)?;
-        let result = match execution_times.as_deref() {
+        let magnifier = parse_magnifier_bars(py, magnifier_bars)?;
+        let mut runtime = HistoricalRuntime::with_request_environment_and_input_overrides(
+            &self.hir,
+            request_environment,
+            input_overrides,
+        );
+        if let Some(magnifier) = magnifier {
+            runtime = runtime.with_magnifier_input(magnifier);
+        }
+        match execution_times.as_deref() {
             Some(execution_times) => {
-                run_historical_with_request_environment_and_input_overrides_and_execution_times(
-                    &self.hir,
-                    &bars,
-                    request_environment,
-                    input_overrides,
-                    execution_times,
-                )
+                runtime.append_bars_with_execution_times(&bars, execution_times)
             }
-            None => run_historical_with_request_environment_and_input_overrides(
-                &self.hir,
-                &bars,
-                request_environment,
-                input_overrides,
-            ),
+            None => runtime.append_bars(&bars),
         }
         .map_err(|err| PyValueError::new_err(err.message))?;
-        runtime_result_to_py(py, &result)
+        runtime_result_to_py(py, &runtime.result())
     }
 
     #[pyo3(signature = (
         request_bars=None,
         input_overrides=None,
         chart_symbol=None,
-        chart_timeframe=None
+        chart_timeframe=None,
+        magnifier_bars=None
     ))]
     fn realtime_session(
         &self,
+        py: Python<'_>,
         request_bars: Option<&Bound<'_, PyAny>>,
         input_overrides: Option<&Bound<'_, PyAny>>,
         chart_symbol: Option<&str>,
         chart_timeframe: Option<&str>,
+        magnifier_bars: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<PyRealtimeSession> {
         let request_environment =
             parse_request_environment(request_bars, chart_symbol, chart_timeframe)?;
         let input_overrides = parse_input_overrides(input_overrides, &self.hir)?;
+        let magnifier = parse_magnifier_bars(py, magnifier_bars)?;
         Ok(PyRealtimeSession::new(
             self.hir.clone(),
             request_environment,
             input_overrides,
+            magnifier,
         ))
     }
 }
@@ -139,7 +143,8 @@ fn analyze_script(
     input_overrides=None,
     chart_symbol=None,
     chart_timeframe=None,
-    execution_times=None
+    execution_times=None,
+    magnifier_bars=None
 ))]
 #[allow(clippy::too_many_arguments)]
 fn run_script(
@@ -152,6 +157,7 @@ fn run_script(
     chart_symbol: Option<&str>,
     chart_timeframe: Option<&str>,
     execution_times: Option<&Bound<'_, PyAny>>,
+    magnifier_bars: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<Py<PyAny>> {
     let program = compile_script(source, library_sources)?;
     program.run(
@@ -162,6 +168,7 @@ fn run_script(
         chart_symbol,
         chart_timeframe,
         execution_times,
+        magnifier_bars,
     )
 }
 
@@ -220,6 +227,25 @@ fn parse_execution_times(execution_times: Option<&Bound<'_, PyAny>>) -> PyResult
         })?);
     }
     Ok(Some(parsed))
+}
+
+fn parse_magnifier_bars(
+    py: Python<'_>,
+    magnifier_bars: Option<&Bound<'_, PyAny>>,
+) -> PyResult<Option<MagnifierInput>> {
+    let Some(magnifier_bars) = magnifier_bars else {
+        return Ok(None);
+    };
+    let json = if let Ok(text) = magnifier_bars.extract::<String>() {
+        text
+    } else {
+        py.import("json")?
+            .call_method1("dumps", (magnifier_bars,))?
+            .extract::<String>()?
+    };
+    magnifier_input_from_json(&json)
+        .map(Some)
+        .map_err(PyValueError::new_err)
 }
 
 fn validate_bar_times(bars: &[Bar]) -> PyResult<()> {

@@ -4,7 +4,7 @@ use super::BrokerState;
 use super::pending_entries::{PendingEntry, PendingEntryDirection, PendingEntryKind};
 use super::pending_exits::{PendingExit, PendingExitTrigger, PendingTrailingState};
 use super::types::{InternalOrderKey, StrategyCommandOrigin};
-use crate::runtime::strategy_path::{HistoricalPathKind, PathLeg};
+use crate::runtime::strategy_path::{HistoricalPathKind, MagnifierHostGap, PathLeg};
 use crate::strategy::broker::ledger::TradeDirection;
 use std::cmp::Ordering;
 
@@ -163,7 +163,11 @@ impl BrokerState {
             TradeDirection::Long
         };
         for pending in self.order_book.exits().iter() {
-            if pending.last_update_bar_index >= bar_index {
+            if !self
+                .order_book
+                .exits()
+                .price_created_eligible(pending.last_update_bar_index, bar_index)
+            {
                 continue;
             }
             if !self.has_open_position_for_entry(&pending.from_entry) {
@@ -177,6 +181,132 @@ impl BrokerState {
             candidates.push(candidate);
         }
         candidates.sort_by(|left, right| cmp_candidates(left, right, Some(leg)));
+        candidates
+    }
+
+    pub(super) fn collect_gap_candidates(
+        &self,
+        bar_index: usize,
+        gap: MagnifierHostGap,
+        generation: u64,
+    ) -> Vec<BrokerCandidate> {
+        let mut candidates = Vec::new();
+        let fill = gap.next_open;
+        let verify = self.limit_verification_price_offset;
+        for pending in self.order_book.entries().iter() {
+            if !self
+                .order_book
+                .entries()
+                .price_created_eligible(pending.created_bar_index, bar_index)
+            {
+                continue;
+            }
+            match (pending.direction, &pending.kind) {
+                (direction, PendingEntryKind::Limit { price })
+                    if entry_limit_marketable(direction, fill, *price, verify) =>
+                {
+                    candidates.push(entry_fill_candidate(
+                        pending,
+                        BrokerCandidatePhase::PathLeg,
+                        0,
+                        fill,
+                        fill,
+                        generation,
+                    ));
+                }
+                (direction, PendingEntryKind::Stop { price })
+                    if entry_stop_marketable(direction, fill, *price) =>
+                {
+                    candidates.push(entry_fill_candidate(
+                        pending,
+                        BrokerCandidatePhase::PathLeg,
+                        0,
+                        fill,
+                        fill,
+                        generation,
+                    ));
+                }
+                (
+                    direction,
+                    PendingEntryKind::StopLimit {
+                        stop_price,
+                        limit_price,
+                        activated_bar_index,
+                    },
+                ) => {
+                    if activated_bar_index.is_none()
+                        && entry_stop_marketable(direction, fill, *stop_price)
+                    {
+                        if same_bar_stop_limit_fill_allowed(
+                            HistoricalPathKind::OpenHighLowClose,
+                            direction,
+                        ) && entry_limit_marketable(direction, fill, *limit_price, verify)
+                        {
+                            candidates.push(entry_fill_candidate(
+                                pending,
+                                BrokerCandidatePhase::PathLeg,
+                                0,
+                                fill,
+                                fill,
+                                generation,
+                            ));
+                            continue;
+                        }
+                        candidates.push(BrokerCandidate {
+                            event_kind: BrokerCandidateEvent::StopLimitActivation,
+                            phase: BrokerCandidatePhase::PathLeg,
+                            path_leg: 0,
+                            crossing_price: fill,
+                            fill_price_or_mark: fill,
+                            creation_sequence: pending.key.0,
+                            stable_order_key: pending.key,
+                            observed_generation: generation,
+                            origin: pending.origin,
+                            public_id: pending.id.clone(),
+                        });
+                    } else if activated_bar_index.is_some_and(|activated| {
+                        stop_limit_fill_bar_eligible(
+                            activated,
+                            bar_index,
+                            HistoricalPathKind::OpenHighLowClose,
+                            direction,
+                        )
+                    }) && entry_limit_marketable(direction, fill, *limit_price, verify)
+                    {
+                        candidates.push(entry_fill_candidate(
+                            pending,
+                            BrokerCandidatePhase::PathLeg,
+                            0,
+                            fill,
+                            fill,
+                            generation,
+                        ));
+                    }
+                }
+                _ => {}
+            }
+        }
+        let direction = if self.position_size < 0.0 {
+            TradeDirection::Short
+        } else {
+            TradeDirection::Long
+        };
+        for pending in self.order_book.exits().iter() {
+            if !self
+                .order_book
+                .exits()
+                .price_created_eligible(pending.last_update_bar_index, bar_index)
+            {
+                continue;
+            }
+            if !self.has_open_position_for_entry(&pending.from_entry) {
+                continue;
+            }
+            candidates.extend(exit_gap_candidates(
+                pending, direction, fill, verify, generation,
+            ));
+        }
+        candidates.sort_by(|left, right| cmp_candidates(left, right, None));
         candidates
     }
 
@@ -245,6 +375,25 @@ impl BrokerState {
             return (qty.is_finite() && qty > 0.0).then_some(qty);
         }
         None
+    }
+}
+
+fn entry_limit_marketable(
+    direction: PendingEntryDirection,
+    open: f64,
+    price: f64,
+    verify: f64,
+) -> bool {
+    match direction {
+        PendingEntryDirection::Long => open <= price - verify,
+        PendingEntryDirection::Short => open >= price + verify,
+    }
+}
+
+fn entry_stop_marketable(direction: PendingEntryDirection, open: f64, price: f64) -> bool {
+    match direction {
+        PendingEntryDirection::Long => open >= price,
+        PendingEntryDirection::Short => open <= price,
     }
 }
 
@@ -597,4 +746,93 @@ fn exit_leg_candidates(
         }
     }
     out
+}
+
+fn exit_gap_candidates(
+    pending: &PendingExit,
+    direction: TradeDirection,
+    open: f64,
+    verify: f64,
+    generation: u64,
+) -> Vec<BrokerCandidate> {
+    let fill = || exit_fill_candidate(pending, 0, open, open, generation);
+    match &pending.trigger {
+        PendingExitTrigger::Stop(price) => exit_stop_marketable(direction, open, *price)
+            .then(fill)
+            .into_iter()
+            .collect(),
+        PendingExitTrigger::Limit(price) => exit_limit_marketable(direction, open, *price, verify)
+            .then(fill)
+            .into_iter()
+            .collect(),
+        PendingExitTrigger::Bracket { downside, upside } => {
+            if exit_stop_marketable(direction, open, *downside)
+                || exit_limit_marketable(direction, open, *upside, verify)
+            {
+                vec![fill()]
+            } else {
+                Vec::new()
+            }
+        }
+        PendingExitTrigger::Trailing(trailing) => match trailing.state {
+            PendingTrailingState::Inactive => {
+                let activation = trailing.spec.activation.price();
+                let activates = match direction {
+                    TradeDirection::Long => open >= activation,
+                    TradeDirection::Short => open <= activation,
+                };
+                activates
+                    .then(|| {
+                        trailing_state_candidate(
+                            pending,
+                            BrokerCandidateEvent::TrailingActivation,
+                            0,
+                            open,
+                            generation,
+                        )
+                    })
+                    .into_iter()
+                    .collect()
+            }
+            PendingTrailingState::Active { stop_price } => {
+                if exit_stop_marketable(direction, open, stop_price) {
+                    return vec![fill()];
+                }
+                let next_stop = match direction {
+                    TradeDirection::Long => open - trailing.spec.offset_price_distance,
+                    TradeDirection::Short => open + trailing.spec.offset_price_distance,
+                };
+                let improves = match direction {
+                    TradeDirection::Long => next_stop > stop_price,
+                    TradeDirection::Short => next_stop < stop_price,
+                };
+                improves
+                    .then(|| {
+                        trailing_state_candidate(
+                            pending,
+                            BrokerCandidateEvent::TrailingRatchet,
+                            0,
+                            open,
+                            generation,
+                        )
+                    })
+                    .into_iter()
+                    .collect()
+            }
+        },
+    }
+}
+
+fn exit_stop_marketable(direction: TradeDirection, open: f64, price: f64) -> bool {
+    match direction {
+        TradeDirection::Long => open <= price,
+        TradeDirection::Short => open >= price,
+    }
+}
+
+fn exit_limit_marketable(direction: TradeDirection, open: f64, price: f64, verify: f64) -> bool {
+    match direction {
+        TradeDirection::Long => open >= price + verify,
+        TradeDirection::Short => open <= price - verify,
+    }
 }

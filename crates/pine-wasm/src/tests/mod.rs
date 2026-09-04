@@ -5465,6 +5465,48 @@ fn runs_strategy_calc_on_every_tick_fixture_from_csv_to_public_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_use_bar_magnifier_fallback_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_use_bar_magnifier_fallback.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy use_bar_magnifier fallback fixture should run");
+
+    assert_snapshot("runtime_strategy_use_bar_magnifier_fallback.json", &output);
+}
+
+#[test]
+fn runs_strategy_use_bar_magnifier_false_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_use_bar_magnifier_false.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy use_bar_magnifier false fixture should run");
+
+    assert_snapshot("runtime_strategy_use_bar_magnifier_false.json", &output);
+}
+
+#[test]
+fn run_csv_with_request_bars_uses_magnifier_lower_bars_for_strategy_fills() {
+    let source =
+        include_str!("../../../../tests/fixtures/runtime/strategy_use_bar_magnifier_gap.pine");
+    let bars =
+        include_str!("../../../../tests/fixtures/runtime/strategy_use_bar_magnifier_gap_bars.csv");
+    let host_input = format!(
+        r#"{{"$magnifier":{}}}"#,
+        include_str!("../../../../tests/fixtures/runtime/strategy_use_bar_magnifier_gap.json")
+    );
+    let output = run_script_csv_with_request_bars(source, bars, &host_input)
+        .expect("strategy magnifier envelope should run");
+    assert_snapshot("runtime_strategy_use_bar_magnifier_gap.json", &output);
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(parsed["strategy"]["orders"][0]["id"], "STP");
+    assert_eq!(parsed["strategy"]["orders"][0]["barIndex"], 1);
+    assert_eq!(parsed["strategy"]["orders"][0]["time"], 2000);
+    assert_eq!(parsed["strategy"]["orders"][0]["price"], 11.0);
+}
+
+#[test]
 fn runs_strategy_calc_on_order_fills_fixture_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_calc_on_order_fills.pine"),
@@ -10144,6 +10186,23 @@ fn run_csv_with_request_bars_matches_direct_request_api() {
 
     assert_eq!(compiled_output, direct_output);
     assert_eq!(repeated_output, direct_output);
+}
+
+#[test]
+fn run_csv_with_request_bars_accepts_reserved_magnifier_envelope() {
+    let source = "//@version=6\nindicator(\"magnifier host\")\nplot(close)\n";
+    let bars = "time,open,high,low,close,volume\n1,1,1,1,1,1\n";
+    let host_input = r#"{"$magnifier":{"schemaVersion":1,"chartBars":[]}}"#;
+    let output = run_script_csv_with_request_bars(source, bars, host_input)
+        .expect("empty magnifier envelope is valid");
+    assert!(output.contains("\"schemaVersion\":8"), "{output}");
+    let invalid = run_script_csv_with_request_bars_internal(
+        source,
+        bars,
+        r#"{"$magnifier":{"schemaVersion":2,"chartBars":[]}}"#,
+    )
+    .expect_err("unsupported schema");
+    assert!(invalid.contains("E_MAGNIFIER_SCHEMA_VERSION"), "{invalid}");
 }
 
 #[test]

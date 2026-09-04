@@ -1,0 +1,3 @@
+//@version=4
+strategy("Unsupported v4 use_bar_magnifier", use_bar_magnifier=false)
+plot(close)

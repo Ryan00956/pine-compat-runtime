@@ -168,6 +168,9 @@ mod tests {
         assert_eq!(signature.params[22].name, "calc_on_every_tick");
         assert_eq!(signature.params[22].accepts, crate::Accepts::ConstBool);
         assert!(signature.params[22].optional);
+        assert_eq!(signature.params[23].name, "use_bar_magnifier");
+        assert_eq!(signature.params[23].accepts, crate::Accepts::ConstBool);
+        assert!(signature.params[23].optional);
         assert!(!signature.variadic);
     }
 

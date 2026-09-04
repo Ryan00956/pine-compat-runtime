@@ -64,6 +64,7 @@ pub struct StrategySettings {
     pub process_orders_on_close: bool,
     pub calc_on_order_fills: bool,
     pub calc_on_every_tick: bool,
+    pub use_bar_magnifier: bool,
 }
 
 impl Default for StrategySettings {
@@ -81,6 +82,7 @@ impl Default for StrategySettings {
             process_orders_on_close: false,
             calc_on_order_fills: false,
             calc_on_every_tick: false,
+            use_bar_magnifier: false,
         }
     }
 }
@@ -113,5 +115,25 @@ impl StrategySettings {
             | Some(StrategyCommission::Percent(_))
             | None => 0.0,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::StrategySettings;
+
+    #[test]
+    fn default_use_bar_magnifier_is_false() {
+        assert!(!StrategySettings::default().use_bar_magnifier);
+    }
+
+    #[test]
+    fn explicit_false_use_bar_magnifier_is_false() {
+        let settings = StrategySettings {
+            use_bar_magnifier: false,
+            ..StrategySettings::default()
+        };
+        assert!(!settings.use_bar_magnifier);
+        assert_eq!(settings, StrategySettings::default());
     }
 }

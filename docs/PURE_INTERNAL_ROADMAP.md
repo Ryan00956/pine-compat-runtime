@@ -1550,8 +1550,9 @@ While strategy completion is the selected direction:
 
 1. Integrate and review the current Stage 17-22 worktree.
 2. Stage 18g true OHLC-path and cross-family candidate ordering.
-3. Bar Magnifier fill wiring on the shared scheduler path.
-4. Mixed-family OCA and instrument-session semantics through separate slices.
+3. Bar Magnifier fill wiring on the shared scheduler path is closed.
+4. Mixed-family OCA is the next strategy target; session calendars and the
+   general chart-to-chart inter-bar gap rewrite stay later, separate slices.
 5. Strategy reporting/account gaps selected from executable fixtures.
 6. Other pure-internal work only when it is a prerequisite or regression fix
    for the active strategy slice.

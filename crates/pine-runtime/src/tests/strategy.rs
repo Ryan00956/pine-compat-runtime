@@ -13725,7 +13725,7 @@ plot(strategy.position_size)
 }
 
 #[test]
-fn use_bar_magnifier_stays_semantically_rejected() {
+fn use_bar_magnifier_true_is_accepted() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"
@@ -13735,14 +13735,12 @@ plot(close)
     );
     let analysis = analyze_source(&source);
     assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.message.contains("use_bar_magnifier")),
+        analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    let hir = analysis.hir.expect("HIR");
+    assert!(hir.strategy_settings.use_bar_magnifier);
 }
 
 #[test]

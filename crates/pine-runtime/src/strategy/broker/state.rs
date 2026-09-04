@@ -171,6 +171,9 @@ impl BrokerState {
         self.order_book
             .entries_mut()
             .set_allow_same_bar_price_fills(calc_on_order_fills);
+        self.order_book
+            .exits_mut()
+            .set_allow_same_bar_price_fills(calc_on_order_fills);
         self
     }
 

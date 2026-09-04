@@ -178,6 +178,11 @@ const STRATEGY_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstBool,
         optional: true,
     },
+    BuiltinParam {
+        name: "use_bar_magnifier",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
 ];
 
 const INPUT_PARAMS: &[BuiltinParam] = &[

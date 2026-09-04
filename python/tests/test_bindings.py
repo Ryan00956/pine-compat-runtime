@@ -71,6 +71,24 @@ FLAT_EQUITY = [
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def test_run_script_accepts_canonical_magnifier_bars_mapping() -> None:
+    source = '''//@version=6
+indicator("magnifier host")
+plot(close)
+'''
+    magnifier = {"schemaVersion": 1, "chartBars": []}
+    omitted = pine_compat.run_script(source, BARS)
+    with_empty = pine_compat.run_script(source, BARS, magnifier_bars=magnifier)
+    assert omitted == with_empty
+    try:
+        pine_compat.run_script(
+            source, BARS, magnifier_bars={"schemaVersion": 2, "chartBars": []}
+        )
+        raise AssertionError("unsupported schema should fail")
+    except ValueError as error:
+        assert "E_MAGNIFIER_SCHEMA_VERSION" in str(error)
+
+
 def fixture_bars(path):
     rows = []
     lines = (ROOT / path).read_text().strip().splitlines()
@@ -6137,6 +6155,70 @@ def test_run_script_returns_strategy_calc_on_every_tick_contract():
     )
 
     assert result == expected
+
+
+def test_run_script_returns_strategy_use_bar_magnifier_fallback_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_use_bar_magnifier_fallback.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_use_bar_magnifier_fallback.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_use_bar_magnifier_false_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_use_bar_magnifier_false.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_use_bar_magnifier_false.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_uses_magnifier_lower_bars_for_strategy_fills() -> None:
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_use_bar_magnifier_gap.pine"
+    ).read_text()
+    bars = fixture_bars(
+        "tests/fixtures/runtime/strategy_use_bar_magnifier_gap_bars.csv"
+    )
+    magnifier = json.loads(
+        (
+            ROOT / "tests/fixtures/runtime/strategy_use_bar_magnifier_gap.json"
+        ).read_text()
+    )
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_use_bar_magnifier_gap.json"
+        ).read_text()
+    )
+    baseline = pine_compat.run_script(source, bars)
+    result = pine_compat.run_script(source, bars, magnifier_bars=magnifier)
+    assert result != baseline
+    assert_json_close(result, expected)
+    assert result["strategy"]["orders"][0]["id"] == "STP"
+    assert result["strategy"]["orders"][0]["barIndex"] == 1
+    assert result["strategy"]["orders"][0]["time"] == 2000
+    assert result["strategy"]["orders"][0]["price"] == 11.0
+    assert baseline["strategy"]["orders"][0]["price"] == 10.5
 
 
 def test_run_script_returns_strategy_calc_on_order_fills_contract():

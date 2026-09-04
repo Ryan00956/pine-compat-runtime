@@ -1,0 +1,4 @@
+//@version=6
+magnifierOff = false
+strategy("Supported use_bar_magnifier const false", use_bar_magnifier=magnifierOff)
+plot(close)

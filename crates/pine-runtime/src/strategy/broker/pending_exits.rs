@@ -401,11 +401,25 @@ pub(super) struct DeferredRelativeExit {
 pub(super) struct PendingExitBook {
     exits: Vec<PendingExit>,
     deferred_relative_exits: Vec<DeferredRelativeExit>,
+    allow_same_bar_price_fills: bool,
 }
 
 impl PendingExitBook {
     pub(super) fn new() -> Self {
         Self::default()
+    }
+
+    pub(super) fn set_allow_same_bar_price_fills(&mut self, allow_same_bar_price_fills: bool) {
+        self.allow_same_bar_price_fills = allow_same_bar_price_fills;
+    }
+
+    pub(super) fn price_created_eligible(
+        &self,
+        last_update_bar_index: usize,
+        bar_index: usize,
+    ) -> bool {
+        last_update_bar_index < bar_index
+            || (self.allow_same_bar_price_fills && last_update_bar_index == bar_index)
     }
 
     #[allow(dead_code)]

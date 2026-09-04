@@ -1,6 +1,8 @@
 use std::{fs, path::PathBuf};
 
-use pine_runtime::{AlertEvent, Bar, BarUpdate, PineValue, RealtimeRuntime, run_historical};
+use pine_runtime::{
+    AlertEvent, Bar, BarUpdate, HistoricalRuntime, PineValue, RealtimeRuntime, run_historical,
+};
 use pine_sema::{AnalysisInput, analyze_input, analyze_source};
 use pine_syntax::SourceFile;
 
@@ -2014,6 +2016,133 @@ fn legacy_v4_outputs_roll_back_forming_visual_state_without_stale_values() {
         vec![PineValue::Color(0x2196F31A), PineValue::Na]
     );
     assert_eq!(runtime.confirmed_result(), result);
+}
+
+#[test]
+fn magnifier_historical_realtime_replay_matches_batch() {
+    use pine_runtime::{MagnifierChartBarInput, magnifier_input_from_groups};
+
+    let source = SourceFile::new(
+        "magnifier-realtime-replay.pine",
+        r#"//@version=6
+strategy("magnifier replay", initial_capital=100000, use_bar_magnifier=true)
+if bar_index == 0
+    strategy.entry("EN", strategy.long, qty=1, stop=10.5)
+    strategy.exit("EX", "EN", limit=11.5)
+plot(close)
+"#
+        .to_owned(),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.expect("HIR");
+    assert!(program.strategy_settings.use_bar_magnifier);
+    let bars = [
+        Bar {
+            time: 1_000,
+            open: 10.0,
+            high: 10.0,
+            low: 10.0,
+            close: 10.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 2_000,
+            open: 10.0,
+            high: 12.0,
+            low: 8.0,
+            close: 11.0,
+            volume: 1.0,
+        },
+    ];
+    let input = magnifier_input_from_groups(vec![
+        MagnifierChartBarInput {
+            chart_bar_index: 0,
+            bars: vec![bars[0]],
+        },
+        MagnifierChartBarInput {
+            chart_bar_index: 1,
+            bars: vec![
+                Bar {
+                    time: 2_000,
+                    open: 10.0,
+                    high: 10.4,
+                    low: 9.8,
+                    close: 10.2,
+                    volume: 1.0,
+                },
+                Bar {
+                    time: 2_300,
+                    open: 10.2,
+                    high: 10.8,
+                    low: 10.1,
+                    close: 10.6,
+                    volume: 1.0,
+                },
+                Bar {
+                    time: 2_600,
+                    open: 10.6,
+                    high: 11.8,
+                    low: 10.5,
+                    close: 11.0,
+                    volume: 1.0,
+                },
+            ],
+        },
+    ])
+    .expect("valid");
+    let mut batch_runtime = HistoricalRuntime::new(&program).with_magnifier_input(input.clone());
+    batch_runtime.append_bars(&bars).expect("batch");
+    let batch = batch_runtime.result();
+    let mut realtime = RealtimeRuntime::from_program(program).with_magnifier_input(input);
+    let seeded = realtime.seed_historical(&bars).expect("seed");
+    assert_eq!(batch, seeded);
+}
+
+#[test]
+fn realtime_forming_does_not_consume_historical_magnifier_input() {
+    use pine_runtime::{MagnifierChartBarInput, magnifier_input_from_groups};
+
+    let source = SourceFile::new(
+        "magnifier-realtime.pine",
+        r#"//@version=6
+indicator("Magnifier realtime")
+plot(close)
+"#
+        .to_owned(),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let input = magnifier_input_from_groups(vec![MagnifierChartBarInput {
+        chart_bar_index: 0,
+        bars: vec![Bar {
+            time: 1,
+            open: 9.0,
+            high: 9.0,
+            low: 9.0,
+            close: 9.0,
+            volume: 1.0,
+        }],
+    }])
+    .expect("valid");
+    let mut runtime = RealtimeRuntime::from_program(hir).with_magnifier_input(input);
+    runtime
+        .seed_historical(&[bar(1.0)])
+        .expect("historical seed");
+    let forming = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming must ignore historical magnifier");
+    assert_values(&forming.plots[0].values, &[1.0, 2.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
 }
 
 fn runtime_for_fixture(path: &str) -> RealtimeRuntime<'static> {

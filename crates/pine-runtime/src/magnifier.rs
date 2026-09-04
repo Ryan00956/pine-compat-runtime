@@ -1,10 +1,13 @@
 use std::collections::BTreeMap;
 use std::fmt;
 
-use crate::{Bar, RuntimeDiagnostic};
+use crate::{Bar, RuntimeDiagnostic, RuntimeError};
 
 /// Official TradingView bar-magnifier lower-timeframe cap.
 pub const MAX_MAGNIFIER_INTRABARS: usize = 200_000;
+
+/// Canonical MagnifierInputV1 schema version shared by all hosts.
+pub const MAGNIFIER_SCHEMA_VERSION: u32 = 1;
 
 /// Host-owned lower-timeframe bars for one chart bar.
 #[derive(Debug, Clone, PartialEq)]
@@ -49,6 +52,22 @@ impl MagnifierInput {
             .get(&chart_bar_index)
             .map(Vec::as_slice)
     }
+
+    /// Reject groups whose chart-bar index is outside `0..chart_bar_count`.
+    pub fn validate_chart_bar_range(
+        &self,
+        chart_bar_count: usize,
+    ) -> Result<(), MagnifierInputError> {
+        for chart_bar_index in self.bars_by_chart_index.keys().copied() {
+            if chart_bar_index >= chart_bar_count {
+                return Err(MagnifierInputError::ChartBarOutOfRange {
+                    chart_bar_index,
+                    chart_bar_count,
+                });
+            }
+        }
+        Ok(())
+    }
 }
 
 /// Explicit fallback when lower-timeframe data is unavailable for a chart bar.
@@ -92,6 +111,21 @@ pub enum MagnifierInputError {
         count: usize,
         limit: usize,
     },
+    InvalidBar {
+        chart_bar_index: usize,
+        lower_bar_index: usize,
+    },
+    ChartBarOutOfRange {
+        chart_bar_index: usize,
+        chart_bar_count: usize,
+    },
+    ChartBarCountRequired,
+    UnsupportedSchemaVersion {
+        version: u32,
+    },
+    FormingBar {
+        chart_bar_index: usize,
+    },
 }
 
 impl fmt::Display for MagnifierInputError {
@@ -122,6 +156,32 @@ impl fmt::Display for MagnifierInputError {
                 formatter,
                 "magnifier input has {count} lower-timeframe bars; at most {limit} are allowed"
             ),
+            Self::InvalidBar {
+                chart_bar_index,
+                lower_bar_index,
+            } => write!(
+                formatter,
+                "magnifier bar {lower_bar_index} on chart bar {chart_bar_index} is not a finite OHLC bar"
+            ),
+            Self::ChartBarOutOfRange {
+                chart_bar_index,
+                chart_bar_count,
+            } => write!(
+                formatter,
+                "magnifier input chart bar {chart_bar_index} is outside the supplied chart range 0..{chart_bar_count}"
+            ),
+            Self::ChartBarCountRequired => write!(
+                formatter,
+                "magnifier chart-bar count must be prepared before streaming historical execution"
+            ),
+            Self::UnsupportedSchemaVersion { version } => write!(
+                formatter,
+                "magnifier input schemaVersion {version} is unsupported; expected {MAGNIFIER_SCHEMA_VERSION}"
+            ),
+            Self::FormingBar { chart_bar_index } => write!(
+                formatter,
+                "magnifier input for forming chart bar {chart_bar_index} is rejected"
+            ),
         }
     }
 }
@@ -134,10 +194,23 @@ impl MagnifierInputError {
             Self::DuplicateTicks { .. } => "E_MAGNIFIER_DUPLICATE_TICK",
             Self::UnsortedTicks { .. } => "E_MAGNIFIER_UNSORTED_TICKS",
             Self::TooManyIntrabars { .. } => "E_MAGNIFIER_MAX_INTRABARS",
+            Self::InvalidBar { .. } => "E_MAGNIFIER_INVALID_BAR",
+            Self::ChartBarOutOfRange { .. } => "E_MAGNIFIER_CHART_BAR_RANGE",
+            Self::ChartBarCountRequired => "E_MAGNIFIER_CHART_BAR_COUNT_REQUIRED",
+            Self::UnsupportedSchemaVersion { .. } => "E_MAGNIFIER_SCHEMA_VERSION",
+            Self::FormingBar { .. } => "E_MAGNIFIER_FORMING_BAR",
         };
         RuntimeDiagnostic {
             code: code.to_owned(),
             message: self.to_string(),
+        }
+    }
+
+    #[must_use]
+    pub fn runtime_error(&self) -> RuntimeError {
+        let diagnostic = self.diagnostic();
+        RuntimeError {
+            message: format!("{}: {}", diagnostic.code, diagnostic.message),
         }
     }
 }
@@ -158,6 +231,7 @@ pub fn magnifier_input_from_groups(
             });
         }
         validate_intrabar_times(group.chart_bar_index, &group.bars)?;
+        validate_intrabar_ohlc(group.chart_bar_index, &group.bars)?;
         total = total.saturating_add(group.bars.len());
         if total > MAX_MAGNIFIER_INTRABARS {
             return Err(MagnifierInputError::TooManyIntrabars {
@@ -170,6 +244,71 @@ pub fn magnifier_input_from_groups(
             .insert(group.chart_bar_index, group.bars);
     }
     Ok(input)
+}
+
+/// Decode the versioned MagnifierInputV1 envelope before semantic validation.
+pub fn magnifier_input_from_v1(
+    schema_version: u32,
+    groups: Vec<MagnifierChartBarInput>,
+) -> Result<MagnifierInput, MagnifierInputError> {
+    if schema_version != MAGNIFIER_SCHEMA_VERSION {
+        return Err(MagnifierInputError::UnsupportedSchemaVersion {
+            version: schema_version,
+        });
+    }
+    magnifier_input_from_groups(groups)
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct MagnifierInputV1Json {
+    #[serde(rename = "schemaVersion")]
+    schema_version: u32,
+    #[serde(rename = "chartBars")]
+    chart_bars: Vec<MagnifierChartBarJson>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct MagnifierChartBarJson {
+    #[serde(rename = "chartBarIndex")]
+    chart_bar_index: usize,
+    bars: Vec<MagnifierBarJson>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct MagnifierBarJson {
+    time: i64,
+    open: f64,
+    high: f64,
+    low: f64,
+    close: f64,
+    volume: f64,
+}
+
+/// Decode the canonical MagnifierInputV1 JSON envelope used by CLI, Python, and WASM.
+pub fn magnifier_input_from_json(json: &str) -> Result<MagnifierInput, String> {
+    let parsed: MagnifierInputV1Json = serde_json::from_str(json)
+        .map_err(|err| format!("E_MAGNIFIER_MALFORMED: magnifier JSON is invalid: {err}"))?;
+    let groups = parsed
+        .chart_bars
+        .into_iter()
+        .map(|group| MagnifierChartBarInput {
+            chart_bar_index: group.chart_bar_index,
+            bars: group
+                .bars
+                .into_iter()
+                .map(|bar| Bar {
+                    time: bar.time,
+                    open: bar.open,
+                    high: bar.high,
+                    low: bar.low,
+                    close: bar.close,
+                    volume: bar.volume,
+                })
+                .collect(),
+        })
+        .collect();
+    magnifier_input_from_v1(parsed.schema_version, groups)
+        .map_err(|error| error.runtime_error().message)
 }
 
 fn validate_intrabar_times(
@@ -196,6 +335,28 @@ fn validate_intrabar_times(
         previous_time = Some(bar.time);
     }
     Ok(())
+}
+
+fn validate_intrabar_ohlc(chart_bar_index: usize, bars: &[Bar]) -> Result<(), MagnifierInputError> {
+    for (lower_bar_index, bar) in bars.iter().enumerate() {
+        if !bar_invariants_hold(bar) {
+            return Err(MagnifierInputError::InvalidBar {
+                chart_bar_index,
+                lower_bar_index,
+            });
+        }
+    }
+    Ok(())
+}
+
+fn bar_invariants_hold(bar: &Bar) -> bool {
+    [bar.open, bar.high, bar.low, bar.close, bar.volume]
+        .iter()
+        .all(|value| value.is_finite())
+        && bar.high >= bar.open
+        && bar.high >= bar.close
+        && bar.low <= bar.open
+        && bar.low <= bar.close
 }
 
 #[must_use]
@@ -407,5 +568,122 @@ mod tests {
             } if count == MAX_MAGNIFIER_INTRABARS + 1
         ));
         assert_eq!(error.diagnostic().code, "E_MAGNIFIER_MAX_INTRABARS");
+    }
+
+    #[test]
+    fn rejects_non_finite_and_inconsistent_ohlc_bars() {
+        let nan = magnifier_input_from_groups(vec![MagnifierChartBarInput {
+            chart_bar_index: 0,
+            bars: vec![Bar {
+                time: 1,
+                open: f64::NAN,
+                high: 1.0,
+                low: 1.0,
+                close: 1.0,
+                volume: 1.0,
+            }],
+        }])
+        .expect_err("non-finite bar");
+        assert!(matches!(
+            nan,
+            MagnifierInputError::InvalidBar {
+                chart_bar_index: 0,
+                lower_bar_index: 0
+            }
+        ));
+        assert_eq!(nan.diagnostic().code, "E_MAGNIFIER_INVALID_BAR");
+
+        let inconsistent = magnifier_input_from_groups(vec![MagnifierChartBarInput {
+            chart_bar_index: 1,
+            bars: vec![Bar {
+                time: 1,
+                open: 10.0,
+                high: 9.0,
+                low: 8.0,
+                close: 9.5,
+                volume: 1.0,
+            }],
+        }])
+        .expect_err("inconsistent OHLC");
+        assert!(matches!(
+            inconsistent,
+            MagnifierInputError::InvalidBar {
+                chart_bar_index: 1,
+                lower_bar_index: 0
+            }
+        ));
+    }
+
+    #[test]
+    fn rejects_chart_bar_indexes_outside_supplied_range() {
+        let input = magnifier_input_from_groups(vec![MagnifierChartBarInput {
+            chart_bar_index: 2,
+            bars: vec![bar_at(1, 1.0)],
+        }])
+        .expect("structurally valid");
+        let error = input
+            .validate_chart_bar_range(2)
+            .expect_err("index 2 is out of range for 2 bars");
+        assert!(matches!(
+            error,
+            MagnifierInputError::ChartBarOutOfRange {
+                chart_bar_index: 2,
+                chart_bar_count: 2
+            }
+        ));
+        assert_eq!(error.diagnostic().code, "E_MAGNIFIER_CHART_BAR_RANGE");
+        input.validate_chart_bar_range(3).expect("in range");
+    }
+
+    #[test]
+    fn rejects_unsupported_schema_version_at_host_boundary() {
+        let error = magnifier_input_from_v1(2, Vec::new()).expect_err("schema");
+        assert!(matches!(
+            error,
+            MagnifierInputError::UnsupportedSchemaVersion { version: 2 }
+        ));
+        assert_eq!(error.diagnostic().code, "E_MAGNIFIER_SCHEMA_VERSION");
+        magnifier_input_from_v1(MAGNIFIER_SCHEMA_VERSION, Vec::new()).expect("v1");
+    }
+
+    #[test]
+    fn json_v1_envelope_decodes_through_shared_path() {
+        let json = r#"{
+            "schemaVersion": 1,
+            "chartBars": [
+                {
+                    "chartBarIndex": 0,
+                    "bars": [
+                        {"time": 1, "open": 1.0, "high": 1.1, "low": 0.9, "close": 1.0, "volume": 2.0}
+                    ]
+                }
+            ]
+        }"#;
+        let input = magnifier_input_from_json(json).expect("json");
+        assert_eq!(input.chart_bar_count(), 1);
+        assert_eq!(input.intrabar_count(), 1);
+        let bad =
+            magnifier_input_from_json(r#"{"schemaVersion":2,"chartBars":[]}"#).expect_err("schema");
+        assert!(bad.contains("E_MAGNIFIER_SCHEMA_VERSION"), "{bad}");
+        let malformed = magnifier_input_from_json("{").expect_err("malformed");
+        assert!(malformed.contains("E_MAGNIFIER_MALFORMED"), "{malformed}");
+    }
+
+    #[test]
+    fn sparse_and_empty_groups_remain_structurally_valid() {
+        let input = magnifier_input_from_groups(vec![
+            MagnifierChartBarInput {
+                chart_bar_index: 0,
+                bars: vec![bar_at(1, 1.0)],
+            },
+            MagnifierChartBarInput {
+                chart_bar_index: 2,
+                bars: Vec::new(),
+            },
+        ])
+        .expect("sparse input");
+        assert_eq!(input.chart_bar_count(), 2);
+        assert_eq!(input.intrabar_count(), 1);
+        input.validate_chart_bar_range(3).expect("in range");
     }
 }

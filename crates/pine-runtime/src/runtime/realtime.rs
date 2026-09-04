@@ -47,6 +47,26 @@ impl<'a> RealtimeRuntime<'a> {
             .request_environment()
     }
 
+    #[must_use]
+    pub fn with_magnifier_input(mut self, input: crate::MagnifierInput) -> Self {
+        self.confirmed = self.confirmed.with_magnifier_input(input);
+        self
+    }
+
+    #[must_use]
+    pub fn magnifier_input(&self) -> &crate::MagnifierInput {
+        self.confirmed.magnifier_input()
+    }
+
+    /// Validate the complete historical range before streaming bar-zero input.
+    pub fn prepare_magnifier_chart_bar_count(
+        &mut self,
+        chart_bar_count: usize,
+    ) -> Result<(), RuntimeError> {
+        self.confirmed
+            .prepare_magnifier_chart_bar_count(chart_bar_count)
+    }
+
     pub fn update(&mut self, update: BarUpdate) -> Result<RuntimeResult, RuntimeError> {
         self.update_inner(update, None)
     }
@@ -64,6 +84,20 @@ impl<'a> RealtimeRuntime<'a> {
         update: BarUpdate,
         execution_time: Option<i64>,
     ) -> Result<RuntimeResult, RuntimeError> {
+        if matches!(
+            update.kind,
+            BarUpdateKind::Forming | BarUpdateKind::Confirmed
+        ) && self
+            .confirmed
+            .magnifier_input()
+            .bars_for_chart_bar(self.confirmed.bars)
+            .is_some()
+        {
+            return Err(MagnifierInputError::FormingBar {
+                chart_bar_index: self.confirmed.bars,
+            }
+            .runtime_error());
+        }
         match update.kind {
             BarUpdateKind::Historical => {
                 let mut runtime = self.confirmed.clone();
