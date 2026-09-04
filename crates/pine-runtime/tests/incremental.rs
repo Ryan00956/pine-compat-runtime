@@ -3,7 +3,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use pine_runtime::{Bar, HistoricalRuntime, run_historical};
+use pine_runtime::{
+    Bar, HistoricalRuntime, MagnifierChartBarInput, magnifier_input_from_groups, run_historical,
+};
 use pine_sema::{Analysis, AnalysisInput, analyze_input, analyze_source};
 use pine_syntax::SourceFile;
 
@@ -361,6 +363,91 @@ fn version_matched_fixture_library_text(root: &str, mut library: String) -> Stri
         library.replace_range(..first_newline, root_version.trim_start());
     }
     library
+}
+
+#[test]
+fn magnifier_batch_matches_incremental_append() {
+    let source = SourceFile::new(
+        "magnifier-incremental.pine",
+        r#"//@version=6
+strategy("magnifier incremental", initial_capital=100000)
+if bar_index == 0
+    strategy.entry("EN", strategy.long, qty=1, stop=10.5)
+    strategy.exit("EX", "EN", limit=11.5)
+plot(close)
+"#
+        .to_owned(),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let mut program = analysis.hir.expect("HIR");
+    program.strategy_settings.use_bar_magnifier = true;
+    let bars = vec![
+        Bar {
+            time: 1_000,
+            open: 10.0,
+            high: 10.0,
+            low: 10.0,
+            close: 10.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 2_000,
+            open: 10.0,
+            high: 12.0,
+            low: 8.0,
+            close: 11.0,
+            volume: 1.0,
+        },
+    ];
+    let input = magnifier_input_from_groups(vec![
+        MagnifierChartBarInput {
+            chart_bar_index: 0,
+            bars: vec![bars[0]],
+        },
+        MagnifierChartBarInput {
+            chart_bar_index: 1,
+            bars: vec![
+                Bar {
+                    time: 2_000,
+                    open: 10.0,
+                    high: 10.4,
+                    low: 9.8,
+                    close: 10.2,
+                    volume: 1.0,
+                },
+                Bar {
+                    time: 2_300,
+                    open: 10.2,
+                    high: 10.8,
+                    low: 10.1,
+                    close: 10.6,
+                    volume: 1.0,
+                },
+                Bar {
+                    time: 2_600,
+                    open: 10.6,
+                    high: 11.8,
+                    low: 10.5,
+                    close: 11.0,
+                    volume: 1.0,
+                },
+            ],
+        },
+    ])
+    .expect("valid");
+    let mut batch_runtime = HistoricalRuntime::new(&program).with_magnifier_input(input.clone());
+    batch_runtime.append_bars(&bars).expect("batch");
+    let batch = batch_runtime.result();
+    let mut incremental = HistoricalRuntime::new(&program).with_magnifier_input(input);
+    for bar in &bars {
+        incremental.append_bar(*bar).expect("append");
+    }
+    assert_eq!(batch, incremental.result());
 }
 
 fn load_bars(path: &PathBuf) -> Vec<Bar> {

@@ -402,6 +402,54 @@ plot(close)
 }
 
 #[test]
+fn magnifier_calc_on_order_fills_false_does_not_add_script_passes() {
+    let with_fills = enabled_strategy(
+        r#"
+strategy("fills on", calc_on_order_fills=true, initial_capital=100000)
+if bar_index == 0
+    strategy.entry("EN", strategy.long, qty=1, stop=10.5)
+if strategy.position_size > 0
+    strategy.exit("EX", "EN", limit=11.5)
+plot(close)
+"#,
+    );
+    let without_fills = enabled_strategy(
+        r#"
+strategy("fills off", calc_on_order_fills=false, initial_capital=100000)
+if bar_index == 0
+    strategy.entry("EN", strategy.long, qty=1, stop=10.5)
+if strategy.position_size > 0
+    strategy.exit("EX", "EN", limit=11.5)
+plot(close)
+"#,
+    );
+    let bars = [timed_bar(1_000, 10.0), ohlc(2_000, 10.0, 12.0, 8.0, 11.0)];
+    let input = magnifier_input_from_groups(vec![
+        group(0, vec![timed_bar(1_000, 10.0)]),
+        group(
+            1,
+            vec![
+                ohlc(2_000, 10.0, 10.4, 9.8, 10.2),
+                ohlc(2_300, 10.2, 10.8, 10.1, 10.6),
+                ohlc(2_600, 10.6, 11.8, 10.5, 11.0),
+            ],
+        ),
+    ])
+    .expect("valid");
+    let mut on = HistoricalRuntime::new(&with_fills).with_magnifier_input(input.clone());
+    on.append_bars(&bars).expect("on");
+    let mut off = HistoricalRuntime::new(&without_fills).with_magnifier_input(input);
+    off.append_bars(&bars).expect("off");
+    assert!(
+        on.strategy_scheduler.script_passes() > off.strategy_scheduler.script_passes(),
+        "on={} off={}",
+        on.strategy_scheduler.script_passes(),
+        off.strategy_scheduler.script_passes()
+    );
+    assert_eq!(off.strategy_scheduler.recalculation_passes(), 0);
+}
+
+#[test]
 fn magnifier_false_setting_matches_standard_ohlc_baseline() {
     let source = r#"
 strategy("baseline", initial_capital=100000)
