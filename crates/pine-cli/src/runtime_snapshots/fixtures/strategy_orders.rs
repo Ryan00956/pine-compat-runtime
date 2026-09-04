@@ -354,6 +354,14 @@ pub(crate) const STRATEGY_ORDER_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixt
         "tests/fixtures/runtime/strategy_calc_on_every_tick.pine",
     ),
     (
+        "runtime_strategy_use_bar_magnifier_fallback.json",
+        "tests/fixtures/runtime/strategy_use_bar_magnifier_fallback.pine",
+    ),
+    (
+        "runtime_strategy_use_bar_magnifier_false.json",
+        "tests/fixtures/runtime/strategy_use_bar_magnifier_false.pine",
+    ),
+    (
         "runtime_strategy_calc_on_order_fills.json",
         "tests/fixtures/runtime/strategy_calc_on_order_fills.pine",
     ),

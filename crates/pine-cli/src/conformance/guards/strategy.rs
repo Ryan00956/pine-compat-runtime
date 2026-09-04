@@ -43,8 +43,13 @@ const STRATEGY_CALC_ON_EVERY_TICK_BOUNDARY_FIXTURES: &[&str] = &[
 ];
 
 const STRATEGY_BAR_MAGNIFIER_BOUNDARY_FIXTURES: &[&str] = &[
-    "tests/fixtures/sema/unsupported_strategy_declaration_properties.pine",
-    "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier.pine",
+    "tests/fixtures/sema/supported_strategy_use_bar_magnifier.pine",
+    "tests/fixtures/sema/supported_strategy_use_bar_magnifier_v6.pine",
+    "tests/fixtures/sema/supported_strategy_use_bar_magnifier_false.pine",
+    "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier_series.pine",
+    "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier_positional.pine",
+    "tests/fixtures/runtime/strategy_use_bar_magnifier_fallback.pine",
+    "tests/fixtures/runtime/strategy_use_bar_magnifier_false.pine",
 ];
 
 const STRATEGY_RISK_BOUNDARY_FIXTURES: &[&str] =
@@ -513,7 +518,7 @@ fn validate_strategy_bar_magnifier_boundary_fixture_paths(
     for fixture in STRATEGY_BAR_MAGNIFIER_BOUNDARY_FIXTURES {
         if !fixtures.contains(fixture) {
             return Err(format!(
-                "line {line_number}: `{feature}` must reference `{fixture}` while use_bar_magnifier remains unsupported and the magnifier host contract stays fail-closed"
+                "line {line_number}: `{feature}` must reference `{fixture}` while named const bool use_bar_magnifier is an accepted historical fill setting"
             ));
         }
     }

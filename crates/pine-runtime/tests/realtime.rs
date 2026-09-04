@@ -2025,7 +2025,7 @@ fn magnifier_historical_realtime_replay_matches_batch() {
     let source = SourceFile::new(
         "magnifier-realtime-replay.pine",
         r#"//@version=6
-strategy("magnifier replay", initial_capital=100000)
+strategy("magnifier replay", initial_capital=100000, use_bar_magnifier=true)
 if bar_index == 0
     strategy.entry("EN", strategy.long, qty=1, stop=10.5)
     strategy.exit("EX", "EN", limit=11.5)
@@ -2039,8 +2039,8 @@ plot(close)
         "{:?}",
         analysis.diagnostics
     );
-    let mut program = analysis.hir.expect("HIR");
-    program.strategy_settings.use_bar_magnifier = true;
+    let program = analysis.hir.expect("HIR");
+    assert!(program.strategy_settings.use_bar_magnifier);
     let bars = [
         Bar {
             time: 1_000,

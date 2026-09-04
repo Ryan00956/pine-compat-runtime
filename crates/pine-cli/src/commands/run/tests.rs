@@ -67,6 +67,96 @@ fn parses_run_options_with_magnifier_bars() {
 }
 
 #[test]
+fn runs_strategy_use_bar_magnifier_true_with_lower_bar_gap_fill() {
+    let suffix = format!("{}-{}", std::process::id(), line!());
+    let script = std::env::temp_dir().join(format!("pine-magnifier-cli-{suffix}.pine"));
+    let bars = std::env::temp_dir().join(format!("pine-magnifier-cli-{suffix}.csv"));
+    let magnifier = std::env::temp_dir().join(format!("pine-magnifier-cli-{suffix}.json"));
+    fs::write(
+        &script,
+        r#"//@version=6
+strategy("Bar magnifier gap", overlay=false, use_bar_magnifier=true, initial_capital=100000, pyramiding=2)
+if bar_index == 0
+    strategy.entry("STP", strategy.long, qty=1, stop=10.5)
+plot(strategy.position_size)
+"#,
+    )
+    .expect("write magnifier script");
+    fs::write(
+        &bars,
+        "time,open,high,low,close,volume\n1000,10,10,10,10,1\n2000,10,12,8,11,1\n",
+    )
+    .expect("write chart bars");
+    fs::write(
+        &magnifier,
+        r#"{"schemaVersion":1,"chartBars":[{"chartBarIndex":0,"bars":[{"time":1000,"open":10,"high":10,"low":10,"close":10,"volume":1}]},{"chartBarIndex":1,"bars":[{"time":2000,"open":10,"high":10.2,"low":9.9,"close":10.1,"volume":1},{"time":2300,"open":11,"high":11.2,"low":10.8,"close":11.1,"volume":1}]}]}"#,
+    )
+    .expect("write magnifier bars");
+
+    let script_path = script.to_string_lossy().into_owned();
+    let bars_path = bars.to_string_lossy().into_owned();
+    let magnifier_path = magnifier.to_string_lossy().into_owned();
+    let baseline_options = RunOptions {
+        path: script_path.clone(),
+        bars_path: bars_path.clone(),
+        magnifier_bars_path: None,
+        execution_times_path: None,
+        chart_context: ChartContext::default(),
+        profile: false,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+    let magnifier_options = RunOptions {
+        path: script_path,
+        bars_path,
+        magnifier_bars_path: Some(magnifier_path),
+        execution_times_path: None,
+        chart_context: ChartContext::default(),
+        profile: false,
+        request_bars: Vec::new(),
+        library_sources: Vec::new(),
+        input_overrides: Vec::new(),
+        strategy_alert_template: None,
+        strategy_running_alert: None,
+    };
+
+    let baseline = run_json_with_options(&baseline_options).expect("baseline CLI output");
+    let first = run_json_with_options(&magnifier_options).expect("magnifier CLI output");
+    let second = run_json_with_options(&magnifier_options).expect("repeated magnifier CLI output");
+    assert_eq!(first, second);
+    assert_ne!(first, baseline);
+
+    let parsed: serde_json::Value = serde_json::from_str(&first).expect("magnifier JSON");
+    assert_eq!(parsed["strategy"]["orders"][0]["id"], "STP");
+    assert_eq!(parsed["strategy"]["orders"][0]["barIndex"], 1);
+    assert_eq!(parsed["strategy"]["orders"][0]["time"], 2000);
+    assert_eq!(parsed["strategy"]["orders"][0]["price"], 11.0);
+
+    let baseline_parsed: serde_json::Value =
+        serde_json::from_str(&baseline).expect("baseline JSON");
+    assert_eq!(baseline_parsed["strategy"]["orders"][0]["price"], 10.5);
+    assert!(baseline.contains("W_MAGNIFIER_FALLBACK"), "{baseline}");
+
+    assert_eq!(
+        run_json_with_options_in_mode(&magnifier_options, ExecutionMode::Incremental)
+            .expect("incremental magnifier CLI output"),
+        first
+    );
+    assert_eq!(
+        run_json_with_options_in_mode(&magnifier_options, ExecutionMode::RealtimeHistory)
+            .expect("realtime-history magnifier CLI output"),
+        first
+    );
+
+    let _ = fs::remove_file(script);
+    let _ = fs::remove_file(bars);
+    let _ = fs::remove_file(magnifier);
+}
+
+#[test]
 fn parses_run_options_with_execution_times() {
     let options = parse_options(&[
         "script.pine".to_owned(),

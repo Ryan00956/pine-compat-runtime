@@ -6157,6 +6157,102 @@ def test_run_script_returns_strategy_calc_on_every_tick_contract():
     assert result == expected
 
 
+def test_run_script_returns_strategy_use_bar_magnifier_fallback_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_use_bar_magnifier_fallback.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_use_bar_magnifier_fallback.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_returns_strategy_use_bar_magnifier_false_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_use_bar_magnifier_false.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_use_bar_magnifier_false.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
+def test_run_script_uses_magnifier_lower_bars_for_strategy_fills() -> None:
+    source = '''//@version=6
+strategy("Bar magnifier gap", overlay=false, use_bar_magnifier=true, initial_capital=100000, pyramiding=2)
+if bar_index == 0
+    strategy.entry("STP", strategy.long, qty=1, stop=10.5)
+plot(strategy.position_size)
+'''
+    bars = [
+        {"time": 1000, "open": 10.0, "high": 10.0, "low": 10.0, "close": 10.0, "volume": 1.0},
+        {"time": 2000, "open": 10.0, "high": 12.0, "low": 8.0, "close": 11.0, "volume": 1.0},
+    ]
+    magnifier = {
+        "schemaVersion": 1,
+        "chartBars": [
+            {
+                "chartBarIndex": 0,
+                "bars": [
+                    {
+                        "time": 1000,
+                        "open": 10.0,
+                        "high": 10.0,
+                        "low": 10.0,
+                        "close": 10.0,
+                        "volume": 1.0,
+                    }
+                ],
+            },
+            {
+                "chartBarIndex": 1,
+                "bars": [
+                    {
+                        "time": 2000,
+                        "open": 10.0,
+                        "high": 10.2,
+                        "low": 9.9,
+                        "close": 10.1,
+                        "volume": 1.0,
+                    },
+                    {
+                        "time": 2300,
+                        "open": 11.0,
+                        "high": 11.2,
+                        "low": 10.8,
+                        "close": 11.1,
+                        "volume": 1.0,
+                    },
+                ],
+            },
+        ],
+    }
+    baseline = pine_compat.run_script(source, bars)
+    result = pine_compat.run_script(source, bars, magnifier_bars=magnifier)
+    assert result != baseline
+    assert result["strategy"]["orders"][0]["id"] == "STP"
+    assert result["strategy"]["orders"][0]["barIndex"] == 1
+    assert result["strategy"]["orders"][0]["time"] == 2000
+    assert result["strategy"]["orders"][0]["price"] == 11.0
+    assert baseline["strategy"]["orders"][0]["price"] == 10.5
+
+
 def test_run_script_returns_strategy_calc_on_order_fills_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_calc_on_order_fills.pine"

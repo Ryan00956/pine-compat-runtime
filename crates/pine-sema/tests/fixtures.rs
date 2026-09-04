@@ -4269,12 +4269,7 @@ fn reports_unsupported_strategy_declaration_properties_fixture() {
     );
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_declaration_properties.pine",
-        &[
-            "currency",
-            "risk_free_rate",
-            "use_bar_magnifier",
-            "fill_orders_on_standard_ohlc",
-        ],
+        &["currency", "risk_free_rate", "fill_orders_on_standard_ohlc"],
     );
 }
 
@@ -4305,11 +4300,23 @@ fn reports_strategy_process_orders_on_close_series_rejected() {
 }
 
 #[test]
-fn reports_strategy_process_orders_on_close_keeps_recalc_flags_rejected() {
-    assert_diagnostic_messages(
+fn accepts_strategy_process_orders_on_close_with_bar_magnifier() {
+    let path = workspace_fixture(
         "tests/fixtures/sema/unsupported_strategy_process_orders_on_close_with_recalc.pine",
-        &["use_bar_magnifier"],
     );
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    assert!(hir.strategy_settings.process_orders_on_close);
+    assert!(hir.strategy_settings.calc_on_order_fills);
+    assert!(hir.strategy_settings.use_bar_magnifier);
 }
 
 #[test]
@@ -4338,11 +4345,36 @@ fn reports_strategy_calc_on_every_tick_series_rejected() {
 }
 
 #[test]
-fn reports_unsupported_strategy_use_bar_magnifier_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_strategy_use_bar_magnifier.pine",
-        &["use_bar_magnifier"],
+fn accepts_supported_strategy_use_bar_magnifier_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_use_bar_magnifier.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
     );
+    let hir = analysis.hir.expect("HIR");
+    assert!(hir.strategy_settings.use_bar_magnifier);
+}
+
+#[test]
+fn accepts_supported_strategy_use_bar_magnifier_v6_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_strategy_use_bar_magnifier_v6.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    assert!(hir.strategy_settings.use_bar_magnifier);
 }
 
 #[test]

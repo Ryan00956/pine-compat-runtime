@@ -304,13 +304,6 @@ impl Analyzer {
                     }
                     if let Some(value) = self.known_const_bool_value(&arg.value) {
                         self.strategy_settings.use_bar_magnifier = value;
-                        if value {
-                            self.unsupported(
-                                "use_bar_magnifier",
-                                "historical lower-timeframe fill wiring is not implemented",
-                                arg.span,
-                            );
-                        }
                     }
                 }
                 _ => {}

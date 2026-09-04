@@ -147,8 +147,11 @@ fn enabled_strategy(source: &str) -> pine_ir::HirProgram {
         "{:?}",
         analysis.diagnostics
     );
-    let mut program = analysis.hir.expect("HIR");
-    program.strategy_settings.use_bar_magnifier = true;
+    let program = analysis.hir.expect("HIR");
+    assert!(
+        program.strategy_settings.use_bar_magnifier,
+        "enabled_strategy sources must set use_bar_magnifier=true"
+    );
     program
 }
 
@@ -169,7 +172,7 @@ fn magnifier_three_lower_bars_walk_independent_host_paths() {
 
     let program = enabled_strategy(
         r#"
-strategy("three lower bars")
+strategy("three lower bars", use_bar_magnifier=true)
 plot(close)
 "#,
     );
@@ -220,7 +223,7 @@ plot(close)
 fn magnifier_empty_group_falls_back_once_and_keeps_chart_identity() {
     let program = enabled_strategy(
         r#"
-strategy("empty group")
+strategy("empty group", use_bar_magnifier=true)
 plot(close)
 "#,
     );
@@ -248,7 +251,7 @@ plot(close)
 fn magnifier_doji_lower_bar_terminates_without_replay() {
     let program = enabled_strategy(
         r#"
-strategy("doji")
+strategy("doji", use_bar_magnifier=true)
 plot(close)
 "#,
     );
@@ -272,7 +275,7 @@ fn magnifier_fill_resumes_from_current_host_leg_without_replay() {
 
     let program = enabled_strategy(
         r#"
-strategy("resume", calc_on_order_fills=true, initial_capital=100000)
+strategy("resume", calc_on_order_fills=true, initial_capital=100000, use_bar_magnifier=true)
 if bar_index == 0
     strategy.entry("EN", strategy.long, qty=1, stop=10.5)
 if strategy.position_size > 0
@@ -327,7 +330,7 @@ plot(close)
 fn magnifier_gap_fills_stop_at_next_open_not_requested_price() {
     let program = enabled_strategy(
         r#"
-strategy("gap stop", pyramiding=2, initial_capital=100000)
+strategy("gap stop", pyramiding=2, initial_capital=100000, use_bar_magnifier=true)
 if bar_index == 0
     strategy.entry("STP", strategy.long, qty=1, stop=10.5)
 plot(close)
@@ -363,7 +366,7 @@ plot(close)
 fn magnifier_same_chart_bar_entry_and_exit_uses_chart_bar_index() {
     let program = enabled_strategy(
         r#"
-strategy("same bar", initial_capital=100000)
+strategy("same bar", initial_capital=100000, use_bar_magnifier=true)
 if bar_index == 0
     strategy.entry("EN", strategy.long, qty=1, stop=10.5)
     strategy.exit("EX", "EN", limit=11.5)
@@ -405,7 +408,7 @@ plot(close)
 fn magnifier_calc_on_order_fills_false_does_not_add_script_passes() {
     let with_fills = enabled_strategy(
         r#"
-strategy("fills on", calc_on_order_fills=true, initial_capital=100000)
+strategy("fills on", calc_on_order_fills=true, initial_capital=100000, use_bar_magnifier=true)
 if bar_index == 0
     strategy.entry("EN", strategy.long, qty=1, stop=10.5)
 if strategy.position_size > 0
@@ -415,7 +418,7 @@ plot(close)
     );
     let without_fills = enabled_strategy(
         r#"
-strategy("fills off", calc_on_order_fills=false, initial_capital=100000)
+strategy("fills off", calc_on_order_fills=false, initial_capital=100000, use_bar_magnifier=true)
 if bar_index == 0
     strategy.entry("EN", strategy.long, qty=1, stop=10.5)
 if strategy.position_size > 0
