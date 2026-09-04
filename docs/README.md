@@ -69,11 +69,10 @@ cargo run -p pine-cli -- matrix --format json
 - [Strategy Stage 18g True OHLC Path Execution Plan](STRATEGY_INTERNAL_STAGE18G_TRUE_OHLC_PATH_EXECUTION_PLAN.md):
   step-by-step reference lock, path model, candidate ordering, broker identity,
   fill integration, rollback, fixture matrix, and closeout gates for Stage 18g.
-  Slice 18g.0 is blocked on unresolved equal-distance and same-price ranks.
+  Slice 18g.1 is authorized under the B1 `UNVERIFIED_INTERNAL_ORDER` amendment.
 - [Strategy Stage 18g True OHLC Path Audit](STRATEGY_INTERNAL_STAGE18_TRUE_OHLC_PATH_AUDIT.md):
-  18g.0 official review, reference matrix, oracle scripts, and design
-  correction. Later slices must not start until the blocking questions have
-  lawful reference output.
+  18g.0 official review, Tester evidence index, sample-level A/C/D locks, B1
+  `UNVERIFIED_INTERNAL_ORDER` amendment, and path-primitive status.
 - [Strategy Broker Stage 17-22 Integration Audit](STRATEGY_BROKER_STAGE17_22_INTEGRATION_AUDIT.md):
   recovered worktree scope, commit boundary, final verification, Stage 18f
   correction, and remaining compatibility limits.

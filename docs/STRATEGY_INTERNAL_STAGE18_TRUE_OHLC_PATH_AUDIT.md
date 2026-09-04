@@ -1,21 +1,18 @@
 # Strategy Internal Stage 18g True OHLC Path Audit
 
-Status: draft after Slice 18g.0 on 2026-09-03. Stage 18g is **blocked** before
-any path-builder or fill-order change. Official high-first and low-first path
-rules are locked. Equal-distance selection, same-price entry-versus-exit rank,
-same-price exit-versus-margin rank, and same-bar stop-limit post-activation
-eligibility remain unresolved without a lawful TradingView reference export.
+Status: Slice 18g.0 reference lock plus B1 contract amendment recorded on
+2026-09-03. Slice 18g.1 path primitives are authorized under that amendment.
+Family-order production fills remain active until a later slice. This is not
+Stage 18g closeout.
 
-This document is a reference-lock and design-correction record. It does not
-claim new strategy support. Support claims still come from
-`tests/fixtures/conformance.tsv`, committed fixtures and snapshots, host
-parity, and a passing `scripts/verify.sh` run.
+This document is a reference-lock, evidence index, and contract-amendment
+record. It does not claim new public strategy support. Support claims still
+come from `tests/fixtures/conformance.tsv`, committed fixtures and snapshots,
+host parity, and a passing `scripts/verify.sh` run.
 
 Starting commit: `1e9ac6af6d585fb76c39674b627f68292878a542` (`main`).
 Working branch: `codex/strategy-stage18g-ohlc-path`.
-Ending commit for this slice: recorded in the 18g.0 commit that adds this
-draft. Later slices must not append an ending Stage 18g closeout commit until
-the blocking questions below are resolved.
+18g.0 docs commit: `f2f9338a06b72516aaedcba9e451e750c2fbcf75`.
 
 ## Official Review
 
@@ -61,50 +58,92 @@ equal-distance branch.
 No comparator rank is taken from the current family-order scheduler, enum
 order, or existing snapshots.
 
+## Evidence Index (2026-09-03)
+
+Chrome Strategy Tester pack (BINANCE:ADAUSDT.P 1m, Pine v6,
+`use_bar_magnifier=false`, commission/slippage/limit-verify 0; emulator build
+not exposed). Do not commit TradingView Pine sources from these packs as
+runtime fixtures.
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `18g-b1-evidence-package.zip` | `506903bb331af76624d4402494babd3c4878905fd82ba438a08c94f4ad7d8725` |
+| `18g-b1-source-free.json` | `5e037d5927d5eb108661b7b58d2f78c6f062449733c2dc64d0cc5440d5317fb2` |
+| `18g-b1-contract-amendment.md` | `3696037b841aaebd0f82e398ba991a5f9d1ba85335c7babd454e8472d176968c` |
+| earlier `stage18g-source-free-runs.json` (A/C/D) | `bb5ced6d188e52e667b112f6abfcfe9ad223ac84baf95d2ca029280f5773a49c` |
+
+A, C, and D were not re-run in the B1 package. They stay the sample-level
+rows in the 17-run JSON / Chrome audit report.
+
+## B1 Contract Amendment
+
+Confirmed by the user on 2026-09-03 after the B1 follow-up (both declaration
+orders, capacity variants, NEXT-only and early-EX controls; 6 runs, 56 SNAP
+lines). Target bar still only showed `BASE=1 → NEXT=1`. No intermediate
+`position_size=0` or `position_size=2`. Capacity early-EX did not restore a
+NEXT fill, so final flat cannot rank ENTRY vs EXIT. No margin call in B1.
+
+Amendment:
+
+- Do not lock a global entry-before-exit or exit-before-entry type rank.
+- B1 is `UNVERIFIED_INTERNAL_ORDER` / an unverified boundary.
+- For same-price events not locked by evidence, this runtime uses creation
+  sequence and a stable internal key for determinism only. That is this
+  runtime's contract. It is not a claim that TradingView's private internal
+  order is reproduced.
+- Missing intermediate script callbacks must not be read as proven emulator
+  atomicity.
+- A, C, and D remain sample-level ADAUSDT conclusions. They are not
+  all-symbol laws and must not be re-run to "complete" 18g.0.
+
+Creation-sequence / stable-key reproducibility must be testable. It must not
+depend on wall-clock time, thread scheduling, random values, or unstable
+collection order.
+
+## Sample-Level Path And Event Locks
+
+These are ADAUSDT 1m tick-aligned analogues, not the original hand-authored
+`O=10 H=12 L=8 C=10` / 10.8/8.2 numeric oracles.
+
+- Equal-distance analogue bar `O=0.1939 H=0.1941 L=0.1937 C=0.1939`: LIM@0.1938
+  then STP@0.1940 on bar 23851. Sample-level path is open-low-high-close.
+  Equal-distance doji and close-direction variants stay out of evidence.
+- High-first stop-limit bar 23863 `O=0.1968 H=0.1971 L=0.1961 C=0.1969`: SL
+  fills at 0.1962 on that bar. Sample-level same-bar post-activation fill.
+  Short and low-first stop-limit stay out of evidence.
+- User exit vs margin at mark 0.1937: USER_EXIT qty=1 then Margin call. Sample
+  for this pre-placed long stop-exit. Not all margin scenes. The margin event
+  is a public `Margin call` / `Close position order`, not a user id.
+
+Inter-bar gap remains confirmed-deferred from official docs and is not in this
+pack.
+
 ## Design Correction
 
-Stop Stage 18g here. Do not start Slice 18g.1 or any later behavior-changing
-slice until a lawful source-free TradingView order/trade export answers the
-blocking questions below.
+The previous 18g.0 stop ("no Tester rows") is lifted for Slice 18g.1 path
+primitives only. Later fill-order slices still must not invent a B1 type rank
+or generalize A/C/D beyond the recorded samples.
 
-Required external evidence, for original scripts and hand-authored OHLC, not
-market-feed dependence:
-
-1. Equal-distance path: which of open-high-low-close or open-low-high-close
-   wins when `|open-high| == |open-low|`, including whether close direction
-   matters, and what happens when the bar is a four-price doji.
-2. Same-price user entry versus user exit on one path crossing: observed
-   order-id sequence, bar index, fill price, direction, quantity, and
-   resulting position.
-3. Same-price user exit versus synthetic margin on one path mark: the same
-   fields, plus whether the margin event is a public order and whether it
-   impersonates a user id.
-4. Stop-limit activation followed by a limit crossing on the **same**
-   historical bar: whether the limit can fill on the activation bar, and at
-   which path mark.
-
-Until those rows exist, keep:
+Until later slices own fill-order changes, keep:
 
 - the production `HistoricalFillStep` family-order dispatcher;
-- the current later-bar stop-limit delay
-  (`activated_bar_index < bar_index`);
 - current whole-bar margin and exit phases;
 - public strategy JSON schema versions unchanged.
 
-Do not default equal-distance to high-first, low-first, close-direction, or
-"else" of either official clause. Do not invent an entry-before-exit,
-long-before-short, or margin-before-exit rank to preserve an old snapshot.
+Stop-limit same-bar eligibility is sample-locked for the high-first long
+analogue above; do not widen short/low-first without evidence. Do not infer
+TradingView internal atomicity from missing intermediate callbacks.
 
 ## Reference Matrix
 
 | Case | Official statement | Lawful TV export | Expected sequence recorded before Rust change | Classification |
 | --- | --- | --- | --- | --- |
-| Open closer to high | open, high, low, close | not supplied | high-first long: stop then limit; high-first short: limit then stop, on the script/bars below | confirmed-in-scope |
-| Open closer to low | open, low, high, close | not supplied | low-first long: limit then stop; low-first short: stop then limit | confirmed-in-scope |
-| Open exactly equidistant | neither closer-than clause applies; page silent | not supplied | **blocked** | unresolved-blocking |
-| Same-price entry vs user exit | path crossing only; no family rank | not supplied | **blocked** | unresolved-blocking |
-| Same-price exit vs margin | margin formula exists; no same-price rank vs user exit | not supplied | **blocked** | unresolved-blocking |
-| Same-bar stop-limit then limit | multi-bar example only | not supplied | **blocked** for widening; keep current later-bar delay fail-closed | unresolved-blocking |
+| Open closer to high | open, high, low, close | official pages | high-first long: stop then limit; high-first short: limit then stop | confirmed-in-scope |
+| Open closer to low | open, low, high, close | official pages | low-first long: limit then stop; low-first short: stop then limit | confirmed-in-scope |
+| Open exactly equidistant | page silent | ADAUSDT analogue LIM then STP (OLHC) | sample-level OLHC; not original 10/12/8/10; doji/close-direction unverified | sample-locked |
+| Same-price entry vs user exit | path crossing only; no family rank | B1 pack: BASE=1→NEXT=1, no pos 0/2 | `UNVERIFIED_INTERNAL_ORDER`; runtime creation sequence/key only | unverified-boundary |
+| Same-price exit vs margin | margin formula exists; no general rank | USER_EXIT then Margin call at 0.1937 | sample-level for that long stop-exit | sample-locked |
+| Same-bar stop-limit then limit | multi-bar official example | high-first SL fill 0.1962 on bar 23863 | sample-level same-bar fill; short/low-first unverified | sample-locked |
 | Inter-bar gap crossing | fill at next open | not supplied | keep current next-open fill; not part of this rewrite | confirmed-deferred |
 | `calc_on_order_fills` | extra pass after a fill, not after non-fill bookkeeping | Stage 21b goldens | unchanged 18g.0 claim | confirmed-in-scope |
 | In-range prices reachable | any price in the bar range | not supplied | use asymmetric bars in later fixtures | confirmed-in-scope |
@@ -112,10 +151,9 @@ long-before-short, or margin-before-exit rank to preserve an old snapshot.
 
 ## Oracle Scripts And Bars
 
-These scripts are original and were **not** executed against a TradingView
-reference environment in this worktree. They are the scripts that must be run
-to lift the block. Do not commit them as passing runtime fixtures until
-source-free order/trade rows exist.
+These original synthetic scripts were the 18g.0 templates. TradingView
+evidence used tick-aligned ADAUSDT analogues instead of these exact prices.
+Do not commit TradingView Pine sources as passing runtime fixtures.
 
 Platform context to record with any future export: Pine version, broker
 emulator build/UI date, symbol, timeframe, `use_bar_magnifier=false`,
@@ -276,7 +314,9 @@ next-open filling is locked, but it is not part of the intrabar walk.
 
 ## Closeout Fields (Not Yet Applicable)
 
-Implemented path and comparator: not implemented.
+Implemented path builder: Slice 18g.1 pure `HistoricalPath` (not wired into
+the production scheduler). Equal-distance uses the sample-locked OLHC rule.
+Candidate comparator: not implemented. No B1 entry/exit type rank.
 Internal identity migration: not implemented.
 Added fixtures: none.
 Intentionally changed snapshots: none.

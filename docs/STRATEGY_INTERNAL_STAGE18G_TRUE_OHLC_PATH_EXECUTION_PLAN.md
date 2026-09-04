@@ -1,16 +1,25 @@
 # Strategy Internal Stage 18g True OHLC Path Execution Plan
 
-Status: blocked after Slice 18g.0 on 2026-09-03. Stage 18a-18e are closed.
-Stage 18f established a deterministic family-ordered scheduler but did not
-implement a true historical OHLC walk. Official high-first and low-first path
-rules are locked in
-`docs/STRATEGY_INTERNAL_STAGE18_TRUE_OHLC_PATH_AUDIT.md`. Equal-distance
-selection, same-price entry-versus-exit rank, same-price exit-versus-margin
-rank, and same-bar stop-limit post-activation eligibility remain unresolved
-without a lawful TradingView reference export. Do not start Slice 18g.1 or
-later behavior-changing work until that audit's design-correction evidence
-exists. This document remains the step-by-step plan for closing Stage 18 after
-the block lifts.
+Status: Slice 18g.1 authorized on 2026-09-03 under the B1 contract
+amendment in `docs/STRATEGY_INTERNAL_STAGE18_TRUE_OHLC_PATH_AUDIT.md`.
+Stage 18a-18e are closed. Stage 18f established a deterministic family-ordered
+scheduler but did not implement a true historical OHLC walk. Official
+high-first and low-first path rules are locked. Equal-distance is sample-locked
+to open-low-high-close on the recorded ADAUSDT analogue. Same-direction
+same-price entry/exit is `UNVERIFIED_INTERNAL_ORDER`: this runtime may use
+creation sequence and a stable internal key for determinism only; that is not
+a TradingView private-order claim and must not become a global
+entry-before-exit or exit-before-entry type rank. Missing intermediate
+callbacks must not be read as proven emulator atomicity. A/C/D stay
+sample-level and must not be re-run or generalized. The production family-order
+dispatcher stays active until a later slice replaces it.
+
+B1 evidence index (SHA-256): package
+`506903bb331af76624d4402494babd3c4878905fd82ba438a08c94f4ad7d8725`,
+source-free JSON
+`5e037d5927d5eb108661b7b58d2f78c6f062449733c2dc64d0cc5440d5317fb2`,
+contract amendment
+`3696037b841aaebd0f82e398ba991a5f9d1ba85335c7babd454e8472d176968c`.
 
 This plan is subordinate to executable evidence. The compatibility authority
 remains `tests/fixtures/conformance.tsv`, its referenced fixtures, committed
@@ -105,17 +114,21 @@ oracles.
 
 ### Unresolved Reference Questions
 
-Resolve these questions before the first behavior-changing slice:
+Dispositions after the 2026-09-03 Tester packs (see the Stage 18g audit):
 
-1. The current official page does not state which path wins when the open is
-   exactly equidistant from the high and low.
-2. The exact same-price precedence between a synthetic margin event and a
-   user-created exit is not fully specified by the general path description.
-3. The existing runtime deliberately delays a stop-limit's limit eligibility;
-   same-bar post-activation eligibility must not be widened without exact
-   reference-output evidence.
-4. Inter-bar gap fills are adjacent to, but not automatically part of, the
-   intrabar Stage 18g rewrite.
+1. Equal-distance path: official page silent; sample-locked open-low-high-close
+   on the ADAUSDT analogue (LIM then STP). Doji and close-direction stay
+   unverified.
+2. Same-price user exit versus margin: sample-locked USER_EXIT then Margin call
+   at the recorded long stop-exit mark. Not a general margin law.
+3. Same-bar stop-limit: sample-locked same-bar limit fill on the recorded
+   high-first long analogue. Short and low-first stay unverified.
+4. Inter-bar gap fills remain adjacent to, and not automatically part of, the
+   intrabar rewrite.
+5. Same-direction same-price entry versus exit is `UNVERIFIED_INTERNAL_ORDER`.
+   Do not invent a global type rank. This runtime may use creation sequence and
+   a stable internal key for determinism only. Missing intermediate callbacks
+   must not be read as proven emulator atomicity.
 
 For each question, create an original minimal strategy, run it against an
 explicit OHLC dataset in the reference environment, and save only lawful
@@ -481,8 +494,15 @@ Goal: settle observable rules before designing comparator ranks.
 - no comparator rank is justified only by current runtime behavior; and
 - the Stage 18g audit draft contains the reference table.
 
-If equality or a required cross-family rule is still unresolved, stop Stage
-18g here and write a design-correction note.
+18g.0 dispositions after the 2026-09-03 Tester packs and B1 amendment:
+
+- equal-distance: sample-locked OLHC (LIM then STP on the ADAUSDT analogue);
+- B1 same-direction same-price entry/exit: `UNVERIFIED_INTERNAL_ORDER`;
+- exit versus margin and high-first same-bar stop-limit: sample-locked;
+- no global entry/exit type rank.
+
+Slice 18g.1 may add a pure path builder under that amendment. Later slices
+must not invent a B1 type rank.
 
 ## Slice 18g.1: Pure Historical Path Primitives
 
