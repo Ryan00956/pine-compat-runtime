@@ -2,9 +2,7 @@
 
 use super::BrokerState;
 use super::pending_entries::{PendingEntry, PendingEntryDirection, PendingEntryKind};
-use super::pending_exits::{
-    PendingExit, PendingExitTrigger, PendingTrailingState, PendingTrailingUpdate,
-};
+use super::pending_exits::{PendingExit, PendingExitTrigger, PendingTrailingState};
 use super::types::{InternalOrderKey, StrategyCommandOrigin};
 use crate::runtime::strategy_path::{HistoricalPathKind, PathLeg};
 use crate::strategy::broker::ledger::TradeDirection;
@@ -168,6 +166,9 @@ impl BrokerState {
             if pending.last_update_bar_index >= bar_index {
                 continue;
             }
+            if !self.has_open_position_for_entry(&pending.from_entry) {
+                continue;
+            }
             candidates.extend(exit_leg_candidates(
                 pending, direction, leg, high, low, verify, generation,
             ));
@@ -272,12 +273,24 @@ fn entry_fill_candidate(
 }
 
 fn price_on_leg(leg: PathLeg, price: f64) -> bool {
+    leg.contains_price(price)
+}
+
+/// Crossing used to visit a trigger on this leg.
+///
+/// If the exact price is inside the segment, use it. If the bar already
+/// traded through the trigger (gap or a doji beyond the level), clamp onto
+/// the segment so the fill still occurs at the requested price.
+fn crossing_on_leg(leg: PathLeg, price: f64) -> Option<f64> {
     if !price.is_finite() {
-        return false;
+        return None;
+    }
+    if price_on_leg(leg, price) {
+        return Some(price);
     }
     let low = leg.from.price.min(leg.to.price);
     let high = leg.from.price.max(leg.to.price);
-    price >= low && price <= high
+    Some(price.clamp(low, high))
 }
 
 fn same_bar_stop_limit_fill_allowed(
@@ -441,6 +454,48 @@ fn entry_leg_candidates(
     out
 }
 
+fn exit_fill_candidate(
+    pending: &PendingExit,
+    path_leg: u8,
+    crossing_price: f64,
+    fill_price: f64,
+    generation: u64,
+) -> BrokerCandidate {
+    BrokerCandidate {
+        event_kind: BrokerCandidateEvent::ExitFill,
+        phase: BrokerCandidatePhase::PathLeg,
+        path_leg,
+        crossing_price,
+        fill_price_or_mark: fill_price,
+        creation_sequence: pending.key.0,
+        stable_order_key: pending.key,
+        observed_generation: generation,
+        origin: StrategyCommandOrigin::Exit,
+        public_id: pending.id.clone(),
+    }
+}
+
+fn trailing_state_candidate(
+    pending: &PendingExit,
+    kind: BrokerCandidateEvent,
+    path_leg: u8,
+    mark: f64,
+    generation: u64,
+) -> BrokerCandidate {
+    BrokerCandidate {
+        event_kind: kind,
+        phase: BrokerCandidatePhase::PathLeg,
+        path_leg,
+        crossing_price: mark,
+        fill_price_or_mark: mark,
+        creation_sequence: pending.key.0,
+        stable_order_key: pending.key,
+        observed_generation: generation,
+        origin: StrategyCommandOrigin::Exit,
+        public_id: pending.id.clone(),
+    }
+}
+
 fn exit_leg_candidates(
     pending: &PendingExit,
     direction: TradeDirection,
@@ -452,66 +507,100 @@ fn exit_leg_candidates(
 ) -> Vec<BrokerCandidate> {
     let mut out = Vec::new();
     match &pending.trigger {
-        PendingExitTrigger::Trailing(trailing) => {
-            match trailing.evaluate_update_for(direction, high, low) {
-                PendingTrailingUpdate::NoChange => {}
-                PendingTrailingUpdate::Persist(updated) => {
-                    let kind = if trailing.state == PendingTrailingState::Inactive {
-                        BrokerCandidateEvent::TrailingActivation
-                    } else {
-                        BrokerCandidateEvent::TrailingRatchet
-                    };
-                    let mark = match updated.state {
-                        PendingTrailingState::Active { stop_price } => stop_price,
-                        PendingTrailingState::Inactive => trailing.spec.activation.price(),
-                    };
-                    out.push(BrokerCandidate {
-                        event_kind: kind,
-                        phase: BrokerCandidatePhase::PathLeg,
-                        path_leg: leg.index,
-                        crossing_price: mark,
-                        fill_price_or_mark: mark,
-                        creation_sequence: pending.key.0,
-                        stable_order_key: pending.key,
-                        observed_generation: generation,
-                        origin: StrategyCommandOrigin::Exit,
-                        public_id: pending.id.clone(),
-                    });
-                }
-                PendingTrailingUpdate::Candidate(touch) => {
-                    if price_on_leg(leg, touch.exit_price) {
-                        out.push(BrokerCandidate {
-                            event_kind: BrokerCandidateEvent::ExitFill,
-                            phase: BrokerCandidatePhase::PathLeg,
-                            path_leg: leg.index,
-                            crossing_price: touch.exit_price,
-                            fill_price_or_mark: touch.exit_price,
-                            creation_sequence: pending.key.0,
-                            stable_order_key: pending.key,
-                            observed_generation: generation,
-                            origin: StrategyCommandOrigin::Exit,
-                            public_id: pending.id.clone(),
-                        });
+        PendingExitTrigger::Trailing(trailing) => match trailing.state {
+            PendingTrailingState::Inactive => {
+                let activation = trailing.spec.activation.price();
+                let mark = match direction {
+                    TradeDirection::Long if high >= activation => {
+                        Some(leg.from.price.max(activation).min(high))
                     }
+                    TradeDirection::Short if low <= activation => {
+                        Some(leg.from.price.min(activation).max(low))
+                    }
+                    _ => None,
+                };
+                if let Some(mark) = mark
+                    && price_on_leg(leg, mark)
+                {
+                    out.push(trailing_state_candidate(
+                        pending,
+                        BrokerCandidateEvent::TrailingActivation,
+                        leg.index,
+                        mark,
+                        generation,
+                    ));
+                }
+            }
+            PendingTrailingState::Active { stop_price } => {
+                let hit = match direction {
+                    TradeDirection::Long => low <= stop_price,
+                    TradeDirection::Short => high >= stop_price,
+                };
+                if hit {
+                    if let Some(crossing) = crossing_on_leg(leg, stop_price) {
+                        out.push(exit_fill_candidate(
+                            pending, leg.index, crossing, stop_price, generation,
+                        ));
+                    }
+                }
+                let next_stop = match direction {
+                    TradeDirection::Long => high - trailing.spec.offset_price_distance,
+                    TradeDirection::Short => low + trailing.spec.offset_price_distance,
+                };
+                let improves = match direction {
+                    TradeDirection::Long => next_stop > stop_price,
+                    TradeDirection::Short => next_stop < stop_price,
+                };
+                let extreme = match direction {
+                    TradeDirection::Long => high,
+                    TradeDirection::Short => low,
+                };
+                if improves && price_on_leg(leg, extreme) {
+                    out.push(trailing_state_candidate(
+                        pending,
+                        BrokerCandidateEvent::TrailingRatchet,
+                        leg.index,
+                        extreme,
+                        generation,
+                    ));
+                }
+            }
+        },
+        PendingExitTrigger::Bracket { downside, upside } => {
+            let stop_touched = match direction {
+                TradeDirection::Long => low <= *downside,
+                TradeDirection::Short => high >= *downside,
+            };
+            if stop_touched {
+                if let Some(crossing) = crossing_on_leg(leg, *downside) {
+                    out.push(exit_fill_candidate(
+                        pending, leg.index, crossing, *downside, generation,
+                    ));
+                }
+            }
+            let limit_touched = match direction {
+                TradeDirection::Long => high >= *upside + verify,
+                TradeDirection::Short => low <= *upside - verify,
+            };
+            if limit_touched {
+                if let Some(crossing) = crossing_on_leg(leg, *upside) {
+                    out.push(exit_fill_candidate(
+                        pending, leg.index, crossing, *upside, generation,
+                    ));
                 }
             }
         }
         trigger => {
-            if let Some(touch) = trigger.touched_candidate_for(direction, high, low, verify) {
-                if price_on_leg(leg, touch.exit_price) {
-                    out.push(BrokerCandidate {
-                        event_kind: BrokerCandidateEvent::ExitFill,
-                        phase: BrokerCandidatePhase::PathLeg,
-                        path_leg: leg.index,
-                        crossing_price: touch.exit_price,
-                        fill_price_or_mark: touch.exit_price,
-                        creation_sequence: pending.key.0,
-                        stable_order_key: pending.key,
-                        observed_generation: generation,
-                        origin: StrategyCommandOrigin::Exit,
-                        public_id: pending.id.clone(),
-                    });
-                }
+            if let Some(touch) = trigger.touched_candidate_for(direction, high, low, verify)
+                && let Some(crossing) = crossing_on_leg(leg, touch.exit_price)
+            {
+                out.push(exit_fill_candidate(
+                    pending,
+                    leg.index,
+                    crossing,
+                    touch.exit_price,
+                    generation,
+                ));
             }
         }
     }

@@ -2,6 +2,7 @@ use super::{
     BrokerState,
     candidates::{BrokerCandidate, BrokerCandidateEvent},
     pending_entries::{PendingEntry, PendingEntryDirection, PendingEntryKind},
+    pending_exits::{PendingExitTrigger, PendingTrailingState},
     types::{EntryFill, EntryPyramidingMode, InternalOrderKey, OcaPeerEffects},
 };
 use crate::runtime::strategy_path::{HistoricalPathKind, PathLeg};
@@ -51,6 +52,9 @@ impl BrokerState {
                     candidate.event_kind,
                     BrokerCandidateEvent::EntryOrOrderFill
                         | BrokerCandidateEvent::StopLimitActivation
+                        | BrokerCandidateEvent::ExitFill
+                        | BrokerCandidateEvent::TrailingActivation
+                        | BrokerCandidateEvent::TrailingRatchet
                 ) && candidate.observed_generation == self.event_generation
                     && tick
                         .leg
@@ -72,6 +76,17 @@ impl BrokerState {
                     mark: candidate.crossing_price,
                 }
             }
+            BrokerCandidateEvent::TrailingActivation | BrokerCandidateEvent::TrailingRatchet => {
+                self.apply_trailing_path_update(
+                    candidate.stable_order_key,
+                    candidate.crossing_price,
+                );
+                self.bump_event_generation();
+                PathEventOutcome::Activated {
+                    mark: candidate.crossing_price,
+                }
+            }
+            BrokerCandidateEvent::ExitFill => self.apply_exit_path_candidate(candidate, tick),
             BrokerCandidateEvent::EntryOrOrderFill => {
                 let Some(pending) = self
                     .order_book
@@ -119,6 +134,98 @@ impl BrokerState {
             _ => PathEventOutcome::Ignored {
                 mark: candidate.crossing_price,
             },
+        }
+    }
+
+    fn apply_trailing_path_update(&mut self, key: InternalOrderKey, mark: f64) {
+        let offset = {
+            let Some(pending) = self
+                .order_book
+                .exits()
+                .iter()
+                .find(|pending| pending.key == key)
+            else {
+                return;
+            };
+            let PendingExitTrigger::Trailing(trailing) = &pending.trigger else {
+                return;
+            };
+            trailing.spec.offset_price_distance
+        };
+        let stop_price = if self.position_size < 0.0 {
+            mark + offset
+        } else {
+            mark - offset
+        };
+        let Some(pending) = self.order_book.exits_mut().find_mut_by_key(key) else {
+            return;
+        };
+        let PendingExitTrigger::Trailing(trailing) = &mut pending.trigger else {
+            return;
+        };
+        trailing.state = PendingTrailingState::Active { stop_price };
+    }
+
+    fn apply_exit_path_candidate(
+        &mut self,
+        candidate: &BrokerCandidate,
+        tick: EntryPathTick,
+    ) -> PathEventOutcome {
+        let eligible = self
+            .order_book
+            .exits()
+            .iter()
+            .find(|pending| pending.key == candidate.stable_order_key)
+            .is_some_and(|pending| {
+                self.position_size != 0.0 && self.has_open_position_for_entry(&pending.from_entry)
+            });
+        if !eligible {
+            return PathEventOutcome::Ignored {
+                mark: candidate.crossing_price,
+            };
+        }
+        let Some(pending) = self
+            .order_book
+            .exits_mut()
+            .remove_by_key(candidate.stable_order_key)
+        else {
+            return PathEventOutcome::Ignored {
+                mark: candidate.crossing_price,
+            };
+        };
+        let from_entry = pending.from_entry.clone();
+        let exit_id = pending.id.clone();
+        let target_trade_key = pending.target_trade_key;
+        let filled_qty = pending.reserved_quantity.min(self.position_size.abs());
+        let before = self.public_order_event_count();
+        self.fill_pending_exit(
+            pending,
+            tick.bar_index,
+            tick.time,
+            candidate.fill_price_or_mark,
+        );
+        self.order_book.apply_oca_after_exit_fill(
+            &exit_id,
+            &from_entry,
+            target_trade_key,
+            filled_qty,
+        );
+        if self.position_size == 0.0 {
+            self.order_book.exits_mut().clear_all();
+        } else if !self.has_open_position_for_entry(&from_entry) {
+            self.order_book.exits_mut().clear_for_entry(&from_entry);
+        }
+        self.debug_assert_ledger_aggregates();
+        self.bump_event_generation();
+        if self.public_order_event_count() > before {
+            PathEventOutcome::Filled {
+                mark: candidate.crossing_price,
+                fill_price: candidate.fill_price_or_mark,
+            }
+        } else {
+            PathEventOutcome::Ignored {
+                mark: candidate.crossing_price,
+            }
         }
     }
 

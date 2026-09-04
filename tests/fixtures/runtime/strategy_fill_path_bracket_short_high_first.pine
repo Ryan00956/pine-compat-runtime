@@ -1,0 +1,6 @@
+//@version=5
+strategy("Fill path bracket short high first", overlay=false, initial_capital=100000)
+
+if bar_index == 0
+    strategy.entry("EN", strategy.short, qty=1)
+    strategy.exit("BR", "EN", stop=10.8, limit=8.2)

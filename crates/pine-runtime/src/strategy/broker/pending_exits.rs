@@ -92,6 +92,7 @@ pub(super) enum PendingTrailingState {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 pub(super) enum PendingTrailingUpdate {
     NoChange,
     Persist(PendingTrailingExit),
@@ -112,6 +113,7 @@ impl PendingTrailingExit {
         self.evaluate_update_for(TradeDirection::Long, high, low)
     }
 
+    #[allow(dead_code)]
     pub(super) fn evaluate_update_for(
         &self,
         direction: TradeDirection,
@@ -406,6 +408,7 @@ impl PendingExitBook {
         Self::default()
     }
 
+    #[allow(dead_code)]
     pub(super) fn current(&self) -> Option<&PendingExit> {
         self.exits.first()
     }
@@ -462,6 +465,21 @@ impl PendingExitBook {
                 && pending_exit.from_entry == from_entry
                 && pending_exit.target_trade_key == target_trade_key
         })
+    }
+
+    pub(super) fn find_mut_by_key(
+        &mut self,
+        key: super::types::InternalOrderKey,
+    ) -> Option<&mut PendingExit> {
+        self.exits.iter_mut().find(|pending| pending.key == key)
+    }
+
+    pub(super) fn remove_by_key(
+        &mut self,
+        key: super::types::InternalOrderKey,
+    ) -> Option<PendingExit> {
+        let position = self.exits.iter().position(|pending| pending.key == key)?;
+        Some(self.exits.remove(position))
     }
 
     pub(super) fn remove_by_identity_and_key(
@@ -619,6 +637,7 @@ impl PendingExitBook {
         matching
     }
 
+    #[allow(dead_code)]
     pub(super) fn remove_identities(&mut self, identities: &[(String, String, Option<u64>)]) {
         self.exits.retain(|pending_exit| {
             !identities.iter().any(|(id, from_entry, target_trade_key)| {

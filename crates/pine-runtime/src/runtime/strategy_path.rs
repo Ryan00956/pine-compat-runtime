@@ -176,6 +176,19 @@ impl HistoricalPath {
         Self::from_ohlc(bar.open, bar.high, bar.low, bar.close)
     }
 
+    /// Infer a path for a bar that already passed public validation.
+    ///
+    /// Inconsistent high/low extremes are clamped onto `open`/`close` so the
+    /// broker still walks four points instead of skipping fills. `from_ohlc`
+    /// stays strict for unit tests of the pure constructor.
+    pub(crate) fn from_validated_bar(bar: &Bar) -> Option<Self> {
+        Self::from_bar(bar).or_else(|| {
+            let high = bar.high.max(bar.open);
+            let low = bar.low.min(bar.open);
+            Self::from_ohlc(bar.open, high, low, bar.close)
+        })
+    }
+
     pub(crate) fn legs(self) -> [PathLeg; 3] {
         [
             PathLeg::new(0, self.points[0], self.points[1]),
@@ -373,5 +386,31 @@ mod tests {
         assert!(HistoricalPath::from_ohlc(1.0, f64::INFINITY, 0.0, 1.0).is_none());
         assert!(HistoricalPath::from_ohlc(1.0, 0.5, 0.0, 1.0).is_none());
         assert!(HistoricalPath::from_ohlc(1.0, 2.0, 1.5, 1.0).is_none());
+    }
+
+    #[test]
+    fn validated_bar_clamps_inconsistent_extremes() {
+        let bar = Bar {
+            time: 0,
+            open: 3.5,
+            high: 4.0,
+            low: 3.6,
+            close: 3.8,
+            volume: 1.0,
+        };
+        assert!(HistoricalPath::from_bar(&bar).is_none());
+        let path = HistoricalPath::from_validated_bar(&bar).expect("clamped path");
+        assert_eq!(path.points.map(|point| point.price), [3.5, 3.5, 4.0, 3.8]);
+
+        let close_outside = Bar {
+            time: 0,
+            open: 96.0,
+            high: 96.0,
+            low: 96.0,
+            close: 40.0,
+            volume: 1.0,
+        };
+        assert!(HistoricalPath::from_bar(&close_outside).is_none());
+        assert!(HistoricalPath::from_validated_bar(&close_outside).is_none());
     }
 }

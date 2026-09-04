@@ -354,7 +354,7 @@ impl HistoricalRuntime<'_> {
     }
 
     fn walk_entry_price_path(&mut self, bar_index: usize, bar: Bar) -> Result<(), RuntimeError> {
-        let Some(path) = HistoricalPath::from_bar(&bar) else {
+        let Some(path) = HistoricalPath::from_validated_bar(&bar) else {
             return Ok(());
         };
         self.strategy_scheduler
@@ -439,14 +439,8 @@ impl HistoricalRuntime<'_> {
             }
         }
         self.trace_strategy_phase(StrategyBarPhase::ExitFills);
-        let before_exits = self.strategy_broker.public_order_event_count();
-        self.strategy_broker
-            .evaluate_pending_exits(bar_index, bar.time, bar.high, bar.low);
         self.strategy_broker
             .flatten_if_risk_blocked(bar_index, bar.time, bar.close);
-        self.recalculate_after_fill(
-            self.strategy_broker.public_order_event_count() > before_exits,
-        )?;
         self.strategy_broker
             .evaluate_risk_equity_stops(bar_index, bar.time, bar.close);
         self.trace_strategy_phase(StrategyBarPhase::Equity);

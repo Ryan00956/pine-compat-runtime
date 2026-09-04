@@ -1057,6 +1057,7 @@ impl BrokerState {
         true
     }
 
+    #[allow(dead_code)]
     fn pending_exit(&self) -> Option<&PendingExit> {
         self.order_book.exits().current()
     }
@@ -1093,6 +1094,7 @@ impl BrokerState {
         self.order_book.exits().iter()
     }
 
+    #[allow(dead_code)]
     pub(crate) fn evaluate_pending_exits(
         &mut self,
         bar_index: usize,
@@ -1181,6 +1183,7 @@ impl BrokerState {
         }
     }
 
+    #[allow(dead_code)]
     fn evaluate_multiple_pending_exits(
         &mut self,
         bar_index: usize,
