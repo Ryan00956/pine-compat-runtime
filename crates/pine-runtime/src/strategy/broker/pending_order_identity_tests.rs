@@ -6,7 +6,7 @@ use crate::output::json::public_runtime_result_json;
 use crate::output::model::RuntimeResult;
 use crate::output::strategy::StrategyResult;
 
-fn pending_entry<'a>(broker: &'a BrokerState, id: &str) -> super::pending_entries::PendingEntry {
+fn pending_entry(broker: &BrokerState, id: &str) -> super::pending_entries::PendingEntry {
     broker
         .order_book
         .entries()

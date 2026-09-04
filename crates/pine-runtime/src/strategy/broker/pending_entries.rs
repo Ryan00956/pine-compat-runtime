@@ -82,6 +82,7 @@ pub(super) struct PendingEntryBook {
     allow_same_bar_price_fills: bool,
 }
 
+#[allow(clippy::too_many_arguments)]
 impl PendingEntryBook {
     pub(super) fn new() -> Self {
         Self::default()

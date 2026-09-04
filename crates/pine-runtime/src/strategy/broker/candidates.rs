@@ -235,9 +235,7 @@ impl BrokerState {
             if !margin_ratio.is_finite() || margin_ratio <= 0.0 {
                 return None;
             }
-            let Some(margin_required) = self.margin_required_for_position(current_price) else {
-                return None;
-            };
+            let margin_required = self.margin_required_for_position(current_price)?;
             let available_funds = self.equity_value(current_price) - margin_required;
             if !available_funds.is_finite() || available_funds >= 0.0 {
                 return None;
@@ -536,12 +534,10 @@ fn exit_leg_candidates(
                     TradeDirection::Long => low <= stop_price,
                     TradeDirection::Short => high >= stop_price,
                 };
-                if hit {
-                    if let Some(crossing) = crossing_on_leg(leg, stop_price) {
-                        out.push(exit_fill_candidate(
-                            pending, leg.index, crossing, stop_price, generation,
-                        ));
-                    }
+                if hit && let Some(crossing) = crossing_on_leg(leg, stop_price) {
+                    out.push(exit_fill_candidate(
+                        pending, leg.index, crossing, stop_price, generation,
+                    ));
                 }
                 let next_stop = match direction {
                     TradeDirection::Long => high - trailing.spec.offset_price_distance,
@@ -571,23 +567,19 @@ fn exit_leg_candidates(
                 TradeDirection::Long => low <= *downside,
                 TradeDirection::Short => high >= *downside,
             };
-            if stop_touched {
-                if let Some(crossing) = crossing_on_leg(leg, *downside) {
-                    out.push(exit_fill_candidate(
-                        pending, leg.index, crossing, *downside, generation,
-                    ));
-                }
+            if stop_touched && let Some(crossing) = crossing_on_leg(leg, *downside) {
+                out.push(exit_fill_candidate(
+                    pending, leg.index, crossing, *downside, generation,
+                ));
             }
             let limit_touched = match direction {
                 TradeDirection::Long => high >= *upside + verify,
                 TradeDirection::Short => low <= *upside - verify,
             };
-            if limit_touched {
-                if let Some(crossing) = crossing_on_leg(leg, *upside) {
-                    out.push(exit_fill_candidate(
-                        pending, leg.index, crossing, *upside, generation,
-                    ));
-                }
+            if limit_touched && let Some(crossing) = crossing_on_leg(leg, *upside) {
+                out.push(exit_fill_candidate(
+                    pending, leg.index, crossing, *upside, generation,
+                ));
             }
         }
         trigger => {
