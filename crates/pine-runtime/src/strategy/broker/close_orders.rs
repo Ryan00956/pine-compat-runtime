@@ -26,14 +26,19 @@ impl BrokerState {
         metadata: StrategyOrderMetadata,
         immediately: bool,
     ) {
-        self.order_book.closes_mut().place(PendingClose {
-            key: super::types::InternalOrderKey(0),
-            origin: StrategyCommandOrigin::Close,
-            kind: PendingCloseKind::Close { id },
-            quantity,
-            created_bar_index,
-            immediately,
-            metadata,
+        self.order_book.with_close_allocator(|closes, allocate| {
+            closes.place(
+                PendingClose {
+                    key: super::types::InternalOrderKey(0),
+                    origin: StrategyCommandOrigin::Close,
+                    kind: PendingCloseKind::Close { id },
+                    quantity,
+                    created_bar_index,
+                    immediately,
+                    metadata,
+                },
+                allocate,
+            );
         });
     }
 
@@ -110,14 +115,19 @@ impl BrokerState {
         metadata: StrategyOrderMetadata,
         immediately: bool,
     ) {
-        self.order_book.closes_mut().place(PendingClose {
-            key: super::types::InternalOrderKey(0),
-            origin: StrategyCommandOrigin::CloseAll,
-            kind: PendingCloseKind::CloseAll,
-            quantity,
-            created_bar_index,
-            immediately,
-            metadata,
+        self.order_book.with_close_allocator(|closes, allocate| {
+            closes.place(
+                PendingClose {
+                    key: super::types::InternalOrderKey(0),
+                    origin: StrategyCommandOrigin::CloseAll,
+                    kind: PendingCloseKind::CloseAll,
+                    quantity,
+                    created_bar_index,
+                    immediately,
+                    metadata,
+                },
+                allocate,
+            );
         });
     }
 

@@ -246,15 +246,17 @@ impl BrokerState {
         if self.position_size >= 0.0 && !self.can_open_long_entry() {
             return;
         }
-        self.order_book
-            .entries_mut()
-            .place_market_long_with_metadata(
+        let diagnostics = &mut self.diagnostics;
+        self.order_book.with_entry_allocator(|entries, allocate| {
+            entries.place_market_long_with_metadata(
                 id,
                 qty,
                 created_bar_index,
                 metadata,
-                &mut self.diagnostics,
+                diagnostics,
+                allocate,
             );
+        });
     }
 
     #[allow(dead_code)]
@@ -282,15 +284,17 @@ impl BrokerState {
         if self.blocked_trade_action() {
             return;
         }
-        self.order_book
-            .entries_mut()
-            .place_market_long_without_pyramiding_with_metadata(
+        let diagnostics = &mut self.diagnostics;
+        self.order_book.with_entry_allocator(|entries, allocate| {
+            entries.place_market_long_without_pyramiding_with_metadata(
                 id,
                 qty,
                 created_bar_index,
                 metadata,
-                &mut self.diagnostics,
+                diagnostics,
+                allocate,
             );
+        });
     }
 
     #[allow(dead_code)]
@@ -318,13 +322,17 @@ impl BrokerState {
         if self.blocked_trade_action() {
             return;
         }
-        self.order_book.entries_mut().place_market_short_order(
-            id,
-            qty,
-            created_bar_index,
-            metadata,
-            &mut self.diagnostics,
-        );
+        let diagnostics = &mut self.diagnostics;
+        self.order_book.with_entry_allocator(|entries, allocate| {
+            entries.place_market_short_order(
+                id,
+                qty,
+                created_bar_index,
+                metadata,
+                diagnostics,
+                allocate,
+            );
+        });
     }
 
     #[allow(dead_code)]
@@ -366,15 +374,17 @@ impl BrokerState {
         if self.position_size <= 0.0 && !self.can_open_short_entry() {
             return;
         }
-        self.order_book
-            .entries_mut()
-            .place_market_short_with_metadata(
+        let diagnostics = &mut self.diagnostics;
+        self.order_book.with_entry_allocator(|entries, allocate| {
+            entries.place_market_short_with_metadata(
                 id,
                 qty,
                 created_bar_index,
                 metadata,
-                &mut self.diagnostics,
+                diagnostics,
+                allocate,
             );
+        });
     }
 
     #[allow(dead_code)]
@@ -413,16 +423,18 @@ impl BrokerState {
                 if !this.can_place_long_entry() {
                     return;
                 }
-                this.order_book
-                    .entries_mut()
-                    .place_limit_long_with_metadata(
+                let diagnostics = &mut this.diagnostics;
+                this.order_book.with_entry_allocator(|entries, allocate| {
+                    entries.place_limit_long_with_metadata(
                         id,
                         qty,
                         limit,
                         created_bar_index,
                         metadata,
-                        &mut this.diagnostics,
+                        diagnostics,
+                        allocate,
                     );
+                });
             },
         );
     }
@@ -463,16 +475,18 @@ impl BrokerState {
                 if !this.can_place_short_entry() {
                     return;
                 }
-                this.order_book
-                    .entries_mut()
-                    .place_limit_short_with_metadata(
+                let diagnostics = &mut this.diagnostics;
+                this.order_book.with_entry_allocator(|entries, allocate| {
+                    entries.place_limit_short_with_metadata(
                         id,
                         qty,
                         limit,
                         created_bar_index,
                         metadata,
-                        &mut this.diagnostics,
+                        diagnostics,
+                        allocate,
                     );
+                });
             },
         );
     }
@@ -513,16 +527,18 @@ impl BrokerState {
                 if !this.can_place_short_entry() {
                     return;
                 }
-                this.order_book
-                    .entries_mut()
-                    .place_stop_short_with_metadata(
+                let diagnostics = &mut this.diagnostics;
+                this.order_book.with_entry_allocator(|entries, allocate| {
+                    entries.place_stop_short_with_metadata(
                         id,
                         qty,
                         stop,
                         created_bar_index,
                         metadata,
-                        &mut this.diagnostics,
+                        diagnostics,
+                        allocate,
                     );
+                });
             },
         );
     }
@@ -570,9 +586,9 @@ impl BrokerState {
                 if !this.can_place_short_entry() {
                     return;
                 }
-                this.order_book
-                    .entries_mut()
-                    .place_stop_limit_short_with_metadata(
+                let diagnostics = &mut this.diagnostics;
+                this.order_book.with_entry_allocator(|entries, allocate| {
+                    entries.place_stop_limit_short_with_metadata(
                         StopLimitEntryPlacement {
                             id,
                             quantity: qty,
@@ -581,8 +597,10 @@ impl BrokerState {
                             created_bar_index,
                             metadata,
                         },
-                        &mut this.diagnostics,
+                        diagnostics,
+                        allocate,
                     );
+                });
             },
         );
     }
@@ -615,16 +633,18 @@ impl BrokerState {
         if self.blocked_trade_action() {
             return;
         }
-        self.order_book
-            .entries_mut()
-            .place_limit_long_without_pyramiding_with_metadata(
+        let diagnostics = &mut self.diagnostics;
+        self.order_book.with_entry_allocator(|entries, allocate| {
+            entries.place_limit_long_without_pyramiding_with_metadata(
                 id,
                 qty,
                 limit,
                 created_bar_index,
                 metadata,
-                &mut self.diagnostics,
+                diagnostics,
+                allocate,
             );
+        });
     }
 
     #[allow(dead_code)]
@@ -655,16 +675,18 @@ impl BrokerState {
         if self.blocked_trade_action() {
             return;
         }
-        self.order_book
-            .entries_mut()
-            .place_limit_short_without_pyramiding_with_metadata(
+        let diagnostics = &mut self.diagnostics;
+        self.order_book.with_entry_allocator(|entries, allocate| {
+            entries.place_limit_short_without_pyramiding_with_metadata(
                 id,
                 qty,
                 limit,
                 created_bar_index,
                 metadata,
-                &mut self.diagnostics,
+                diagnostics,
+                allocate,
             );
+        });
     }
 
     #[allow(dead_code)]
@@ -703,14 +725,18 @@ impl BrokerState {
                 if !this.can_place_long_entry() {
                     return;
                 }
-                this.order_book.entries_mut().place_stop_long_with_metadata(
-                    id,
-                    qty,
-                    stop,
-                    created_bar_index,
-                    metadata,
-                    &mut this.diagnostics,
-                );
+                let diagnostics = &mut this.diagnostics;
+                this.order_book.with_entry_allocator(|entries, allocate| {
+                    entries.place_stop_long_with_metadata(
+                        id,
+                        qty,
+                        stop,
+                        created_bar_index,
+                        metadata,
+                        diagnostics,
+                        allocate,
+                    );
+                });
             },
         );
     }
@@ -743,16 +769,18 @@ impl BrokerState {
         if self.blocked_trade_action() {
             return;
         }
-        self.order_book
-            .entries_mut()
-            .place_stop_long_without_pyramiding_with_metadata(
+        let diagnostics = &mut self.diagnostics;
+        self.order_book.with_entry_allocator(|entries, allocate| {
+            entries.place_stop_long_without_pyramiding_with_metadata(
                 id,
                 qty,
                 stop,
                 created_bar_index,
                 metadata,
-                &mut self.diagnostics,
+                diagnostics,
+                allocate,
             );
+        });
     }
 
     #[allow(dead_code)]
@@ -783,16 +811,18 @@ impl BrokerState {
         if self.blocked_trade_action() {
             return;
         }
-        self.order_book
-            .entries_mut()
-            .place_stop_short_without_pyramiding_with_metadata(
+        let diagnostics = &mut self.diagnostics;
+        self.order_book.with_entry_allocator(|entries, allocate| {
+            entries.place_stop_short_without_pyramiding_with_metadata(
                 id,
                 qty,
                 stop,
                 created_bar_index,
                 metadata,
-                &mut self.diagnostics,
+                diagnostics,
+                allocate,
             );
+        });
     }
 
     #[allow(dead_code)]
@@ -838,9 +868,9 @@ impl BrokerState {
                 if !this.can_place_long_entry() {
                     return;
                 }
-                this.order_book
-                    .entries_mut()
-                    .place_stop_limit_long_with_metadata(
+                let diagnostics = &mut this.diagnostics;
+                this.order_book.with_entry_allocator(|entries, allocate| {
+                    entries.place_stop_limit_long_with_metadata(
                         StopLimitEntryPlacement {
                             id,
                             quantity: qty,
@@ -849,8 +879,10 @@ impl BrokerState {
                             created_bar_index,
                             metadata,
                         },
-                        &mut this.diagnostics,
+                        diagnostics,
+                        allocate,
                     );
+                });
             },
         );
     }
@@ -886,9 +918,9 @@ impl BrokerState {
         if self.blocked_trade_action() {
             return;
         }
-        self.order_book
-            .entries_mut()
-            .place_stop_limit_long_without_pyramiding_with_metadata(
+        let diagnostics = &mut self.diagnostics;
+        self.order_book.with_entry_allocator(|entries, allocate| {
+            entries.place_stop_limit_long_without_pyramiding_with_metadata(
                 StopLimitEntryPlacement {
                     id,
                     quantity: qty,
@@ -897,8 +929,10 @@ impl BrokerState {
                     created_bar_index,
                     metadata,
                 },
-                &mut self.diagnostics,
+                diagnostics,
+                allocate,
             );
+        });
     }
 
     #[allow(dead_code)]
@@ -932,9 +966,9 @@ impl BrokerState {
         if self.blocked_trade_action() {
             return;
         }
-        self.order_book
-            .entries_mut()
-            .place_stop_limit_short_without_pyramiding_with_metadata(
+        let diagnostics = &mut self.diagnostics;
+        self.order_book.with_entry_allocator(|entries, allocate| {
+            entries.place_stop_limit_short_without_pyramiding_with_metadata(
                 StopLimitEntryPlacement {
                     id,
                     quantity: qty,
@@ -943,8 +977,10 @@ impl BrokerState {
                     created_bar_index,
                     metadata,
                 },
-                &mut self.diagnostics,
+                diagnostics,
+                allocate,
             );
+        });
     }
 
     #[allow(dead_code)]
@@ -1092,7 +1128,7 @@ impl BrokerState {
                 PendingTrailingUpdate::NoChange => return,
                 PendingTrailingUpdate::Persist(updated_trailing) => {
                     pending_exit.trigger = PendingExitTrigger::Trailing(updated_trailing);
-                    self.order_book.exits_mut().replace_all(pending_exit);
+                    self.order_book.replace_all_exit(pending_exit);
                     return;
                 }
                 PendingTrailingUpdate::Candidate(touch) => Some(touch.exit_price),
@@ -1231,9 +1267,7 @@ impl BrokerState {
             PendingExitSide::Limit
         } else {
             for updated_pending_exit in state_updates {
-                self.order_book
-                    .exits_mut()
-                    .replace_or_append(updated_pending_exit);
+                self.order_book.replace_or_append_exit(updated_pending_exit);
             }
             return;
         };
@@ -1282,9 +1316,7 @@ impl BrokerState {
             self.order_book.exits_mut().clear_all();
         } else {
             for updated_pending_exit in state_updates {
-                self.order_book
-                    .exits_mut()
-                    .replace_or_append(updated_pending_exit);
+                self.order_book.replace_or_append_exit(updated_pending_exit);
             }
             self.order_book
                 .exits_mut()
@@ -1301,6 +1333,8 @@ mod ledger_invariant_tests;
 mod pending_close_tests;
 #[cfg(test)]
 mod pending_entry_origin_tests;
+#[cfg(test)]
+mod pending_order_identity_tests;
 #[cfg(test)]
 mod risk_storage_tests;
 #[cfg(test)]

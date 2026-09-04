@@ -1507,20 +1507,18 @@ fn keyed_pending_exit_closes_only_target_same_id_trade() {
         Some(1)
     );
 
-    broker
-        .order_book
-        .exits_mut()
-        .replace_or_append(PendingExit {
-            id: "X".to_owned(),
-            from_entry: "A".to_owned(),
-            target_trade_key: Some(1),
-            trigger: PendingExitTrigger::Limit(111.0),
-            quantity: PendingExitQuantity::Full,
-            reserved_quantity: 2.0,
-            multiple_reservation: false,
-            last_update_bar_index: 1,
-            metadata: StrategyExitMetadata::default(),
-        });
+    broker.order_book.replace_or_append_exit(PendingExit {
+        key: InternalOrderKey(0),
+        id: "X".to_owned(),
+        from_entry: "A".to_owned(),
+        target_trade_key: Some(1),
+        trigger: PendingExitTrigger::Limit(111.0),
+        quantity: PendingExitQuantity::Full,
+        reserved_quantity: 2.0,
+        multiple_reservation: false,
+        last_update_bar_index: 1,
+        metadata: StrategyExitMetadata::default(),
+    });
 
     broker.evaluate_pending_exits(2, 30, 111.0, 100.0);
 
@@ -1718,6 +1716,7 @@ fn close_entries_rule_any_internal_omitted_exit_stays_fifo() {
 
     broker.fill_pending_exit(
         PendingExit {
+            key: InternalOrderKey(0),
             id: "X".to_owned(),
             from_entry: String::new(),
             target_trade_key: None,
@@ -1772,6 +1771,7 @@ fn close_entries_rule_any_internal_exit_from_entry_uses_exact_short_entry_id_all
 
     broker.fill_pending_exit(
         PendingExit {
+            key: InternalOrderKey(0),
             id: "X".to_owned(),
             from_entry: "target".to_owned(),
             target_trade_key: None,
@@ -1830,6 +1830,7 @@ fn close_entries_rule_any_internal_partial_exit_same_short_id_preserves_ledger_o
 
     broker.fill_pending_exit(
         PendingExit {
+            key: InternalOrderKey(0),
             id: "X".to_owned(),
             from_entry: "S".to_owned(),
             target_trade_key: None,
@@ -1888,6 +1889,7 @@ fn close_entries_rule_any_internal_exit_from_entry_uses_exact_entry_id_allocatio
 
     broker.fill_pending_exit(
         PendingExit {
+            key: InternalOrderKey(0),
             id: "X".to_owned(),
             from_entry: "target".to_owned(),
             target_trade_key: None,
@@ -3602,6 +3604,7 @@ fn pending_market_entry_allows_attached_stop_exit_without_public_fill() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -3899,6 +3902,7 @@ fn pending_market_entry_resolves_stop_profit_bracket_attachment_after_fill() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -3952,6 +3956,7 @@ fn pending_market_entry_resolves_loss_limit_bracket_attachment_after_fill() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -4005,6 +4010,7 @@ fn pending_market_entry_resolves_loss_profit_bracket_attachment_after_fill() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -4075,6 +4081,7 @@ fn pending_market_entry_resolves_profit_attachment_after_fill() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XP".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -4114,6 +4121,7 @@ fn pending_market_entry_resolves_loss_attachment_after_fill() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -4153,6 +4161,7 @@ fn pending_market_entry_resolves_trail_points_attachment_after_fill() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -4208,6 +4217,7 @@ fn pending_limit_entry_resolves_profit_attachment_fixed_quantity_after_fill() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XP".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -4235,6 +4245,7 @@ fn pending_limit_entry_resolves_loss_attachment_fixed_quantity_after_fill() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -4272,6 +4283,7 @@ fn pending_limit_entry_resolves_trail_points_attachment_fixed_quantity_after_fil
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -4299,6 +4311,7 @@ fn pending_stop_entry_resolves_profit_attachment_percent_quantity_after_fill() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XP".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -4326,6 +4339,7 @@ fn pending_stop_entry_resolves_loss_attachment_percent_quantity_after_fill() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -4363,6 +4377,7 @@ fn pending_stop_entry_resolves_trail_points_attachment_percent_quantity_after_fi
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -4563,6 +4578,7 @@ fn place_exit_while_long_records_pending_stop() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -4591,6 +4607,7 @@ fn place_exit_replaces_existing_pending_stop() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XL2".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -4617,6 +4634,7 @@ fn omitted_quantity_single_trigger_with_new_identity_replaces_instead_of_appendi
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -5049,6 +5067,7 @@ fn omitted_quantity_exit_replaces_explicit_reservation_pool() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XFULL".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -5284,6 +5303,7 @@ fn changed_repeated_quantity_replaces_pending_exit() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -5688,6 +5708,7 @@ fn limit_with_mismatched_entry_is_noop_without_changing_pending_exit() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -5713,6 +5734,7 @@ fn repeated_entry_noop_leaves_pending_exit_untouched() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -5904,6 +5926,7 @@ fn profit_ticks_create_limit_from_average_entry_price() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XP".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -5926,6 +5949,7 @@ fn loss_ticks_create_stop_from_average_entry_price() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -5949,6 +5973,7 @@ fn place_exit_bracket_records_pending_bracket() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -5981,6 +6006,7 @@ fn bracket_tick_helpers_resolve_prices_from_average_entry_price() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -6007,6 +6033,7 @@ fn place_exit_trail_price_records_pending_trailing_exit() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -6030,6 +6057,7 @@ fn place_exit_trail_points_records_entry_relative_activation() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -6064,6 +6092,7 @@ fn trailing_with_mismatched_entry_is_noop_without_changing_pending_exit() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -6088,6 +6117,7 @@ fn invalid_trailing_activation_price_records_diagnostic_without_changing_pending
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -6113,6 +6143,7 @@ fn invalid_trailing_offset_ticks_record_diagnostic_without_changing_pending_exit
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -6152,6 +6183,7 @@ fn unchanged_repeated_trailing_preserves_active_state() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -6180,6 +6212,7 @@ fn changed_repeated_trailing_replaces_spec_and_delays_eligibility() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -6206,6 +6239,7 @@ fn omitted_quantity_trailing_with_new_identity_replaces_and_resets_eligibility()
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XT2".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -6868,6 +6902,7 @@ fn invalid_bracket_downside_price_records_diagnostic_without_changing_pending_ex
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -6893,6 +6928,7 @@ fn invalid_bracket_upside_price_records_diagnostic_without_changing_pending_exit
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -6919,6 +6955,7 @@ fn invalid_bracket_ticks_record_diagnostic_without_changing_pending_exit() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -6945,6 +6982,7 @@ fn invalid_bracket_mintick_records_diagnostic_without_changing_pending_exit() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -7037,6 +7075,7 @@ fn bracket_with_mismatched_entry_is_noop_without_changing_pending_exit() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -7070,6 +7109,7 @@ fn stop_profit_bracket_with_mismatched_entry_is_noop_without_changing_pending_ex
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -7103,6 +7143,7 @@ fn loss_limit_bracket_with_mismatched_entry_is_noop_without_changing_pending_exi
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -7136,6 +7177,7 @@ fn loss_profit_bracket_with_mismatched_entry_is_noop_without_changing_pending_ex
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -7168,6 +7210,7 @@ fn changed_repeated_bracket_replaces_price_and_delays_eligibility() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -7197,6 +7240,7 @@ fn omitted_quantity_bracket_with_new_identity_replaces_instead_of_appending() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XB2".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -7224,6 +7268,7 @@ fn single_trigger_and_bracket_replace_each_other_and_reset_eligibility() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -7244,6 +7289,7 @@ fn single_trigger_and_bracket_replace_each_other_and_reset_eligibility() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -7464,6 +7510,7 @@ fn invalid_fixed_qty_bracket_replacement_preserves_existing_pending_bracket() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XB1".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -7925,6 +7972,7 @@ fn invalid_percent_bracket_replacement_preserves_existing_pending_bracket() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XB1".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -7953,6 +8001,7 @@ fn pending_trailing_is_not_eligible_on_creation_bar() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -8041,6 +8090,7 @@ fn invalid_profit_ticks_record_diagnostic_without_changing_pending_exit() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -8066,6 +8116,7 @@ fn invalid_exit_mintick_records_diagnostic_without_changing_pending_exit() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -8101,6 +8152,7 @@ fn profit_ticks_with_mismatched_entry_is_noop_without_changing_pending_exit() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -8125,6 +8177,7 @@ fn loss_ticks_with_mismatched_entry_is_noop_without_changing_pending_exit() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XLIMIT".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -8180,6 +8233,7 @@ fn profit_ticks_replace_stop_and_loss_ticks_replace_limit() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XP".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,
@@ -8197,6 +8251,7 @@ fn profit_ticks_replace_stop_and_loss_ticks_replace_limit() {
     assert_eq!(
         broker.pending_exit().cloned(),
         Some(PendingExit {
+            key: InternalOrderKey(0),
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
             target_trade_key: None,

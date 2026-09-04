@@ -6,6 +6,7 @@ use super::{
         PendingExit, PendingExitQuantity, PendingExitTrigger, PendingTrailingActivation,
         PendingTrailingExit, PendingTrailingSpec, PendingTrailingState,
     },
+    types::InternalOrderKey,
 };
 use crate::RuntimeDiagnostic;
 
@@ -228,7 +229,8 @@ impl BrokerState {
         if !reserved_quantity.is_finite() || reserved_quantity <= 0.0 {
             return;
         }
-        self.order_book.exits_mut().replace_or_append(PendingExit {
+        self.order_book.replace_or_append_exit(PendingExit {
+            key: InternalOrderKey(0),
             id,
             from_entry,
             target_trade_key: Some(target_trade_key),
@@ -261,7 +263,8 @@ impl BrokerState {
         if !reserved_quantity.is_finite() || reserved_quantity <= 0.0 {
             return;
         }
-        self.order_book.exits_mut().replace_or_append(PendingExit {
+        self.order_book.replace_or_append_exit(PendingExit {
+            key: InternalOrderKey(0),
             id,
             from_entry,
             target_trade_key: Some(target_trade_key),
@@ -294,7 +297,8 @@ impl BrokerState {
         if !reserved_quantity.is_finite() || reserved_quantity <= 0.0 {
             return;
         }
-        self.order_book.exits_mut().replace_or_append(PendingExit {
+        self.order_book.replace_or_append_exit(PendingExit {
+            key: InternalOrderKey(0),
             id,
             from_entry,
             target_trade_key: Some(target_trade_key),
@@ -351,7 +355,8 @@ impl BrokerState {
         if !reserved_quantity.is_finite() || reserved_quantity <= 0.0 {
             return;
         }
-        self.order_book.exits_mut().replace_or_append(PendingExit {
+        self.order_book.replace_or_append_exit(PendingExit {
+            key: InternalOrderKey(0),
             id: placement.id,
             from_entry: placement.from_entry,
             target_trade_key: Some(placement.target_trade_key),

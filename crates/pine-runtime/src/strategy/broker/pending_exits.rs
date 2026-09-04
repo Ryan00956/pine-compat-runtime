@@ -344,8 +344,9 @@ impl ExitQuantityRequest {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub(super) struct PendingExit {
+    pub(super) key: super::types::InternalOrderKey,
     pub(super) id: String,
     pub(super) from_entry: String,
     pub(super) target_trade_key: Option<u64>,
@@ -357,10 +358,29 @@ pub(super) struct PendingExit {
     pub(super) metadata: StrategyExitMetadata,
 }
 
+impl PartialEq for PendingExit {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.from_entry == other.from_entry
+            && self.target_trade_key == other.target_trade_key
+            && self.trigger == other.trigger
+            && self.quantity == other.quantity
+            && self.reserved_quantity == other.reserved_quantity
+            && self.multiple_reservation == other.multiple_reservation
+            && self.last_update_bar_index == other.last_update_bar_index
+            && self.metadata == other.metadata
+    }
+}
+
 impl PendingExit {
     #[allow(dead_code)]
     pub(super) fn trade_direction(&self) -> super::ledger::TradeDirection {
         super::ledger::TradeDirection::Long
+    }
+
+    #[allow(dead_code)]
+    pub(super) fn creation_sequence(&self) -> u64 {
+        self.key.0
     }
 }
 
