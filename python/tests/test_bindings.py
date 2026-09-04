@@ -5992,51 +5992,82 @@ def test_run_script_returns_strategy_fill_path_limit_stop_collision_contract():
     assert result == expected
 
 
-def _assert_strategy_fill_path_contract(pine: str, snapshot: str, bars: str) -> None:
-    source = (ROOT / pine).read_text()
-    expected = json.loads((ROOT / snapshot).read_text())
-    result = pine_compat.run_script(source, fixture_bars(bars))
+def test_run_script_returns_strategy_fill_path_high_first_long_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_fill_path_high_first_long.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_fill_path_high_first_long.json").read_text()
+    )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_fill_path_high_first_long_bars.csv"),
+    )
     assert result == expected
 
 
-def test_run_script_returns_strategy_fill_path_high_first_long_contract():
-    _assert_strategy_fill_path_contract(
-        "tests/fixtures/runtime/strategy_fill_path_high_first_long.pine",
-        "tests/snapshots/runtime_strategy_fill_path_high_first_long.json",
-        "tests/fixtures/runtime/strategy_fill_path_high_first_long_bars.csv",
-    )
-
-
 def test_run_script_returns_strategy_fill_path_low_first_short_contract():
-    _assert_strategy_fill_path_contract(
-        "tests/fixtures/runtime/strategy_fill_path_low_first_short.pine",
-        "tests/snapshots/runtime_strategy_fill_path_low_first_short.json",
-        "tests/fixtures/runtime/strategy_fill_path_low_first_short_bars.csv",
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_fill_path_low_first_short.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_fill_path_low_first_short.json").read_text()
     )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_fill_path_low_first_short_bars.csv"),
+    )
+    assert result == expected
 
 
 def test_run_script_returns_strategy_fill_path_entry_then_exit_same_bar_contract():
-    _assert_strategy_fill_path_contract(
-        "tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar.pine",
-        "tests/snapshots/runtime_strategy_fill_path_entry_then_exit_same_bar.json",
-        "tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar_bars.csv",
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_fill_path_entry_then_exit_same_bar.json"
+        ).read_text()
     )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar_bars.csv"
+        ),
+    )
+    assert result == expected
 
 
 def test_run_script_returns_strategy_fill_path_stop_limit_long_contract():
-    _assert_strategy_fill_path_contract(
-        "tests/fixtures/runtime/strategy_fill_path_stop_limit_long.pine",
-        "tests/snapshots/runtime_strategy_fill_path_stop_limit_long.json",
-        "tests/fixtures/runtime/strategy_fill_path_stop_limit_long_bars.csv",
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_fill_path_stop_limit_long.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_fill_path_stop_limit_long.json").read_text()
     )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_fill_path_stop_limit_long_bars.csv"),
+    )
+    assert result == expected
 
 
 def test_run_script_returns_strategy_fill_path_exit_before_margin_long_contract():
-    _assert_strategy_fill_path_contract(
-        "tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long.pine",
-        "tests/snapshots/runtime_strategy_fill_path_exit_before_margin_long.json",
-        "tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long_bars.csv",
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_fill_path_exit_before_margin_long.json"
+        ).read_text()
     )
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long_bars.csv"
+        ),
+    )
+    assert result == expected
 
 
 def test_run_script_returns_strategy_process_orders_on_close_contract():

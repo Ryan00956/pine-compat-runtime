@@ -5335,67 +5335,78 @@ fn runs_strategy_fill_path_limit_stop_collision_fixture_from_csv_to_public_strat
     );
 }
 
-fn assert_fill_path_snapshot(snapshot: &str, source: &str, bars: &str) {
-    let output = run_script_csv(source, bars).expect("strategy fill-path fixture should run");
-    assert_snapshot(snapshot, &output);
-}
-
 #[test]
 fn runs_strategy_fill_path_high_first_long_from_csv_to_public_strategy_json() {
-    assert_fill_path_snapshot(
-        "runtime_strategy_fill_path_high_first_long.json",
+    let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_high_first_long.pine"),
         include_str!(
             "../../../../tests/fixtures/runtime/strategy_fill_path_high_first_long_bars.csv"
         ),
-    );
+    )
+    .expect("strategy fill-path high-first long fixture should run");
+
+    assert_snapshot("runtime_strategy_fill_path_high_first_long.json", &output);
 }
 
 #[test]
 fn runs_strategy_fill_path_low_first_short_from_csv_to_public_strategy_json() {
-    assert_fill_path_snapshot(
-        "runtime_strategy_fill_path_low_first_short.json",
+    let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_low_first_short.pine"),
         include_str!(
             "../../../../tests/fixtures/runtime/strategy_fill_path_low_first_short_bars.csv"
         ),
-    );
+    )
+    .expect("strategy fill-path low-first short fixture should run");
+
+    assert_snapshot("runtime_strategy_fill_path_low_first_short.json", &output);
 }
 
 #[test]
 fn runs_strategy_fill_path_entry_then_exit_same_bar_from_csv_to_public_strategy_json() {
-    assert_fill_path_snapshot(
-        "runtime_strategy_fill_path_entry_then_exit_same_bar.json",
+    let output = run_script_csv(
         include_str!(
             "../../../../tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar.pine"
         ),
         include_str!(
             "../../../../tests/fixtures/runtime/strategy_fill_path_entry_then_exit_same_bar_bars.csv"
         ),
+    )
+    .expect("strategy fill-path entry-then-exit fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_fill_path_entry_then_exit_same_bar.json",
+        &output,
     );
 }
 
 #[test]
 fn runs_strategy_fill_path_stop_limit_long_from_csv_to_public_strategy_json() {
-    assert_fill_path_snapshot(
-        "runtime_strategy_fill_path_stop_limit_long.json",
+    let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_stop_limit_long.pine"),
         include_str!(
             "../../../../tests/fixtures/runtime/strategy_fill_path_stop_limit_long_bars.csv"
         ),
-    );
+    )
+    .expect("strategy fill-path stop-limit long fixture should run");
+
+    assert_snapshot("runtime_strategy_fill_path_stop_limit_long.json", &output);
 }
 
 #[test]
 fn runs_strategy_fill_path_exit_before_margin_long_from_csv_to_public_strategy_json() {
-    assert_fill_path_snapshot(
-        "runtime_strategy_fill_path_exit_before_margin_long.json",
+    let output = run_script_csv(
         include_str!(
             "../../../../tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long.pine"
         ),
         include_str!(
             "../../../../tests/fixtures/runtime/strategy_fill_path_exit_before_margin_long_bars.csv"
         ),
+    )
+    .expect("strategy fill-path exit-before-margin fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_fill_path_exit_before_margin_long.json",
+        &output,
     );
 }
 
