@@ -1,22 +1,28 @@
 use std::{collections::BTreeMap, sync::Arc};
 
 use pine_runtime::{
-    Bar, ChartContext, InMemoryRequestDataProvider, RequestEnvironment, RequestKey,
-    RequestTimeframe,
+    Bar, ChartContext, InMemoryRequestDataProvider, MagnifierInput, RequestEnvironment, RequestKey,
+    RequestTimeframe, magnifier_input_from_json,
 };
 use serde_json::Value;
+
+pub(crate) struct RequestHostParse {
+    pub environment: RequestEnvironment,
+    pub execution_times: Option<Vec<i64>>,
+    pub magnifier: Option<MagnifierInput>,
+}
 
 #[cfg(test)]
 pub(crate) fn request_environment_from_json(
     request_bars_json: &str,
 ) -> Result<RequestEnvironment, String> {
     request_environment_and_execution_times_from_json(request_bars_json)
-        .map(|(environment, _)| environment)
+        .map(|parsed| parsed.environment)
 }
 
 pub(crate) fn request_environment_and_execution_times_from_json(
     request_bars_json: &str,
-) -> Result<(RequestEnvironment, Option<Vec<i64>>), String> {
+) -> Result<RequestHostParse, String> {
     let value: Value = serde_json::from_str(request_bars_json).map_err(|err| {
         format!("request bars must be a JSON object mapping SYMBOL:TIMEFRAME to bar arrays: {err}")
     })?;
@@ -25,27 +31,37 @@ pub(crate) fn request_environment_and_execution_times_from_json(
     })?;
     let chart = parse_chart_context(object.get("$chart"))?;
     let execution_times = parse_execution_times(object.get("$executionTimes"))?;
+    let magnifier = parse_magnifier(object.get("$magnifier"))?;
 
     let mut streams = Vec::with_capacity(object.len());
     for (key, bars) in deterministic_entries(object) {
-        if matches!(key.as_str(), "$chart" | "$executionTimes") {
+        if matches!(key.as_str(), "$chart" | "$executionTimes" | "$magnifier") {
             continue;
         }
         let request_key = parse_request_key(key)?;
         streams.push((request_key, parse_bars(key, bars)?));
     }
-    if streams.is_empty() {
-        return Ok((
-            RequestEnvironment::default().for_chart(chart),
-            execution_times,
-        ));
-    }
-    let provider =
-        InMemoryRequestDataProvider::from_streams(streams).map_err(|err| err.to_string())?;
-    Ok((
-        RequestEnvironment::new(chart, Arc::new(provider)),
+    let environment = if streams.is_empty() {
+        RequestEnvironment::default().for_chart(chart)
+    } else {
+        let provider =
+            InMemoryRequestDataProvider::from_streams(streams).map_err(|err| err.to_string())?;
+        RequestEnvironment::new(chart, Arc::new(provider))
+    };
+    Ok(RequestHostParse {
+        environment,
         execution_times,
-    ))
+        magnifier,
+    })
+}
+
+fn parse_magnifier(value: Option<&Value>) -> Result<Option<MagnifierInput>, String> {
+    let Some(value) = value else {
+        return Ok(None);
+    };
+    let json = serde_json::to_string(value)
+        .map_err(|err| format!("request host input `$magnifier` is invalid: {err}"))?;
+    magnifier_input_from_json(&json).map(Some)
 }
 
 fn parse_execution_times(value: Option<&Value>) -> Result<Option<Vec<i64>>, String> {
@@ -228,13 +244,15 @@ mod tests {
 
     #[test]
     fn request_host_input_parses_execution_times_without_creating_a_request_stream() {
-        let (environment, execution_times) = request_environment_and_execution_times_from_json(
+        let parsed = request_environment_and_execution_times_from_json(
             r#"{"$executionTimes":[101,205,333]}"#,
         )
         .expect("execution time host input");
 
-        assert_eq!(execution_times, Some(vec![101, 205, 333]));
-        let message = environment
+        assert_eq!(parsed.execution_times, Some(vec![101, 205, 333]));
+        assert!(parsed.magnifier.is_none());
+        let message = parsed
+            .environment
             .provider()
             .bars(&RequestKey::new("NYSE:IBM", RequestTimeframe::default()))
             .expect_err("execution times do not create provider data")

@@ -1,13 +1,10 @@
 use std::{collections::HashMap, fs, sync::Arc};
 
 use pine_runtime::{
-    BarUpdate, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, RealtimeRuntime,
-    RequestEnvironment, RequestKey, RequestTimeframe, RunningAlertConfig, RuntimeProfile,
-    RuntimeResult, input_calls, public_runtime_profiled_result_json, public_runtime_result_json,
-    run_historical_profiled_with_request_environment_and_input_overrides,
-    run_historical_profiled_with_request_environment_and_input_overrides_and_execution_times,
-    run_historical_with_request_environment_and_input_overrides,
-    run_historical_with_request_environment_and_input_overrides_and_execution_times,
+    BarUpdate, ChartContext, HistoricalRuntime, InMemoryRequestDataProvider, MagnifierInput,
+    RealtimeRuntime, RequestEnvironment, RequestKey, RequestTimeframe, RunningAlertConfig,
+    RuntimeProfile, RuntimeResult, input_calls, magnifier_input_from_json,
+    public_runtime_profiled_result_json, public_runtime_result_json,
 };
 use pine_sema::analyze_input;
 
@@ -53,6 +50,7 @@ enum ExecutionMode {
 struct RunOptions {
     path: String,
     bars_path: String,
+    magnifier_bars_path: Option<String>,
     execution_times_path: Option<String>,
     chart_context: ChartContext,
     profile: bool,
@@ -177,27 +175,23 @@ fn run_profiled_json_with_options_in_mode(
         .collect::<HashMap<_, _>>();
     let input_overrides = input_overrides_from_specs(&options.input_overrides, &input_calls)?;
     let execution_times = execution_times_from_path(options.execution_times_path.as_deref())?;
-    let result = match execution_times.as_deref() {
-        Some(execution_times) => {
-            run_historical_profiled_with_request_environment_and_input_overrides_and_execution_times(
-                &hir,
-                &bars,
-                request_environment,
-                input_overrides,
-                execution_times,
-            )
-        }
-        None => run_historical_profiled_with_request_environment_and_input_overrides(
-            &hir,
-            &bars,
-            request_environment,
-            input_overrides,
-        ),
+    let magnifier = magnifier_input_from_path(options.magnifier_bars_path.as_deref())?;
+    let mut runtime = HistoricalRuntime::with_request_environment_and_input_overrides(
+        &hir,
+        request_environment,
+        input_overrides,
+    );
+    if let Some(magnifier) = magnifier {
+        runtime = runtime.with_magnifier_input(magnifier);
+    }
+    match execution_times.as_deref() {
+        Some(execution_times) => runtime.append_bars_with_execution_times(&bars, execution_times),
+        None => runtime.append_bars(&bars),
     }
     .map_err(|err| format!("runtime failed: {}", err.message))?;
     Ok(public_runtime_profiled_result_json(
-        &result.result,
-        &result.profile,
+        &runtime.result(),
+        &runtime.profile(),
     ))
 }
 
@@ -240,24 +234,21 @@ fn run_result_with_options_in_mode(
         .collect::<HashMap<_, _>>();
     let input_overrides = input_overrides_from_specs(&options.input_overrides, &input_calls)?;
     let execution_times = execution_times_from_path(options.execution_times_path.as_deref())?;
-    match execution_times.as_deref() {
-        Some(execution_times) => {
-            run_historical_with_request_environment_and_input_overrides_and_execution_times(
-                &hir,
-                &bars,
-                request_environment,
-                input_overrides,
-                execution_times,
-            )
-        }
-        None => run_historical_with_request_environment_and_input_overrides(
-            &hir,
-            &bars,
-            request_environment,
-            input_overrides,
-        ),
+    let magnifier = magnifier_input_from_path(options.magnifier_bars_path.as_deref())?;
+    let mut runtime = HistoricalRuntime::with_request_environment_and_input_overrides(
+        &hir,
+        request_environment,
+        input_overrides,
+    );
+    if let Some(magnifier) = magnifier {
+        runtime = runtime.with_magnifier_input(magnifier);
     }
-    .map_err(|err| format!("runtime failed: {}", err.message))
+    match execution_times.as_deref() {
+        Some(execution_times) => runtime.append_bars_with_execution_times(&bars, execution_times),
+        None => runtime.append_bars(&bars),
+    }
+    .map_err(|err| format!("runtime failed: {}", err.message))?;
+    Ok(runtime.result())
 }
 
 fn run_non_batch_with_options(
@@ -297,6 +288,7 @@ fn run_non_batch_with_options(
         .collect::<HashMap<_, _>>();
     let input_overrides = input_overrides_from_specs(&options.input_overrides, &input_calls)?;
     let execution_times = execution_times_from_path(options.execution_times_path.as_deref())?;
+    let magnifier = magnifier_input_from_path(options.magnifier_bars_path.as_deref())?;
 
     if let Some(execution_times) = &execution_times
         && execution_times.len() != bars.len()
@@ -316,6 +308,9 @@ fn run_non_batch_with_options(
                 request_environment,
                 input_overrides,
             );
+            if let Some(magnifier) = magnifier {
+                runtime = runtime.with_magnifier_input(magnifier);
+            }
             match execution_times.as_deref() {
                 Some(execution_times) => {
                     runtime.append_bars_with_execution_times(&bars, execution_times)
@@ -331,6 +326,9 @@ fn run_non_batch_with_options(
                 request_environment,
                 input_overrides,
             );
+            if let Some(magnifier) = magnifier.clone() {
+                runtime = runtime.with_magnifier_input(magnifier);
+            }
             for (index, bar) in bars.iter().copied().enumerate() {
                 match execution_times.as_ref().map(|values| values[index]) {
                     Some(execution_time) => runtime
@@ -350,6 +348,9 @@ fn run_non_batch_with_options(
                 request_environment,
                 input_overrides,
             );
+            if let Some(magnifier) = magnifier {
+                runtime = runtime.with_magnifier_input(magnifier);
+            }
             for (index, bar) in history.iter().copied().enumerate() {
                 match execution_times.as_ref().map(|values| values[index]) {
                     Some(execution_time) => runtime
@@ -438,6 +439,7 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
     let mut options = RunOptions {
         path: path.clone(),
         bars_path: String::new(),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -462,6 +464,16 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
                     return Err(usage());
                 };
                 options.bars_path = value.clone();
+            }
+            "--magnifier-bars" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(usage());
+                };
+                if value.trim().is_empty() {
+                    return Err("magnifier bars path must not be empty".to_owned());
+                }
+                options.magnifier_bars_path = Some(value.clone());
             }
             "--execution-times" => {
                 index += 1;
@@ -691,6 +703,14 @@ fn request_environment_from_specs(
     let provider =
         InMemoryRequestDataProvider::from_streams(streams).map_err(|err| err.to_string())?;
     Ok(RequestEnvironment::new(chart_context, Arc::new(provider)))
+}
+
+fn magnifier_input_from_path(path: Option<&str>) -> Result<Option<MagnifierInput>, String> {
+    let Some(path) = path else {
+        return Ok(None);
+    };
+    let text = fs::read_to_string(path).map_err(|err| format!("failed to read {path}: {err}"))?;
+    magnifier_input_from_json(&text).map(Some)
 }
 
 #[cfg(test)]

@@ -253,6 +253,58 @@ pub fn magnifier_input_from_v1(
     magnifier_input_from_groups(groups)
 }
 
+#[derive(Debug, serde::Deserialize)]
+struct MagnifierInputV1Json {
+    #[serde(rename = "schemaVersion")]
+    schema_version: u32,
+    #[serde(rename = "chartBars")]
+    chart_bars: Vec<MagnifierChartBarJson>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct MagnifierChartBarJson {
+    #[serde(rename = "chartBarIndex")]
+    chart_bar_index: usize,
+    bars: Vec<MagnifierBarJson>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct MagnifierBarJson {
+    time: i64,
+    open: f64,
+    high: f64,
+    low: f64,
+    close: f64,
+    volume: f64,
+}
+
+/// Decode the canonical MagnifierInputV1 JSON envelope used by CLI, Python, and WASM.
+pub fn magnifier_input_from_json(json: &str) -> Result<MagnifierInput, String> {
+    let parsed: MagnifierInputV1Json = serde_json::from_str(json)
+        .map_err(|err| format!("E_MAGNIFIER_MALFORMED: magnifier JSON is invalid: {err}"))?;
+    let groups = parsed
+        .chart_bars
+        .into_iter()
+        .map(|group| MagnifierChartBarInput {
+            chart_bar_index: group.chart_bar_index,
+            bars: group
+                .bars
+                .into_iter()
+                .map(|bar| Bar {
+                    time: bar.time,
+                    open: bar.open,
+                    high: bar.high,
+                    low: bar.low,
+                    close: bar.close,
+                    volume: bar.volume,
+                })
+                .collect(),
+        })
+        .collect();
+    magnifier_input_from_v1(parsed.schema_version, groups)
+        .map_err(|error| error.runtime_error().message)
+}
+
 fn validate_intrabar_times(
     chart_bar_index: usize,
     bars: &[Bar],
@@ -586,6 +638,29 @@ mod tests {
         ));
         assert_eq!(error.diagnostic().code, "E_MAGNIFIER_SCHEMA_VERSION");
         magnifier_input_from_v1(MAGNIFIER_SCHEMA_VERSION, Vec::new()).expect("v1");
+    }
+
+    #[test]
+    fn json_v1_envelope_decodes_through_shared_path() {
+        let json = r#"{
+            "schemaVersion": 1,
+            "chartBars": [
+                {
+                    "chartBarIndex": 0,
+                    "bars": [
+                        {"time": 1, "open": 1.0, "high": 1.1, "low": 0.9, "close": 1.0, "volume": 2.0}
+                    ]
+                }
+            ]
+        }"#;
+        let input = magnifier_input_from_json(json).expect("json");
+        assert_eq!(input.chart_bar_count(), 1);
+        assert_eq!(input.intrabar_count(), 1);
+        let bad =
+            magnifier_input_from_json(r#"{"schemaVersion":2,"chartBars":[]}"#).expect_err("schema");
+        assert!(bad.contains("E_MAGNIFIER_SCHEMA_VERSION"), "{bad}");
+        let malformed = magnifier_input_from_json("{").expect_err("malformed");
+        assert!(malformed.contains("E_MAGNIFIER_MALFORMED"), "{malformed}");
     }
 
     #[test]

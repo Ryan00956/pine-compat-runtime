@@ -25,7 +25,7 @@ pub use magnifier::{
     MAGNIFIER_SCHEMA_VERSION, MAX_MAGNIFIER_INTRABARS, MagnifierChartBarInput, MagnifierFallback,
     MagnifierHostTicks, MagnifierInput, MagnifierInputError, MagnifierTickSource,
     magnifier_absence_diagnostic, magnifier_gap_diagnostic, magnifier_host_ticks,
-    magnifier_input_from_groups, magnifier_input_from_v1,
+    magnifier_input_from_groups, magnifier_input_from_json, magnifier_input_from_v1,
 };
 pub use output::alerts::AlertEvent;
 pub use output::delivery::{

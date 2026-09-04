@@ -71,6 +71,24 @@ FLAT_EQUITY = [
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def test_run_script_accepts_canonical_magnifier_bars_mapping() -> None:
+    source = '''//@version=6
+indicator("magnifier host")
+plot(close)
+'''
+    magnifier = {"schemaVersion": 1, "chartBars": []}
+    omitted = pine_compat.run_script(source, BARS)
+    with_empty = pine_compat.run_script(source, BARS, magnifier_bars=magnifier)
+    assert omitted == with_empty
+    try:
+        pine_compat.run_script(
+            source, BARS, magnifier_bars={"schemaVersion": 2, "chartBars": []}
+        )
+        raise AssertionError("unsupported schema should fail")
+    except ValueError as error:
+        assert "E_MAGNIFIER_SCHEMA_VERSION" in str(error)
+
+
 def fixture_bars(path):
     rows = []
     lines = (ROOT / path).read_text().strip().splitlines()

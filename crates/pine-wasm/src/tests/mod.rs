@@ -10147,6 +10147,23 @@ fn run_csv_with_request_bars_matches_direct_request_api() {
 }
 
 #[test]
+fn run_csv_with_request_bars_accepts_reserved_magnifier_envelope() {
+    let source = "//@version=6\nindicator(\"magnifier host\")\nplot(close)\n";
+    let bars = "time,open,high,low,close,volume\n1,1,1,1,1,1\n";
+    let host_input = r#"{"$magnifier":{"schemaVersion":1,"chartBars":[]}}"#;
+    let output = run_script_csv_with_request_bars(source, bars, host_input)
+        .expect("empty magnifier envelope is valid");
+    assert!(output.contains("\"schemaVersion\":8"), "{output}");
+    let invalid = run_script_csv_with_request_bars_internal(
+        source,
+        bars,
+        r#"{"$magnifier":{"schemaVersion":2,"chartBars":[]}}"#,
+    )
+    .expect_err("unsupported schema");
+    assert!(invalid.contains("E_MAGNIFIER_SCHEMA_VERSION"), "{invalid}");
+}
+
+#[test]
 fn timenow_uses_reserved_execution_times_in_direct_and_compiled_wasm_apis() {
     let source = "//@version=4\nstudy(\"clock\")\nplot(timenow)\nplot(timenow - time)\n";
     let bars = "time,open,high,low,close,volume\n1,1,1,1,1,1\n2,1,1,1,1,1\n3,1,1,1,1,1\n";

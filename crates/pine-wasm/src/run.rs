@@ -1,8 +1,7 @@
 use pine_ir::HirProgram;
 use pine_runtime::{
-    Bar, InputOverrides, RequestEnvironment, public_runtime_result_json,
-    run_historical_with_request_environment_and_input_overrides,
-    run_historical_with_request_environment_and_input_overrides_and_execution_times,
+    Bar, HistoricalRuntime, InputOverrides, MagnifierInput, RequestEnvironment,
+    public_runtime_result_json,
 };
 use wasm_bindgen::prelude::*;
 
@@ -67,12 +66,15 @@ pub(crate) fn run_script_csv_with_request_bars_internal(
     request_bars_json: &str,
 ) -> Result<String, String> {
     let program = compile_program(analysis_input(source))?;
-    let (request_environment, execution_times) =
-        request_environment_and_execution_times_from_json(request_bars_json)?;
+    let parsed = request_environment_and_execution_times_from_json(request_bars_json)?;
+    let request_environment = parsed.environment;
+    let execution_times = parsed.execution_times;
+    let magnifier = parsed.magnifier;
     program.run_csv_with_request_environment_internal(
         bars_csv,
         request_environment,
         execution_times.as_deref(),
+        magnifier,
     )
 }
 
@@ -99,13 +101,16 @@ fn run_script_csv_with_request_bars_and_input_overrides_internal(
     input_overrides_json: &str,
 ) -> Result<String, String> {
     let program = compile_program(analysis_input(source))?;
-    let (request_environment, execution_times) =
-        request_environment_and_execution_times_from_json(request_bars_json)?;
+    let parsed = request_environment_and_execution_times_from_json(request_bars_json)?;
+    let request_environment = parsed.environment;
+    let execution_times = parsed.execution_times;
+    let magnifier = parsed.magnifier;
     program.run_csv_with_request_bars_and_input_overrides_internal(
         bars_csv,
         request_environment,
         execution_times.as_deref(),
         input_overrides_json,
+        magnifier,
     )
 }
 
@@ -180,12 +185,15 @@ pub(crate) fn run_script_csv_with_libraries_and_request_bars_internal(
 ) -> Result<String, String> {
     let input = analysis_input_with_libraries(source, library_sources_json)?;
     let program = compile_program(input)?;
-    let (request_environment, execution_times) =
-        request_environment_and_execution_times_from_json(request_bars_json)?;
+    let parsed = request_environment_and_execution_times_from_json(request_bars_json)?;
+    let request_environment = parsed.environment;
+    let execution_times = parsed.execution_times;
+    let magnifier = parsed.magnifier;
     program.run_csv_with_request_environment_internal(
         bars_csv,
         request_environment,
         execution_times.as_deref(),
+        magnifier,
     )
 }
 
@@ -216,13 +224,16 @@ fn run_script_csv_with_libraries_and_request_bars_and_input_overrides_internal(
 ) -> Result<String, String> {
     let input = analysis_input_with_libraries(source, library_sources_json)?;
     let program = compile_program(input)?;
-    let (request_environment, execution_times) =
-        request_environment_and_execution_times_from_json(request_bars_json)?;
+    let parsed = request_environment_and_execution_times_from_json(request_bars_json)?;
+    let request_environment = parsed.environment;
+    let execution_times = parsed.execution_times;
+    let magnifier = parsed.magnifier;
     program.run_csv_with_request_bars_and_input_overrides_internal(
         bars_csv,
         request_environment,
         execution_times.as_deref(),
         input_overrides_json,
+        magnifier,
     )
 }
 
@@ -261,14 +272,17 @@ impl WasmProgram {
         request_bars_json: &str,
         input_overrides_json: &str,
     ) -> Result<String, JsValue> {
-        let (request_environment, execution_times) =
-            request_environment_and_execution_times_from_json(request_bars_json)
-                .map_err(|err| JsValue::from_str(&err))?;
+        let parsed = request_environment_and_execution_times_from_json(request_bars_json)
+            .map_err(|err| JsValue::from_str(&err))?;
+        let request_environment = parsed.environment;
+        let execution_times = parsed.execution_times;
+        let magnifier = parsed.magnifier;
         self.run_csv_with_request_bars_and_input_overrides_internal(
             bars_csv,
             request_environment,
             execution_times.as_deref(),
             input_overrides_json,
+            magnifier,
         )
         .map_err(|err| JsValue::from_str(&err))
     }
@@ -279,6 +293,7 @@ impl WasmProgram {
         self.run_csv_with_request_environment_internal(
             bars_csv,
             RequestEnvironment::default(),
+            None,
             None,
         )
     }
@@ -294,6 +309,7 @@ impl WasmProgram {
             RequestEnvironment::default(),
             input_overrides,
             None,
+            None,
         )
     }
 
@@ -302,12 +318,15 @@ impl WasmProgram {
         bars_csv: &str,
         request_bars_json: &str,
     ) -> Result<String, String> {
-        let (request_environment, execution_times) =
-            request_environment_and_execution_times_from_json(request_bars_json)?;
+        let parsed = request_environment_and_execution_times_from_json(request_bars_json)?;
+        let request_environment = parsed.environment;
+        let execution_times = parsed.execution_times;
+        let magnifier = parsed.magnifier;
         self.run_csv_with_request_environment_internal(
             bars_csv,
             request_environment,
             execution_times.as_deref(),
+            magnifier,
         )
     }
 
@@ -317,6 +336,7 @@ impl WasmProgram {
         request_environment: RequestEnvironment,
         execution_times: Option<&[i64]>,
         input_overrides_json: &str,
+        magnifier: Option<MagnifierInput>,
     ) -> Result<String, String> {
         let input_overrides = input_overrides_from_json(input_overrides_json, &self.hir)?;
         self.run_csv_with_request_environment_and_input_overrides_internal(
@@ -324,6 +344,7 @@ impl WasmProgram {
             request_environment,
             input_overrides,
             execution_times,
+            magnifier,
         )
     }
 
@@ -332,12 +353,14 @@ impl WasmProgram {
         bars_csv: &str,
         request_environment: RequestEnvironment,
         execution_times: Option<&[i64]>,
+        magnifier: Option<MagnifierInput>,
     ) -> Result<String, String> {
         self.run_csv_with_request_environment_and_input_overrides_internal(
             bars_csv,
             request_environment,
             InputOverrides::new(),
             execution_times,
+            magnifier,
         )
     }
 
@@ -347,27 +370,25 @@ impl WasmProgram {
         request_environment: RequestEnvironment,
         input_overrides: InputOverrides,
         execution_times: Option<&[i64]>,
+        magnifier: Option<MagnifierInput>,
     ) -> Result<String, String> {
         let bars = parse_bars_csv(bars_csv)?;
-        let result = match execution_times {
+        let mut runtime = HistoricalRuntime::with_request_environment_and_input_overrides(
+            &self.hir,
+            request_environment,
+            input_overrides,
+        );
+        if let Some(magnifier) = magnifier {
+            runtime = runtime.with_magnifier_input(magnifier);
+        }
+        match execution_times {
             Some(execution_times) => {
-                run_historical_with_request_environment_and_input_overrides_and_execution_times(
-                    &self.hir,
-                    &bars,
-                    request_environment,
-                    input_overrides,
-                    execution_times,
-                )
+                runtime.append_bars_with_execution_times(&bars, execution_times)
             }
-            None => run_historical_with_request_environment_and_input_overrides(
-                &self.hir,
-                &bars,
-                request_environment,
-                input_overrides,
-            ),
+            None => runtime.append_bars(&bars),
         }
         .map_err(|err| format!("runtime failed: {}", err.message))?;
-        Ok(public_runtime_result_json(&result))
+        Ok(public_runtime_result_json(&runtime.result()))
     }
 }
 

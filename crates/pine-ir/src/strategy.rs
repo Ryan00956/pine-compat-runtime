@@ -129,8 +129,10 @@ mod tests {
 
     #[test]
     fn explicit_false_use_bar_magnifier_is_false() {
-        let mut settings = StrategySettings::default();
-        settings.use_bar_magnifier = false;
+        let settings = StrategySettings {
+            use_bar_magnifier: false,
+            ..StrategySettings::default()
+        };
         assert!(!settings.use_bar_magnifier);
         assert_eq!(settings, StrategySettings::default());
     }

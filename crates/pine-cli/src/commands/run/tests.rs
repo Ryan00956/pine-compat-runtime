@@ -51,6 +51,22 @@ fn parses_run_options_with_library_source() {
 }
 
 #[test]
+fn parses_run_options_with_magnifier_bars() {
+    let options = parse_options(&[
+        "script.pine".to_owned(),
+        "--bars".to_owned(),
+        "bars.csv".to_owned(),
+        "--magnifier-bars".to_owned(),
+        "magnifier.json".to_owned(),
+    ])
+    .expect("run options");
+    assert_eq!(
+        options.magnifier_bars_path.as_deref(),
+        Some("magnifier.json")
+    );
+}
+
+#[test]
 fn parses_run_options_with_execution_times() {
     let options = parse_options(&[
         "script.pine".to_owned(),
@@ -299,6 +315,7 @@ fn runs_timenow_with_explicit_execution_times_in_normal_and_profile_modes() {
     let options = RunOptions {
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: Some(execution_times.to_string_lossy().into_owned()),
         chart_context: ChartContext::default(),
         profile: false,
@@ -385,6 +402,7 @@ fn cli_timenow_fails_closed_when_execution_times_are_missing_or_misaligned() {
     let mut options = RunOptions {
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -450,6 +468,7 @@ bgcolor(shade)
     let options = RunOptions {
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -487,6 +506,7 @@ bgcolor(shade)
     let profile_options = RunOptions {
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -548,6 +568,7 @@ plot(color.t(shade))
     let options = RunOptions {
         path: script.to_string_lossy().into_owned(),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -655,6 +676,7 @@ fn runs_v4_legacy_input_overrides_through_cli_host() {
     let options = RunOptions {
         path,
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -682,6 +704,7 @@ fn profiled_run_reports_max_bars_back_without_retention_misses() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/profile/dynamic_history_max_bars_back.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -706,6 +729,7 @@ fn profiled_run_reports_max_bars_back_retention_misses() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/profile/dynamic_history_max_bars_back_miss.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -730,6 +754,7 @@ fn profiled_run_reports_udf_max_bars_back_retention_misses() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/profile/dynamic_history_udf_max_bars_back_miss.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -768,6 +793,7 @@ fn assert_profile_series_max_bars_back_miss_with_libraries(
     let options = RunOptions {
         path: workspace_path(path),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -796,6 +822,7 @@ fn profiled_run_reports_effective_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -823,6 +850,7 @@ fn profiled_run_reports_expression_source_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_expression_source_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -851,6 +879,7 @@ fn profiled_run_reports_alias_expression_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_alias_expression_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -879,6 +908,7 @@ fn profiled_run_reports_ternary_expression_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_ternary_expression_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -907,6 +937,7 @@ fn profiled_run_reports_qualified_builtin_ternary_series_max_bars_back_diagnosti
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_qualified_builtin_ternary_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -935,6 +966,7 @@ fn profiled_run_reports_pure_math_call_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_pure_math_call_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -963,6 +995,7 @@ fn profiled_run_reports_named_pure_math_call_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_named_pure_math_call_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -991,6 +1024,7 @@ fn profiled_run_reports_numeric_cast_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_numeric_cast_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1055,6 +1089,7 @@ fn profiled_run_reports_udf_length_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_udf_length_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1083,6 +1118,7 @@ fn profiled_run_reports_block_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1111,6 +1147,7 @@ fn profiled_run_reports_switch_block_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_switch_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1139,6 +1176,7 @@ fn profiled_run_reports_statement_switch_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_statement_switch_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1167,6 +1205,7 @@ fn profiled_run_reports_expression_block_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_expression_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1195,6 +1234,7 @@ fn profiled_run_reports_tuple_switch_expression_block_series_max_bars_back_diagn
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_tuple_switch_expression_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1223,6 +1263,7 @@ fn profiled_run_reports_if_expression_block_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_if_expression_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1251,6 +1292,7 @@ fn profiled_run_reports_tuple_if_expression_block_series_max_bars_back_diagnosti
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_tuple_if_expression_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1279,6 +1321,7 @@ fn profiled_run_reports_call_argument_block_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_call_argument_block_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1307,6 +1350,7 @@ fn profiled_run_reports_block_result_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_block_result_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1335,6 +1379,7 @@ fn profiled_run_reports_loop_result_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_loop_result_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1363,6 +1408,7 @@ fn profiled_run_reports_for_in_result_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_for_in_result_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1391,6 +1437,7 @@ fn profiled_run_reports_for_statement_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_for_statement_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1419,6 +1466,7 @@ fn profiled_run_reports_for_in_statement_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_for_in_statement_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1447,6 +1495,7 @@ fn profiled_run_reports_while_result_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_while_result_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1475,6 +1524,7 @@ fn profiled_run_reports_while_statement_series_max_bars_back_diagnostic() {
             "tests/fixtures/profile/dynamic_history_series_max_bars_back_while_statement_miss.pine",
         ),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: true,
@@ -1579,6 +1629,7 @@ fn runs_request_bars_integration_fixture() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/request/request_security_host.pine"),
         bars_path: workspace_path("tests/fixtures/request/chart_1m.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2123,6 +2174,7 @@ fn runs_legacy_v4_security_provider_fixture() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine"),
         bars_path: workspace_path("tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2160,6 +2212,7 @@ fn legacy_v4_security_cli_missing_provider_error_is_source_spanned() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/legacy/v4/runtime/security_provider_legacy.pine"),
         bars_path: workspace_path("tests/fixtures/legacy/v4/runtime/security_chart_bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2182,6 +2235,7 @@ fn runs_imported_function_with_library_source_integration_fixture() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/import.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2217,6 +2271,7 @@ fn run_json_treats_strategy_exit_wrong_entry_as_noop() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_unmatched_from_entry_noop.pine"),
         bars_path: bars_path.display().to_string(),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2245,6 +2300,7 @@ fn run_output_renders_strategy_order_alert_template() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2268,6 +2324,7 @@ fn run_output_rejects_unknown_strategy_order_alert_placeholder() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2291,6 +2348,7 @@ fn run_output_renders_strategy_running_alert() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2319,6 +2377,7 @@ fn run_output_rejects_unknown_strategy_running_alert_placeholder() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
@@ -2347,6 +2406,7 @@ fn run_json_keeps_strategy_alert_template_output_out_of_default_json() {
     let options = RunOptions {
         path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
         bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+        magnifier_bars_path: None,
         execution_times_path: None,
         chart_context: ChartContext::default(),
         profile: false,
