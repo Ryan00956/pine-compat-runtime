@@ -10,6 +10,7 @@ Starting commit: `1e9ac6af6d585fb76c39674b627f68292878a542` (`main`).
 Working branch: `codex/strategy-stage18g-ohlc-path`.
 18g.0 docs commit: `f2f9338a06b72516aaedcba9e451e750c2fbcf75`.
 18g.7 last behavior commit: `b1902e5ec88f787367085cbb70d2a34adf2b155a`.
+18g.8 documentation closeout: `d8e80147cf1dff83002a651e6e607112f8b9bba1`.
 
 ## Official Review
 
