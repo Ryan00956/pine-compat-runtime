@@ -7,6 +7,5 @@ pub(crate) mod history;
 pub(crate) mod persistence;
 pub(crate) mod realtime;
 pub(crate) mod statements;
-#[allow(dead_code)]
 pub(crate) mod strategy_path;
 pub(crate) mod strategy_scheduler;

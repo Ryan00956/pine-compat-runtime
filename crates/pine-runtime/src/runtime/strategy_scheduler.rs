@@ -1,6 +1,8 @@
 use pine_ir::ScriptMode;
 
 use super::historical::HistoricalRuntime;
+use super::strategy_path::HistoricalPath;
+use crate::strategy::{EntryPathTick, PathEventOutcome};
 use crate::{Bar, RuntimeError};
 
 /// Internal extra-pass cap per bar. Extra `calc_on_order_fills` passes stop
@@ -26,9 +28,16 @@ impl Default for StrategyExecutionIdentity {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct StrategyPathCursor {
+    pub leg_index: u8,
+    pub mark: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) struct StrategySchedulerState {
     pub(crate) identity: StrategyExecutionIdentity,
+    pub(crate) path_cursor: Option<StrategyPathCursor>,
     max_recalculation_passes: u32,
     script_passes: usize,
     recalculation_passes: usize,
@@ -50,6 +59,7 @@ impl StrategySchedulerState {
     pub(crate) fn with_max_recalculation_passes(max_recalculation_passes: u32) -> Self {
         Self {
             identity: StrategyExecutionIdentity::default(),
+            path_cursor: None,
             max_recalculation_passes,
             script_passes: 0,
             recalculation_passes: 0,
@@ -84,7 +94,16 @@ impl StrategySchedulerState {
         self.identity.phase = StrategyBarPhase::EligibleEntryFills;
         self.identity.fill_step = None;
         self.identity.pass = 0;
+        self.path_cursor = None;
         self.current_bar_script_passes = 0;
+    }
+
+    pub(crate) fn set_path_cursor(&mut self, leg_index: u8, mark: f64) {
+        self.path_cursor = Some(StrategyPathCursor { leg_index, mark });
+    }
+
+    pub(crate) fn clear_path_cursor(&mut self) {
+        self.path_cursor = None;
     }
 
     pub(crate) fn set_phase(&mut self, phase: StrategyBarPhase) {
@@ -162,22 +181,25 @@ pub(crate) enum StrategyBarPhase {
     OutputCommit,
 }
 
-/// Deterministic historical fill-path steps. Discriminant order is the path
-/// tick used when several families are eligible on the same bar: market closes
-/// and entries at open, then long price families, then short price families.
-/// Same-tick pyramiding batches stay inside one step so eligible limit/stop
-/// entries can still fill together. Host-owned bar-magnifier intrabars, when
-/// later wired, reuse this path against each lower-timeframe tick instead of
-/// adding a second broker.
+/// Point-phase identity for market-open, bar-close, and the shared OHLC path
+/// walk. Price-family variants remain for magnifier host-tick tests; they are
+/// no longer the production price-path model.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum HistoricalFillStep {
     MarketClosesAtOpen,
     MarketEntriesAtOpen,
+    IntrabarPath,
+    #[allow(dead_code)]
     LimitLong,
+    #[allow(dead_code)]
     StopLong,
+    #[allow(dead_code)]
     StopLimitLong,
+    #[allow(dead_code)]
     LimitShort,
+    #[allow(dead_code)]
     StopShort,
+    #[allow(dead_code)]
     StopLimitShort,
     SameBarMarketClosesAtClose,
     SameBarMarketEntriesAtClose,
@@ -185,16 +207,7 @@ pub(crate) enum HistoricalFillStep {
 
 impl HistoricalFillStep {
     fn pre_script_path() -> &'static [Self] {
-        &[
-            Self::MarketClosesAtOpen,
-            Self::MarketEntriesAtOpen,
-            Self::LimitLong,
-            Self::StopLong,
-            Self::StopLimitLong,
-            Self::LimitShort,
-            Self::StopShort,
-            Self::StopLimitShort,
-        ]
+        &[Self::MarketClosesAtOpen, Self::MarketEntriesAtOpen]
     }
 
     fn bar_close_path() -> &'static [Self] {
@@ -212,6 +225,7 @@ impl HistoricalFillStep {
         match self {
             Self::MarketClosesAtOpen
             | Self::MarketEntriesAtOpen
+            | Self::IntrabarPath
             | Self::LimitLong
             | Self::StopLong
             | Self::StopLimitLong
@@ -255,6 +269,7 @@ impl HistoricalRuntime<'_> {
             }
             self.recalculate_after_fill(filled)?;
         }
+        self.walk_entry_price_path(bar_index, bar)?;
         self.strategy_broker
             .evaluate_risk_equity_stops(bar_index, bar.time, bar.open);
         self.trace_strategy_phase(StrategyBarPhase::TradeExtremes);
@@ -325,6 +340,7 @@ impl HistoricalRuntime<'_> {
                 self.strategy_broker
                     .fill_pending_stop_limit_short_entries(bar_index, bar.time, bar.high, bar.low);
             }
+            HistoricalFillStep::IntrabarPath => {}
             HistoricalFillStep::SameBarMarketClosesAtClose => {
                 self.strategy_broker
                     .fill_same_bar_market_closes(bar_index, bar.time, bar.close);
@@ -335,6 +351,57 @@ impl HistoricalRuntime<'_> {
             }
         }
         self.strategy_broker.public_order_event_count() > before
+    }
+
+    fn walk_entry_price_path(&mut self, bar_index: usize, bar: Bar) -> Result<(), RuntimeError> {
+        let Some(path) = HistoricalPath::from_bar(&bar) else {
+            return Ok(());
+        };
+        self.strategy_scheduler
+            .set_fill_step(HistoricalFillStep::IntrabarPath);
+        let long_blocked = self.strategy_broker.same_side_long_entry_blocked();
+        let short_blocked = self.strategy_broker.same_side_short_entry_blocked();
+        for leg in path.legs() {
+            let mut mark = leg.from.price;
+            self.strategy_scheduler.set_path_cursor(leg.index, mark);
+            let mut steps = 0_u32;
+            loop {
+                steps += 1;
+                if steps > 10_000 {
+                    return Err(RuntimeError {
+                        message: format!(
+                            "strategy path event loop made no progress: bar {} leg {}",
+                            bar_index, leg.index
+                        ),
+                    });
+                }
+                let Some(outcome) =
+                    self.strategy_broker
+                        .take_next_entry_path_event(EntryPathTick {
+                            bar_index,
+                            time: bar.time,
+                            leg,
+                            path_kind: path.kind,
+                            mark,
+                            long_blocked_at_path_start: long_blocked,
+                            short_blocked_at_path_start: short_blocked,
+                        })
+                else {
+                    mark = leg.to.price;
+                    self.strategy_scheduler.set_path_cursor(leg.index, mark);
+                    break;
+                };
+                mark = outcome.mark();
+                self.strategy_scheduler.set_path_cursor(leg.index, mark);
+                if let PathEventOutcome::Filled { fill_price, .. } = outcome {
+                    self.strategy_broker
+                        .flatten_if_risk_blocked(bar_index, bar.time, fill_price);
+                    self.recalculate_after_fill(true)?;
+                }
+            }
+        }
+        self.strategy_scheduler.clear_path_cursor();
+        Ok(())
     }
 
     pub(crate) fn fill_current_tick_market_closes(&mut self) {
@@ -403,6 +470,7 @@ mod tests {
         let mut scheduler = StrategySchedulerState::new();
         scheduler.begin_bar(3);
         scheduler.begin_script_pass().expect("initial pass");
+        scheduler.set_path_cursor(1, 10.5);
         scheduler.begin_bar(4);
         assert_eq!(scheduler.identity.bar_index, 4);
         assert_eq!(scheduler.identity.pass, 0);
@@ -411,6 +479,7 @@ mod tests {
             StrategyBarPhase::EligibleEntryFills
         );
         assert_eq!(scheduler.identity.fill_step, None);
+        assert_eq!(scheduler.path_cursor, None);
         assert_eq!(scheduler.script_passes(), 1);
     }
 

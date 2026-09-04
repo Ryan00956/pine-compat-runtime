@@ -43,6 +43,7 @@ pub(crate) use loss_profit_brackets::LossProfitBracketSpec;
 use order_book::OrderBook;
 pub(crate) use pending_closes::PendingCloseQuantity;
 use pending_entries::StopLimitEntryPlacement;
+pub(crate) use pending_entry_fills::{EntryPathTick, PathEventOutcome};
 use pending_exits::{
     PendingExit, PendingExitQuantity, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate,
 };
@@ -145,11 +146,11 @@ impl BrokerState {
         self.position_size > 0.0 || self.can_open_short_entry()
     }
 
-    fn same_side_long_entry_blocked(&self) -> bool {
+    pub(crate) fn same_side_long_entry_blocked(&self) -> bool {
         self.position_size >= 0.0 && !self.can_open_long_entry()
     }
 
-    fn same_side_short_entry_blocked(&self) -> bool {
+    pub(crate) fn same_side_short_entry_blocked(&self) -> bool {
         self.position_size <= 0.0 && !self.can_open_short_entry()
     }
 

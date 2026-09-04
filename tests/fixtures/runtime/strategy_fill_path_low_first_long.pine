@@ -1,0 +1,6 @@
+//@version=5
+strategy("Fill path low first long", overlay=false, pyramiding=2, initial_capital=100000)
+
+if bar_index == 0
+    strategy.entry("STP", strategy.long, qty=1, stop=10.8)
+    strategy.entry("LIM", strategy.long, qty=1, limit=8.2)

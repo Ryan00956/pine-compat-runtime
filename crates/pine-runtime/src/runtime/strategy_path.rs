@@ -72,6 +72,27 @@ impl PathLeg {
         self.crossing_rank(left)
             .total_cmp(&self.crossing_rank(right))
     }
+
+    pub(crate) fn contains_price(self, price: f64) -> bool {
+        if !price.is_finite() {
+            return false;
+        }
+        let low = self.from.price.min(self.to.price);
+        let high = self.from.price.max(self.to.price);
+        price >= low && price <= high
+    }
+
+    /// Remaining prices on this monotonic leg, including the current mark.
+    pub(crate) fn contains_unconsumed(self, mark: f64, price: f64) -> bool {
+        if !self.contains_price(price) {
+            return false;
+        }
+        match self.direction {
+            PathLegDirection::Rising => price.total_cmp(&mark) != Ordering::Less,
+            PathLegDirection::Falling => price.total_cmp(&mark) != Ordering::Greater,
+            PathLegDirection::Flat => true,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -340,6 +361,10 @@ mod tests {
         assert_eq!(flat.direction, PathLegDirection::Flat);
         assert_eq!(flat.cmp_crossing_prices(3.0, 3.0), Ordering::Equal);
         assert_eq!(close_leg.direction, PathLegDirection::Rising);
+        assert!(rising.contains_unconsumed(10.0, 10.5));
+        assert!(!rising.contains_unconsumed(11.0, 10.5));
+        assert!(falling.contains_unconsumed(12.0, 11.0));
+        assert!(!falling.contains_unconsumed(9.0, 11.0));
     }
 
     #[test]

@@ -1091,25 +1091,25 @@ plot(strategy.position_avg_price)
 
     assert_eq!(strategy.orders.len(), 1);
     assert_eq!(strategy.orders[0].id, "L");
-    assert_eq!(strategy.orders[0].bar_index, 2);
+    assert_eq!(strategy.orders[0].bar_index, 1);
     assert_eq!(strategy.orders[0].direction, "strategy.long");
     assert_eq!(strategy.orders[0].qty, 2.0);
     assert_eq!(strategy.orders[0].price, 2.0);
     assert_eq!(strategy.position.len(), 1);
-    assert_eq!(strategy.position[0].bar_index, 2);
+    assert_eq!(strategy.position[0].bar_index, 1);
     assert_eq!(strategy.position[0].size, 2.0);
     assert_eq!(strategy.position[0].avg_price, Some(2.0));
     assert_eq!(
         result.plots[0].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Float(2.0),
             PineValue::Float(2.0),
         ]
     );
     assert_eq!(
         result.plots[1].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Float(2.0),]
+        vec![PineValue::Na, PineValue::Float(2.0), PineValue::Float(2.0),]
     );
     assert!(strategy.diagnostics.is_empty());
 }
@@ -1149,12 +1149,12 @@ plot(strategy.position_avg_price)
     assert_eq!(strategy.orders.len(), 2);
     assert_eq!(strategy.orders[0].id, "L1");
     assert_eq!(strategy.orders[0].direction, "strategy.long");
-    assert_eq!(strategy.orders[0].bar_index, 2);
+    assert_eq!(strategy.orders[0].bar_index, 1);
     assert_eq!(strategy.orders[0].qty, 1.0);
     assert_eq!(strategy.orders[0].price, 10.0);
     assert_eq!(strategy.orders[1].id, "L2");
     assert_eq!(strategy.orders[1].direction, "strategy.long");
-    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].bar_index, 1);
     assert_eq!(strategy.orders[1].qty, 3.0);
     assert_eq!(strategy.orders[1].price, 10.0);
     assert_eq!(strategy.position.last().unwrap().size, 4.0);
@@ -1164,7 +1164,7 @@ plot(strategy.position_avg_price)
         result.plots[0].values,
         vec![
             PineValue::Int(0),
-            PineValue::Int(0),
+            PineValue::Int(2),
             PineValue::Int(2),
             PineValue::Int(2),
         ]
@@ -1173,7 +1173,7 @@ plot(strategy.position_avg_price)
         result.plots[1].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Float(4.0),
             PineValue::Float(4.0),
             PineValue::Float(4.0),
         ]
@@ -1182,7 +1182,7 @@ plot(strategy.position_avg_price)
         result.plots[2].values,
         vec![
             PineValue::Na,
-            PineValue::Na,
+            PineValue::Float(10.0),
             PineValue::Float(10.0),
             PineValue::Float(10.0),
         ]
@@ -1221,7 +1221,7 @@ plot(strategy.closedtrades)
 
     assert_eq!(strategy.orders.len(), 2);
     assert_eq!(strategy.orders[0].id, "L");
-    assert_eq!(strategy.orders[0].bar_index, 2);
+    assert_eq!(strategy.orders[0].bar_index, 1);
     assert_eq!(strategy.orders[0].price, 2.0);
     assert_eq!(strategy.orders[1].id, "XL");
     assert_eq!(strategy.orders[1].bar_index, 2);
@@ -1236,7 +1236,7 @@ plot(strategy.closedtrades)
         result.plots[0].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Float(2.0),
             PineValue::Float(2.0),
         ]
     );
@@ -12669,36 +12669,169 @@ fn historical_fill_path_orders_open_then_long_price_then_short_price() {
     assert!(StopLimitShort < SameBarMarketClosesAtClose);
 }
 
+fn fill_path_order_ids(strategy: &crate::StrategyResult) -> Vec<&str> {
+    strategy
+        .orders
+        .iter()
+        .map(|order| order.id.as_str())
+        .collect()
+}
+
+fn run_fill_path_fixture(name: &str, source: &str, bars: &[Bar]) -> crate::StrategyResult {
+    let source = SourceFile::new(name, source);
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{name} diagnostics: {:?}",
+        analysis.diagnostics
+    );
+    run_historical(&analysis.hir.expect("HIR"), bars)
+        .unwrap_or_else(|error| panic!("{name} runtime: {error:?}"))
+        .strategy
+        .unwrap_or_else(|| panic!("{name} missing strategy output"))
+}
+
 #[test]
 fn strategy_same_bar_limit_and_stop_fill_limit_family_first() {
-    let source = SourceFile::new(
+    let strategy = run_fill_path_fixture(
         "strategy_fill_path_limit_stop_collision.pine",
         include_str!(
             "../../../../tests/fixtures/runtime/strategy_fill_path_limit_stop_collision.pine"
         ),
-    );
-    let analysis = analyze_source(&source);
-    assert!(
-        analysis.diagnostics.is_empty(),
-        "{:?}",
-        analysis.diagnostics
-    );
-    let result = run_historical(
-        &analysis.hir.expect("HIR"),
         &[bar(1.0), bar_ohlc(2.0, 3.0, 1.0, 2.0), bar(3.0), bar(4.0)],
-    )
-    .expect("runtime result");
-    let strategy = result.strategy.expect("strategy output");
-    assert_eq!(
-        strategy
-            .orders
-            .iter()
-            .map(|order| order.id.as_str())
-            .collect::<Vec<_>>(),
-        vec!["LIM", "STP"]
     );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["LIM", "STP"]);
     assert_eq!(strategy.orders[0].bar_index, 1);
     assert_eq!(strategy.orders[1].bar_index, 1);
+}
+
+#[test]
+fn strategy_fill_path_high_first_long_fills_stop_then_limit() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_high_first_long.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_high_first_long.pine"),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["STP", "LIM"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 10.8);
+    assert_eq!(strategy.orders[0].direction, "strategy.long");
+    assert_eq!(strategy.orders[0].qty, 1.0);
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].price, 8.2);
+    assert_eq!(strategy.orders[1].direction, "strategy.long");
+    assert_eq!(strategy.orders[1].qty, 1.0);
+    assert_eq!(strategy.position.last().unwrap().size, 2.0);
+}
+
+#[test]
+fn strategy_fill_path_low_first_long_fills_limit_then_stop() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_low_first_long.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_low_first_long.pine"),
+        &[bar(10.0), bar_ohlc(10.0, 13.0, 8.0, 11.0), bar(11.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["LIM", "STP"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 8.2);
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].price, 10.8);
+    assert_eq!(strategy.position.last().unwrap().size, 2.0);
+}
+
+#[test]
+fn strategy_fill_path_high_first_short_fills_limit_then_stop() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_high_first_short.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_high_first_short.pine"),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["LIM", "STP"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 10.8);
+    assert_eq!(strategy.orders[0].direction, "strategy.short");
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].price, 8.2);
+    assert_eq!(strategy.orders[1].direction, "strategy.short");
+    assert_eq!(strategy.position.last().unwrap().size, -2.0);
+}
+
+#[test]
+fn strategy_fill_path_low_first_short_fills_stop_then_limit() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_low_first_short.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_low_first_short.pine"),
+        &[bar(10.0), bar_ohlc(10.0, 13.0, 8.0, 11.0), bar(11.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["STP", "LIM"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 8.2);
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].price, 10.8);
+    assert_eq!(strategy.position.last().unwrap().size, -2.0);
+}
+
+#[test]
+fn strategy_fill_path_same_price_uses_creation_order_not_family_rank() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_same_price_creation_order.pine",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_fill_path_same_price_creation_order.pine"
+        ),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["LIM", "STP"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 10.8);
+    assert_eq!(strategy.orders[0].direction, "strategy.short");
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].price, 10.8);
+    assert_eq!(strategy.orders[1].direction, "strategy.long");
+    assert_eq!(strategy.position.last().unwrap().size, 1.0);
+}
+
+#[test]
+fn strategy_fill_path_order_oca_cancel_does_not_fill_stale_peer() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_order_oca_cancel.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_order_oca_cancel.pine"),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["STP"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 10.8);
+    assert_eq!(strategy.position.last().unwrap().size, 1.0);
+}
+
+#[test]
+fn strategy_fill_path_stop_limit_long_fills_same_bar_after_high_first_activation() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_stop_limit_long.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_stop_limit_long.pine"),
+        &[bar(10.0), bar_ohlc(10.0, 11.0, 8.0, 9.0), bar(9.0)],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["SL"]);
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].price, 8.2);
+    assert_eq!(strategy.orders[0].qty, 1.0);
+    assert_eq!(strategy.position.last().unwrap().size, 1.0);
+}
+
+#[test]
+fn strategy_fill_path_stop_limit_short_does_not_fill_same_bar() {
+    let strategy = run_fill_path_fixture(
+        "strategy_fill_path_stop_limit_short.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_fill_path_stop_limit_short.pine"),
+        &[
+            bar(10.0),
+            bar_ohlc(10.0, 13.0, 8.0, 11.0),
+            bar_ohlc(10.8, 10.8, 10.8, 10.8),
+        ],
+    );
+    assert_eq!(fill_path_order_ids(&strategy), vec!["SL"]);
+    assert_eq!(strategy.orders[0].bar_index, 2);
+    assert_eq!(strategy.orders[0].price, 10.8);
+    assert_eq!(strategy.position.last().unwrap().size, -1.0);
 }
 
 fn expected_strategy_bar_phases() -> Vec<crate::runtime::strategy_scheduler::StrategyBarPhase> {

@@ -1,11 +1,143 @@
 use super::{
     BrokerState,
+    candidates::{BrokerCandidate, BrokerCandidateEvent},
     pending_entries::{PendingEntry, PendingEntryDirection, PendingEntryKind},
     types::{EntryFill, EntryPyramidingMode, InternalOrderKey, OcaPeerEffects},
 };
+use crate::runtime::strategy_path::{HistoricalPathKind, PathLeg};
 use std::collections::{HashMap, HashSet};
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct EntryPathTick {
+    pub bar_index: usize,
+    pub time: i64,
+    pub leg: PathLeg,
+    pub path_kind: HistoricalPathKind,
+    pub mark: f64,
+    pub long_blocked_at_path_start: bool,
+    pub short_blocked_at_path_start: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum PathEventOutcome {
+    Filled { mark: f64, fill_price: f64 },
+    Activated { mark: f64 },
+    Ignored { mark: f64 },
+}
+
+impl PathEventOutcome {
+    #[cfg_attr(not(test), allow(dead_code))]
+    pub(crate) fn is_fill(self) -> bool {
+        matches!(self, Self::Filled { .. })
+    }
+
+    pub(crate) fn mark(self) -> f64 {
+        match self {
+            Self::Filled { mark, .. } | Self::Activated { mark } | Self::Ignored { mark } => mark,
+        }
+    }
+}
+
 impl BrokerState {
+    pub(crate) fn take_next_entry_path_event(
+        &mut self,
+        tick: EntryPathTick,
+    ) -> Option<PathEventOutcome> {
+        let winner = self
+            .collect_path_leg_candidates_for(tick.bar_index, tick.leg, tick.path_kind)
+            .into_iter()
+            .find(|candidate| {
+                matches!(
+                    candidate.event_kind,
+                    BrokerCandidateEvent::EntryOrOrderFill
+                        | BrokerCandidateEvent::StopLimitActivation
+                ) && candidate.observed_generation == self.event_generation
+                    && tick
+                        .leg
+                        .contains_unconsumed(tick.mark, candidate.crossing_price)
+            })?;
+        Some(self.apply_entry_path_candidate(&winner, tick))
+    }
+
+    fn apply_entry_path_candidate(
+        &mut self,
+        candidate: &BrokerCandidate,
+        tick: EntryPathTick,
+    ) -> PathEventOutcome {
+        match candidate.event_kind {
+            BrokerCandidateEvent::StopLimitActivation => {
+                self.activate_stop_limit_by_key(candidate.stable_order_key, tick.bar_index);
+                self.bump_event_generation();
+                PathEventOutcome::Activated {
+                    mark: candidate.crossing_price,
+                }
+            }
+            BrokerCandidateEvent::EntryOrOrderFill => {
+                let Some(pending) = self
+                    .order_book
+                    .entries_mut()
+                    .remove_by_key(candidate.stable_order_key)
+                else {
+                    return PathEventOutcome::Ignored {
+                        mark: candidate.crossing_price,
+                    };
+                };
+                let blocked = pending.enforce_pyramiding
+                    && match pending.direction {
+                        PendingEntryDirection::Long => {
+                            tick.long_blocked_at_path_start && self.position_size >= 0.0
+                        }
+                        PendingEntryDirection::Short => {
+                            tick.short_blocked_at_path_start && self.position_size <= 0.0
+                        }
+                    };
+                if blocked {
+                    self.bump_event_generation();
+                    return PathEventOutcome::Ignored {
+                        mark: candidate.crossing_price,
+                    };
+                }
+                let before = self.public_order_event_count();
+                let _ = self.fill_pending_generic_or_entry(
+                    pending,
+                    tick.bar_index,
+                    tick.time,
+                    candidate.fill_price_or_mark,
+                );
+                self.bump_event_generation();
+                if self.public_order_event_count() > before {
+                    PathEventOutcome::Filled {
+                        mark: candidate.crossing_price,
+                        fill_price: candidate.fill_price_or_mark,
+                    }
+                } else {
+                    PathEventOutcome::Ignored {
+                        mark: candidate.crossing_price,
+                    }
+                }
+            }
+            _ => PathEventOutcome::Ignored {
+                mark: candidate.crossing_price,
+            },
+        }
+    }
+
+    fn activate_stop_limit_by_key(&mut self, key: InternalOrderKey, bar_index: usize) {
+        let Some(pending) = self.order_book.entries_mut().find_mut_by_key(key) else {
+            return;
+        };
+        let PendingEntryKind::StopLimit {
+            activated_bar_index,
+            ..
+        } = &mut pending.kind
+        else {
+            return;
+        };
+        if activated_bar_index.is_none() {
+            *activated_bar_index = Some(bar_index);
+        }
+    }
+
     pub(crate) fn fill_pending_market_entries(
         &mut self,
         bar_index: usize,

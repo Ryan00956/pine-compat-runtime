@@ -6,7 +6,7 @@ use super::pending_exits::{
     PendingExit, PendingExitTrigger, PendingTrailingState, PendingTrailingUpdate,
 };
 use super::types::{InternalOrderKey, StrategyCommandOrigin};
-use crate::runtime::strategy_path::PathLeg;
+use crate::runtime::strategy_path::{HistoricalPathKind, PathLeg};
 use crate::strategy::broker::ledger::TradeDirection;
 use std::cmp::Ordering;
 
@@ -133,6 +133,15 @@ impl BrokerState {
         bar_index: usize,
         leg: PathLeg,
     ) -> Vec<BrokerCandidate> {
+        self.collect_path_leg_candidates_for(bar_index, leg, HistoricalPathKind::OpenHighLowClose)
+    }
+
+    pub(super) fn collect_path_leg_candidates_for(
+        &self,
+        bar_index: usize,
+        leg: PathLeg,
+        path_kind: HistoricalPathKind,
+    ) -> Vec<BrokerCandidate> {
         let generation = self.event_generation;
         let high = leg.from.price.max(leg.to.price);
         let low = leg.from.price.min(leg.to.price);
@@ -147,7 +156,7 @@ impl BrokerState {
                 continue;
             }
             candidates.extend(entry_leg_candidates(
-                pending, bar_index, leg, high, low, verify, generation,
+                pending, bar_index, path_kind, leg, verify, generation,
             ));
         }
         let direction = if self.position_size < 0.0 {
@@ -271,15 +280,34 @@ fn price_on_leg(leg: PathLeg, price: f64) -> bool {
     price >= low && price <= high
 }
 
+fn same_bar_stop_limit_fill_allowed(
+    path_kind: HistoricalPathKind,
+    direction: PendingEntryDirection,
+) -> bool {
+    path_kind == HistoricalPathKind::OpenHighLowClose && direction == PendingEntryDirection::Long
+}
+
+fn stop_limit_fill_bar_eligible(
+    activated_bar_index: usize,
+    bar_index: usize,
+    path_kind: HistoricalPathKind,
+    direction: PendingEntryDirection,
+) -> bool {
+    activated_bar_index < bar_index
+        || (activated_bar_index == bar_index
+            && same_bar_stop_limit_fill_allowed(path_kind, direction))
+}
+
 fn entry_leg_candidates(
     pending: &PendingEntry,
     bar_index: usize,
+    path_kind: HistoricalPathKind,
     leg: PathLeg,
-    high: f64,
-    low: f64,
     verify: f64,
     generation: u64,
 ) -> Vec<BrokerCandidate> {
+    let high = leg.from.price.max(leg.to.price);
+    let low = leg.from.price.min(leg.to.price);
     let mut out = Vec::new();
     match (pending.direction, &pending.kind) {
         (PendingEntryDirection::Long, PendingEntryKind::Limit { price })
@@ -355,20 +383,19 @@ fn entry_leg_candidates(
                     public_id: pending.id.clone(),
                 });
             }
-            if let Some(activated) = *activated_bar_index {
-                if activated < bar_index
-                    && low <= *limit_price - verify
-                    && price_on_leg(leg, *limit_price)
-                {
-                    out.push(entry_fill_candidate(
-                        pending,
-                        BrokerCandidatePhase::PathLeg,
-                        leg.index,
-                        *limit_price,
-                        *limit_price,
-                        generation,
-                    ));
-                }
+            if let Some(activated) = *activated_bar_index
+                && stop_limit_fill_bar_eligible(activated, bar_index, path_kind, pending.direction)
+                && low <= *limit_price - verify
+                && price_on_leg(leg, *limit_price)
+            {
+                out.push(entry_fill_candidate(
+                    pending,
+                    BrokerCandidatePhase::PathLeg,
+                    leg.index,
+                    *limit_price,
+                    *limit_price,
+                    generation,
+                ));
             }
         }
         (
@@ -394,8 +421,9 @@ fn entry_leg_candidates(
                     public_id: pending.id.clone(),
                 });
             }
-            if activated_bar_index.is_some_and(|activated| activated < bar_index)
-                && high >= *limit_price + verify
+            if activated_bar_index.is_some_and(|activated| {
+                stop_limit_fill_bar_eligible(activated, bar_index, path_kind, pending.direction)
+            }) && high >= *limit_price + verify
                 && price_on_leg(leg, *limit_price)
             {
                 out.push(entry_fill_candidate(

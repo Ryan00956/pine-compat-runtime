@@ -80,6 +80,57 @@ fn stop_limit_activation_is_not_a_fill() {
 }
 
 #[test]
+fn high_first_long_stop_limit_can_fill_after_same_bar_activation() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.place_pending_stop_limit_long_entry("SL".to_owned(), 1.0, 10.8, 8.5, 0);
+    let path = HistoricalPath::from_ohlc(10.0, 11.0, 8.0, 9.0).expect("path");
+    let [rising, falling, _] = path.legs();
+    let outcome = broker
+        .take_next_entry_path_event(super::EntryPathTick {
+            bar_index: 1,
+            time: 10,
+            leg: rising,
+            path_kind: path.kind,
+            mark: rising.from.price,
+            long_blocked_at_path_start: false,
+            short_blocked_at_path_start: false,
+        })
+        .expect("activation");
+    assert!(!outcome.is_fill());
+    let candidates = broker.collect_path_leg_candidates_for(1, falling, path.kind);
+    assert!(candidates.iter().any(|candidate| {
+        candidate.public_id == "SL"
+            && candidate.event_kind == BrokerCandidateEvent::EntryOrOrderFill
+            && candidate.fill_price_or_mark == 8.5
+    }));
+}
+
+#[test]
+fn short_stop_limit_does_not_collect_same_bar_fill() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.place_pending_stop_limit_short_entry("SL".to_owned(), 1.0, 8.2, 10.8, 0);
+    let path = HistoricalPath::from_ohlc(10.0, 13.0, 8.0, 11.0).expect("path");
+    let [falling, rising, _] = path.legs();
+    let outcome = broker
+        .take_next_entry_path_event(super::EntryPathTick {
+            bar_index: 1,
+            time: 10,
+            leg: falling,
+            path_kind: path.kind,
+            mark: falling.from.price,
+            long_blocked_at_path_start: false,
+            short_blocked_at_path_start: false,
+        })
+        .expect("activation");
+    assert!(!outcome.is_fill());
+    let candidates = broker.collect_path_leg_candidates_for(1, rising, path.kind);
+    assert!(!candidates.iter().any(|candidate| {
+        candidate.public_id == "SL"
+            && candidate.event_kind == BrokerCandidateEvent::EntryOrOrderFill
+    }));
+}
+
+#[test]
 fn same_price_uses_creation_sequence_not_entry_before_exit() {
     let mut broker = BrokerState::new(100_000.0);
     broker.place_pending_limit_long_entry("NX".to_owned(), 1.0, 9.5, 0);
