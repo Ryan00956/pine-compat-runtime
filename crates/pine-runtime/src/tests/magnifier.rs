@@ -138,3 +138,187 @@ fn realtime_runtime_rejects_magnifier_group_for_forming_bar() {
         error.message
     );
 }
+
+fn enabled_strategy(source: &str) -> pine_ir::HirProgram {
+    let file = SourceFile::new("magnifier-enabled.pine", source);
+    let analysis = analyze_source(&file);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let mut program = analysis.hir.expect("HIR");
+    program.strategy_settings.use_bar_magnifier = true;
+    program
+}
+
+fn ohlc(time: i64, open: f64, high: f64, low: f64, close: f64) -> Bar {
+    Bar {
+        time,
+        open,
+        high,
+        low,
+        close,
+        volume: 1.0,
+    }
+}
+
+#[test]
+fn magnifier_three_lower_bars_walk_independent_host_paths() {
+    use crate::runtime::strategy_scheduler::StrategyPathPhase;
+
+    let program = enabled_strategy(
+        r#"
+strategy("three lower bars")
+plot(close)
+"#,
+    );
+    let input = magnifier_input_from_groups(vec![
+        group(0, vec![timed_bar(1_000, 10.0)]),
+        group(
+            1,
+            vec![
+                ohlc(2_000, 10.0, 10.4, 9.8, 10.2),
+                ohlc(2_300, 10.2, 10.8, 10.1, 10.6),
+                ohlc(2_600, 11.0, 11.8, 10.5, 11.0),
+            ],
+        ),
+    ])
+    .expect("valid");
+    let mut runtime = HistoricalRuntime::new(&program).with_magnifier_input(input);
+    runtime
+        .append_bars(&[timed_bar(1_000, 10.0), ohlc(2_000, 10.0, 12.0, 8.0, 11.0)])
+        .expect("run");
+    let hosts: Vec<_> = runtime
+        .strategy_path_trace
+        .iter()
+        .filter(|entry| entry.chart_bar_index == 1)
+        .map(|entry| entry.host_bar_index)
+        .collect();
+    assert!(hosts.contains(&0));
+    assert!(hosts.contains(&1));
+    assert!(hosts.contains(&2));
+    assert!(
+        runtime.strategy_path_trace.iter().any(|entry| {
+            entry.chart_bar_index == 1
+                && entry.host_bar_index == 2
+                && entry.path_phase == StrategyPathPhase::HostOpen
+                && (entry.mark - 11.0).abs() < 1e-10
+        }),
+        "gap 10.6 -> 11.0 must be a host-open point: {:?}",
+        runtime.strategy_path_trace
+    );
+    let fallback = runtime
+        .result()
+        .diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.code.starts_with("W_MAGNIFIER"));
+    assert!(!fallback);
+}
+
+#[test]
+fn magnifier_empty_group_falls_back_once_and_keeps_chart_identity() {
+    let program = enabled_strategy(
+        r#"
+strategy("empty group")
+plot(close)
+"#,
+    );
+    let input = magnifier_input_from_groups(vec![
+        group(0, vec![timed_bar(1, 1.0)]),
+        MagnifierChartBarInput {
+            chart_bar_index: 1,
+            bars: Vec::new(),
+        },
+    ])
+    .expect("valid");
+    let result = HistoricalRuntime::new(&program)
+        .with_magnifier_input(input)
+        .run(&[timed_bar(1_000, 1.0), timed_bar(2_000, 2.0)])
+        .expect("run");
+    let warnings: Vec<_> = result
+        .diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.code.as_str())
+        .collect();
+    assert_eq!(warnings, vec!["W_MAGNIFIER_GAP"]);
+}
+
+#[test]
+fn magnifier_doji_lower_bar_terminates_without_replay() {
+    let program = enabled_strategy(
+        r#"
+strategy("doji")
+plot(close)
+"#,
+    );
+    let input = magnifier_input_from_groups(vec![group(
+        0,
+        vec![
+            ohlc(1, 10.0, 10.0, 10.0, 10.0),
+            ohlc(2, 10.0, 10.0, 10.0, 10.0),
+        ],
+    )])
+    .expect("valid");
+    HistoricalRuntime::new(&program)
+        .with_magnifier_input(input)
+        .run(&[timed_bar(1, 10.0)])
+        .expect("doji walk must terminate");
+}
+
+#[test]
+fn magnifier_fill_resumes_from_current_host_leg_without_replay() {
+    use crate::runtime::strategy_scheduler::StrategyPathPhase;
+
+    let program = enabled_strategy(
+        r#"
+strategy("resume", calc_on_order_fills=true, initial_capital=100000)
+if bar_index == 0
+    strategy.entry("EN", strategy.long, qty=1, stop=10.5)
+if strategy.position_size > 0
+    strategy.exit("EX", "EN", limit=11.5)
+plot(close)
+"#,
+    );
+    let input = magnifier_input_from_groups(vec![group(
+        1,
+        vec![
+            ohlc(2_000, 10.0, 10.4, 9.8, 10.2),
+            ohlc(2_300, 10.2, 10.8, 10.1, 10.6),
+            ohlc(2_600, 10.6, 11.8, 10.5, 11.0),
+        ],
+    )])
+    .expect("valid");
+    let mut runtime = HistoricalRuntime::new(&program).with_magnifier_input(input);
+    runtime
+        .append_bars(&[timed_bar(1_000, 10.0), ohlc(2_000, 10.0, 12.0, 8.0, 11.0)])
+        .expect("run");
+    let result = runtime.result();
+    let strategy = result.strategy.expect("strategy");
+    assert!(
+        strategy
+            .orders
+            .iter()
+            .any(|order| order.id == "EN" && order.bar_index == 1),
+        "{:?}",
+        strategy.orders
+    );
+    let after_entry: Vec<_> = runtime
+        .strategy_path_trace
+        .iter()
+        .filter(|entry| entry.chart_bar_index == 1)
+        .map(|entry| entry.host_bar_index)
+        .collect();
+    assert!(after_entry.contains(&1));
+    assert!(after_entry.contains(&2));
+    assert!(
+        runtime
+            .strategy_path_trace
+            .iter()
+            .any(|entry| entry.chart_bar_index == 1
+                && entry.host_bar_index == 1
+                && entry.path_phase == StrategyPathPhase::PathLeg),
+        "{:?}",
+        runtime.strategy_path_trace
+    );
+}

@@ -1,7 +1,9 @@
 use pine_ir::ScriptMode;
 
 use super::historical::HistoricalRuntime;
-use super::strategy_path::HistoricalPath;
+use super::strategy_path::{
+    HistoricalPath, MagnifierHostBar, MagnifierHostGap, magnifier_host_sequence,
+};
 use crate::strategy::{EntryPathTick, PathEventOutcome};
 use crate::{Bar, RuntimeError};
 
@@ -28,8 +30,26 @@ impl Default for StrategyExecutionIdentity {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum StrategyPathPhase {
+    HostOpen,
+    PathLeg,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct StrategyPathCursor {
+    pub host_bar_index: usize,
+    pub path_phase: StrategyPathPhase,
+    pub leg_index: u8,
+    pub mark: f64,
+}
+
+#[cfg(test)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct StrategyPathTraceEntry {
+    pub chart_bar_index: usize,
+    pub host_bar_index: usize,
+    pub path_phase: StrategyPathPhase,
     pub leg_index: u8,
     pub mark: f64,
 }
@@ -98,8 +118,30 @@ impl StrategySchedulerState {
         self.current_bar_script_passes = 0;
     }
 
+    #[cfg(test)]
     pub(crate) fn set_path_cursor(&mut self, leg_index: u8, mark: f64) {
-        self.path_cursor = Some(StrategyPathCursor { leg_index, mark });
+        self.set_host_path_cursor(0, StrategyPathPhase::PathLeg, leg_index, mark);
+    }
+
+    pub(crate) fn set_host_path_cursor(
+        &mut self,
+        host_bar_index: usize,
+        path_phase: StrategyPathPhase,
+        leg_index: u8,
+        mark: f64,
+    ) {
+        self.path_cursor = Some(StrategyPathCursor {
+            host_bar_index,
+            path_phase,
+            leg_index,
+            mark,
+        });
+    }
+
+    #[must_use]
+    #[cfg(test)]
+    pub(crate) fn host_bar_index(&self) -> usize {
+        self.path_cursor.map_or(0, |cursor| cursor.host_bar_index)
     }
 
     pub(crate) fn clear_path_cursor(&mut self) {
@@ -246,30 +288,47 @@ impl HistoricalRuntime<'_> {
         if self.program.script_mode != ScriptMode::Strategy {
             return Ok(());
         }
+        let sequence = magnifier_host_sequence(
+            bar_index,
+            bar,
+            &self.magnifier_input,
+            self.program.strategy_settings.use_bar_magnifier,
+        );
+        if let Some(warning) = sequence.warning {
+            self.push_magnifier_diagnostic(warning);
+        }
+        let open_price = sequence
+            .bars
+            .first()
+            .map(|host| host.bar.open)
+            .unwrap_or(bar.open);
         let timeframe_seconds =
             crate::builtins::time::timeframe_seconds(crate::DEFAULT_CHART_TIMEFRAME).unwrap_or(0);
-        let mark = bar.open;
-        let equity = self.strategy_broker.equity_value(mark);
+        let equity = self.strategy_broker.equity_value(open_price);
         self.strategy_broker.reset_intraday_window(
             bar_index,
             bar.time,
             timeframe_seconds,
             equity,
-            mark,
+            open_price,
         );
         self.trace_strategy_phase(StrategyBarPhase::EligibleEntryFills);
         let mut steps: Vec<_> = HistoricalFillStep::pre_script_path().to_vec();
         steps.sort_by_key(|step| step.ordering_key());
+        let open_bar = Bar {
+            open: open_price,
+            ..bar
+        };
         for step in steps {
             self.strategy_scheduler.set_fill_step(step);
-            let filled = self.apply_historical_fill_step(step, bar_index, bar);
+            let filled = self.apply_historical_fill_step(step, bar_index, open_bar);
             if filled {
                 self.strategy_broker
-                    .flatten_if_risk_blocked(bar_index, bar.time, bar.open);
+                    .flatten_if_risk_blocked(bar_index, bar.time, open_price);
             }
             self.recalculate_after_fill(filled)?;
         }
-        self.walk_entry_price_path(bar_index, bar)?;
+        self.walk_host_sequence(bar_index, bar.time, &sequence.bars)?;
         self.trace_strategy_phase(StrategyBarPhase::TradeExtremes);
         self.trace_strategy_phase(StrategyBarPhase::MarginCall);
         Ok(())
@@ -328,7 +387,54 @@ impl HistoricalRuntime<'_> {
         self.strategy_broker.public_order_event_count() > before
     }
 
-    fn walk_entry_price_path(&mut self, bar_index: usize, bar: Bar) -> Result<(), RuntimeError> {
+    fn walk_host_sequence(
+        &mut self,
+        chart_bar_index: usize,
+        chart_time: i64,
+        hosts: &[MagnifierHostBar],
+    ) -> Result<(), RuntimeError> {
+        for (index, host) in hosts.iter().enumerate() {
+            if index > 0
+                && let Some(gap) = MagnifierHostGap::between(&hosts[index - 1].bar, &host.bar)
+            {
+                self.observe_host_open_gap(chart_bar_index, chart_time, host, gap);
+            }
+            self.walk_one_host_bar(chart_bar_index, chart_time, host)?;
+        }
+        self.strategy_scheduler.clear_path_cursor();
+        Ok(())
+    }
+
+    fn observe_host_open_gap(
+        &mut self,
+        chart_bar_index: usize,
+        chart_time: i64,
+        host: &MagnifierHostBar,
+        gap: MagnifierHostGap,
+    ) {
+        self.strategy_scheduler.set_host_path_cursor(
+            host.host_bar_index,
+            StrategyPathPhase::HostOpen,
+            0,
+            gap.next_open,
+        );
+        self.record_path_trace(
+            chart_bar_index,
+            host.host_bar_index,
+            StrategyPathPhase::HostOpen,
+            0,
+            gap.next_open,
+        );
+        self.observe_path_mark(chart_bar_index, chart_time, gap.next_open);
+    }
+
+    fn walk_one_host_bar(
+        &mut self,
+        chart_bar_index: usize,
+        chart_time: i64,
+        host: &MagnifierHostBar,
+    ) -> Result<(), RuntimeError> {
+        let bar = host.bar;
         let Some(path) = HistoricalPath::from_validated_bar(&bar) else {
             self.strategy_broker
                 .update_open_trade_extremes(bar.high, bar.low);
@@ -340,13 +446,13 @@ impl HistoricalRuntime<'_> {
                 bar.close
             };
             self.strategy_broker
-                .evaluate_risk_equity_stops(bar_index, bar.time, adverse);
+                .evaluate_risk_equity_stops(chart_bar_index, chart_time, adverse);
             self.strategy_broker
-                .evaluate_margin_call_long(bar_index, bar.time, bar.low);
+                .evaluate_margin_call_long(chart_bar_index, chart_time, bar.low);
             self.strategy_broker
-                .evaluate_margin_call_short(bar_index, bar.time, bar.high);
+                .evaluate_margin_call_short(chart_bar_index, chart_time, bar.high);
             self.strategy_broker
-                .flatten_if_risk_blocked(bar_index, bar.time, adverse);
+                .flatten_if_risk_blocked(chart_bar_index, chart_time, adverse);
             return Ok(());
         };
         self.strategy_scheduler
@@ -355,24 +461,36 @@ impl HistoricalRuntime<'_> {
         let short_blocked = self.strategy_broker.same_side_short_entry_blocked();
         for leg in path.legs() {
             let mut mark = leg.from.price;
-            self.strategy_scheduler.set_path_cursor(leg.index, mark);
-            self.observe_path_mark(bar_index, bar.time, mark);
+            self.strategy_scheduler.set_host_path_cursor(
+                host.host_bar_index,
+                StrategyPathPhase::PathLeg,
+                leg.index,
+                mark,
+            );
+            self.record_path_trace(
+                chart_bar_index,
+                host.host_bar_index,
+                StrategyPathPhase::PathLeg,
+                leg.index,
+                mark,
+            );
+            self.observe_path_mark(chart_bar_index, chart_time, mark);
             let mut steps = 0_u32;
             loop {
                 steps += 1;
                 if steps > 10_000 {
                     return Err(RuntimeError {
                         message: format!(
-                            "strategy path event loop made no progress: bar {} leg {}",
-                            bar_index, leg.index
+                            "strategy path event loop made no progress: bar {} host {} leg {}",
+                            chart_bar_index, host.host_bar_index, leg.index
                         ),
                     });
                 }
                 let Some(outcome) =
                     self.strategy_broker
                         .take_next_entry_path_event(EntryPathTick {
-                            bar_index,
-                            time: bar.time,
+                            bar_index: chart_bar_index,
+                            time: chart_time,
                             leg,
                             path_kind: path.kind,
                             mark,
@@ -381,22 +499,67 @@ impl HistoricalRuntime<'_> {
                         })
                 else {
                     mark = leg.to.price;
-                    self.strategy_scheduler.set_path_cursor(leg.index, mark);
-                    self.observe_path_mark(bar_index, bar.time, mark);
+                    self.strategy_scheduler.set_host_path_cursor(
+                        host.host_bar_index,
+                        StrategyPathPhase::PathLeg,
+                        leg.index,
+                        mark,
+                    );
+                    self.record_path_trace(
+                        chart_bar_index,
+                        host.host_bar_index,
+                        StrategyPathPhase::PathLeg,
+                        leg.index,
+                        mark,
+                    );
+                    self.observe_path_mark(chart_bar_index, chart_time, mark);
                     break;
                 };
                 mark = outcome.mark();
-                self.strategy_scheduler.set_path_cursor(leg.index, mark);
-                self.observe_path_mark(bar_index, bar.time, mark);
+                self.strategy_scheduler.set_host_path_cursor(
+                    host.host_bar_index,
+                    StrategyPathPhase::PathLeg,
+                    leg.index,
+                    mark,
+                );
+                self.record_path_trace(
+                    chart_bar_index,
+                    host.host_bar_index,
+                    StrategyPathPhase::PathLeg,
+                    leg.index,
+                    mark,
+                );
+                self.observe_path_mark(chart_bar_index, chart_time, mark);
                 if let PathEventOutcome::Filled { fill_price, .. } = outcome {
-                    self.strategy_broker
-                        .flatten_if_risk_blocked(bar_index, bar.time, fill_price);
+                    self.strategy_broker.flatten_if_risk_blocked(
+                        chart_bar_index,
+                        chart_time,
+                        fill_price,
+                    );
                     self.recalculate_after_fill(true)?;
                 }
             }
         }
-        self.strategy_scheduler.clear_path_cursor();
         Ok(())
+    }
+
+    #[allow(unused_variables)]
+    fn record_path_trace(
+        &mut self,
+        chart_bar_index: usize,
+        host_bar_index: usize,
+        path_phase: StrategyPathPhase,
+        leg_index: u8,
+        mark: f64,
+    ) {
+        #[cfg(test)]
+        self.strategy_path_trace.push(StrategyPathTraceEntry {
+            chart_bar_index,
+            host_bar_index,
+            path_phase,
+            leg_index,
+            mark,
+        });
     }
 
     fn observe_path_mark(&mut self, bar_index: usize, time: i64, mark: f64) {
@@ -584,5 +747,34 @@ mod tests {
             .expect_err("configured limit of 1 extra pass");
         assert_eq!(scheduler.max_recalculation_passes(), 1);
         assert_eq!(scheduler.recalculation_passes(), 1);
+    }
+
+    #[test]
+    fn host_path_cursor_is_monotonic_across_lower_bars() {
+        let mut scheduler = StrategySchedulerState::new();
+        scheduler.begin_bar(1);
+        scheduler.set_host_path_cursor(0, StrategyPathPhase::PathLeg, 1, 10.2);
+        assert_eq!(scheduler.host_bar_index(), 0);
+        assert_eq!(
+            scheduler.path_cursor,
+            Some(StrategyPathCursor {
+                host_bar_index: 0,
+                path_phase: StrategyPathPhase::PathLeg,
+                leg_index: 1,
+                mark: 10.2,
+            })
+        );
+        scheduler.set_host_path_cursor(0, StrategyPathPhase::PathLeg, 2, 10.6);
+        scheduler.set_host_path_cursor(1, StrategyPathPhase::HostOpen, 0, 11.0);
+        assert_eq!(scheduler.host_bar_index(), 1);
+        assert_eq!(
+            scheduler.path_cursor.map(|cursor| cursor.path_phase),
+            Some(StrategyPathPhase::HostOpen)
+        );
+        scheduler.set_host_path_cursor(2, StrategyPathPhase::PathLeg, 0, 10.6);
+        assert_eq!(scheduler.host_bar_index(), 2);
+        scheduler.begin_bar(2);
+        assert_eq!(scheduler.path_cursor, None);
+        assert_eq!(scheduler.host_bar_index(), 0);
     }
 }

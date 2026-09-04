@@ -159,8 +159,11 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) strategy_broker: BrokerState,
     pub(crate) strategy_scheduler: super::strategy_scheduler::StrategySchedulerState,
     strategy_eval_checkpoint: Option<StrategyEvalCheckpoint>,
+    magnifier_diagnostics: Vec<RuntimeDiagnostic>,
     #[cfg(test)]
     pub(crate) strategy_phase_trace: Vec<crate::runtime::strategy_scheduler::StrategyBarPhase>,
+    #[cfg(test)]
+    pub(crate) strategy_path_trace: Vec<crate::runtime::strategy_scheduler::StrategyPathTraceEntry>,
     pub(crate) next_label_id: u32,
     pub(crate) next_line_id: u32,
     pub(crate) next_line_fill_id: u32,
@@ -401,8 +404,11 @@ impl<'a> HistoricalRuntime<'a> {
             strategy_broker,
             strategy_scheduler: super::strategy_scheduler::StrategySchedulerState::new(),
             strategy_eval_checkpoint: None,
+            magnifier_diagnostics: Vec::new(),
             #[cfg(test)]
             strategy_phase_trace: Vec::new(),
+            #[cfg(test)]
+            strategy_path_trace: Vec::new(),
             next_label_id: 1,
             next_line_id: 1,
             next_line_fill_id: 1,
@@ -444,6 +450,16 @@ impl<'a> HistoricalRuntime<'a> {
     #[must_use]
     pub fn magnifier_input(&self) -> &MagnifierInput {
         &self.magnifier_input
+    }
+
+    pub(crate) fn push_magnifier_diagnostic(&mut self, diagnostic: RuntimeDiagnostic) {
+        if !self
+            .magnifier_diagnostics
+            .iter()
+            .any(|existing| existing == &diagnostic)
+        {
+            self.magnifier_diagnostics.push(diagnostic);
+        }
     }
 
     pub(crate) fn fork_with_request_environment(
@@ -685,7 +701,8 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn runtime_diagnostics(&self) -> Vec<RuntimeDiagnostic> {
-        let mut diagnostics = self
+        let mut diagnostics = self.magnifier_diagnostics.clone();
+        let mut lookahead = self
             .legacy_security_repaint_warnings
             .iter()
             .map(|(callsite, (start, end))| {
@@ -700,11 +717,8 @@ impl<'a> HistoricalRuntime<'a> {
                 )
             })
             .collect::<Vec<_>>();
-        diagnostics.sort_by_key(|(callsite, _)| *callsite);
-        let mut diagnostics = diagnostics
-            .into_iter()
-            .map(|(_, diagnostic)| diagnostic)
-            .collect::<Vec<_>>();
+        lookahead.sort_by_key(|(callsite, _)| *callsite);
+        diagnostics.extend(lookahead.into_iter().map(|(_, diagnostic)| diagnostic));
 
         if self.history_dynamic_retention_misses == 0 {
             return diagnostics;
