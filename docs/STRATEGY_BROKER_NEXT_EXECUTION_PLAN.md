@@ -1,7 +1,10 @@
 # Strategy Broker Next Execution Plan
 
 Status: Stages 17, 18, and 19-22 closed. Stage 18g true OHLC path execution
-closed on 2026-09-04. Bar Magnifier fill wiring remains deferred.
+closed on 2026-09-04. Stage 23 Bar Magnifier fill wiring is planned but not
+started. Its
+[detailed execution plan](STRATEGY_INTERNAL_STAGE23_BAR_MAGNIFIER_FILL_WIRING_EXECUTION_PLAN.md)
+is the active step-by-step procedure.
 Created on 2026-09-02 after Strategy Internal Stages 14-16 closed the
 fixture-backed short, reversal, short-margin, and id-specific
 `close_entries_rule="ANY"` subsets.
@@ -1321,5 +1324,6 @@ The Stage 17-22 program is complete only when:
 
 Current closeout note: Stage 18g true OHLC path execution closed on
 2026-09-04. Passing the repository gate proves the documented current subset.
-Bar Magnifier fill wiring and the deferred inter-bar gap rewrite remain
-outside this closeout.
+Stage 23 Bar Magnifier fill wiring now has a dedicated execution plan but
+remains unimplemented. The deferred general inter-bar gap rewrite remains
+outside both closeouts.

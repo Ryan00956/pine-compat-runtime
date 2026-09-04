@@ -65,7 +65,11 @@ cargo run -p pine-cli -- matrix --format json
   directions.
 - [Strategy Broker Next Execution Plan](STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md):
   Stage 17-22 implementation record. Stage 18g true OHLC path execution is
-  closed; Bar Magnifier fill wiring remains deferred.
+  closed; Stage 23 Bar Magnifier fill wiring is the next strategy slice.
+- [Strategy Stage 23 Bar Magnifier Fill Wiring Execution Plan](STRATEGY_INTERNAL_STAGE23_BAR_MAGNIFIER_FILL_WIRING_EXECUTION_PLAN.md):
+  active step-by-step plan for behavior locking, the lower-bar sequence cursor,
+  unified broker integration, recalculation, CLI/Python/WASM host inputs,
+  conformance evidence, stop conditions, and closeout gates.
 - [Strategy Stage 18g True OHLC Path Execution Plan](STRATEGY_INTERNAL_STAGE18G_TRUE_OHLC_PATH_EXECUTION_PLAN.md):
   step-by-step reference lock, path model, candidate ordering, broker identity,
   fill integration, rollback, fixture matrix, and closeout gates for Stage 18g.
@@ -151,7 +155,7 @@ cargo run -p pine-cli -- matrix --format json
 - [Strategy Broker Next Execution Plan](STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md):
   Stage 17-22 record for the unified fill kernel, historical order timing,
   generic netting, OCA, recalculation, and broker-enforced risk rules; Stage
-  18g remains active for true OHLC-path ordering.
+  18g is closed and the Stage 23 Bar Magnifier plan is active.
 - [Next Language Expansion Playbook](NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md):
   process for selecting a language slice.
 

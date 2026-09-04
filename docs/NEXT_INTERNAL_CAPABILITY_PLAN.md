@@ -1,8 +1,9 @@
 # Next Internal Capability Plan
 
-Status: active planning document, refreshed on 2026-09-03 after the Stage 17-22
-integration review. Strategy broker accuracy remains the selected direction
-while further source-version expansion is paused.
+Status: active planning document, refreshed on 2026-09-04 after the Stage 18g
+closeout. Stage 23 Bar Magnifier fill wiring is planned but not started.
+Strategy broker accuracy remains the selected direction while further
+source-version expansion is paused.
 
 This document groups the next interpreter-internal work into seven large task
 directions. It does not claim new compatibility. A task becomes supported only
@@ -47,18 +48,17 @@ Active stage order:
 
 1. Wire the existing bar-magnifier host contract into the completed 18g path
    before accepting `use_bar_magnifier=true`.
-4. Expand mixed entry/order/exit OCA groups only through a dedicated slice.
-5. Add an instrument-session calendar before claiming exchange-session risk
+2. Expand mixed entry/order/exit OCA groups only through a dedicated slice.
+3. Add an instrument-session calendar before claiming exchange-session risk
    parity.
-6. Select later reporting, account, or order-family work from real fixture
+4. Select later reporting, account, or order-family work from real fixture
    gaps.
 
 The step-by-step source of truth is
-`docs/STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md`.
+`docs/STRATEGY_INTERNAL_STAGE23_BAR_MAGNIFIER_FILL_WIRING_EXECUTION_PLAN.md`.
 
 Keep out of scope until separately designed and fixture-backed:
 
-- Bar Magnifier fill wiring and public host inputs.
 - Mixed entry/order/exit OCA groups and series `oca_name`.
 - Omitted `qty` for unsupported `strategy.short` order forms.
 - Currency conversion, symbol precision, and richer account constraints.
