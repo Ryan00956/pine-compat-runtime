@@ -190,7 +190,9 @@ Phase 1 executable subset:
   executes strategy code on each host-provided forming update with `var`
   rollback and `varip` persistence and does not change historical bars;
   host-owned bar-magnifier lower-timeframe input is keyed by chart bar with
-  explicit standard-OHLC fallback; `use_bar_magnifier` stays rejected
+  explicit standard-OHLC fallback; named const bool `use_bar_magnifier` is
+  accepted for v5/v6 historical fill wiring with host-owned lower-timeframe
+  bars, chart-scoped public fill identity, and standard-OHLC fallback
 - `strategy.entry(id, strategy.long, qty=...)` in strategy-mode scripts only,
   filled through the supported historical broker model for long market entries
   up to the configured `pyramiding` limit
@@ -610,7 +612,6 @@ The analyzer should reject these with clear diagnostics:
   default entry subset,
   `strategy.*` variables beyond the supported position/profit/equity/count
   state subset, mutable strategy state, and requested-context strategy state,
-  `use_bar_magnifier`,
   `fill_orders_on_standard_ohlc`, and remaining `strategy.risk.*` broker
   directives other than fixture-backed `strategy.risk.allow_entry_in`,
   `strategy.risk.max_position_size`, `strategy.risk.max_drawdown`,

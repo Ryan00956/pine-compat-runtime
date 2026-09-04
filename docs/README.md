@@ -64,12 +64,16 @@ cargo run -p pine-cli -- matrix --format json
 - [Pure Internal Roadmap](PURE_INTERNAL_ROADMAP.md): interpreter-internal design
   directions.
 - [Strategy Broker Next Execution Plan](STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md):
-  Stage 17-22 implementation record. Stage 18g true OHLC path execution is
-  closed; Stage 23 Bar Magnifier fill wiring is the next strategy slice.
+  Stage 17-23 implementation record. Stage 18g true OHLC path execution and
+  Stage 23 Bar Magnifier fill wiring are closed; mixed-family OCA is the next
+  strategy slice.
 - [Strategy Stage 23 Bar Magnifier Fill Wiring Execution Plan](STRATEGY_INTERNAL_STAGE23_BAR_MAGNIFIER_FILL_WIRING_EXECUTION_PLAN.md):
-  active step-by-step plan for behavior locking, the lower-bar sequence cursor,
+  step-by-step plan for behavior locking, the lower-bar sequence cursor,
   unified broker integration, recalculation, CLI/Python/WASM host inputs,
   conformance evidence, stop conditions, and closeout gates.
+- [Strategy Stage 23 Bar Magnifier Fill Wiring Audit](STRATEGY_INTERNAL_STAGE23_BAR_MAGNIFIER_FILL_WIRING_AUDIT.md):
+  closed Stage 23 record for host schema, fill identity, fallback diagnostics,
+  host adapters, snapshots, and remaining exclusions.
 - [Strategy Stage 18g True OHLC Path Execution Plan](STRATEGY_INTERNAL_STAGE18G_TRUE_OHLC_PATH_EXECUTION_PLAN.md):
   step-by-step reference lock, path model, candidate ordering, broker identity,
   fill integration, rollback, fixture matrix, and closeout gates for Stage 18g.
@@ -153,9 +157,10 @@ cargo run -p pine-cli -- matrix --format json
   id-specific and same-entry-id partial `close_entries_rule="ANY"` allocation for
   shorts.
 - [Strategy Broker Next Execution Plan](STRATEGY_BROKER_NEXT_EXECUTION_PLAN.md):
-  Stage 17-22 record for the unified fill kernel, historical order timing,
-  generic netting, OCA, recalculation, and broker-enforced risk rules; Stage
-  18g is closed and the Stage 23 Bar Magnifier plan is active.
+  Stage 17-23 record for the unified fill kernel, historical order timing,
+  generic netting, OCA, recalculation, broker-enforced risk rules, and Bar
+  Magnifier fill wiring; Stage 18g and Stage 23 are closed and mixed-family
+  OCA is the next strategy target.
 - [Next Language Expansion Playbook](NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md):
   process for selecting a language slice.
 
