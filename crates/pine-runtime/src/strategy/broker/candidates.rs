@@ -163,7 +163,11 @@ impl BrokerState {
             TradeDirection::Long
         };
         for pending in self.order_book.exits().iter() {
-            if pending.last_update_bar_index >= bar_index {
+            if !self
+                .order_book
+                .exits()
+                .price_created_eligible(pending.last_update_bar_index, bar_index)
+            {
                 continue;
             }
             if !self.has_open_position_for_entry(&pending.from_entry) {
@@ -247,7 +251,11 @@ impl BrokerState {
             TradeDirection::Long
         };
         for pending in self.order_book.exits().iter() {
-            if pending.last_update_bar_index >= bar_index {
+            if !self
+                .order_book
+                .exits()
+                .price_created_eligible(pending.last_update_bar_index, bar_index)
+            {
                 continue;
             }
             if !self.has_open_position_for_entry(&pending.from_entry) {

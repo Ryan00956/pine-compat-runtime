@@ -36,8 +36,12 @@ Behavior lock: `docs/STRATEGY_INTERNAL_STAGE23_BAR_MAGNIFIER_BEHAVIOR_AUDIT.md`.
   point event at the next open, not a tradable close-to-open segment.
 - `calc_on_order_fills` extra passes resume from the unconsumed
   `{host_bar_index, path_phase, leg_index, mark}` cursor and do not replay
-  consumed marks. Script-visible OHLC, `time`, and `bar_index` stay
-  chart-scoped.
+  consumed marks. Exits created on that extra pass may fill later unconsumed
+  lower bars of the same chart bar; they cannot fill prices already consumed.
+  Script-visible OHLC, `time`, and `bar_index` stay chart-scoped.
+- A pending market entry fills at the first lower-bar open when coverage
+  exists, not at the chart-bar open. Script-visible `open` stays the chart
+  open.
 - Missing groups emit `W_MAGNIFIER_FALLBACK`. Empty groups emit
   `W_MAGNIFIER_GAP`. Both fall back to that chart bar's standard OHLC path,
   at most once per affected chart bar.
@@ -117,7 +121,12 @@ Focused 23.7/23.8 evidence, saved under `{SCRATCH}` when present:
 
 - `cargo test -p pine-sema use_bar_magnifier`: 11 passed
 - `cargo test -p pine-sema accepts_strategy_process_orders_on_close_with_bar_magnifier`: 1 passed
-- `cargo test -p pine-runtime magnifier -- --test-threads=1`: 28 passed
+- `cargo test -p pine-runtime magnifier -- --test-threads=1`: 28 passed, then
+  21 `magnifier_*` HistoricalRuntime tests after first-open / resume /
+  stop-limit / trailing / OCA / risk / margin fixtures
+- `cargo test -p pine-runtime --lib calc_on_order_fills -- --test-threads=1`:
+  8 passed after same-chart-bar post-fill exits became eligible under
+  `calc_on_order_fills`
 - `cargo test -p pine-runtime use_bar_magnifier_true_is_accepted -- --test-threads=1`: 1 passed
 - `cargo test -p pine-runtime --test incremental magnifier_batch -- --test-threads=1`: 1 passed
 - `cargo test -p pine-runtime --test realtime magnifier_historical -- --test-threads=1`: 1 passed
